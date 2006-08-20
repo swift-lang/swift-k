@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<registry>
+    <portlet-entry name="JavaCoGKitSetManagePortlet" hidden="false" type="instance" application="false">
+        <meta-info>
+            <title>Java CoG Kit: User Task Set Management Portlet</title>
+            <description>Helps you to manage your task set</description>
+        </meta-info>
+        <classname>org.apache.jetspeed.portal.portlets.CustomizerVelocityPortlet</classname>
+        <parameter name="template" value="setManage-view" hidden="false"/>
+        <parameter name="cache-period-milliseconds" value="0" hidden="false" cachedOnName="true" cachedOnValue="true"/>
+        <parameter name="action" value="org.globus.cog.portlet.setManage.SetManagePortlet" hidden="false" cachedOnName="true" cachedOnValue="true"/>
+        <media-type ref="html"/>
+    </portlet-entry>
+</registry>

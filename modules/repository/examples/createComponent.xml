@@ -1,0 +1,12 @@
+<karajan>
+   
+   <include file="cogkit.xml"/>
+   <include file="repository.xml"/>   
+
+   <repository:initialize />
+   <repository:setProvider providertype="jdbc:local" dblocation="d://repository"/>
+   <repository:connect/>
+   <repository:loadComponent fileName="c:\\test.xml"/>
+   <repository:disconnect/>
+
+</karajan>

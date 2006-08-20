@@ -1,0 +1,32 @@
+<karajan>
+	<!-- factorial -->
+	<map>
+		<map:entry key="name" value="definition scoping"/>
+		
+		<map:entry key="test">
+			<element arguments="">
+				<element name="a" arguments="">
+					<element name="b" arguments="">
+						<string>b</string>
+					</element>
+					<element arguments="">
+						<b/>
+					</element>
+				</element>
+			
+			
+				<element name="b" arguments="">
+					<string>!b</string>
+				</element>
+			
+				<define name="c">
+					<a/>
+				</define>
+				<c/>
+			</element>
+		</map:entry>
+		
+		<map:entry key="expected-result" value="b"/>
+		
+	</map>
+</karajan>

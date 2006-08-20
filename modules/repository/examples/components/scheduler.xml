@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <metadata version="1.0">
+    <name>Scheduler</name>
+    <author> Mihael </author>
+	<shortdesc> Argument Library File </shortdesc>
+	<desc> Job Scheduler</desc>
+	<date_created>2005-06-06</date_created>
+	<date_modified>2005-06-06</date_modified>
+	<language>xml</language>
+	<signature>k#kas1@hg$</signature>
+ </metadata>
+  <source>
+  <![CDATA[
+  <karajan name="scheduler">
+   <include file="sys.xml"/>
+   <include file="task.xml"/>
+  
+   <scheduler type="default">
+  	 <argument name="properties">
+		<map>
+			<map:entry key="jobsPerCpu" value="10"/>
+		</map>
+	 </argument>
+	 <argument name="handlers">
+		<list>
+		    <task:handler type="execution" provider="gt2"/>
+		    <task:handler type="file" provider="gridftp"/>
+		</list>
+	 </argument>
+	 <argument name="resources">
+	    <resources>
+	      <host name="plussed">
+    	    <service type="execution" provider="gt2" url="plussed.mcs.anl.gov:4002"/>
+        	<service type="file" provider="gridftp" url="gridftp://plussed.mcs.anl.gov:4001"/>
+	      </host>
+		</resources>
+      </argument>
+    </scheduler>
+  </karajan>
+  ]]>
+  </source>
+</component>

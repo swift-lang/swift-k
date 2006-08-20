@@ -1,0 +1,23 @@
+Things to do for Java CoG Kit: Portlet
+
+========================================
+Priority levels assigned to each task:
+
+***** = Maximum
+*     = Mimimum
+========================================
+
+DONE	****	The monitoring window should have a start date and end date
+DONE	****	Provide for submission of environment variables for a job
+DONE	****	Make a help button for every textfild
+DONE	****	Test with GT3 providers.
+DONE	***		Upload and execution of a job through an xml definition file
+DONE	***		Threaded impl into the core
+DONE	***		Move to logger
+***		Add schema2src to cvs
+*** 	Html documentation
+DONE	***		Give appropriate titles for stdout/err windows
+DONE	***		Options to delete task
+DONE	**		Save button to save the monitoring context
+DONE	**		Update to README.txt and license fragment in the code
+

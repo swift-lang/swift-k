@@ -1,0 +1,18 @@
+<karajan>
+	<!-- unscheduled task -->
+	<map>
+		<map:entry key="name" value="unscheduled execution"/>
+		<map:entry key="test">
+			<element arguments="">
+				<parallelFor name="run">
+					<range from="1" to="{task_run_count}"/>	
+				
+					<for name="res" in="{grid_resources}">
+						<task:execute executable="/bin/date" host="{res}" provider="{default_provider}"/>
+					</for>
+					<print message="{run}" nl="false"/>
+				</parallelFor>
+			</element>
+		</map:entry>
+	</map>
+</karajan>

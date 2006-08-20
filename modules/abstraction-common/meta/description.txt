@@ -1,0 +1,7 @@
+The abstraction-common module is the base element of the abstractions 
+framework. It contains all the interface definition. It also encapsulates 
+the implementation of all the foundation elements of the abstractions 
+framework (Task, TaskGraph, Handlers, Specifications, etc). Finally, it 
+contains the implementation of the logic required to translate 
+abstractions components (Task and TaskGraph) to and from XML.
+

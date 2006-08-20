@@ -1,0 +1,8 @@
+[
+Name="Lucky-Exec";
+AdvType="Service";
+ServiceType="JobSubmission";
+Provider="GT2";
+Rank=2;
+ServiceContact="lucky0.mcs.anl.gov";
+]

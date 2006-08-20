@@ -1,0 +1,19 @@
+<project>
+	<include file="sys.xml"/>
+	<include file="currentTimeMillis-def.xml"/>
+	
+	<timer:initialize/>
+	
+	<timer:start name="one"/>
+	<wait delay="1000"/>
+	<timer:print name="one"/>
+	
+	<timer:start name="two"/>
+	<parallel>
+		<wait delay="2000"/>
+		<wait delay="1000"/>
+	</parallel>
+	
+	<timer:print name="two"/>
+	<timer:print name="one"/>
+</project>

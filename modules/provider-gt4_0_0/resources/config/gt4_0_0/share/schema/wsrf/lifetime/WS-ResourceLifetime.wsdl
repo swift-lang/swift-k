@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+OASIS takes no position regarding the validity or scope of any intellectual property or other rights that might be claimed to pertain to the implementation or use of the technology described in this document or the extent to which any license under such rights might or might not be available; neither does it represent that it has made any effort to identify any such rights. Information on OASIS's procedures with respect to rights in OASIS specifications can be found at the OASIS website. Copies of claims of rights made available for publication and any assurances of licenses to be made available, or the result of an attempt made to obtain a general license or permission for the use of such proprietary rights by implementors or users of this specification, can be obtained from the OASIS Executive Director.
+
+OASIS invites any interested party to bring to its attention any copyrights, patents or patent applications, or other proprietary rights which may cover technology that may be required to implement this specification. Please address the information to the OASIS Executive Director.
+
+Copyright (C) OASIS Open (2004). All Rights Reserved.
+
+This document and translations of it may be copied and furnished to others, and derivative works that comment on or otherwise explain it or assist in its implementation may be prepared, copied, published and distributed, in whole or in part, without restriction of any kind, provided that the above copyright notice and this paragraph are included on all such copies and derivative works. However, this document itself may not be modified in any way, such as by removing the copyright notice or references to OASIS, except as needed for the purpose of developing OASIS specifications, in which case the procedures for copyrights defined in the OASIS Intellectual Property Rights document must be followed, or as required to translate it into languages other than English. 
+
+The limited permissions granted above are perpetual and will not be revoked by OASIS or its successors or assigns. 
+
+This document and the information contained herein is provided on an "AS IS" basis and OASIS DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+-->
+
+<wsdl:definitions
+    name="WS-ResourceLifetime"
+    targetNamespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:wsbf="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:wsrl="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd"
+    xmlns:wsrlw="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl"
+    xmlns:wsrp="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd"
+    xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <wsdl:types>
+        <xsd:schema
+            xmlns="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd"
+            attributeFormDefault="unqualified"
+            elementFormDefault="qualified"
+            >
+
+            <xsd:include
+                schemaLocation="./WS-ResourceLifetime.xsd"/>
+
+            <xsd:import
+                namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing" 
+                schemaLocation="../../ws/addressing/WS-Addressing.xsd"  />
+
+            <xsd:import
+                namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+                schemaLocation="../faults/WS-BaseFaults.xsd"
+            />
+
+            <!-- ==== Resource Properties for ScheduledResourceTermination ==== -->
+            <xsd:element name="ScheduledResourceTerminationRP">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element maxOccurs="1" minOccurs="1" ref="wsrl:CurrentTime"/>
+                        <xsd:element maxOccurs="1" minOccurs="1" ref="wsrl:TerminationTime"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <!-- ====== Message Types for ImmediateResourceTermination  ======= -->
+            <xsd:element name="Destroy">
+                <xsd:complexType/>
+            </xsd:element>
+            <xsd:element name="DestroyResponse">
+                <xsd:complexType/>
+            </xsd:element>
+            <xsd:complexType name="ResourceUnknownFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="ResourceUnknownFault" type="wsrl:ResourceUnknownFaultType"/>
+            <xsd:complexType name="ResourceNotDestroyedFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element
+                name="ResourceNotDestroyedFault"
+                type="wsrl:ResourceNotDestroyedFaultType"/>
+            <!-- ====== Message Types for ScheduledResourceTermination  ======= -->
+            <xsd:element name="SetTerminationTime">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element
+                            name="RequestedTerminationTime"
+                            nillable="true"
+                            type="xsd:dateTime"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="SetTerminationTimeResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="NewTerminationTime" nillable="true" type="xsd:dateTime"/>
+                        <xsd:element name="CurrentTime" type="xsd:dateTime"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:complexType name="UnableToSetTerminationTimeFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element
+                name="UnableToSetTerminationTimeFault"
+                type="wsrl:UnableToSetTerminationTimeFaultType"/>
+            <xsd:complexType name="TerminationTimeChangeRejectedFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element
+                name="TerminationTimeChangeRejectedFault"
+                type="wsrl:TerminationTimeChangeRejectedFaultType"/>
+        </xsd:schema>
+    </wsdl:types>
+    <wsdl:message name="DestroyResponse">
+        <wsdl:part element="wsrl:DestroyResponse" name="DestroyResponse"/>
+    </wsdl:message>
+    <wsdl:message name="SetTerminationTimeRequest">
+        <wsdl:part element="wsrl:SetTerminationTime" name="SetTerminationTimeRequest"/>
+    </wsdl:message>
+    <wsdl:message name="ResourceUnknownFault">
+        <wsdl:part element="wsrl:ResourceUnknownFault" name="ResourceUnknownFault"/>
+    </wsdl:message>
+    <wsdl:message name="DestroyRequest">
+        <wsdl:part element="wsrl:Destroy" name="DestroyRequest"/>
+    </wsdl:message>
+    <wsdl:message name="UnableToSetTerminationTimeFault">
+        <wsdl:part
+            element="wsrl:UnableToSetTerminationTimeFault"
+            name="UnableToSetTerminationTimeFault"/>
+    </wsdl:message>
+    <wsdl:message name="SetTerminationTimeResponse">
+        <wsdl:part
+            element="wsrl:SetTerminationTimeResponse"
+            name="SetTerminationTimeResponse"/>
+    </wsdl:message>
+    <wsdl:message name="ResourceNotDestroyedFault">
+        <wsdl:part
+            element="wsrl:ResourceNotDestroyedFault"
+            name="ResourceNotDestroyedFault"/>
+    </wsdl:message>
+    <wsdl:message name="TerminationTimeChangeRejectedFault">
+        <wsdl:part
+            element="wsrl:TerminationTimeChangeRejectedFault"
+            name="TerminationTimeChangeRejectedFault"/>
+    </wsdl:message>
+    <wsdl:portType name="ScheduledResourceTermination"
+          wsrp:ResourceProperties = "wsrl:ScheduledResourceTerminationRP">
+        <wsdl:operation name="SetTerminationTime">
+            <wsdl:input message="wsrlw:SetTerminationTimeRequest"
+                        wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTime"/>
+            <wsdl:output message="wsrlw:SetTerminationTimeResponse"
+                         wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTimeResponse"/>
+            <wsdl:fault
+                message="wsrlw:UnableToSetTerminationTimeFault"
+                name="UnableToSetTerminationTimeFault"/>
+            <wsdl:fault message="wsrlw:ResourceUnknownFault" name="ResourceUnknownFault"/>
+            <wsdl:fault
+                message="wsrlw:TerminationTimeChangeRejectedFault"
+                name="TerminationTimeChangeRejectedFault"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:portType name="ImmediateResourceTermination">
+        <wsdl:operation name="Destroy">
+            <wsdl:input message="wsrlw:DestroyRequest"
+                        wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/Destroy"/>
+            <wsdl:output message="wsrlw:DestroyResponse"
+                         wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/DestroyResponse"/>
+            <wsdl:fault
+                message="wsrlw:ResourceNotDestroyedFault"
+                name="ResourceNotDestroyedFault"/>
+            <wsdl:fault message="wsrlw:ResourceUnknownFault" name="ResourceUnknownFault"/>
+        </wsdl:operation>
+    </wsdl:portType>
+</wsdl:definitions>

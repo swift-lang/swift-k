@@ -1,0 +1,77 @@
+NAME
+    grid-proxy-init
+
+DESCRIPTION 
+    TBD
+
+SYNOPSIS
+    grid-proxy-init [options]
+    grid-proxy-init -help
+
+OPTIONS
+    -help | -usage		
+        Displays usage.
+
+    -version			
+        Displays version.
+
+    -debug			
+        Enables extra debug output.
+
+    -verify			
+        Performs proxy verification tests (default).
+
+    -noverify			
+        Disables proxy verification tests.
+
+    -quiet | -q			
+        Quiet mode, minimal output
+
+    -limited			
+        Creates a limited proxy.
+
+    -independent		
+        Creates a independent globus proxy.
+
+    -old			
+        Creates a legacy globus proxy.
+
+    -hours <hours>		
+        Proxy is valid for H hours (default:12).
+
+    -bits <bits>		
+        Number of bits in key {512|1024|2048|4096}.
+
+    -globus			
+        Prints user identity in globus format.
+
+    -policy <policyfile>	
+        File containing policy to store in the ProxyCertInfo
+        extension
+
+    -pl <oid>			
+        OID string for the policy language.
+
+    -policy-language <oid>	
+        used in the policy file.
+
+    -path-length <l>		
+        Allow a chain of at most l proxies to be generated
+        from this one
+
+    -cert <certfile>		
+        Non-standard location of user certificate
+
+    -key <keyfile>		
+        Non-standard location of user key
+
+    -out <proxyfile>		
+        Non-standard location of new proxy cert.
+
+    -pkcs11			
+        Enables the PKCS11 support module. The -cert and
+        -key arguments are used as labels to find the
+        credentials on the device.
+
+SEE ALSO
+    ProxyInit 

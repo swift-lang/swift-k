@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/faults"
+    xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job/faults"
+    xmlns:types="http://www.globus.org/namespaces/2004/10/gram/job/types"
+    xmlns:wsbf="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+    elementFormDefault="qualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import
+        namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+        schemaLocation="../wsrf/faults/WS-BaseFaults.xsd"/>
+
+    <xsd:import
+        namespace="http://www.globus.org/namespaces/2004/10/gram/job/types"
+        schemaLocation="managed_job_types.xsd"/>
+
+    <!--==================================================-->
+    <!--                    faults                        -->
+    <!--==================================================-->
+
+    <xsd:complexType name="FaultType">
+        <xsd:annotation>
+            <xsd:documentation>
+                This is the base fault for runtime errors that occur while
+                managing a job. It extends the OGSI FaultType.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="wsbf:BaseFaultType">
+                <xsd:sequence>
+                    <xsd:element name="stateWhenFailureOccurred"
+                                 type="types:StateEnumeration"/>
+                    <xsd:element name="command" type="xsd:string"/>
+                    <xsd:element name="gt2ErrorCode" type="xsd:int"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="CredentialSerializationFaultType">
+        <!--
+        This fault replaces the GT2 error codes
+        GLOBUS_GRAM_PROTOCOL_ERROR_DELEGATION_FAILED,
+        GLOBUS_GRAM_PROTOCOL_ERROR_OPENING_USER_PROXY,
+        GLOBUS_GRAM_PROTOCOL_ERROR_USER_PROXY_NOT_FOUND,
+        -->
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that the managed job service was unable to
+                serialize or deserialize a delegated credential.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:FaultType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="InsufficientCredentialsFaultType">
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that the managed job service was unable to
+                perform some action on behalf of the owner of the job submission
+                because the owner has delegated insufficient credentials.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:FaultType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="InternalFaultType">
+        <!--
+        This fault replaces the GT2 error codes
+        GLOBUS_GRAM_PROTOCOL_ERROR_INVALID_SCRIPT_REPLY,
+        GLOBUS_GRAM_PROTOCOL_ERROR_BAD_SCRIPT_ARG_FILE, and
+        GLOBUS_GRAM_PROTOCOL_ERROR_TEMP_SCRIPT_FILE_FAILED.
+        -->
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that an internal operation failed.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:FaultType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="InvalidCredentialsFaultType">
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that the managed job service was unable to
+                use a delegated credential.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:FaultType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ServiceLevelAgreementFaultType">
+        <!--
+        This fault replaces the GT2 error codes
+        GLOBUS_GRAM_PROTOCOL_ERROR_BAD_RSL_ENVIRONMENT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_ARGUMENTS,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_CACHE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_COUNT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_DIRECTORY,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_DRYRUN
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_ENVIRONMENT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_EXECUTABLE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_FILE_CLEANUP,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_FILE_STAGE_IN,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_FILE_STAGE_IN_SHARED,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_FILE_STAGE_OUT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_GASS_CACHE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_HOST_COUNT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_JOBTYPE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_MAX_CPU_TIME,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_MAX_MEMORY,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_MAXTIME,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_MAX_WALL_TIME,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_MIN_MEMORY,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_MYJOB,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_PARADYN,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_PROJECT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_PROXY_TIMEOUT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_QUEUE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_REMOTE_IO_URL,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_RESERVATION_HANDLE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_RESTART,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_SAVE_STATE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_SCHEDULER_SPECIFIC,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_SCRATCH,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_START_TIME,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_STDERR,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_STDERR_POSITION,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_STDIN,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_STDOUT,
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_STDOUT_POSITION, and
+        GLOBUS_GRAM_PROTOCOL_ERROR_RSL_TWO_PHASE_COMMIT
+        -->
+        <xsd:annotation>
+            <xsd:documentation>
+                Fault for runtime errors which are directly related to a
+                particular part of the ServiceLevelAgreement document passed to
+                the createService method. This fault type contains the fragment
+                of the ServiceLevelAgreement related to the fault as one of its
+                elements.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:FaultType">
+                <xsd:sequence>
+                    <xsd:element name="attribute" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ExecutionFailedFaultType">
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that the Managed Job service was unable to
+                begin the execution of the job.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:ServiceLevelAgreementFaultType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="FilePermissionsFaultType">
+        <!--
+        This fault replaces the GT2 error code
+        GLOBUS_GRAM_PROTOCOL_ERROR_EXECUTABLE_PERMISSIONS
+        -->
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that the ManagedJob service does not have
+                permissions to access a file referenced in the
+                ServiceLevelAgreement.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:ServiceLevelAgreementFaultType">
+                <xsd:sequence>
+                    <xsd:element    name="path"
+                                    type="xsd:string"
+                                    minOccurs="1"
+                                    maxOccurs="1"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="InvalidPathFaultType">
+        <!--
+        This fault replaces the GT2 error codes
+        GLOBUS_GRAM_PROTOCOL_ERROR_BAD_DIRECTORY,
+        GLOBUS_GRAM_PROTOCOL_ERROR_EXECUTABLE_NOT_FOUND,
+        GLOBUS_GRAM_PROTOCOL_ERROR_STDIN_NOT_FOUND, and
+        GLOBUS_GRAM_PROTOCOL_ERROR_INVALID_SCRATCH
+        -->
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that a file or directory path
+                referenced in the ServiceLevelAgreement contains an invalid
+                path.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:ServiceLevelAgreementFaultType">
+                <xsd:sequence>
+                    <xsd:element    name="path"
+                                    type="xsd:string"
+                                    minOccurs="1"
+                                    maxOccurs="1"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="StagingFaultType">
+        <!--
+        This fault replaces the GT2 error codes
+        GLOBUS_GRAM_PROTOCOL_ERROR_STAGING_EXECUTABLE,
+        GLOBUS_GRAM_PROTOCOL_ERROR_STAGING_STDIN,
+        GLOBUS_GRAM_PROTOCOL_ERROR_STAGE_IN_FAILED, and
+        GLOBUS_GRAM_PROTOCOL_ERROR_STAGE_OUT_FAILED
+        -->
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that part of the file staging requirements
+                of the ServiceLevelAgreement could not be completed.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:ServiceLevelAgreementFaultType">
+                <xsd:sequence>
+                    <xsd:element    name="source"
+                                    type="xsd:string"
+                                    minOccurs="1"
+                                    maxOccurs="1"/>
+                    <xsd:element    name="destination"
+                                    type="xsd:string"
+                                    minOccurs="1"
+                                    maxOccurs="1"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="UnsupportedFeatureFaultType">
+        <!--
+        This fault replaces the GT2 error codes
+        GLOBUS_GRAM_PROTOCOL_JOBTYPE_NOT_SUPPORTED, and
+        GLOBUS_GRAM_PROTOCOL_UNIMPLEMENTED.
+        -->
+        <xsd:annotation>
+            <xsd:documentation>
+                This fault indicates that an error occurred because
+                the RSL depended on a feature not implemented by
+                a particular GRAM scheduler.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:ServiceLevelAgreementFaultType">
+                <xsd:sequence>
+                    <xsd:element    name="feature"
+                                    type="xsd:string"
+                                    minOccurs="1"
+                                    maxOccurs="1"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <!-- Specific fault element(s) -->
+    <xsd:element    name="credentialSerializationFault"
+                    type="tns:CredentialSerializationFaultType"/>
+    <xsd:element    name="insufficientCredentialsFault"
+                    type="tns:InsufficientCredentialsFaultType"/>
+    <xsd:element    name="internalFault"
+                    type="tns:InternalFaultType"/>
+    <xsd:element    name="invalidCredentialsFault"
+                    type="tns:InvalidCredentialsFaultType"/>
+    <xsd:element    name="serviceLevelAgreementFault"
+                    type="tns:ServiceLevelAgreementFaultType"/>
+    <xsd:element    name="executionFailedFault"
+                    type="tns:ExecutionFailedFaultType"/>
+    <xsd:element    name="filePermissionsFault"
+                    type="tns:FilePermissionsFaultType"/>
+    <xsd:element    name="invalidPathFault"
+                    type="tns:InvalidPathFaultType"/>
+    <xsd:element    name="stagingFault"
+                    type="tns:StagingFaultType"/>
+    <xsd:element    name="unsupportedFeatureFault"
+                    type="tns:UnsupportedFeatureFaultType"/>
+
+    <xsd:complexType name="FaultResourcePropertyType">
+        <xsd:choice>
+            <xsd:element name="fault" type="tns:FaultType"/>
+            <xsd:element ref="tns:credentialSerializationFault"/>
+            <xsd:element ref="tns:insufficientCredentialsFault"/>
+            <xsd:element ref="tns:internalFault"/>
+            <xsd:element ref="tns:invalidCredentialsFault"/>
+            <xsd:element ref="tns:serviceLevelAgreementFault"/> 
+            <xsd:element ref="tns:executionFailedFault"/>
+            <xsd:element ref="tns:filePermissionsFault"/>
+            <xsd:element ref="tns:invalidPathFault"/>
+            <xsd:element ref="tns:stagingFault"/>
+            <xsd:element ref="tns:unsupportedFeatureFault"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <xsd:element name="fault"   type="tns:FaultResourcePropertyType"/>
+</xsd:schema>

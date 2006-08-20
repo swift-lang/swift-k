@@ -1,0 +1,85 @@
+NAME
+  group - is a form of an environmental variable that allows a user to
+          perform operations on multiple machines.
+
+SYNOPIS
+  group [OPTIONS] [VALUES]
+
+DESCRIPTION
+  This command allows a user to perform operations on multiple
+  machines with ease. To add a machine you must specify an action and
+  a url. A url can be specified in one of two ways. It can be used by
+  specifying the protocol, the host, and the portnumber seperately, or
+  by specifying them all at once using the url parameter.
+
+OPTIONS
+    [-p, --protocol [value]]
+     the protocol to use
+    -a, --action [value]
+     what you wish to do
+    [-n, --portnumber [value]]
+     the port number
+    [-h, --host [value]]
+     the host
+    [-u, --url [value]]
+     the url
+    -i, --id [value]
+     id of the grid group
+    [- , --help]
+     displays the options
+
+EXAMPLES
+  ADDING to a group
+      In each example it is assumed that the group "groupId" is
+      initially empty.
+
+    1) Here we specify that we will include the options: id, action,
+       and url (and in that order). If you do not understand why it is
+       specified in that order, see 'man getopt'. Then we give this
+       group the id "groupId", the action "add", and the url
+       "gsiftp://sub.domain.net:1111/"
+
+      > group -iau groupId add gsiftp://sub.domain.net:1111/
+      > group -ia groupId print
+         [gsiftp://sub.domain.net:1111/] # this is the output
+      
+
+    2) Same as the first example, but modified the order of the
+       parameters.
+
+      > group -uai gsiftp://sub.domain.net:1111/ add groupId
+      > group -ia groupId print
+         [gsiftp://sub.domain.net:1111/] # this is the output
+
+    3) Demonstrates hows a different way of using the options.
+
+      > group -a add -i groupId -p gsiftp -h newhost.org --portnumber 1111
+      > group -ia groupId print
+         [gsiftp://newhost.org:1111/] # this is the output
+
+    4) Shows how to print a gorup
+
+      # first add something to the group
+      > group -uai gsiftp://sub.domain.net:1111/ add groupId
+      > group -ia groupId print
+         [gsiftp://sub.domain.net:1111/] # this is the output
+
+    5) Shows how to remove connections from a group
+    
+      # First add something to remove
+      > group -iau groupId add gsiftp://sub.domain.net:1111/
+      > group -iau groupId add gsiftp://newdomain.org:2222/
+      > group -ia groupId print
+        # below is the output
+        gsiftp://sub.domain.net:1111/ gsiftp://newdomain.org:2222/ 
+
+      # now actually remove
+      > group -aiu remove groupId gsiftp://sub.domain.net:1111/
+      > group -ia groupId print
+         gsiftp://newdomain.org:2222/ # this is the output 
+
+TO DO
+  REMOVE A GROUP - allow an entire group to be removed  
+
+SEE ALSO
+  open, ls, close, exec

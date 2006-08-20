@@ -1,0 +1,4 @@
+The provider-ws module is a component of the abstractions framework.
+It provides the implementation for the execution task handler
+supporting invocations of generic Web services using the Web services 
+invication framework (WSIF). 

@@ -1,0 +1,47 @@
+NAME
+  put - puts a file from a local machine by copying it to a remote
+        machine
+
+SYNOPIS
+  put [FROM_URI] [TO_URI]
+
+DESCRIPTION
+  This command needs to have a connection associated with it
+  (open). It does not work on each machine when open contains multiple
+  connections, instead it uses the last connection specified as a
+  default. In the future, there should be a selection feature that
+  allows to select which connection. This command puts a file from a 
+  local machine (FROM_URI) by copying it to a remote machine (TO_URI).
+
+  The FROM_URI and the TO_URI should cotain a valid protocol, host,
+  and port number.
+
+OPTIONS
+   [--help]
+     displays the options
+
+EXAMPLES
+  1) This will put a file from the local current working
+  directory and places it in the root directory of the
+  remote machine.  (Local current working directory will be
+  where the current java machine was started)
+
+    > put name.TEST /fileName.TEST
+
+  2) Puts a file from the lcoal root directory and places it
+  in the working directory of the remote machine.
+
+    > put /name.TEST fileName.TEST
+
+  3) Puts a file from a level up from the current working
+  directory on the local machine and places it on the remote
+  machine in the current working directory.
+    
+    > put ../name.TEST fileName.TEST
+
+TO DO
+  Allow the user to specify which connection to associate the put
+  command with when using multiple connections.
+
+SEE ALSO
+  open, cp, get

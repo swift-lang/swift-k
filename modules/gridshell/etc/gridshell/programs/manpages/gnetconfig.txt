@@ -1,0 +1,47 @@
+NAME
+  gnetconfig - to set the cog.properties file's ip address value
+
+SYNOPIS
+  gnetconfig [OPTIONS] [VALUES]
+
+DESCRIPTION
+  Allows the user to see the available network devices and the ip
+  address associated with each network device. It also allows the user
+  to set the cog.properties file's ip address value to the value found
+  by a specified device name.
+
+OPTIONS
+   [--ipaddress [value]]
+     set the redirect ipaddress to this value
+   [-p, --print]
+     prints the available devices and their ip addresses
+   --help
+     displays the options
+
+EXAMPLES
+  1) This shows all the available network device names and the address
+     associated with that device.
+
+    > gnetconfig --print
+
+      Device Name: 'lo | MS TCP Loopback interface' 
+       address: '/127.0.0.1'
+      Device Name: 'eth0 | Atheros AR5001X+ Wireless Network Adapter #2'
+       address: '/123.45.6.78'
+      Device Name: 'eth1 | Realtek RTL8139/810x Family Fast Ethernet NIC'
+      Device Name: 'eth2 | Cisco Systems VPN Adapter'
+       address: '/976.5.43.21'
+
+  2) Sets the cog.properties attribute for the ip address to the ip
+     address associated with eth2
+
+    > gnetconfig eth2
+
+  3) Set the ipaddress to "976.5.43.21" In this example, it is the result
+     is the same as EXAMPLE 2.
+
+    > gnetconfig --ipaddress 976.5.43.21
+
+TO DO
+  Store a device name in cog.properties file so that this can be done
+  automatically.

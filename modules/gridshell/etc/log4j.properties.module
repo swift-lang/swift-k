@@ -1,0 +1,46 @@
+#############
+# ERROR-DIALOG is an error dialog for the desktop that allows errors to be 
+#   submitted to a form. It is required taht gridfaces are on the classpath 
+#   to use since that is where this custom appender is located 
+#############
+log4j.appender.ERROR-DIALOG=org.globus.cog.gridface.impl.util.ErrorDialogAppender
+log4j.appender.ERROR-DIALOG.level=WARN
+log4j.appender.ERROR-DIALOG.headerPattern=%d %-5p [%t] %C{2} (%F:%L) - %m%n
+
+log4j.appender.ERROR-DIALOG.PostURL=http://rwinch.dnsalias.com/cgi-bin/display_param.cgi
+log4j.appender.ERROR-DIALOG.layout=org.apache.log4j.HTMLLayout
+
+#############
+# STDOUT is set to be a ConsoleAppender using a PatternLayout
+#############
+log4j.appender.STDOUT=org.apache.log4j.ConsoleAppender
+log4j.appender.STDOUT.layout=org.apache.log4j.PatternLayout
+log4j.appender.STDOUT.layout.ConversionPattern=%-5p %C{4} (%F:%L) - %m%n
+
+#############
+# LOG-FILE appends to a log file and can be read using chainsaw and the 
+#   chainsaw-config.xml file
+#############
+log4j.appender.LOG-FILE=org.apache.log4j.RollingFileAppender
+log4j.appender.LOG-FILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.LOG-FILE.layout.ConversionPattern=%d %-5p [%t] %C{2} (%F:%L) - %m%n
+log4j.appender.LOG-FILE.MaxFileSize=20KB
+log4j.appender.LOG-FILE.Append=true
+log4j.appender.LOG-FILE.File=example.log
+
+###
+# gridshell
+#log4j.category.org.globus.cog.gridshell=ALL
+###
+# gridshell.commands
+#log4j.category.org.globus.cog.gridshell.commands=ALL
+###
+# gridshell.model
+#log4j.category.org.globus.cog.gridshell.model.ScopeableProperties=ALL
+###
+# gridshell.model.test
+#log4j.category.org.globus.cog.gridshell.model.test.ScopeablePropertiesTest=ALL
+###
+# gridshell.tasks
+#log4j.category.org.globus.cog.gridshell.tasks=ALL
+

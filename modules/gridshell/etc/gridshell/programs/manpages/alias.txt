@@ -1,0 +1,73 @@
+NAME
+  alias - Allow an arbitrary combination of letters and numbers to be the same
+          as a command.
+
+SYNOPIS
+  alias [ALIAS_NAME] [ALIAS_VALUE]
+
+DESCRIPTION
+  Allow an arbitrary combination of letters and numbers (ALIAS_NAME)
+  to be the same as a command (ALIAS_VALUE).
+
+OPTIONS
+  [--help]
+    displays the options
+
+EXAMPLES
+
+  1) Create a simple command using alias
+
+    > alias myalias pwd
+    > alias myalias       # print the value of the alias myalias
+      pwd
+    > pwd                 # get the present working directory pwd 
+                          # (needs a connection, see open)
+      /usr/bin # output
+    > myalias             # get the present working directory with myalias
+                          # (needs a connection, see open)
+       /usr/bin # output  
+
+  2) Create a more complex commands with flags
+    
+      Assume, a user wants to be able to see hidden files. The ls command 
+      provided with an open connection does not currently support the 
+      -a option (see 'man ls' for more information). 
+      This can be simulated with the alias command in the follwoing way 
+
+      > alias lsall "exec --command '/bin/ls -a' --service myhost.com"
+      > alias lsall    # print the value of alias lsall
+        exec --command '/bin/ls -a' --service myhost.com
+
+      instead of typing 
+
+      > exec --command '/bin/ls -a' --service myhost.com
+
+      you can now simply type 
+  
+      > lsall
+
+      to see the output. 
+
+TODO
+  Eventually, it would be nice to allow variables in the alias command. 
+  An example  is provided below.
+
+    alias lsall "exec --command '/bin/ls -a %s' --service %s"
+
+    lsall % (/var/www/html/, sub.domain.org) # first list command
+
+      .config     # start output
+      index.html
+      logo.gif
+      page1.html  # end output
+
+    # second list command
+    exec --command '/bin/ls -a /var/www/html' --service sub.domain.org 
+
+      .config     # start output
+      index.html
+      logo.gif
+      page1.html  # end output
+    
+SEE ALSO
+  See "man exec" for information on the exec command.

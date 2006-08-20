@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="CASConfig" 
+    xmlns="http://xml.apache.org/axis/wsdd/" 
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java" 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <service name="CASService" provider="Handler" use="literal" 
+        style="document">
+        <parameter name="allowedMethodsClass" 
+            value="org.globus.cas.CASPortType"/>
+        <parameter name="handlerClass" 
+            value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="className" 
+            value="org.globus.cas.impl.service.CasService"/>
+        <wsdlFile>share/schema/cas/cas_service.wsdl</wsdlFile>
+        <parameter name="scope" value="Application"/>
+        <parameter name="providers" value="org.globus.cas.impl.service.CasAdminPortImpl org.globus.cas.impl.service.CasQueryPortImpl GetRPProvider QueryRPProvider"/>
+        <parameter name="securityDescriptor" value="etc/globus_cas_service/security-config.xml"/>
+    </service>
+
+    <typeMapping xmlns:ns="http://www.globus.org/07/2004/cas/casTypes"
+             qname="ns:PolicyData"
+             type="java:org.globus.cas.types.PolicyData"
+             serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+             deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+             encodingStyle=""/>
+</deployment>

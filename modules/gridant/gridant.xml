@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!-- ==============================================================
+Build file for the GridAnt Framework
+
+Most useful targets:
+
+ - declare    -> declares all the GridAnt tasks
+ - cogSetup   -> creates the cog.properties file 
+ - gridAuth   -> creates GSI compatible proxy certificate 
+ - gridExec   -> performs remote job submission 
+ - gridCopy   -> performs third party file transfer
+ - workflow   -> an example workflow run.
+
+=============================================================== -->
+
+<project name="GridAnt" default="declare" basedir=".">
+
+  <property name="lib.dir" value="./dist/gridant-1.0/lib"/>
+  <property name="provider" value="local"/>
+  <property name="jobManager" value="localhost"/>
+  <property name="source.server" value="file://"/>
+  <property name="destination.server" value="file://"/>
+
+  <path id="classpath">
+   <fileset dir="${lib.dir}">
+        <include name="*.jar"/>
+     </fileset>
+  </path>
+
+  <target name="declare">
+     <taskdef name="cog-setup"
+       classname="org.globus.cog.gridant.tasks.GridSetup"
+       classpathref="classpath"/>
+
+     <taskdef name="grid-authenticate"
+       classname="org.globus.cog.gridant.tasks.GridAuthenticate"
+       classpathref="classpath"/>
+
+     <taskdef name="grid-execute"
+       classname="org.globus.cog.gridant.tasks.GridExecute"
+       classpathref="classpath"/>
+
+     <taskdef name="grid-copy"
+       classname="org.globus.cog.gridant.tasks.GridCopy"
+       classpathref="classpath"/>
+  </target>
+
+  <target name="cogSetup" depends="declare">
+    <cog-setup/>
+  </target>
+
+  <target name="gridAuth" depends="declare">
+    <grid-authenticate/>
+  </target>
+
+  <target name="gridExec" depends="declare">
+    <grid-execute
+	provider="${provider}"
+	serviceContact = "${jobManager}"
+	executable = "/bin/ls"
+	arguments="-l -a"
+	directory=""
+	localExecutable="false"
+	redirect="true"
+	stdoutput=""
+	stderror=""/>
+  </target>
+
+  <target name="gridCopy" depends="declare">
+    <grid-copy
+	source="${source.server}/home/amin/hello"
+	destination="${destination.server}/home/amin/test/hello"
+	thirdparty="false"/>
+  </target>
+
+<target name="workflow" depends="declare">
+  <sequential>
+    <parallel>
+      <grid-copy
+	source="${source.server}/home/amin/source1.txt"
+	destination="${destination.server}/home/amin/destination1.txt"/>
+      <grid-copy
+	source="${source.server}/home/amin/source2.txt"
+	destination="${destination.server}/home/amin/destination2.txt"/>
+    </parallel>
+    <grid-execute
+	provider="${provider}"
+	serviceContact = "${jobManager}"
+	executable = "/bin/ls"
+	arguments="-l -a"
+	directory="/home/amin"
+	localExecutable="false"
+	redirect="true"
+	stdoutput=""
+	stderror=""/>
+  </sequential>
+</target>
+
+</project>

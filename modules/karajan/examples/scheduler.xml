@@ -1,0 +1,26 @@
+<karajan name="scheduler">
+  <include file="sys.xml"/>
+  <include file="task.xml"/>
+  
+  <scheduler type="default">
+  	<argument name="properties">
+		<map>
+			<map:entry key="jobsPerCpu" value="10"/>
+		</map>
+	</argument>
+	<argument name="handlers">
+		<list>
+		    <task:handler type="execution" provider="gt2"/>
+		    <task:handler type="file" provider="gridftp"/>
+		</list>
+	</argument>
+	<argument name="resources">
+	    <resources>
+	      <host name="plussed">
+    	    <service type="execution" provider="gt2" url="plussed.mcs.anl.gov:4002"/>
+        	<service type="file" provider="gridftp" url="gridftp://plussed.mcs.anl.gov:4001"/>
+	      </host>
+		</resources>
+    </argument>
+  </scheduler>
+</karajan>

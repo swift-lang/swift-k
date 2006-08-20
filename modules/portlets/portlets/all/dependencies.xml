@@ -1,0 +1,14 @@
+<project name="Project dependencies" default="deps" basedir=".">
+	<!-- project dependencies -->
+	<target name="deps">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="portlet/portlets/remoteExecution"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="portlet/portlets/setManage"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="portlet/portlets/taskSetUpload"/>
+		</ant>
+	</target>
+</project>

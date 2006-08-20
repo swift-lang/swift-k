@@ -1,0 +1,620 @@
+(08/02/2006)
+
+*** Fail if extra arguments are specified
+
+*** Added some preliminary stat capability to the service
+
+*** Also added a submit command to the service (to be used
+    locally).
+	
+*** Added -nosec and -local arguments to the service.
+
+*** RestartOnError can take a list of regexp as argument
+    (this is somewhat reduntant, since the same goal can
+	be achieved by the regexp itself, but it may provide
+	for somewhat cleaner code)
+	
+*** Some cleanups.
+
+(07/27/2006)
+
+*** Added task:transferParams() which looks up in etc/bdp.conf (the
+    same file as the one used by tgcp) to figure the GridFTP TCP
+	buffer size
+	
+*** Added tcpBufferSize argument to task:transfer()
+
+*** task:file:list() will list the files in the default directory if
+    no argument is specified
+
+(07/24/2006)
+
+*** Reorganized and cleaned up code, in particular the bits dealing
+    with element arguments
+
+*** Added a throttling scheduler. It does not do scheduling, but it
+    does throttling.
+	
+*** Added fault handlers to the scheduler
+	
+*** Added SSH throttling and restarting
+
+*** Reorganized the service code a little
+
+(07/12/2006)
+
+*** Fixed task aborts
+
+*** Added an experimental assignment operator: ':='. If there are multiple
+    values on the right hand side, they need to be grouped under one element.
+
+*** Allow "compact" blocks by not having to specify a sequential explicitly.
+    Just the parentheses.
+
+(07/11/2006)
+
+*** Fixed a busy loop in the late binding scheduler
+
+(07/08/2006)
+
+*** Better stack traces. Only relevant things are now shown.
+
+(07/07/2006)
+
+*** Don't update/remove the channel list if a channel already existed
+
+*** Corrected problems with stack unwinding on errors
+
+*** Added support to store arbitrary strings in the log file
+
+(06/26/2006)
+
+*** Fixed a bug involving hosts without names
+
+*** Fixed a problem with the lock release on the log file (rlog library)
+
+*** Updated the viewer a little including some preliminary saving 
+    capabilities
+
+(06/21/2006)
+
+*** Fixed a case sensitivity problem with arguments
+
+*** Made stderr a commutative channel
+
+*** Added multi-level submission throttling. It limits the number of 
+    concurrent submissions that can happen at one time
+	
+*** The scheduler complains now if trying to set a property that is 
+    unknown
+	
+*** Optimized access to channels
+
+
+(06/20/2006)
+
+*** Added ability to apply "task transformations" in the scheduler, after
+    a task has been bound to a service
+	
+*** Added some code to allow specification of properties through their own
+    channel, instead of as a list.
+	
+*** Fixed a problem with parallel iterators when a stack frame would be
+    removed when it should not have been.
+	
+*** Removed cache argument in user defined elements. It was undocumented
+    and the same functionality can be acheived using cache() or cacheOn()
+
+*** Ability to add custom channels for stdout and stderr when embedding
+    from Java
+
+(05/10/2006)
+
+*** Fixed a NPE when defining user elements. It was only visible if the 
+    definition was done in sys.
+	
+*** Added fold(lambda, initial, ...). Similar to a feedback loop, it allows
+    certain things to accumulate state over the values on a channel.
+
+(04/25/2006)
+
+*** Kernel elements are always defined globally. Due to the shallow definition
+    lookup not having this was causing problems with the service.
+	
+*** Fixed a problem with the wrong thing being sent to the service
+
+*** LinkedStack throws EmptyStackException instead of NPE if leave() is 
+    called on an empty stack
+	
+*** Function collection invocations should not print warnings on exceptions.
+    They can very well be things that are caught and handled properly.
+
+(04/20/2006)
+
+*** Updated the maybe test to also test for more than one child element
+
+(04/19/2006)
+
+*** Fixed a few problems with aborts:
+	- If something wouldn't actually abort after being aborted
+	the state manager would keep sending it abort events.
+	- If an element would be aborted and then it will fail/complete
+	it would do so with a messed up stack. The state manager now makes
+	a copy of the stack when actually aborting something.
+	
+*** Fixed quoted list to not optimize things. It was broken.
+
+*** Fixed maybe() to work properly if used with more than one child element
+
+(04/18/2006)
+
+*** Fixed wait() to abort properly
+
+*** Fixed choice() to always have error defined
+
+*** Fixed a problem with exports
+
+*** Added partial support to task:transfer
+
+*** str:chr() was incorrectly sys:chr() in sys-common
+
+*** Fixed file:write() to convert objects to strings using TypeUtil. Arguably
+    it should actually write binary data, or at least there should be some
+	element that does. The problem was that Throwable.toString() does not
+	return the stack trace.
+	
+*** Fixed a problem with optional arguments not being seen properly when 
+    no mandatory arguments were present
+	
+*** Fixed a problem with the arguments to a user defined element were executed
+    in the definition context. They should be executed in the calling context.
+	
+*** Imported files must now have their own imports, and they cannot use the
+    ones from the importing context. Fixed the settings.* files in tests/ 
+	accordingly
+	
+*** Fixed info() to print proper information about user defined elements
+
+(04/12/2006)
+
+*** Put back ... for the command line arguments. The cmdline:arguments global
+    is still there
+	
+*** Some misc. cleanups
+
+*** Added a few methods for tree manipulation (replaceElement, removeElement)
+
+(04/10/2006)
+
+*** changed sys:numberformat from (value, pattern) to (pattern, value)
+
+(04/06/2006)
+
+*** Added ExecutionContext.waitFor()
+
+*** Moved ExecutionContext from karajan.stack to karajan.workflow
+
+*** Made "executable" and "arguments" arguments to task:execute non-optional.
+    They can be omitted, but the first two positional arguments map to them.
+	
+*** Added a KarajanWorkflow class
+
+*** Changed kernel:export to export a set of immediately enclosed definitions
+    if the other arguments are missing.
+	
+*** Added a "thirdparty" argument to task:transfer. Ideally the abstractions
+    should figure out when a third party transfer can be done.
+
+(03/31/2006)
+
+*** A general code clean-up
+
+*** Element definitions are now portable in the sense that
+    the lookup for the elements inside the body of the definition
+	is not done in the current scope but in the scope in which the
+	definition was created. This makes things closer to lexical 
+	scoping. On the other hand it still allows dynamic definitions
+	that are different for different threads. Unfortunately, lookups
+	are only performed once, since they are expensive, thus once bound
+	an element keeps the same binding.
+	
+*** Added sys:each(list). It returns each element of the list (or
+    something else that can be iterated) as individual values
+	
+*** Added list:get(list, index)
+
+*** task:execute() shows better error message if both executable and
+    specification are missing
+
+*** Cleaned up the event handling in most elements. Low level things are
+    not as visible. Instead of elements intercepting events, they now
+	override methods like 'childCompleted'
+	
+*** Most heavily used collections now use adaptive sizing. For example
+    the map with the properties for an element, instead of being initialized
+	with the default size of 17 (or whatever it is), is now initialized with
+	a size that reflects the average of the sizes of all property maps (for
+	elements), which is closer to 2 or 3 (actually slightly higher than the
+	average, and also corrected for the map load factor).
+	
+*** Removed some obsolete classes
+
+*** Command line arguments are not available as ... in the main program. They
+    are now instead accessible through the "cmdline:arguments" global (reminds
+	me; those should be constants).
+	
+*** Changed the transliterator (the one that converts symbols to their internal
+    forms in the parser) to not instantiate a new Character for each character 
+	that is checked. Use a MutableCharacter instead.
+	
+*** No socket timeouts on persistent TCP channels
+
+*** Some restructuring of the marshaling logic (elements are marshaled
+    differently depending on whether they are part of source code or
+	a reference on the stack). A policy is used now instead of a condition
+	in the marshaler.
+	
+*** The state manager was initializing a timer even if checkpoints were
+    disabled. Not any more.
+	
+*** Added channel:fork(count), and channel:close(channel). They (along with
+    other things) allow Data Flow style programming.
+
+*** Added sys:stats(). It returns information about memory usage, thread count,
+    and number of CPUs. Especially useful to get statistics from services.
+	
+*** Added Condor DAGMan style restart logs (rlog library)
+
+*** Added sys:self(). It allows recursive calls in lambdas without the 
+    necessity to bind them to names. For completeness and because it's 
+	just a few lines of code.
+	
+*** Added sys:exclusive(): lexical mutual exclusion.
+
+*** In the service, if a comm channel has no contact information 
+    (on how to re-establish the connection), it should not attempt
+	to do so (a sure way to get a NPE).
+	
+*** Updated the HTML library to not export internally used elements
+
+*** Updated CHANGES.txt ;)
+	
+
+(03/16/2006)
+
+*** Added missing ProgressMonitoringEventType.java
+
+(03/15/2006)
+
+*** task:transfer now accepts srcprovider and destprovider if two 
+    different providers are needed
+	
+*** made the transfer poll timer static (one per JVM instance) and
+    re-enabled transfer progress events (if monitoring is enabled)
+
+(01/03/2006)
+
+*** If a function returns an array of primitives (say, char[]) return
+    that as a single value instead of multiple
+	
+*** Added missing handling for -help in the loader
+
+*** Added conversion from String to char[] in java invocations, thus
+    fixing problems with passwordAuthentication and
+	publicKeyAuthentication.
+	
+*** Updated gt4.xml
+
+(12/23/2005)
+
+*** Fixed a synchronization bug in the core event handling. It could
+    cause lock-ups on SMP machines
+	
+*** Fixed the service to not send replies from the same threads that
+    processes incoming requests. It was causing a "distributed deadlock"
+	in which both server and client would block trying to flush the TCP
+	output buffer, while not being able to process any requests.
+	
+*** Added a new stack (LinkedStack) which uses a linked list of frames
+    but links to an existing stack for shared frames. It's more like a
+	tree of frames, but with each 'stack' object seeing a different
+	path to the root.
+	
+*** Rewrote the channel buffering/ordering logic to use less memory and
+    be more efficient.
+	
+*** Rewrote the way "trust" is considered when the service is running in 
+    shared mode. Local libraries are considered "trusted" code, therefore
+	they can use restricted things.
+	
+*** Added missing -monitor command line flag. It pops a window that graphs
+    various things over time (memory, threads, etc.)
+	
+*** Compress source of remote workflows when sending over to the service.
+
+*** Added math:exp (e^x) and math:random()
+
+*** Better error messages (some "smart" exception chain message extraction)
+
+(11/23/2005)
+
+*** Fixed a concurrency bug with return value ordering in parallel 
+    elements. It looks like appendAll() was not properly implemented
+	in the ordered vargs.
+
+*** Fixed task:transfer to not require a provider. In this case it will
+    use the first service of a host. It is still required if the host 
+	is a string contact. Also fixed it to properly use/set security 
+	contexts on used services
+	
+*** Some attempts at fixing the debugger
+
+*** Always have ... defined in project()
+
+(11/22/2005)
+
+*** Use the argument parser in util.
+
+*** Added info(), which can be used to get information about defined
+	elements and their arguments
+	
+*** Added the -execute option to the loader. It can be used to pass a
+    script as a string
+	
+*** Fixed an issue with the thread manager counting outside threads, 
+    which caused problems if Karajan was started from Tomcat.
+	
+*** Command line arguments are passed in '...'
+
+
+(11/09/2005)
+
+*** Import/include now has a "export" argument which tells it to
+	transparently export all definitions that it gets.
+	
+*** The meaning of "." in the library search path for import/include
+	was changed to mean "the current directory of the currently executing
+	file". That means that including "java.xml" from "task.xml" the latter 
+	of which is in the class path, will not include the "java.xml" from the
+	current directory, but rather the one from the class path.
+	
+*** Augmented channels with commutativity. When returning values
+	on a commutative channel, the order does not need to be maintained.
+
+(11/08/2005)
+
+*** Added a catch element which can be used with choice to filter
+    specific errors
+	
+*** Added guard(), something similar to try/finally. try blockA finally blockB (Java)
+	would "translate" to guard(blockA, blockB)
+	
+*** Aborts are now handled like failures. This allows clean-up code to be used even
+	if aborts occur.
+
+(11/02/2005)
+
+*** Fixed various problems with onError
+
+(10/31/2005)
+
+*** Fixed file operation tasks not having the proper number of required
+    services.
+
+(10/29/2005)
+
+*** Updated tests since the hyphen is not a valid identifier character
+    any more. 
+	
+*** Added the maybe element, which acts as a noop if an error occurs
+    while executing its arguments.
+
+(10/17/2005)
+
+*** Added operators to the native syntax. The unfortunate side-effect
+    to this is that hyphens cannot any more be used in identifiers.
+	I suppose Karajan is stuck now with either Java naming conventions,
+	or the C ones. Since the identifier syntax is shared between
+	the native and XML versions, this applies to the XML syntax
+	as well.
+	
+*** Removed the old service code. It was insecure, slow, and had little
+    features.
+
+*** Added an EXPERIMENTAL service, which can be used to submit remote scripts.
+    It can be configured using regexps on host names to use persistent 
+	connections, polling, callbacks, or a combination of these.
+
+*** Added a restricted mode, which can be used to securely multiplex
+    between multiple users. This is only used when the service is
+	started in shared mode (a feature still in development). The
+	unfortunate part is that access to certain things (such as 
+	the Java library) is forbidden.
+
+*** Changed they way libraries define elements. A library will now
+    export definitions, using the export element, which simply returns
+	a definition object on the default channel. The import element 
+	(an alias to 'include') will bind all arguments on the default
+	channel as definitions
+	
+*** Added a new core event system. It offers relatively the same
+    performance as the old one, but the implementation is more
+	'correct' (proper synchronization). It uses the concurrent
+	libraries from Java 1.5 (a backport is provided, so it will
+	also work with Java 1.4)
+
+*** Added registers to the stack for storing frequently used data,
+    thus removing the need for a hash table lookup. Performance measurements
+	however show that this yields little overall improvement.
+	
+*** Split caching into two elements: cache and cacheOn. The former will
+    cache lexically, while the latter will cache on a given reference.
+
+*** Better distinction between static state and run-time state. It used
+    to be that most statically, globally shared things would go into the
+	the root node, which required the presence of the entire tree in 
+	order to execute anything. Now, it has moved into an 'execution context', 
+	which is accessible through the stack.
+	
+*** Added an EXPERIMENTAL option to the launcher to save the cache to the 
+    disk, and automatically re-load it when the same file is executed again.
+	
+*** Other small bug-fixes and enhancements
+
+(08/06/2005)
+
+*** Added uParallel and uParallelFor (unbuffered versions) - returns are
+    out of order
+	
+*** Fixed isDefined to take globals into consideration
+
+*** Fixed isDefined case-sensitivity
+
+*** Added 'macros'. Basically an element with the ability to control the
+    evaluation of its arguments. The 'macro' simply receives its arguments
+	as a list of lambdas. It is not technically a macro, since everything
+	happens at run-time.
+	
+*** Added a define element. It binds a lambda to a name. I'm thinking that
+    in the future the current way of defining elements be removed:
+	instead of element(ident, args, body) it should be define(ident, element(args, body)).
+	It allows the separation of the binding process from the particular definition, since
+	there is more than one type of element definition. The associated code
+	should be simpler, thus possibly less buggy. As a (nice) side effect, it
+	allows more flexible manipulation of lambdas.
+
+(07/28/2005)
+
+*** Changed parallel and parallelFor to have deterministic order 
+    on the return values. This pretty much makes f(sequential(...)) 
+	equivalent to f(parallel(...)) if ... are pure. The unbuffered
+	versions are still there with a 'U' prefix, but they are not mapped
+	in sys.
+	
+*** Updated the parser with better error messages in certain cases.
+
+*** Fixed problem with user defined elements that didn't have lowercase
+    arguments in the definition.
+	
+*** Added a force argument to dir:remove.
+
+
+(06/28/2005)
+
+*** Schedulers are now configurable through the properties file
+
+*** Batch scheduler projects can now be attached to a service instead
+	of being specified with every job submission
+	
+*** Added an experimental adaptive scheduler
+
+(05/14/2005)
+
+*** Added a 'match' argument to restartOnError. Also added check in
+    ignoreErrors to see if the match argument was evaluated properly.
+
+(05/13/2005)
+
+*** Fixed scheduler to not fail the task when resources are not 
+    available (Bug #3346)
+	
+*** Added tests for execution both scheduled and unscheduled
+
+(05/10/2005)
+
+*** Fixed case sensitive set in XML. Changed expression parser
+    to use IDENTIFIER() from the translator. Updated echo() to
+	output to streams. Updated from print() to echo() in HTML 
+	library.
+	
+*** Providers are now case-insensitive. 
+
+*** Whenever the 'local' provider is used, the 'host' argument
+    is not necessary for task:execute.
+
+(05/08/2005)
+
+*** The "If" construct works now without a condition node. The
+    condition is now implied to be in the first element after the if.
+
+*** Moved indispensable elements to the kernel: namespace. 
+
+*** Moved the java elements out of sys and into java.
+
+*** Added aliases to function collection classes, such the arguments
+    and implementing method are described only once.
+
+*** The arguments for the scheduler have proper names now instead of
+    the figure-out-by type method.
+
+*** Added argument checking to java:execute
+
+*** Moved the stream argument from print() to echo(), so that print
+    stays clean. An elemental ;) way should though be implemented for
+    writing to streams (where there is no open/close).
+
+(05/04/2005)
+
+*** Added 'redirect' argument to task:execute. It will print the task
+    output on the screen
+
+(05/02/2005) 
+
+*** Fixed future iterator synchronization.
+
+*** Added a count for dynamically created event busses to -showstats
+
+*** Various cleanups.
+
+------------------ v 0.31 ------------------
+(04/30/2005) 
+
+*** Added new sort-of-lisp-like syntax
+
+*** Formalized argument processing
+
+*** Removed redundant for/foreach. Now it's only for
+
+*** Changed parallel for from being an argument to a new element
+
+*** Added futures for asynchronous results
+
+*** Added parallel elements (which evaluate their arguments in
+    parallel with their body)
+
+*** Added the choice element (similar to try/catch)
+
+*** Added the parallelChoice element (arbitrated race)
+
+*** Added the concept of channels (named vargs), and their supporting
+    elements
+
+*** Added a print element. It uses channels (so it has functional
+    behavior instead of the side-effect-style echo)
+
+*** Rewrote the event classes to simplify them.
+
+*** Switched to xstream (xstream.codehaus.org) for serialization
+    /deserialization to/from XML. The state serialization and the
+    source serialization are now done with the same
+    library. Underneath it uses the xpp3 parser. Seems to be pretty
+    fast.
+
+*** Rewrote the event bus. It can now create threads on the fly if one
+    bus is blocked processing another event (usually from badly
+    behaved elements), and re-locate events to the newly created bus.
+
+*** Added an experimental (and buggy) debugger.
+
+*** Improved the checkpointing. it may not work if complex,
+    unserializable objects are put on the stack).
+
+*** Began adding File Operations from the CoG Abstractions.
+
+*** Remove the forward arguments. Hard to program, hard to maintain,
+    error prone.
+
+*** Made some performance improvements (in general optimizations for
+    certain common execution patterns)
+
+*** Misc. maintenance things not worth mentioning

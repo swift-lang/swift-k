@@ -1,0 +1,60 @@
+<!--This is a Karajan XML file for demonstrating the mail.xml package--> 
+<!--TO USE FOLLOW THE STEPS BELOW-->
+<!--1. Please appropriately change the SMTPServer and the mail send 'from' host in 'maildate' element-->
+<!--2. Also modify the email addresses in the workflow section-->
+
+<project>
+	<include file="sys.xml"/>
+	<include file="mail.xml"/>
+	<include file="forms.xml"/>
+				
+	<!--Grid Execute to acquire current date through local provider-->    
+	<element name="getdate" arguments="">
+		<gridExecute host="localhost" 
+	    executable="date"
+	    stdout="output"  
+	    provider="local"/>
+	    <readFile file="output"/>
+	</element> 
+	
+	<!--Prompt current date in a form dialog-->       
+	<element name="showdate">
+	  <form:messageDialog title="output">
+	  	<argument name="message">
+		  	<getdate/>
+		</argument>
+	  </form:messageDialog>
+	</element>  
+	
+	<!--ONE SHOULD ONLY MODIFY BELOW THIS LINE-->
+	<!--Mails the local machine date to specified email address-->
+	<element name="maildate" arguments="to">
+		<mail:setSMTPServer host="smtp.mcs.anl.gov"/>
+		<mail:send from="pankaj@mcs.anl.gov" to="{to}" subject="Current time is:">
+			<getdate/>
+		</mail:send>
+	</element> 
+	
+	<element name="mailmessage" arguments="to, subject, mymessage">
+		<mail:setSMTPServer host="smtp.mcs.anl.gov"/>
+		<mail:send from="pankaj@mcs.anl.gov" to="{to}" subject="{subject}">
+			<variable>mymessage</variable>
+		</mail:send>
+	</element> 
+	
+	
+	<!--Start of workflow-->
+	<sequential>
+		<set name="welcomemsg" value="You are enrolled in the Karajan workflow demo!"/>
+		<set name="mobile1" value="enter@emailAddresssHere.com"/>
+		<set name="mobile2" value="enter@emailAddresssHere.com"/>
+		
+		<mailmessage to="{mobile1}" subject="Welcome" mymessage="{welcomemsg}"/>
+		<!--Wait ten seconds-->
+		<wait delay="10000"/>
+		<mailmessage to="{mobile2}" subject="Welcome" mymessage="{welcomemsg}"/>
+
+	</sequential>
+  <!--End of workflow-->      
+  
+</project>

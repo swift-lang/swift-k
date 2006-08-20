@@ -1,0 +1,17 @@
+<karajan>
+	<!-- a basic sum -->
+	<map>
+		<map:entry key="name" value="sum"/>
+		<map:entry key="test">
+			<element arguments="">
+				<sum>
+					<number>1</number>
+					<number>2</number>
+					<number>3</number>
+				</sum>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result" value="6.0"/>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

@@ -1,0 +1,29 @@
+NAME
+  rm - remove a file
+
+SYNOPIS
+  rm [FILE_NAME]
+
+DESCRIPTION
+  This command allows a user to remove a file (FILE_NAME).
+
+OPTIONS
+  [--help]
+     displays the options
+
+EXAMPLES
+  1) Removes the file "myFile" if it exists
+
+    > rm myFile
+
+WARNINGS
+  This command is not enabled to work well with the group
+  command. If there are more than one connections associated
+  with the last open, then it uses the last connection.
+
+TO DO
+  Allow the user to choose which connection to perform the rm command
+  on when multiple connections are associated with the last open.
+
+SEE ALSO
+  open, cd, put, pwd, rmdir

@@ -1,0 +1,13 @@
+<karajan>
+	<cache>
+		<namespace prefix="java">
+			<export name="classOf" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.functions.Java"/></export>
+    		<export name="invokeMethod" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.JavaMethodInvocationNode"/></export>
+		    <export name="new" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.NewJavaObjectNode"/></export>
+			<export name="executeMain" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.ExecuteJavaNode"/></export>
+			<export name="waitForEvent" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.EventWait"/></export>
+			<export name="getField" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.functions.Java"/></export>
+			<export name="null" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.functions.JavaNull"/></export>
+		</namespace>
+	</cache>
+</karajan>

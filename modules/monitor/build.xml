@@ -1,0 +1,418 @@
+<!-- ===================================================================
+ This code is developed as part of the Java CoG Kit project
+ The terms of the license can be found at http://www.cogkit.org/license
+ This message may not be removed or altered.
+==================================================================== -->
+
+<project name="GUSS" default="compile-client" basedir=".">
+  <target name="init">
+    <property file="guss.properties"/>
+    <!--this contains paths and ports for user's tomcat, axis, portal, etc. which user will edit.-->
+    
+    <property name="package-path" value ="org/globus/cog/monitor/guss"/>
+    <property name="sourceDir" value="./src/${package-path}/"/>
+    <property name="outDir" value="./dist"/>
+    <property name="packagename" value="org.globus.cog.monitor.guss"/>
+    <property name="autogen" value="${outDir}/axisAutoSource"/>
+    <property name="stuffDir" value="${autogen}/${package-path}/subcreated"/>
+  
+    <!--seet up paths to all the jars we need to compile.  We assume the user
+    already has the axis jars somewhere (he'll edit guss.properties to tell
+    us where), but we provide the jfreechart and jsr168 jars.-->
+    <path id="axis.classpath">
+      <fileset dir="${axis-library}">
+	<include name="**/*.jar"/>
+      </fileset>
+    </path>	
+    <!--Set up path to axis-ant.jar so we can use axis-defined ant tasks: -->
+    <taskdef resource="axis-tasks.properties" classpathref="axis.classpath"/>
+    
+    <path id="jfreechart.classpath">
+      <fileset dir="./lib/jars/">
+	<include name="jcommon-0.9.5.jar"/>
+	<include name="jfreechart-0.9.20.jar"/>
+      </fileset>
+    </path>
+    
+    <path id="junit.classpath">
+      <fileset dir="${junit-location}">
+	<include name="**/*.jar"/>
+      </fileset>
+    </path>
+
+    <path id="jsr168.classpath">
+      <fileset dir="./lib/jars/">
+	<include name="portlet.jar"/>
+      </fileset>
+    </path>
+  </target>
+  
+  <path id="sql.classpath">
+    <fileset dir="./lib/jars">
+      <include name="mysql-connector-java-3.1.6-bin.jar"/>
+      <include name="postgresql-8.0-310.jdbc3.jar"/>
+      <include name="commons-collections-3.0.jar"/>
+      <include name="commons-dbcp-1.2.1.jar"/>
+      <include name="commons-pool-1.2.jar"/>
+    </fileset>
+  </path>
+
+  <target name="clean" depends="init">
+    <!--Make this remove backup files (ending in ~) too?-->
+    <delete>
+      <fileset dir=".">
+	<include name="**/*.class"/>
+      </fileset>
+      <fileset dir="${autogen}">
+	<include name="GUSS.wsdl"/>
+	<include name="**/*.java"/>
+	<include name="**/*.wsdd"/>
+      </fileset>
+      <fileset dir="${outDir}/lib/">
+	<include name="*.jar"/>
+      </fileset>
+      <fileset dir="${outDir}/WEB-INF"/>
+      <fileset dir="${outDir}">
+	<include name="GussPortlet.war"/>
+      </fileset>
+    </delete>
+  </target>
+  
+  <target name="start-tomcat" depends="init">
+<!--    <exec os="Linux" executable="${catalina-home}/bin/startup.sh"/>
+    <exec os="Windows" executable="${catalina-home}/bin/startup.bat"/> -->
+<!--    <ant dir="/homes/jdicarlo/uPortal_rel-2-4-2-quick-start" target="tomcatstart" inheritAll="false"/> -->
+    <exec os="Linux" executable="${demon-portal-scripts-dir}/daemon-portal.sh"/>
+  </target>
+  
+  <target name="restart-tomcat" depends="init">
+    <!--decide based on OS whether to call startup.sh or startup.bat -->
+<!--    <echo message="${os.name}"/>
+    <exec os="Linux" executable="${catalina-home}/bin/shutdown.sh"/>
+    <exec os="Linux" executable="${catalina-home}/bin/startup.sh"/>
+    <exec os="Windows" executable="${catalina-home}/bin/shutdown.bat"/>
+    <exec os="Windows" executable="${catalina-home}/bin/startup.bat"/>-->
+    
+<!--    <ant dir="/homes/jdicarlo/uPortal_rel-2-4-2-quick-start" target="tomcatstop" inheritAll="false"/>
+    <ant dir="/homes/jdicarlo/uPortal_rel-2-4-2-quick-start" target="tomcatstart" inheritAll="false"/> -->
+
+    <exec os="Linux" executable="${demon-portal-scripts-dir}/restart-daemon-tomcat.sh"/>
+  </target>
+  
+  <target name="do-junit" depends="compile-client">
+    <mkdir dir="${outDir}/tests"/>
+    <javac srcdir="./tests/" destdir="${outDir}/tests">
+      <classpath>
+	<pathelement path="${outDir}/axisServerClasses/"/>
+	<pathelement path="${outDir}/axisClientClasses/"/>
+	<path refid="junit.classpath"/>
+      </classpath>
+    </javac>
+    <!--    <java classname="junit.textui.TestRunner"> -->
+    <java classname="org.globus.cog.monitor.guss.AllTester">
+      <classpath>
+	<pathelement path="${outDir}/axisClientClasses/"/>
+	<pathelement path="${outDir}/axisServerClasses/"/>
+	<pathelement path="${outDir}/axisAutoSource/"/>
+	<pathelement path="${outDir}/tests/"/>
+	<path refid="axis.classpath"/>
+	<path refid="junit.classpath"/>
+	<path refid="jfreechart.classpath"/>
+	<path refid="sql.classpath"/>
+      </classpath>
+<!--      <arg value="org.globus.cog.monitor.guss.GFTPRecordTester"/> -->
+    </java>
+  </target>
+  
+  <target name="do-javadoc" depends="compile-service">
+    <mkdir dir="./javadoc_out"/>
+    <javadoc destDir="./javadoc_out">
+      <fileset dir="${sourceDir}">
+	<include name="**/*.java"/>
+      </fileset>
+      <classpath>
+	<path refid="junit.classpath"/>
+	<path refid="axis.classpath"/>
+	<path refid="jfreechart.classpath"/>
+	<pathelement path="${outDir}/axisServerClasses/"/>
+      </classpath>
+    </javadoc>
+  </target>
+  
+  <target name="compile-service" depends="init">
+    <mkdir dir="${outDir}/axisServerClasses"/>
+    <mkdir dir="${outDir}/lib"/>
+    <javac srcdir="${sourceDir}/server" destdir="${outDir}/axisServerClasses">
+      <classpath>
+	<path refid="junit.classpath"/>
+	<path refid="axis.classpath"/>
+	<path refid="jfreechart.classpath"/>
+	<path refid="sql.classpath"/>
+      </classpath>
+    </javac>
+    <jar destfile="${outDir}/lib/GUSSService.jar">
+      <fileset dir="${outDir}/axisServerClasses/">
+	<include name="**/*.class"/>
+      </fileset>
+      <!--Put guss.properties into the jar so service can read it at runtime-->
+      <fileset file="./guss.properties"/>
+    </jar>
+  </target>
+  
+  <target name="make-WSDL" depends="compile-service">
+    <mkdir dir="${autogen}"/>
+    <axis-java2wsdl classname="${packagename}.GUSSIF"
+		    implclass="${packagename}.GUSSImpl"
+		    location="${axis-server}/axis/services/GUSS"
+		    output="${autogen}/GUSS.wsdl"
+		    namespace="urn:${packagename}">
+      <classpath>
+	<pathelement path="${outDir}/axisServerClasses/"/>
+	<path refid="jfreechart.classpath"/>
+	<path refid="axis.classpath"/>
+      </classpath>
+      <mapping namespace="urn:${packagename}" package="${packagename}"/> 
+    </axis-java2wsdl>
+  </target>
+  
+  <target name="make-stuff" depends="make-WSDL">
+    <axis-wsdl2java
+	output="${autogen}"
+	deployscope="Application"
+	serverside="true"
+	url="${autogen}/GUSS.wsdl"> 
+      <mapping namespace="urn:${packagename}" package="${packagename}.subcreated"/> 
+    </axis-wsdl2java>
+    <!--the generated deploy.wsdd has a reference to the wrong Impl class (the newly generated, empty one.)  Change this using replace to point it at my Impl class-->
+    <replace
+	file="${stuffDir}/deploy.wsdd"
+	token="${packagename}.subcreated.GUSSSoapBindingImpl"
+	value="${packagename}.GUSSImpl"/>
+    
+  </target>
+  
+  <!--This makes GUSSClient.jar.  See also make-war which makes GUSSPortlet.war which contains everything this does and then some. -->
+  <target name="compile-client" depends="make-stuff">
+    <mkdir dir="${outDir}/axisClientClasses/"/>
+    <javac srcdir="${stuffDir}" destdir="${outDir}/axisClientClasses" classpathref="axis.classpath"/>
+    <javac srcdir="${sourceDir}/client"
+	   destdir="${outDir}/axisClientClasses"
+	   includes="GUSSClient.java SwingClient.java">
+      <classpath>
+	<path refid="axis.classpath"/>
+	<path refid="jfreechart.classpath"/>
+        <fileset dir="./dist/lib">
+          <include name="GUSSService.jar"/>
+        </fileset>
+	<fileset dir="${outDir}/axisServerClasses/">
+          <include name="**/*.class"/>
+        </fileset>
+      </classpath>
+    </javac>
+    <jar destfile="${outDir}/lib/GUSSClient.jar">
+      <fileset dir="${outDir}/axisClientClasses/">
+	<include name="**/*.class"/>
+      </fileset>
+      <fileset file="./guss.properties"/>
+    </jar>
+  </target>
+  
+  
+  <!--java org.apache.axis.client.AdminClient deploy.wsdd -->
+  <!--Deployment is idempotent, as it should be. -->
+  <target name="deploy-service" depends="make-stuff">
+    <!-- now we have the little problem that axis server won't accept axis-admin unless enableRemoteAdmin has been set to true in server-config.wsdd.  But leaving this set to true is a security hole, so we want to reset it to false right after the deployment.  Further complicating the problem: a fresh axis installation may not even have a server-config.wsdd yet.  -->
+    <!-- replace file="${webappDir}/server-config.wsdd"
+	 token="&quot;enableRemoteAdmin&quot; value=&quot;false&quot;"
+	 value="&quot;enableRemoteAdmin&quot; value=&quot;true&quot;"/ -->
+    <!-- Doesn't work because it needs to restart to read server-config.-->
+    <axis-admin 
+	port="${axis-port}"
+	hostname="localhost"
+	xmlfile="${stuffDir}/deploy.wsdd"
+	debug="true"
+	url="${axis-server}/axis/services/AdminService"
+	username="jdicarlo"
+	password="cogrules"
+	/>
+    <!-- Send ant back to turn off remote admin again? -->
+    
+    <!--Put needed jars (GUSS, JFreeChart) into axis/WEB-INF/lib: -->
+    <copy todir="${webappDir}/lib">
+      <fileset file="${outDir}/lib/GUSSService.jar"/>
+      <fileset file="lib/jfreechart-0.9.20.jar"/>
+      <fileset file="lib/jcommon-0.9.5.jar"/>
+    </copy>
+    
+    <!-- mkdir tomcat/webapps/ROOT/tempimages if it does not already exist: -->
+    <mkdir dir="${temp-file-dir}"/>
+    
+    <antcall target="restart-tomcat"/>
+  </target>
+  
+  
+  
+  <!--java org.apache.axis.client.AdminClient undeploy.wsdd -->
+  <target name="undeploy-service" depends="make-stuff">
+    <axis-admin 
+	port="${axis-port}"
+	hostname="localhost"
+	xmlfile="${stuffDir}/undeploy.wsdd"
+	debug="true"
+	url="${axis-server}/axis/services/AdminService"
+	username="repotest"
+	password="repotest"
+	/>
+    <!-- Get rid of the jars we installed, too: -->
+    <delete>
+      <fileset file="${webappDir}/lib/GUSSService.jar"/>
+    </delete>
+  </target>
+
+<!-- Test stuff -->  
+  
+  <target name="test-service" depends="compile-service">
+    <java classname="org.globus.cog.monitor.guss.GUSSImpl">
+      <sysproperty key="DISPLAY" value="localhost:10.0"/>
+      <classpath>
+	<fileset dir="${outDir}/lib/">
+	  <include name="GUSSService.jar"/>
+	</fileset>
+	<path refid="sql.classpath"/>
+	<path refid="jfreechart.classpath"/>
+      </classpath>
+    </java>
+  </target>
+  
+  <target name="test-client" depends="compile-client">
+    <java classname="org.globus.cog.monitor.guss.GUSSClient">
+      <classpath>
+	<pathelement path="${outDir}/axisClientClasses/"/>
+	<pathelement path="${outDir}/axisServerClasses/"/>
+	<pathelement path="${outDir}/axisAutoSource/"/>
+	<path refid="axis.classpath"/>
+      </classpath>
+      <arg value="${service-hostname}"/>
+      <arg value="${service-port}"/>
+    </java>
+  </target>
+
+  <target name="run-swing" depends="compile-client">
+    <java classname="org.globus.cog.monitor.guss.SwingClient">
+      <classpath>
+	<pathelement path="${outDir}/axisClientClasses/"/>
+	<pathelement path="${outDir}/axisServerClasses/"/>
+	<pathelement path="${outDir}/axisAutoSource/"/>
+	<path refid="axis.classpath"/>
+	<path refid="jfreechart.classpath"/>
+      </classpath>
+      <arg value="localhost"/>
+      <arg value="${axis-port}"/>
+    </java>
+  </target>
+  
+  <target name="pre-summarize-database" depends="compile-service">
+    <java classname="org.globus.cog.monitor.guss.DatabaseTool">
+      <!--call this with -DsummaryTime=hour or -DsummaryTime=day, etc -->
+      <arg value="${summaryTime}"/>
+      <classpath>
+	<fileset dir="${outDir}/lib/">
+	  <include name="GUSSService.jar"/>
+	</fileset>
+	<path refid="sql.classpath"/>
+	<path refid="jfreechart.classpath"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="database-report" depends="compile-client">
+    <java classname="org.globus.cog.monitor.guss.GUSSClient">
+      <classpath>
+	<pathelement path="${outDir}/axisClientClasses/"/>
+	<pathelement path="${outDir}/axisServerClasses/"/>
+	<pathelement path="${outDir}/axisAutoSource/"/>
+	<path refid="axis.classpath"/>
+      </classpath>
+      <arg value="${service-hostname}"/>
+      <arg value="${service-port}"/>
+      <arg value="--report"/>
+    </java>
+  </target>
+  
+  <!-- JSP STUFF -->
+  
+  <target name="deploy-jsp" depends="init">
+    <copy todir="${jsp-dir}">
+      <fileset file="./src/${package-path}/client/GUSSPage.jsp"/>
+    </copy>
+    <copy todir="${jsp-lib-dir}">
+      <fileset file="${outDir}/lib/GUSSClient.jar"/>
+      <fileset dir="${axis-library}" includes="*.jar"/>
+    </copy>
+  </target>
+  
+  <target name="undeploy-jsp" depends="init">
+    <delete>
+      <fileset file="${jsp-dir}/GUSSPage.jsp"/>
+      <fileset file="${jsp-lib-dir}/GUSSClient.jar"/>
+    </delete>
+  </target>
+  
+
+  <!-- PORTAL STUFF -->
+
+  <!--Compile all the autogenerated classes along with GUSSClient and GUSSPortlet and put class files into WEB-INF/classes; then jar it into a .war.-->
+  <target name="make-war" depends="init">
+    <echo message="Make love, not war!"/>
+    <mkdir dir="${outDir}/WEB-INF"/>
+    <mkdir dir="${outDir}/WEB-INF/classes"/>
+    <javac srcdir="${stuffDir}" destdir="${outDir}/WEB-INF/classes" classpathref="axis.classpath"/>
+    <javac srcdir="${sourceDir}/client/"
+	   destdir="${outDir}/WEB-INF/classes" includes="GUSSPortlet.java GUSSClient.java">
+      <classpath>
+	<path refid="axis.classpath"/>
+	<path refid="jsr168.classpath"/>
+	<pathelement path="${outDir}/WEB-INF/classes"/>
+        <fileset dir="./dist/lib">
+          <include name="GUSSService.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+    <!--need to get a copy of GUSSConstants.class into the war file too-->
+    <copy todir="${outDir}/WEB-INF/classes/org/globus/cog/monitor/guss">
+      <fileset dir="${outDir}/axisServerClasses/org/globus/cog/monitor/guss">
+        <include name="GUSSConstants.class"/>
+      </fileset>
+    </copy>
+    <copy todir="${outDir}/WEB-INF">
+      <fileset dir=".">
+	<include name="portlet.xml"/>
+	<include name="web.xml"/>
+      </fileset>
+    </copy>
+    <jar destfile="${outDir}/GussPortlet.war"
+	 basedir="${outDir}"
+	 includes="WEB-INF/**/*"/>
+  </target>
+
+  <target name="deploy-uportal" depends="make-war">
+    <!--Run ant deployPortletApp -DportletApp=./GussPortlet.war from
+    uPortal/build.xml-->
+    <ant dir="${uPortalbase}" antfile="build.xml" target="deployPortletApp" inheritAll="false">
+      <property name="portletApp" value="${guss-home}/dist/GussPortlet.war"/>
+<property name="portletAppDir" value="${guss-home}/dist/"/>
+    </ant>
+    <antcall target="restart-tomcat"/>
+  </target>
+
+  <!--jar files that I had to put in tomcat/common/lib before this would work:
+  axis.jar
+  commons-discovery.jar
+  jaxrpc.jar
+  saaj.jar
+  wsdl4j.jar 
+
+-->
+
+</project>
+
