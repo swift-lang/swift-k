@@ -1,0 +1,48 @@
+NAME
+  cp - a third party transfer mechinism
+
+SYNOPIS
+  cp [FROM_URI] [TO_URI]
+
+DESCRIPTION
+  This command does not need to have a connection associated with it. Its
+  purpose is to copy a file from one remote machine (FROM_URI) to another 
+  (TO_URI). It is not meant to work from a remove machine to the local machine
+  or from the local machine to a remote machine. Both FROM_URI and TO_URI
+  should include a valid protocol, host, and port.
+
+OPTIONS
+  [--help]
+    displays the options
+  
+EXAMPLES
+  CORRECT USAGE 
+    1) The first example demonstrates that the url's port
+    when followed by a single / the base path will be the
+    user's home directory.
+
+      > cp gsiftp://sub.domain.net:1/test.TEST gsiftp://domain2.org:2/dir/test.TEST
+
+    2) The second example demonstrates that the url's port
+    when followed by a double / the base path will be the
+    root directory. This example shows how to replace the ls
+    command with another's implementation (assuming both ls
+    commands are at '/usr/bin/ls').
+
+      > cp gsiftp://sub.domain.net:1//usr/bin/ls gsiftp://domain2.org:2//usr/bin/ls
+
+  INCORRECT USAGE
+    1) This command is not meant to be a protocol to
+    transfer from a local machine. It is intended to
+    transfer files between two remote machines. If you wish
+    to do local transfer to remote or remote to local
+    transfer see commands 'get' and 'put'. Hence the
+    following will not work
+        
+      > cp file://local:1//usr/bin/ls gsiftp://newdomain.org:2222//usr/bin/ls
+
+WARNINGS
+  Currently the relative path does not work properly.
+
+SEE ALSO
+  get, put

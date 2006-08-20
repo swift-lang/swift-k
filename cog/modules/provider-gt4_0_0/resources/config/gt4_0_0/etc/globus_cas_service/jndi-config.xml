@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jndiConfig xmlns="http://wsrf.globus.org/jndi/config">
+    <service name="CASService">
+        <resource 
+            name="home"
+            type="org.globus.cas.impl.service.CasResourceHome">
+            <resourceParams>
+                <parameter>
+                    <name>factory</name>
+                    <value>org.globus.wsrf.jndi.BeanFactory</value>
+                </parameter>
+                <parameter>
+                    <name>resourceClass</name>
+                    <value>org.globus.cas.impl.service.CasResource</value>
+                </parameter>
+                <parameter>
+                    <name>maxAssertionLifetime</name>
+                    <value>86400</value>
+                </parameter>
+                <parameter>
+                    <name>voDescription</name>
+                    <value>Description of VO of CAS service</value>
+                </parameter>
+            </resourceParams>
+        </resource>
+        <resource 
+            name="databaseConfiguration"
+            type="org.globus.cas.impl.databaseAccess.CasDBOptions">
+            <resourceParams>
+                <parameter>
+                    <name>factory</name>
+                    <value>org.globus.wsrf.jndi.BeanFactory</value>
+                </parameter>
+                <parameter>
+                    <name>driver</name>
+                    <value>org.postgresql.Driver</value>
+                </parameter>
+                <parameter>
+                    <name>connectionURL</name>
+                    <value>jdbc:postgresql://127.0.0.1/casDatabase</value>
+                </parameter>
+                <parameter>
+                    <name>userName</name>
+                    <value>tester</value>
+                </parameter>
+                <parameter>
+                    <name>password</name>
+                    <value>foo</value>
+                </parameter>
+                <parameter>
+                    <name>maxWait</name>
+                    <value>1000</value>
+                </parameter>
+            </resourceParams>
+        </resource>
+        <resource name="mdsConfiguration"
+                  type="org.globus.wsrf.impl.servicegroup.client.MDSConfiguration">
+            <resourceParams>
+            <parameter> <name>reg</name>
+                        <value>false</value>
+            </parameter>
+            <parameter> <name>factory</name>
+                        <value>org.globus.wsrf.jndi.BeanFactory</value>
+            </parameter>
+            </resourceParams>
+        </resource>
+    </service>
+</jndiConfig>

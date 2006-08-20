@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions targetNamespace="http://wsrf.globus.org/types/profiling/wsdl"
+  xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+  <import location="timestamp.xsd" 
+    namespace="http://wsrf.globus.org/types/profiling"/> 
+  
+</definitions>

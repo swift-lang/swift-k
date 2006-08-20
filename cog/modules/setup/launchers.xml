@@ -1,0 +1,15 @@
+<project name="Launchers" default="create" basedir=".">
+	<target name="create">
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="cog-setup"/>
+			<property name="class-name" value="org.globus.cog.gui.setup.CoGSetup"/>
+		</ant>
+	</target>
+	<target name="webstart">
+		<ant antfile="${main.buildfile}" target="webstart.launcher">
+			<property name="launcher-name" value="cog-setup"/>
+			<property name="class-name" value="org.globus.cog.gui.setup.CoGSetup"/>
+			<property name="display-name" value="Java CoG Kit Setup"/>
+		</ant>
+	</target>
+</project>

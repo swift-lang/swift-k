@@ -1,0 +1,34 @@
+NAME
+    grid-change-pass-phrase - TBD
+
+SYNOPSIS
+        grid-change-pass-phrase [-help] [-version] [-file private_key_file]
+
+DESCRIPTION
+
+    Changes the passphrase that protects the private key. If
+    the -file argument is not given, the default location of
+    the file containing the private key is assumed:
+
+    C:\Documents and Settings\username\.globus\userkey.pem
+
+    under unix it is 
+
+    ~/.globus/userkey.pem 
+
+OPTIONS
+
+    -help | -usage
+	Display usage.
+
+    -version
+	Display version.
+
+    -file location
+	Change passphrase on key stored in the file at
+	the non-standard location 'location'.
+
+SEE ALSO
+    ChangePassPhrase
+
+

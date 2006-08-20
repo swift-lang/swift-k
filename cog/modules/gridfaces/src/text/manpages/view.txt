@@ -1,0 +1,46 @@
+NAME
+  view - allows to view a file based upon the settings of the
+         mimehandler
+
+SYNOPIS
+  view [FILE_NAME]
+
+DESCRIPTION
+  Allows a user to view a file, FILE_NAME, based upon the class
+  regestered in the mimehandler class for that file type
+
+OPTIONS
+  [--help]
+     displays the options
+
+EXAMPLES
+  The files will be brought up in the class that is registered for
+  their file extention.  If the MimeHandler class is modified, then
+  these files could be opened in different classes.
+
+  1) This will bring up the file in the Image Viewer
+
+    > view myImage.gif
+
+  2) To bring up the webpage in the text editor (which can
+  browse basic webpages in non-edit mode). See "man texteditor" for
+  more information.
+
+    > view http://www.google.com
+
+  3) This will bring the file file:///fileName.txt in the
+  text editor. The file may be edited in edit mode.
+
+    > view file:///fileName.txt
+
+TO DO
+  Make it easier to change what file types are associated with what
+  commands. Currently, a user must edit the MimeHandler class.
+
+  There are an infinate number items that can be added to the text
+  editor. Syntax highlighting, grep command, editing of html files as
+  text (currently the editor parses the html document), and many more.
+
+SEE ALSO
+  imageviewer, texteditor
+

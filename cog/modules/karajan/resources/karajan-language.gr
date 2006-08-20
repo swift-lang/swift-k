@@ -1,0 +1,174 @@
+program := HVSPACES() IDENTIFIER("karajan") BEGINELEMENT() body ENDELEMENT() ;
+
+body :=
+	items EOF() |
+	EOF() ;
+	
+items := itemOrCommentOrNone HSPACES() moreItems ;
+
+moreItems := 
+	COMMASEP() expression moreItems |
+	HVSPACES() itemOrCommentOrNone |
+	E() commentOrNone ;
+		
+itemOrCommentOrNone := 
+	comment moreItems |
+	LITERAL(":=") IDENTIFIER("sys:set") BEGINELEMENT() SWAP() HVSPACES() expression ENDELEMENT() moreItems |
+	expression moreItems |
+	E() ;
+	
+commentOrNone :=
+	comment moreItems |
+	E() ;
+		
+item :=
+	list |
+	block |
+	value |
+	IDENTIFIER() HSPACES() action ;
+	
+separator := COMMASEP() | HVSPACES() ;
+		
+comment :=
+	LITERAL("//") SINGLELINECOMMENT() |
+	LITERAL("/*") MULTILINECOMMENT() HVSPACES() ;
+			
+list := LITERAL("[") IDENTIFIER("kernel:quotedlist") BEGINELEMENT() moreItems LITERAL("]") ENDELEMENT() ;
+
+block := LITERAL("(") IDENTIFIER("sys:sequential") BEGINELEMENT() moreItems LITERAL(")") ENDELEMENT() ;
+
+value := number | string STRING() ;
+
+action :=
+	LITERAL("(") TRANSLITERATE() BEGINELEMENT() moreItems LITERAL(")") ENDELEMENT() |
+	LITERAL("==") VARIABLE() IDENTIFIER("==") infixop< expression endExpr> |
+	LITERAL("=") TRANSLITERATE() HVSPACES() expression NAMED() |
+	VARIABLE() ;
+ 	
+string := LITERAL(""") stringExpression LITERAL(""") ;
+
+number :=
+	DIGITS() fractional |
+	LITERAL("+") DIGITS() fractional |
+	LITERAL("-") DIGITS() NEG() fractional ;
+	
+fractional :=
+	LITERAL(".") DIGITS() FLOAT() NUMBER() |
+	E() NUMBER() ;
+	
+stringExpression :=
+	NOTLITERAL(""") ANYTOKEN() moreStringExpression |
+	E() EMPTYSTRING() ;
+				
+moreStringExpression :=
+	NOTLITERAL(""") ANYTOKEN() CONCAT() moreStringExpression |
+	E() ;
+		
+expression := 
+	comment expression |
+	expitem moreExpression ;
+
+expitem := item HVSPACES() ; /* | parexp ; */
+	
+/* parexp := LITERAL("(") HVSPACES() expression HVSPACES() LITERAL(")") HVSPACES() ; */
+	
+moreExpression :=
+	comment moreExpression |
+	e0 moreExpression | e1 moreExpression | e2 moreExpression | 
+	e3 moreExpression | e4 moreExpression | e5 moreExpression |
+	e6 moreExpression |
+	E() ;
+
+e0 := o0 infixop< expitem me0> ;
+
+me0> := endExpr> ge0 ;
+
+ge0 := e0 | E() ;
+
+o0 :=
+	LITERAL("^") IDENTIFIER("^") ;
+
+e1 := 
+	comment |
+	o1 infixop< expitem me1> ;
+
+me1> := lt1 mlt1 endExpr> ge1 | endExpr> ge1 ;
+
+lt1 := e0 ;
+
+mlt1 := lt1 mlt1 | E() ;
+
+ge1 := e1 | E() ;
+
+o1 :=
+	LITERAL("*") IDENTIFIER("*") |
+	LITERAL("/") IDENTIFIER("/") |
+	LITERAL("%") IDENTIFIER("%") ;
+	
+
+e2 := o2 infixop< expitem me2> ;
+
+me2> := lt2 mlt2 endExpr> ge2 | endExpr> ge2 ;
+
+lt2 := e1 | lt1 ;
+
+mlt2 := lt2 mlt2 | E() ;
+
+ge2 := e2 | E() ;
+
+o2 :=
+	LITERAL("+") IDENTIFIER("+") |
+	LITERAL("-") IDENTIFIER("-") ;
+
+e3 := o3 infixop< expitem me3> ;
+
+me3> := lt3 mlt3 endExpr> ge3 | endExpr> ge3 ;
+
+lt3 := e2 | lt2 ;
+
+mlt3 := lt3 mlt3 | E() ;
+
+ge3 := e3 | E() ;
+
+o3 :=
+	LITERAL("<=") IDENTIFIER("<=") |
+	LITERAL(">=") IDENTIFIER(">=") |
+	LITERAL("<") IDENTIFIER("<") |
+	LITERAL(">") IDENTIFIER(">") ;
+
+e4 := o4 infixop< expitem me4> ;
+
+me4> := lt4 mlt4 endExpr> ge4 | endExpr> ge4 ;
+
+lt4 := e3 | lt3 ;
+
+mlt4 := lt4 mlt4 | E() ;
+
+ge4 := e4 | E() ;
+
+o4 := 
+	LITERAL("==") IDENTIFIER("==") |
+	LITERAL("!=") IDENTIFIER("!=") ;
+
+e5 := o5 infixop< expitem me5> ;
+
+me5> := lt5 mlt5 endExpr> ge5 | endExpr> ge5 ;
+
+lt5 := e4 | lt4 ;
+
+mlt5 := lt5 mlt5 | E() ;
+
+ge5 := e5 | E() ;
+
+o5 :=
+	LITERAL("&") IDENTIFIER("&") ;
+
+e6 := o6 infixop< expression endExpr> ;
+
+o6 := 
+	LITERAL("|") IDENTIFIER("|") ;
+
+endExpr> := ENDELEMENT() HVSPACES() commentOrNone ;
+	
+infixop< := TRANSLITERATE() BEGINELEMENT() SWAP() HVSPACES() ;
+	

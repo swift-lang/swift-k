@@ -1,0 +1,22 @@
+<project>
+	<include file="sys.xml"/>
+	<include file="stopwatch.xml"/>
+	
+	<stopwatch:initialize count="2"/>
+	
+	<stopwatch:setName index="0" name="first"/>
+	<stopwatch:setName index="1" name="second"/>
+	
+	<stopwatch:start index="0"/>
+	<wait delay="1000"/>
+	<stopwatch:print index="0"/>
+	
+	<stopwatch:start index="1"/>
+	<parallel>
+		<wait delay="2000"/>
+		<wait delay="1000"/>
+	</parallel>
+	
+	<stopwatch:print index="1"/>
+	<stopwatch:print index="0"/>
+</project>

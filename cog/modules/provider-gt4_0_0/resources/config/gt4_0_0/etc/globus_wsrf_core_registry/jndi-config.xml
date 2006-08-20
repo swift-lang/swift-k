@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jndiConfig xmlns="http://wsrf.globus.org/jndi/config">
+
+    <service name="ContainerRegistryService">
+        <resource
+            name="home"
+            type="org.globus.registry.RegistryServiceHome">
+            <resourceParams>
+                <parameter>
+                    <name>factory</name>
+                    <value>org.globus.wsrf.jndi.BeanFactory</value>
+                </parameter>
+                <parameter>
+                    <name>registryLocation</name>
+                    <value>java:comp/env/services/ContainerRegistryEntryService/home</value>
+                </parameter>
+            </resourceParams>
+        </resource>
+    </service>
+
+    <service name="ContainerRegistryEntryService">
+        <resource
+            name="home"
+            type="org.globus.registry.AxisRegistryHome">
+            <resourceParams>
+                <parameter>
+                    <name>factory</name>
+                    <value>org.globus.wsrf.jndi.BeanFactory</value>
+                </parameter>
+               <parameter>
+                    <name>serviceGroupServiceName</name>
+                    <value>ContainerRegistryService</value>
+                </parameter>
+            </resourceParams>
+        </resource>
+    </service>
+
+</jndiConfig>

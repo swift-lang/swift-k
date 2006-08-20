@@ -1,0 +1,35 @@
+NAME
+  texteditor - bring up the text editor
+
+SYNOPIS
+  texteditor
+
+DESCRIPTION
+  This command brings up a text editor
+
+  USING TEXT EDITOR
+
+    The text editor has four main commands:
+      ctrl+E - toggles between edit mode and non-edit mode.  Initially
+               non-edit mode is entered. To browse webpages, the text
+               editor must be in non-edit mode.
+
+      ctrl+N - open a new document
+
+      ctrl+O - open an existing document
+
+      ctrl+S - save a document
+
+OPTIONS
+  [--help]
+     displays the options
+
+EXAMPLES
+  > texteditor
+
+TO DO
+  This command should allow a file or multiple files to be passed to
+  it and let those files be opened for editing.
+
+SEE ALSO
+  view

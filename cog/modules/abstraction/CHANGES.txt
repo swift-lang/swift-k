@@ -1,0 +1,23 @@
+Version 2.0
+-----------
+- Renamed the module from "core" to "abstraction"
+
+Version 1.3
+-----------
+- Implemented "live" task graphs
+- Introduced the core-scheduling framework API and implementation
+- Improved interface and implementation for file access APIs
+- Changed the package hierarchy to clean the naming schemes
+- Fixed some critical bugs
+
+Version 1.2
+-----------
+- Improved interface and implementaion for the task graph handlers
+- Implementation of the WebDAV protocol for FileResource interface
+- Task model provisioning for File access operations
+
+Version 1.1
+-----------
+- Ability to translate between xml documents and core-objects
+- Implementation of the FileResource interface with FTP and GridFTP protocols
+

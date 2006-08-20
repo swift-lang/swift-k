@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="DelegationServiceConfig" 
+    xmlns="http://xml.apache.org/axis/wsdd/" 
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java" 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <service name="DelegationFactoryService" provider="Handler" use="literal" 
+        style="document">
+        <parameter name="allowedMethodsClass" 
+            value="org.globus.delegationService.DelegationFactoryPortType"/>
+        <parameter name="handlerClass" 
+            value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="className" 
+            value="org.globus.delegation.factory.DelegationFactoryService"/>
+        <wsdlFile>share/schema/delegationService/delegation_factory_service.wsdl</wsdlFile>
+        <parameter name="scope" value="Application"/>
+        <parameter name="providers" value="GetRPProvider QueryRPProvider"/>
+        <parameter name="securityDescriptor" value="etc/globus_delegation_service/factory-security-config.xml"/>
+    </service>
+
+    <service name="DelegationService" provider="Handler" use="literal" 
+        style="document">
+        <parameter name="allowedMethodsClass" 
+            value="org.globus.delegationService.DelegationPortType"/>
+        <parameter name="handlerClass" 
+            value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="className" 
+            value="org.globus.delegation.service.DelegationService"/>
+        <wsdlFile>share/schema/delegationService/delegation_service.wsdl</wsdlFile>
+        <parameter name="scope" value="Application"/>
+        <parameter name="providers" value="DestroyProvider 
+        SetTerminationTimeProvider "/>
+        <parameter name="securityDescriptor" value="etc/globus_delegation_service/service-security-config.xml"/>
+    </service>
+
+</deployment>

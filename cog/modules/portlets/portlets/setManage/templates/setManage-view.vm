@@ -1,0 +1,492 @@
+## This program is distributed under the following licence:
+## http://www.globus.org/toolkit/download/license.html
+
+<div align="left">
+
+	<link rel="stylesheet" type="text/css" href="/jetspeed/css/SetManage_styles.css" title="style">
+
+	<script>
+		<!-- hide from older browsers
+
+		function fnTaskOperation(strOperationType, strTaskId, strTaskName) {
+			if (strOperationType == 'delete') {
+				if (!confirm('Delete task ' + strTaskName + '?')) {
+					return;
+				}
+			}
+			if (strOperationType == 'cancel') {
+				if (!confirm('Cancel task ' + strTaskName + '?')) {
+					return;
+				}
+			}
+			if (strOperationType == 'deleteAll') {
+				if (!confirm(
+						'Warning: This will delete all the tasks in the TaskSet!\n' +
+						'         Are you shure you want to continue?'
+							)) {
+					return;
+				}
+			}
+			document.setManage_form.txtOperationType.value = strOperationType;
+			document.setManage_form.txtTaskId.value = strTaskId;
+			document.setManage_form.txtTaskName.value = strTaskName;
+			document.setManage_form.submit();
+		}
+#* commented by shankar
+
+		function fnChangeImage(strOperationType, strTaskId, strImageType) {
+			var strImageName = strTaskId + '-' + strOperationType;
+			document[strImageName].src = 'images/setManage-' + strOperationType + '-' + strImageType + '.png';
+		}
+**#
+
+		//-->
+	</script>
+
+
+#set( $link_refresh = $jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doShow_detail","") )
+#set( $link_minimal = $jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doShow_minimal","") )
+
+		<table border="0" cellspacing="0" cellpadding="2">
+			<tr>
+				<td>
+					<a href= "$!{link_refresh}">Refresh</a>
+				</td>
+#if( $SetManagePortlet_TaskSet )
+	#set( $taskSet = $SetManagePortlet_TaskSet )
+				<td>
+					Tasks: Total: $!{taskSet.Size}
+				</td>
+				<td>
+					Submitted: $!{taskSet.SubmittedCount}
+				</td>
+				<td>
+					Unsubmitted: $!{taskSet.UnsubmittedCount}
+				</td>
+				<td>
+					Completed: $!{taskSet.CompletedCount}
+				</td>
+				<td>
+					Active: $!{taskSet.ActiveCount}
+				</td>
+				<td>
+					Failed: $!{taskSet.FailedCount}
+				</td>
+#end
+				<td>
+					<a href= "$!{link_minimal}">Minimal View</a>
+				</td>
+			</tr>
+			<tr>
+#if( $SetManagePortlet_AllTasks )
+	#set( $length = 0 )
+	#foreach( $task in $SetManagePortlet_AllTasks )
+		#set( $length = $length + 1 )
+	#end
+	#if( $length != 0 )
+				<td colspan="2">
+					<a href="javascript:fnTaskOperation('deleteAll', 'deleteAll', 'deleteAll')">
+						Delete All Tasks
+						<img src="images/setManage-deleteall.png" alt="Delete All Tasks">
+					</a>
+				</td>
+	#end
+#end
+			</tr>
+		</table>
+
+		<table>
+			<tr>
+				<td>
+#if( $SetManagePortlet_Error )
+					<div class="InfoRed">
+						$!{SetManagePortlet_Status}
+					</div>
+#end
+				</td>
+			</tr>
+		</table>
+
+#if( $SetManagePortlet_AllTasks )
+	#if( $length == 0 )
+		<table>
+			<tr>
+				<td>
+					No Tasks submitted.
+				</td>
+			</tr>
+		</table>
+	#else
+		<form name="setManage_form" action="$jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doTask_operation","")" method="POST">
+			<input type="hidden" name="txtOperationType" value=""/>
+			<input type="hidden" name="txtTaskId" value=""/>
+			<input type="hidden" name="txtTaskName" value=""/>
+		</form>
+
+		<!-- legend table -->
+		<table border="1" cellspacing="0" cellpadding="2">
+			<tr>
+				<td colspan="18">
+					<div class="Bold">Image Legend</div>
+				</td>
+			</tr>
+			<tr>
+				<td rowspan="1">
+					<div>Task Status</div>
+				</td>
+				<td width="80" align="right">
+					Unsubmitted
+				</td>
+				<td>
+					<img src="images/setManage-unsubmitted.png" alt="Unsubmitted">
+				</td>
+				<td>
+				</td>
+				<td width="80" align="right">
+					Submitted
+				</td>
+				<td>
+					<img src="images/setManage-submitted.png" alt="Submitted">
+				</td>
+				<td>
+				</td>
+				<td width="80" align="right">
+					Failed
+				</td>
+				<td>
+					<img src="images/setManage-failed.png" alt="Failed">
+				</td>
+				<td>
+				</td>
+				<td width="80" align="right">
+					Active
+				</td>
+				<td>
+					<img src="images/setManage-active.png" alt="Active">
+				</td>
+				<td>
+				</td>
+				<td width="80" align="right">
+					Canceled
+				</td>
+				<td>
+					<img src="images/setManage-canceled.png" alt="Canceled">
+				</td>
+				<td>
+				</td>
+				<td width="80" align="right">
+					Completed
+				</td>
+				<td>
+					<img src="images/setManage-completed.png" alt="Completed">
+				</td>
+			</tr>
+			<tr>
+				<td rowspan="1">
+					<div>Task Type</div>
+				</td>
+				<td width="80" align="right">
+					GT2
+				</td>
+				<td>
+					<img src="images/setManage-gt2.png" alt="GT2">
+				</td>
+				<td>
+				</td>
+				<td width="80" align="right">
+					GT3
+				</td>
+				<td>
+					<img src="images/setManage-gt3.png" alt="GT3">
+				</td>
+			</tr>
+			<tr>
+				<td rowspan="1">
+					<div>Task Operations</div>
+				</td>
+				<td width="80" align="right">
+					Cancel Task
+				</td>
+				<td>
+					<img src="images/setManage-cancel.png" alt="Cancel">
+				</td>
+				<td>
+				</td>
+				<td width="80" align="right">
+					Delete Task
+				</td>
+				<td>
+					<img src="images/setManage-delete.png" alt="Delete">
+				</td>
+			</tr>
+		</table>
+		<table columns="5" border="1" cellspacing="0" cellpadding="2">
+			<tr>
+#* commented by shankar
+				<td>
+					<b>Task</b>
+				</td>
+*#
+				<td>
+					<b>Task ID</b>
+				</td>
+				<td>
+					<b>Provider</b>
+				</td>
+				<td>
+					<b>Type</b>
+				</td>
+				<td>
+					<b>Status</b>
+				</td>
+				<td>	
+					<b>Operations</b>
+				</td>
+				<td>
+					<b>Details</b>
+				</td>
+			</tr>
+		#foreach( $task in $SetManagePortlet_AllTasks )
+			<tr>
+#* commented by shankar
+				<td>
+					$!{velocityCount}
+				</td>
+*#
+				<td>
+## commented by shankar					$!{task.Name}
+					$!{task.Identity.Value}
+				</td>
+				<td>
+			#if( $task.Provider.equalsIgnoreCase("GT2") )
+					<img src="images/setManage-gt2.png" alt="GT2">
+			#elseif( $task.Provider.equalsIgnoreCase("GT3") )
+					<img src="images/setManage-gt3.png" alt="GT3">
+			#end
+				</td>
+				<td>
+			#set( $iTaskType = $task.Type )
+			#if( $iTaskType == 1 )
+					Job
+			#elseif( $iTaskType == 2 )
+					File Transfer
+			#elseif( $iTaskType == 3 )
+					Information Retrieval
+			#end
+				</td>
+				<td>
+			#set( $boolCompleted = false )
+			#set( $iStatus = $task.Status.Status )
+			#if( $iStatus == 0 )
+				#set( $strStatusMessage = "Unsubmitted" )
+					<img src="images/setManage-unsubmitted.png" alt="Unsubmitted">
+			#elseif( $iStatus == 1 )
+				#set( $strStatusMessage = "Submitted" )
+					<img src="images/setManage-submitted.png" alt="Submitted">
+			#elseif( $iStatus == 2 )
+				#set( $strStatusMessage = "Active" )
+					<img src="images/setManage-active.png" alt="Active">
+			#elseif( $iStatus == 3 )
+				#set( $strStatusMessage = "Suspended" )
+					<img src="images/setManage-suspended.png" alt="Suspended">
+			#elseif( $iStatus == 4 )
+				#set( $strStatusMessage = "Resumed" )
+					<img src="images/setManage-resumed.png" alt="Resumed">
+			#elseif( $iStatus == 5 )
+				#set( $strStatusMessage = "Failed" )
+					<img src="images/setManage-failed.png" alt="Failed">
+			#elseif( $iStatus == 6 )
+				#set( $strStatusMessage = "Canceled" )
+					<img src="images/setManage-canceled.png" alt="Canceled">
+			#elseif( $iStatus == 7 )
+				#set( $strStatusMessage = "Completed" )
+				#set( $boolCompleted = true )
+					<img src="images/setManage-completed.png" alt="Completed">
+			#end
+## commented by shankar					$!{strStatusMessage}<br>
+				</td>
+
+				<td>
+					<table>
+			#if( !$boolCompleted )
+#* commented by shankar
+				#if( $iStatus == 2 )
+						<tr>
+							<td>
+								<a href="javascript:fnTaskOperation('suspend', '$!{task.Identity.Value}', '$!{task.Name}')">
+									onmouseover="fnChangeImage('suspend', '$!{task.Identity.Value}','')"
+									onmouseout="fnChangeImage('suspend', '$!{task.Identity.Value}','disabled')">
+									<img name="$!{task.Identity.Value}-suspend" src="images/setManage-suspend.png" border="0" alt="Suspend Task">
+									Suspend Task
+
+								</a>
+							</td>
+						</tr>
+				#end
+				#if( $iStatus == 3 )
+						<tr>
+							<td>
+								<a href="javascript:fnTaskOperation('resume', '$!{task.Identity.Value}', '$!{task.Name}')">
+									onmouseover="fnChangeImage('resume', '$!{task.Identity.Value}','')"
+									onmouseout="fnChangeImage('resume', '$!{task.Identity.Value}','disabled')">
+									<img name="$!{task.Identity.Value}-resume" src="images/setManage-resume.png" border="0" alt="Resume Task">
+									Resume Task
+								</a>
+							</td>
+						</tr>
+				#end
+*#
+				#if( $iStatus <= 4 )
+						<tr>
+							<td>
+								<a href="javascript:fnTaskOperation('cancel', '$!{task.Identity.Value}', '$!{task.Name}')">
+#* commented by shankar
+									onmouseover="fnChangeImage('cancel', '$!{task.Identity.Value}','')"
+									onmouseout="fnChangeImage('cancel', '$!{task.Identity.Value}','disabled')">
+									<img name="$!{task.Identity.Value}-cancel" src="images/setManage-cancel.png" border="0" alt="Cancel Task">
+*#
+## commented by shankar									Cancel Task
+									<img src="images/setManage-cancel.png" alt="Cancel">
+								</a>
+							</td>
+						</tr>
+				#end
+			#end
+						<tr>
+							<td>
+								<a href="javascript:fnTaskOperation('delete', '$!{task.Identity.Value}', '$!{task.Name}')">
+###	 commented by shankar								<img name="$!{task.Identity.Value}-delete" src="images/setManage-delete.png" border="0" alt="Delete Task">
+## commented by shankar									Delete Task
+									<img src="images/setManage-delete.png" alt="Delete">
+								</a>
+							</td>
+						</tr>
+					</table>
+				</td>
+
+				<td>
+			#if( $iTaskType == 1 )
+					<table>
+						<tr>
+							<td>
+								Submitted on:
+							</td>
+							<td>
+								$!{task.SubmittedTime.Time.toString()}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Completed on:
+							</td>
+							<td>
+								$!{task.CompletedTime.Time.toString()}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Host Contact:
+							</td>
+							<td>
+								$!{task.ServiceContact.URL}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Executable:
+							</td>
+							<td>
+				#if( $task.Specification.isLocalExecutable() )
+								(Local) 
+					#set( $strExecutableName = $task.getAttribute("RE_executable_name") )
+								$!{strExecutableName}
+				#else
+								(Remote) 
+								$!{task.Specification.Executable}
+				#end
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Arguments:
+							</td>
+							<td>
+								$!{task.Specification.Arguments}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Directory:
+							</td>
+							<td>
+								$!{task.Specification.Directory}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Standard Output:
+							</td>
+							<td>
+				#if( $task.Specification.isRedirected() )
+					#if ( $boolCompleted )
+						#set( $strStdOutFilePath = $task.getAttribute("RE_std_out.html") )
+						<a href="$!{strStdOutFilePath}" target="_blank">view</a>
+					#else
+						No Standard Output.
+					#end
+				#else
+					#if ( $boolCompleted )
+						Standard Output on the remote machine.
+					#else
+						No Standard Output.
+					#end
+				#end
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Standard Error:
+							</td>
+							<td>
+				#if( $task.Specification.isRedirected() )
+					#if ( $boolCompleted )
+						#set( $strStdErrFilePath = $task.getAttribute("RE_std_err.html") )
+						<a href="$!{strStdErrFilePath}" target="_blank">view</a>
+					#else
+						No Standard Error.
+					#end
+				#else
+					#if ( $boolCompleted )
+						Standard Error on the remote machine.
+					#else
+						No Standard Error.
+					#end
+				#end
+							</td>
+						</tr>
+					</table>
+			#elseif( $iTaskType == 2 )
+					<table>
+						<tr>
+							<td>
+								## FT Details
+							</td>
+						</tr>
+					</table>
+			#elseif( $iTaskType == 3 )
+					<table>
+						<tr>
+							<td>
+								## IR Details
+							</td>
+						</tr>
+					</table>
+			#end
+				</td>
+			</tr>
+		#end
+		</table>
+	#end
+#end
+
+</div>

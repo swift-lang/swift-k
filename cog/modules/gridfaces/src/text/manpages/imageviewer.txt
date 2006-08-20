@@ -1,0 +1,23 @@
+NAME
+  imageviewer - brings up the image viewer
+
+SYNOPIS
+  imageviewer
+
+DESCRIPTION
+  This command starts the visual image viewer.
+
+OPTIONS
+   [--help]
+     displays the options
+
+EXAMPLES
+  1) To open the imageviewer type:
+
+    > imageviewer
+
+TO DO
+  Allow the user to specify an image or multiple images to open.
+
+SEE ALSO
+  view

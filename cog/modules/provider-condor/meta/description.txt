@@ -1,0 +1,6 @@
+The provider-condor module is a component of the abstractions framework. 
+It provides the implementation for the execution task handler
+supporting the native condor protocol. It facilitates submissions of
+condor jobs to the local condor submit machines using the Java CoG Kit
+abstractions. 
+

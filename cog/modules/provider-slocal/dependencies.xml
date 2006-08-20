@@ -1,0 +1,14 @@
+<project name="Project dependencies" default="deps" basedir=".">
+	<!-- project dependencies -->
+	<target name="deps">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="abstraction-common"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="jglobus"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="util"/>
+		</ant>
+	</target>
+</project>

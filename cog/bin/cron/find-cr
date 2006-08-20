@@ -1,0 +1,10 @@
+#! /usr/bin/perl
+
+$filename = $argv[1];
+
+while (<>) {
+	if (/\r/) {
+		printf "Found >$_<\n", $filename;
+		exit 1;
+	}
+}

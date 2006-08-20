@@ -1,0 +1,20 @@
+NAME
+  gsh - Enables a list of GridShell commands to be entered into a 
+        text file and then executed as a script.
+
+SYNOPIS
+  gsh [FILE_NAME]
+
+DESCRIPTION
+  Enables a list of GridShell commands to be entered into a text
+  file (FILE_NAME) and then executed as a script.
+  
+OPTIONS
+  [--help]
+    displays the options
+
+EXAMPLES
+
+  1) Run the script located in C:\script.gsh
+
+    > gsh C:\script.gsh

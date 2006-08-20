@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="DelegationService" targetNamespace="http://www.globus.org/08/2004/delegationService" xmlns:wst="http://schemas.xmlsoap.org/ws/2004/04/trust" xmlns:wsrp="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd" xmlns:tns="http://www.globus.org/08/2004/delegationService" xmlns:wsdlpp="http://www.globus.org/namespaces/2004/10/WSDLPreprocessor" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:wsrlw="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl" location="../wsrf/lifetime/WS-ResourceLifetime.wsdl"/>
+  <import namespace="http://schemas.xmlsoap.org/ws/2004/04/trust" location="../ws/trust/ws-trust.wsdl"/>
+  <types>
+    <xsd:schema elementFormDefault="qualified" targetNamespace="http://www.globus.org/08/2004/delegationService" xmlns:rpns0="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing" schemaLocation="../ws/addressing/WS-Addressing.xsd"/>
+
+<xsd:import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd" schemaLocation="../wsrf/lifetime/WS-ResourceLifetime.xsd"/>
+
+
+            <xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/04/trust" schemaLocation="../ws/trust/ws-trust.xsd"/>
+
+        <xsd:element name="voidElemType" type="tns:voidType"/>
+        <xsd:complexType name="voidType"/>
+        <xsd:element name="refreshRequest" type="wst:RequestSecurityTokenType"/>
+        <xsd:element name="DelegationPortTypeGTWSDLResourceProperties">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rpns0:CurrentTime"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rpns0:TerminationTime"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </types>
+  <message name="RefreshRequest">
+    <part name="parameters" element="tns:refreshRequest"/>
+  </message>
+  <message name="RefreshResponse">
+    <part name="parameters" element="tns:voidElemType"/>
+  </message>
+  <portType name="DelegationPortType" wsrp:ResourceProperties="DelegationPortTypeGTWSDLResourceProperties">
+    <operation name="refresh">
+      <input name="refreshRequest" message="tns:RefreshRequest"/>
+      <output name="refreshResponse" message="tns:RefreshResponse"/>
+    </operation>
+    <operation name="Destroy">
+      <input message="wsrlw:DestroyRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/Destroy"/>
+      <output message="wsrlw:DestroyResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/DestroyResponse"/>
+      <fault name="ResourceNotDestroyedFault" message="wsrlw:ResourceNotDestroyedFault"/>
+      <fault name="ResourceUnknownFault" message="wsrlw:ResourceUnknownFault"/>
+    </operation>
+    <operation name="SetTerminationTime">
+      <input message="wsrlw:SetTerminationTimeRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTime"/>
+      <output message="wsrlw:SetTerminationTimeResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTimeResponse"/>
+      <fault name="UnableToSetTerminationTimeFault" message="wsrlw:UnableToSetTerminationTimeFault"/>
+      <fault name="TerminationTimeChangeRejectedFault" message="wsrlw:TerminationTimeChangeRejectedFault"/>
+      <fault name="ResourceUnknownFault" message="wsrlw:ResourceUnknownFault"/>
+    </operation>
+  </portType>
+</definitions>

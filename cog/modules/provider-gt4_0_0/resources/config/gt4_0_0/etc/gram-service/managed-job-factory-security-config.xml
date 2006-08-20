@@ -1,0 +1,13 @@
+<securityConfig xmlns="http://www.globus.org">
+    <method name="createManagedJob">
+        <auth-method>
+            <GSITransport/>
+            <GSISecureMessage/>
+            <GSISecureConversation/>
+        </auth-method>
+    </method>
+    <authz value="gridmap"/> 
+    <reject-limited-proxy value="true"/>
+    <gridmap value="/etc/grid-security/grid-mapfile"/>
+</securityConfig>
+

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+STDIN=$1
+STDOUT=$2
+STDERR=$3
+EXECUTABLE=$4
+shift 4
+
+if [ $STDIN == "-" ]; then
+	STDIN=""
+else
+	STDIN="<$STDIN"
+fi
+
+if [ $STDOUT == "-" ]; then
+	STDOUT=""
+else
+	STDOUT="1>$STDOUT"
+fi
+
+if [ $STDERR == "-" ]; then
+	STDERR=""
+else
+	STDERR="2>$STDERR"
+fi
+
+echo "WRAPPER OK" 1>&2
+
+exec $EXECUTABLE $STDIN $STDOUT $STDERR $@

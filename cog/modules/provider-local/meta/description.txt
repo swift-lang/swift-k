@@ -1,0 +1,5 @@
+The provider-local module is a component of the abstractions framework.
+It provides the implementation for the execution task handler
+supporting submissions to the local machine. It also provides the
+implementation for the file-operation task 
+handler supporting the local file resources.  

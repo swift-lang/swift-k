@@ -1,0 +1,14 @@
+(04/19/2005)	Renamed this module from "core-provider-webdav" to 
+		"provider-webdav"
+-------------------------------2.0----------------------------------
+
+(03/24/2005)    Updated the implementation of
+                org.globus.cog.core.impl.file.webdav.FileResourceImpl.java
+                to make it compatible with the changes in its interface 
+
+(03/17/2005)  	Updated the WebDAVSecurityCredentialImpl to show a dialog  
+		box prompting the user to enter credentials (if null
+		credentials are specified)   
+
+-------------------------------1.0----------------------------------
+

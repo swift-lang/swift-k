@@ -1,0 +1,5 @@
+The abstraction module provides a unifying environment for the entire 
+abstractions framework. Modules that have dependencies on the abstractions 
+framework can depend on the abstraction module without having to worry 
+about other sub-modules (abstraction-common, abstraction-example, 
+provider-*). 

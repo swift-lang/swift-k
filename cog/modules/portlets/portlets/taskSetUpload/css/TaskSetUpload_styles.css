@@ -1,0 +1,5 @@
+.NoteSmall		{ font-size: 8pts; color:#AAAAAA; }
+.NoteSmallRed	{ font-size: 8pts; color:#FF0000; }
+.InfoRed		{ font-size: 10pts; color:#FF0000; }
+.Bold			{ font-weight: bold; }
+#clsSwap		{ position: absolute; }

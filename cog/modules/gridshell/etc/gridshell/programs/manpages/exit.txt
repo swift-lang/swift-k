@@ -1,0 +1,28 @@
+NAME
+  exit - exits this shell panel
+  
+SYNOPIS
+  exit
+
+DESCRIPTION
+  Exits the ShellPanel.
+
+  If the shell panel is in the desktop it closes the current frame. Note
+  that this command could be done better, but it would require the ShellPanel
+  having a refference to the Desktop. Right now it simply closes by calling 
+  getParent a few times and then calling setClosed(true). Later implementations
+  may want to allow a property change event to be fired to the desktop.
+
+  If there is an error when trying to call the setClosed(true), then 
+  System.exit(-1) is called.
+
+OPTIONS
+  [--help]
+    displays the options
+
+EXAMPLES
+  1) To exit the ShellPanel from either the desktop or standalone Shell enter:
+
+    > exit
+
+  

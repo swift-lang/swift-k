@@ -1,0 +1,74 @@
+<karajan>   
+   <include file="cogkit.xml"/>
+   <include file="repository.xml"/>
+   <include file="forms.xml"/>
+   
+   <repository:init repositoryType="derby"/>  
+   <repository:connect/>
+   
+   <parallel>
+   	   <ignoreErrors>
+		   <repository:removeComponent componentName="Stopwatch"/>
+	   </ignoreErrors>
+	   <ignoreErrors>
+		   <file:remove name="temp.xml"/>
+	   </ignoreErrors>
+   </parallel>
+   
+   <print message="Cleanup complete"/>
+   
+   <unsynchronized>
+   	   <wait delay="5000" annotation="Wait for a while..."/>
+	   <repository:loadComponent 
+fileName="c:/cygwin/home/USER/sc2005/src/cog/modules/repository/dist/repository-1.0/examples/repository/components/stopwatch.xml"/>
+   </unsynchronized>
+   
+
+   <race>
+		<while>
+			<wait delay="2000"/>
+			<condition annotation="blabla">
+				<choice>
+				   <sequential>
+					   <repository:getComponent componentName="Stopwatch" fileName="temp.xml"/>
+					   <false/>
+				   </sequential>
+				   <sequential>
+					   <true/>
+				   </sequential>
+				</choice>
+			</condition>
+		</while>
+	
+		<form id="IDForm" title="Waiting..." waiton="IDCancel">
+			<vbox>
+				<label text="Waiting for component..."/>
+				<button id="IDCancel" caption="Cancel"/>
+			</vbox>
+		</form>
+   </race>
+	   
+   <repository:disconnect/>
+
+   <include file="temp.xml"/>
+ 	
+   <stopwatch:initialize count="2"/>
+   	
+   <stopwatch:setName index="0" name="first"/>
+   <stopwatch:setName index="1" name="second"/>
+	
+   <stopwatch:start index="0"/>
+     <wait delay="5000"/>
+   <stopwatch:print index="0"/>
+	
+   <stopwatch:start index="1"/>
+   <parallel>
+	<wait delay="10000"/>
+	<wait delay="5000"/>
+   </parallel>
+	
+   <stopwatch:print index="1"/>
+   <stopwatch:print index="0"/>
+
+</karajan>
+

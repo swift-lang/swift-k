@@ -1,0 +1,91 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="While loop"/>
+		<map:entry key="test">
+			<element arguments="">
+				<element name="test-while">
+					<set name="i" value="0"/>
+					<list>
+						<while>
+							<condition>
+								<lessThan value1="{i}" value2="8"/>
+							</condition>
+							<argument value="{i}"/>
+							<set name="i">
+								<sum>
+									<variable>i</variable>
+									<number>1</number>
+								</sum>
+							</set>
+						</while>
+					</list>
+				</element>
+				
+				<element name="test-break">
+					<set name="i" value="0"/>
+					<list>
+						<while>
+							<condition>
+								<lessThan value1="{i}" value2="8"/>
+							</condition>
+							<if>
+								<equalsNumeric value1="{i}" value2="3"/>
+
+								<then>
+									<break/>
+								</then>
+							</if>
+							<variable>i</variable>
+							<set name="i">
+								<sum>
+									<variable>i</variable>
+									<number>1</number>
+								</sum>
+							</set>
+						</while>									
+					</list>
+				</element>
+				
+				<element name="test-continue">
+					<set name="i" value="0"/>
+					<list>
+						<while>
+							<condition>
+								<lessThan value1="{i}" value2="3"/>
+							</condition>
+							<set name="i">
+								<sum>
+									<variable>i</variable>
+									<number>1</number>
+								</sum>
+							</set>
+							<if>
+								<equalsNumeric value1="{i}" value2="2"/>
+
+								<then>
+									<continue/>
+								</then>
+							</if>
+							<variable>i</variable>
+						</while>								
+					</list>
+				</element>
+				
+				<list>
+					<test-while/>
+					<test-break/>
+					<test-continue/>
+				</list>
+			</element>
+		</map:entry>
+		
+		<map:entry key="expected-result">
+			<list>
+				<list items="0, 1, 2, 3, 4, 5, 6, 7"/>
+				<list items="0, 1, 2"/>
+				<list items="1, 3"/>
+			</list>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

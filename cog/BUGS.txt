@@ -1,0 +1,41 @@
+WARNING: 
+====================================================================
+PLEASE NOTE ALTHOUGH THE PROVIDER FOR GT4_0_0 IS UNDER DEVELOPMENT.
+IN THE GT4_0_0 DIRECTORY YOU STILL FIND THE 3.9.5 PROVIDER which is a
+prerelease to 4.0
+
+WE WILL CHANGE THIS ASAP.
+====================================================================
+
+
+BUGS AND ENHANCEMENTS LIST SORTED BY TOPIC
+
+
+SETUP
+=====
+
+- the NTP tme finding routine sometimes shows a time that is
+greater than one second from the local time. We have not yet
+identified if this is a programming error, or if this is
+normal based on the time delay of the network.
+
+- a registration page that allows the user to register their
+application to the Java CoG team would be great. The
+registration is stored in the .globus directory and once
+registered the registration page is not anymore shown 
+
+
+JAVA 1.5
+========
+
+- In case you use JDK1.5, make sure that you use the newest 
+JDK1.5.0_2
+
+FAULT TOLLERANCE
+================
+
+- A future version of the Java CoG Kit will introduce
+persistent services, that is for example the user will be
+able to close the lid of his descktop or shut down the
+client machine and will be able to continue working at the
+last preserverd state the user checkpointed. 

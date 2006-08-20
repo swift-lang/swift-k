@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<registry>
+ <portlet-entry name="GUSS" hidden="false" type="ref" 
+               parent="JSP" application="false">
+  <meta-info>
+    <title>Grid Usage Sensor Services</title>
+    <description>Displays dynamic graphs of GridFTP usage statistics.</description>
+  </meta-info>
+        <classname>org.apache.jetspeed.portal.portlets.JspPortlet</classname>
+        <parameter name="template" value="GUSSPage.jsp" hidden="false"
+            cachedOnName="true" cachedOnValue="true"/>
+        <media-type ref="html"/>
+        <url cachedOnURL="true"/>
+    </portlet-entry>
+</registry>

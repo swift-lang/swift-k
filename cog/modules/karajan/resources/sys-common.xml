@@ -1,0 +1,161 @@
+<karajan>
+	<export name="sequential"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Sequential"/></export>
+    <export name="parallel"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Parallel"/></export>
+	<export name="uparallel"><elementDef classname="org.globus.cog.karajan.workflow.nodes.UParallel"/></export>
+	<export name="unsynchronized"><elementDef classname="org.globus.cog.karajan.workflow.nodes.UnsynchronizedNode"/></export>
+	<export name="parallelChoice"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ParallelChoice"/></export>
+	<export name="race"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ParallelChoice"/></export>
+	<export name="choice"><elementDef classname="org.globus.cog.karajan.workflow.nodes.SequentialChoice"/></export>
+	<export name="catch"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Catch"/></export>
+	<export name="guard"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Guard"/></export>
+	<export name="maybe"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Maybe"/></export>
+	<export name="exclusive"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Exclusive"/></export>
+	
+	<export name="future"><elementDef classname="org.globus.cog.karajan.workflow.nodes.FutureNode"/></export>
+	<export name="futureIterator"><elementDef classname="org.globus.cog.karajan.workflow.nodes.FutureIteratorNode"/></export>
+	
+	<export name="echo"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Echo"/></export>
+	<export name="print"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Print"/></export>
+    
+    <export name="for"><elementDef classname="org.globus.cog.karajan.workflow.nodes.For"/></export>
+    <export name="parallelFor"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ParallelFor"/></export>
+	<export name="uParallelFor"><elementDef classname="org.globus.cog.karajan.workflow.nodes.UParallelFor"/></export>
+	<export name="each"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Each"/></export>
+    
+    <export name="default"><elementDef classname="org.globus.cog.karajan.workflow.nodes.DefaultParameterNode"/></export>
+    
+    <export name="ignoreErrors"><elementDef classname="org.globus.cog.karajan.workflow.nodes.IgnoreErrorsNode"/></export>
+    <export name="restartOnError"><elementDef classname="org.globus.cog.karajan.workflow.nodes.RestartOnErrorNode"/></export>
+    <export name="generateError"><elementDef classname="org.globus.cog.karajan.workflow.nodes.GenerateErrorNode"/></export>
+	<export name="onError"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ErrorHandlerNode"/></export>
+    	
+	<export name="quoted"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.QuotedString"/></export>
+	<export name="unquoted"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Unquote"/></export>
+	<export name="argument"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Argument"/></export>
+	<export name="vargs"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Vargs"/></export>
+	<export name="args"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Args"/></export>
+	<export name="channel"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Channel"/></export>
+	
+	<namespace prefix="channel">
+		<export name="from"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ChannelFrom"/></export>
+		<export name="to"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ChannelTo"/></export>
+		<export name="fork"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ChannelFork"/></export>
+		<export name="close"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ChannelClose"/></export>
+	</namespace>
+    
+    <export name="numberFormat"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+    <export name="contains"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="file:contains" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+    <export name="UID"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+    <export name="readFile" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="file:read" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="property"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="outputStream" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="closeStream" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="isDefined"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="isTrue"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="isList"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	
+	
+	<export name="discard"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="range"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="filter"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="sort"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="value"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="input" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Input"/></export>
+	
+	<export name="dot"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="cross"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	
+	<namespace prefix="str">
+		<export name="concat"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+		<export name="strip"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+		<export name="nl"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+		<export name="split"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+		<export name="matches"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+		<export name="chr"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+		<export name="substring"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	</namespace>
+	
+	<export name="time"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Time"/></export>
+	<export name="cacheon"><elementDef classname="org.globus.cog.karajan.workflow.nodes.CacheOn"/></export>
+    
+    <export name="checkpoint"><elementDef classname="org.globus.cog.karajan.workflow.nodes.CheckpointNode"/></export>
+	<export name="wait"><elementDef classname="org.globus.cog.karajan.workflow.nodes.WaitNode"/></export>
+	<export name="executeFile" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ExecuteFile"/></export>
+	<export name="file:execute" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ExecuteFile"/></export>
+	<export name="file:write" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.FileWrite"/></export>
+	
+	<export name="element"><elementDef classname="org.globus.cog.karajan.workflow.nodes.user.SequentialImplicitExecutionUDE"/></export>
+	<export name="parallelElement"><elementDef classname="org.globus.cog.karajan.workflow.nodes.user.ParallelImplicitExecutionUDE"/></export>
+	<export name="macro"><elementDef classname="org.globus.cog.karajan.workflow.nodes.user.ExplicitExecutionUDE"/></export>
+	<export name="executeElement"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ExecuteElement"/></export>
+	<export name="elementList"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ElementList"/></export>
+	<export name="self"><elementDef classname="org.globus.cog.karajan.workflow.nodes.user.Self"/></export>
+	
+	<export name="if"><elementDef classname="org.globus.cog.karajan.workflow.nodes.If"/></export>
+	<export name="else"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Sequential"/></export>
+	<export name="then"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ConditionalNode"/></export>
+	<export name="elseif"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ConditionalNode"/></export>
+	<export name="while"><elementDef classname="org.globus.cog.karajan.workflow.nodes.While"/></export>
+	<export name="condition"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ConditionNode"/></export>
+	<export name="break"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Break"/></export>
+	<export name="continue"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Continue"/></export>
+	
+	<export name="and"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
+	<export name="or"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
+	<export name="not"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
+	<export name="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
+	<export name="false"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
+	
+	<namespace prefix="math">
+		<export name="sum"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Sum"/></export>
+		<export name="product"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="subtraction"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="quotient"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="remainder"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="square"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="sqrt"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="equalsnumeric"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="greaterthan"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="lessthan"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="greaterorequal"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="lessorequal"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="min"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="max"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="int"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="ln"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="exp"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="random"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+	</namespace>
+	
+	<export name="equals"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	
+	<namespace prefix="list">
+		<export name="append"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="list"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="prepend"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="join"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="size"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="last"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="first"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="butLast"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="butFirst"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="isEmpty"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+		<export name="get"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.List"/></export>
+	</namespace>
+	
+	<namespace prefix="map">
+		<export name="map"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Map_Map"/></export>
+		<export name="put"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Map"/></export>
+		<export name="delete"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Map"/></export>
+		<export name="get"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Map"/></export>
+		<export name="entry"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Map"/></export>
+		<export name="size"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Map"/></export>
+		<export name="contains"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Map"/></export>
+	</namespace>
+	
+	<export name="remote"><elementDef classname="org.globus.cog.karajan.workflow.service.RemoteNode"/></export>
+	<export name="info"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Info"/></export>
+	<export name="stats"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+</karajan>

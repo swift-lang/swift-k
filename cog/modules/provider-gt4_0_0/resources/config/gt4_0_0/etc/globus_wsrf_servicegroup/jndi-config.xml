@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jndiConfig xmlns="http://wsrf.globus.org/jndi/config">
+    <global>
+<!--  define both the in-memory and and entry homes in the global section,
+      and then link both homes to both of the two appropriate 
+      ServiceGroup and ServiceGroupEntry services, as well as anything 
+      else who wants to know.
+-->
+        <resource 
+            name="InMemorySGHome"
+            type="org.globus.wsrf.impl.servicegroup.inmemory.InMemoryServiceGroupHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+
+ 
+        <resource 
+            name="InMemorySGEntryHome"
+            type="org.globus.wsrf.impl.servicegroup.inmemory.InMemoryServiceGroupEntryHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+
+    </global>
+
+    <service name="InMemoryServiceGroup">
+       <resourceLink name="home"
+                     target="java:comp/env/InMemorySGHome"/>
+       <resourceLink name="groupHome"
+                     target="java:comp/env/InMemorySGHome"/>
+       <resourceLink name="entryHome"
+                     target="java:comp/env/InMemorySGEntryHome"/>
+    </service>
+
+
+
+    <service name="InMemoryServiceGroupEntry">
+       <resourceLink name="groupHome"
+                     target="java:comp/env/InMemorySGHome"/>
+       <resourceLink name="entryHome"
+                     target="java:comp/env/InMemorySGEntryHome"/>
+       <resourceLink name="home"
+                     target="java:comp/env/InMemorySGEntryHome"/>
+    </service>
+
+    <service name="InMemoryServiceGroupFactory">
+         <resource 
+            name="home"
+            type="org.globus.wsrf.impl.ServiceResourceHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+
+      
+       <resourceLink name="groupHome"
+                     target="java:comp/env/InMemorySGHome"/>
+       <resourceLink name="entryHome"
+                     target="java:comp/env/InMemorySGEntryHome"/>
+    </service>
+
+
+
+</jndiConfig>
+

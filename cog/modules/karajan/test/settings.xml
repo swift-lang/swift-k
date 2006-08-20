@@ -1,0 +1,18 @@
+<karajan>
+	<import file="sys.xml"/>
+	<import file="task.xml"/>
+
+	<global name="global_pass_count" value="1"/>
+	<global name="test_pass_count" value="10"/>
+
+	<global name="grid_resources">
+		<list>
+			<host name="plussed.mcs.anl.gov:4010" cpus="2">
+				<service type="execution" provider="gt2"/>
+				<service type="file" provider="gt2"/>
+			</host>
+		</list>
+	</global>
+	<global name="default_provider" value="gt2"/>
+	<global name="task_run_count" value="4"/>
+</karajan>

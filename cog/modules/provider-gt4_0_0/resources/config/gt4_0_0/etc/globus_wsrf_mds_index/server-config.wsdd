@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="defaultServerConfig" 
+    xmlns="http://xml.apache.org/axis/wsdd/" 
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java" 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <service name="IndexServiceEntry" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="providers" value="SetTerminationTimeProvider GetRPProvider GetMRPProvider"/>
+        <parameter name="handlerClass" value="org.globus.axis.providers.RPCProvider"/>
+
+        <parameter name="scope" value="Application"/> 
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.mds.index.impl.IndexEntryService"/>
+        <wsdlFile>share/schema/mds/index/index_entry_service.wsdl</wsdlFile>
+    </service>
+
+
+    <service name="IndexService" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="providers" value="org.globus.wsrf.impl.servicegroup.ServiceGroupRegistrationProvider"/>
+        <parameter name="handlerClass" value="org.globus.axis.providers.RPCProvider"/>
+
+        <parameter name="scope" value="Application"/> 
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.mds.index.impl.IndexService"/>
+
+        <wsdlFile>share/schema/mds/index/index_service.wsdl</wsdlFile>
+    </service>
+
+
+    <service name="IndexFactoryService" provider="java:RPC"
+        use="literal" style="document">
+        <parameter name="scope" value="Application"/>
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className"
+            value="org.globus.mds.index.impl.IndexFactoryService"/>
+        <wsdlFile>share/schema/mds/servicegroup/ServiceGroupFactory_service.wsdl</wsdlFile>
+    </service>
+
+    <service name="DefaultIndexServiceEntry" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="providers" value="SetTerminationTimeProvider GetRPProvider GetMRPProvider"/>
+        <parameter name="handlerClass" value="org.globus.axis.providers.RPCProvider"/>
+
+        <parameter name="scope" value="Application"/> 
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.mds.index.impl.IndexEntryService"/>
+        <wsdlFile>share/schema/mds/index/index_entry_service.wsdl</wsdlFile>
+    </service>
+
+
+    <service name="DefaultIndexService" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="providers" value="org.globus.wsrf.impl.servicegroup.ServiceGroupRegistrationProvider"/>
+        <parameter name="handlerClass" value="org.globus.axis.providers.RPCProvider"/>
+
+        <parameter name="scope" value="Application"/> 
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.mds.index.impl.DefaultIndexService"/>
+        <wsdlFile>share/schema/mds/index/index_service.wsdl</wsdlFile>
+    </service>
+
+</deployment>
+

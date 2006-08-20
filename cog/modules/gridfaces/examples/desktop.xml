@@ -1,0 +1,256 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE preferences SYSTEM 'http://java.sun.com/dtd/preferences.dtd'>
+
+<preferences EXTERNAL_XML_VERSION="1.0">
+  <root type="user">
+    <map />
+    <node name="Desktop_1__1098394815583">
+      <map>
+        <entry key="frame.title" value="GridDesktop" />
+        <entry key="frame.class" value="org.globus.cog.gridface.impl.desktop.GridDesktopContainer" />
+        <entry key="frame.width" value="924" />
+        <entry key="frame.height" value="668" />
+        <entry key="frame.x" value="20" />
+        <entry key="frame.y" value="14" />
+        <entry key="icon.count" value="7" />
+      </map>
+      <node name="icons">
+        <map />
+        <node name="ICON_ID_18">
+          <map>
+            <entry key="icon.name" value="/bin/date" />
+            <entry key="icon.x" value="10" />
+            <entry key="icon.y" value="196" />
+            <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GridIconImpl:JOB_SUBMISSION" />
+            <entry key="icon.imageURI" value="images/32x32/co/kcmsystem.png" />
+            <entry key="icon.launchStaticMain" value="false" />
+            <entry key="#ATTRIB:servicecontactport" value="2119" />
+            <entry key="#ATTRIB:servicecontactname" value="wiggum.mcs.anl.gov" />
+            <entry key="#ATTRIB:executable" value="/bin/date" />
+            <entry key="#ATTRIB:batchjob" value="false" />
+            <entry key="#ATTRIB:localexecutable" value="false" />
+            <entry key="#ATTRIB:redirected" value="true" />
+            <entry key="#ATTRIB:provider" value="GT2" />
+          </map>
+        </node>
+        <node name="ICON_ID_19">
+          <map>
+            <entry key="icon.name" value="Local" />
+            <entry key="icon.x" value="10" />
+            <entry key="icon.y" value="10" />
+            <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GridIconImpl:SERVICE" />
+            <entry key="icon.imageURI" value="images/32x32/co/konsole2.png" />
+            <entry key="icon.launchStaticMain" value="false" />
+            <entry key="#ATTRIB:servicecontactport" value="2119" />
+            <entry key="#ATTRIB:servicecontactname" value="localhost" />
+            <entry key="#ATTRIB:executable" value="/bin/date" />
+            <entry key="#ATTRIB:batchjob" value="false" />
+            <entry key="#ATTRIB:localexecutable" value="false" />
+            <entry key="#ATTRIB:redirected" value="true" />
+            <entry key="#ATTRIB:provider" value="local" />
+          </map>
+        </node>
+        <node name="ICON_ID_20">
+          <map>
+            <entry key="icon.name" value="arbat.mcs.anl.gov" />
+            <entry key="icon.x" value="10" />
+            <entry key="icon.y" value="72" />
+            <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GridIconImpl:SERVICE" />
+            <entry key="icon.imageURI" value="images/32x32/co/konsole2.png" />
+            <entry key="icon.launchStaticMain" value="false" />
+            <entry key="#ATTRIB:servicecontactport" value="2119" />
+            <entry key="#ATTRIB:servicecontactname" value="arbat.mcs.anl.gov" />
+            <entry key="#ATTRIB:executable" value="/bin/date" />
+            <entry key="#ATTRIB:batchjob" value="false" />
+            <entry key="#ATTRIB:localexecutable" value="false" />
+            <entry key="#ATTRIB:redirected" value="true" />
+            <entry key="#ATTRIB:provider" value="GT2" />
+          </map>
+        </node>
+        <node name="ICON_ID_21">
+          <map>
+            <entry key="icon.name" value="Sysinfo" />
+            <entry key="icon.x" value="10" />
+            <entry key="icon.y" value="258" />
+            <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GridIconImpl:JOB_SPECIFICATION" />
+            <entry key="icon.imageURI" value="images/32x32/co/jobspec-icon.png" />
+            <entry key="icon.launchStaticMain" value="false" />
+            <entry key="#ATTRIB:servicecontactport" value="2119" />
+            <entry key="#ATTRIB:servicecontactname" value="wiggum.mcs.anl.gov" />
+            <entry key="#ATTRIB:executable" value="/home/pankaj/sysinfo" />
+            <entry key="#ATTRIB:batchjob" value="false" />
+            <entry key="#ATTRIB:localexecutable" value="false" />
+            <entry key="#ATTRIB:redirected" value="true" />
+            <entry key="#ATTRIB:provider" value="GT2" />
+          </map>
+        </node>
+        <node name="ICON_ID_22">
+          <map>
+            <entry key="icon.name" value="/bin/date" />
+            <entry key="icon.x" value="10" />
+            <entry key="icon.y" value="320" />
+            <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GridIconImpl:JOB_SPECIFICATION" />
+            <entry key="icon.imageURI" value="images/32x32/co/jobspec-icon.png" />
+            <entry key="icon.launchStaticMain" value="false" />
+            <entry key="#ATTRIB:servicecontactport" value="2119" />
+            <entry key="#ATTRIB:servicecontactname" value="arbat.mcs.anl.gov" />
+            <entry key="#ATTRIB:executable" value="/bin/date" />
+            <entry key="#ATTRIB:batchjob" value="false" />
+            <entry key="#ATTRIB:localexecutable" value="false" />
+            <entry key="#ATTRIB:redirected" value="true" />
+            <entry key="#ATTRIB:provider" value="GT2" />
+          </map>
+        </node>
+        <node name="ICON_ID_23">
+          <map>
+            <entry key="icon.name" value="wiggum.mcs.anl.gov" />
+            <entry key="icon.x" value="10" />
+            <entry key="icon.y" value="134" />
+            <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GridIconImpl:SERVICE" />
+            <entry key="icon.imageURI" value="images/32x32/co/konsole2.png" />
+            <entry key="icon.launchStaticMain" value="false" />
+            <entry key="#ATTRIB:servicecontactport" value="2119" />
+            <entry key="#ATTRIB:servicecontactname" value="wiggum.mcs.anl.gov" />
+            <entry key="#ATTRIB:executable" value="/bin/date" />
+            <entry key="#ATTRIB:batchjob" value="false" />
+            <entry key="#ATTRIB:localexecutable" value="false" />
+            <entry key="#ATTRIB:redirected" value="true" />
+            <entry key="#ATTRIB:provider" value="GT2" />
+          </map>
+        </node>
+        <node name="ICON_ID_24">
+          <map>
+            <entry key="icon.name" value="Sleeptest" />
+            <entry key="icon.x" value="10" />
+            <entry key="icon.y" value="382" />
+            <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GridIconImpl:JOB_SPECIFICATION" />
+            <entry key="icon.imageURI" value="images/32x32/co/jobspec-icon.png" />
+            <entry key="icon.launchStaticMain" value="false" />
+            <entry key="#ATTRIB:servicecontactport" value="2119" />
+            <entry key="#ATTRIB:servicecontactname" value="wiggum.mcs.anl.gov" />
+            <entry key="#ATTRIB:executable" value="/home/pankaj/sleeptest" />
+            <entry key="#ATTRIB:batchjob" value="false" />
+            <entry key="#ATTRIB:localexecutable" value="false" />
+            <entry key="#ATTRIB:taskarguments" value="22" />
+            <entry key="#ATTRIB:redirected" value="true" />
+            <entry key="#ATTRIB:provider" value="GT2" />
+          </map>
+        </node>
+      </node>
+      <node name="toolbar">
+        <map />
+        <node name="SystemIcons">
+          <map />
+          <node name="ICON_ID_12">
+            <map>
+              <entry key="icon.name" value="Directory Browser" />
+              <entry key="icon.x" value="7" />
+              <entry key="icon.y" value="2" />
+              <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GenericIconImpl:System" />
+              <entry key="icon.imageURI" value="images/32x32/co/view-tree.png" />
+              <entry key="App_Container_class" value="org.globus.cog.gridface.impl.directorybrowser.DirectoryBrowserImpl" />
+              <entry key="icon.launchStaticMain" value="false" />
+            </map>
+            <node name="App_Container_class_args">
+              <map>
+                <entry key="Arg0" value="org.globus.cog.gridface.interfaces.GridCommandManager" />
+                <entry key="Value0" value="NOT_A_STRING" />
+              </map>
+            </node>
+          </node>
+          <node name="ICON_ID_13">
+            <map>
+              <entry key="icon.name" value="Shell Panel" />
+              <entry key="icon.x" value="7" />
+              <entry key="icon.y" value="36" />
+              <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GenericIconImpl:System" />
+              <entry key="icon.imageURI" value="images/32x32/co/terminal.png" />
+              <entry key="App_Container_class" value="org.globus.cog.gridface.impl.shell.ShellPanelImpl" />
+              <entry key="icon.launchStaticMain" value="false" />
+            </map>
+            <node name="App_Container_class_args">
+              <map>
+                <entry key="Arg0" value="org.globus.cog.gridface.interfaces.GridCommandManager" />
+                <entry key="Value0" value="NOT_A_STRING" />
+              </map>
+            </node>
+          </node>
+          <node name="ICON_ID_14">
+            <map>
+              <entry key="icon.name" value="Java CoG Kit: Simple GridFTP Queue" />
+              <entry key="icon.x" value="7" />
+              <entry key="icon.y" value="68" />
+              <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GenericIconImpl:System" />
+              <entry key="icon.imageURI" value="images/32x32/co/fileshare.png" />
+              <entry key="App_Container_class" value="org.globus.cog.gridface.impl.gftpanel.GridFTPPanelImpl" />
+              <entry key="icon.launchStaticMain" value="false" />
+            </map>
+            <node name="App_Container_class_args">
+              <map>
+                <entry key="Arg0" value="java.lang.String" />
+                <entry key="Value0" value="wiggum.mcs.anl.gov" />
+                <entry key="Arg1" value="java.lang.String" />
+                <entry key="Value1" value="2811" />
+                <entry key="Arg2" value="java.lang.String" />
+                <entry key="Value2" value="/home/pankaj/imageTest.jpg" />
+                <entry key="Arg3" value="java.lang.String" />
+                <entry key="Value3" value="wiggum.mcs.anl.gov" />
+                <entry key="Arg4" value="java.lang.String" />
+                <entry key="Value4" value="2811" />
+                <entry key="Arg5" value="java.lang.String" />
+                <entry key="Value5" value="/home/pankaj/test/imageTest.jpg" />
+              </map>
+            </node>
+          </node>
+          <node name="ICON_ID_15">
+            <map>
+              <entry key="icon.name" value="Report Desktop Bug" />
+              <entry key="icon.x" value="7" />
+              <entry key="icon.y" value="100" />
+              <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GenericIconImpl:System" />
+              <entry key="icon.imageURI" value="images/32x32/co/setup-icon.png" />
+              <entry key="App_Container_class" value="org.globus.cog.gridface.impl.texteditor.TextEditor" />
+              <entry key="icon.launchStaticMain" value="false" />
+            </map>
+            <node name="App_Container_class_args">
+              <map>
+                <entry key="Arg0" value="java.lang.String" />
+                <entry key="Value0" value="http://bugzilla.globus.org/globus/enter_bug.cgi?product=Java%20CoG%20Kit" />
+              </map>
+            </node>
+          </node>
+          <node name="ICON_ID_16">
+            <map>
+              <entry key="icon.name" value="Globus Website" />
+              <entry key="icon.x" value="7" />
+              <entry key="icon.y" value="132" />
+              <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GenericIconImpl:System" />
+              <entry key="icon.imageURI" value="images/32x32/co/window-globus.png" />
+              <entry key="App_Container_class" value="org.globus.cog.gridface.impl.texteditor.TextEditor" />
+              <entry key="icon.launchStaticMain" value="false" />
+            </map>
+            <node name="App_Container_class_args">
+              <map>
+                <entry key="Arg0" value="java.lang.String" />
+                <entry key="Value0" value="http://www.globus.org" />
+              </map>
+            </node>
+          </node>
+          <node name="ICON_ID_17">
+            <map>
+              <entry key="icon.name" value="Java CoG Kit: Karajan Workflow" />
+              <entry key="icon.x" value="7" />
+              <entry key="icon.y" value="164" />
+              <entry key="icon.type" value="org.globus.cog.gridface.impl.desktop.icons.GenericIconImpl:System" />
+              <entry key="icon.imageURI" value="images/32x32/co/window-graph.png" />
+              <entry key="App_Container_class" value="org.globus.cog.karajan.viewer.KarajanFrame" />
+              <entry key="icon.launchStaticMain" value="false" />
+            </map>
+          </node>
+        </node>
+      </node>
+    </node>
+  </root>
+</preferences>
+

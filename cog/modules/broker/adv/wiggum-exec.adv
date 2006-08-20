@@ -1,0 +1,7 @@
+[
+Name="Wiggum-Exec";
+AdvType="Service";
+ServiceType="JobSubmission";
+Provider="GT2";
+ServiceContact="wiggum.mcs.anl.gov";
+]

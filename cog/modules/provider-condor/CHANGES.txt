@@ -1,0 +1,3 @@
+(04/18/2005)	renamed this module from "core-provider-condor" to 
+		"provider-condor"
+----------------------2.0--------------------------------

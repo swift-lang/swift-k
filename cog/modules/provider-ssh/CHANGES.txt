@@ -1,0 +1,48 @@
+(07/24/2006)
+
+*** Patched the j2ssh library to report when the server throttles connections,
+    so it can be detected by tools sitting above this layer
+
+(01/11/2006)
+*** The InteractiveSSHSecurity context now accepts optional "username"
+    and "privatekey" attributes, which will be pre-filled in the dialog(s)
+	
+*** Pressing "Cancel" will return (username: "", password: ""). It prevents
+    the dialog from re-appearing after "Cancel" is pressed.
+	
+*** Changed the credentials dialog to if the environment is headless (it 
+    seems to indicate the absence of GUI capability). In that case, use 
+	a console authentication dialog. The "nogui" attribute (Boolean or String)
+	can also be used, if set to Boolean.TRUE or "True" to force the console
+	dialog.
+	
+
+-------------------------------2.1----------------------------------
+
+(01/04/2006)
+*** Comitted fix for:
+	http://bugzilla.globus.org/bugzilla/show_bug.cgi?id=3784
+	
+*** Re-formatted this file
+
+
+(05/11/2005)	
+*** Implemented file stage outs redirected to the local 
+	machine fixing bug http://www.cogkit.org/bugzilla/show_bug.cgi?id=123  
+		
+
+(05/11/2005)	
+*** Committed changes for bug:
+	http://www.cogkit.org/bugzilla/show_bug.cgi?id=70
+
+(04/19/2005)	
+*** Renamed the module "core-provider-ssh" to "provider-ssh" 
+
+-------------------------------2.0----------------------------------
+
+(03/17/2005)
+*** Updated the SSHSecurityCredentialImpl to show a dialog box 
+	prompting the user to enter credentials (if null credentials are
+	specified)   
+
+-------------------------------1.0----------------------------------

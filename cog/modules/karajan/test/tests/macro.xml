@@ -1,0 +1,43 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="macro"/>
+		<map:entry key="test">
+			<element arguments="">
+				<define name="for1to10">
+					<macro>
+						<set names="ivar, body">
+							<quoted>
+								<executeElement>
+									<list:first list="{...}"/>
+								</executeElement>
+							</quoted>
+						
+							<list:butFirst list="{...}"/>
+						</set>
+
+						<for name="{ivar}">
+							<range from="1" to="10"/>
+						
+							<for name="_" in="{body}">
+								<executeElement element="{_}"/>
+							</for>
+						</for>
+					</macro>
+				</define>
+				
+				<sum>
+					<for1to10>
+						<variable>i</variable>
+						
+						<sum>
+							<number>1</number>
+							<variable>i</variable>
+						</sum>
+					</for1to10>
+				</sum>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result" value="65"/>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

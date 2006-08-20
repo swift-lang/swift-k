@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="DelegationFactoryService" targetNamespace="http://www.globus.org/08/2004/delegationService" xmlns:wst="http://schemas.xmlsoap.org/ws/2004/04/trust" xmlns:wsrp="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd" xmlns:tns="http://www.globus.org/08/2004/delegationService" xmlns:wsrpw="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" xmlns:wsdlpp="http://www.globus.org/namespaces/2004/10/WSDLPreprocessor" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" location="../wsrf/properties/WS-ResourceProperties.wsdl"/>
+  <import namespace="http://schemas.xmlsoap.org/ws/2004/04/trust" location="../ws/trust/ws-trust.wsdl"/>
+  <types>
+    <xsd:schema elementFormDefault="qualified" targetNamespace="http://www.globus.org/08/2004/delegationService" xmlns:wst="http://schemas.xmlsoap.org/ws/2004/04/trust" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing" schemaLocation="../ws/addressing/WS-Addressing.xsd"/>
+
+            <xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/04/trust" schemaLocation="../ws/trust/ws-trust.xsd"/>
+
+            <xsd:complexType name="certType">
+                <xsd:sequence>
+                    <xsd:any namespace="##any"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:element name="CertificateChain" type="tns:certType"/>
+
+            <xsd:element name="RPSet">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element maxOccurs="1" minOccurs="1" ref="tns:CertificateChain"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:schema>
+  </types>
+  <portType name="DelegationFactoryPortType" wsrp:ResourceProperties="tns:RPSet">
+    <operation name="RequestSecurityToken">
+      <input message="wst:RequestSecurityTokenMsg"/>
+      <output name="RequestSecurityTokenResponse" message="wst:RequestSecurityTokenResponseMsg"/>
+    </operation>
+    <operation name="RequestSecurityToken2">
+      <input message="wst:RequestSecurityTokenMsg"/>
+      <output message="wst:RequestSecurityTokenResponseCollectionMsg"/>
+    </operation>
+    <operation name="QueryResourceProperties">
+      <input name="QueryResourcePropertiesRequest" message="wsrpw:QueryResourcePropertiesRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/QueryResourceProperties"/>
+      <output name="QueryResourcePropertiesResponse" message="wsrpw:QueryResourcePropertiesResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/QueryResourcePropertiesResponse"/>
+      <fault name="UnknownQueryExpressionDialectFault" message="wsrpw:UnknownQueryExpressionDialectFault"/>
+      <fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <fault name="QueryEvaluationErrorFault" message="wsrpw:QueryEvaluationErrorFault"/>
+      <fault name="InvalidQueryExpressionFault" message="wsrpw:InvalidQueryExpressionFault"/>
+      <fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+    </operation>
+    <operation name="GetResourceProperty">
+      <input name="GetResourcePropertyRequest" message="wsrpw:GetResourcePropertyRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourceProperty"/>
+      <output name="GetResourcePropertyResponse" message="wsrpw:GetResourcePropertyResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourcePropertyResponse"/>
+      <fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+    </operation>
+  </portType>
+</definitions>

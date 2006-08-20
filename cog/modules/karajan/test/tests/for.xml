@@ -1,0 +1,47 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="for"/>
+		<map:entry key="test">
+			<element arguments="">
+				<set name="r">
+					<range from="0" to="6"/>
+				</set>
+				<list>
+					<sum>
+						<for name="i" in="{r}">
+							<number>1</number>
+							<number>1</number>
+						</for>
+					</sum>
+					
+					<sum>
+						<for name="i">
+							<range from="0" to="7"/>	
+						
+							<number>1</number>
+							<number>1</number>
+						</for>
+					</sum>
+					
+					<sum>
+						<for>
+							<variable>i</variable>
+							<range from="0" to="8"/>	
+						
+							<number>1</number>
+							<number>1</number>
+						</for>
+					</sum>
+				</list>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<list>
+				<number>14</number>
+				<number>16</number>
+				<number>18</number>
+			</list>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

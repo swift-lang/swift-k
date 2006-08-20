@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<registry>
+    <portlet-entry name="JavaCoGKitRemoteExecutionPortlet" hidden="false"
+        type="instance" application="false">
+        <meta-info>
+            <title>Java CoG Kit: Grid Job Submission Portlet</title>
+            <description>Helps you submit a job to the Grid</description>
+        </meta-info>
+        <classname>org.apache.jetspeed.portal.portlets.CustomizerVelocityPortlet</classname>
+        <parameter name="template" value="remoteExecution-form" hidden="false"/>
+        <parameter name="cache-period-milliseconds" value="0" hidden="false" cachedOnName="true" cachedOnValue="true"/>
+        <parameter name="action" value="org.globus.cog.portlet.remoteExecution.RemoteExecutionPortlet" hidden="false" cachedOnName="true" cachedOnValue="true"/>
+        <media-type ref="html"/>
+    </portlet-entry>
+</registry>

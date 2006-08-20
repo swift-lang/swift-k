@@ -1,0 +1,26 @@
+<project name="Launchers" default="create" basedir=".">
+  <target name="create">
+	  <ant antfile="${main.buildfile}" target="launcher">
+	  	  <property name="launcher-name" value="cog-gridshell"/>
+	  	  <property name="class-name"	value="org.globus.cog.gridshell.ctrl.GridShellImpl"/>
+	  </ant>          
+          <ant antfile="${main.buildfile}" target="example.launcher">
+                  <property name="launcher-name" value="cog-matrix-mult"/>
+                  <property name="class-name" value="org.globus.cog.gridshell.tasks.examples.MatrixMultiplyImpl"/>
+                  <property name="launcher-dir" value="examples"/>
+          </ant>
+          <ant antfile="${main.buildfile}" target="example.launcher">
+                  <property name="launcher-name" value="cog-echo-example"/>
+                  <property name="class-name" value="org.globus.cog.gridshell.tasks.examples.EchoExample"/>
+                  <property name="launcher-dir" value="examples"/>
+          </ant>
+   </target>
+
+   <target name="webstart">
+          <ant antfile="${main.buildfile}" target="webstart.launcher">
+                  <property name="launcher-name" value="cog-gridshell"/>
+                  <property name="class-name" value="org.globus.cog.gridshell.ctrl.GridShellImpl"/>
+                  <property name="display-name" value="Java CoG Kit - GridShell"/>
+          </ant>
+   </target>
+</project>

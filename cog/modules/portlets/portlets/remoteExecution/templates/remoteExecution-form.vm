@@ -1,0 +1,785 @@
+## This program is distributed under the following licence:
+## http://www.globus.org/toolkit/download/license.html
+
+<div align="left">
+
+	<link rel="stylesheet" type="text/css" href="/jetspeed/css/RemoteExecution_styles.css" title="style">
+
+	<script type="text/javascript" language="JavaScript">
+		<!-- hide from older browsers
+
+#*
+ * todo: more javascript to validate form, etc
+ *#
+
+		var boolFile=false;
+		var boolText=true;
+		var arrEnvPairList = new Array();
+		arrEnvPairList[0] = new Array();
+		arrEnvPairList[1] = new Array();
+
+		function trim(str) {
+			if (str == null) {
+				return (false);
+			}
+			return str.replace(/^\s*/,"").replace(/\s*$/,"");
+		}
+
+		function fnShow(objId) {
+			if (document.getElementById) { // object detection for IE5 and NS6
+				var objTmp=document.getElementById(objId);
+				objTmp.style.visibility='visible';
+			} else if (document.all) { // object detection for IE4
+				document.all[objId].style.visibility='visible';
+			} else if (document.layers) { // object detection for NS4
+				document.layers[objId].visibility='show';
+			} else { // other browers
+			}
+		}
+
+		function fnHide(objId) {
+			if (document.getElementById) { // object detection for IE5 and NS6
+				var objTmp=document.getElementById(objId);
+				objTmp.style.visibility='hidden';
+			} else if (document.all) { // object detection for IE4
+				document.all[objId].style.visibility='hidden';
+			} else if (document.layers) { // object detection for NS4
+				document.layers[objId].visibility='hide';
+			} else { // other browers
+			}
+		}
+
+		function fnChangeBatch(objId) {
+			if (objId.options[objId.selectedIndex].id == 0) {
+				/**
+				 * if batch is false 
+				 * a) enable redirection
+				 * b) enable stdout and stderr
+				 * c) enable toggle button.
+				 */
+				document.RemoteExecution_form.selRedirected.disabled = false;
+				document.RemoteExecution_form.btnExecutable.disabled = false;
+				document.RemoteExecution_form.txtStdOut.disabled = false;
+				document.RemoteExecution_form.txtStdErr.disabled = false;
+			} else if (objId.options[objId.selectedIndex].id == 1) {
+				/**
+				 * if batch is true 
+				 * a) disable redirection, and set to false
+				 * b) enable stdout and stderr
+				 * c) switch to remote executable mode, and disable toggle button.
+				 */
+				var objTmp = document.getElementById('selRedirected');
+				objTmp.options[0].selected = true;
+				document.RemoteExecution_form.selRedirected.disabled = true;
+				document.RemoteExecution_form.txtStdOut.disabled = false;
+				document.RemoteExecution_form.txtStdErr.disabled = false;
+				if (document.RemoteExecution_form.btnExecutable.value == 'Remote') {
+					fnToggleExecutable();
+				}
+				document.RemoteExecution_form.btnExecutable.disabled = true;
+			}
+		}
+
+		function fnChangeRedirected(objId) {
+			if (objId.options[objId.selectedIndex].id == 0) {
+				// if redirected is false enable stdout and stderr
+				document.RemoteExecution_form.txtStdOut.disabled = false;
+				document.RemoteExecution_form.txtStdErr.disabled = false;
+			} else if (objId.options[objId.selectedIndex].id == 1) {
+				// if redirected is true disable stdout and stderr
+				document.RemoteExecution_form.txtStdOut.disabled = true;
+				document.RemoteExecution_form.txtStdErr.disabled = true;
+			}
+		}
+
+		function fnChangeHost(objId) {
+			if (objId.options[objId.selectedIndex].id!=0) {
+				document.RemoteExecution_form.txtHostContact.value=objId.options[objId.selectedIndex].value;
+			}
+		}
+
+		function fnToggleExecutable() {
+			// change hidden/show state of idFile
+			if (boolFile==true) {
+				boolFile=false;
+				fnHide('idFile');
+				document.RemoteExecution_form.txtExecutableType.value='Remote';
+				document.RemoteExecution_form.btnExecutable.value='Local';
+			} else {
+				boolFile=true;
+				fnShow('idFile');
+			}
+			// change hidden/show state of idText
+			if (boolText==true) {
+				boolText=false;
+				fnHide('idText');
+				document.RemoteExecution_form.txtExecutableType.value='Local';
+				document.RemoteExecution_form.btnExecutable.value='Remote';
+			} else {
+				boolText=true;
+				fnShow('idText');
+			}
+		}
+
+		function fnPopulateSelect() {
+			var objSel = document.RemoteExecution_form.selEnvPairs;
+			objSel.options.length=0;
+			var len = objSel.options.length;
+
+			for (i=0; i<arrEnvPairList[0].length; i++) {
+				var strNameValue = arrEnvPairList[0][i] + '=' + arrEnvPairList[1][i];
+				
+				objSel.options[len++] = new Option(strNameValue);
+			}
+		}
+
+		function fnAddEnvPair() {
+			var boolNameOk = false;
+			var boolValueOk = false;
+			if ((document.RemoteExecution_form.txtEnvName.value != null) && (trim(document.RemoteExecution_form.txtEnvName.value) != '')) {
+				boolNameOk = true;
+			}
+			if ((document.RemoteExecution_form.txtEnvValue.value != null) && (trim(document.RemoteExecution_form.txtEnvValue.value) != '')) {
+				boolValueOk = true;
+			}
+			if ((boolNameOk == true) && (boolValueOk == true)) {
+				// add name and value to respective array
+				arrEnvPairList[0].push(trim(document.RemoteExecution_form.txtEnvName.value));
+				arrEnvPairList[1].push(trim(document.RemoteExecution_form.txtEnvValue.value));
+
+				// populate select
+				fnPopulateSelect();
+			}
+		}
+
+		function fnEditEnvPair() {
+			// find out which one
+			var objSel = document.RemoteExecution_form.selEnvPairs;
+
+			if (objSel.selectedIndex >= 0) {
+				// put into text fields
+				document.RemoteExecution_form.txtEnvName.value = arrEnvPairList[0][objSel.selectedIndex];
+				document.RemoteExecution_form.txtEnvValue.value = arrEnvPairList[1][objSel.selectedIndex];
+
+				// remove from array
+				arrEnvPairList[0].splice(objSel.selectedIndex, 1);
+				arrEnvPairList[1].splice(objSel.selectedIndex, 1);
+
+				// populate select
+				fnPopulateSelect();
+			}
+		}
+
+		function fnHelpPopup(strHelpFile, strLinkLocation) {
+			var strLink = '$!{RemoteExecutionPortlet_ContextPath}/html/' + strHelpFile + '#' + strLinkLocation;
+			var objWin = window.open(strLink, "Help", "toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, width=400, height=300, top=100, left=100");
+		}
+
+		function fnTrimAll() {
+			document.RemoteExecution_form.txtJobName.value = trim(document.RemoteExecution_form.txtJobName.value);
+			document.RemoteExecution_form.txtHostContact.value = trim(document.RemoteExecution_form.txtHostContact.value);
+			document.RemoteExecution_form.txtPort.value = trim(document.RemoteExecution_form.txtPort.value);
+			document.RemoteExecution_form.txtService.value = trim(document.RemoteExecution_form.txtService.value);
+			document.RemoteExecution_form.txtSubject.value = trim(document.RemoteExecution_form.txtSubject.value);
+			document.RemoteExecution_form.txtArguments.value = trim(document.RemoteExecution_form.txtArguments.value);
+			document.RemoteExecution_form.txtDirectory.value = trim(document.RemoteExecution_form.txtDirectory.value);
+			document.RemoteExecution_form.txtStdOut.value = trim(document.RemoteExecution_form.txtStdOut.value);
+			document.RemoteExecution_form.txtStdErr.value = trim(document.RemoteExecution_form.txtStdErr.value);
+		}
+
+		function fnConstructConfirmMessage() {
+			var strConfirmMessage = null;
+			var strHostContact = null;
+			var strEnvironment = null;
+
+			fnTrimAll();
+
+			strConfirmMessage = 'You have entered the following:\n\n';
+			strConfirmMessage += 'Job Name\t\t: ' + document.RemoteExecution_form.txtJobName.value + '\n';
+			strConfirmMessage += 'Provider\t\t: ' + document.RemoteExecution_form.selProvider.value + '\n';
+			strConfirmMessage += 'Batch Job\t\t: ' + document.RemoteExecution_form.selBatchJob.value + '\n';
+			strConfirmMessage += 'Redirected\t: ' + document.RemoteExecution_form.selRedirected.value + '\n';
+
+			strHostContact = '';
+			if (document.RemoteExecution_form.selProvider.value == 'GT2') {
+				strHostContact = document.RemoteExecution_form.txtHostContact.value + ':' +
+								document.RemoteExecution_form.txtPort.value + '/' +
+								document.RemoteExecution_form.txtService.value + ':' +
+								document.RemoteExecution_form.txtSubject.value;
+			} else if (document.RemoteExecution_form.selProvider.value == 'GT3') {
+				strHostContact = document.RemoteExecution_form.txtHostContact.value;
+			}
+			strConfirmMessage += 'Host Contact\t: ' + strHostContact + '\n';
+			strConfirmMessage += 'Certificate\t: ' + document.RemoteExecution_form.selCertDN.value + '\n';
+
+			var strExecutable = '';
+			if (document.RemoteExecution_form.txtExecutableType.value == 'Remote') {
+				strExecutable = trim(document.RemoteExecution_form.txtExecutable.value);
+			} else if (document.RemoteExecution_form.txtExecutableType.value == 'Local') {
+				strExecutable = trim(document.RemoteExecution_form.flExecutable.value);
+			}
+			strConfirmMessage += 'Executable\t: ' + strExecutable + '\n';
+			strConfirmMessage += 'Arguments\t: ' + document.RemoteExecution_form.txtArguments.value + '\n';
+			strConfirmMessage += 'Directory\t\t: ' + document.RemoteExecution_form.txtDirectory.value + '\n';
+
+			var strEnvironment = '';
+			if (arrEnvPairList[0].length > 0) {
+				strEnvironment += '\n\tName\tValue';
+				for (i=0; i<arrEnvPairList[0].length; i++) {
+					strEnvironment += '\n\t';
+					strEnvironment += arrEnvPairList[0][i];
+					strEnvironment += ' = \"';
+					strEnvironment += arrEnvPairList[1][i];
+					strEnvironment += '\"';
+				}
+			}
+			strConfirmMessage += 'Environment\t: ' + strEnvironment + '\n';
+			strConfirmMessage += 'Standard Output\t: ' + document.RemoteExecution_form.txtStdOut.value + '\n';
+			strConfirmMessage += 'Standard Error\t: ' + document.RemoteExecution_form.txtStdErr.value + '\n';
+			strConfirmMessage += '\nContinue?';
+
+			return strConfirmMessage;
+		}
+
+		function fnCheckAndSubmit() {
+			var boolMissing = false;
+			var strMissingMessage = null;
+			var strConfirmMessage = null;
+			var iCount = 1;
+
+			strMissingMessage = 'Please specify the following\n';
+
+			// check for provider
+			// find out which one
+			var objProvider = document.RemoteExecution_form.selProvider;
+			if (objProvider.selectedIndex == 0) {
+				boolMissing = true;
+				strMissingMessage += iCount++ + ') ';
+				strMissingMessage += 'Provider\n';
+			}
+			// check for host contact
+			if (trim(document.RemoteExecution_form.txtHostContact.value) == '') {
+				boolMissing = true;
+				strMissingMessage += iCount++ + ') ';
+				strMissingMessage += 'Host contact\n';
+			}
+			// check for executable
+			if (trim(document.RemoteExecution_form.txtExecutableType.value) == 'Remote') {
+				if ((document.RemoteExecution_form.txtExecutable.value != null) &&
+					(trim(document.RemoteExecution_form.txtExecutable.value) == '')) {
+					boolMissing = true;
+					strMissingMessage += iCount++ + ') ';
+					strMissingMessage += 'Executable\n';
+				}
+			} else if (trim(document.RemoteExecution_form.txtExecutableType.value) == 'Local') {
+				if ((document.RemoteExecution_form.flExecutable.value != null) &&
+					(trim(document.RemoteExecution_form.flExecutable.value) == '')) {
+					boolMissing = true;
+					strMissingMessage += iCount++ + ') ';
+					strMissingMessage += 'Executable\n';
+				}
+			}
+
+			// if missing then alert and return
+			if (boolMissing) {
+				strMissingMessage += 'and then try again.';
+				alert(strMissingMessage);
+				return false;
+			}
+
+			// check and populate the environment string
+			var strEnvironment = '';
+			for (i=0; i<arrEnvPairList[0].length; i++) {
+				strEnvironment += '(';
+				strEnvironment += arrEnvPairList[0][i];
+				strEnvironment += ' \"';
+				strEnvironment += arrEnvPairList[1][i];
+				strEnvironment += '\")';
+			}
+			document.RemoteExecution_form.txtEnvironment.value = strEnvironment;
+			// disable temporary fields
+			document.RemoteExecution_form.eventSubmit_doSubmit_job.disabled = true;
+			document.RemoteExecution_form.txtEnvName.disabled = true;
+			document.RemoteExecution_form.txtEnvValue.disabled = true;
+
+			// confirm the job details and submit
+			// construct job details message
+			strConfirmMessage = fnConstructConfirmMessage();
+			if (confirm(strConfirmMessage)) {
+//				document.RemoteExecution_form.submit();
+				document.RemoteExecution_form.eventSubmit_doSubmit_job.disabled = false;
+				return true;
+			}
+
+			// enable fields
+			document.RemoteExecution_form.eventSubmit_doSubmit_job.disabled = false;
+			document.RemoteExecution_form.txtEnvName.disabled = false;
+			document.RemoteExecution_form.txtEnvValue.disabled = false;
+			return false;
+		}
+
+		//-->
+	</script>
+
+	<!--	action="$jlink.getPortletByName($portlet.Name)" -->
+
+#if( !($RemoteExecutionPortlet_ProxyDNs) )
+		<table border="0" cellspacing="2" cellpadding="1">
+			<tr>
+				<td width="100%">
+					<div class="InfoRed">
+						You don't have any valid certificates.<br>
+						Please use the MyProxy credential access portlet to get a proxy certificate.
+					</div>
+				</td>
+			</tr>
+		</table>
+#else
+##	#set( $link_monitor = $jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doShow_job_history","") )
+	#set( $link_submit = $jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doSubmit_job","") )
+	<form name="RemoteExecution_form" method="POST" enctype="multipart/form-data" action="$!{link_submit}">
+#* commented by shankar
+		<table width=100%>
+			<tr>
+				<td>
+					<a href= "${link_monitor}">
+						Monitor submitted jobs 
+					</a>
+				</td>
+			</tr>
+		</table>
+*#
+
+		<table border="1" cellspacing="0" cellpadding="2">
+			<tr>
+				<td colspan="2">
+					<div class="NoteSmall">Note: Fields marked with a <span class="NoteSmallRed">*</span> are required</div>
+				</td>
+				<td>
+					<div class="NoteSmall">Redirected/<br>Local?</div>
+				</td>
+				<td>
+					<div class="NoteSmall">Help</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Job name
+					</div>
+				</td>
+				<td>
+					<input size="25" value="$!data.Parameters.getString("txtJobName")" name="txtJobName" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'jobname'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Provider 
+						<span class="NoteSmallRed">*</span>
+					</div>
+				</td>
+				<td>
+					<select name="selProvider">
+						<option value="none" selected>--- Select a provider ---</option>
+						<option value="GT2">Globus Toolkit 2</option>
+						<option value="GT3">Globus Toolkit 3</option>
+					</select>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'provider'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Batch job?
+					</div>
+				</td>
+				<td>
+					<select name="selBatchJob" onChange="fnChangeBatch(this);">
+						<option id="0" value="false" selected>false</option>
+						<option id="1" value="true">true</option>
+					</select>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'batch'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Redirect stdout/stderr?
+					</div>
+				</td>
+				<td>
+					<select name="selRedirected" onChange="fnChangeRedirected(this);">
+						<option id="0" value="false" selected>false</option>
+						<option id="1" value="true">true</option>
+					</select>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'redirect'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Host contact
+						<span class="NoteSmallRed">*</span>
+					</div>
+				</td>
+				<td>
+					<input size="25" value="$!data.Parameters.getString("txtHostContact")" name="txtHostContact" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'hostcontact'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+	#set( $hosts = $data.getUser().getTemp("RemoteExecutionPortlet_Hosts") )
+			<tr>
+				<td>
+					Select a host contact
+				</td>
+				<td>	
+					<select onChange="fnChangeHost(this);">
+						<option id="0" value="none" selected>--- Select a host ---</option>
+	#if( $hosts )
+		#foreach( $hostname in $hosts )
+						<option id="${velocityCount}" value="${hostname}">$hostname</option>
+		#end
+	#end
+					</select>
+				</td>
+				</td>
+			</tr>
+			<tr id="idRowPort">
+				<td>
+					<div class="Bold">
+						Port
+					</div>
+				</td>
+				<td>
+					<input size="25" value="$!data.Parameters.getString("txtPort")" name="txtPort" maxlength="5" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'port'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr id="idRowService">
+				<td>
+					<div class="Bold">
+						Service
+					</div>
+				</td>
+				<td>
+					<input size="25" value="$!data.Parameters.getString("txtService")" name="txtService" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'service'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr id="idRowSubject">
+				<td>
+					<div class="Bold">
+						Subject
+					</div>
+				</td>
+				<td>
+					<input size="50" value="$!data.Parameters.getString("txtSubject")" name="txtSubject" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'subject'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Certificate to use
+						<span class="NoteSmallRed">*</span>
+					</div>
+				</td>
+				<td>
+					<select name="selCertDN">
+	#foreach( $DN in $RemoteExecutionPortlet_ProxyDNs )
+						<option value="$DN">$DN</option>
+	#end
+					</select>	
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'certificate'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td>
+					<div class="NoteSmall">Note: If you don't see all the certificates above, it means they have expired</div>
+				</td> 
+				<td>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Executable 
+						<span class="NoteSmallRed">*</span>
+					</div>
+				</td>
+				<td>
+					<input type="hidden" name="txtExecutableType" value="Remote"/>
+					<div id="idFile" class="clsSwap" style="position: absolute">
+						<input type="file" size="25" name="flExecutable"/>
+					</div>
+					<div id="idText" class="clsSwap" style="position: relative">
+						<input type="text" size="25" value="$!data.Parameters.getString("txtExecutable")" name="txtExecutable" maxlength="200"/>
+					</div>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'executable'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					&nbsp;
+				</td>
+				<td>
+					Click here to toggle between local and remote executables
+				</td>
+				<td>
+					<input type="button" name="btnExecutable" value="Local" onclick="fnToggleExecutable();"/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Arguments
+					</div>
+				</td>
+				<td>
+					<input size="25" value="$!data.Parameters.getString("txtArguments")" name="txtArguments" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'arguments'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Directory
+					</div>
+				</td>
+				<td>
+					<input size="25" value="$!data.Parameters.getString("txtDirectory")" name="txtDirectory" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'directory'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Environment
+					</div>
+				</td>
+				<td>
+					<table border="1">
+						<tr>
+							<td>
+								<input type="hidden" name="txtEnvironment" value=""/>
+								<table>
+									<tr>
+										<td>
+											Name
+										</td>
+										<td>
+										</td>
+										<td>
+											Value
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<input type="text" name="txtEnvName" value="" size="20"/>
+										</td>
+										<td>
+											&nbsp;=&nbsp;
+										</td>
+										<td>
+											<input type="text" name="txtEnvValue" value="" size="20"/>
+										</td>
+									</tr>
+								</table>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											Add <input type="button" name="btnAddEnvPair" value="-->" onclick="fnAddEnvPair();"/>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Edit <input type="button" name="btnEditEnvPair" value="<--" onclick="fnEditEnvPair();"/>
+										</td>
+									</tr>
+								</table>
+
+							</td>
+							<td>
+								Current environement set:<br>
+								<select name="selEnvPairs" size="5" onchange="fnEnvPairsChanged(this);"/></select>
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'environment'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+	#* commented by shankar
+	 * not yet implemented in core
+			<tr>
+				<td>
+					<div class="Bold">
+						Standard Input
+					</div>
+				</td>
+				<td>
+					<input size="35" value="$!data.Parameters.getString("txtStdin")" name="txtStdin" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'stdin'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+	*#
+			<tr>
+				<td>
+					<div class="Bold">
+						Standard Output File
+					</div>
+				</td>
+				<td>
+					<input size="35" value="$!data.Parameters.getString("txtStdOut")" name="txtStdOut" maxlength="100" type="text"/>
+				</td>
+				<td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'stdout'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Standard Error File
+					</div>
+				</td>
+				<td>
+					<input size="35" value="$!data.Parameters.getString("txtStdErr")" name="txtStdErr" maxlength="100" type="text"/>
+				</td>
+				<td>
+				</td>
+				<td align="center">
+					<a href="#" onclick="fnHelpPopup('RemoteExecution_help.html', 'stderr'); return false;">
+						<img src="images/remoteExecution-question.png" border="0">
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td align="left"><br>
+					<input name="eventSubmit_doSubmit_job" type="submit" value="Submit Job" onclick="return fnCheckAndSubmit();"/>
+				</td>
+				<td>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+			</tr>
+			<tr>
+	#if($RemoteExecutionPortlet_Status)
+		#set($outputMesg = "Output")
+	#end
+				<td valign="top">
+					<b>$!outputMesg</b>
+				</td>
+				<td colspan="2">
+					$!RemoteExecutionPortlet_Status
+				</td>
+			</tr>
+		</table>
+		<script type="text/javascript" language="JavaScript">
+		<!--
+			fnHide('idFile');
+		//--!>
+		</script>
+#end
+	</form>
+</div>

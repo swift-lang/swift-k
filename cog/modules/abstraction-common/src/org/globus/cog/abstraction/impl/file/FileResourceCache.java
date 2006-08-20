@@ -1,0 +1,206 @@
+// ----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
+/*
+ * Created on Oct 8, 2004
+ */
+package org.globus.cog.abstraction.impl.file;
+
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
+import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
+import org.globus.cog.abstraction.interfaces.FileResource;
+import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.Service;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
+
+public class FileResourceCache {
+	private static Logger logger = Logger.getLogger(FileResourceCache.class);
+
+	private static FileResourceCache defaultFileResourceCache;
+
+	private static int DEFAULT_MAX_IDLE_RESOURCES = 20;
+	private static long DEFAULT_MAX_IDLE_TIME = 120000;
+
+	public static FileResourceCache getDefault() {
+		if (defaultFileResourceCache == null) {
+			defaultFileResourceCache = new FileResourceCache();
+		}
+		return defaultFileResourceCache;
+	}
+
+	private LinkedList order;
+	private Map releaseTimes;
+	private Map fileResources;
+	private Set inUse;
+	private Timer timer;
+	private int maxIdleResources = DEFAULT_MAX_IDLE_RESOURCES;
+	private long maxIdleTime = DEFAULT_MAX_IDLE_TIME;
+
+	public FileResourceCache() {
+		fileResources = new Hashtable();
+		inUse = new HashSet();
+		order = new LinkedList();
+		releaseTimes = new Hashtable();
+	}
+
+	public synchronized FileResource getResource(Service service) throws InvalidProviderException,
+			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
+			GeneralException {
+		logger.debug("Got request for resource for " + service);
+		checkTimer();
+		ServiceContact contact = service.getServiceContact();
+		if (fileResources.containsKey(contact)) {
+			List resources = (List) fileResources.get(contact);
+			Iterator i = resources.iterator();
+			while (i.hasNext()) {
+				FileResource fileResource = (FileResource) i.next();
+				if (!inUse.contains(fileResource)) {
+					inUse.add(fileResource);
+					order.remove(fileResource);
+					releaseTimes.remove(fileResource);
+					logger.debug("Found cached resource");
+					return fileResource;
+				}
+			}
+		}
+		return newResource(service);
+	}
+
+	private FileResource newResource(Service service) throws InvalidProviderException,
+			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
+			GeneralException {
+		//TODO Are file resources reentrant?
+		logger.debug("Instantiating new resource for " + service);
+		String provider = service.getProvider();
+		ServiceContact contact = service.getServiceContact();
+		if (provider == null) {
+			throw new InvalidProviderException("Provider is null");
+		}
+		SecurityContext securityContext = service.getSecurityContext();
+		if (securityContext == null) {
+			securityContext = AbstractionFactory.newSecurityContext(provider);
+		}
+		FileResource fileResource = AbstractionFactory.newFileResource(provider);
+		fileResource.setServiceContact(contact);
+		fileResource.setSecurityContext(securityContext);
+		fileResource.start();
+		List resources;
+		if (fileResources.containsKey(contact)) {
+			resources = (List) fileResources.get(contact);
+		}
+		else {
+			resources = new LinkedList();
+			fileResources.put(contact, resources);
+		}
+		resources.add(fileResource);
+		inUse.add(fileResource);
+		return fileResource;
+	}
+
+	public synchronized void releaseResource(FileResource resource) {
+		if (resource == null) {
+			return;
+		}
+		logger.debug("Releasing resource for " + resource.getServiceContact());
+		if (!inUse.contains(resource)) {
+			throw new RuntimeException("Attempted to release resource that is not in use");
+		}
+		inUse.remove(resource);
+		order.addLast(resource);
+		releaseTimes.put(resource, new Long(System.currentTimeMillis()));
+		checkIdleResourceCount();
+	}
+
+	private void removeResource(FileResource resource) {
+		if (fileResources.containsKey(resource.getServiceContact())) {
+			List resources = (List) fileResources.get(resource.getServiceContact());
+			resources.remove(resource);
+			try {
+				resource.stop();
+			}
+			catch (GeneralException e) {
+				logger.warn("Failed to stop resource", e);
+			}
+		}
+	}
+
+	private void checkIdleResourceCount() {
+		while (order.size() > maxIdleResources) {
+			FileResource fileResource = (FileResource) order.removeFirst();
+			logger.debug("Idle resource count exceeded. Removing resource for "
+					+ fileResource.getServiceContact());
+			removeResource(fileResource);
+		}
+	}
+
+	public int getMaxIdleResources() {
+		return maxIdleResources;
+	}
+
+	public void setMaxIdleResources(int maxResources) {
+		this.maxIdleResources = maxResources;
+	}
+
+	public long getMaxIdleTime() {
+		return maxIdleTime;
+	}
+
+	public void setMaxIdleTime(long maxIdleTime) {
+		this.maxIdleTime = maxIdleTime;
+	}
+
+	private void checkTimer() {
+		if (timer == null) {
+			timer = new Timer(true);
+			timer.schedule(new ResourceSwipe(this), 60000, 60000);
+		}
+	}
+
+	private synchronized void checkIdleResourceAges() {
+		long threshold = System.currentTimeMillis() - maxIdleTime;
+		long last;
+		do {
+			if (order.size() == 0) {
+				return;
+			}
+			FileResource resource = (FileResource) order.getFirst();
+			last = ((Long) releaseTimes.get(resource)).longValue();
+			if (last < threshold) {
+				order.removeFirst();
+				releaseTimes.remove(resource);
+				logger.debug("Maximum idle time exceeded. Removing resource for "
+						+ resource.getServiceContact());
+				removeResource(resource);
+			}
+		}
+		while (last < threshold);
+	}
+
+	private class ResourceSwipe extends TimerTask {
+		private FileResourceCache cache;
+
+		public ResourceSwipe(FileResourceCache cache) {
+			this.cache = cache;
+		}
+
+		public void run() {
+			cache.checkIdleResourceAges();
+		}
+	}
+}

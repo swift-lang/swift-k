@@ -1,0 +1,22 @@
+<project name="reverse">
+<!-- reverses the lines in a file using /usr/bin/tac on a remote host -->
+  <include file="sys.xml"/>
+  <include file="task.xml"/>
+  <include file="scheduler.xml"/>
+    
+  <allocateHost name="host">
+    <execute  host="{host}" 
+              executable="/bin/rm" 
+              args="-f esrever.lmx"/> 
+    <transfer srchost="localhost" 
+              srcfile="reverse.xml" 
+              desthost="{host}"/>
+    <execute  host="{host}" 
+              executable="/usr/bin/tac" 
+              stdin="reverse.xml" 
+              stdout="esrever.lmx"/>
+    <transfer srchost="{host}" 
+              srcfile="esrever.lmx" 
+              desthost="localhost"/>
+  </allocateHost>
+</project>
