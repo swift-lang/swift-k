@@ -1,0 +1,48 @@
+<project name="Project dependencies" default="deps" basedir=".">
+	<!-- project dependencies -->
+	<target name="deps">
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="abstraction-common"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="abstraction-examples"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-gt2"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-gt2ft"/>
+	  </ant>
+	  <!-- GT 3 providers are not built by default any more
+	  
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-gt3_0_2"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-gt3_2_0"/>
+	  </ant> -->
+	  
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-gt3_2_1"/>
+	  </ant>
+	  
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-gt4_0_0"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-condor"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-ssh"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-webdav"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-local"/>
+	  </ant>
+	  <!-- <ant antfile="${main.buildfile}" target="dep">
+		<property name="module" value="provider-ws"/>
+	  </ant>-->
+	</target>	
+</project>

@@ -1,0 +1,164 @@
+
+Please help us improving the software by
+
+a) registering if you use JGlobus or Java CoG Kit 4
+
+b) by actively participating in our community project.
+
+Thanks
+
+Gregor
+gregor@mcs.anl.gov
+
+=====================================================================
+CHANGES
+=====================================================================
+
+(01/06) We recommend that you do not use GT3 and that you switch 
+        either to GT2, GT4, or SSH and use the appropriate providers.
+
+---------------------------------------------------------------------
+
+SEVERAL CHANGES HAVE NOT YET BEEN REPORTED BETWEEN 08/05 and 01/06
+
+---------------------------------------------------------------------
+
+=====================================================================
+(04/06) Java CoG Kit release 4.1.4
+=====================================================================
+
+(For more details, please consult the CHANGES.txt file for specific
+ modules)
+
+=== Abstractions ===
+
+******* Better Tomcat integration for the abstractions library
+
+******* Support for partial transfers in 3rd party GridFTP transfers
+
+******* Better performance of sandboxed providers when using concurrent
+        requests (GT3 & 4)
+
+******* By default delegation is disabled now (where possible)
+
+******* Updated GT4 jars to fix a race condition and a deadlock
+
+******* Added a grid-mapping local provider (used by the workflow service)
+
+******* Made the interactive SSH credentials dialog more robust and able
+        to also work with a console only interface if no GUI is detected.
+
+
+=== Graph Editor ===
+
+******* Added dilate/contract options
+
+=== JGlobus ===
+
+******* Updated to a newer version fixing a number of problems and 
+        implementing partial 3rd party transfers in GlobusURLCopy
+		
+=== Karajan ===
+
+******* Performance and scalability improvements
+
+******* Added a library for DAGMan style fault tolerance (restart logs)
+
+******* A workflow service is now available which can be used to execute
+        arbitrary workflows
+		
+******* A number of elements were added
+
+******* Portable element definitions by using lexical scoping
+
+
+
+=====================================================================
+(09/05) Java CoG Kit release 4.1.4
+=====================================================================
+
+(08/05) Moved all core* directories from the CVS src/cog to
+	src/obsolete/august-2005. All core libraries can be found
+	since the last version in other directories.
+
+(08/05) Added the cog-info launcher to display client-side environment 
+	details 
+
+(08/05) Added support for MPICH-G2 job submissions and multi-job RSL in 
+	the abstractions framework
+
+=====================================================================
+(07/05) Java CoG Kit release 4.1.2
+=====================================================================
+
+(07/05) GUI forms can be created through XML in Karajan workflow language
+
+(07/05) registration command
+
+(07/05) cog-workflow command
+
+(07/05) GT4 provider for WS-GRAM and GridFTP
+
+(07/05) Condor provider that accesses a native Condor client
+
+(06/05) Added the GT4FT provider 
+
+(06/05) Added support for Job Manager abstractions in abstractions 
+	framework
+
+(06/05) Added the cog-checkpoint-status launcher in the abstractions 
+	framework 
+
+(05/05) Improved the examples in the abstraction-examples module to 
+	handle task checkpoints and job submissions to the TeraGrid. 	
+
+(05/05) Created a new provider called "GT2FT" (GT2 fault tolerant) 
+	which is capable of handling job resubmissions 
+
+(05/05) Added support for the environment variable handling in the 
+	JobSpecification interface of the abstractions module
+
+(05/05) org.globus.cog.gridshell has been created.  The old gridshell
+        has been removed from CVS. The development version has been
+        tagged with 4.1.2
+
+(05/05) Added a register component cog-register that is also reused 
+        in cog-setup.
+
+(04/05) Renamed ALL the packages containing the term "core" to 
+	"abstraction". Also renamed the provider modules from 
+	"core-provider-**" to "provider-**"
+
+(03/05) Significantly improved the design, interfaces, and 
+	implementation of the file operation abstractions.
+
+(03/05) Added default CAs to the setup panel
+
+======================================================================
+(03/05) Released cog-4_0_a1
+======================================================================
+
+(02/05) Added PMD checking, added a preliminary version of Checkstyle
+
+(02/05) Added a License file that is also available in the
+        manual
+
+(02/05) Fixed the image viewer using GridFTP
+
+(01/05) Added a Condor provider
+
+(01/05) FINDBUGS
+        Added experimental quality control with the help of
+	FindBugs http://findbugs.sourceforge.net/ call 
+           make install-findbugs 
+        to download and install it. Call 
+           make findbugs 
+        to list the bugs in qualitycontrol/findbugs.html  
+
+(01/05) PMD
+	Removed the old version of PMD in src/pmd and
+	uploaded a new one in src/tools/pmd-2.1	
+
+(11/04) Cleaned the CVS archive by correcting the -x flags
+on files
+

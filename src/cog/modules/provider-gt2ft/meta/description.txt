@@ -1,0 +1,5 @@
+The provider-gt2ft module is an extension to the provider-gt2 module
+offering fault tolerance features for long running Grid jobs. Jobs
+submitted via the gt2ft provider can be reconnected at any time
+(despite network failures) to actively receive status updates.
+

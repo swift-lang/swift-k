@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jndiConfig xmlns="http://wsrf.globus.org/jndi/config">
+
+ <service name="ReliableFileTransferFactoryService">
+        <resource name="home"
+            type="org.globus.wsrf.impl.ServiceResourceHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>
+                    org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+
+        <resource name="mdsConfiguration"
+                  type="org.globus.wsrf.impl.servicegroup.client.MDSConfiguration">
+            <resourceParams>
+            <parameter> <name>reg</name>
+                        <value>false</value>
+            </parameter> 
+            <parameter> <name>factory</name>
+                        <value>org.globus.wsrf.jndi.BeanFactory</value>
+            </parameter>
+            </resourceParams>
+        </resource>
+
+    </service>
+
+    <service name="ReliableFileTransferService">
+        <resource name="configuration"
+                type="org.globus.transfer.reliable.service.RFTConfiguration">
+            <resourceParams>
+                <parameter>
+                    <name>
+                    factory
+                    </name>
+                    <value>
+                    org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+                <parameter>
+                    <name>
+                    backOff
+                    </name>
+                    <value>
+                    10000
+                    </value>
+                </parameter>
+                <parameter>
+                    <name>
+                    maxActiveAllowed
+                    </name>
+                    <value>
+                    100
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+        
+      <resource name="dbConfiguration"
+            type="org.globus.transfer.reliable.service.database.RFTDatabaseOptions">
+            <resourceParams>
+            <parameter>
+                <name>
+                factory
+                </name>
+                <value>
+                org.globus.wsrf.jndi.BeanFactory
+                </value>
+            </parameter>
+            <parameter>
+                <name>
+                driverName
+                </name>
+                <value>
+                org.hsqldb.jdbcDriver
+                </value>
+            </parameter>
+            <parameter>
+                <name>
+                connectionString
+                </name>
+                <value>
+                jdbc:hsqldb:hsql://localhost:9001/rftdatabase
+                </value>
+            </parameter>
+            <parameter>
+                <name>
+                userName
+                </name>
+                <value>
+                sa
+                </value>
+            </parameter>
+            <parameter>
+                <name>
+                password
+                </name>
+                <value>
+                </value>
+            </parameter>
+            <parameter>
+                <name>
+                maxActive
+                </name>
+                <value>
+                20
+                </value>
+            </parameter>
+            <parameter>
+                <name>
+                maxIdle
+                </name>
+                <value>
+                10
+                </value>
+            </parameter>
+            <parameter>
+                <name>
+                maxWait
+                </name>
+                <value>
+                -1
+                </value>
+            </parameter>
+            </resourceParams>
+        </resource>
+        <resource name="home"
+                type="org.globus.transfer.reliable.service.ReliableFileTransferHome">
+            <resourceParams>
+            <parameter>
+                <name>factory</name>
+                <value>org.globus.wsrf.jndi.BeanFactory</value>
+            </parameter>
+            <parameter>
+                <name>resourceClass</name>
+                <value>org.globus.transfer.reliable.service.ReliableFileTransferResource</value>
+            </parameter>
+            <parameter>
+                <name>resourceKeyName</name>
+                <value>{http://www.globus.org/namespaces/2004/10/rft}TransferKey</value>
+            </parameter>
+            <parameter>
+                <name>resourceKeyType</name>
+                <value>java.lang.String</value>
+            </parameter>
+            <parameter>
+                <name>sweeperDelay</name>
+                <value>60000</value>
+            </parameter>
+            </resourceParams>
+    </resource>
+ </service>
+</jndiConfig>

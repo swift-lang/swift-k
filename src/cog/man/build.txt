@@ -1,0 +1,72 @@
+NAME 
+    ant - the Java CoG Kit build process
+
+SYNOPSIS
+
+    ant [help] [dist] [jar] [javadoc] 
+        [clean] [distclean] [cleanall]
+	[all] [dist.joint] 
+        [eclipse.modules] [eclipse.all] [eclipse.clean]
+	-f buildfile.xml
+
+DESCRIPTION
+
+    The Java CoG kit preferd compilation process is controled by ant.	
+
+OPTIONS
+
+    help:
+               prints out this help message
+
+    -f buildfile.xml 
+              use an alternate xml build file
+                        
+    dist:
+               creates a distribution directory of the Java CoG
+               Kit. Compiled classes from different modules will be in
+               different jars. Use dist.joint to put everything into
+               one jar file.
+
+    jar:
+               creates a jar file for the ${project} ${long.name}
+               named ${jar.filename}
+                        
+    javadoc:
+               creates the documentation
+                        
+    clean:
+               removes the compiled classes
+                        
+    cleanall:
+               removes the compiled classes including the ones in 
+               the modules
+
+    distclean:
+               deletes the distribution directory
+
+    all:
+               dist and javadoc
+                  
+    dist.joint:
+               does a dist for all modules, and puts all compiled
+               classes into one jar file
+                  
+    eclipse.modules: 
+	           creates Eclipse project files for each module in the
+               modules directory. Each module can then be imported
+               into Eclipse as a project. The project dependencies,
+               source directories, and libraries will be automatically
+               set-up
+                  
+    eclipse.all:
+               creates one Eclipse project, in the cog directory,
+               which includes all of the Java CoG Kit modules.  This
+               makes it more convenient to import the CoG into Eclipse
+               (since there is just one project).  However, the
+               advantages of modularity are gone.
+                  
+    eclipse.clean:
+               cleans all Eclipse related files from the CoG source
+               tree. This works as a complement to eclipse.modules and
+               eclipse.all. If Eclipse projects were created
+               otherwise, the build directory may not be deleted.

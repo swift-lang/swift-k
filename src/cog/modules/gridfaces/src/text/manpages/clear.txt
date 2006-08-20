@@ -1,0 +1,12 @@
+NAME
+  clear - clear the terminal screen
+
+SYNOPSIS
+ clears
+
+DESCRIPTION
+  clear clears the values in the history panel
+
+OPTIONS
+  [--help]
+    displays the options

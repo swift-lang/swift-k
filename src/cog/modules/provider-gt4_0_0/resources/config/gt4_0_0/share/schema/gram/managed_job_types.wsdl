@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+    <wsdl:types>
+        <xsd:schema
+            targetNamespace="http://www.globus.org/namespaces/2004/10/gram"
+            xmlns:tns="http://www.globus.org/namespaces/2004/10/gram"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+            <xsd:include schemaLocation="managed_job_types.xsd"/>
+        </xsd:schema>
+    </wsdl:types>
+</definitions>

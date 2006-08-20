@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/exec"
+    xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job/exec"
+    xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+    xmlns:job="http://www.globus.org/namespaces/2004/10/gram/job"
+    xmlns:types="http://www.globus.org/namespaces/2004/10/gram/job/types"
+    attributeFormDefault="qualified"
+    elementFormDefault="qualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+                schemaLocation="../ws/addressing/WS-Addressing.xsd"/>
+
+    <xsd:import namespace="http://www.globus.org/namespaces/2004/10/gram/job/types"
+                schemaLocation="../gram/managed_job_types.xsd"/>
+
+    <xsd:import namespace="http://www.globus.org/namespaces/2004/10/gram/job"
+                schemaLocation="../gram/managed_job_data.xsd"/>
+
+
+    <!--==================================================-->
+    <!--                 resource data                    -->
+    <!--==================================================-->
+
+    <xsd:simpleType name="InternalStateEnumeration">
+        <xsd:annotation>
+            <xsd:documentation>
+                Internal states for a Managed Job.
+
+                            -- Hold States --
+                UnsubmittedHold - Undefined. Throws an exception.
+                StageInHold     - Hold before StageOut state is set.
+                                  Throws an exception if no fileStageIn in RSL.
+                PendingHold     - Hold before Submit state.
+                ActiveHold      - Not Implemented (requires scheduler-specific
+                                  hold support). Throws an exception.
+                SuspendedHold   - Undefined. Throws an exception.
+                StageOutHold    - Hold before StageOut state.
+                                  Throws an exception of no fileStageOut in RSL.
+                CleanUpHold     - Hold before FileCleanUp (not dependent on
+                                  fileCleanUp in RSL).
+                DoneHold        - Undefined. Throws an exception.
+                FailedHold      - Undefined. Throws an exception.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="None" />
+            <xsd:enumeration value="Restart" />
+            <xsd:enumeration value="Start" />
+            <xsd:enumeration value="MakeScratchDir" />
+            <xsd:enumeration value="MakeScratchDirResponse" />
+            <xsd:enumeration value="ProxyRelocate" />
+            <xsd:enumeration value="ProxyRelocateResponse" />
+            <xsd:enumeration value="StageIn" />
+            <xsd:enumeration value="StageInResponse" />
+            <xsd:enumeration value="Submit" />
+            <xsd:enumeration value="SubmitResponse" />
+            <xsd:enumeration value="OpenStdout" />
+            <xsd:enumeration value="OpenStderr" />
+            <xsd:enumeration value="WaitingForStateChanges" />
+
+            <xsd:enumeration value="MergeStdout" />
+            <xsd:enumeration value="MergeStdoutResponse" />
+            <xsd:enumeration value="StageOut" />
+            <xsd:enumeration value="StageOutResponse" />
+            <xsd:enumeration value="WaitingForEOF" />
+            <xsd:enumeration value="UserCancel" />
+            <xsd:enumeration value="UserCancelResponse" />
+            <xsd:enumeration value="SystemCancel" />
+            <xsd:enumeration value="CleanUp" />
+            <xsd:enumeration value="FileCleanUp" />
+            <xsd:enumeration value="FileCleanUpResponse" />
+            <xsd:enumeration value="CacheCleanUp" />
+            <xsd:enumeration value="CacheCleanUpResponse" />
+            <xsd:enumeration value="ScratchCleanUp" />
+            <xsd:enumeration value="ScratchCleanUpResponse" />
+            <xsd:enumeration value="Suspend" />
+            <xsd:enumeration value="Resume" />
+            <xsd:enumeration value="Done" />
+            <xsd:enumeration value="FailureFileCleanUp" />
+            <xsd:enumeration value="FailureFileCleanUpResponse" />
+            <xsd:enumeration value="FailureCacheCleanUp" />
+            <xsd:enumeration value="FailureCacheCleanUpResponse" />
+            <xsd:enumeration value="FailureScratchCleanUp" />
+            <xsd:enumeration value="FailureScratchCleanUpResponse" />
+            <xsd:enumeration value="Failed" />
+
+            <xsd:enumeration value="UnsubmittedHold" />
+            <xsd:enumeration value="StageInHold" />
+            <xsd:enumeration value="PendingHold" />
+            <xsd:enumeration value="ActiveHold"  />
+            <xsd:enumeration value="SuspendedHold"  />
+            <xsd:enumeration value="StageOutHold" />
+            <xsd:enumeration value="CleanUpHold" />
+            <xsd:enumeration value="DoneHold" />
+            <xsd:enumeration value="FailedHold" />
+
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="StagingTypeEnumeration">
+        <xsd:annotation>
+            <xsd:documentation>
+                The different types of operations that can be done related to
+                staging.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="StageIn"/>
+            <xsd:enumeration value="StageOut"/>
+            <xsd:enumeration value="CleanUp"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="ScriptCommandEnumeration">
+        <xsd:annotation>
+            <xsd:documentation>
+                Script methods which may be called the Managed Job Services.
+                Faults will be associated with each one of these script methods.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="submit"/>
+            <xsd:enumeration value="poll" />
+            <xsd:enumeration value="cancel" />
+            <xsd:enumeration value="signal"  />
+            <xsd:enumeration value="make_scratchdir" />
+            <xsd:enumeration value="remove_scratchdir" />
+            <xsd:enumeration value="stage_in" />
+            <xsd:enumeration value="stage_out" />
+            <xsd:enumeration value="cache_cleanup" />
+            <xsd:enumeration value="remote_io_file_create" />
+            <xsd:enumeration value="proxy_relocate" />
+            <xsd:enumeration value="proxy_update" />
+            <xsd:enumeration value="file_cleanup" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="JobIdStatePairType">
+        <xsd:sequence>
+            <xsd:element name="id"              type="xsd:string"/>
+            <xsd:element name="state"           type="types:StateEnumeration"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="localResourceManager"    type="xsd:string"/>
+    <xsd:element name="localJobId"              type="xsd:string"/>
+    <xsd:element name="localJobState"           type="types:StateEnumeration"/>
+    <xsd:element name="notifiedJobData"         type="tns:JobIdStatePairType"/>
+    <xsd:element name="cacheTag"                type="xsd:string"/>
+    <xsd:element name="commitTimeout"           type="xsd:int"/>
+    <xsd:element name="transferEndpoint"
+                 type="wsa:EndpointReferenceType"/>
+    <!-- State Transition Data -->
+    <xsd:element name="internalState"
+                 type="tns:InternalStateEnumeration"/>
+    <xsd:element name="restartInternalState"
+                 type="tns:InternalStateEnumeration"/>
+    <xsd:element name="suspendedInternalState"
+                 type="tns:InternalStateEnumeration"/>
+    <xsd:element name="userCancelRequested"     type="xsd:boolean"/>
+    <xsd:element name="systemCancelRequested"   type="xsd:boolean"/>
+    <xsd:element name="canceled"                type="xsd:boolean"/>
+
+    <xsd:complexType name="ManagedExecutableJobResourceDataType">
+        <xsd:complexContent>
+            <xsd:extension base="job:ManagedJobResourceDataType">
+                <xsd:sequence>
+                    <!-- elements from Managed Job -->
+                    <xsd:element ref="types:holdState"/>
+
+                    <xsd:element ref="tns:localResourceManager"/>
+                    <xsd:element ref="tns:localJobId"
+                                 minOccurs="0"
+                                 maxOccurs="unbounded"/>
+                    <xsd:element ref="tns:localJobState"
+                                 minOccurs="0"
+                                 maxOccurs="unbounded"/>
+                    <xsd:element ref="tns:notifiedJobData"
+                                 minOccurs="0"
+                                 maxOccurs="unbounded"/>
+                    <xsd:element ref="tns:cacheTag"         minOccurs="0"/>
+                    <xsd:element ref="tns:commitTimeout"    minOccurs="0"/>
+                    <xsd:element ref="tns:transferEndpoint"
+                                 minOccurs="0"/>
+                    <xsd:element ref="job:subscriptionEndpoint"
+                                minOccurs="0"/>
+
+                    <!-- State Transition Data -->
+                    <xsd:element ref="tns:internalState"/>
+                    <xsd:element ref="tns:restartInternalState"/>
+                    <xsd:element ref="tns:userCancelRequested"/>
+                    <xsd:element ref="tns:systemCancelRequested"/>
+                    <xsd:element ref="tns:canceled"/>
+
+                    <!-- Usage Data-->
+                    <xsd:element name="creationTime"    type="xsd:date"/>
+                    <!-- the rest can be pulled from other RD fields -->
+
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+</xsd:schema>

@@ -1,0 +1,32 @@
+<ServiceGroupRegistrationParameters
+   xmlns:sgc="http://mds.globus.org/servicegroup/client" 
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+   xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+   xmlns:agg="http://mds.globus.org/aggregator/types"
+   xmlns="http://mds.globus.org/servicegroup/client" >
+
+
+   <!-- Specifies that the registration will be renewed every 10 minutes -->
+   <RefreshIntervalSecs>600</RefreshIntervalSecs>
+
+
+   <Content xsi:type="agg:AggregatorContent"
+      xmlns:agg="http://mds.globus.org/aggregator/types">
+
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+
+         <agg:GetResourcePropertyPollType
+            xmlns:cas="http://www.globus.org/07/2004/cas">
+            <!-- Specifies that the index should refresh information
+                 every 8 hours (28800000ms) -->
+            <agg:PollIntervalMillis>28800000</agg:PollIntervalMillis>
+            <agg:ResourcePropertyName>cas:VoDescription</agg:ResourcePropertyName>
+         </agg:GetResourcePropertyPollType>
+
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+</ServiceGroupRegistrationParameters>
+

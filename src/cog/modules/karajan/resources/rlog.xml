@@ -1,0 +1,10 @@
+<karajan>
+	<namespace prefix="rlog">
+		<export name="restartLog" restricted="true">
+			<elementDef classname="org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog"/>
+		</export>
+		<export name="logged">
+			<elementDef classname="org.globus.cog.karajan.workflow.nodes.restartLog.Logged"/>
+		</export>
+	</namespace>
+</karajan>

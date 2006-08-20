@@ -1,0 +1,39 @@
+<ServiceGroupRegistrationParameters
+   xmlns:sgc="http://mds.globus.org/servicegroup/client" 
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+   xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+   xmlns:agg="http://mds.globus.org/aggregator/types"
+   xmlns="http://mds.globus.org/servicegroup/client" >
+
+
+   <!-- Specifies that the registration will be renewed every 10 minutes -->
+   <RefreshIntervalSecs>600</RefreshIntervalSecs>
+
+
+   <Content xsi:type="agg:AggregatorContent"
+      xmlns:agg="http://mds.globus.org/aggregator/types">
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+
+
+         <agg:GetResourcePropertyPollType
+            xmlns:glue="http://mds.globus.org/glue/ce/1.1" >
+            <!-- Specifies that the index should refresh information
+                 every 60000 milliseconds (once per minute) -->
+            <agg:PollIntervalMillis>60000</agg:PollIntervalMillis>
+
+            <!-- specifies the resource property that should be
+                 aggregated, which in this case is the GLUE cluster
+                 and scheduler information RP -->
+            <agg:ResourcePropertyName>glue:GLUECE</agg:ResourcePropertyName>
+
+         </agg:GetResourcePropertyPollType>
+
+
+
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+</ServiceGroupRegistrationParameters>
+

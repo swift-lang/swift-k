@@ -1,0 +1,115 @@
+<karajan>
+	<include file="java.xml"/>
+	<include file="cogkit.xml"/>
+	
+	<element name="repository:init" arguments="repositoryType">
+	<global name="_repository">
+             <java:invokeMethod classname="org.globus.cog.repository.RepositoryFactory" method="newRepository" types="java.lang.String">
+                <argument value="{repositoryType}"/>
+             </java:invokeMethod>
+	</global>
+	</element>
+
+        <!-- initialize: element is used to set the provider and connect to the database-->
+	<element name="repository:init2">
+        <!-- Note: Argument names with uppercase letters do not work-->
+             <java:invokeMethod object="{_repository}" method="setLocation" 
+              types="java.lang.String, java.lang.String">
+			<argument value="{providertype}"/>
+			<argument value="{dblocation}"/>
+	     </java:invokeMethod>
+	</element>
+	
+   <!-- setProvider: is used to set the provider in case initialize is not used or if the provider needs to be reset within the workflow-->
+	<element name="repository:setLocation" arguments="providertype, dblocation">
+		<java:invokeMethod object="{_repository}" method="setLocation" 
+                 types="java.lang.String, java.lang.String">
+			<argument value="{providertype}"/>
+			<argument value="{dblocation}"/>
+		</java:invokeMethod>
+	</element>
+	
+    <!-- connect: Connects to the database using the previously set provider--> 
+	<element name="repository:connect">
+		<java:invokeMethod object="{_repository}" method="connect">
+		</java:invokeMethod>
+	</element>
+	
+    <!-- getConnection: returns a connection object through the default channel--> 
+	<element name="repository:getConnection">
+	<!-- Method returns a connection -->
+	    <set name="connection">
+		   <java:invokeMethod object="{_repository}" method="getProvider">
+		   </java:invokeMethod>
+		</set>
+	</element>
+        
+    <!--connStatus: returns true if connected to the database-->
+    <element name="repository:connStatus">
+       <set name="status">  
+           <java:invokeMethod object="{_repository}" method="isConnected">
+    	   </java:invokeMethod>
+       </set>
+       <echo message="Connected to the database: '{status}'"/>
+    </element>  
+
+    <!--disconnect: disconnects from the database--> 
+    <element name="repository:disconnect">  
+        <java:invokeMethod object="{_repository}" method="disconnect">    
+        </java:invokeMethod> 
+    </element>
+
+    <!--setComponent: stores the component in the repository specified--> 
+ 	<element name="repository:setComponent" arguments="name, fileName">
+	    <set name="_connection">
+		  <java:invokeMethod object="{_repository}" method="getProvider">
+          </java:invokeMethod>
+	    </set>  
+            <set name="_component">
+	           <java:new
+                classname="org.globus.cog.repository.impl.jdbc.DerbyRepositoryComponent" 
+                types="java.lang.String, java.sql.Connection">
+               <!-- Note: This needs to be changed in the code to take in only connection-->  
+			   	<argument value="default"/>
+			    <argument value="{_connection}"/>
+			</java:new>
+	    </set>		
+	    <java:invokeMethod object="{_component}" method="set" types="java.lang.String">
+		<argument value="{fileName}"/>
+	    </java:invokeMethod>
+	    <java:invokeMethod object="{_repository}" method="setComponent" 
+             types="org.globus.cog.repository.impl.jdbc.DerbyRepositoryComponent ,java.lang.String">
+		<argument value="{name}"/>
+		<argument value="{_component}"/>
+	    </java:invokeMethod>
+	</element>
+	
+   <!--loadComponent: loads the component from an xml file and stores it in the repository-->
+	<element name="repository:loadComponent" arguments="filename">
+		<java:invokeMethod object="{_repository}" method="loadComponentsFromFile" 
+                 types="java.lang.String">
+		    <argument value="{filename}"/>
+		</java:invokeMethod>
+	</element>
+
+   <!--getComponent: gets the component from the repository and stores it in an xml file-->
+	<element name="repository:getComponent" arguments="componentName, fileName">
+	    <set name="_component">
+		<java:invokeMethod object="{_repository}" method="getComponent" types="java.lang.String">
+		    <argument value="{componentName}"/>
+		</java:invokeMethod>
+            </set>
+	    <java:invokeMethod object="{_component}" method="toFile" types="java.lang.String">
+		<argument value="{fileName}"/>
+	    </java:invokeMethod>            
+	</element>
+
+   <!--removeComponent: removes the component from the repository-->
+	<element name="repository:removeComponent" arguments="componentName">
+		<java:invokeMethod object="{_repository}" method="removeComponent" 
+                 types="java.lang.String">
+		    <argument value="{componentName}"/>
+		</java:invokeMethod>
+	</element>
+	
+</karajan>

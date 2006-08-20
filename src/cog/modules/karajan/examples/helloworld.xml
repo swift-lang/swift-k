@@ -1,0 +1,5 @@
+<project name="helloworld">
+  <include file="sys.xml"/>
+  
+  <echo message="Hello World!"/>   
+</project>

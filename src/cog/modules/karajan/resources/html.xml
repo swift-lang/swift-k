@@ -1,0 +1,226 @@
+<karajan>
+ <cache>
+  <namespace prefix="html">
+  	<import file="sys.xml"/>
+	
+	<element name="htmlargs" arguments="args">
+		<channel:to name="html">
+			<each items="{args}"/>
+		</channel:to>
+	</element>
+
+	<element name="checkargs" arguments="attributes, attrmap" vargs="true">
+		<str:concat>
+			<for name="attr" in="{attributes}">
+				<if>
+					<map:contains key="{attr}" map="{attrmap}"/>
+
+					<then>
+						<str:concat>
+							<value> {attr}=&quot;</value>
+							<map:get key="{attr}" map="{attrmap}"/>
+							<value>&quot;</value>
+						</str:concat>
+					</then>
+				</if>
+			</for>
+		</str:concat>
+	</element>
+	
+	
+	<element name="generic" arguments="tag" optargs="attributes, attrmap" channels="html">
+		<default name="attributes" value=""/>
+		<default name="attrmap">
+			<map/>
+		</default>
+
+		<channel:to name="html">
+			<str:concat>
+				<value>&lt;{tag}</value>
+				<checkargs attributes="{attributes}" attrmap="{attrmap}"/>
+				<value>&gt;</value>
+			</str:concat>
+		</channel:to>	
+		
+		<if>
+			<map:contains key="text" map="{attrmap}"/>
+
+			<then>
+				<channel:to name="html">
+					<map:get key="text" map="{attrmap}"/>
+				</channel:to>
+			</then>
+		</if>
+		
+		<htmlargs args="{html}"/>
+		
+		<channel:to name="html">
+			<value>&lt;/{tag}&gt;</value>
+		</channel:to>
+	</element>
+	
+	<element name="genericSingle" arguments="tag" optargs="attributes, attrmap">
+		<default name="attributes" value=""/>
+		<default name="attrmap">
+			<map/>
+		</default>
+		<channel:to name="html">
+			<str:concat>
+				<value>&lt;{tag}</value>
+				<checkargs attributes="{attributes}" attrmap="{attrmap}"/>
+				<value>&gt;</value>
+			</str:concat>
+		</channel:to>	
+	</element>
+	
+	<export name="html"><element arguments="" channels="html" named="true">
+		<generic tag="html">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="head"><element arguments="" channels="html" named="true">
+		<generic tag="head">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+		
+	<export name="title"><element arguments="title" named="true">
+		<generic tag="title">
+			<channel:to name="html">
+				<variable>title</variable>
+			</channel:to>
+		</generic>
+	</element></export>
+	
+	<export name="body"><element optargs="bgcolor" channels="html" named="true">
+		<generic tag="body" attributes="bgcolor" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="table">
+		<element optargs="width, height, border, cellpadding, rules, bgcolor, class, style" channels="html" named="true">
+			<generic tag="table" attributes="width, height, border, cellpadding, rules, bgcolor, class, style" attrmap="{named}">
+				<htmlargs args="{html}"/>
+			</generic>
+		</element>
+	</export>
+	
+	<export name="tr"><element optargs="width, height" channels="html" named="true">
+		<generic tag="tr" attributes="width, height" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="td"><element arguments="text" optargs="width, height, colspan, bgcolor, align, valign" channels="html" named="true">
+		<generic tag="td" attributes="width, height, colspan, bgcolor, align, valign" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="th"><element arguments="text" optargs="width, height, colspan" channels="html" named="true">
+		<generic tag="th" attributes="width, height, colspan" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="h1"><element arguments="text" channels="html" named="true">
+		<generic tag="h1" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="h2"><element arguments="text" channels="html" named="true">
+		<generic tag="h2" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="h3"><element arguments="text" channels="html" named="true">
+		<generic tag="h3" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="h4"><element arguments="text" channels="html" named="true">
+		<generic tag="h4" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="h5"><element arguments="text" channels="html" named="true">
+		<generic tag="h5" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="h6"><element arguments="text" channels="html" named="true">
+		<generic tag="h6" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="ul"><element arguments="" channels="html" named="true">
+		<generic tag="ul">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="pre"><element arguments="text" channels="html" named="true">
+		<generic tag="pre" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="br"><element arguments="" named="true">
+		<genericSingle tag="br"/>
+	</element></export>
+	
+	<export name="li"><element arguments="" named="true">
+		<genericSingle tag="li"/>
+	</element></export>
+	
+	<export name="a"><element arguments="text" optargs="href, style" channels="html" named="true">
+		<generic tag="a" attributes="href, style" attrmap="{named}">
+			<htmlargs args="{html}"/>
+		</generic>
+	</element></export>
+	
+	<export name="anchor"><element arguments="name" named="true">
+		<genericSingle tag="a" attributes="name" attrmap="{named}"/>
+	</element></export>
+	
+	<export name="img"><element arguments="src" optargs="border" named="true">
+		<genericSingle tag="img" attributes="src, border" attrmap="{named}"/>
+	</element></export>
+	
+	<export name="quickstart"><element arguments="title" channels="html" named="true">
+		<html>
+			<head>
+				<title title="{title}"/>
+			</head>
+			<body>
+				<htmlargs args="{html}"/>
+			</body>
+		</html>
+	</element></export>
+
+	<export name="text"><element arguments="text">
+		<channel:to name="html">
+			<variable>text</variable>
+		</channel:to>
+	</element></export>
+	
+	<export name="write">
+		<parallelElement channels="html" arguments="file">
+			<file:write name="{file}">
+				<for name="arg" in="{html}">
+					<variable>arg</variable>
+				</for>
+			</file:write>
+		</parallelElement>
+	</export>
+  </namespace>
+ </cache>
+</karajan>

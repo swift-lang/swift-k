@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by Shashank Shankar (IIT) -->
+<xs:schema targetNamespace="http://www.globus.org/cog/util/xml/taskset" xmlns:task="http://www.globus.org/cog/util/xml/task" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.globus.org/cog/util/xml/taskset" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:import namespace="http://www.globus.org/cog/util/xml/task" schemaLocation="Task.xsd"/>
+	<xs:element name="TaskSet">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="task:Task" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

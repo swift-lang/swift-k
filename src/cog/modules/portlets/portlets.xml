@@ -1,0 +1,217 @@
+<project name="Java CoG Kit Portlet" default="compile" basedir=".">
+	
+	<property name="jar.name"		value="cog-${portlet.name}-${version}.jar"/>
+	<property name="jar.file"		value="${build.dir}/${jar.name}"/>
+	<property name="main.buildfile" value="${cog.dir}/mbuild.xml"/>
+	<property name="portlet.dir"    value="${cog.dir}/modules/portlets/portlets/${portlet.name}"/>
+	<property file="${cog.dir}/modules/portlets/portlets.properties"/>
+
+	<path id="classpath">
+		<!-- include the core jars -->
+		<fileset dir="${dist.dir}/lib">
+			<include name="*.jar"/>
+		</fileset>
+
+		<!-- include jetspeed jars -->
+		<!-- TODO <fileset dir="${jetspeed.home}/lib"> <include name="${lib.deps}"/> </fileset>-->
+        <fileset dir="${jetspeed.home}/WEB-INF/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+		<!-- include catalina jars -->
+		<!-- TODO: this works for tomcat only at the moment -->
+		<fileset dir="${servlet.lib.dir}">
+			<include name="servlet.jar"/>
+		</fileset>
+
+		<!-- include other portlet classes -->
+		<pathelement location="${jetspeed.home}/WEB-INF/classes"/>
+    </path>
+	
+	
+	<!--  _________________________________________________________________  -->
+    <!-- /                                                                 \ -->
+    <!-- | Internal targets                                                | -->
+    <!-- \_________________________________________________________________/ -->
+
+	<target name="build.dependencies">
+		<ant 
+			antfile="${cog.dir}/mbuild.xml" 
+			target="build.dependencies" 
+			dir="${cog.dir}/modules/${module.name}"/>
+	</target>
+		
+
+	<!--  _________________________________________________________________  -->
+    <!-- /                                                                 \ -->
+    <!-- | Compile                                                         | -->
+    <!-- \_________________________________________________________________/ -->
+	
+    <target name="compile">
+		<!-- copy jars that are not in cog/lib nor in portlets/lib -->
+		<copy todir="${dist.dir}/lib">
+			<fileset dir="${cog.dir}/modules/portlets/lib" includes="${lib.deps}"/>
+		</copy>
+		<mkdir dir="build"/>
+        <javac	srcdir="src"
+            	destdir="${build.dir}"
+            	includes="**/*.java"
+            	excludes="${exclude.dirs}"
+            	classpathref="classpath"
+            	debug="${debug}"
+            	optimize="${optimize}"
+            	deprecation="${deprecation}" />
+	</target>
+
+
+	<!--  _________________________________________________________________  -->
+    <!-- /                                                                 \ -->
+    <!-- | Clean                                                           | -->
+    <!-- \_________________________________________________________________/ -->
+	
+    <target name="clean">
+		<!-- build dependencies -->
+		<property name="build.target" value="clean"/>
+		<antcall target="build.dependencies"/>
+		<delete dir="${build.dir}"/>
+    </target>
+
+
+	<!--  _________________________________________________________________  -->
+    <!-- /                                                                 \ -->
+    <!-- | Distclean                                                       | -->
+    <!-- \_________________________________________________________________/ -->
+
+    <target name="distclean" depends="clean">
+		<!-- build dependencies -->
+		<property name="build.target" value="distclean"/>
+		<antcall target="build.dependencies"/>
+
+        <delete dir="${dist.dir}"/>
+    </target>
+
+
+    <!--  _________________________________________________________________  -->
+    <!-- /                                                                 \ -->
+    <!-- | Jar                                                             | -->
+    <!-- \_________________________________________________________________/ -->
+
+	
+    <target name="delete.jar" unless="jar.uptodate">
+        <echo message="removing ${dist.dir}/lib/${jar.name}"/>
+        <delete file="${dist.dir}/lib/${jar.name}"/>
+    </target>
+
+    <target name="jar" depends="delete.jar,compile" unless="no.jar">
+        <echo message="building ${dist.dir}/lib/${jar.name}"/>
+		<mkdir dir="${build.dir}/etc"/>
+		<concat destfile="${build.dir}/etc/MANIFEST.MF">
+			<filelist dir="etc" files="MANIFEST.MF.head,MANIFEST.MF.tail"/>
+		</concat>
+        <jar    jarfile="${dist.dir}/lib/${jar.name}" manifest="${build.dir}/etc/MANIFEST.MF" index="true">
+            <fileset dir="${build.dir}" includes="**/*.class"/>
+        </jar>
+    </target>
+
+
+	<!--  _________________________________________________________________  -->
+    <!-- /                                                                 \ -->
+    <!-- | Dist                                                            | -->
+    <!-- \_________________________________________________________________/ -->
+
+    <target name="dist">
+		<echo message="Building portlet ${portlet.name}"/>
+		<!-- build dependencies -->
+		<property name="build.target" value="jar"/>
+		<antcall target="build.dependencies"/>
+
+		<antcall target="jar"/>
+		<!-- install the various portlet files -->
+		<!-- jar/classes -->
+		<antcall target="deploy.jar"/>
+
+		<!-- conf -->
+		<antcall target="deploy.conf"/>
+
+		<!-- templates -->
+		<antcall target="deploy.templates"/>
+
+		<!-- html -->
+		<antcall target="deploy.html"/>
+
+		<!-- css -->
+		<antcall target="deploy.css"/>
+
+		<!-- js -->
+		<antcall target="deploy.js"/>
+
+		<!-- images -->
+		<antcall target="deploy.images"/>
+
+    </target>
+
+	<target name="deploy.jar" if="deploy.path.jar">
+		<!-- portlet -->
+		<copy todir="${jetspeed.home}/${deploy.path.jar}" failonerror="false">
+			<fileset dir="${dist.dir}/lib" includes="*.jar"/>
+		</copy>
+	</target>
+	<target name="deploy.conf" if="deploy.path.conf">
+		<copy todir="${jetspeed.home}/${deploy.path.conf}" failonerror="false">
+			<fileset dir="${portlet.dir}/conf" includes="*.xreg"/>
+		</copy>
+	</target>
+	<target name="deploy.templates" if="deploy.path.templates">
+		<copy todir="${jetspeed.home}/${deploy.path.templates}" failonerror="false">
+			<fileset dir="${portlet.dir}" includes="templates/**/*.vm"/>
+			<mapper type="glob" from="templates/*" to="*"/>
+		</copy>
+	</target>
+	<target name="deploy.html" if="deploy.path.html">
+		<copy todir="${jetspeed.home}/${deploy.path.html}" failonerror="false">
+			<fileset dir="${portlet.dir}" includes="html/**/*.html,html/**/*.xsd,html/**/*.xml,html/**/*.txt"/>
+			<mapper type="glob" from="html/*" to="*"/>
+		</copy>
+	</target>
+	<target name="deploy.css" if="deploy.path.css">
+		<copy todir="${jetspeed.home}/${deploy.path.css}" failonerror="false">
+			<fileset dir="${portlet.dir}" includes="css/**/*.css"/>
+			<mapper type="glob" from="css/*" to="*"/>
+		</copy>
+	</target>
+	<target name="deploy.js" if="deploy.path.js">
+		<copy todir="${jetspeed.home}/${deploy.path.js}" failonerror="false">
+			<fileset dir="${portlet.dir}" includes="js/**/*.js"/>
+			<mapper type="glob" from="js/*" to="*"/>
+		</copy>
+	</target>
+	<target name="deploy.images" if="deploy.path.images">
+		<copy todir="${jetspeed.home}/${deploy.path.images}" failonerror="false">
+			<fileset dir="${portlet.dir}" includes="images/**/*"/>
+			<mapper type="glob" from="images/*" to="*"/>
+		</copy>
+	</target>
+
+
+	<!--  _________________________________________________________________  -->
+    <!-- /                                                                 \ -->
+    <!-- | PMD                                                             | -->
+    <!-- \_________________________________________________________________/ -->
+
+	<target name="pmd">
+		<echo message="Running PMD on module ${portlet.name}"/>
+		<taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask">
+		    <classpath>
+			<fileset dir="${portlet.dir}/../../pmd">
+			    <include name="*.jar"/>
+			</fileset>
+		    </classpath>
+		</taskdef>
+		<pmd rulesetfiles="${portlet.dir}/../../pmd/cog.xml" printToConsole="true">
+			<formatter type="html" toFile="pmd-report.html"/>
+			<fileset dir="${portlet.dir}/portlets/${portlet.name}/src">
+				<include name="**/*.java"/>
+			</fileset>
+		</pmd>
+    </target>
+
+</project>

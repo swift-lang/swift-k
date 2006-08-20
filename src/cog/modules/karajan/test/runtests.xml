@@ -1,0 +1,105 @@
+<project name="test">
+	<import file="sys.xml"/>
+	<import file="task.xml"/>
+	<import file="html.xml"/>
+	<import file="settings.xml"/>
+
+	<!-- define a few convenience comparisons -->	
+	<set name="default_comparison">
+		<element arguments="value1, value2">
+			<equals value1="{value1}" value2="{value2}"/>
+		</element>
+	</set>
+	
+	<set name="math_comparison">
+		<element arguments="value1, value2">
+			<equalsNumeric value1="{value1}" value2="{value2}"/>
+		</element>
+	</set>
+	
+	<set name="no_comparison">
+		<element arguments="value1, value2">
+			<true/>
+		</element>
+	</set>
+		
+	<for name="i">
+		<range from="1" to="{global_pass_count}"/>
+		<print message="Running global pass {i}"/>
+	
+		<set name="tests">
+			<filter regexp=".*\.xml">
+				<file:list dir="tests"/>
+			</filter>
+		</set>
+	
+		<print message="Got list: {tests}"/>
+	
+		<for name="testfile" in="{tests}">
+		
+			<print message="{testfile}"/>
+			<!-- get the test map -->
+			<set name="test">
+				<executeFile file="tests/{testfile}"/>
+			</set>
+		
+			<set name="name">
+				<map:get key="name" map="{test}"/>
+			</set>
+			<print message="Executing test [{name}]..."/>
+			<for name="pass">
+				<range from="1" to="{test_pass_count}"/>
+				
+				<print message="Pass {pass}..." nl="false"/>
+				<if>
+					<map:contains map="{test}" key="expected-result"/>
+
+					<then>
+						<set name="result">
+							<executeElement>
+								<map:get key="test" map="{test}"/>
+							</executeElement>
+						</set>
+						<set name="expected">
+							<map:get key="expected-result" map="{test}"/>
+						</set>
+						<set name="comparison">
+							<if>
+								<map:contains key="comparison" map="{test}"/>
+								
+								<then>
+									<map:get key="comparison" map="{test}"/>			
+								</then>
+								<else>
+									<argument value="{default_comparison}"/>
+								</else>
+							</if>
+						</set>
+						<if>
+							<executeElement element="{comparison}">
+								<variable>expected</variable>
+								<variable>result</variable>
+							</executeElement>
+
+							<then>
+								<print message="PASSED"/>
+							</then>
+							<else>
+								<print message="FAILED"/>
+								<print message="Expected result: {expected}. Actual result: {result}."/>
+								<generateError message="FAILED [{name}]"/>
+							</else>
+						</if>
+					</then>
+					<else>
+						<executeElement>
+							<map:get key="test" map="{test}"/>
+						</executeElement>
+						<print message="PASSED"/>
+					</else>
+				</if>
+			</for>
+		</for>
+		<print message="Pass {i} OK"/>
+	</for>
+</project>

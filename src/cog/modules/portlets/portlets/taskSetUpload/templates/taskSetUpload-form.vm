@@ -1,0 +1,162 @@
+## This program is distributed under the following licence:
+## http://www.globus.org/toolkit/download/license.html
+
+<div align="left">
+
+	<link rel="stylesheet" type="text/css" href="/jetspeed/css/TaskSetUpload_styles.css" title="style">
+
+	<script type="text/javascript" language="JavaScript">
+		<!-- hide from older browsers
+
+#*
+ * todo: more javascript to validate form, etc
+ *#
+
+		function fn_TSUP_trim(str) {
+			if (str == null) {
+				return (false);
+			}
+			return str.replace(/^\s*/,"").replace(/\s*$/,"");
+		}
+
+		function fn_TSUP_HelpPopup(strHelpFile, strLinkLocation) {
+			var strLink = '$!{TaskSetUploadPortlet_ContextPath}/html/' + strHelpFile + '#' + strLinkLocation;
+			var objWin = window.open(strLink, "Help", "toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, width=400, height=300, top=100, left=100");
+		}
+
+		function fn_TSUP_ConstructConfirmMessage() {
+			var strConfirmMessage = null;
+
+			strConfirmMessage = 'You have chosen the following:\n\n';
+
+			var strTaskSetSpec = '';
+			strTaskSetSpec = fn_TSUP_trim(document.TaskSetUpload_form.flTaskSetSpec.value);
+			strConfirmMessage += 'Task Set Specification\t: ' + strTaskSetSpec + '\n';
+
+			strConfirmMessage += 'Certificate\t\t: ' + document.TaskSetUpload_form.selCertDN.value + '\n';
+
+			strConfirmMessage += '\nContinue?';
+
+			return strConfirmMessage;
+		}
+
+		function fn_TSUP_CheckAndUpload() {
+			var boolMissing = false;
+			var strMissingMessage = null;
+			var strConfirmMessage = null;
+
+			strMissingMessage = 'Please fill out the following\n';
+
+			// check for upload file
+			if ((document.TaskSetUpload_form.flTaskSetSpec.value != null) && (fn_TSUP_trim(document.TaskSetUpload_form.flTaskSetSpec.value) == '')) {
+				boolMissing = true;
+				strMissingMessage += 'Task Set Specification\n';
+			}
+
+			// if missing then alert and return
+			if (boolMissing) {
+				strMissingMessage += 'and then try again.';
+				alert(strMissingMessage);
+				return false;
+			}
+
+			// disable temporary fields
+			document.TaskSetUpload_form.eventSubmit_doUpload_taskset.disabled = true;
+
+			// confirm the task set spec details and submit
+			// construct task set spec details message
+			strConfirmMessage = fn_TSUP_ConstructConfirmMessage();
+			if (confirm(strConfirmMessage)) {
+//				document.TaskSetUpload_form.submit();
+				document.TaskSetUpload_form.eventSubmit_doUpload_taskset.disabled = false;
+				return true;
+			}
+
+			// enable fields
+			document.TaskSetUpload_form.eventSubmit_doUpload_taskset.disabled = false;
+			return false;
+		}
+
+		//-->
+	</script>
+
+	<!--	action="$jlink.getPortletByName($portlet.Name)" -->
+
+#if( !($TaskSetUploadPortlet_ProxyDNs) )
+		<table border="0" cellspacing="2" cellpadding="1">
+			<tr>
+				<td width="100%">
+					<div class="InfoRed">
+						You don't have any valid certificates.<br>
+						Please use the MyProxy credential access portlet to get a proxy certificate.
+					</div>
+				</td>
+			</tr>
+		</table>
+#else
+	#set( $link_upload = $jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doUpload_taskset","") )
+	<form name="TaskSetUpload_form" method="post" enctype="multipart/form-data" action="$!{link_upload}">
+
+		<table border="1" cellspacing="0" cellpadding="2">
+			<tr>
+				<td colspan="2">
+					The xml schema's for Task and TaskSet can be see here:
+					<ul>
+						<li><a href="$!{TaskSetUploadPortlet_ContextPath}/html/Task.xsd" target="_blank">Task.xsd</a>
+						<li><a href="$!{TaskSetUploadPortlet_ContextPath}/html/TaskSet.xsd" target="_blank">TaskSet.xsd</a>
+					</ul>
+					Ensure that the task specification is valid.
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Task Set Specification
+					</div>
+				</td>
+				<td>
+					<input type="file" name="flTaskSetSpec" value=""/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="Bold">
+						Certificate to use
+					</div>
+				</td>
+				<td>
+					<select name="selCertDN">
+	#foreach( $DN in $TaskSetUploadPortlet_ProxyDNs )
+						<option value="$DN">$DN</option>
+	#end
+					</select>	
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td align="left">
+					<input name="eventSubmit_doUpload_taskset" type="submit" value="Upload Task Set Specification" onclick="return fn_TSUP_CheckAndUpload();"/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td>
+				</td>
+			</tr>
+			<tr>
+				<td valign="top">
+	#if( $TaskSetUploadPortlet_Status )
+		#set( $outputMesg = "Output" )
+	#end
+					<b>$!outputMesg</b>
+				</td>
+				<td colspan="2">
+					$!{TaskSetUploadPortlet_Status}
+				</td>
+			</tr>
+		</table>
+#end
+	</form>
+</div>

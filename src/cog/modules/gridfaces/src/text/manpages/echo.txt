@@ -1,0 +1,26 @@
+NAME
+  ECHO - prints out a value
+
+SYNOPIS
+  NOT IMPLEMENTED!
+
+DESCRIPTION
+  NOT IMPLEMENTED!
+
+OPTIONS
+  [--help]
+    displays the options
+
+EXAMPLES
+  1) description
+
+    [show the command in action]
+
+WARNINGS
+  NOT IMPLEMENTED!
+
+TO DO
+  Implement command
+
+SEE ALSO
+  ALIAS, SET

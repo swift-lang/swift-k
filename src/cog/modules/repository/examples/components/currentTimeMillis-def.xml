@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <metadata version="1.0">
+    <name>currentTimeMillis-def</name>
+    <author> deepti </author>
+	<shortdesc> Element Library File </shortdesc>
+	<desc> File is used to test the validity of the xml document and parse it</desc>
+	<date_created>2005-06-06</date_created>
+	<date_modified>2005-06-06</date_modified>
+	<language>xml</language>
+	<signature>k#kas1@hg$</signature>
+	<extra_attribute>testing</extra_attribute>
+  </metadata>
+  <source>
+  <![CDATA[
+    <project>
+	  <include file="sys.xml"/>
+	  <include file="currentTimeMillis-def.xml"/>
+	
+      <timer:initialize/>
+	
+	  <timer:start name="one"/>
+	  <wait delay="1000"/>
+	  <timer:print name="one"/>
+	
+      <timer:start name="two"/>
+	  <parallel>
+		<wait delay="2000"/>
+		<wait delay="1000"/>
+	  </parallel>
+	
+	  <timer:print name="two"/>
+	  <timer:print name="one"/>
+    </project>
+  ]]>
+  </source>
+</component>

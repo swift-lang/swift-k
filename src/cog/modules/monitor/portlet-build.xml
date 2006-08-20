@@ -1,0 +1,30 @@
+<project name="GUSS Portlet" default="deploy-portlet" basedir=".">
+
+ <property file="guss.properties"/>
+
+  <path id="portlet.classpath">
+   <fileset file="${portalbase}/chef-1.0.7/modules/nmi-lib/turbine/turbine-2.2-b2-dev.jar"/>
+   <fileset file="${portalbase}/jakarta-jetspeed/bin/jetspeed-1.4b2-dev.jar"/>
+   <fileset file="${portalbase}/jakarta-jetspeed/lib/ecs-1.4.1.jar"/>
+   <fileset file="${portalbase}/jakarta-tomcat-4.1.18/common/lib/servlet.jar"/>
+  </path>
+
+ <target name="deploy-portlet">
+  <!--copy GUSSClient.jar, GUSSPortlet.xreg, and GUSSPage.jsp into portal-->
+  <copy todir="${nmi-web-inf}/lib" file="./dist/lib/GUSSClient.jar"/>  
+  <copy todir="${nmi-web-inf}/conf" file="./GUSSPortlet.xreg"/>
+  <copy todir="${nmi-web-inf}/templates/jsp/portlets/html">
+   <fileset dir="./src/org/globus/cog/monitor/guss/client/">
+    <include name="GUSSPage.jsp"/>
+   </fileset>
+  </copy>
+ </target>
+
+ <target name="undeploy-portlet">
+   <delete>
+     <fileset file="${nmi-web-inf}/lib/GUSSClient.jar"/>
+     <fileset file="${nmi-web-inf}/conf/GUSSPortlet.xreg"/>
+     <fileset file="${nmi-web-inf}/templates/jsp/portlets/html/GUSSPage.jsp"/>
+   </delete>
+ </target>
+</project>

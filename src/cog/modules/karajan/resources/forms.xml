@@ -1,0 +1,439 @@
+<karajan>
+  <import file="java.xml"/>
+  <import file="sys.xml"/>
+  
+  <namespace prefix="form">
+		
+	<export name="getContentPane"><element arguments="frame">
+		<java:invokeMethod object="{frame}" method="getContentPane"/>
+	</element></export>
+	
+	<export name="rstruct"><element arguments="id, object">
+		<list>
+			<map>
+				<map:entry key="{id}" value="{object}"/>
+			</map>
+			<variable>object</variable>
+		</list>
+	</element></export>
+	
+	<export name="rstruct:noid"><element arguments="object">
+		<list>
+			<map/>
+			<variable>object</variable>
+		</list>
+	</element></export>
+	
+	<export name="rstruct:add"><element arguments="parent, rstructs">
+		<list>
+			<map>
+				<for name="arg" in="{rstructs}">
+					<list:first list="{arg}"/>
+					<discard>
+						<java:invokeMethod object="{parent}" method="add" types="java.awt.Component">
+							<list:last list="{arg}"/>
+						</java:invokeMethod>
+					</discard>
+				</for>
+			</map>
+			<variable>parent</variable>
+		</list>
+	</element></export>
+	
+	<export name="value"><element arguments="object">
+		<set name="class">
+			<java:classOf object="{object}"/>
+		</set>		
+		<if>
+			<equals value1="{class}" value2="javax.swing.JButton"/>
+			<then>
+				<!-- nothing, a button doesn't return a value -->
+			</then>
+			
+			<equals value1="{class}" value2="javax.swing.JCheckBox"/>
+			<then>
+				<java:invokeMethod method="isSelected" object="{object}"/>
+			</then>
+			
+			<equals value1="{class}" value2="javax.swing.JRadioButton"/>
+			<then>
+				<java:invokeMethod method="isSelected" object="{object}"/>
+			</then>
+			
+			<equals value1="{class}" value2="javax.swing.JTextField"/>
+			<then>
+				<java:invokeMethod method="getText" object="{object}"/>
+			</then>
+			
+			<equals value1="{class}" value2="javax.swing.JPasswordField"/>
+			<then>
+				<java:invokeMethod method="getPassword" object="{object}"/>
+			</then>
+			
+			<equals value1="{class}" value2="javax.swing.ButtonGroup"/>
+			<then>
+				<choice>
+					<sequential>
+						<set name="selected">
+							<java:invokeMethod method="getSelection" object="{object}"/>
+						</set>
+						<java:invokeMethod method="getActionCommand" object="{selected}"/>
+					</sequential>
+					<form:value>N/A</form:value>
+				</choice>
+			</then>
+			
+			<equals value1="{class}" value2="javax.swing.JComboBox"/>
+			<then>
+				<java:invokeMethod method="getSelectedItem" object="{object}"/>
+			</then>
+			
+			<else>
+				<generateError message="Cannot get value from object of class {class}. Unrecognized type"/>
+			</else>
+		</if>
+	</element></export>
+	
+	<export name="form"><element arguments="id, title, waiton" vargs="true">
+		<set name="frame">
+			<java:new classname="javax.swing.JFrame"/>
+		</set>
+		<java:invokeMethod object="{frame}" method="setTitle">
+			<variable>title</variable>
+		</java:invokeMethod>
+		<set name="contentPane">
+			<getContentPane frame="{frame}"/>
+		</set>
+		<java:invokeMethod object="{contentPane}" method="setLayout" types="java.awt.LayoutManager">
+			<java:new classname="org.globus.cog.gui.util.VerticalLayout"/>
+		</java:invokeMethod>
+		<set name="objects">
+			<map>
+				<for name="arg" in="{vargs}">
+					<list:first list="{arg}"/>
+					<discard>
+						<java:invokeMethod object="{contentPane}" method="add" types="java.awt.Component">
+							<list:last list="{arg}"/>
+						</java:invokeMethod>
+					</discard>
+				</for>
+			</map>
+		</set>
+
+		<guard>
+			<sequential>
+				<java:invokeMethod object="{frame}" method="pack"/>
+				<java:invokeMethod object="{frame}" method="show"/>
+
+				<map>
+					<map:entry>
+						<argument name="key">
+							<java:waitForEvent>
+								<for name="item" in="{waiton}">
+									<list>
+										<variable>item</variable>
+										<string>java.awt.events.ActionEvent</string>
+										<map:delete key="{item}" map="{objects}"/>
+									</list>
+								</for>
+								<list>
+									<string>frameClosed</string>
+									<string>java.awt.events.WindowEvent</string>
+									<variable>frame</variable>
+								</list>
+							</java:waitForEvent>
+						</argument>
+						<argument name="value">
+							<true/>
+						</argument>
+					</map:entry>
+					<for name="item" in="{objects}">
+						<map:entry key="{item}">
+							<form:value>
+								<map:get key="{item}" map="{objects}"/>
+							</form:value>
+						</map:entry>
+					</for>
+				</map>
+			</sequential>
+			
+			<java:invokeMethod object="{frame}" method="dispose"/>
+		</guard>
+	</element></export>
+	
+	<export name="setAlignment"><element arguments="object, halign, valign">
+		<java:invokeMethod object="{object}" method="setAlignmentX" types="float">
+			<variable>halign</variable>
+		</java:invokeMethod>
+		<java:invokeMethod object="{object}" method="setAlignmentY" types="float">
+			<variable>valign</variable>
+		</java:invokeMethod>
+	</element></export>
+	
+	<export name="labeledControl"><element arguments="control, id, caption, halign, valign">
+		<java:invokeMethod object="{control}" method="setText">
+			<variable>caption</variable>
+		</java:invokeMethod>
+		<form:setAlignment object="{control}" valign="{valign}" halign="{halign}"/>
+		<form:rstruct id="{id}" object="{control}"/>
+	</element></export>
+	
+	<export name="button"><element arguments="id, caption" optargs="valign, halign">
+		<default name="valign" value="0.5"/>
+		<default name="halign" value="0.5"/>
+		<form:labeledControl id="{id}" caption="{caption}" valign="{valign}" halign="{halign}">
+			<argument name="control">
+				<java:new classname="javax.swing.JButton"/>
+			</argument>
+		</form:labeledControl>
+	</element></export>
+	
+	<export name="label"><element arguments="text" optargs="valign, halign">
+		<default name="valign" value="0.5"/>
+		<default name="halign" value="0.5"/>
+		<set name="label">
+			<java:new classname="javax.swing.JLabel"/>
+		</set>
+		<java:invokeMethod object="{label}" method="setText">
+			<argument value="{text}"/>
+		</java:invokeMethod>
+		<form:setalignment object="{label}" valign="{valign}" halign="{halign}"/>
+		<form:rstruct:noid object="{label}"/>
+	</element></export>
+	
+	<export name="hbox"><element arguments="" optargs="homogenous" vargs="true">
+		<default name="homogenous" value="false"/>
+		<set name="container">
+			<java:new classname="java.awt.Container"/>
+		</set>
+		<set name="layout">
+			<java:new className="org.globus.cog.gui.util.HorizontalLayout"/>
+		</set>
+		<java:invokeMethod object="{layout}" method="setHomogenous" types="boolean">
+			<argument value="{homogenous}"/>
+		</java:invokeMethod>
+		<java:invokeMethod object="{container}" method="setLayout" types="java.awt.LayoutManager">
+			<argument value="{layout}"/>
+		</java:invokeMethod>
+		
+		<form:rstruct:add parent="{container}" rstructs="{vargs}"/>
+	</element></export>
+	
+	<export name="vbox"><element arguments="" optargs="homogenous" vargs="true">
+		<default name="homogenous" value="false"/>
+		<set name="container">
+			<java:new classname="java.awt.Container"/>
+		</set>
+		<set name="layout">
+			<java:new className="org.globus.cog.gui.util.VerticalLayout"/>
+		</set>
+		<java:invokeMethod object="{layout}" method="setHomogenous" types="boolean">
+			<argument value="{homogenous}"/>
+		</java:invokeMethod>
+		<java:invokeMethod object="{container}" method="setLayout" types="java.awt.LayoutManager">
+			<argument value="{layout}"/>
+		</java:invokeMethod>
+		
+		<form:rstruct:add parent="{container}" rstructs="{vargs}"/>
+	</element></export>
+	
+	<export name="textField"><element arguments="id" optargs="columns,valign, halign">
+		<default name="columns" value="10"/>
+		<default name="valign" value="0.5"/>
+		<default name="halign" value="0.5"/>
+		<set name="tf">
+			<java:new classname="javax.swing.JTextField"/>
+		</set>
+		<java:invokeMethod object="{tf}" method="setColumns" types="int">
+			<argument value="{columns}"/>
+		</java:invokeMethod>
+		<form:setalignment object="{tf}" valign="{valign}" halign="{halign}"/>
+		<form:rstruct id="{id}" object="{tf}"/>
+	</element></export>
+	
+	<export name="passwordField"><element arguments="id" optargs="columns,valign, halign">
+		<default name="columns" value="10"/>
+		<default name="valign" value="0.5"/>
+		<default name="halign" value="0.5"/>
+		<set name="tf">
+			<java:new classname="javax.swing.JPasswordField"/>
+		</set>
+		<java:invokeMethod object="{tf}" method="setColumns" types="int">
+			<argument value="{columns}"/>
+		</java:invokeMethod>
+		<form:setalignment object="{tf}" valign="{valign}" halign="{halign}"/>
+		<form:rstruct id="{id}" object="{tf}"/>
+	</element></export>
+	
+	<export name="checkBox"><element arguments="id, caption" optargs="checked, halign, valign">
+		<default name="checked" value="false"/>
+		<default name="valign" value="0.5"/>
+		<default name="halign" value="0.5"/>
+		<set name="cb">
+			<java:new classname="javax.swing.JCheckBox"/>
+		</set>
+		<java:invokeMethod object="{cb}" method="setSelected" types="boolean">
+			<argument value="{checked}"/>
+		</java:invokeMethod>
+		<form:labeledControl control="{cb}" caption="{caption}" id="{id}" valign="{valign}" halign="{halign}"/>
+	</element></export>
+		
+	<export name="lineBorder"><element arguments="">
+		<java:invokeMethod classname="javax.swing.BorderFactory" method="createLineBorder">
+			<java:getField classname="java.awt.Color" field="black"/>
+		</java:invokeMethod>
+	</element></export>
+	
+	<export name="titledBorder"><element arguments="title">
+		<java:invokeMethod className="javax.swing.BorderFactory" method="createTitledBorder"
+			types="javax.swing.border.Border, java.lang.String">
+			<form:lineBorder/>
+			<argument value="{title}"/>
+		</java:invokeMethod>
+	</element></export>
+	
+	<export name="radioBox"><element arguments="id, caption" vargs="true">
+		<set name="container">
+			<java:new classname="javax.swing.JPanel"/>
+		</set>
+		<set name="layout">
+			<java:new className="org.globus.cog.gui.util.VerticalLayout"/>
+		</set>
+		<java:invokeMethod object="{layout}" method="setBorder" types="int">
+			<argument value="16"/>
+		</java:invokeMethod>
+		
+		<java:invokeMethod object="{container}" method="setLayout" types="java.awt.LayoutManager">
+			<argument value="{layout}"/>
+		</java:invokeMethod>
+		<java:invokeMethod object="{container}" method="setBorder" types="javax.swing.border.Border">
+			<form:titledBorder title="{caption}"/>
+		</java:invokeMethod>
+				
+		<set name="group">
+			<java:new classname="javax.swing.ButtonGroup"/>
+		</set>
+		
+		<list>
+			<map>
+				<map:entry key="{id}" value="{group}"/>
+				<for name="arg" in="{vargs}">
+					<set name="controls">
+						<list:first list="{arg}"/>
+					</set>
+					<argument value="{controls}"/>	
+					<for name="key" in="{controls}">
+						<java:invokeMethod object="{group}" method="add" types="javax.swing.AbstractButton">
+							<map:get key="{key}" map="{controls}"/>
+						</java:invokeMethod>
+					</for>
+					<discard>
+						<java:invokeMethod object="{container}" method="add" types="java.awt.Component">
+							<list:last list="{arg}"/>
+						</java:invokeMethod>
+					</discard>
+				</for>
+			</map>
+			<argument value="{container}"/>
+		</list>
+	</element></export>
+	
+	<export name="radioButton"><element arguments="id, caption" optargs="selected, valign, halign">
+		<default name="selected" value="false"/>
+		<default name="valign" value="0.5"/>
+		<default name="halign" value="0"/>
+		<set name="rb">
+			<java:new classname="javax.swing.JRadioButton"/>
+		</set>
+		<java:invokeMethod object="{rb}" method="setSelected" types="boolean">
+			<argument value="{selected}"/>
+		</java:invokeMethod>
+		<java:invokeMethod object="{rb}" method="setActionCommand">
+			<argument value="{caption}"/>
+		</java:invokeMethod>
+		<form:labeledControl control="{rb}" caption="{caption}" id="{id}" valign="{valign}" halign="{halign}"/>
+	</element></export>
+	
+	<export name="VSeparator"><element arguments="">
+		<form:rstruct:noid>
+			<java:new classname="javax.swing.JSeparator" types="int">
+				<java:getField classname="javax.swing.SwingConstants" field="VERTICAL"/>
+			</java:new>
+		</form:rstruct:noid>
+	</element></export>
+	
+	<export name="HSeparator"><element arguments="">
+		<form:rstruct:noid>
+			<java:new classname="javax.swing.JSeparator" types="int">
+				<java:getField classname="javax.swing.SwingConstants" field="HORIZONTAL"/>
+			</java:new>
+		</form:rstruct:noid>
+	</element></export>	
+	
+	<export name="filler"><element arguments="" optargs="width, height">
+		<default name="width" value="1"/>
+		<default name="height" value="1"/>
+		<form:rstruct:noid>
+			<java:invokeMethod classname="javax.swing.Box" method="createRigidArea" types="java.awt.Dimension">
+				<java:new classname="java.awt.Dimension" types="int, int">
+					<argument value="{width}"/>
+					<argument value="{height}"/>
+				</java:new>
+			</java:invokeMethod>
+		</form:rstruct:noid>
+	</element></export>
+	
+	<export name="comboBox"><element arguments="id" optargs="valign, halign" vargs="true">
+		<default name="valign" value="0.5"/>
+		<default name="halign" value="0.5"/>
+		<set name="cb">
+			<java:new classname="javax.swing.JComboBox"/>
+		</set>
+		<form:setAlignment valign="{valign}" halign="{halign}" object="{cb}"/>
+		<for name="item" in="{vargs}">
+			<java:invokeMethod object="{cb}" method="addItem" types="java.lang.Object">
+				<list:first list="{item}"/>
+			</java:invokeMethod>
+			<if>
+				<isTrue>
+					<list:last list="{item}"/>
+				</isTrue>
+
+				<then>
+					<java:invokeMethod object="{cb}" method="setSelectedItem" types="java.lang.Object">
+						<list:first list="{item}"/>
+					</java:invokeMethod>
+				</then>
+			</if>
+		</for>
+		<form:rstruct id="{id}" object="{cb}"/>
+	</element></export>
+	
+	<export name="comboItem"><element arguments="text" optargs="selected">
+		<default name="selected" value="false"/>
+		<list items="{text}, {selected}"/>
+	</element></export>
+	
+	
+	<export name="constant"><element arguments="name">
+		<global name="form:{name}">
+			<java:getField classname="javax.swing.JOptionPane" field="{name}"/>
+		</global>
+	</element></export>
+	
+	<form:constant name="ERROR_MESSAGE"/>
+	<form:constant name="INFORMATION_MESSAGE"/>
+	<form:constant name="WARNING_MESSAGE"/>
+	<form:constant name="QUESTION_MESSAGE"/>
+	<form:constant name="PLAIN_MESSAGE"/>
+	
+	<export name="messageDialog"><element arguments="message, title">
+		<java:invokeMethod classname="javax.swing.JOptionPane" method="showMessageDialog" types="java.awt.Component, java.lang.Object, java.lang.String, int">
+			<java:null/>
+			<variable>message</variable>
+			<variable>title</variable>
+			<variable>form:PLAIN_MESSAGE</variable>
+		</java:invokeMethod>
+	</element></export>
+  </namespace>
+</karajan>

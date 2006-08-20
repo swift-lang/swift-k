@@ -1,0 +1,124 @@
+<html>
+	<head>
+		<title>Java CoG: Remote Execution Portlet: Help</title>
+	</head>
+	<body>
+		<div id="jobname">
+			(Optional) The value of this field is the job name. If left blank, one will be generated automatically.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="provider">
+			(Required) Select one from the list of providers. The job will be submitted to the selected provider.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="batch">
+			 (Optional) Selecting true, will annotate this job as a batch job. Note that currently:
+			<ul>
+				<li>Redirection of Standard Output/Error for batch jobs is not supported. Thus the 'Redirect stdout/stderr' select is disabled.
+				<li>Local executables are not supported with batch mode execution. The 'Local' to 'Remote' and back toggle is disabled.
+			<ul>
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="redirect">
+			(Optional) Selecting true, will annotate this job as a redirect job, with the stdout/stderr fields disabled. If the job is successfully executed, the stdout/stderr may be viewed using the 'User Task Set Management Portlet'.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="hostcontact">
+			(Required) Either select from the list of previously entered host contacts, or enter a new one. Note that, for:
+			<ul>
+				<li>GT2 Jobs, the host contact field is the host Name field. Use the Port, Service and Subject fields for the respective values.
+				<li>GT3 Jobs, the host contact field should contain the complete URL to the job management service.
+			<ul>
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="port">
+			(Optional) The port on which the GT2 job execution service is running.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="service">
+			(Optional) The service name with the GT3 job execution service is configured. The default is 'jobmanager'.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="subject">
+			(Optional) For non-host, certificate, services the subject string of the certificate being used to host the service should be specified here.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="certificate">
+			(Required) By default a certificate is chosen. Select the appropriate certificate.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="executable">
+			(Required) The executable may be on the remote machine, or may be uploaded through this portlet. For:
+			<ul>
+				<li>Remote executables, click on the 'Remote' button (this is the Default mode), to specify the path, relative to the user home directory/or absolute, to the executable.
+				<li>Local executables, click on the 'Local' button, to select a local file to upload and execute.
+			<ul>
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="arguments">
+			(Optional) The command line arguments to be passed to the executable may be set here.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="directory">
+			(Optional) The working directory for this job execution may be set here.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="environment">
+			(Optional) Environment variables, their names and values may be set here. The procedure is simple, type in the name and value pair, and click on 'add -->' to add them to your current environment set. This can be done as many number of times as needed. If you think that something has been wrongly entered, then it should be selected, and a click on 'edit <--' will bring the selected pair into the name/value text boxes, to be edited.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="stdout">
+			(Optional) The path, relative to the user home directory/or absolute, to the file, to contain the Standard Output. If the 'Redirect stdout/stderr' is selected to be true, then this field is disabled, and the output is automatically redirected. It can be viewd through the 'User Task Set Management Portlet'.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+		<div id="stderr">
+			(Optional) The path, relative to the user home directory/or absolute, to the file, to contain the Standard Error. If the 'Redirect stdout/stderr' is selected to be true, then this field is disabled, and the stderr is automatically redirected. It can be viewd through the 'User Task Set Management Portlet'.
+		</div>
+		<div align="right">
+			<a href="" align="right" onclick="window.close()">close</a>
+		</div>
+
+	</body>
+</html>

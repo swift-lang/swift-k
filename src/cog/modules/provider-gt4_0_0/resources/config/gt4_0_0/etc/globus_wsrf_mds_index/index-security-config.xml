@@ -1,0 +1,22 @@
+<securityConfig xmlns="http://www.globus.org">
+  <auth-method>
+   <GSISecureMessage/>
+  </auth-method>
+<method name="queryResourceProperties">
+ <auth-method><none/></auth-method>
+</method>
+<method name="getResourceProperty">
+ <auth-method><none/></auth-method>
+</method>
+<method name="getResourceProperties">
+ <auth-method><none/></auth-method>
+</method>
+<method name="getMultipleResourceProperties">
+ <auth-method><none/></auth-method>
+</method>
+<method name="add">
+ <auth-method><none/></auth-method>
+</method>
+<authz value="gridmap"/> 
+ <gridmap value="/etc/grid-security/grid-mapfile"/>
+</securityConfig>			

@@ -1,0 +1,120 @@
+<karajan>
+	<cache>
+		<namespace prefix="task">
+			<export name="handler"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.TaskHandlerNode"/></export>
+			<export name="scheduler"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.SchedulerNode"/></export>
+			<export name="securityContext"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.SecurityContextNode"/></export>
+			<export name="resources"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.GridNode"/></export>
+			<export name="host"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.HostNode"/></export>
+			<export name="service"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.ServiceNode"/></export>
+
+			<export name="host:hasService"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.Functions"/></export>
+			<export name="serviceURI"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.Functions"/></export>
+    
+			<export name="allocateHost"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.AllocateHost"/></export>
+			<export name="execute"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.GridExec"/></export>
+			<export name="transfer"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.GridTransfer"/></export>
+	
+			<export name="file:list"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.FileList"/></export>
+			<export name="file:remove"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.FileRemove"/></export>
+			<export name="file:exists"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.FileExists"/></export>
+			<export name="dir:make"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.MakeDir"/></export>
+			<export name="dir:remove"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.Rmdir"/></export>
+			<export name="file:isDirectory"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.IsDirectory"/></export>
+			<export name="file:chmod"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.Chmod"/></export>
+			<export name="file:rename"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.Rename"/></export>
+		
+			
+			<import file="sys.xml"/>
+			<import file="java.xml"/>
+			
+			<export name="SSHSecurityContext">
+				<element arguments="credentials">
+					<task:securityContext provider="ssh" credentials="{credentials}"/>
+				</element>
+			</export>
+			
+			<export name="InteractiveSSHSecurityContext" restricted="true">
+				<element arguments="" optargs="username, privatekey, nogui">
+					<set name="sc">
+						<java:new classname="org.globus.cog.abstraction.impl.execution.ssh.InteractiveSSHSecurityContextImpl"/>
+					</set>
+					<if>
+						<isDefined name="username"/>
+						<java:invokeMethod method="setAttribute" object="{sc}" types="java.lang.String, java.lang.Object">
+							<string>username</string>
+							<variable>username</variable>
+						</java:invokeMethod>
+					</if>
+					<if>
+						<isDefined name="privatekey"/>
+						<java:invokeMethod method="setAttribute" object="{sc}" types="java.lang.String, java.lang.Object">
+							<string>privatekey</string>
+							<variable>privatekey</variable>
+						</java:invokeMethod>
+					</if>
+					<if>
+						<isDefined name="nogui"/>
+						<java:invokeMethod method="setAttribute" object="{sc}" types="java.lang.String, java.lang.Object">
+							<string>nogui</string>
+							<variable>nogui</variable>
+						</java:invokeMethod>
+					</if>
+					<argument value="{sc}"/>
+				</element>
+			</export>
+	
+			<export name="passwordAuthentication">
+				<element arguments="username, password">
+					<!-- this is insecure; the password passes through a string representation and is not zeroed out -->
+					<java:new
+						classname="java.net.PasswordAuthentication"
+						types="java.lang.String, char[]">
+						<argument value="{username}"/>
+						<argument value="{password}"/>
+					</java:new>
+				</element>
+			</export>
+	
+			<export name="publicKeyAuthentication">
+				<element arguments="username, privatekey, passphrase">
+					<java:new
+						classname="org.globus.cog.abstraction.impl.common.PublicKeyAuthentication"
+						types="java.lang.String, java.lang.String, char[]">
+						<argument value="{username}"/>
+						<argument value="{privatekey}"/>
+						<argument value="{passphrase}"/>
+					</java:new>
+				</element>
+			</export>
+			
+			<export name="taskTransformer">
+				<element arguments="classname">
+					<channel:to name="taskTransformers">
+						<variable>classname</variable>
+					</channel:to>
+				</element>
+			</export>
+			
+			<elementDef type="BDP" className="org.globus.cog.karajan.workflow.nodes.grid.BDP"/>
+			
+			<export name="transferParams">
+				<element arguments="srchost, desthost, provider">
+					<argument name="srchost" value="{srchost}"/>
+					<argument name="desthost" value="{desthost}"/>
+					<argument name="provider" value="{provider}"/>
+					<BDP srchost="{srchost}" desthost="{desthost}" provider="{provider}"/>
+				</element>
+			</export>
+			
+			<export name="envVar">
+				<element arguments="name, value">
+					<channel:to name="environment">
+						<map:entry key="{name}" value="{value}"/>
+					</channel:to>
+				</element>
+			</export>
+			
+		</namespace>
+	</cache>
+</karajan>

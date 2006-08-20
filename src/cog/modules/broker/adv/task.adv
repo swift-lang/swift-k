@@ -1,0 +1,7 @@
+[
+Name="Exec-Task";
+AdvType="Task";
+TaskType="JobSubmission";
+Requirements=Other.AdvType is "Service" && Other.ServiceType is 
+"JobSubmission" && Other.Rank == 2;
+]

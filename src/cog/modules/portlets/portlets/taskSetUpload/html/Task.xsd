@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by Shashank Shankar (IIT) -->
+<xs:schema targetNamespace="http://www.globus.org/cog/util/xml/task" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.globus.org/cog/util/xml/task" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:complexType name="File">
+		<xs:sequence>
+			<xs:element name="URL" type="xs:string" minOccurs="0"/>
+			<xs:element ref="FileParts" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="ServiceContact">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Protocol" type="xs:string" minOccurs="0"/>
+				<xs:element name="IP" type="xs:string" minOccurs="0"/>
+				<xs:element name="Port" type="xs:string" minOccurs="0"/>
+				<xs:element name="URL" type="xs:string" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Attribute">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="Name" type="xs:string"/>
+				<xs:element name="Value" type="xs:string"/>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Specification">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="JobSpecification" minOccurs="0"/>
+				<xs:element ref="FileSpecification" minOccurs="0"/>
+				<xs:element ref="InfoSpecification" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="Detail" type="xs:string" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="JobSpecification">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Executable" type="xs:string"/>
+				<xs:element name="Directory" type="xs:string" minOccurs="0"/>
+				<xs:element name="Arguments" type="xs:string" minOccurs="0"/>
+				<xs:element name="stdInput" type="xs:string" minOccurs="0"/>
+				<xs:element name="stdOutput" type="xs:string" minOccurs="0"/>
+				<xs:element name="stdError" type="xs:string" minOccurs="0"/>
+				<xs:element name="BatchJob" type="xs:boolean" minOccurs="0"/>
+				<xs:element name="Redirected" type="xs:boolean" minOccurs="0"/>
+				<xs:element name="LocalExecutable" type="xs:boolean" minOccurs="0"/>
+				<xs:element ref="Attribute" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="InfoSpecification">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="Attribute" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="FileSpecification">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Source" type="File"/>
+				<xs:element name="Destination" type="File"/>
+				<xs:element name="Binary" type="xs:boolean" minOccurs="0"/>
+				<xs:element name="Notpt" type="xs:boolean" minOccurs="0"/>
+				<xs:element name="Dcau" type="xs:boolean" minOccurs="0"/>
+				<xs:element name="BlockSize" type="xs:integer" minOccurs="0"/>
+				<xs:element name="TcpBufferSize" type="xs:integer" minOccurs="0"/>
+				<xs:element name="ParallelStreams" type="xs:integer" minOccurs="0"/>
+				<xs:element name="ThirdParty" type="xs:boolean" minOccurs="0"/>
+				<xs:element ref="Attribute" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="FileParts">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="Server" type="xs:string"/>
+				<xs:element name="Directory" type="xs:string"/>
+				<xs:element name="FileName" type="xs:string"/>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="SecurityContext">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Credential" type="xs:string" minOccurs="0"/>
+				<xs:element name="Authorization" minOccurs="0">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:pattern value="HOST_AUTHORIZATION|SELF_AUTHORIZATION|NO_AUTHORIZATION"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="Delegation" minOccurs="0">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:pattern value="FULL_DELEGATION|PARTIAL_DELEGATION|NO_DELEGATION"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="xmlSec" minOccurs="0">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:pattern value="XML_ENCRYPTION|XML_SIGNATURE"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element ref="Attribute" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Task">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Name" type="xs:string" minOccurs="0"/>
+				<xs:element name="Type">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:pattern value="JOB_SUBMISSION|FILE_TRANSFER|INFORMATION_QUERY"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="Provider">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:pattern value="GT2|GT3|SSH"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element ref="Specification"/>
+				<xs:element ref="SecurityContext"/>
+				<xs:element ref="ServiceContact"/>
+				<xs:element ref="Attribute" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

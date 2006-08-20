@@ -1,0 +1,21 @@
+<project>
+	<include file="cogkit.xml"/>
+	
+	<global name="GLOBUS_LOCATION" value="/path/to/gt4/installation"/>
+	<include file="gt4.xml"/>
+	
+	<gt4:submit>
+		<quoted>
+<![CDATA[
+<job>
+    <executable>bin/echo</executable>
+    <argument>Testing</argument>
+    <argument>1...2...3</argument>
+    <stdout>${GLOBUS_USER_HOME}/stdout</stdout>
+    <stderr>${GLOBUS_USER_HOME}/stderr</stderr>
+</job>
+]]>
+		</quoted>
+	</gt4:submit>
+</project>
+

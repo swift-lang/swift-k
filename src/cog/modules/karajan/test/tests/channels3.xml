@@ -1,0 +1,47 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="channels 3"/>
+		<map:entry key="test">
+			<element arguments="">
+				<element name="chantest" vargs="true" channels="one, two">
+					<for name="i" in="{vargs}">
+						<string>0:{i}</string>
+					</for>
+
+					<for name="i" in="{one}">
+						<string>1:{i}</string>
+					</for>
+						
+					<for name="i" in="{two}">
+						<string>2:{i}</string>
+					</for>
+				</element>
+				<list>
+					<chantest>
+						<string>a</string>
+						<string>b</string>
+						<channel:to name="one">
+							<string>a</string>
+							<string>b</string>
+						</channel:to>
+						<channel:to name="two">
+							<string>a</string>
+							<string>b</string>
+						</channel:to>
+					</chantest>
+				</list>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<list>
+				<string>0:a</string>
+				<string>0:b</string>
+				<string>1:a</string>
+				<string>1:b</string>
+				<string>2:a</string>
+				<string>2:b</string>
+			</list>
+		</map:entry>
+		<map:entry key="comparison" value="{default_comparison}"/>
+	</map>
+</karajan>

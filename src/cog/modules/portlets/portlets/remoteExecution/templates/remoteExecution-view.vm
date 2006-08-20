@@ -1,0 +1,164 @@
+## This program is distributed under the following licence:
+## http://www.globus.org/toolkit/download/license.html
+
+<div align="left">
+
+#set( $link1 = $jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doShow_main_screen","") )
+#set( $link2 = $jslink.getPortletById($portlet.ID).addQueryData("eventSubmit_doShow_job_history","") )
+
+		<table>
+			<tr>
+				<td>
+					<a href= "${link1}">Back to main screen</a>
+				</td>
+				<td>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td>
+					<a href= "${link2}">Refresh</a>
+				</td>
+			</tr>
+		</table>
+
+#if( $RemoteExecutionPortlet_AllJobs )
+	#set( $alljobs = $RemoteExecutionPortlet_AllJobs )
+	#if( $alljobs.size() == 0 )
+		<table>
+			<tr>
+				<td>
+					No jobs submitted.
+				</td>
+			</tr>
+		</table>
+	#else
+		<table columns=5 border=1 cellpadding=15>
+			<tr>
+				<td>
+					<b>Job</b>
+				</td>
+				<td>
+					<b>Name</b>
+				</td>
+				<td>
+					<b>Details</b>
+				</td>
+				<td>
+					<b>Status</b>
+				</td>
+				<td>	
+					<b>Dates</b>
+				</td>
+				<td>	
+					<b>Standard Output</b>
+				</td>
+				<td>	
+					<b>Standard Error</b>
+				</td>
+			</tr>
+		#foreach( $jobinfo in $RemoteExecutionPortlet_AllJobs )
+			<tr>
+				<td>
+					$!velocityCount
+				</td>
+				<td>
+					$!{jobinfo.Name}
+				</td>
+				<td>
+					<table>
+						<tr>
+							<td>
+								Host Contact
+							</td>
+							<td>
+								$!{jobinfo.URL}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Executable
+							</td>
+							<td>
+			#if( $jobinfo.LocalExecutable )
+								$!{jobinfo.ExecutableName}
+			#else
+								$!{jobinfo.Executable}
+			#end
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Arguments
+							</td>
+							<td>
+								$!{jobinfo.Arguments}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Directory
+							</td>
+							<td>
+								$!{jobinfo.Directory}
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td>
+					$!{jobinfo.Status}
+				</td>
+				<td>
+					## a table with the dates listed here
+				</td>
+				<td>
+			#set( $strcompleted = "Completed" )
+			#set( $completed = false )
+			#if( $jobinfo.Status == $strcompleted )
+				#set( $completed = true )
+			#end
+			#if( $jobinfo.Redirected )
+				#if ( $completed )
+					<a href="$!{jobinfo.StdOutput}" target="_blank">view</a>
+				#else
+					No Standard Output.
+				#end
+			#else
+				#if ( $completed )
+					Standard Output on the remote machine.
+				#else
+					No Standard Output.
+				#end
+			#end
+				</td>
+				<td>
+			#set( $completed = false )
+			#if( $jobinfo.Status == $strcompleted )
+				#set( $completed = true )
+			#end
+			#if( $jobinfo.Redirected )
+				#if ( $completed )
+					<a href="$!{jobinfo.StdError}" target="_blank">view</a>
+				#else
+					No Standard Error.
+				#end
+			#else
+				#if ( $completed )
+					Standard Error on the remote machine.
+				#else
+					No Standard Error.
+				#end
+			#end
+				</td>
+			</tr>
+		#end
+		</table>
+	#end
+#end
+
+</div>

@@ -1,0 +1,7 @@
+[
+Name="Arbat-Transfer";
+AdvType="Service";
+ServiceType="FileTransfer";
+Provider="GT2";
+ServiceContact="arbat.mcs.anl.gov:6224";
+]

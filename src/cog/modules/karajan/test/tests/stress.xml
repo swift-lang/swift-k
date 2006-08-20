@@ -1,0 +1,61 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="small stress test"/>
+		<map:entry key="test">
+			<element arguments="">
+				<set name="A" value="1"/>
+				<set name="B" value="2"/>
+				<sum>
+					<!-- this actually makes a list with 30000 values of 1 
+					how terribly innefficient -->
+					<!-- not any more ;) -->
+					<parallel>
+						<for name="i">
+							<range from="1" to="10"/>
+							
+							<parallelFor name="j">
+								<range from="1" to="30"/>
+								
+								<for name="k">
+									<range from="1" to="50"/>
+									
+									<set name="dummy" value="{i}{j}{k}"/>
+									<number>1</number>
+								</for>
+							</parallelFor>
+							
+							<echo message="{A}" nl="false"/>
+						</for>
+						
+						<for name="i">
+							<range from="1" to="10"/>
+							
+							<for name="j">
+								<range from="1" to="30"/>
+								
+								<parallelFor name="k">
+									<range from="1" to="50"/>
+									
+									<set name="dummy" value="{i}{j}{k}"/>
+									<number>1</number>
+								</parallelFor>
+							</for>
+							
+							<echo message="{B}" nl="false"/>
+						</for>
+					</parallel>
+				</sum>
+				<echo/>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<product>
+				<number>2</number>
+				<number>5</number>
+				<number>30</number>
+				<number>100</number>
+			</product>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

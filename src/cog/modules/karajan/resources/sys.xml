@@ -1,0 +1,33 @@
+<karajan>
+	<cache>
+		<namespace prefix="sys">
+			<import file="sys-common.xml" export="true"/>
+  
+			<export name="setvar"><elementDef className="org.globus.cog.karajan.workflow.nodes.SetVar"/></export>
+			<export name="set"><elementDef className="org.globus.cog.karajan.workflow.nodes.SetVar"/></export>
+			<export name="global"><elementDef className="org.globus.cog.karajan.workflow.nodes.Global"/></export>
+			
+			<export name="fold">
+				<parallelElement arguments="lambda, initial" vargs="true">
+					<set name="fc">
+						<channel/>
+					</set>
+					<discard>
+						<append list="{fc}"><variable>initial</variable></append>
+					</discard>
+					<for name="i">
+						<dot><variable>vargs</variable><variable>fc</variable></dot>
+						<discard>
+							<append list="{fc}">
+								<executeElement element="{lambda}">
+									<each><variable>i</variable></each>
+								</executeElement>
+							</append>
+						</discard>
+					</for>
+					<first list="{fc}"/>
+				</parallelElement>
+			</export>
+		</namespace>
+	</cache>
+</karajan>

@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ServiceGroupRegistrations
+  xmlns="http://mds.globus.org/servicegroup/client" 
+  xmlns:sgc="http://mds.globus.org/servicegroup/client" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+  xmlns:agg="http://mds.globus.org/aggregator/types">
+
+<!-- This is an example configuration file for the mds-servicegrou-add
+     tool, which maintains registrations between grid resources and
+     servicegroups (such as MDS Index and Trigger services.
+
+     The file consists of an optional defaultServiceGroupEPR, an 
+     optional defaultRegistrantEPR, and then one or more
+     ServiceGroupRegistrationParameters blocks, each of which 
+     represents one registration.
+
+     Use search-and-replace to change each occurence of 'myhost' to the 
+     name of your host. 
+
+-->
+
+<!-- The defaultServiceGroupEPR defines the servicegroup to which 
+     registrations will be made, unless overridden in the 
+     ServiceGroupRegistrationParameters
+-->
+
+<defaultServiceGroupEPR>
+   <wsa:Address>https://myhost:8443/wsrf/services/DefaultIndexService</wsa:Address>
+</defaultServiceGroupEPR>
+
+<!-- The defaultRegistrantEPR defines the grid resource that will be
+     registered, unless overridden in the ServiceGroupRegistrationParameters
+-->
+<defaultRegistrantEPR>
+   <wsa:Address>https://myhost:8443/wsrf/services/WidgetService</wsa:Address>
+</defaultRegistrantEPR>
+
+<defaultSecurityDecriptorFile>some/other/sec/file.xml</defaultSecurityDecriptorFile>
+
+
+<!-- Each ServiceGroupRegistrationParameters element defines one
+     registration to be maintained. The registration specifies
+     a grid resource to be registered, a servicegroup to be registered
+     to, and various parameters associated with the registration.
+
+     This element should be duplicated once for each registration to 
+     be maintained.
+
+     A number of sample registration blocks are included below, but 
+     commented out. These demonstrate the use of the mds-servicegroup-add
+     tool for a variety of common registration scenarios.
+
+-->
+
+<!-- The following demonstrates registering a GRAM service to the default
+     service group, specified above in the <defaultServiceGroupEPR> 
+     element.
+
+     To use, ensure that the defaultServiceGroupElement parameter is
+     set correctly above, and set the registrantEPR to refer to 
+     the correct host and queueing system.
+
+-->
+
+
+<ServiceGroupRegistrationParameters
+   xmlns="http://mds.globus.org/servicegroup/client" >
+
+
+   <!-- Specifies an EPR of the GRAM service to be registered.
+        Change the hostname (and port) to point to the correct 
+        location, and change 'Condor' to the appropriate 
+        scheduler name. -->
+
+    <RegistrantEPR
+      xmlns:agg="http://mds.globus.org/aggregator/types"
+      xmlns:gram="http://www.globus.org/namespaces/2004/10/gram/job"
+      xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing">
+      <wsa:Address>
+         https://myhost:8443/wsrf/services/ManagedJobFactoryService
+      </wsa:Address>
+      <wsa:ReferenceProperties>
+         <gram:ResourceID>Condor</gram:ResourceID>
+      </wsa:ReferenceProperties>
+   </RegistrantEPR>
+
+   <!-- Specifies that the registration will be renewed every 600
+        seconds (= 10 minutes) -->
+   <RefreshIntervalSecs>600</RefreshIntervalSecs>
+
+
+   <!-- <Content> specifies registration specific information -->
+   <Content xsi:type="agg:AggregatorContent"
+      xmlns:agg="http://mds.globus.org/aggregator/types">
+
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+         <agg:GetResourcePropertyPollType
+            xmlns:glue="http://mds.globus.org/glue/ce/1.1" >
+            <!-- Specifies that the index should refresh information 
+                 every 60000 milliseconds (once per minute) -->
+            <agg:PollIntervalMillis>60000</agg:PollIntervalMillis>
+
+            <!-- specifies the resource property that should be
+                 aggregated, which in this case is the GLUE cluster
+                 and scheduler information RP -->
+            <agg:ResourcePropertyName>glue:GLUECE</agg:ResourcePropertyName>
+
+         </agg:GetResourcePropertyPollType>
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+</ServiceGroupRegistrationParameters>
+
+<!-- The following demonstrates registering an RFT factory service to 
+     the default service group, with all of the resource properties
+     from the RFT factory being collected.
+-->
+
+
+
+
+
+<ServiceGroupRegistrationParameters
+  xmlns="http://mds.globus.org/servicegroup/client" >
+
+   <!-- Specifies an EPR of the RFT factory service to be registered.
+        Change the hostname (and port) to point to the correct
+        location. -->
+   <RegistrantEPR
+      xmlns:agg="http://mds.globus.org/aggregator/types"
+      xmlns:glue="http://mds.globus.org/glue/ce/1.1"
+      xmlns:gram="http://www.globus.org/namespaces/2004/10/gram/job"
+      xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing">
+      <wsa:Address>
+         https://myhost:8443/wsrf/services/ReliableFileTransferFactoryService
+      </wsa:Address>
+   </RegistrantEPR>
+
+   <!-- Specifies that the registration will be renewed every 600
+        seconds (= 10 minutes) -->
+   <RefreshIntervalSecs>600</RefreshIntervalSecs>
+
+
+   <!-- <Content> specifies registration specific information -->
+   <Content
+        xmlns:agg="http://mds.globus.org/aggregator/types"
+        xmlns:rft="http://www.globus.org/namespaces/2004/10/rft"
+        xsi:type="agg:AggregatorContent">
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+
+         <agg:GetMultipleResourcePropertiesPollType
+            xmlns:rft="http://www.globus.org/namespaces/2004/10/rft">
+            <!-- Specifies that the index should refresh information
+                 every 60000 milliseconds (once per minute) -->
+            <agg:PollIntervalMillis>60000</agg:PollIntervalMillis>
+
+            <!-- specifies that all Resource Properties should be
+                 collected from the RFT factory -->
+            <agg:ResourcePropertyNames>rft:totalBytes</agg:ResourcePropertyNames>
+            <agg:ResourcePropertyNames>rft:TotalNumberOfActiveTransfers</agg:ResourcePropertyNames>
+            <agg:ResourcePropertyNames>rft:RFTFactoryStartTime</agg:ResourcePropertyNames>
+            <agg:ResourcePropertyNames>rft:ActiveTransferResourceCount</agg:ResourcePropertyNames>
+            <agg:ResourcePropertyNames>rft:TotalTransferCount</agg:ResourcePropertyNames>
+
+         </agg:GetMultipleResourcePropertiesPollType>
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+</ServiceGroupRegistrationParameters>
+
+
+
+
+
+<!-- The following demonstrates register a CAS to the default
+     service group. -->
+
+
+<ServiceGroupRegistrationParameters
+  xmlns="http://mds.globus.org/servicegroup/client" >
+
+   <!-- Specifies an EPR of the RFT factory service to be registered.
+        Change the hostname (and port) to point to the correct
+        location. -->
+   <RegistrantEPR
+      xmlns:agg="http://mds.globus.org/aggregator/types"
+      xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing">
+      <wsa:Address>
+         https://myhost:8443/wsrf/services/CASService
+      </wsa:Address>
+   </RegistrantEPR>
+
+   <!-- Specifies that the registration will be renewed every 600
+        seconds (= 10 minutes) -->
+   <RefreshIntervalSecs>600</RefreshIntervalSecs>
+
+
+   <!-- <Content> specifies registration specific information -->
+   <Content
+        xmlns:agg="http://mds.globus.org/aggregator/types"
+        xsi:type="agg:AggregatorContent">
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+
+         <agg:GetResourcePropertyPollType
+            xmlns:cas="http://www.globus.org/07/2004/cas">
+            <!-- Specifies that the index should refresh information
+                 every 60000 milliseconds (once per minute) -->
+            <agg:PollIntervalMillis>60000</agg:PollIntervalMillis>
+
+            <agg:ResourcePropertyName>cas:VoDescription</agg:ResourcePropertyName>
+
+         </agg:GetResourcePropertyPollType>
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+
+</ServiceGroupRegistrationParameters>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- The following demonstrates registering an interoperability test code
+    'widget' to a dynamically created index service.
+
+<ServiceGroupRegistrationParameters>
+
+   <ServiceGroupEPR>
+      <wsa:Address>https://127.0.0.1:8443/wsrf/services/IndexService</wsa:Address>
+      <wsa:ReferenceProperties>
+         <ServiceGroupKey xmlns="http://mds.globus.org/inmemoryservicegroup">000000</isgk:ServiceGroupKey>
+      </wsa:ReferenceProperties>
+   </ServiceGroupEPR>
+
+   <RegistrantEPR>
+      <wsa:Address>https://127.0.0.1:8443/wsrf/services/WidgetService</wsa:Address>
+      <wsa:ReferenceProperties>
+         <WidgetKey xmlns="http://www.globus.org/namespaces/2004/06/core">000000</wkey:WidgetKey>
+      </wsa:ReferenceProperties>
+   </RegistrantEPR>
+
+   <RefreshIntervalSecs>600</RefreshIntervalSecs>
+
+   <Content xmlns:agg="http://mds.globus.org/aggregator/types" xsi:type="agg:AggregatorContent">
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+         <agg:GetResourcePropertyPollType>
+            <agg:PollIntervalMillis>40000</agg:PollIntervalMillis>
+            <agg:ResourcePropertyName xmlns:wcom="http://widgets.com">wcom:foo</agg:ResourcePropertyName>
+         </agg:GetResourcePropertyPollType>
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+</ServiceGroupRegistrationParameters>
+
+-->
+
+
+</ServiceGroupRegistrations>
+

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<!-- definition of complex elements -->
+<xs:element name="component">	
+<xs:complexType>
+	<xs:sequence>
+		<xs:element name="metadata">
+			<xs:complexType>
+				<xs:sequence>
+					<!-- definition of simple elements -->
+					<xs:element name="name" type="xs:string" minOccurs="1"/>
+				    <xs:element name="author" type="xs:string" minOccurs="1"/>
+					<xs:element name="shortdesc" type="xs:string"/>
+					<xs:element name="desc" type="xs:string" minOccurs="0"/>
+					<xs:element name="date_created" type="xs:date"/>
+					<xs:element name="date_modified" type="xs:string" minOccurs="0"/>
+					<xs:element name="language" type="xs:string"/>
+					<xs:element name="deprecates" type="xs:string" minOccurs="0"/>
+					<xs:element name="signature" type="xs:string" minOccurs="0"/>
+				</xs:sequence>
+				<xs:attribute name="version" type="xs:string" use="required"/>
+			</xs:complexType>
+		</xs:element>
+		<xs:element name="source">
+			<xs:simpleType>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+		</xs:element>
+	</xs:sequence>
+</xs:complexType>
+</xs:element>	
+	</xs:schema>

@@ -1,0 +1,46 @@
+<karajan>
+	<include file="sys.xml"/>
+	<include file="java.xml"/>
+	
+	<export>
+		<element name="stopwatch:initialize" arguments="count">
+			<global name="_stopwatch">
+				<java:new classname="org.globus.cog.util.timer.StopWatch" types="int">
+					<argument value="{count}"/>
+				</java:new>
+			</global>
+		</element>
+	
+		<element name="stopwatch:setName" arguments="index, name">
+			<java:invokeMethod object="{_stopwatch}" method="set" types="int, java.lang.String">
+				<argument value="{index}"/>
+				<argument value="{name}"/>
+			</java:invokeMethod>
+		</element>
+	
+		<element name="stopwatch:start" arguments="index">
+			<java:invokeMethod object="{_stopwatch}" method="start" types="int">
+				<argument value="{index}"/>
+			</java:invokeMethod>
+		</element>
+	
+		<element name="stopwatch:pause" arguments="index">
+			<java:invokeMethod object="{_stopwatch}" method="pause" types="int">
+				<argument value="{index}"/>
+			</java:invokeMethod>
+		</element>
+	
+		<element name="stopwatch:resume" arguments="index">
+			<java:invokeMethod object="{_stopwatch}" method="resume" types="int">
+				<argument value="{index}"/>
+			</java:invokeMethod>
+		</element>
+	
+		<element name="stopwatch:print" arguments="index">
+			<java:invokeMethod object="{_stopwatch}" method="printTimer" types="int">
+				<argument value="{index}"/>
+			</java:invokeMethod>
+		</element>
+	</export>
+
+</karajan>

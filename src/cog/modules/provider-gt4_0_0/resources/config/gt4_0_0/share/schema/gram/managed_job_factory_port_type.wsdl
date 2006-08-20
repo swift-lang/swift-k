@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="ManagedJobFactory" targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job" xmlns:wsrp="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd" xmlns:wsbf="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd" xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job" xmlns:wsrpw="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" xmlns:wsdlpp="http://www.globus.org/namespaces/2004/10/WSDLPreprocessor" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsnt="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd">
+  <wsdl:import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" location="../wsrf/properties/WS-ResourceProperties.wsdl"/>
+  <wsdl:import namespace="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd" location="../wsrf/notification/WS-BaseN.wsdl"/>
+  <wsdl:types>
+    <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job" xmlns:desc="http://www.globus.org/namespaces/2004/10/gram/job/description" xmlns:gluece="http://mds.globus.org/glue/ce/1.1" xmlns:metric="http://mds.globus.org/metadata/2005/02" xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing">
+
+            <xsd:import namespace="http://www.globus.org/namespaces/2004/10/gram/job/description" schemaLocation="job_description.xsd"/>
+
+            <xsd:import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd" schemaLocation="../wsrf/faults/WS-BaseFaults.xsd"/>
+
+            <xsd:import namespace="http://mds.globus.org/glue/ce/1.1" schemaLocation="../mds/usefulrp/ce.xsd"/>
+
+            <xsd:import namespace="http://mds.globus.org/metadata/2005/02" schemaLocation="../mds/usefulrp/metadata.xsd"/>
+
+            <xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing" schemaLocation="../ws/addressing/WS-Addressing.xsd"/>
+
+            <xsd:import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd" schemaLocation="../wsrf/properties/WS-ResourceProperties.xsd"/>
+
+            <xsd:import namespace="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd" schemaLocation="../wsrf/notification/WS-BaseN.xsd"/>
+
+            <!--Resource property element declarations-->
+            <xsd:element name="localResourceManager" type="xsd:string"/>
+            <xsd:element name="globusLocation" type="xsd:string"/>
+            <xsd:element name="hostCPUType" type="xsd:string"/>
+            <xsd:element name="hostManufacturer" type="xsd:string"/>
+            <xsd:element name="hostOSName" type="xsd:string"/>
+            <xsd:element name="hostOSVersion" type="xsd:string"/>
+            <xsd:element name="scratchBaseDirectory" type="xsd:string"/>
+            <xsd:element name="delegationFactoryEndpoint" type="wsa:EndpointReferenceType"/>
+            <xsd:element name="stagingDelegationFactoryEndpoint" type="wsa:EndpointReferenceType"/>
+            <!-- should we defines the following as part of an
+                 <xsd:any> instead? -->
+            <xsd:element name="condorArchitecture" type="xsd:string"/>
+            <xsd:element name="condorOS" type="xsd:string"/>
+
+            <!--Resource property document declaration-->
+            <xsd:element name="managedJobFactoryResourceProperties">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="tns:localResourceManager"/>
+                        <xsd:element ref="tns:globusLocation"/>
+                        <xsd:element minOccurs="0" ref="tns:hostCPUType"/>
+                        <xsd:element minOccurs="0" ref="tns:hostManufacturer"/>
+                        <xsd:element minOccurs="0" ref="tns:hostOSName"/>
+                        <xsd:element minOccurs="0" ref="tns:hostOSVersion"/>
+                        <xsd:element minOccurs="0" ref="tns:scratchBaseDirectory"/>
+                        <xsd:element ref="tns:delegationFactoryEndpoint"/>
+                        <xsd:element minOccurs="0" ref="tns:stagingDelegationFactoryEndpoint"/>
+                        <xsd:element minOccurs="0" ref="tns:condorArchitecture"/>
+                        <xsd:element minOccurs="0" ref="tns:condorOS"/>
+                        <xsd:element minOccurs="0" ref="gluece:GLUECE"/>
+                        <xsd:element minOccurs="0" ref="gluece:GLUECESummary"/>
+                        <xsd:element ref="metric:ServiceMetaDataInfo"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- Operational input/outout type declarations -->
+            <xsd:element name="createManagedJob" type="tns:CreateManagedJobInputType"/>
+            <xsd:complexType name="CreateManagedJobInputType">
+                <xsd:sequence>
+
+                    <xsd:element minOccurs="0" name="InitialTerminationTime" nillable="true" type="xsd:dateTime"/>
+                    <!--
+                    Given the initial termination time (ITT) in parameter:
+
+                    If the ITT is nil or absent, the factory will
+                    set the termination time of the created resource
+                    to "indefinite" (i.e the resource will never expire).
+
+                    If the ITT is not in future wrt to the current time as
+                    known by the factory, the create operation will throw a
+                    fault.
+
+                    If the factory is unable or unwilling to set the termination
+                    time of the created resource to the input value or greater,
+                    the create operation will throw a fault.
+                    -->
+
+                    <xsd:element minOccurs="0" name="JobID" type="wsa:AttributedURI"/>
+
+                    <xsd:element minOccurs="0" ref="wsnt:Subscribe"/>
+
+                    <xsd:choice>
+                        <xsd:element ref="desc:job"/>
+                        <xsd:element ref="desc:multiJob"/>
+                    </xsd:choice>
+
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="CreateManagedJobOutputType">
+            <xsd:sequence>
+              <xsd:element name="NewTerminationTime" nillable="true" type="xsd:dateTime"/>
+              <xsd:element name="CurrentTime" type="xsd:dateTime"/>
+              <xsd:element name="managedJobEndpoint" type="wsa:EndpointReferenceType"/>
+              <xsd:element minOccurs="0" name="subscriptionEndpoint" type="wsa:EndpointReferenceType"/>
+            </xsd:sequence>
+            </xsd:complexType>
+            <xsd:element name="createManagedJobResponse" type="tns:CreateManagedJobOutputType"/>
+        </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="createManagedJobOuputMessage">
+    <wsdl:part name="parameters" element="tns:createManagedJobResponse"/>
+  </wsdl:message>
+  <wsdl:message name="createManagedJobInputMessage">
+    <wsdl:part name="parameters" element="tns:createManagedJob"/>
+  </wsdl:message>
+  <wsdl:message name="createManagedJobFaultMessage">
+    <wsdl:part name="fault" element="wsbf:BaseFault"/>
+  </wsdl:message>
+  <wsdl:portType name="ManagedJobFactoryPortType" wsrp:ResourceProperties="tns:managedJobFactoryResourceProperties">
+    <wsdl:operation name="createManagedJob">
+      <wsdl:input message="tns:createManagedJobInputMessage"/>
+      <wsdl:output message="tns:createManagedJobOuputMessage"/>
+      <wsdl:fault name="createManagedJobFault" message="tns:createManagedJobFaultMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="QueryResourceProperties">
+      <wsdl:input name="QueryResourcePropertiesRequest" message="wsrpw:QueryResourcePropertiesRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/QueryResourceProperties"/>
+      <wsdl:output name="QueryResourcePropertiesResponse" message="wsrpw:QueryResourcePropertiesResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/QueryResourcePropertiesResponse"/>
+      <wsdl:fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <wsdl:fault name="InvalidQueryExpressionFault" message="wsrpw:InvalidQueryExpressionFault"/>
+      <wsdl:fault name="QueryEvaluationErrorFault" message="wsrpw:QueryEvaluationErrorFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+      <wsdl:fault name="UnknownQueryExpressionDialectFault" message="wsrpw:UnknownQueryExpressionDialectFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetMultipleResourceProperties">
+      <wsdl:input name="GetMultipleResourcePropertiesRequest" message="wsrpw:GetMultipleResourcePropertiesRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetMultipleResourceProperties"/>
+      <wsdl:output name="GetMultipleResourcePropertiesResponse" message="wsrpw:GetMultipleResourcePropertiesResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetMultipleResourcePropertiesResponse"/>
+      <wsdl:fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetResourceProperty">
+      <wsdl:input name="GetResourcePropertyRequest" message="wsrpw:GetResourcePropertyRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourceProperty"/>
+      <wsdl:output name="GetResourcePropertyResponse" message="wsrpw:GetResourcePropertyResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourcePropertyResponse"/>
+      <wsdl:fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>

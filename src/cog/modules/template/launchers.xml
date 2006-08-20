@@ -1,0 +1,30 @@
+<!-- ===================================================================
+ This code is developed as part of the Java CoG Kit project
+ The terms of the license can be found at http://www.cogkit.org/license
+ This message may not be removed or altered.
+==================================================================== -->
+
+<project name="Launchers" default="create" basedir=".">
+	<target name="create">
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="sample-launcher"/>
+			<property name="class-name" value="org.globus.cog.example.Class"/>
+		</ant>
+	</target>
+	<target name="webstart">
+		<ant antfile="${main.buildfile}" target="webstart.launcher">
+			<property name="launcher-name" value="sample-app"/>
+			<property name="class-name" value="org.globus.cog.example.Class"/>
+			<property name="launcher-description" value="Example Application"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="webstart.launcher">
+			<property name="launcher-name" value="sample-applet"/>
+			<property name="class-name" value="org.globus.cog.example.Applet"/>
+			<property name="launcher-description" value="Example Application"/>
+			<property name="applet" value="true"/>
+			<property name="width" value="320"/>
+			<property name="height" value="240"/>
+			<property name="applet-params" value="&lt;param name=&quot;param1&quot; value=&quot;value1&quot;/&gt;"/>
+		</ant>
+	</target>
+</project>

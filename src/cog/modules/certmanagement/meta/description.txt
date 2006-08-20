@@ -1,0 +1,8 @@
+The certmanagement module contains a collection of certificate management
+applications and was contributed by:
+
+Jean-Claude Cote
+High Performance Computing / Calcul de haute performance
+National Research Council Canada / Conseil national de recherches Canada
+www.grid.nrc.ca
+
