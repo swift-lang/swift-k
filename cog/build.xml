@@ -19,19 +19,6 @@
                   includes="*.jar"/>
       </copy>
 
-      <mkdir dir="${maven.dir}/cog-${cog.version}-gt3.2.0/jars"/>
-      <copy todir="${maven.dir}/cog-${cog.version}-gt3.2.0/jars">
-         <fileset dir="${dist.dir}/lib/gt3_2_0" 
-                  includes="*.jar"/>
-      </copy>
-
-
-      <mkdir dir="${maven.dir}/cog-${cog.version}-gt3.2.1/jars"/>
-      <copy todir="${maven.dir}/cog-${cog.version}-gt3.2.1/jars">
-         <fileset dir="${dist.dir}/lib/gt3_2_1" 
-                  includes="*.jar"/>
-      </copy>
-        
     </target>        
 
     <target name="maven.publish">

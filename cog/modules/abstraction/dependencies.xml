@@ -13,18 +13,6 @@
 	  <ant antfile="${main.buildfile}" target="dep">
 		<property name="module" value="provider-gt2ft"/>
 	  </ant>
-	  <!-- GT 3 providers are not built by default any more
-	  
-	  <ant antfile="${main.buildfile}" target="dep">
-		<property name="module" value="provider-gt3_0_2"/>
-	  </ant>
-	  <ant antfile="${main.buildfile}" target="dep">
-		<property name="module" value="provider-gt3_2_0"/>
-	  </ant> -->
-	  
-	  <ant antfile="${main.buildfile}" target="dep">
-		<property name="module" value="provider-gt3_2_1"/>
-	  </ant>
 	  
 	  <ant antfile="${main.buildfile}" target="dep">
 		<property name="module" value="provider-gt4_0_0"/>
