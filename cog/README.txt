@@ -93,6 +93,19 @@ Libraries
 	Please talk to Gregor or Mike in this case.  Also please note
 	that the libraries in your module may at any time move to the
 	cog/lib directory.
+	
+Sandboxed libraries
+
+	In order to facilitate the peaceful coexistence of different
+	GT client libraries within the same JVM, a classloader sandboxing 
+	environment was created. It requires certain jar files to exist
+	in directories that are separate from the main jar directory.
+	These jars must NOT be added to the classpath if sandboxing is
+	enabled.
+	
+	To disable the sanboxing system (this can only be done at build time)
+	uncomment the 'merge.extra.libs=true' line in build.properties
+	
 
 Source
 
