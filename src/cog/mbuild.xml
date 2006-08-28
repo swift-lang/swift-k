@@ -1,6 +1,8 @@
 <project name="Java CoG Kit" default="dist" basedir=".">
   
-	<property file="${cog.dir}/VERSION"/>  
+	<property file="${cog.dir}/VERSION"/>
+	<property file="${cog.dir}/build.properties"/>
+	
 	<property name="jar.name" value="cog-${module.name}-${version}.jar"/>
 	<property name="jar.file" value="${build.dir}/${jar.name}"/>
     
@@ -8,12 +10,13 @@
 	<property name="javadoc.index.dir" value="${dist.dir}/javadoc"/>
 	<property name="javadoc.dir" value="${javadoc.index.dir}/${module.name}"/>
 	<property name="extra.lib.dir" value="lib"/>
+	
     
   <property file="${cog.dir}/webstart.properties"/>
 
 	<path id="classpath">
-		<fileset dir="${dist.dir}/${extra.lib.dir}">
-			<include name="*.jar"/>
+		<fileset dir="${dist.dir}">
+			<include name="${extra.lib.dir}/*.jar"/>
 		</fileset>
     	<fileset dir="${cog.dir}/modules/${module.name}/lib">
 			<include name="**/*.jar"/>
@@ -240,6 +243,23 @@
         <copy todir="${build.dir}">
             <fileset dir="resources" includes="**/*.*"/>
         </copy>
+		<antcall target="update.provider.props"/>
+  </target>
+  
+  <target name="update.provider.props" if="merge.extra.libs">
+  		<!-- maybe this is the wrong place to do this -->
+		<replace dir="${build.dir}"
+			token="sandbox=true"
+			value="sandbox=false"
+			includes="cog-provider.properties"/>
+		<replace dir="${build.dir}"
+			token="classloader.usesystem=false"
+			value="classloader.usesystem=true"
+			includes="cog-provider.properties"/>
+		<replace dir="${build.dir}"
+			token="#classloader.boot="
+			value="classloader.boot="
+			includes="cog-provider.properties"/>
   </target>
 
   <!-- ===================================================--> 
@@ -439,6 +459,24 @@
 		<antcall target="jar"/>
 		<ant antfile="launchers.xml" target="create"/>
 		<antcall target="deploy.examples"/>
+	</target>
+	
+	<target name="dist.extra.lib" depends="dist.extra.lib.notmerged,dist.extra.lib.merged"/>
+	
+	<target name="dist.extra.lib.merged" if="merge.extra.libs">
+		<copy todir="${dist.dir}/lib">
+			<fileset dir="${extra.lib.dir}" includes="*.*"/>
+		</copy>
+		<delete>
+			<fileset dir="${dist.dir}/lib" includes="WARNING.txt"/>
+		</delete>
+	</target>
+	
+	<target name="dist.extra.lib.notmerged" unless="merge.extra.libs">
+		<mkdir dir="${dist.dir}/${extra.lib.dir}"/>
+		<copy todir="${dist.dir}/${extra.lib.dir}">
+			<fileset dir="${extra.lib.dir}" includes="*.*"/>
+		</copy>
 	</target>
     
 	<target name="module.package" depends="dist">
