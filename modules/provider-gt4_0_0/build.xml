@@ -53,10 +53,9 @@
     <!-- \_________________________________________________________________/ -->
 	
 	<target name="dist" unless="no.providers">
-		<mkdir dir="${dist.dir}/lib-gt4_0_0"/>
-		<copy todir="${dist.dir}/lib-gt4_0_0">
-			<fileset dir="lib-gt4_0_0" includes="*.*"/>
-		</copy>
+		<ant antfile="${main.buildfile}" target="dist.extra.lib">
+			<property name="extra.lib.dir" value="lib-gt4_0_0"/>
+		</ant>
 		<ant antfile="${main.buildfile}" target="dist"/>
 	</target>
 
@@ -137,13 +136,11 @@
 	</target>
 
 	<target name="module.package">
-		<mkdir dir="${dist.dir}/lib-gt4_0_0"/>
-		<copy todir="${dist.dir}/lib-gt4_0_0">
-			<fileset dir="lib-gt4_0_0" includes="*.*"/>
-		</copy>
+		<ant antfile="${main.buildfile}" target="dist.extra.lib">
+			<property name="extra.lib.dir" value="lib-gt4_0_0"/>
+		</ant>
 		<ant antfile="${main.buildfile}" target="module.package"/>
 	</target>
-
 </project>
 
 
