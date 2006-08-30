@@ -9,7 +9,6 @@ package org.globus.cog.abstraction.examples.taskgraph;
 import java.io.File;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.examples.transfer.FileTransfer;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.AbstractionProperties;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
@@ -35,6 +34,7 @@ import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskGraph;
 import org.globus.cog.abstraction.interfaces.TaskGraphHandler;
+import org.globus.cog.abstraction.tools.transfer.FileTransfer;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 
