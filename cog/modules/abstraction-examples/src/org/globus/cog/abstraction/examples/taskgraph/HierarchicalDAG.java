@@ -7,7 +7,6 @@
 package org.globus.cog.abstraction.examples.taskgraph;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.examples.transfer.FileTransfer;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
@@ -21,6 +20,7 @@ import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskGraph;
 import org.globus.cog.abstraction.interfaces.TaskGraphHandler;
+import org.globus.cog.abstraction.tools.transfer.FileTransfer;
 
 /*
  * This class serves as an example to demonstrate the execution of hierarchical
