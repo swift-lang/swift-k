@@ -1,3 +1,8 @@
+(08/29/2006)
+
+*** Merged with abstraction-examples
+
+
 (07/24/2006)
 
 *** Replaced the broken DeferredCommitHashSet.
