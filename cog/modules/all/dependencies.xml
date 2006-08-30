@@ -28,5 +28,8 @@
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="gridfaces"/>
 		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="examples"/>
+		</ant>
 	</target>
 </project>
