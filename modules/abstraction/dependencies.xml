@@ -5,9 +5,6 @@
 		<property name="module" value="abstraction-common"/>
 	  </ant>
 	  <ant antfile="${main.buildfile}" target="dep">
-		<property name="module" value="abstraction-examples"/>
-	  </ant>
-	  <ant antfile="${main.buildfile}" target="dep">
 		<property name="module" value="provider-gt2"/>
 	  </ant>
 	  <ant antfile="${main.buildfile}" target="dep">
