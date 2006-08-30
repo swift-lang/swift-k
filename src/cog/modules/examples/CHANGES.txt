@@ -1,3 +1,8 @@
+(08/29/2006) v2.2
+
+*** Merged most things (besides DAG examples) into 
+    abstraction-common
+
 (02/08/2006) Added a -stdin option for cog-job-submit.
 
 (08/23/2005)	Added  org.globus.cog.abstractions.examples.etc 
