@@ -13,8 +13,8 @@ import org.eclipse.ui.*;
 public class OpenRepositoryFormEditorAction
 		implements
 			IWorkbenchWindowActionDelegate {
+	
 	private IWorkbenchWindow window;
-
 	public OpenRepositoryFormEditorAction(){
 		
 	}
@@ -41,7 +41,11 @@ public class OpenRepositoryFormEditorAction
 	}
 	
 	public void run(IAction action) {
+		System.out.println("Running the repomanager action");
+		IEditorPart ePart = window.getActivePage().getActiveEditor();
+		if(!window.getActivePage().isEditorAreaVisible()){
 		openEditor(new RepositoryFormEditorInput("Repository Manager"), "karajanRCP.rcp.RepositoryFormEditor"); 
+		}
 	}
 	
 	/**
