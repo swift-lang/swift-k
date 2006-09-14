@@ -15,13 +15,20 @@ import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 import karajanRCP.views.KarajanView;
 import karajanRCP.views.KarajanView.ComponentTreeObject;
+import karajanRCP.views.KarajanView.ComponentTreeParent;
 
 public class NodeElementPropertySource implements IPropertySource{
     
     final protected ComponentTreeObject nodeElement;
     private ComponentNodeInfo node;
-    private IPropertyDescriptor[] propertyDescriptors;
+    private Vector propertyDescriptors;
     protected static final HashMap PROPS = new HashMap();
+
+	protected static final String PROPERTY_TEXT = "text";	
+	private final Object PropertiesTable[][] = 
+	{ { PROPERTY_TEXT, new TextPropertyDescriptor(PROPERTY_TEXT,"Text")},		  
+	};	
+
     
     /**
      * Creates a new NodeElementPropertySource.
@@ -35,12 +42,17 @@ public class NodeElementPropertySource implements IPropertySource{
 	   
 	   try{
 		
-       this.node = (ComponentNodeInfo) element.getNode();
-
-	   System.out.println("saved Node");
-       //Creating a PropertiesMap
-       initProperties(node);
-	   System.out.println("inited properties" + PROPS.toString());
+	   if(!(element instanceof ComponentTreeParent)){	   
+		   this.node = (ComponentNodeInfo) element.getNode();
+		   System.out.println("saved Node");
+		   //Creating a PropertiesMap
+		   initProperties(node);
+		   System.out.println("inited properties" + PROPS.toString());
+	   }
+	   else if(element instanceof ComponentTreeParent){
+		   PROPS.put("library", element.getName());
+	   }
+	   
        }
 	   catch(Exception e){
 		   e.printStackTrace();
@@ -69,51 +81,54 @@ public class NodeElementPropertySource implements IPropertySource{
             PROPS.put(iter.next(), "value");
          }
     }
-    
-    /**
-     * @see org.eclipse.ui.views.properties.IPropertySource#getPropertyDescriptors()
-     */
-    public IPropertyDescriptor[] getPropertyDescriptors() {
-		
-		
-       if (propertyDescriptors == null) {
-           
-		   
-           IPropertyDescriptor[] staticDescriptors = createStaticDescriptors();
-           IPropertyDescriptor[] argDescriptors1 = createMandatoryArgumentDescriptors();
-           IPropertyDescriptor[] argDescriptors2 = createOptionalArgumentDescriptors();
-		   propertyDescriptors = new IPropertyDescriptor[staticDescriptors.length + argDescriptors1.length + argDescriptors2.length];
-           
-		   int j =0; 
-           
-           for(int i=0 ; i < staticDescriptors.length; i++){
-               propertyDescriptors[j] = staticDescriptors[i];
-			   j++;
-           }
-           
-		   
-		   
-           for(int i=0 ; i < argDescriptors1.length; i++){
-               propertyDescriptors[j] = argDescriptors1[i];
-               j++;
-           }
-           
-           for(int i=0 ; i < argDescriptors2.length; i++){
-               propertyDescriptors[j] = argDescriptors2[i];
-               j++;
-           }
-       }
-	   
-	   if(propertyDescriptors != null) System.out.println("returning descriptors");
-         return propertyDescriptors;
-                
+	 //**
+     /* @see org.eclipse.ui.views.properties.IPropertySource#getPropertyDescriptors()
+     **/
+     
+	public IPropertyDescriptor[] getPropertyDescriptors() {
 
-}
+		// Create the property vector.
+		try{			
+			// Add each property supported.
+			PropertyDescriptor descriptor;
+			propertyDescriptors = null; 
+			IPropertyDescriptor[] IProps = null;
+			if(nodeElement instanceof ComponentTreeParent){
+
+				IProps = new IPropertyDescriptor[1];
+				IProps[0] = (IPropertyDescriptor)new TextPropertyDescriptor("library","Library Name");
+				return IProps;
+			}
+			if(!(nodeElement instanceof ComponentTreeParent)){
+			
+				propertyDescriptors = createStaticDescriptors();
+				propertyDescriptors.addAll(createMandatoryArgumentDescriptors());
+				propertyDescriptors.addAll(createOptionalArgumentDescriptors());
+			
+				IProps = new IPropertyDescriptor[propertyDescriptors.size()];
+				System.out.println("size ----" + propertyDescriptors.size());
+				ListIterator iter = propertyDescriptors.listIterator();
+			
+				int j =0; 
+				while(iter.hasNext()){
+	               IProps[j] = (IPropertyDescriptor) iter.next();
+				   j++;
+				}	   
+				return IProps;
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+return null;
+	}
+    
+  
+    
+   public Vector createMandatoryArgumentDescriptors(){
        
-   public IPropertyDescriptor[] createMandatoryArgumentDescriptors(){
-       
-       //More than 10 arguments are not there anyway but need to change to make more dynamic
-       IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[10];
+	   Vector propertyDescriptors = new Vector();
+	   
        int i = 0; 
        
        //Get the mandatory Arguments from the node
@@ -121,25 +136,27 @@ public class NodeElementPropertySource implements IPropertySource{
        
        //Interator for the argument Vector
        ListIterator iter = mandArgs.listIterator(); 
-       
+
        //Create a property descriptor for each of the arguments under 
        // the mandatory argument category 
-       while(iter.hasNext()){
-	   String textName = (String) iter.next();
-       PropertyDescriptor textDescriptor = new TextPropertyDescriptor(textName, textName);
-       textDescriptor.setCategory("Mandatory Arguments");
        
-       propertyDescriptors[i] = textDescriptor; i++;
+	   while(iter.hasNext()){
+		   
+		   String textName = (String) iter.next();
+		   PropertyDescriptor textDescriptor = new TextPropertyDescriptor(textName, textName);
+		   textDescriptor.setCategory("Mandatory Arguments");
+		   propertyDescriptors.add((IPropertyDescriptor)textDescriptor);
+		   
        }
        
        return propertyDescriptors;
    }
    
-   public IPropertyDescriptor[] createOptionalArgumentDescriptors(){
+   public Vector createOptionalArgumentDescriptors(){
 
-       //More than 10 arguments are not there anyway but need to change to make more dynamic
-       IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[10];
-       int i = 0; 
+       Vector propertyDescriptors = new Vector();
+
+	   int i = 0; 
        
        //Get the optional Arguments from the node
        Vector optArgs = node.getOptionalArgs();
@@ -150,33 +167,35 @@ public class NodeElementPropertySource implements IPropertySource{
        //Create a property descriptor for each of the arguments under 
        // the optional argument category 
        while(iter.hasNext()){
-       String textName = (String) iter.next();
-       PropertyDescriptor textDescriptor = new TextPropertyDescriptor(textName, textName);
-       textDescriptor.setCategory("Optional Arguments");
-       
-       propertyDescriptors[i] = textDescriptor; i++;
-       }
+		   
+		   String textName = (String) iter.next();
+		   PropertyDescriptor textDescriptor = new TextPropertyDescriptor(textName, textName);
+		   textDescriptor.setCategory("Optional Arguments"); 
+		   propertyDescriptors.add((IPropertyDescriptor)textDescriptor);
+      
+	   }
        
        return propertyDescriptors;
    }
    
-   public IPropertyDescriptor[] createStaticDescriptors(){
+   public Vector createStaticDescriptors(){
        
-       IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[2];
-       int i = 0; 
+       Vector propertyDescriptors = new Vector();
+	   int i = 0; 
        
        //Get the optional Arguments from the node
        String nodeName = node.getNodeName();
        String libName = node.getLibName();
        
-       //Create a property descriptor for the name 
-       PropertyDescriptor textDescriptor = new TextPropertyDescriptor("nodeName", "Node Name");
-       propertyDescriptors[i] = textDescriptor; i++;
+       //Create a property descriptor for the Library Name 
+	   PropertyDescriptor textDescriptor = new TextPropertyDescriptor("libName", "Library Name");
+	   textDescriptor.setCategory("Details");
+       propertyDescriptors.add((IPropertyDescriptor)textDescriptor); 
       
-       //Create a property descriptor for the libName 
-       textDescriptor = new TextPropertyDescriptor("libName", "Library Name");      
-       propertyDescriptors[i] = textDescriptor;
-       
+       //Create a property descriptor for the Name       
+	   textDescriptor = new TextPropertyDescriptor("nodeName", "Node Name");
+	   textDescriptor.setCategory("Details");
+	   propertyDescriptors.add((IPropertyDescriptor)textDescriptor);
        
        return propertyDescriptors;
    }
@@ -228,6 +247,8 @@ public class NodeElementPropertySource implements IPropertySource{
     public Object getPropertyValue(Object name){
        
 		System.out.println("getProperty value for - " + name.toString() );
+		
+		
 		try{
         Set set = PROPS.keySet();
         Iterator iter = set.iterator();
