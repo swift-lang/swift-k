@@ -7,17 +7,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 
+import karajanRCP.views.viewNodes.ComponentTreeObject;
+import karajanRCP.views.viewNodes.ComponentTreeParent;
+
 import org.apache.log4j.Logger;
 import org.cogkit.repository.ComponentNodeInfo;
 import org.cogkit.repository.LibraryElementLoader;
-import org.cogkit.repository.NodeElementPropertySource;
 import org.cogkit.repository.util.InfoParser;
 import org.cogkit.repository.util.NodeInfo;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.model.AdaptableList;
-import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.part.*;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -29,7 +30,6 @@ import org.eclipse.ui.*;
 import org.eclipse.ui.views.properties.*;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.SWT;
-import org.eclipse.core.runtime.IAdaptable;
 import org.globus.cog.gui.grapheditor.generic.RootContainerHelper;
 
 
@@ -61,116 +61,10 @@ public class KarajanView extends ViewPart {
 	private Action action2;
 	private Action doubleClickAction;
     private ArrayList myListeners;
-    private static NodeElementPropertySource nodeElPS = null ;
     private static Logger logger = Logger.getLogger(KarajanView.class);
     
-	/*
-	 * The content provider class is responsible for
-	 * providing objects to the view. It can wrap
-	 * existing objects in adapters or simply return
-	 * objects as-is. These objects may be sensitive
-	 * to the current input of the view, or ignore
-	 * it and always show the same content 
-	 * (like Task List, for example).
-	 */
-	 
-	public class ComponentTreeObject implements IAdaptable {
-		private String nodeName;
-        private String objectType;
-        private NodeInfo node;
-		private ComponentTreeParent parent;
-		
-		public ComponentTreeObject(NodeInfo node) {
-			this.node = node;
-            this.nodeName = node.getNodeName();
-            this.objectType = "component";
-            
-		}
-        
-        public ComponentTreeObject(String str, String type) {
-            
-            this.nodeName = str;
-            this.objectType = type;
-        
-        }
-        
-        public ComponentTreeObject(String str) {
-            
-            this.nodeName = str;
-            this.objectType = "parent" ;
-        
-        }
-        
-		public String getName() {
-			return nodeName;
-		}
-        
-        public NodeInfo getNode(){
-            return this.node;
-        }
-        
-		public void setParent(ComponentTreeParent parent) {
-			this.parent = parent;
-		}
-		public ComponentTreeParent getParent() {
-			return parent;
-		}
-		public String toString() {
-			return getName();
-		}
-		public Object getAdapter(Class adapter) {
-           if (adapter == IPropertySource.class) {
-               
-               // cache the nodeelementpropertysource
-			   System.out.println("adding Adapter");
-			   try{
-			   nodeElPS =  new NodeElementPropertySource(this);
-			   }catch(Exception e){
-				   e.printStackTrace();
-			   }
-               if(nodeElPS != null)System.out.println("returned non-null  Adapter");
-			   return nodeElPS;
-             }
-		   
-		   if (adapter == IWorkbenchAdapter.class){
-			   System.out.println("returning workbench Adapter");
-			   return this;
-				
-		   }
-		
-		   System.out.println("returning nullAdapter + " + adapter.getName());
-		   return null ;
-		}
-	}
 	
-	class ComponentTreeParent extends ComponentTreeObject {
-		private ArrayList children;
-		public ComponentTreeParent(String name) {
-			super(name);
-			children = new ArrayList();
-		}
-        
-        public ComponentTreeParent(String name, String type) {
-            super(name, type);
-            children = new ArrayList();
-        }
-        
-		public void addChild(ComponentTreeObject child) {
-			children.add(child);
-			child.setParent(this);
-		}
-		public void removeChild(ComponentTreeObject child) {
-			children.remove(child);
-			child.setParent(null);
-		}
-		public ComponentTreeObject [] getChildren() {
-			return (ComponentTreeObject [])children.toArray(new ComponentTreeObject[children.size()]);
-		}
-		public boolean hasChildren() {
-			return children.size()>0;
-		}
-	}
-
+	
 	class ViewContentProvider implements IStructuredContentProvider, 
 										   ITreeContentProvider {
 		private ComponentTreeParent invisibleRoot;
