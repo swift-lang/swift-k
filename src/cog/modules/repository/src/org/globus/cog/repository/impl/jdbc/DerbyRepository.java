@@ -12,6 +12,7 @@ import org.globus.cog.repository.Repository;
 import org.globus.cog.repository.RepositoryFactory;
 import org.globus.cog.repository.RepositoryProperties;
 
+import java.sql.*;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -196,7 +197,8 @@ public class DerbyRepository implements Repository {
 		}
         if(providerType.equals("remote")){
             //format of the dbLocation should be //<hostname or ip>:<port>/<dbName>
-            connectionURL = "jdbc:derby:net:"+ dbLocation +";retrieveMessagesFromServerOnGetMessage=true;deferPrepares=true;"; 
+			//eg. "//localhost:1527/workflowRepository"
+            connectionURL = "jdbc:derby:"+ dbLocation +";retrieveMessagesFromServerOnGetMessage=true;deferPrepares=true;"; 
         }
   
 	}
@@ -233,22 +235,28 @@ public class DerbyRepository implements Repository {
             if(providerType.equals(null)) logger.warn("Provider Type needs to be set for connecting");
             
             if(providerType.equals("local")){
+				
             // Load the Derby embedded driver class    
 			      Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
             System.out.println("connection URL : " + connectionURL);
 			      conn = DriverManager.getConnection(connectionURL);	
+				  
             }
             
             else if(providerType.equals("remote")){
+				
              // Load IBM JDBC Universal Driver class
-             Class.forName("com.ibm.db2.jcc.DB2Driver");
+             Class.forName("org.apache.derby.jdbc.ClientDriver");
              /*// Set user and password properties if necessary
              properties.put("user", "APP");
              properties.put("password", "APP");*/
              Properties properties = new Properties();
              properties.put("retrieveMessagesFromServerOnGetMessage", "true");
+			  System.out.println("connection URL : " + connectionURL);
+		      conn = DriverManager.getConnection(connectionURL);
              // Get a connection
-             Connection conn = DriverManager.getConnection(connectionURL, properties);     
+             Connection conn = DriverManager.getConnection(connectionURL); 
+			 
             }
             
 		} catch (InstantiationException e) {	
