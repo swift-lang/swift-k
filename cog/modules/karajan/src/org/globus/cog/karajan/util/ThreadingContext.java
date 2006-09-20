@@ -88,4 +88,8 @@ public class ThreadingContext {
 	public static void set(VariableStack stack, ThreadingContext context) {
 		stack.setVar("#thread", context);
 	}
+
+	public int getLastID() {
+		return id;
+	}
 }
