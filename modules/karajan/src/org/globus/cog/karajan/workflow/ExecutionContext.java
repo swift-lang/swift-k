@@ -200,10 +200,11 @@ public class ExecutionContext implements EventListener {
 				logger.debug("Detailed exception is ", ex);
 			}
 		}
-		System.out.println("\nExecution failed:");
+		stderr.append("\nExecution failed:\n");
 		failure = getInitialCause(((FailureNotificationEvent) e).getException());
 		failed = true;
-		System.out.println(e.toString());
+		stderr.append(e.toString());
+		stderr.append("\n");
 		logger.info("Detailed exception: ", failure);
 		stateManager.stop();
 		fireNotificationEvent(new NotificationEvent(null, NotificationEventType.EXECUTION_FAILED, null), null);
