@@ -18,6 +18,10 @@ import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 public abstract class AbstractFunction extends SequentialWithArguments {
 	private Object value;
 	private boolean simple;
+	
+	public AbstractFunction() {
+		setAcceptsInlineText(true);
+	}
 
 	public void pre(VariableStack stack) throws ExecutionException {
 		if (simple) {
