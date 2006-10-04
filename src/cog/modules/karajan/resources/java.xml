@@ -8,6 +8,7 @@
 			<export name="waitForEvent" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.EventWait"/></export>
 			<export name="getField" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.functions.Java"/></export>
 			<export name="null" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.functions.JavaNull"/></export>
+			<export name="systemProperty" restricted="true"><elementDef className="org.globus.cog.karajan.workflow.nodes.functions.Java"/></export>
 		</namespace>
 	</cache>
 </karajan>
