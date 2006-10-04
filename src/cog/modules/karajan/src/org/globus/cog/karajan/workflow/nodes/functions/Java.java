@@ -16,7 +16,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 
 public class Java extends FunctionsCollection {
 	public static final Arg PA_OBJECT = new Arg.Positional("object");
-	
+
 	static {
 		setArguments("java_classof", new Arg[] { PA_OBJECT });
 	}
@@ -24,7 +24,7 @@ public class Java extends FunctionsCollection {
 	public String java_classof(VariableStack stack) throws ExecutionException {
 		return PA_OBJECT.getValue(stack).getClass().getName();
 	}
-	
+
 	public static final Arg PA_FIELD = new Arg.Positional("field");
 	public static final Arg OA_OBJECT = new Arg.Optional("object", null);
 	public static final Arg PA_CLASSNAME = new Arg.Positional("classname");
@@ -54,5 +54,16 @@ public class Java extends FunctionsCollection {
 		catch (Exception e) {
 			throw new ExecutionException("Could not get the specified field", e);
 		}
+	}
+
+	public static final Arg PA_NAME = new Arg.Positional("name");
+
+	static {
+		setArguments("java_systemproperty", new Arg[] { PA_NAME });
+	}
+	
+	public Object java_systemproperty(VariableStack stack) throws ExecutionException {
+		String name = TypeUtil.toString(PA_NAME.getValue(stack));
+		return System.getProperty(name);
 	}
 }
