@@ -322,11 +322,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				}
 				t.setService(i, services[i]);
 			}
-			if (services.length == 2
-					&& "localhost".equals(services[0].getServiceContact().getContact())
-					&& "localhost".equals(services[1].getServiceContact().getContact())) {
-				System.err.println("!");
-			}
 
 			if (services.length == 1 && t.getType() == Task.JOB_SUBMISSION) {
 				String project = (String) services[0].getAttribute("project");
