@@ -344,6 +344,15 @@ public class Misc extends FunctionsCollection {
 	}
 
 	static {
+		setArguments("str_quote", new Arg[] { PA_STRING });
+	}
+
+	public Object str_quote(VariableStack stack) throws ExecutionException {
+		String str = TypeUtil.toString(PA_STRING.getValue(stack));
+		return "\"" + str + "\"";
+	}
+
+	static {
 		setArguments("sys_discard", new Arg[] { Arg.VARGS });
 	}
 
@@ -362,8 +371,8 @@ public class Misc extends FunctionsCollection {
 	}
 
 	public RangeIterator sys_range(VariableStack stack) throws ExecutionException {
-		return new RangeIterator(TypeUtil.toInt(PA_FROM.getValue(stack)), TypeUtil.toInt(
-				PA_TO.getValue(stack)), TypeUtil.toInt(OA_STEP.getValue(stack)));
+		return new RangeIterator(TypeUtil.toInt(PA_FROM.getValue(stack)),
+				TypeUtil.toInt(PA_TO.getValue(stack)), TypeUtil.toInt(OA_STEP.getValue(stack)));
 	}
 
 	public static final Arg OA_INVERT = new Arg.Optional("invert", Boolean.FALSE);
