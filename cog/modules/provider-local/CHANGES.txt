@@ -1,3 +1,11 @@
+(10/05/2006)
+
+*** Added support for environment variables
+
+*** Use the argument array of the specification to avoid tokenization
+    based on spaces. This allows passing of arguments that contain spaces
+	to the sub-process
+
 (04/29/2005)    Don't change to the user's home directory on start-up.
                 Default directory is the current directory.
 
