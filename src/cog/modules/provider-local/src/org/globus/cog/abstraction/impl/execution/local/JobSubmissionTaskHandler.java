@@ -12,6 +12,9 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -26,7 +29,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 /**
  * @author Kaizar Amin (amin@mcs.anl.gov)
- *  
+ * 
  */
 public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable {
 	private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
@@ -83,24 +86,22 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 	}
 
 	public void cancel() throws InvalidSecurityContextException, TaskSubmissionException {
-	    killed = true;
+		killed = true;
 		process.destroy();
 		this.task.setStatus(Status.CANCELED);
 	}
 
 	public void run() {
 		try {
+			// TODO move away from the multi-threaded approach
 			JobSpecification spec = (JobSpecification) this.task.getSpecification();
-			String cmd = spec.getExecutable();
-			if (spec.getArgumentsAsString() != null) {
-				cmd += " " + spec.getArgumentsAsString();
-			}
+
 			File dir = null;
 			if (spec.getDirectory() != null) {
 				dir = new File(spec.getDirectory());
 			}
 
-			process = Runtime.getRuntime().exec(cmd, null, dir);
+			process = Runtime.getRuntime().exec(buildCmdArray(spec), buildEnvp(spec), dir);
 
 			if (spec.getStdInput() != null) {
 				OutputStream out = process.getOutputStream();
@@ -133,10 +134,12 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 				logger.debug("STDOUT from job: " + output);
 			}
 			else {
-				//redirect it to the specified file
+				// redirect it to the specified file
 				FileWriter writer = new FileWriter(spec.getStdOutput());
-				writer.write(output);
-				writer.flush();
+				if (output != null) {
+					writer.write(output);
+					writer.flush();
+				}
 				writer.close();
 			}
 
@@ -157,10 +160,12 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 				logger.debug("STDERR from job: " + output);
 			}
 			else {
-				//redirect it to the specified file
+				// redirect it to the specified file
 				FileWriter writer = new FileWriter(spec.getStdError());
-				writer.write(output);
-				writer.flush();
+				if (output != null) {
+					writer.write(output);
+					writer.flush();
+				}
 				writer.close();
 			}
 
@@ -171,18 +176,18 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 			int exitCode = process.waitFor();
 			logger.debug("Exit code was " + exitCode);
 			if (killed) {
-			    return;
+				return;
 			}
 			if (exitCode == 0) {
 				this.task.setStatus(Status.COMPLETED);
 			}
 			else {
-				throw new Exception("Job failed with an exit code of "+exitCode);
+				throw new Exception("Job failed with an exit code of " + exitCode + "\n" + output);
 			}
 		}
 		catch (Exception e) {
-		    if (killed) {
-			    return;
+			if (killed) {
+				return;
 			}
 			logger.debug("Exception while running local executable", e);
 			Status newStatus = new StatusImpl();
@@ -192,5 +197,39 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 			newStatus.setException(e);
 			this.task.setStatus(newStatus);
 		}
+	}
+
+	private String[] buildCmdArray(JobSpecification spec) {
+		List arguments = spec.getArgumentsAsList();
+		String[] cmdarray = new String[arguments.size() + 1];
+
+		cmdarray[0] = spec.getExecutable();
+		Iterator i = arguments.iterator();
+		int index = 1;
+		while (i.hasNext()) {
+			cmdarray[index++] = (String) i.next();
+		}
+		return cmdarray;
+	}
+
+	private String[] buildEnvp(JobSpecification spec) {
+		Collection names = spec.getEnvironmentVariableNames();
+		if (names.size() == 0) {
+			/*
+			 * Questionable. An envp of null will cause the parent environment
+			 * to be inherited, while an empty one will cause no environment
+			 * variables to be set for the process. Or so it seems from the
+			 * Runtime.exec docs.
+			 */
+			return null;
+		}
+		String[] envp = new String[names.size()];
+		Iterator i = names.iterator();
+		int index = 0;
+		while (i.hasNext()) {
+			String name = (String) i.next();
+			envp[index++] = name + "=" + spec.getEnvironmentVariable(name);
+		}
+		return envp;
 	}
 }
