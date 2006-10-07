@@ -410,7 +410,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 newStatus.setPrevStatusCode(oldStatus.getStatusCode());
                 newStatus.setStatusCode(Status.FAILED);
                 int errorCode = job.getError();
-                Exception e = new Exception("Error code: " + errorCode);
+                Exception e = new GramException(errorCode);
                 newStatus.setException(e);
                 this.task.setStatus(newStatus);
                 break;
