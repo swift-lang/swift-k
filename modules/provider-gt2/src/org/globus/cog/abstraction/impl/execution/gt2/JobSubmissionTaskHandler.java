@@ -7,8 +7,8 @@
 package org.globus.cog.abstraction.impl.execution.gt2;
 
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
@@ -30,10 +30,14 @@ import org.globus.gram.GramJobListener;
 import org.globus.io.gass.server.GassServer;
 import org.globus.io.gass.server.JobOutputListener;
 import org.globus.io.gass.server.JobOutputStream;
+import org.globus.rsl.Binding;
+import org.globus.rsl.Bindings;
+import org.globus.rsl.ListRslNode;
 import org.globus.rsl.NameOpValue;
 import org.globus.rsl.RSLParser;
 import org.globus.rsl.RslNode;
 import org.globus.rsl.Value;
+import org.globus.rsl.VarRef;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
@@ -262,10 +266,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     private String prepareSpecification(JobSpecification spec)
             throws IllegalSpecException, TaskSubmissionException {
+        ListRslNode rsl = new ListRslNode(RslNode.AND);
         if (spec.getSpecification() != null) {
             return spec.getSpecification();
         } else {
-            StringBuffer buf = new StringBuffer("&");
             boolean batchJob = spec.isBatchJob();
             boolean redirected = spec.isRedirected();
             boolean localExecutable = spec.isLocalExecutable();
@@ -279,96 +283,119 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             if (redirected || localExecutable || localInput) {
                 this.startGassServer = true;
                 String gassURL = startGassServer();
-                appendRSL(buf, "rsl_substitution", "(GLOBUSRUN_GASS_URL "
-                        + gassURL + ")");
+                Bindings subst = new Bindings("rsl_substitution");
+                subst.add(new Binding("GLOBUSRUN_GASS_URL", gassURL));
+                rsl.add(subst);
             }
             // sets the executable
-            if (this.startGassServer && localExecutable) {
-                appendRSL(buf, "executable", "$(GLOBUSRUN_GASS_URL)"
-                        + spec.getExecutable());
+            if (spec.getExecutable() != null) {
+                if (this.startGassServer && localExecutable) {
+                    rsl.add(new NameOpValue("executable", NameOpValue.EQ,
+                            new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
+                                    spec.getExecutable()))));
+                } else {
+                    rsl.add(new NameOpValue("executable", NameOpValue.EQ, spec
+                            .getExecutable()));
+                }
             } else {
-                appendRSL(buf, "executable", spec.getExecutable());
+                throw new IllegalSpecException("Missing executable");
             }
-            // sets other parameters
-            appendRSL(buf, "arguments", spec.getArgumentsAsString());
-            appendRSL(buf, "directory", spec.getDirectory());
 
-            Collection environment = spec.getEnvironment();
+            // sets other parameters
+            NameOpValue args = new NameOpValue("arguments", NameOpValue.EQ);
+            if (!spec.getArgumentsAsList().isEmpty()) {
+                List arglist = new LinkedList();
+                Iterator i = spec.getArgumentsAsList().iterator();
+                while (i.hasNext()) {
+                    arglist.add(new Value((String) i.next()));
+                }
+                args.add(arglist);
+                rsl.add(args);
+            }
+
+            if (spec.getDirectory() != null) {
+                rsl.add(new NameOpValue("directory", NameOpValue.EQ, spec
+                        .getDirectory()));
+            }
+
+            Collection environment = spec.getEnvironmentVariableNames();
             if (environment.size() > 0) {
-                String env = "";
+                NameOpValue env = new NameOpValue("environment", NameOpValue.EQ);
                 Iterator iterator = environment.iterator();
                 while (iterator.hasNext()) {
                     String name = (String) iterator.next();
                     String value = spec.getEnvironmentVariable(name);
-                    env += "(" + name + " " + value + ")";
+                    System.err.println(value);
+                    List l = new LinkedList();
+                    l.add(new Value(name));
+                    l.add(new Value(value));
+                    env.add(l);
                 }
-                appendRSL(buf, "environment", env);
+                rsl.add(env);
             }
 
             // sets the stdin
-            if (this.startGassServer && localInput) {
-                appendRSL(buf, "stdin", "$(GLOBUSRUN_GASS_URL)"
-                        + spec.getStdInput());
-            } else {
-                appendRSL(buf, "stdin", spec.getStdInput());
+            if (spec.getStdInput() != null) {
+                if (this.startGassServer && localInput) {
+                    rsl.add(new NameOpValue("stdin", NameOpValue.EQ,
+                            new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
+                                    spec.getStdInput()))));
+                } else {
+                    rsl.add(new NameOpValue("stdin", NameOpValue.EQ, spec
+                            .getStdInput()));
+                }
             }
 
             // if output is to be redirected
             if (this.startGassServer && redirected) {
+                Value v;
                 // if no output file is specified, use the stdout
                 if ((spec.getStdOutput() == null)
                         || (spec.getStdOutput().equals(""))) {
-                    appendRSL(buf, "stdout",
-                            "$(GLOBUSRUN_GASS_URL)/dev/stdout-"
-                                    + this.task.getIdentity().toString());
+                    v = new Value("/dev/stdout-"
+                            + this.task.getIdentity().toString());
                 } else {
-                    appendRSL(buf, "stdout", "$(GLOBUSRUN_GASS_URL)/"
-                            + spec.getStdOutput());
+                    v = new Value(spec.getStdOutput());
                 }
-            } else {
+                rsl.add(new NameOpValue("stdout", NameOpValue.EQ, new VarRef(
+                        "GLOBUSRUN_GASS_URL", null, v)));
+            } else if (spec.getStdOutput() != null) {
                 // output on the remote machine
-                appendRSL(buf, "stdout", spec.getStdOutput());
+                rsl.add(new NameOpValue("stdout", NameOpValue.EQ, spec
+                        .getStdOutput()));
             }
             // if error is to be redirected
             if (this.startGassServer && redirected) {
+                Value v;
                 // if no error file is specified, use the stdout
                 if ((spec.getStdError() == null)
                         || (spec.getStdError().equals(""))) {
-                    appendRSL(buf, "stderr",
-                            "$(GLOBUSRUN_GASS_URL)/dev/stderr-"
-                                    + this.task.getIdentity().toString());
+                    v = new Value("/dev/stderr-"
+                            + this.task.getIdentity().toString());
                 } else {
-                    appendRSL(buf, "stderr", "$(GLOBUSRUN_GASS_URL)/"
-                            + spec.getStdError());
+                    v = new Value(spec.getStdError());
                 }
-            } else {
+                rsl.add(new NameOpValue("stderr", NameOpValue.EQ, new VarRef(
+                        "GLOBUSRUN_GASS_URL", null, v)));
+            } else if (spec.getStdError() != null) {
                 // error on the remote machine
-                appendRSL(buf, "stderr", spec.getStdError());
+                rsl.add(new NameOpValue("stderr", NameOpValue.EQ, spec
+                        .getStdError()));
             }
 
-            Enumeration en = spec.getAllAttributes();
-            while (en.hasMoreElements()) {
+            Iterator i = spec.getAttributeNames().iterator();
+            while (i.hasNext()) {
                 try {
-                    String key = (String) en.nextElement();
-                    appendRSL(buf, key, (String) spec.getAttribute(key));
+                    String key = (String) i.next();
+                    rsl.add(new NameOpValue(key, NameOpValue.EQ, (String) spec
+                            .getAttribute(key)));
                 } catch (Exception e) {
                     throw new IllegalSpecException(
                             "Cannot parse the user defined attributes");
                 }
             }
-            return buf.toString();
+            return rsl.toString();
         }
-    }
-
-    private void appendRSL(StringBuffer rsl, String attribute, String value) {
-        if (value == null || value.length() == 0) {
-            return;
-        }
-        rsl.append("(");
-        rsl.append(attribute);
-        rsl.append("=");
-        rsl.append(value);
-        rsl.append(")");
     }
 
     private String startGassServer() throws TaskSubmissionException {
