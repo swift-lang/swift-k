@@ -76,7 +76,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         } catch (Throwable e) {
             throw new IllegalSpecException("Cannot parse the given RSL", e);
         }
-        logger.debug("RSL: " + rsl);
+        if (logger.isDebugEnabled()) {
+            logger.debug("RSL: " + rsl);
+        }
 
         if (rslTree.getOperator() == RslNode.MULTI) {
             this.task.setAttribute("jobCount", "multiple");
@@ -114,7 +116,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         if (jobmanager != null) {
             server = handleJobManager(server, jobmanager);
         }
-        logger.debug("Execution server: " + server);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Execution server: " + server);
+        }
         boolean limitedDeleg = (securityContext.getDelegation() != GlobusSecurityContextImpl.FULL_DELEGATION);
         limitedDeleg &= !spec.isDelegationEnabled();
         try {
@@ -122,8 +126,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             // submitted for execution
             if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
                 this.gramJob.request(server, spec.isBatchJob(), limitedDeleg);
-                logger.debug("Submitted job with Globus ID: "
-                        + this.gramJob.getIDAsString());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Submitted job with Globus ID: "
+                            + this.gramJob.getIDAsString());
+                }
                 this.task.setStatus(Status.SUBMITTED);
                 if (spec.isBatchJob()) {
                     this.task.setStatus(Status.COMPLETED);
@@ -200,9 +206,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         boolean limitedDeleg = (securityContext.getDelegation() == GlobusSecurityContextImpl.PARTIAL_DELEGATION);
         try {
             job.request(rmc, false, limitedDeleg);
-            logger
-                    .debug("Submitted job with Globus ID: "
-                            + job.getIDAsString());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Submitted job with Globus ID: "
+                        + job.getIDAsString());
+            }
         } catch (GramException ge) {
             Status newStatus = new StatusImpl();
             Status oldStatus = this.task.getStatus();
@@ -304,12 +311,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             // sets other parameters
             NameOpValue args = new NameOpValue("arguments", NameOpValue.EQ);
             if (!spec.getArgumentsAsList().isEmpty()) {
-                List arglist = new LinkedList();
                 Iterator i = spec.getArgumentsAsList().iterator();
                 while (i.hasNext()) {
-                    arglist.add(new Value((String) i.next()));
+                    args.add((String) i.next());
                 }
-                args.add(arglist);
                 rsl.add(args);
             }
 
