@@ -1,3 +1,8 @@
+(10/11/2006)
+
+*** Added sys:unique(). It returns its arguments asynchronously, but
+	each argument is returned only once
+
 (10/05/2006)
 
 *** Added str:quote() to put quotes around a string
