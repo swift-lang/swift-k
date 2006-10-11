@@ -1,3 +1,7 @@
+(10/10/2006)
+
+*** Fixed hosts.xml file creation.
+
 (07/24/2006)
 
 *** Patched the j2ssh library to report when the server throttles connections,
