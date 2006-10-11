@@ -77,6 +77,13 @@ public class NonBlockingSubmit implements Runnable {
 		catch (Exception e) {
 			notifyPreviousQueue(e);
 		}
+		catch (ThreadDeath td) {
+			throw td;
+		}
+		catch (Throwable t) {
+			notifyPreviousQueue(new Exception(t));
+			t.printStackTrace();
+		}
 	}
 
 	public int getAttempts() {
