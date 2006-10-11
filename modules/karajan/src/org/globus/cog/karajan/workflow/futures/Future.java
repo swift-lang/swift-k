@@ -9,7 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.futures;
 
-import org.globus.cog.karajan.stack.VariableNotFoundException;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventListener;
 
@@ -19,7 +19,15 @@ public interface Future {
 	
 	boolean isClosed();
 	
-	Object getValue() throws VariableNotFoundException;
+	Object getValue() throws ExecutionException;
+	
+	/**
+	 * Signal to any threads waiting on this future that the 
+	 * evaluation of the future has failed. The exception
+	 * passed through this method should be thrown by all
+	 * sub-sequent calls to getValue();
+	 */
+	void fail(FutureEvaluationException e);
 
 	/** 
 	 * When the future becomes available, send the event to the element.
