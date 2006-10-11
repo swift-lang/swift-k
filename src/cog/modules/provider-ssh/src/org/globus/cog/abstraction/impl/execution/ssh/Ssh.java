@@ -1,12 +1,9 @@
-
 // ----------------------------------------------------------------------
 // This code is developed as part of the Java CoG Kit project
 // The terms of the license can be found at http://www.cogkit.org/license
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-
-    
 /*
  *  Sshtools - Java SSH2 API
  *
@@ -73,53 +70,64 @@ public class Ssh {
 
 	static {
 		if (System.getProperty("sshtools.home") == null) {
-			System.setProperty(
-				"sshtools.home",
-				System.getProperty("user.home") + File.separator + ".globus");
+			System.setProperty("sshtools.home", System.getProperty("user.home") + File.separator
+					+ ".globus");
 		}
-		File hosts = new File(System.getProperty("sshtools.home") + File.separator + "hosts.xml");
-		if (!hosts.exists()){
-		    try{
-			FileWriter w = new FileWriter(hosts);
-			w.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-			w.write("<HostAuthorizations>\n");
-			w.write("<!-- please consult the j2ssh documentation for details on this file -->\n");
-			w.write("</HostAuthorizations>\n");
-			w.close();
-		    }
-		    catch (IOException e){
-			logger.error("Cannot create hosts.xml file. Please check if you have a .globus directory"+
-			"in your home directory, and that it is writable");
-		    }
+		File dir = new File(System.getProperty("sshtools.home"), "conf");
+		if (!dir.exists()) {
+			if (!dir.mkdirs()) {
+				throw new RuntimeException("Cannot create " + dir.getAbsolutePath()
+						+ ". Please check if you have a .globus directory"
+						+ "in your home directory, and that it is writable");
+			}
+		}
+		else if (!dir.isDirectory()) {
+			throw new RuntimeException("Cannot create directory: " + dir.getAbsolutePath()
+					+ ". A file with that name already exists");
+		}
+		File hosts = new File(dir, "hosts.xml");
+		if (!hosts.exists()) {
+			try {
+				FileWriter w = new FileWriter(hosts);
+				w.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+				w.write("<HostAuthorizations>\n");
+				w.write("<!-- please consult the j2ssh documentation for details on this file -->\n");
+				w.write("</HostAuthorizations>\n");
+				w.close();
+			}
+			catch (IOException e) {
+				throw new RuntimeException(
+						"Cannot create hosts.xml file. Please check if you have a .globus directory"
+								+ "in your home directory, and that it is writable", e);
+			}
 		}
 	}
 
-
-	public void execute()
-		throws
-			IllegalSpecException,
-			InvalidSecurityContextException,
-			InvalidServiceContactException,
-			TaskSubmissionException {
+	public void execute() throws IllegalSpecException, InvalidSecurityContextException,
+			InvalidServiceContactException, TaskSubmissionException {
 		try {
 			if (host == null) {
 				throw new InvalidServiceContactException("You must provide a host to connect to.");
 			}
 
 			if (username == null) {
-				throw new InvalidSecurityContextException("You must supply a username for authentication.");
+				throw new InvalidSecurityContextException(
+						"You must supply a username for authentication.");
 			}
 
 			if ((password == null) && (keyfile == null)) {
-				throw new InvalidSecurityContextException("You must supply either a password or keyfile/passphrase to authenticate!");
+				throw new InvalidSecurityContextException(
+						"You must supply either a password or keyfile/passphrase to authenticate!");
 			}
 
 			if (verifyhost && (fingerprint == null)) {
-				throw new InvalidSecurityContextException("Public key fingerprint required to verify the host");
+				throw new InvalidSecurityContextException(
+						"Public key fingerprint required to verify the host");
 			}
 
 			if ((System.getProperty("sshtools.home") == null) && (sshtoolsHome == null)) {
-				//logger.debug("System property sshtools.home is not set either use");
+				// logger.debug("System property sshtools.home is not set either
+				// use");
 			}
 
 			if (sshtoolsHome != null) {
@@ -150,9 +158,7 @@ public class Ssh {
 						properties.setPrefCSEncryption(cipher);
 					}
 					else {
-						logger.debug(
-							cipher
-								+ " is not a supported cipher, using default "
+						logger.debug(cipher + " is not a supported cipher, using default "
 								+ SshCipherFactory.getDefaultCipher());
 					}
 				}
@@ -163,9 +169,7 @@ public class Ssh {
 						properties.setPrefSCMac(mac);
 					}
 					else {
-						logger.debug(
-							mac
-								+ " is not a supported mac, using default "
+						logger.debug(mac + " is not a supported mac, using default "
 								+ SshHmacFactory.getDefaultHmac());
 					}
 				}
@@ -174,7 +178,7 @@ public class Ssh {
 
 				ssh.connect(properties, new AbstractHostKeyVerification() {
 					public void onUnknownHost(String hostname, String fingerprint)
-						throws InvalidHostFileException {
+							throws InvalidHostFileException {
 						if (Ssh.this.verifyhost) {
 							if (fingerprint.equalsIgnoreCase(Ssh.this.fingerprint)) {
 								allowHost(hostname, fingerprint, always);
@@ -186,7 +190,7 @@ public class Ssh {
 					}
 
 					public void onHostKeyMismatch(String hostname, String allowed, String supplied)
-						throws InvalidHostFileException {
+							throws InvalidHostFileException {
 						if (Ssh.this.verifyhost) {
 							if (supplied.equalsIgnoreCase(Ssh.this.fingerprint)) {
 								allowHost(hostname, supplied, always);
@@ -215,9 +219,11 @@ public class Ssh {
 					// Open up the private key file
 					SshPrivateKeyFile file = SshPrivateKeyFile.parse(new File(keyfile));
 
-					// If the private key is passphrase protected then ask for the passphrase
+					// If the private key is passphrase protected then ask for
+					// the passphrase
 					if (file.isPassphraseProtected() && (passphrase == null)) {
-						throw new InvalidSecurityContextException("Private key file is passphrase protected, please supply a valid passphrase");
+						throw new InvalidSecurityContextException(
+								"Private key file is passphrase protected, please supply a valid passphrase");
 					}
 
 					// Get the key
@@ -232,11 +238,11 @@ public class Ssh {
 						authenticated = true;
 					}
 					else if (result == AuthenticationProtocolState.PARTIAL) {
-						logger.debug(
-							"Public key authentication completed, attempting password authentication");
+						logger.debug("Public key authentication completed, attempting password authentication");
 					}
 					else {
-						throw new InvalidSecurityContextException("Public Key Authentication failed");
+						throw new InvalidSecurityContextException(
+								"Public Key Authentication failed");
 					}
 				}
 
@@ -253,8 +259,7 @@ public class Ssh {
 						logger.debug("Authentication complete");
 					}
 					else if (result == AuthenticationProtocolState.PARTIAL) {
-						logger.error(
-							"Password Authentication succeeded but further authentication required!");
+						logger.error("Password Authentication succeeded but further authentication required!");
 					}
 					else {
 						throw new InvalidSecurityContextException("Password Authentication failed");
@@ -262,7 +267,7 @@ public class Ssh {
 				}
 			}
 
-					}
+		}
 		catch (IOException sshe) {
 			logger.debug(sshe);
 			throw new TaskSubmissionException("SSH Connection failed: " + sshe.getMessage());
@@ -316,8 +321,6 @@ public class Ssh {
 	public void setSshtoolshome(String sshtoolsHome) {
 		this.sshtoolsHome = sshtoolsHome;
 	}
-
-	
 
 	public boolean getError() {
 		return error;
