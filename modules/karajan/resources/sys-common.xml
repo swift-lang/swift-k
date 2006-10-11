@@ -66,6 +66,7 @@
 	
 	<export name="dot"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
 	<export name="cross"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="unique"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Unique"/></export>
 	
 	<namespace prefix="str">
 		<export name="concat"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
