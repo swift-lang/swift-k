@@ -11,8 +11,8 @@ package org.globus.cog.karajan.util;
 
 import org.globus.cog.karajan.parser.EvaluationContext;
 import org.globus.cog.karajan.parser.UndefinedVariableException;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.Future;
 
 
@@ -33,7 +33,7 @@ public class ExpressionVariableTableAdaptor implements EvaluationContext {
 				return value;
 			}
 		}
-		catch (VariableNotFoundException e) {
+		catch (ExecutionException e) {
 			throw new UndefinedVariableException(e.getMessage());
 		}
 	}

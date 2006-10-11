@@ -25,6 +25,6 @@ public class KarajanRuntimeException extends RuntimeException {
 	}
 
 	public KarajanRuntimeException(Throwable cause) {
-		super(cause.getMessage(), cause);
+		super(cause == null ? null : cause.getMessage(), cause);
 	}
 }

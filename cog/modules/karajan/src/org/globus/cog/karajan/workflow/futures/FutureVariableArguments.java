@@ -25,7 +25,8 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 
 	private boolean closed;
 	private List actions;
-	
+	private FutureEvaluationException exception;
+
 	public FutureVariableArguments() {
 		super();
 	}
@@ -55,7 +56,7 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 		return closed;
 	}
 
-	public Object getValue() throws FutureNotYetAvailable {
+	public Object getValue() {
 		return this;
 	}
 
@@ -63,9 +64,18 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 		return new Iterator(this, 0);
 	}
 
+	private Object notYetAvailable(String op)  {
+		if (exception != null) {
+			throw exception;
+		}
+		else {
+			throw new FutureNotYetAvailable(this, op);
+		}
+	}
+
 	private void checkClosed(String op) {
 		if (!closed) {
-			throw new FutureNotYetAvailable(this, op);
+			notYetAvailable(op);
 		}
 	}
 
@@ -76,7 +86,7 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 
 	public Object get(int index) {
 		if (!closed && (super.size() <= index)) {
-			throw new FutureNotYetAvailable(this);
+			return notYetAvailable(null);
 		}
 		return super.get(index);
 	}
@@ -94,7 +104,7 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 		checkClosed("size()");
 		return super.size();
 	}
-	
+
 	public boolean isEmpty() {
 		if (!super.isEmpty()) {
 			return false;
@@ -104,14 +114,14 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 			return true;
 		}
 	}
-	
+
 	public VariableArguments butFirst() {
 		if (available() > 0) {
 			removeFirst();
 			return this;
 		}
 		else {
-			throw new FutureNotYetAvailable(this);
+			return (VariableArguments) notYetAvailable(null);
 		}
 	}
 
@@ -170,6 +180,11 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 		}
 	}
 
+	public void fail(FutureEvaluationException e) {
+		this.exception = e;
+		actions();
+	}
+
 	public static class Iterator implements FutureIterator {
 		private int crt;
 		private final FutureVariableArguments vargs;
@@ -199,6 +214,9 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 					return true;
 				}
 				else {
+					if (vargs.exception != null) {
+						throw vargs.exception;
+					}
 					throw new FutureIteratorIncomplete(vargs, this);
 				}
 			}
@@ -211,9 +229,9 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 				return obj;
 			}
 		}
-		
+
 		public Object peek() {
-			synchronized(vargs) {
+			synchronized (vargs) {
 				return vargs.get(0);
 			}
 		}
@@ -249,6 +267,10 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 
 		public FutureVariableArguments getVargs() {
 			return vargs;
+		}
+
+		public void fail(FutureEvaluationException e) {
+			// this would only be called on the backing channel
 		}
 	}
 

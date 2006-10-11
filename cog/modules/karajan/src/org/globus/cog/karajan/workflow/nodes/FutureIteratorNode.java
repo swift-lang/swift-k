@@ -17,22 +17,26 @@ import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
+import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureNameBindingVariableArguments;
 import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
 
 public class FutureIteratorNode extends PartialArgumentsContainer {
 	public static final String FUTURE_ITERATOR = "##iterator";
-	
+
 	static {
 		setArguments(FutureIteratorNode.class, new Arg[] { Arg.VARGS });
 	}
-	
+
 	public FutureIteratorNode() {
 		setQuotedArgs(true);
 	}
-	
+
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		VariableArguments vargs = ArgUtil.getVariableArguments(stack); 
+		VariableArguments vargs = ArgUtil.getVariableArguments(stack);
 		ret(stack, vargs);
 		super.partialArgumentsEvaluated(stack);
 		VariableStack copy = stack.copy();
@@ -49,9 +53,19 @@ public class FutureIteratorNode extends PartialArgumentsContainer {
 			List nonpropargs) {
 		return new FutureNameBindingVariableArguments(nargs, nonpropargs);
 	}
-	
+
 	public void post(VariableStack stack) throws ExecutionException {
 		FutureVariableArguments fva = (FutureVariableArguments) ArgUtil.getVariableArguments(stack);
 		fva.close();
+	}
+
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		if (e.getType().equals(NotificationEventType.EXECUTION_FAILED)) {
+			FutureVariableArguments fva = (FutureVariableArguments) ArgUtil.getVariableArguments(e.getStack());
+			fva.fail(new FutureEvaluationException(((FailureNotificationEvent) e)));
+		}
+		else {
+			super.notificationEvent(e);
+		}
 	}
 }

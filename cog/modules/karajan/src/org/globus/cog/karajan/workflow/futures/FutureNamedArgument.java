@@ -16,6 +16,7 @@ import java.util.Set;
 import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.arguments.NamedArgumentsListener;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.events.EventListener;
@@ -26,6 +27,7 @@ public class FutureNamedArgument implements Future, NamedArgumentsListener {
 	private final NamedArguments named;
 	private final String name;
 	private Set listeners;
+	private FutureEvaluationException exception;
 
 	public FutureNamedArgument(String name, NamedArguments named) {
 		this.name = name;
@@ -40,15 +42,25 @@ public class FutureNamedArgument implements Future, NamedArgumentsListener {
 	public boolean isClosed() {
 		return closed;
 	}
+	
+	private Object notYetAvailable() throws ExecutionException {
+		//there should be an abstract future
+		if (exception != null) {
+			throw exception;
+		}
+		else {
+			throw new FutureNotYetAvailable(this);
+		}
+	}
 
-	public synchronized Object getValue() throws VariableNotFoundException {
+	public synchronized Object getValue() throws ExecutionException {
 		Object value = named.getArgument(name);
 		if (value == null) {
 			if (closed) {
 				throw new VariableNotFoundException(name);
 			}
 			else {
-				throw new FutureNotYetAvailable(this);
+				return notYetAvailable();
 			}
 		}
 		else {
@@ -90,5 +102,10 @@ public class FutureNamedArgument implements Future, NamedArgumentsListener {
 				EventBus.post(etp.getTarget(), etp.getEvent());
 			}
 		}
+	}
+	
+	public void fail(FutureEvaluationException e) {
+	    this.exception = e;
+	    notifyListeners();
 	}
 }
