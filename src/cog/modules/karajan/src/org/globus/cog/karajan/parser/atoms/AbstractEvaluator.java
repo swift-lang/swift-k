@@ -11,7 +11,7 @@ package org.globus.cog.karajan.parser.atoms;
 
 import org.globus.cog.karajan.parser.EvaluationContext;
 import org.globus.cog.karajan.parser.EvaluationException;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.Future;
 
 public abstract class AbstractEvaluator implements Evaluator {
@@ -61,7 +61,7 @@ public abstract class AbstractEvaluator implements Evaluator {
 			try {
 				obj = ((Future) obj).getValue();
 			}
-			catch (VariableNotFoundException e) {
+			catch (ExecutionException e) {
 				throw new EvaluationException(e);
 			}
 		}

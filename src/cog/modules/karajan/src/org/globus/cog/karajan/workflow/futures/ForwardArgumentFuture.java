@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.arguments.VariableArgumentsListener;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventBus;
@@ -31,6 +32,7 @@ public class ForwardArgumentFuture implements Future {
 	private final VariableArguments vargs;
 	private boolean closed;
 	private List actions;
+	private FutureEvaluationException exception;
 
 	public ForwardArgumentFuture(VariableArguments vargs, int index) {
 		this.vargs = vargs;
@@ -47,7 +49,10 @@ public class ForwardArgumentFuture implements Future {
 		return closed;
 	}
 
-	public Object getValue() throws VariableNotFoundException {
+	public Object getValue() throws ExecutionException {
+		if (exception != null) {
+			throw exception;
+		}
 		if (vargs instanceof FutureVariableArguments) {
 			FutureVariableArguments f = (FutureVariableArguments) vargs;
 			if (index <= f.available()) {
@@ -122,7 +127,7 @@ public class ForwardArgumentFuture implements Future {
 		try {
 			return getValue().hashCode();
 		}
-		catch (VariableNotFoundException e) {
+		catch (ExecutionException e) {
 			throw new KarajanRuntimeException(e);
 		}
 	}
@@ -135,7 +140,7 @@ public class ForwardArgumentFuture implements Future {
 			try {
 				return "ForwardArgumentFuture(" + index + "): " + getValue();
 			}
-			catch (VariableNotFoundException e) {
+			catch (ExecutionException e) {
 				return "ForwardArgumentFuture(" + index + "): ?";
 			}
 		}
@@ -158,5 +163,10 @@ public class ForwardArgumentFuture implements Future {
 				}
 			}
 		}
+	}
+	
+	public void fail(FutureEvaluationException e) {
+		this.exception = e;
+		actions();
 	}
 }

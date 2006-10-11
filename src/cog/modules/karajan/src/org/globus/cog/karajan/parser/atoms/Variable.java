@@ -14,8 +14,8 @@ import org.globus.cog.karajan.parser.EvaluationException;
 import org.globus.cog.karajan.parser.ParserContext;
 import org.globus.cog.karajan.parser.ParsingException;
 import org.globus.cog.karajan.parser.Stack;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.translator.atoms.Identifier;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.Future;
 
 public class Variable extends AbstractAtom {
@@ -52,7 +52,7 @@ public class Variable extends AbstractAtom {
 				try {
 					value = ((Future) value).getValue();
 				}
-				catch (VariableNotFoundException e) {
+				catch (ExecutionException e) {
 					throw new EvaluationException(e);
 				}
 			}

@@ -43,6 +43,7 @@ import org.globus.cog.karajan.workflow.events.MonitoringEventType;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.events.StatusMonitoringEvent;
+import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 
@@ -136,7 +137,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	 * Notification events notify callers of the status of the execution
 	 * (completed, failed, aborted, ...)
 	 */
-	public final void fireNotificationEvent(final FlowEvent event, final VariableStack stack) {
+	public void fireNotificationEvent(final FlowEvent event, final VariableStack stack) {
 		try {
 			EventListener caller = (EventListener) stack.getVar(CALLER);
 			if (caller == null) {
@@ -323,6 +324,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		}
 		catch (FutureNotYetAvailable ex) {
 			ex.getFuture().addModificationAction(this, e);
+		}
+		catch (FutureEvaluationException ex) {
+			event(ex.getFailure());
 		}
 		catch (KarajanRuntimeException ex) {
 			failImmediately(e.getStack(), ex);
