@@ -2,6 +2,39 @@
 
 *** Added sys:unique(). It returns its arguments asynchronously, but
 	each argument is returned only once
+	
+*** Changed the tasks to post an event instead of calling the caller
+	directly. This is supposed to release shared notification threads
+	faster to increase concurrency. However, measurements show little
+	improvements.
+	
+*** Changed the way futures throw exceptions. Until now exceptions in 
+	futures would cause the thread which started the future to 
+	nondeterministically fail whenever the exception occured. That
+	didn't sound right. In the new model attempting to use the value
+	of a future would be the exact operation throwing the exception.
+	Additionally, a future, if not used, would fail silently. 
+	Furthermore, if a failure occurs in the future thread after the 
+	value of a future is calculated, the value will be available and
+	the failure will be ignored. The last part is somewhat questionable, 
+	but likely necessary. Due to the way futures work, the exact scheduling
+	of threads may create nondeterminism in the behaviour of things.
+	Example:
+	
+		f := future(
+			"I am a future value"
+			generateError("I was destined for /dev/null")
+		)
+		
+		print(f)
+	
+	In the above example, the program will finish successfully. If print(f)
+	was to fail because of the error, it would largely depend on whether, 
+	after the generation of the future value, print(f) or generateError(...)
+	would be scheduled first. Instead of risking nondeterminism here, print(f)
+	will always succeed because semantically it is correct. But this still
+	leaves an error going unreported.
+	
 
 (10/05/2006)
 
