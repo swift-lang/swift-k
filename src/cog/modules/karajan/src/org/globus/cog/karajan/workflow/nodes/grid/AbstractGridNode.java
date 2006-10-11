@@ -38,6 +38,11 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.AbortEvent;
+import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.FlowEvent;
+import org.globus.cog.karajan.workflow.nodes.FlowNode;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 
 public abstract class AbstractGridNode extends SequentialWithArguments implements StatusListener {
@@ -296,6 +301,31 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 		else {
 			return AbstractionFactory.newSecurityContext(provider);
+		}
+	}
+
+	/**
+	 * Overriden to release the notification threads as soon as possible.
+	 */
+	public void fireNotificationEvent(final FlowEvent event, final VariableStack stack) {
+		try {
+			EventListener caller = (EventListener) stack.getVar(CALLER);
+			if (caller == null) {
+				logger.error("Caller is null");
+				stack.dumpAll();
+			}
+			else {
+				EventBus.post(caller, event);
+			}
+		}
+		catch (VariableNotFoundException ee) {
+			logger.debug("No #caller for: " + this, new Throwable());
+			if (FlowNode.debug) {
+				stack.dumpAll();
+			}
+			EventListener parent = getParent();
+			EventBus.post(parent, new FailureNotificationEvent(this, stack,
+					"No #caller found on stack for " + this, ee));
 		}
 	}
 }
