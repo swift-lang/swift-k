@@ -255,7 +255,7 @@ public class KarajanGraphTransformation implements GraphTransformation {
 				}
 				else {
 					hue = hue + (float) 0.2;
-					if (n.hasProperty("annotation")) {
+					if (n.hasProperty("_annotation")) {
 						text = (String) n.getProperty("_annotation");
 					}
 					else {
@@ -276,7 +276,7 @@ public class KarajanGraphTransformation implements GraphTransformation {
 		}
 		return endState;
 	}
-	
+
 	public static final Arg A_RANGE = new Arg.Optional("range", null);
 
 	public State unfold(State state) {
@@ -369,21 +369,29 @@ public class KarajanGraphTransformation implements GraphTransformation {
 			else if (isA(state.flowNode, "sys:ignoreErrors")) {
 				state = seq(state);
 			}
+			else if (isA(state.flowNode, "sys:set") || isA(state.flowNode, "sys:echo")) {
+				state = atomic(state);
+			}
 			else if (state.flowNode.elementCount() > 0 && !isA(state.flowNode, "vdl:execute")) {
 				state = seq(state);
 			}
 			else {
-				GenericNode gn = new KarajanNode();
-				Node node = addNode(state, gn);
-				addEdges(state, node);
-				state = state.addNode(node);
-				if (state.flowNode.elementCount() != 0) {
-					Graph g = new Graph();
-					createGraph(g, state.flowNode, new ArrayList());
-					GraphCanvas gc = gn.createCanvas();
-					gc.setGraph(g);
-				}
+				state = atomic(state);
 			}
+		}
+		return state;
+	}
+
+	private State atomic(State state) {
+		GenericNode gn = new KarajanNode();
+		Node node = addNode(state, gn);
+		addEdges(state, node);
+		state = state.addNode(node);
+		if (state.flowNode.elementCount() != 0) {
+			Graph g = new Graph();
+			createGraph(g, state.flowNode, new ArrayList());
+			GraphCanvas gc = gn.createCanvas();
+			gc.setGraph(g);
 		}
 		return state;
 	}
@@ -554,8 +562,8 @@ public class KarajanGraphTransformation implements GraphTransformation {
 
 		public State enter(FlowElement node, FlowElement caller) {
 			return new State(g, last, node, null,
-					thread.split(((Integer) caller.getProperty(FlowElement.UID)).intValue()), ignoreErrors,
-					edgeColor, edgeLabel, loopDepth);
+					thread.split(((Integer) caller.getProperty(FlowElement.UID)).intValue()),
+					ignoreErrors, edgeColor, edgeLabel, loopDepth);
 		}
 
 		public State copy() {
