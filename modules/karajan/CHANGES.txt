@@ -1,3 +1,12 @@
+(10/14/2006)
+
+*** Fixed some of the examples
+
+*** Fixed missing true() and false() functions and typo in the
+	viewer
+
+*** Updated the viewer to treat assignments and echo() as atomic
+
 (10/11/2006)
 
 *** Added sys:unique(). It returns its arguments asynchronously, but
