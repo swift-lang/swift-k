@@ -3,7 +3,7 @@
   <include file="forms.xml"/>
   
   <set name="formData"
-    annotation="Input lastname, firstname, marrige status, and gender">
+    _annotation="Input lastname, firstname, marrige status, and gender">
     <form:form title="test" id="form" waitOn="IDOk">
       <form:vbox>
         <form:hbox>
@@ -32,19 +32,19 @@
     </form:form>
   </set>
   
-  <echo annotation= "Printing the first name">
+  <echo _annotation= "Printing the first name">
 		<concat>
 			<string>The first name is </string>
 		    <map:get key="IDFirst" map="{formData}"/>
 		</concat>
   </echo>
-  <echo annotation= "Printing the last name">
+  <echo _annotation= "Printing the last name">
 		<concat>
 			<string>The last name is </string>
 		    <map:get key="IDLast" map="{formData}"/>
 		</concat>
   </echo>
-  <echo annotation= "Printing the first and last name">
+  <echo _annotation= "Printing the first and last name">
 		<concat>
 			<string>The person is </string>
 		    <if>
@@ -59,7 +59,7 @@
 		</concat>
   </echo>
   
-  <echo annotation= "Printing the sex">
+  <echo _annotation= "Printing the sex">
 		<concat>
 			<string>The person is a </string>
 		    <map:get key="IDSex" map="{formData}"/>
