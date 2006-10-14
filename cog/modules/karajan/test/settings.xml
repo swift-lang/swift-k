@@ -7,7 +7,7 @@
 
 	<global name="grid_resources">
 		<list>
-			<host name="plussed.mcs.anl.gov:4010" cpus="2">
+			<host name="plussed.mcs.anl.gov:4020" cpus="2">
 				<service type="execution" provider="gt2"/>
 				<service type="file" provider="gt2"/>
 			</host>

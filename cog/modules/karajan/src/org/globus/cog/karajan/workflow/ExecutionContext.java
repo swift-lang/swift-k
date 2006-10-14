@@ -161,6 +161,7 @@ public class ExecutionContext implements EventListener {
 		define(stack, "quotedlist", QuotedList.class);
 		define(stack, "project", ProjectNode.class);
 		define(stack, "karajan", ProjectNode.class);
+
 		stack.firstFrame().setVar("false", Boolean.FALSE);
 		stack.firstFrame().setVar("true", Boolean.TRUE);
 	}

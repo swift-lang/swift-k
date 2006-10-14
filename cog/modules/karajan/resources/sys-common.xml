@@ -107,6 +107,8 @@
 	<export name="and"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
 	<export name="or"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
 	<export name="not"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
+	<export name="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
+	<export name="false"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Logic"/></export>
 	
 	<namespace prefix="math">
 		<export name="sum"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Sum"/></export>
