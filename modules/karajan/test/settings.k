@@ -6,7 +6,7 @@ global(test_pass_count, 10)
 
 global(grid_resources
 	list(
-		host("plussed.mcs.anl.gov:4010", cpus=2
+		host("plussed.mcs.anl.gov:4020", cpus=2
 			service("execution", provider="gt2")
 			service("file", provider="gt2")
 		)

@@ -36,13 +36,6 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 
 	public static final String QUOTED = "#quoted";
 
-	public static Set commonArguments;
-
-	static {
-		commonArguments = new HashSet();
-		commonArguments.add("annotation");
-	}
-
 	private int argElements = 0;
 	private boolean quotedArgs;
 	private boolean nestedArgs, hasVargs, hasChannels;
@@ -362,9 +355,6 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 		for (Iterator i = getStaticArguments().keySet().iterator(); i.hasNext();) {
 			String name = (String) i.next();
 			if (args == null || !args.containsKey(name)) {
-				if (commonArguments.contains(name)) {
-					continue;
-				}
 				if (args != null) {
 					throw new KarajanRuntimeException("\tUnsupported argument: " + name
 							+ ". Valid arguments are: " + args.keySet());
