@@ -1,3 +1,7 @@
+(10/16/2006)
+
+*** Make task:execute(arguments=...) work with vargs
+
 (10/14/2006)
 
 *** Fixed some of the examples

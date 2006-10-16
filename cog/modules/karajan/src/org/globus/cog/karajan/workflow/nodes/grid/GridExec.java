@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
@@ -85,12 +84,10 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 					js.setExecutable(TypeUtil.toString(value));
 				}
 				else if (name.equals(A_ARGS.getName()) || name.equals(A_ARGUMENTS.getName())) {
-					if (value instanceof List) {
-						Vector v = new Vector();
-						v.addAll((List) value);
-						js.setArguments(v);
+					try {
+						js.setArguments(TypeUtil.toList(value));
 					}
-					else {
+					catch (Exception e) {
 						js.setArguments(TypeUtil.toString(value));
 					}
 				}
