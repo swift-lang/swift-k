@@ -6,7 +6,7 @@
 
 package org.globus.cog.karajan.workflow.nodes.grid;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -26,6 +26,7 @@ public class SchedulerNode extends SequentialWithArguments {
 	public static final Logger logger = Logger.getLogger(SchedulerNode.class);
 
 	public static final Arg A_TYPE = new Arg.Positional("type", 0);
+	public static final Arg A_SHARE_ID = new Arg.Optional("shareID");
 	public static final Arg A_RESOURCES = new Arg.Positional("resources", 1);
 	public static final Arg.Channel A_PROPERTIES = new Arg.Channel("properties");
 	public static final Arg.Channel A_TASK_TRANSFORMERS = new Arg.Channel("taskTransformers");
@@ -36,12 +37,14 @@ public class SchedulerNode extends SequentialWithArguments {
 	static {
 		setArguments(SchedulerNode.class, new Arg[] { A_TYPE, A_RESOURCES, A_PROPERTIES,
 				A_TASK_TRANSFORMERS, A_HANDLERS });
+		sharedInstances = new HashMap();
 	}
 
 	private static Map schedulers;
+	private static Map sharedInstances;
 
 	private void initializeSchedulers(KarajanProperties properties) {
-		schedulers = new Hashtable();
+		schedulers = new HashMap();
 		Iterator i = properties.keySet().iterator();
 		while (i.hasNext()) {
 			String name = (String) i.next();
@@ -53,6 +56,25 @@ public class SchedulerNode extends SequentialWithArguments {
 
 	public void post(VariableStack stack) throws ExecutionException {
 		Scheduler s = null;
+		String shareID = TypeUtil.toString(A_SHARE_ID.getValue(stack, null));
+		if (shareID != null) {
+			synchronized(sharedInstances) {
+				s = (Scheduler) sharedInstances.get(shareID);
+				if (s == null) {
+					s = newScheduler(stack);
+					sharedInstances.put(shareID, s);
+				}
+			}
+		}
+		else {
+			s = newScheduler(stack);
+		}
+		stack.parentFrame().setVar(SCHEDULER, s);
+		super.post(stack);
+	}
+	
+	protected Scheduler newScheduler(VariableStack stack) throws ExecutionException {
+		Scheduler s;
 		String type = TypeUtil.toString(A_TYPE.getValue(stack));
 		synchronized (SchedulerNode.class) {
 			if (schedulers == null) {
@@ -106,7 +128,6 @@ public class SchedulerNode extends SequentialWithArguments {
 			s.addTaskHandler((TaskHandlerWrapper) i.next());
 		}
 
-		stack.parentFrame().setVar(SCHEDULER, s);
-		super.post(stack);
+		return s;
 	}
 }

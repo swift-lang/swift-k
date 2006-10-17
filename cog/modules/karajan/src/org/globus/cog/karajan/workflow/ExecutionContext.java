@@ -112,11 +112,11 @@ public class ExecutionContext implements EventListener {
 	}
 
 	public void start() {
-		EventBus.initialize();
 		start(new LinkedStack(this));
 	}
 
 	public void start(VariableStack stack) {
+		EventBus.initialize();
 		startTime = System.currentTimeMillis();
 		if (arguments == null) {
 			arguments = Collections.EMPTY_LIST;
