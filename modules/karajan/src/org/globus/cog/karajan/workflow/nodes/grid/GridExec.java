@@ -78,7 +78,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 			String provider = null;
 			while (i.hasNext()) {
 				String name = (String) i.next();
-
+	
 				Object value = named.getArgument(name);
 				if (name.equals(A_EXECUTABLE.getName())) {
 					js.setExecutable(TypeUtil.toString(value));
@@ -154,7 +154,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 					js.setAttribute(name, value);
 				}
 			}
-
+	
 			VariableArguments env = C_ENVIRONMENT.get(stack);
 			Iterator j = env.iterator();
 			while (j.hasNext()) {
