@@ -1,3 +1,7 @@
+(10/18/2006)
+
+*** Updated file resource to support createDirectories
+
 (10/05/2006)
 
 *** Added support for environment variables
