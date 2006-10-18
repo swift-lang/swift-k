@@ -8,7 +8,9 @@ package org.globus.cog.abstraction.impl.file;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
@@ -48,9 +50,39 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
     private Hashtable activeFileResources;
     private Identity defaultSessionId = null;
 
-    private Vector oneWordCommands = null;
-    private Vector twoWordCommands = null;
-    private Vector threeWordCommands = null;
+    private static final Set oneWordCommands, twoWordCommands, threeWordCommands;
+    
+    static {
+    	oneWordCommands = new HashSet();
+        twoWordCommands = new HashSet();
+        threeWordCommands = new HashSet();
+
+        // Add all one word commands
+        oneWordCommands.add(FileOperationSpecification.START);
+        oneWordCommands.add(FileOperationSpecification.STOP);
+        oneWordCommands.add(FileOperationSpecification.LS);
+        oneWordCommands.add(FileOperationSpecification.PWD);
+
+        // Add all two word commands
+        twoWordCommands.add(FileOperationSpecification.LS);
+        twoWordCommands.add(FileOperationSpecification.MKDIR);
+        twoWordCommands.add(FileOperationSpecification.MKDIRS);
+        twoWordCommands.add(FileOperationSpecification.RMDIR);
+        twoWordCommands.add(FileOperationSpecification.RMFILE);
+        twoWordCommands.add(FileOperationSpecification.EXISTS);
+        twoWordCommands.add(FileOperationSpecification.CD);
+        twoWordCommands.add(FileOperationSpecification.ISDIRECTORY);
+
+        // Add all three word commands
+        threeWordCommands.add(FileOperationSpecification.RMDIR);
+        threeWordCommands.add(FileOperationSpecification.GETFILE);
+        threeWordCommands.add(FileOperationSpecification.PUTFILE);
+        threeWordCommands.add(FileOperationSpecification.GETDIR);
+        threeWordCommands.add(FileOperationSpecification.PUTDIR);
+        threeWordCommands.add(FileOperationSpecification.RENAME);
+        threeWordCommands.add(FileOperationSpecification.CHMOD);
+    }
+    
     private int type;
 
     private Task task = null;
@@ -59,7 +91,6 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
     static Logger logger = Logger.getLogger(TaskHandlerImpl.class.getName());
 
     public TaskHandlerImpl() {
-
         this.submittedList = new Vector();
         this.activeList = new Vector();
         this.suspendedList = new Vector();
@@ -70,11 +101,6 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
         this.handleMap = new Hashtable();
         this.type = TaskHandler.FILE_OPERATION;
         this.activeFileResources = new Hashtable();
-        oneWordCommands = new Vector();
-        twoWordCommands = new Vector();
-        threeWordCommands = new Vector();
-        addValidCommands();
-
     }
 
     /** set type of task handler */
@@ -266,6 +292,10 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
                     .equalsIgnoreCase(FileOperationSpecification.MKDIR)
                     && spec.getArgumentSize() == 1) {
                 fileResource.createDirectory(spec.getArgument(0));
+            } else if (operation
+                    .equalsIgnoreCase(FileOperationSpecification.MKDIRS)
+                    && spec.getArgumentSize() == 1) {
+                fileResource.createDirectories(spec.getArgument(0));
             } else if (operation
                     .equalsIgnoreCase(FileOperationSpecification.RMDIR)
                     && spec.getArgumentSize() == 2) {
@@ -497,33 +527,6 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
                     break;
             }
         }
-    }
-
-    /** Add a list of valid commands to a vector */
-    public void addValidCommands() {
-        // Add all one word commands
-        oneWordCommands.add(FileOperationSpecification.START);
-        oneWordCommands.add(FileOperationSpecification.STOP);
-        oneWordCommands.add(FileOperationSpecification.LS);
-        oneWordCommands.add(FileOperationSpecification.PWD);
-
-        // Add all two word commands
-        twoWordCommands.add(FileOperationSpecification.LS);
-        twoWordCommands.add(FileOperationSpecification.MKDIR);
-        twoWordCommands.add(FileOperationSpecification.RMDIR);
-        twoWordCommands.add(FileOperationSpecification.RMFILE);
-        twoWordCommands.add(FileOperationSpecification.EXISTS);
-        twoWordCommands.add(FileOperationSpecification.CD);
-        twoWordCommands.add(FileOperationSpecification.ISDIRECTORY);
-
-        // Add all three word commands
-        threeWordCommands.add(FileOperationSpecification.RMDIR);
-        threeWordCommands.add(FileOperationSpecification.GETFILE);
-        threeWordCommands.add(FileOperationSpecification.PUTFILE);
-        threeWordCommands.add(FileOperationSpecification.GETDIR);
-        threeWordCommands.add(FileOperationSpecification.PUTDIR);
-        threeWordCommands.add(FileOperationSpecification.RENAME);
-        threeWordCommands.add(FileOperationSpecification.CHMOD);
     }
 
     private SecurityContext getSecurityContext() {
