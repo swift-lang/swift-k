@@ -36,7 +36,7 @@ public class SchedulerNode extends SequentialWithArguments {
 
 	static {
 		setArguments(SchedulerNode.class, new Arg[] { A_TYPE, A_RESOURCES, A_PROPERTIES,
-				A_TASK_TRANSFORMERS, A_HANDLERS });
+				A_TASK_TRANSFORMERS, A_HANDLERS, A_SHARE_ID });
 		sharedInstances = new HashMap();
 	}
 
