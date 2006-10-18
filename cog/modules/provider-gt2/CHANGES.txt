@@ -1,3 +1,7 @@
+(10/18/2006)
+
+*** Added a mkdirs implementation for the file resource
+
 (10/09/2006)
 
 *** Use JGlobus RSL classes to construct the RSL in a structured way. 

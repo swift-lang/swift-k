@@ -23,6 +23,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileNotFoundException;
+import org.globus.cog.abstraction.impl.file.FileResourceUtil;
 import org.globus.cog.abstraction.impl.file.GeneralException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
@@ -282,6 +283,10 @@ public class FileResourceImpl implements FileResource {
         } catch (Exception e) {
             throw new GeneralException("Cannot create the directory", e);
         }
+    }
+    
+    public void createDirectories(String directory) throws GeneralException {
+        FileResourceUtil.createDirectories(this, directory);
     }
 
     /**
