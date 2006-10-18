@@ -9,8 +9,6 @@
  */
 package org.globus.cog.abstraction.impl.file;
 
-import java.util.StringTokenizer;
-
 import org.globus.cog.abstraction.interfaces.FileResource;
 
 public class FileResourceUtil {
@@ -18,25 +16,32 @@ public class FileResourceUtil {
 	public static void createDirectories(FileResource fr, String dir) throws GeneralException {
 		// TODO this should be in an AbstractFileResource
 		// there is an assumption here on the path separators
-		// I'd really suggest enforcing only one of them at the level of the
+		// I'd really suggest enforcing only one of them (hint: '/') at the
+		// level of the
 		// interface
-		StringTokenizer st = new StringTokenizer(dir, "/");
-		StringBuffer sb = new StringBuffer();
-		if (dir.startsWith("/")) {
-			sb.append('/');
+		if (dir.equals("/")) {
+			return;
 		}
-		while (st.hasMoreTokens()) {
-			try {
-				String partial = sb.toString();
-				if (!fr.exists(partial)) {
-					fr.createDirectory(partial);
+		try {
+			if (!fr.exists(dir)) {
+				int i = dir.lastIndexOf('/');
+				if (i <= 0) {
+					fr.createDirectory(dir);
 				}
-				sb.append(st.nextToken());
-				sb.append('/');
+				else {
+					createDirectories(fr, dir.substring(0, i));
+					if (i != dir.length() - 1) {
+						fr.createDirectory(dir);
+					}
+					else {
+						// trailing '/'
+					}
+				}
 			}
-			catch (Exception e) {
-				throw new GeneralException("Could not create directory structure " + dir, e);
-			}
+		}
+		catch (FileNotFoundException e) {
+			// [m] why on earth is this thrown here?
+			throw new GeneralException(e.getMessage(), e);
 		}
 	}
 }
