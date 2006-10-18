@@ -1,3 +1,9 @@
+(10/18/2006)
+
+*** Added a MKDIRS file operation (it creates a full directory path)
+
+*** Asynchronously stop cached resources
+
 (10/05/2006)
 
 *** Cleaned up the JobSpecification interface and the implementation
