@@ -1,3 +1,9 @@
+(10/18/2006)
+
+*** Attempt to fix handling of status notifications. There is some
+	oddness in jobs having no initial status (which could cause
+	NPEs on anything that would query details of the status)
+
 (04/12/2006)    Use the new spec.isDelegationEnabled()
                 Fixed boot crash when no ip set in cog.properties
 				Some cleanups
