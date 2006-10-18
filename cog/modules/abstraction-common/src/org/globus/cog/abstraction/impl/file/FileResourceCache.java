@@ -51,41 +51,52 @@ public class FileResourceCache {
 	private Timer timer;
 	private int maxIdleResources = DEFAULT_MAX_IDLE_RESOURCES;
 	private long maxIdleTime = DEFAULT_MAX_IDLE_TIME;
+	private ResourceStopper stopper;
 
 	public FileResourceCache() {
 		fileResources = new Hashtable();
 		inUse = new HashSet();
 		order = new LinkedList();
 		releaseTimes = new Hashtable();
+		stopper = new ResourceStopper();
 	}
 
-	public synchronized FileResource getResource(Service service) throws InvalidProviderException,
+	public FileResource getResource(Service service) throws InvalidProviderException,
 			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
 			GeneralException {
 		logger.debug("Got request for resource for " + service);
 		checkTimer();
 		ServiceContact contact = service.getServiceContact();
-		if (fileResources.containsKey(contact)) {
-			List resources = (List) fileResources.get(contact);
-			Iterator i = resources.iterator();
-			while (i.hasNext()) {
-				FileResource fileResource = (FileResource) i.next();
-				if (!inUse.contains(fileResource)) {
-					inUse.add(fileResource);
-					order.remove(fileResource);
-					releaseTimes.remove(fileResource);
-					logger.debug("Found cached resource");
-					return fileResource;
+		FileResource fileResource;
+		synchronized (this) {
+			if (fileResources.containsKey(contact)) {
+				List resources = (List) fileResources.get(contact);
+				Iterator i = resources.iterator();
+				while (i.hasNext()) {
+					fileResource = (FileResource) i.next();
+					if (!inUse.contains(fileResource)) {
+						inUse.add(fileResource);
+						order.remove(fileResource);
+						releaseTimes.remove(fileResource);
+						logger.debug("Found cached resource");
+						return fileResource;
+					}
 				}
 			}
+			fileResource = newResource(service);
 		}
-		return newResource(service);
+		synchronized (fileResource) {
+			if (!fileResource.isStarted()) {
+				fileResource.start();
+			}
+		}
+		return fileResource;
 	}
 
 	private FileResource newResource(Service service) throws InvalidProviderException,
 			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
 			GeneralException {
-		//TODO Are file resources reentrant?
+		// TODO Are file resources reentrant?
 		logger.debug("Instantiating new resource for " + service);
 		String provider = service.getProvider();
 		ServiceContact contact = service.getServiceContact();
@@ -99,7 +110,6 @@ public class FileResourceCache {
 		FileResource fileResource = AbstractionFactory.newFileResource(provider);
 		fileResource.setServiceContact(contact);
 		fileResource.setSecurityContext(securityContext);
-		fileResource.start();
 		List resources;
 		if (fileResources.containsKey(contact)) {
 			resources = (List) fileResources.get(contact);
@@ -113,29 +123,28 @@ public class FileResourceCache {
 		return fileResource;
 	}
 
-	public synchronized void releaseResource(FileResource resource) {
+	public void releaseResource(FileResource resource) {
 		if (resource == null) {
 			return;
 		}
-		logger.debug("Releasing resource for " + resource.getServiceContact());
-		if (!inUse.contains(resource)) {
-			throw new RuntimeException("Attempted to release resource that is not in use");
+		synchronized (this) {
+			logger.debug("Releasing resource for " + resource.getServiceContact());
+			if (!inUse.contains(resource)) {
+				throw new RuntimeException("Attempted to release resource that is not in use");
+			}
+			inUse.remove(resource);
+			order.addLast(resource);
+			releaseTimes.put(resource, new Long(System.currentTimeMillis()));
 		}
-		inUse.remove(resource);
-		order.addLast(resource);
-		releaseTimes.put(resource, new Long(System.currentTimeMillis()));
 		checkIdleResourceCount();
 	}
 
 	private void removeResource(FileResource resource) {
-		if (fileResources.containsKey(resource.getServiceContact())) {
-			List resources = (List) fileResources.get(resource.getServiceContact());
-			resources.remove(resource);
-			try {
-				resource.stop();
-			}
-			catch (GeneralException e) {
-				logger.warn("Failed to stop resource", e);
+		synchronized (this) {
+			if (fileResources.containsKey(resource.getServiceContact())) {
+				List resources = (List) fileResources.get(resource.getServiceContact());
+				resources.remove(resource);
+				stopper.addResource(resource);
 			}
 		}
 	}
@@ -188,8 +197,7 @@ public class FileResourceCache {
 						+ resource.getServiceContact());
 				removeResource(resource);
 			}
-		}
-		while (last < threshold);
+		} while (last < threshold);
 	}
 
 	private class ResourceSwipe extends TimerTask {
@@ -201,6 +209,56 @@ public class FileResourceCache {
 
 		public void run() {
 			cache.checkIdleResourceAges();
+		}
+	}
+	
+	public static class ResourceStopper implements Runnable {
+		private LinkedList resources;
+		private boolean running;
+		
+		public ResourceStopper () {
+			resources = new LinkedList();
+			running = false;
+		}
+		
+		public void addResource(FileResource fr) {
+			synchronized(this) {
+				resources.add(fr);
+				if (!running) {
+					running = true;
+					Thread t = new Thread(this);
+					t.setName("File resource stopper");
+					t.setDaemon(true);
+					t.start();
+				}
+			}
+		}
+		
+		public void run() {
+			FileResource fr = nextResource();
+			while (fr != null) {
+				try {
+					fr.stop();
+				}
+				catch (GeneralException e) {
+					logger.warn("Failed to stop resource", e);
+				}
+				fr = nextResource();
+			}
+			synchronized(this) {
+				running = false;
+			}
+		}
+		
+		private FileResource nextResource() {
+			synchronized(this) {
+				if (resources.isEmpty()) {
+					return null;
+				}
+				else {
+					return (FileResource) resources.removeFirst();
+				}
+			}
 		}
 	}
 }
