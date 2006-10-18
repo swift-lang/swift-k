@@ -1,3 +1,7 @@
+(10/18/2006)
+
+*** Updated file resource to support createDirectories
+
 (04/19/2005)	Renamed this module from "core-provider-webdav" to 
 		"provider-webdav"
 -------------------------------2.0----------------------------------
