@@ -1,3 +1,7 @@
+(10/18/2006)
+
+*** dir:make() now does a mkdirs() rather than mkdir()
+
 (10/17/2006)
 
 *** Added the possibility to share schedulers (if in the same JVM 

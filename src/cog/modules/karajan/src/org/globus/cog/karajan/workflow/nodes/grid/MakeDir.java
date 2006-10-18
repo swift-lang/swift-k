@@ -23,7 +23,7 @@ public class MakeDir extends AbstractFileOperation {
 	}
 
 	protected String getOperation(VariableStack stack) throws ExecutionException {
-		return FileOperationSpecification.MKDIR;
+		return FileOperationSpecification.MKDIRS;
 	}
 
 	protected String[] getArguments(VariableStack stack) throws ExecutionException {
