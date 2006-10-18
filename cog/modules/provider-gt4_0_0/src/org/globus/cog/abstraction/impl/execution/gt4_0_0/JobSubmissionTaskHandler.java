@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Vector;
 
 import org.apache.axis.components.uuid.UUIDGenFactory;
 import org.apache.axis.message.addressing.EndpointReferenceType;
@@ -252,8 +251,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, GramJobLi
 			desc.setQueue((String) spec.getAttribute("queue"));
 		}
 
-		Vector v = spec.getArgumentsAsVector();
-		desc.setArgument((String[]) v.toArray(new String[0]));
+		desc.setArgument((String[]) spec.getArgumentsAsList().toArray(new String[0]));
 
 		boolean batchJob = spec.isBatchJob();
 		if (spec.isRedirected()) {
@@ -277,7 +275,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, GramJobLi
 		}
 		desc.setExecutable(spec.getExecutable());
 
-		Collection environment = spec.getEnvironment();
+		Collection environment = spec.getEnvironmentVariableNames();
 		if (environment != null && environment.size() > 0) {
 			NameValuePairType[] envVars = new NameValuePairType[environment.size()];
 			Iterator iterator = environment.iterator();
@@ -304,8 +302,13 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, GramJobLi
 			newStatus.setPrevStatusCode(oldStatus.getStatusCode());
 			newStatus.setStatusCode(Status.FAILED);
 			int errorCode = job.getError();
-			newStatus.setMessage("#" + errorCode + " " + job.getFault().getDescription()[0]);
-			newStatus.setException((Exception) job.getFault().getCause());
+			if (job.getFault() != null) {
+				newStatus.setMessage("#" + errorCode + " " + job.getFault().getDescription()[0]);
+				newStatus.setException((Exception) job.getFault().getCause());
+			}
+			else {
+				newStatus.setMessage("#" + errorCode);
+			}
 			this.task.setStatus(newStatus);
 			cleanup();
 		}
