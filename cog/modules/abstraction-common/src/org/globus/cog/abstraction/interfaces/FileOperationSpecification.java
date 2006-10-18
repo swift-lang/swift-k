@@ -43,6 +43,11 @@ public interface FileOperationSpecification extends Specification {
      * Creates a new directory on the remote resource
      */
     public static final String MKDIR = "mkdir";
+    
+    /**
+     * Creates a full directory path on the remote resource
+     */
+    public static final String MKDIRS = "mkdirs";
 
     /**
      * Deletes the directory on the remote resource
