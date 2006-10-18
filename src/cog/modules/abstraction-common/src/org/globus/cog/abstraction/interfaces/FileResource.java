@@ -94,6 +94,12 @@ public interface FileResource extends GridResource {
 
     /** Creates a new directory with the given name */
     public void createDirectory(String directoryName) throws GeneralException;
+    
+    /**
+     * Creates the specified directory and all required directories in the
+     * hierarchy if they do not exist
+     */
+    public void createDirectories(String directoryName) throws GeneralException;
 
     /**
      * Deletes the specified directory. If the "force" flag is true, delete
