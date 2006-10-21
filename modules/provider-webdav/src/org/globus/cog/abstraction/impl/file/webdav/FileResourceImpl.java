@@ -134,7 +134,7 @@ public class FileResourceImpl implements FileResource {
         try {
             String contact = serviceContact.getContact().toString();
             if (!contact.startsWith("http")) {
-                contact = "http://" + contact + "/slide";
+                contact = "http://" + contact;
             }
             HttpURL hrl = new HttpURL(contact);
             PasswordAuthentication credentials = (PasswordAuthentication) securityContext
