@@ -54,6 +54,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 			catch (Exception e) {
 				throw new IllegalSpecException("Exception while retreiving Job Specification", e);
 			}
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug(spec.toString());
+			}
 
 			try {
 				this.thread = new Thread(this);
@@ -105,8 +109,16 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 
 			if (spec.getStdInput() != null) {
 				OutputStream out = process.getOutputStream();
+				
+				File stdin;
+				if (dir != null) {
+					stdin = new File(dir, spec.getStdInput());
+				}
+				else {
+					stdin = new File(spec.getStdInput());
+				}
 
-				FileInputStream file = new FileInputStream(spec.getStdInput());
+				FileInputStream file = new FileInputStream(stdin);
 				InputStreamReader inReader = new InputStreamReader(file);
 				BufferedReader inBuffer = new BufferedReader(inReader);
 				String message = inBuffer.readLine();
@@ -135,7 +147,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 			}
 			else {
 				// redirect it to the specified file
-				FileWriter writer = new FileWriter(spec.getStdOutput());
+				File stdout;
+				if (dir != null) {
+					stdout = new File(dir, spec.getStdOutput());
+				}
+				else {
+					stdout = new File(spec.getStdOutput());
+				}
+				FileWriter writer = new FileWriter(stdout);
 				if (output != null) {
 					writer.write(output);
 					writer.flush();
@@ -161,7 +180,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
 			}
 			else {
 				// redirect it to the specified file
-				FileWriter writer = new FileWriter(spec.getStdError());
+				File stderr;
+				if (dir != null) {
+					stderr = new File(dir, spec.getStdError());
+				}
+				else {
+					stderr = new File(spec.getStdError());
+				}
+				FileWriter writer = new FileWriter(stderr);
 				if (output != null) {
 					writer.write(output);
 					writer.flush();

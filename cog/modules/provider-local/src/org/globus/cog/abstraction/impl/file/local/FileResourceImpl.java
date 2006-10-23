@@ -218,7 +218,7 @@ public class FileResourceImpl implements FileResource {
     }
     
     public void createDirectories(String directory) throws GeneralException {
-        FileResourceUtil.createDirectories(this, directory);
+    	new File(directory).mkdirs();
     }
 
     /** delete the given directory. If force == true, recursive delete */
