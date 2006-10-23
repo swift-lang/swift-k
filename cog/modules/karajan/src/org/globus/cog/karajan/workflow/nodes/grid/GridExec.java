@@ -84,10 +84,13 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 					js.setExecutable(TypeUtil.toString(value));
 				}
 				else if (name.equals(A_ARGS.getName()) || name.equals(A_ARGUMENTS.getName())) {
-					try {
-						js.setArguments(TypeUtil.toList(value));
+					if (value instanceof List) {
+						js.setArguments((List) value);
 					}
-					catch (Exception e) {
+					else if (value instanceof VariableArguments) {
+						js.setArguments(((VariableArguments) value).getAll());
+					}
+					else {
 						js.setArguments(TypeUtil.toString(value));
 					}
 				}
