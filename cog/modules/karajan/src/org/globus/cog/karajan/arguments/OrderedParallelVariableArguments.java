@@ -30,16 +30,11 @@ public class OrderedParallelVariableArguments extends AbstractWriteOnlyVariableA
 		}
 	}
 
-	private final boolean isPrevClosed() {
-		if (prevClosed) {
-			return true;
-		}
+	private synchronized boolean isPrevClosed() {
 		if (prev == null) {
-			prevClosed = true;
 			return true;
 		}
 		else {
-			prevClosed = prev.isClosed();
 			return prevClosed;
 		}
 	}
@@ -55,15 +50,16 @@ public class OrderedParallelVariableArguments extends AbstractWriteOnlyVariableA
 	}
 
 	public synchronized void close() {
-		this.closed = true;
+		boolean prevClosed = isPrevClosed();
 
-		if (isPrevClosed()) {
+		if (prevClosed) {
 			flushBuffer();
 		}
 
-		if (next != null && isPrevClosed()) {
+		if (next != null && prevClosed) {
 			next.prevClosed();
 		}
+		this.closed = true;
 	}
 
 	private void flushBuffer() {
@@ -75,6 +71,8 @@ public class OrderedParallelVariableArguments extends AbstractWriteOnlyVariableA
 
 	protected synchronized void prevClosed() {
 		flushBuffer();
+		
+		prevClosed = true;
 
 		if (closed && next != null) {
 			next.prevClosed();
