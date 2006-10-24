@@ -2,17 +2,19 @@ map(
 	map:entry("name", "another stress test")
 	map:entry("test",
 		element([]
-			element(bla, [a, b]
-				a/b
+			element(bla, [a, b, c, d]
+				if(
+					a == list(b, c, d) 1 0
+				)
 			)
 			
 			sum(
 				for(i, range(1, 20)
-					parallelFor(j, range(1, 500)
+					parallelFor(j, range(1, 250)
 						bla(
 							parallel(
-								2+2
-								1+1
+								list(1, 2, 3)
+								1, 2, 3
 							)
 						)
 					)
@@ -22,5 +24,5 @@ map(
 			echo()
 		)
 	)
-	map:entry("expected-result", 20*500*2)
+	map:entry("expected-result", 20*250*1)
 )
