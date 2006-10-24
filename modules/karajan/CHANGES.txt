@@ -1,3 +1,9 @@
+(10/24/2006)
+
+*** An attempt at fixing a concurrency bug in the code
+	that keeps returns of parallel() and parallelFor()
+	in order.
+
 (10/23/2006)
 
 *** the fix on task:execute(arguments=...) broke passing
