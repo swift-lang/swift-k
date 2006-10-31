@@ -279,12 +279,16 @@ public class FileResourceImpl implements FileResource {
     /** Equivalent to mkdir */
     public void createDirectory(String directory) throws GeneralException {
         try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("createDirectory(" + directory + ")");
+            }
             gridFTPClient.makeDir(directory);
         } catch (Exception e) {
-            throw new GeneralException("Cannot create the directory", e);
+            throw new GeneralException("Cannot create directory " + directory,
+                    e);
         }
     }
-    
+
     public void createDirectories(String directory) throws GeneralException {
         FileResourceUtil.createDirectories(this, directory);
     }
@@ -684,6 +688,9 @@ public class FileResourceImpl implements FileResource {
     public boolean exists(String filename) throws FileNotFoundException,
             GeneralException {
         try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("exists(" + filename + ")");
+            }
             return gridFTPClient.exists(filename);
         } catch (IOException ie) {
             throw new FileNotFoundException("File " + filename
