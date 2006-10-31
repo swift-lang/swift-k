@@ -27,6 +27,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.gram.GramException;
 import org.globus.gram.GramJob;
 import org.globus.gram.GramJobListener;
+import org.globus.gram.internal.GRAMConstants;
 import org.globus.io.gass.server.GassServer;
 import org.globus.io.gass.server.JobOutputListener;
 import org.globus.io.gass.server.JobOutputStream;
@@ -433,10 +434,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void statusChanged(GramJob job) {
         int status = job.getStatus();
         switch (status) {
-            case 2:
+            case GRAMConstants.STATUS_ACTIVE:
                 this.task.setStatus(Status.ACTIVE);
                 break;
-            case 4:
+            case GRAMConstants.STATUS_FAILED:
                 Status newStatus = new StatusImpl();
                 Status oldStatus = this.task.getStatus();
                 newStatus.setPrevStatusCode(oldStatus.getStatusCode());
@@ -446,13 +447,13 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 newStatus.setException(e);
                 this.task.setStatus(newStatus);
                 break;
-            case 8:
+            case GRAMConstants.STATUS_DONE:
                 this.task.setStatus(Status.COMPLETED);
                 break;
-            case 16:
+            case GRAMConstants.STATUS_SUSPENDED:
                 this.task.setStatus(Status.SUSPENDED);
                 break;
-            case 32:
+            case GRAMConstants.STATUS_UNSUBMITTED:
                 this.task.setStatus(Status.UNSUBMITTED);
                 break;
             default:
