@@ -39,6 +39,11 @@ public class FileResourceUtil {
 				}
 			}
 		}
+		catch (GeneralException e) {
+			if (!fr.isDirectory(dir)) {
+				throw e;
+			}
+		}
 		catch (FileNotFoundException e) {
 			// [m] why on earth is this thrown here?
 			throw new GeneralException(e.getMessage(), e);
