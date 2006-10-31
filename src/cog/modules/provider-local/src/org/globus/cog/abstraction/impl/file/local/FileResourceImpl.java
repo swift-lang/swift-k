@@ -39,8 +39,8 @@ import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 /**
- * enables access to local file system through the file resource
- * interface Supports absolute and relative path names
+ * enables access to local file system through the file resource interface
+ * Supports absolute and relative path names
  */
 public class FileResourceImpl implements FileResource {
     private final int type = GridResource.FILE;
@@ -117,7 +117,8 @@ public class FileResourceImpl implements FileResource {
     public void start() throws IllegalHostException,
             InvalidSecurityContextException, GeneralException {
         try {
-            setCurrentDirectory(new File(".").getAbsoluteFile().toURI().getPath());
+            setCurrentDirectory(new File(".").getAbsoluteFile().toURI()
+                    .getPath());
         } catch (Exception e) {
             throw new GeneralException(
                     "Exception in local Fileresourceimpl start()", e);
@@ -184,8 +185,8 @@ public class FileResourceImpl implements FileResource {
     }
 
     /** list contents of the given directory */
-    public Collection list(String directory) throws DirectoryNotFoundException,
-            GeneralException {
+    public Collection list(String directory)
+            throws DirectoryNotFoundException, GeneralException {
         try {
             if (!this.isDirectory(resolveName(directory))) {
                 throw new DirectoryNotFoundException(
@@ -210,15 +211,19 @@ public class FileResourceImpl implements FileResource {
             String currentPath = getCurrentDirectory();
             this.resource = new File(resolveName(directory));
             resource.mkdir();
-            setCurrentDirectory(currentPath);//[m] ???
+            setCurrentDirectory(currentPath);// [m] ???
         } catch (Exception e) {
             throw new GeneralException("Could not create directory: "
                     + directory);
         }
     }
-    
+
     public void createDirectories(String directory) throws GeneralException {
-    	new File(directory).mkdirs();
+        File f = new File(directory);
+        if (!f.mkdirs() && !f.exists()) {
+            throw new GeneralException("Failed to create directory: "
+                    + directory);
+        }
     }
 
     /** delete the given directory. If force == true, recursive delete */
@@ -269,12 +274,13 @@ public class FileResourceImpl implements FileResource {
         try {
             File remote = new File(resolveName(remoteFileName));
             if (!remote.exists()) {
-            	throw new FileNotFoundException("File not found: "+remote.getAbsolutePath());
+                throw new FileNotFoundException("File not found: "
+                        + remote.getAbsolutePath());
             }
             File local = new File(resolveName(localFileName));
-            //silently ignore requests for which source == destination
+            // silently ignore requests for which source == destination
             if (remote.getCanonicalPath().equals(local.getCanonicalPath())) {
-            	return;
+                return;
             }
             FileInputStream remoteStream = new FileInputStream(remote);
             FileOutputStream localStream = new FileOutputStream(local);
@@ -284,8 +290,7 @@ public class FileResourceImpl implements FileResource {
             }
             remoteStream.close();
             localStream.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new GeneralException("Exception in getFile ", e);
         }
 
@@ -336,8 +341,9 @@ public class FileResourceImpl implements FileResource {
     }
 
     /** copy multiple files */
-    public void getMultipleFiles(String[] remoteFileNames, String[] localFileNames)
-            throws FileNotFoundException, GeneralException {
+    public void getMultipleFiles(String[] remoteFileNames,
+            String[] localFileNames) throws FileNotFoundException,
+            GeneralException {
         if (remoteFileNames.length != localFileNames.length) {
             throw new GeneralException(
                     "Number of source files are not equal to the number of destination files");
@@ -358,8 +364,9 @@ public class FileResourceImpl implements FileResource {
     }
 
     /** copy multiple files */
-    public void putMultipleFiles(String[] localFileNames, String[] remoteFileNames)
-            throws FileNotFoundException, GeneralException {
+    public void putMultipleFiles(String[] localFileNames,
+            String[] remoteFileNames) throws FileNotFoundException,
+            GeneralException {
         getMultipleFiles(localFileNames, remoteFileNames);
     }
 
@@ -384,20 +391,20 @@ public class FileResourceImpl implements FileResource {
     }
 
     /** chmod on a file. not implemented for local resource */
-    public void changeMode(String filename, int mode) throws FileNotFoundException,
-            GeneralException {
+    public void changeMode(String filename, int mode)
+            throws FileNotFoundException, GeneralException {
         throw new GeneralException("Not implemented for local file resource");
     }
 
     /** chmod for the gridFile. not implemented for local resource */
-    public void changeMode(GridFile newGridFile) throws FileNotFoundException,
-            GeneralException {
+    public void changeMode(GridFile newGridFile)
+            throws FileNotFoundException, GeneralException {
         throw new GeneralException("Not implemented for local file resource");
     }
 
     /** get file information */
-    public GridFile getGridFile(String fileName) throws FileNotFoundException,
-            GeneralException {
+    public GridFile getGridFile(String fileName)
+            throws FileNotFoundException, GeneralException {
         return createGridFile(fileName);
     }
 
@@ -435,8 +442,8 @@ public class FileResourceImpl implements FileResource {
     public void setAttribute(String name, Object value) {
         attributes.put(name.toLowerCase(), value);
     }
-    
-    public Enumeration getAllAttributes(){
+
+    public Enumeration getAllAttributes() {
         return this.attributes.elements();
     }
 
