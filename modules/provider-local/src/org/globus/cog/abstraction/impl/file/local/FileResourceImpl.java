@@ -219,6 +219,9 @@ public class FileResourceImpl implements FileResource {
     }
 
     public void createDirectories(String directory) throws GeneralException {
+        if (directory == null || directory.equals("")) {
+            return;
+        }
         File f = new File(directory);
         if (!f.mkdirs() && !f.exists()) {
             throw new GeneralException("Failed to create directory: "
