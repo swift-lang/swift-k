@@ -65,11 +65,11 @@ public class Export extends Define {
 				Object value = stack.currentFrame().getVar(name);
 				if (value instanceof DefList) {
 					DefList defList = (DefList) value;
-					Iterator j = defList.prefixes().iterator();
-					while (j.hasNext()) {
-						String nsprefix = (String) j.next();
+					String[] prefixes = defList.currentPrefixes();
+					for (int j = 0; j < prefixes.length; j++) {
+						String nsprefix = prefixes[j];
 						DEF_CHANNEL.ret(stack, new ElementDefinition(nsprefix, defList.getName(),
-								defList.get(nsprefix).getDef(), false));
+								defList.get(nsprefix), false));
 					}
 				}
 			}
