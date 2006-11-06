@@ -154,7 +154,7 @@ public class StartCommand extends Command {
 						Iterator d = def.prefixes().iterator();
 						while (d.hasNext()) {
 							String prefix = (String) d.next();
-							Object value = def.get(prefix).getDef();
+							Object value = def.get(prefix);
 							// TODO This check is only made for performance
 							// reasons here
 							// It MUST be made for security reasons on the
