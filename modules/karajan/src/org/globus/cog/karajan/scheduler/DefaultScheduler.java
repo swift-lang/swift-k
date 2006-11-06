@@ -13,6 +13,7 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
+import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.TypeUtil;
 
 public class DefaultScheduler extends LateBindingScheduler implements Scheduler, Runnable {
@@ -63,7 +64,9 @@ public class DefaultScheduler extends LateBindingScheduler implements Scheduler,
 			throws NoFreeResourceException {
 		checkGlobalLoadConditions();
 		int initial = contactCursor;
-		while (!checkLoad(getResources().get(contactCursor))) {
+		ContactSet resources = getResources();
+		while (!checkLoad(resources.get(contactCursor))
+				|| !checkConstraints(resources.get(contactCursor), t)) {
 			incContactCursor();
 			if (contactCursor == initial) {
 				logger.debug("No free resources");

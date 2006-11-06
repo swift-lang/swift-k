@@ -423,6 +423,15 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	public void submitBoundToServices(Task t, Contact[] contacts, Service[] services)
 			throws TaskSubmissionException {
+		if (t instanceof ContactAllocationTask) {
+			((ContactAllocationTask) t).setContact((BoundContact) contacts[0]);
+			Status status = t.getStatus();
+			status.setPrevStatusCode(status.getStatusCode());
+			status.setStatusCode(Status.COMPLETED);
+			StatusEvent se = new StatusEvent(t, status);
+			fireJobStatusChangeEvent(se);
+			return;
+		}
 		applyTaskTransformers(t, contacts, services);
 		t.addStatusListener(this);
 		TaskHandler handler;
@@ -607,5 +616,4 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	protected Contact[] getContacts(Task t) {
 		return (Contact[]) taskContacts.get(t);
 	}
-
 }
