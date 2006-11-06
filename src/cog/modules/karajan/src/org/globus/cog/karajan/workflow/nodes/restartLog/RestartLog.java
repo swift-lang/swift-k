@@ -84,7 +84,7 @@ public class RestartLog extends PartialArgumentsContainer {
 				stack.setVar(LOG_DATA, parseLog(log));
 			}
 			catch (FileNotFoundException e) {
-				throw new ExecutionException("Log file was deleted");
+				throw new ExecutionException("Log file was deleted", e);
 			}
 			catch (IOException e) {
 				throw new ExecutionException("I/O Exception caught while reading the log file ("
@@ -126,7 +126,7 @@ public class RestartLog extends PartialArgumentsContainer {
 			}
 			catch (IOException e) {
 				throw new ExecutionException("Exception caught trying to get exclusive lock on "
-						+ f.getAbsolutePath());
+						+ f.getAbsolutePath(), e);
 			}
 			if (logffw.isLocked()) {
 				break;
