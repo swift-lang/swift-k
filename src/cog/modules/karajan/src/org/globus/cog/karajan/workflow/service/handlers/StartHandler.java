@@ -34,6 +34,7 @@ import org.globus.cog.karajan.util.DefList;
 import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.karajan.util.serialization.XMLConverter;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.nodes.Disallowed;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.Include;
 import org.globus.cog.karajan.workflow.nodes.user.UserDefinedElement;
@@ -197,9 +198,9 @@ public class StartHandler extends RequestHandler {
 						Iterator ei = m.prefixes().iterator();
 						while (ei.hasNext()) {
 							String prefix = (String) ei.next();
-							Object value = m.get(prefix).getDef();
+							Object value = m.get(prefix);
 							if (!(value instanceof UserDefinedElement)) {
-								m.removeAll(prefix);
+								m.put(prefix, new Disallowed());
 							}
 						}
 						copy.setVar(name, m);
