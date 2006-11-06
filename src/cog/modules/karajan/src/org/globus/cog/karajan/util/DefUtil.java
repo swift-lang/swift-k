@@ -68,7 +68,7 @@ public class DefUtil {
 		}
 	}
 
-	private static Entry search(VariableStack stack, String name, FlowElement parent)
+	private static DefList.Entry search(VariableStack stack, String name, FlowElement parent)
 			throws ExecutionException {
 		String prefixed = name.toLowerCase();
 		String unprefixed;
@@ -94,23 +94,22 @@ public class DefUtil {
 			}
 		}
 
-		Entry value = new Entry(unprefixed, get(stack, prefix, unprefixed));
-		if (value.getDef() == null) {
-			value = getNoPrefix(stack, name);
+		Object def = get(stack, prefix, unprefixed);
+		if (def == null) {
+			return getNoPrefix(stack, name);
 		}
-		return value;
+		else {
+			return new DefList.Entry(unprefixed, prefix, def);
+		}
 	}
-	
-	public static final Entry NO_ENTRY = new Entry(null, null);
 
-	private static Entry getNoPrefix(VariableStack stack, String name) throws ExecutionException {
+	private static DefList.Entry getNoPrefix(VariableStack stack, String name) throws ExecutionException {
 		DefList prefixes = get(stack, name);
 		if (prefixes == null) {
-			return NO_ENTRY;
+			return null;
 		}
 		checkAmbiguous(prefixes, name);
-		DefList.Entry entry = prefixes.first();
-		return new Entry(name, entry);
+		return prefixes.first();
 	}
 
 	private static void checkAmbiguous(DefList prefixes, String name) {
@@ -125,7 +124,7 @@ public class DefUtil {
 		}
 	}
 
-	private static DefList.Entry get(VariableStack stack, String prefix, String name)
+	private static Object get(VariableStack stack, String prefix, String name)
 			throws ExecutionException {
 		DefList prefixes = get(stack, name);
 		if (prefixes == null) {
@@ -158,51 +157,12 @@ public class DefUtil {
 		}
 	}
 
-	public static Entry getDef(VariableStack stack, String type, FlowElement parent)
+	public static DefList.Entry getDef(VariableStack stack, String type, FlowElement parent)
 			throws ExecutionException {
-		Entry value = search(stack, type, parent);
-		if (value.entry == null) {
+		DefList.Entry value = search(stack, type, parent);
+		if (value == null) {
 			value = getNoPrefix(stack, "#");
-			value.name = type;
 		}
 		return value;
-	}
-
-	public static class Entry {
-		private String name;
-		private String fullName;
-		private final DefList.Entry entry;
-
-		public Entry(String name, DefList.Entry entry) {
-			this.name = name;
-			this.entry = entry;
-		}
-
-		public String toString() {
-			return entry.getPrefix() + ":" + name + " -> " + entry.getDef();
-		}
-
-		public String getFullName() {
-			if (fullName != null) {
-				return fullName;
-			}
-			if (entry.getPrefix() != null && entry.getPrefix().length() > 0) {
-				return fullName = entry.getPrefix() + ":" + name;
-			}
-			else {
-				return fullName = name;
-			}
-		}
-		
-		public Object getDef() {
-			if (entry == null) {
-				return null;
-			}
-			return entry.getDef();
-		}
-		
-		public String getName() {
-			return name;
-		}
 	}
 }
