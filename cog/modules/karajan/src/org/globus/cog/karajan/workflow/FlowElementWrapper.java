@@ -17,6 +17,7 @@ import java.util.Map;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.AdaptiveArrayList;
 import org.globus.cog.karajan.util.AdaptiveMap;
+import org.globus.cog.karajan.util.DefList;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.LoadListener;
 import org.globus.cog.karajan.workflow.events.Event;
@@ -237,8 +238,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 
 	private void bind(final VariableStack stack) throws ExecutionException {
 		try {
-			DefUtil.Entry def = null;
-			def = DefUtil.getDef(stack, getElementType(), getParent());
+			DefList.Entry def = DefUtil.getDef(stack, getElementType(), getParent());
 			if (def == null || def.getDef() == null) {
 				throw new ExecutionException("'" + getElementType() + "' is not defined.");
 			}
@@ -252,7 +252,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 			}
 			else {
 				throw new ExecutionException("Unrecognized definition for '" + getElementType()
-						+ "': " + def);
+						+ "': " + value);
 			}
 			peer.setElementType(def.getFullName());
 			populate(peer);
