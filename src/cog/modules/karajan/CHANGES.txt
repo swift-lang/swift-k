@@ -1,3 +1,28 @@
+(11/06/2006)
+
+*** Changed the way the virtual hosts work. Until now, the
+	first task using a virtual host would bind it. The change
+	consists in making allocateHost asynchronous by queuing a 
+	special task when constraints are used. This achieves the
+	same purpose as virtual hosts (i.e. push the allocation
+	choice to the scheduler) but when constraints are used, the
+	host "returned" by allocateHost is bound and not virtual 
+	(i.e. you can print it out).
+	
+*** Added constraint checkers to the scheduler. They can be used
+	to enforce various constraints on both the task and the
+	resource when mathcing them (not unlike the Condor match maker).
+	
+*** Changed the schedulers to use constraint checkers.
+
+*** Updated the way element definitions are stored internally.
+	Previously a wasteful HashSet (backed by a HashMap) were
+	used. Considering that namespace overloaded and overriden
+	definitions are somewhat rare, this was a waste of space.
+	It is hoped that the new way of doing things is more 
+	conservative on memory at insignifficant losses (if any)
+	in performance.
+
 (10/24/2006)
 
 *** An attempt at fixing a concurrency bug in the code
