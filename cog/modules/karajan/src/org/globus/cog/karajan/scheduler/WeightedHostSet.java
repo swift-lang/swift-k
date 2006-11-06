@@ -9,108 +9,75 @@
  */
 package org.globus.cog.karajan.scheduler;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.Map.Entry;
+import java.util.Iterator;
+import java.util.TreeSet;
 
 public class WeightedHostSet {
-	private TreeMap map;
-	private HashMap scores;
+	private TreeSet scores;
+	private double sum;
 
 	public WeightedHostSet() {
-		map = new TreeMap();
-		scores = new HashMap();
+		init();
 	}
 	
+	protected void init() {
+		scores = new TreeSet();
+		sum = 0;
+	}
+
 	public synchronized void add(WeightedHost wh) {
-		Double score = wh.getScoreAsDouble();
-		Set s = (Set) map.get(score);
-		if (s == null) {
-			s = new HashSet();
-			map.put(score, s);
-		}
-		
-		s.add(wh);
-		scores.put(wh, score);
+		scores.add(wh);
+		sum += wh.getScore();
 	}
 	
+	public synchronized void changeScore(WeightedHost wh, double newScore) {
+		scores.remove(wh);
+		sum -= wh.getScore();
+		scores.add(new WeightedHost(wh.getHost(), newScore));
+		sum += newScore;
+	}
+
 	public synchronized double remove(WeightedHost wh) {
-		Double score = (Double) scores.get(wh);
-		Set s = (Set) map.get(score);
-		if (s != null) {
-			s.remove(wh);
-			if (s.isEmpty()) {
-				map.remove(score);
-			}
-			scores.remove(wh);
-		}
-		return score.doubleValue();
+		scores.remove(wh);
+		return wh.getScore();
 	}
-	
-	public java.util.Iterator iterator() {
-		return new Iterator();
+
+	public Iterator iterator() {
+		return scores.iterator(); 
 	}
-	
+
 	public WeightedHost last() {
-		Set s = (Set) map.get(map.lastKey());
-		return (WeightedHost) s.iterator().next();
+		return (WeightedHost) scores.last();
 	}
-	
+
 	public int size() {
 		return scores.size();
 	}
-	
+
+	public double getSum() {
+		return sum;
+	}
+
+	protected synchronized void normalize(double target) {
+		double prod = 1;
+		Iterator i = scores.iterator();
+		while (i.hasNext()) {
+			WeightedHost wh = (WeightedHost) i.next();
+			prod *= wh.getScore();
+		}
+		double geomAvg = Math.pow(prod, target / scores.size());
+		double renormalizationFactor = 1 / geomAvg;
+		i = scores.iterator();
+		scores = new TreeSet();
+		while (i.hasNext()) {
+			WeightedHost wh = (WeightedHost) i.next();
+			WeightedHost nwh = new WeightedHost(wh.getHost(), wh.getScore()
+					* renormalizationFactor);
+			add(nwh);
+		}
+	}
+
 	public String toString() {
-		return map.toString();
+		return scores.toString();
 	}
-	
-	private class Iterator implements java.util.Iterator{
-		private final java.util.Iterator mapi;
-		private java.util.Iterator seti;
-		private WeightedHost lasth;
-		private Set lasts;
-		
-		
-		public Iterator() {
-			mapi = map.entrySet().iterator();
-			if (mapi.hasNext()) {
-				Entry next = (Entry) mapi.next();
-				lasts = (Set) next.getValue();
-				seti = lasts.iterator();
-			}
-		}
-
-		public boolean hasNext() {
-			return seti.hasNext() || mapi.hasNext();
-		}
-
-		public Object next() {
-			if (seti.hasNext()) {
-				lasth =  (WeightedHost) seti.next();
-				return lasth;
-			}
-			else if (mapi.hasNext()) {
-				Entry next = (Entry) mapi.next();
-				lasts = (Set) next.getValue();
-				seti = lasts.iterator();
-				lasth = (WeightedHost) seti.next();
-				return lasth;
-			}
-			else {
-				throw new NoSuchElementException();
-			}
-		}
-
-		public void remove() {
-			seti.remove();
-			if (lasts.isEmpty()) {
-				mapi.remove();
-			}
-			scores.remove(lasth);
-		}
-	}
-
 }

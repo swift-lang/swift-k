@@ -11,7 +11,7 @@ package org.globus.cog.karajan.scheduler;
 
 import org.globus.cog.karajan.util.BoundContact;
 
-public class WeightedHost {
+public class WeightedHost implements Comparable {
 	private BoundContact host;
 	private Double score;
 
@@ -50,5 +50,17 @@ public class WeightedHost {
 
 	public String toString() {
 		return host.toString();
+	}
+
+	public int compareTo(Object o) {
+		WeightedHost other = (WeightedHost) o;
+		int r = score.compareTo(other.score);
+		if (r == 0) {
+			//arbitrary ordering on the contact
+			return System.identityHashCode(host) - System.identityHashCode(other.host);
+		}
+		else {
+			return r;
+		}
 	}
 }

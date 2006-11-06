@@ -21,6 +21,7 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.Queue;
@@ -48,6 +49,8 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	private final Map constraints;
 
 	private List taskTransformers, failureHandlers;
+	
+	private ResourceConstraintChecker constraintChecker;
 
 	public AbstractScheduler() {
 		super("Scheduler");
@@ -239,5 +242,31 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	
 	public void addFailureHandler(FailureHandler handler) {
 		failureHandlers.add(handler);
+	}
+
+	public ResourceConstraintChecker getConstraintChecker() {
+		return constraintChecker;
+	}
+
+	public void setConstraintChecker(ResourceConstraintChecker constraintChecker) {
+		this.constraintChecker = constraintChecker;
+	}
+	
+	protected boolean checkConstraints(BoundContact resource, TaskConstraints tc) {
+		if (constraintChecker == null) {
+			return true;
+		}
+		else {
+			return constraintChecker.checkConstraints(resource, tc);
+		}
+	}
+	
+	protected List checkConstraints(List resources, TaskConstraints tc) {
+		if (constraintChecker == null) {
+			return resources;
+		}
+		else {
+			return constraintChecker.checkConstraints(resources, tc);
+		}
 	}
 }
