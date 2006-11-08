@@ -269,8 +269,10 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 	}
 
 	protected void taskFailed(StatusEvent e, VariableStack stack) throws ExecutionException {
+		if (logger.isInfoEnabled()) {
+			logger.info("Failed task: " + ((Task) e.getSource()).getSpecification());
+		}
 		Exception ex = e.getStatus().getException();
-		// ret(stack, "stderr", "Failed task: " + e.getSource());
 		if (ex != null) {
 			failImmediately(stack, new ExecutionException(
 					ExecutionContext.getMeaningfulMessage(ex), ex));
