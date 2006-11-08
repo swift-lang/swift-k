@@ -122,6 +122,8 @@ public class FileResourceCache {
 		inUse.add(fileResource);
 		return fileResource;
 	}
+	
+	private Throwable lastRelease;
 
 	public void releaseResource(FileResource resource) {
 		if (resource == null) {
@@ -129,14 +131,27 @@ public class FileResourceCache {
 		}
 		synchronized (this) {
 			logger.debug("Releasing resource for " + resource.getServiceContact());
-			if (!inUse.contains(resource)) {
-				throw new RuntimeException("Attempted to release resource that is not in use");
+			/*
+			 * if (!inUse.contains(resource)) { throw new
+			 * RuntimeException("Attempted to release resource that is not in
+			 * use"); }
+			 */
+			if (inUse.remove(resource)) {
+				order.addLast(resource);
+				releaseTimes.put(resource, new Long(System.currentTimeMillis()));
+				if (logger.isDebugEnabled()) {
+					logger.debug("Resource successfully released");
+					lastRelease = new Throwable();
+				}
 			}
-			inUse.remove(resource);
-			order.addLast(resource);
-			releaseTimes.put(resource, new Long(System.currentTimeMillis()));
+			else {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Resource was previously released", new Throwable());
+					logger.debug("Previous release: ", lastRelease);
+				}
+			}
+			checkIdleResourceCount();
 		}
-		checkIdleResourceCount();
 	}
 
 	private void removeResource(FileResource resource) {
@@ -211,18 +226,18 @@ public class FileResourceCache {
 			cache.checkIdleResourceAges();
 		}
 	}
-	
+
 	public static class ResourceStopper implements Runnable {
 		private LinkedList resources;
 		private boolean running;
-		
-		public ResourceStopper () {
+
+		public ResourceStopper() {
 			resources = new LinkedList();
 			running = false;
 		}
-		
+
 		public void addResource(FileResource fr) {
-			synchronized(this) {
+			synchronized (this) {
 				resources.add(fr);
 				if (!running) {
 					running = true;
@@ -233,7 +248,7 @@ public class FileResourceCache {
 				}
 			}
 		}
-		
+
 		public void run() {
 			FileResource fr = nextResource();
 			while (fr != null) {
@@ -245,13 +260,13 @@ public class FileResourceCache {
 				}
 				fr = nextResource();
 			}
-			synchronized(this) {
+			synchronized (this) {
 				running = false;
 			}
 		}
-		
+
 		private FileResource nextResource() {
-			synchronized(this) {
+			synchronized (this) {
 				if (resources.isEmpty()) {
 					return null;
 				}
