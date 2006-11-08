@@ -6,6 +6,7 @@
 
 package org.globus.cog.karajan.workflow.nodes.grid;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -85,10 +86,10 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 				}
 				else if (name.equals(A_ARGS.getName()) || name.equals(A_ARGUMENTS.getName())) {
 					if (value instanceof List) {
-						js.setArguments((List) value);
+						js.setArguments(stringify((List) value));
 					}
 					else if (value instanceof VariableArguments) {
-						js.setArguments(((VariableArguments) value).getAll());
+						js.setArguments(stringify(((VariableArguments) value).getAll()));
 					}
 					else {
 						js.setArguments(TypeUtil.toString(value));
@@ -236,6 +237,15 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 		catch (Exception e) {
 			throw new ExecutionException("Exception caught while submitting job", e);
 		}
+	}
+	
+	private List stringify(List l) {
+	    ArrayList sl = new ArrayList(l.size());
+	    Iterator i = l.iterator();
+	    while (i.hasNext()) {
+	        sl.add(TypeUtil.toString(i.next()));
+	    }
+	    return sl;
 	}
 
 	protected void taskFailed(StatusEvent e, VariableStack stack) throws ExecutionException {
