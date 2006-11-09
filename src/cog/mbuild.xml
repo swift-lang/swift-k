@@ -115,7 +115,7 @@
 		<chmod file="${dist.dir}/bin/${launcher-name}" perm="+x"/>
 		<!-- Just in case... -->
 		<fixcrlf srcdir="${dist.dir}/bin"
-			eol="unix"
+			eol="lf"
 			includes="${launcher-name}" />
 		<fixcrlf srcdir="${dist.dir}/bin"
 			eol="crlf"
