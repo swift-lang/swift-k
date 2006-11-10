@@ -151,7 +151,12 @@ public class FileResourceImpl extends
 				return me.get("type").endsWith("dir");
 			}
 			catch (Exception e) {
-				throw new GeneralException(e.getMessage(), e);
+                if (e.getMessage() != null && e.getMessage().indexOf("No such file or directory") != -1) {
+                    return false;
+                }
+                else {
+                    throw new GeneralException(e.getMessage(), e);
+                }
 			}
 		}
 	}
