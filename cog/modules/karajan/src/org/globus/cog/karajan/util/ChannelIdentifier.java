@@ -11,9 +11,18 @@ package org.globus.cog.karajan.util;
 
 
 public class ChannelIdentifier extends Identifier {
-
-	public ChannelIdentifier(String name) {
-		super(name);
-	}
+	private final boolean commutative;
 	
+	public ChannelIdentifier(String name) {
+		this(name, false);
+	}
+
+	public ChannelIdentifier(String name, boolean commutative) {
+		super(name);
+		this.commutative = commutative;
+	}
+
+	public boolean isCommutative() {
+		return commutative;
+	}
 }
