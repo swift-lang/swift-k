@@ -9,7 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.nodes;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,17 +26,21 @@ import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Cache;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class CacheNode extends PartialArgumentsContainer {
 	public static final Arg A_ON = new Arg.Optional("on");
-	
+
 	public static final String KEY = "##cachekey";
 
 	private static final Map instances;
 
 	static {
 		setArguments(CacheNode.class, new Arg[] { A_ON });
-		instances = new Hashtable();
+		instances = new HashMap();
 	}
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
@@ -45,21 +49,24 @@ public class CacheNode extends PartialArgumentsContainer {
 
 	protected void cpre(Object key, VariableStack stack) throws ExecutionException {
 		stack.setVar(KEY, key);
-		Cache cache = stack.getExecutionContext().getTree().getCache();
-		if (cache.isCached(key)) {
-			returnCachedArguments(stack, (Arguments) cache.getCachedValue(key));
-			complete(stack);
-			return;
-		}
-		synchronized (instances) {
-			List inst = (List) instances.get(key);
-			if (inst == null) {
-				inst = new LinkedList();
-				instances.put(key, inst);
-			}
-			else {
-				inst.add(stack);
+		Cache cache = getCache(stack);
+		synchronized (cache) {
+			if (cache.isCached(key)) {
+				returnCachedArguments(stack, (Arguments) cache.getCachedValue(key));
+				complete(stack);
 				return;
+			}
+
+			synchronized (instances) {
+				List inst = (List) instances.get(key);
+				if (inst == null) {
+					inst = new LinkedList();
+					instances.put(key, inst);
+				}
+				else {
+					inst.add(stack);
+					return;
+				}
 			}
 		}
 		super.partialArgumentsEvaluated(stack);
@@ -70,21 +77,35 @@ public class CacheNode extends PartialArgumentsContainer {
 	public void post(VariableStack stack) throws ExecutionException {
 		Arguments ret = getTrackingArguments(stack);
 		Object key = stack.currentFrame().getVar(KEY);
-		Cache cache = stack.getExecutionContext().getTree().getCache();
-		cache.addValue(key, ret);
+		Cache cache = getCache(stack);
+		synchronized (cache) {
+			cache.addValue(key, ret);
 
-		synchronized (instances) {
-			if (instances.containsKey(key)) {
-				List l = (List) instances.get(key);
-				while (l.size() > 0) {
-					VariableStack st = (VariableStack) l.remove(0);
-					returnCachedArguments(st, ret);
-					complete(st);
+			synchronized (instances) {
+				if (instances.containsKey(key)) {
+					List l = (List) instances.get(key);
+					while (l.size() > 0) {
+						VariableStack st = (VariableStack) l.remove(0);
+						returnCachedArguments(st, ret);
+						complete(st);
+					}
+					instances.remove(key);
 				}
-				instances.remove(key);
 			}
 		}
 		super.post(stack);
+	}
+
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		if (e.getType().equals(NotificationEventType.EXECUTION_FAILED)) {
+			Object key = e.getStack().currentFrame().getVar(KEY);
+			synchronized (instances) {
+				if (instances.containsKey(key)) {
+					instances.remove(key);
+				}
+			}
+		}
+		super.notificationEvent(e);
 	}
 
 	private void addTrackingArguments(VariableStack stack) throws ExecutionException {
@@ -132,5 +153,9 @@ public class CacheNode extends PartialArgumentsContainer {
 			ArgUtil.getChannelReturn(stack, channel).merge(
 					(VariableArguments) ret.getChannels().get(channel));
 		}
+	}
+
+	protected Cache getCache(VariableStack stack) throws ExecutionException {
+		return stack.getExecutionContext().getTree().getCache();
 	}
 }
