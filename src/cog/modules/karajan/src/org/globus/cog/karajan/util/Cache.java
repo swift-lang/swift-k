@@ -28,6 +28,8 @@ public class Cache implements Serializable {
 	private final static int CACHE_PURGE_SIZE = 100;
 	private HashMap primitives;
 	
+	private int maxCacheSize = MAX_CACHE_SIZE;
+	
 	public Cache() {
 		primitives = new HashMap();
 	}
@@ -52,7 +54,7 @@ public class Cache implements Serializable {
 	}
 
 	private void checkSize() {
-		if (primitives.size() > MAX_CACHE_SIZE) {
+		if (maxCacheSize > 0 && primitives.size() > maxCacheSize) {
 			long[] scores = new long[primitives.size()];
 			int index = 0;
 			Iterator i = primitives.values().iterator();
@@ -75,6 +77,14 @@ public class Cache implements Serializable {
 
 	private long score(int hits, long lastHit) {
 		return hits + lastHit / 10000;
+	}
+	
+	public int getMaxCacheSize() {
+		return maxCacheSize;
+	}
+
+	public void setMaxCacheSize(int maxCacheSize) {
+		this.maxCacheSize = maxCacheSize;
 	}
 
 	private static class Value {
