@@ -9,12 +9,15 @@
  */
 package org.globus.cog.karajan.scheduler;
 
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.util.BoundContact;
@@ -45,30 +48,30 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	private int policy;
 	private int delay;
 
+	/*
+	 * These field names must match the property names
+	 */
+	private double connectionRefusedFactor, connectionTimeoutFactor, jobSubmissionTaskLoadFactor,
+			transferTaskLoadFactor, fileOperationTaskLoadFactor, successFactor, failureFactor,
+			scoreHighCap, scoreLowCap;
+	private int normalizationDelay;
+
 	public WeightedHostScoreScheduler() {
 		policy = POLICY_WEIGHTED_RANDOM;
 		setDefaultFactors();
 	}
 
 	protected final void setDefaultFactors() {
-		setFactor(FACTOR_CONNECTION_REFUSED, 0.1);
-		setFactor(FACTOR_CONNECTION_TIMEOUT, 0.05);
-		setFactor(FACTOR_SUBMISSION_TASK_LOAD, 0.9);
-		setFactor(FACTOR_TRANSFER_TASK_LOAD, 0.9);
-		setFactor(FACTOR_FILEOP_TASK_LOAD, 0.95);
-		setFactor(FACTOR_SUCCESS, 1.2);
-		setFactor(FACTOR_FAILURE, 0.9);
-		setFactor(SCORE_HIGH_CAP, 100);
-		setFactor(SCORE_LOW_CAP, 0.001);
-		setFactor(NORMALIZATION_DELAY, 100);
-	}
-
-	protected final void setFactor(String name, double value) {
-		setProperty(name, new Double(value));
-	}
-
-	protected double getFactor(String name) {
-		return ((Double) getProperty(name)).doubleValue();
+		connectionRefusedFactor = 0.1;
+		connectionTimeoutFactor = 0.05;
+		jobSubmissionTaskLoadFactor = 0.9;
+		transferTaskLoadFactor = 0.9;
+		fileOperationTaskLoadFactor = 0.95;
+		successFactor = 1.01;
+		failureFactor = 0.9;
+		scoreHighCap = 100;
+		scoreLowCap = 0.01;
+		normalizationDelay = 100;
 	}
 
 	public void setResources(ContactSet grid) {
@@ -97,11 +100,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	}
 
 	protected double checkCaps(double score) {
-		if (score > getFactor(SCORE_HIGH_CAP)) {
-			return getFactor(SCORE_HIGH_CAP);
+		if (score > scoreHighCap) {
+			return scoreHighCap;
 		}
-		else if (score < getFactor(SCORE_LOW_CAP)) {
-			return getFactor(SCORE_LOW_CAP);
+		else if (score < scoreLowCap) {
+			return scoreLowCap;
 		}
 		else {
 			return score;
@@ -112,11 +115,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			throws NoFreeResourceException {
 		checkGlobalLoadConditions();
 		BoundContact contact;
-		
+
 		WeightedHostSet s = sorted;
-		
+
 		s = constrain(s, getConstraintChecker(), t);
-		
+
 		double sum = s.getSum();
 		if (policy == POLICY_WEIGHTED_RANDOM) {
 			double rand = Math.random() * sum;
@@ -125,7 +128,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				logger.debug("Rand: " + rand + ", sum: " + sum);
 			}
 			Iterator i = s.iterator();
-			
+
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
 				sum += wh.getScore();
@@ -149,7 +152,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		return contact;
 	}
 
-	protected WeightedHostSet constrain(WeightedHostSet s, ResourceConstraintChecker rcc, TaskConstraints tc) {
+	protected WeightedHostSet constrain(WeightedHostSet s, ResourceConstraintChecker rcc,
+			TaskConstraints tc) {
 		if (rcc == null) {
 			return s;
 		}
@@ -168,7 +172,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 
 	protected void normalize() {
 		delay++;
-		if (delay > getFactor(NORMALIZATION_DELAY)) {
+		if (delay > normalizationDelay) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Normalizing...");
 				logger.debug("Before normalization: " + sorted);
@@ -220,57 +224,87 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				}
 			}
 			else {
-				super.setProperty(name, new Double(TypeUtil.toDouble(value)));
+				double val = TypeUtil.toDouble(value);
+				try {
+					Field f = this.getClass().getField(name);
+					if (f.getClass().equals(int.class)) {
+						f.setInt(this, (int) val);
+					}
+					else {
+						f.setDouble(this, val);
+					}
+				}
+				catch (Exception e) {
+					throw new KarajanRuntimeException("Failed to set property '" + name + "'", e);
+				}
 			}
+		}
+		else {
+			super.setProperty(name, value);
 		}
 	}
 
+	public void submitBoundToServices(Task t, Contact[] contacts, Service[] services)
+			throws TaskSubmissionException {
+		factorSubmission(t, contacts, 1);
+		super.submitBoundToServices(t, contacts, services);
+	}
+
 	public void statusChanged(StatusEvent e) {
-		Task t = (Task) e.getSource();
-		int code = e.getStatus().getStatusCode();
-		Contact[] contacts = getContacts(t);
-		if (code == Status.SUBMITTED) {
-			factorSubmission(t, contacts, 1);
-		}
-		else if (code == Status.COMPLETED) {
-			factorSubmission(t, contacts, -1);
-			factorMultiple(contacts, getFactor(FACTOR_SUCCESS));
-		}
-		else if (code == Status.FAILED) {
-			factorMultiple(contacts, getFactor(FACTOR_FAILURE));
-			Exception ex = e.getStatus().getException();
-			if (ex != null) {
-				String exs = ex.toString();
-				if (exs.indexOf("Connection refused") >= 0 || exs.indexOf("connection refused") >= 0) {
-					factorMultiple(contacts, getFactor(FACTOR_CONNECTION_REFUSED));
-				}
-				else if (exs.indexOf("timeout") >= 0) {
-					factorMultiple(contacts, getFactor(FACTOR_CONNECTION_TIMEOUT));
+		try {
+			Task t = (Task) e.getSource();
+			int code = e.getStatus().getStatusCode();
+			Contact[] contacts = getContacts(t);
+			if (code == Status.SUBMITTED) {
+				// this isn't reliable
+				// factorSubmission(t, contacts, 1);
+			}
+			else if (code == Status.COMPLETED) {
+				factorSubmission(t, contacts, -1);
+				factorMultiple(contacts, successFactor);
+			}
+			else if (code == Status.FAILED) {
+				factorMultiple(contacts, failureFactor);
+				Exception ex = e.getStatus().getException();
+				if (ex != null) {
+					String exs = ex.toString();
+					if (exs.indexOf("Connection refused") >= 0
+							|| exs.indexOf("connection refused") >= 0) {
+						factorMultiple(contacts, connectionRefusedFactor);
+					}
+					else if (exs.indexOf("timeout") >= 0) {
+						factorMultiple(contacts, connectionTimeoutFactor);
+					}
 				}
 			}
 		}
-		super.statusChanged(e);
+		catch (Exception ex) {
+			logger.warn("Scheduler threw exception while processing task status change", ex);
+		}
+		finally {
+			super.statusChanged(e);
+		}
 	}
 
 	private void factorSubmission(Task t, Contact[] contacts, int exp) {
 		// I wonder where the line between abstraction and obfuscation is...
 		if (t.getType() == Task.JOB_SUBMISSION) {
-			factorMultiple(contacts, spow(getFactor(FACTOR_SUBMISSION_TASK_LOAD), exp));
+			factorMultiple(contacts, spow(jobSubmissionTaskLoadFactor, exp));
 		}
 		else if (t.getType() == Task.FILE_TRANSFER) {
-			factorMultiple(contacts, spow(getFactor(FACTOR_TRANSFER_TASK_LOAD), exp));
+			factorMultiple(contacts, spow(transferTaskLoadFactor, exp));
 		}
 		else if (t.getType() == Task.FILE_OPERATION) {
-			factorMultiple(contacts, spow(getFactor(FACTOR_FILEOP_TASK_LOAD), exp));
+			factorMultiple(contacts, spow(fileOperationTaskLoadFactor, exp));
 		}
 	}
-	
+
 	private double spow(double x, int exp) {
 		if (exp == 1) {
 			return x;
 		}
 		else if (exp == -1) {
-			return 1/x;
+			return 1 / x;
 		}
 		else {
 			throw new IllegalArgumentException();
@@ -279,7 +313,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 
 	private void factorMultiple(Contact[] contacts, double factor) {
 		for (int i = 0; i < contacts.length; i++) {
-			WeightedHost wh = new WeightedHost((BoundContact) contacts[i]);
+			WeightedHost wh = sorted.findHost((BoundContact) contacts[i]);
 			multiplyScore(wh, factor);
 		}
 	}
