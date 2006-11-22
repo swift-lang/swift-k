@@ -178,7 +178,6 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 			setMaxSimultaneousJobs(TypeUtil.toInt(value));
 		}
 		else {
-			// properties.put(name, value);
 			throw new IllegalArgumentException("Unsupported property: " + name
 					+ ". Supported properties are: " + Arrays.asList(this.getPropertyNames()));
 		}
