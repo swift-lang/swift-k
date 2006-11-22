@@ -218,10 +218,16 @@ public abstract class Arg {
 
 	public static class Channel extends Arg {
 		private transient String variableName;
+		private final transient boolean commutative; 
 
 		public Channel(String name) {
+			this(name, false);
+		}
+		
+		public Channel(String name, boolean commutative) {
 			super(name, CHANNEL);
 			this.variableName = variableName(getName());
+			this.commutative = commutative;
 		}
 
 		public VariableArguments get(VariableStack stack) throws ExecutionException {
@@ -253,6 +259,10 @@ public abstract class Arg {
 
 		public boolean isPresent(VariableStack stack) throws ExecutionException {
 			return ArgUtil.getChannelArguments(stack, this) != null;
+		}
+
+		public boolean isCommutative() {
+			return commutative;
 		}
 
 		public static String variableName(String channelName) {
