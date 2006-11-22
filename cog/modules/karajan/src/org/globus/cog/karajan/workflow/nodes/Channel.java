@@ -18,6 +18,7 @@ import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
 
 public class Channel extends SequentialWithArguments {
 	public static final Arg A_NAME = new Arg.Positional("name", 0);
+	public static final Arg A_COMMUTATIVE = new Arg.Optional("commutative", Boolean.FALSE);
 	
 	private String to, from;
 
@@ -30,6 +31,7 @@ public class Channel extends SequentialWithArguments {
 	}
 
 	public void post(VariableStack stack) throws ExecutionException {
+		boolean comm = TypeUtil.toBoolean(A_COMMUTATIVE.getValue(stack));
 		if (A_NAME.isPresent(stack)) {
 			ret(stack, new ChannelIdentifier(TypeUtil.toString(A_NAME.getValue(stack))));
 		}
