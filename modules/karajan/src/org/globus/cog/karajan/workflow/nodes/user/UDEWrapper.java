@@ -63,7 +63,7 @@ public class UDEWrapper extends AbstractSequentialWithArguments implements Event
 			return;
 		}
 
-		initializeDefArgs((UserDefinedElement) def.getUde());
+		initializeDefArgs(def.getUde());
 		super.initializeStatic();
 
 		initialized = true;
@@ -72,7 +72,7 @@ public class UDEWrapper extends AbstractSequentialWithArguments implements Event
 	public void pre(VariableStack stack) throws ExecutionException {
 		UDEDefinition uded = getDef(stack);
 		stack.setVar(Trace.ELEMENT, this);
-		((UserDefinedElement) uded.getUde()).startInstance(stack, this, uded.getEnv());
+		uded.getUde().startInstance(stack, this, uded.getEnv());
 	}
 
 	protected UDEDefinition getDefInternal(VariableStack stack) throws ExecutionException {
