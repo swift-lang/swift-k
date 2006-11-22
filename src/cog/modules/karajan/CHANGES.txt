@@ -1,3 +1,19 @@
+(11/22/2006)
+
+*** Added once(). It works like cacheOn(), but it is guaranteed
+    (at the expense of no bounds on the memory)
+	
+*** Fixed the adaptive scheduler
+
+*** Partially fixed cache/cacheOn to work better when things
+    fail
+	
+*** Enabled DOTALL mode in restartOnError (note to self: do this
+    for the rest of the regexp error handling things) such that
+	"." will also match newline characters
+	
+*** A slightly better uid() which returns a more compact string
+
 (11/06/2006)
 
 *** Changed the way the virtual hosts work. Until now, the
