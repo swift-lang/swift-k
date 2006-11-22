@@ -24,7 +24,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextExcepti
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileNotFoundException;
-import org.globus.cog.abstraction.impl.file.FileResourceUtil;
 import org.globus.cog.abstraction.impl.file.GeneralException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
