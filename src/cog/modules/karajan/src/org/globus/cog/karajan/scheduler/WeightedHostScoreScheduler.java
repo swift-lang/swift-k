@@ -128,7 +128,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				logger.debug("Rand: " + rand + ", sum: " + sum);
 			}
 			Iterator i = s.iterator();
-
+			
+			sum = 0;
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
 				sum += wh.getScore();
