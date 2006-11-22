@@ -9,11 +9,16 @@
  */
 package org.globus.cog.karajan.scheduler;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TreeSet;
+
+import org.globus.cog.karajan.util.BoundContact;
 
 public class WeightedHostSet {
 	private TreeSet scores;
+	private Map weightedHosts;
 	private double sum;
 
 	public WeightedHostSet() {
@@ -22,24 +27,33 @@ public class WeightedHostSet {
 	
 	protected void init() {
 		scores = new TreeSet();
+		weightedHosts = new HashMap();
 		sum = 0;
 	}
 
 	public synchronized void add(WeightedHost wh) {
 		scores.add(wh);
+		weightedHosts.put(wh.getHost(), wh);
 		sum += wh.getScore();
 	}
 	
 	public synchronized void changeScore(WeightedHost wh, double newScore) {
 		scores.remove(wh);
 		sum -= wh.getScore();
-		scores.add(new WeightedHost(wh.getHost(), newScore));
+		WeightedHost nwh = new WeightedHost(wh.getHost(), newScore);
+		weightedHosts.put(wh.getHost(), nwh);
+		scores.add(nwh);
 		sum += newScore;
 	}
 
 	public synchronized double remove(WeightedHost wh) {
 		scores.remove(wh);
+		weightedHosts.remove(wh.getHost());
 		return wh.getScore();
+	}
+	
+	public WeightedHost findHost(BoundContact bc) {
+		return (WeightedHost) weightedHosts.get(bc);
 	}
 
 	public Iterator iterator() {
