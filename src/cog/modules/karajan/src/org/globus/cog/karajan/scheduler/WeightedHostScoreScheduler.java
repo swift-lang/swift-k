@@ -313,9 +313,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 
 	private void factorMultiple(Contact[] contacts, double factor) {
 		for (int i = 0; i < contacts.length; i++) {
-			WeightedHost wh = sorted.findHost((BoundContact) contacts[i]);
-			multiplyScore(wh, factor);
+			BoundContact bc = (BoundContact) contacts[i];
+			WeightedHost wh = sorted.findHost(bc);
+			if (wh != null) {
+				multiplyScore(wh, factor);
+			}
 		}
 	}
-
 }
