@@ -378,7 +378,8 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 				continue;
 			}
 			if (id instanceof ChannelIdentifier) {
-				channels.add(new Arg.Channel(id.getName()));
+				ChannelIdentifier ci = (ChannelIdentifier) id;
+				channels.add(new Arg.Channel(ci.getName(), ci.isCommutative()));
 			}
 			else if (id instanceof OptionalArgument) {
 				optional.add(id.getName());
@@ -420,7 +421,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 	public String[] getArguments() {
 		if (arguments == null) {
 			if (A_ARGUMENTS.isPresentStatic(this)) {
-				arguments = (String[]) TypeUtil.toStringArray(A_ARGUMENTS.getStatic(this));
+				arguments = TypeUtil.toStringArray(A_ARGUMENTS.getStatic(this));
 			}
 			else {
 				arguments = STRING_ARRAY;
@@ -432,7 +433,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 	public String[] getOptargs() {
 		if (optargs == null) {
 			if (A_OPTARGS.isPresentStatic(this)) {
-				optargs = (String[]) TypeUtil.toStringArray(A_OPTARGS.getStatic(this));
+				optargs = TypeUtil.toStringArray(A_OPTARGS.getStatic(this));
 			}
 			else {
 				optargs = STRING_ARRAY;
