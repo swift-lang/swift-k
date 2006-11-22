@@ -11,6 +11,7 @@ package org.globus.cog.karajan.workflow.nodes;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -23,7 +24,7 @@ import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class RestartOnErrorNode extends PartialArgumentsContainer {
 	public static final Logger logger = Logger.getLogger(RestartOnErrorNode.class);
-	
+
 	public static final Arg A_MATCH = new Arg.Positional("match", 0);
 	public static final Arg A_TIMES = new Arg.Positional("times", 1);
 
@@ -67,7 +68,7 @@ public class RestartOnErrorNode extends PartialArgumentsContainer {
 		}
 		super.notificationEvent(e);
 	}
-	
+
 	protected boolean matches(VariableStack stack, FailureNotificationEvent e) {
 		if (!stack.currentFrame().isDefined(MATCH)) {
 			return false;
@@ -77,7 +78,7 @@ public class RestartOnErrorNode extends PartialArgumentsContainer {
 			if (match instanceof List) {
 				Iterator i = ((List) match).iterator();
 				while (i.hasNext()) {
-					if (matches(TypeUtil.toString(i.next()), e)){
+					if (matches(TypeUtil.toString(i.next()), e)) {
 						return true;
 					}
 				}
@@ -88,8 +89,16 @@ public class RestartOnErrorNode extends PartialArgumentsContainer {
 			}
 		}
 	}
-	
+
 	protected boolean matches(String str, FailureNotificationEvent e) {
-		return e.getMessage().matches(str);
+		String msg = e.getMessage();
+		if (msg == null) {
+			msg = "";
+		}
+		boolean matches = Pattern.compile(str, Pattern.DOTALL).matcher(msg).matches();
+		if (!matches && logger.isDebugEnabled()) {
+			logger.debug("Failure does not match: \"" + msg + "\" vs. " + str);
+		}
+		return matches;
 	}
 }
