@@ -167,9 +167,23 @@ public class Misc extends FunctionsCollection {
 			prefix = TypeUtil.toString(OA_CONTEXT.getValue(stack));
 		}
 		synchronized (Misc.class) {
-			return prefix + (UIDIndex++) + suffix;
+			return prefix + alphanum(UIDIndex++) + suffix;
 		}
 	}
+	
+	public static final String codes = "0123456789abcdefghijklmnopqrstuvxyz";
+	
+	protected String alphanum(long val) {
+		StringBuffer sb = new StringBuffer();
+		int base = codes.length();
+		while (val > 0) {
+			int c = (int) (val % base);
+			sb.append(codes.charAt(c));
+			val = val / base;
+		}
+		return sb.toString();
+	}
+	
 
 	public static final Arg PA_NAME = new Arg.Positional("name");
 	public static final Arg.Channel CA_PROPERTIES = new Arg.Channel("properties");
