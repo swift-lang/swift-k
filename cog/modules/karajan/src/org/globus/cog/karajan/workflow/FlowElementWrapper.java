@@ -37,7 +37,8 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 	private Map staticArguments;
 	private String type;
 	private boolean peerInitialized;
-	private static AdaptiveMap.Context pc = new AdaptiveMap.Context(), sac = new AdaptiveMap.Context();
+	private static AdaptiveMap.Context pc = new AdaptiveMap.Context(),
+			sac = new AdaptiveMap.Context();
 	private static AdaptiveArrayList.Context ec = new AdaptiveArrayList.Context();
 
 	public FlowElementWrapper() {
@@ -57,7 +58,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 			peer.addElement(element);
 		}
 	}
-	
+
 	public void replaceElement(int index, FlowElement element) {
 		if (peer == null) {
 			elements.set(index, element);
@@ -66,7 +67,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 			peer.replaceElement(index, element);
 		}
 	}
-	
+
 	public void removeElement(int index) {
 		if (peer == null) {
 			elements.remove(index);
@@ -159,7 +160,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 			return peer.propertyNames();
 		}
 	}
-	
+
 	public void addStaticArgument(String name, Object value) {
 		if (peer == null) {
 			staticArguments.put(name.toLowerCase(), value);
@@ -172,7 +173,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 	public void setStaticArguments(Map args) {
 		throw new UnsupportedOperationException("setStaticArguments");
 	}
-	
+
 	public Map getStaticArguments() {
 		if (peer == null) {
 			return staticArguments;
@@ -283,20 +284,26 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 	}
 
 	public String toString() {
-		String tmp = getElementType();
+		StringBuffer sb = new StringBuffer();
+		sb.append(getElementType());
 		if (hasProperty("annotation")) {
-			tmp = tmp + " (" + getProperty("annotation") + ") ";
+            sb.append(" (");
+			sb.append(getProperty("annotation"));
+            sb.append(") ");
 		}
 		Object fileName = FlowNode.getTreeProperty(FILENAME, this);
 		if (fileName instanceof String) {
 			String fn = (String) fileName;
 			fn = fn.substring(1 + fn.lastIndexOf('/'));
-			tmp = tmp + " @ " + fn;
+			sb.append(" @ ");
+            sb.append(fn);
+
+			if (hasProperty(LINE)) {
+				sb.append(", line: "); 
+                sb.append(getProperty(LINE));
+			}
 		}
-		if (hasProperty(LINE)) {
-			tmp = tmp + ", line: " + getProperty(LINE);
-		}
-		return tmp;
+		return sb.toString();
 	}
 
 	public boolean isSimple() {
