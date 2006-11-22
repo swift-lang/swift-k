@@ -81,6 +81,7 @@
 	
 	<export name="time"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Time"/></export>
 	<export name="cacheon"><elementDef classname="org.globus.cog.karajan.workflow.nodes.CacheOn"/></export>
+	<export name="once"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Once"/></export>
     
     <export name="checkpoint"><elementDef classname="org.globus.cog.karajan.workflow.nodes.CheckpointNode"/></export>
 	<export name="wait"><elementDef classname="org.globus.cog.karajan.workflow.nodes.WaitNode"/></export>
