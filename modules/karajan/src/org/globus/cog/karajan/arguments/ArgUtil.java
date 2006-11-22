@@ -102,7 +102,7 @@ public final class ArgUtil {
 	}
 
 	public static void createChannel(VariableStack stack, Arg.Channel channel) {
-		createChannel(stack, channel, new VariableArgumentsImpl());
+		createChannel(stack, channel, new VariableArgumentsImpl(channel.isCommutative()));
 	}
 
 	public static void removeChannel(VariableStack stack, Arg.Channel channel) {
