@@ -222,7 +222,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 	public void statusChanged(StatusEvent e) {
 		try {
 			int status = e.getStatus().getStatusCode();
-			if (!((status == Status.COMPLETED) || (status == Status.FAILED) || (status == Status.CANCELED))) {
+			if (!e.getStatus().isTerminal()) {
 				return;
 			}
 			VariableStack stack = (VariableStack) tasks.get(e.getSource());
