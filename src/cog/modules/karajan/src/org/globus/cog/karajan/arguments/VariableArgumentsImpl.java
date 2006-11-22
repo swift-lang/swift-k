@@ -29,18 +29,27 @@ public class VariableArgumentsImpl implements VariableArguments {
 
 	private static int cid = 0;
 	private final int id = cid++;
+	
+	private final boolean commutative;
 
 	private Set listeners;
 
 	public VariableArgumentsImpl() {
+		this(false);
+	}
+	
+	public VariableArgumentsImpl(boolean commutative) {
+		this.commutative = commutative;
 	}
 	
 	protected VariableArgumentsImpl(List vargs) {
+		this();
 		this.vargs = vargs;
 	}
 
 	public VariableArgumentsImpl(VariableArguments vargs) {
 		this.vargs = new ArrayList(vargs.getAll());
+		this.commutative = vargs.isCommutative();
 	}
 
 	public synchronized void merge(VariableArguments args) {
@@ -242,6 +251,6 @@ public class VariableArgumentsImpl implements VariableArguments {
 	}
 
 	public boolean isCommutative() {
-		return false;
+		return commutative;
 	}
 }
