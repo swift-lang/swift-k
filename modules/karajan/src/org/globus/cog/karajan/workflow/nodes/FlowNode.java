@@ -457,20 +457,26 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public String toString() {
-		String tmp = getTextualName();
+		StringBuffer sb = new StringBuffer();
+		sb.append(getTextualName());
 		if (hasProperty(ANNOTATION)) {
-			tmp = tmp + " (" + getStringProperty(ANNOTATION) + ") ";
+			sb.append(" (");
+			sb.append(getStringProperty(ANNOTATION));
+			sb.append(") ");
 		}
 		Object fileName = getTreeProperty(FILENAME, this);
 		if (fileName instanceof String) {
 			String fn = (String) fileName;
 			fn = fn.substring(1 + fn.lastIndexOf('/'));
-			tmp = tmp + " @ " + fn;
+			sb.append(" @ ");
+			sb.append(fn);
+
+			if (hasProperty(LINE)) {
+				sb.append(", line: ");
+				sb.append(getProperty(LINE));
+			}
 		}
-		if (hasProperty(LINE)) {
-			tmp = tmp + ", line: " + getProperty(LINE);
-		}
-		return tmp;
+		return sb.toString();
 	}
 
 	protected String getTextualName() {
