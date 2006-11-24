@@ -2,6 +2,8 @@
 
 *** Fixed sort() to not ignore descending= and to not convert
     values to strings before performing the sort.
+	
+*** Also fixed ignoreErrors to do DOTALL matching
 
 (11/22/2006)
 
