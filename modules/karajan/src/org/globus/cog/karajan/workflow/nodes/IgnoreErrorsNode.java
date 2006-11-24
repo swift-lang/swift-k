@@ -16,7 +16,7 @@ import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
-public class IgnoreErrorsNode extends PartialArgumentsContainer {
+public class IgnoreErrorsNode extends AbstractRegexpFailureHandler {
 	public static final Arg A_MATCH = new Arg.Optional("match");
 	
 	private static final String MATCH = "##match";
@@ -43,7 +43,7 @@ public class IgnoreErrorsNode extends PartialArgumentsContainer {
 			else {
 				String match = (String) stack.currentFrame().getVar(MATCH);
 
-				if (((FailureNotificationEvent) e).getMessage().matches(match)) {
+				if (matches(match, (FailureNotificationEvent) e)) {
 					e = new NotificationEvent(e.getFlowElement(),
 							NotificationEventType.EXECUTION_COMPLETED, e.getStack());
 				}

@@ -11,7 +11,6 @@ package org.globus.cog.karajan.workflow.nodes;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -22,7 +21,7 @@ import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
-public class RestartOnErrorNode extends PartialArgumentsContainer {
+public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 	public static final Logger logger = Logger.getLogger(RestartOnErrorNode.class);
 
 	public static final Arg A_MATCH = new Arg.Positional("match", 0);
@@ -88,17 +87,5 @@ public class RestartOnErrorNode extends PartialArgumentsContainer {
 				return matches(TypeUtil.toString(match), e);
 			}
 		}
-	}
-
-	protected boolean matches(String str, FailureNotificationEvent e) {
-		String msg = e.getMessage();
-		if (msg == null) {
-			msg = "";
-		}
-		boolean matches = Pattern.compile(str, Pattern.DOTALL).matcher(msg).matches();
-		if (!matches && logger.isDebugEnabled()) {
-			logger.debug("Failure does not match: \"" + msg + "\" vs. " + str);
-		}
-		return matches;
 	}
 }
