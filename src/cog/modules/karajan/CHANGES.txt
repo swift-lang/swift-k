@@ -1,3 +1,8 @@
+(11/24/2006)
+
+*** Fixed sort() to not ignore descending= and to not convert
+    values to strings before performing the sort.
+
 (11/22/2006)
 
 *** Added once(). It works like cacheOn(), but it is guaranteed
