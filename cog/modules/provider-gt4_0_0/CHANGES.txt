@@ -1,3 +1,7 @@
+(11/24/2006)
+
+*** Set status to failed if the exit code is not 0
+
 (10/18/2006)
 
 *** Attempt to fix handling of status notifications. There is some
