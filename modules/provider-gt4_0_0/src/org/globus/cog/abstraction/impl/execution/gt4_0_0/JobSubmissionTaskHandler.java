@@ -303,17 +303,21 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, GramJobLi
 			newStatus.setStatusCode(Status.FAILED);
 			int errorCode = job.getError();
 			if (job.getFault() != null) {
-				newStatus.setMessage("#" + errorCode + " " + job.getFault().getDescription()[0]);
-				newStatus.setException((Exception) job.getFault().getCause());
+				failTask("#" + errorCode + " " + job.getFault().getDescription()[0], (Exception) job.getFault().getCause());
 			}
 			else {
-				newStatus.setMessage("#" + errorCode);
+				failTask("#" + errorCode + " " + job.getFault().getDescription()[0], null);
 			}
 			this.task.setStatus(newStatus);
 			cleanup();
 		}
 		else if (state.equals(StateEnumeration.Done)) {
-			this.task.setStatus(Status.COMPLETED);
+			if (job.getExitCode() != 0) {
+				failTask("Job failed with an exit code of " + job.getExitCode(), null);
+			}
+			else {
+				this.task.setStatus(Status.COMPLETED);
+			}
 			cleanup();
 		}
 		else if (state.equals(StateEnumeration.Suspended)) {
@@ -325,6 +329,16 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, GramJobLi
 		else {
 			logger.debug("Unknown status: " + state.getValue());
 		}
+	}
+	
+	private void failTask(String message, Exception exception) {
+		Status newStatus = new StatusImpl();
+		Status oldStatus = this.task.getStatus();
+		newStatus.setPrevStatusCode(oldStatus.getStatusCode());
+		newStatus.setStatusCode(Status.FAILED);
+		newStatus.setMessage(message);
+		newStatus.setException(exception);
+		this.task.setStatus(newStatus);
 	}
 
 	private void cleanup() {
