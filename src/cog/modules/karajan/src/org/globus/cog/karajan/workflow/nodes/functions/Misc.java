@@ -23,6 +23,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -170,9 +171,9 @@ public class Misc extends FunctionsCollection {
 			return prefix + alphanum(UIDIndex++) + suffix;
 		}
 	}
-	
+
 	public static final String codes = "0123456789abcdefghijklmnopqrstuvxyz";
-	
+
 	protected String alphanum(long val) {
 		StringBuffer sb = new StringBuffer();
 		int base = codes.length();
@@ -183,7 +184,6 @@ public class Misc extends FunctionsCollection {
 		}
 		return sb.toString();
 	}
-	
 
 	public static final Arg PA_NAME = new Arg.Positional("name");
 	public static final Arg.Channel CA_PROPERTIES = new Arg.Channel("properties");
@@ -430,27 +430,54 @@ public class Misc extends FunctionsCollection {
 		setArguments("sys_sort", new Arg[] { OA_DESCENDING, Arg.VARGS });
 	}
 
+	public static final Comparator INVERSE_COMPARATOR = new Comparator() {
+		public int compare(Object o1, Object o2) {
+			Comparable c2 = (Comparable) o2;
+			// c1.compareTo(o2) == -c2.compareTo(o1)
+			return c2.compareTo(o1);
+		}
+	};
+
 	public Object sys_sort(VariableStack stack) throws ExecutionException {
 		boolean descending = TypeUtil.toBoolean(OA_DESCENDING.getValue(stack));
 		Object[] args = Arg.VARGS.asArray(stack);
 		ArrayList ret = new ArrayList();
 		if (args.length > 1) {
 			for (int i = 0; i < args.length; i++) {
-				String value = TypeUtil.toString(args[i]);
-				ret.add(value);
+				ret.add(args[i]);
 			}
 			Object[] array = ret.toArray();
-			Arrays.sort(array);
+			try {
+				if (descending) {
+					Arrays.sort(array, INVERSE_COMPARATOR);
+				}
+				else {
+					Arrays.sort(array);
+				}
+			}
+			catch (ClassCastException e) {
+				throw new ExecutionException("Cannot sort items of different types");
+			}
 			return array;
 		}
 		else if (args.length == 1) {
 			Iterator i = TypeUtil.toIterator(args[0]);
 			while (i.hasNext()) {
-				String value = TypeUtil.toString(i.next());
-				ret.add(value);
+				ret.add(i.next());
 			}
 			Object[] array = ret.toArray();
 			Arrays.sort(array);
+			try {
+				if (descending) {
+					Arrays.sort(array, INVERSE_COMPARATOR);
+				}
+				else {
+					Arrays.sort(array);
+				}
+			}
+			catch (ClassCastException e) {
+				throw new ExecutionException("Cannot sort items of different types");
+			}
 			return Arrays.asList(array);
 		}
 		else {
