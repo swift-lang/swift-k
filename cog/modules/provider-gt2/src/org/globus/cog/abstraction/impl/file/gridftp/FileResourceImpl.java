@@ -9,14 +9,14 @@
  */
 package org.globus.cog.abstraction.impl.file.gridftp;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
-import org.globus.cog.abstraction.impl.file.GeneralException;
+import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.impl.file.UnixPermissionsImpl;
@@ -24,6 +24,9 @@ import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.ftp.MlsxEntry;
+import org.globus.ftp.exception.ClientException;
+import org.globus.ftp.exception.FTPException;
+import org.globus.ftp.exception.ServerException;
 
 public class FileResourceImpl extends
 		org.globus.cog.abstraction.impl.file.gridftp.old.FileResourceImpl {
@@ -40,23 +43,23 @@ public class FileResourceImpl extends
 	}
 
 	public void start() throws IllegalHostException, InvalidSecurityContextException,
-			GeneralException {
+			FileResourceException, IOException {
 		super.start();
 		try {
 			getGridFTPClient().quote("HELP MLSD");
 		}
-		catch (Exception e) {
+		catch (ServerException e) {
 			if (e.getMessage().indexOf("Unknown command MLSD") != -1) {
 				old = true;
 			}
 			else {
-				throw new GeneralException(
+				throw new FileResourceException(
 						"Unexpected exception caught while querying server capabilities", e);
 			}
 		}
 	}
 
-	public Collection list() throws GeneralException {
+	public Collection list() throws FileResourceException, IOException {
 		if (old) {
 			return super.list();
 		}
@@ -74,8 +77,8 @@ public class FileResourceImpl extends
 				}
 				return list;
 			}
-			catch (Exception e) {
-				throw new GeneralException("Could not get list of files from server", e);
+			catch (FTPException e) {
+				throw new FileResourceException("Could not get list of files from server", e);
 			}
 		}
 	}
@@ -112,7 +115,7 @@ public class FileResourceImpl extends
 		return gfi;
 	}
 
-	public Collection list(String directory) throws DirectoryNotFoundException, GeneralException {
+	public Collection list(String directory) throws FileResourceException, IOException {
 		if (old) {
 			return super.list(directory);
 		}
@@ -130,14 +133,14 @@ public class FileResourceImpl extends
 				}
 				return list;
 			}
-			catch (Exception e) {
-				throw new GeneralException("Could not get list of files in " + directory
+			catch (FTPException e) {
+				throw new FileResourceException("Could not get list of files in " + directory
 						+ "from server", e);
 			}
 		}
 	}
 
-	public boolean isDirectory(String dirName) throws GeneralException {
+	public boolean isDirectory(String dirName) throws FileResourceException, IOException {
 		if (old) {
 			return super.isDirectory(dirName);
 		}
@@ -150,12 +153,15 @@ public class FileResourceImpl extends
 				MlsxEntry me = this.getGridFTPClient().mlst(dirName);
 				return me.get("type").endsWith("dir");
 			}
-			catch (Exception e) {
+			catch (ClientException e) {
+				throw new FileResourceException(e);
+			}
+			catch (ServerException e) {
                 if (e.getMessage() != null && e.getMessage().indexOf("No such file or directory") != -1) {
                     return false;
                 }
                 else {
-                    throw new GeneralException(e.getMessage(), e);
+                    throw new FileResourceException(e);
                 }
 			}
 		}
