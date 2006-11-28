@@ -4,25 +4,20 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-
-    
 package org.globus.cog.abstraction.impl.file;
 
-
 /**
- * File not found exception to be thrown when the file being accessed does not exist
+ * File not found exception to be thrown when the file being accessed does not
+ * exist
  */
-public class FileNotFoundException extends FileResourceException
-{
-	/** Set a string message to the exception */
-    public FileNotFoundException(String message)
-    {
+public class FileNotFoundException extends FileResourceException {
+    /** Set a string message to the exception */
+    public FileNotFoundException(String message) {
         super(message);
     }
 
-	/** Set a message and throwable for the exception */
-    public FileNotFoundException(String message, Throwable parent)
-    {
+    /** Set a message and throwable for the exception */
+    public FileNotFoundException(String message, Throwable parent) {
         super(message, parent);
     }
 }
