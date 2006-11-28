@@ -1,3 +1,12 @@
+(11/28/2006)
+
+*** Cleaned up file resources:
+      - removed GeneralException and replaced it with FileResourceExcepion
+	    and IOException (to distinguish between protocol level errors
+		and communication problems)
+	  - added an AbstractFileResource class and moved most of the common
+	    things in the implementations there.
+
 (10/18/2006)
 
 *** Added a MKDIRS file operation (it creates a full directory path)
