@@ -11,19 +11,19 @@ package org.globus.cog.abstraction.impl.file;
 
 public class FileResourceException extends Exception {
 
-	public FileResourceException() {
-		super();	
-	}
+    public FileResourceException() {
+        super();
+    }
 
-	public FileResourceException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public FileResourceException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public FileResourceException(String message) {
-		super(message);
-	}
+    public FileResourceException(String message) {
+        super(message);
+    }
 
-	public FileResourceException(Throwable cause) {
-		super(cause);
-	}
+    public FileResourceException(Throwable cause) {
+        super(cause);
+    }
 }

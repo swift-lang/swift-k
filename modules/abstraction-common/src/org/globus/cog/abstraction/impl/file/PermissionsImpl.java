@@ -9,7 +9,7 @@ package org.globus.cog.abstraction.impl.file;
 import org.globus.cog.abstraction.interfaces.Permissions;
 
 /**
- * Class to set and get Permissions for Grid File objects 
+ * Class to set and get Permissions for Grid File objects
  */
 public class PermissionsImpl implements Permissions {
 
@@ -52,8 +52,8 @@ public class PermissionsImpl implements Permissions {
 
     /** return a string representation of the mode. Pattern 777 */
     public String toString() {
-        String mode =
-            getVal(getRead()) + getVal(getWrite()) + getVal(getExecute());
+        String mode = getVal(getRead()) + getVal(getWrite())
+                + getVal(getExecute());
         return String.valueOf((Integer.parseInt(mode, 2)));
     }
 
@@ -61,7 +61,8 @@ public class PermissionsImpl implements Permissions {
     private String getVal(boolean value) {
         if (value == true) {
             return "1";
-        } else {
+        }
+        else {
             return "0";
         }
 
