@@ -6,20 +6,21 @@
 
 package org.globus.cog.abstraction.impl.fileTransfer;
 
+import java.io.IOException;
+
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.file.FileResourceCache;
-import org.globus.cog.abstraction.impl.file.GeneralException;
-import org.globus.cog.abstraction.impl.file.IllegalHostException;
+import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.Service;
 
 public class CachingDelegatedFileTransferHandler extends DelegatedFileTransferHandler {
 
 	protected FileResource startResource(Service service) throws InvalidProviderException,
-			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
-			GeneralException {
+			ProviderMethodException, InvalidSecurityContextException, FileResourceException,
+			IOException {
 		return FileResourceCache.getDefault().getResource(service);
 	}
 
