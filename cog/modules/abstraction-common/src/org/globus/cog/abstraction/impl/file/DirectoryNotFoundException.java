@@ -8,10 +8,11 @@
     
 package org.globus.cog.abstraction.impl.file;
 
+
 /**
  * Directory not found exception to be thrown when the directory being accessed does not exist
  */
-public class DirectoryNotFoundException extends Exception
+public class DirectoryNotFoundException extends FileResourceException
 {
 	/** Set a string message to the exception */
     public DirectoryNotFoundException(String message)
