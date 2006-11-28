@@ -8,10 +8,11 @@
     
 package org.globus.cog.abstraction.impl.file;
 
+
 /**
  * File not found exception to be thrown when the file being accessed does not exist
  */
-public class FileNotFoundException extends Exception
+public class FileNotFoundException extends FileResourceException
 {
 	/** Set a string message to the exception */
     public FileNotFoundException(String message)

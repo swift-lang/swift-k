@@ -9,6 +9,7 @@
  */
 package org.globus.cog.abstraction.impl.file;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -63,8 +64,10 @@ public class FileResourceCache {
 
 	public FileResource getResource(Service service) throws InvalidProviderException,
 			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
-			GeneralException {
-		logger.debug("Got request for resource for " + service);
+			FileResourceException, IOException {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Got request for resource for " + service);
+		}
 		checkTimer();
 		ServiceContact contact = service.getServiceContact();
 		FileResource fileResource;
@@ -78,7 +81,9 @@ public class FileResourceCache {
 						inUse.add(fileResource);
 						order.remove(fileResource);
 						releaseTimes.remove(fileResource);
-						logger.debug("Found cached resource");
+						if (logger.isDebugEnabled()) {
+							logger.debug("Found cached resource");
+						}
 						return fileResource;
 					}
 				}
@@ -95,9 +100,11 @@ public class FileResourceCache {
 
 	private FileResource newResource(Service service) throws InvalidProviderException,
 			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
-			GeneralException {
+			FileResourceException, IOException {
 		// TODO Are file resources reentrant?
-		logger.debug("Instantiating new resource for " + service);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Instantiating new resource for " + service);
+		}
 		String provider = service.getProvider();
 		ServiceContact contact = service.getServiceContact();
 		if (provider == null) {
@@ -122,7 +129,7 @@ public class FileResourceCache {
 		inUse.add(fileResource);
 		return fileResource;
 	}
-	
+
 	private Throwable lastRelease;
 
 	public void releaseResource(FileResource resource) {
@@ -130,7 +137,9 @@ public class FileResourceCache {
 			return;
 		}
 		synchronized (this) {
-			logger.debug("Releasing resource for " + resource.getServiceContact());
+			if (logger.isDebugEnabled()) {
+				logger.debug("Releasing resource for " + resource.getServiceContact());
+			}
 			/*
 			 * if (!inUse.contains(resource)) { throw new
 			 * RuntimeException("Attempted to release resource that is not in
@@ -161,14 +170,21 @@ public class FileResourceCache {
 				resources.remove(resource);
 				stopper.addResource(resource);
 			}
+			else {
+				if (logger.isDebugEnabled()) {
+					logger.debug("removeResource called with resource not in set");
+				}
+			}
 		}
 	}
 
 	private void checkIdleResourceCount() {
 		while (order.size() > maxIdleResources) {
 			FileResource fileResource = (FileResource) order.removeFirst();
-			logger.debug("Idle resource count exceeded. Removing resource for "
-					+ fileResource.getServiceContact());
+			if (logger.isDebugEnabled()) {
+				logger.debug("Idle resource count exceeded. Removing resource for "
+						+ fileResource.getServiceContact());
+			}
 			removeResource(fileResource);
 		}
 	}
@@ -208,8 +224,10 @@ public class FileResourceCache {
 			if (last < threshold) {
 				order.removeFirst();
 				releaseTimes.remove(resource);
-				logger.debug("Maximum idle time exceeded. Removing resource for "
-						+ resource.getServiceContact());
+				if (logger.isDebugEnabled()) {
+					logger.debug("Maximum idle time exceeded. Removing resource for "
+							+ resource.getServiceContact());
+				}
 				removeResource(resource);
 			}
 		} while (last < threshold);
@@ -238,6 +256,7 @@ public class FileResourceCache {
 
 		public void addResource(FileResource fr) {
 			synchronized (this) {
+				System.err.println("Scheduling " + fr + " for closing");
 				resources.add(fr);
 				if (!running) {
 					running = true;
@@ -253,9 +272,11 @@ public class FileResourceCache {
 			FileResource fr = nextResource();
 			while (fr != null) {
 				try {
+					System.err.println("Stopping " + fr);
 					fr.stop();
+					System.err.println("Stopped " + fr);
 				}
-				catch (GeneralException e) {
+				catch (Exception e) {
 					logger.warn("Failed to stop resource", e);
 				}
 				fr = nextResource();
