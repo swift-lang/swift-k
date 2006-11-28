@@ -9,7 +9,7 @@ package org.globus.cog.abstraction.impl.file;
 /**
  * IllegalHostException is thrown 
  */
-public class IllegalHostException extends Exception
+public class IllegalHostException extends FileResourceException
 {
 	/** Assign message for the exception */
     public IllegalHostException(String message)

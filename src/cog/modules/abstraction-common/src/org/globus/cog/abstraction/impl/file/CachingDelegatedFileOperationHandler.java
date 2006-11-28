@@ -9,6 +9,8 @@
  */
 package org.globus.cog.abstraction.impl.file;
 
+import java.io.IOException;
+
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -24,7 +26,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
 	private FileResource resource;
-	
+
 	public synchronized void submit(Task task) throws IllegalSpecException,
 			InvalidSecurityContextException, InvalidServiceContactException,
 			TaskSubmissionException {
@@ -64,9 +66,9 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
 
 	protected FileResource getResource(Service service) throws InvalidProviderException,
 			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
-			GeneralException {
+			FileResourceException, IOException {
 		resource = FileResourceCache.getDefault().getResource(service);
-		return resource; 
+		return resource;
 	}
 
 	public void stopResources() {
@@ -78,7 +80,7 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
 	}
 
 	protected Object execute(FileResource fileResource, FileOperationSpecification spec)
-			throws DirectoryNotFoundException, FileNotFoundException, GeneralException {
+			throws FileResourceException, IOException {
 		Object ret;
 		try {
 			ret = super.execute(fileResource, spec);
