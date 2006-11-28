@@ -10,7 +10,7 @@ import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
 
 /**
- * GridFileImpl contains information pertaining to a file. 
+ * GridFileImpl contains information pertaining to a file.
  */
 public class GridFileImpl implements GridFile {
 
@@ -195,16 +195,16 @@ public class GridFileImpl implements GridFile {
         buf.append(getSize() + " ");
         buf.append(getLastModified() + " ");
         switch (fileType) {
-            case DIRECTORY :
+            case DIRECTORY:
                 buf.append("directory");
                 break;
-            case FILE :
+            case FILE:
                 buf.append("file");
                 break;
-            case SOFTLINK :
+            case SOFTLINK:
                 buf.append("softlink");
                 break;
-            default :
+            default:
                 buf.append("unknown type");
         }
         buf.append(" " + getMode());
