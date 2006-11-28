@@ -28,8 +28,7 @@ import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileNotFoundException;
-import org.globus.cog.abstraction.impl.file.GeneralException;
-import org.globus.cog.abstraction.impl.file.IllegalHostException;
+import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
@@ -180,8 +179,8 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 	}
 
 	protected FileResource prepareService(Service service) throws InvalidProviderException,
-			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
-			GeneralException {
+			ProviderMethodException, InvalidSecurityContextException, FileResourceException,
+			IOException {
 		if (isLocal(service)) {
 			return null;
 		}
@@ -214,9 +213,8 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 	 *             if a file is being transfered and it was not found at the
 	 *             source
 	 */
-	protected File doSource(Service service, File localDestination) throws GeneralException,
-			IOException, DirectoryNotFoundException, FileNotFoundException,
-			InvalidProviderException, ProviderMethodException {
+	protected File doSource(Service service, File localDestination) throws FileResourceException,
+			IOException, InvalidProviderException, ProviderMethodException {
 		if (isLocal(service)) {
 			return new File(spec.getSource());
 		}
@@ -230,7 +228,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 						localDestination.mkdir();
 					}
 					else if (localDestination.exists() && !localDestination.isDirectory()) {
-						throw new GeneralException(
+						throw new FileResourceException(
 								"A directory transfer was requested, but the destination ("
 										+ localDestination.getAbsolutePath()
 										+ ") already exists and is a file");
@@ -280,34 +278,30 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 	 *            source
 	 * @param service
 	 *            the service to upload to
+	 * @throws InvalidSecurityContextException
 	 */
-	protected void doDestination(File localSource, Service service) throws GeneralException,
-			IOException, DirectoryNotFoundException, FileNotFoundException,
-			InvalidProviderException, ProviderMethodException {
+	protected void doDestination(File localSource, Service service) throws FileResourceException,
+			IOException, InvalidProviderException, ProviderMethodException,
+			InvalidSecurityContextException {
 		if (isLocal(service)) {
 			FileResource fr = AbstractionFactory.newFileResource("local");
+			fr.start();
 			try {
-				fr.start();
-				try {
-					if (localSource.isDirectory()) {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Directory transfer with resource local->local");
-						}
-						fr.putDirectory(localSource.getAbsolutePath(), spec.getDestination());
+				if (localSource.isDirectory()) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Directory transfer with resource local->local");
 					}
-					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Directory transfer with resource local->local");
-						}
-						fr.putFile(localSource.getAbsolutePath(), spec.getDestination());
-					}
+					fr.putDirectory(localSource.getAbsolutePath(), spec.getDestination());
 				}
-				finally {
-					fr.stop();
+				else {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Directory transfer with resource local->local");
+					}
+					fr.putFile(localSource.getAbsolutePath(), spec.getDestination());
 				}
 			}
-			catch (Exception e) {
-				throw new GeneralException("Transfer failed: " + e.getMessage(), e);
+			finally {
+				fr.stop();
 			}
 		}
 		else {
@@ -331,24 +325,19 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 				if (logger.isDebugEnabled()) {
 					logger.debug("File transfer with handler local->remote");
 				}
-				transferWithHandler(service.getProvider(), LOCAL_SERVICE, service,
-						localSource, spec.getDestination());
+				transferWithHandler(service.getProvider(), LOCAL_SERVICE, service, localSource,
+						spec.getDestination());
 			}
 		}
 	}
 
 	protected void transferWithHandler(String provider, Service sourceService,
-			Service destinationService, Object source, Object destination) throws GeneralException {
+			Service destinationService, Object source, Object destination)
+			throws FileResourceException, InvalidProviderException, ProviderMethodException {
 		TaskHandler th;
-		try {
-			th = AbstractionFactory.newFileTransferTaskHandler(provider);
-		}
-		catch (Exception e) {
-			// since we checked this one before, this should not be
-			// happening
-			throw new GeneralException("Could not instantiate transfer handler: " + e.getMessage(),
-					e);
-		}
+
+		th = AbstractionFactory.newFileTransferTaskHandler(provider);
+
 		try {
 			Task t = new TaskImpl();
 			t.setType(Task.FILE_TRANSFER);
@@ -364,9 +353,9 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 				tspec.setSource((String) source);
 			}
 			else {
-				throw new GeneralException("Invalid source: " + source);
+				throw new IllegalArgumentException("Invalid source: " + source);
 			}
-			
+
 			if (destination instanceof File) {
 				tspec.setDestinationDirectory(((File) destination).getParentFile().getAbsolutePath());
 				tspec.setDestinationFile(((File) destination).getName());
@@ -375,7 +364,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 				tspec.setDestination((String) destination);
 			}
 			else {
-				throw new GeneralException("Invalid destination: " + destination);
+				throw new IllegalArgumentException("Invalid destination: " + destination);
 			}
 
 			Enumeration e = spec.getAllAttributes();
@@ -400,7 +389,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 			}
 		}
 		catch (Exception e) {
-			throw new GeneralException("Could not transfer file: " + e.getMessage(), e);
+			throw new FileResourceException("Could not transfer file: " + e.getMessage(), e);
 		}
 	}
 
@@ -417,8 +406,8 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 	}
 
 	protected FileResource startResource(Service service) throws InvalidProviderException,
-			ProviderMethodException, IllegalHostException, InvalidSecurityContextException,
-			GeneralException {
+			ProviderMethodException, InvalidSecurityContextException, IOException,
+			FileResourceException {
 		FileResource resource;
 		resource = AbstractionFactory.newFileResource(service.getProvider().trim());
 		resource.setServiceContact(service.getServiceContact());
@@ -455,13 +444,12 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 						cleanTemporaries(intermediate);
 					}
 				}
+				stopResources();
 				transferCompleted();
 			}
 			catch (Exception e) {
-				transferFailed(e);
-			}
-			finally {
 				stopResources();
+				transferFailed(e);
 			}
 		}
 	}
@@ -515,18 +503,18 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler, Runna
 			transferFailed(se);
 			return;
 		}
-        if (spec.getSourceOffset() != FileTransferSpecification.OFFSET_FILE_START) {
-            urlCopy.setSourceFileOffset(spec.getSourceOffset());
-        }
-        if (spec.getDestinationOffset() != FileTransferSpecification.OFFSET_FILE_START) {
-            urlCopy.setDestinationOffset(spec.getDestinationOffset());
-        }
-        if (spec.getSourceLength() != FileTransferSpecification.LENGTH_ENTIRE_FILE) {
-            urlCopy.setSourceFileLength(spec.getSourceLength());
-        }
+		if (spec.getSourceOffset() != FileTransferSpecification.OFFSET_FILE_START) {
+			urlCopy.setSourceFileOffset(spec.getSourceOffset());
+		}
+		if (spec.getDestinationOffset() != FileTransferSpecification.OFFSET_FILE_START) {
+			urlCopy.setDestinationOffset(spec.getDestinationOffset());
+		}
+		if (spec.getSourceLength() != FileTransferSpecification.LENGTH_ENTIRE_FILE) {
+			urlCopy.setSourceFileLength(spec.getSourceLength());
+		}
 		urlCopy.setUseThirdPartyCopy(true);
 		urlCopy.addUrlCopyListener(this);
-        urlCopy.run();
+		urlCopy.run();
 	}
 
 	private void transferFailed(Exception e) {
