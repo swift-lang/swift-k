@@ -6,22 +6,39 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.io.IOException;
 import java.util.Collection;
-import java.util.Enumeration;
 
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
-import org.globus.cog.abstraction.impl.file.FileNotFoundException;
-import org.globus.cog.abstraction.impl.file.GeneralException;
+import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 
 /**
  * This interface provides a list of methods that could be used to - establish
  * and maintain connections with remote file servers - browse directories -
  * upload and download files/directories - view and change access permissions
- *  
+ * 
+ * Given the distributed nature of most of the implementations of this
+ * interface, errors will occur. Most methods implementing the actual operations
+ * throw exceptions that can be divided into two categories:
+ * <ol>
+ * <li> Exceptions that are caused by semantically invalid arguments or states
+ * (FileResourceException)
+ * <li> Exceptions that are caused by improper functioning of the mechanism used
+ * to implement this interface (IOException).
+ * </ol>
+ * 
+ * Implementations should be careful about how exceptions are handled, because
+ * higher level code may rely on the proper distinction between the two.
+ * 
+ * Additionally some distinction should be provided between fatal and non-fatal
+ * errors, where fatal errors are errors which can prevent the resource from
+ * further proper functioning and should be handled by restarting the resource
+ * (Note: this must be done at the interface level)
+ * 
  */
 public interface FileResource extends GridResource {
 
@@ -58,12 +75,16 @@ public interface FileResource extends GridResource {
      */
     public SecurityContext getSecurityContext();
 
-    /** Establishes the connection to the remote service contact */
+    /**
+     * Establishes the connection to the remote service contact
+     * 
+     * @throws FileResourceException
+     */
     public void start() throws IllegalHostException,
-            InvalidSecurityContextException, GeneralException;
+            InvalidSecurityContextException, IOException, FileResourceException;
 
     /** Closes the connection to the file resource */
-    public void stop() throws GeneralException;
+    public void stop() throws IOException, FileResourceException;
 
     /**
      * Returns true if a connection to the service has been made
@@ -72,143 +93,197 @@ public interface FileResource extends GridResource {
 
     /**
      * Changes the current directory to the given directory
+     * 
+     * @throws FileResourceException
      */
-    public void setCurrentDirectory(String directoryName)
-            throws DirectoryNotFoundException, GeneralException;
+    public void setCurrentDirectory(String directoryName) throws IOException,
+            FileResourceException;
 
     /**
      * Returns the current working directory
+     * 
+     * @throws FileResourceException
      */
-    public String getCurrentDirectory() throws GeneralException;
+    public String getCurrentDirectory() throws IOException,
+            FileResourceException;
 
     /**
      * Returns the list of files in the current working directory
+     * 
+     * @throws FileResourceException
      */
-    public Collection list() throws GeneralException;
+    public Collection list() throws IOException, FileResourceException;
 
     /**
      * Returns the list of files in the given directory
+     * 
+     * @throws FileResourceException
      */
     public Collection list(String directoryName)
-            throws DirectoryNotFoundException, GeneralException;
+            throws DirectoryNotFoundException, IOException,
+            FileResourceException;
 
-    /** Creates a new directory with the given name */
-    public void createDirectory(String directoryName) throws GeneralException;
-    
+    /**
+     * Creates a new directory with the given name
+     * 
+     * @throws FileResourceException
+     */
+    public void createDirectory(String directoryName) throws IOException,
+            FileResourceException;
+
     /**
      * Creates the specified directory and all required directories in the
      * hierarchy if they do not exist
+     * 
+     * @throws FileResourceException
      */
-    public void createDirectories(String directoryName) throws GeneralException;
+    public void createDirectories(String directoryName) throws IOException,
+            FileResourceException;
 
     /**
      * Deletes the specified directory. If the "force" flag is true, delete
      * non-empty directory too
+     * 
+     * @throws FileResourceException
      */
     public void deleteDirectory(String directoryName, boolean force)
-            throws DirectoryNotFoundException, GeneralException;
+            throws DirectoryNotFoundException, IOException,
+            FileResourceException;
 
     /**
      * Deletes the given file
+     * 
+     * @throws FileResourceException
      */
-    public void deleteFile(String fileName) throws FileNotFoundException,
-            GeneralException;
+    public void deleteFile(String fileName) throws IOException,
+            FileResourceException;
 
     /**
      * Transfer a <code>remoteFileName</code> file from the file resource and
      * name it as <code>localFileName</code> on the local machine
+     * 
+     * @throws FileResourceException
      */
     public void getFile(String remoteFileName, String localFileName)
-            throws FileNotFoundException, GeneralException;
+            throws IOException, FileResourceException;
 
     /**
      * Upload the <code>localFileName</code> from the local machine to
      * <code>remoteFileName</code> on the file resource
+     * 
+     * @throws FileResourceException
      */
     public void putFile(String localFileName, String remoteFileName)
-            throws FileNotFoundException, GeneralException;
+            throws IOException, FileResourceException;
 
     /**
      * Transfer the entire directory <code>remoteDirectoryName</code> from the
      * file resource and name it as <code>localDirectoryName</code> on the
      * local machine
+     * 
+     * @throws FileResourceException
      */
     public void getDirectory(String remoteDirectoryName,
-            String localDirectoryName) throws DirectoryNotFoundException,
-            GeneralException;
+            String localDirectoryName) throws IOException,
+            FileResourceException;
 
     /**
      * Upload the <code>localDirectoryName</code> directory from the local
      * machine to <code>remoteDirectoryName</code> on the file resource
+     * 
+     * @throws FileResourceException
      */
     public void putDirectory(String localDirectoryName,
-            String remoteDirectoryName) throws DirectoryNotFoundException,
-            GeneralException;
+            String remoteDirectoryName) throws IOException,
+            FileResourceException;
 
     /**
      * Copy an array of files from the file resource into the local file system
+     * 
+     * @throws FileResourceException
      */
     public void getMultipleFiles(String[] remoteFileNames,
-            String[] localFileNames) throws FileNotFoundException,
-            GeneralException;
+            String[] localFileNames) throws IOException, FileResourceException;
 
     /**
      * Copy an array of files from the file resource into the given local
      * directory
+     * 
+     * @throws IOException
+     * @throws FileResourceException
      */
     public void getMultipleFiles(String[] remoteFileNames,
-            String localDirectoryName) throws FileNotFoundException,
-            DirectoryNotFoundException, GeneralException;
+            String localDirectoryName) throws FileResourceException,
+            IOException;
 
     /**
      * Copy an array of files from the local file system into the file resource
+     * 
+     * @throws IOException
+     * @throws FileResourceException
      */
     public void putMultipleFiles(String[] localFileNames,
-            String[] remoteFileNames) throws FileNotFoundException,
-            GeneralException;
+            String[] remoteFileNames) throws FileResourceException, IOException;
 
     /**
      * Copy an array of files from the local file system into the given remote
      * directory on this file resource
+     * 
+     * @throws IOException
+     * @throws FileResourceException
      */
     public void putMultipleFiles(String[] localFileNames,
-            String remoteDirectoryName) throws FileNotFoundException,
-            DirectoryNotFoundException, GeneralException;
+            String remoteDirectoryName) throws FileResourceException,
+            IOException;
 
     /**
      * Rename a file on the file resource
+     * 
+     * @throws IOException
      */
     public void rename(String oldFileName, String newFileName)
-            throws FileNotFoundException, GeneralException;
+            throws FileResourceException, IOException;
 
     /**
      * Changes the permissions on the file if authorized to do so
+     * 
+     * @throws IOException
+     * @throws FileResourceException
      */
     public void changeMode(String fileName, int mode)
-            throws FileNotFoundException, GeneralException;
+            throws FileResourceException, IOException;
 
     /**
      * Changes the permissions on the file if authorized to do so
+     * 
+     * @throws IOException
+     * @throws FileResourceException
      */
-    public void changeMode(GridFile gridFile) throws FileNotFoundException,
-            GeneralException;
+    public void changeMode(GridFile gridFile) throws FileResourceException,
+            IOException;
 
     /**
      * Get information of a file from the file resource
+     * 
+     * @throws IOException
+     * @throws FileResourceException
      */
-    public GridFile getGridFile(String fileName) throws FileNotFoundException,
-            GeneralException;
+    public GridFile getGridFile(String fileName) throws FileResourceException,
+            IOException;
 
     /**
      * Return true if the file exists on the file resource
+     * 
+     * @throws FileResourceException
      */
-    public boolean exists(String fileName) throws FileNotFoundException,
-            GeneralException;
+    public boolean exists(String fileName) throws IOException,
+            FileResourceException;
 
     /**
      * Return true if the name points to a directory in the file resource
      */
-    public boolean isDirectory(String directoryName) throws GeneralException;
+    public boolean isDirectory(String directoryName)
+            throws FileResourceException, IOException;
 
     /**
      * Executes a non-interactive workflow of commands on the FileResource
@@ -221,7 +296,7 @@ public interface FileResource extends GridResource {
      */
     public void setAttribute(String name, Object value);
 
-    public Enumeration getAllAttributes();
+    public Collection getAttributeNames();
 
     /**
      * Returns attribute value for the given attribute name
