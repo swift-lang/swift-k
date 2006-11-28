@@ -266,7 +266,6 @@ public class FileResourceCache {
 
         public void addResource(FileResource fr) {
             synchronized (this) {
-                System.err.println("Scheduling " + fr + " for closing");
                 resources.add(fr);
                 if (!running) {
                     running = true;
@@ -282,9 +281,7 @@ public class FileResourceCache {
             FileResource fr = nextResource();
             while (fr != null) {
                 try {
-                    System.err.println("Stopping " + fr);
                     fr.stop();
-                    System.err.println("Stopped " + fr);
                 }
                 catch (Exception e) {
                     logger.warn("Failed to stop resource", e);
