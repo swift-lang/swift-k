@@ -14,6 +14,7 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.scheduler.ContactAllocationTask;
 import org.globus.cog.karajan.scheduler.Scheduler;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -24,6 +25,8 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 
 	public static final Arg A_NAME = new Arg.Positional("name");
 	public static final Arg A_CONSTRAINTS = new Arg.Optional("constraints", null);
+	
+	public static final String HOST = "##host";
 
 	static {
 		setArguments(AllocateHost.class, new Arg[] { A_NAME, A_CONSTRAINTS });
@@ -78,6 +81,7 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 			}
 			else if (code == Status.COMPLETED) {
 				stack.setVar(TypeUtil.toString(A_NAME.getValue(stack)), t.getContact());
+				stack.setVar(HOST, t.getContact());
 				super.partialArgumentsEvaluated(stack);
 				startRest(stack);
 			}
@@ -89,6 +93,15 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 			catch (ExecutionException e1) {
 				logger.warn("Could not fail element", e1);
 			}
+		}
+	}
+
+	protected void _finally(VariableStack stack) throws ExecutionException {
+		super._finally(stack);
+		Scheduler s = (Scheduler) stack.getDeepVar(SchedulerNode.SCHEDULER);
+		Contact c = (Contact) stack.currentFrame().getVar(HOST);
+		if (s != null && c instanceof BoundContact) {
+			s.releaseContact((BoundContact) c);
 		}
 	}
 }
