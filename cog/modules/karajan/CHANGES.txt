@@ -1,3 +1,10 @@
+(11/30/2006)
+
+*** Updated the adaptive scheduler
+
+*** fixed allocateHost() to actually tell the scheduler when it 
+    is done.
+
 (11/24/2006)
 
 *** Fixed sort() to not ignore descending= and to not convert
