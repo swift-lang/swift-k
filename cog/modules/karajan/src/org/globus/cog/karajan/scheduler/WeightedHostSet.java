@@ -20,11 +20,13 @@ public class WeightedHostSet {
 	private TreeSet scores;
 	private Map weightedHosts;
 	private double sum;
+	private double scoreHighCap;
 
-	public WeightedHostSet() {
+	public WeightedHostSet(double scoreHighCap) {
 		init();
+		this.scoreHighCap = scoreHighCap;
 	}
-	
+
 	protected void init() {
 		scores = new TreeSet();
 		weightedHosts = new HashMap();
@@ -34,16 +36,16 @@ public class WeightedHostSet {
 	public synchronized void add(WeightedHost wh) {
 		scores.add(wh);
 		weightedHosts.put(wh.getHost(), wh);
-		sum += wh.getScore();
+		sum += wh.getTScore();
 	}
-	
+
 	public synchronized void changeScore(WeightedHost wh, double newScore) {
 		scores.remove(wh);
-		sum -= wh.getScore();
-		WeightedHost nwh = new WeightedHost(wh.getHost(), newScore);
+		sum -= wh.getTScore();
+		WeightedHost nwh = new WeightedHost(wh.getHost(), newScore, wh.getLoad());
 		weightedHosts.put(wh.getHost(), nwh);
 		scores.add(nwh);
-		sum += newScore;
+		sum += nwh.getTScore();
 	}
 
 	public synchronized double remove(WeightedHost wh) {
@@ -57,7 +59,7 @@ public class WeightedHostSet {
 	}
 
 	public Iterator iterator() {
-		return scores.iterator(); 
+		return scores.iterator();
 	}
 
 	public WeightedHost last() {
@@ -85,10 +87,13 @@ public class WeightedHostSet {
 		scores = new TreeSet();
 		while (i.hasNext()) {
 			WeightedHost wh = (WeightedHost) i.next();
-			WeightedHost nwh = new WeightedHost(wh.getHost(), wh.getScore()
-					* renormalizationFactor);
+			WeightedHost nwh = new WeightedHost(wh.getHost(), wh.getScore() * renormalizationFactor);
 			add(nwh);
 		}
+	}
+
+	public boolean isEmpty() {
+		return scores.isEmpty();
 	}
 
 	public String toString() {

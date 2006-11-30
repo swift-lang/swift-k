@@ -27,7 +27,6 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
 public class WeightedHostScoreScheduler extends LateBindingScheduler {
-
 	private static final Logger logger = Logger.getLogger(WeightedHostScoreScheduler.class);
 
 	public static final int POLICY_WEIGHTED_RANDOM = 0;
@@ -40,21 +39,19 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	public static final String FACTOR_SUCCESS = "successFactor";
 	public static final String FACTOR_FAILURE = "failureFactor";
 	public static final String SCORE_HIGH_CAP = "scoreHighCap";
-	public static final String SCORE_LOW_CAP = "scoreLowCap";
-	public static final String NORMALIZATION_DELAY = "normalizationDelay";
 	public static final String POLICY = "policy";
 
 	private WeightedHostSet sorted;
 	private int policy;
-	private int delay;
 
 	/*
 	 * These field names must match the property names
 	 */
 	private double connectionRefusedFactor, connectionTimeoutFactor, jobSubmissionTaskLoadFactor,
 			transferTaskLoadFactor, fileOperationTaskLoadFactor, successFactor, failureFactor,
-			scoreHighCap, scoreLowCap;
-	private int normalizationDelay;
+			scoreHighCap;
+
+	private int jobThrottle;
 
 	public WeightedHostScoreScheduler() {
 		policy = POLICY_WEIGHTED_RANDOM;
@@ -62,21 +59,20 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	}
 
 	protected final void setDefaultFactors() {
-		connectionRefusedFactor = 0.1;
-		connectionTimeoutFactor = 0.05;
-		jobSubmissionTaskLoadFactor = 0.9;
-		transferTaskLoadFactor = 0.9;
-		fileOperationTaskLoadFactor = 0.95;
-		successFactor = 1.01;
-		failureFactor = 0.9;
+		connectionRefusedFactor = -10;
+		connectionTimeoutFactor = -20;
+		jobSubmissionTaskLoadFactor = -0.2;
+		transferTaskLoadFactor = -0.2;
+		fileOperationTaskLoadFactor = -0.01;
+		successFactor = 1;
+		failureFactor = -0.1;
 		scoreHighCap = 100;
-		scoreLowCap = 0.01;
-		normalizationDelay = 100;
+		jobThrottle = 2;
 	}
 
 	public void setResources(ContactSet grid) {
 		super.setResources(grid);
-		sorted = new WeightedHostSet();
+		sorted = new WeightedHostSet(scoreHighCap);
 		Iterator i = grid.getContacts().iterator();
 		while (i.hasNext()) {
 			addToSorted(new WeightedHost((BoundContact) i.next()));
@@ -92,23 +88,19 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (logger.isDebugEnabled()) {
 			logger.debug("multiplyScore(" + wh + ", " + factor + ")");
 		}
-		double ns = checkCaps(score * factor);
+		double ns = factor(score, factor);
 		sorted.changeScore(wh, ns);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Old score: " + score + ", new score: " + ns);
 		}
 	}
 
-	protected double checkCaps(double score) {
-		if (score > scoreHighCap) {
-			return scoreHighCap;
-		}
-		else if (score < scoreLowCap) {
-			return scoreLowCap;
-		}
-		else {
-			return score;
-		}
+	protected synchronized void multiplyScoreLater(WeightedHost wh, double factor) {
+		wh.setDelayedDelta(wh.getDelayedDelta() + factor);
+	}
+
+	protected double factor(double score, double factor) {
+		return score + factor;
 	}
 
 	protected synchronized BoundContact getNextContact(TaskConstraints t)
@@ -117,40 +109,66 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		BoundContact contact;
 
 		WeightedHostSet s = sorted;
+		WeightedHost selected = null;
 
 		s = constrain(s, getConstraintChecker(), t);
 
 		double sum = s.getSum();
 		if (policy == POLICY_WEIGHTED_RANDOM) {
 			double rand = Math.random() * sum;
+			if (logger.isInfoEnabled() && !s.isEmpty()) {
+				logger.info("Sorted: " + s);
+			}
 			if (logger.isDebugEnabled()) {
-				logger.debug("Sorted: " + s);
 				logger.debug("Rand: " + rand + ", sum: " + sum);
 			}
 			Iterator i = s.iterator();
-			
+
 			sum = 0;
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
-				sum += wh.getScore();
+				sum += wh.getTScore();
 				if (sum >= rand) {
-					return wh.getHost();
+					selected = wh;
+					break;
 				}
 			}
-			normalize();
-			contact = s.last().getHost();
+			if (selected == null) {
+				if (s.isEmpty()) {
+					throw new NoFreeResourceException();
+				}
+				else {
+					selected = s.last();
+				}
+			}
 		}
 		else if (policy == POLICY_BEST_SCORE) {
-			normalize();
-			contact = s.last().getHost();
+			selected = s.last();
 		}
 		else {
 			throw new KarajanRuntimeException("Invalid policy number: " + policy);
 		}
 		if (logger.isDebugEnabled()) {
-			logger.debug("Next contact: " + contact);
+			logger.debug("Next contact: " + selected.getHost());
 		}
-		return contact;
+		selected.changeLoad(1);
+		selected.setDelayedDelta(successFactor);
+		return selected.getHost();
+	}
+
+	public void releaseContact(BoundContact contact) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Releasing contact " + contact);
+		}
+		super.releaseContact(contact);
+		WeightedHost wh = sorted.findHost(contact);
+		if (wh != null) {
+			wh.changeLoad(-1);
+			sorted.changeScore(wh, wh.getScore() + wh.getDelayedDelta());
+		}
+		else {
+			logger.warn("ghost contact (" + contact + ") in releaseContact");
+		}
 	}
 
 	protected WeightedHostSet constrain(WeightedHostSet s, ResourceConstraintChecker rcc,
@@ -159,11 +177,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			return s;
 		}
 		else {
-			WeightedHostSet ns = new WeightedHostSet();
+			WeightedHostSet ns = new WeightedHostSet(scoreHighCap);
 			Iterator i = s.iterator();
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
-				if (rcc.checkConstraints(wh.getHost(), tc)) {
+				if (rcc.checkConstraints(wh.getHost(), tc) && notOverloaded(wh)) {
 					ns.add(wh);
 				}
 			}
@@ -171,26 +189,17 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 	}
 
-	protected void normalize() {
-		delay++;
-		if (delay > normalizationDelay) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Normalizing...");
-				logger.debug("Before normalization: " + sorted);
-			}
-			delay = 0;
-			sorted.normalize(1);
-			if (logger.isDebugEnabled()) {
-				logger.debug("After normalization: " + sorted);
-			}
-		}
+	protected boolean notOverloaded(WeightedHost wh) {
+		double score = wh.getTScore();
+		int load = wh.getLoad();
+		return load < jobThrottle * score + 2;
 	}
 
 	private static String[] propertyNames;
 	private static final String[] myPropertyNames = new String[] { POLICY,
 			FACTOR_CONNECTION_REFUSED, FACTOR_CONNECTION_TIMEOUT, FACTOR_SUBMISSION_TASK_LOAD,
 			FACTOR_TRANSFER_TASK_LOAD, FACTOR_FILEOP_TASK_LOAD, FACTOR_FAILURE, FACTOR_SUCCESS,
-			SCORE_HIGH_CAP, SCORE_LOW_CAP, NORMALIZATION_DELAY };
+			SCORE_HIGH_CAP };
 	private static Set propertyNamesSet;
 
 	static {
@@ -262,19 +271,19 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			}
 			else if (code == Status.COMPLETED) {
 				factorSubmission(t, contacts, -1);
-				factorMultiple(contacts, successFactor);
+				factorMultipleLater(contacts, successFactor);
 			}
 			else if (code == Status.FAILED) {
-				factorMultiple(contacts, failureFactor);
+				factorMultipleLater(contacts, failureFactor);
 				Exception ex = e.getStatus().getException();
 				if (ex != null) {
 					String exs = ex.toString();
 					if (exs.indexOf("Connection refused") >= 0
 							|| exs.indexOf("connection refused") >= 0) {
-						factorMultiple(contacts, connectionRefusedFactor);
+						factorMultipleLater(contacts, connectionRefusedFactor);
 					}
 					else if (exs.indexOf("timeout") >= 0) {
-						factorMultiple(contacts, connectionTimeoutFactor);
+						factorMultipleLater(contacts, connectionTimeoutFactor);
 					}
 				}
 			}
@@ -305,7 +314,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			return x;
 		}
 		else if (exp == -1) {
-			return 1 / x;
+			return -x;
 		}
 		else {
 			throw new IllegalArgumentException();
@@ -318,6 +327,16 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			WeightedHost wh = sorted.findHost(bc);
 			if (wh != null) {
 				multiplyScore(wh, factor);
+			}
+		}
+	}
+
+	private void factorMultipleLater(Contact[] contacts, double factor) {
+		for (int i = 0; i < contacts.length; i++) {
+			BoundContact bc = (BoundContact) contacts[i];
+			WeightedHost wh = sorted.findHost(bc);
+			if (wh != null) {
+				multiplyScoreLater(wh, factor);
 			}
 		}
 	}
