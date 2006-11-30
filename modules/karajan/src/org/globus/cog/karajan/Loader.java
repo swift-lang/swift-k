@@ -27,6 +27,7 @@ import org.globus.cog.karajan.util.Monitor;
 import org.globus.cog.karajan.util.serialization.XMLConverter;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
+import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.events.EventWorker;
 import org.globus.cog.karajan.workflow.events.WorkerManager;
@@ -50,6 +51,7 @@ public class Loader {
 	public static final String ARG_INTERMEDIATE = "intermediate";
 	public static final String ARG_CACHE = "cache";
 	public static final String ARG_EXECUTE = "execute";
+	public static final String ARG_CSTDOUT = "stdoutUnordered";
 
 	public static void main(String[] argv) {
 		ArgumentParser ap = buildArgumentParser();
@@ -145,6 +147,9 @@ public class Loader {
 				ExecutionContext ec = new ExecutionContext(tree);
 				ec.setDumpState(Configuration.getDefault().getFlag(
 						Configuration.DUMP_STATE_ON_ERROR));
+				if (ap.isPresent(ARG_CSTDOUT)) {
+					ec.setStdout(new PrintStreamChannel(System.out, true));
+				}
 				ec.setArguments(ap.getArguments());
 				ec.start();
 				/*
@@ -254,6 +259,9 @@ public class Loader {
 		ap.addFlag(ARG_HELP, "Display usage information");
 		ap.addAlias(ARG_HELP, "h");
 		ap.addFlag(ARG_CACHE, "EXPERIMENTAL! Enables cache persistance");
+		ap.addFlag(ARG_CSTDOUT,
+				"Make print() invocations produce produce results in the order they are executed. By default" +
+				" the order is lexical.");
 		return ap;
 	}
 
