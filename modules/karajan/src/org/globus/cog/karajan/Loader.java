@@ -204,7 +204,7 @@ public class Loader {
 
 	public static ElementTree load(String project) throws SpecificationException, IOException {
 		BufferedReader br = new BufferedReader(new FileReader(project));
-		return load(project, br, project.endsWith(".xml"));
+		return load(project, br, project.endsWith(".xml") || project.endsWith(".kml"));
 	}
 
 	public static ElementTree loadFromString(String source) throws SpecificationException {

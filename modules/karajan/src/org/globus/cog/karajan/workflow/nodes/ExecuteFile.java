@@ -128,7 +128,7 @@ public class ExecuteFile extends AbstractSequentialWithArguments {
 					}
 					ElementTree tree = stack.getExecutionContext().getTree();
 					if (ignoreRoot) {
-						if (iname.endsWith(".xml")) {
+						if (iname.endsWith(".xml") || iname.endsWith(".kml")) {
 							XMLConverter.read(seq, tree, reader, iname);
 						}
 						else {
