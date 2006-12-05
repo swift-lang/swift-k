@@ -7,6 +7,8 @@
 	
 *** Added DOTALL mode to str:matches()
 
+*** Fixed the exit code to not be 0 if the execution fails
+
 (11/30/2006)
 
 *** Updated the adaptive scheduler
