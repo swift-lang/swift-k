@@ -1,3 +1,12 @@
+(12/05/2006)
+
+*** Added support for the .kml extension. This is only intended
+    to allow the loader to load files with the .kml extension
+	and interpret them as containing XML Karajan scripts (so
+	the contents is the same as that for .xml files)
+	
+*** Added DOTALL mode to str:matches()
+
 (11/30/2006)
 
 *** Updated the adaptive scheduler
