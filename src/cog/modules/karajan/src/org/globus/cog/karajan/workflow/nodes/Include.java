@@ -252,7 +252,7 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 					}
 					setProperty(FILENAME, iname);
 					ElementTree tree = stack.getExecutionContext().getTree();
-					if (iname.endsWith(".xml")) {
+					if (iname.endsWith(".xml") || iname.endsWith(".kml")) {
 						XMLConverter.read(this, tree, reader, iname);
 					}
 					else {
