@@ -108,6 +108,8 @@ public class Loader {
 			System.exit(1);
 		}
 
+		boolean runerror = false;
+
 		try {
 			ElementTree tree;
 			if (project != null) {
@@ -158,6 +160,9 @@ public class Loader {
 				 * already done.
 				 */
 				ec.waitFor();
+				if (ec.isFailed()) {
+					runerror = true;
+				}
 			}
 			if (cache) {
 				try {
@@ -199,7 +204,7 @@ public class Loader {
 					/ 1024 + "KB");
 		}
 
-		System.exit(0);
+		System.exit(runerror ? 2 : 0);
 	}
 
 	public static ElementTree load(String project) throws SpecificationException, IOException {
@@ -260,8 +265,8 @@ public class Loader {
 		ap.addAlias(ARG_HELP, "h");
 		ap.addFlag(ARG_CACHE, "EXPERIMENTAL! Enables cache persistance");
 		ap.addFlag(ARG_CSTDOUT,
-				"Make print() invocations produce produce results in the order they are executed. By default" +
-				" the order is lexical.");
+				"Make print() invocations produce produce results in the order they are executed. By default"
+						+ " the order is lexical.");
 		return ap;
 	}
 
