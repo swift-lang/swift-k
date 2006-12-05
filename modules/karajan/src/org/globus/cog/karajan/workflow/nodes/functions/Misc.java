@@ -329,7 +329,8 @@ public class Misc extends FunctionsCollection {
 	public boolean str_matches(VariableStack stack) throws ExecutionException {
 		String string = TypeUtil.toString(PA_STRING.getValue(stack));
 		String regexp = TypeUtil.toString(PA_REGEXP.getValue(stack));
-		return string.matches(regexp);
+		Pattern p = Pattern.compile(regexp, Pattern.DOTALL);
+		return p.matcher(string).matches();
 	}
 
 	public static final Arg PA_SEPARATOR = new Arg.Positional("separator");
