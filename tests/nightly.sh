@@ -272,12 +272,13 @@ if [ "$FCO" != "1" ]; then
 
 	TEST="Checkout VDL2"
 	pexec rm -rf src
-	vexec cvs -d :pserver:anonymous@cvs.cogkit.org:/cvs/cogkit co src/vdsk
-	#svn co https://
+	#vexec cvs -d :pserver:anonymous@cvs.cogkit.org:/cvs/cogkit co src/vdsk
+	svn co https://svn.ci.uchicago.edu/svn/vdl2
 fi
 
 TEST="Directory setup"
-vexec cp -r src/vdsk cog/modules
+pexec mkdir cog/modules/vdsk
+vexec cp -r vdl2/trunk/* cog/modules/vdsk
 
 TEST="Compile"
 pexec cd cog/modules/vdsk
