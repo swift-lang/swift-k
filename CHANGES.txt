@@ -2,6 +2,8 @@
 
 *** Moved to CI SVN
 
+*** Added tests directory
+
 (11/22/06)
 
 *** Changed to a pure Karajan adaptive scheduler instead
