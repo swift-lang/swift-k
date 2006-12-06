@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+[
+<!ENTITY % myents SYSTEM "../../entitiesnocatalog">
+%myents;
+]>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+<article>
+	<articleinfo>
+	<title>A gentle guide to DocBook</title>
+	<author>
+		<firstname>Joe</firstname>
+		<surname>Brockmeier</surname>
+	</author>
+	</articleinfo>
+<sect1 label="1.0">
+	<title>A brief introduction to DocBook</title>
+<para>
+If you've ever thought about writing documentation for an open source project...
+</para>
+</sect1>
+</article>
