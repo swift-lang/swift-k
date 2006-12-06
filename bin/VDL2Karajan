@@ -1,0 +1,17 @@
+#!/bin/sh
+
+MYPATH=`dirname $0`
+
+if [ "`basename $1 .dtm`" == "$1" ]; then
+	if [ "`basename $1 .xml`" == "$1" ]; then
+		echo Unknown file type: $1 
+		exit
+	else
+		NAME=`basename $1 .xml`
+		$MYPATH/VDLx2Karajan "$NAME.xml" >"${NAME}.kml"
+	fi
+else
+	NAME=`basename $1 .dtm`
+	$MYPATH/VDLt2VDLx <$1 >"$NAME.xml"
+	$MYPATH/VDLx2Karajan "$NAME.xml" >"${NAME}.kml"
+fi

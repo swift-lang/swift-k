@@ -1,0 +1,4 @@
+This is a modified version of the jaxrpc normally available with CoG and its libraries.
+It has the class javax.xml.namespace.QName class removed because it conflicts with
+another version of that class in xbean.jar. The full implications of this are not
+yet known.

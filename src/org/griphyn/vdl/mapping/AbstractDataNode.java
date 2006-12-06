@@ -1,0 +1,331 @@
+/*
+ * Created on Jun 6, 2006
+ */
+package org.griphyn.vdl.mapping;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.griphyn.vdl.type.Field;
+
+public abstract class AbstractDataNode implements DSHandle {
+	private Field field;
+	private Map handles;
+	private Object value;
+	private boolean closed;
+
+	protected AbstractDataNode(Field field) {
+		this.field = field;
+		handles = new HashMap();
+	}
+
+	public void init(Map params) {
+		
+	}
+
+	public String getType() {
+		return field.getType().getName();
+	}
+
+	public boolean isPrimitive() {
+		return field.getType().isPrimitive();
+	}
+
+	protected Field getField() {
+		return field;
+	}
+
+	public String toString() {
+		String prefix = getDisplayableName();
+		String svalue = value == null ? "" : " (" + value + ")";
+		if (Path.EMPTY_PATH.equals(getPathFromRoot())) {
+			// return getType() + " " + prefix + ": " + value;
+			return prefix + svalue;
+
+		}
+		else {
+			// return getType() + " " + prefix + "." + getPathFromRoot() + ": "
+			// + value;
+			return prefix + "." + getPathFromRoot() + svalue;
+		}
+	}
+
+	protected String getDisplayableName() {
+		String prefix = getRoot().getParam("prefix");
+		if (prefix == null) {
+			prefix = getRoot().getParam("dbgname");
+		}
+		return prefix;
+	}
+
+	public DSHandle getField(Path path) throws InvalidPathException {
+		if (path.isEmpty()) {
+			return this;
+		}
+		try {
+			DSHandle handle = getField(path.getFirst());
+			if (path.size() > 1) {
+				return handle.getField(path.butFirst());
+			}
+			else {
+				return handle;
+			}
+		}
+		catch (NoSuchFieldException e) {
+			throw new InvalidPathException(path, this);
+		}
+	}
+
+	public Collection getFields(Path path) throws InvalidPathException, HandleOpenException {
+		List fields = new ArrayList();
+		getFields(fields, path);
+		return fields;
+	}
+
+	private void getFields(List fields, Path path) throws InvalidPathException, HandleOpenException {
+		if (path.isEmpty()) {
+			fields.add(this);
+		}
+		else {
+			Path rest = path.butFirst();
+			if (path.isWildcard(0)) {
+				if (isArray() && !closed) {
+					throw new HandleOpenException(this);
+				}
+				Iterator i = this.handles.entrySet().iterator();
+				while (i.hasNext()) {
+					Map.Entry e = (Map.Entry) i.next();
+					((AbstractDataNode) e.getValue()).getFields(fields, rest);
+				}
+			}
+			else {
+				try {
+					((AbstractDataNode) getField(path.getFirst())).getFields(fields, rest);
+				}
+				catch (NoSuchFieldException e) {
+					throw new InvalidPathException(path, this);
+				}
+			}
+		}
+	}
+
+	public void set(DSHandle handle) {
+		// TODO check type
+		if (closed) {
+			throw new IllegalArgumentException(this + " is already assigned");
+		}
+		if (getParent() == null) {
+			/*
+			AbstractDataNode node = (AbstractDataNode)handle;
+			field = node.getField();
+			handles = node.getHandles();
+			closed = node.isClosed();
+			value = node.getValue();
+			*/
+			throw new RuntimeException("Can't set root data node!");
+		} else
+			((AbstractDataNode) getParent()).setField(field.getName(), handle);
+	}
+
+	protected void setField(String name, DSHandle handle) {
+		synchronized (handles) {
+			handles.put(name, handle);
+		}
+	}
+
+	protected synchronized DSHandle getField(String name) throws NoSuchFieldException {
+		DSHandle handle = getHandle(name);
+		if (handle == null) {
+			if (closed) {
+				throw new NoSuchFieldException(name);
+			}
+			else {
+				handle = createDSHandle(name);
+			}
+
+		}
+		return handle;
+	}
+
+	protected DSHandle getHandle(String name) {
+		synchronized (handles) {
+			return (DSHandle) handles.get(name);
+		}
+	}
+
+	protected boolean isHandlesEmpty() {
+		synchronized (handles) {
+			return handles.isEmpty();
+		}
+	}
+
+	public DSHandle createDSHandle(String fieldName) throws NoSuchFieldException {
+		if (closed) {
+			throw new RuntimeException("Cannot write to closed handle: " + this + " (" + fieldName
+					+ ")");
+		}
+
+		AbstractDataNode child;
+		Field childField = getChildField(fieldName);
+		if (childField.isArray()) {
+			child = new ArrayDataNode(getChildField(fieldName), getRoot(), this);
+		}
+		else {
+			child = new DataNode(getChildField(fieldName), getRoot(), this);
+		}
+
+		synchronized (handles) {
+			Object o = handles.put(fieldName, child);
+			if (o != null) {
+				throw new RuntimeException("Trying to create a handle that already exists ("
+						+ fieldName + ") in " + this);
+			}
+		}
+		return child;
+	}
+
+	protected Field getChildField(String fieldName) throws NoSuchFieldException {
+		return Field.Factory.createField(fieldName, field.getType().getFieldType(fieldName),
+				field.getType().isArrayField(fieldName));
+	}
+
+	public Object getValue() {
+		return value;
+	}
+
+	public Map getArrayValue() {
+		if (!field.isArray()) {
+			throw new RuntimeException("getArrayValue called on a struct: " + this);
+		}
+		return handles;
+	}
+
+	public boolean isArray() {
+		return false;
+	}
+
+	public void setValue(Object value) {
+		if (this.value != null) {
+			throw new IllegalArgumentException(this + " is already assigned with a value of "
+					+ value);
+		}
+		this.value = value;
+	}
+
+	public void commit() {
+	}
+
+	public String getFilename() {
+		Path path = Path.EMPTY_PATH;
+		AbstractDataNode crt = this;
+		while (crt.getParent() != null) {
+			path = path.addFirst(crt.getField().getName(), crt.getParent().isArray());
+			crt = (AbstractDataNode) crt.getParent();
+		}
+		return getMapper().map(path);
+	}
+
+	public List getFileSet() {
+		ArrayList list = new ArrayList();
+		getFileSet(list);
+		return list;
+	}
+
+	protected void getFileSet(List list) {
+		synchronized (handles) {
+			Iterator i = handles.entrySet().iterator();
+			while (i.hasNext()) {
+				Map.Entry e = (Map.Entry) i.next();
+				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
+				if (!mapper.handles.isEmpty()) {
+					mapper.getFileSet(list);
+				}
+				else if (!mapper.field.getType().isPrimitive()) {
+					list.add(mapper.getFilename());
+				}
+			}
+		}
+	}
+
+	public Collection getFringePaths() throws HandleOpenException {
+		ArrayList list = new ArrayList();
+		getFringePaths(list, Path.EMPTY_PATH);
+		return list;
+	}
+
+	public void getFringePaths(List list, Path parentPath) throws HandleOpenException {
+		if (getField().getType().getBaseType() != null) {
+			list.add(Path.EMPTY_PATH.toString());
+		}
+		else {
+			Iterator i = getField().getType().getFields().iterator();
+			while (i.hasNext()) {
+				Field field = (Field) i.next();
+				AbstractDataNode mapper;
+				try {
+					mapper = (AbstractDataNode) this.getField(field.getName());
+				}
+				catch (NoSuchFieldException e) {
+					throw new RuntimeException(
+							"Inconsistency between type declaration and handle for field '"
+									+ field.getName() + "'");
+				}
+				Path fullPath = parentPath.addLast(mapper.getField().getName());
+				if (!mapper.field.getType().isPrimitive() && !mapper.isArray()) {
+					list.add(fullPath.toString());
+				}
+				else {
+					mapper.getFringePaths(list, fullPath);
+				}
+			}
+		}
+	}
+
+	public void closeShallow() {
+		this.closed = true;
+	}
+
+	public boolean isClosed() {
+		return closed;
+	}
+
+	public void closeDeep() {
+		if (!this.closed) {
+			this.closed = true;
+			setValue(Boolean.TRUE);
+		}
+		synchronized (handles) {
+			Iterator i = handles.entrySet().iterator();
+			while (i.hasNext()) {
+				Map.Entry e = (Map.Entry) i.next();
+				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
+				mapper.closeDeep();
+			}
+		}
+	}
+
+	public Path getPathFromRoot() {
+		AbstractDataNode parent = (AbstractDataNode) this.getParent();
+		Path myPath;
+		if (parent != null) {
+			myPath = parent.getPathFromRoot();
+			return myPath.addLast(getField().getName(), parent.getField().isArray());
+		}
+		else {
+			return Path.EMPTY_PATH;
+		}
+	}
+
+	public Mapper getMapper() {
+		return ((AbstractDataNode) getRoot()).getMapper();
+	}
+
+	protected Map getHandles() {
+		return handles;
+	}
+
+}

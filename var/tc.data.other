@@ -1,0 +1,459 @@
+#
+# [1] HU_huatlas @ xena.hamptonu.edu : 2
+#
+HU_huatlas	voeckler::combine:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	voeckler::generate:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	voeckler::analyze:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	voeckler::findrange:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	voeckler::multi:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	voeckler::process:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	test::world:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	voeckler::preprocess:1.0	/opt/data/vdldemo/bin/keg	INSTALLED	null	null
+HU_huatlas	globus-url-copy /opt/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3/globus/lib
+HU_huatlas	transfer	/opt/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3/globus/lib
+HU_huatlas	makedir 	/opt/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [2] UCSanDiego @ uscmstb0.ucsd.edu : 3
+#
+UCSanDiego	voeckler::combine:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	voeckler::generate:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	voeckler::analyze:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	voeckler::findrange:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	voeckler::multi:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	voeckler::process:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	test::world:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	voeckler::preprocess:1.0	/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiego	globus-url-copy /grid3/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/grid3/grid3/globus/lib
+UCSanDiego	transfer	/grid3/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/grid3/grid3/globus/lib
+UCSanDiego	makedir 	/grid3/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [3] Vanderbilt @ spike.accre.vanderbilt.edu : 6
+#
+Vanderbilt	voeckler::combine:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	voeckler::generate:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	voeckler::analyze:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	voeckler::findrange:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	voeckler::multi:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	voeckler::process:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	test::world:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	voeckler::preprocess:1.0	/grid/grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Vanderbilt	globus-url-copy /usr/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/grid3/globus/lib
+Vanderbilt	transfer	/grid/grid3-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/grid3/globus/lib
+Vanderbilt	makedir 	/grid/grid3-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [4] HamptonU @ hercules.hamptonu.edu : 6
+#
+HamptonU	voeckler::combine:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	voeckler::generate:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	voeckler::analyze:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	voeckler::findrange:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	voeckler::multi:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	voeckler::process:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	test::world:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	voeckler::preprocess:1.0	__datadir__/vdldemo/bin/keg	INSTALLED	null	null
+HamptonU	globus-url-copy /opt/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3/globus/lib
+HamptonU	transfer	__datadir__/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3/globus/lib
+HamptonU	makedir 	__datadir__/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [5] UM_ATLAS @ linat09.grid.umich.edu : 12
+#
+UM_ATLAS	voeckler::combine:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	voeckler::generate:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	voeckler::analyze:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	voeckler::findrange:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	voeckler::multi:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	voeckler::process:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	test::world:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	voeckler::preprocess:1.0	/Grid3/Data/vdldemo/bin/keg	INSTALLED	null	null
+UM_ATLAS	globus-url-copy /Grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/Grid3/globus/lib
+UM_ATLAS	transfer	/Grid3/Data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/Grid3/globus/lib
+UM_ATLAS	makedir 	/Grid3/Data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [6] OUHEP @ ouhep0.nhn.ou.edu : 18
+#
+OUHEP	voeckler::combine:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	voeckler::generate:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	voeckler::analyze:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	voeckler::findrange:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	voeckler::multi:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	voeckler::process:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	test::world:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	voeckler::preprocess:1.0	/atlas2/software/grid3appdata/data/vdldemo/bin/keg	INSTALLED	null	null
+OUHEP	globus-url-copy /scratch/opt/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/scratch/opt/grid3/globus/lib
+OUHEP	transfer	/atlas2/software/grid3appdata/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/scratch/opt/grid3/globus/lib
+OUHEP	makedir 	/atlas2/software/grid3appdata/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [7] Rice-Grid3 @ bonner-pcs11.rice.edu : 22
+#
+Rice_Grid3	voeckler::combine:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	voeckler::generate:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	voeckler::analyze:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	voeckler::findrange:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	voeckler::multi:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	voeckler::process:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	test::world:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	voeckler::preprocess:1.0	/net/data15/Grid-data/vdldemo/bin/keg	INSTALLED	null	null
+Rice_Grid3	globus-url-copy /usr/local/Grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/Grid3/globus/lib
+Rice_Grid3	transfer	/net/data15/Grid-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/Grid3/globus/lib
+Rice_Grid3	makedir 	/net/data15/Grid-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [8] SMU_ATLAS @ mcfarm.physics.smu.edu : 24
+#
+SMU_ATLAS	voeckler::combine:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	voeckler::generate:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	voeckler::analyze:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	voeckler::findrange:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	voeckler::multi:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	voeckler::process:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	test::world:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	voeckler::preprocess:1.0	/data/vdldemo/bin/keg	INSTALLED	null	null
+SMU_ATLAS	globus-url-copy /grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/grid3/globus/lib
+SMU_ATLAS	transfer	/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/grid3/globus/lib
+SMU_ATLAS	makedir 	/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [9] CalTech-Grid3 @ citgrid3.cacr.caltech.edu : 24
+#
+CalTech_Grid3	voeckler::combine:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	voeckler::generate:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	voeckler::analyze:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	voeckler::findrange:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	voeckler::multi:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	voeckler::process:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	test::world:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	voeckler::preprocess:1.0	/raid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+CalTech_Grid3	globus-url-copy /usr/local/Grid3V2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/Grid3V2.1/globus/lib
+CalTech_Grid3	transfer	/raid/Grid3-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/Grid3V2.1/globus/lib
+CalTech_Grid3	makedir 	/raid/Grid3-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [10] BU_AGT_Tier2 @ agt-login.bu.edu : 32
+#
+BU_AGT_Tier2	voeckler::combine:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	voeckler::generate:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	voeckler::analyze:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	voeckler::findrange:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	voeckler::multi:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	voeckler::process:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	test::world:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	voeckler::preprocess:1.0	/home/atlas/data/vdldemo/bin/keg	INSTALLED	null	null
+BU_AGT_Tier2	globus-url-copy /usr/local/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/grid3/globus/lib
+BU_AGT_Tier2	transfer	/home/atlas/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/grid3/globus/lib
+BU_AGT_Tier2	makedir 	/home/atlas/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [11] UFlorida-Grid3 @ ufgrid01.phys.ufl.edu : 40
+#
+UFlorida_Grid3	voeckler::combine:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	voeckler::generate:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	voeckler::analyze:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	voeckler::findrange:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	voeckler::multi:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	voeckler::process:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	test::world:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	voeckler::preprocess:1.0	/raid/data1/grid01/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_Grid3	globus-url-copy /share/grid01/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/share/grid01/grid3/globus/lib
+UFlorida_Grid3	transfer	/raid/data1/grid01/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/share/grid01/grid3/globus/lib
+UFlorida_Grid3	makedir 	/raid/data1/grid01/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [12] JHopkins @ hydra.pha.jhu.edu : 42
+#
+JHopkins	voeckler::combine:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	voeckler::generate:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	voeckler::analyze:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	voeckler::findrange:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	voeckler::multi:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	voeckler::process:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	test::world:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	voeckler::preprocess:1.0	/data1/gfs/gridshare/data/vdldemo/bin/keg	INSTALLED	null	null
+JHopkins	globus-url-copy /data1/gfs/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/data1/gfs/grid3/globus/lib
+JHopkins	transfer	/data1/gfs/gridshare/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/data1/gfs/grid3/globus/lib
+JHopkins	makedir 	/data1/gfs/gridshare/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [13] Purdue-Physics @ grid.physics.purdue.edu : 53
+#
+Purdue_Physics	voeckler::combine:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	voeckler::generate:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	voeckler::analyze:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	voeckler::findrange:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	voeckler::multi:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	voeckler::process:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	test::world:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	voeckler::preprocess:1.0	/project/grid/data/vdldemo/bin/keg	INSTALLED	null	null
+Purdue_Physics	globus-url-copy /package/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/package/grid3/globus/lib
+Purdue_Physics	transfer	/project/grid/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/package/grid3/globus/lib
+Purdue_Physics	makedir 	/project/grid/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [14] NTUHEP @ grid1.phys.ntu.edu.tw : 53
+#
+NTUHEP	voeckler::combine:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	voeckler::generate:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	voeckler::analyze:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	voeckler::findrange:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	voeckler::multi:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	voeckler::process:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	test::world:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	voeckler::preprocess:1.0	/disk1/grid3data/vdldemo/bin/keg	INSTALLED	null	null
+NTUHEP	globus-url-copy /home/grid3v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/home/grid3v2.1/globus/lib
+NTUHEP	transfer	/disk1/grid3data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/home/grid3v2.1/globus/lib
+NTUHEP	makedir 	/disk1/grid3data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [15] UCSanDiegoProd @ t2cms0.sdsc.edu : 57
+#
+UCSanDiegoProd	voeckler::combine:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	voeckler::generate:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	voeckler::analyze:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	voeckler::findrange:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	voeckler::multi:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	voeckler::process:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	test::world:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	voeckler::preprocess:1.0	/groot/data/vdldemo/bin/keg	INSTALLED	null	null
+UCSanDiegoProd	globus-url-copy /groot/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/groot/grid3/globus/lib
+UCSanDiegoProd	transfer	/groot/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/groot/grid3/globus/lib
+UCSanDiegoProd	makedir 	/groot/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [16] KNU @ cluster28.knu.ac.kr : 59
+#
+KNU	voeckler::combine:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	voeckler::generate:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	voeckler::analyze:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	voeckler::findrange:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	voeckler::multi:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	voeckler::process:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	test::world:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	voeckler::preprocess:1.0	/usr/local/grid3_data/vdldemo/bin/keg	INSTALLED	null	null
+KNU	globus-url-copy /usr/local/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/grid3/globus/lib
+KNU	transfer	/usr/local/grid3_data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/grid3/globus/lib
+KNU	makedir 	/usr/local/grid3_data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [17] UC_ATLAS_Tier2 @ tier2-01.uchicago.edu : 64
+#
+UC_ATLAS_Tier2	voeckler::combine:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	voeckler::generate:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	voeckler::analyze:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	voeckler::findrange:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	voeckler::multi:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	voeckler::process:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	test::world:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	voeckler::preprocess:1.0	/share/data2/vdldemo/bin/keg	INSTALLED	null	null
+UC_ATLAS_Tier2	globus-url-copy /export/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/export/grid3/globus/lib
+UC_ATLAS_Tier2	transfer	/share/data2/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/export/grid3/globus/lib
+UC_ATLAS_Tier2	makedir 	/share/data2/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [18] UFlorida-PG @ ufloridaPG.phys.ufl.edu : 80
+#
+UFlorida_PG	voeckler::combine:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	voeckler::generate:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	voeckler::analyze:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	voeckler::findrange:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	voeckler::multi:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	voeckler::process:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	test::world:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	voeckler::preprocess:1.0	/raid/data1/pg/data/vdldemo/bin/keg	INSTALLED	null	null
+UFlorida_PG	globus-url-copy /share/pg/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/share/pg/grid3/globus/lib
+UFlorida_PG	transfer	/raid/data1/pg/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/share/pg/grid3/globus/lib
+UFlorida_PG	makedir 	/raid/data1/pg/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [19] CHEPREO_FIU @ grid3.ampath.net : 92
+#
+CHEPREO_FIU	voeckler::combine:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	voeckler::generate:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	voeckler::analyze:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	voeckler::findrange:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	voeckler::multi:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	voeckler::process:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	test::world:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	voeckler::preprocess:1.0	/export/home/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+CHEPREO_FIU	globus-url-copy /export/home/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/export/home/grid3/globus/lib
+CHEPREO_FIU	transfer	/export/home/grid3/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/export/home/grid3/globus/lib
+CHEPREO_FIU	makedir 	/export/home/grid3/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [20] UWMadison @ cmsgrid.hep.wisc.edu : 99
+#
+UWMadison	voeckler::combine:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	voeckler::generate:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	voeckler::analyze:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	voeckler::findrange:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	voeckler::multi:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	voeckler::process:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	test::world:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	voeckler::preprocess:1.0	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+UWMadison	globus-url-copy /afs/hep.wisc.edu/cms/sw/grid3v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/afs/hep.wisc.edu/cms/sw/grid3v2.1/globus/lib
+UWMadison	transfer	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/afs/hep.wisc.edu/cms/sw/grid3v2.1/globus/lib
+UWMadison	makedir 	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [21] uofc @ e.cs.uchicago.edu : 100
+#
+uofc	voeckler::combine:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	voeckler::generate:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	voeckler::analyze:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	voeckler::findrange:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	voeckler::multi:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	voeckler::process:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	test::world:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	voeckler::preprocess:1.0	/home/voeckler/vdldemo/bin/keg	INSTALLED	null	null
+uofc	globus-url-copy /opt/globus/globus-2.4.3/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/globus/globus-2.4.3/lib
+uofc	transfer	/home/voeckler/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/globus/globus-2.4.3/lib
+uofc	makedir 	/home/voeckler/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [22] FNAL_CMS @ cmssrv04.fnal.gov : 105
+#
+FNAL_CMS	voeckler::combine:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	voeckler::generate:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	voeckler::analyze:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	voeckler::findrange:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	voeckler::multi:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	voeckler::process:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	test::world:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	voeckler::preprocess:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS	globus-url-copy /fnal/products/G3DPE/v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/fnal/products/G3DPE/v2.1/globus/lib
+FNAL_CMS	transfer	/storage/remote/data1/g3-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/fnal/products/G3DPE/v2.1/globus/lib
+FNAL_CMS	makedir 	/storage/remote/data1/g3-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [23] BU_ATLAS_Tier2 @ atlas.bu.edu : 112
+#
+BU_ATLAS_Tier2	voeckler::combine:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	voeckler::generate:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	voeckler::analyze:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	voeckler::findrange:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	voeckler::multi:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	voeckler::process:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	test::world:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	voeckler::preprocess:1.0	/atlasgrid/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+BU_ATLAS_Tier2	globus-url-copy /software/Grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/software/Grid3/globus/lib
+BU_ATLAS_Tier2	transfer	/atlasgrid/Grid3-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/software/Grid3/globus/lib
+BU_ATLAS_Tier2	makedir 	/atlasgrid/Grid3-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [24] Caltech-PG @ tier2b.cacr.caltech.edu : 124
+#
+Caltech_PG	voeckler::combine:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	voeckler::generate:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	voeckler::analyze:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	voeckler::findrange:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	voeckler::multi:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	voeckler::process:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	test::world:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	voeckler::preprocess:1.0	/raid1/Grid3-data/vdldemo/bin/keg	INSTALLED	null	null
+Caltech_PG	globus-url-copy /usr/local/Grid3V2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/Grid3V2.1/globus/lib
+Caltech_PG	transfer	/raid1/Grid3-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/local/Grid3V2.1/globus/lib
+Caltech_PG	makedir 	/raid1/Grid3-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [25] FNAL_CMS2 @ cmssrv05.fnal.gov : 158
+#
+FNAL_CMS2	voeckler::combine:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	voeckler::generate:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	voeckler::analyze:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	voeckler::findrange:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	voeckler::multi:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	voeckler::process:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	test::world:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	voeckler::preprocess:1.0	/storage/remote/data3/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS2	globus-url-copy /fnal/products/G3DPE/v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/fnal/products/G3DPE/v2.1/globus/lib
+FNAL_CMS2	transfer	/storage/remote/data3/g3-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/fnal/products/G3DPE/v2.1/globus/lib
+FNAL_CMS2	makedir 	/storage/remote/data3/g3-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [26] UTA-DPCC @ atlas.dpcc.uta.edu : 158
+#
+UTA_DPCC	voeckler::combine:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	voeckler::generate:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	voeckler::analyze:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	voeckler::findrange:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	voeckler::multi:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	voeckler::process:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	test::world:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	voeckler::preprocess:1.0	/data73/grid3-1.1.11/data/vdldemo/bin/keg	INSTALLED	null	null
+UTA_DPCC	globus-url-copy /opt/grid3v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3v2.1/globus/lib
+UTA_DPCC	transfer	/data73/grid3-1.1.11/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3v2.1/globus/lib
+UTA_DPCC	makedir 	/data73/grid3-1.1.11/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [27] FNAL_CMS3 @ cmssrv10.fnal.gov : 272
+#
+FNAL_CMS3	voeckler::combine:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	voeckler::generate:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	voeckler::analyze:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	voeckler::findrange:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	voeckler::multi:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	voeckler::process:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	test::world:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	voeckler::preprocess:1.0	/storage/remote/data1/g3-data/vdldemo/bin/keg	INSTALLED	null	null
+FNAL_CMS3	globus-url-copy /fnal/products/G3DPE/v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/fnal/products/G3DPE/v2.1/globus/lib
+FNAL_CMS3	transfer	/storage/remote/data1/g3-data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/fnal/products/G3DPE/v2.1/globus/lib
+FNAL_CMS3	makedir 	/storage/remote/data1/g3-data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [28] PSU_Grid3 @ grid3.aset.psu.edu : 312
+#
+PSU_Grid3	voeckler::combine:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	voeckler::generate:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	voeckler::analyze:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	voeckler::findrange:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	voeckler::multi:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	voeckler::process:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	test::world:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	voeckler::preprocess:1.0	/usr16/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+PSU_Grid3	globus-url-copy /opt/grid3/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3/globus/lib
+PSU_Grid3	transfer	/usr16/grid3/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/opt/grid3/globus/lib
+PSU_Grid3	makedir 	/usr16/grid3/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [29] ANL_Jazz @ jmayor1.lcrc.anl.gov : 350
+#
+ANL_Jazz	voeckler::combine:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	voeckler::generate:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	voeckler::analyze:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	voeckler::findrange:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	voeckler::multi:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	voeckler::process:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	test::world:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	voeckler::preprocess:1.0	/home/gose/grid3/data/vdldemo/bin/keg	INSTALLED	null	null
+ANL_Jazz	globus-url-copy /nfs/software-linux-rh72/apps/packages/ivdgl/grid3v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/nfs/software-linux-rh72/apps/packages/ivdgl/grid3v2.1/globus/lib
+ANL_Jazz	transfer	/home/gose/grid3/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/nfs/software-linux-rh72/apps/packages/ivdgl/grid3v2.1/globus/lib
+ANL_Jazz	makedir 	/home/gose/grid3/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [30] PDSF @ pdsfgrid3.nersc.gov : 376
+#
+PDSF	voeckler::combine:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	voeckler::generate:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	voeckler::analyze:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	voeckler::findrange:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	voeckler::multi:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	voeckler::process:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	test::world:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	voeckler::preprocess:1.0	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/keg	INSTALLED	null	null
+PDSF	globus-url-copy /auto/lx_local/pkg/Grid3-v1.2/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH="/usr/local/pkg/Grid3-v1.2/globus/lib:/usr/local/pkg/Grid3-v1.2/globus/lib"
+PDSF	transfer	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH="/usr/local/pkg/Grid3-v1.2/globus/lib:/usr/local/pkg/Grid3-v1.2/globus/lib"
+PDSF	makedir 	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [31] BNL_ATLAS @ agridgk01.usatlas.bnl.gov : 400
+#
+BNL_ATLAS	voeckler::combine:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	voeckler::generate:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	voeckler::analyze:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	voeckler::findrange:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	voeckler::multi:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	voeckler::process:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	test::world:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	voeckler::preprocess:1.0	/usatlas/prodjob/share/vdldemo/bin/keg	INSTALLED	null	null
+BNL_ATLAS	globus-url-copy /home/Grid3-V2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/home/Grid3-V2.1/globus/lib
+BNL_ATLAS	transfer	/usatlas/prodjob/share/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/home/Grid3-V2.1/globus/lib
+BNL_ATLAS	makedir 	/usatlas/prodjob/share/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [32] UNM_HPC @ ll03.alliance.unm.edu : 507
+#
+UNM_HPC	voeckler::combine:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	voeckler::generate:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	voeckler::analyze:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	voeckler::findrange:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	voeckler::multi:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	voeckler::process:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	test::world:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	voeckler::preprocess:1.0	/Grid2003/raid1/data/vdldemo/bin/keg	INSTALLED	null	null
+UNM_HPC	globus-url-copy /usr/grid3v2.1/globus/bin/globus-url-copy	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/grid3v2.1/globus/lib
+UNM_HPC	transfer	/Grid2003/raid1/data/vdldemo/bin/transfer	INSTALLED	null	env::LD_LIBRARY_PATH=/usr/grid3v2.1/globus/lib
+UNM_HPC	makedir 	/Grid2003/raid1/data/vdldemo/bin/makedir	INSTALLED	null	null
+#
+# [33] local @ griodine.uchicago.edu : 2
+#
+local	RLS_Client		/home/voeckler/vds/bin/rls-client	INSTALLED	null	env::JAVA_HOME=/opt/java;env::VDS_HOME=/home/voeckler/vds;env::CLASSPATH="/home/voeckler/vds/lib/java-getopt-1.0.9.jar:/home/voeckler/vds/lib/gvds.jar:/home/voeckler/vds/lib/rls.jar";env::GLOBUS_LOCATION=/vdt/globus;env::LD_LIBRARY_PATH=/vdt/globus/lib
+local	globus-url-copy /vdt/globus/bin/globus-url-copy	INSTALLED	null	env::GLOBUS_LOCATION=/vdt/globus;env::LD_LIBRARY_PATH=/vdt/globus/lib
+local	transfer	/home/voeckler/vds/bin/linux/transfer	INSTALLED	null	env::GLOBUS_LOCATION=/vdt/globus;env::LD_LIBRARY_PATH=/vdt/globus/lib
+local	makedir 	/home/voeckler/vds/bin/makedir	INSTALLED	null	null
+#
+# [34] Mike's site @ plussed.mcs.anl.gov : ?
+#
+

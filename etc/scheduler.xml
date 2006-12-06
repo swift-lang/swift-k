@@ -1,0 +1,25 @@
+<project>
+	<import file="sys.xml"/>
+	<import file="task.xml"/>
+	<import file="vdl.k"/>
+	
+	<set name="sites">
+		<vdl:configProperty name="pool.file"/>
+	</set>
+  
+	<scheduler type="vds-adaptive" shareID="vdl2:scheduler:{sites}">
+		<!--<property name="siteSelectorClassName" value="RoundRobin"/>-->
+		<property name="hostSubmitThrottle" value="2"/>
+		<property name="submitThrottle" value="4"/>
+		<property name="jobsPerCpu" value="10"/>
+		<property name="maxTransfers" value="8"/>
+		
+		<task:handler type="execution" provider="gt2"/>
+	    <task:handler type="execution" provider="gt4"/>
+		<task:handler type="execution" provider="local"/>
+	    <task:handler type="file" provider="gsiftp"/>
+		<task:handler type="file" provider="local"/>
+		
+		<vdl:siteCatalog file="{sites}"/>
+  </scheduler>
+</project>

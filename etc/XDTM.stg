@@ -1,0 +1,346 @@
+group XDTM;
+
+program(namespaces,targetNS,functions,types,statements) ::= <<
+<program xmlns=$defaultNS()$
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"$if(!namespaces)$>
+	 $else$
+
+	 $namespaces;separator="\n"$>$endif$
+  $if(types)$
+  <types>
+    <xs:schema xmlns=$defaultNS(targetNS)$ targetNamespace=$defaultNS(targetNS)$>
+     $types;separator="\n"$
+    </xs:schema>
+  </types>
+  $endif$
+  $functions;separator="\n"$
+  $statements;separator="\n"$
+</program>
+>>
+
+defaultNS(ns) ::= <<
+$if(ns)$"$ns$"$else$
+"http://www.griphyn.org/2006/08/vdl"
+$endif$
+>>
+
+nsDef(prefix,uri) ::= <<
+$if(prefix)$xmlns:$prefix$="$uri$"$else$targetNamespace="$uri$"$endif$
+>>
+
+typeDef(name,type,members) ::= <<
+$if(type)$
+$if(type.name)$
+<xs:element name="$name$" type="$type$"/>
+$else$
+<xs:simpleType name="$name$">
+  <xs:restriction base="xs:$type$"/>
+</xs:simpleType>
+$endif$
+$else$
+$if(!members)$
+<xs:simpleType name="$name$">
+  <xs:restriction base="xs:string"/>
+</xs:simpleType>
+$else$
+<xs:complexType name="$name$">
+  <xs:sequence>
+    $members;separator="\n"$
+  </xs:sequence>
+</xs:complexType>
+$endif$
+$endif$
+>>
+
+member(type,name, isArray) ::= <<
+$if(isArray)$
+<xs:sequence minOccurs="0" maxOccurs="unbounded">
+  <xs:element name="$name$" type="$if(type.name)$$type$$else$xs:$type$$endif$"/>
+</xs:sequence>
+$else$
+  <xs:element name="$name$" type="$if(type.name)$$type$$else$xs:$type$$endif$"/>
+$endif$
+>>
+
+variable(type,name, isArray, value) ::= <<
+<variable name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(!value)$/>$else$>$value$</variable>
+$endif$
+>>
+
+dataset(name,type,mapping, lfn, isArray) ::= <<
+<dataset name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$>
+$if(lfn)$
+  <file name="$lfn$"/>
+
+$else$
+  $mapping$
+
+$endif$
+</dataset>
+>>
+
+mapping(descriptor,params) ::= <<
+<mapping descriptor="$descriptor$"$if(params)$>
+  $params;separator="\n"$
+</mapping>
+$else$/>$endif$
+>>
+
+mapParam(name,value) ::= <<
+<param name="$name$">$value$</param>
+>>
+
+globalVariable ::= variable
+
+arrayInit(elements,range) ::= <<
+$if(range)$
+
+  $range$
+
+$else$
+
+  <array>
+    $elements:element();separator="\n"$
+  </array>
+
+$endif$
+>>
+
+element() ::= <<
+<element>$it$</element>
+>>
+
+range(from, to, step) ::= <<
+<range from="$from$" to="$to$"$if(step)$ step="$step$"$endif$/>
+>>
+
+function(name,outputs,inputs,statements,config) ::= <<
+<procedure name="$name$">
+  $outputs;separator="\n"$
+  $inputs;separator="\n"$
+  $statements;separator="\n"$
+  $config$
+</procedure>
+>>
+
+call(func,outputs,inputs) ::= <<
+<call proc="$func$">
+  $outputs;separator="\n"$
+  $inputs;separator="\n"$
+</call>
+>>
+
+vardecl() ::= <<
+$if (it.type)$
+<variable name="$it.name$" type="$it.type$"/>$\n$
+$endif$
+>>
+
+returnParam(type,name,bind) ::= <<
+<output$if (bind)$ bind="$bind$"$endif$>$name$</output>
+>>
+
+actualParam(value,bind) ::= <<
+<input$if (bind)$ bind="$bind$"$endif$>$value$</input>
+>>
+  
+parameter(type,name,outlink,isArray,defaultv) ::= <<
+$if(outlink)$
+<output name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(defaultv)$ default="$defaultv$"$endif$/>
+$else$
+<input name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(defaultv)$ default="$defaultv$"$endif$/>
+$endif$
+>>
+
+app(exec,arguments,stdio) ::= <<
+<binding type="app">
+  <application>
+    <executable>$exec$</executable>
+$if(arguments)$
+    $arguments:argument();separator="\n"$
+
+$endif$
+$if(stdio)$
+    $stdio;separator="\n"$
+
+$endif$
+  </application>
+</binding>
+>>
+
+argument() ::= <<
+<argument>$it$</argument>
+>>
+
+service(wsdlURI,portType,operation,messages) ::= <<
+<binding type="service">
+  <service>
+    <wsdl uri=$wsdlURI$/>$if(portType)$	
+    <portType>$portType$</portType>
+$endif$
+
+    <operation>$operation$</operation>
+$if(messages)$
+    $messages;separator="\n"$
+$endif$
+
+  </service> 
+</binding>
+>>
+
+message(name,type,expr,parts) ::= <<
+<$type$ name="$name$">$if(expr)$$expr$</$type$>$else$
+
+  $parts;separator="\n"$
+</$type$>
+$endif$
+>>
+
+part(name,expr) ::= <<
+<part name="$name$">$expr$</part>
+>>
+
+mappingFunc(name,arg) ::= <<
+<function name="$name$">$arg$</function>
+>>
+
+mappingExpr(expr) ::= "$expr$"
+
+stdin(content) ::= <<
+<stdin>$content$</stdin>
+>>
+
+stdout(content) ::= <<
+<stdout>$content$</stdout>
+>>
+
+stderr(content) ::= <<
+<stderr>$content$</stderr>
+>>
+
+statementList(statements) ::= <<
+  $statements;separator="\n"$
+>>
+
+forLoop(e1,e2,e3,statements) ::= <<
+$e1$
+<while test="$e2$">
+  $statements;separator="\n"$
+  $e3$
+</while>
+>>
+
+if(cond,body,els) ::= <<
+<if test="$cond$">
+  <then>
+  $body$
+  </then>
+$if(els)$
+  <else>
+  $els$
+  </else>
+
+$endif$
+</if>
+>>
+
+foreach(variables,var,in,index,body) ::= <<
+$if(variables)$
+$variables$
+
+$endif$
+<foreach var="$var$" in="$in$"$if(index)$ indexVar="$index$"$endif$>
+$body$
+</foreach>
+>>
+
+switch(cond,cases) ::= <<
+<switch test="$cond$">
+  $cases;separator="\n"$
+</switch>
+>>
+
+case(value, statements) ::= <<
+$if(value)$
+<case value="$value$">
+  $statements;separator="\n"$
+</case>
+$else$
+<default>
+  $statements;separator="\n"$
+</default>
+$endif$
+>>
+
+while(cond,body) ::= <<
+<while test="$cond$">
+  $body$
+</while>
+>>
+
+repeat(cond,body) ::= <<
+<repeat until="$cond$">
+  $body$
+</repeat>
+>>
+
+break() ::= <<
+<break/>
+>>
+
+continue() ::= <<
+<continue/>
+>>
+
+assign(lhs,rhs) ::= <<
+<assign to="$lhs$">$rhs$</assign>
+>>
+
+id(var,path) ::= <<
+$if(path)$
+$var$.$path$
+$else$
+$var$
+$endif$
+>>
+
+subscript(var,index) ::= <<
+$if(index)$
+$var$[$index$]
+$else$
+$var$
+$endif$
+>>
+
+unary(sign,exp) ::= "$sign$$exp$"
+
+cond(op,left,right) ::= "$left$ $op$ $right$"
+
+and(left,right) ::= "$left$ &amp;&amp; $right$"
+
+or(left, right) ::= "$left$ || $right$"
+
+not(exp) ::= "!$exp$"
+
+arith(op, left,right) ::= "$left$ $op$ $right$"
+
+paren(exp) ::= "($exp$)"
+
+type_int() ::= "int"
+type_string() ::= "string"
+type_float() ::= "float"
+type_date() ::= "date"
+type_uri() ::= "uri"
+type_bool() ::= "bool"
+
+type_user_object(name) ::= "$name$"
+
+iConst(value) ::= "$value$"
+
+fConst(value) ::= "$value$"
+
+bConst(value) ::= "$value$"
+
+sConst(value,innervalue) ::= "$value$"
+
+null() ::= "null"

@@ -1,0 +1,13 @@
+(12/06/06)
+
+*** Moved to CI SVN
+
+(11/22/06)
+
+*** Changed to a pure Karajan adaptive scheduler instead
+    of a Pegasus site selector
+	
+*** Added "client-side-caching" of remote files
+
+*** Added a basic wrapper to capture exit codes and do other
+    work before and after executing the job
