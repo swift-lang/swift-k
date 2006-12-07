@@ -51,7 +51,7 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 			}
 			else {
 				ContactAllocationTask t = new ContactAllocationTask();
-				t.setStack(stack);
+				t.setStack(stack.copy());
 				Contact contact = s.allocateContact(constraints);
 				s.addJobStatusListener(this, t);
 				s.enqueue(t, new Contact[] { contact });
@@ -76,7 +76,7 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 					failImmediately(stack, "Failed to allocate host");
 				}
 				else {
-					failImmediately(stack, event.getStatus().getException());
+					failImmediately(stack, event.getStatus().getMessage(), e);
 				}
 			}
 			else if (code == Status.COMPLETED) {
