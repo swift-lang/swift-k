@@ -216,7 +216,8 @@ namespace("vdl"
 						
 						doStageout(stageout, sharedDir, rhost)
 							
-						cleanup(tmpdir, rhost)
+						//cleanup is done at the end of everything
+						//cleanup(tmpdir, rhost)
 					)
 					sequential(
 						for(f, ["stderr.txt", "stdout.txt"]
@@ -267,6 +268,8 @@ namespace("vdl"
 				dir:make(sharedDir, host=rhost)
 				transfer(srcdir="{vds.home}/libexec/", srcfile="wrapper.sh", destdir=sharedDir, desthost=rhost)
 				wfdir, sharedDir
+				//we send the cleanup data to vdl:main()
+				to(cleanup, list(wfdir, rhost))
 			)
 		)
 		
@@ -360,11 +363,8 @@ namespace("vdl"
 		)
 		
 		element(cleanup, [dir, host]
-			//echo("Cleaning up ", dir)
-			//rmdir(dir, host)
-			//unsynchronized(
-				//task:execute("/bin/rm", arguments="-rf {dir}", host=host)
-			//)
+			print("Cleaning up ", dir, " on ", host)
+			task:execute("/bin/rm", arguments="-rf {dir}", host=host)
 		)
 		
 		element(stagein, [var]
@@ -410,6 +410,14 @@ namespace("vdl"
 		
 		element(tr, [name]
 			tr = name
+		)
+		
+		element(main, [channel(cleanup)]
+			//this should be reached after the everything is done
+			parallelFor(i, cleanup
+				[dir, host] := each(i)
+				cleanup(dir, host)
+			)
 		)
 	)
 )

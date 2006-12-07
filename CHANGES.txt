@@ -2,6 +2,9 @@
 
 *** Added dynamic loading of the TC file
 
+*** Added cleanup which is done at the end of the
+    whole run
+
 (12/06/06)
 
 *** Moved to CI SVN

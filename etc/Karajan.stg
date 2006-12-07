@@ -15,9 +15,11 @@ program(types,procedures,declarations,statements) ::= <<
   $declarations;separator="\n"$
   $if(statements)$
   <restartLog>
-    <parallel>
-      $statements;separator="\n"$
-    </parallel>
+  	<vdl:main>
+	    <parallel>
+    	  $statements;separator="\n"$
+	    </parallel>
+	</vdl:main>
   </restartLog>  
   $endif$
 </project>
