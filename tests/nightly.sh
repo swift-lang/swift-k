@@ -4,6 +4,7 @@ OUTDIR=`pwd`
 LOGCOUNT=0
 SEQ=1
 DATE=`date +"%y%m%d"`
+TIME=`date +"%T %Z(%z)"`
 RUNDIRBASE="run-$DATE"
 RUNDIR="$OUTDIR/$RUNDIRBASE"
 mkdir -p $RUNDIR
@@ -44,7 +45,7 @@ DOH
 	cat <<DOH >$HTML
 <html>
 	<head>
-		<title>VDL2 nightly integration tests an build ($DATE)</title>
+		<title>VDL2 nightly integration tests and build ($DATE $TIME)</title>
 		<style type="text/css">
 			a:link {color:black}
 			a:visited {color:black}
@@ -55,7 +56,7 @@ DOH
 		</style>
 	</head>
 	<body>
-	<h1>VDL2 nightly integration tests an build ($DATE)</h1>
+	<h1>VDL2 nightly integration tests and build ($DATE $TIME)</h1>
 	<ol>
 		<li><a href="#tests">Test results</a>
 		<li><a href="#packages">Compiled packages</a>
