@@ -1,3 +1,11 @@
+(12/07/2006)
+
+*** Schedulers fail now when no resources are available for a 
+    task but no tasks are running. The guess is that suitable
+	resources will never be available for the task. 
+	The checking of such conditions should be done in a better
+	way.
+
 (12/05/2006)
 
 *** Added support for the .kml extension. This is only intended
