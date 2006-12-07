@@ -61,7 +61,7 @@ DOH
 		<li><a href="#tests">Test results</a>
 		<li><a href="#packages">Compiled packages</a>
 		<li><a href="#older">Older tests</a>
-		<li><a href="info.html">How to add new tests</a>
+		<li><a href="addtests.html">How to add new tests</a>
 	</ol>
 DOH
 	FIRSTTEST=1
