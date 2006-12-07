@@ -33,6 +33,7 @@ head() {
 <html>
 	<head>
 		<title>Redirecting...</title>
+		<meta http-equiv="cache-control" content="no-cache">
 		<meta http-equiv="refresh" content="0,url=$HTMLBASE">
 	</head>
 	<body>
