@@ -16,6 +16,10 @@ import org.globus.cog.karajan.util.BoundContact;
 public class ContactAllocationTask extends TaskImpl {
 	private BoundContact contact;
 	private VariableStack stack;
+	
+	public ContactAllocationTask() {
+		setName("Contact allocation task");
+	}
 
 	public BoundContact getContact() {
 		return contact;
