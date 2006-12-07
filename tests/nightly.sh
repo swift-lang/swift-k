@@ -118,7 +118,7 @@ out() {
 		if [ "$FIRSTTEST" == "1" ]; then
 			html "<h1>Test results</h1>"
 			html "<a name=\"tests\">"
-			html "<a href=\"tests.log\">Output log from tests</a>"
+			html "<a href=\"$RUNDIR/tests.log\">Output log from tests</a>"
 			html "<table border=\"0\">"
 			FIRSTTEST=0
 		else
