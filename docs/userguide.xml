@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" >
+
 <article>
 	<articleinfo>
 	<title>A gentle guide to DocBook</title>
@@ -37,6 +39,9 @@ We use a C-like syntax to represent VDL types. For instance, we can define an or
 			string name; 
 			integer quantity; 
 		}
-		</quote></sect2>
+		</quote>
+					</para>
+		
+		</sect2>
 	</sect1>
 </article>
