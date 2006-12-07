@@ -1,3 +1,7 @@
+(12/07/06)
+
+*** Added dynamic loading of the TC file
+
 (12/06/06)
 
 *** Moved to CI SVN
