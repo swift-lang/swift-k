@@ -152,7 +152,14 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected TaskConstraints getTaskConstraints(Task t) {
-		return null;
+		Object constraints = super.getConstraints(t);
+        if (constraints instanceof Contact[]) {
+        	Contact[] c = (Contact[]) constraints;
+            if (c.length > 0 && c[0] != null) {
+            	return c[0].getConstraints();
+            }
+        }
+        return null;
 	}
 
 	public void enqueue(Task task, Object constraints) {
@@ -236,6 +243,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					success = true;
 				}
 				catch (NoFreeResourceException e) {
+					if (running == 0) {
+						failUnsubmittedTask(t, "Could not find any valid host for task \"" + t
+								+ "\" with constraints " + getTaskConstraints(t), e);
+					}
 				}
 				catch (Exception e) {
 					failTask(t, "The scheduler could not execute the task", e);
