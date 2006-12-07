@@ -179,8 +179,8 @@ tlog() {
 	else
 		touch $RUNDIR/$TLOG
 	fi
-	let "LOGCOUNT=$LOGCOUNT+1"
 	TLOG="$RUNDIRBASE/$TLOG"
+	let "LOGCOUNT=$LOGCOUNT+1"
 }
 
 fexec() {
