@@ -22,9 +22,24 @@ else
 fi
 
 head() {
-	HTML=$OUTDIR/tests-$DATE.html
+	HTMLBASE=tests-$DATE.html
+	HTML=$OUTDIR/$HTMLBASE
 	rm -f $OUTDIR/current.html
-	ln -s $HTML $OUTDIR/current.html
+	
+	#This doesn't work well with servers that don't follow symlinks
+	#ln -s $HTML $OUTDIR/current.html
+	
+	cat <<DOH >$OUTDIR/current.html
+<html>
+	<head>
+		<title>Redirecting...</title>
+		<meta http-equiv="refresh" content="0,url=$HTMLBASE">
+	</head>
+	<body>
+		You should be redirected to <a href="$HTMLBASE">$HTMLBASE</a>
+	</body>
+</html>
+DOH
 	cat <<DOH >$HTML
 <html>
 	<head>
