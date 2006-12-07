@@ -132,6 +132,11 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		failImmediately(stack, new FailureNotificationEvent(this, stack, exception.getMessage(),
 				exception));
 	}
+	
+	public void failImmediately(VariableStack stack, String message, Exception exception) throws ExecutionException {
+		failImmediately(stack, new FailureNotificationEvent(this, stack, message,
+				exception));
+	}
 
 	/**
 	 * Notification events notify callers of the status of the execution
