@@ -173,8 +173,9 @@ aexec() {
 
 tlog() {
 	TLOG="output_$LOGCOUNT.txt"
+	banner $LASTCMD $RUNDIR/$TLOG
 	if [ -f $OUTDIR/x73010test.log ]; then
-		cp $OUTDIR/x73010test.log $RUNDIR/$TLOG >>$OUT 2>&1 
+		cat $OUTDIR/x73010test.log >>$RUNDIR/$TLOG 2>>$OUT
 	else
 		touch $RUNDIR/$TLOG
 	fi
@@ -192,10 +193,15 @@ fexec() {
 }
 
 banner() {
-	echo "">>$OUT
-	echo "*****************************************************************************************">>$OUT
-	echo "* $1" >>$OUT
-	echo "*****************************************************************************************">>$OUT
+	if [ "$2" == "" ]; then
+		BOUT=$OUT
+	else
+		BOUT=$2
+	fi
+	echo "">>$BOUT
+	echo "*****************************************************************************************">>$BOUT
+	echo "* $1" >>$BOUT
+	echo "*****************************************************************************************">>$BOUT
 }
 
 pexec() {
