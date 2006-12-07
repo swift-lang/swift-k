@@ -1,12 +1,12 @@
 #!/bin/bash
 
-OUTDIR=`pwd`
+OUTDIR=$PWD
 LOGCOUNT=0
 SEQ=1
 DATE=`date +"%y%m%d"`
 TIME=`date +"%T %Z(%z)"`
 RUNDIRBASE="run-$DATE"
-RUNDIR="$OUTDIR/$RUNDIRBASE"
+RUNDIR=$OUTDIR/$RUNDIRBASE
 mkdir -p $RUNDIR
 
 if [ "$1" == "-fco" ]; then
@@ -17,10 +17,11 @@ elif [ "$2" == "-fco" ]; then
 fi
 
 if [ "$1" == "" ]; then
-	OUT=$RUNDIR/"tests.log"
+	OUTBASE=$RUNDIRBASE/tests.log
 else
-	OUT=$RUNDIR/$1
+	OUTBASE=$RUNDIRBASE/$1
 fi
+OUT=$OUTDIR/$OUTBASE
 
 head() {
 	HTMLBASE=tests-$DATE.html
@@ -118,7 +119,7 @@ out() {
 		if [ "$FIRSTTEST" == "1" ]; then
 			html "<h1>Test results</h1>"
 			html "<a name=\"tests\">"
-			html "<a href=\"$RUNDIR/tests.log\">Output log from tests</a>"
+			html "<a href=\"$OUTBASE\">Output log from tests</a>"
 			html "<table border=\"0\">"
 			FIRSTTEST=0
 		else
@@ -270,11 +271,6 @@ vtest() {
 	fi
 }
 
-if [ "$1" == "" ]; then
-	OUT=$OUTDIR/"tests.log"
-else
-	OUT=$OUTDIR/$1
-fi
 date > $OUT
 FLUSH=1
 
