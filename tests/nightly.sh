@@ -173,11 +173,10 @@ aexec() {
 
 tlog() {
 	TLOG="output_$LOGCOUNT.txt"
+	rm -f $RUNDIR/$TLOG
 	banner $LASTCMD $RUNDIR/$TLOG
 	if [ -f $OUTDIR/x73010test.log ]; then
 		cat $OUTDIR/x73010test.log >>$RUNDIR/$TLOG 2>>$OUT
-	else
-		touch $RUNDIR/$TLOG
 	fi
 	TLOG="$RUNDIRBASE/$TLOG"
 	let "LOGCOUNT=$LOGCOUNT+1"
