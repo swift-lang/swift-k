@@ -1,0 +1,5 @@
+Edited with Eclipse, with OrangeVolt plugins.
+
+
+Generated the html with:
+$ xsltproc formatting/custom_html.xsl userguide.xml
