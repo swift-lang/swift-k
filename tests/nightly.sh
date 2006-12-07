@@ -141,7 +141,7 @@ out() {
 		fi
 		if [ "$RES" == "Passed" ]; then
 			html "<td class=\"success\" $WIDTH title=\"$CMD\">"
-			html "$SEQ"
+			html "<a href=\"$LOG\">$SEQ</a>"
 		else
 			html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
 			html "<a href=\"$LOG\">$SEQ</a>"
@@ -239,12 +239,8 @@ ptest() {
 	else
 		RES="Failed"
 	fi
-	if [ "$EXITCODE" != "0" ]; then
-		tlog
-		out test "$TEST" $SEQ "$LASTCMD" $RES $TLOG
-	else
-		out test "$TEST" $SEQ "$LASTCMD" $RES
-	fi
+	tlog
+	out test "$TEST" $SEQ "$LASTCMD" $RES $TLOG
 	if [ "$EXITONFAILURE" == "true" ]; then
 		if [ "$EXITCODE" != "0" ]; then
 			exit
@@ -259,14 +255,12 @@ vtest() {
 	else
 		RES="Failed"
 	fi
+	tlog
+	out test "$TEST" $SEQ "$LASTCMD" $RES $TLOG
 	if [ "$EXITCODE" != "0" ]; then
-		tlog
-		out test "$TEST" $SEQ "$LASTCMD" $RES $TLOG
 		if [ "$EXITONFAILURE" == "true" ]; then
 			exit
 		fi
-	else
-		out test "$TEST" $SEQ "$LASTCMD" $RES
 	fi
 }
 
