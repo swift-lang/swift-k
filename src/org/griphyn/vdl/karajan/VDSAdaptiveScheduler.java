@@ -14,12 +14,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.scheduler.AbstractScheduler;
 import org.globus.cog.karajan.scheduler.ResourceConstraintChecker;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.globus.cog.karajan.util.BoundContact;
 import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.transformation.TCMode;
+import org.griphyn.common.catalog.transformation.File;
 import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.util.FQN;
 
@@ -29,9 +30,29 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 	private TransformationCatalog tc;
 
 	public VDSAdaptiveScheduler() {
-		tc = TCMode.loadInstance();
-		this.setConstraintChecker(new TCChecker(tc));
-		this.addTaskTransformer(new VDSTaskTransformer(tc));
+	}
+	
+	public static final String PROP_TC_FILE = "transformationCatalogFile";
+	
+	private static String[] propertyNames;
+	
+	public synchronized String[] getPropertyNames() {
+		if (propertyNames == null) {
+			propertyNames = AbstractScheduler.combineNames(super.getPropertyNames(),
+					new String[] {PROP_TC_FILE});
+		}
+		return propertyNames;
+	}
+
+	public void setProperty(String name, Object value) {
+		if (PROP_TC_FILE.equals(name)) {
+			tc = File.getNonSingletonInstance((String) value);
+			this.setConstraintChecker(new TCChecker(tc));
+			this.addTaskTransformer(new VDSTaskTransformer(tc));
+		}
+		else {
+			super.setProperty(name, value);
+		}
 	}
 
 	public static class TCChecker implements ResourceConstraintChecker {
