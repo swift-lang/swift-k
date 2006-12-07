@@ -11,7 +11,7 @@
 <xsl:param name="chunk.fast">1</xsl:param>
 <!--
  which css stylesheet to use?
-<xsl:param name="html.stylesheet" select="'/formatting/default.css'"></xsl:param> 
+<xsl:param name="html.stylesheet" select="'default.css'"></xsl:param> 
 -->
 <!--
  Use graphics in admonitions? like 'warnings' 'important' 'note' etc 
@@ -118,9 +118,7 @@
 <!-- add elements to the HEAD tag -->
 
 	<xsl:template name="user.head.content">
-<link href="/toolkit/css/default.css" rel="stylesheet" type="text/css"/>
-<link rel="stylesheet" type="text/css" href="/toolkit/css/print.css" media="print"/>
-<link rel="alternate" title="Globus Toolkit RSS" href="/toolkit/rss/downloadNews/downloadNews.xml" type="application/rss+xml"/>
+<link href="default.css" rel="stylesheet" type="text/css"/>
 
 	<script>
 

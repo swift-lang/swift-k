@@ -1,4 +1,4 @@
-<xsl:stylesheet version="1.0">
+<xsl:stylesheet version="1.0"  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 −
 	<!--
  now replace all these settings with those specific for use with the fo stylesheet (for pdf output) 
@@ -9,7 +9,11 @@
  those variables 
 -->
 <!-- which stylesheet to use? -->
+<!--  
 <xsl:import href="/usr/share/xml/docbook/stylesheet/nwalsh/fo/docbook.xsl"/>
+-->
+<xsl:import href="/sw/share/xml/xsl/docbook-xsl/fo/docbook.xsl"/>
+
 <!-- enable extensions -->
 <xsl:param name="use.extensions" select="'0'"/>
 <xsl:param name="xep.extensions" select="0"/>
