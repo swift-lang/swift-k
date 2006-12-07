@@ -12,13 +12,37 @@
 	<title>A gentle guide to DocBook</title>
 	<author>
 		<firstname>Joe</firstname>
-		<surname>Brockmeier</surname>
+		<surname>Schmoe</surname>
 	</author>
 	</articleinfo>
 <sect1 label="1.0">
-	<title>A brief introduction to DocBook</title>
+	<title>The VDL2 User Guide</title>
 <para>
-If you've ever thought about writing documentation for an open source project...
+Get ready to be blown into pieces
 </para>
 </sect1>
+
+	<sect1 label="Overview">
+		<title>Overview</title>
+		<para>
+Before we get into the details of the examples, let’s first go over some of the major components in VDL2		
+		</para>
+		<sect2>
+			<title>Type System</title>
+			<para>
+The VDL2 type system is based on the XDTM (XML dataset typing and mapping) model, where a dataset’s logical structure is described via (a subset of) XML Schema, which defines primitive scalar data types such as Boolean, Integer, String, Float, and Date, and also allows for the definition of complex types via the composition of simple and complex types. 
+			</para>
+			<para>
+We use a C-like syntax to represent VDL types. For instance, we can define an order as composed of an array of items, where each item has a name and a quantity:
+		<quote>
+		type order { 
+			item[] items; 
+		}
+
+		type item { 
+			string name; 
+			integer quantity; 
+		}
+		</quote></sect2>
+	</sect1>
 </article>
