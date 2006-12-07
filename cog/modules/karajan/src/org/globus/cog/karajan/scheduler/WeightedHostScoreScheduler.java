@@ -217,7 +217,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		return propertyNames;
 	}
 
-	public final void setProperty(String name, Object value) {
+	public void setProperty(String name, Object value) {
 		if (propertyNamesSet.contains(name)) {
 			if (POLICY.equals(name)) {
 				if (value instanceof String) {
