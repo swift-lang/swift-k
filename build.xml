@@ -71,6 +71,10 @@
 		<copy todir="${dist.dir}/var">
 			<fileset dir="${cog.dir}/modules/${module.name}/var"/>
 		</copy>
+		<mkdir dir="${dist.dir}/libexec"/>
+		<copy todir="${dist.dir}/libexec">
+			<fileset dir="${cog.dir}/modules/${module.name}/libexec"/>
+		</copy>
 		<copy todir="${dist.dir}/bin">
 			<fileset dir="${cog.dir}/modules/${module.name}/bin"/>
 		</copy>
