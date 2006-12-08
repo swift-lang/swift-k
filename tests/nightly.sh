@@ -36,9 +36,13 @@ head() {
 	<head>
 		<title>Redirecting...</title>
 		<meta http-equiv="cache-control" content="no-cache">
-		<meta http-equiv="refresh" content="0,url=$HTMLBASE">
+		<script language="JavaScript">
+			function redirect() {
+				window.location="$HTMLBASE";
+			}
+		</script>
 	</head>
-	<body>
+	<body onLoad="redirect()">
 		You should be redirected to <a href="$HTMLBASE">$HTMLBASE</a>
 	</body>
 </html>
