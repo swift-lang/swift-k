@@ -64,7 +64,7 @@
 					Edit <filename
 					class="file">vdsk-xyz/etc/vdl2.properties</filename>. You
 					should add your numeric IP address there
-					(<property>ip</property>=<literal>x.y.z.w</literal>).
+					(<property>ip.address</property>=<literal>x.y.z.w</literal>).
 				
 				</para>
 			</listitem>	
