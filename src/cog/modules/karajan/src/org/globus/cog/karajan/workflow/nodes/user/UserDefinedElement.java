@@ -480,6 +480,19 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		}
 	}
 	
+	public void setProperties(Map properties) {
+		super.setProperties(properties);
+		Object value;
+		value = properties.get(KMODE);
+		if (value != null) {
+			kmode = TypeUtil.toBoolean(value);
+		}
+		value = properties.get(SKIP);
+		if (value != null) {
+			skip = TypeUtil.toInt(value);
+		}
+	}
+
 	public void addStaticArgument(String name, Object value) {
 		super.addStaticArgument(name, value);
 		if ("vargs".equals(name)) {
