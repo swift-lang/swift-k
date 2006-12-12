@@ -45,7 +45,7 @@
 			
 				Stable releases can be obtained from the VDL2 download page:
 				<ulink
-				url="http://www.ci.uchicago.edu/~hategan/vdl2/downloads.shtml#stable">VDL2
+				url="http://vds.uchicago.edu/vdl2/downloads.shtml#stable">VDL2
 				Downloads Page</ulink>. Once you downloaded the package, please
 				move to the <link linkend="install">install section</link>.
 
@@ -58,7 +58,7 @@
 			<para>
 			
 				VDL2 builds and tests are being run every day. The <ulink
-				url="http://www.ci.uchicago.edu/~hategan/vdl2/downloads.shtml#nightly">VDL2
+				url="http://vds.uchicago.edu/vdl2/downloads.shtml#nightly">VDL2
 				downloads page</ulink> contains links to the latest build and
 				test page. The nightly builds reflect a development version of
 				the VDL2 code and should not be used in production mode. After
@@ -75,7 +75,7 @@
 			
 				Details about accessing the VDL2 source repository together with
 				build instructions are available on the <ulink
-				url="http://www.ci.uchicago.edu/~hategan/vdl2/downloads.shtml#nightly">VDL2
+				url="http://vds.uchicago.edu/vdl2/downloads.shtml#nightly">VDL2
 				downloads page</ulink>. Once built, the <filename
 				class="directory">dist/vdsk-&lt;version&gt;</filename> directory
 				will contain a self-contained build which can be moved to a
@@ -344,7 +344,7 @@ ip=192.168.0.1
 			The VDL2 examples can be found in the <filename
 			class="directory">&lt;VDS_HOME&gt;/examples</filename> directory.
 			The examples are written in the <ulink
-			url="http://www.ci.uchicago.edu/vdl2/languageref-0.5.html">VDL2
+			url="http://vds.uchicago.edu/vdl2/guides/languageref-0.5.html">VDL2
 			language</ulink>, and have <filename class="file">.dtm</filename> as
 			a file extension. 
 
