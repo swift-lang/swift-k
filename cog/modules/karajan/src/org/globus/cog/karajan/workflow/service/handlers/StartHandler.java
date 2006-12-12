@@ -31,13 +31,15 @@ import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.DefList;
+import org.globus.cog.karajan.util.DefinitionEnvironment;
 import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.karajan.util.serialization.XMLConverter;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.JavaElement;
 import org.globus.cog.karajan.workflow.nodes.Disallowed;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.Include;
-import org.globus.cog.karajan.workflow.nodes.user.UserDefinedElement;
+import org.globus.cog.karajan.workflow.nodes.user.UDEDefinition;
 import org.globus.cog.karajan.workflow.service.InstanceContext;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RemoteContainer;
@@ -59,7 +61,9 @@ public class StartHandler extends RequestHandler {
 		}
 		else {
 			Integer eid = Integer.valueOf(new String((byte[]) data.get(1)));
-			logger.debug("Destination UID: " + eid);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Destination UID: " + eid);
+			}
 			Inflater inflater = new Inflater();
 			InputStreamReader isr = new InputStreamReader(new InflaterInputStream(
 					new ByteArrayInputStream((byte[]) data.get(2)), inflater));
@@ -85,23 +89,22 @@ public class StartHandler extends RequestHandler {
 				}
 			}
 			catch (Exception e) {
-				sendError("Exception caught: " + e.toString());
+				sendError(e.getMessage(), e);
 			}
 		}
 	}
 
 	private FlowElement addImports(FlowElement fe, VariableStack stack, ChannelContext sc)
 			throws ExecutionException {
-		if (!stack.isDefined("#imports")) {
-			return fe;
-		}
 		RemoteContainer seq = new RemoteContainer();
 		seq.setElementType("sequential");
-		Collection imports = (Collection) stack.getVar("#imports");
-		Iterator i = imports.iterator();
-		while (i.hasNext()) {
-			String imp = (String) i.next();
-			seq.addElement(getImport(sc, imp));
+		if (stack.isDefined("#imports")) {
+			Collection imports = (Collection) stack.getVar("#imports");
+			Iterator i = imports.iterator();
+			while (i.hasNext()) {
+				String imp = (String) i.next();
+				seq.addElement(getImport(sc, imp));
+			}
 		}
 		seq.addElement(fe);
 		seq.setProperty(FlowElement.UID, fe.getProperty(FlowElement.UID));
@@ -168,6 +171,14 @@ public class StartHandler extends RequestHandler {
 		}
 		copy.enter();
 		copy.setVar(RemoteNode.REMOTE_FLAG, true);
+		/* 
+		 * The stack on this will be set by the remote container
+		 * It is needed because the remote imports, which are needed
+		 * by user defined elements, are not on this frame 
+		 */
+		DefinitionEnvironment env = new DefinitionEnvironment(null, null);
+		copy.setVar(RemoteContainer.DEF_ENV, env);
+		
 		Collection channels = (Collection) stack.getVar("#channels");
 		Iterator i = channels.iterator();
 		while (i.hasNext()) {
@@ -199,8 +210,12 @@ public class StartHandler extends RequestHandler {
 						while (ei.hasNext()) {
 							String prefix = (String) ei.next();
 							Object value = m.get(prefix);
-							if (!(value instanceof UserDefinedElement)) {
+							if (value instanceof JavaElement) {
 								m.put(prefix, new Disallowed());
+							}
+							else if (value instanceof UDEDefinition) {
+								UDEDefinition uded = (UDEDefinition) value;
+								m.put(prefix, new UDEDefinition(uded.getUdeNR(), env));
 							}
 						}
 						copy.setVar(name, m);
