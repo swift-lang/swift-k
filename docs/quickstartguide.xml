@@ -315,7 +315,7 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 								mechanims is not reliable. In such cases, the IP
 								address of the VDL2 client machine can be
 								specified using this property. The value of this
-								property must be a numeric address without any.
+								property must be a numeric address without quotes.
 								
 							</para>
 						</listitem>
