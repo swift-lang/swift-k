@@ -10,6 +10,10 @@
 			<formalpara>
 				<title></title>
 				<para>
+				
+					The impatient may find the <ulink
+					url="reallyquickstartguide.shtml">VDL2 Really Quick Start
+					Guide</ulink> to be more convenient.
 
 					This guide describes the steps needed to download, install,
 					configure, and run the basic examples for VDL2. If you are
@@ -344,6 +348,17 @@ ip=192.168.0.1
 			language</ulink>, and have <filename class="file">.dtm</filename> as
 			a file extension. 
 
+		</para>
+		
+		<para>
+		
+			The Globus Security Infrastructure, which VDL2 uses, works with
+			limited time certificates called proxies. These proxies can be
+			generated from your user certificate and private key using one of
+			<command>grid-proxy-init</command> or
+			<command>cog-proxy-init</command> (the latter being a Java Swing
+			interface to the former).
+		
 		</para>
 		
 		<para>
