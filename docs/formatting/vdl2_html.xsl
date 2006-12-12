@@ -1,7 +1,9 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-	<!-- Which DocBook standard xsl file should we use as the default? --> 
+	<!-- Which DocBook standard xsl file should we use as the default? -->
+	<!-- Well, xsltproc doesn't cache the xsl files fetched over the web, so better use a local copy -->
 	<xsl:import href="docbook/html/chunk.xsl"/>
+	<!--<xsl:import href="http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl"/>-->
 	<!--
 	
 		testing: if you want to generate your own html without installing
@@ -135,7 +137,7 @@
 	<!-- add elements to the HEAD tag -->
 
 	<xsl:template name="user.head.content"> 
-		<link href="style.css" rel="stylesheet" type="text/css"/>
+		<link href="http://vds.uchicago.edu/vdl2/style.css" rel="stylesheet" type="text/css"/>
 	</xsl:template>
 
 	<!-- add an attribute to the BODY tag -->
