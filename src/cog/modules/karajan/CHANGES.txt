@@ -5,6 +5,8 @@
 	
 *** Cleaned up the xstream conversion exception a bit
 
+*** Removed files belonging to the old Axis based service
+
 (12/07/2006)
 
 *** Schedulers fail now when no resources are available for a 
