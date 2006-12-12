@@ -19,7 +19,7 @@ public class DefList {
 	private final String name;
 	private String[] prefixes;
 	private Object[] defs;
-	private int count; 
+	private int count;
 	private int size;
 
 	public DefList(DefList prev) {
@@ -61,6 +61,10 @@ public class DefList {
 			defs[count] = def;
 			count++;
 		}
+	}
+	
+	public DefList getPrev() {
+		return prev;
 	}
 
 	protected boolean replace(String prefix, Object def) {
@@ -105,6 +109,12 @@ public class DefList {
 		String[] p = new String[count];
 		System.arraycopy(prefixes, 0, p, 0, count);
 		return p;
+	}
+	
+	public Object[] currentObjects() {
+		Object[] o = new Object[count];
+		System.arraycopy(defs, 0, o, 0, count);
+		return o;
 	}
 
 	public String getName() {
