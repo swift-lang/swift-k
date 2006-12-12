@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<article>
+	<articleinfo revision="0.1">
+		<title>VDL2 Really Quick Start Guide</title>
+	
+		<abstract>
+			<formalpara>
+				<title></title>
+				<para>
+				
+					This guide is a compressed version of the <ulink
+					url="quickstartguide.shtml">VDL2 Quick Start
+					Guide</ulink>.
+				
+				</para>
+			</formalpara>
+		</abstract>
+	</articleinfo>
+
+	<sect1 id="reallyquickstart">
+		<title>VDL2 Really Quick Start Guide</title>
+		
+		<itemizedlist>
+		
+			<listitem>
+				<para>
+				
+					<ulink
+					url="http://www.ci.uchicago.edu/vdl2/downloads.shtml">Download</ulink>
+					VDL2.
+				
+				</para>
+			</listitem>	
+			
+			<listitem>
+				<para>
+				
+					Unpack it and add the <filename
+					class="directory">vdsk-xyz/bin</filename> directory to your
+					<envar>PATH</envar>.
+				
+				</para>
+			</listitem>	
+			
+			<listitem>
+				<para>
+				
+					Make sure you have your user certificate, a valid GSI proxy
+					certificate, and the proper CA root certificates in either
+					<filename
+					class="directory">~/.globus/certificates</filename> or
+					<filename
+					class="directory">/etc/grid-security/certificates</filename>.
+				
+				</para>
+			</listitem>	
+			
+			<listitem>
+				<para>
+				
+					Edit <filename
+					class="file">vdsk-xyz/etc/vdl2.properties</filename>. You
+					should add your numeric IP address there
+					(<property>ip</property>=<literal>x.y.z.w</literal>).
+				
+				</para>
+			</listitem>	
+			
+			<listitem>
+				<para>
+				
+					Use <command>vdlc file.dtm</command> to compile <filename
+					class="file">.dtm</filename> files to <filename
+					class="file">.kml</filename> files.
+				
+				</para>
+			</listitem>	
+			
+			<listitem>
+				<para>
+				
+					Use <command>vdlrun file.kml</command> to execute <filename
+					class="file">.kml</filename> files.
+				
+				</para>
+			</listitem>	
+			
+			<listitem>
+				<para>
+				
+					Use <command>vdlrun file.kml
+					-rlog:resume=file.kml.?.rlog</command> to resume a failed
+					run.
+				
+				</para>
+			</listitem>	
+		
+		</itemizedlist>
+		
+	</sect1>
+</article>
