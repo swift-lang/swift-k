@@ -10,20 +10,19 @@
 package org.globus.cog.karajan.workflow.service.commands;
 
 import org.globus.cog.karajan.util.DefinitionEnvironment;
+import org.globus.cog.karajan.util.serialization.KarajanSerializationContext;
+import org.globus.cog.karajan.util.serialization.UDEDefinitionConverter;
 import org.globus.cog.karajan.workflow.nodes.user.UDEDefinition;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
-import com.thoughtworks.xstream.core.JVM;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-import com.thoughtworks.xstream.mapper.Mapper;
 
-public class UDEDefinitionConverter extends ReflectionConverter {
+public class RUDEDefinitionConverter extends UDEDefinitionConverter {
 	
 	private final DefinitionEnvironment env;
 
-	public UDEDefinitionConverter(Mapper mapper, DefinitionEnvironment env) {
-		super(mapper, new JVM().bestReflectionProvider());
+	public RUDEDefinitionConverter(KarajanSerializationContext kcontext, DefinitionEnvironment env) {
+		super(kcontext);
 		this.env = env;
 	}
 
