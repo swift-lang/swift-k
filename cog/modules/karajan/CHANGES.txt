@@ -1,3 +1,10 @@
+(12/12/2006)
+
+*** Fixed service to properly handle elements defined on the
+    other side.
+	
+*** Cleaned up the xstream conversion exception a bit
+
 (12/07/2006)
 
 *** Schedulers fail now when no resources are available for a 
