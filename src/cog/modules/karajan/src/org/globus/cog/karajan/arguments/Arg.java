@@ -224,6 +224,15 @@ public abstract class Arg {
 			this(name, false);
 		}
 		
+		public static Channel getInstance(String name) {
+			if (name.equals("...") || name.equals("vargs")) {
+				return VARGS;
+			}
+			else {
+				return new Channel(name);
+			}
+		}
+		
 		public Channel(String name, boolean commutative) {
 			super(name, CHANNEL);
 			this.variableName = variableName(getName());
