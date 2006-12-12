@@ -100,7 +100,15 @@ public class ElementConverter extends AbstractKarajanConverter {
 				continue;
 			}
 			else if (name.startsWith("_")) {
-				wrapper.setProperty(mrd.getAttributeName(i), mrd.getAttributeValue(i));
+				wrapper.setProperty(name, mrd.getAttributeValue(i));
+			}
+			else if (name.equals("__id_")) {
+				// unescape the id attribute to avoid clashes with XStream
+				wrapper.addStaticArgument("id", mrd.getAttributeValue(i));
+			}
+			else if (name.equals("id")) {
+				// this one belongs to XStream and should be skipped
+				continue;
 			}
 			else {
 				try {
