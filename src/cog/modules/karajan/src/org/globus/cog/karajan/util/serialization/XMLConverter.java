@@ -18,6 +18,7 @@ import java.util.Map;
 import org.globus.cog.karajan.stack.DefaultStackFrame;
 import org.globus.cog.karajan.stack.LinkedStack;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.DefList;
 import org.globus.cog.karajan.util.ListKarajanIterator;
 import org.globus.cog.karajan.util.StateManager;
 import org.globus.cog.karajan.util.ThreadedElement;
@@ -77,6 +78,8 @@ public class XMLConverter {
 		registerConverter(new NullConverter());
 		registerConverter(new ElementConverter(kcontext));
 		registerConverter(new ListLoopIteratorConverter(kcontext));
+		registerConverter(new DefListConverter(kcontext));
+		registerConverter(new UDEDefinitionConverter(kcontext));
 		alias("karajan-iterator", ListKarajanIterator.class);
 		alias("element", SequentialImplicitExecutionUDE.class);
 		alias("parallelElement", ParallelImplicitExecutionUDE.class);
@@ -88,6 +91,7 @@ public class XMLConverter {
 		// xstream.alias("error-handler", ErrorHandler.class);
 		registerConverter(new FutureVariableArgumentsConverter(kcontext));
 		alias("future-vargs", FutureVariableArguments.class);
+		alias("deflist", DefList.class);
 		registerConverter(new FutureVariableArgumentsIteratorConverter(kcontext));
 		registerConverter(new SimpleDateFormatConverter(kcontext));
 		registerConverter(new DecimalFormatConverter(kcontext));
