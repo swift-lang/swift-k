@@ -30,13 +30,13 @@ public class ListLoopIteratorConverter extends AbstractKarajanConverter {
 
 	public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
 		ListKarajanIterator lli = (ListKarajanIterator) source;
-		marshallObject(writer, context, "list", lli.getList());
-		marshallObject(writer, context, "current", lli.current());
+		marshalObject(writer, context, "list", lli.getList());
+		marshalObject(writer, context, "current", lli.current());
 	}
 
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-		List list = (List) unmarshallObject(reader, context, List.class, null);
-		Integer current = (Integer) unmarshallObject(reader, context, Integer.class, list);
+		List list = (List) unmarshalObject(reader, context, List.class, null);
+		Integer current = (Integer) unmarshalObject(reader, context, Integer.class, list);
 		ListKarajanIterator lli = new ListKarajanIterator(list);
 		lli.skipTo(current.intValue());
 		return lli;

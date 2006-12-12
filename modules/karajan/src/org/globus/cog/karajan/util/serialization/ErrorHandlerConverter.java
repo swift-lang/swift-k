@@ -29,15 +29,15 @@ public class ErrorHandlerConverter extends AbstractKarajanConverter {
 
 	public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
 		ErrorHandler eh = (ErrorHandler) source;
-		marshallObject(writer, context, "type", eh.getType());
-		marshallObject(writer, context, "handler", eh.getHandler());
+		marshalObject(writer, context, "type", eh.getType());
+		marshalObject(writer, context, "handler", eh.getHandler());
 	}
 
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
 		ErrorHandler eh = new ErrorHandler();
-		eh.setType((String) unmarshallObject(reader, context, String.class, eh));
+		eh.setType((String) unmarshalObject(reader, context, String.class, eh));
 		reader.moveDown();
-		eh.setHandler((FlowElement) unmarshallObject(reader, context, FlowElement.class, eh));
+		eh.setHandler((FlowElement) unmarshalObject(reader, context, FlowElement.class, eh));
 		reader.moveUp();
 		return eh;
 	}

@@ -30,18 +30,18 @@ public class ServiceConverter extends AbstractKarajanConverter {
 
 	public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
 		ServiceImpl si = (ServiceImpl) source;
-		marshallObject(writer, context, "type", si.getType());
-		marshallObject(writer, context, "provider", si.getProvider());
-		marshallObjectCls(writer, context, "serviceContact", si.getServiceContact());
-		marshallObjectCls(writer, context, "securityContext", si.getSecurityContext());
+		marshalObject(writer, context, "type", si.getType());
+		marshalObject(writer, context, "provider", si.getProvider());
+		marshalObjectCls(writer, context, "serviceContact", si.getServiceContact());
+		marshalObjectCls(writer, context, "securityContext", si.getSecurityContext());
 	}
 
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-		Integer type = (Integer) unmarshallObject(reader, context, Integer.class, null);
-		String provider = (String) unmarshallObject(reader, context, String.class, null);
-		ServiceContact svc = (ServiceContact) unmarshallObject(reader, context,
+		Integer type = (Integer) unmarshalObject(reader, context, Integer.class, null);
+		String provider = (String) unmarshalObject(reader, context, String.class, null);
+		ServiceContact svc = (ServiceContact) unmarshalObject(reader, context,
 				ServiceContact.class, null);
-		SecurityContext sc = (SecurityContext) unmarshallObject(reader, context,
+		SecurityContext sc = (SecurityContext) unmarshalObject(reader, context,
 				SecurityContext.class, null);
 		ServiceImpl s = new ServiceImpl();
 		s.setType(type.intValue());

@@ -28,14 +28,14 @@ public class FutureVariableArgumentsIteratorConverter extends AbstractKarajanCon
 
 	public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
 		FutureVariableArguments.Iterator fvai = (FutureVariableArguments.Iterator) source;
-		marshallObject(writer, context, "fvargs", fvai.getVargs());
-		marshallObject(writer, context, "crt", fvai.current());
+		marshalObject(writer, context, "fvargs", fvai.getVargs());
+		marshalObject(writer, context, "crt", fvai.current());
 	}
 
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-		FutureVariableArguments vargs = (FutureVariableArguments) unmarshallObject(reader, context,
+		FutureVariableArguments vargs = (FutureVariableArguments) unmarshalObject(reader, context,
 				FutureVariableArguments.class, null);
-		Integer crt = (Integer) unmarshallObject(reader, context, Integer.class, null);
+		Integer crt = (Integer) unmarshalObject(reader, context, Integer.class, null);
 		FutureVariableArguments.Iterator fvai = new FutureVariableArguments.Iterator(vargs,
 				crt.intValue());
 		return fvai;
