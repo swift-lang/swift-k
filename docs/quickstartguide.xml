@@ -327,7 +327,7 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 <programlisting>
 sites.file=${vds.home}/etc/sites.xml
 tc.file=${vds.home}/var/tc.data
-ip=192.168.0.1
+ip.address=192.168.0.1
 </programlisting>
 			
 			</para>
