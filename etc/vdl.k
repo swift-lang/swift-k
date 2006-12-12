@@ -207,7 +207,7 @@ namespace("vdl"
 							host = rhost
 						)
 							
-						checkExitCode(rhost, tmpdir, jobdir)
+						checkExitCode(rhost, tmpdir, jobdir, tr)
 	
 						print("Completed job ", tr, maybe(" with arguments ", arguments), " on {rhost}")
 										
@@ -222,14 +222,13 @@ namespace("vdl"
 					sequential(
 						for(f, ["stderr.txt", "stdout.txt"]
 							if(
-								file:exists("{tmpdir}/{f}", host=rhost) 
+								file:exists("{jobdir}/{f}", host=rhost) 
 									then(
 										task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
 											destfile="{jobdir}-{f}")
 	
-										print("{f}: ", file:read("{jobdir}-{f}")
+										print("{f}: ", file:read("{jobdir}-{f}"))
 									)
-								)
 							)
 						)
 						generateError(trace, maybe(exception))
@@ -248,7 +247,7 @@ namespace("vdl"
 			)
 		)
 		
-		element(checkExitCode, [rhost, tmpdir, jobdir]
+		element(checkExitCode, [rhost, tmpdir, jobdir, tr]
 			if(
 				file:exists("{tmpdir}/exitcode", host=rhost) then(
 					task:transfer(srchost=rhost, srcdir=tmpdir, srcfile="exitcode",
@@ -256,7 +255,7 @@ namespace("vdl"
 						
 					exitcode := file:read("{jobdir}-exitcode")
 													
-					generateError("Job failed with an exit code of {exitcode}")
+					generateError("Job {tr} failed with an exit code of {exitcode}")
 				)
 			)
 		)
