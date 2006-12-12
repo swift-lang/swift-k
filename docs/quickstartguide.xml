@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<article>
+	<articleinfo revision="0.1">
+		<title>VDL2 Quick Start Guide</title>
+	
+		<abstract>
+			<formalpara>
+				<title></title>
+				<para>
+
+					This guide describes the steps needed to download, install,
+					configure, and run the basic examples for VDL2. If you are
+					using a pre-installed version of VDL2, you can skip directly
+					to the <link linkend="configure">configuration
+					section</link>.
+
+				</para>
+			</formalpara>
+		</abstract>
+	</articleinfo>
+
+	<sect1 id="download">
+		<title>Downloading a VDL2 distribution</title>
+		
+		<para>
+		
+			There are three main ways of getting the VDL2 implementation: <link
+			linkend="dl-stable">stable releases</link>, <link
+			linkend="dl-nightly">nightly builds</link>, and the <link
+			linkend="dl-repository">source code repository</link>. 
+
+		</para>
+		
+		<sect2 id="dl-stable">
+			<title>Stable Releases</title>
+		
+			<para>
+			
+				Stable releases can be obtained from the VDL2 download page:
+				<ulink
+				url="http://www.ci.uchicago.edu/~hategan/vdl2/downloads.shtml#stable">VDL2
+				Downloads Page</ulink>. Once you downloaded the package, please
+				move to the <link linkend="install">install section</link>.
+
+			</para>
+		</sect2>
+		
+		<sect2 id="dl-nightly">
+			<title>Nightly Builds</title>
+		
+			<para>
+			
+				VDL2 builds and tests are being run every day. The <ulink
+				url="http://www.ci.uchicago.edu/~hategan/vdl2/downloads.shtml#nightly">VDL2
+				downloads page</ulink> contains links to the latest build and
+				test page. The nightly builds reflect a development version of
+				the VDL2 code and should not be used in production mode. After
+				downloading a nightly build package, please continue to the
+				<link linkedn="install">install section</link>.
+			
+			</para>
+		</sect2>
+		
+		<sect2 id="dl-repository">
+			<title>Source Repository</title>
+		
+			<para>
+			
+				Details about accessing the VDL2 source repository together with
+				build instructions are available on the <ulink
+				url="http://www.ci.uchicago.edu/~hategan/vdl2/downloads.shtml#nightly">VDL2
+				downloads page</ulink>. Once built, the <filename
+				class="directory">dist/vdsk-&lt;version&gt;</filename> directory
+				will contain a self-contained build which can be moved to a
+				desired location. For simplicity this directory will be called
+				<filename class="directory"><envar>$VDS_HOME</envar></filename>.
+				You should then proceed to the <link
+				linkend="configure">configuration section</link>.
+			
+			</para>
+		</sect2>
+	</sect1>
+	
+	<sect1 id="install">
+		<title>Installing a VDL2 Binary Package</title>
+		
+		<para>
+		
+			Simply unpack the downloaded package (<filename
+			class="file">vdsk-&lt;version&gt;.tar.gz</filename>) into a
+			directory of your choice:
+			
+<programlisting>
+<prompt>&gt;</prompt> <command>tar</command> <option>-xzvf</option> <filename
+class="file">vdsk-&lt;version&gt;.tar.gz</filename>
+</programlisting>
+			
+			This will create a <filename
+			class="directory">vdsk-&lt;version&gt;</filename> directory
+			containing the build. For simplicity this directory will be refered
+			to as <filename
+			class="directory"><envar>$VDS_HOME</envar></filename>.
+		
+		</para>
+	</sect1>
+	
+	<sect1 id="configure">
+		<title>Configuring VDL2</title>
+		
+		<para>
+		
+			This section describes configuration steps that need to be taken in
+			order to get VDL2 running. Since all command line tools provided
+			with VDL2 can be found in the <filename
+			class="directory"><envar>$VDS_HOME</envar>/bin</filename> directory, it may
+			be a good idea to add this directory to your <envar>PATH</envar>
+			environment variable:
+			
+<programlisting>
+<prompt>&gt;</prompt> <command>export</command> <envar>PATH</envar>=<filename
+class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
+</programlisting>
+			
+			If you are installing VDL2 on a machine with access to a graphical
+			display, you can run the <command>cog-setup</command> tool to
+			configure various aspects of the environment required by VDL2.
+		
+		</para>
+		
+		<sect2 id="certs">
+	
+			<title>User Certificate</title>
+			
+			<para>
+			
+				VDL2 uses <ulink
+				url="http://www.globus.org/toolkit/docs/4.0/security/key-index.html">GSI
+				security</ulink> to access <ulink
+				url="http://www.globus.org/toolkit">Globus Toolkit</ulink>
+				services. Consequently it requires a certificate/private key
+				pair for authentication. The certificate and private key should
+				be placed into the <filename
+				class="file">~/.globus/usercert.pem</filename> and <filename
+				class="file">~/.globus/userkey.pem</filename> files,
+				respectively.
+			
+			</para>
+		
+		</sect2>
+		
+		<sect2 id="cas">
+		
+			<title>Certificate Authorities Root Certificates</title>
+			
+			<para>
+			
+				The VDL2 client libraries are generally required to authenticate
+				the services to which they connect. This process requires the
+				presence on the VDL2 submit site of the root certificates used
+				to sign the host certificates of services used. These root
+				certificates need to be installed in either (or both) the
+				<filename class="directory">~/.globus/certificates</filename>
+				and <filename
+				class="directory">/etc/grid-security/certificates</filename>
+				directories. A package with the root certificates of the
+				certificate authorities used in the <ulink
+				url="http://www.teragrid.org">TeraGrid</ulink> can be found
+				<ulink
+				url="http://security.teragrid.org/TG-CAs.html">here</ulink>.
+			
+			</para>
+		
+		</sect2>
+				
+		<sect2>
+		
+			<title>VDL2 Properties</title>
+			
+			<para>
+			
+				A VDL2 properties file (named <filename
+				class="file">vdl2.properties</filename>) can be used to
+				customize certain configuration aspects of VDL2. A shared
+				version of this file, <filename
+				class="file"><envar>$VDS_HOME</envar>/etc/vdl2.properties</filename>
+				can be used to provide installation-wide defaults. A per-user
+				properties file, <filename
+				class="file">~/.vdl2/vdl2.properties</filename> can be used for
+				user specific settings. VDL2 first loads the shared
+				configuration file and, if present, the user configuration file.
+				Any properties not explicitly set in the user configuration file
+				will be inherited from the shared configuration file. Properties
+				are specified in the following format:
+
+<programlisting>
+<property>name</property>=<parameter>value</parameter>
+</programlisting>
+
+				
+				The value can contain variables which will be expanded when the
+				properties file is read. Expansion is performed when the name of
+				the variable is used inside the "standard" shell dereference
+				construct: ${<varname>name</varname>}. The following variables
+				can be used in the VDL2 configuration file:
+				
+				<variablelist>
+					<title>VDL2 Configuration Variables</title>
+					
+					<varlistentry>
+						<term>
+							<varname>vds.home</varname>
+						</term>
+						<listitem>
+							<para>
+							
+								Points to the VDL2 installation directory
+								(<filename
+								class="directory"><envar>$VDS_HOME</envar></filename>).
+							
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<varname>user.name</varname>
+						</term>
+						<listitem>
+							<para>
+							
+								The name of the current logged in user.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<varname>user.home</varname>
+						</term>	
+						<listitem>
+							<para>
+							
+								The user's home directory.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+				</variablelist>
+				
+				The following properties can be specified:
+				
+				<variablelist>
+					<title>VDL2 Properties</title>
+					
+					<varlistentry>
+						<term>
+							<property>sites.file</property>
+						</term>
+						<listitem>
+							<para>
+							
+								Points to the location of the pool file (site
+								catalog) which contains a list of all sites that
+								VDL2 should use, together with information about
+								the installed services. Details about the format
+								of the pool file can be found <ulink
+								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html">here</ulink>.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>tc.file</property>
+						</term>
+						<listitem>
+							<para>
+							
+								Points to the location of the transformation
+								catalog file which contains information about
+								installed applications. Details about the format
+								of the transformation catalog can be found
+								<ulink
+								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_TranformationCatalog.html">here</ulink>.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>ip.address</property>
+						</term>
+						<listitem>
+							<para>
+							
+								The Globus GRAM service uses a callback
+								mechanism to send notifications about the status
+								of submitted jobs. The callback mechanism
+								requires that the VDL2 client be reachable from
+								the hosts the GRAM services are running on.
+								Normally, VDL2 can detect the correct IP address
+								of the client machine. However, in certain cases
+								(such as the client machine having more than one
+								network interface) the automatic detection
+								mechanims is not reliable. In such cases, the IP
+								address of the VDL2 client machine can be
+								specified using this property. The value of this
+								property must be a numeric address without any.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+				</variablelist>
+				
+				Example:
+				
+<programlisting>
+sites.file=${vds.home}/etc/sites.xml
+tc.file=${vds.home}/var/tc.data
+ip=192.168.0.1
+</programlisting>
+			
+			</para>
+		
+		</sect2>
+	</sect1>
+	
+	<sect1 id="examples">
+		
+		<title>Running VDL2 Examples</title>
+		
+		<para>
+		
+			The VDL2 examples can be found in the <filename
+			class="directory">&lt;VDS_HOME&gt;/examples</filename> directory.
+			The examples are written in the <ulink
+			url="http://www.ci.uchicago.edu/vdl2/languageref-0.5.html">VDL2
+			language</ulink>, and have <filename class="file">.dtm</filename> as
+			a file extension. 
+
+		</para>
+		
+		<para>
+
+			Before a VDL2 workflow can be executed it needs to be compiled, a
+			task which is achieved using the <command>vdlc</command>, which can
+			be used in the following way:
+			
+<programlisting>
+<prompt>&gt;</prompt> <command>vdlc</command> <option><filename
+class="file">example.dtm</filename></option>
+</programlisting>
+			
+			This will produce an XML version of the original (<filename
+			type="file">example.xml</filename>) and a compiled version
+			(<filename class="file">example.kml</filename>).
+			
+		</para>
+		
+		<para>
+		
+			Execution of a VDL2 compiled workflow is done using the
+			<command>vdlrun</command> command, which takes the compiled VDL2
+			workflow file name as an argument:
+			
+<programlisting>
+<prompt>&gt;</prompt> <command>vdlrun</command> <option><filename
+class="file">example.kml</filename></option>
+</programlisting>
+		
+		</para>
+		
+		<para> 
+
+			VDL2 features the ability to re-start failed workflows based on
+			restart log files. Every execution of a workflow creates a restart
+			log file with a named composed of the file name of the workflow
+			being executed, a numeric ID, and the <filename
+			class="file">.rlog</filename> extension. For example, <filename
+			class="file">example.kml</filename>, when executed, could produce
+			the following restart log file: <filename
+			class="file">example.kml.0.rlog</filename>. Normally, if the
+			workflow completes successfully, the log file is deleted. If however
+			the workflow fails, <command>vdlrun</command> allows the possibility
+			of using the restart log file to continue the execution of the
+			workflow from the last consistent point before the failure occurred.
+			In order to restart a workflow from a restart log file, the
+			<option>-rlog:resume=<parameter><filename
+			class="file">logfile</filename></parameter></option> after the
+			compiled workflow file name. Example:
+			
+<programlisting>
+<prompt>&gt;</prompt> <command>vdlrun</command> <option><filename
+class="file">example.kml</filename></option> <option>-rlog:resume=<filename
+class="file">example.kml.0.rlog</filename></option>
+</programlisting>
+		
+		</para>
+		
+	</sect1>
+</article>
