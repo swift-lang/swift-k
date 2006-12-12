@@ -17,6 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import org.globus.common.CoGProperties;
+
 public class VDL2Config extends Properties {
 	public static final String CONFIG_FILE_NAME = "vdl2.properties";
 	public static final String[] CONFIG_FILE_SEARCH_PATH = new String[] {
@@ -25,8 +27,9 @@ public class VDL2Config extends Properties {
 			System.getProperty("user.home") + File.separator + ".vdl2" + File.separator
 					+ "vdl2.properties" };
 	
-	public static final String POOL_FILE = "pool.file";
+	public static final String POOL_FILE = "sites.file";
 	public static final String TC_FILE = "tc.file";
+	public static final String IP_ADDRESS = "ip.address";
 
 	private static VDL2Config config;
 
@@ -40,6 +43,10 @@ public class VDL2Config extends Properties {
 			config = new VDL2Config();
 			for (int i = 0; i < CONFIG_FILE_SEARCH_PATH.length; i++) {
 				config.load(CONFIG_FILE_SEARCH_PATH[i]);
+			}
+			String ip = config.getIP();
+			if (ip != null) {
+				CoGProperties.getDefault().setIPAddress(ip);
 			}
 		}
 		return config;
@@ -132,6 +139,10 @@ public class VDL2Config extends Properties {
 	
 	public String getTCFile() {
 		return getProperty(TC_FILE);
+	}
+	
+	public String getIP() {
+		return getProperty(IP_ADDRESS);
 	}
 
 	public String toString() {
