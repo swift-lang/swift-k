@@ -36,10 +36,10 @@ public class CheckpointConverter extends AbstractKarajanConverter {
 
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
 		_Checkpoint checkpoint = new _Checkpoint();
-		checkpoint.projectNode = (ProjectNode) unmarshallObject(reader, context, ProjectNode.class, checkpoint);
+		checkpoint.projectNode = (ProjectNode) unmarshalObject(reader, context, ProjectNode.class, checkpoint);
 		getKContext().getTree().setRoot(checkpoint.projectNode);
 		getKContext().setSource(false);
-		checkpoint.state = (_State) unmarshallObject(reader, context, _State.class, checkpoint);
+		checkpoint.state = (_State) unmarshalObject(reader, context, _State.class, checkpoint);
 		return checkpoint;
 	}
 

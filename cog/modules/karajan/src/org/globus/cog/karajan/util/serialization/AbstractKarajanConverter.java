@@ -28,7 +28,7 @@ public abstract class AbstractKarajanConverter implements Converter {
 		return kcontext;
 	}
 
-	public void marshallObject(HierarchicalStreamWriter writer, MarshallingContext context,
+	public void marshalObject(HierarchicalStreamWriter writer, MarshallingContext context,
 			String tag, Object value) {
 		writer.startNode(tag);
 		if (value != null) {
@@ -37,7 +37,7 @@ public abstract class AbstractKarajanConverter implements Converter {
 		writer.endNode();
 	}
 
-	public void marshallObjectCls(HierarchicalStreamWriter writer, MarshallingContext context,
+	public void marshalObjectCls(HierarchicalStreamWriter writer, MarshallingContext context,
 			String tag, Object value) {
 		writer.startNode(tag);
 		if (value != null) {
@@ -48,17 +48,17 @@ public abstract class AbstractKarajanConverter implements Converter {
 		writer.endNode();
 	}
 
-	public void marshallObject(HierarchicalStreamWriter writer, MarshallingContext context,
+	public void marshalObject(HierarchicalStreamWriter writer, MarshallingContext context,
 			String tag, int value) {
-		marshallObject(writer, context, tag, new Integer(value));
+		marshalObject(writer, context, tag, new Integer(value));
 	}
 
-	public void marshallObject(HierarchicalStreamWriter writer, MarshallingContext context,
+	public void marshalObject(HierarchicalStreamWriter writer, MarshallingContext context,
 			String tag, boolean value) {
-		marshallObject(writer, context, tag, Boolean.valueOf(value));
+		marshalObject(writer, context, tag, Boolean.valueOf(value));
 	}
 
-	public Object unmarshallObject(HierarchicalStreamReader reader, UnmarshallingContext context,
+	public Object unmarshalObject(HierarchicalStreamReader reader, UnmarshallingContext context,
 			Class cls, Object current) {
 		try {
 			reader.moveDown();
@@ -84,7 +84,7 @@ public abstract class AbstractKarajanConverter implements Converter {
 		}
 	}
 
-	public Object unmarshallObject(HierarchicalStreamReader reader, UnmarshallingContext context) {
+	public Object unmarshalObject(HierarchicalStreamReader reader, UnmarshallingContext context) {
 		reader.moveDown();
 		reader.moveDown();
 		String type = reader.getAttribute("class");
