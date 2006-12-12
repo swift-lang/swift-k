@@ -327,7 +327,7 @@ for TEST in `ls $TESTDIR/*.dtm`; do
 	cp $TESTDIR/$BN .
 	
 	TESTNAME=${BN:0:((${#BN}-4))}
-	TEST="<a href=\"$RUNDIRBASE/$TESTNAME\">$TESTNAME</a>"
+	TEST="<a href=\"$RUNDIRBASE/$TESTNAME.dtm\">$TESTNAME</a>"
 	
 	ssexec "Compile" vdlc $TESTNAME.dtm
 	for ((i=0; $i<9; i=$i+1)); do
