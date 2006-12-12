@@ -32,7 +32,7 @@ public class VargHandler extends RequestHandler {
 		Object o = XMLConverter.readObject(isr);
 		InstanceContext ic = getChannel().getUserContext().getInstanceContext(id);
 		try {
-			Arg.Channel channel = new Arg.Channel(name);
+			Arg.Channel channel = Arg.Channel.getInstance(name);
 			channel.ret(ic.getStack(), o);
 			sendReply("OK".getBytes());
 		}
