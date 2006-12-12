@@ -66,8 +66,9 @@ public class StartCommand extends Command {
 			XMLConverter converter = XMLConverter.createStateMarshallingConverter(stack.getExecutionContext().getTree());
 			converter.getKContext().setElementMarshallingPolicy(
 					new RemoteElementMarshallingPolicy());
-			converter.registerConverter(new UDEDefinitionConverter(
-					converter.getKContext().getClassMapper(), new DefinitionEnvironment(stack)), 1);
+			converter.registerConverter(
+						new RUDEDefinitionConverter(converter.getKContext(),
+								new DefinitionEnvironment(stack)), 1);
 			converter.write(stack, osw);
 			osw.close();
 			baos.close();
@@ -88,7 +89,7 @@ public class StartCommand extends Command {
 				converter.getKContext().setElementMarshallingPolicy(
 						new RemoteElementMarshallingPolicy());
 				converter.registerConverter(
-						new UDEDefinitionConverter(converter.getKContext().getClassMapper(),
+						new RUDEDefinitionConverter(converter.getKContext(),
 								new DefinitionEnvironment(stack)), 1);
 				converter.write(stack, new OutputStreamWriter(fos));
 				fos.close();
