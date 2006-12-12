@@ -33,20 +33,20 @@ public class FutureVariableArgumentsConverter extends AbstractKarajanConverter {
 
 	public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
 		FutureVariableArguments fva = (FutureVariableArguments) source;
-		marshallObject(writer, context, "list", fva.getBackingList());
-		marshallObject(writer, context, "closed", fva.isClosed());
-		marshallObject(writer, context, "listeners", fva.getListeners());
-		marshallObject(writer, context, "actions", fva.getModificationActions());
+		marshalObject(writer, context, "list", fva.getBackingList());
+		marshalObject(writer, context, "closed", fva.isClosed());
+		marshalObject(writer, context, "listeners", fva.getListeners());
+		marshalObject(writer, context, "actions", fva.getModificationActions());
 		
 	}
 
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
 		FutureVariableArguments fva = new FutureVariableArguments();
 		String name = reader.getNodeName();
-		List list = (List) unmarshallObject(reader, context, List.class, fva);
-		Boolean closed = (Boolean) unmarshallObject(reader, context, Boolean.class, fva);
-		List listeners = (List) unmarshallObject(reader, context, List.class, fva);
-		List actions = (List) unmarshallObject(reader, context, List.class, fva);
+		List list = (List) unmarshalObject(reader, context, List.class, fva);
+		Boolean closed = (Boolean) unmarshalObject(reader, context, Boolean.class, fva);
+		List listeners = (List) unmarshalObject(reader, context, List.class, fva);
+		List actions = (List) unmarshalObject(reader, context, List.class, fva);
 		fva.appendAll(list);
 		if (closed.booleanValue()) {
 			fva.close();

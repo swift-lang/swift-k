@@ -44,6 +44,9 @@ public abstract class AbstractElementMarshallingPolicy implements ElementMarshal
 		String text = null;
 		while (i.hasNext()) {
 			String name = (String) i.next();
+			if (name.equals("id")) {
+				name = "__id_";
+			}
 			if (name.equals(FlowElement.TEXT)) {
 				Object prop = node.getProperty(name);
 				if (prop instanceof ElementProperty) {
