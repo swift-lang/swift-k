@@ -407,8 +407,8 @@ class="file">example.kml</filename></option>
 			workflow from the last consistent point before the failure occurred.
 			In order to restart a workflow from a restart log file, the
 			<option>-rlog:resume=<parameter><filename
-			class="file">logfile</filename></parameter></option> after the
-			compiled workflow file name. Example:
+			class="file">logfile</filename></parameter></option> argument can be
+			used after the compiled workflow file name. Example:
 			
 <programlisting>
 <prompt>&gt;</prompt> <command>vdlrun</command> <option><filename
