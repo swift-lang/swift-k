@@ -45,7 +45,14 @@ public class UDEDefinition {
 			ude = few.getPeer();
 		}
 		return (UserDefinedElement) ude;
-	}	
+	}
+	
+	/**
+	 * Does not resolve the definition if it's a wrapper
+	 */
+	public FlowElement getUdeNR() {
+		return ude;
+	}
 	
 	public String toString() {
 		return Info.ppDef("lambda", ude);
