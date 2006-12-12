@@ -17,6 +17,7 @@ import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ArgumentsMap;
+import org.globus.cog.karajan.util.DefList;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -60,19 +61,19 @@ public class Info extends AbstractSequentialWithArguments {
 			while (n.hasNext()) {
 				String name = (String) n.next();
 				if (name.startsWith("#def#")) {
-					Map m = (Map) frame.getVar(name);
+					DefList dl = (DefList) frame.getVar(name);
 					String elName = name.substring(5);
 					if (prefix != null) {
-						if (m.containsKey(prefix)) {
-							Object def = m.get(prefix);
+						if (dl.contains(prefix)) {
+							Object def = dl.get(prefix);
 							printDef(prefix + ":" + elName, def, stdout);
 						}
 					}
 					else {
-						Iterator mi = m.entrySet().iterator();
+						Iterator mi = dl.prefixes().iterator();
 						while (mi.hasNext()) {
-							Map.Entry entry = (Map.Entry) mi.next();
-							printDef(entry.getKey() + ":" + elName, entry.getValue(), stdout);
+							String p = (String) mi.next();
+							printDef(p + ":" + elName, dl.get(p), stdout);
 						}
 					}
 				}
