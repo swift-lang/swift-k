@@ -31,38 +31,46 @@ The VDL2 type system is based on the XDTM (XML dataset typing and mapping) model
 			</para>
 			<para>
 We use a C-like syntax to represent VDL types. For instance, we can define an order as composed of an array of items, where each item has a name and a quantity:
-		<programlisting>
-		type order { 
-			item[] items; 
-		}
 
-		type item { 
-			string name; 
-			integer quantity; 
-		}
-		</programlisting>
+<programlisting>
+<token>type</token> <type>order</type> {
+	<type>item[]</type> <structfield>items</structfield>;
+}
+
+<token>type</token> <type>item</type> {
+	<type>string</type> <structfield>name</structfield>;
+	<type>integer</type> <structfield>quantity</structfield>;
+}
+</programlisting>
+
 		</para>
 		
 		<para>
 There is also an any type where we do not care about the inner logical structure; for instance, when we deal with a binary file, and we don’t need to look at the actual content of that file in the workflow. The syntax for such a declaration is as follows:
-		<programlisting>
-		type binaryfile {}
-		</programlisting>	
+
+<programlisting>
+<token>type</token> <type>binaryfile</type> {}
+</programlisting>
+
 A dataset’s physical representation is defined by a mapping descriptor, which defines how each element in the dataset’s logical schema is stored in, and fetched from, physical structures such as directories, files, and database tables.  
 		</para>
 		
 		<para>
 In order to permit reuse for different datasets, mapping functions may be parameterized for such things as dataset locations. Thus, in order to access a dataset, we need to know three things: its type schema, its mapping descriptor, and the value(s) of any parameter(s) associated with the mapping descriptor. For example, if we want to describe a dataset, whose logical structure is defined by binaryfile, and whose physical representation is a file called “file1.bin” located at “/home/yongzh/data/”, then the dataset can be declared as follows:		
-		<programlisting>
-		binaryfile f1&lt;fixed_mapper;file=“/home/yongzh/data/file1.bin”&gt;
-		</programlisting>
+
+<programlisting>
+<type>binaryfile</type> <varname>f1</varname>&lt;<parameter>fixed_mapper</parameter>;<property>file</property>=<literal>“/home/yongzh/data/file1.bin”</literal>&gt;
+</programlisting>
+
 		</para>
 				
 		<para>
 		The above example declares a dataset called f1, which uses a fixed_mapper to map a file from a specific location. What the fixed_mapper does is merely returning the file name to the system. VDL2 also has a simplified syntax for such cases since fixed_mapper is the default mapper used:
-		<programlisting>
-		binaryfile f1&lt;“/home/yongzh/data/file1.bin”&gt;
-		</programlisting>
+
+<programlisting>
+<type>binaryfile</type> <varname>f1</varname>&lt;<literal>“/home/yongzh/data/file1.bin”</literal>&gt;
+</programlisting>
+
 		</para>		
 				
 		</sect2>
@@ -75,46 +83,58 @@ In order to permit reuse for different datasets, mapping functions may be parame
 			
 			<para>
 			A procedure declaration is like a function definition, where we specify the function name and the formal parameters. VDL procedures can take multiple inputs and produce multiple outputs, and inputs are organized to the right of the function name where outputs to the left. For instance:
-			<programlisting>
-		(type3 out1, type4 out2) myproc (type1 in1, type2 in2)
-			</programlisting>
+
+<programlisting>
+(<type>type3</type> <returnvalue>out1</returnvalue>, <type>type4</type> <returnvalue>out2</returnvalue>) <function>myproc</function> (<type>type1</type> <parameter>in1</parameter>, <type>type2</type> <parameter>in2</parameter>)
+</programlisting>
+
 			The above example declares a procedure called myproc, which has two inputs in1 (of type type1) and in2 (of type type2) and two outputs out1 (of type type3) and out2 (of type type4).
 			</para>
 	
 			<para>
 	A formal parameter can have a default value, in which case this parameter is also deemed an optional parameter. When we call a procedure, passing in the actual parameters, we allow both positional parameter and keyword parameter passing, provided that all optional parameters have to be declared after the required parameters and any optional parameter has to be bound using keyword parameter passing. So for instance if we declare a procedure myproc1:
-			<programlisting>
-		(binaryfile bf) myproc1 (int i, string s=”foo”)
-			</programlisting>
+
+<programlisting>
+(<type>binaryfile</type> <returnvalue>bf</returnvalue>) <function>myproc1</function> (<type>int</type> <parameter>i</parameter>, <type>string</type> <parameter>s</parameter>=<literal>”foo”</literal>)
+</programlisting>
+
 			Then the procedure can be called like this
-			<programlisting>
-		binaryfile mybf = myproc1 (1);
-			</programlisting>
+
+<programlisting>
+<type>binaryfile</type> <varname>mybf</varname> = <function>myproc1</function>(<constant>1</constant>);
+</programlisting>
+
 			or like this supplying the value for the optional parameter s:
-			<programlisting>
-		binaryfile mybf = myproc1 (1, s=”bar”);
-			</programlisting>
+
+<programlisting>
+<type>binaryfile</type> <varname>mybf</varname> = <function>myproc1</function> (<constant>1</constant>, <parameter>s</parameter>=<literal>”bar”</literal>);
+</programlisting>
+
 			</para>
 			
 			<para>
 			The body of an atomic procedure specifies how to invoke an external executable program or Web Service, and how logical data types are mapped to command line arguments or SOAP messages. A complete specification for myproc1 can be:
-			<programlisting>
-		(binaryfile bf) myproc1 (int i, string s=”foo”) {
-			app {
-				myapp1 i s @filename(bf);
-			}
-		}			
-			</programlisting>
+
+<programlisting>
+(binaryfile bf) myproc1 (int i, string s=”foo”) {
+	app {
+		myapp1 i s @filename(bf);
+	}
+}			
+</programlisting>
+
 Which specifies that myproc1 invokes an executable, passing the values of i, s and the file name of bf as command line arguments. The @filename notation serves as a mapping function denoting that the argument should be mapped as a file name, and since the notation is often required in invoking applications, often we can omit the filename part and use the @ sign only.			
 			</para>
 			A compound procedure contains a set of calls to other procedures. Shared variables in the body of a compound procedure specify data dependencies and thus the execution sequence of the procedure calls. For simple illustration, we define a compound procedure in below:
-			<programlisting>
-		(type2 b) foo_bar (type1 a) {
-			type3 c;     
-			c = foo(a);    // c holds the result of foo
-			b = bar(c);    // c is an input to bar
-		}			
-			</programlisting>
+
+<programlisting>
+(type2 b) foo_bar (type1 a) {
+	type3 c;
+	c = foo(a);    // c holds the result of foo
+	b = bar(c);    // c is an input to bar
+}
+</programlisting>
+
 		</sect2>
 		
 		
@@ -126,13 +146,15 @@ Which specifies that myproc1 invokes an executable, passing the values of i, s a
 			
 			<para>
 			The foreach construct is used for dataset iteration. It iterates over each of the items in a composite dataset, and applies some operations to that item. We illustrate the use of the foreach construct in the following example using the type order defined above:
-			<programlisting>
-		check_order (order o) {
-			foreach item it in o.items {
-				check_item(it);
-			}
-		}
-			</programlisting>
+
+<programlisting>
+check_order (order o) {
+	foreach item it in o.items {
+		check_item(it);
+	}
+}
+</programlisting>
+
 			</para>
 		</sect2>
 	</sect1>
@@ -146,16 +168,18 @@ Which specifies that myproc1 invokes an executable, passing the values of i, s a
 		
 		<para>
 		The hello world example calls to the UNIX command echo to print the text “hello world” and redirect the standard output into a file. Please note that the echo command in the procedure body is only a logical command, it needs to be mapped to an executable by means of a transformation catalog.
-		<programlisting>
-		type file {}				//define a type for file
-		(file t) echo (string s) {	      //procedure declaration
-    		app {
-        		echo s stdout=@filename(t);	//redirect stdout to a file
- 		   }
-		}
 
-		file hw = echo("hello world");	//procedure call
-		</programlisting>
+<programlisting>
+type file {} //define a type for file
+(file t) echo (string s) { //procedure declaration
+	app {
+		echo s stdout=@filename(t); //redirect stdout to a file
+	}
+}
+
+file hw = echo("hello world"); //procedure call
+</programlisting>
+
 		</para>
 		</sect2>	
 		
@@ -164,20 +188,21 @@ Which specifies that myproc1 invokes an executable, passing the values of i, s a
 		
 		<para>
 		A similar example to the hello world, but the procedure has a parameter with a default value.
-		<programlisting>
-		type file {}		
 
-		(file t) echo (string s=”hello world”) { //s has a default value
-		    app {
- 		       echo s stdout=@filename(t);	//redirect stdout to a file
-   		 }
-		}
+<programlisting>
+type file {}		
 
-		file hw1, hw2;
-		hw1 = echo();	// procedure call using the default value
-		hw2 = echo(s=”hello again”); // using a different value
-		
-		</programlisting>
+(file t) echo (string s=”hello world”) { //s has a default value
+    app {
+		echo s stdout=@filename(t); //redirect stdout to a file
+	}
+}
+
+file hw1, hw2;
+hw1 = echo(); // procedure call using the default value
+hw2 = echo(s=”hello again”); // using a different value
+</programlisting>
+
 		</para>
 
 		</sect2>
@@ -187,30 +212,33 @@ Which specifies that myproc1 invokes an executable, passing the values of i, s a
 		
 		<para>
 		This workflow is essentially doing a UNIX pipe
-		<programlisting>
-		ls *.txt | wc	
-		</programlisting>
+
+<programlisting>
+ls *.txt | wc
+</programlisting>
+
 that counts the number of “.txt” file and save the output to a file.
 		
-		<programlisting>
-		type file {}		
+<programlisting>
+type file {}		
 
-		(file f) ls (string s) { 
- 		   app {
-  		      ls s stdout=@filename(f);
-   		 }
-		}
-		(file c) wc (file f) { 
-  		  app {
-   		     wc stdin=@filename(f) stdout=@filename(c);
-  		  }
-		}
+(file f) ls (string s) { 
+	app {
+		ls s stdout=@filename(f);
+	}
+}
 
-		file list, count;
-		list = ls(“*.txt”);
-		count = wc(list);
-		
-		</programlisting>
+(file c) wc (file f) { 
+	app {
+		wc stdin=@filename(f) stdout=@filename(c);
+	}
+}
+
+file list, count;
+list = ls(“*.txt”);
+count = wc(list);
+</programlisting>
+
 		</para>
 		</sect2>
 		
@@ -219,18 +247,20 @@ that counts the number of “.txt” file and save the output to a file.
 		
 		<para>
 		This example shows how to map an array into a command line argument.
-		<programlisting>
-		type file {}
 
-		(file t) echo (string s[]) {
-  		  app {
- 		       echo s[*] stdout=@filename(t);
-  		  }
-		}
+<programlisting>
+type file {}
 
-		string s[] = ["how","are","you"];
-		file hw = echo(s);			
-		</programlisting>
+(file t) echo (string s[]) {
+	app {
+		echo s[*] stdout=@filename(t);
+	}
+}
+
+string s[] = ["how","are","you"];
+file hw = echo(s);
+</programlisting>
+
 		</para>
 		</sect2>
 		
@@ -239,25 +269,27 @@ that counts the number of “.txt” file and save the output to a file.
 		
 		<para>
 		This example shows how to use arrays and the foreach construct.
-		<programlisting>
-		type file {}
 
-		(file f) echo (string s) {
- 		   app {
-  		      echo s stdout=@filename(f);
-  		  }
-		}
+<programlisting>
+type file {}
 
-		(file fa[]) echo_batch (string sa[]) {
- 		   foreach string s, i in sa {
-  		      fa[i] = echo(s);
-  		  }
-		}
+(file f) echo (string s) {
+	app {
+		echo s stdout=@filename(f);
+	}
+}
 
-		string sa[] = ["hello","hi there","how are you"];
-		file fa[];
-		fa = echo_batch(sa);
-		</programlisting>
+(file fa[]) echo_batch (string sa[]) {
+	foreach string s, i in sa {
+		fa[i] = echo(s);
+	}
+}
+
+string sa[] = ["hello","hi there","how are you"];
+file fa[];
+fa = echo_batch(sa);
+</programlisting>
+
 		</para>
 		</sect2>
 		
@@ -266,15 +298,17 @@ that counts the number of “.txt” file and save the output to a file.
 		
 		<para>
 		This example shows how to map a list of files that follow a certain pattern. Note the print function is a built-in Karajan function; we use it here just for printing out the file names.
-		<programlisting>
-		type file {};
 
-		file files[]&lt;simple_mapper;pattern="*",location=”/usr/bin”&gt;;
+<programlisting>
+type file {};
 
-		foreach f in files {
- 		  print(f);
-		}
-		</programlisting>
+file files[]&lt;simple_mapper;pattern="*",location=”/usr/bin”&gt;;
+
+foreach f in files {
+	print(f);
+}
+</programlisting>
+
 		</para>
 		</sect2>
 		
@@ -283,12 +317,14 @@ that counts the number of “.txt” file and save the output to a file.
 		
 		<para>
 		Range specifies a range of values, with a starting value, an ending value, and an incremental step. Range is very useful in parameter sweeping. It is generally used to initialize an array with a range of values, which can be then iterated over.
-		<programlisting>
-		int nums[] = [0:20:2];  // generate a list 0, 2, 4, 6, 8 …
-		foreach num in nums {
-		print(num);
-		}
-		</programlisting>
+
+<programlisting>
+int nums[] = [0:20:2];  // generate a list 0, 2, 4, 6, 8 …
+foreach num in nums {
+	print(num);
+}
+</programlisting>
+
 		</para>
 		</sect2>
 		
