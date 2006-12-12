@@ -80,8 +80,10 @@ public abstract class RequestReply {
 		raiseErrorFlag();
 		this.addOutData(error.getBytes());
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		PrintStream ps = new PrintStream(baos);
-		e.printStackTrace(ps);
+		if (e != null) {
+			PrintStream ps = new PrintStream(baos);
+			e.printStackTrace(ps);
+		}
 		this.addOutData(baos.toByteArray());
 		send();
 	}
@@ -183,7 +185,8 @@ public abstract class RequestReply {
 		if (data.size() > 0) {
 			msg = new String((byte[]) data.get(0));
 			if (data.size() > 1) {
-				exception = new Exception(new String((byte[]) data.get(1)));
+				String ex = new String((byte[]) data.get(1));
+				exception = new RemoteException(msg, ex);
 			}
 		}
 		errorReceived(msg, exception);
@@ -234,7 +237,8 @@ public abstract class RequestReply {
 		Inflater inflater = new Inflater();
 		InputStreamReader isr = new InputStreamReader(new InflaterInputStream(
 				new ByteArrayInputStream(data), inflater));
-		//TODO on a shared service deserialization should always be restricted. Always!! 
+		// TODO on a shared service deserialization should always be restricted.
+		// Always!!
 		return XMLConverter.readObject(isr);
 	}
 
