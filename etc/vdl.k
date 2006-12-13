@@ -229,7 +229,7 @@ namespace("vdl"
 										task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
 											destfile="{jobdir}-{f}")
 	
-										print("{f}: ", file:read("{jobdir}-{f}"))
+										echo("{f}: ", file:read("{jobdir}-{f}"))
 									)
 							)
 						)
