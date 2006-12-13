@@ -19,7 +19,7 @@ VDL2 is an improved version of the Virtual Data Language that supports dataset t
 		</abstract>
 	</articleinfo>
 
-	<sect1 label="Overview">
+	<sect1>
 		<title>Overview</title>
 		<para>
 Before we get into the details of the examples, let’s first go over some of the major components in VDL2		
