@@ -3,7 +3,7 @@ import("task.k")
 import("rlog.k")
 
 once("vdl.k-print-version"
-	echo("VDL/Karajan library V 0.311")
+	echo("VDL/Karajan library V 0.312")
 )
 
 import("vdl-xs.k", export = true)
