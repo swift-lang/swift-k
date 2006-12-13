@@ -4,7 +4,7 @@
 	<import file="vdl.k"/>
 	
 	<set names="sites, tcfile">
-		<vdl:configProperty name="pool.file"/>
+		<vdl:configProperty name="sites.file"/>
 		<vdl:configProperty name="tc.file"/>
 	</set>
   
