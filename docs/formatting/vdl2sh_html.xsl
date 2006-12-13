@@ -170,7 +170,7 @@
 				<xsl:with-param name="next" select="$next"/>
 			</xsl:call-template>
 
-			<body onLoad="initjs();">
+			<body onLoad="initjs();sh();">
 				<xsl:call-template name="body.attributes"/>
 
 				<xsl:call-template name="user.header.navigation"/>
