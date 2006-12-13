@@ -67,7 +67,24 @@
 					(<property>ip.address</property>=<literal>x.y.z.w</literal>).
 				
 				</para>
-			</listitem>	
+			</listitem>
+			
+			<listitem>
+				<para>
+				
+					Use the example site catalog and transformation catalog (they 
+					are configured for local submission):
+					
+<programlisting>
+<command>cd</command> vdsk-xyz/etc
+<command>cp</command> sites.xml.example sites.xml
+
+<command>cd</command> ../var
+<command>cp</command> tc.data.example tc.data
+</programlisting>
+				
+				</para>
+			</listitem>
 			
 			<listitem>
 				<para>
