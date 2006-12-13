@@ -33,13 +33,13 @@ The VDL2 type system is based on the XDTM (XML dataset typing and mapping) model
 We use a C-like syntax to represent VDL types. For instance, we can define an order as composed of an array of items, where each item has a name and a quantity:
 
 <programlisting>
-<token>type</token> <type>order</type> {
-	<type>item[]</type> <structfield>items</structfield>;
+type order {
+	item[] items;
 }
 
-<token>type</token> <type>item</type> {
-	<type>string</type> <structfield>name</structfield>;
-	<type>integer</type> <structfield>quantity</structfield>;
+type item {
+	string name;
+	integer quantity;
 }
 </programlisting>
 
@@ -49,7 +49,7 @@ We use a C-like syntax to represent VDL types. For instance, we can define an or
 There is also an any type where we do not care about the inner logical structure; for instance, when we deal with a binary file, and we don’t need to look at the actual content of that file in the workflow. The syntax for such a declaration is as follows:
 
 <programlisting>
-<token>type</token> <type>binaryfile</type> {}
+type binaryfile {}
 </programlisting>
 
 A dataset’s physical representation is defined by a mapping descriptor, which defines how each element in the dataset’s logical schema is stored in, and fetched from, physical structures such as directories, files, and database tables.  
@@ -59,7 +59,7 @@ A dataset’s physical representation is defined by a mapping descriptor, which 
 In order to permit reuse for different datasets, mapping functions may be parameterized for such things as dataset locations. Thus, in order to access a dataset, we need to know three things: its type schema, its mapping descriptor, and the value(s) of any parameter(s) associated with the mapping descriptor. For example, if we want to describe a dataset, whose logical structure is defined by binaryfile, and whose physical representation is a file called “file1.bin” located at “/home/yongzh/data/”, then the dataset can be declared as follows:		
 
 <programlisting>
-<type>binaryfile</type> <varname>f1</varname>&lt;<parameter>fixed_mapper</parameter>;<property>file</property>=<literal>“/home/yongzh/data/file1.bin”</literal>&gt;
+binaryfile f1&lt;fixed_mapper;file="/home/yongzh/data/file1.bin"&gt;
 </programlisting>
 
 		</para>
@@ -68,7 +68,7 @@ In order to permit reuse for different datasets, mapping functions may be parame
 		The above example declares a dataset called f1, which uses a fixed_mapper to map a file from a specific location. What the fixed_mapper does is merely returning the file name to the system. VDL2 also has a simplified syntax for such cases since fixed_mapper is the default mapper used:
 
 <programlisting>
-<type>binaryfile</type> <varname>f1</varname>&lt;<literal>“/home/yongzh/data/file1.bin”</literal>&gt;
+binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
 </programlisting>
 
 		</para>		
@@ -85,7 +85,7 @@ In order to permit reuse for different datasets, mapping functions may be parame
 			A procedure declaration is like a function definition, where we specify the function name and the formal parameters. VDL procedures can take multiple inputs and produce multiple outputs, and inputs are organized to the right of the function name where outputs to the left. For instance:
 
 <programlisting>
-(<type>type3</type> <returnvalue>out1</returnvalue>, <type>type4</type> <returnvalue>out2</returnvalue>) <function>myproc</function> (<type>type1</type> <parameter>in1</parameter>, <type>type2</type> <parameter>in2</parameter>)
+(type3 out1, type4 out2) myproc (type1 in1, type2 in2)
 </programlisting>
 
 			The above example declares a procedure called myproc, which has two inputs in1 (of type type1) and in2 (of type type2) and two outputs out1 (of type type3) and out2 (of type type4).
@@ -95,19 +95,19 @@ In order to permit reuse for different datasets, mapping functions may be parame
 	A formal parameter can have a default value, in which case this parameter is also deemed an optional parameter. When we call a procedure, passing in the actual parameters, we allow both positional parameter and keyword parameter passing, provided that all optional parameters have to be declared after the required parameters and any optional parameter has to be bound using keyword parameter passing. So for instance if we declare a procedure myproc1:
 
 <programlisting>
-(<type>binaryfile</type> <returnvalue>bf</returnvalue>) <function>myproc1</function> (<type>int</type> <parameter>i</parameter>, <type>string</type> <parameter>s</parameter>=<literal>”foo”</literal>)
+(binaryfile bf) myproc1 (int i, string s="foo")
 </programlisting>
 
 			Then the procedure can be called like this
 
 <programlisting>
-<type>binaryfile</type> <varname>mybf</varname> = <function>myproc1</function>(<constant>1</constant>);
+binaryfile mybf = myproc1(1);
 </programlisting>
 
 			or like this supplying the value for the optional parameter s:
 
 <programlisting>
-<type>binaryfile</type> <varname>mybf</varname> = <function>myproc1</function> (<constant>1</constant>, <parameter>s</parameter>=<literal>”bar”</literal>);
+binaryfile mybf = myproc1 (1, s="bar");
 </programlisting>
 
 			</para>
@@ -116,7 +116,7 @@ In order to permit reuse for different datasets, mapping functions may be parame
 			The body of an atomic procedure specifies how to invoke an external executable program or Web Service, and how logical data types are mapped to command line arguments or SOAP messages. A complete specification for myproc1 can be:
 
 <programlisting>
-(binaryfile bf) myproc1 (int i, string s=”foo”) {
+(binaryfile bf) myproc1 (int i, string s="foo") {
 	app {
 		myapp1 i s @filename(bf);
 	}
@@ -192,7 +192,7 @@ file hw = echo("hello world"); //procedure call
 <programlisting>
 type file {}		
 
-(file t) echo (string s=”hello world”) { //s has a default value
+(file t) echo (string s="hello world") { //s has a default value
     app {
 		echo s stdout=@filename(t); //redirect stdout to a file
 	}
@@ -200,7 +200,7 @@ type file {}
 
 file hw1, hw2;
 hw1 = echo(); // procedure call using the default value
-hw2 = echo(s=”hello again”); // using a different value
+hw2 = echo(s="hello again"); // using a different value
 </programlisting>
 
 		</para>
@@ -217,7 +217,7 @@ hw2 = echo(s=”hello again”); // using a different value
 ls *.txt | wc
 </programlisting>
 
-that counts the number of “.txt” file and save the output to a file.
+that counts the number of ".txt" file and save the output to a file.
 		
 <programlisting>
 type file {}		
@@ -235,7 +235,7 @@ type file {}
 }
 
 file list, count;
-list = ls(“*.txt”);
+list = ls("*.txt");
 count = wc(list);
 </programlisting>
 
@@ -302,7 +302,7 @@ fa = echo_batch(sa);
 <programlisting>
 type file {};
 
-file files[]&lt;simple_mapper;pattern="*",location=”/usr/bin”&gt;;
+file files[]&lt;simple_mapper;pattern="*",location="/usr/bin"&gt;;
 
 foreach f in files {
 	print(f);
