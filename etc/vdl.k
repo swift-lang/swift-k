@@ -3,7 +3,7 @@ import("task.k")
 import("rlog.k")
 
 once("vdl.k-print-version"
-	echo("VDL/Karajan library V 0.312")
+	echo("VDL/Karajan library V 0.313")
 )
 
 import("vdl-xs.k", export = true)
@@ -222,18 +222,21 @@ namespace("vdl"
 						//cleanup(tmpdir, rhost)
 					)
 					sequential(
-						for(f, ["stderr.txt", "stdout.txt"]
-							if(
-								file:exists("{jobdir}/{f}", host=rhost) 
-									then(
-										task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
-											destfile="{jobdir}-{f}")
+						outs := concat(
+							for(f, ["stderr.txt", "stdout.txt"]
+								if(
+									file:exists("{tmpdir}/{f}", host=rhost) 
+										then(
+											task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
+												destfile="{jobdir}-{f}")
 	
-										echo("{f}: ", file:read("{jobdir}-{f}"))
-									)
+											"{f}: ", file:read("{jobdir}-{f}")
+											file:remove("{jobdir}-{f}")
+										)
+								)
 							)
 						)
-						generateError(trace, maybe(exception))
+						generateError(concat(outs, nl(), trace), maybe(exception))
 					)
 				)
 			)
@@ -255,7 +258,8 @@ namespace("vdl"
 					task:transfer(srchost=rhost, srcdir=tmpdir, srcfile="exitcode",
 						destfile="{jobdir}-exitcode")
 						
-					exitcode := file:read("{jobdir}-exitcode")
+					exitcode := str:strip(file:read("{jobdir}-exitcode"))
+					file:remove("{jobdir}-exitcode")
 													
 					generateError("Job {tr} failed with an exit code of {exitcode}")
 				)
