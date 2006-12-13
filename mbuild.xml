@@ -222,7 +222,9 @@
 			classpathref="classpath"
 			debug="${debug}"
 			optimize="${optimize}"
-			deprecation="${deprecation}" />
+			deprecation="${deprecation}"
+			source="1.4"
+			target="1.4"/>
                 
 		<copy todir="${build.dir}" >
 			<fileset dir="src" includes="**/*.properties" />
@@ -281,7 +283,9 @@
 			classpathref="classpath.joint"
 			debug="${debug}"
 			optimize="${optimize}"
-			deprecation="${deprecation}"/>
+			deprecation="${deprecation}"
+			source="1.4"
+			target="1.4"/>
                 
 		<copy todir="${build.dir}">
 			<fileset dir="src" includes="**/*.properties"/>
