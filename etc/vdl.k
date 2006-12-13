@@ -2,7 +2,9 @@ import("sys.k")
 import("task.k")
 import("rlog.k")
 
-print("VDL/Karajan library V 0.311")
+once("vdl.k-print-version"
+	echo("VDL/Karajan library V 0.311")
+)
 
 import("vdl-xs.k", export = true)
 
