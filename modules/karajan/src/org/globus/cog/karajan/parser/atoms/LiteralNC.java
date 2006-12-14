@@ -28,7 +28,7 @@ public class LiteralNC extends AbstractAtom {
 			if (lexer.hasMoreChars()) {
 				if (value.charAt(i) != Character.toLowerCase(lexer.nextChar())) {
 					lexer.reset(mark);
-					context.lastExpected = errorForm();
+					context.lastExpected = this;
 					return false;
 				}
 			}

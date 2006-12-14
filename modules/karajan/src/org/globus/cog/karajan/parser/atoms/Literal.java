@@ -28,7 +28,7 @@ public class Literal extends AbstractAtom {
 			if (lexer.hasMoreChars()) {
 				if (value.charAt(i) != lexer.nextChar()) {
 					lexer.reset(mark);
-					context.lastExpected = errorForm();
+					context.lastExpected = this;
 					return false;
 				}
 			}
