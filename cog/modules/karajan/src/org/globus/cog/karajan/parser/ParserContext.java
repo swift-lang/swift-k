@@ -18,7 +18,7 @@ public class ParserContext {
 	public AtomMapping mapping;
 	public Rules grammar;
 	public LinkedList queue;
-	public String lastExpected;
+	public GrammarElement lastExpected;
 	public Map data = new HashMap();
 	public ParseTree tree;
 }
