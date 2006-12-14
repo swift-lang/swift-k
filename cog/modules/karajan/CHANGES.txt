@@ -1,3 +1,7 @@
+(12/13/2006)
+
+*** Sped up the parser a little
+
 (12/12/2006)
 
 *** Fixed service to properly handle elements defined on the
