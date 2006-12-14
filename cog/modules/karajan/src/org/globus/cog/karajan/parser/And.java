@@ -66,7 +66,7 @@ public final class And extends AbstractGrammarElement {
 			}
 			catch (Exception e) {
 				debug(stack);
-				throw new ParsingException("Exception executing " + ge.toString());
+				throw new ParsingException("Exception executing " + ge.toString(), e);
 			}
 		}
 		return true;

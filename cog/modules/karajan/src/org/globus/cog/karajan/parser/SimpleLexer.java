@@ -65,7 +65,7 @@ public final class SimpleLexer implements Lexer {
 		Arrays.fill(ccache, -1);
 	}
 	
-	private int getLevel(final char c) {
+	private static int getLevel(final char c) {
 		if (c < 256) {
 			int l = ccache[c];
 			if (l != -1) {
@@ -82,7 +82,7 @@ public final class SimpleLexer implements Lexer {
 		}
 	}
 
-	private int getLevel0(final char c) {
+	private static int getLevel0(final char c) {
 		if (Character.isLetter(c)) {
 			return 1;
 		}

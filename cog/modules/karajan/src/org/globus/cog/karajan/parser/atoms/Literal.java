@@ -23,8 +23,17 @@ public class Literal extends AbstractAtom {
 
 	public boolean parse(ParserContext context, Stack stack) {
 		Lexer lexer = context.tok;
-		Object mark = lexer.mark();
-		for(int i = 0; i < value.length(); i++) {
+		Object mark;
+		if (!lexer.hasMoreChars() || lexer.peekChar() != value.charAt(0)) {
+			//avoid lexer.mark() as much as possible
+			context.lastExpected = this;
+			return false;
+		}
+		else {
+			mark = lexer.mark();
+			lexer.nextChar();
+		}
+		for(int i = 1; i < value.length(); i++) {
 			if (lexer.hasMoreChars()) {
 				if (value.charAt(i) != lexer.nextChar()) {
 					lexer.reset(mark);
