@@ -1,3 +1,7 @@
+(12/14/06)
+
+*** Fixed the default mapper to be concurrent_mapper
+
 (12/07/06)
 
 *** Added dynamic loading of the TC file
