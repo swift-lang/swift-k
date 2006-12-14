@@ -9,23 +9,23 @@
  */
 package org.globus.cog.karajan.parser;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class Or extends AbstractGrammarElement {
-	private final List ands;
+	private GrammarElement[] ands;
 
 	public Or() {
-		ands = new LinkedList();
 	}
 
 	public void read(PeekableEnumeration st, AtomMapping mapping) {
+		List a = new ArrayList();
 		while (true) {
 			And and = new And();
 			and.read(st, mapping);
-			ands.add(and);
+			a.add(and);
 			if (st.peek().equals(";")) {
+				ands = (GrammarElement[]) a.toArray(GEATYPE);
 				break;
 			}
 			expect(st, "|");
@@ -34,11 +34,9 @@ public final class Or extends AbstractGrammarElement {
 	}
 
 	public boolean parse(ParserContext context, Stack stack) throws ParsingException {
-		Iterator i = ands.iterator();
-		while (i.hasNext()) {
-			GrammarElement and = (GrammarElement) i.next();
+		for (int i = 0; i < ands.length; i++) {
 			int mark = stack.mark();
-			if (and.parse(context, stack)) {
+			if (ands[i].parse(context, stack)) {
 				return true;
 			}
 			stack.forget(mark);
@@ -48,16 +46,15 @@ public final class Or extends AbstractGrammarElement {
 
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		Iterator i = ands.iterator();
 		boolean first = true;
-		while (i.hasNext()) {
+		for (int i = 0; i < ands.length; i++) {
 			if (first) {
 				first = false;
 			}
 			else {
 				sb.append(" |\n");
 			}
-			sb.append(i.next());
+			sb.append(ands[i]);
 		}
 		sb.append(" ;\n");
 		return sb.toString();
@@ -65,26 +62,25 @@ public final class Or extends AbstractGrammarElement {
 	
 	public String errorForm() {
 		StringBuffer sb = new StringBuffer();
-		Iterator i = ands.iterator();
 		boolean first = true;
-		while (i.hasNext()) {
+		for(int i = 0; i < ands.length; i++) {
 			if (first) {
 				first = false;
 			}
 			else {
 				sb.append(" or ");
 			}
-			sb.append(((GrammarElement) i.next()).errorForm());
+			sb.append(ands[i].errorForm());
 		}
 		return sb.toString();
 	}
 
 	public GrammarElement _optimize(Rules rules) {
-		if (ands.size() == 1) {
-			return ((GrammarElement) ands.get(0)).optimize(rules);
+		if (ands.length == 1) {
+			return ands[0].optimize(rules);
 		}
-		for (int i = 0; i < ands.size(); i++) {
-			ands.set(i, ((GrammarElement) ands.get(i)).optimize(rules));
+		for (int i = 0; i < ands.length; i++) {
+			ands[i] = ands[i].optimize(rules);
 		}
 		return this;
 	}

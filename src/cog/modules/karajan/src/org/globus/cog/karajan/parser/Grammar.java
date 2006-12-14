@@ -45,7 +45,7 @@ public class Grammar {
 				throw new ParsingException("Unexpected input: " + lexer.currentLine());
 			}
 			else {
-				throw new ParsingException("Expected " + context.lastExpected + "; got "
+				throw new ParsingException("Expected " + context.lastExpected.errorForm() + "; got "
 						+ lexer.currentLine());
 			}
 		}

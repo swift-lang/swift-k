@@ -9,6 +9,8 @@
  */
 package org.globus.cog.karajan.parser;
 
+import java.util.Arrays;
+
 public final class SimpleLexer implements Lexer {
 	private final char[] buf;
 	private int begin, crt, line, lastLine;
@@ -56,8 +58,31 @@ public final class SimpleLexer implements Lexer {
 			}
 		}
 	}
-
+	
+	private static final int[] ccache = new int[256];
+	
+	static {
+		Arrays.fill(ccache, -1);
+	}
+	
 	private int getLevel(final char c) {
+		if (c < 256) {
+			int l = ccache[c];
+			if (l != -1) {
+				return l;
+			}
+			else {
+				l = getLevel0(c);
+				ccache[c] = l;
+				return l;
+			}
+		}
+		else {
+			return getLevel0(c);
+		}
+	}
+
+	private int getLevel0(final char c) {
 		if (Character.isLetter(c)) {
 			return 1;
 		}

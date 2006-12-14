@@ -9,18 +9,16 @@
  */
 package org.globus.cog.karajan.parser;
 
-import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 public final class Rules extends AbstractGrammarElement {
 	private final Map rules;
 	private Rule root;
 
 	public Rules() {
-		rules = new Hashtable();
+		rules = new HashMap();
 	}
 
 	public void read(PeekableEnumeration st, AtomMapping mapping) {
@@ -43,12 +41,10 @@ public final class Rules extends AbstractGrammarElement {
 	}
 
 	public GrammarElement _optimize(Rules rules) {
-		Set names = new HashSet(this.rules.keySet());
-		Iterator i = names.iterator();
+		Iterator i = this.rules.entrySet().iterator();
 		while (i.hasNext()) {
-			String name = (String) i.next();
-			GrammarElement el = (GrammarElement) this.rules.get(name);
-			this.rules.put(name, el.optimize(rules));
+			Map.Entry entry = (Map.Entry) i.next();
+			entry.setValue(((GrammarElement) entry.getValue()).optimize(rules));
 		}
 		return this;
 	}
