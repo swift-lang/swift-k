@@ -39,10 +39,28 @@ public class Identifier extends AbstractAtom {
 		}
 		return excluded[c];
 	}
+	
+	private static final boolean[] charok = new boolean[256];
 
 	static {
 		excl(new char[] { '(', ')', '[', ']', '{', '}', '+', '-', '/', '*', '%', '^', '&', '|',
 				'=', '!', '"', ',' });
+		for (int i = 0; i < 256; i++) {
+			charok[i] = isCharOk0((char) i);
+		}
+	}
+	
+	private static boolean isCharOk0(char c) {
+		return Character.isLetterOrDigit(c) || (!Character.isWhitespace(c) && !isExcluded(c));
+	}
+	
+	private static boolean isCharOk(char c) {
+		if (c < 256) {
+			return charok[c];
+		}
+		else {
+			return isCharOk0(c);
+		}
 	}
 
 	public boolean parse(final ParserContext context, final Stack stack) throws ParsingException {
@@ -56,7 +74,7 @@ public class Identifier extends AbstractAtom {
 			char first = 0;
 			while (context.tok.hasMoreChars()) {
 				final char c = context.tok.peekChar();
-				if (Character.isLetterOrDigit(c) || (!Character.isWhitespace(c) && !isExcluded(c))) {
+				if (isCharOk(c)) {
 					if (c == '=') {
 						if (!once) {
 							final char cc = context.tok.peekNextChar();
