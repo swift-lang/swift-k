@@ -187,7 +187,7 @@ public class Karajan {
 		if (variableST.getAttribute("nil") != null) {
 			// add temporary mapping info
 			StringTemplate mappingST = new StringTemplate("mapping");
-			mappingST.setAttribute("descriptor", "temp_mapper");
+			mappingST.setAttribute("descriptor", "concurrent_mapper");
 			StringTemplate paramST = template("vdl_parameter");
 			paramST.setAttribute("name", "prefix");
 			paramST.setAttribute("value", var.getName() + "-"
