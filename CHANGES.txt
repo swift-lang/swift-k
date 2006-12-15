@@ -2,6 +2,10 @@
 
 *** Fixed the default mapper to be concurrent_mapper
 
+*** Added passing of tc.data profiles to the job (e.g
+    user-defined environment variables, jobtype, count, etc.)
+
+------------------------- 0 rc 1 ---------------------------
 (12/07/06)
 
 *** Added dynamic loading of the TC file
