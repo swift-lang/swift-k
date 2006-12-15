@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<article>
+    <articleinfo revision="0.1">
+        <title>A VDL2 Tutorial</title>
+        <abstract>
+            <formalpara>
+                <para>
+This is a tutorial on the use of VDL2. It is not intended as a reference 
+guide.
+                </para>
+            </formalpara>
+        </abstract>
+    </articleinfo>
+
+<sect1> <title>Introduction</title>
+    <para>
+This tutorial is intended to introduce new users to the basics of VDL2. 
+It is structured as a series of small exercise/examples which you can
+try for yourself as you read along.
+    </para>
+</sect1>
+<sect1> <title>Hello World</title>
+    <para>
+The first example program (found in the file 
+examples/vdlk/tutorial/q1.dtm) outputs a hello world message into
+a file called hello.txt.
+    </para>
+
+<programlisting>
+type messagefile {}
+
+(messagefile t) greeting () { 
+    app {
+        echo &quot;Hello, world!&quot; stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
+
+outfile = greeting();
+</programlisting>
+
+<para>We can run this program as follows:</para>
+
+<programlisting>
+cd examples/vdlk/tutorial/
+
+vdlc q1.dtm
+
+ls q1.kml
+q1.kml
+
+vdlrun q1.kml
+VDL/Karajan library V 0.312
+Adding file service local://localhost
+Adding local execution service local://localhost
+Adding host local
+Type file: string
+WARN   - No global submit throttle set. Using default (100)
+Creating temporary directory run-8q5crd4i/echo-9q5crd4i on local
+Creating directory structure  in run-8q5crd4i/shared (run-8q5crd4i/shared/)
+Running job echo with arguments [Hello, world!] in run-8q5crd4i/echo-9q5crd4i on local
+Completed job echo with arguments [Hello, world!] on local
+Staging out run-8q5crd4i/shared//hello.txt to hello.txt from local
+Staged out run-8q5crd4i/shared//hello.txt to hello.txt from local
+Cleaning up run-8q5crd4i on local
+
+cat hello.txt
+Hello, world!
+</programlisting>
+
+<para>The basic structure of this program is a type definition, 
+a procedure definition, a variable definition and 
+then a call to the procedure:</para>
+
+
+<programlisting>
+type messagefile {}
+</programlisting>
+
+First we define a new type, called messagefile. Data in VDL2 must be typed,
+whether it is stored in memory or on disk. In this example, we will use
+this as the type for our output message. The {} indicates that no 
+internal structure is defined for the data.
+
+<programlisting>
+(messagefile t) greeting () { 
+    app {
+        echo &quot;Hello, world!&quot; stdout=@filename(t);
+    }
+}
+</programlisting>
+
+Next we define a procedure called write. This procedure will write out
+the helloworld message to a file. The procedure takes no parameters
+and outputs a messagefile.
+
+To achieve this, it executes the unix utility 'echo' with a parameter 
+&quot;Hello, world!&quot; and directs the standard output into the output file.
+
+<programlisting>
+messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
+</programlisting>
+
+Here we define a variable called outfile. The type of this variable is
+messagefile, and we specify that when the contents of this variable will
+be stored on disk in a file called hello.txt
+
+<programlisting>
+outfile = greeting();
+</programlisting>
+
+Now we call the greeting procedure, with its output going to the 
+outfile variable and therefore to hello.txt on disk.
+
+<para>Over the following exercises, we'll extend this simple 
+hello world program to demonstrate the various features of VDL2.</para>
+
+</sect1>
+
+<sect1> <title>Parameters</title>
+
+<para>
+Procedures can have parameters. Input parameters specify inputs to the
+procedure and output parameters specify outputs. Our helloworld greeting
+procedure already uses an output parameter, t, which indicates where the
+greeting output will go. In this section, we will add an input parameter
+to the greeting function.</para>
+<para>
+We'll also encounter a new built-in data type, 'string'.
+</para>
+<para>The code for this section can be found in q2.dtm. It can be 
+invoked using vdlc and vdlrun, with output appearing in hello2.txt:</para>
+
+<programlisting>
+vdlc q2.dtm
+vdlrun q2.kml
+cat hello2.txt
+</programlisting>
+
+<para>The code changes from q1.dtm are highlighted below.</para>
+
+<programlisting>
+type messagefile {} 
+
+(messagefile t) greeting (string s) {   
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;hello2.txt&quot;&gt;;
+
+outfile = greeting(&quot;hello world&quot;);
+</programlisting>
+
+<para>We have modified the signature of the greeting procedure to indicate
+that it takes a single parameter, s, of type 'string'.</para>
+<para>We have modified the invocation of the 'echo' utility so that it
+takes the value of s as a parameter, instead of the string literal 
+&quot;Hello, world!&quot;.</para>
+<para>We have modified the output file definition to point to a different
+file on disk.</para>
+<para>We have modified the invocation of greeting so that a greeting 
+string is supplied.</para>
+
+</sect1>
+
+<sect1><title>Calling the same function with different parameters</title>
+<para>Now that we can choose our greeting text, we can call the same
+procedure with different parameters to generate several output files with
+different greetings. The code is in q12.dtm and can be run as before
+using vdlc and vdlrun.
+</para>
+
+<programlisting>
+type messagefile {} 
+
+(messagefile t) greeting (string s) {   
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+
+messagefile english &lt;&quot;english.txt&quot;&gt;;
+messagefile french &lt;&quot;francais.txt&quot;&gt;;
+
+english = greeting(&quot;hello&quot;);
+french = greeting(&quot;bonjour&quot;);
+
+messagefile japanese &lt;&quot;nihongo.txt&quot;&gt;;
+japanese = greeting(&quot;konnichiwa&quot;);
+</programlisting>
+
+<para>Note that we can intermingle definitions of variables with invocations
+of procedures.</para>
+
+</sect1>
+<sect1><title>Another procedure</title>
+<para>
+Now we'll define a new simple procedure. This will take an input file and 
+count the number of words in that input file, storing the count in 
+another file.
+</para>
+
+<para>To do this, we'll use the unix 'wc' (word-count) utility.</para>
+
+<para>First we need to modify the Transformation Catalog to define 
+a logical transformation for the wc utility.  The transformation 
+catalog can be found in var/tc.data.
+There is already one entry specifying where 'echo' can 
+be found. Add a new line to the file, specifying where wc can be found
+(usually in /usr/bin/wc but it may vary depending on your system), like this:
+</para>
+
+<programlisting>
+local      wc  /bin/wc  INSTALLED INTEL32::LINUX null
+</programlisting>
+
+<para>For now, ignore all of the fields except the second and the third.
+The second field 'wc' specifies a logical transformation name and the
+third specifies the location of an executable to perform that 
+transformation.</para>
+
+<para>Now that we have defined the logical transformation 'wc', we can 
+use it in VDL:
+</para>
+
+<programlisting>
+type messagefile {} 
+type countfile {} 
+
+(messagefile t) greeting (string s) {   
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+
+(countfile t) countwords (messagefile f) {   
+    app {
+        wc &quot;-w&quot; @filename(f) stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
+countfile c &lt;&quot;count.txt&quot;&gt;;
+
+outfile = greeting(&quot;hello from VDL&quot;);
+c = countwords(outfile);
+</programlisting>
+
+<para>We define a new data type for files containing counts (although 
+like messagefile, we don't specify any internal structure for that 
+file). Then we define a 'countwords' procedure which invokes the 
+wc utility with appropriate parameters. Finally, we define a variable,
+c, which we map to count.txt and to which we assign the count of words
+in a greeting message.</para>
+
+<para>We can use vdlc and vdlrun to run q13.dtm:</para>
+
+<programlisting>
+vdlc q13.dtm
+[...]
+vdlrun q13.kml
+[...]
+cat count.txt 
+  3 q13greeting.txt
+</programlisting>
+
+<para>and thus we discover that the phrase &quot;hello from VDL&quot; contains
+precisely three words.</para>
+
+</sect1>
+
+<sect1><title>Anonymous files</title>
+
+<para>In the previous section, the file 'q13greeting.txt' is used only to 
+store an intermediate result. We don't really care about which name is used
+for the file, as no matter which intermediate name is used we will still 
+get the same word count.</para>
+
+<para>In this case, we can omit the filename mapping part of the variable
+declaration. Instead of:</para>
+
+<programlisting>
+messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
+</programlisting>
+
+<para>we can instead write:</para>
+
+<programlisting>
+messagefile outfile;
+</programlisting>
+
+<para>q14.dtm contains the code and can be run in the usual way. After
+execution, the results can be found in count14.txt</para>
+
+<programlisting>
+cat count14.txt
+     3 outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60
+</programlisting>
+
+<para>Observe that a generated name, 
+outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60, was
+automatically mapped to outfile.</para>
+
+</sect1>
+
+<sect1><title>More on datatypes</title>
+
+<para>
+As mentioned earlier, all data in variables and files has a datatype.  So 
+far, we've seen the built-in 'string' data type and simple user-defined
+datatypes (messagefile and countfile).</para>
+
+<para>
+VDL2 has the additional built-in types, based on XML types:
+Boolean, Integer, Float, and Date.
+</para>
+
+</sect1>
+
+<sect1><title>Arrays</title>
+<para>We can define arrays of values. For example, we could specify each
+word in a greeting as a separate element of a string array, as seen in 
+q5.dtm:</para>
+
+<programlisting>
+type messagefile {} 
+
+(messagefile t) greeting (string s[]) {   
+    app {
+        echo s[0] s[1] s[2] stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;q5out.txt&quot;&gt;;
+
+string words[] = [&quot;how&quot;,&quot;are&quot;,&quot;you&quot;];
+
+outfile = greeting(words);
+
+</programlisting>
+
+<para>Observe that the type of the parameter to greeting is now an
+array of strings, 'string s[]', instead of a single string, 'string s', 
+that elements of the array can be referenced numerically, for example 
+s[0], and that the array is initialised using an array literal,
+[&quot;how&quot;,&quot;are&quot;,&quot;you&quot;].</para>
+
+</sect1>
+
+<sect1><title>More about control structures</title>
+<para>if, while. should have covered foreach before this</para>
+</sect1>
+
+<sect1><title>More about mappers</title>
+
+<para>TODO introduce other mappers here - at least simple_mapper leading
+to an array of files.</para>
+
+</sect1>
+
+</article>
+
