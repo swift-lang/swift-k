@@ -22,6 +22,8 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.arguments.ArgUtil;
+import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
@@ -35,13 +37,16 @@ import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
 import org.globus.cog.karajan.workflow.nodes.restartLog.LogEntry;
 import org.globus.cog.karajan.workflow.nodes.restartLog.MutableInteger;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
+import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.catalog.transformation.TCMode;
+import org.griphyn.common.catalog.transformation.File;
 import org.griphyn.common.classes.TCType;
+import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
@@ -51,6 +56,7 @@ import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.util.FQN;
+import org.griphyn.vdl.util.VDL2Config;
 
 public class VdlLib extends FunctionsCollection {
 	public static final Arg OA_TYPE = new Arg.Optional("type", null);
@@ -155,7 +161,7 @@ public class VdlLib extends FunctionsCollection {
 			throw new ExecutionException(e);
 		}
 	}
-	
+
 	public Object vdl_threadprefix(VariableStack stack) throws ExecutionException {
 		return getThreadPrefix(stack);
 	}
@@ -950,51 +956,120 @@ public class VdlLib extends FunctionsCollection {
 		}
 		return q;
 	}
-	
+
 	public static final Arg PA_TR = new Arg.Positional("tr");
 	public static final Arg PA_HOST = new Arg.Positional("host");
-	
+
 	static {
 		setArguments("vdl_executable", new Arg[] { PA_TR, PA_HOST });
 	}
-	
-	private static TransformationCatalog tc;
-	private static Set warnset = new HashSet();
-	
+
 	public String vdl_executable(VariableStack stack) throws ExecutionException {
-		synchronized(VdlLib.class) {
-			if (tc == null) {
-				tc = TCMode.loadInstance();
-			}
-		}
+		TransformationCatalog tc = getTC(stack);
 		String tr = TypeUtil.toString(PA_TR.getValue(stack));
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
 		FQN fqn = new FQN(tr);
-		List l;
-		try {
-			l = tc.getTCEntries(fqn.getNamespace(), fqn.getName(), fqn.getVersion(),
-					bc.getHost(), TCType.INSTALLED);
-			}
-			catch (Exception e) {
-				throw new KarajanRuntimeException(e);
-			}
-			if (l == null || l.isEmpty()) {
-				return tr;
-			}
-			if (l.size() > 1) {
-				synchronized (warnset) {
-					LinkedList wl = new LinkedList();
-					wl.add(fqn);
-					wl.add(bc);
-					if (!warnset.contains(wl)) {
-						logger.warn("Multiple entries found for " + fqn + " on " + bc
-								+ ". Using the first one");
-						warnset.add(wl);
-					}
+		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
+		if (tce == null) {
+			return tr;
+		}
+		else {
+			return tce.getPhysicalTransformation();
+		}
+	}
+
+	static {
+		setArguments("vdl_tcprofile", new Arg[] { PA_TR, PA_HOST });
+	}
+
+	public void vdl_tcprofile(VariableStack stack) throws ExecutionException {
+		TransformationCatalog tc = getTC(stack);
+		String tr = TypeUtil.toString(PA_TR.getValue(stack));
+		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
+		FQN fqn = new FQN(tr);
+		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
+		NamedArguments named = ArgUtil.getNamedReturn(stack);
+		if (tce != null) {
+			Map m = new HashMap();
+			List l = tce.getProfiles(Profile.ENV);
+			if (l != null) {
+				Iterator i = l.iterator();
+				while (i.hasNext()) {
+					Profile p = (Profile) i.next();
+					m.put(p.getProfileKey(), p.getProfileValue());
 				}
+				named.add(GridExec.A_ENVIRONMENT, m);
 			}
 
-			TransformationCatalogEntry tce = (TransformationCatalogEntry) l.get(0);
-			return tce.getPhysicalTransformation();
+			l = tce.getProfiles(Profile.GLOBUS);
+			if (l != null) {
+				Iterator i = l.iterator();
+				while (i.hasNext()) {
+				    Profile p = (Profile) i.next();
+				    Arg a = (Arg) PROFILE_T.get(p.getProfileKey());
+				    if (a != null) {
+				        named.add(a, p.getProfileValue());
+				    }
+				}
+			}
+		}
+	}
+	
+	private static Map PROFILE_T;
+	
+	static {
+		PROFILE_T = new HashMap();
+		PROFILE_T.put("count", GridExec.A_COUNT);
+		PROFILE_T.put("jobtype", GridExec.A_JOBTYPE);
+		PROFILE_T.put("maxcputime", GridExec.A_MAXCPUTIME);
+		PROFILE_T.put("maxmemory", GridExec.A_MAXMEMORY);
+		PROFILE_T.put("maxtime", GridExec.A_MAXTIME);
+		PROFILE_T.put("maxwalltime", GridExec.A_MAXWALLTIME);
+		PROFILE_T.put("minmemory", GridExec.A_MINMEMORY);
+		PROFILE_T.put("project", GridExec.A_PROJECT);
+		PROFILE_T.put("queue", GridExec.A_QUEUE);
+	}
+	
+	private static Set warnset = new HashSet();
+
+	protected TransformationCatalogEntry getTCE(TransformationCatalog tc, FQN fqn, BoundContact bc) {
+		List l;
+		try {
+			l = tc.getTCEntries(fqn.getNamespace(), fqn.getName(), fqn.getVersion(), bc.getHost(),
+					TCType.INSTALLED);
+		}
+		catch (Exception e) {
+			throw new KarajanRuntimeException(e);
+		}
+		if (l == null || l.isEmpty()) {
+			return null;
+		}
+		if (l.size() > 1) {
+			synchronized (warnset) {
+				LinkedList wl = new LinkedList();
+				wl.add(fqn);
+				wl.add(bc);
+				if (!warnset.contains(wl)) {
+					logger.warn("Multiple entries found for " + fqn + " on " + bc
+							+ ". Using the first one");
+					warnset.add(wl);
+				}
+			}
+		}
+		return (TransformationCatalogEntry) l.get(0);
+	}
+
+	public static final String TC = "vdl:TC";
+
+	public static TransformationCatalog getTC(VariableStack stack) throws ExecutionException {
+		synchronized (stack.firstFrame()) {
+			TransformationCatalog tc = (TransformationCatalog) stack.firstFrame().getVar(TC);
+			if (tc == null) {
+				String prop = ConfigProperty.getProperty(VDL2Config.TC_FILE, stack);
+				tc = File.getNonSingletonInstance(prop);
+				stack.firstFrame().setVar(TC, tc);
+			}
+			return tc;
+		}
 	}
 }
