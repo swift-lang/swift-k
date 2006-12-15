@@ -6,6 +6,7 @@
 
 package org.globus.cog.karajan.workflow.nodes.grid;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -129,12 +130,12 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 			}
 
 			if (sourceContact.equals(BoundContact.LOCALHOST) && fs.getSourceDirectory().equals("")) {
-				fs.setSourceDirectory(stack.getExecutionContext().getBasedir());
+				fs.setSourceDirectory(new File(".").getAbsolutePath());
 			}
 
 			if (destinationContact.equals(BoundContact.LOCALHOST)
 					&& fs.getDestinationDirectory().equals("")) {
-				fs.setDestinationDirectory(stack.getExecutionContext().getBasedir());
+				fs.setDestinationDirectory(new File(".").getAbsolutePath());
 			}
 
 			task.setType(Task.FILE_TRANSFER);
