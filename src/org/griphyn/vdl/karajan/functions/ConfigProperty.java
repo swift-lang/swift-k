@@ -32,39 +32,47 @@ public class ConfigProperty extends AbstractFunction {
 	public Object function(VariableStack stack) throws ExecutionException {
 		String name = TypeUtil.toString(NAME.getValue(stack));
 		boolean instance = TypeUtil.toBoolean(INSTANCE.getValue(stack));
-		try {
-			VDL2Config conf;
-			String prop;
-			if (!instance) {
-				conf = VDL2Config.getConfig();
-				prop = conf.getProperty(name);
-			}
-			else {
-				synchronized (stack.firstFrame()) {
-					conf = (VDL2Config) stack.getGlobal(INSTANCE_CONFIG);
-					if (conf == null) {
-						String confFile = (String) stack.getGlobal(INSTANCE_CONFIG_FILE);
-						if (confFile == null) {
-							conf = VDL2Config.getConfig();
-						}
-						else {
-							conf = VDL2Config.getConfig(confFile);
-						}
-						stack.setGlobal(INSTANCE_CONFIG, conf);
-					}
-					prop = conf.getProperty(name);
-				}
-			}
-			if (prop == null) {
-				throw new ExecutionException("VDL2 config property \"" + name + "\" not found in "
-						+ conf);
-			}
-			else {
-				return prop;
-			}
-		}
-		catch (IOException e) {
-			throw new ExecutionException("Failed to load VDL2 configuration", e);
-		}
+		return getProperty(name, instance, stack);
 	}
+    
+    public static String getProperty(String name, VariableStack stack) throws ExecutionException {
+    	return getProperty(name, true, stack);
+    }
+    
+    public static String getProperty(String name, boolean instance, VariableStack stack) throws ExecutionException {
+    	try {
+            VDL2Config conf;
+            String prop;
+            if (!instance) {
+                conf = VDL2Config.getConfig();
+                prop = conf.getProperty(name);
+            }
+            else {
+                synchronized (stack.firstFrame()) {
+                    conf = (VDL2Config) stack.getGlobal(INSTANCE_CONFIG);
+                    if (conf == null) {
+                        String confFile = (String) stack.getGlobal(INSTANCE_CONFIG_FILE);
+                        if (confFile == null) {
+                            conf = VDL2Config.getConfig();
+                        }
+                        else {
+                            conf = VDL2Config.getConfig(confFile);
+                        }
+                        stack.setGlobal(INSTANCE_CONFIG, conf);
+                    }
+                    prop = conf.getProperty(name);
+                }
+            }
+            if (prop == null) {
+                throw new ExecutionException("VDL2 config property \"" + name + "\" not found in "
+                        + conf);
+            }
+            else {
+                return prop;
+            }
+        }
+        catch (IOException e) {
+            throw new ExecutionException("Failed to load VDL2 configuration", e);
+        }
+    }
 }
