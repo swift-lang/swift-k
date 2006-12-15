@@ -178,7 +178,6 @@ public class VDSTaskTransformer implements TaskTransformer {
 
 		protected void applyTCEntry(Task task, Contact[] contacts) {
 			JobSpecification spec = (JobSpecification) task.getSpecification();
-			String dir = spec.getDirectory();
 			BoundContact bc = (BoundContact) contacts[0];
 
 			FQN fqn = new FQN(spec.getExecutable());
@@ -208,8 +207,6 @@ public class VDSTaskTransformer implements TaskTransformer {
 
 			TransformationCatalogEntry tce = (TransformationCatalogEntry) l.get(0);
 			spec.setExecutable(tce.getPhysicalTransformation());
-			List envs = tce.getProfiles("env");
-			System.err.println("ENVS: " + envs);
 		}
 	}
 }
