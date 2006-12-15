@@ -27,5 +27,6 @@ export(typecheck, elementDef(classname="org.griphyn.vdl.karajan.VdlLib"))
 export(threadPrefix, elementDef(classname="org.griphyn.vdl.karajan.VdlLib"))
 
 export(executable, elementDef(classname="org.griphyn.vdl.karajan.VdlLib"))
+export(tcprofile, elementDef(classname="org.griphyn.vdl.karajan.VdlLib"))
 
 export(configProperty, elementDef(classname="org.griphyn.vdl.karajan.functions.ConfigProperty"))

@@ -3,7 +3,7 @@ import("task.k")
 import("rlog.k")
 
 once("vdl.k-print-version"
-	echo("VDL/Karajan library V 0.313")
+	echo("VDL/Karajan library V 0.314")
 )
 
 import("vdl-xs.k", export = true)
@@ -207,6 +207,7 @@ namespace("vdl"
 							maybe(stdin="{jobdir}/{stdin}")
 							redirect = false
 							host = rhost
+							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
 						)
 							
 						checkExitCode(rhost, tmpdir, jobdir, tr)
@@ -231,6 +232,10 @@ namespace("vdl"
 												destfile="{jobdir}-{f}")
 	
 											"{f}: ", file:read("{jobdir}-{f}")
+											/*
+											 * If multiple concurrent errors occur, 
+											 * the files might not get deleted
+											 */
 											file:remove("{jobdir}-{f}")
 										)
 								)
