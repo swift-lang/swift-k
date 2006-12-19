@@ -7,6 +7,9 @@
 		<vdl:configProperty name="sites.file"/>
 		<vdl:configProperty name="tc.file"/>
 	</set>
+	
+	<print message="Using sites file: {sites}"/>
+	<print message="Using tc.data: {tcfile}"/>
   
 	<scheduler type="vds-adaptive" shareID="vdl2:scheduler:{sites}">
 		<property name="transformationCatalogFile" value="{tcfile}"/>
