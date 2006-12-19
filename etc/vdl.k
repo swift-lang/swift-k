@@ -29,7 +29,9 @@ namespace("vdl"
 		)
 	)
 	
+	export(split, element([var], str:split(vdl:getFieldValue(var), " ")))
 	
+		
 	element(basename, [file]
 		last(split(file, "/"))
 	)
