@@ -321,6 +321,40 @@ VDL2 has the additional built-in types, based on XML types:
 Boolean, Integer, Float, and Date.
 </para>
 
+<para>We've seen empty user-defined types already, which are used as
+markers on files that we don't need to look at the content of in VDL.
+It is also possible to create types with structure, as in other 
+programming languages.</para>
+
+<para>q15.dtm contains the code for this exercise, based on the q2 
+code.</para>
+
+<programlisting>
+type messagefile {} 
+
+type details {
+    string name;
+    string place;
+}
+
+(messagefile t) greeting (details d) {   
+    app {
+        echo &quot;Hello&quot; d.name &quot;You live in&quot; d.place stdout=@filename(t);
+    }
+}
+
+details person;
+
+person.name = &quot;John&quot;;
+person.place = &quot;Namibia&quot;;
+
+messagefile outfile &lt;&quot;q15.txt&quot;&gt;;
+
+outfile = greeting(person);
+</programlisting>
+
+We define a new type, details, with members, a string and an integer.
+
 </sect1>
 
 <sect1><title>Arrays</title>
@@ -353,8 +387,14 @@ s[0], and that the array is initialised using an array literal,
 
 </sect1>
 
-<sect1><title>More about control structures</title>
-<para>if, while. should have covered foreach before this</para>
+<sect1><title>foreach</title>
+<para>VDL provides a control structure, foreach, to operate on each element of 
+an array.</para>
+</sect1>
+
+<sect1><title>More control</title>
+<para>In addition to foreach, VDL2 has 'if' and 'while'
+control structures which behave much like in other languages.</para>
 </sect1>
 
 <sect1><title>More about mappers</title>
@@ -362,6 +402,36 @@ s[0], and that the array is initialised using an array literal,
 <para>TODO introduce other mappers here - at least simple_mapper leading
 to an array of files.</para>
 
+</sect1>
+
+<sect1><title>Running on a remote site</title>
+
+<para>As configured by default, all jobs are run locally. In the previous
+examples, we've invoked 'echo' and 'wc' executables from our VDL. These
+have been run on the local system (the same computer on which you 
+ran vdlrun). We can also make our computations run on a remote resource.</para> 
+
+<para>WARNING: This example is necessarily more vague than previous examples,
+because its requires access to remote resources. You should ensure that you
+can submit a job using the globus-job-run (or globusrun-ws?) command(s).
+</para>
+
+<para>We do not need to modify any VDL code to run on another resource.
+Instead, we must modify another catalog, the 'site catalog'. This catalog
+provides details of the location that applications will be run, with the
+default settings referring to the local machine. We will modify it to 
+refer to a remote resource - the UC Teraport cluster. If you are not a 
+UC Teraport user, you should use details of a different resource that
+you do have access to.
+</para>
+
+<para>The site catalog is located in etc/sites.xml and is a relatively
+straightforward XML format file. We must modify each of the following
+three settings: gridftp (which indicates how and where data can be 
+transferred to the remote resource), jobmanager (which indicates how
+applications can be run on the remote resource) and workdirectory
+(which indicates where working storage can be found on the 
+remote resource).</para>
 </sect1>
 
 </article>
