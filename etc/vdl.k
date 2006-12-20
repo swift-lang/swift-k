@@ -29,7 +29,7 @@ namespace("vdl"
 		)
 	)
 	
-	export(split, element([var], str:split(vdl:getFieldValue(var), " ")))
+	export(split, element([var], each(str:split(vdl:getFieldValue(var), " "))))
 	
 		
 	element(basename, [file]
