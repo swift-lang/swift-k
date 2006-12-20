@@ -3,7 +3,7 @@ import("task.k")
 import("rlog.k")
 
 once("vdl.k-print-version"
-	echo("VDL/Karajan library V 0.314")
+	echo("VDL/Karajan library V 0.315")
 )
 
 import("vdl-xs.k", export = true)
@@ -33,11 +33,11 @@ namespace("vdl"
 	
 		
 	element(basename, [file]
-		last(split(file, "/"))
+		last(str:split(file, "/"))
 	)
 	
 	element(pathelements, [file]
-		elements := butLast(split(file, "/"))
+		elements := butLast(str:split(file, "/"))
 			
 		for(element, elements
 			element
