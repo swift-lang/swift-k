@@ -1,13 +1,3 @@
-WARNING: 
-====================================================================
-PLEASE NOTE ALTHOUGH THE PROVIDER FOR GT4_0_0 IS UNDER DEVELOPMENT.
-IN THE GT4_0_0 DIRECTORY YOU STILL FIND THE 3.9.5 PROVIDER which is a
-prerelease to 4.0
-
-WE WILL CHANGE THIS ASAP.
-====================================================================
-
-
 BUGS AND ENHANCEMENTS LIST SORTED BY TOPIC
 
 
