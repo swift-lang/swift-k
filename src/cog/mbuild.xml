@@ -469,11 +469,8 @@
 	
 	<target name="dist.extra.lib.merged" if="merge.extra.libs">
 		<copy todir="${dist.dir}/lib">
-			<fileset dir="${extra.lib.dir}" includes="*.*"/>
+			<fileset dir="${extra.lib.dir}" includes="*.*" excludes="WARNING.txt"/>
 		</copy>
-		<delete>
-			<fileset dir="${dist.dir}/lib" includes="WARNING.txt"/>
-		</delete>
 	</target>
 	
 	<target name="dist.extra.lib.notmerged" unless="merge.extra.libs">
@@ -498,6 +495,9 @@
 		<copy todir="${package.dir}/lib">
 			<fileset dir="lib" includes="${lib.deps}"/>
 		</copy>
+		<antcall target="dist.extra.lib">
+			<param name="dist.dir" value="${package.dir}"/>
+		</antcall>
 		<copy todir="${package.dir}/lib">
 			<fileset dir="${cog.dir}/lib" includes="${lib.deps}"/>
 		</copy>
