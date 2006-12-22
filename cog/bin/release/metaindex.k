@@ -32,10 +32,10 @@ element(formodule, [lambda]
 
 element(module, [m]
 	print("Module: {m}")
-	set(mdir, "{srcdir}/modules/{m}")
+	mdir := "{srcdir}/modules/{m}"
 	
 	
-	set(name, property:get("{mdir}/project.properties", "long.name"))
+	name := property:get("{mdir}/project.properties", "long.name")
 	
 	anchor(m)
 	h2(concat(m, ": ", name))
@@ -66,8 +66,8 @@ element(module, [m]
 )
 
 element(module:file, [module, file]
-	set(mfile, "{srcdir}/modules/{module}/{file}")
-	set(cog:version, cog:version())
+	mfile := "{srcdir}/modules/{module}/{file}"
+	cog:version := cog:version()
 	
 	if(file:exists(mfile)
 		then(
@@ -82,10 +82,10 @@ element(module:file, [module, file]
 )
 
 element(property:get, [file, name]
-	set(lines, split(file:read(file), nl()))
+	lines := split(file:read(file), nl())
 	
 	for(line, lines
-		set(nvpair, split(line, "="))
+		nvpair := split(line, "=")
 		
 		if(list:size(nvpair) == 2
 			if(strip(list:first(nvpair)) == name

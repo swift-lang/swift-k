@@ -1,4 +1,5 @@
-CVSROOT=:pserver:anonymous@cvs.cogkit.org:/cvs/cogkit
+#CVSROOT=:pserver:anonymous@cvs.cogkit.org:/cvs/cogkit
+CVSROOT=https://svn.sourceforge.net/svnroot/cogkit
 # for example TAG=-r 4_0_alpha1
 TAG=now
 CRTDIR=$(shell pwd)
@@ -7,8 +8,8 @@ export LOG
 export CVSROOT
 #must be after the above
 VERSION=$(shell release.sh cogversion $(CVSROOT) $(TAG))
-EXCLUDEMODULES=qos common portlets template monitor provider-gt3_0_2 provider-gt3_2_0
-PROVIDERS=gt3-common gt3_2_1 gt4_0_0 local webdav ssh condor gt2ft
+EXCLUDEMODULES=qos common portlets template monitor provider-gt3_0_2 provider-gt3_2_0 broker provider-ws provider-mpichg2
+PROVIDERS=gt4_0_0 local webdav ssh condor gt2ft
 #PUBLISHHOST=hategan@www.cogkit.org
 PUBLISHHOST=dkodeboy@www.cogkit.org
 #PUBLISHROOT=/www/www.cogkit/org/release

@@ -9,19 +9,28 @@ providers() {
 	done
 }
 
-cogversion() {
+cog-version() {
 CVSROOT=$1
+if [ "$CVSROOT" == "" ]; then
+	CVSROOT="https://svn.sourceforge.net/svnroot/cogkit"
+fi
 TAG=$2
+if [ "$TAG" == "" ]; then
+	TAG=now
+fi
 
 	if [ "$LOG" == "" ]; then
 		LOG="log.txt"
 	fi
 
 	if [ ! -f src/cog/VERSION ]; then
+		mkdir -p src/cog
 		if [ "$TAG" == "now" ]; then
-			cvs -d $CVSROOT export -D now src/cog/VERSION 2>>$LOG
+			#cvs -d $CVSROOT export -D now src/cog/VERSION 2>>$LOG
+			svn export --force $CVSROOT/trunk/current/src/cog/VERSION src/cog/VERSION 2>>$LOG
 		else
-			cvs -d $CVSROOT export $TAG src/cog/VERSION 2>>$LOG
+			#cvs -d $CVSROOT export $TAG src/cog/VERSION 2>>$LOG
+			svn export --force $CVSROOT/tags/$TAG/src/cog/VERSION src/cog/VERSION 2>>$LOG
 		fi
 	fi
 
@@ -38,10 +47,12 @@ TAG=$2
 
 	if [ "$TAG" == "now" ]; then
 		echo "Checking out current $CVSMODULE from $CVSROOT"
-		cvs -q -d $CVSROOT export -D now $CVSMODULE >>$LOG
+		#cvs -q -d $CVSROOT export -D now $CVSMODULE >>$LOG
+		svn export --force $CVSROOT/trunk/current/$CVSMODULE src/cog >>$LOG
 	else
 		echo "Checking out $TAG tag of $CVSMODULE"
-		cvs -q -d $CVSROOT export $TAG $CVSMODULE >>$LOG
+		#cvs -q -d $CVSROOT export $TAG $CVSMODULE >>$LOG
+		svn export --force $CVSROOT/tags/$TAG/$CVSMODULE src/cog >>$LOG
 	fi
 }
 
@@ -56,14 +67,16 @@ TAG=$3
 
 	if [ ! -f src/cog/modules/provider-$PROVIDER/project.properties ]; then
 		if [ "$TAG" == "now" ]; then
-			cvs -d $CVSROOT export -D now src/cog/modules/provider-$PROVIDER/project.properties 2>>$LOG
+			#cvs -d $CVSROOT export -D now src/cog/modules/provider-$PROVIDER/project.properties 2>>$LOG
+			svn export --force $CVSROOT/trunk/current/src/cog/modules/provider-$PROVIDER/project.properties src/cog/modules/provider-$PROVIDER 2>>$LOG
 		else
-			cvs -d $CVSROOT export $TAG src/cog/modules/provider-$PROVIDER/project.properties 2>>$LOG
+			#cvs -d $CVSROOT export $TAG src/cog/modules/provider-$PROVIDER/project.properties 2>>$LOG
+			svn export --force $CVSROOT/tags/$TAG/src/cog/modules/provider-$PROVIDER/project.properties src/cog/modules/provider-$PROVIDER 2>>$LOG
 		fi
 	fi
 
 
-	MODULEVERSION=`grep "version" src/cog-compile/modules/provider-$PROVIDER/project.properties | gawk -F: 'function trim(s){gsub(/^[ \t\n]*/,"",s); gsub(/[ \t\n]*$/,"",s);return s} BEGIN {FS="="} {print trim($2)}'`
+	MODULEVERSION=`grep "version" src/cog/modules/provider-$PROVIDER/project.properties | gawk -F: 'function trim(s){gsub(/^[ \t\n]*/,"",s); gsub(/[ \t\n]*$/,"",s);return s} BEGIN {FS="="} {print trim($2)}'`
 	echo $MODULEVERSION
 }
 
@@ -113,12 +126,16 @@ PUBLISHDIR=$2
 
 OP=$1
 
+if [ "$CVSROOT" == "" ]; then
+	CVSROOT="https://svn.sourceforge.net/svnroot/cogkit"
+fi
+
 case $OP in
 	checkout)
 		checkout $2 $3
 		;;
 	cogversion)
-		cogversion $2 $3
+		cog-version $2 $3
 		;;
 	providerversion)
 		providerversion $2 $3 $4
