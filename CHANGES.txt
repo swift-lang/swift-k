@@ -1,3 +1,8 @@
+(12/23/06)
+------------------------- 0 rc 2 ---------------------------
+
+*** svn copy is broken so I'm noting the revision here: 34
+
 (12/14/06)
 
 *** Fixed the default mapper to be concurrent_mapper
