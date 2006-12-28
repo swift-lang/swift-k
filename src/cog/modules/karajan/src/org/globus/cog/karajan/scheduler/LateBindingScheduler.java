@@ -235,21 +235,25 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					break;
 				}
 				Task t = (Task) getJobQueue().get(index);
+				boolean remove = true;
 				try {
 					submitUnbound(t);
-					synchronized (this) {
-						getJobQueue().remove(index);
-					}
 					success = true;
 				}
-				catch (NoFreeResourceException e) {
-					if (running == 0) {
-						failUnsubmittedTask(t, "Could not find any valid host for task \"" + t
+				catch (NoSuchResourceException e) {
+					failTask(t, "Could not find any valid host for task \"" + t
 								+ "\" with constraints " + getTaskConstraints(t), e);
-					}
+				}
+				catch (NoFreeResourceException e) {
+					remove = false;
 				}
 				catch (Exception e) {
 					failTask(t, "The scheduler could not execute the task", e);
+				}
+				if (remove) {
+					synchronized (this) {
+						getJobQueue().remove(index);
+					}
 				}
 				index++;
 			}
@@ -272,14 +276,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected void failTask(Task t, String message, Exception e) {
-		Status s = new StatusImpl();
-		s.setStatusCode(Status.FAILED);
-		s.setMessage(message);
-		s.setException(e);
-		t.setStatus(s);
-	}
-
-	protected void failUnsubmittedTask(Task t, String message, Exception e) {
 		Status s = new StatusImpl();
 		s.setStatusCode(Status.FAILED);
 		s.setMessage(message);
@@ -327,7 +323,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					services[i] = resolveService((BoundContact) contacts[i], t.getType());
 				}
 				if (services[i] == null) {
-					failUnsubmittedTask(t, "Could not find a suitable service/provider for host "
+					failTask(t, "Could not find a suitable service/provider for host "
 							+ contacts[i], null);
 					return;
 				}
@@ -348,11 +344,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			throw e;
 		}
 		catch (Exception e) {
-			if (e instanceof NullPointerException) {
-				e.printStackTrace();
-			}
-			logger.debug("Scheduler exception: job =" + t.getIdentity().getValue() + ", status = "
+			if (logger.isDebugEnabled()) {
+				logger.debug("Scheduler exception: job =" + t.getIdentity().getValue() + ", status = "
 					+ t.getStatus(), e);
+			}
 			Status status = t.getStatus();
 			status.setPrevStatusCode(status.getStatusCode());
 			status.setStatusCode(Status.FAILED);
@@ -556,6 +551,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					synchronized (taskContacts) {
 						taskContacts.remove(task);
 					}
+					removeConstraints(task);
 
 					for (int i = 0; i < contacts.length; i++) {
 						BoundContact c = (BoundContact) contacts[i];

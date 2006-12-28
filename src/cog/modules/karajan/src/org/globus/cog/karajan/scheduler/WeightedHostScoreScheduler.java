@@ -112,6 +112,16 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		WeightedHost selected = null;
 
 		s = constrain(s, getConstraintChecker(), t);
+		
+		if (s.isEmpty()) {
+			throw new NoSuchResourceException();
+		}
+		
+		removeOverloaded(s);
+		
+		if (s.isEmpty()) {
+			throw new NoFreeResourceException();
+		}
 
 		double sum = s.getSum();
 		if (policy == POLICY_WEIGHTED_RANDOM) {
@@ -134,12 +144,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				}
 			}
 			if (selected == null) {
-				if (s.isEmpty()) {
-					throw new NoFreeResourceException();
-				}
-				else {
-					selected = s.last();
-				}
+				selected = s.last();
 			}
 		}
 		else if (policy == POLICY_BEST_SCORE) {
@@ -181,18 +186,28 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			Iterator i = s.iterator();
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
-				if (rcc.checkConstraints(wh.getHost(), tc) && notOverloaded(wh)) {
+				if (rcc.checkConstraints(wh.getHost(), tc)) {
 					ns.add(wh);
 				}
 			}
 			return ns;
 		}
 	}
+	
+	protected void removeOverloaded(WeightedHostSet s) {
+		 Iterator i = s.iterator();
+		while (i.hasNext()) {
+			WeightedHost wh = (WeightedHost) i.next();
+			if (overloaded(wh)) {
+				i.remove();
+			}
+		}
+	}
 
-	protected boolean notOverloaded(WeightedHost wh) {
+	protected boolean overloaded(WeightedHost wh) {
 		double score = wh.getTScore();
 		int load = wh.getLoad();
-		return load < jobThrottle * score + 2;
+		return !(load < jobThrottle * score + 2);
 	}
 
 	private static String[] propertyNames;
