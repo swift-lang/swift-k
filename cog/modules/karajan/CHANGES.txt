@@ -1,3 +1,17 @@
+************************** v0.35 ***************************
+
+(12/28/2006)
+
+*** Added a mechanism in the schedulers to distinguish between
+    resources not being found because of permanently unsatisfiable
+	constraints or temporary load conditions. The heuristics used
+	before were broken.
+	
+*** Fixed a memory leak in the schedulers with constraints not 
+    being removed after a task was done or failed.
+	
+*** Some cleanups in the schedulers.
+
 ************************** v0.34 ***************************
 
 (12/13/2006)
