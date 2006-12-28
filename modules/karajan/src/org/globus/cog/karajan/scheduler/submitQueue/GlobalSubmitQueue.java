@@ -40,7 +40,7 @@ public class GlobalSubmitQueue extends AbstractSubmitQueue {
 			}
 		}
 		else {
-			logger.warn("No global submit throttle set. Using default ("
+			logger.info("No global submit throttle set. Using default ("
 					+ DEFAULT_GLOBAL_SUBMIT_THROTTLE + ")");
 		}
 	}
