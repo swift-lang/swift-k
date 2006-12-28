@@ -51,6 +51,7 @@ public class WeightedHostSet {
 	public synchronized double remove(WeightedHost wh) {
 		scores.remove(wh);
 		weightedHosts.remove(wh.getHost());
+		sum -= wh.getScore();
 		return wh.getScore();
 	}
 	
@@ -59,7 +60,23 @@ public class WeightedHostSet {
 	}
 
 	public Iterator iterator() {
-		return scores.iterator();
+		final Iterator it = scores.iterator();
+		return new Iterator() {
+			private WeightedHost last;
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+
+			public Object next() {
+				return last = (WeightedHost) it.next();
+			}
+
+			public void remove() {
+				it.remove();
+				sum -= last.getScore();
+				weightedHosts.remove(last.getHost());
+			}
+		};
 	}
 
 	public WeightedHost last() {
