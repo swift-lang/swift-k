@@ -65,21 +65,29 @@ public class DefaultScheduler extends LateBindingScheduler implements Scheduler,
 		checkGlobalLoadConditions();
 		int initial = contactCursor;
 		ContactSet resources = getResources();
-		while (!checkLoad(resources.get(contactCursor))
-				|| !checkConstraints(resources.get(contactCursor), t)) {
+		boolean incompatibleConstraints = true;
+		while (true) {
+			if (checkConstraints(resources.get(contactCursor), t)) {
+				incompatibleConstraints = false;
+				if (checkLoad(resources.get(contactCursor))) {
+					break;
+				}
+			}
 			incContactCursor();
 			if (contactCursor == initial) {
-				logger.debug("No free resources");
-				throw new NoFreeResourceException("No free hosts available");
+				if (incompatibleConstraints) {
+					throw new NoSuchResourceException();
+				}
+				else {
+					throw new NoFreeResourceException("No free hosts available");
+				}
 			}
-		}
-		if (initial == contactCursor) {
-			incContactCursor();
 		}
 		BoundContact contact = getResources().get(contactCursor);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Contact: " + contact);
 		}
+		incContactCursor();
 		return contact;
 	}
 

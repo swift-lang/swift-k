@@ -211,6 +211,12 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 			return constraints.get(task);
 		}
 	}
+	
+	protected void removeConstraints(Task task) {
+		synchronized(constraints) {
+			constraints.remove(task);
+		}
+	}
 
 	public void addTaskTransformer(TaskTransformer taskTransformer) {
 		this.taskTransformers.add(taskTransformer);
