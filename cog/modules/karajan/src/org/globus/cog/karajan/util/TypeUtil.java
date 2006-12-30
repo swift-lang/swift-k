@@ -20,6 +20,7 @@ import java.util.StringTokenizer;
 
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.parser.ParseTree;
+import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
@@ -75,6 +76,24 @@ public class TypeUtil {
 			throw new KarajanRuntimeException("Could not convert value to number: " + obj, e);
 		}
 	}
+	
+	public static long toLong(final Object obj) {
+		try {
+			if (obj instanceof String) {
+				return Long.valueOf((String) obj).longValue();
+			}
+			else if (obj instanceof Number) {
+				return ((Number) obj).longValue();
+			}
+			else {
+				throw new KarajanRuntimeException("Could not convert value to integer: " + obj);
+			}
+		}
+		catch (Exception e) {
+			throw new KarajanRuntimeException("Could not convert value to number: " + obj, e);
+		}
+	}
+
 
 	public static boolean toBoolean(Object obj) {
 		try {
@@ -181,11 +200,19 @@ public class TypeUtil {
 			return ((Identifier) obj).getName();
 		}
 		if (obj instanceof Throwable) {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			PrintStream ps = new PrintStream(baos);
-			Throwable t = (Throwable) obj;
-			t.printStackTrace(ps);
-			return baos.toString();
+			if (obj instanceof ExecutionException) {
+				ExecutionException ee = (ExecutionException) obj;
+				StringBuffer sb = new StringBuffer();
+				convertExecutionException(sb, ee);
+				return sb.toString();
+			}
+			else {
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				PrintStream ps = new PrintStream(baos);
+				Throwable t = (Throwable) obj;
+				t.printStackTrace(ps);
+				return baos.toString();
+			}
 		}
 		if (obj instanceof String[]) {
 			final StringBuffer sb = new StringBuffer();
@@ -203,6 +230,26 @@ public class TypeUtil {
 		}
 		else {
 			return null;
+		}
+	}
+	
+	private static void convertExecutionException(StringBuffer sb, ExecutionException ee) {
+		sb.append(ee.getMessage());
+		sb.append('\n');
+		if (ee.getStack() != null) {
+			sb.append(Trace.get(ee.getStack()));
+		}
+		else {
+			sb.append("\t-- no stack --\n");
+		}
+		Throwable cause = ee.getCause();
+		if (cause instanceof ExecutionException) {
+			sb.append("Caused by: \n");
+			convertExecutionException(sb, (ExecutionException) cause);
+		}
+		else if (cause != null) {
+			sb.append("Caused by: ");
+			sb.append(cause.getMessage());
 		}
 	}
 
