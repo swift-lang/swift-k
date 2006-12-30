@@ -158,12 +158,7 @@ public class RemoteNode extends PartialArgumentsContainer implements Callback {
 			}
 		}
 		catch (Exception e) {
-			try {
-				this.failImmediately(stack, e);
-			}
-			catch (ExecutionException ee) {
-				logger.error("Exception caught out of execution context", ee);
-			}
+			this.failImmediately(stack, e);
 		}
 		finally {
 			if (channel != null) {
@@ -185,17 +180,13 @@ public class RemoteNode extends PartialArgumentsContainer implements Callback {
 			logger.error("No stack for command " + cmd);
 			return;
 		}
-		try {
-			if (t == null) {
-				this.failImmediately(stack, "Remote error: " + msg);
-			}
-			else {
-				this.failImmediately(stack, t);
-			}
+		if (t == null) {
+			this.failImmediately(stack, "Remote error: " + msg);
 		}
-		catch (ExecutionException e) {
-			logger.error("Exception caught out of execution context", e);
+		else {
+			this.failImmediately(stack, t);
 		}
+
 	}
 
 	protected void nonArgChildCompleted(VariableStack stack) throws ExecutionException {
