@@ -1,0 +1,68 @@
+/*
+ * Created on Dec 23, 2006
+ */
+package org.griphyn.vdl.util;
+
+import java.util.Map;
+import java.util.TreeMap;
+
+public class VDL2ConfigProperties {
+	public static final String POOL_FILE = "sites.file";
+	public static final String TC_FILE = "tc.file";
+	public static final String IP_ADDRESS = "ip.address";
+	public static final String LAZY_ERRORS = "lazy.errors";
+	public static final String PGRAPH = "pgraph";
+	public static final String PGRAPH_GRAPH_OPTIONS = "pgraph.graph.options";
+	public static final String PGRAPH_NODE_OPTIONS = "pgraph.node.options";
+	public static final String CACHING_ALGORITHM = "caching.algorithm";
+	public static final Map PROPERTIES;
+
+	static {
+		PROPERTIES = new TreeMap();
+		PROPERTIES.put(POOL_FILE, new PropInfo("file",
+				"Points to the location of the sites.xml file"));
+		PROPERTIES.put(TC_FILE, new PropInfo("file", "Points to the location of the tc.data file"));
+		PROPERTIES.put(IP_ADDRESS, new PropInfo("aaa.bbb.ccc.ddd",
+				"Can be used to specify a publicly reacheable IP address for "
+						+ "this machine which is generally used for Globus callbacks. "
+						+ "Normally this should be auto-detected, but if you have "
+						+ "multiple network cards or NAT then " + "you may need to set this"));
+		PROPERTIES.put(LAZY_ERRORS, new PropInfo("true|false",
+				"Use a lazy mode to deal with errors. When set to 'true' VDL2 will proceed with the "
+						+ "execution until no more data can be derived because of "
+						+ "errors in dependent steps. If set to 'false', an error will "
+						+ "cause the execution to immediately stop"));
+		PROPERTIES.put(PGRAPH, new PropInfo("true|false|<filename>",
+				"Whether to generate a provenance"
+						+ "graph or not. If a 'true' is used, the file name for the graph will "
+						+ "be chosen by VDL2."));
+		PROPERTIES.put(PGRAPH_GRAPH_OPTIONS, new PropInfo("<string>",
+				"Graph options to be passed to the .dot file."
+						+ "These will appear in the 'graph' clause in the .dot file: "
+						+ "graph [<string>]; "));
+		PROPERTIES.put(PGRAPH_NODE_OPTIONS, new PropInfo("<string>",
+				"Node options to be passed to the .dot file."
+						+ "These will appear in the 'node' clause in the .dot file: "
+						+ "node [<string>]; "));
+		PROPERTIES.put(CACHING_ALGORITHM, new PropInfo("[LRU]", "The algorithm to use for the "
+				+ "VDL2 file caching mechanism. LRU is the only one available now."));
+	}
+
+	public static Map getPropertyDescriptions() {
+		return PROPERTIES;
+	}
+
+	public static String getPropertyDescription(String name) {
+		return (String) PROPERTIES.get(name);
+	}
+
+	public static class PropInfo {
+		public final String validValues;
+		public final String desc;
+
+		public PropInfo(String validValues, String desc) {
+			this.validValues = validValues;
+			this.desc = desc;
+		}
+	}
+}

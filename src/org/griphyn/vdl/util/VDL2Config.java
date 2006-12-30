@@ -1,9 +1,3 @@
-//----------------------------------------------------------------------
-//This code is developed as part of the Java CoG Kit project
-//The terms of the license can be found at http://www.cogkit.org/license
-//This message may not be removed or altered.
-//----------------------------------------------------------------------
-
 /*
  * Created on Dec 5, 2006
  */
@@ -26,11 +20,8 @@ public class VDL2Config extends Properties {
 					+ "vdl2.properties",
 			System.getProperty("user.home") + File.separator + ".vdl2" + File.separator
 					+ "vdl2.properties" };
-	
-	public static final String POOL_FILE = "sites.file";
-	public static final String TC_FILE = "tc.file";
-	public static final String IP_ADDRESS = "ip.address";
 
+	
 	private static VDL2Config config;
 
 	public static VDL2Config getConfig() throws IOException {
@@ -79,7 +70,7 @@ public class VDL2Config extends Properties {
 			super.load(new FileInputStream(f));
 		}
 	}
-	
+
 	protected VDL2Config check() throws IOException {
 		if (files.size() == 0) {
 			throw new FileNotFoundException("No VDL2 configuration file found. Tried " + tried);
@@ -132,20 +123,30 @@ public class VDL2Config extends Properties {
 			return super.put(key, sb.toString());
 		}
 	}
-	
+
 	public String getPoolFile() {
-		return getProperty(POOL_FILE);
+		return getProperty(VDL2ConfigProperties.POOL_FILE);
 	}
-	
+
 	public String getTCFile() {
-		return getProperty(TC_FILE);
+		return getProperty(VDL2ConfigProperties.TC_FILE);
+	}
+
+	public String getIP() {
+		return getProperty(VDL2ConfigProperties.IP_ADDRESS);
 	}
 	
-	public String getIP() {
-		return getProperty(IP_ADDRESS);
+	public boolean getLazyErrors() {
+		return Boolean.valueOf(getProperty(VDL2ConfigProperties.LAZY_ERRORS, "true")).booleanValue();
 	}
 
 	public String toString() {
 		return "VDL2 configuration " + files;
+	}
+
+	public Object clone() {
+		VDL2Config conf = new VDL2Config();
+		conf.putAll(this);
+		return conf;
 	}
 }
