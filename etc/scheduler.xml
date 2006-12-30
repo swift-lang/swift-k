@@ -21,11 +21,11 @@
 		<property name="maxTransfers" value="8"/>
 		
 		<task:handler type="execution" provider="gt2"/>
-	    <task:handler type="execution" provider="gt4"/>
+		<task:handler type="execution" provider="gt4"/>
 		<task:handler type="execution" provider="local"/>
-	    <task:handler type="file" provider="gsiftp"/>
+		<task:handler type="file" provider="gsiftp"/>
 		<task:handler type="file" provider="local"/>
 		
 		<vdl:siteCatalog file="{sites}"/>
-  </scheduler>
+	</scheduler>
 </project>
