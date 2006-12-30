@@ -1,7 +1,8 @@
 <project>
 	<import file="sys.xml"/>
 	<import file="task.xml"/>
-	<import file="vdl.k"/>
+	<import file="vdl-lib.xml"/>
+	<import file="vdl-sc.k"/>
 	
 	<set names="sites, tcfile">
 		<vdl:configProperty name="sites.file"/>
