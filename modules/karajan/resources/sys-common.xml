@@ -6,6 +6,7 @@
 	<export name="parallelChoice"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ParallelChoice"/></export>
 	<export name="race"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ParallelChoice"/></export>
 	<export name="choice"><elementDef classname="org.globus.cog.karajan.workflow.nodes.SequentialChoice"/></export>
+	<export name="try"><elementDef classname="org.globus.cog.karajan.workflow.nodes.SequentialChoice"/></export>
 	<export name="catch"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Catch"/></export>
 	<export name="guard"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Guard"/></export>
 	<export name="maybe"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Maybe"/></export>
@@ -27,7 +28,9 @@
     <export name="ignoreErrors"><elementDef classname="org.globus.cog.karajan.workflow.nodes.IgnoreErrorsNode"/></export>
     <export name="restartOnError"><elementDef classname="org.globus.cog.karajan.workflow.nodes.RestartOnErrorNode"/></export>
     <export name="generateError"><elementDef classname="org.globus.cog.karajan.workflow.nodes.GenerateErrorNode"/></export>
+    <export name="throw"><elementDef classname="org.globus.cog.karajan.workflow.nodes.GenerateErrorNode"/></export>
 	<export name="onError"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ErrorHandlerNode"/></export>
+	<export name="exception"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.KException"/></export>
     	
 	<export name="quoted"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.QuotedString"/></export>
 	<export name="unquoted"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Unquote"/></export>
