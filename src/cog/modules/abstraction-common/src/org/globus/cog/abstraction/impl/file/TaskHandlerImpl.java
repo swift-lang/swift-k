@@ -9,10 +9,11 @@ package org.globus.cog.abstraction.impl.file;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -40,15 +41,9 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
  * The base class for task handlers in all file providers
  */
 public class TaskHandlerImpl implements TaskHandler, StatusListener {
-    private Vector submittedList = null;
-    private Vector activeList = null;
-    private Vector suspendedList = null;
-    private Vector resumedList = null;
-    private Vector failedList = null;
-    private Vector canceledList = null;
-    private Vector completedList = null;
-    private Hashtable handleMap = null;
-    private Hashtable activeFileResources;
+    private Set tasks;
+    private Map handleMap = null;
+    private Map activeFileResources;
     private Identity defaultSessionId = null;
 
     private static final Set oneWordCommands, twoWordCommands,
@@ -74,6 +69,7 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
         twoWordCommands.add(FileOperationSpecification.EXISTS);
         twoWordCommands.add(FileOperationSpecification.CD);
         twoWordCommands.add(FileOperationSpecification.ISDIRECTORY);
+        twoWordCommands.add(FileOperationSpecification.FILEINFO);
 
         // Add all three word commands
         threeWordCommands.add(FileOperationSpecification.RMDIR);
@@ -93,16 +89,10 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
     static Logger logger = Logger.getLogger(TaskHandlerImpl.class.getName());
 
     public TaskHandlerImpl() {
-        this.submittedList = new Vector();
-        this.activeList = new Vector();
-        this.suspendedList = new Vector();
-        this.resumedList = new Vector();
-        this.failedList = new Vector();
-        this.canceledList = new Vector();
-        this.completedList = new Vector();
-        this.handleMap = new Hashtable();
+        this.handleMap = new HashMap();
         this.type = TaskHandler.FILE_OPERATION;
-        this.activeFileResources = new Hashtable();
+        this.activeFileResources = new HashMap();
+        this.tasks = new HashSet();
     }
 
     /** set type of task handler */
@@ -129,6 +119,9 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
         }
 
         try {
+            synchronized (tasks){
+            	tasks.add(task);
+            }
             this.task = task;
             task.setStatus(Status.SUBMITTED);
             FileOperationSpecification spec = (FileOperationSpecification) task
@@ -332,6 +325,11 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
                         .getArgument(0)));
             }
             else if (operation
+                    .equalsIgnoreCase(FileOperationSpecification.FILEINFO)
+                    && spec.getArgumentSize() == 1) {
+                output = fileResource.getGridFile(spec.getArgument(0));
+            }
+            else if (operation
                     .equalsIgnoreCase(FileOperationSpecification.GETFILE)
                     && spec.getArgumentSize() == 2) {
                 fileResource.getFile(spec.getArgument(0), spec.getArgument(1));
@@ -448,12 +446,9 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
                     "Cannot remove an active or suspended Task");
         }
         else {
-            this.failedList.remove(task);
-            this.canceledList.remove(task);
-            this.completedList.remove(task);
-            this.activeList.remove(task);
-            this.suspendedList.remove(task);
-            this.submittedList.remove(task);
+            synchronized(tasks) {
+            	this.tasks.remove(task);
+            }
             this.handleMap.remove(task);
         }
     }
@@ -467,95 +462,53 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
             return null;
         }
     }
+    
+    protected Collection getTasksWithStatus(int code) {
+        ArrayList l = new ArrayList();
+        synchronized(tasks) {
+            Iterator i = tasks.iterator();
+            while (i.hasNext()) {
+                Task t = (Task) i.next();
+                if (t.getStatus().getStatusCode() == code) {
+                	l.add(t);
+                }
+            }
+        }
+        return l;
+    }
 
     /** return a collection of active tasks */
     public Collection getActiveTasks() {
-        return new ArrayList(this.activeList);
+        return getTasksWithStatus(Status.ACTIVE);
     }
 
     /** return a collection of failed tasks */
     public Collection getFailedTasks() {
-        return new ArrayList(this.failedList);
+        return getTasksWithStatus(Status.FAILED);
     }
 
     /** return a collection of completed tasks */
     public Collection getCompletedTasks() {
-        return new ArrayList(this.completedList);
+        return getTasksWithStatus(Status.COMPLETED);
     }
 
     /** return a collection of suspended tasks */
     public Collection getSuspendedTasks() {
-        return new ArrayList(this.suspendedList);
+        return getTasksWithStatus(Status.SUSPENDED);
     }
 
     /** return a collection of resumed tasks */
     public Collection getResumedTasks() {
-        return new ArrayList(this.resumedList);
+        return getTasksWithStatus(Status.RESUMED);
     }
 
     /** return a collection of canceled tasks */
     public Collection getCanceledTasks() {
-        return new ArrayList(this.canceledList);
+        return getTasksWithStatus(Status.CANCELED);
     }
 
     /** listen to the status changes of the task */
     public void statusChanged(StatusEvent event) {
-        Task task = (Task) event.getSource();
-        Status status = event.getStatus();
-        int prevStatus = status.getPrevStatusCode();
-        int curStatus = status.getStatusCode();
-        switch (prevStatus) {
-            case Status.SUBMITTED:
-                this.submittedList.remove(task);
-                break;
-            case Status.ACTIVE:
-                this.activeList.remove(task);
-                break;
-            case Status.SUSPENDED:
-                this.suspendedList.remove(task);
-                break;
-            case Status.RESUMED:
-                this.resumedList.remove(task);
-                break;
-            case Status.FAILED:
-                this.failedList.remove(task);
-                break;
-            case Status.CANCELED:
-                this.canceledList.remove(task);
-                break;
-            case Status.COMPLETED:
-                this.completedList.remove(task);
-                break;
-            default:
-                break;
-        }
-        if (task != null) {
-            switch (curStatus) {
-                case Status.SUBMITTED:
-                    this.submittedList.add(task);
-                    break;
-                case Status.ACTIVE:
-                    this.activeList.add(task);
-                    break;
-                case Status.SUSPENDED:
-                    this.suspendedList.add(task);
-                    break;
-                case Status.RESUMED:
-                    this.resumedList.add(task);
-                    break;
-                case Status.FAILED:
-                    this.failedList.add(task);
-                    break;
-                case Status.CANCELED:
-                    this.canceledList.add(task);
-                    break;
-                case Status.COMPLETED:
-                    this.completedList.add(task);
-                    break;
-                default:
-                    break;
-            }
-        }
     }
 
     private SecurityContext getSecurityContext() {
