@@ -15,7 +15,7 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 
-public class Catch extends PartialArgumentsContainer {
+public class Catch extends AbstractRegexpFailureHandler {
 	public static final Arg A_MATCH = new Arg.Positional("match", 0);
 	
 	static {
@@ -23,9 +23,9 @@ public class Catch extends PartialArgumentsContainer {
 	}
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		String error = TypeUtil.toString(stack.getVar("error"));
+		ExecutionException error = (ExecutionException) stack.getVar("exception");
 		String match = TypeUtil.toString(getArgument(A_MATCH, stack));
-		if (error.matches(match)) {
+		if (matches(match, error)) {
 			super.partialArgumentsEvaluated(stack);
 			startRest(stack);
 		}

@@ -7,6 +7,7 @@
 package org.globus.cog.karajan.workflow.nodes.grid;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -60,13 +61,14 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	public static final Arg A_NATIVESPEC = new Arg.Optional("nativespec");
 	public static final Arg A_DELEGATION = new Arg.Optional("delegation", Boolean.FALSE);
 	public static final Arg.Channel C_ENVIRONMENT = new Arg.Channel("environment");
+	public static final Arg A_ATTRIBUTES = new Arg.Optional("attributes", Collections.EMPTY_MAP);
 
 	static {
 		setArguments(GridExec.class, new Arg[] { A_EXECUTABLE, A_ARGS, A_ARGUMENTS, A_HOST,
 				A_STDOUT, A_STDERR, A_STDIN, A_PROVIDER, A_COUNT, A_JOBTYPE, A_MAXTIME,
 				A_MAXWALLTIME, A_MAXCPUTIME, A_ENVIRONMENT, A_QUEUE, A_PROJECT, A_MINMEMORY,
 				A_MAXMEMORY, A_REDIRECT, A_SECURITY_CONTEXT, A_DIRECTORY, A_NATIVESPEC,
-				A_DELEGATION, C_ENVIRONMENT });
+				A_DELEGATION, A_ATTRIBUTES, C_ENVIRONMENT });
 	}
 
 	public void submitTask(VariableStack stack) throws ExecutionException {
@@ -151,6 +153,19 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 							else {
 								js.addEnvironmentVariable(nv[0].trim(), nv[1].trim());
 							}
+						}
+					}
+				}
+				else if (name.equals(A_ATTRIBUTES.getName())) {
+					Map m = (Map) checkClass(A_ATTRIBUTES.getValue(stack), Map.class, "map");
+					Iterator ai = m.entrySet().iterator();
+					while (ai.hasNext()) {
+						Map.Entry e = (Map.Entry) ai.next();
+						try {
+							js.setAttribute((String) e.getKey(), e.getValue());
+						}
+						catch (ClassCastException ex) {
+							throw new ExecutionException("Invalid attribute name (" + e.getKey() + ")", ex);
 						}
 					}
 				}

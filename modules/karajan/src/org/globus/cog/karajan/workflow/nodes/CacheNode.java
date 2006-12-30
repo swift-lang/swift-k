@@ -26,8 +26,6 @@ import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Cache;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
 

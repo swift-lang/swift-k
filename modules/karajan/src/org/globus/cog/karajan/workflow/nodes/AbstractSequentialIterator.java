@@ -15,7 +15,6 @@ import org.globus.cog.karajan.util.Identifier;
 import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.FutureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
@@ -127,8 +126,7 @@ public abstract class AbstractSequentialIterator extends AbstractIterator {
 			}
 		}
 		else if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-			failImmediately(e.getStack(), new ChainedFailureNotificationEvent(this,
-					(FailureNotificationEvent) e));
+			failImmediately(e.getStack(), (FailureNotificationEvent) e);
 			return;
 		}
 		super.notificationEvent(e);

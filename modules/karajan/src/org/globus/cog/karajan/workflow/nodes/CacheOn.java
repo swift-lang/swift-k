@@ -9,9 +9,6 @@
  */
 package org.globus.cog.karajan.workflow.nodes;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -24,10 +21,6 @@ public class CacheOn extends CacheNode {
 	}
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		List key = new LinkedList();
-		key.add(getProperty(UID));
-		key.add(A_VALUE.getValue(stack));
-		cpre(key, stack);
+		cpre(A_VALUE.getValue(stack), stack);
 	}
-
 }

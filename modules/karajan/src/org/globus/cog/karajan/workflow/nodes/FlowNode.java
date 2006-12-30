@@ -109,33 +109,52 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		return false;
 	}
 
-	public void failImmediately(VariableStack stack, FailureNotificationEvent e)
-			throws ExecutionException {
-		if (FlowNode.debug) {
-			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
+	public void failImmediately(VariableStack stack, FailureNotificationEvent fne) {
+		try {
+			if (FlowNode.debug) {
+				threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
+			}
+			boolean errorHandler = false;
+			try {
+				_finally(stack);
+			}
+			catch (Exception e) {
+				fne = new FailureNotificationEvent(this, stack, e.getMessage(), e);
+			}
+			if (frame) {
+				stack.leave();
+			}
+			try {
+				errorHandler = executeErrorHandler(stack, fne);
+			}
+			catch (Exception e) {
+				fne = new FailureNotificationEvent(this, stack, e.getMessage(), e);
+			}
+			if (!errorHandler) {
+				fireNotificationEvent(fne, stack);
+				fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack,
+						fne.getMessage());
+			}
 		}
-		_finally(stack);
-		if (frame) {
-			stack.leave();
-		}
-		if (!executeErrorHandler(stack, e)) {
-			fireNotificationEvent(e, stack);
-			fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack, e.getMessage());
+		catch (ExecutionException e) {
+			logger.error("Could not fail element", e);
 		}
 	}
 
-	public void failImmediately(VariableStack stack, String message) throws ExecutionException {
+	public void failImmediately(VariableStack stack, String message) {
 		failImmediately(stack, new FailureNotificationEvent(this, stack, message, null));
 	}
 
-	public void failImmediately(VariableStack stack, Exception exception) throws ExecutionException {
+	public void failImmediately(VariableStack stack, Throwable exception) {
+		if (exception instanceof ExecutionException && stack != null) {
+			((ExecutionException) exception).setStack(stack.copy());
+		}
 		failImmediately(stack, new FailureNotificationEvent(this, stack, exception.getMessage(),
 				exception));
 	}
-	
-	public void failImmediately(VariableStack stack, String message, Exception exception) throws ExecutionException {
-		failImmediately(stack, new FailureNotificationEvent(this, stack, message,
-				exception));
+
+	public void failImmediately(VariableStack stack, String message, Exception exception) {
+		failImmediately(stack, new FailureNotificationEvent(this, stack, message, exception));
 	}
 
 	/**
@@ -211,7 +230,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public final void restart(final VariableStack stack) throws ExecutionException {
 		startCount++;
-		if (logger.isInfoEnabled()) {
+		if (!logger.isInfoEnabled()) {
 			logger.info("Executing " + this + "; thread: " + ThreadingContext.get(stack));
 			if (FlowNode.debug) {
 				checkStackReuse(stack);
@@ -221,7 +240,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			execute(stack);
 		}
 		catch (FutureFault e) {
-			if (logger.isDebugEnabled()) {
+			if (!logger.isDebugEnabled()) {
 				logger.debug(this + " got future exception. Future is " + e.getFuture());
 			}
 			if (FlowNode.debug) {
@@ -331,7 +350,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			ex.getFuture().addModificationAction(this, e);
 		}
 		catch (FutureEvaluationException ex) {
-			event(ex.getFailure());
+			failImmediately(e.getStack(), ex.getFault());
 		}
 		catch (KarajanRuntimeException ex) {
 			failImmediately(e.getStack(), ex);
@@ -345,7 +364,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			}
 		}
 		catch (RuntimeException ex) {
-			throw ex;
+			failImmediately(e.getStack(), ex);
 		}
 	}
 
@@ -357,8 +376,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 				}
 			}
 			if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-				failImmediately(e.getStack(), new ChainedFailureNotificationEvent(this,
-						(FailureNotificationEvent) e));
+				failImmediately(e.getStack(), (FailureNotificationEvent) e);
 			}
 			else {
 				e.getStack().leave();

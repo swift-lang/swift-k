@@ -50,12 +50,7 @@ public class ExecuteJavaNode extends SequentialWithArguments implements Threaded
 	public void failed(ThreadedClassRunner source, Throwable reason) {
 		VariableStack stack = (VariableStack) map.get(source);
 		map.remove(source);
-		try {
-			failImmediately(stack, reason.getMessage());
-		}
-		catch (ExecutionException e) {
-			logger.fatal("ExecutionException caught out of execution context", e);
-		}
+		failImmediately(stack, reason.getMessage());
 	}
 
 	public void completed(ThreadedClassRunner source) {

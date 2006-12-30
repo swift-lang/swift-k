@@ -13,6 +13,7 @@ import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.scheduler.ContactAllocationTask;
 import org.globus.cog.karajan.scheduler.Scheduler;
+import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
@@ -25,7 +26,7 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 
 	public static final Arg A_NAME = new Arg.Positional("name");
 	public static final Arg A_CONSTRAINTS = new Arg.Optional("constraints", null);
-	
+
 	public static final String HOST = "##host";
 
 	static {
@@ -87,21 +88,22 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 			}
 		}
 		catch (ExecutionException e) {
-			try {
-				failImmediately(stack, e);
-			}
-			catch (ExecutionException e1) {
-				logger.warn("Could not fail element", e1);
-			}
+			failImmediately(stack, e);
 		}
 	}
 
 	protected void _finally(VariableStack stack) throws ExecutionException {
 		super._finally(stack);
-		Scheduler s = (Scheduler) stack.getDeepVar(SchedulerNode.SCHEDULER);
-		Contact c = (Contact) stack.currentFrame().getVar(HOST);
-		if (s != null && c instanceof BoundContact) {
-			s.releaseContact((BoundContact) c);
+		try {
+			Scheduler s = (Scheduler) stack.getDeepVar(SchedulerNode.SCHEDULER);
+			Contact c = (Contact) stack.currentFrame().getVar(HOST);
+			if (s != null && c instanceof BoundContact) {
+				s.releaseContact((BoundContact) c);
+			}
+		}
+		catch (VariableNotFoundException e) {
+			//stack.dumpAll();
+			throw e;
 		}
 	}
 }

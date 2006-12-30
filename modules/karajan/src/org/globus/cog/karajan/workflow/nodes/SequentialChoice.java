@@ -24,7 +24,7 @@ import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class SequentialChoice extends Sequential {
 	private static final Logger logger = Logger.getLogger(SequentialChoice.class);
-	
+
 	public static final Arg A_BUFFER = new Arg.Optional("buffer", Boolean.TRUE);
 
 	private boolean buffer;
@@ -58,20 +58,8 @@ public class SequentialChoice extends Sequential {
 			VariableStack stack = e.getStack();
 			FailureNotificationEvent fne = (FailureNotificationEvent) e;
 			stack.setVar(LAST_FAILURE, e);
-			stack.setVar("element", fne.getFlowElement());
-			if (fne.getMessage() == null) {
-				stack.setVar("error", "Error");
-			}
-			else {
-				stack.setVar("error", fne.getMessage());
-			}
-			stack.setVar("trace", fne.toString());
-			if (fne.getException() != null) {
-				stack.setVar("exception", fne.getException());
-			}
-			else {
-				stack.setVar("exception", "No exception available");
-			}
+			stack.setVar("exception", new ExecutionException(fne.getStack().copy(),
+					fne.getMessage(), fne.getException()));
 			initializeArgBuffers(stack);
 			startNext(stack);
 		}
