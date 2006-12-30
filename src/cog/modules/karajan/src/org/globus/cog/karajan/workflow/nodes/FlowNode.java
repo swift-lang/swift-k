@@ -29,7 +29,6 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.events.AbortEvent;
 import org.globus.cog.karajan.workflow.events.AbortNotificationEvent;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.ControlEvent;
 import org.globus.cog.karajan.workflow.events.ControlEventType;
 import org.globus.cog.karajan.workflow.events.Event;
@@ -89,9 +88,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	protected boolean executeErrorHandler(VariableStack stack, NotificationEvent error)
 			throws ExecutionException {
-		if (error instanceof ChainedFailureNotificationEvent) {
+		//TODO
+		/*if (error instanceof ChainedFailureNotificationEvent) {
 			return false;
-		}
+		}*/
 		FailureNotificationEvent evt = (FailureNotificationEvent) error;
 		List set = stack.getAllVars("#errorhandlers");
 		Iterator i = set.iterator();
