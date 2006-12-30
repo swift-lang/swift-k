@@ -40,7 +40,6 @@ public class Site {
 			}
 		}
 		this.storageSize = quota;
-		System.err.println(logger.isDebugEnabled());
 		if (logger.isDebugEnabled()) {
 			logger.debug("NewCacheSite(host=" + host + ", storageSize=" + quota + ")");
 		}
