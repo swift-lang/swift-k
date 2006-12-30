@@ -111,6 +111,11 @@ public interface FileOperationSpecification extends Specification {
      * resource
      */
     public static final String ISDIRECTORY = "isDirectory";
+    
+    /**
+     * Get info about a file
+     */
+    public static final String FILEINFO = "stat";
 
     /**
      * Sets the operation to be executed on the remote file resource. Valid
