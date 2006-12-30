@@ -1,0 +1,30 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="try/catch"/>
+		
+		<map:entry key="test">
+			<element arguments="">
+				<list>
+					<try>
+						<sequential>
+							<throw exception="Kaboom"/>
+							<string>uncaught</string>
+						</sequential>
+						<catch match=".*">
+							<string>caught</string>
+						</catch>
+					</try>
+					<string>alldone</string>
+				</list>
+			</element>
+		</map:entry>
+		
+		<map:entry key="expected-result">
+			<list>
+				<string>caught</string>
+				<string>alldone</string>
+			</list>
+		</map:entry>
+		
+	</map>
+</karajan>
