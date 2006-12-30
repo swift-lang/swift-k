@@ -270,7 +270,7 @@ public class Loader {
 		return ap;
 	}
 
-	private static void error(final String err) {
+	protected static void error(final String err) {
 		System.err.println(err);
 		System.exit(1);
 	}
