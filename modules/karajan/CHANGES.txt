@@ -1,3 +1,25 @@
+(12/30/2006)
+
+*** Began simplifying the way karajan exceptions are implemented.
+
+*** Added file:size()
+
+*** generateError() has throw() as an alias, and choice() has 
+    try() as an alias. choice() doesn't make much sense and will
+	eventually be removed.
+	
+*** Added exception(message, prev). It can be used nicely with
+    throw() to chain exceptions.
+	
+*** Updated exclusive(on=). Without the "on" argument, it defines
+    a global mutual exclusion region (no other exclusive 
+	block witout the "on" argument can be running concurrently).
+	With the "on" argument specified, it will treat the value
+	as defining a token that defines the exclusion criteria (i.e.
+	no two exclusive blocks with the same value passed to the
+	"on" argument can be executed concurrently)
+	
+
 ************************** v0.35 ***************************
 
 (12/28/2006)
