@@ -39,14 +39,15 @@ import org.globus.cog.karajan.workflow.events.ControlEvent;
 import org.globus.cog.karajan.workflow.events.ControlEventType;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
+import org.globus.cog.karajan.workflow.nodes.Info;
 import org.globus.cog.karajan.workflow.nodes.Sequential;
 
 public abstract class UserDefinedElement extends AbstractSequentialWithArguments implements
 		NonCacheable {
-	
+
 	public static final String KMODE = "_kmode";
 	public static final String SKIP = "_skip";
-	
+
 	public static final Arg A_NAME = new Arg.Positional("name");
 	public static final Arg A_ARGUMENTS = new Arg.Positional("arguments");
 	public static final Arg A_VARGS = new Arg.Positional("vargs");
@@ -90,7 +91,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		setOptimize(false);
 		callcount = 0;
 	}
-	
+
 	protected void initializeStatic() {
 		super.initializeStatic();
 		type = TypeUtil.toString(A_NAME.getStatic(this));
@@ -159,8 +160,8 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		}
 	}
 
-	public abstract void startInstance(VariableStack stack, UDEWrapper wrapper, DefinitionEnvironment env)
-			throws ExecutionException;
+	public abstract void startInstance(VariableStack stack, UDEWrapper wrapper,
+			DefinitionEnvironment env) throws ExecutionException;
 
 	public final void startBody(VariableStack stack, Arguments fnargs) throws ExecutionException {
 		if (logger.isDebugEnabled()) {
@@ -192,7 +193,8 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 					stack.setVar(name, fnargs.getVargs().removeFirst());
 				}
 				else {
-					throw new ExecutionException("Missing argument " + name);
+					throw new ExecutionException("Missing argument " + name + " for "
+							+ Info.ppDef(getElementType(), this));
 				}
 			}
 		}
@@ -405,11 +407,11 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		}
 		return sb.toString();
 	}
-	
+
 	private String unfold(Collection collection) {
 		StringBuffer sb = new StringBuffer();
 		Iterator i = collection.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			sb.append(i.next());
 			if (i.hasNext()) {
 				sb.append(", ");
@@ -479,7 +481,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 			skip = TypeUtil.toInt(value);
 		}
 	}
-	
+
 	public void setProperties(Map properties) {
 		super.setProperties(properties);
 		Object value;
@@ -527,14 +529,14 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		}
 		return env;
 	}
-    
-    public String getTextualName() {
-    	String name = (String) A_NAME.getStatic(this);
-    	if (name == null) {
-    		return super.getTextualName();
-    	}
-    	else {
-    		return name;
-    	}
-    }
+
+	public String getTextualName() {
+		String name = (String) A_NAME.getStatic(this);
+		if (name == null) {
+			return super.getTextualName();
+		}
+		else {
+			return name;
+		}
+	}
 }

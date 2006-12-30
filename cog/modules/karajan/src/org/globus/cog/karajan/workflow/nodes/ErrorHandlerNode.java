@@ -18,7 +18,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ErrorHandler;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
@@ -55,7 +54,7 @@ public class ErrorHandlerNode extends PartialArgumentsContainer {
 			throws ExecutionException {
 		VariableStack stack = error.getInitialStack();
 		if (stack.isDefined("#inhandler") && !stack.currentFrame().isDefined("#inhandler")) {
-			this.failImmediately(stack, new ChainedFailureNotificationEvent(this, error));
+			this.failImmediately(stack, error);
 			return;
 		}
 		stack.enter();
@@ -78,16 +77,7 @@ public class ErrorHandlerNode extends PartialArgumentsContainer {
 	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
 		VariableStack stack = e.getStack();
 		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-			if (e instanceof ChainedFailureNotificationEvent) {
-				ChainedFailureNotificationEvent ce = (ChainedFailureNotificationEvent) e;
-				ChainedFailureNotificationEvent nce = new ChainedFailureNotificationEvent(this, ce);
-				//ce.getInitial().setFlowElement((FlowElement) stack.getVar("element"));
-				nce.setPrevious(ce.getInitial());
-				failImmediately(stack, nce);
-			}
-			else {
-				failImmediately(stack, (FailureNotificationEvent) e);
-			}
+			failImmediately(stack, (FailureNotificationEvent) e);
 		}
 		else {
 			super.notificationEvent(e);

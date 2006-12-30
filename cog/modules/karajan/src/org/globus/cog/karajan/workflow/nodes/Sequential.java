@@ -63,7 +63,7 @@ public class Sequential extends FlowContainer {
 		if (FlowNode.debug) {
 			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 		}
-		FlowElement fn = (FlowElement) getElement(0);
+		FlowElement fn = getElement(0);
 		if (fn instanceof ExtendedFlowElement && ((ExtendedFlowElement) fn).isSimple()) {
 			((ExtendedFlowElement) fn).executeSimple(stack);
 			post(stack);

@@ -24,7 +24,6 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
@@ -127,8 +126,7 @@ public class ParallelChoice extends Parallel {
 			stack.leave();
 			if (!stack.currentFrame().getBooleanVar(COMPLETED)) {
 				stack.setVar(COMPLETED, true);
-				failImmediately(stack, new ChainedFailureNotificationEvent(this,
-						(FailureNotificationEvent) e));
+				failImmediately(stack, (FailureNotificationEvent) e);
 			}
 		}
 		else {
