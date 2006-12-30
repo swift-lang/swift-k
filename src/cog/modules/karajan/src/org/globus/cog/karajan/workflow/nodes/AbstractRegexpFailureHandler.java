@@ -12,13 +12,16 @@ package org.globus.cog.karajan.workflow.nodes;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 
 public abstract class AbstractRegexpFailureHandler extends PartialArgumentsContainer {
 	public static final Logger logger = Logger.getLogger(AbstractRegexpFailureHandler.class);
 	
 	protected static boolean matches(String str, FailureNotificationEvent e) {
-		String msg = e.getMessage();
+		return matches(str, e.getMessage());
+	}
+	protected static boolean matches(String str, String msg) {
 		if (msg == null) {
 			msg = "";
 		}
@@ -27,5 +30,9 @@ public abstract class AbstractRegexpFailureHandler extends PartialArgumentsConta
 			logger.debug("Failure does not match: \"" + msg + "\" vs. " + str);
 		}
 		return matches;
+	}
+	
+	protected static boolean matches(String str, ExecutionException e) {
+		return matches(str, e.getMessage());
 	}
 }

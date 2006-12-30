@@ -24,7 +24,6 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.util.serialization.XMLConverter;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
@@ -164,8 +163,7 @@ public class ExecuteFile extends AbstractSequentialWithArguments {
 				complete(stack);
 			}
 			else if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-				failImmediately(stack, new ChainedFailureNotificationEvent(this,
-						(FailureNotificationEvent) e));
+				failImmediately(stack, (FailureNotificationEvent) e);
 			}
 			else {
 				super.notificationEvent(e);

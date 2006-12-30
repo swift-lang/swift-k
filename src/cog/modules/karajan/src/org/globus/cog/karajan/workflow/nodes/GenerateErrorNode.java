@@ -11,38 +11,38 @@ package org.globus.cog.karajan.workflow.nodes;
 
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.FlowEvent;
 
 public class GenerateErrorNode extends SequentialWithArguments {
-	
-	public static final Arg A_MESSAGE = new Arg.Positional("message", 0);
-	public static final Arg A_EXCEPTION = new Arg.Positional("exception", 1);
+
+	public static final Arg EXCEPTION = new Arg.Positional("exception");
 
 	static {
-		setArguments(GenerateErrorNode.class, new Arg[] { A_MESSAGE, A_EXCEPTION });
+		setArguments(GenerateErrorNode.class, new Arg[] { EXCEPTION });
 	}
 
 	public void post(VariableStack stack) throws ExecutionException {
-		if (A_EXCEPTION.isPresent(stack)) {
-			Object exception = A_EXCEPTION.getValue(stack);
-			if (exception instanceof Throwable) {
-				fail(stack, TypeUtil.toString(A_MESSAGE.getValue(stack)), (Throwable) exception);
+			Object exc = EXCEPTION.getValue(stack);
+			if (exc instanceof String) {
+				fail(stack, (String) exc);
+			}
+			else if (exc instanceof ExecutionException) {
+				ExecutionException prev = (ExecutionException) exc;
+				throw prev;
+			}
+			else if (exc instanceof Throwable) {
+				Throwable t = (Throwable) exc;
+				fail(stack, t.getMessage(), t);
 			}
 			else {
-				fail(stack, TypeUtil.toString(A_MESSAGE.getValue(stack)) + "\n"
-						+ exception.toString());
+				fail(stack, String.valueOf(exc));
 			}
-		}
-		else {
-			fail(stack, TypeUtil.toString(A_MESSAGE.getValue(stack)));
-		}
 	}
 
 	protected boolean executeErrorHandler(VariableStack stack, FlowEvent error)
 			throws ExecutionException {
-		//No error handling for this
+		// No error handling for this
 		return false;
 	}
 }

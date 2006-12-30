@@ -97,7 +97,8 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 				return null;
 			}
 			else {
-				throw new ExecutionException("Missing argument " + name);
+				throw new ExecutionException("Missing argument " + name + " for "
+						+ Info.ppDef(getElementType(), this));
 			}
 		}
 		else {

@@ -16,7 +16,6 @@ import org.globus.cog.karajan.util.Identifier;
 import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.FutureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
@@ -123,8 +122,7 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 					throw new ExecutionException("Stack inconsistency",
 							((FailureNotificationEvent) e).getException());
 				}
-				failImmediately(stack, new ChainedFailureNotificationEvent(this,
-						(FailureNotificationEvent) e));
+				failImmediately(stack, (FailureNotificationEvent) e);
 			}
 		}
 		else if (FutureNotificationEvent.FUTURE_MODIFIED.equals(e.getType())) {

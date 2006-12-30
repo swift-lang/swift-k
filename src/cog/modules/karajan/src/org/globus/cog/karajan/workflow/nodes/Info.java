@@ -111,7 +111,14 @@ public class Info extends AbstractSequentialWithArguments {
 		else {
 			internalId = cls;
 		}
-
+		return ppDef(name, internalId);
+	}
+	
+	public static String ppDef(String name, FlowNode fe) {
+		return ppDef(name, fe.getCanonicalType());
+	}
+	
+	protected static String ppDef(String name, String internalId) {
 		String args = "()";
 		Map valid = (Map) ArgumentsMap.getMap().getValidArgs().get(internalId);
 		boolean vargs = ArgumentsMap.getMap().getVargs().contains(internalId);

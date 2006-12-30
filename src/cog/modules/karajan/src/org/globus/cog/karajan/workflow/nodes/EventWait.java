@@ -134,12 +134,7 @@ public class EventWait extends SequentialWithArguments implements ActionListener
 							complete(stack);
 					}
 					catch (ExecutionException ex) {
-						try {
-							failImmediately(stack, ex);
-						}
-						catch (ExecutionException exx) {
-							logger.error("Exception caught out of execution context", exx);
-						}
+						failImmediately(stack, ex);
 					}
 				}
 			}
