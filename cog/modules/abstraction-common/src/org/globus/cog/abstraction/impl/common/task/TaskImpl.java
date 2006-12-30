@@ -30,6 +30,8 @@ import org.globus.cog.abstraction.xml.TaskMarshaller;
 import org.globus.cog.util.CopyOnWriteHashSet;
 
 public class TaskImpl implements Task {
+	public static final Status STATUS_NONE = new StatusImpl();
+	
     private Identity id = null;
     private String name = null;
     private int type = 0;
@@ -37,7 +39,7 @@ public class TaskImpl implements Task {
     private Specification specification = null;
     private String output = null;
     private String error = null;
-    private Status status = null;
+    private Status status = STATUS_NONE;
 
     private CopyOnWriteHashSet statusListeners, outputListeners;
 
