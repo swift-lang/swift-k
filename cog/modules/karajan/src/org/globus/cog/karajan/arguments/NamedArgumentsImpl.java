@@ -76,7 +76,7 @@ public class NamedArgumentsImpl implements NamedArguments {
 			}
 		}
 		if (named == null) {
-			named = new HashMap();
+			named = new HashMap(4);
 		}
 		if (name == null) {
 			throw new KarajanRuntimeException("Null name");
