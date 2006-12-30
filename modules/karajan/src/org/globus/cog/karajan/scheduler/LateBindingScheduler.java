@@ -564,7 +564,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					}
 					catch (ActiveTaskException e1) {
 						e1.printStackTrace();
-						Throwable t = new RuntimeException("Something is wrong here");
+						Throwable t = new RuntimeException("Something is wrong here", e1);
 						t.printStackTrace();
 					}
 					finally {
