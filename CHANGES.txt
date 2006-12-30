@@ -1,3 +1,30 @@
+(12/30/06)
+
+*** A new vdlrun that is specific to VDL2.
+
+*** Added an error translator (based on regular expressions)
+    that can be used to provide improved error messages
+	
+*** Added a lazy errors mode in which errors in application
+    execution are aggregated and reported only once at the
+	end
+
+*** Added provenance graph generation
+
+*** Added a control mechanism for managing remote storage
+    usage
+	
+*** Cleanups
+
+
+------------------------- 0 rc 3 ---------------------------
+
+(12/28/06)
+
+*** The heuristics (in CoG) used to detect if a task can ever
+    run (due to constraints as opposed to temporary load 
+	conditions) were broken and the issue was fixed.
+
 (12/23/06)
 ------------------------- 0 rc 2 ---------------------------
 
