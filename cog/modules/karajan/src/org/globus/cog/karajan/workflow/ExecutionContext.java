@@ -11,6 +11,7 @@ package org.globus.cog.karajan.workflow;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -190,6 +191,14 @@ public class ExecutionContext implements EventListener {
 	}
 
 	protected void failed(NotificationEvent e) {
+		synchronized(this) {
+			if (failed) {
+				return;
+			}
+			else {
+				failed = true;
+			}
+		}
 		if (dumpState) {
 			try {
 				DateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
@@ -201,14 +210,19 @@ public class ExecutionContext implements EventListener {
 				logger.debug("Detailed exception is ", ex);
 			}
 		}
-		stderr.append("\nExecution failed:\n");
-		failure = getInitialCause(((FailureNotificationEvent) e).getException());
-		failed = true;
-		stderr.append(e.toString());
-		stderr.append("\n");
-		logger.info("Detailed exception: ", failure);
+		FailureNotificationEvent fe = (FailureNotificationEvent) e;
+		printFailure(fe);
+		if (logger.isInfoEnabled()) {
+			logger.info("Detailed exception: ", fe.getException());
+		}
 		stateManager.stop();
 		fireNotificationEvent(new NotificationEvent(null, NotificationEventType.EXECUTION_FAILED, null), null);
+	}
+	
+	protected void printFailure(FailureNotificationEvent e) {
+		stderr.append("\nExecution failed:\n");
+		stderr.append(e.toString());
+		stderr.append("\n");
 	}
 
 	protected void completed(NotificationEvent e) {
@@ -293,6 +307,13 @@ public class ExecutionContext implements EventListener {
 
 	public void setArguments(List arguments) {
 		this.arguments = arguments;
+	}
+	
+	public void addArgument(String arg) {
+		if (this.arguments == null) {
+			this.arguments = new ArrayList();
+		}
+		this.arguments.add(arg);
 	}
 
 	public String toString() {
