@@ -20,7 +20,6 @@ import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.util.Queue;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.AbortException;
-import org.globus.cog.karajan.workflow.events.ChainedFailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.ControlEvent;
 import org.globus.cog.karajan.workflow.events.ControlEventType;
 import org.globus.cog.karajan.workflow.events.Event;
@@ -100,7 +99,8 @@ public class Hook implements EventHook, Runnable {
 	}
 
 	public void notificationEvent(EventListener element, NotificationEvent e) {
-		if ((e instanceof ChainedFailureNotificationEvent) || !(element instanceof FlowElement)) {
+		//TODO
+		if (/*(e instanceof ChainedFailureNotificationEvent) || */!(element instanceof FlowElement)) {
 			EventBus.send(element, e);
 			return;
 		}
