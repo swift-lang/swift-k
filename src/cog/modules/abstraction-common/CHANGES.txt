@@ -1,3 +1,9 @@
+(12/30/2006)
+
+*** Added FILEINFO operation to the FileOperationSpecification. It
+    returns a GridFile which contains information about a file such
+	as size, permissions, etc.
+
 -------------------------------2.2----------------------------------
 
 (11/28/2006)
