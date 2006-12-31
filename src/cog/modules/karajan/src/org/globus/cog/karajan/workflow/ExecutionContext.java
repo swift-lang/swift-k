@@ -221,7 +221,7 @@ public class ExecutionContext implements EventListener {
 	
 	protected void printFailure(FailureNotificationEvent e) {
 		stderr.append("\nExecution failed:\n");
-		stderr.append(e.toString());
+		stderr.append(e.getException().toString());
 		stderr.append("\n");
 	}
 

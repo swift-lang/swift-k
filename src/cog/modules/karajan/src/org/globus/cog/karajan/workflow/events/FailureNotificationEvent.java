@@ -11,11 +11,12 @@ package org.globus.cog.karajan.workflow.events;
 
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionContext;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public class FailureNotificationEvent extends NotificationEvent {
 	private final String message;
-	private final Throwable exception;
+	private final ExecutionException exception;
 	private final VariableStack initialStack;
 
 	public FailureNotificationEvent(FlowElement source, VariableStack stack,
@@ -28,7 +29,12 @@ public class FailureNotificationEvent extends NotificationEvent {
 		else {
 			this.message = message;
 		}
-		this.exception = exception;
+		if (exception instanceof ExecutionException) {
+			this.exception = (ExecutionException) exception;
+		}
+		else {
+		    this.exception = new ExecutionException(stack, this.message, exception);
+		}
 	}
 
 	public FailureNotificationEvent(FlowElement source, VariableStack stack, String message,
@@ -40,7 +46,7 @@ public class FailureNotificationEvent extends NotificationEvent {
 		return message;
 	}
 
-	public Throwable getException() {
+	public ExecutionException getException() {
 		return exception;
 	}
 
