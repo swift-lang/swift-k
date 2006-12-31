@@ -99,7 +99,7 @@ namespace("vdl"
 					exitcode := str:strip(file:read("{jobdir}-exitcode"))
 					file:remove("{jobdir}-exitcode")
 													
-					generateError("Job {tr} failed with an exit code of {exitcode}")
+					throw("Job {tr} failed with an exit code of {exitcode}")
 				)
 			)
 		)
@@ -314,6 +314,7 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 						
 						outs := concat(
+							nl()
 							for(f, ["stderr.txt", "stdout.txt"]
 								if(
 									file:exists("{tmpdir}/{f}", host=rhost) 
@@ -330,7 +331,7 @@ namespace("vdl"
 							)
 						)
 						throw(
-							if(outs == "" exception exception(outs, exception))
+							if(outs == "" exception concat(exception, outs))
 						)
 					)
 				)
