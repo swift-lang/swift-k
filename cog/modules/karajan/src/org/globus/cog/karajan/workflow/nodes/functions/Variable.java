@@ -9,6 +9,8 @@
  */
 package org.globus.cog.karajan.workflow.nodes.functions;
 
+import java.util.Collections;
+
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Identifier;
@@ -34,6 +36,9 @@ public class Variable extends AbstractFunction implements DirectExecution {
 	public Object function(VariableStack stack) throws ExecutionException {
 		if (name == null) {
 			name = TypeUtil.toString(A_NAME.getStatic(this)).toLowerCase();
+			if (getStaticArguments().size() == 1) {
+				setStaticArguments(Collections.EMPTY_MAP);
+			}
 		}
 
 		if (stack.parentFrame().isDefined("#quoted")) {

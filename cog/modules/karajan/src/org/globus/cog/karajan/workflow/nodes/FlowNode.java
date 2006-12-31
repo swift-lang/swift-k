@@ -55,6 +55,8 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	public static final Arg.Channel STDERR = ExecutionContext.STDERR;
 
 	private String locator;
+	
+	private Integer uid;
 
 	private boolean checkpointable;
 
@@ -146,9 +148,6 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public void failImmediately(VariableStack stack, Throwable exception) {
-		if (exception instanceof ExecutionException && stack != null) {
-			((ExecutionException) exception).setStack(stack.copy());
-		}
 		failImmediately(stack, new FailureNotificationEvent(this, stack, exception.getMessage(),
 				exception));
 	}
@@ -356,12 +355,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			failImmediately(e.getStack(), ex);
 		}
 		catch (ExecutionException ex) {
-			if (ex.getStack() != null) {
-				failImmediately(ex.getStack(), ex);
+			if (ex.getStack() == null) {
+				ex.setStack(e.getStack());
 			}
-			else {
-				failImmediately(e.getStack(), ex);
-			}
+			failImmediately(e.getStack(), ex);
 		}
 		catch (RuntimeException ex) {
 			failImmediately(e.getStack(), ex);
@@ -413,7 +410,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	public void fail(VariableStack stack, String message, Throwable cause)
 			throws ExecutionException {
 		checkCompleted(stack);
-		throw new ExecutionException(stack, message, cause);
+		throw new ExecutionException(stack.copy(), message, cause);
 	}
 
 	public void fail(VariableStack stack, String message) throws ExecutionException {
@@ -423,13 +420,13 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	public void failIfNotDefined(VariableStack stack, String var, String message)
 			throws ExecutionException {
 		if (!stack.isDefined(var)) {
-			throw new ExecutionException(stack, message);
+			throw new ExecutionException(stack.copy(), message);
 		}
 	}
 
 	public void failIfNull(VariableStack stack, String name) throws ExecutionException {
 		if (failIfNull(name)) {
-			throw new ExecutionException(stack, "Required property not present: " + name);
+			throw new ExecutionException(stack.copy(), "Required property not present: " + name);
 		}
 	}
 
@@ -550,6 +547,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public void setProperty(final String name, final Object value) {
+		if (name.equals(UID)) {
+			uid = (Integer) value;
+			return;
+		}
 		if (properties.isEmpty()) {
 			properties = new HashMap();
 		}
@@ -557,15 +558,27 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public void setProperties(Map properties) {
-		this.properties = properties;
+		uid = (Integer) properties.remove(UID);
+		if (properties.size() == 0) {
+			return;
+		}
+		else {
+			this.properties = properties;
+		}
 	}
 
 	public void removeProperty(String name) {
 		properties.remove(name);
 	}
 
-	public Object getProperty(final String name) {
-		return properties.get(name.toLowerCase());
+	public Object getProperty(String name) {
+		name = name.toLowerCase();
+		if (name.equals(UID)) {
+			return uid;
+		}
+		else {
+			return properties.get(name.toLowerCase());
+		}
 	}
 
 	public boolean hasProperty(final String name) {
