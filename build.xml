@@ -80,7 +80,6 @@
 		</copy>
 		<chmod perm="+x" file="${dist.dir}/bin/VDL2Karajan"/>
 		<chmod perm="+x" file="${dist.dir}/bin/vdlc"/>
-		<chmod perm="+x" file="${dist.dir}/bin/vdlrun"/>
 		<!--<delete file="${dist.dir}/lib/jaxrpc.jar" quiet="true"/>-->
 		<delete includeEmptyDirs="true">
 			<fileset dir="${dist.dir}/bin/examples"/>
@@ -96,7 +95,7 @@
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/karajan.properties" 
 			overwrite="true"/>
-		<replace file="${dist.dir}/bin/cog-workflow">
+		<replace file="${dist.dir}/bin/vdlrun">
 			<replacetoken>updateOptions "$COG_INSTALL_PATH" "COG_INSTALL_PATH"
 
 </replacetoken>
@@ -105,7 +104,7 @@ updateOptions "$COG_INSTALL_PATH" "vds.home"
 
 </replacevalue>
 		</replace>
-		<chmod perm="+x" file="${dist.dir}/bin/cog-workflow"/>
+		<chmod perm="+x" file="${dist.dir}/bin/vdlrun"/>
 	</target>
 	
 	<target name="antlr">
