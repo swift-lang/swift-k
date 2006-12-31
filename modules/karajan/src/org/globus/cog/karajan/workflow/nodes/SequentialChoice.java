@@ -58,8 +58,7 @@ public class SequentialChoice extends Sequential {
 			VariableStack stack = e.getStack();
 			FailureNotificationEvent fne = (FailureNotificationEvent) e;
 			stack.setVar(LAST_FAILURE, e);
-			stack.setVar("exception", new ExecutionException(fne.getStack().copy(),
-					fne.getMessage(), fne.getException()));
+			stack.setVar("exception", fne.getException());
 			initializeArgBuffers(stack);
 			startNext(stack);
 		}
