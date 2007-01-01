@@ -1,3 +1,13 @@
+(01/01/07)
+
+*** Modified AbstractFileMapper to expose local variables as protected
+
+*** Added a RegularExpressionMapper to do file name conversion based on regexp
+
+*** Added a DirectoryMapper to map a list of files from a directory as an array
+
+*** Added a CSVMapper to map a CSV (Comma-Separated Values) file into a logical structure
+
 (12/30/06)
 
 *** A new vdlrun that is specific to VDL2.
