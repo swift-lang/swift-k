@@ -162,20 +162,20 @@ variable [StringTemplate code]
     :   t=type d=declarator (b1:LBRACK RBRACK)? i1=varInitializer
 
 	{
-          if ( currentFunctionName==null ) {
-              v1 = template("globalVariable");
-          }
-          else {
-              v1 = template("variable");
-          }
-          v1.setAttribute("type", t);
-          v1.setAttribute("name", d);
-	  if (b1 != null)
-	     v1.setAttribute("isArray", "true");
-	  if (i1 != null)
-	     v1.setAttribute("value", i1);
-	  code.setAttribute("statements", v1);
-        }
+		if ( currentFunctionName==null ) {
+			v1 = template("globalVariable");
+		}
+		else {
+			v1 = template("variable");
+		}
+		v1.setAttribute("type", t);
+		v1.setAttribute("name", d);
+		if (b1 != null)
+			v1.setAttribute("isArray", "true");
+		if (i1 != null)
+			v1.setAttribute("value", i1);
+		code.setAttribute("statements", v1);
+	}
 	( COMMA d=declarator (b2:LBRACK RBRACK)? i2=varInitializer
 	  {
             if ( currentFunctionName==null ) {
@@ -186,11 +186,11 @@ variable [StringTemplate code]
             }
             v2.setAttribute("type", t);
             v2.setAttribute("name", d);
- 	    if (b2 != null)
-	       v2.setAttribute("isArray", "true");
-	    if (i2 != null)
-	       v2.setAttribute("value", i2);
-	    code.setAttribute("statements", v2);
+	 	    if (b2 != null)
+		       v2.setAttribute("isArray", "true");
+	    	if (i2 != null)
+	    	   v2.setAttribute("value", i2);
+	    	code.setAttribute("statements", v2);
           }
 	)*
 	SEMI
@@ -225,7 +225,7 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
 	    if (step != null)
 		range.setAttribute("step", step);
 	    code.setAttribute("range", range);
-          }
+	  }
 	 ) 
 	 |
 	 (
@@ -287,38 +287,38 @@ mapparam returns [StringTemplate code=template("mapParam")]
 
 function returns [StringTemplate code=template("function")]
 {StringTemplate f=null;}
-    :   ( LPAREN
+    :  ( LPAREN
         f=formalParameter
         {
-	f.setAttribute("outlink", "true");
-	code.setAttribute("outputs", f);
-	}
+		f.setAttribute("outlink", "true");
+		code.setAttribute("outputs", f);
+		}
         (   COMMA f=formalParameter
             {
-	    f.setAttribute("outlink", "true");
-	    code.setAttribute("outputs", f);
-	    }
+	    	f.setAttribute("outlink", "true");
+	    	code.setAttribute("outputs", f);
+	    	}
         )*
         RPAREN )?
-	id:ID {currentFunctionName=id.getText();} LPAREN
+		id:ID {currentFunctionName=id.getText();} LPAREN
         (   f=formalParameter
-	    {
-	    code.setAttribute("inputs", f);
-	    }
+	    	{
+	    	code.setAttribute("inputs", f);
+	    	}
             (   COMMA f=formalParameter
                 {
-		code.setAttribute("inputs", f);
-	        }
+				code.setAttribute("inputs", f);
+	        	}
             )*
         )?
         RPAREN
- 	LCURLY
+ 		LCURLY
         (
-	atomicBody[code]
-	|
+		atomicBody[code]
+		|
         compoundBody[code]
         )
-	RCURLY
+		RCURLY
         {
         code.setAttribute("name", id.getText());
         currentFunctionName=null;
@@ -332,16 +332,16 @@ formalParameter returns [StringTemplate code=template("parameter")]
         code.setAttribute("type", t);
         code.setAttribute("name", d);
         }
-	(
-	(LBRACK RBRACK {code.setAttribute("isArray", "true");})
-	| (ASSIGN v=constant 
-	  {
-	  String value = (String)v.getAttribute("value");
-	  if (v.getName().equals("sConst")) {
-	     v.removeAttribute("value");
-	     v.setAttribute("value", quote(value));
-          }
-	  code.setAttribute("defaultv", v);
+		(
+		(LBRACK RBRACK {code.setAttribute("isArray", "true");})
+		| (ASSIGN v=constant 
+	  	{
+	  	String value = (String)v.getAttribute("value");
+	  	if (v.getName().equals("sConst")) {
+	    	v.removeAttribute("value");
+	     	v.setAttribute("value", quote(value));
+        }
+	  	code.setAttribute("defaultv", v);
 	  }) 
 	)?
     ;
@@ -379,7 +379,7 @@ declORstat[StringTemplate code]
 {StringTemplate s=null;}
     : 
 	(variable[code]) => variable[code]
-        |  datasetdecl[code]
+	|  (datasetdecl[code]) => datasetdecl[code]
 	|  s=statement 
 	   {
 	    code.setAttribute("statements",s);
@@ -410,13 +410,13 @@ statement returns [StringTemplate code=null]
         // while statement
        	| code=whileStat
 
-	// break
-	| "break" {code=template("break");} SEMI
+		// break
+		| "break" {code=template("break");} SEMI
 
-	// continue
-	| "continue" {code=template("continue");} SEMI
+		// continue
+		| "continue" {code=template("continue");} SEMI
 
-	// assignment statement
+		// assignment statement
     	| code=assignStat SEMI
 
     	// empty statement	
@@ -441,17 +441,17 @@ ifStat returns [StringTemplate code=template("if")]
   StringTemplate els=template("statementList");
 }
     :  "if" LPAREN cond=expression RPAREN
-	{
-	code.setAttribute("cond", cond);
-	}
-	compoundStat[body] {code.setAttribute("body", body);}
-	(
-	  options { 
-  	    warnWhenFollowAmbig = false;
-	  }
-	  : "else" 
-	  compoundStat[els] {code.setAttribute("els", els);}
-	)?
+		{
+		code.setAttribute("cond", cond);
+		}
+		compoundStat[body] {code.setAttribute("body", body);}
+		(
+	  	options { 
+  	    	warnWhenFollowAmbig = false;
+	  	}
+	  	: "else" 
+	  	compoundStat[els] {code.setAttribute("els", els);}
+		)?
     ;
 
 foreachStat returns [StringTemplate code=template("foreach")]
@@ -573,9 +573,9 @@ functioncallStat returns [StringTemplate code=template("call")]
 	    | (f= returnParameter { code.setAttribute("outputs", f); })
 	    )
 	    ASSIGN
-	)?
-	id:ID {code.setAttribute("func", id.getText());} 
-	LPAREN
+		)?
+		id:ID {code.setAttribute("func", id.getText());} 
+		LPAREN
         (   f=actualParameter
 	    {
 	    code.setAttribute("inputs", f);
@@ -592,15 +592,15 @@ functioncallStat returns [StringTemplate code=template("call")]
 returnParameter returns [StringTemplate code=template("returnParam")]
 {StringTemplate t=null, id=null, d=null;}
     :   (t=type{        code.setAttribute("type", t);})? 
-	id=identifier
+		id=identifier
         {
         code.setAttribute("name", id);
         }
-	(
-	  (ASSIGN declarator)=>(ASSIGN d=declarator)
-	  {
-	  code.setAttribute("bind", d);
-	  }
+		(
+	  	(ASSIGN declarator)=>(ASSIGN d=declarator)
+	  	{
+	  	code.setAttribute("bind", d);
+	  	}
         )?
     ;
 
@@ -609,14 +609,14 @@ actualParameter returns [StringTemplate code=template("actualParam")]
     :   (
           (declarator ASSIGN)=> (d=declarator ASSIGN)
           {
- 	  code.setAttribute("bind", d);
-	  }
+ 	  		code.setAttribute("bind", d);
+	  	  }
         )?
 	(
 	  id=expression
-          {
-          code.setAttribute("value", id);
-          }
+      {
+      code.setAttribute("value", id);
+      }
 	  | ai=arrayInitializer
 	  {
 	  code.setAttribute("value", ai);
@@ -654,7 +654,7 @@ appArg [StringTemplate code]
 
 mappingExpr returns [StringTemplate code=null]
 {StringTemplate e=null;}
-    :   code = mappingFunc 
+    :   (mappingFunc) => code = mappingFunc 
 	|
 	(
 	e = expression
@@ -738,7 +738,7 @@ operation returns [String code=null]
 
 message returns [StringTemplate code=template("message")]
 {StringTemplate p=null, e=null;}
-    :	(
+    :  (
 	 ("request" {code.setAttribute("type", "request");}) 
 	 |
 	 ("response" {code.setAttribute("type", "response");}) 
@@ -983,21 +983,21 @@ options {
     k=2;
 }
 
-AT	:   "@" ;
+AT		:   "@" ;
 PLUS    :   "+" ;
 MINUS   :   '-' ;
-DIV	:   '/' ;
-MOD	:   '%' ;
+DIV		:   '/' ;
+MOD		:   '%' ;
 EQ  	:   "==" ;
-NE	:   "!=" ;
+NE		:   "!=" ;
 LT      :   '<' ;
-LE	:   "<=" ;
-GT	:   ">" ;
-GE	:   ">=";
+LE		:   "<=" ;
+GT		:   ">" ;
+GE		:   ">=";
 ASSIGN  :   '=' ;
-AND	:   "&&";
-OR	:   "||";
-NOT	:   "!";
+AND		:   "&&";
+OR		:   "||";
+NOT		:   "!";
 LBRACK	:   '[' ;
 RBRACK	:   ']' ;	
 LPAREN  :   '(' ;
@@ -1019,7 +1019,8 @@ ID     options
 
 // string literals
 STRING_LITERAL
-	:	'"'! (ESC|~('"'|'\\'|'\n'|'\r'))* '"'!
+	:	'"'! (~('"'|'\n'|'\r'))* '"'!
+//	:	'"'! (ESC|~('"'|'\\'|'\n'|'\r'))* '"'!
 	;
 
 // a numeric literal
@@ -1027,25 +1028,25 @@ NUMBER
 	{boolean isDecimal=false; Token t=null;}
     :   '.' {_ttype = DOT;}
 	    (
-              ('0'..'9')+ (EXPONENT)? 
+            ('0'..'9')+ (EXPONENT)? 
                 {
                 	_ttype = FLOAT_LITERAL;
-		}
-            )?
+				}
+        	)?
 
-	|	(	'0' {isDecimal = true; _ttype = INT_LITERAL; } // special case for just '0'
-						// may add octal or hex support here
-		|	('1'..'9') ('0'..'9')*  {isDecimal=true; _ttype = INT_LITERAL;}	// non-zero decimal
+			|	(	'0' {isDecimal = true; _ttype = INT_LITERAL; } // special case for just '0'
+				// may add octal or hex support here
+			|	('1'..'9') ('0'..'9')*  {isDecimal=true; _ttype = INT_LITERAL;}	// non-zero decimal
 		)
 		(	
 			{isDecimal}?
-            		(   '.'  ('0'..'9')* (EXPONENT)? 
-	            	    {
+            (   '.'  ('0'..'9')* (EXPONENT)? 
+	           	    {
                 		_ttype = FLOAT_LITERAL;
  		    	    }
 			)
-		        |   ( EXPONENT )?
-            	)
+		    |   ( EXPONENT )?
+        )
 	;
 
 // white spaces
