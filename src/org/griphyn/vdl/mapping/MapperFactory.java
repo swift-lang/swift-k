@@ -7,10 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.griphyn.vdl.mapping.file.AirsnMapper;
+import org.griphyn.vdl.mapping.file.CSVMapper;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
+import org.griphyn.vdl.mapping.file.DirectoryMapper;
 import org.griphyn.vdl.mapping.file.FixedArrayFileMapper;
 import org.griphyn.vdl.mapping.file.FixedFileMapper;
 import org.griphyn.vdl.mapping.file.ROIMapper;
+import org.griphyn.vdl.mapping.file.RegularExpressionMapper;
 import org.griphyn.vdl.mapping.file.SimpleFileMapper;
 
 public class MapperFactory {
@@ -23,6 +26,9 @@ public class MapperFactory {
 		registerMapper("array_mapper", FixedArrayFileMapper.class);
         registerMapper("temp_mapper", SimpleFileMapper.class);
         registerMapper("concurrent_mapper", ConcurrentMapper.class);
+        registerMapper("dir_mapper", DirectoryMapper.class);
+        registerMapper("regexp_mapper", RegularExpressionMapper.class);
+        registerMapper("csv_mapper", CSVMapper.class);
         registerMapper("airsn_mapper", AirsnMapper.class);
         registerMapper("roi_mapper", ROIMapper.class);
 	}

@@ -22,7 +22,7 @@ public abstract class AbstractFileMapper implements Mapper {
 
 	protected Map params;
 	protected FileNameElementMapper elementMapper;
-	private String prefix=null, suffix=null, pattern=null, location=null;
+	protected String prefix=null, suffix=null, pattern=null, location=null;
 
 	protected AbstractFileMapper(FileNameElementMapper elementMapper) {
 		this.elementMapper = elementMapper;
@@ -140,7 +140,7 @@ public abstract class AbstractFileMapper implements Mapper {
 			if (index == -1) {
 				String[] e = name.split("\\.");
 				if (e.length != 2) {
-					return null;
+					return rmapElement(path, name);
 				}
 				else {
 					if (e[0].length() * e[1].length() == 0) {
