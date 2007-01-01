@@ -1,4 +1,4 @@
-// $ANTLR 2.7.5 (20050128): "VDL.g" -> "VDLtParser.java"$
+// $ANTLR 2.7.5 (20050128): "../../../../../grammars/VDL.g" -> "VDLtParser.java"$
 
 package org.griphyn.vdl.parser;
 
@@ -554,33 +554,50 @@ public VDLtParser(ParserSharedInputState state) {
 			if ( synPredMatched77 ) {
 				variable(code);
 			}
-			else if ((_tokenSet_10.member(LA(1))) && (LA(2)==ID) && (LA(3)==LBRACK||LA(3)==LT)) {
-				datasetdecl(code);
-			}
-			else if ((_tokenSet_0.member(LA(1))) && (_tokenSet_4.member(LA(2))) && (_tokenSet_12.member(LA(3)))) {
-				s=statement();
-				if ( inputState.guessing==0 ) {
-					
-						    code.setAttribute("statements",s);
-						    setReturnVariables(code, s);
+			else {
+				boolean synPredMatched79 = false;
+				if (((_tokenSet_10.member(LA(1))) && (LA(2)==ID) && (LA(3)==LBRACK||LA(3)==LT))) {
+					int _m79 = mark();
+					synPredMatched79 = true;
+					inputState.guessing++;
+					try {
+						{
+						datasetdecl(code);
+						}
+					}
+					catch (RecognitionException pe) {
+						synPredMatched79 = false;
+					}
+					rewind(_m79);
+					inputState.guessing--;
+				}
+				if ( synPredMatched79 ) {
+					datasetdecl(code);
+				}
+				else if ((_tokenSet_0.member(LA(1))) && (_tokenSet_4.member(LA(2))) && (_tokenSet_12.member(LA(3)))) {
+					s=statement();
+					if ( inputState.guessing==0 ) {
 						
+							    code.setAttribute("statements",s);
+							    setReturnVariables(code, s);
+							
+					}
+				}
+				else {
+					throw new NoViableAltException(LT(1), getFilename());
+				}
 				}
 			}
-			else {
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			
-		}
-		catch (RecognitionException ex) {
-			if (inputState.guessing==0) {
-				reportError(ex);
-				recover(ex,_tokenSet_13);
-			} else {
-			  throw ex;
+			catch (RecognitionException ex) {
+				if (inputState.guessing==0) {
+					reportError(ex);
+					recover(ex,_tokenSet_13);
+				} else {
+				  throw ex;
+				}
 			}
 		}
-	}
-	
+		
 	public final StringTemplate  function() throws RecognitionException, TokenStreamException {
 		StringTemplate code=template("function");
 		
@@ -596,9 +613,9 @@ public VDLtParser(ParserSharedInputState state) {
 				f=formalParameter();
 				if ( inputState.guessing==0 ) {
 					
-						f.setAttribute("outlink", "true");
-						code.setAttribute("outputs", f);
-						
+							f.setAttribute("outlink", "true");
+							code.setAttribute("outputs", f);
+							
 				}
 				{
 				_loop58:
@@ -608,9 +625,9 @@ public VDLtParser(ParserSharedInputState state) {
 						f=formalParameter();
 						if ( inputState.guessing==0 ) {
 							
-								    f.setAttribute("outlink", "true");
-								    code.setAttribute("outputs", f);
-								
+								    	f.setAttribute("outlink", "true");
+								    	code.setAttribute("outputs", f);
+								    	
 						}
 					}
 					else {
@@ -651,8 +668,8 @@ public VDLtParser(ParserSharedInputState state) {
 				f=formalParameter();
 				if ( inputState.guessing==0 ) {
 					
-						    code.setAttribute("inputs", f);
-						
+						    	code.setAttribute("inputs", f);
+						    	
 				}
 				{
 				_loop61:
@@ -662,8 +679,8 @@ public VDLtParser(ParserSharedInputState state) {
 						f=formalParameter();
 						if ( inputState.guessing==0 ) {
 							
-									code.setAttribute("inputs", f);
-								
+											code.setAttribute("inputs", f);
+								        	
 						}
 					}
 					else {
@@ -777,20 +794,20 @@ public VDLtParser(ParserSharedInputState state) {
 			i1=varInitializer();
 			if ( inputState.guessing==0 ) {
 				
-				if ( currentFunctionName==null ) {
-				v1 = template("globalVariable");
-				}
-				else {
-				v1 = template("variable");
-				}
-				v1.setAttribute("type", t);
-				v1.setAttribute("name", d);
-					  if (b1 != null)
-					     v1.setAttribute("isArray", "true");
-					  if (i1 != null)
-					     v1.setAttribute("value", i1);
-					  code.setAttribute("statements", v1);
-				
+						if ( currentFunctionName==null ) {
+							v1 = template("globalVariable");
+						}
+						else {
+							v1 = template("variable");
+						}
+						v1.setAttribute("type", t);
+						v1.setAttribute("name", d);
+						if (b1 != null)
+							v1.setAttribute("isArray", "true");
+						if (i1 != null)
+							v1.setAttribute("value", i1);
+						code.setAttribute("statements", v1);
+					
 			}
 			{
 			_loop30:
@@ -830,11 +847,11 @@ public VDLtParser(ParserSharedInputState state) {
 						}
 						v2.setAttribute("type", t);
 						v2.setAttribute("name", d);
-							    if (b2 != null)
-							       v2.setAttribute("isArray", "true");
-							    if (i2 != null)
-							       v2.setAttribute("value", i2);
-							    code.setAttribute("statements", v2);
+							 	    if (b2 != null)
+								       v2.setAttribute("isArray", "true");
+							    	if (i2 != null)
+							    	   v2.setAttribute("value", i2);
+							    	code.setAttribute("statements", v2);
 						
 					}
 				}
@@ -1033,7 +1050,7 @@ public VDLtParser(ParserSharedInputState state) {
 						    if (step != null)
 							range.setAttribute("step", step);
 						    code.setAttribute("range", range);
-					
+						
 				}
 				}
 			}
@@ -1303,7 +1320,23 @@ public VDLtParser(ParserSharedInputState state) {
 		StringTemplate e=null;
 		
 		try {      // for error handling
-			if ((LA(1)==AT) && (LA(2)==ID||LA(2)==LPAREN) && (_tokenSet_25.member(LA(3)))) {
+			boolean synPredMatched132 = false;
+			if (((LA(1)==AT) && (LA(2)==ID||LA(2)==LPAREN) && (_tokenSet_25.member(LA(3))))) {
+				int _m132 = mark();
+				synPredMatched132 = true;
+				inputState.guessing++;
+				try {
+					{
+					mappingFunc();
+					}
+				}
+				catch (RecognitionException pe) {
+					synPredMatched132 = false;
+				}
+				rewind(_m132);
+				inputState.guessing--;
+			}
+			if ( synPredMatched132 ) {
 				code=mappingFunc();
 			}
 			else if ((_tokenSet_17.member(LA(1))) && (_tokenSet_26.member(LA(2))) && (_tokenSet_27.member(LA(3)))) {
@@ -1367,12 +1400,12 @@ public VDLtParser(ParserSharedInputState state) {
 				v=constant();
 				if ( inputState.guessing==0 ) {
 					
-						  String value = (String)v.getAttribute("value");
-						  if (v.getName().equals("sConst")) {
-						     v.removeAttribute("value");
-						     v.setAttribute("value", quote(value));
+						  	String value = (String)v.getAttribute("value");
+						  	if (v.getName().equals("sConst")) {
+						    	v.removeAttribute("value");
+						     	v.setAttribute("value", quote(value));
 					}
-						  code.setAttribute("defaultv", v);
+						  	code.setAttribute("defaultv", v);
 						
 				}
 				}
@@ -1818,8 +1851,8 @@ public VDLtParser(ParserSharedInputState state) {
 			match(RPAREN);
 			if ( inputState.guessing==0 ) {
 				
-					code.setAttribute("cond", cond);
-					
+						code.setAttribute("cond", cond);
+						
 			}
 			compoundStat(body);
 			if ( inputState.guessing==0 ) {
@@ -1973,7 +2006,7 @@ public VDLtParser(ParserSharedInputState state) {
 			}
 			match(LCURLY);
 			{
-			_loop89:
+			_loop91:
 			do {
 				if ((LA(1)==LITERAL_case||LA(1)==LITERAL_default)) {
 					b=casesGroup();
@@ -1982,7 +2015,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop89;
+					break _loop91;
 				}
 				
 			} while (true);
@@ -2075,10 +2108,10 @@ public VDLtParser(ParserSharedInputState state) {
 		StringTemplate a=null, e=null, id=null;
 		
 		try {      // for error handling
-			boolean synPredMatched99 = false;
+			boolean synPredMatched101 = false;
 			if (((_tokenSet_6.member(LA(1))) && (_tokenSet_35.member(LA(2))) && (_tokenSet_36.member(LA(3))))) {
-				int _m99 = mark();
-				synPredMatched99 = true;
+				int _m101 = mark();
+				synPredMatched101 = true;
 				inputState.guessing++;
 				try {
 					{
@@ -2086,12 +2119,12 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				catch (RecognitionException pe) {
-					synPredMatched99 = false;
+					synPredMatched101 = false;
 				}
-				rewind(_m99);
+				rewind(_m101);
 				inputState.guessing--;
 			}
-			if ( synPredMatched99 ) {
+			if ( synPredMatched101 ) {
 				code=functioncallStat();
 			}
 			else if ((LA(1)==ID) && (_tokenSet_37.member(LA(2))) && (_tokenSet_38.member(LA(3)))) {
@@ -2224,7 +2257,7 @@ public VDLtParser(ParserSharedInputState state) {
 		
 		try {      // for error handling
 			{
-			_loop96:
+			_loop98:
 			do {
 				if ((_tokenSet_0.member(LA(1)))) {
 					s=statement();
@@ -2233,7 +2266,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop96;
+					break _loop98;
 				}
 				
 			} while (true);
@@ -2271,7 +2304,7 @@ public VDLtParser(ParserSharedInputState state) {
 						
 					}
 					{
-					_loop106:
+					_loop108:
 					do {
 						if ((LA(1)==COMMA)) {
 							match(COMMA);
@@ -2283,7 +2316,7 @@ public VDLtParser(ParserSharedInputState state) {
 							}
 						}
 						else {
-							break _loop106;
+							break _loop108;
 						}
 						
 					} while (true);
@@ -2352,7 +2385,7 @@ public VDLtParser(ParserSharedInputState state) {
 						
 				}
 				{
-				_loop110:
+				_loop112:
 				do {
 					if ((LA(1)==COMMA)) {
 						match(COMMA);
@@ -2364,7 +2397,7 @@ public VDLtParser(ParserSharedInputState state) {
 						}
 					}
 					else {
-						break _loop110;
+						break _loop112;
 					}
 					
 				} while (true);
@@ -2413,7 +2446,7 @@ public VDLtParser(ParserSharedInputState state) {
 				
 			}
 			{
-			_loop183:
+			_loop187:
 			do {
 				if ((LA(1)==DOT)) {
 					d = LT(1);
@@ -2449,7 +2482,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop183;
+					break _loop187;
 				}
 				
 			} while (true);
@@ -2493,10 +2526,10 @@ public VDLtParser(ParserSharedInputState state) {
 				
 			}
 			{
-			boolean synPredMatched115 = false;
+			boolean synPredMatched117 = false;
 			if (((LA(1)==ASSIGN) && (LA(2)==ID) && (_tokenSet_45.member(LA(3))))) {
-				int _m115 = mark();
-				synPredMatched115 = true;
+				int _m117 = mark();
+				synPredMatched117 = true;
 				inputState.guessing++;
 				try {
 					{
@@ -2505,20 +2538,20 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				catch (RecognitionException pe) {
-					synPredMatched115 = false;
+					synPredMatched117 = false;
 				}
-				rewind(_m115);
+				rewind(_m117);
 				inputState.guessing--;
 			}
-			if ( synPredMatched115 ) {
+			if ( synPredMatched117 ) {
 				{
 				match(ASSIGN);
 				d=declarator();
 				}
 				if ( inputState.guessing==0 ) {
 					
-						  code.setAttribute("bind", d);
-						
+						  	code.setAttribute("bind", d);
+						  	
 				}
 			}
 			else if ((_tokenSet_45.member(LA(1))) && (_tokenSet_46.member(LA(2))) && (_tokenSet_47.member(LA(3)))) {
@@ -2547,10 +2580,10 @@ public VDLtParser(ParserSharedInputState state) {
 		
 		try {      // for error handling
 			{
-			boolean synPredMatched120 = false;
+			boolean synPredMatched122 = false;
 			if (((LA(1)==ID) && (LA(2)==ASSIGN))) {
-				int _m120 = mark();
-				synPredMatched120 = true;
+				int _m122 = mark();
+				synPredMatched122 = true;
 				inputState.guessing++;
 				try {
 					{
@@ -2559,20 +2592,20 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				catch (RecognitionException pe) {
-					synPredMatched120 = false;
+					synPredMatched122 = false;
 				}
-				rewind(_m120);
+				rewind(_m122);
 				inputState.guessing--;
 			}
-			if ( synPredMatched120 ) {
+			if ( synPredMatched122 ) {
 				{
 				d=declarator();
 				match(ASSIGN);
 				}
 				if ( inputState.guessing==0 ) {
 					
-						  code.setAttribute("bind", d);
-						
+						  		code.setAttribute("bind", d);
+						  	
 				}
 			}
 			else if ((_tokenSet_48.member(LA(1))) && (_tokenSet_49.member(LA(2)))) {
@@ -2646,13 +2679,13 @@ public VDLtParser(ParserSharedInputState state) {
 				code.setAttribute("exec", exec);
 			}
 			{
-			_loop126:
+			_loop128:
 			do {
 				if ((_tokenSet_50.member(LA(1)))) {
 					appArg(code);
 				}
 				else {
-					break _loop126;
+					break _loop128;
 				}
 				
 			} while (true);
@@ -2710,7 +2743,7 @@ public VDLtParser(ParserSharedInputState state) {
 					
 			}
 			{
-			_loop142:
+			_loop146:
 			do {
 				if ((LA(1)==LITERAL_request||LA(1)==LITERAL_response)) {
 					m=message();
@@ -2719,7 +2752,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop142;
+					break _loop146;
 				}
 				
 			} while (true);
@@ -2853,10 +2886,10 @@ public VDLtParser(ParserSharedInputState state) {
 		try {      // for error handling
 			match(AT);
 			{
-			boolean synPredMatched133 = false;
+			boolean synPredMatched137 = false;
 			if (((LA(1)==ID) && (LA(2)==LPAREN) && (_tokenSet_17.member(LA(3))))) {
-				int _m133 = mark();
-				synPredMatched133 = true;
+				int _m137 = mark();
+				synPredMatched137 = true;
 				inputState.guessing++;
 				try {
 					{
@@ -2865,12 +2898,12 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				catch (RecognitionException pe) {
-					synPredMatched133 = false;
+					synPredMatched137 = false;
 				}
-				rewind(_m133);
+				rewind(_m137);
 				inputState.guessing--;
 			}
-			if ( synPredMatched133 ) {
+			if ( synPredMatched137 ) {
 				{
 				func=declarator();
 				match(LPAREN);
@@ -3057,8 +3090,8 @@ public VDLtParser(ParserSharedInputState state) {
 				{
 				match(LCURLY);
 				{
-				int _cnt153=0;
-				_loop153:
+				int _cnt157=0;
+				_loop157:
 				do {
 					if ((LA(1)==ID)) {
 						p=part();
@@ -3067,10 +3100,10 @@ public VDLtParser(ParserSharedInputState state) {
 						}
 					}
 					else {
-						if ( _cnt153>=1 ) { break _loop153; } else {throw new NoViableAltException(LT(1), getFilename());}
+						if ( _cnt157>=1 ) { break _loop157; } else {throw new NoViableAltException(LT(1), getFilename());}
 					}
 					
-					_cnt153++;
+					_cnt157++;
 				} while (true);
 				}
 				match(RCURLY);
@@ -3157,7 +3190,7 @@ public VDLtParser(ParserSharedInputState state) {
 		try {      // for error handling
 			code=andExpr();
 			{
-			_loop160:
+			_loop164:
 			do {
 				if ((LA(1)==OR)) {
 					match(OR);
@@ -3172,7 +3205,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop160;
+					break _loop164;
 				}
 				
 			} while (true);
@@ -3197,7 +3230,7 @@ public VDLtParser(ParserSharedInputState state) {
 		try {      // for error handling
 			code=equalExpr();
 			{
-			_loop163:
+			_loop167:
 			do {
 				if ((LA(1)==AND)) {
 					match(AND);
@@ -3212,7 +3245,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop163;
+					break _loop167;
 				}
 				
 			} while (true);
@@ -3406,7 +3439,7 @@ public VDLtParser(ParserSharedInputState state) {
 		try {      // for error handling
 			code=multiExpr();
 			{
-			_loop173:
+			_loop177:
 			do {
 				if ((LA(1)==PLUS||LA(1)==MINUS) && (_tokenSet_17.member(LA(2))) && (_tokenSet_52.member(LA(3)))) {
 					if ( inputState.guessing==0 ) {
@@ -3442,7 +3475,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop173;
+					break _loop177;
 				}
 				
 			} while (true);
@@ -3470,7 +3503,7 @@ public VDLtParser(ParserSharedInputState state) {
 		try {      // for error handling
 			code=unaryExpr();
 			{
-			_loop177:
+			_loop181:
 			do {
 				if (((LA(1) >= STAR && LA(1) <= MOD))) {
 					if ( inputState.guessing==0 ) {
@@ -3511,7 +3544,7 @@ public VDLtParser(ParserSharedInputState state) {
 					}
 				}
 				else {
-					break _loop177;
+					break _loop181;
 				}
 				
 			} while (true);

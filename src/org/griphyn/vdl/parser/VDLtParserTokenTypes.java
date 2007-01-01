@@ -1,4 +1,4 @@
-// $ANTLR 2.7.5 (20050128): "VDL.g" -> "VDLtLexer.java"$
+// $ANTLR 2.7.5 (20050128): "../../../../../grammars/VDL.g" -> "VDLtLexer.java"$
 
 package org.griphyn.vdl.parser;
 

@@ -1,4 +1,4 @@
-// $ANTLR 2.7.5 (20050128): VDL.g -> VDLtParserTokenTypes.txt$
+// $ANTLR 2.7.5 (20050128): ../../../../../grammars/VDL.g -> VDLtParserTokenTypes.txt$
 VDLtParser    // output token vocab name
 LITERAL_namespace="namespace"=4
 ID=5
