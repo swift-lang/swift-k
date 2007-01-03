@@ -179,19 +179,17 @@ namespace("vdl"
 			uParallelFor(file, files
 				[srcdir, destdir, filename] := (dirname(file), dircat(dir, reldirname(file)), basename(file))
 				
-				cleanupFiles(host,
-					vdl:cacheAddAndLockFile(file, destdir, host, file:size(file)
-						//This is kinda hackish, but these files should be cleaned before
-						//the other ones are uploaded, and doing it nicer is a complex
-						//business. So vdl:cacheAddAndLockFile defines "filesToRemove"
-						cleanupFiles(cacheFilesToRemove, host)
-						echo("Staging in {srcdir} {filename} to {destdir} on {host}")
-						restartOnError(".*", 2
-						    task:transfer(srcfile=filename, srcdir=srcdir,
-							    desthost=host, destdir=destdir)
-						)
-						echo("Staged in {srcdir} {filename} to {destdir} on {host}")
+				vdl:cacheAddAndLockFile(file, destdir, host, file:size(file)
+					//This is kinda hackish, but these files should be cleaned before
+					//the other ones are uploaded, and doing it nicer is a complex
+					//business. So vdl:cacheAddAndLockFile defines "filesToRemove"
+					cleanupFiles(cacheFilesToRemove, host)
+					echo("Staging in {srcdir} {filename} to {destdir} on {host}")
+					restartOnError(".*", 2
+					    task:transfer(srcfile=filename, srcdir=srcdir,
+						    desthost=host, destdir=destdir)
 					)
+					echo("Staged in {srcdir} {filename} to {destdir} on {host}")
 				)
 			)
 		)
