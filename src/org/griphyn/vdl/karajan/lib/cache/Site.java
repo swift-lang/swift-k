@@ -79,6 +79,10 @@ public class Site {
 	}
 
 	public synchronized CacheReturn fileRemoved(File f) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("CacheFileRemoved(file=" + f + ", usage=" + usage + "/" + storageSize
+					+ ")");
+		}
 		File cached = (File) files.remove(f.getPath());
 		if (cached == null) {
 			throw new IllegalStateException(
@@ -89,24 +93,20 @@ public class Site {
 					"fileRemoved() called on a file that was not locked for removal (" + f + ")");
 		}
 		usage -= cached.getSize();
-		if (logger.isDebugEnabled()) {
-			logger.debug("CacheFileRemoved(file=" + cached + ", usage=" + usage + "/" + storageSize
-					+ ")");
-		}
 		cached.notifyListeners();
 		return new CacheReturn(true, Collections.EMPTY_LIST, cached);
 	}
 
 	public synchronized CacheReturn unlockEntry(File f) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("CacheUnlockFile(file=" + f + ")");
+		}
 		File cached = (File) files.get(f.getPath());
 		if (cached == null) {
 			throw new IllegalStateException(
 					"unlockEntry() called with a file that is not in the cache (" + f + ")");
 		}
 		cached.unlock();
-		if (logger.isDebugEnabled()) {
-			logger.debug("CacheUnlockFile(file=" + cached + ")");
-		}
 		return new CacheReturn(true, purge(), cached);
 	}
 
