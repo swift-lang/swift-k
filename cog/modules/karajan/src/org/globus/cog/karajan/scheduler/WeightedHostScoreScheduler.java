@@ -40,6 +40,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	public static final String FACTOR_FAILURE = "failureFactor";
 	public static final String SCORE_HIGH_CAP = "scoreHighCap";
 	public static final String POLICY = "policy";
+	public static final String JOB_THROTTLE = "jobThrottle";
 
 	private WeightedHostSet sorted;
 	private int policy;
@@ -112,13 +113,13 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		WeightedHost selected = null;
 
 		s = constrain(s, getConstraintChecker(), t);
-		
+
 		if (s.isEmpty()) {
 			throw new NoSuchResourceException();
 		}
-		
-		removeOverloaded(s);
-		
+
+		s = removeOverloaded(s);
+
 		if (s.isEmpty()) {
 			throw new NoFreeResourceException();
 		}
@@ -161,7 +162,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		return selected.getHost();
 	}
 
-	public void releaseContact(BoundContact contact) {
+	public synchronized void releaseContact(BoundContact contact) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Releasing contact " + contact);
 		}
@@ -193,14 +194,28 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			return ns;
 		}
 	}
-	
-	protected void removeOverloaded(WeightedHostSet s) {
-		 Iterator i = s.iterator();
-		while (i.hasNext()) {
-			WeightedHost wh = (WeightedHost) i.next();
-			if (overloaded(wh)) {
-				i.remove();
+
+	protected WeightedHostSet removeOverloaded(WeightedHostSet s) {
+		if (s == sorted) {
+			WeightedHostSet ns = new WeightedHostSet(scoreHighCap);
+			Iterator i = s.iterator();
+			while (i.hasNext()) {
+				WeightedHost wh = (WeightedHost) i.next();
+				if (!overloaded(wh)) {
+					ns.add(wh);
+				}
 			}
+			return ns;
+		}
+		else {
+			Iterator i = s.iterator();
+			while (i.hasNext()) {
+				WeightedHost wh = (WeightedHost) i.next();
+				if (overloaded(wh)) {
+					i.remove();
+				}
+			}
+			return s;
 		}
 	}
 
@@ -214,7 +229,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	private static final String[] myPropertyNames = new String[] { POLICY,
 			FACTOR_CONNECTION_REFUSED, FACTOR_CONNECTION_TIMEOUT, FACTOR_SUBMISSION_TASK_LOAD,
 			FACTOR_TRANSFER_TASK_LOAD, FACTOR_FILEOP_TASK_LOAD, FACTOR_FAILURE, FACTOR_SUCCESS,
-			SCORE_HIGH_CAP };
+			SCORE_HIGH_CAP, JOB_THROTTLE };
 	private static Set propertyNamesSet;
 
 	static {
@@ -247,6 +262,9 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				else {
 					throw new KarajanRuntimeException("Unknown policy type: " + value);
 				}
+			}
+			else if (JOB_THROTTLE.equals(name)) {
+				jobThrottle = TypeUtil.toInt(value);
 			}
 			else {
 				double val = TypeUtil.toDouble(value);
