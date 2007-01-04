@@ -225,7 +225,8 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			if (!e.getStatus().isTerminal()) {
 				return;
 			}
-			VariableStack stack = (VariableStack) tasks.get(e.getSource());
+			Task task = (Task) e.getSource();
+			VariableStack stack = (VariableStack) tasks.get(task);
 			if (stack == null) {
 				logger.warn("Received status event from unknown task " + e.getSource());
 			}
@@ -233,10 +234,10 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 				logger.debug("Got status event: " + status);
 				Scheduler scheduler = getScheduler(stack);
 				if (scheduler != null) {
-					scheduler.removeJobStatusListener(this, (Task) e.getSource());
+					scheduler.removeJobStatusListener(this, task);
 				}
 				stack.getExecutionContext().getStateManager().unregisterElement(this, stack);
-				removeTask((Task) e.getSource());
+				removeTask(task);
 				if (e.getStatus().getStatusCode() == Status.COMPLETED) {
 					taskCompleted(e, stack);
 				}
