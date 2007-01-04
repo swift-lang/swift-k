@@ -55,7 +55,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	public static final Arg.Channel STDERR = ExecutionContext.STDERR;
 
 	private String locator;
-	
+
 	private Integer uid;
 
 	private boolean checkpointable;
@@ -90,10 +90,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	protected boolean executeErrorHandler(VariableStack stack, NotificationEvent error)
 			throws ExecutionException {
-		//TODO
-		/*if (error instanceof ChainedFailureNotificationEvent) {
-			return false;
-		}*/
+		// TODO
+		/*
+		 * if (error instanceof ChainedFailureNotificationEvent) { return false; }
+		 */
 		FailureNotificationEvent evt = (FailureNotificationEvent) error;
 		List set = stack.getAllVars("#errorhandlers");
 		Iterator i = set.iterator();
@@ -351,17 +351,15 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		catch (FutureEvaluationException ex) {
 			failImmediately(e.getStack(), ex.getFault());
 		}
-		catch (KarajanRuntimeException ex) {
-			failImmediately(e.getStack(), ex);
-		}
 		catch (ExecutionException ex) {
 			if (ex.getStack() == null) {
-				ex.setStack(e.getStack());
+				ex.setStack(e.getStack().copy());
 			}
 			failImmediately(e.getStack(), ex);
 		}
 		catch (RuntimeException ex) {
-			failImmediately(e.getStack(), ex);
+			failImmediately(e.getStack(), new ExecutionException(e.getStack().copy(),
+					ex.getMessage(), ex));
 		}
 	}
 
@@ -381,7 +379,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			}
 		}
 		catch (FutureFault ex) {
-			logger.debug("FE: ", ex);
+			if (logger.isDebugEnabled()) {
+				logger.debug("FE: ", ex);
+			}
 			ex.getFuture().addModificationAction(this, e);
 		}
 	}
