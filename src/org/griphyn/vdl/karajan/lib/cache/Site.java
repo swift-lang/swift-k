@@ -18,7 +18,7 @@ import org.griphyn.vdl.util.VDL2Profile;
 
 public class Site {
 	public static final Logger logger = Logger.getLogger(Site.class);
-	
+
 	private long storageSize;
 	private TreeMap accessTimes;
 	private Map files;
@@ -126,6 +126,7 @@ public class Site {
 			logger.debug("CachePurge(count=" + l.size() + ", targetUsage=" + targetUsage + "/"
 					+ storageSize + ")");
 		}
+		usage = targetUsage;
 		return l;
 	}
 }
