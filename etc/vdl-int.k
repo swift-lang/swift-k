@@ -179,7 +179,7 @@ namespace("vdl"
 			uParallelFor(file, files
 				[srcdir, destdir, filename] := (dirname(file), dircat(dir, reldirname(file)), basename(file))
 				
-				vdl:cacheAddAndLockFile(file, destdir, host, file:size(file)
+				vdl:cacheAddAndLockFile(filename, destdir, host, file:size(file)
 					//This is kinda hackish, but these files should be cleaned before
 					//the other ones are uploaded, and doing it nicer is a complex
 					//business. So vdl:cacheAddAndLockFile defines "filesToRemove"
