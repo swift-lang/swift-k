@@ -25,7 +25,7 @@ public class VDL2ExecutionContext extends ExecutionContext {
 				getStderr().append(translation);
 			}
 			else {
-				getStderr().append(e.toString());
+				getStderr().append(e.getException().toString());
 			}
 			getStderr().append("\n");
 		}
