@@ -97,11 +97,11 @@ public class Site {
 		return new CacheReturn(true, Collections.EMPTY_LIST, cached);
 	}
 
-	public CacheReturn unlockEntry(File f) {
+	public synchronized CacheReturn unlockEntry(File f) {
 		File cached = (File) files.get(f.getPath());
 		if (cached == null) {
 			throw new IllegalStateException(
-					"fileRemoved() called with a file that is not in the cache (" + f + ")");
+					"unlockEntry() called with a file that is not in the cache (" + f + ")");
 		}
 		cached.unlock();
 		if (logger.isDebugEnabled()) {
