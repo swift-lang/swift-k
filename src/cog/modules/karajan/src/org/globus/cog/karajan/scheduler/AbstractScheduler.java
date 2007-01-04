@@ -6,6 +6,7 @@
 
 package org.globus.cog.karajan.scheduler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	private final Map constraints;
 
 	private List taskTransformers, failureHandlers;
-	
+
 	private ResourceConstraintChecker constraintChecker;
 
 	public AbstractScheduler() {
@@ -125,29 +126,38 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 
 	public void addJobStatusListener(StatusListener l, Task task) {
 		List jobListeners;
-		if (listeners.containsKey(task)) {
-			jobListeners = (List) listeners.get(task);
+		synchronized (listeners) {
+			if (listeners.containsKey(task)) {
+				jobListeners = (List) listeners.get(task);
+			}
+			else {
+				jobListeners = new ArrayList();
+				listeners.put(task, jobListeners);
+			}
+			jobListeners.add(l);
 		}
-		else {
-			jobListeners = new LinkedList();
-			listeners.put(task, jobListeners);
-		}
-		jobListeners.add(l);
 	}
 
 	public void removeJobStatusListener(StatusListener l, Task task) {
-		if (listeners.containsKey(task)) {
-			List jobListeners = (List) listeners.get(task);
-			jobListeners.remove(l);
-			if (jobListeners.size() == 0) {
-				listeners.remove(task);
+		synchronized (listeners) {
+			if (listeners.containsKey(task)) {
+				List jobListeners = (List) listeners.get(task);
+				jobListeners.remove(l);
+				if (jobListeners.size() == 0) {
+					listeners.remove(task);
+				}
 			}
 		}
 	}
 
 	public void fireJobStatusChangeEvent(StatusEvent e) {
-		if (listeners.containsKey(e.getSource())) {
-			List jobListeners = new LinkedList((List) listeners.get(e.getSource()));
+		List jobListeners = null;
+		synchronized(listeners) {
+			if (listeners.containsKey(e.getSource())) {
+				jobListeners = new ArrayList((List) listeners.get(e.getSource()));
+			}
+		}
+		if (jobListeners != null) {
 			Iterator i = jobListeners.iterator();
 			while (i.hasNext()) {
 				((StatusListener) i.next()).statusChanged(e);
@@ -201,19 +211,19 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	}
 
 	protected void setConstraints(Task task, Object constraint) {
-		synchronized(constraints) {
+		synchronized (constraints) {
 			constraints.put(task, constraint);
 		}
 	}
 
 	protected Object getConstraints(Task task) {
-		synchronized(constraints) {
+		synchronized (constraints) {
 			return constraints.get(task);
 		}
 	}
-	
+
 	protected void removeConstraints(Task task) {
-		synchronized(constraints) {
+		synchronized (constraints) {
 			constraints.remove(task);
 		}
 	}
@@ -233,7 +243,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 			((TaskTransformer) i.next()).transformTask(t, contacts, services);
 		}
 	}
-	
+
 	protected boolean runFailureHandlers(Task t) {
 		Iterator i = failureHandlers.iterator();
 		while (i.hasNext()) {
@@ -244,7 +254,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		}
 		return false;
 	}
-	
+
 	public void addFailureHandler(FailureHandler handler) {
 		failureHandlers.add(handler);
 	}
@@ -256,7 +266,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	public void setConstraintChecker(ResourceConstraintChecker constraintChecker) {
 		this.constraintChecker = constraintChecker;
 	}
-	
+
 	protected boolean checkConstraints(BoundContact resource, TaskConstraints tc) {
 		if (constraintChecker == null) {
 			return true;
@@ -265,7 +275,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 			return constraintChecker.checkConstraints(resource, tc);
 		}
 	}
-	
+
 	protected List checkConstraints(List resources, TaskConstraints tc) {
 		if (constraintChecker == null) {
 			return resources;
