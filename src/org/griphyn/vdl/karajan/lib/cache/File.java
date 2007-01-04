@@ -50,10 +50,6 @@ public class File {
 		return path;
 	}
 
-	public void setPath(String fullPath) {
-		this.path = fullPath;
-	}
-
 	public Object getHost() {
 		return host;
 	}
