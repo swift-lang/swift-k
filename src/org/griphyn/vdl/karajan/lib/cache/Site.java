@@ -116,7 +116,7 @@ public class Site {
 		Iterator i = accessTimes.values().iterator();
 		while (i.hasNext() && targetUsage > storageSize) {
 			File f = (File) i.next();
-			if (!f.isLocked()) {
+			if (!f.isLocked() && !f.isLockedForRemoval()) {
 				f.lockForRemoval();
 				l.add(f.getPath());
 				targetUsage -= f.getSize();
