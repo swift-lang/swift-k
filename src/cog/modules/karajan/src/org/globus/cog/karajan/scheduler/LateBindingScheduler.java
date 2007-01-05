@@ -277,6 +277,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	protected void failTask(Task t, String message, Exception e) {
 		Status s = new StatusImpl();
+		s.setPrevStatusCode(t.getStatus().getStatusCode());
 		s.setStatusCode(Status.FAILED);
 		s.setMessage(message);
 		s.setException(e);
@@ -348,13 +349,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				logger.debug("Scheduler exception: job =" + t.getIdentity().getValue() + ", status = "
 					+ t.getStatus(), e);
 			}
-			Status status = t.getStatus();
-			status.setPrevStatusCode(status.getStatusCode());
-			status.setStatusCode(Status.FAILED);
-			status.setException(e);
-			status.setMessage(e.toString());
-			StatusEvent se = new StatusEvent(t, status);
-			fireJobStatusChangeEvent(se);
+			failTask(t, e.toString(), e);
 			return;
 		}
 	}
