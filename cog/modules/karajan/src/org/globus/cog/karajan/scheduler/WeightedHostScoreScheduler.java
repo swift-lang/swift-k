@@ -298,6 +298,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			Task t = (Task) e.getSource();
 			int code = e.getStatus().getStatusCode();
 			Contact[] contacts = getContacts(t);
+			
+			if (contacts == null) {
+				return;
+			}
+			
 			if (code == Status.SUBMITTED) {
 				// this isn't reliable
 				// factorSubmission(t, contacts, 1);
