@@ -231,6 +231,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					js.setExecutable("/bin/sh");
 					js.addArgument("shared/seq.sh");
 					js.setDirectory(dir);
+					js.setAttribute("maxwalltime", String.valueOf(clusterTime));
 
 					Iterator i = cluster.iterator();
 					while (i.hasNext()) {
