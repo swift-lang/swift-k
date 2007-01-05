@@ -39,6 +39,8 @@ namespace("vdl"
 		export(execute
 			executeFile(
 				if(
+					vdl:operation == "dryrun"
+						"execute-dryrun.k"
 					vdl:operation == "typecheck"
 						"execute-typecheck.k"
 					vdl:operation == "run"

@@ -33,10 +33,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static final String ARG_RESUME = "resume";
 	public static final String ARG_INSTANCE_CONFIG = "config";
 	public static final String ARG_TYPECHECK = "typecheck";
-	
+	public static final String ARG_DRYRUN = "dryrun";
+
 	public static final String CONST_VDL_OPERATION = "vdl:operation";
 	public static final String VDL_OPERATION_RUN = "run";
 	public static final String VDL_OPERATION_TYPECHECK = "typecheck";
+	public static final String VDL_OPERATION_DRYRUN = "dryrun";
 
 	public static void main(String[] argv) {
 		ArgumentParser ap = buildArgumentParser();
@@ -92,8 +94,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			VariableStack stack = new LinkedStack(ec);
 			VDL2Config config = loadConfig(ap, stack);
 			addCommandLineProperties(config, ap);
-			
-			if (ap.isPresent(ARG_TYPECHECK)) {
+
+			if (ap.isPresent(ARG_DRYRUN)) {
+				stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_DRYRUN);
+			}
+			else if (ap.isPresent(ARG_TYPECHECK)) {
 				stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_TYPECHECK);
 			}
 			else {
@@ -151,6 +156,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		ap.addAlias(ARG_HELP, "h");
 
 		ap.addFlag(ARG_TYPECHECK, "Does a typecheck instead of executing the workflow");
+
+		ap.addFlag(ARG_DRYRUN,
+				"Runs the workflow without submitting any jobs (can be used to get a graph)");
 
 		ap.addFlag(ARG_MONITOR, "Shows a graphical resource monitor");
 
