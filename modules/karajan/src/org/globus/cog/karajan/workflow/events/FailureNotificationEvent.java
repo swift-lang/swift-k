@@ -33,7 +33,7 @@ public class FailureNotificationEvent extends NotificationEvent {
 			this.exception = (ExecutionException) exception;
 		}
 		else {
-		    this.exception = new ExecutionException(stack, this.message, exception);
+		    this.exception = new ExecutionException(initialStack, this.message, exception);
 		}
 	}
 
