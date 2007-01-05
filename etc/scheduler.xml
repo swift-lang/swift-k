@@ -4,12 +4,12 @@
 	<import file="vdl-lib.xml"/>
 	<import file="vdl-sc.k"/>
 	
-	<set names="sites, tcfile, clusteringEnabled, clusteringQueueDelay, minClusterTime">
+	<set names="sites, tcfile, clusteringEnabled, clusteringQueueDelay, clusteringMinTime">
 		<vdl:configProperty name="sites.file"/>
 		<vdl:configProperty name="tc.file"/>
 		<vdl:configProperty name="clustering.enabled"/>
 		<vdl:configProperty name="clustering.queue.delay"/>
-		<vdl:configProperty name="min.cluster.time"/>
+		<vdl:configProperty name="clustering.min.time"/>
 	</set>
 	
 	<print message="Using sites file: {sites}"/>
@@ -19,7 +19,7 @@
 		<property name="transformationCatalogFile" value="{tcfile}"/>
 		<property name="clusteringEnabled" value="{clusteringEnabled}"/>
 		<property name="clusteringQueueDelay" value="{clusteringQueueDelay}"/>
-		<property name="minClusterTime" value="{minClusterTime}"/>
+		<property name="clusteringMinTime" value="{clusteringMinTime}"/>
 		
 		<property name="hostSubmitThrottle" value="2"/>
 		<property name="submitThrottle" value="4"/>
