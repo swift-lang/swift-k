@@ -110,6 +110,7 @@ namespace("vdl"
 				sharedDir := dircat(wfdir, "shared")
 				dir:make(sharedDir, host=rhost)
 				transfer(srcdir="{vds.home}/libexec/", srcfile="wrapper.sh", destdir=sharedDir, desthost=rhost)
+				transfer(srcdir="{vds.home}/libexec/", srcfile="seq.sh", destdir=sharedDir, desthost=rhost)
 				wfdir, sharedDir
 				//we send the cleanup data to vdl:main()
 				to(cleanup, list(wfdir, rhost))
@@ -163,13 +164,13 @@ namespace("vdl"
 		)
 				
 		element(cleanup, [dir, host]
-			print("Cleaning up ", dir, " on ", host)
+			echo("Cleaning up ", dir, " on ", host)
 			task:execute("/bin/rm", arguments="-rf {dir}", host=host)
 		)
 		
 		element(cleanupFiles, [files, host]
 			uParallelFor(r, files
-				print("Purging ", r, " on ", host)
+				echo("Purging ", r, " on ", host)
 				file:remove(r, host=host)
 				vdl:cacheFileRemoved(r, host)
 			)
@@ -204,7 +205,7 @@ namespace("vdl"
 				fullLocal := dircat(ldir, bname)
 				fullRemote := dircat(rdir, bname)
 					
-				print("Staging out ", dircat(rdir, bname), " to {fullLocal} from {host}")
+				echo("Staging out ", dircat(rdir, bname), " to {fullLocal} from {host}")
 				//make sure we do have the directory on the client side
 				dir:make(ldir)
 				restartOnError(".*", 2
@@ -212,7 +213,7 @@ namespace("vdl"
 				        srcdir=rdir, destdir=ldir)
 				)
 		        vdl:logvar(var, path)
-		        print("Staged out {fullRemote} to {fullLocal} from {host}")
+		        echo("Staged out {fullRemote} to {fullLocal} from {host}")
 
 				//there is really no way to tell big files created by apps will be, so
 				//the decent thing to do is clean things up as much as possible
@@ -268,7 +269,7 @@ namespace("vdl"
 				jobdir := concat(tr, "-", uid())
 				tmpdir := dircat(wfdir, jobdir)
 				
-				print("Creating temporary directory {tmpdir} on {rhost}")
+				echo("Creating temporary directory {tmpdir} on {rhost}")
 				dir:make(tmpdir, host=rhost)
 				
 				try(
@@ -282,7 +283,7 @@ namespace("vdl"
 						
 						doStagein(stagein, sharedDir, rhost)
 
-						print("Running job ", tr, maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
+						echo("Running job ", tr, maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
 																	
 						task:execute("/bin/sh",
 							list("shared/wrapper.sh", jobdir, 
@@ -299,7 +300,7 @@ namespace("vdl"
 							
 						checkExitCode(rhost, tmpdir, jobdir, tr)
 		
-						print("Completed job ", tr, maybe(" with arguments ", arguments), " on {rhost}")
+						echo("Completed job ", tr, maybe(" with arguments ", arguments), " on {rhost}")
 
 									
 						/* need to stage the files to upper scratch area in case they are not transfered to another site
@@ -329,7 +330,7 @@ namespace("vdl"
 							)
 						)
 						throw(
-							if(outs == "" exception concat(exception, outs))
+							if(strip(outs) == "" exception concat(exception, outs))
 						)
 					)
 				)
@@ -349,7 +350,7 @@ namespace("vdl"
 				)
 				"}", nl()
 			)
-			print("Provenance graph saved in ", gname)
+			echo("Provenance graph saved in ", gname)
 		)
 	)
 )
