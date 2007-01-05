@@ -1,3 +1,7 @@
+(01/04/2007)
+
+*** Backported some fixes to the adaptive scheduler from trunk.
+
 ************************** v0.35 ***************************
 
 (12/28/2006)
