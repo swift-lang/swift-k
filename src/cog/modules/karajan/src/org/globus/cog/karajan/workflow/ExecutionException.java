@@ -9,6 +9,9 @@
  */
 package org.globus.cog.karajan.workflow;
 
+import java.io.CharArrayWriter;
+import java.io.PrintWriter;
+
 import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableStack;
 
@@ -73,8 +76,23 @@ public class ExecutionException extends Exception {
 				((ExecutionException) cause).toString(sb);
 			}
 			else {
-				sb.append(cause.toString());
+				if (cause instanceof ClassCastException || cause instanceof NullPointerException) {
+					CharArrayWriter caw = new CharArrayWriter();
+					cause.printStackTrace(new PrintWriter(caw));
+					sb.append(caw.toString());
+				}
+				else {
+					appendJavaException(sb, cause);
+				}
 			}
+		}
+	}
+	
+	private void appendJavaException(StringBuffer sb, Throwable cause) {
+		sb.append(cause.toString());
+		if (cause.getCause() != null) {
+			sb.append("\nCaused by: ");
+			appendJavaException(sb, cause.getCause());
 		}
 	}
 }
