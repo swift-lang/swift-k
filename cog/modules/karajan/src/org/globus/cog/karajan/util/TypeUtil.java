@@ -201,10 +201,7 @@ public class TypeUtil {
 		}
 		if (obj instanceof Throwable) {
 			if (obj instanceof ExecutionException) {
-				ExecutionException ee = (ExecutionException) obj;
-				StringBuffer sb = new StringBuffer();
-				convertExecutionException(sb, ee);
-				return sb.toString();
+				return obj.toString();
 			}
 			else {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -230,26 +227,6 @@ public class TypeUtil {
 		}
 		else {
 			return null;
-		}
-	}
-	
-	private static void convertExecutionException(StringBuffer sb, ExecutionException ee) {
-		sb.append(ee.getMessage());
-		sb.append('\n');
-		if (ee.getStack() != null) {
-			sb.append(Trace.get(ee.getStack()));
-		}
-		else {
-			sb.append("\t-- no stack --\n");
-		}
-		Throwable cause = ee.getCause();
-		if (cause instanceof ExecutionException) {
-			sb.append("Caused by: \n");
-			convertExecutionException(sb, (ExecutionException) cause);
-		}
-		else if (cause != null) {
-			sb.append("Caused by: ");
-			sb.append(cause.getMessage());
 		}
 	}
 
