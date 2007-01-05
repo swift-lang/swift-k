@@ -1,3 +1,14 @@
+(01/04/07)
+
+*** Added a simple clustering mechanism for small jobs.
+
+*** Added a "-dryrun" argument to vdlrun. If graph generation 
+    is enabled, this should produce a graph without running
+	any actual jobs.
+	
+*** Fixed an issue with caching where a file could have
+    been purged more than once
+
 (01/01/07)
 
 *** Modified AbstractFileMapper to expose local variables as protected
