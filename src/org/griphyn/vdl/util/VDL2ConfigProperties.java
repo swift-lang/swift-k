@@ -17,7 +17,7 @@ public class VDL2ConfigProperties {
 	public static final String CACHING_ALGORITHM = "caching.algorithm";
 	public static final String CLUSTERING_ENABLED = "clustering.enabled";
 	public static final String CLUSTERING_QUEUE_DELAY = "clustering.queue.delay";
-	public static final String MIN_CLUSTER_TIME = "min.cluster.time";
+	public static final String CLUSTERING_MIN_TIME = "clustering.min.time";
 	public static final Map PROPERTIES;
 
 	static {
@@ -51,14 +51,14 @@ public class VDL2ConfigProperties {
 				+ "VDL2 file caching mechanism. LRU is the only one available now."));
 		PROPERTIES.put(CLUSTERING_ENABLED, new PropInfo("true|false",
 				"Whether to enable clustering of small jobs. If enabled, jobs with a "
-						+ "max wall time which is less than the value of the " + MIN_CLUSTER_TIME
+						+ "max wall time which is less than the value of the " + CLUSTERING_MIN_TIME
 						+ " property will be clustered into one job which has a cummulative"
-						+ " max wall time greater or equal to the value of the " + MIN_CLUSTER_TIME
+						+ " max wall time greater or equal to the value of the " + CLUSTERING_MIN_TIME
 						+ " property."));
 		PROPERTIES.put(CLUSTERING_QUEUE_DELAY, new PropInfo("<seconds>", "The delay at which "
 				+ "the clustering code scans the clustering queue. A job marked for clustering "
 				+ "will spend no more than the value of this property in the clustering queue."));
-		PROPERTIES.put(MIN_CLUSTER_TIME, new PropInfo("<seconds>", "The threshold determines "
+		PROPERTIES.put(CLUSTERING_MIN_TIME, new PropInfo("<seconds>", "The threshold determines "
 				+ " if a job as being clusterable. Also represents the minimum cummulative "
 				+ "wall time that a cluster will have."));
 	}

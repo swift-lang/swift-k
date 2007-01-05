@@ -50,7 +50,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 	public static final String PROP_TC_FILE = "transformationCatalogFile";
 	public static final String PROP_CLUSTERING_ENABLED = "clusteringEnabled";
 	public static final String PROP_CLUSTERING_QUEUE_DELAY = "clusteringQueueDelay";
-	public static final String PROP_MIN_CLUSTER_TIME = "minClusterTime";
+	public static final String PROP_CLUSTERING_MIN_TIME = "clusteringMinTime";
 
 	private static String[] propertyNames;
 
@@ -71,7 +71,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 		else if (PROP_CLUSTERING_QUEUE_DELAY.equals(name)) {
 			clusteringQueueDelay = TypeUtil.toInt(value);
 		}
-		else if (PROP_MIN_CLUSTER_TIME.equals(name)) {
+		else if (PROP_CLUSTERING_MIN_TIME.equals(name)) {
 			minClusterTime = TypeUtil.toInt(value);
 		}
 		else if (PROP_CLUSTERING_ENABLED.equals(name)) {
