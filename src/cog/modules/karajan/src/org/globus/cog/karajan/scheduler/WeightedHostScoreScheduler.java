@@ -161,7 +161,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		return selected.getHost();
 	}
 
-	public void releaseContact(BoundContact contact) {
+	public synchronized void releaseContact(BoundContact contact) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Releasing contact " + contact);
 		}
