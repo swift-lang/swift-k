@@ -109,6 +109,7 @@ namespace("vdl"
 		
 		element(mains, [channel(cleanup), channel(errors)]
 			//this should be reached after everything is done
+			log(LOG:INFO, "Cleanups: ", cleanup)
 			parallelFor(i, cleanup
 				[dir, host] := each(i)
 				cleanup(dir, host)
@@ -122,10 +123,13 @@ namespace("vdl"
 		 * This would run in parallel with the workflow so that we don't keep
 		 * all the data in memory until the workflow is done
 		 */
-		parallelElement(mainp, [channel(graph)]
-			if(
-				vdl:configProperty("pgraph") != "false" 
-					generateProvenanceGraph(graph)
+		parallelElement(mainp, [channel(graph), channel(cleanup)]
+			parallel(
+				if(
+					vdl:configProperty("pgraph") != "false" 
+						generateProvenanceGraph(graph)
+				)
+				to(cleanup, unique(for(c, cleanup, c)))
 			)
 		)
 	)
