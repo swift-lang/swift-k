@@ -54,6 +54,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 
 	private int jobThrottle;
 
+	private boolean change;
+	private TaskConstraints cachedConstraints;
+	private boolean cachedLoadState;
+	private int hits;
+
 	public WeightedHostScoreScheduler() {
 		policy = POLICY_WEIGHTED_RANDOM;
 		setDefaultFactors();
@@ -65,8 +70,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		jobSubmissionTaskLoadFactor = -0.2;
 		transferTaskLoadFactor = -0.2;
 		fileOperationTaskLoadFactor = -0.01;
-		successFactor = 1;
-		failureFactor = -0.1;
+		successFactor = 0.1;
+		failureFactor = -0.5;
 		scoreHighCap = 100;
 		jobThrottle = 2;
 	}
@@ -76,7 +81,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		sorted = new WeightedHostSet(scoreHighCap);
 		Iterator i = grid.getContacts().iterator();
 		while (i.hasNext()) {
-			addToSorted(new WeightedHost((BoundContact) i.next()));
+			addToSorted(new WeightedHost((BoundContact) i.next(), jobThrottle));
 		}
 	}
 
@@ -92,7 +97,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		double ns = factor(score, factor);
 		sorted.changeScore(wh, ns);
 		if (logger.isDebugEnabled()) {
-			logger.debug("Old score: " + score + ", new score: " + ns);
+			logger.debug("Old score: " + WeightedHost.D4.format(score) + ", new score: "
+					+ WeightedHost.D4.format(ns));
 		}
 	}
 
@@ -107,15 +113,35 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	protected synchronized BoundContact getNextContact(TaskConstraints t)
 			throws NoFreeResourceException {
 		checkGlobalLoadConditions();
+
+		if (!change && cachedLoadState && cachedConstraints.equals(t)) {
+			hits++;
+			throw new NoFreeResourceException();
+		}
+
 		BoundContact contact;
 
 		WeightedHostSet s = sorted;
 		WeightedHost selected = null;
 
+		if (s.allOverloaded()) {
+			throw new NoFreeResourceException();
+		}
+
 		s = constrain(s, getConstraintChecker(), t);
 
 		if (s.isEmpty()) {
 			throw new NoSuchResourceException();
+		}
+		else if (s.allOverloaded()) {
+			change = false;
+			cachedLoadState = true;
+			cachedConstraints = t;
+			hits = 0;
+			throw new NoFreeResourceException();
+		}
+		else {
+			cachedLoadState = false;
 		}
 
 		s = removeOverloaded(s);
@@ -157,7 +183,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Next contact: " + selected.getHost());
 		}
-		selected.changeLoad(1);
+		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
 		return selected.getHost();
 	}
@@ -169,7 +195,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		super.releaseContact(contact);
 		WeightedHost wh = sorted.findHost(contact);
 		if (wh != null) {
-			wh.changeLoad(-1);
+			change = true;
+			sorted.changeLoad(wh, -1);
 			sorted.changeScore(wh, wh.getScore() + wh.getDelayedDelta());
 		}
 		else {
@@ -201,7 +228,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			Iterator i = s.iterator();
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
-				if (!overloaded(wh)) {
+				if (!wh.isOverloaded()) {
 					ns.add(wh);
 				}
 			}
@@ -211,18 +238,12 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			Iterator i = s.iterator();
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
-				if (overloaded(wh)) {
+				if (wh.isOverloaded()) {
 					i.remove();
 				}
 			}
 			return s;
 		}
-	}
-
-	protected boolean overloaded(WeightedHost wh) {
-		double score = wh.getTScore();
-		int load = wh.getLoad();
-		return !(load < jobThrottle * score + 2);
 	}
 
 	private static String[] propertyNames;
@@ -298,11 +319,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			Task t = (Task) e.getSource();
 			int code = e.getStatus().getStatusCode();
 			Contact[] contacts = getContacts(t);
-			
+
 			if (contacts == null) {
 				return;
 			}
-			
+
 			if (code == Status.SUBMITTED) {
 				// this isn't reliable
 				// factorSubmission(t, contacts, 1);
