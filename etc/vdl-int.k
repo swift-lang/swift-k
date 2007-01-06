@@ -5,6 +5,12 @@ import("vdl-lib.xml")
  * Things that are not exposed to the translated file
  */
 
+global(LOG:DEBUG, "debug")
+global(LOG:INFO, "info")
+global(LOG:WARN, "warn")
+global(LOG:ERROR, "error")
+global(LOG:FATAL, "fatal")
+
 namespace("vdl"
 	export(
 		element(basename, [file]
@@ -50,7 +56,7 @@ namespace("vdl"
 		
 		element(createdirs, [path, dir, host]
 			dc := dircat(dir, path)
-			print("Creating directory structure {path} in {dir} ({dc})")
+			log(LOG:INFO, "Creating directory structure {path} in {dir} ({dc})")
 			dir:make(dc, host=host)
 		)
 					
@@ -164,13 +170,13 @@ namespace("vdl"
 		)
 				
 		element(cleanup, [dir, host]
-			echo("Cleaning up ", dir, " on ", host)
+			log(LOG:INFO, "Cleaning up ", dir, " on ", host)
 			task:execute("/bin/rm", arguments="-rf {dir}", host=host)
 		)
 		
 		element(cleanupFiles, [files, host]
 			uParallelFor(r, files
-				echo("Purging ", r, " on ", host)
+				log(LOG:INFO, "Purging ", r, " on ", host)
 				file:remove(r, host=host)
 				vdl:cacheFileRemoved(r, host)
 			)
@@ -185,12 +191,12 @@ namespace("vdl"
 					//the other ones are uploaded, and doing it nicer is a complex
 					//business. So vdl:cacheAddAndLockFile defines "filesToRemove"
 					cleanupFiles(cacheFilesToRemove, host)
-					echo("Staging in {srcdir} {filename} to {destdir} on {host}")
+					log(LOG:INFO, "Staging in {srcdir} {filename} to {destdir} on {host}")
 					restartOnError(".*", 2
 					    task:transfer(srcfile=filename, srcdir=srcdir,
 						    desthost=host, destdir=destdir)
 					)
-					echo("Staged in {srcdir} {filename} to {destdir} on {host}")
+					log(LOG:INFO, "Staged in {srcdir} {filename} to {destdir} on {host}")
 				)
 			)
 		)
@@ -205,7 +211,7 @@ namespace("vdl"
 				fullLocal := dircat(ldir, bname)
 				fullRemote := dircat(rdir, bname)
 					
-				echo("Staging out ", dircat(rdir, bname), " to {fullLocal} from {host}")
+				log(LOG:INFO, "Staging out ", dircat(rdir, bname), " to {fullLocal} from {host}")
 				//make sure we do have the directory on the client side
 				dir:make(ldir)
 				restartOnError(".*", 2
@@ -213,7 +219,7 @@ namespace("vdl"
 				        srcdir=rdir, destdir=ldir)
 				)
 		        vdl:logvar(var, path)
-		        echo("Staged out {fullRemote} to {fullLocal} from {host}")
+		        log(LOG:INFO, "Staged out {fullRemote} to {fullLocal} from {host}")
 
 				//there is really no way to tell big files created by apps will be, so
 				//the decent thing to do is clean things up as much as possible
@@ -269,7 +275,7 @@ namespace("vdl"
 				jobdir := concat(tr, "-", uid())
 				tmpdir := dircat(wfdir, jobdir)
 				
-				echo("Creating temporary directory {tmpdir} on {rhost}")
+				log(LOG:INFO, "Creating temporary directory {tmpdir} on {rhost}")
 				dir:make(tmpdir, host=rhost)
 				
 				try(
@@ -283,7 +289,7 @@ namespace("vdl"
 						
 						doStagein(stagein, sharedDir, rhost)
 
-						echo("Running job ", tr, maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
+						log(LOG:INFO, "Running job ", tr, maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
 																	
 						task:execute("/bin/sh",
 							list("shared/wrapper.sh", jobdir, 
@@ -300,7 +306,7 @@ namespace("vdl"
 							
 						checkExitCode(rhost, tmpdir, jobdir, tr)
 		
-						echo("Completed job ", tr, maybe(" with arguments ", arguments), " on {rhost}")
+						log(LOG:INFO, "Completed job ", tr, maybe(" with arguments ", arguments), " on {rhost}")
 
 									
 						/* need to stage the files to upper scratch area in case they are not transfered to another site
@@ -310,6 +316,7 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
 					catch(".*"
+						echo(exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 						
 						outs := concat(

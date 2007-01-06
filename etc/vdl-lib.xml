@@ -41,5 +41,7 @@
 	<export name="cacheAddFile"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheAddFile"/></export>
 	<export name="cacheFileRemoved"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheFileRemoved"/></export>
 	<export name="cacheUnlockFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheUnlockFiles"/></export>
+	
+	<export name="log"><elementDef classname="org.griphyn.vdl.karajan.lib.Log"/></export>
   </namespace>
 </karajan>
