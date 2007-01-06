@@ -27,12 +27,12 @@ import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
-import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.catalog.transformation.File;
 import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.karajan.InHook;
 import org.griphyn.vdl.karajan.Monitor;
+import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.WrapperMap;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -44,7 +44,7 @@ import org.griphyn.vdl.util.VDL2ConfigProperties;
 
 public abstract class VDLFunction extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(VDLFunction.class);
-	
+
 	public static final Arg OA_PATH = new Arg.Optional("path", "");
 	public static final Arg PA_PATH = new Arg.Positional("path");
 	public static final Arg PA_VAR = new Arg.TypedPositional("var", DSHandle.class, "handle");
@@ -139,7 +139,7 @@ public abstract class VDLFunction extends AbstractFunction {
 		else {
 			return value;
 		}
-	}	
+	}
 
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
@@ -226,7 +226,7 @@ public abstract class VDLFunction extends AbstractFunction {
 			return hash;
 		}
 	}
-	
+
 	protected Map getLogData(VariableStack stack) throws ExecutionException {
 		try {
 			return (Map) stack.getDeepVar(RestartLog.LOG_DATA);
@@ -253,7 +253,6 @@ public abstract class VDLFunction extends AbstractFunction {
 		}
 	}
 
-	
 	protected boolean compatible(String expectedType, String actualType) {
 		if (expectedType.equals("float")) {
 			if (actualType.equals("float") || actualType.equals("int"))
@@ -263,7 +262,7 @@ public abstract class VDLFunction extends AbstractFunction {
 		}
 		return actualType.equals(expectedType);
 	}
-	
+
 	protected void closeChildren(VariableStack stack, DSHandle handle) throws ExecutionException,
 			InvalidPathException {
 		WrapperMap hash = getFutureWrapperMap(stack);
@@ -384,15 +383,12 @@ public abstract class VDLFunction extends AbstractFunction {
 		return q;
 	}
 
-
-	
 	private static Set warnset = new HashSet();
 
-	protected TransformationCatalogEntry getTCE(TransformationCatalog tc, FQN fqn, BoundContact bc) {
+	protected TransformationCatalogEntry getTCE(TCCache tc, FQN fqn, BoundContact bc) {
 		List l;
 		try {
-			l = tc.getTCEntries(fqn.getNamespace(), fqn.getName(), fqn.getVersion(), bc.getHost(),
-					TCType.INSTALLED);
+			l = tc.getTCEntries(fqn, bc.getHost(), TCType.INSTALLED);
 		}
 		catch (Exception e) {
 			throw new KarajanRuntimeException(e);
@@ -417,18 +413,15 @@ public abstract class VDLFunction extends AbstractFunction {
 
 	public static final String TC = "vdl:TC";
 
-	public static TransformationCatalog getTC(VariableStack stack) throws ExecutionException {
+	public static TCCache getTC(VariableStack stack) throws ExecutionException {
 		synchronized (stack.firstFrame()) {
-			TransformationCatalog tc = (TransformationCatalog) stack.firstFrame().getVar(TC);
+			TCCache tc = (TCCache) stack.firstFrame().getVar(TC);
 			if (tc == null) {
 				String prop = ConfigProperty.getProperty(VDL2ConfigProperties.TC_FILE, stack);
-				tc = File.getNonSingletonInstance(prop);
+				tc = new TCCache(File.getNonSingletonInstance(prop));
 				stack.firstFrame().setVar(TC, tc);
 			}
 			return tc;
 		}
 	}
 }
-
-
-
