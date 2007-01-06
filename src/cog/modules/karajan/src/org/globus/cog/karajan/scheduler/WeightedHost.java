@@ -20,19 +20,21 @@ public class WeightedHost implements Comparable {
 	private double tscore;
 	private int load;
 	private double delayedDelta;
+	private int jobThrottle;
 
-	public WeightedHost(BoundContact contact) {
-		this(contact, 0.0);
+	public WeightedHost(BoundContact contact, int jobThrottle) {
+		this(contact, 0.0, jobThrottle);
 	}
 
-	public WeightedHost(BoundContact contact, double score) {
-		this(contact, score, 0);
+	public WeightedHost(BoundContact contact, double score, int jobThrottle) {
+		this(contact, score, 0, jobThrottle);
 	}
-	
-	public WeightedHost(BoundContact contact, double score, int load) {
+
+	public WeightedHost(BoundContact contact, double score, int load, int jobThrottle) {
 		this.host = contact;
 		setScore(score);
 		this.load = load;
+		this.jobThrottle = jobThrottle;
 	}
 
 	protected void setScore(double score) {
@@ -41,11 +43,11 @@ public class WeightedHost implements Comparable {
 	}
 
 	public static final double T = 100;
-	public static final double B = 2.0*Math.log(T)/Math.PI;
+	public static final double B = 2.0 * Math.log(T) / Math.PI;
 	public static final double C = 0.2;
 
 	public double smooth(double score) {
-		return Math.exp(B*Math.atan(C*score));
+		return Math.exp(B * Math.atan(C * score));
 	}
 
 	public final double getScore() {
@@ -99,7 +101,8 @@ public class WeightedHost implements Comparable {
 	}
 
 	public String toString() {
-		return host.toString() + ":" + D4.format(score) + "(" + D4.format(tscore) + "):"+load;
+		return host.toString() + ":" + D4.format(score) + "(" + D4.format(tscore) + "):" + load
+				+ "/" + (int)(jobThrottle * tscore + 2) + (isOverloaded() ? " overloaded" : "");
 	}
 
 	public int compareTo(Object o) {
@@ -121,6 +124,12 @@ public class WeightedHost implements Comparable {
 	public void setDelayedDelta(double delayedDelta) {
 		this.delayedDelta = delayedDelta;
 	}
-	
-	
+
+	public boolean isOverloaded() {
+		return !(load < jobThrottle * tscore + 2);
+	}
+
+	public int getJobThrottle() {
+		return jobThrottle;
+	}
 }
