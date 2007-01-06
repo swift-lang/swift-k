@@ -1,3 +1,10 @@
+(01/06/07)
+
+*** Added a cache around the Pegasus TC file implementation.
+
+*** Added vdl:log as a wrapper around log4j.
+
+
 (01/04/07)
 
 *** Added a simple clustering mechanism for small jobs.
