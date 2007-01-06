@@ -1,3 +1,11 @@
+(01/06/2007)
+
+*** Improvements to scheduler performance.
+
+*** Some fixes to a problem with task events.
+
+*** Fixed the weighted host scheduler locking up.
+
 (12/30/2006)
 
 *** Began simplifying the way karajan exceptions are implemented.
