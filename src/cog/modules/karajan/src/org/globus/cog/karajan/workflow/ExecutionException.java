@@ -76,20 +76,20 @@ public class ExecutionException extends Exception {
 				((ExecutionException) cause).toString(sb);
 			}
 			else {
-				if (cause instanceof ClassCastException || cause instanceof NullPointerException) {
-					CharArrayWriter caw = new CharArrayWriter();
-					cause.printStackTrace(new PrintWriter(caw));
-					sb.append(caw.toString());
-				}
-				else {
-					appendJavaException(sb, cause);
-				}
+				appendJavaException(sb, cause);
 			}
 		}
 	}
-	
+
 	private void appendJavaException(StringBuffer sb, Throwable cause) {
-		sb.append(cause.toString());
+		if (cause instanceof ClassCastException || cause instanceof NullPointerException) {
+			CharArrayWriter caw = new CharArrayWriter();
+			cause.printStackTrace(new PrintWriter(caw));
+			sb.append(caw.toString());
+		}
+		else {
+			sb.append(cause.toString());
+		}
 		if (cause.getCause() != null) {
 			sb.append("\nCaused by: ");
 			appendJavaException(sb, cause.getCause());
