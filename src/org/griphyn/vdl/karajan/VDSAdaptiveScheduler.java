@@ -25,7 +25,6 @@ import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.transformation.File;
 import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.util.FQN;
@@ -35,7 +34,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 
 	private static Timer timer;
 
-	private TransformationCatalog tc;
+	private TCCache tc;
 	private Queue dq;
 	private int clusteringQueueDelay = 1;
 	private int minClusterTime = 60;
@@ -64,7 +63,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 
 	public void setProperty(String name, Object value) {
 		if (PROP_TC_FILE.equals(name)) {
-			tc = File.getNonSingletonInstance((String) value);
+			tc = new TCCache(File.getNonSingletonInstance((String) value));
 			this.setConstraintChecker(new TCChecker(tc));
 			this.addTaskTransformer(new VDSTaskTransformer(tc));
 		}
@@ -332,9 +331,9 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 	}
 
 	public static class TCChecker implements ResourceConstraintChecker {
-		private TransformationCatalog tc;
+		private TCCache tc;
 
-		public TCChecker(TransformationCatalog tc) {
+		public TCChecker(TCCache tc) {
 			this.tc = tc;
 		}
 
@@ -342,7 +341,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 			if (isPresent("trfqn", tc)) {
 				FQN tr = (FQN) tc.getConstraint("trfqn");
 				try {
-					List l = this.tc.getTCEntries(tr.getNamespace(), tr.getName(), tr.getVersion(),
+					List l = this.tc.getTCEntries(tr,
 							resource.getHost(), TCType.INSTALLED);
 					if (l == null || l.isEmpty()) {
 						return false;

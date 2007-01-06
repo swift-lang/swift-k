@@ -17,8 +17,8 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
+import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.util.FQN;
 
 public class TCProfile extends VDLFunction {
@@ -45,7 +45,7 @@ public class TCProfile extends VDLFunction {
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
-		TransformationCatalog tc = getTC(stack);
+		TCCache tc = getTC(stack);
 		String tr = TypeUtil.toString(PA_TR.getValue(stack));
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
 		FQN fqn = new FQN(tr);

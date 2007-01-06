@@ -20,7 +20,6 @@ import org.globus.cog.karajan.scheduler.TaskTransformer;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.catalog.transformation.Mapper;
 import org.griphyn.common.classes.TCType;
@@ -37,7 +36,7 @@ public class VDSTaskTransformer implements TaskTransformer {
 		this.impl = new MapperTransformer(tcmapper);
 	}
 
-	public VDSTaskTransformer(TransformationCatalog tc) {
+	public VDSTaskTransformer(TCCache tc) {
 		this.impl = new TCTransformer(tc);
 	}
 
@@ -163,10 +162,10 @@ public class VDSTaskTransformer implements TaskTransformer {
 	}
 
 	public static class TCTransformer extends AbstractTransformer {
-		private TransformationCatalog tc;
+		private TCCache tc;
 		private Set warnset = new HashSet();
 
-		public TCTransformer(TransformationCatalog tc) {
+		public TCTransformer(TCCache tc) {
 			this.tc = tc;
 		}
 
@@ -177,8 +176,7 @@ public class VDSTaskTransformer implements TaskTransformer {
 			FQN fqn = new FQN(spec.getExecutable());
 			List l;
 			try {
-				l = tc.getTCEntries(fqn.getNamespace(), fqn.getName(), fqn.getVersion(),
-						bc.getHost(), TCType.INSTALLED);
+				l = tc.getTCEntries(fqn, bc.getHost(), TCType.INSTALLED);
 			}
 			catch (Exception e) {
 				throw new KarajanRuntimeException(e);
