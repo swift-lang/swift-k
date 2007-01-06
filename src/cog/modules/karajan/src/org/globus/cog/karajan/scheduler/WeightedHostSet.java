@@ -21,6 +21,7 @@ public class WeightedHostSet {
 	private Map weightedHosts;
 	private double sum;
 	private double scoreHighCap;
+	private int overloadedCount;
 
 	public WeightedHostSet(double scoreHighCap) {
 		init();
@@ -33,28 +34,38 @@ public class WeightedHostSet {
 		sum = 0;
 	}
 
-	public synchronized void add(WeightedHost wh) {
+	public void add(WeightedHost wh) {
 		scores.add(wh);
 		weightedHosts.put(wh.getHost(), wh);
 		sum += wh.getTScore();
+		overloadedCount += wh.isOverloaded() ? 1 : 0;
 	}
 
-	public synchronized void changeScore(WeightedHost wh, double newScore) {
+	public void changeScore(WeightedHost wh, double newScore) {
 		scores.remove(wh);
 		sum -= wh.getTScore();
-		WeightedHost nwh = new WeightedHost(wh.getHost(), newScore, wh.getLoad());
-		weightedHosts.put(wh.getHost(), nwh);
-		scores.add(nwh);
-		sum += nwh.getTScore();
+		overloadedCount -= wh.isOverloaded() ? 1 : 0;
+		wh.setScore(newScore);
+		weightedHosts.put(wh.getHost(), wh);
+		scores.add(wh);
+		sum += wh.getTScore();
+		overloadedCount += wh.isOverloaded() ? 1 : 0;
 	}
 
-	public synchronized double remove(WeightedHost wh) {
+	public void changeLoad(WeightedHost wh, int dl) {
+		overloadedCount -= wh.isOverloaded() ? 1 : 0;
+		wh.changeLoad(dl);
+		overloadedCount += wh.isOverloaded() ? 1 : 0;
+	}
+
+	public double remove(WeightedHost wh) {
 		scores.remove(wh);
 		weightedHosts.remove(wh.getHost());
 		sum -= wh.getScore();
+		overloadedCount -= wh.isOverloaded() ? 1 : 0;
 		return wh.getScore();
 	}
-	
+
 	public WeightedHost findHost(BoundContact bc) {
 		return (WeightedHost) weightedHosts.get(bc);
 	}
@@ -63,6 +74,7 @@ public class WeightedHostSet {
 		final Iterator it = scores.iterator();
 		return new Iterator() {
 			private WeightedHost last;
+
 			public boolean hasNext() {
 				return it.hasNext();
 			}
@@ -91,29 +103,15 @@ public class WeightedHostSet {
 		return sum;
 	}
 
-	protected synchronized void normalize(double target) {
-		double prod = 1;
-		Iterator i = scores.iterator();
-		while (i.hasNext()) {
-			WeightedHost wh = (WeightedHost) i.next();
-			prod *= wh.getScore();
-		}
-		double geomAvg = Math.pow(prod, target / scores.size());
-		double renormalizationFactor = 1 / geomAvg;
-		i = scores.iterator();
-		scores = new TreeSet();
-		while (i.hasNext()) {
-			WeightedHost wh = (WeightedHost) i.next();
-			WeightedHost nwh = new WeightedHost(wh.getHost(), wh.getScore() * renormalizationFactor);
-			add(nwh);
-		}
-	}
-
 	public boolean isEmpty() {
 		return scores.isEmpty();
 	}
 
 	public String toString() {
 		return scores.toString();
+	}
+
+	public boolean allOverloaded() {
+		return overloadedCount == weightedHosts.size();
 	}
 }
