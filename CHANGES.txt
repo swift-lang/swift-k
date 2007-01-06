@@ -4,6 +4,9 @@
 
 *** Added vdl:log as a wrapper around log4j.
 
+*** Fixed an issue in the cleanup with the same file being
+    deleted multiple times concurrently.
+
 
 (01/04/07)
 
