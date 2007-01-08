@@ -422,7 +422,7 @@ $endif$
 
 operator ::= [
   "+":"sum",
-  "-":"substraction",
+  "-":"subtraction",
   "*":"product",
   "/":"quotient",
   "%":"remainder",
