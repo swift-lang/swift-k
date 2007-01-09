@@ -213,7 +213,14 @@ public abstract class AbstractDataNode implements DSHandle {
 			throw new IllegalArgumentException(this + " is already assigned with a value of "
 					+ value);
 		}
-		this.value = value;
+		Object leafValue = value;
+		if (getType().equals("int")) {
+			if (value instanceof Double ) {
+				leafValue = new Integer(((Double)value).intValue());
+			}
+		}
+		
+		this.value = leafValue;
 	}
 
 	public void commit() {
