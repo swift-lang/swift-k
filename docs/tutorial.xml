@@ -446,6 +446,14 @@ vdlrun q1.kml graph > graph.text.dot
 	</simplelist>
 </para>
 
+<para>
+	<simplelist>
+		<member>DO NOT put functions invocations as actual arguments for procedures</member>
+		<member>Put ITERATION loops in procedures, when they produce ARRAY outputs</member>
+	</simplelist>
+</para>
+
+
 </sect1>
 </article>
 
