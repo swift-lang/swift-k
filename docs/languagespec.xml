@@ -666,7 +666,7 @@
 <sect1>
   <title>Datasets</title>
   <para>VDL provides a logical programming model for data Grids. A VDL program consists of procedure calls that operate on data items. VDL provides the level of abstraction such that operations can be specified on a data item without regard to its physical location or representation. Within the VDL logical space, a data item is called a <emphasis>data object</emphasis>, and its physical counterpart is called a <emphasis>dataset</emphasis>.</para><para>A <emphasis>d</emphasis><emphasis>ataset</emphasis> is a data item that has persistent physical storage. Datasets have both logical representations and physical representations. A dataset&#x2019;s logical structure is declared using VDL type definition, where its physical representation describes how the dataset is physically stored and cataloged on persistent storage.</para><para>A VDL program specifies the operations on a dataset&#x2019;s logical structure. The physical dataset is accessed via a mapper, which translates between the physical, persistent structure of the dataset and its logical representation.</para><para>A physical dataset is referenced via a <emphasis>dataset handle</emphasis>, which contains name, type, and mapping information. The name of the dataset handle uniquely identifies the dataset; the type information specifies the logical type the dataset conforms to; and the mapping information comprises the name of a <emphasis>mapping descriptor</emphasis> and the necessary parameters to the mapper.  A dataset handle builds the connection between a data object and its corresponding physical dataset.</para>
-  <para>The declaration of a dataset handle is defined in Section link linkend='sect10_4_2' endterm="sect10_4_2.title"/></para>
+  <para>The declaration of a dataset handle is defined in Section <link linkend='sect10_4_2' endterm="sect10_4_2.title"/></para>
 </sect1>
 
 <sect1>
@@ -700,7 +700,7 @@
   
   <sect2>
   <title>Dataset-bound variable</title>
-  <para>When a variable is associated with a dataset, i.e. it holds the dataset handle of that dataset; it is also called a dataset-bound variable. A dataset-bound variable usually has an associated mapping specification, for details, please look at Section link linkend='sect10_4_2' endterm="sect10_4_2.title"/></para>
+  <para>When a variable is associated with a dataset, i.e. it holds the dataset handle of that dataset; it is also called a dataset-bound variable. A dataset-bound variable usually has an associated mapping specification, for details, please look at Section <link linkend='sect10_4_2' endterm="sect10_4_2.title"/></para>
   </sect2>
   
   <sect2>
@@ -1299,7 +1299,7 @@
   <title>Statements</title>
   
   <sect2 id="sect10_1">
-  <title>Namespace Statement</title>
+  <title id="Namespace Statement">Namespace Statement</title>
   <para>The namespace statement MUST appear at the very beginning of a VDL program, and the namespace must be unique. It serves similar purpose as a Java package definition, so that the type definitions and procedure definitions defined in this namespace would not collide with others defined outside. The syntax for namespace definition is as follows:</para><para>&#x201C;<emphasis role="bold">namespace</emphasis>&#x201D;  (<emphasis>prefix</emphasis>)?<emphasis/><emphasis> &#x2018;&#x201C;&#x2019;  </emphasis><emphasis>uri</emphasis><emphasis>  &#x2018;&#x201D;&#x2019;  </emphasis>(<emphasis>&#x2018;;&#x2019;</emphasis>)?</para><para><emphasis>prefix</emphasis> is the abbreviation of the namespace denoted by <emphasis>uri</emphasis>. If prefix is ommitted, then the namespace is regarded as the default namespace. If a default namespace is not defined in the program, it assumes the value</para>
   <para>&#x201C;http://www.griphyn.org/vds/2006/08/nonamespace&#x201D;</para>
   <para>Some examples:</para>
@@ -1555,7 +1555,7 @@
   </sect3>
   
   <sect3 id="sect10_4_2">
-  <title>Dataset Declaration </title>
+  <title id="Dataset Declaration">Dataset Declaration </title>
   <para>A physical dataset is referenced by a <emphasis>dataset handle</emphasis>, which contains name, type and mapping information of the dataset.</para>
   <informaltable>
   <tgroup cols="3">
