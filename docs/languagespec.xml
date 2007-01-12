@@ -1270,11 +1270,11 @@
   
   <sect2>
   <title>Operators</title>
-  <para>Operators in an expression indicate what kind of operations to apply to the operands. Currently we support assignment operator, arithmetic operators and relational operators. </para>
+  <para>Operators in an expression indicate what kind of operations to apply to the operands. Currently we support an assignment operator, arithmetic operators and relational operators. </para>
   
   <sect3>
   <title>Assignment Operators</title>
-  <para>The assignment operator = assigns the value of the right operand to a left operand. The left operand must be a variable reference.</para>
+  <para>The assignment operator = assigns the value of the right operand to the left operand. The left operand must be a variable reference.</para>
   </sect3>
   
   <sect3>
