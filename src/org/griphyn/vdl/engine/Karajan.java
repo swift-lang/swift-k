@@ -695,7 +695,7 @@ public class Karajan {
 				} else
 				if (declName.equals("dataset")) {
 					if (declST.getAttribute("name").equals(name)) {
-						markDatasetParam(declST, isInput);
+						markDatasetParam(declST, st, isInput);
 						return;
 					}
 				}
@@ -727,7 +727,7 @@ public class Karajan {
 					} else
 					if (declName.equals("dataset")) {
 						if (declST.getAttribute("name").equals(name)) {
-							markDatasetParam(declST, isInput);
+							markDatasetParam(declST, st, isInput);
 							return;
 						}
 					}
@@ -804,7 +804,25 @@ public class Karajan {
 		}
 	}
 
-	protected void markDatasetParam(StringTemplate datasetST, boolean isInput) {
+	protected void markFunction(StringTemplate funcST, StringTemplate st) {
+		// mark all the dataset references in a function as input
+		Object expr = funcST.getAttribute("expr");
+		if (expr == null)
+			return;
+		
+		if (expr instanceof StringTemplate) {
+			StringTemplate exprST = (StringTemplate) expr;
+			markDataset(exprST, st, true);
+		} else {
+			// a list of functions
+			Iterator it = ((List) expr).iterator();
+			while (it.hasNext()) {
+				StringTemplate subFuncST = (StringTemplate) it.next();
+				markFunction(subFuncST, st);
+			}
+		}
+	}
+	protected void markDatasetParam(StringTemplate datasetST, StringTemplate st, boolean isInput) {
 		if (datasetST == null)
 			return;
 
@@ -830,6 +848,17 @@ public class Karajan {
 						paramST.setAttribute("value", new Boolean(false));
 					}
 					return;
+				} else {
+					// always try to mark references at the RHS of a mapper as input
+					StringTemplate exprST = (StringTemplate)paramST.getAttribute("expr");
+					if (exprST != null) {
+						markDataset(exprST, st, true);
+					} else {
+						StringTemplate funcST = (StringTemplate)paramST.getAttribute("func");
+						if (funcST != null) {
+							markFunction(funcST, st);
+						}
+					}
 				}
 			}
 			else {
@@ -837,12 +866,27 @@ public class Karajan {
 				Iterator it = ((List) params).iterator();
 				while (it.hasNext()) {
 					StringTemplate paramST = (StringTemplate) it.next();
+					boolean foundInput = false;
 					if (paramST.getAttribute("name").equals("input")) {
 						if (!isInput) {
 							// mark as false
 							paramST.removeAttribute("value");
 							paramST.setAttribute("value", new Boolean(false));
 						}
+						foundInput = true;
+					} else {
+						// always try to mark references at the RHS of a mapper as input
+						StringTemplate exprST = (StringTemplate)paramST.getAttribute("expr");
+						if (exprST != null) {
+							markDataset(exprST, st, true);
+						} else {
+							StringTemplate funcST = (StringTemplate)paramST.getAttribute("func");
+							if (funcST != null) {
+								markFunction(funcST, st);
+							}
+						}
+					}
+					if (foundInput) {
 						return;
 					}
 				}
