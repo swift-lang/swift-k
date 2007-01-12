@@ -2,14 +2,14 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
 
 <article>
-	<articleinfo revision="0.6">
-		<title>Virtual Data Language Reference Manual</title>
-		<subtitle>Document Version: 0.6</subtitle>
-		<author>
-			<firstname>Yong</firstname>
-			<surname>Zhao</surname>
-		</author>
-	</articleinfo>
+    <articleinfo revision="0.6">
+        <title>Virtual Data Language Reference Manual</title>
+        <subtitle>Document Version: 0.6</subtitle>
+        <author>
+            <firstname>Yong</firstname>
+            <surname>Zhao</surname>
+        </author>
+    </articleinfo>
 
 <toc>
   <tocchap>
@@ -24,194 +24,194 @@
          <tocentry pagenum="3">Comments</tocentry>
      </toclevel1>
      <toclevel1>
-	     <tocentry pagenum="3">Identifiers</tocentry>
-	 </toclevel1>
-	 <toclevel1>
-	     <tocentry pagenum="3">Keywords</tocentry>
-	 </toclevel1>
-	 <toclevel1>
-	     <tocentry pagenum="3">Literals</tocentry>
-	     <toclevel2>
-	     	<tocentry pagenum="4">Integer literals</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="4">Float literals</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="4">Boolean literals</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="4">Date literals</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="5">String literals</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="5">XML literals</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="5">URI literals</tocentry>
-	     </toclevel2>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="5">Operators and Separators</tocentry>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="5">Type Definitions</tocentry>
-	     <toclevel2>
-	     	<tocentry pagenum="5">Primitive types</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="5">Composite types</tocentry>
-	     	<toclevel3>
-		     	<tocentry pagenum="5">Arrays</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="5">Structs</tocentry>
-		    </toclevel3>
-	     </toclevel2>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="6">Datasets</tocentry>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="6">Mapping</tocentry>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="6">Variables</tocentry>
-	     <toclevel2>
-	     	<tocentry pagenum="7">Global variables</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="7">Local variables</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="7">Dataset-bound variable</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="7">Scopes</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="7">Variable references</tocentry>
-	     </toclevel2>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="7">Procedure Definitions</tocentry>
-	     <toclevel2>
-	     	<tocentry pagenum="8">Atomic procedure body</tocentry>
-	     	<toclevel3>
-		     	<tocentry pagenum="8">Application procedure body</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="9">Service procedure body</tocentry>
-		    </toclevel3>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="9">Compound procedure body</tocentry>
-	     </toclevel2>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="9">Expressions</tocentry>
-	     <toclevel2>
-	     	<tocentry pagenum="9">Primary Expressions</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="10">Operators</tocentry>
-	     	<toclevel3>
-		     	<tocentry pagenum="10">Assignment Operators</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="10">Arithmetic Operators</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="11">Relational Operators</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="11">Boolean Expressions</tocentry>
-		    </toclevel3>
-	     </toclevel2>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="11">Statements</tocentry>
-	     <toclevel2>
-	     	<tocentry pagenum="11">Namespace Statement</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="11">Include Statements</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="11">Type Definitions</tocentry>
-	     	<toclevel3>
-		     	<tocentry pagenum="12">Type Specifiers</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="12">Struct Declarations</tocentry>
-		    </toclevel3>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="12">Declaration Statements</tocentry>
-		    <toclevel3>
-		     	<tocentry pagenum="12">Local Variable Declaration</tocentry>
-		    </toclevel3>
-		    <toclevel3>
-		     	<tocentry pagenum="13">Dataset Declaration</tocentry>
-		    </toclevel3>
-		 </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="13">Selection Statements</tocentry>
-	     	<toclevel3>
-		     	<tocentry pagenum="13">The if statement</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="14">The switch statement</tocentry>
-		    </toclevel3>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="14">Loop statements</tocentry>
-	     	<toclevel3>
-		     	<tocentry pagenum="14">The foreach statement</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="14">The while statement</tocentry>
-		    </toclevel3>
-	     	<toclevel3>
-		     	<tocentry pagenum="15">The repeat statement</tocentry>
-		    </toclevel3>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="15">The break statement</tocentry>
-	     </toclevel2>
-	     <toclevel2>
-	     	<tocentry pagenum="15">The continue statement</tocentry>
-	     </toclevel2>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="15">Examples</tocentry>
-	  </toclevel1>
-	</tocchap>
-	<tocchap>
-	  <toclevel1>
-	     <tocentry pagenum="15">Extensions to consider</tocentry>
-	  </toclevel1>
-	</tocchap>
+         <tocentry pagenum="3">Identifiers</tocentry>
+     </toclevel1>
+     <toclevel1>
+         <tocentry pagenum="3">Keywords</tocentry>
+     </toclevel1>
+     <toclevel1>
+         <tocentry pagenum="3">Literals</tocentry>
+         <toclevel2>
+             <tocentry pagenum="4">Integer literals</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="4">Float literals</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="4">Boolean literals</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="4">Date literals</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="5">String literals</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="5">XML literals</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="5">URI literals</tocentry>
+         </toclevel2>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="5">Operators and Separators</tocentry>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="5">Type Definitions</tocentry>
+         <toclevel2>
+             <tocentry pagenum="5">Primitive types</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="5">Composite types</tocentry>
+             <toclevel3>
+                 <tocentry pagenum="5">Arrays</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="5">Structs</tocentry>
+            </toclevel3>
+         </toclevel2>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="6">Datasets</tocentry>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="6">Mapping</tocentry>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="6">Variables</tocentry>
+         <toclevel2>
+             <tocentry pagenum="7">Global variables</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="7">Local variables</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="7">Dataset-bound variable</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="7">Scopes</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="7">Variable references</tocentry>
+         </toclevel2>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="7">Procedure Definitions</tocentry>
+         <toclevel2>
+             <tocentry pagenum="8">Atomic procedure body</tocentry>
+             <toclevel3>
+                 <tocentry pagenum="8">Application procedure body</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="9">Service procedure body</tocentry>
+            </toclevel3>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="9">Compound procedure body</tocentry>
+         </toclevel2>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="9">Expressions</tocentry>
+         <toclevel2>
+             <tocentry pagenum="9">Primary Expressions</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="10">Operators</tocentry>
+             <toclevel3>
+                 <tocentry pagenum="10">Assignment Operators</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="10">Arithmetic Operators</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="11">Relational Operators</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="11">Boolean Expressions</tocentry>
+            </toclevel3>
+         </toclevel2>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="11">Statements</tocentry>
+         <toclevel2>
+             <tocentry pagenum="11">Namespace Statement</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="11">Include Statements</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="11">Type Definitions</tocentry>
+             <toclevel3>
+                 <tocentry pagenum="12">Type Specifiers</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="12">Struct Declarations</tocentry>
+            </toclevel3>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="12">Declaration Statements</tocentry>
+            <toclevel3>
+                 <tocentry pagenum="12">Local Variable Declaration</tocentry>
+            </toclevel3>
+            <toclevel3>
+                 <tocentry pagenum="13">Dataset Declaration</tocentry>
+            </toclevel3>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="13">Selection Statements</tocentry>
+             <toclevel3>
+                 <tocentry pagenum="13">The if statement</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="14">The switch statement</tocentry>
+            </toclevel3>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="14">Loop statements</tocentry>
+             <toclevel3>
+                 <tocentry pagenum="14">The foreach statement</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="14">The while statement</tocentry>
+            </toclevel3>
+             <toclevel3>
+                 <tocentry pagenum="15">The repeat statement</tocentry>
+            </toclevel3>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="15">The break statement</tocentry>
+         </toclevel2>
+         <toclevel2>
+             <tocentry pagenum="15">The continue statement</tocentry>
+         </toclevel2>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="15">Examples</tocentry>
+      </toclevel1>
+    </tocchap>
+    <tocchap>
+      <toclevel1>
+         <tocentry pagenum="15">Extensions to consider</tocentry>
+      </toclevel1>
+    </tocchap>
 </toc>
 
 <sect1>
@@ -246,343 +246,343 @@
 <title>Lexical structure</title>
 <para>Lexical tokens follow the conventions of the C programming language. Specifically, there are five different tokens: identifiers, keywords, literals, operators, and other separators. White space (spaces, tabs, newlines) and comments are used to separate tokens and are ignored.</para>
    <sect2>
-	   <title>Comments</title>
-	   <para>The characters # or // starts a comment, which terminates when a newline is encountered. The C style /* and */ pair are used for multi-line comments.  For example:</para>
-	   <programlisting>// this is a single-line comment</programlisting>
-	   <programlisting># this is another single-line comment </programlisting>
-	   <programlisting>
+       <title>Comments</title>
+       <para>The characters # or // starts a comment, which terminates when a newline is encountered. The C style /* and */ pair are used for multi-line comments.  For example:</para>
+       <programlisting>// this is a single-line comment</programlisting>
+       <programlisting># this is another single-line comment </programlisting>
+       <programlisting>
 /* multi-line comment line 1
    multi-line comment line 2 */
-	   </programlisting>
+       </programlisting>
    </sect2>
 
-	<sect2>
-	<title>Identifiers</title>
-	<para>An identifier starts with an alphabetic character (&#x2018;a&#x2019;-&#x2018;z&#x2019;, &#x2018;A&#x2019;-&#x2018;Z&#x2019;, &#x2018;_&#x2019;), after which there can be arbitrary number of letters or digits. Identifiers are case sensitive, meaning upper case letters are different from lower case ones. An identifier is used to represent the name of a variable, a procedure, a procedure argument, etc, which we&#x2019;ll talk in detail in later sections.</para>
-	<informaltable>
-	  <tgroup cols="3">
-	    <colspec colnum="1" colname="col1" colwidth="48.15pt"/>
-	    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
-	    <colspec colnum="3" colname="col3" colwidth="139.35pt"/>
-	    <tbody>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">identifier</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>(</emphasis>
-	          <emphasis>letter</emphasis>
-	          <emphasis>|&#x2018;_&#x2019;) (</emphasis>
-	          <emphasis>letter</emphasis>
-	          <emphasis> | </emphasis>
-	          <emphasis>digit</emphasis>
-	          <emphasis> | &#x2018;_&#x2019;)*</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">letter</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>lowercase</emphasis>
-	          <emphasis> | </emphasis>
-	          <emphasis>uppercase</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">lowercase</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>&#x2018;a</emphasis>
-	          <emphasis>&#x2019;</emphasis>
-	          <emphasis> .. &#x2018;z</emphasis>
-	          <emphasis>&#x2019;</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">uppercase</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>&#x2018;A</emphasis>
-	          <emphasis>&#x2019;</emphasis>
-	          <emphasis> .. &#x2018;Z</emphasis>
-	          <emphasis>&#x2019;</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">digit</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>&#x2018;0</emphasis>
-	          <emphasis>&#x2019;</emphasis>
-	          <emphasis> .. &#x2018;9</emphasis>
-	          <emphasis>&#x2019;</emphasis>
-	        </entry>
-	      </row>
-	    </tbody>
-	  </tgroup>
-	</informaltable>
-	</sect2>
+    <sect2>
+    <title>Identifiers</title>
+    <para>An identifier starts with an alphabetic character (&#x2018;a&#x2019;-&#x2018;z&#x2019;, &#x2018;A&#x2019;-&#x2018;Z&#x2019;, &#x2018;_&#x2019;), after which there can be arbitrary number of letters or digits. Identifiers are case sensitive, meaning upper case letters are different from lower case ones. An identifier is used to represent the name of a variable, a procedure, a procedure argument, etc, which we&#x2019;ll talk in detail in later sections.</para>
+    <informaltable>
+      <tgroup cols="3">
+        <colspec colnum="1" colname="col1" colwidth="48.15pt"/>
+        <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+        <colspec colnum="3" colname="col3" colwidth="139.35pt"/>
+        <tbody>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">identifier</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>(</emphasis>
+              <emphasis>letter</emphasis>
+              <emphasis>|&#x2018;_&#x2019;) (</emphasis>
+              <emphasis>letter</emphasis>
+              <emphasis> | </emphasis>
+              <emphasis>digit</emphasis>
+              <emphasis> | &#x2018;_&#x2019;)*</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">letter</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>lowercase</emphasis>
+              <emphasis> | </emphasis>
+              <emphasis>uppercase</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">lowercase</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>&#x2018;a</emphasis>
+              <emphasis>&#x2019;</emphasis>
+              <emphasis> .. &#x2018;z</emphasis>
+              <emphasis>&#x2019;</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">uppercase</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>&#x2018;A</emphasis>
+              <emphasis>&#x2019;</emphasis>
+              <emphasis> .. &#x2018;Z</emphasis>
+              <emphasis>&#x2019;</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">digit</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>&#x2018;0</emphasis>
+              <emphasis>&#x2019;</emphasis>
+              <emphasis> .. &#x2018;9</emphasis>
+              <emphasis>&#x2019;</emphasis>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    </sect2>
 
-	<sect2>
-	  <title>Keywords</title>
-	  <para>Keywords are identifiers that are reserved for system use, and may not be used otherwise. We have reserved the following identifiers for type declarations and control statements:</para>
-	  <para>
-	  <emphasis role="bold">int</emphasis>
-	  <emphasis role="bold">float</emphasis>
-	  <emphasis role="bold">string</emphasis>
-	  <emphasis role="bold"/>
-	</para><para>
-	  <emphasis role="bold">date</emphasis>
-	  <emphasis role="bold">boolean</emphasis>
-	  <emphasis role="bold">uri</emphasis>
-	</para><para>
-	  <emphasis role="bold">any</emphasis>
-	</para><para>
-	  <emphasis role="bold">true</emphasis>
-	  <emphasis role="bold">false</emphasis>
-	  <emphasis role="bold">null</emphasis>
-	</para><para>
-	  <emphasis role="bold">namespace</emphasis>
-	  <emphasis role="bold"/>
-	  <emphasis role="bold">include</emphasis>
-	  <emphasis role="bold">type</emphasis>
-	</para><para>
-	  <emphasis role="bold">if</emphasis>
-	  <emphasis role="bold">else</emphasis>
-	</para><para>
-	  <emphasis role="bold">switch</emphasis>
-	  <emphasis role="bold">case</emphasis>
-	  <emphasis role="bold">default</emphasis>
-	</para><para>
-	  <emphasis role="bold">while</emphasis>
-	</para><para>
-	  <emphasis role="bold">foreach</emphasis>
-	  <emphasis role="bold">in</emphasis>
-	  <emphasis role="bold">step</emphasis>
-	</para><para>
-	  <emphasis role="bold">repeat</emphasis>
-	  <emphasis role="bold">until</emphasis>
-	</para>
-	</sect2>
+    <sect2>
+      <title>Keywords</title>
+      <para>Keywords are identifiers that are reserved for system use, and may not be used otherwise. We have reserved the following identifiers for type declarations and control statements:</para>
+      <para>
+      <emphasis role="bold">int</emphasis>
+      <emphasis role="bold">float</emphasis>
+      <emphasis role="bold">string</emphasis>
+      <emphasis role="bold"/>
+    </para><para>
+      <emphasis role="bold">date</emphasis>
+      <emphasis role="bold">boolean</emphasis>
+      <emphasis role="bold">uri</emphasis>
+    </para><para>
+      <emphasis role="bold">any</emphasis>
+    </para><para>
+      <emphasis role="bold">true</emphasis>
+      <emphasis role="bold">false</emphasis>
+      <emphasis role="bold">null</emphasis>
+    </para><para>
+      <emphasis role="bold">namespace</emphasis>
+      <emphasis role="bold"/>
+      <emphasis role="bold">include</emphasis>
+      <emphasis role="bold">type</emphasis>
+    </para><para>
+      <emphasis role="bold">if</emphasis>
+      <emphasis role="bold">else</emphasis>
+    </para><para>
+      <emphasis role="bold">switch</emphasis>
+      <emphasis role="bold">case</emphasis>
+      <emphasis role="bold">default</emphasis>
+    </para><para>
+      <emphasis role="bold">while</emphasis>
+    </para><para>
+      <emphasis role="bold">foreach</emphasis>
+      <emphasis role="bold">in</emphasis>
+      <emphasis role="bold">step</emphasis>
+    </para><para>
+      <emphasis role="bold">repeat</emphasis>
+      <emphasis role="bold">until</emphasis>
+    </para>
+    </sect2>
 
-	<sect2>
-	  <title>Literals</title>
-	  <para>VDL <emphasis>literals</emphasis> are constant values that are represented as strings in the program. The types and formats of literals are drawn from the set of atomic values defined by XML Schema. The type of a literal value is implicit from its context &#x2013; from the type of the variable that its being assigned to or the type of the procedure parameter that it is being passed to, or the type of value that is expected in a specific position of a statement such as an <emphasis>if</emphasis>, <emphasis>while</emphasis>, or <emphasis>switch</emphasis>.</para><para>Some literal types can be identified without being enclosed in quotes; string literals and similar types based on strings must be enclosed in quotes.</para>
+    <sect2>
+      <title>Literals</title>
+      <para>VDL <emphasis>literals</emphasis> are constant values that are represented as strings in the program. The types and formats of literals are drawn from the set of atomic values defined by XML Schema. The type of a literal value is implicit from its context &#x2013; from the type of the variable that its being assigned to or the type of the procedure parameter that it is being passed to, or the type of value that is expected in a specific position of a statement such as an <emphasis>if</emphasis>, <emphasis>while</emphasis>, or <emphasis>switch</emphasis>.</para><para>Some literal types can be identified without being enclosed in quotes; string literals and similar types based on strings must be enclosed in quotes.</para>
 
-	  <sect3>
-	  <title>Integer literals</title>
-	  <para>An integer literal is a sequence of digits. (We may need to support octal and hexal integer literals too.)</para><informaltable>
-	  <tgroup cols="3">
-	    <colspec colnum="1" colname="col1" colwidth="64.95pt"/>
-	    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
-	    <colspec colnum="3" colname="col3" colwidth="113.55pt"/>
-	    <tbody>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">integer literal</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>nonzerodigit</emphasis>
-	          <emphasis>  </emphasis>
-	          <emphasis>digit</emphasis>
-	          <emphasis>* | &#x2018;0&#x2019;</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">nonzerodigit</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>&#x2018;1&#x2019; .. &#x2018;9&#x2019;</emphasis>
-	        </entry>
-	      </row>
-	    </tbody>
-	  </tgroup>
-	  </informaltable>
-	  </sect3>
+      <sect3>
+      <title>Integer literals</title>
+      <para>An integer literal is a sequence of digits. (We may need to support octal and hexal integer literals too.)</para><informaltable>
+      <tgroup cols="3">
+        <colspec colnum="1" colname="col1" colwidth="64.95pt"/>
+        <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+        <colspec colnum="3" colname="col3" colwidth="113.55pt"/>
+        <tbody>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">integer literal</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>nonzerodigit</emphasis>
+              <emphasis>  </emphasis>
+              <emphasis>digit</emphasis>
+              <emphasis>* | &#x2018;0&#x2019;</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">nonzerodigit</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>&#x2018;1&#x2019; .. &#x2018;9&#x2019;</emphasis>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+      </informaltable>
+      </sect3>
 
-	  <sect3>
-	  <title>Float literals</title>
-	  <para>A float literal has an integer part, a decimal point, a faction part, an <emphasis role="bold">e</emphasis><emphasis role="bold">, </emphasis>and an optionally signed integer exponent. The integer part and the faction part both consist of a sequence of digits, where either (but not both) may be missing. The <emphasis role="bold">e</emphasis> together with the exponent may be missing too.</para><para>Every float literal is considered to be double-precision.</para>
-	  <informaltable>
-	  <tgroup cols="3">
-	    <colspec colnum="1" colname="col1" colwidth="62.55pt"/>
-	    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
-	    <colspec colnum="3" colname="col3" colwidth="134.55pt"/>
-	    <tbody>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">float literal</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>pointfloat</emphasis>
-	          <emphasis> | </emphasis>
-	          <emphasis>exponentfloat</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">pointfloat</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>[</emphasis>
-	          <emphasis>intpart</emphasis>
-	          <emphasis>] </emphasis>
-	          <emphasis>fraction</emphasis>
-	          <emphasis> | </emphasis>
-	          <emphasis>intpart</emphasis>
-	          <emphasis> "."</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">exponentfloat</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>(</emphasis>
-	          <emphasis>intpart</emphasis>
-	          <emphasis> | </emphasis>
-	          <emphasis>pointfloat</emphasis>
-	          <emphasis>) </emphasis>
-	          <emphasis>exponent</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">intpart</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>digit</emphasis>
-	          <emphasis>+</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">fraction</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>"." </emphasis>
-	          <emphasis>digit</emphasis>
-	          <emphasis>+</emphasis>
-	        </entry>
-	      </row>
-	      <row>
-	        <entry>
-	          <emphasis>
-	            <emphasis role="underline">exponent</emphasis>
-	          </emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>::=</emphasis>
-	        </entry>
-	        <entry>
-	          <emphasis>("e" | "E") ["+" | "-"] </emphasis>
-	          <emphasis>digit</emphasis>
-	          <emphasis>+</emphasis>
-	        </entry>
-	      </row>
-	    </tbody>
-	  </tgroup>
-	</informaltable>
-	<para>Examples of float literals are:</para>
-	<programlisting>3.  .14  3.14  3.14e-6  2e100</programlisting>
-	</sect3>
-	
-	<sect3>
-	<title>Boolean literals</title>
-	<para>There are two boolean literals:<emphasis role="bold"> </emphasis><emphasis role="bold">true</emphasis> and <emphasis role="bold">false</emphasis>.</para>
-	</sect3>
-	
-	<sect3>
-	<title>Date literals</title>
-	<para>A date literal is represented in quoted string conforming to ISO-8601 standard, for example:</para>
-	<programlisting>"2005-09-25T11:30:00Z"</programlisting>
-	</sect3>
-	
-	<sect3>
-	<title>String literals</title>
-	<para>A string literal is a sequence of characters surrounded by two double quotes. The special string literal <emphasis role="bold">null</emphasis> is used to represent an uninitialized string. </para>
-	</sect3>
-	
-	<sect3>
-	<title>XML literals</title>
-	<para>XML literals refers to verbatim XML documents. We use @ followed by a string representation of the XML document to denote such literals. For instance:</para>
-	<programlisting>@“<volume><image>b1.img</image><header>b1.hdr</header></volume>”</programlisting>
-	</sect3>
-	
-	<sect3>
-	<title>URI literals</title>
-	<para>An URI literal is a string that conforms to the URI specification &#x2013; IETF RFC 2396. (<ulink url="http://www.ietf.org/rfc/rfc2396.txt">http://www.ietf.org/rfc/rfc2396.txt</ulink>).</para>
-	<para>Example: </para>
-	<programlisting>"http://www.griphyn.org/"</programlisting>
-	</sect3>
+      <sect3>
+      <title>Float literals</title>
+      <para>A float literal has an integer part, a decimal point, a faction part, an <emphasis role="bold">e</emphasis><emphasis role="bold">, </emphasis>and an optionally signed integer exponent. The integer part and the faction part both consist of a sequence of digits, where either (but not both) may be missing. The <emphasis role="bold">e</emphasis> together with the exponent may be missing too.</para><para>Every float literal is considered to be double-precision.</para>
+      <informaltable>
+      <tgroup cols="3">
+        <colspec colnum="1" colname="col1" colwidth="62.55pt"/>
+        <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+        <colspec colnum="3" colname="col3" colwidth="134.55pt"/>
+        <tbody>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">float literal</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>pointfloat</emphasis>
+              <emphasis> | </emphasis>
+              <emphasis>exponentfloat</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">pointfloat</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>[</emphasis>
+              <emphasis>intpart</emphasis>
+              <emphasis>] </emphasis>
+              <emphasis>fraction</emphasis>
+              <emphasis> | </emphasis>
+              <emphasis>intpart</emphasis>
+              <emphasis> "."</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">exponentfloat</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>(</emphasis>
+              <emphasis>intpart</emphasis>
+              <emphasis> | </emphasis>
+              <emphasis>pointfloat</emphasis>
+              <emphasis>) </emphasis>
+              <emphasis>exponent</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">intpart</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>digit</emphasis>
+              <emphasis>+</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">fraction</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>"." </emphasis>
+              <emphasis>digit</emphasis>
+              <emphasis>+</emphasis>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <emphasis>
+                <emphasis role="underline">exponent</emphasis>
+              </emphasis>
+            </entry>
+            <entry>
+              <emphasis>::=</emphasis>
+            </entry>
+            <entry>
+              <emphasis>("e" | "E") ["+" | "-"] </emphasis>
+              <emphasis>digit</emphasis>
+              <emphasis>+</emphasis>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    <para>Examples of float literals are:</para>
+    <programlisting>3.  .14  3.14  3.14e-6  2e100</programlisting>
+    </sect3>
+    
+    <sect3>
+    <title>Boolean literals</title>
+    <para>There are two boolean literals:<emphasis role="bold"> </emphasis><emphasis role="bold">true</emphasis> and <emphasis role="bold">false</emphasis>.</para>
+    </sect3>
+    
+    <sect3>
+    <title>Date literals</title>
+    <para>A date literal is represented in quoted string conforming to ISO-8601 standard, for example:</para>
+    <programlisting>"2005-09-25T11:30:00Z"</programlisting>
+    </sect3>
+    
+    <sect3>
+    <title>String literals</title>
+    <para>A string literal is a sequence of characters surrounded by two double quotes. The special string literal <emphasis role="bold">null</emphasis> is used to represent an uninitialized string. </para>
+    </sect3>
+    
+    <sect3>
+    <title>XML literals</title>
+    <para>XML literals refers to verbatim XML documents. We use @ followed by a string representation of the XML document to denote such literals. For instance:</para>
+    <programlisting>@“<volume><image>b1.img</image><header>b1.hdr</header></volume>”</programlisting>
+    </sect3>
+    
+    <sect3>
+    <title>URI literals</title>
+    <para>An URI literal is a string that conforms to the URI specification &#x2013; IETF RFC 2396. (<ulink url="http://www.ietf.org/rfc/rfc2396.txt">http://www.ietf.org/rfc/rfc2396.txt</ulink>).</para>
+    <para>Example: </para>
+    <programlisting>"http://www.griphyn.org/"</programlisting>
+    </sect3>
   </sect2>
-	
-  <sect2>	
+    
+  <sect2>    
   <title>Operators and Separators</title>
   <para>Operators are used in expressions for operations that involve one or more operands. Separators are for grouping and separation. The operators and separators are as follows:</para>
   <para/>
