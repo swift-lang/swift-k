@@ -1,0 +1,1933 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<article>
+	<articleinfo revision="0.6">
+		<title>Virtual Data Language Reference Manual</title>
+		<subtitle>Document Version: 0.6</subtitle>
+		<author>
+			<firstname>Yong</firstname>
+			<surname>Zhao</surname>
+		</author>
+	</articleinfo>
+
+<toc>
+  <tocchap>
+     <tocentry pagenum="1">Introduction</tocentry>
+  </tocchap>
+  <tocchap>   
+     <tocentry pagenum="3">Namespaces</tocentry>
+  </tocchap>
+  <tocchap>
+     <tocentry pagenum="3">Lexical structure</tocentry>
+     <toclevel1>
+         <tocentry pagenum="3">Comments</tocentry>
+     </toclevel1>
+     <toclevel1>
+	     <tocentry pagenum="3">Identifiers</tocentry>
+	 </toclevel1>
+	 <toclevel1>
+	     <tocentry pagenum="3">Keywords</tocentry>
+	 </toclevel1>
+	 <toclevel1>
+	     <tocentry pagenum="3">Literals</tocentry>
+	     <toclevel2>
+	     	<tocentry pagenum="4">Integer literals</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="4">Float literals</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="4">Boolean literals</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="4">Date literals</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="5">String literals</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="5">XML literals</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="5">URI literals</tocentry>
+	     </toclevel2>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="5">Operators and Separators</tocentry>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="5">Type Definitions</tocentry>
+	     <toclevel2>
+	     	<tocentry pagenum="5">Primitive types</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="5">Composite types</tocentry>
+	     	<toclevel3>
+		     	<tocentry pagenum="5">Arrays</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="5">Structs</tocentry>
+		    </toclevel3>
+	     </toclevel2>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="6">Datasets</tocentry>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="6">Mapping</tocentry>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="6">Variables</tocentry>
+	     <toclevel2>
+	     	<tocentry pagenum="7">Global variables</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="7">Local variables</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="7">Dataset-bound variable</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="7">Scopes</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="7">Variable references</tocentry>
+	     </toclevel2>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="7">Procedure Definitions</tocentry>
+	     <toclevel2>
+	     	<tocentry pagenum="8">Atomic procedure body</tocentry>
+	     	<toclevel3>
+		     	<tocentry pagenum="8">Application procedure body</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="9">Service procedure body</tocentry>
+		    </toclevel3>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="9">Compound procedure body</tocentry>
+	     </toclevel2>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="9">Expressions</tocentry>
+	     <toclevel2>
+	     	<tocentry pagenum="9">Primary Expressions</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="10">Operators</tocentry>
+	     	<toclevel3>
+		     	<tocentry pagenum="10">Assignment Operators</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="10">Arithmetic Operators</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="11">Relational Operators</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="11">Boolean Expressions</tocentry>
+		    </toclevel3>
+	     </toclevel2>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="11">Statements</tocentry>
+	     <toclevel2>
+	     	<tocentry pagenum="11">Namespace Statement</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="11">Include Statements</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="11">Type Definitions</tocentry>
+	     	<toclevel3>
+		     	<tocentry pagenum="12">Type Specifiers</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="12">Struct Declarations</tocentry>
+		    </toclevel3>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="12">Declaration Statements</tocentry>
+		    <toclevel3>
+		     	<tocentry pagenum="12">Local Variable Declaration</tocentry>
+		    </toclevel3>
+		    <toclevel3>
+		     	<tocentry pagenum="13">Dataset Declaration</tocentry>
+		    </toclevel3>
+		 </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="13">Selection Statements</tocentry>
+	     	<toclevel3>
+		     	<tocentry pagenum="13">The if statement</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="14">The switch statement</tocentry>
+		    </toclevel3>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="14">Loop statements</tocentry>
+	     	<toclevel3>
+		     	<tocentry pagenum="14">The foreach statement</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="14">The while statement</tocentry>
+		    </toclevel3>
+	     	<toclevel3>
+		     	<tocentry pagenum="15">The repeat statement</tocentry>
+		    </toclevel3>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="15">The break statement</tocentry>
+	     </toclevel2>
+	     <toclevel2>
+	     	<tocentry pagenum="15">The continue statement</tocentry>
+	     </toclevel2>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="15">Examples</tocentry>
+	  </toclevel1>
+	</tocchap>
+	<tocchap>
+	  <toclevel1>
+	     <tocentry pagenum="15">Extensions to consider</tocentry>
+	  </toclevel1>
+	</tocchap>
+</toc>
+
+<sect1>
+  <title>Introduction</title>
+  <para>VDL is a language for workflow specification in Data Grid environments, in which:</para>
+  <itemizedlist>
+  <listitem>
+    <para>Data lives in files, in a variety of different file system organizations and file formats;</para>
+  </listitem>
+  <listitem>
+    <para>We want to be able to define and compose typed procedures that operate on such data; and</para>
+  </listitem>
+  <listitem>
+    <para>We want to be able to execute these procedures on distributed resources. </para>
+  </listitem>
+</itemizedlist>
+<para>VDL addresses the challenges associated with such environments by defining:</para>
+<itemizedlist>
+  <listitem>a language for describing operations on typed <emphasis>data items</emphasis>; and </listitem>
+  <listitem>mechanisms for binding data items defined in this language to <emphasis>datasets</emphasis> stored on persistent storage.</listitem>
+</itemizedlist>
+<para>The binding between data item and dataset is based on the XDTM (XML dataset typing and mapping) model [ref], which separates the declaration of the logical structure of datasets from their physical representation. The logical structure is specified via a subset of XML Schema, where a physical representation is defined by a mapping descriptor<emphasis>,</emphasis> which describes how each element in the dataset&#x2019;s VDL representation can be mapped to a corresponding physical structure such as a directory, file, or database table.</para><para>This manual documents the XDTM-based VDL, which uses a C-like syntax to represent XML Schema types and procedures. This C-like syntax is easier to read and write than XML, but can easily be mapped to XML. </para>
+</sect1>
+
+<sect1>
+<title>Namespaces</title>
+<para>Since VDL is to be used in Grid environments, the type definitions and procedure definitions can be shared across multiple virtual organizations, groups, and project development stages. Thus namespaces issue is important to address.</para><para>In general, every type definition and procedure definition has an associated namespace. When they are referenced from within another namespace, they must be referenced with their namespace specified explicitly, so as to avoid any confliction with types and procedures defined in the origin namespace.</para><para>If the namespace for a definition is not specified, it uses </para><para>&#x2018;http://www.griphyn.org/vds/2006/08/nonamespace&#x2019; </para><para>as the default namespace. </para><para>A namespace prefix can be defined to represent an XML-style namespace (in the form of a URI or URN), We follow the XML <emphasis>prefix:localname</emphasis> convention and use &#x2018;:&#x2019; as the separator between the namespace and the local name of a definition. Examples of namespace declaration can be found in Section 
+<link linkend='sect10_1' endterm="sect10_1.title"/>.</para>
+</sect1>
+
+<sect1>
+<title>Lexical structure</title>
+<para>Lexical tokens follow the conventions of the C programming language. Specifically, there are five different tokens: identifiers, keywords, literals, operators, and other separators. White space (spaces, tabs, newlines) and comments are used to separate tokens and are ignored.</para>
+   <sect2>
+	   <title>Comments</title>
+	   <para>The characters # or // starts a comment, which terminates when a newline is encountered. The C style /* and */ pair are used for multi-line comments.  For example:</para>
+	   <programlisting>// this is a single-line comment</programlisting>
+	   <programlisting># this is another single-line comment </programlisting>
+	   <programlisting>
+/* multi-line comment line 1
+   multi-line comment line 2 */
+	   </programlisting>
+   </sect2>
+
+	<sect2>
+	<title>Identifiers</title>
+	<para>An identifier starts with an alphabetic character (&#x2018;a&#x2019;-&#x2018;z&#x2019;, &#x2018;A&#x2019;-&#x2018;Z&#x2019;, &#x2018;_&#x2019;), after which there can be arbitrary number of letters or digits. Identifiers are case sensitive, meaning upper case letters are different from lower case ones. An identifier is used to represent the name of a variable, a procedure, a procedure argument, etc, which we&#x2019;ll talk in detail in later sections.</para>
+	<informaltable>
+	  <tgroup cols="3">
+	    <colspec colnum="1" colname="col1" colwidth="48.15pt"/>
+	    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+	    <colspec colnum="3" colname="col3" colwidth="139.35pt"/>
+	    <tbody>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">identifier</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>(</emphasis>
+	          <emphasis>letter</emphasis>
+	          <emphasis>|&#x2018;_&#x2019;) (</emphasis>
+	          <emphasis>letter</emphasis>
+	          <emphasis> | </emphasis>
+	          <emphasis>digit</emphasis>
+	          <emphasis> | &#x2018;_&#x2019;)*</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">letter</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>lowercase</emphasis>
+	          <emphasis> | </emphasis>
+	          <emphasis>uppercase</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">lowercase</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>&#x2018;a</emphasis>
+	          <emphasis>&#x2019;</emphasis>
+	          <emphasis> .. &#x2018;z</emphasis>
+	          <emphasis>&#x2019;</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">uppercase</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>&#x2018;A</emphasis>
+	          <emphasis>&#x2019;</emphasis>
+	          <emphasis> .. &#x2018;Z</emphasis>
+	          <emphasis>&#x2019;</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">digit</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>&#x2018;0</emphasis>
+	          <emphasis>&#x2019;</emphasis>
+	          <emphasis> .. &#x2018;9</emphasis>
+	          <emphasis>&#x2019;</emphasis>
+	        </entry>
+	      </row>
+	    </tbody>
+	  </tgroup>
+	</informaltable>
+	</sect2>
+
+	<sect2>
+	  <title>Keywords</title>
+	  <para>Keywords are identifiers that are reserved for system use, and may not be used otherwise. We have reserved the following identifiers for type declarations and control statements:</para>
+	  <para>
+	  <emphasis role="bold">int</emphasis>
+	  <emphasis role="bold">float</emphasis>
+	  <emphasis role="bold">string</emphasis>
+	  <emphasis role="bold"/>
+	</para><para>
+	  <emphasis role="bold">date</emphasis>
+	  <emphasis role="bold">boolean</emphasis>
+	  <emphasis role="bold">uri</emphasis>
+	</para><para>
+	  <emphasis role="bold">any</emphasis>
+	</para><para>
+	  <emphasis role="bold">true</emphasis>
+	  <emphasis role="bold">false</emphasis>
+	  <emphasis role="bold">null</emphasis>
+	</para><para>
+	  <emphasis role="bold">namespace</emphasis>
+	  <emphasis role="bold"/>
+	  <emphasis role="bold">include</emphasis>
+	  <emphasis role="bold">type</emphasis>
+	</para><para>
+	  <emphasis role="bold">if</emphasis>
+	  <emphasis role="bold">else</emphasis>
+	</para><para>
+	  <emphasis role="bold">switch</emphasis>
+	  <emphasis role="bold">case</emphasis>
+	  <emphasis role="bold">default</emphasis>
+	</para><para>
+	  <emphasis role="bold">while</emphasis>
+	</para><para>
+	  <emphasis role="bold">foreach</emphasis>
+	  <emphasis role="bold">in</emphasis>
+	  <emphasis role="bold">step</emphasis>
+	</para><para>
+	  <emphasis role="bold">repeat</emphasis>
+	  <emphasis role="bold">until</emphasis>
+	</para>
+	</sect2>
+
+	<sect2>
+	  <title>Literals</title>
+	  <para>VDL <emphasis>literals</emphasis> are constant values that are represented as strings in the program. The types and formats of literals are drawn from the set of atomic values defined by XML Schema. The type of a literal value is implicit from its context &#x2013; from the type of the variable that its being assigned to or the type of the procedure parameter that it is being passed to, or the type of value that is expected in a specific position of a statement such as an <emphasis>if</emphasis>, <emphasis>while</emphasis>, or <emphasis>switch</emphasis>.</para><para>Some literal types can be identified without being enclosed in quotes; string literals and similar types based on strings must be enclosed in quotes.</para>
+
+	  <sect3>
+	  <title>Integer literals</title>
+	  <para>An integer literal is a sequence of digits. (We may need to support octal and hexal integer literals too.)</para><informaltable>
+	  <tgroup cols="3">
+	    <colspec colnum="1" colname="col1" colwidth="64.95pt"/>
+	    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+	    <colspec colnum="3" colname="col3" colwidth="113.55pt"/>
+	    <tbody>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">integer literal</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>nonzerodigit</emphasis>
+	          <emphasis>  </emphasis>
+	          <emphasis>digit</emphasis>
+	          <emphasis>* | &#x2018;0&#x2019;</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">nonzerodigit</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>&#x2018;1&#x2019; .. &#x2018;9&#x2019;</emphasis>
+	        </entry>
+	      </row>
+	    </tbody>
+	  </tgroup>
+	  </informaltable>
+	  </sect3>
+
+	  <sect3>
+	  <title>Float literals</title>
+	  <para>A float literal has an integer part, a decimal point, a faction part, an <emphasis role="bold">e</emphasis><emphasis role="bold">, </emphasis>and an optionally signed integer exponent. The integer part and the faction part both consist of a sequence of digits, where either (but not both) may be missing. The <emphasis role="bold">e</emphasis> together with the exponent may be missing too.</para><para>Every float literal is considered to be double-precision.</para>
+	  <informaltable>
+	  <tgroup cols="3">
+	    <colspec colnum="1" colname="col1" colwidth="62.55pt"/>
+	    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+	    <colspec colnum="3" colname="col3" colwidth="134.55pt"/>
+	    <tbody>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">float literal</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>pointfloat</emphasis>
+	          <emphasis> | </emphasis>
+	          <emphasis>exponentfloat</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">pointfloat</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>[</emphasis>
+	          <emphasis>intpart</emphasis>
+	          <emphasis>] </emphasis>
+	          <emphasis>fraction</emphasis>
+	          <emphasis> | </emphasis>
+	          <emphasis>intpart</emphasis>
+	          <emphasis> "."</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">exponentfloat</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>(</emphasis>
+	          <emphasis>intpart</emphasis>
+	          <emphasis> | </emphasis>
+	          <emphasis>pointfloat</emphasis>
+	          <emphasis>) </emphasis>
+	          <emphasis>exponent</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">intpart</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>digit</emphasis>
+	          <emphasis>+</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">fraction</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>"." </emphasis>
+	          <emphasis>digit</emphasis>
+	          <emphasis>+</emphasis>
+	        </entry>
+	      </row>
+	      <row>
+	        <entry>
+	          <emphasis>
+	            <emphasis role="underline">exponent</emphasis>
+	          </emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>::=</emphasis>
+	        </entry>
+	        <entry>
+	          <emphasis>("e" | "E") ["+" | "-"] </emphasis>
+	          <emphasis>digit</emphasis>
+	          <emphasis>+</emphasis>
+	        </entry>
+	      </row>
+	    </tbody>
+	  </tgroup>
+	</informaltable>
+	<para>Examples of float literals are:</para>
+	<programlisting>3.  .14  3.14  3.14e-6  2e100</programlisting>
+	</sect3>
+	
+	<sect3>
+	<title>Boolean literals</title>
+	<para>There are two boolean literals:<emphasis role="bold"> </emphasis><emphasis role="bold">true</emphasis> and <emphasis role="bold">false</emphasis>.</para>
+	</sect3>
+	
+	<sect3>
+	<title>Date literals</title>
+	<para>A date literal is represented in quoted string conforming to ISO-8601 standard, for example:</para>
+	<programlisting>"2005-09-25T11:30:00Z"</programlisting>
+	</sect3>
+	
+	<sect3>
+	<title>String literals</title>
+	<para>A string literal is a sequence of characters surrounded by two double quotes. The special string literal <emphasis role="bold">null</emphasis> is used to represent an uninitialized string. </para>
+	</sect3>
+	
+	<sect3>
+	<title>XML literals</title>
+	<para>XML literals refers to verbatim XML documents. We use @ followed by a string representation of the XML document to denote such literals. For instance:</para>
+	<programlisting>@“<volume><image>b1.img</image><header>b1.hdr</header></volume>”</programlisting>
+	</sect3>
+	
+	<sect3>
+	<title>URI literals</title>
+	<para>An URI literal is a string that conforms to the URI specification &#x2013; IETF RFC 2396. (<ulink url="http://www.ietf.org/rfc/rfc2396.txt">http://www.ietf.org/rfc/rfc2396.txt</ulink>).</para>
+	<para>Example: </para>
+	<programlisting>"http://www.griphyn.org/"</programlisting>
+	</sect3>
+  </sect2>
+	
+  <sect2>	
+  <title>Operators and Separators</title>
+  <para>Operators are used in expressions for operations that involve one or more operands. Separators are for grouping and separation. The operators and separators are as follows:</para>
+  <para/>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="106.2pt"/>
+    <colspec colnum="2" colname="col2" colwidth="109.8pt"/>
+    <colspec colnum="3" colname="col3" colwidth="171pt"/>
+    <tbody>
+      <row>
+        <entry>Operators</entry>
+        <entry>() [ ] .</entry>
+        <entry>Procedure call, member reference</entry>
+      </row>
+      <row>
+        <entry/>
+        <entry>=</entry>
+        <entry>Assignment operator</entry>
+      </row>
+      <row>
+        <entry/>
+        <entry>+ - * / %</entry>
+        <entry>Arithmetic operators</entry>
+      </row>
+      <row>
+        <entry/>
+        <entry>&gt; &lt; ==  !=  &gt;=  &lt;=</entry>
+        <entry>Relational operators</entry>
+      </row>
+      <row>
+        <entry/>
+        <entry>&amp;&amp;  ||  !</entry>
+        <entry>Boolean operators</entry>
+      </row>
+      <row>
+        <entry>Separators</entry>
+        <entry>{ }  </entry>
+        <entry>Block separator</entry>
+      </row>
+      <row>
+        <entry/>
+        <entry>&lt; &gt;</entry>
+        <entry>Mapper declaration</entry>
+      </row>
+      <row>
+        <entry/>
+        <entry>,  :  ;</entry>
+        <entry>Others</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  </sect2>
+</sect1>
+
+<sect1>
+  <title>Type Definitions</title>
+  <para>All data objects processed by VDL are typed. We distinguish between <emphasis>primitive types</emphasis> and <emphasis>composite types.</emphasis></para>
+
+  <sect2>
+  <title>Primitive types</title>
+  <para>A primitive type is one of <emphasis role="bold">int, float,</emphasis><emphasis role="bold"> boolean, date, string, uri</emphasis>.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Composite types</title>
+  <para>A composite type is a type composed of primitive types. We support two kinds of type constructions: Arrays and Structs. We will talk more about these in the declaration section.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Arrays</title>
+  <para>An array is a data structure that contains zero or more elements that are all of the same type; this type is called the <emphasis>element type</emphasis> of the array.</para>
+  <para>Arrays are indexed by integer values, and they are 0-indexed following the C convention.</para><para>Currently only one-dimensional arrays are supported.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Structs</title><para>A struct is a data structure that can contain members of different types, where those types can be either primitive or composite types.</para>
+  </sect2>
+</sect1>
+  
+<sect1>
+  <title>Datasets</title>
+  <para>VDL provides a logical programming model for data Grids. A VDL program consists of procedure calls that operate on data items. VDL provides the level of abstraction such that operations can be specified on a data item without regard to its physical location or representation. Within the VDL logical space, a data item is called a <emphasis>data object</emphasis>, and its physical counterpart is called a <emphasis>dataset</emphasis>.</para><para>A <emphasis>d</emphasis><emphasis>ataset</emphasis> is a data item that has persistent physical storage. Datasets have both logical representations and physical representations. A dataset&#x2019;s logical structure is declared using VDL type definition, where its physical representation describes how the dataset is physically stored and cataloged on persistent storage.</para><para>A VDL program specifies the operations on a dataset&#x2019;s logical structure. The physical dataset is accessed via a mapper, which translates between the physical, persistent structure of the dataset and its logical representation.</para><para>A physical dataset is referenced via a <emphasis>dataset handle</emphasis>, which contains name, type, and mapping information. The name of the dataset handle uniquely identifies the dataset; the type information specifies the logical type the dataset conforms to; and the mapping information comprises the name of a <emphasis>mapping descriptor</emphasis> and the necessary parameters to the mapper.  A dataset handle builds the connection between a data object and its corresponding physical dataset.</para>
+  <para>The declaration of a dataset handle is defined in Section link linkend='sect10_4_2' endterm="sect10_4_2.title"/></para>
+</sect1>
+
+<sect1>
+  <title>Mapping</title>
+  <para>The process of mapping, as defined by XDTM, converts between a dataset&#x2019;s physical representation (typically in persistent storage) and a logical XML view of that data. VDL programs operate on this logical view, and mapping functions implement the actions used to convert back and forth between the logical view and the physical representation.</para><para>Associated with each logical type is a mapping descriptor, which describes the implementation of the mapping functions and necessary mapping parameters to the implementation. </para><para>A mapping descriptor contains the following fields:</para>
+  <itemizedlist> 
+  <listitem>name - name of the descriptor</listitem>
+  <listitem>description- a brief description of the mapper</listitem>
+  <listitem>type- name of the abstract type of the dataset to map</listitem>
+  <listitem>implementation_class- java class that implements the mapping API</listitem>
+  <listitem>parameters- parameters for the implementation class</listitem>
+  </itemizedlist>
+  <para>The implementation of the mapper must conform to the mapper API, which is a standard interface defined between mappers and data sources.  </para>
+</sect1>
+
+<sect1>  
+  <title>Variables</title>
+  <para>A variable represents a storage location. Each variable has a name and an associated type that determines what values can be stored in the variable. The value of a variable is the value currently stored in the storage location allocated to the variable. The value of a variable can be initialized or changed through assignment.</para>
+  <para>A variable consists of a name and a value. A value is either a literal, or a reference to a data item. </para>
+  
+  <sect2>
+  <title>Global variables</title>
+  <para>Global variables are the variables declared in the main body of a VDL program. A global variable extends to any procedures and blocks defined in the program and can be referenced anywhere within the program. The syntax for declaring a global variable is not different from the others, it is just that its scope applies to the whole program.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Local variables</title>
+  <para>A local variable occurs in a block. A block is a section of code, which consists of one or more statements that can be grouped together. Examples of a block include an <emphasis>if</emphasis> statement, a <emphasis>switch</emphasis>, or a <emphasis>while</emphasis> statement, etc. Blocks can be nested with one block inside another.</para>
+  <para>A local variable can be declared, for instance, within the body of a compound procedure, or in a <emphasis>while</emphasis> or <emphasis>switch</emphasis> statement. </para><para>A local variable may also be declared within a <emphasis>foreach</emphasis> statement as an iteration variable.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Dataset-bound variable</title>
+  <para>When a variable is associated with a dataset, i.e. it holds the dataset handle of that dataset; it is also called a dataset-bound variable. A dataset-bound variable usually has an associated mapping specification, for details, please look at Section link linkend='sect10_4_2' endterm="sect10_4_2.title"/></para>
+  </sect2>
+  
+  <sect2>
+  <title>Scopes</title>
+  <para>A scope defines the visibility of a variable. A global variable extends to any procedures and blocks defined in the program. For a local variable, if it is defined in a block, its scope is limited to that block. If it is defined at the beginning of a procedure, its scope extends to any blocks contained within the procedure, unless a contained block defines a variable with the same name. </para>
+  </sect2>
+  
+  <sect2>
+  <title>Variable references</title>
+  <para>A variable reference is an expression that refers to a variable or its sub-elements. A simple example of a variable reference is an identifier. For an <emphasis>array</emphasis> variable, subscript can be used to reference an array element. For instance if <emphasis>a</emphasis> is an int array, then <emphasis>a[2]</emphasis> is a variable reference that refers to element 3 in the array. For a <emphasis>struct</emphasis> variable, member names can be used to refer to member variables in the struct. For instance, if <emphasis>addr</emphasis> is a struct, with string members: <emphasis>street</emphasis>, <emphasis>city</emphasis>, and <emphasis>state</emphasis>, then <emphasis>addr.city</emphasis> refers to its <emphasis>city</emphasis> member variable.</para>
+  </sect2>
+</sect1>
+
+<sect1>
+  <title>Procedure Definitions</title>
+  <para>Datasets are operated on by <emphasis>procedures</emphasis>, which take one or more typed data items as input, perform computations on those data item(s), and produce zero or more data items as output.</para>
+  <para>A VDL procedure can be either an <emphasis>atomic procedure</emphasis> or a <emphasis>compound procedure</emphasis>. An <emphasis>atomic </emphasis>procedure definition specifies an interface to an executable program or service. A <emphasis>compound </emphasis><emphasis>procedure</emphasis> composes calls to atomic procedures, other compound procedures, and/or control statements: it can be viewed as a named workflow template defining a graph of multiple nodes.</para>
+  <para>A procedure definition has the form</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="105.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="172.35pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">procedure-definition</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>procedure-declarator  procedure-body</emphasis>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+<para>A procedure declarator declares the output formal parameters, the name, and the input parameters of the procedure being defined. This construct is used for all procedures, regardless of the form of their body declarations.</para>
+<informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="105.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="18pt"/>
+    <colspec colnum="3" colname="col3" colwidth="290.8pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">procedure-declarator</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;(&#x2019;  <emphasis>output-parameter-list  </emphasis>&#x2018;)&#x2019;<emphasis>  procedure-name  </emphasis>&#x2018;(&#x2019;  <emphasis>input-parameter-list </emphasis>&#x2019;)&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">parameter-list</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>p</emphasis><emphasis>arameter</emphasis><emphasis> ( </emphasis>&#x2018;,&#x2019;<emphasis> parameter) *</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">parameter</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>type identifier</emphasis>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+<para>Both <emphasis>output-parameter-list</emphasis> and <emphasis>input-parameter-list</emphasis> can be optional. When there is zero or one output parameter, the parentheses for <emphasis>output-parameter-list</emphasis> can be omitted.</para>
+<para>The procedure-body is different for atomic procedure and compound procedure:</para>
+<informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="105.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="231.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">procedure-body</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>atomic-</emphasis><emphasis>procedure-</emphasis><emphasis>body</emphasis> | <emphasis>compound-procedure-body</emphasis></entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+
+  <sect2>
+  <title>Atomic procedure body</title>
+  <para>An atomic procedure defines an interface to an external executable program or Web Service, and specifies how data items passed as input and output parameters are mapped to and from application program or service arguments and results. While the header of an atomic procedure specifies the name of the procedure, and the inputs and outputs to the procedure, the body of such an atomic procedure specifies how to set up its execution environment and how to assemble the call to the procedure. Thus, it is in the body of an atomic procedure that <emphasis>mapping operations</emphasis> may appear to access components of any physical dataset that is dataset-bound to data items passed as procedure parameters.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="114.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="181.95pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">atomic-procedure-body</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>procedure-type</emphasis> &#x2018;{&#x2019;<emphasis> invocation-config </emphasis>&#x2019;}&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">procedure-type</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>&#x201C;</emphasis><emphasis role="bold">app</emphasis>&#x201D;  |  &#x201C;<emphasis role="bold">service</emphasis>&#x201D;</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>The body can specify the invocation of either an application or a Web Service, where <emphasis>procedure-type</emphasis> specifies the type of the procedure.</para>
+
+  <sect3>
+  <title>Application procedure body</title>
+  <para>An application procedure defines the interface to an application program that should be invoked, typically by a POSIX exec() primitive.</para>
+  <para>A program procedure body maps the VDL arguments to the information needed to ultimately invoke an application through the POSIX interface, which involves setting arguments and environment variables, and passing back a return code (via an exit value).</para><para>Provisions for handling file descriptors (stdin, stdout, stderr) are provided in the body.</para>
+  <para>(TODO: environment variable and other configuration handling, probably using Profile)</para>
+  <para>In addition, we define the mapping from logical types to physical representations, via mapping functions.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="114.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="201.15pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">invocation-config</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>application-name application-argument*  </emphasis>&#x2018;;&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">application-argument</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>mapping-expression | stdio-argument</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">mapping-expression</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>mapping-function-call | </emphasis>
+          <emphasis>expression</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">mapping-function-call</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;@&#x2019;<emphasis>function-name </emphasis>&#x2018;(&#x2019;<emphasis> expression </emphasis>&#x2018;)&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">stdio-argument</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <para>&#x201C;<emphasis role="bold">stdin</emphasis>&#x201D;  &#x2018; =&#x2019;<emphasis>  mapping-expression </emphasis>  |</para>
+          <para>&#x201C;<emphasis role="bold">stdout</emphasis>&#x201D; &#x2018;=&#x2019;<emphasis>  mapping-expression </emphasis>  |</para>
+          <para>&#x201C;<emphasis role="bold">stderr</emphasis>&#x201D;  &#x2018;=&#x2019;<emphasis>  mapping-expression </emphasis></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>Since <emphasis>@filename</emphasis><emphasis>(f)</emphasis> is commonly used for getting the name of a file <emphasis>f</emphasis>, we introduce a shortcut for this specification, where <emphasis>filename</emphasis> along with the parentheses can be omitted. In this case, it can be specified as either <emphasis>@f</emphasis> or <emphasis>@(f)</emphasis>. </para>
+  </sect3>
+
+  <sect3>
+  <title>Service procedure body</title>
+  <para>A Web Service body specifies the URL of the WSDL description, the port type and operation to invoke, and soap message mappings.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="114.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="266.55pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">invocation-config</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>wsdlURI  port-type  operation  soap-message-mapping*</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">wsdlURI</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x201C;<emphasis role="bold">wsdlURI</emphasis>&#x201D; &#x2018;<emphasis role="bold">=</emphasis>&#x2019;<emphasis> string-literal </emphasis>&#x2018;;&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">port-type</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x201C;<emphasis role="bold">portType</emphasis>&#x201D; &#x2018;=&#x2019;<emphasis> string-literal </emphasis>&#x2018;;&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">operation</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x201C;<emphasis role="bold">operation</emphasis>&#x201D; &#x2018;=&#x2019;<emphasis> string-literal </emphasis>&#x2018;;&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">soap-message-mapping</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <para>( &#x201C;<emphasis role="bold">request</emphasis>&#x201D; | &#x201C;<emphasis role="bold">response</emphasis>&#x201D; )<emphasis> </emphasis><emphasis>message-element-name </emphasis>&#x2018;=&#x2019; </para>
+          <para>( &#x2018;{&#x2019; <emphasis>message-part-mapping*</emphasis> &#x2018;}&#x2019; ) | <emphasis>mapping-expression</emphasis><emphasis> </emphasis>&#x2018;;&#x2019;</para>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">message-part-mapping</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>message-part-name</emphasis> &#x2018;=&#x2019; <emphasis>mapping-expression </emphasis> &#x2018;;&#x2019;</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>(TODO: WSRF service specification)<emphasis/></para>
+  </sect3>
+  </sect2>
+  
+  <sect2>
+  <title>Compound procedure body</title>
+  <para>A compound procedure body is a block of one or more VDL statements, which are executed in an order determined by their data dependencies.  </para><para>The body is comprised of <emphasis>procedure-statement-sequence</emphasis>, which is just a sequence of statements:</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="141.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="167.55pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">compound-procedure-body</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;{&#x2019;<emphasis> </emphasis><emphasis>procedure-</emphasis><emphasis>statement-sequence </emphasis>&#x2018;}&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">procedure-statement-sequence</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>statement*</emphasis>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  </sect2>
+</sect1>
+
+<sect1>  
+<title>Expressions</title>
+<para>An expression consists of operands and operators that follow a certain sequence.</para>
+  
+  <sect2>
+  <title>Primary Expressions</title>
+  <para>There are several kinds of primary expressions:</para>
+
+  <para><emphasis role="bold">Literals</emphasis></para>
+  <para>A literal is a value that has an associated type. We have already discussed literals in Section .</para>
+  <para>  <emphasis role="bold">Variables</emphasis></para>
+  <para>A variable also needs to have an associated type. Variables have been described in section .</para>
+  <para><emphasis role="bold">Member a</emphasis><emphasis role="bold">ccesses</emphasis></para>
+  <para>A member access expression is an expression that accesses a member of a struct variable. It is a variable expression followed by a dot, and then followed by the name of a struct member. It has the type of the named member of the struct.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="88.95pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="96.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">member-expression</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>primary</emphasis><emphasis> </emphasis>&#x2018;.&#x2019;<emphasis> </emphasis><emphasis><emphasis role="underline">identifier</emphasis></emphasis></entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>Example:</para>
+  <programlisting>addr.city</programlisting>
+  <para><emphasis role="bold">Element a</emphasis><emphasis role="bold">ccesses</emphasis>
+  <emphasis role="bold"> []</emphasis>
+  </para>
+  <para>An element access expression is an expression that accesses an element of an array. It is a primary expression followed by square brackets, containing a subscript expression. It has the type of the element type. It is also called subscription.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="87.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="116.55pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">element-expression</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis><emphasis role="underline">primary</emphasis></emphasis><emphasis> </emphasis>&#x2018;[&#x2019;<emphasis> </emphasis><emphasis><emphasis role="underline">expression</emphasis></emphasis><emphasis> </emphasis>&#x2018;]&#x2019;</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>Example:</para>
+  <programlisting>itemNumbers[5]</programlisting>
+  <para><emphasis role="bold">Procedure calls</emphasis>
+  <emphasis role="bold"> ()</emphasis>
+  </para>
+  <para>A procedure call expression is an invocation of a procedure. It is in the form of parenthesized list of comma separated expressions, for actual output parameters; followed by a primary expression, for function name; and then followed by parenthesized list of comma separated expressions, for actual input parameters. Output parameters should have associated types explicitly defined. The acutal paramters can be optional. When there is only one output parameter specified, the parentheses can be optional.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="100.95pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="252.15pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">procedure-call</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;(&#x2019;<emphasis> output-param-list</emphasis><emphasis> </emphasis>&#x2018;)&#x2019;  <emphasis>primary </emphasis>&#x2018;(&#x2019;<emphasis> </emphasis><emphasis>input-param-list</emphasis><emphasis> </emphasis>&#x2018;)&#x2019;<emphasis> </emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">output-param-list</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>typed-parameter*</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">typed-parameter</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>(type</emphasis>
+          <emphasis>)?</emphasis>
+          <emphasis>  identifier</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">input</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">-</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">param</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">-</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">list</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>positional-parameters </emphasis><emphasis> ( </emphasis>&#x2018;,&#x2019;<emphasis> keyword-parameters</emphasis><emphasis> )?</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">positional</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">-</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">parameters</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis><emphasis role="underline">expression</emphasis></emphasis><emphasis> </emphasis><emphasis>(</emphasis><emphasis> </emphasis>&#x2018;,&#x2019; <emphasis>expression</emphasis><emphasis> )*</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">keyword</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">-</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">parameters</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis><emphasis role="underline">keyword</emphasis></emphasis><emphasis><emphasis role="underline">-</emphasis></emphasis><emphasis><emphasis role="underline">item</emphasis></emphasis><emphasis> ( </emphasis>&#x2018;,&#x2019; <emphasis>keyword-item</emphasis><emphasis> )*</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">keyword</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">-</emphasis>
+          </emphasis>
+          <emphasis>
+            <emphasis role="underline">item</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis><emphasis role="underline">identifier</emphasis></emphasis><emphasis> </emphasis>&#x2018;=&#x2019;<emphasis> </emphasis><emphasis><emphasis role="underline">expression</emphasis></emphasis></entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>Example:</para>
+  <programlisting>File out = myproc1 ( 100, optional_arg = &#x201C;v1&#x201D; );</programlisting>
+  <para><emphasis role="bold">Parenthesized Expressions</emphasis></para>
+  <para>A parenthesized expression is a primary expression enclosed in parentheses. The presence of parentheses does not affect its type, or value. Parentheses are used solely for grouping, to achieve a specific order of evaluation.</para><informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="118.5pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.65pt"/>
+    <colspec colnum="3" colname="col3" colwidth="79.4pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">parenthesized_expression</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;(&#x2019;<emphasis> expression</emphasis>&#x2018;)&#x2019;</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>Example:</para>
+  <programlisting>int i = (a + b) * 5;</programlisting>
+  </sect2>
+  
+  <sect2>
+  <title>Operators</title>
+  <para>Operators in an expression indicate what kind of operations to apply to the operands. Currently we support assignment operator, arithmetic operators and relational operators. </para>
+  
+  <sect3>
+  <title>Assignment Operators</title>
+  <para>The assignment operator = assigns the value of the right operand to a left operand. The left operand must be a variable reference.</para>
+  </sect3>
+  
+  <sect3>
+  <title>Arithmetic Operators</title>
+  <para>Currently we support arithmetic operators + - * / %</para>
+  </sect3>
+  
+  <sect3>
+  <title>Relational Operators</title>
+  <para>The relational operators ==, !=, &lt;, &gt;, &lt;= and &gt;= are comparison operators, and the result of the comparisons evaluates to either <emphasis role="bold">true</emphasis> or <emphasis role="bold">false</emphasis>. For instance, <emphasis>x==y</emphasis> evaluates to true is x is equal to y, and false otherwise.</para>
+  </sect3>
+  
+  <sect3>
+  <title>Boolean Expressions</title>
+  <para>A boolean expression is an expression that evaluates to either true or false. There are three boolean operators: &amp;&amp;  || ! for AND, OR, and NOT operations respectively.</para>
+  <para>The controlling conditional expression of an if-statement, while-statement, or repeat-statement is a boolean expression.</para>
+  </sect3>
+  </sect2>
+</sect1>  
+
+<sect1>
+  <title>Statements</title>
+  
+  <sect2 id="sect10_1">
+  <title>Namespace Statement</title>
+  <para>The namespace statement MUST appear at the very beginning of a VDL program, and the namespace must be unique. It serves similar purpose as a Java package definition, so that the type definitions and procedure definitions defined in this namespace would not collide with others defined outside. The syntax for namespace definition is as follows:</para><para>&#x201C;<emphasis role="bold">namespace</emphasis>&#x201D;  (<emphasis>prefix</emphasis>)?<emphasis/><emphasis> &#x2018;&#x201C;&#x2019;  </emphasis><emphasis>uri</emphasis><emphasis>  &#x2018;&#x201D;&#x2019;  </emphasis>(<emphasis>&#x2018;;&#x2019;</emphasis>)?</para><para><emphasis>prefix</emphasis> is the abbreviation of the namespace denoted by <emphasis>uri</emphasis>. If prefix is ommitted, then the namespace is regarded as the default namespace. If a default namespace is not defined in the program, it assumes the value</para>
+  <para>&#x201C;http://www.griphyn.org/vds/2006/08/nonamespace&#x201D;</para>
+  <para>Some examples:</para>
+  <programlisting>
+  <para>namespace&#x201C;http://www.griphyn.org/&#x201D;</para>
+  <para>namespacefmri&#x201C;http://www.fmridc.org/&#x201D;</para>
+  </programlisting>
+  <para>For the definitions that follow the namespace statement, they all belong to the default namespace unless otherwise specified.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Include Statements</title>
+  <para>An include statement is used to include type definitions defined in an external XML Schema document, or to include another program defined in VDL, so that the type definitions and procedure definitions can be used directly within the current VDL program.</para>
+  <para>An include statement is of the form:</para>
+  <para>&#x201C;<emphasis role="bold">include</emphasis>&#x201D;<emphasis role="bold"> </emphasis>&#x2018;<emphasis role="bold">&#x201C;</emphasis>&#x2019;<emphasis role="bold"> </emphasis><emphasis>include-file-name</emphasis><emphasis> &#x2018;</emphasis><emphasis role="bold"><emphasis>&#x201D;</emphasis></emphasis><emphasis>&#x2019;</emphasis></para>
+  <para>Since the definitions in the included file may have a different namespace from the one in the current program, it is necessary to explicitly specify the namespace for those definitions when they are used in the current program.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Type Definitions</title>
+  <para>A type definition is usually used at the beginning of a program, to define the structure of a new type, which can later be used to declare a variable. Type definitions have the form:</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="83.25pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.75pt"/>
+    <colspec colnum="3" colname="col3" colwidth="202.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">type-definition</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x201C;<emphasis role="bold">type</emphasis>&#x201D;<emphasis> type-name type-specifier</emphasis><emphasis> </emphasis>&#x2018;;&#x2019; </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>Where the <emphasis>type-name</emphasis> is a unique identifier and the <emphasis>type-specifier</emphasis> is either an already defined type, such as primitive types, or a struct declaration.</para>
+
+  <sect3>
+  <title>Type Specifiers</title>
+  <para>The type specifiers are</para><para>&#x201C;<emphasis role="bold">int</emphasis>&#x201D;</para><para><emphasis role="bold"/>&#x201C;<emphasis role="bold">float</emphasis>&#x201D;</para><para><emphasis role="bold"/>&#x201C;<emphasis role="bold">string</emphasis>&#x201D;</para><para><emphasis role="bold"/>&#x201C;<emphasis role="bold">boolean</emphasis>&#x201D;</para><para><emphasis role="bold"/>&#x201C;<emphasis role="bold">date</emphasis>&#x201D;</para><para><emphasis role="bold"/>&#x201C;<emphasis role="bold">uri</emphasis>&#x201D;</para><para>
+  <emphasis/>
+  <emphasis>struct-declaration</emphasis>
+  </para>
+  </sect3>
+  
+  <sect3>
+  <title>Struct Declarations</title>
+  <para>A struct declaration is of the form:</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="93.9pt"/>
+    <colspec colnum="2" colname="col2" colwidth="19.7pt"/>
+    <colspec colnum="3" colname="col3" colwidth="148.85pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">struct-declaration</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;{&#x2019;  <emphasis>type-decl</emphasis><emphasis>aration-list</emphasis><emphasis> </emphasis> &#x2018;}&#x2019;</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para> The <emphasis>type-declaration-list</emphasis> is a sequence of type declarations for the members of the struct.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="96.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="19.5pt"/>
+    <colspec colnum="3" colname="col3" colwidth="91.6pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">type-declaration-list</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>type-declaration*</emphasis>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>A type declaration is of the form:</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="96.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="19.7pt"/>
+    <colspec colnum="3" colname="col3" colwidth="163.15pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">type-declaration</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>type-specifier declarator-list </emphasis>&#x2018;;&#x2019;</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>The <emphasis>declarator-list</emphasis> is a comma-separated sequence of declarators. Each declarator can be an identifier, or an array declarator, which is an identifer followed by [ ], with an optional array size designated by an integer literal.  </para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="96.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="21.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="191.85pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">declarator-list</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <para>
+            <emphasis>identifier</emphasis>
+            <emphasis> </emphasis>
+            <emphasis> |</emphasis>
+          </para>
+          <para><emphasis>identifier  </emphasis>&#x2018;[&#x2019; <emphasis> integer_literal?  </emphasis>&#x2018;]&#x2019;</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>For example, an order with an order number, a description, and a sequence of item numbers can be specified as follows:</para>
+  <programlisting>
+   <emphasis role="bold">type</emphasis> order {
+       int orderNumber;
+       string description;
+       int itemNumbers[];
+   }
+  </programlisting>
+  </sect3>
+  </sect2>
+  
+  <sect2>
+  <title>Declaration Statements</title>
+  <para>A declaration statement declares a variable, or a physical dataset in the form of a <emphasis>dataset handle</emphasis>.</para>
+  
+  <sect3>
+  <title>Local Variable Declaration </title>
+  <para>A local variable declaration declares one or more local variables. </para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="131.05pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="264.35pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">local-variable-declaration</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>type&#xA0;&#xA0;&#xA0;local-variable-declarator-list</emphasis><emphasis> </emphasis>&#x2018;;&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">local-variable-declarator-list</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>local-variable-declarator&#xA0;</emphasis><emphasis>(</emphasis><emphasis>&#xA0;</emphasis>&#x2018;,&#x2019;&#xA0;&#xA0;&#xA0;<emphasis>local-variable-declarator</emphasis><emphasis> )*</emphasis> </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">local-variable-declarator</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>identifier&#xA0;&#xA0;</emphasis><emphasis>(</emphasis><emphasis>&#xA0;</emphasis><emphasis> </emphasis>&#x2018;=&#x2019;<emphasis>&#xA0;&#xA0;&#xA0;local-variable-initializer</emphasis><emphasis> </emphasis><emphasis> )</emphasis><emphasis>?</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">local-variable-initializer</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>expression</emphasis>
+          <emphasis> | </emphasis>
+          <emphasis>array-initializer</emphasis>
+          <emphasis> | range-initializer</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">array-initializer</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;[&#x2019;<emphasis> expression </emphasis><emphasis> </emphasis><emphasis>(</emphasis><emphasis> </emphasis>&#x2018;,&#x2019;<emphasis> expression</emphasis><emphasis> </emphasis><emphasis>)* </emphasis>&#x2018;]&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">range-initializer</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;[&#x2019; <emphasis>expression&#xA0;</emphasis>&#x2018;:&#x2019;<emphasis> expression (&#xA0;</emphasis>&#x2018;:&#x2019;<emphasis> expression )&#xA0;?</emphasis> &#x2018;]&#x2019;</entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>Some examples:</para>
+  <programlisting>
+  int x, y=2;
+  String s = &#x201C;hello&#x201D;;
+  floatf[] = [1.0, 2.0, 3.0];
+  intp[] = [1 : 9 : 2];  // numbers 1 3 5 7 9
+  </programlisting>
+  <para>Note a range initializes an array with a series of values with a fixed step, with a default step 1.</para>
+  </sect3>
+  
+  <sect3 id="sect10_4_2">
+  <title>Dataset Declaration </title>
+  <para>A physical dataset is referenced by a <emphasis>dataset handle</emphasis>, which contains name, type and mapping information of the dataset.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="108.15pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="235.95pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">dataset-declaration</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>type&#xA0;&#xA0;dataset-name </emphasis>&#x2018;&lt;&#x2019;<emphasis>&#xA0;mapping-description </emphasis>&#x2018;&gt;&#x2019; &#x2018;;&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">dataset-name</emphasis>
+          </emphasis>
+          <emphasis role="underline"> </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>identifier</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">mapping-descrition</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>mapping-descriptor</emphasis><emphasis> </emphasis><emphasis>( </emphasis><emphasis> </emphasis>&#x2018;;&#x2019;<emphasis> </emphasis><emphasis> </emphasis><emphasis>mapping-parameter-list</emphasis><emphasis> )?</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">mapping-descriptor</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>identifier</emphasis>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">mapping-parameter-list</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>mapping-parameter</emphasis>  <emphasis>(</emphasis><emphasis> </emphasis>&#x2018;,&#x2019; <emphasis>mapping-parameter</emphasis><emphasis> )</emphasis><emphasis>*</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">mapping-parameter</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>identifier </emphasis>&#x2018;=&#x2019;<emphasis> </emphasis><emphasis> mapping-</emphasis><emphasis>expression</emphasis></entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>A sample dataset declaration is shown as follows:</para>
+  <programlisting>Imageimg1&lt;image_mapper; location=&#x201C;/home/archive/images/image1.jpg&#x201D;&gt;;</programlisting>
+  <programlisting>Imageimg2&lt;simple_mapper; prefix=@img1, suffix=&#x201D;.2&#x201D;&gt;; </programlisting>
+  <para>As a dataset handle is no more than a variable holding a dataset, we can also call it a <emphasis>dataset-bound variable</emphasis>.</para>
+  </sect3>
+  </sect2>
+  
+  <sect2>
+  <title>Expression Statements</title>
+  <para>Most statements are expression statements, they take the form:</para>
+  <para><emphasis>expression </emphasis>&#x2018;;&#x2019;</para>
+  <para>Usually expression statements are assignments, or procedure calls.</para>
+  </sect2>
+  
+  <sect2>
+  <title>Selection Statements</title>
+  <para>A selection statement selects one of a number of possible statements for execution, based on the value of a boolean expression.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="107.7pt"/>
+    <colspec colnum="2" colname="col2" colwidth="21.1pt"/>
+    <colspec colnum="3" colname="col3" colwidth="169.05pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">selection-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>if-statement</emphasis>
+          <emphasis> | </emphasis>
+          <emphasis>switch-statement</emphasis>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  
+  <sect3>
+  <title>The if statement</title><para>The if statement selects a statement for execution based on the value of a boolean expression. </para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="78.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="18.65pt"/>
+    <colspec colnum="3" colname="col3" colwidth="259.25pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">if-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <para>&#x201C;<emphasis role="bold">if</emphasis>&#x201D;&#xA0;&#xA0;&#xA0;&#x2018;(&#x2019;&#xA0;&#xA0;<emphasis>boolean-expression&#xA0;&#xA0;&#xA0;</emphasis>&#x2018;)&#x2019;&#xA0;&#x2018;{&#x2019;&#xA0;<emphasis>statement*</emphasis>&#xA0;&#x2018;}&#x2019;<emphasis>&#xA0;</emphasis></para>
+          <para><emphasis>( </emphasis><emphasis>&#xA0;</emphasis>&#x201C;<emphasis role="bold">else</emphasis>&#x201D;&#xA0;&#xA0;&#x2018;{&#x2019;&#xA0;<emphasis>statement*</emphasis>&#xA0;&#x2018;}&#x2019; <emphasis>)?</emphasis></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  </sect3>
+  
+  <sect3>
+  <title>The switch statement</title>
+  <para>The switch statement selects one of many statement lists for execution based on the value of  the switch expression.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="77.7pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.4pt"/>
+    <colspec colnum="3" colname="col3" colwidth="234.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">switch-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x201C;<emphasis role="bold">switch</emphasis>&#x201D;&#xA0;&#xA0;&#xA0;&#x2018;(&#x2019;&#xA0;&#xA0;&#xA0;<emphasis>expression&#xA0;&#xA0;&#xA0;</emphasis>&#x2019;)&#x2019;&#xA0;&#xA0;&#xA0;<emphasis>switch-block</emphasis></entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">switch-block</emphasis>
+          </emphasis>
+          <emphasis role="underline"> </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>&#x2018;{&#x2019;&#xA0;&#xA0;&#xA0;<emphasis>switch-section*</emphasis><emphasis>&#xA0;&#xA0;&#xA0;</emphasis>&#x2018;}&#x2019;</entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">switch-section</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>switch-label&#xA0;&#xA0;&#xA0;statement</emphasis><emphasis>*</emphasis> </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">switch-label</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis> </emphasis>&#x201C;<emphasis role="bold">case</emphasis>&#x201D;&#xA0;&#xA0;&#xA0;<emphasis>constant-expression&#xA0;&#xA0;&#xA0;</emphasis>&#x2018;:&#x2019; |  <emphasis>(</emphasis> &#x201C;<emphasis role="bold">default</emphasis>&#x201D;<emphasis role="bold">&#xA0;</emphasis>&#xA0;&#xA0;&#x2018;:&#x2019; <emphasis>)</emphasis></entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  </sect3>
+  </sect2>
+  
+  <sect2>
+  <title>Loop statements</title>
+  <para>A loop statement repeatedly executes some statements in the loop body. It can be of one of the following statements:</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="78.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.75pt"/>
+    <colspec colnum="3" colname="col3" colwidth="256.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">loop-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry><emphasis>foreach-statement</emphasis> | <emphasis>while-statement</emphasis><emphasis> | </emphasis><emphasis>repeat-statement</emphasis></entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  
+  <sect3>
+  <title>The foreach statement</title>
+  <para>The foreach statement iterates over the elements of a collection, and executes the embedded statement for each of the elements.</para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="87.75pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.75pt"/>
+    <colspec colnum="3" colname="col3" colwidth="256.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">foreach-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <para>&#x201C;<emphasis role="bold">foreach</emphasis>&#x201D;&#xA0;&#xA0;<emphasis>type</emphasis><emphasis>?</emphasis><emphasis>&#xA0;&#xA0;identifier</emphasis><emphasis> ( &#x2018;,&#x2019; index-identifier )?  </emphasis><emphasis>&#xA0;</emphasis></para>
+          <para><emphasis>&#xA0;</emphasis>&#x201C;<emphasis role="bold">in</emphasis>&#x201D;  <emphasis>expression&#xA0;&#xA0;</emphasis>&#x201C;<emphasis role="bold">step</emphasis>&#x201D; <emphasis>int-</emphasis><emphasis>literal</emphasis><emphasis> </emphasis>&#xA0;&#x2018;{&#x2019;&#xA0;<emphasis>statement*</emphasis>&#xA0;&#x2018;}&#x2019;</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>The <emphasis>type</emphasis> and <emphasis>identifier</emphasis> of a foreach statement declare the iteration variable of the statement. if the <emphasis>identifier</emphasis> is defined before the <emphasis>foreach</emphasis> statement, then <emphasis>type</emphasis> is optional. The type of the <emphasis>expression</emphasis> in the foreach statement must be a collection type. The <emphasis>step</emphasis> controls how far off the iteration jumps forward to another element, and the <emphasis>index</emphasis> variable is an integer variable to track the current position of the iteration.</para>
+  </sect3>
+  
+  <sect3>
+  <title>The while statement</title>
+  <para>The while statement executes an embedded statement zero or more times conditionally based on a boolean expression. </para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="101.25pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.75pt"/>
+    <colspec colnum="3" colname="col3" colwidth="256.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">while-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <para>&#x201C;<emphasis role="bold">while</emphasis>&#x201D;<emphasis role="bold">&#xA0;</emphasis>&#xA0;&#xA0;&#x2018;(&#x2019;&#xA0;&#xA0;&#xA0;<emphasis>boolean-expression&#xA0;&#xA0;&#xA0;</emphasis>&#x2018;)&#x2019;&#xA0;&#xA0;</para>
+          <para>&#x2018;{&#x2019;&#xA0;<emphasis>embedded-statement</emphasis>&#xA0;&#x2018;}&#x2019;</para>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">embedded-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <emphasis>statement*</emphasis>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>A while statement is executed as follows: </para>
+  <itemizedlist>
+  <listitem>
+    <para>First the <emphasis>boolean-expression</emphasis> is evaluated. </para>
+  </listitem>
+  <listitem>
+    <para>If it is evaluated to true, control is transferred to the embedded statement. When control reaches the end point of the embedded statement, control goes back to the beginning of the while statement. </para>
+  </listitem>
+  <listitem>
+    <para>If the boolean expression yields false, control is transferred to the end point of the while statement. </para>
+  </listitem>
+  </itemizedlist>
+  </sect3>
+  
+  <sect3>
+  <title>The repeat statement</title>
+  <para>The repeat statement executes an embedded statement zero or more times conditionally based on a boolean expression. </para>
+  <informaltable>
+  <tgroup cols="3">
+    <colspec colnum="1" colname="col1" colwidth="101.25pt"/>
+    <colspec colnum="2" colname="col2" colwidth="17.75pt"/>
+    <colspec colnum="3" colname="col3" colwidth="256.75pt"/>
+    <tbody>
+      <row>
+        <entry>
+          <emphasis>
+            <emphasis role="underline">repeat-statement</emphasis>
+          </emphasis>
+        </entry>
+        <entry>
+          <emphasis>::=</emphasis>
+        </entry>
+        <entry>
+          <para>&#x201C;<emphasis role="bold">repeat</emphasis>&#x201D;&#x2018;{&#x2019;&#xA0;<emphasis>embedded-statement</emphasis>&#xA0;&#x2018;}&#x2019;</para>
+          <para><emphasis>&#xA0;</emphasis>&#x201C;<emphasis role="bold">until</emphasis>&#x201D;&#xA0;&#xA0;&#xA0;&#x2018;(&#x2019;&#xA0;&#xA0;&#xA0;<emphasis>boolean-expression&#xA0;&#xA0;&#xA0;</emphasis>&#x2018;)&#x2019;&#xA0;&#xA0;&#xA0;&#x2018;;&#x2019;</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+  </informaltable>
+  <para>The repeat statement is slightly different from the while statement in that control goes to the embedded statement first, and the boolean expression is evaluated, if true, then control goes to the end point of the repeat statement, otherwise, control goes back to the embedded statement.</para>
+  </sect3>
+  </sect2>
+  
+  <sect2>
+  <title>The break statement</title>
+  <para>The statement</para><para>&#x201C;<emphasis role="bold">break</emphasis>&#x201D; &#x2018;;&#x2019;</para>
+  <para>causes termination of the smallest enclosing loop, or switch statement; control passes to the statement following the terminated statement.</para>
+  </sect2>
+  
+  <sect2>
+  <title>The continue statement</title>
+  <para>The statement</para><para>&#x201C;<emphasis role="bold">continue</emphasis>&#x201D; &#x2018;;&#x2019;</para>
+  <para>causes control to pass to the loop continuation portion of the smallest enclosing loop statement; that is to the end of the loop. </para>
+  </sect2>
+</sect1>
+
+<sect1>
+  <title>Examples</title>
+  <para>For detailed examples, please refer to the User Guide document in the VDS public release.</para>
+</sect1>
+  
+<sect1>
+  <title>Extensions to consider</title>
+  <para>- More atomic types, such as those defined in XML Schema</para>
+  <para>- Type inference: if the type of a formal parameter to a procedure can be inferred from its definition, then the type does not need to appear in the procedure signature. </para>
+  <para>For example, if you write</para><para/><para>(c) myfunction (a,b)</para><para>{</para><para>     tmp=combineImages(a,b)</para><para>     c=invertImage(tmp)</para><para>}</para><para>as long as you have function prototypes for combineImages and invertImage,</para><para>you can infer from the program the types for the variables a,b and c and</para><para>hence the prototype for myfunction... and so on for the entire program.</para>
+  <para>- Literal XML snippets instead of quoted XML to avoid quoting problem.</para>
+  <para>- Blocks within a procedure, with new scopes for declaring variables</para>
+  <para>- Ability to invoke an XPath to extract a value from a document</para>
+</sect1>
+
+</article>
