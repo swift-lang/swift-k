@@ -21,8 +21,9 @@ public class GetFieldValue extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		Object var1 = PA_VAR1.getValue(stack);
-		if (!(var1 instanceof DSHandle))
+		if (!(var1 instanceof DSHandle)) {
 			return var1;
+		}
 		DSHandle var = (DSHandle) var1;
 		try {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
@@ -41,11 +42,8 @@ public class GetFieldValue extends VDLFunction {
 				}
 				synchronized (var) {
 					Object value = var.getValue();
-					if (value == null) {
+					if (!var.isClosed()) {
 						throw new FutureNotYetAvailable(addFutureListener(stack, var));
-					}
-					else if (value instanceof ExecutionException){
-						throw (ExecutionException) value;
 					}
 					else {
 						return value;
