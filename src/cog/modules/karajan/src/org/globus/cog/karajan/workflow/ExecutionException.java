@@ -67,7 +67,7 @@ public class ExecutionException extends Exception {
 
 		}
 		else {
-			sb.append("\t-- no stack --\n");
+			//sb.append("\t-- no stack --\n");
 		}
 		Throwable cause = getCause();
 		if (cause != null) {
