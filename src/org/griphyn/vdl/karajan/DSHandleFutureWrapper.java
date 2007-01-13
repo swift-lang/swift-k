@@ -69,6 +69,7 @@ public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListene
 			WaitingThreadsMonitor.removeThread(etp.getEvent().getStack());
 			EventBus.post(etp.getTarget(), etp.getEvent());
 		}
+		listeners = null;
 	}
 
 	public void mergeListeners(Future f) {
@@ -77,6 +78,16 @@ public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListene
 			EventTargetPair etp = (EventTargetPair) i.next();
 			f.addModificationAction(etp.getTarget(), etp.getEvent());
 			i.remove();
+		}
+		listeners = null;
+	}
+
+	public int listenerCount() {
+		if (listeners == null) {
+			return 0;
+		}
+		else {
+			return listeners.size();
 		}
 	}
 
@@ -90,19 +101,7 @@ public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListene
 	}
 
 	public String toString() {
-		String l;
-		if (listeners == null) {
-			l = "no listeners";
-		}
-		else {
-			l = listeners.size() + " listeners";
-		}
-		if (!isClosed()) {
-			return "Open, " + l;
-		}
-		else {
-			return "Closed, " + l;
-		}
+		return "F/" + handle;
 	}
 
 	public void fail(FutureEvaluationException e) {
