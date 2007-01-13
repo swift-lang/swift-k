@@ -59,4 +59,5 @@ public interface DSHandle extends Serializable {
 	
 	public boolean isClosed();
 
+	public void addListener(DSHandleListener listener);
 }
