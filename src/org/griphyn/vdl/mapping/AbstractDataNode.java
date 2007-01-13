@@ -7,16 +7,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.griphyn.vdl.type.Field;
 
 public abstract class AbstractDataNode implements DSHandle {
+	public static final Logger logger = Logger.getLogger(AbstractDataNode.class);
+
 	private Field field;
 	private Map handles;
 	private Object value;
 	private boolean closed;
+	private List listeners;
 
 	protected AbstractDataNode(Field field) {
 		this.field = field;
@@ -24,7 +29,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public void init(Map params) {
-		
+
 	}
 
 	public String getType() {
@@ -41,17 +46,30 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public String toString() {
 		String prefix = getDisplayableName();
-		String svalue = value == null ? "" : " (" + value + ")";
 		if (Path.EMPTY_PATH.equals(getPathFromRoot())) {
-			// return getType() + " " + prefix + ": " + value;
-			return prefix + svalue;
-
+			return prefix;
 		}
 		else {
-			// return getType() + " " + prefix + "." + getPathFromRoot() + ": "
-			// + value;
-			return prefix + "." + getPathFromRoot() + svalue;
+			return prefix + nicePath(getPathFromRoot());
 		}
+	}
+
+	protected String nicePath(Path path) {
+		StringBuffer sb = new StringBuffer();
+		Iterator i = path.iterator();
+		while (i.hasNext()) {
+			Path.Entry e = (Path.Entry) i.next();
+			if (e.isIndex()) {
+				sb.append('[');
+				sb.append(e.getName());
+				sb.append(']');
+			}
+			else {
+				sb.append('.');
+				sb.append(e.getName());
+			}
+		}
+		return sb.toString();
 	}
 
 	protected String getDisplayableName() {
@@ -120,14 +138,13 @@ public abstract class AbstractDataNode implements DSHandle {
 		}
 		if (getParent() == null) {
 			/*
-			AbstractDataNode node = (AbstractDataNode)handle;
-			field = node.getField();
-			handles = node.getHandles();
-			closed = node.isClosed();
-			value = node.getValue();
-			*/
+			 * AbstractDataNode node = (AbstractDataNode)handle; field =
+			 * node.getField(); handles = node.getHandles(); closed =
+			 * node.isClosed(); value = node.getValue();
+			 */
 			throw new RuntimeException("Can't set root data node!");
-		} else
+		}
+		else
 			((AbstractDataNode) getParent()).setField(field.getName(), handle);
 	}
 
@@ -192,12 +209,20 @@ public abstract class AbstractDataNode implements DSHandle {
 		return Field.Factory.createField(fieldName, field.getType().getFieldType(fieldName),
 				field.getType().isArrayField(fieldName));
 	}
+	
+	protected void checkException() {
+		if (value instanceof RuntimeException) {
+			throw (RuntimeException) value;
+		}
+	}
 
 	public Object getValue() {
+		checkException();
 		return value;
 	}
 
 	public Map getArrayValue() {
+		checkException();
 		if (!field.isArray()) {
 			throw new RuntimeException("getArrayValue called on a struct: " + this);
 		}
@@ -211,7 +236,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	public void setValue(Object value) {
 		if (this.value != null) {
 			throw new IllegalArgumentException(this + " is already assigned with a value of "
-					+ value);
+					+ this.value);
 		}
 		Object leafValue = value;
 		if (getType().equals("int")) {
@@ -227,6 +252,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public String getFilename() {
+		checkException();
 		Path path = Path.EMPTY_PATH;
 		AbstractDataNode crt = this;
 		while (crt.getParent() != null) {
@@ -237,6 +263,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public List getFileSet() {
+		checkException();
 		ArrayList list = new ArrayList();
 		getFileSet(list);
 		return list;
@@ -265,6 +292,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public void getFringePaths(List list, Path parentPath) throws HandleOpenException {
+		checkException();
 		if (getField().getType().getBaseType() != null) {
 			list.add(Path.EMPTY_PATH.toString());
 		}
@@ -292,8 +320,9 @@ public abstract class AbstractDataNode implements DSHandle {
 		}
 	}
 
-	public void closeShallow() {
+	public synchronized void closeShallow() {
 		this.closed = true;
+		notifyListeners();
 	}
 
 	public boolean isClosed() {
@@ -302,8 +331,8 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public void closeDeep() {
 		if (!this.closed) {
-			this.closed = true;
 			setValue(Boolean.TRUE);
+			closeShallow();
 		}
 		synchronized (handles) {
 			Iterator i = handles.entrySet().iterator();
@@ -335,4 +364,31 @@ public abstract class AbstractDataNode implements DSHandle {
 		return handles;
 	}
 
+	public synchronized void addListener(DSHandleListener listener) {
+		if (logger.isInfoEnabled()) {
+			logger.info("Adding handle listener \"" + listener + "\" to \"" + this + "\"");
+		}
+		if (listeners == null) {
+			listeners = new LinkedList();
+		}
+		listeners.add(listener);
+		if (closed) {
+			notifyListeners();
+		}
+	}
+
+	protected synchronized void notifyListeners() {
+		if (listeners != null) {
+			Iterator i = listeners.iterator();
+			while (i.hasNext()) {
+				DSHandleListener listener = (DSHandleListener) i.next();
+				i.remove();
+				if (logger.isInfoEnabled()) {
+					logger.info("Notifying listener \"" + listener + "\" about \"" + this + "\"");
+				}
+				listener.handleClosed(this);
+			}
+			listeners = null;
+		}
+	}
 }
