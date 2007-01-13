@@ -316,23 +316,25 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
 					catch(".*"
-						echo(exception)
+						log(LOG:DEBUG, exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 						
 						outs := concat(
 							nl()
 							for(f, ["stderr.txt", "stdout.txt"]
+								"{f}: "
 								if(
 									file:exists("{tmpdir}/{f}", host=rhost) 
 										then(
 											task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
 												destfile="{jobdir}-{f}")
 		
-											"{f}: ", file:read("{jobdir}-{f}")
+											file:read("{jobdir}-{f}")
 											 // If multiple concurrent errors occur, 
 											 // the files might not get deleted
 											file:remove("{jobdir}-{f}")
 										)
+										else(nl())
 								)
 							)
 						)
