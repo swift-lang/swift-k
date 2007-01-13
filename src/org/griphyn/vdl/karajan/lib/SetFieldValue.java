@@ -3,6 +3,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -10,6 +11,8 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
 public class SetFieldValue extends VDLFunction {
+	public static final Logger logger = Logger.getLogger(SetFieldValue.class);
+
 	public static final Arg PA_VALUE = new Arg.Positional("value");
 
 	static {
@@ -21,14 +24,18 @@ public class SetFieldValue extends VDLFunction {
 		try {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
 			DSHandle leaf = var.getField(path);
+			Object value = PA_VALUE.getValue(stack);
+			if (logger.isInfoEnabled()) {
+				logger.info("Setting " + leaf + " to " + value);
+			}
 			synchronized (leaf) {
-				leaf.setValue(PA_VALUE.getValue(stack));
+				leaf.setValue(value);
 				closeShallow(stack, leaf);
 			}
 			return null;
 		}
 		catch (Exception e) {
-			throw new ExecutionException(e.getMessage() + " for variable " + var, e);
+			throw new ExecutionException(e);
 		}
 	}
 
