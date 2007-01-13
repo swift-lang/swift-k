@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,7 +34,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 	private static Timer timer;
 
 	private TCCache tc;
-	private Queue dq;
+	private LinkedList dq;
 	private int clusteringQueueDelay = 1;
 	private int minClusterTime = 60;
 	private Map tasks;
@@ -88,7 +87,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 				logger.debug("Adding task to clustering queue: " + task.getIdentity());
 			}
 			synchronized (dq) {
-				dq.offer(new Object[] { task, constraints });
+				dq.addLast(new Object[] { task, constraints });
 			}
 		}
 		else {
@@ -98,7 +97,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 
 	private synchronized Timer startTimer() {
 		if (timer == null) {
-			timer = new Timer("Clustering Timer", true);
+			timer = new Timer(true);
 			timer.schedule(new TimerTask() {
 				public void run() {
 					processDelayQueue();
@@ -154,7 +153,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 		synchronized (dq) {
 			while (!dq.isEmpty()) {
 				int clusterTime = 0;
-				Queue cluster = new LinkedList();
+				LinkedList cluster = new LinkedList();
 				Map env = new HashMap();
 				Object constraints = null;
 				String dir = null;
@@ -206,7 +205,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 
 					int maxWallTime = getMaxWallTime(task);
 					clusterTime += maxWallTime;
-					cluster.offer(h);
+					cluster.addLast(h);
 				}
 
 				if (logger.isDebugEnabled()) {
@@ -217,7 +216,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					continue;
 				}
 				else if (cluster.size() == 1) {
-					Object[] h = (Object[]) cluster.poll();
+					Object[] h = (Object[]) cluster.removeFirst();
 					super.enqueue((Task) h[0], h[1]);
 				}
 				else if (cluster.size() > 1) {
@@ -273,9 +272,9 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Failing task " + t.getIdentity());
 		}
-		Queue cluster = null;
+		LinkedList cluster = null;
 		synchronized (tasks) {
-			cluster = (Queue) tasks.get(t);
+			cluster = (LinkedList) tasks.get(t);
 		}
 		if (cluster != null) {
 			Iterator i = cluster.iterator();
@@ -296,9 +295,9 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Got task status change for " + t.getIdentity());
 			}
-			Queue cluster = null;
+			LinkedList cluster = null;
 			synchronized (tasks) {
-				cluster = (Queue) tasks.get(t);
+				cluster = (LinkedList) tasks.get(t);
 			}
 
 			if (cluster == null) {
