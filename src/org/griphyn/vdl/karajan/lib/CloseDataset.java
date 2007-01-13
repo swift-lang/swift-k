@@ -3,6 +3,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -11,6 +12,8 @@ import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
 public class CloseDataset extends VDLFunction {
+	public static final Logger logger = Logger.getLogger(CloseDataset.class);
+
 	static {
 		setArguments(CloseDataset.class, new Arg[] { PA_VAR, OA_PATH });
 	}
@@ -20,12 +23,15 @@ public class CloseDataset extends VDLFunction {
 		Path path = parsePath(OA_PATH.getValue(stack), stack);
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		try {
+			if (logger.isInfoEnabled()) {
+				logger.info("Closing " + var);
+			}
 			var = var.getField(path);
 			closeChildren(stack, var);
-			return null;
 		}
 		catch (InvalidPathException e) {
 			throw new ExecutionException(e);
 		}
+		return null;
 	}
 }
