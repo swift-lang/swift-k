@@ -20,14 +20,39 @@ public class File {
 		else {
 			path = dir + '/' + file;
 		}
+		path = normalize(path);
 		this.host = host;
 		this.size = size;
 	}
 
 	public File(String fullPath, Object host, long size) {
-		this.path = fullPath;
+		this.path = normalize(fullPath);
 		this.host = host;
 		this.size = size;
+	}
+	
+	private String normalize(String path) {
+		if (path.indexOf("//") == -1) {
+			return path;
+		}
+		else {
+			StringBuffer sb = new StringBuffer();
+			boolean lastWasSlash = false;
+			for(int i = 0; i < path.length(); i++) {
+				char c = path.charAt(i);
+				if (c == '/') {
+					if (!lastWasSlash) {
+						sb.append(c);
+					}
+					lastWasSlash = true;
+				}
+				else {
+					sb.append(c);
+					lastWasSlash = false;
+				}
+			}
+			return sb.toString();
+		}
 	}
 
 	public boolean equals(Object other) {
