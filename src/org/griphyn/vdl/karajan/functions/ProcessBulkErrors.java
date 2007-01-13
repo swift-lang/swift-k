@@ -19,7 +19,7 @@ import org.griphyn.vdl.karajan.VDL2ErrorTranslator;
 
 public class ProcessBulkErrors extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(ProcessBulkErrors.class);
-	
+
 	public static final Arg ERRORS = new Arg.Positional("errors");
 
 	static {
@@ -50,6 +50,7 @@ public class ProcessBulkErrors extends AbstractFunction {
 					tmsg = ex.toString();
 				}
 			}
+			tmsg = tmsg.trim();
 			if (count.containsKey(tmsg)) {
 				Integer j = (Integer) count.get(tmsg);
 				count.put(tmsg, new Integer(j.intValue() + 1));
@@ -61,15 +62,17 @@ public class ProcessBulkErrors extends AbstractFunction {
 		if (count.size() != 0) {
 			STDERR.ret(stack, "The following errors have occurred:\n");
 			i = count.entrySet().iterator();
+			int k = 1;
 			while (i.hasNext()) {
 				Map.Entry e = (Map.Entry) i.next();
 				Integer j = (Integer) e.getValue();
 				if (j.intValue() == 1) {
-					STDERR.ret(stack, e.getKey() + "\n");
+					STDERR.ret(stack, k + ". " + e.getKey() + "\n");
 				}
 				else {
-					STDERR.ret(stack, e.getKey() + " (" + j.intValue() + " times)\n");
+					STDERR.ret(stack, k + ". " + e.getKey() + " (" + j.intValue() + " times)\n");
 				}
+				k++;
 			}
 			return Boolean.TRUE;
 		}
