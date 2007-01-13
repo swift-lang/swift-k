@@ -115,7 +115,6 @@ public class New extends VDLFunction {
 			return handle;
 		}
 		catch (Exception e) {
-			e.printStackTrace();
 			throw new ExecutionException(e);
 		}
 	}
