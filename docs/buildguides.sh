@@ -16,7 +16,7 @@ pdf() {
 	fop/fop.sh -xsl formatting/custom_fo.xsl -xml $guide -pdf $out
 }
 
-process {
+process() {
 	html $1 $2
 	pdf $1
 }
