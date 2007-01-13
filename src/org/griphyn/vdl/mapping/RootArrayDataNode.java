@@ -2,11 +2,13 @@ package org.griphyn.vdl.mapping;
 
 import java.util.Map;
 
+import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.TypeDefinitions;
 
-public class RootArrayDataNode extends ArrayDataNode {
+public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener {
 	private Mapper mapper;
 	private Map params;
 
@@ -26,11 +28,28 @@ public class RootArrayDataNode extends ArrayDataNode {
 			return;
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
-			RootDataNode.checkInputs(params, mapper, this);
+			checkInputs();
 		}
 		catch (InvalidMapperException e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+
+	private void checkInputs() {
+		try {
+			RootDataNode.checkInputs(params, mapper, this);
+		}
+		catch (VDL2FutureException e) {
+			e.getHandle().addListener(this);
+		}
+		catch (DependentException e) {
+			setValue(new ExecutionException(e));
+			closeShallow();
+		}
+	}
+
+	public void handleClosed(DSHandle handle) {
+		checkInputs();
 	}
 
 	public String getParam(String name) {

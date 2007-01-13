@@ -6,12 +6,17 @@ package org.griphyn.vdl.mapping;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.TypeDefinitions;
 
-public class RootDataNode extends AbstractDataNode {
+public class RootDataNode extends AbstractDataNode implements DSHandleListener {
+	public static final Logger logger = Logger.getLogger(RootDataNode.class);
+	
 	private Mapper mapper;
 	private Map params;
 
@@ -28,15 +33,35 @@ public class RootDataNode extends AbstractDataNode {
 			return;
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
-			checkInputs(params, mapper, this);
+			checkInputs();
 		}
 		catch (InvalidMapperException e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
-	public static void checkInputs(Map params, Mapper mapper, DSHandle root) {
-		if (Boolean.valueOf((String) params.get("input")).booleanValue()) {
+	private void checkInputs() {
+		try {
+			checkInputs(params, mapper, this);
+		}
+		catch (VDL2FutureException e) {
+			e.printStackTrace();
+			e.getHandle().addListener(this);
+		}
+		catch (DependentException e) {
+			e.printStackTrace();
+			setValue(new ExecutionException(e));
+			closeShallow();
+		}
+	}
+
+	public void handleClosed(DSHandle handle) {
+		checkInputs();
+	}
+
+	public static void checkInputs(Map params, Mapper mapper, AbstractDataNode root) {
+		String input = (String) params.get("input");
+		if (input != null && Boolean.valueOf(input).booleanValue()) {
 			Iterator i = mapper.existing().iterator();
 			while (i.hasNext()) {
 				Path p = (Path) i.next();
@@ -44,7 +69,9 @@ public class RootDataNode extends AbstractDataNode {
 					DSHandle field = root.getField(p);
 					field.setValue(Boolean.TRUE);
 					field.closeShallow();
-					System.out.println("Found data " + root + "." + p);
+					if (logger.isInfoEnabled()) {
+						logger.info("Found data " + root + "." + p);
+					}
 				}
 				catch (InvalidPathException e) {
 					// it's ok.
@@ -59,19 +86,19 @@ public class RootDataNode extends AbstractDataNode {
 				Path p = (Path) i.next();
 				try {
 					DSHandle field = root.getField(p);
-					System.out.println("Found mapped data " + root + "." + p);
+					if (logger.isInfoEnabled()) {
+						logger.info("Found mapped data " + root + "." + p);
+					}
 				}
 				catch (InvalidPathException e) {
 					// it's ok.
 				}
 			}
-			root.closeShallow();
+			if (root.isArray()) {
+				root.closeShallow();
+			}
 			checkConsistency(root);
 		}
-	}
-
-	protected void checkConsistency() {
-		checkConsistency(this);
 	}
 
 	public static void checkConsistency(DSHandle handle) {
