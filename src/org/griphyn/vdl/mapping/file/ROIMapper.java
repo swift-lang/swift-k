@@ -7,8 +7,9 @@ import java.util.StringTokenizer;
 import org.griphyn.vdl.mapping.Path;
 
 public class ROIMapper extends AbstractFileMapper {
-	int count;
-	Map names; 
+	private int count;
+	private Map names;
+	
 	public ROIMapper() {
 		super(new ROIFileNameElementMapper());
 		names = new HashMap();
