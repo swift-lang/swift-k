@@ -7,26 +7,19 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class FixedFileMapper extends AbstractFileMapper {
-    public static final String PARAM_FILE = "file";
-    
-	private String file;
+    public static final MappingParam PARAM_FILE = new MappingParam("file");
 
 	public FixedFileMapper() {
 		super();
 	}
 
-	public void setParams(Map params) {
-		super.setParams(params);
-		file = (String) params.get(PARAM_FILE);
-	}
-
 	public Collection existing() {
-		if (new File((String) getParams().get("file")).exists()) {
+		if (new File(PARAM_FILE.getStringValue(this)).exists()) {
 			return Arrays.asList(new Path[] {Path.EMPTY_PATH});
 		}
 		else {
@@ -35,7 +28,7 @@ public class FixedFileMapper extends AbstractFileMapper {
 	}
 
 	public String map(Path path) {
-		return file;
+		return PARAM_FILE.getStringValue(this);
 	}
 
 	public Path rmap(String name) {

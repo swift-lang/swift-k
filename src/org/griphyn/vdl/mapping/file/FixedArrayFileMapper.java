@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class FixedArrayFileMapper extends AbstractFileMapper {
-	public static final String PARAM_FILES = "files";
+	public static final MappingParam PARAM_FILES = new MappingParam("files");
 
-	private String[] files;
 	private Map rmap;
 
 	public FixedArrayFileMapper() {
@@ -24,20 +24,25 @@ public class FixedArrayFileMapper extends AbstractFileMapper {
 
 	public void setParams(Map params) {
 		super.setParams(params);
-		String cfiles = (String) params.get(PARAM_FILES);
+		String cfiles = PARAM_FILES.getStringValue(this);
 		if (cfiles == null) {
 			throw new IllegalArgumentException("Missing required mapper parameter: " + PARAM_FILES);
 		}
 		StringTokenizer st = new StringTokenizer(cfiles, " ,;");
-		files = new String[st.countTokens()];
+		String[] files = new String[st.countTokens()];
 		for (int i = 0; st.hasMoreTokens(); i++) {
 			files[i] = st.nextToken();
 		}
+		PARAM_FILES.setValue(this, files);
+	}
+	
+	protected String[] getFiles() {
+		return (String[]) PARAM_FILES.getValue(this);
 	}
 
 	public Collection existing() {
 		List l = new ArrayList();
-		for (int i = 0; i < files.length; i++) {
+		for (int i = 0; i < getFiles().length; i++) {
 			l.add(Path.EMPTY_PATH.addLast(String.valueOf(i), true));
 		}
 		return l;
@@ -49,11 +54,12 @@ public class FixedArrayFileMapper extends AbstractFileMapper {
 		}
 		else {
 			int index = Integer.parseInt(path.getFirst());
-			return files[index];
+			return getFiles()[index];
 		}
 	}
 
 	public Path rmap(String name) {
+		String[] files = getFiles();
 		synchronized (this) {
 			if (rmap == null) {
 				rmap = new HashMap();

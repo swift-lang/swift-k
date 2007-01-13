@@ -9,29 +9,27 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.griphyn.vdl.mapping.Mapper;
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
-public class RegularExpressionMapper implements Mapper {
-    public static final String PARAM_SOURCE = "source";
-    public static final String PARAM_MATCH = "match";
-    public static final String PARAM_TRANSFORM = "transform";
-    
-    private String source, match, transform; 
-    public RegularExpressionMapper() {
+public class RegularExpressionMapper extends AbstractMapper {
+	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
+	public static final MappingParam PARAM_MATCH = new MappingParam("match");
+	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
+
+	public RegularExpressionMapper() {
 	}
 
 	public void setParams(Map params) {
-		source = (String) params.get(PARAM_SOURCE);
-		match = (String) params.get(PARAM_MATCH);
-		if (match == null)
+		super.setParams(params);
+		if (!PARAM_MATCH.isPresent(this)) {
 			throw new RuntimeException("Missing parameter match!");
-		transform = (String) params.get(PARAM_TRANSFORM);
+		}
 	}
 
 	public Collection existing() {
 		if (exists(Path.EMPTY_PATH))
-			return Arrays.asList(new Path[] {Path.EMPTY_PATH});
+			return Arrays.asList(new Path[] { Path.EMPTY_PATH });
 		else {
 			return Collections.EMPTY_LIST;
 		}
@@ -43,10 +41,14 @@ public class RegularExpressionMapper implements Mapper {
 	}
 
 	public String map(Path path) {
+		String match = PARAM_MATCH.getStringValue(this);
+		String source = PARAM_SOURCE.getStringValue(this);
+		String transform = PARAM_TRANSFORM.getStringValue(this);
 		Pattern p = Pattern.compile(match);
 		Matcher m = p.matcher(source);
 		if (!m.find()) {
-			throw new RuntimeException("No match found! source='" + source + "' match = '" + match + "'" );
+			throw new RuntimeException("No match found! source='" + source + "' match = '" + match
+					+ "'");
 		}
 		// find group number to replace
 		Pattern p2 = Pattern.compile("(\\\\\\d)");
@@ -64,7 +66,7 @@ public class RegularExpressionMapper implements Mapper {
 	public Path rmap(String name) {
 		return Path.EMPTY_PATH;
 	}
-	
+
 	public boolean isStatic() {
 		return true;
 	}

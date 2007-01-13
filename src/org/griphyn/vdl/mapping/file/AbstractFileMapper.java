@@ -11,18 +11,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.griphyn.vdl.mapping.Mapper;
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
-public abstract class AbstractFileMapper implements Mapper {
-	public static final String PARAM_PREFIX = "prefix";
-	public static final String PARAM_SUFFIX = "suffix";
-	public static final String PARAM_PATTERN = "pattern";
-	public static final String PARAM_LOCATION = "location";
+public abstract class AbstractFileMapper extends AbstractMapper {
+	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix");
+	public static final MappingParam PARAM_SUFFIX = new MappingParam("suffix");
+	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern");
+	public static final MappingParam PARAM_LOCATION = new MappingParam("location");
 
-	protected Map params;
 	protected FileNameElementMapper elementMapper;
-	protected String prefix=null, suffix=null, pattern=null, location=null;
 
 	protected AbstractFileMapper(FileNameElementMapper elementMapper) {
 		this.elementMapper = elementMapper;
@@ -30,26 +28,6 @@ public abstract class AbstractFileMapper implements Mapper {
 
 	protected AbstractFileMapper() {
 		this(null);
-	}
-
-	public void setParams(Map params) {
-		this.params = params;
-		if (params.get(PARAM_PREFIX)!=null) {
-			prefix = String.valueOf(params.get(PARAM_PREFIX));
-		}
-		if (params.get(PARAM_SUFFIX)!=null) {
-			suffix = String.valueOf(params.get(PARAM_SUFFIX));
-			if (!suffix.startsWith("."))
-				suffix = "." + suffix;
-		}
-		if (params.get(PARAM_PATTERN)!=null) {
-			pattern = String.valueOf(params.get(PARAM_PATTERN));
-			pattern = replaceWildcards(pattern);
-		}
-		if (params.get(PARAM_LOCATION)!=null) {
-            // ?? This check is unnecessary
-			location = (String) params.get(PARAM_LOCATION);
-		}
 	}
 	
 	protected FileNameElementMapper getElementMapper() {
@@ -60,14 +38,32 @@ public abstract class AbstractFileMapper implements Mapper {
 		this.elementMapper = elementMapper;
 	}
 
+	public void setParams(Map params) {
+		super.setParams(params);
+		if (PARAM_SUFFIX.isPresent(this)) {
+			String suffix = PARAM_SUFFIX.getStringValue(this);
+			if (!suffix.startsWith(".")) {
+				PARAM_SUFFIX.setValue(this, "." + suffix);
+			}
+		}
+		if (PARAM_PATTERN.isPresent(this)) {
+			String pattern = PARAM_PATTERN.getStringValue(this);
+			PARAM_PATTERN.setValue(this, replaceWildcards(pattern));
+		}
+	}
+
 	public String map(Path path) {
 		StringBuffer sb = new StringBuffer();
+		final String location = PARAM_LOCATION.getStringValue(this);
+		final String prefix = PARAM_PREFIX.getStringValue(this);
+		final String suffix = PARAM_SUFFIX.getStringValue(this);
 		maybeAppend(sb, location);
 		if (location != null && !location.endsWith("/")) {
 			sb.append('/');
 		}
-		if (prefix != null)
+		if (prefix != null) {
 			path = path.addFirst(prefix);
+		}
 
 		Iterator pi = path.iterator();
 		int level = 0, tokenCount = path.size();
@@ -92,8 +88,9 @@ public abstract class AbstractFileMapper implements Mapper {
 			}
 			level++;
 		}
-		if (suffix != null)
+		if (suffix != null) {
 			sb.append(suffix);
+		}
 		return sb.toString();
 	}
 
@@ -103,6 +100,10 @@ public abstract class AbstractFileMapper implements Mapper {
 	}
 
 	public Collection existing() {
+		final String location = PARAM_LOCATION.getStringValue(this);
+		final String prefix = PARAM_PREFIX.getStringValue(this);
+		final String suffix = PARAM_SUFFIX.getStringValue(this);
+		final String pattern = PARAM_PATTERN.getStringValue(this);
 		List l = new ArrayList();
 		final File f;
 		if (location == null) {
@@ -176,15 +177,18 @@ public abstract class AbstractFileMapper implements Mapper {
 	}
 
 	public String getLocation() {
-		return location;
+		return PARAM_LOCATION.getStringValue(this);
 	}
 
+	/**
+	 * @deprecated Do not use this since it does not properly deal with futures
+	 */
 	public Map getParams() {
 		return params;
 	}
 
 	public String getPrefix() {
-		return prefix;
+		return PARAM_PREFIX.getStringValue(this);
 	}
 
 	public static String replaceWildcards(String wild) {
