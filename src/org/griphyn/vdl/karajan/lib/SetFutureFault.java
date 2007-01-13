@@ -9,33 +9,36 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
 public class SetFutureFault extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(SetFutureFault.class);
 
-	public static final Arg PA_VALUE = new Arg.Positional("value");
+	public static final Arg OA_EXCEPTION = new Arg.Optional("exception", null);
+	public static final Arg OA_MAPPING = new Arg.Optional("mapping", Boolean.FALSE);
 
 	static {
-		setArguments(SetFutureFault.class, new Arg[] { OA_PATH, PA_VAR, PA_VALUE });
+		setArguments(SetFutureFault.class, new Arg[] { OA_PATH, PA_VAR, OA_EXCEPTION, OA_MAPPING });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+		boolean mapping = TypeUtil.toBoolean(OA_MAPPING.getValue(stack));
 		try {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
 			DSHandle leaf = var.getField(path);
 			if (logger.isInfoEnabled()) {
-				logger.info("Failing " + leaf);
+				logger.info("Failing " + leaf + " (mapping=" + mapping + ")");
 			}
 			synchronized (leaf) {
-				Object value = PA_VALUE.getValue(stack);
-				if (value instanceof Exception) {
-					leaf.setValue(new DependentException(leaf, (Exception) value));
+				Object value = OA_EXCEPTION.getValue(stack);
+				if (mapping) {
+					leaf.setValue(new MappingDependentException(leaf, (Exception) value));
 				}
 				else {
-					leaf.setValue(new DependentException(leaf, TypeUtil.toString(value)));
+					leaf.setValue(new DataDependentException(leaf, (Exception) value));
 				}
 				closeShallow(stack, leaf);
 			}

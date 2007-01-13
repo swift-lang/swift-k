@@ -3,6 +3,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -13,6 +14,8 @@ import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
 public class GetFieldValue extends VDLFunction {
+	public static final Logger logger = Logger.getLogger(GetFieldValue.class);
+
 	public static final Arg PA_VAR1 = new Arg.Positional("var");
 
 	static {
@@ -40,13 +43,15 @@ public class GetFieldValue extends VDLFunction {
 				if (var.isArray()) {
 					throw new ExecutionException("getfieldvalue called on an array: " + var);
 				}
+				if (logger.isDebugEnabled()) {
+					logger.debug("GetFieldValue(" + var + ")");
+				}
 				synchronized (var) {
-					Object value = var.getValue();
 					if (!var.isClosed()) {
 						throw new FutureNotYetAvailable(addFutureListener(stack, var));
 					}
 					else {
-						return value;
+						return var.getValue();
 					}
 				}
 			}

@@ -17,6 +17,7 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.StackFrame;
+import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;
@@ -66,7 +67,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		catch (DependentException e) {
 			// This would not be the primal fault so in non-lazy errors mode it
 			// should not matter
-			ERRORS.ret(stack, e.getMessage());
+			throw new ExecutionException(e);
 		}
 	}
 	
@@ -227,6 +228,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 					}
 				}
 			}
+		}
+		catch (DependentException e) {
+			return new String[0];
 		}
 		catch (InvalidPathException e) {
 			throw new ExecutionException(e);
