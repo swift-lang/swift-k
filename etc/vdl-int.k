@@ -73,11 +73,11 @@ namespace("vdl"
 			)
 		)
 			
-		element(mark, [stageout, optional(err)]
+		element(mark, [stageout, optional(err, mapping)]
 			if(
 				err for(pv, stageout
 					[path, var] := each(pv)
-					vdl:setFutureFault(var, "Not derived due to dependent error", path=path)
+					vdl:setFutureFault(var, path=path, mapping=mapping)
 				)
 				for(pv, stageout
 					[path, var] := each(pv)

@@ -23,7 +23,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 								stagein, stageout
 							)
 						)
-						mark(stageout, err=false)
+						mark(stageout, err=false, mapping=false)
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
 					)
 					catch(".*"
@@ -33,7 +33,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 							)
 							else (
 								to(errors, exception)
-								mark(stageout, err=true)
+								mark(stageout, err=true, mapping=false)
 								graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
 							)
 						)
@@ -51,7 +51,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 					to(errors, exception("VDL2: Application {tr} not executed due to errors in dependencies"))
 				)
 			)
-			mark(stageout, err=true)
+			mark(stageout, err=true, mapping=merr)
 			graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
 		)
 	)

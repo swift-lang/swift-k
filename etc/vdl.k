@@ -51,26 +51,28 @@ namespace("vdl"
 		
 		element(stagein, [var]
 			if(
-				vdl:isDatasetBound(var) then(
-					fp := vdl:fringePaths(var)
-					try (
-						for(path, fp
-							discard(vdl:getFieldValue(path=path, var))
+				vdl:isDatasetBound(var) try(
+					sequential(
+						fp := vdl:fringePaths(var)
+						try (
+							for(path, fp
+								discard(vdl:getFieldValue(path=path, var))
+							)
+							catch(".*dependent error.*"
+								log(LOG:DEBUG, exception)
+								deperror = true
+							)
 						)
-						catch(".*not mapped.*"
-							log(LOG:DEBUG, exception)
-							mdeperror = true
-							deperror = true
-						)
-						catch(".*dependent error.*"
-							log(LOG:DEBUG, exception)
-							deperror = true
+						channel:to(stagein,
+							for(path, fp
+								vdl:absFileName(path, var)
+							)
 						)
 					)
-					channel:to(stagein,
-						for(path, fp
-							vdl:absFileName(path, var)
-						)
+					catch(".*not mapped.*"
+						log(LOG:DEBUG, exception)
+						mdeperror = true
+						deperror = true
 					)
 				)
 			)
