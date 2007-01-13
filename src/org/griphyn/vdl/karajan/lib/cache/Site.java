@@ -103,6 +103,9 @@ public class Site {
 		}
 		File cached = (File) files.get(f.getPath());
 		if (cached == null) {
+			if (logger.isInfoEnabled()) {
+				logger.info("Cache contents: " + files);
+			}
 			throw new IllegalStateException(
 					"unlockEntry() called with a file that is not in the cache (" + f + ")");
 		}
