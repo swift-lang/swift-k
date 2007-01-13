@@ -26,6 +26,7 @@ public class ArrayDataNode extends DataNode {
 	}
 	
 	public void getFringePaths(List list, Path parentPath) throws HandleOpenException {
+		checkMappingException();
 		if (!isClosed()) {
 			throw new HandleOpenException(this);
 		}

@@ -30,6 +30,7 @@ public class MappingParam {
 		if (!handle.isClosed()) {
 			throw new VDL2FutureException(handle);
 		}
+		Object value = handle.getValue();
 	}
 
 	public String getFileName(Mapper mapper) {

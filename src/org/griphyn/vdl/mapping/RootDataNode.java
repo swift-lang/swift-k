@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
@@ -49,8 +48,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			e.getHandle().addListener(this);
 		}
 		catch (DependentException e) {
-			e.printStackTrace();
-			setValue(new ExecutionException(e));
+			setValue(new MappingDependentException(this, e));
 			closeShallow();
 		}
 	}

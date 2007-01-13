@@ -2,7 +2,6 @@ package org.griphyn.vdl.mapping;
 
 import java.util.Map;
 
-import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
@@ -43,7 +42,7 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 			e.getHandle().addListener(this);
 		}
 		catch (DependentException e) {
-			setValue(new ExecutionException(e));
+			setValue(new MappingDependentException(this, e));
 			closeShallow();
 		}
 	}

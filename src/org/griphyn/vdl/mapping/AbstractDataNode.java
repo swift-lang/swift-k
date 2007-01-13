@@ -73,9 +73,9 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	protected String getDisplayableName() {
-		String prefix = getRoot().getParam("prefix");
+		String prefix = getRoot().getParam("dbgname");
 		if (prefix == null) {
-			prefix = getRoot().getParam("dbgname");
+			prefix = getRoot().getParam("prefix");
 		}
 		return prefix;
 	}
@@ -210,19 +210,25 @@ public abstract class AbstractDataNode implements DSHandle {
 				field.getType().isArrayField(fieldName));
 	}
 	
-	protected void checkException() {
-		if (value instanceof RuntimeException) {
-			throw (RuntimeException) value;
+	protected void checkDataException() {
+		if (value instanceof DependentException) {
+			throw (DependentException) value;
+		}
+	}
+	
+	protected void checkMappingException() {
+		if (value instanceof MappingDependentException) {
+			throw (MappingDependentException) value;
 		}
 	}
 
 	public Object getValue() {
-		checkException();
+		checkDataException();
 		return value;
 	}
 
 	public Map getArrayValue() {
-		checkException();
+		checkDataException();
 		if (!field.isArray()) {
 			throw new RuntimeException("getArrayValue called on a struct: " + this);
 		}
@@ -252,7 +258,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public String getFilename() {
-		checkException();
+		checkMappingException();
 		Path path = Path.EMPTY_PATH;
 		AbstractDataNode crt = this;
 		while (crt.getParent() != null) {
@@ -263,7 +269,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public List getFileSet() {
-		checkException();
+		checkMappingException();
 		ArrayList list = new ArrayList();
 		getFileSet(list);
 		return list;
@@ -292,7 +298,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public void getFringePaths(List list, Path parentPath) throws HandleOpenException {
-		checkException();
+		checkMappingException();
 		if (getField().getType().getBaseType() != null) {
 			list.add(Path.EMPTY_PATH.toString());
 		}
