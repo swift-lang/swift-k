@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -70,21 +69,21 @@ public class Monitor implements ActionListener, MouseListener {
 		display.setPreferredSize(new Dimension(500, 400));
 		display.setLayout(new BorderLayout());
 		frame.getContentPane().add(display, BorderLayout.CENTER);
-		
+
 		buttons.setLayout(new FlowLayout());
-		
+
 		futures = new JButton("Variable dump");
 		buttons.add(futures);
 		futures.addActionListener(this);
-		
+
 		waiting = new JButton("Waiting threads");
 		buttons.add(waiting);
 		waiting.addActionListener(this);
-		
+
 		tasks = new JButton("Tasks");
 		buttons.add(tasks);
 		tasks.addActionListener(this);
-		
+
 		frame.pack();
 	}
 
@@ -99,6 +98,7 @@ public class Monitor implements ActionListener, MouseListener {
 			synchronized (map) {
 				Iterator i = map.entrySet().iterator();
 				while (i.hasNext()) {
+					List entry = new ArrayList();
 					Map.Entry en = (Map.Entry) i.next();
 					FutureWrappers fw = (FutureWrappers) en.getValue();
 					Future f = null;
@@ -111,9 +111,26 @@ public class Monitor implements ActionListener, MouseListener {
 					DSHandle handle = (DSHandle) en.getKey();
 					String value = "-";
 					if (handle.getValue() != null) {
-						value = "";
+						value = handle.getValue().toString();
 					}
-					al.add(handle.getType() + " " + handle + " " + value + " : " + f);
+					String h = handle.toString();
+					if (h.indexOf(' ') != -1) {
+						h = h.substring(0, h.indexOf(' '));
+					}
+					String sz = "-";
+					if (handle.isArray()) {
+						sz = String.valueOf(handle.getArrayValue().size());
+					}
+					entry.add(handle.getType());
+					entry.add(h);
+					entry.add(value);
+					entry.add(f.isClosed() ? "Closed" : "Open");
+					entry.add(sz);
+					String fs = f.toString();
+					fs = fs.substring(fs.indexOf(' ') + 1);
+					entry.add(fs);
+					entry.add("2");
+					al.add(entry);
 					wr.add(f);
 				}
 			}
@@ -163,16 +180,16 @@ public class Monitor implements ActionListener, MouseListener {
 			display.repaint();
 		}
 		else if (e.getSource() == tasks) {
-			
+
 		}
 	}
-	
+
 	public void dumpVariables() {
 		dumpVariables(System.out);
 	}
 
 	public void dumpVariables(PrintStream ps) {
-	    ps.println("\nRegistered futures:");
+		ps.println("\nRegistered futures:");
 		synchronized (map) {
 			Iterator i = map.entrySet().iterator();
 			while (i.hasNext()) {
@@ -195,13 +212,13 @@ public class Monitor implements ActionListener, MouseListener {
 			ps.println("----");
 		}
 	}
-	
+
 	public void dumpThreads() {
 		dumpThreads(System.out);
 	}
 
 	public void dumpThreads(PrintStream pw) {
-	    pw.println("\nWaiting threads:");
+		pw.println("\nWaiting threads:");
 		Collection c = WaitingThreadsMonitor.getAllThreads();
 		Iterator i = c.iterator();
 		while (i.hasNext()) {
@@ -223,36 +240,10 @@ public class Monitor implements ActionListener, MouseListener {
 			l = new ArrayList();
 			Iterator i = lp.iterator();
 			while (i.hasNext()) {
-				String s = (String) i.next();
-				StringTokenizer st = new StringTokenizer(s, " ,:");
+				List s = (List) i.next();
+				Iterator j = s.iterator();
 				Object[] e = new Object[6];
-				int tc = st.countTokens();
-				if (st.countTokens() != 6 && st.countTokens() != 8) {
-					List l = new ArrayList();
-					while (st.hasMoreTokens()) {
-						l.add(st.nextToken());
-					}
-					throw new RuntimeException("Invalid number of tokens " + tc + ": " + l
-							+ " for " + s);
-				}
-				e[0] = st.nextToken();
-				e[1] = st.nextToken();
-				e[2] = st.nextToken();
-				if ("null".equals(e[2])) {
-					e[2] = "-";
-				}
-				e[3] = st.nextToken();
-				if (tc == 8) {
-					e[4] = st.nextToken();
-					st.nextToken();
-				}
-				else {
-					e[4] = "";
-				}
-				e[5] = st.nextToken();
-				if ("no".equals(e[5])) {
-					e[5] = "-";
-				}
+				e = s.toArray();
 				l.add(e);
 			}
 		}
@@ -395,7 +386,7 @@ public class Monitor implements ActionListener, MouseListener {
 		}
 		frame.setVisible(!frame.isVisible());
 	}
-	
+
 	private class Service implements Runnable {
 
 		public void run() {
@@ -418,7 +409,7 @@ public class Monitor implements ActionListener, MouseListener {
 									break;
 								}
 								case 'v': {
-									dumpVariables(ps);									
+									dumpVariables(ps);
 									break;
 								}
 								case 't': {
