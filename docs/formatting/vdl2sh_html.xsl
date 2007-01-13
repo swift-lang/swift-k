@@ -138,7 +138,7 @@
 
 	<xsl:template name="user.head.content"> 
 		<link href="http://vds.uchicago.edu/vdl2/style.css" rel="stylesheet" type="text/css"/>
-		<script type="text/javascript" src="dhtml.js"></script>
+		<script type="text/javascript" src="http://vds.uchicago.edu/vdl2/dhtml.js"></script>
 		<script class="javascript" src="http://vds.uchicago.edu/vdl2/shCoreu.js"></script>
 		<script class="javascript" src="http://vds.uchicago.edu/vdl2/shBrushVDL2.js"></script>
 	</xsl:template>
