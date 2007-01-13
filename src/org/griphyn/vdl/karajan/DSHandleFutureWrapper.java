@@ -14,51 +14,50 @@ import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DSHandleListener;
+import org.griphyn.vdl.mapping.InvalidPathException;
 
-public class DSHandleFutureWrapper implements Future, Mergeable {
+public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListener {
 	private DSHandle handle;
-	private boolean closed;
 	private LinkedList listeners;
-	private FutureEvaluationException exception;
 
 	public DSHandleFutureWrapper(DSHandle handle) {
 		this.handle = handle;
+		handle.addListener(this);
 	}
 
 	public synchronized void close() {
-		closed = true;
-		notifyListeners();
+		handle.closeShallow();
 	}
 
 	public synchronized boolean isClosed() {
-		return closed;
+		return handle.isClosed();
 	}
 
 	public synchronized Object getValue() throws VariableNotFoundException {
-		if (exception != null) {
-			throw exception;
+		Object value = handle.getValue();
+		if (value instanceof RuntimeException) {
+			throw (RuntimeException) value;
 		}
-		return handle.getValue();
+		else {
+			return value;
+		}
 	}
 
 	public synchronized void addModificationAction(EventListener target, Event event) {
 		/**
-		 * So, the strategy is the following:
-		 *  getValue() or something else throws a future exception; then
-		 *  some entity catches that and calls this method.
-		 *  There is no way to ensure that the future was not closed in the
-		 *  mean time. What has to be done is that this method should check
-		 *  if the future was closed or modified at the time of the call of 
-		 *  this method and call notifyListeners().
+		 * So, the strategy is the following: getValue() or something else
+		 * throws a future exception; then some entity catches that and calls
+		 * this method. There is no way to ensure that the future was not closed
+		 * in the mean time. What has to be done is that this method should
+		 * check if the future was closed or modified at the time of the call of
+		 * this method and call notifyListeners().
 		 */
 		if (listeners == null) {
 			listeners = new LinkedList();
 		}
 		listeners.add(new EventTargetPair(event, target));
 		WaitingThreadsMonitor.addThread(event.getStack());
-		if (closed || handle.getValue() != null) {
-			notifyListeners();
-		}
 	}
 
 	private synchronized void notifyListeners() {
@@ -98,7 +97,7 @@ public class DSHandleFutureWrapper implements Future, Mergeable {
 		else {
 			l = listeners.size() + " listeners";
 		}
-		if (!closed) {
+		if (!isClosed()) {
 			return "Open, " + l;
 		}
 		else {
@@ -107,7 +106,16 @@ public class DSHandleFutureWrapper implements Future, Mergeable {
 	}
 
 	public void fail(FutureEvaluationException e) {
-		this.exception = e;
+		try {
+			handle.setValue(e);
+			handle.closeShallow();
+		}
+		catch (InvalidPathException ex) {
+			throw new RuntimeException("Failed to fail future (" + this + ")", ex);
+		}
+	}
+
+	public void handleClosed(DSHandle handle) {
 		notifyListeners();
 	}
 }
