@@ -10,5 +10,7 @@ process() {
 }
 
 process "userguide.xml" "vdl2sh_html.xsl"
+process "tutorial.xml" "vdl2sh_html.xsl"
 process "quickstartguide.xml" "vdl2_html.xsl"
 process "reallyquickstartguide.xml" "vdl2_html.xsl"
+process "languagespec.xml" "vdl2_html.xsl"
