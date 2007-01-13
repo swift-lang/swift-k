@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -40,6 +41,7 @@ import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.griphyn.vdl.karajan.WrapperMap.FutureWrappers;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 
 public class Monitor implements ActionListener, MouseListener {
 	public static final int VARS = 0;
@@ -110,8 +112,15 @@ public class Monitor implements ActionListener, MouseListener {
 					}
 					DSHandle handle = (DSHandle) en.getKey();
 					String value = "-";
-					if (handle.getValue() != null) {
-						value = handle.getValue().toString();
+					Object v;
+					try {
+						v = handle.getValue();
+						if (v != null) {
+							value = v.toString();
+						}
+					}
+					catch (DependentException ex) {
+						v = "<text color=\"red\">Exception</text>";
 					}
 					String h = handle.toString();
 					if (h.indexOf(' ') != -1) {
@@ -126,8 +135,14 @@ public class Monitor implements ActionListener, MouseListener {
 					entry.add(value);
 					entry.add(f.isClosed() ? "Closed" : "Open");
 					entry.add(sz);
-					String fs = f.toString();
-					fs = fs.substring(fs.indexOf(' ') + 1);
+					String fs;
+					if (f instanceof DSHandleFutureWrapper) {
+						fs = String.valueOf(((DSHandleFutureWrapper) f).listenerCount());
+					}
+					else {
+						fs = f.toString();
+						fs = fs.substring(fs.indexOf(' ') + 1);
+					}
 					entry.add(fs);
 					entry.add("2");
 					al.add(entry);
@@ -339,8 +354,8 @@ public class Monitor implements ActionListener, MouseListener {
 				if (l != null) {
 					try {
 						for (int i = 0; i < l.length; i++) {
-							System.err.println(Trace.get(l[i].getEvent().getStack()));
-							System.err.println("-----------");
+							displayPopup("Stack trace for " + t.getValueAt(row, 1),
+									Trace.get(l[i].getEvent().getStack()));
 						}
 					}
 					catch (NullPointerException ex) {
@@ -351,10 +366,15 @@ public class Monitor implements ActionListener, MouseListener {
 			else if (crtdisp == THREADS) {
 				Object o = wt.get(row);
 				if (o instanceof VariableStack) {
-					System.err.println(Trace.get((VariableStack) o));
+					displayPopup("Stack trace for " + t.getValueAt(row, 0),
+							Trace.get((VariableStack) o));
 				}
 			}
 		}
+	}
+
+	private void displayPopup(String title, String s) {
+		JOptionPane.showMessageDialog(frame, s, title, JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	public EventTargetPair[] getListeners(int wrindex) {
