@@ -1,4 +1,4 @@
-element([tr, optional(arguments, stdin, stdout, stderr, deperror), channel(stagein), channel(stageout)]
+element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), channel(stagein), channel(stageout)]
 	/* may need to substitute with site selection 
 	   meaning filter out sites first by looking at transformation catalog,
 	   if the application is not present at a site, then it should not be
@@ -9,6 +9,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror), channel(stage
     
 	done := isDone(stageout)
 	derr := try(deperror, false)
+	merr := try(mdeperror, false)
 				
 	if(
 		derr == false then(
@@ -41,10 +42,17 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror), channel(stage
 			)
 		)
 		else (
-			to(errors, exception("VDL2: Application {tr} not executed due to errors in dependencies"))
+			if(
+				merr == true then(
+					to(errors, exception(concat("VDL2: Application ", str:quote(tr), 
+						" not executed due to errors in mapping dependencies")))
+				)
+				derr == true then(
+					to(errors, exception("VDL2: Application {tr} not executed due to errors in dependencies"))
+				)
+			)
 			mark(stageout, err=true)
 			graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
 		)
 	)
 )
-
