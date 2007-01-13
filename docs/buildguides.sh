@@ -13,7 +13,7 @@ pdf() {
 	guide=$1
 	xsl=$2
 	out=${guide:0:${#guide}-4}.pdf
-	fop/fop.sh -xsl formatting/custom_fo.xsl -xml $guide -pdf $out
+	fop/fop.sh -xsl formatting/vdl2_fo.xsl -xml $guide -pdf $out
 }
 
 process() {
