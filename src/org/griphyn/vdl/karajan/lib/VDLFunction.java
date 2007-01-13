@@ -14,6 +14,8 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.arguments.ArgUtil;
+import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -25,7 +27,7 @@ import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
+import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.catalog.transformation.File;
@@ -36,19 +38,60 @@ import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.WrapperMap;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 
-public abstract class VDLFunction extends AbstractFunction {
+public abstract class VDLFunction extends SequentialWithArguments {
 	public static final Logger logger = Logger.getLogger(VDLFunction.class);
+
+	public static final Arg.Channel ERRORS = new Arg.Channel("errors");
 
 	public static final Arg OA_PATH = new Arg.Optional("path", "");
 	public static final Arg PA_PATH = new Arg.Positional("path");
 	public static final Arg PA_VAR = new Arg.TypedPositional("var", DSHandle.class, "handle");
 	public static final Arg OA_ISARRAY = new Arg.Optional("isArray", Boolean.FALSE);
+
+	public final void post(VariableStack stack) throws ExecutionException {
+		try {
+			Object o = function(stack);
+			if (o != null) {
+				ret(stack, o);
+			}
+			super.post(stack);
+		}
+		catch (DependentException e) {
+			// This would not be the primal fault so in non-lazy errors mode it
+			// should not matter
+			ERRORS.ret(stack, e.getMessage());
+		}
+	}
+	
+	protected void ret(VariableStack stack, final Object value) throws ExecutionException {
+		if (value != null) {
+			final VariableArguments vret = ArgUtil.getVariableReturn(stack);
+			if (value.getClass().isArray()) {
+				try {
+					Object[] array = (Object[]) value;
+					for (int i = 0; i < array.length; i++) {
+						vret.append(array[i]);
+					}
+				}
+				catch (ClassCastException e) {
+					// array of primitives; return as is
+					vret.append(value);
+				}
+			}
+			else {
+				vret.append(value);
+			}
+		}
+	}
+
+	protected abstract Object function(VariableStack stack) throws ExecutionException;
 
 	/*
 	 * This will likely break if the engine changes in fundamental ways. It also
