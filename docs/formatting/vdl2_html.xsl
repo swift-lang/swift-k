@@ -213,7 +213,7 @@
 			<table border="0">
 				<tr>
 					<td valign="top">
-						<!--#include virtual="menu.html" -->
+						<!--#include virtual="../menu.html" -->
 					</td>
 					<td valign="top" class="main">
 		]]>
