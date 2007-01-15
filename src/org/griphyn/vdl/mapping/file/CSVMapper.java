@@ -133,6 +133,7 @@ public class CSVMapper extends AbstractMapper {
 			while (itc.hasNext()) {
 				Path p = path.addLast((String)cols.get(j));
 				l.add(p);
+				itc.next();
 				j++;
 			}
 			ii++;
