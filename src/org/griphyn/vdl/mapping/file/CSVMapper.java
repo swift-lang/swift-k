@@ -122,16 +122,18 @@ public class CSVMapper extends AbstractMapper {
 	public Collection existing() {
 		readFile();
 		List l = new ArrayList();
-		Iterator i = content.iterator();
+		Iterator itl = content.iterator();
 		int ii = 0;
-		while (i.hasNext()) {
+		while (itl.hasNext()) {
 			Path path = Path.EMPTY_PATH;
 			path = path.addFirst(String.valueOf(ii), true);
-			List colContent = (List) i.next();
-			Iterator j = colContent.iterator();
-			while (j.hasNext()) {
-				Path p = path.addLast((String) j.next());
+			List colContent = (List) itl.next();
+			Iterator itc = colContent.iterator();
+			int j = 0;
+			while (itc.hasNext()) {
+				Path p = path.addLast((String)cols.get(j));
 				l.add(p);
+				j++;
 			}
 			ii++;
 		}
