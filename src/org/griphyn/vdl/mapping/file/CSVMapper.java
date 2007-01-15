@@ -44,7 +44,7 @@ public class CSVMapper extends AbstractMapper {
 			throw new RuntimeException("CSV mapper must have a file parameter!");
 		}
 		if (!PARAM_DELIMITER.isPresent(this)) {
-			PARAM_DELIMITER.setValue(this, "\t");
+			PARAM_DELIMITER.setValue(this, " \t");
 		}
 		if (!PARAM_HDELIMITER.isPresent(this)) {
 			PARAM_HDELIMITER.setValue(this, PARAM_DELIMITER.getValue(this));
