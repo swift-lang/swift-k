@@ -58,7 +58,7 @@ namespace("vdl"
 							for(path, fp
 								discard(vdl:getFieldValue(path=path, var))
 							)
-							catch(".*dependent error.*"
+							catch(".*errors in data dependencies.*"
 								log(LOG:DEBUG, exception)
 								deperror = true
 							)
