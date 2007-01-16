@@ -17,7 +17,6 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.StackFrame;
-import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;

@@ -70,7 +70,7 @@ public class ArrayIndexFutureList implements FutureList {
 		return new FuturePairIterator(this, stack);
 	}
 
-	public void close() {
+	public synchronized void close() {
 		closed = true;
 		Set allkeys = new HashSet(values.keySet());
 		Iterator i = keys.iterator();
@@ -104,11 +104,9 @@ public class ArrayIndexFutureList implements FutureList {
 		}
 	}
 
-	private void notifyListeners() {
-		synchronized (this) {
-			if (listeners == null) {
-				return;
-			}
+	private synchronized void notifyListeners() {
+		if (listeners == null) {
+			return;
 		}
 
 		Iterator i = listeners.iterator();
