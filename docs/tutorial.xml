@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
 
 <article>
@@ -11,16 +10,20 @@
 This is a tutorial on the use of VDL2. It is not intended as a reference 
 guide.
                 </para>
+                <para>
+$LastChangedRevision$
+                </para>
             </formalpara>
         </abstract>
     </articleinfo>
 
 <sect1> <title>Introduction</title>
     <para>
-This tutorial is intended to introduce new users to the basics of VDL2. 
+This tutorial is intended to introduce new users to the basics of VDL2.
 It is structured as a series of small exercise/examples which you can
 try for yourself as you read along.
     </para>
+
 </sect1>
 <sect1> <title>Hello World</title>
     <para>
@@ -308,18 +311,6 @@ outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60, was
 automatically mapped to outfile.</para>
 
 </sect1>
-
-<sect1><title>Mappers</title></sect1>
-<para>A significant difference between VDL2 and other languages is the
-ability to refer to files using variables (so that the contents of
-variables are stored in files, rather than in memory).</para>
-<para>In order to achieve this, it is necessary to map all such variables
-to named files. This mapping is achieved using a 
-<firstterm>mapper</firstterm>.</para>
-<para>There are various kinds of mappers available within VDL2. Two of
-the simplest forms have been observed already:
-</para>
-
 <sect1><title>More on datatypes</title>
 
 <para>
@@ -398,13 +389,81 @@ s[0], and that the array is initialised using an array literal,
 
 </sect1>
 
+<sect1><title>Mappers</title>
+
+<para>A significant difference between VDL2 and other languages is
+that data can be referred to on disk through variables in a very
+similar fashion to data in memory.  For example, in the above 
+examples we have seen a variable definition like this:</para>
+
+<programlisting>
+messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
+</programlisting>
+
+<para>This means that 'outfile' is a dataset variable, which is
+mapped to a file on disk called 'g13greeting.txt'. This variable 
+can be assigned to using = in a similar fashion to an in-memory 
+variable.  We can say that 'outfile' is mapped onto the disk file 
+'q13greeting.txt' by a <firstterm>mapper</firstterm>.
+</para>
+
+<para>There are various ways of mapping in VDL2. Two forms have already
+been seen in this tutorial. Later exercises will introduce more forms.
+</para>
+
+<para>The two forms of mapping seen so far are:</para>
+
+<itemizedlist>
+<para>
+simple named mapping - the name of the file that a variable is 
+mapped to is explictly listed. Like this:
+<programlisting>
+messagefile outfile &lt;&quot;greeting.txt&quot;&gt;;
+</programlisting>
+
+This is useful when you want to explicitly name input and output
+files for your program. For example, 'outfile' in exercise HELLOWORLD.
+
+</para>
+
+<para>
+anonymous mapping - no name is specified in the source code.
+A name is automatically generated for the file. This is useful
+for intermediate files that are only referenced through VDL2,
+such as 'outfile' in exercise ANONYMOUSFILE. A variable declaration
+is mapped anonymously by ommitting any mapper definition, like this:
+
+<programlisting>
+messagefile outfile;
+</programlisting>
+
+</para>
+
+</itemizedlist>
+
+<para>Later exercises will introduce other ways of mapping from
+disk files to VDL2 variables.</para>
+
+<para>TODO: introduce @v syntax.</para>
+
+<para>There is no hands on exercise for this section</para>
+
+</sect1>
+
+
 <sect1><title>The regexp mapper</title>
-<para>For later exercises, we need to know about a new kind of
-mapper, the regexp_mapper. This maps filenames based on an
-existing string and a regular expression.</para>
-<para>See q16.dml for an example. Here we count words from a named
-file (q16.txt) and generate the output filename by applying a regular
-expression to transform q16.txt into q16.count</para>
+<para>In this exercise, we introduce the <firstterm>regexp mapper</firstterm>.
+This mapper transforms a string expression using a regular expression,
+and uses the result of that transformation as the filename to map.</para>
+<para>
+q16.dtm demonstrates the use of this by placing output into a file that
+is based on the name of the input file: our input file is mapped
+to the inputfile variable using the simple named mapper, and then
+we use the regular expression mapper to map the output file. Then we 
+use the countwords() procedure that we defined in exercise ANOTHERPROCEDURE
+to count the works in the input file and store the result in the 
+output file.
+</para>
 </sect1>
 
 <sect1><title>foreach</title>
@@ -416,17 +475,16 @@ file.</para>
 <para>The source code for this example is in q17.dtm</para>
 </sect1>
 
-<sect1><title>More control</title>
-<para>In addition to foreach, VDL2 has 'if' and 'while'
-control structures which behave much like in other languages.</para>
+<sect1><title>If</title>
+<para>
+Decisions can be made using 'if', in a style reminiscent of many other
+languages. q20.dtm contains a simple example of this. Compile and run
+q20.dtm and see that it outputs 'good morning'. Changing the 'morning'
+variable from true to false will cause the program to output 'good
+afternoon'.
+</para>
 </sect1>
 
-<sect1><title>More about mappers</title>
-
-<para>TODO introduce other mappers here - at least simple_mapper leading
-to an array of files.</para>
-
-</sect1>
 
 <sect1><title>Visualising the workflow as a graph</title>
 
@@ -481,5 +539,6 @@ remote resource).</para>
 
 
 </sect1>
+
 </article>
 
