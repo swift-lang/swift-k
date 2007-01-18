@@ -309,6 +309,17 @@ automatically mapped to outfile.</para>
 
 </sect1>
 
+<sect1><title>Mappers</title></sect1>
+<para>A significant difference between VDL2 and other languages is the
+ability to refer to files using variables (so that the contents of
+variables are stored in files, rather than in memory).</para>
+<para>In order to achieve this, it is necessary to map all such variables
+to named files. This mapping is achieved using a 
+<firstterm>mapper</firstterm>.</para>
+<para>There are various kinds of mappers available within VDL2. Two of
+the simplest forms have been observed already:
+</para>
+
 <sect1><title>More on datatypes</title>
 
 <para>
@@ -387,9 +398,22 @@ s[0], and that the array is initialised using an array literal,
 
 </sect1>
 
+<sect1><title>The regexp mapper</title>
+<para>For later exercises, we need to know about a new kind of
+mapper, the regexp_mapper. This maps filenames based on an
+existing string and a regular expression.</para>
+<para>See q16.dml for an example. Here we count words from a named
+file (q16.txt) and generate the output filename by applying a regular
+expression to transform q16.txt into q16.count</para>
+</sect1>
+
 <sect1><title>foreach</title>
-<para>VDL provides a control structure, foreach, to operate on each element of 
+<para>VDL provides a control structure, foreach, to operate on each element of
 an array.</para>
+<para>In this example, we will run the previous word counting example
+over several files, storing the count of words in a corresponding .count 
+file.</para>
+<para>The source code for this example is in q17.dtm</para>
 </sect1>
 
 <sect1><title>More control</title>
@@ -402,6 +426,18 @@ control structures which behave much like in other languages.</para>
 <para>TODO introduce other mappers here - at least simple_mapper leading
 to an array of files.</para>
 
+</sect1>
+
+<sect1><title>Visualising the workflow as a graph</title>
+
+<para>
+When running a workflow, its possible to generate a provenance graph at the
+same time:
+<programlisting>
+vdlrun -pgraph q1.kml > graph.dot
+dot -ofoo.png -Tpng foo.dot
+</programlisting>
+</para>
 </sect1>
 
 <sect1><title>Running on a remote site</title>
@@ -435,16 +471,6 @@ remote resource).</para>
 </sect1>
 
 <sect1><title>Tips and Tricks</title>
-
-<para>
-	<simplelist>
-		<member>Generating a graph for your workflow. The graph is in _.dot_ format, and can be visualized with Graphviz (www.graphviz.org)
-<programlisting>
-vdlrun q1.kml graph > graph.text.dot
-</programlisting>
-		</member>
-	</simplelist>
-</para>
 
 <para>
 	<simplelist>
