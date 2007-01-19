@@ -36,7 +36,7 @@ public class CSVMapper extends AbstractMapper {
 	// keep the content of the CSV file
 	private List content = new ArrayList();
 
-	private boolean read;
+	private boolean read = false;
 
 	public void setParams(Map params) {
 		super.setParams(params);
@@ -110,6 +110,7 @@ public class CSVMapper extends AbstractMapper {
 				++i;
 				content.add(colContent);
 			}
+			read = true;
 		}
 		catch (FileNotFoundException e) {
 			throw new RuntimeException(e.getMessage());
@@ -151,10 +152,11 @@ public class CSVMapper extends AbstractMapper {
 	}
 
 	public String map(Path path) {
-		readFile();
 		if (path == null || path == Path.EMPTY_PATH) {
 			return null;
 		}
+
+		readFile();
 
 		Iterator pi = path.iterator();
 		Path.Entry pe = (Path.Entry) pi.next();
