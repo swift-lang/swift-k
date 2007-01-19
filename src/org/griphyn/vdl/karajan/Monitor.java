@@ -40,6 +40,7 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.griphyn.vdl.karajan.WrapperMap.FutureWrappers;
+import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 
@@ -128,7 +129,12 @@ public class Monitor implements ActionListener, MouseListener {
 					}
 					String sz = "-";
 					if (handle.isArray()) {
-						sz = String.valueOf(handle.getArrayValue().size());
+						if (handle instanceof ArrayDataNode) {
+							sz = String.valueOf(((ArrayDataNode) handle).size());
+						}
+						else{
+							sz = "unknown";
+						}
 					}
 					entry.add(handle.getType());
 					entry.add(h);
@@ -219,10 +225,16 @@ public class Monitor implements ActionListener, MouseListener {
 				}
 				DSHandle handle = (DSHandle) en.getKey();
 				String value = "-";
-				if (handle.getValue() != null) {
-					value = "";
+				try {
+					if (handle.getValue() != null) {
+						value = "";
+					}
 				}
-				ps.println(handle.getType() + " " + handle + " " + value + " " + f);
+				catch (DependentException e) {
+					value = "Dependent exception";
+				}
+				ps.println(handle.getType() + " " + handle + " " + value + " " + f + " "
+						+ (handle.isClosed() ? "Closed" : "Open"));
 			}
 			ps.println("----");
 		}
