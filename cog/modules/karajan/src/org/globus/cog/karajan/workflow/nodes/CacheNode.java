@@ -26,6 +26,7 @@ import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Cache;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
@@ -97,13 +98,26 @@ public class CacheNode extends PartialArgumentsContainer {
 	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
 		if (e.getType().equals(NotificationEventType.EXECUTION_FAILED)) {
 			Object key = e.getStack().currentFrame().getVar(KEY);
+			List l = null;
 			synchronized (instances) {
 				if (instances.containsKey(key)) {
-					instances.remove(key);
+					l = (List) instances.remove(key);
 				}
+			}
+			if (l != null) {
+				failAll(l, (FailureNotificationEvent) e);
 			}
 		}
 		super.notificationEvent(e);
+	}
+
+	protected void failAll(List l, FailureNotificationEvent e) throws ExecutionException {
+		Iterator i = l.iterator();
+		while (i.hasNext()) {
+			VariableStack stack = (VariableStack) i.next();
+			super.notificationEvent(new FailureNotificationEvent(e.getFlowElement(), stack,
+					e.getInitialStack(), e.getMessage(), e.getException()));
+		}
 	}
 
 	private void addTrackingArguments(VariableStack stack) throws ExecutionException {
