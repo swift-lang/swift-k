@@ -53,4 +53,8 @@ public class ArrayDataNode extends DataNode {
 	public boolean isArray() {
 		return true;
 	}
+	
+	public int size() {
+		return getHandles().size();
+	}
 }
