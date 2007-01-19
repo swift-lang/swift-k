@@ -40,11 +40,11 @@ public class ProcessBulkErrors extends AbstractFunction {
 			if (logger.isDebugEnabled()) {
 				logger.debug(ex);
 			}
-			String msg = ex.getMessage();
+			String msg = ex.toString();
 			String tmsg = translator.translate(msg);
 			if (tmsg == null) {
 				if (msg != null && msg.startsWith("VDL2: ")) {
-					tmsg = msg.substring(6);
+					tmsg = ex.getMessage().substring(6);
 				}
 				else {
 					tmsg = ex.toString();
