@@ -276,8 +276,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 		Exception ex = e.getStatus().getException();
 		if (ex != null) {
-			failImmediately(stack, new ExecutionException(
-					ExecutionContext.getMeaningfulMessage(ex), ex));
+			failImmediately(stack, ex);
 		}
 		else {
 			failImmediately(stack, "Task failed");
