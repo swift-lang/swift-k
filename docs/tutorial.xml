@@ -470,9 +470,13 @@ output file.
 <para>VDL provides a control structure, foreach, to operate on each element of
 an array.</para>
 <para>In this example, we will run the previous word counting example
-over several files, storing the count of words in a corresponding .count 
+over several files, storing the count of words in a corresponding .count
 file.</para>
-<para>The source code for this example is in q17.dtm</para>
+<para>The source code for this example is in q17.dtm. The three input files
+(one.txt, two.txt and three.txt) are supplied. After you have run the
+workflow, you should see that there are three output files (one.count,
+two.count and three.count) each containing the word count for the
+corresponding input file.</para>
 </sect1>
 
 <sect1><title>If</title>
@@ -492,9 +496,10 @@ afternoon'.
 When running a workflow, its possible to generate a provenance graph at the
 same time:
 <programlisting>
-vdlrun -pgraph q1.kml > graph.dot
-dot -ofoo.png -Tpng foo.dot
+vdlrun -pgraph graph1.dot q1.kml 
+dot -ograph.png -Tpng graph1.dot
 </programlisting>
+which can then be viewed using your favourite image viewer.
 </para>
 </sect1>
 
