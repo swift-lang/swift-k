@@ -230,7 +230,7 @@ public class Karajan {
 				if (j == 0) {
 					String value = getText(param);
 					StringTemplate funcST = template("function");
-					setExprOrValue(funcST, value, true, false);
+					setExprOrValue(funcST, value, true, true);
 					paramST.setAttribute("func", funcST);
 				}
 				mappingST.setAttribute("params", paramST);
