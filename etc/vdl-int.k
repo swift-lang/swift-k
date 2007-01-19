@@ -191,12 +191,12 @@ namespace("vdl"
 					//the other ones are uploaded, and doing it nicer is a complex
 					//business. So vdl:cacheAddAndLockFile defines "filesToRemove"
 					cleanupFiles(cacheFilesToRemove, host)
-					log(LOG:INFO, "Staging in {srcdir} {filename} to {destdir} on {host}")
+					log(LOG:INFO, "Staging in {srcdir}{filename} to {destdir} on {host}")
 					restartOnError(".*", 2
 					    task:transfer(srcfile=filename, srcdir=srcdir,
 						    desthost=host, destdir=destdir)
 					)
-					log(LOG:INFO, "Staged in {srcdir} {filename} to {destdir} on {host}")
+					log(LOG:INFO, "Staged in {srcdir}{filename} to {destdir} on {host}")
 				)
 			)
 		)
@@ -270,16 +270,18 @@ namespace("vdl"
 			
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
 			
-				[wfdir, sharedDir] := initSharedDir(rhost)
+				[wfdir, sharedDir] := try(
+					initSharedDir(rhost)
+					throw(exception("Could not initialize shared directory on {rhost}", exception))
+				)
 				
 				jobdir := concat(tr, "-", uid())
 				tmpdir := dircat(wfdir, jobdir)
 				
-				log(LOG:INFO, "Creating temporary directory {tmpdir} on {rhost}")
-				dir:make(tmpdir, host=rhost)
-				
 				try(
 					sequential(
+						log(LOG:INFO, "Creating temporary directory {tmpdir} on {rhost}")
+						dir:make(tmpdir, host=rhost)
 					
 						/* May need to consult RLS to find the physical file names for stagein and stageout. */
 						
@@ -323,19 +325,19 @@ namespace("vdl"
 							nl()
 							for(f, ["stderr.txt", "stdout.txt"]
 								"{f}: "
-								if(
-									file:exists("{tmpdir}/{f}", host=rhost) 
-										then(
-											task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
-												destfile="{jobdir}-{f}")
+								try(
+									sequential(
+										task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
+											destfile="{jobdir}-{f}")
 		
-											file:read("{jobdir}-{f}")
-											 // If multiple concurrent errors occur, 
-											 // the files might not get deleted
-											file:remove("{jobdir}-{f}")
-										)
-										else(nl())
+										file:read("{jobdir}-{f}")
+										 // If multiple concurrent errors occur, 
+										 // the files might not get deleted
+										maybe(file:remove("{jobdir}-{f}"))
+									)
+									nl()
 								)
+								"/{f}"
 							)
 						)
 						throw(
