@@ -89,4 +89,12 @@ public class MappingParam {
 			throw new NumberFormatException(String.valueOf(value));
 		}
 	}
+	
+	public Object getValue(Map map) {
+		return map.get(name); 
+	}
+	
+	public void setValue(Map map, Object value) {
+		map.put(name, value);
+	}
 }
