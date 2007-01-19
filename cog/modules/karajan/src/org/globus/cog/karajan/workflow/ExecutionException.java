@@ -82,7 +82,7 @@ public class ExecutionException extends Exception {
 	}
 
 	private void appendJavaException(StringBuffer sb, Throwable cause) {
-		if (cause instanceof ClassCastException || cause instanceof NullPointerException) {
+		if (cause instanceof RuntimeException) {
 			CharArrayWriter caw = new CharArrayWriter();
 			cause.printStackTrace(new PrintWriter(caw));
 			sb.append(caw.toString());
