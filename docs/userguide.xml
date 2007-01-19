@@ -353,5 +353,30 @@ foreach num in nums {
 		</sect2>
 
 	</sect1>
-	
+
+	<sect1>
+		<title>Mapper reference</title>
+		<para>
+Various mappers are available by default. The (will be) documented in the
+following sections.
+		</para>
+
+		<sect2><title>regexp mapper</title>
+			<programlisting>
+	file f&lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
+			</programlisting>
+			<para>
+Parameters are: source, specifying a VDL expression that will be used
+at the input to the regular expression; match, specifying the regular
+expression to match; and transform, specifying the file name to be mapped
+and which may use substitutions from the match parameter.
+			</para>
+		</sect2>
+
+		<sect2><title>csv mapper</title>
+		</sect2>
+
+		<sect2><title>array mapper<title>
+		</sect2>
+	</sect1>
 </article>
