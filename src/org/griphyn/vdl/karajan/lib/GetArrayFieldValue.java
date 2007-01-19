@@ -26,8 +26,6 @@ public class GetArrayFieldValue extends VDLFunction {
 				var = var.getField(path);
 				Map value = var.getArrayValue();
 				if (var.isClosed()) {
-					// System.err.println("gafv: " + var + "." + path + " ->
-					// OKIT[]");
 					return new PairIterator(value);
 				}
 				else {
