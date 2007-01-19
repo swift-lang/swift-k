@@ -49,7 +49,7 @@ public class New extends VDLFunction {
 			String mapper = (String) mapping.get("descriptor");
 			if ("concurrent_mapper".equals(mapper)) {
 				String threadPrefix = getThreadPrefix(stack);
-				mapping.put(ConcurrentMapper.PARAM_THREAD_PREFIX, threadPrefix);
+				ConcurrentMapper.PARAM_THREAD_PREFIX.setValue(mapping, threadPrefix);
 			}
 		}
 		try {
