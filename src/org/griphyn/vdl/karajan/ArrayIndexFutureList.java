@@ -20,17 +20,20 @@ import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureList;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.util.CopyOnWriteHashSet;
+import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DSHandleListener;
 
-public class ArrayIndexFutureList implements FutureList {
+public class ArrayIndexFutureList implements FutureList, DSHandleListener {
 	private ArrayList keys;
 	private Map values;
 	private boolean closed;
 	private CopyOnWriteHashSet listeners;
 	private FutureEvaluationException exception;
 
-	public ArrayIndexFutureList(Map values) {
+	public ArrayIndexFutureList(DSHandle handle, Map values) {
 		this.values = values;
 		keys = new ArrayList();
+		handle.addListener(this);
 	}
 	
 	private RuntimeException notYetAvailable() {
@@ -162,5 +165,9 @@ public class ArrayIndexFutureList implements FutureList {
 	
 	public FutureEvaluationException getException() {
 		return exception;
+	}
+
+	public void handleClosed(DSHandle handle) {
+		close();
 	}
 }
