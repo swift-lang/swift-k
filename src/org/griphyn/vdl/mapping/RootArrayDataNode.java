@@ -20,11 +20,13 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 	public void init(Map params) {
 		this.params = params;
 		String prefix = (String) params.get("prefix");
-		if (prefix != null)
+		if (prefix != null) {
 			getField().setName(prefix);
+		}
 		String desc = (String) params.get("descriptor");
-		if (desc == null)
+		if (desc == null) {
 			return;
+		}
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
 			checkInputs();
