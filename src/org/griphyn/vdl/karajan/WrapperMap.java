@@ -68,7 +68,7 @@ public class WrapperMap {
 			map.put(handle, fw = new FutureWrappers());
 		}
 		if (fw.arrayWrapper == null) {
-			fw.arrayWrapper = new ArrayIndexFutureList(value);
+			fw.arrayWrapper = new ArrayIndexFutureList(handle, value);
 		}
 		return fw.arrayWrapper;
 	}
