@@ -16,6 +16,6 @@ type countfile {}
 messagefile outfile <"q13greeting.txt">;
 countfile c <"count.txt">;
 
-outfile = greeting("hello from VDL");
+outfile = greeting("hello from Swift");
 c = countwords(outfile);
 
