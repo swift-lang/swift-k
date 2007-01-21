@@ -3,12 +3,12 @@
 
 <article>
     <articleinfo revision="0.1">
-        <title>A VDL2 Tutorial</title>
+        <title>A Swift Tutorial</title>
         <abstract>
             <formalpara>
                 <para>
-This is a tutorial on the use of VDL2. It is not intended as a reference 
-guide.
+This is a tutorial on the use of Swift, and its programming language
+SwiftScript. It is not intended as a reference manual.
                 </para>
                 <para>
 $LastChangedRevision$
@@ -19,7 +19,7 @@ $LastChangedRevision$
 
 <sect1> <title>Introduction</title>
     <para>
-This tutorial is intended to introduce new users to the basics of VDL2.
+This tutorial is intended to introduce new users to the basics of Swift.
 It is structured as a series of small exercise/examples which you can
 try for yourself as you read along.
     </para>
@@ -84,7 +84,8 @@ then a call to the procedure:</para>
 type messagefile {}
 </programlisting>
 
-First we define a new type, called messagefile. Data in VDL2 must be typed,
+First we define a new type, called messagefile. Data in SwiftScript
+must be typed,
 whether it is stored in memory or on disk. In this example, we will use
 this as the type for our output message. The {} indicates that no 
 internal structure is defined for the data.
@@ -120,7 +121,7 @@ Now we call the greeting procedure, with its output going to the
 outfile variable and therefore to hello.txt on disk.
 
 <para>Over the following exercises, we'll extend this simple 
-hello world program to demonstrate the various features of VDL2.</para>
+hello world program to demonstrate various features of Swift.</para>
 
 </sect1>
 
@@ -229,7 +230,7 @@ third specifies the location of an executable to perform that
 transformation.</para>
 
 <para>Now that we have defined the logical transformation 'wc', we can 
-use it in VDL:
+use it in SwiftScript:
 </para>
 
 <programlisting>
@@ -251,7 +252,7 @@ type countfile {}
 messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
 countfile c &lt;&quot;count.txt&quot;&gt;;
 
-outfile = greeting(&quot;hello from VDL&quot;);
+outfile = greeting(&quot;hello from Swift&quot;);
 c = countwords(outfile);
 </programlisting>
 
@@ -273,7 +274,7 @@ cat count.txt
   3 q13greeting.txt
 </programlisting>
 
-<para>and thus we discover that the phrase &quot;hello from VDL&quot; contains
+<para>and thus we discover that the phrase &quot;hello from Swift&quot; contains
 precisely three words.</para>
 
 </sect1>
@@ -319,12 +320,12 @@ far, we've seen the built-in 'string' data type and simple user-defined
 datatypes (messagefile and countfile).</para>
 
 <para>
-VDL2 has the additional built-in types, based on XML types:
+SwiftScript has the additional built-in types, based on XML types:
 Boolean, Integer, Float, and Date.
 </para>
 
 <para>We've seen empty user-defined types already, which are used as
-markers on files that we don't need to look at the content of in VDL.
+markers on files that we don't need to look at the content of in SwiftScript.
 It is also possible to create types with structure, as in other 
 programming languages.</para>
 
@@ -391,7 +392,7 @@ s[0], and that the array is initialised using an array literal,
 
 <sect1><title>Mappers</title>
 
-<para>A significant difference between VDL2 and other languages is
+<para>A significant difference between SwiftScript and other languages is
 that data can be referred to on disk through variables in a very
 similar fashion to data in memory.  For example, in the above 
 examples we have seen a variable definition like this:</para>
@@ -407,7 +408,7 @@ variable.  We can say that 'outfile' is mapped onto the disk file
 'q13greeting.txt' by a <firstterm>mapper</firstterm>.
 </para>
 
-<para>There are various ways of mapping in VDL2. Two forms have already
+<para>There are various ways of mapping in SwiftScript. Two forms have already
 been seen in this tutorial. Later exercises will introduce more forms.
 </para>
 
@@ -429,7 +430,7 @@ files for your program. For example, 'outfile' in exercise HELLOWORLD.
 <para>
 anonymous mapping - no name is specified in the source code.
 A name is automatically generated for the file. This is useful
-for intermediate files that are only referenced through VDL2,
+for intermediate files that are only referenced through SwiftScript,
 such as 'outfile' in exercise ANONYMOUSFILE. A variable declaration
 is mapped anonymously by ommitting any mapper definition, like this:
 
@@ -442,7 +443,7 @@ messagefile outfile;
 </itemizedlist>
 
 <para>Later exercises will introduce other ways of mapping from
-disk files to VDL2 variables.</para>
+disk files to SwiftScript variables.</para>
 
 <para>TODO: introduce @v syntax.</para>
 
@@ -467,7 +468,7 @@ output file.
 </sect1>
 
 <sect1><title>foreach</title>
-<para>VDL provides a control structure, foreach, to operate on each element of
+<para>SwiftScript provides a control structure, foreach, to operate on each element of
 an array.</para>
 <para>In this example, we will run the previous word counting example
 over several files, storing the count of words in a corresponding .count
@@ -506,16 +507,17 @@ which can then be viewed using your favourite image viewer.
 <sect1><title>Running on a remote site</title>
 
 <para>As configured by default, all jobs are run locally. In the previous
-examples, we've invoked 'echo' and 'wc' executables from our VDL. These
-have been run on the local system (the same computer on which you 
-ran vdlrun). We can also make our computations run on a remote resource.</para> 
+examples, we've invoked 'echo' and 'wc' executables from our
+SwiftScript program. These have been run on the local system
+(the same computer on which you ran vdlrun). We can also make our 
+computations run on a remote resource.</para> 
 
 <para>WARNING: This example is necessarily more vague than previous examples,
 because its requires access to remote resources. You should ensure that you
 can submit a job using the globus-job-run (or globusrun-ws?) command(s).
 </para>
 
-<para>We do not need to modify any VDL code to run on another resource.
+<para>We do not need to modify any SwiftScript code to run on another resource.
 Instead, we must modify another catalog, the 'site catalog'. This catalog
 provides details of the location that applications will be run, with the
 default settings referring to the local machine. We will modify it to 
