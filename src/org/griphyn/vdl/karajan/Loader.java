@@ -107,6 +107,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			stack.setGlobal("vds.home", System.getProperty("vds.home"));
 
 			ec.start(stack);
+			ec.setArguments(ap.getArguments());
 			ec.waitFor();
 			if (ec.isFailed()) {
 				runerror = true;
@@ -148,6 +149,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
 	private static ArgumentParser buildArgumentParser() {
 		ArgumentParser ap = new ArgumentParser();
+		ap.setArguments(true);
 		ap.setExecutableName("vdlrun");
 		ap.addOption(ArgumentParser.DEFAULT, "A file (.xml or .k) to execute", "file",
 				ArgumentParser.OPTIONAL);
