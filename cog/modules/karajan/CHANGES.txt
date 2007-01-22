@@ -1,3 +1,8 @@
+(01/21/2007)
+
+*** [u]parallelFor didn't handle concurrent exceptions correctly.
+    Fixed.
+
 (01/18/2007)
 
 *** Fixed exceptions in failing grid tasks
