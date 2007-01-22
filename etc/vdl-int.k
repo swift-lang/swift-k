@@ -318,12 +318,12 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
 					catch(".*"
-						log(LOG:DEBUG, exception)
+						log(LOG:DEBUG, "Application exception: ", exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 						
 						outs := concat(
-							nl()
 							for(f, ["stderr.txt", "stdout.txt"]
+								nl()
 								"{f}: "
 								try(
 									sequential(
@@ -337,11 +337,20 @@ namespace("vdl"
 									)
 									nl()
 								)
-								"/{f}"
 							)
 						)
 						throw(
-							if(strip(outs) == "" exception concat(exception, outs))
+							exception(
+								concat(
+									"Exception in {tr}:", nl(),
+									"Arguments: {arguments}", nl(),
+									"Host: {rhost}", nl(),
+									"Directory: {tmpdir}",
+									"{outs}", nl(),
+									"----"
+								)
+								exception
+							)
 						)
 					)
 				)
