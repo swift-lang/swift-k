@@ -49,7 +49,10 @@ public class MappingParam {
 	}
 
 	public String getStringValue(Mapper mapper) {
-		return (String) getValue(mapper);
+		Object value = getValue(mapper);
+		if (value == null)
+			return null;
+		return String.valueOf(value);
 	}
 
 	public void setValue(Mapper mapper, Object value) {
