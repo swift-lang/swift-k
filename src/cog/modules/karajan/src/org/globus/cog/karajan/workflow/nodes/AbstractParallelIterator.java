@@ -11,6 +11,7 @@ package org.globus.cog.karajan.workflow.nodes;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.ArgUtil;
+import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Identifier;
 import org.globus.cog.karajan.util.KarajanIterator;
@@ -108,19 +109,24 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 		}
 	}
 
+	protected boolean testAndSetChildFailed(VariableStack stack) {
+		StackFrame parent = stack.parentFrame();
+		synchronized (parent) {
+			boolean value = parent.getRegs().getBB();
+			if (!value) {
+				parent.getRegs().setBB(true);
+			}
+			return value;
+		}
+	}
+
 	public void notificationEvent(NotificationEvent e) throws ExecutionException {
 		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
 			VariableStack stack = e.getStack();
-			if (!getChildFailed(stack)) {
+			if (!testAndSetChildFailed(stack)) {
 				if (stack.parentFrame().isDefined(VAR)) {
 					closeBuffers(stack);
 					stack.leave();
-					setChildFailed(stack, true);
-				}
-				else if (!this.equals(stack.currentFrame().getVar(CALLER))) {
-					((FailureNotificationEvent) e).getException().printStackTrace();
-					throw new ExecutionException("Stack inconsistency",
-							((FailureNotificationEvent) e).getException());
 				}
 				failImmediately(stack, (FailureNotificationEvent) e);
 			}
