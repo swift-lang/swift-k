@@ -37,7 +37,6 @@ public class SSHThrottlingFailureHandler implements FailureHandler {
 			return false;
 		}
 		else {
-			System.err.println("restarts: "+restarts);
 			Status status = new StatusImpl();
 			status.setStatusCode(Status.UNSUBMITTED);
 			t.setStatus(status);
