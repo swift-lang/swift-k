@@ -361,9 +361,18 @@ Various mappers are available by default. The (will be) documented in the
 following sections.
 		</para>
 
+		<sect2><title>fixed mapper</title>
+			<programlisting>
+	file f &lt;fixed_mapper;file=@arg("plot_outfile_param")&gt;;
+			</programlisting>
+			<para>
+Parameter is: file, specifying the source file.
+			</para>
+		</sect2>
+
 		<sect2><title>regexp mapper</title>
 			<programlisting>
-	file f&lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
+	file f &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
 			</programlisting>
 			<para>
 Parameters are: source, specifying a VDL expression that will be used
