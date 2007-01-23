@@ -502,7 +502,7 @@ messagefile inputfile &lt;"q16.txt"&gt;;
 
 countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1count"&gt;;
 </programlisting>
-
+</para>
 </sect1>
 
 <sect1><title>array_mapper</title>
