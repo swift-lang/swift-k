@@ -22,7 +22,7 @@ public class SSHThrottlingFailureHandler implements FailureHandler {
 	public boolean handleFailure(Task t, Scheduler s) {
 		Exception e = t.getStatus().getException();
 		if (e == null
-				|| !e.getMessage().matches(
+				|| e.getMessage() == null || !e.getMessage().matches(
 						".*SSH Connection failed.*server throttled the connection.*")) {
 			return false;
 		}
