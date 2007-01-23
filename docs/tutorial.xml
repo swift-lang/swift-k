@@ -229,6 +229,7 @@ or we can let the default value apply:
 english = greeting();
 </programlisting>
 
+</para>
 </sect1>
 
 <sect1><title>Another procedure</title>
@@ -497,7 +498,7 @@ output file.
 <para>
 The important bit of q16.dtm is:
 <programlisting>
-messagefile inputfile <"q16.txt">;
+messagefile inputfile &lt;"q16.txt"&gt;;
 
 countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1count"&gt;;
 </programlisting>
