@@ -203,6 +203,34 @@ japanese = greeting(&quot;konnichiwa&quot;);
 of procedures.</para>
 
 </sect1>
+
+<sect1><title>Named and optional parameters</title>
+<para>In addition to specifying parameters positionally, parameters can 
+be named, and if desired a default value can be specified:
+
+<programlisting>
+(messagefile t) greeting (string s="hello") {   
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+</programlisting>
+
+When we invoke the procedure, we can specify values for the parameters
+by name:
+
+<programlisting>
+french = greeting(s="bonjour");
+</programlisting>
+
+or we can let the default value apply:
+
+<programlisting>
+english = greeting();
+</programlisting>
+
+</sect1>
+
 <sect1><title>Another procedure</title>
 <para>
 Now we'll define a new simple procedure. This will take an input file and 
@@ -460,24 +488,64 @@ and uses the result of that transformation as the filename to map.</para>
 q16.dtm demonstrates the use of this by placing output into a file that
 is based on the name of the input file: our input file is mapped
 to the inputfile variable using the simple named mapper, and then
-we use the regular expression mapper to map the output file. Then we 
+we use the regular expression mapper to map the output file. Then we
 use the countwords() procedure that we defined in exercise ANOTHERPROCEDURE
 to count the works in the input file and store the result in the 
 output file.
 </para>
+
+<para>
+The important bit of q16.dtm is:
+<programlisting>
+messagefile inputfile <"q16.txt">;
+
+countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1count"&gt;;
+</programlisting>
+
 </sect1>
 
-<sect1><title>foreach</title>
-<para>SwiftScript provides a control structure, foreach, to operate on each element of
-an array.</para>
+<sect1><title>array_mapper</title>
+<para>
+The <firstterm>array mapper</firstterm> maps a directory of files into
+an array - each element of the array is mapped into one file in the
+specified directory. see q22.dtm
+</para>
+<programlisting>
+string inputNames = "one.txt two.txt three.txt";
+string outputNames = "one.count two.count three.count";
+
+messagefile inputfiles[] &lt;array_mapper;files=inputNames&gt;;
+countfile outputfiles[] &lt;array_mapper;files=outputNames&gt;;
+
+outputfiles[0] = countwords(inputfiles[0]);
+outputfiles[1] = countwords(inputfiles[1]);
+outputfiles[2] = countwords(inputfiles[2]);
+</programlisting>
+</sect1>
+
+<sect3><title>foreach</title>
+<para>SwiftScript provides a control structure, foreach, to operate 
+on each element of an array.</para>
 <para>In this example, we will run the previous word counting example
-over several files, storing the count of words in a corresponding .count
-file.</para>
-<para>The source code for this example is in q17.dtm. The three input files
-(one.txt, two.txt and three.txt) are supplied. After you have run the
-workflow, you should see that there are three output files (one.count,
-two.count and three.count) each containing the word count for the
-corresponding input file.</para>
+over each file in an array without having to explicitly list the
+array elements. The source code for this example is in q17.dtm. The
+three input files (one.txt, two.txt and three.txt) are supplied. After
+you have run the workflow, you should see that there are three output
+files (one.count, two.count and three.count) each containing the word
+count for the corresponding input file. We combine the use of the
+array_mapper and the regexp_mapper.</para>
+<programlisting>
+string inputNames = "one.txt two.txt three.txt";
+
+messagefile inputfiles[] &lt;array_mapper;files=inputNames&gt;;
+
+
+foreach f in inputfiles {
+  countfile c &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
+  c = countwords(f);
+}
+</programlisting>
+
 </sect1>
 
 <sect1><title>If</title>
