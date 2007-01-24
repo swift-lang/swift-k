@@ -524,7 +524,7 @@ outputfiles[2] = countwords(inputfiles[2]);
 </programlisting>
 </sect1>
 
-<sect3><title>foreach</title>
+<sect1><title>foreach</title>
 <para>SwiftScript provides a control structure, foreach, to operate 
 on each element of an array.</para>
 <para>In this example, we will run the previous word counting example
