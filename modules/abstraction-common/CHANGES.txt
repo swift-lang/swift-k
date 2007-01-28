@@ -1,3 +1,11 @@
+(01/28/2007)
+
+*** Changed IOExceptions in file resources to IrrecoverableResourceExcepion.
+    It's a sub-class of FileResourceException, it allows chaining, 
+	and it is more intuitive.
+	
+*** Added better handling of irrecoverable prblems for caching handlers.
+
 (12/30/2006)
 
 *** Added FILEINFO operation to the FileOperationSpecification. It
