@@ -35,8 +35,10 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
             setTaskStatus(task, Status.FAILED, null, "Service is not set");
             throw new IllegalSpecException("Service is not set");
         }
+        FileResource fr = null;
         try {
-            super.submit(task, getResource(service));
+            fr = getResource(service);
+            super.submit(task, fr);
             setTaskStatus(task, Status.COMPLETED, null, null);
         }
         catch (TaskSubmissionException e) {
@@ -46,6 +48,10 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
         catch (IllegalSpecException e) {
             setTaskStatus(task, Status.FAILED, e, e.getMessage());
             throw e;
+        }
+        catch (IrrecoverableResourceException e) {
+            FileResourceCache.getDefault().invalidateResource(resource);
+            setTaskStatus(task, Status.FAILED, e, e.getMessage());
         }
         catch (Exception e) {
             setTaskStatus(task, Status.FAILED, e, e.getMessage());
@@ -65,7 +71,7 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
         task.setStatus(status);
     }
 
-    protected FileResource getResource(Service service)
+    protected synchronized FileResource getResource(Service service)
             throws InvalidProviderException, ProviderMethodException,
             IllegalHostException, InvalidSecurityContextException,
             FileResourceException, IOException {
@@ -73,7 +79,7 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
         return resource;
     }
 
-    public void stopResources() {
+    public synchronized void stopResources() {
         if (resource == null) {
             return;
         }

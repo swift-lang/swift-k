@@ -48,6 +48,7 @@ public class FileResourceCache {
     private LinkedList order;
     private Map releaseTimes;
     private Map fileResources;
+    private Set invalid;
     private Set inUse;
     private Timer timer;
     private int maxIdleResources = DEFAULT_MAX_IDLE_RESOURCES;
@@ -57,6 +58,7 @@ public class FileResourceCache {
     public FileResourceCache() {
         fileResources = new Hashtable();
         inUse = new HashSet();
+        invalid = new HashSet();
         order = new LinkedList();
         releaseTimes = new Hashtable();
         stopper = new ResourceStopper();
@@ -83,7 +85,8 @@ public class FileResourceCache {
                         order.remove(fileResource);
                         releaseTimes.remove(fileResource);
                         if (logger.isDebugEnabled()) {
-                            logger.debug("Found cached resource");
+                            logger.debug("Found cached resource ("
+                                    + fileResource + ")");
                         }
                         return fileResource;
                     }
@@ -142,7 +145,7 @@ public class FileResourceCache {
         synchronized (this) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Releasing resource for "
-                        + resource.getServiceContact());
+                        + resource.getServiceContact() + " (" + resource + ")");
             }
             /*
              * if (!inUse.contains(resource)) { throw new
@@ -150,12 +153,18 @@ public class FileResourceCache {
              * use"); }
              */
             if (inUse.remove(resource)) {
-                order.addLast(resource);
-                releaseTimes
-                        .put(resource, new Long(System.currentTimeMillis()));
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Resource successfully released");
-                    lastRelease = new Throwable();
+                if (invalid.remove(resource)) {
+                    removeResource(resource);
+                }
+                else {
+                    order.addLast(resource);
+                    releaseTimes.put(resource, new Long(System
+                            .currentTimeMillis()));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Resource (" + resource
+                                + ") successfully released");
+                        lastRelease = new Throwable();
+                    }
                 }
             }
             else {
@@ -167,6 +176,10 @@ public class FileResourceCache {
             }
             checkIdleResourceCount();
         }
+    }
+
+    public synchronized void invalidateResource(FileResource resource) {
+        invalid.add(resource);
     }
 
     private void removeResource(FileResource resource) {
@@ -214,7 +227,7 @@ public class FileResourceCache {
         this.maxIdleTime = maxIdleTime;
     }
 
-    private void checkTimer() {
+    private synchronized void checkTimer() {
         if (timer == null) {
             timer = new Timer(true);
             timer.schedule(new ResourceSwipe(this), 60000, 60000);
@@ -284,7 +297,7 @@ public class FileResourceCache {
                     fr.stop();
                 }
                 catch (Exception e) {
-                    logger.warn("Failed to stop resource", e);
+                    logger.info("Failed to stop resource", e);
                 }
                 fr = nextResource();
             }
