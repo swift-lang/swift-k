@@ -26,6 +26,7 @@ import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
+import org.globus.cog.abstraction.impl.file.IrrecoverableResourceException;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
@@ -37,236 +38,289 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
  * names
  */
 public class FileResourceImpl extends AbstractFileResource {
-	private WebdavResource davClient = null;
-	public static final Logger logger = Logger.getLogger(FileResourceImpl.class.getName());
-	
-	/** throws exception */
-	public FileResourceImpl() throws Exception {
-		this(null, new ServiceContactImpl(), AbstractionFactory.newSecurityContext("WebDAV"));
-	}
+    private WebdavResource davClient = null;
+    public static final Logger logger = Logger.getLogger(FileResourceImpl.class
+            .getName());
 
-	/** constructor to be used normally */
-	public FileResourceImpl(String name, ServiceContact serviceContact,
-			SecurityContext securityContext) {
-		super(name, FileResource.WebDAV, serviceContact, securityContext);
-	}
+    /** throws exception */
+    public FileResourceImpl() throws Exception {
+        this(null, new ServiceContactImpl(), AbstractionFactory
+                .newSecurityContext("WebDAV"));
+    }
 
-	/**
-	 * Create the davClient and authenticate with the resource. serviceContact
-	 * should be in the form of a url
-	 */
-	public void start() throws IllegalHostException, InvalidSecurityContextException,
-			FileResourceException, IOException {
-		try {
-			String contact = getServiceContact().getContact().toString();
-			if (!contact.startsWith("http")) {
-				contact = "http://" + contact;
-			}
-			HttpURL hrl = new HttpURL(contact);
-			PasswordAuthentication credentials = (PasswordAuthentication) getSecurityContext().getCredentials();
-			String username = credentials.getUserName();
-			String password = String.valueOf(credentials.getPassword());
-			hrl.setUserinfo(username, password);
-			davClient = new WebdavResource(hrl);
-			setStarted(true);
-		}
-		catch (URIException ue) {
-			throw new IllegalHostException("Error while communicating with the webdav server", ue);
-		}
-	}
+    /** constructor to be used normally */
+    public FileResourceImpl(String name, ServiceContact serviceContact,
+            SecurityContext securityContext) {
+        super(name, FileResource.WebDAV, serviceContact, securityContext);
+    }
 
-	/** Stop the davClient from connecting to the server */
-	public void stop() throws FileResourceException, IOException {
-		davClient.close();
-		setStarted(false);
-	}
+    /**
+     * Create the davClient and authenticate with the resource. serviceContact
+     * should be in the form of a url
+     */
+    public void start() throws IllegalHostException,
+            InvalidSecurityContextException, FileResourceException {
+        try {
+            String contact = getServiceContact().getContact().toString();
+            if (!contact.startsWith("http")) {
+                contact = "http://" + contact;
+            }
+            HttpURL hrl = new HttpURL(contact);
+            PasswordAuthentication credentials = (PasswordAuthentication) getSecurityContext()
+                    .getCredentials();
+            String username = credentials.getUserName();
+            String password = String.valueOf(credentials.getPassword());
+            hrl.setUserinfo(username, password);
+            davClient = new WebdavResource(hrl);
+            setStarted(true);
+        }
+        catch (URIException ue) {
+            throw new IllegalHostException(
+                    "Error while communicating with the webdav server", ue);
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Equivalent to cd command */
-	public void setCurrentDirectory(String directory) throws FileResourceException, IOException {
-		davClient.setPath(directory);
-	}
+    /** Stop the davClient from connecting to the server */
+    public void stop() throws FileResourceException {
+        try {
+            davClient.close();
+            setStarted(false);
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Return Current Directory's name */
-	public String getCurrentDirectory() throws FileResourceException, IOException {
-		return davClient.getPath();
-	}
+    /** Equivalent to cd command */
+    public void setCurrentDirectory(String directory)
+            throws FileResourceException {
+        try {
+            davClient.setPath(directory);
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Equivalent to ls command in the current directory */
-	public Collection list() throws FileResourceException, IOException {
-		Vector listVector = new Vector();
+    /** Return Current Directory's name */
+    public String getCurrentDirectory() throws FileResourceException {
+        return davClient.getPath();
+    }
 
-		if (davClient.isCollection() == true) {
-			String[] listArray = davClient.list();
-			for (int i = 0; i < listArray.length; i++) {
-				String fileName = getCurrentDirectory() + "/" + listArray[i];
-				listVector.add(createGridFile(fileName));
-			}
-		}
-		else {
-			listVector.add(createGridFile(davClient.getName()));
-		}
-		return listVector;
-	}
+    /** Equivalent to ls command in the current directory */
+    public Collection list() throws FileResourceException {
+        Vector listVector = new Vector();
 
-	/** Equivalent to ls command on the given directory */
-	public Collection list(String directory) throws FileResourceException, IOException {
-		// Store currentDir
-		String currentDirectory = getCurrentDirectory();
-		// Change directory
-		setCurrentDirectory(directory);
+        if (davClient.isCollection() == true) {
+            String[] listArray = davClient.list();
+            for (int i = 0; i < listArray.length; i++) {
+                String fileName = getCurrentDirectory() + "/" + listArray[i];
+                listVector.add(createGridFile(fileName));
+            }
+        }
+        else {
+            listVector.add(createGridFile(davClient.getName()));
+        }
+        return listVector;
+    }
 
-		Collection list = list();
-		// Come back to original directory
-		setCurrentDirectory(currentDirectory);
+    /** Equivalent to ls command on the given directory */
+    public Collection list(String directory) throws FileResourceException {
+        // Store currentDir
+        String currentDirectory = getCurrentDirectory();
+        // Change directory
+        setCurrentDirectory(directory);
 
-		return list;
-	}
+        Collection list = list();
+        // Come back to original directory
+        setCurrentDirectory(currentDirectory);
 
-	/** Equivalent to mkdir */
-	public void createDirectory(String directory) throws FileResourceException, IOException {
-		String currentPath = getCurrentDirectory();
-		if (davClient.mkcolMethod(directory) == false) {
-			throw new FileResourceException("Failed to create directory");
-		}
-		setCurrentDirectory(currentPath);
-	}
+        return list;
+    }
 
-	/**
-	 * Remove directory and its files if force = true. Else remove directory
-	 * only if empty
-	 */
-	public void deleteDirectory(String directory, boolean force) throws FileResourceException,
-			IOException {
-		Collection list = list(directory);
-		if (list == null || force == true) {
-			davClient.deleteMethod(directory);
-		}
-	}
+    /** Equivalent to mkdir */
+    public void createDirectory(String directory) throws FileResourceException {
+        try {
+            String currentPath = getCurrentDirectory();
+            if (davClient.mkcolMethod(directory) == false) {
+                throw new FileResourceException("Failed to create directory");
+            }
+            setCurrentDirectory(currentPath);
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Equivalent to rm command */
-	public void deleteFile(String file) throws FileResourceException, IOException {
-		davClient.deleteMethod(file);
-	}
+    /**
+     * Remove directory and its files if force = true. Else remove directory
+     * only if empty
+     */
+    public void deleteDirectory(String directory, boolean force)
+            throws FileResourceException {
+        try {
+            Collection list = list(directory);
+            if (list == null || force == true) {
+                davClient.deleteMethod(directory);
+            }
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Equivalent to cp/copy command */
-	public void getFile(String remoteFilename, String localFileName) throws FileResourceException,
-			IOException {
-		File localFile = new File(localFileName);
-		davClient.getMethod(remoteFilename, localFile);
-	}
+    /** Equivalent to rm command */
+    public void deleteFile(String file) throws FileResourceException {
+        try {
+            davClient.deleteMethod(file);
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Copy a local file to a remote file. Default option 'overwrite' */
-	public void putFile(String localFileName, String remoteFileName) throws FileResourceException,
-			IOException {
-		File localFile = new File(localFileName);
-		davClient.putMethod(remoteFileName, localFile);
-	}
-	
-	/**
-	 * Rename a remote file.
-	 */
-	public void rename(String remoteFileName1, String remoteFileName2)
-			throws FileResourceException, IOException {
-		throw new UnsupportedOperationException("rename not implemented for  webdav");
-	}
+    /** Equivalent to cp/copy command */
+    public void getFile(String remoteFilename, String localFileName)
+            throws FileResourceException {
+        try {
+            File localFile = new File(localFileName);
+            davClient.getMethod(remoteFilename, localFile);
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Changes the permissions on the file if authorized to do so */
-	public void changeMode(String filename, int mode) throws FileResourceException, IOException {
-		throw new UnsupportedOperationException("chmod(filename, mode) not implemented for  webdav");
-	}
+    /** Copy a local file to a remote file. Default option 'overwrite' */
+    public void putFile(String localFileName, String remoteFileName)
+            throws FileResourceException {
+        try {
+            File localFile = new File(localFileName);
+            davClient.putMethod(remoteFileName, localFile);
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
 
-	/** Changes the permissions on the file if authorized to do so */
-	public void changeMode(GridFile newGridFile) throws FileResourceException, IOException {
-		throw new UnsupportedOperationException("chmod(GridFile) not implemented for  webdav");
-	}
+    /**
+     * Rename a remote file.
+     */
+    public void rename(String remoteFileName1, String remoteFileName2)
+            throws FileResourceException {
+        throw new UnsupportedOperationException(
+                "rename not implemented for  webdav");
+    }
 
-	/** get file information */
-	public GridFile getGridFile(String fileName) throws FileResourceException, IOException {
-		return createGridFile(fileName);
-	}
+    /** Changes the permissions on the file if authorized to do so */
+    public void changeMode(String filename, int mode)
+            throws FileResourceException {
+        throw new UnsupportedOperationException(
+                "chmod(filename, mode) not implemented for  webdav");
+    }
 
-	/**
-	 * Returns true if the file exists. uses setCurrentDirectory. return false
-	 * if the user does not have permissions to access directory
-	 */
-	public boolean exists(String filename) throws FileResourceException, IOException {
-		String currentPath = getCurrentDirectory();
-		boolean result = false;
+    /** Changes the permissions on the file if authorized to do so */
+    public void changeMode(GridFile newGridFile) throws FileResourceException {
+        throw new UnsupportedOperationException(
+                "chmod(GridFile) not implemented for  webdav");
+    }
 
-		setCurrentDirectory(filename);
-		result = davClient.exists();
-		setCurrentDirectory(currentPath);
+    /** get file information */
+    public GridFile getGridFile(String fileName) throws FileResourceException {
+        return createGridFile(fileName);
+    }
 
-		return result;
-	}
+    /**
+     * Returns true if the file exists. uses setCurrentDirectory. return false
+     * if the user does not have permissions to access directory
+     */
+    public boolean exists(String filename) throws FileResourceException {
+        String currentPath = getCurrentDirectory();
+        boolean result = false;
 
-	/**
-	 * Is this filename a directory. uses setCurrentDirectory(). Returns false
-	 * if the user does not have permissions to access directory
-	 */
-	public boolean isDirectory(String dirName) throws FileResourceException, IOException {
-		boolean isDir = true;
-		String currentDirectory = getCurrentDirectory();
+        setCurrentDirectory(filename);
+        result = davClient.exists();
+        setCurrentDirectory(currentPath);
 
-		setCurrentDirectory(dirName);
-		if (davClient.isCollection() == false)
-			isDir = false;
-		else
-			isDir = true;
-		setCurrentDirectory(currentDirectory);
+        return result;
+    }
 
-		return isDir;
-	}
+    /**
+     * Is this filename a directory. uses setCurrentDirectory(). Returns false
+     * if the user does not have permissions to access directory
+     */
+    public boolean isDirectory(String dirName) throws FileResourceException {
+        boolean isDir = true;
+        String currentDirectory = getCurrentDirectory();
 
-	/** Not implemented in Webdav * */
-	public void submit(ExecutableObject commandWorkflow) throws IllegalSpecException,
-			TaskSubmissionException {
-		throw new UnsupportedOperationException();
-	}
+        setCurrentDirectory(dirName);
+        if (davClient.isCollection() == false)
+            isDir = false;
+        else
+            isDir = true;
+        setCurrentDirectory(currentDirectory);
 
-	/** method to create gridfile */
-	private GridFile createGridFile(Object obj) throws FileResourceException, IOException {
+        return isDir;
+    }
 
-		GridFile gridFile = new GridFileImpl();
-		String fileName = (String) obj;
+    /** Not implemented in Webdav * */
+    public void submit(ExecutableObject commandWorkflow)
+            throws IllegalSpecException, TaskSubmissionException {
+        throw new UnsupportedOperationException();
+    }
 
-		String currentPath = getCurrentDirectory();
-		davClient.setPath(fileName);
-		gridFile.setAbsolutePathName(davClient.getPath());
+    /** method to create gridfile */
+    private GridFile createGridFile(Object obj) throws FileResourceException {
+        try {
+            GridFile gridFile = new GridFileImpl();
+            String fileName = (String) obj;
 
-		gridFile.setLastModified(String.valueOf(new Date(davClient.getGetLastModified())));
+            String currentPath = getCurrentDirectory();
+            davClient.setPath(fileName);
+            gridFile.setAbsolutePathName(davClient.getPath());
 
-		if (davClient.isCollection() == false) {
-			gridFile.setFileType(GridFile.FILE);
-		}
-		if (davClient.isCollection() == true) {
-			gridFile.setFileType(GridFile.DIRECTORY);
-		}
+            gridFile.setLastModified(String.valueOf(new Date(davClient
+                    .getGetLastModified())));
 
-		gridFile.setName(davClient.getName());
-		gridFile.setSize(davClient.getGetContentLength());
+            if (davClient.isCollection() == false) {
+                gridFile.setFileType(GridFile.FILE);
+            }
+            if (davClient.isCollection() == true) {
+                gridFile.setFileType(GridFile.DIRECTORY);
+            }
 
-		davClient.setPath(currentPath);
+            gridFile.setName(davClient.getName());
+            gridFile.setSize(davClient.getGetContentLength());
 
-		return gridFile;
-	}
+            davClient.setPath(currentPath);
 
-	/** Delete the specified local directory */
-	private void removeLocalDirectory(String tempDirName) {
-		File tempFile = new File(tempDirName);
-		String[] fileNames = tempFile.list();
-		if (fileNames != null) {
-			for (int i = 0; i < fileNames.length; i++) {
-				File newFile = new File(tempDirName + File.separator + fileNames[i]);
-				if (newFile.isFile() == true) {
-					newFile.delete();
-				}
-				else {
-					removeLocalDirectory(newFile.getAbsolutePath());
-				}
-			}
-		}
-		tempFile.delete();
-	}
+            return gridFile;
+        }
+        catch (IOException e) {
+            throw new IrrecoverableResourceException(e);
+        }
+    }
+
+    /** Delete the specified local directory */
+    private void removeLocalDirectory(String tempDirName) {
+        File tempFile = new File(tempDirName);
+        String[] fileNames = tempFile.list();
+        if (fileNames != null) {
+            for (int i = 0; i < fileNames.length; i++) {
+                File newFile = new File(tempDirName + File.separator
+                        + fileNames[i]);
+                if (newFile.isFile() == true) {
+                    newFile.delete();
+                }
+                else {
+                    removeLocalDirectory(newFile.getAbsolutePath());
+                }
+            }
+        }
+        tempFile.delete();
+    }
 
 }
