@@ -14,6 +14,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -30,6 +31,8 @@ import org.globus.cog.abstraction.xml.TaskMarshaller;
 import org.globus.cog.util.CopyOnWriteHashSet;
 
 public class TaskImpl implements Task {
+    public static final Logger logger = Logger.getLogger(TaskImpl.class);
+    
 	public static final Status STATUS_NONE = new StatusImpl();
 	
     private Identity id = null;
@@ -48,6 +51,8 @@ public class TaskImpl implements Task {
     private Calendar completedTime = null;
     private ArrayList serviceList = null;
     private int requiredServices = 0;
+    
+    private boolean anythingWaiting;
 
     public TaskImpl() {
         this.id = new IdentityImpl();
@@ -188,6 +193,9 @@ public class TaskImpl implements Task {
     }
 
     public void setStatus(Status status) {
+        if (logger.isDebugEnabled()) {
+        	logger.debug(this + " setting status to " + status);
+        }
         this.status = status;
 
         if (this.status.getStatusCode() == Status.SUBMITTED) {
@@ -207,7 +215,9 @@ public class TaskImpl implements Task {
             statusListeners.release();
         }
         synchronized (this) {
-            notifyAll();
+        	if (anythingWaiting) {
+        		notifyAll();
+        	}
         }
     }
 
@@ -300,6 +310,7 @@ public class TaskImpl implements Task {
     }
 
     public synchronized void waitFor() throws InterruptedException {
+    	anythingWaiting = true;
         while (!isFailed() && !isCompleted() && !isCanceled()) {
             wait();
         }
