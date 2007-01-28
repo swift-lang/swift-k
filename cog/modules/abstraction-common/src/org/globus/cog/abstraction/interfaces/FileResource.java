@@ -81,10 +81,10 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void start() throws IllegalHostException,
-            InvalidSecurityContextException, IOException, FileResourceException;
+            InvalidSecurityContextException, FileResourceException;
 
     /** Closes the connection to the file resource */
-    public void stop() throws IOException, FileResourceException;
+    public void stop() throws FileResourceException;
 
     /**
      * Returns true if a connection to the service has been made
@@ -96,23 +96,21 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      */
-    public void setCurrentDirectory(String directoryName) throws IOException,
-            FileResourceException;
+    public void setCurrentDirectory(String directoryName) throws FileResourceException;
 
     /**
      * Returns the current working directory
      * 
      * @throws FileResourceException
      */
-    public String getCurrentDirectory() throws IOException,
-            FileResourceException;
+    public String getCurrentDirectory() throws FileResourceException;
 
     /**
      * Returns the list of files in the current working directory
      * 
      * @throws FileResourceException
      */
-    public Collection list() throws IOException, FileResourceException;
+    public Collection list() throws FileResourceException;
 
     /**
      * Returns the list of files in the given directory
@@ -120,16 +118,14 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public Collection list(String directoryName)
-            throws DirectoryNotFoundException, IOException,
-            FileResourceException;
+            throws DirectoryNotFoundException, FileResourceException;
 
     /**
      * Creates a new directory with the given name
      * 
      * @throws FileResourceException
      */
-    public void createDirectory(String directoryName) throws IOException,
-            FileResourceException;
+    public void createDirectory(String directoryName) throws FileResourceException;
 
     /**
      * Creates the specified directory and all required directories in the
@@ -137,8 +133,7 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      */
-    public void createDirectories(String directoryName) throws IOException,
-            FileResourceException;
+    public void createDirectories(String directoryName) throws FileResourceException;
 
     /**
      * Deletes the specified directory. If the "force" flag is true, delete
@@ -147,16 +142,14 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void deleteDirectory(String directoryName, boolean force)
-            throws DirectoryNotFoundException, IOException,
-            FileResourceException;
+            throws DirectoryNotFoundException, FileResourceException;
 
     /**
      * Deletes the given file
      * 
      * @throws FileResourceException
      */
-    public void deleteFile(String fileName) throws IOException,
-            FileResourceException;
+    public void deleteFile(String fileName) throws FileResourceException;
 
     /**
      * Transfer a <code>remoteFileName</code> file from the file resource and
@@ -165,7 +158,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void getFile(String remoteFileName, String localFileName)
-            throws IOException, FileResourceException;
+            throws FileResourceException;
 
     /**
      * Upload the <code>localFileName</code> from the local machine to
@@ -174,7 +167,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void putFile(String localFileName, String remoteFileName)
-            throws IOException, FileResourceException;
+            throws FileResourceException;
 
     /**
      * Transfer the entire directory <code>remoteDirectoryName</code> from the
@@ -184,8 +177,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void getDirectory(String remoteDirectoryName,
-            String localDirectoryName) throws IOException,
-            FileResourceException;
+            String localDirectoryName) throws FileResourceException;
 
     /**
      * Upload the <code>localDirectoryName</code> directory from the local
@@ -194,8 +186,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void putDirectory(String localDirectoryName,
-            String remoteDirectoryName) throws IOException,
-            FileResourceException;
+            String remoteDirectoryName) throws FileResourceException;
 
     /**
      * Copy an array of files from the file resource into the local file system
@@ -203,7 +194,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void getMultipleFiles(String[] remoteFileNames,
-            String[] localFileNames) throws IOException, FileResourceException;
+            String[] localFileNames) throws FileResourceException;
 
     /**
      * Copy an array of files from the file resource into the given local
@@ -213,8 +204,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void getMultipleFiles(String[] remoteFileNames,
-            String localDirectoryName) throws FileResourceException,
-            IOException;
+            String localDirectoryName) throws FileResourceException;
 
     /**
      * Copy an array of files from the local file system into the file resource
@@ -223,7 +213,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void putMultipleFiles(String[] localFileNames,
-            String[] remoteFileNames) throws FileResourceException, IOException;
+            String[] remoteFileNames) throws FileResourceException;
 
     /**
      * Copy an array of files from the local file system into the given remote
@@ -233,8 +223,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void putMultipleFiles(String[] localFileNames,
-            String remoteDirectoryName) throws FileResourceException,
-            IOException;
+            String remoteDirectoryName) throws FileResourceException;
 
     /**
      * Rename a file on the file resource
@@ -242,7 +231,7 @@ public interface FileResource extends GridResource {
      * @throws IOException
      */
     public void rename(String oldFileName, String newFileName)
-            throws FileResourceException, IOException;
+            throws FileResourceException;
 
     /**
      * Changes the permissions on the file if authorized to do so
@@ -251,7 +240,7 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public void changeMode(String fileName, int mode)
-            throws FileResourceException, IOException;
+            throws FileResourceException;
 
     /**
      * Changes the permissions on the file if authorized to do so
@@ -259,8 +248,7 @@ public interface FileResource extends GridResource {
      * @throws IOException
      * @throws FileResourceException
      */
-    public void changeMode(GridFile gridFile) throws FileResourceException,
-            IOException;
+    public void changeMode(GridFile gridFile) throws FileResourceException;
 
     /**
      * Get information of a file from the file resource
@@ -268,22 +256,20 @@ public interface FileResource extends GridResource {
      * @throws IOException
      * @throws FileResourceException
      */
-    public GridFile getGridFile(String fileName) throws FileResourceException,
-            IOException;
+    public GridFile getGridFile(String fileName) throws FileResourceException;
 
     /**
      * Return true if the file exists on the file resource
      * 
      * @throws FileResourceException
      */
-    public boolean exists(String fileName) throws IOException,
-            FileResourceException;
+    public boolean exists(String fileName) throws FileResourceException;
 
     /**
      * Return true if the name points to a directory in the file resource
      */
     public boolean isDirectory(String directoryName)
-            throws FileResourceException, IOException;
+            throws FileResourceException;
 
     /**
      * Executes a non-interactive workflow of commands on the FileResource
