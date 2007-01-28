@@ -91,6 +91,7 @@ public class TCProfile extends VDLFunction {
 	}
 
 	private void addGlobusAttributes(NamedArguments named, TransformationCatalogEntry tce) {
+        Map attrs = null;
 		List l = tce.getProfiles(Profile.GLOBUS);
 		if (l != null) {
 			Iterator i = l.iterator();
@@ -100,7 +101,16 @@ public class TCProfile extends VDLFunction {
 				if (a != null) {
 					named.add(a, p.getProfileValue());
 				}
+                else {
+                    if (attrs == null) {
+                        attrs = new HashMap();
+                    }
+                    attrs.put(p.getProfileKey(), p.getProfileValue());
+                }
 			}
+            if (attrs != null) {
+                named.add(GridExec.A_ATTRIBUTES, attrs);
+            }
 		}
 	}
 }
