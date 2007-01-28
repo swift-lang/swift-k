@@ -25,6 +25,8 @@ public class JobSpecificationImpl implements JobSpecification {
 	private Map additionalAttributes;
 	private List arguments;
 	private Map environment;
+	private String directory;
+	private String executable;
 
 	public JobSpecificationImpl() {
 		this.type = Specification.JOB_SUBMISSION;
@@ -51,19 +53,19 @@ public class JobSpecificationImpl implements JobSpecification {
 	}
 
 	public void setExecutable(String executable) {
-		this.attributes.put("executable", executable);
+		this.executable = executable;
 	}
 
 	public String getExecutable() {
-		return (String) this.attributes.get("executable");
+		return executable;
 	}
 
 	public void setDirectory(String directory) {
-		this.attributes.put("directory", directory);
+		this.directory = directory;
 	}
 
 	public String getDirectory() {
-		return (String) this.attributes.get("directory");
+		return directory;
 	}
 
 	public void addArgument(String argument) {
