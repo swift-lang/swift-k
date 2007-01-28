@@ -19,12 +19,11 @@ import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
-import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
-import org.globus.cog.abstraction.impl.file.FileNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
+import org.globus.cog.abstraction.impl.file.ftp.AbstractFTPFileResource;
 import org.globus.cog.abstraction.impl.file.gridftp.DataChannelAuthenticationType;
 import org.globus.cog.abstraction.impl.file.gridftp.DataChannelProtectionType;
 import org.globus.cog.abstraction.impl.file.gridftp.GridFTPSecurityContext;
@@ -42,7 +41,6 @@ import org.globus.ftp.GridFTPClient;
 import org.globus.ftp.GridFTPSession;
 import org.globus.ftp.MarkerListener;
 import org.globus.ftp.Session;
-import org.globus.ftp.exception.FTPException;
 import org.globus.ftp.exception.ServerException;
 import org.ietf.jgss.GSSCredential;
 
@@ -50,7 +48,7 @@ import org.ietf.jgss.GSSCredential;
  * Implements FileResource API for accessing gridftp server Supports relative
  * and absolute path names
  */
-public class FileResourceImpl extends AbstractFileResource {
+public class FileResourceImpl extends AbstractFTPFileResource {
     public static final Logger logger = Logger
             .getLogger(FileResourceImpl.class);
 
@@ -81,7 +79,7 @@ public class FileResourceImpl extends AbstractFileResource {
      * @throws FileResourceException
      */
     public void start() throws IllegalHostException,
-            InvalidSecurityContextException, IOException, FileResourceException {
+            InvalidSecurityContextException, FileResourceException {
 
         try {
             String host = getServiceContact().getHost();
@@ -96,13 +94,13 @@ public class FileResourceImpl extends AbstractFileResource {
                     .getCredentials();
             gridFTPClient.authenticate(proxy);
             gridFTPClient.setType(Session.TYPE_IMAGE);
-
             setSecurityOptions(gridFTPClient);
 
             setStarted(true);
-        } catch (ServerException se) {
-            throw new FileResourceException(
-                    "Error while communicating with the GridFTP server", se);
+        }
+        catch (Exception e) {
+            throw translateException(
+                    "Error communicating with the GridFTP server", e);
         }
     }
 
@@ -114,7 +112,8 @@ public class FileResourceImpl extends AbstractFileResource {
             if (dcau.equals(DataChannelAuthenticationType.NONE)) {
                 client
                         .setDataChannelAuthentication(DataChannelAuthentication.NONE);
-            } else if (dcau.equals(DataChannelAuthenticationType.SELF)) {
+            }
+            else if (dcau.equals(DataChannelAuthenticationType.SELF)) {
                 client
                         .setDataChannelAuthentication(DataChannelAuthentication.SELF);
             }
@@ -125,13 +124,16 @@ public class FileResourceImpl extends AbstractFileResource {
             if (prot.equals(DataChannelProtectionType.CLEAR)) {
                 client
                         .setDataChannelProtection(GridFTPSession.PROTECTION_CLEAR);
-            } else if (prot.equals(DataChannelProtectionType.CONFIDENTIAL)) {
+            }
+            else if (prot.equals(DataChannelProtectionType.CONFIDENTIAL)) {
                 client
                         .setDataChannelProtection(GridFTPSession.PROTECTION_CONFIDENTIAL);
-            } else if (prot.equals(DataChannelProtectionType.PRIVATE)) {
+            }
+            else if (prot.equals(DataChannelProtectionType.PRIVATE)) {
                 client
                         .setDataChannelProtection(GridFTPSession.PROTECTION_PRIVATE);
-            } else if (prot.equals(DataChannelProtectionType.SAFE)) {
+            }
+            else if (prot.equals(DataChannelProtectionType.SAFE)) {
                 client.setDataChannelProtection(GridFTPSession.PROTECTION_SAFE);
             }
         }
@@ -142,24 +144,25 @@ public class FileResourceImpl extends AbstractFileResource {
      * 
      * @throws FileResourceException
      */
-    public void stop() throws IOException, FileResourceException {
+    public void stop() throws FileResourceException {
         try {
             gridFTPClient.close();
             setStarted(false);
-        } catch (ServerException e) {
-            throw new FileResourceException(
-                    "Error stopping the GridFTP server", e);
+        }
+        catch (Exception e) {
+            throw translateException("Error stopping the resource", e);
         }
     }
 
     /** Equivalent to cd command */
     public void setCurrentDirectory(String directory)
-            throws DirectoryNotFoundException, IOException {
+            throws FileResourceException {
         try {
             gridFTPClient.changeDir(directory);
-        } catch (ServerException ie) {
-            throw new DirectoryNotFoundException(directory
-                    + " is not a valid directory", ie);
+        }
+        catch (Exception e) {
+            throw translateException("Could not set current directory to \""
+                    + directory + "\"", e);
         }
     }
 
@@ -168,18 +171,17 @@ public class FileResourceImpl extends AbstractFileResource {
      * 
      * @throws FileResourceException
      */
-    public String getCurrentDirectory() throws IOException,
-            FileResourceException {
+    public String getCurrentDirectory() throws FileResourceException {
         try {
             return gridFTPClient.getCurrentDir();
-        } catch (ServerException e) {
-            throw new FileResourceException("Cannot get the current directory",
-                    e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot get the current directory", e);
         }
     }
 
     /** Equivalent to ls command in the current directory */
-    public Collection list() throws FileResourceException, IOException {
+    public Collection list() throws FileResourceException {
 
         Vector gridFileList = new Vector();
         try {
@@ -190,15 +192,15 @@ public class FileResourceImpl extends AbstractFileResource {
             }
             return gridFileList;
 
-        } catch (FTPException e) {
-            throw new FileResourceException(
+        }
+        catch (Exception e) {
+            throw translateException(
                     "Cannot list the elements of the current directory", e);
         }
     }
 
     /** Equivalent to ls command on the given directory */
-    public Collection list(String directory) throws FileResourceException,
-            IOException {
+    public Collection list(String directory) throws FileResourceException {
         // Store currentDir
         String currentDirectory = getCurrentDirectory();
         // Change directory
@@ -212,15 +214,15 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** Equivalent to mkdir */
-    public void createDirectory(String directory) throws FileResourceException,
-            IOException {
+    public void createDirectory(String directory) throws FileResourceException {
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("createDirectory(" + directory + ")");
             }
             gridFTPClient.makeDir(directory);
-        } catch (ServerException e) {
-            throw new FileResourceException("Cannot create directory "
+        }
+        catch (Exception e) {
+            throw translateException("Cannot create directory "
                     + directory, e);
         }
     }
@@ -230,8 +232,7 @@ public class FileResourceImpl extends AbstractFileResource {
      * only if empty
      */
     public void deleteDirectory(String directory, boolean force)
-            throws DirectoryNotFoundException, FileResourceException,
-            IOException {
+            throws DirectoryNotFoundException, FileResourceException {
 
         GridFile gridFile = null;
 
@@ -248,7 +249,8 @@ public class FileResourceImpl extends AbstractFileResource {
                     if (gridFile.isFile()) {
                         gridFTPClient.deleteFile(directory + "/"
                                 + gridFile.getName());
-                    } else {
+                    }
+                    else {
                         if (!(gridFile.getName().equals(".") || gridFile
                                 .getName().equals(".."))) {
                             deleteDirectory(directory + "/"
@@ -259,84 +261,90 @@ public class FileResourceImpl extends AbstractFileResource {
                 }
             }
             gridFTPClient.deleteDir(directory);
-        } catch (ServerException e) {
-            throw new FileResourceException(
+        }
+        catch (Exception e) {
+            throw translateException(
                     "Cannot delete the given directory", e);
         }
     }
 
     /** Equivalent to rm file command */
-    public void deleteFile(String file) throws FileNotFoundException,
-            IOException {
+    public void deleteFile(String file) throws FileResourceException {
         try {
             gridFTPClient.deleteFile(file);
-        } catch (ServerException e) {
-            throw new FileNotFoundException("Cannot delete the given file", e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot delete the given file", e);
         }
     }
 
     /** get a remote file to the local stream */
     public void get(String remoteFileName, DataSink sink,
-            MarkerListener mListener) throws FileResourceException, IOException {
+            MarkerListener mListener) throws FileResourceException {
         String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.get(remoteFileName, sink, mListener);
-        } catch (FTPException e) {
-            throw new FileResourceException("Cannot retrieve the given file", e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot retrieve the given file", e);
         }
     }
 
     /** get a remote file */
     public void get(String remoteFileName, File localFile)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.get(remoteFileName, localFile);
-        } catch (FTPException e) {
-            throw new FileResourceException("Cannot retrieve the given file", e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot retrieve the given file", e);
         }
 
     }
 
     /** Equivalent to cp/copy command */
     public void getFile(String remoteFileName, String localFileName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         File localFile = new File(localFileName);
         String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.get(remoteFileName, localFile);
-        } catch (FTPException e) {
-            throw new FileResourceException("Exception in getFile", e);
+        }
+        catch (Exception e) {
+            throw translateException("Exception in getFile", e);
         }
     }
 
     /** Copy a local file to a remote file. Default option 'overwrite' */
     public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
 
         String currentDirectory = getCurrentDirectory();
         File localFile = new File(localFileName);
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.put(localFile, remoteFileName, false);
-        } catch (FTPException e) {
-            throw new FileResourceException("Cannot transfer the given file", e);
+        }
+        catch (Exception e) {
+            throw translateException(e);
         }
     }
 
     /** put a local file into remote resource */
     public void put(File localFile, String remoteFileName, boolean append)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
 
         String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.put(localFile, remoteFileName, append);
-        } catch (FTPException e) {
-            throw new FileResourceException("Cannot transfer the given file", e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot transfer the given file", e);
         }
     }
 
@@ -345,25 +353,27 @@ public class FileResourceImpl extends AbstractFileResource {
      * file resource.
      */
     public void put(DataSource source, String remoteFileName,
-            MarkerListener mListener) throws FileResourceException, IOException {
+            MarkerListener mListener) throws FileResourceException {
         String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.put(remoteFileName, source, mListener);
-        } catch (FTPException e) {
-            throw new FileResourceException("Cannot transfer the given file", e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot transfer the given file", e);
         }
     }
-    
+
     /**
      * Rename a remote file.
      */
     public void rename(String remoteFileName1, String remoteFileName2)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         try {
             gridFTPClient.rename(remoteFileName1, remoteFileName2);
-        } catch (ServerException e) {
-            throw new FileResourceException("Rename for gridftp failed", e);
+        }
+        catch (Exception e) {
+            throw translateException("Rename for gridftp failed", e);
         }
     }
 
@@ -371,25 +381,31 @@ public class FileResourceImpl extends AbstractFileResource {
      * Changes the permissions on the file if authorized to do so
      */
     public void changeMode(String filename, int mode)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         String cmd = "chmod " + mode + " " + filename; // or something else
         try {
             gridFTPClient.site(cmd);
-        } catch (ServerException e) {
-            throw new FileResourceException(
+        }
+        catch (Exception e) {
+            throw translateException(
                     "Cannot change the file permissions.", e);
         }
     }
 
     /** Returns true if the file exists */
-    public boolean exists(String filename) throws IOException {
+    public boolean exists(String filename)
+            throws FileResourceException {
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("exists(" + filename + ")");
             }
             return gridFTPClient.exists(filename);
-        } catch (ServerException e) {
+        }
+        catch (ServerException e) {
             return false;
+        }
+        catch (Exception e) {
+            throw translateException(e);
         }
     }
 
@@ -397,18 +413,20 @@ public class FileResourceImpl extends AbstractFileResource {
      * Is this filename a directory. works if user has permissions to change to
      * the given directory
      */
-    public boolean isDirectory(String dirName) throws FileResourceException,
-            IOException {
+    public boolean isDirectory(String dirName) throws FileResourceException {
         boolean isDir = true;
         String currentDirectory = getCurrentDirectory();
         try {
             setCurrentDirectory(dirName);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             isDir = false;
-        } finally {
+        }
+        finally {
             try {
                 setCurrentDirectory(currentDirectory);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // do nothihng
             }
         }
@@ -416,14 +434,14 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** get remote file information */
-    public GridFile getGridFile(String fileName) throws FileResourceException,
-            IOException {
+    public GridFile getGridFile(String fileName) throws FileResourceException {
 
         String directory = null;
         int endIndex = fileName.lastIndexOf("/");
         if (endIndex < 0) {
             directory = getCurrentDirectory();
-        } else {
+        }
+        else {
             directory = fileName.substring(0, endIndex);
             fileName = fileName.substring(endIndex + 1, fileName.length());
         }
@@ -441,8 +459,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** change permissions to a remote file */
-    public void changeMode(GridFile newGridFile) throws FileResourceException,
-            IOException {
+    public void changeMode(GridFile newGridFile) throws FileResourceException {
 
         String newPermissions = newGridFile.getUserPermissions().toString()
                 + newGridFile.getGroupPermissions().toString()
@@ -457,11 +474,11 @@ public class FileResourceImpl extends AbstractFileResource {
     /** Not implemented in GridFTP * */
     public void submit(ExecutableObject commandWorkflow)
             throws IllegalSpecException, TaskSubmissionException {
+        throw new UnsupportedOperationException("sumbit");
     }
 
     /** create the file information object */
-    private GridFile createGridFile(Object obj) throws FileResourceException,
-            IOException {
+    private GridFile createGridFile(Object obj) throws FileResourceException {
 
         GridFile gridFile = new GridFileImpl();
 
@@ -470,7 +487,8 @@ public class FileResourceImpl extends AbstractFileResource {
         String directory = getCurrentDirectory();
         if (directory.endsWith("/")) {
             gridFile.setAbsolutePathName(directory + fileInfo.getName());
-        } else {
+        }
+        else {
             gridFile.setAbsolutePathName(directory + "/" + fileInfo.getName());
         }
 
@@ -525,7 +543,8 @@ public class FileResourceImpl extends AbstractFileResource {
                         + fileNames[i]);
                 if (newFile.isFile() == true) {
                     newFile.delete();
-                } else {
+                }
+                else {
                     removeLocalDirectory(newFile.getAbsolutePath());
                 }
             }
