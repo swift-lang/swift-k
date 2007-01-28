@@ -10,10 +10,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -37,7 +37,10 @@ import org.globus.cog.abstraction.interfaces.Permissions;
  */
 public class FileResourceImpl extends AbstractFileResource {
     private File resource = null;
-    public static final Logger logger = Logger.getLogger(FileResourceImpl.class.getName());
+    public static final Logger logger = Logger
+            .getLogger(FileResourceImpl.class.getName());
+
+    public int ltoken;
 
     public FileResourceImpl() {
         super();
@@ -49,8 +52,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** set user's home directory as the current directory */
     public void start() throws IllegalHostException,
-            InvalidSecurityContextException, FileResourceException,
-            IOException {
+            InvalidSecurityContextException, FileResourceException {
         setCurrentDirectory(new File(".").getAbsoluteFile().toURI().getPath());
         setStarted(true);
     }
@@ -63,7 +65,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** equivalent to cd */
     public void setCurrentDirectory(String directory)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         if (this.isDirectory(resolveName(directory))) {
             resource = new File(resolveName(directory));
         } else {
@@ -91,8 +93,8 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** list the contents of the current directory */
-    public Collection list() throws IOException {
-        Vector files = new Vector();
+    public Collection list() {
+        ArrayList files = new ArrayList();
         String fileArray[] = null;
 
         fileArray = resource.list();
@@ -104,8 +106,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** list contents of the given directory */
-    public Collection list(String directory) throws FileResourceException,
-            IOException {
+    public Collection list(String directory) throws FileResourceException {
         if (!this.isDirectory(resolveName(directory))) {
             throw new DirectoryNotFoundException("Could not find directory: "
                     + directory);
@@ -122,16 +123,16 @@ public class FileResourceImpl extends AbstractFileResource {
      * 
      * @throws FileResourceException
      */
-    public void createDirectory(String directory) throws IOException,
-            FileResourceException {
+    public void createDirectory(String directory)
+            throws FileResourceException {
         String currentPath = getCurrentDirectory();
         this.resource = new File(resolveName(directory));
         resource.mkdir();
         setCurrentDirectory(currentPath);// [m] ???
     }
 
-    public void createDirectories(String directory) throws IOException,
-            FileResourceException {
+    public void createDirectories(String directory)
+            throws FileResourceException {
         if (directory == null || directory.equals("")) {
             return;
         }
@@ -144,7 +145,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** delete the given directory. If force == true, recursive delete */
     public void deleteDirectory(String directory, boolean force)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
 
         String currentPath = getCurrentDirectory();
         setCurrentDirectory(directory);
@@ -165,8 +166,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** remove a file */
-    public void deleteFile(String fileName) throws FileResourceException,
-            IOException {
+    public void deleteFile(String fileName) throws FileResourceException {
         File localFile = new File(resolveName(fileName));
         if (!localFile.exists()) {
             throw new FileNotFoundException(fileName + " not found.");
@@ -181,37 +181,41 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** copy a file */
     public void getFile(String remoteFileName, String localFileName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
 
-        File remote = new File(resolveName(remoteFileName));
-        if (!remote.exists()) {
-            throw new FileNotFoundException("File not found: "
-                    + remote.getAbsolutePath());
+        try {
+            File remote = new File(resolveName(remoteFileName));
+            if (!remote.exists()) {
+                throw new FileNotFoundException("File not found: "
+                        + remote.getAbsolutePath());
+            }
+            File local = new File(resolveName(localFileName));
+            // silently ignore requests for which source == destination
+            if (remote.getCanonicalPath().equals(local.getCanonicalPath())) {
+                return;
+            }
+            FileInputStream remoteStream = new FileInputStream(remote);
+            FileOutputStream localStream = new FileOutputStream(local);
+            int read;
+            while ((read = remoteStream.read()) != -1) {
+                localStream.write(read);
+            }
+            remoteStream.close();
+            localStream.close();
+        } catch (IOException e) {
+            throw new FileResourceException(e);
         }
-        File local = new File(resolveName(localFileName));
-        // silently ignore requests for which source == destination
-        if (remote.getCanonicalPath().equals(local.getCanonicalPath())) {
-            return;
-        }
-        FileInputStream remoteStream = new FileInputStream(remote);
-        FileOutputStream localStream = new FileOutputStream(local);
-        int read;
-        while ((read = remoteStream.read()) != -1) {
-            localStream.write(read);
-        }
-        remoteStream.close();
-        localStream.close();
     }
 
     /** copy a file */
     public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         getFile(localFileName, remoteFileName);
     }
 
     /** copy a directory */
     public void getDirectory(String remoteDirName, String localDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
 
         File localDir = new File(localDirName);
         GridFile gridFile = null;
@@ -235,14 +239,13 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** copy a directory */
     public void putDirectory(String localDirName, String remoteDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         getDirectory(localDirName, remoteDirName);
     }
 
     /** copy multiple files */
     public void getMultipleFiles(String[] remoteFileNames,
-            String[] localFileNames) throws FileResourceException,
-            IOException {
+            String[] localFileNames) throws FileResourceException {
         if (remoteFileNames.length != localFileNames.length) {
             throw new IllegalArgumentException(
                     "Number of source files are not equal to the number of destination files");
@@ -254,7 +257,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** copy multiple files */
     public void getMultipleFiles(String[] remoteFileNames, String localDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         for (int i = 0; i < remoteFileNames.length; i++) {
             File newFile = new File(remoteFileNames[i]);
             getFile(remoteFileNames[i], localDirName + newFile.getName());
@@ -263,14 +266,13 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** copy multiple files */
     public void putMultipleFiles(String[] localFileNames,
-            String[] remoteFileNames) throws FileResourceException,
-            IOException {
+            String[] remoteFileNames) throws FileResourceException {
         getMultipleFiles(localFileNames, remoteFileNames);
     }
 
     /** copy multiple files */
     public void putMultipleFiles(String[] localFileNames, String remoteDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         getMultipleFiles(localFileNames, remoteDirName);
     }
 
@@ -278,7 +280,7 @@ public class FileResourceImpl extends AbstractFileResource {
      * rename a file.
      */
     public void rename(String remoteFileName1, String remoteFileName2)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         File file1 = new File(remoteFileName1);
         File file2 = new File(remoteFileName2);
         if (file1.renameTo(file2) == false) {
@@ -289,34 +291,30 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** chmod on a file. not implemented for local resource */
     public void changeMode(String filename, int mode)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         throw new UnsupportedOperationException(
                 "Not implemented for local file resource");
     }
 
     /** chmod for the gridFile. not implemented for local resource */
-    public void changeMode(GridFile newGridFile)
-            throws FileResourceException, IOException {
+    public void changeMode(GridFile newGridFile) throws FileResourceException {
         throw new UnsupportedOperationException(
                 "Not implemented for local file resource");
     }
 
     /** get file information */
-    public GridFile getGridFile(String fileName)
-            throws FileResourceException, IOException {
+    public GridFile getGridFile(String fileName) throws FileResourceException {
         return createGridFile(fileName);
     }
 
     /** return true of file exists */
-    public boolean exists(String filename) throws FileResourceException,
-            IOException {
+    public boolean exists(String filename) throws FileResourceException {
         File tempFile = new File(resolveName(filename));
         return tempFile.exists();
     }
 
     /** return true if input is a directory */
-    public boolean isDirectory(String dirName) throws FileResourceException,
-            IOException {
+    public boolean isDirectory(String dirName) throws FileResourceException {
         File isDir = new File(resolveName(dirName));
         return isDir.isDirectory();
     }
@@ -352,7 +350,7 @@ public class FileResourceImpl extends AbstractFileResource {
         gridFile.setUserPermissions(userPermissions);
         gridFile.setGroupPermissions(groupPermissions);
         gridFile.setAllPermissions(allPermissions);
-        
+
         return gridFile;
     }
 
