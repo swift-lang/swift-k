@@ -23,11 +23,15 @@ public class NonBlockingSubmit implements Runnable {
 	private SubmitQueue[] queues;
 	private int currentQueue;
 	private int attempts;
+    private int id;
+    
+    private static volatile int sid = 0;
 
 	public NonBlockingSubmit(TaskHandler th, Task task, SubmitQueue[] queues) {
 		this.taskHandler = th;
 		this.task = task;
 		this.queues = queues;
+        id = sid++;
 		attempts = 0;
 	}
 
@@ -40,7 +44,7 @@ public class NonBlockingSubmit implements Runnable {
 			queues[currentQueue++].queue(this);
 		}
 		else {
-			new Thread(this, "Submit").start();
+			new Thread(this, "Submit"+id).start();
 		}
 	}
 
