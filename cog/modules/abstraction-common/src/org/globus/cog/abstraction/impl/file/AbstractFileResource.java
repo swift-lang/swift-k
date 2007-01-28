@@ -10,7 +10,6 @@
 package org.globus.cog.abstraction.impl.file;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -122,7 +121,7 @@ public abstract class AbstractFileResource implements FileResource {
 
     /** Equivalent to the cp -r command for copying directories */
     public void getDirectory(String remoteDirName, String localDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         File localDir = new File(localDirName);
         GridFile gridFile = null;
 
@@ -150,7 +149,7 @@ public abstract class AbstractFileResource implements FileResource {
 
     /** Equivalent to cp -r command for copying directories */
     public void putDirectory(String localDirName, String remoteDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         File localDir = new File(localDirName);
         if (!localDir.exists()) {
             throw new DirectoryNotFoundException("Local directory not found");
@@ -193,7 +192,7 @@ public abstract class AbstractFileResource implements FileResource {
      * mget - Obtain multiple files from the remote server
      */
     public void getMultipleFiles(String[] remoteFileNames,
-            String[] localFileNames) throws FileResourceException, IOException {
+            String[] localFileNames) throws FileResourceException {
 
         // If the list of sources not equal to destination lists then error
         if (localFileNames.length != remoteFileNames.length)
@@ -219,7 +218,7 @@ public abstract class AbstractFileResource implements FileResource {
      * mget - Obtain multiple files from the ftp server
      */
     public void getMultipleFiles(String[] remoteFileNames, String localDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
         for (int index = 0; index < remoteFileNames.length; index++) {
             // Extract only the file name to be appended to the destination
             // directory
@@ -247,7 +246,7 @@ public abstract class AbstractFileResource implements FileResource {
      * mput - copy multiple files to the resource
      */
     public void putMultipleFiles(String[] localFileNames, String remoteDirName)
-            throws FileResourceException, IOException {
+            throws FileResourceException {
 
         for (int index = 0; index < localFileNames.length; index++) {
             // Check every remote file name provided. If file, use putfile else
@@ -268,7 +267,7 @@ public abstract class AbstractFileResource implements FileResource {
      * mput - copy multiple files into the resource server
      */
     public void putMultipleFiles(String[] localFileNames,
-            String[] remoteFileNames) throws FileResourceException, IOException {
+            String[] remoteFileNames) throws FileResourceException {
         // If list of sources not equal to list of destinations then error
         if (localFileNames.length != remoteFileNames.length)
             throw new IllegalArgumentException(
@@ -287,8 +286,7 @@ public abstract class AbstractFileResource implements FileResource {
         }
     }
 
-    public void createDirectories(String dir) throws FileResourceException,
-            IOException {
+    public void createDirectories(String dir) throws FileResourceException {
         // TODO there is an assumption here on the path separators
         // I'd really suggest enforcing only one of them (hint: '/') at the
         // level of the
