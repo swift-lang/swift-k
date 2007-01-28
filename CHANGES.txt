@@ -1,3 +1,8 @@
+(01/28/07)
+
+*** Added support for non-standard attributes on the GLOBUS
+    prefix in tc.data.
+
 (01/18/07)
 
 *** Fixed an issue with dependent mappers and arrays
