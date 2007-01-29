@@ -223,6 +223,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					i = js.getAttributeNames().iterator();
 					while (i.hasNext()) {
 						String attrName = (String) i.next();
+						if (attrName.equals("maxwalltime"))
+							continue;
 						attrs.put(attrName, js.getAttribute(attrName));
 					}
 
