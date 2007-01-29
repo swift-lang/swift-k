@@ -155,6 +155,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 				int clusterTime = 0;
 				LinkedList cluster = new LinkedList();
 				Map env = new HashMap();
+				Map attrs = new HashMap();
 				Object constraints = null;
 				String dir = null;
 
@@ -201,6 +202,27 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					while (i.hasNext()) {
 						String envName = (String) i.next();
 						env.put(envName, js.getEnvironmentVariable(envName));
+					}
+
+					boolean attrConflict = false;
+					Iterator ia = js.getAttributeNames().iterator();
+					while (ia.hasNext()) {
+						String attrName = (String)ia.next();	
+						if (attrName.equals("maxwalltime"))
+							continue;
+						Object value = env.get(attrName);
+						if (value != null && !value.equals(js.getAttribute(attrName))) {
+							attrConflict = true;
+							break;
+						} else {
+							attrs.put(attrName, js.getAttribute(attrName));
+						}
+					}
+					if (attrConflict) {
+						continue;
+					}
+					else {
+						dqi.remove();
 					}
 
 					int maxWallTime = getMaxWallTime(task);
@@ -253,6 +275,12 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					while (i.hasNext()) {
 						Map.Entry e = (Map.Entry) i.next();
 						js.addEnvironmentVariable((String) e.getKey(), (String) e.getValue());
+					}
+
+					i = attrs.entrySet().iterator();
+					while (i.hasNext()) {
+						Map.Entry e = (Map.Entry) i.next();
+						js.setAttribute((String) e.getKey(), (String) e.getValue());
 					}
 
 					synchronized (tasks) {
