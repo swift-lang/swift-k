@@ -194,15 +194,6 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					if (envConflict) {
 						continue;
 					}
-					else {
-						dqi.remove();
-					}
-
-					i = js.getEnvironmentVariableNames().iterator();
-					while (i.hasNext()) {
-						String envName = (String) i.next();
-						env.put(envName, js.getEnvironmentVariable(envName));
-					}
 
 					boolean attrConflict = false;
 					Iterator ia = js.getAttributeNames().iterator();
@@ -214,8 +205,6 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 						if (value != null && !value.equals(js.getAttribute(attrName))) {
 							attrConflict = true;
 							break;
-						} else {
-							attrs.put(attrName, js.getAttribute(attrName));
 						}
 					}
 					if (attrConflict) {
@@ -223,6 +212,18 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					}
 					else {
 						dqi.remove();
+					}
+
+					i = js.getEnvironmentVariableNames().iterator();
+					while (i.hasNext()) {
+						String envName = (String) i.next();
+						env.put(envName, js.getEnvironmentVariable(envName));
+					}
+
+					i = js.getAttributeNames().iterator();
+					while (i.hasNext()) {
+						String attrName = (String) i.next();
+						attrs.put(attrName, js.getAttribute(attrName));
 					}
 
 					int maxWallTime = getMaxWallTime(task);
