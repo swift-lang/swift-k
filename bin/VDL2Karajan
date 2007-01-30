@@ -19,6 +19,6 @@ if [ "`basename $1 .dtm`" == "$1" ]; then
 	fi
 else
 	NAME=`basename $1 .dtm`
-	$MYPATH/VDLt2VDLx <$1 >"$NAME.xml"
+	$MYPATH/VDLt2VDLx <$1 >"$NAME.xml" && \
 	$MYPATH/VDLx2Karajan "$NAME.xml" >"${NAME}.kml"
 fi
