@@ -1,6 +1,6 @@
 type file {};
 
-file files[]<simple_mapper;pattern="*">;
+file files[]<filesys_mapper;pattern="*">;
 
 foreach f in files {
    print(f);

@@ -7,7 +7,7 @@ type file {}
     }
 }
 
-file inputFiles[] <simple_mapper;pattern="*">;
+file inputFiles[] <filesys_mapper;pattern="*">;
 
 file o <"foo.out">;
 o = echo(@filenames(inputFiles));

@@ -8,7 +8,7 @@ type file {}
 
 string outputNames = "one two three";
 
-file outputFiles[] <array_mapper;files=outputNames>;
+file outputFiles[] <fixed_array_mapper;files=outputNames>;
 
 foreach f in outputFiles {
     f = echo("hello");

@@ -1,5 +1,5 @@
 // a two-step workflow that essentially does 
-// ls "*.txt" | wc
+// ls "/bin" | wc
 
 type file {}
 
@@ -16,5 +16,5 @@ type file {}
 }
 
 file list, count;
-list = ls("*.txt");
+list = ls("/bin");
 count = wc(list);
