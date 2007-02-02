@@ -228,7 +228,7 @@ dataset(name,type,mapping,file,isArray) ::= <<
 
 vdl_mapping(mapping,file) ::= <<
 $if(file)$
-<vdl:mapping descriptor="vdl:fixed_mapper">
+<vdl:mapping descriptor="single_file_mapper">
   <vdl:parameter name="file" value="$file.name$"/>
   $if(file.params)$$file.params;separator="\n"$$endif$
 </vdl:mapping>
