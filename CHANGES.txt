@@ -1,3 +1,7 @@
+(02/02/07)
+
+*** Renamed a few mappers to better reflect the mapper functionalities.
+ 
 (01/30/07)
 
 *** Fixed vdlc to return a non-zero exit code when text->xml conversion
