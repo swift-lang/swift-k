@@ -59,13 +59,13 @@ A dataset’s physical representation is defined by a mapping descriptor, which 
 In order to permit reuse for different datasets, mapping functions may be parameterized for such things as dataset locations. Thus, in order to access a dataset, we need to know three things: its type schema, its mapping descriptor, and the value(s) of any parameter(s) associated with the mapping descriptor. For example, if we want to describe a dataset, whose logical structure is defined by binaryfile, and whose physical representation is a file called “file1.bin” located at “/home/yongzh/data/”, then the dataset can be declared as follows:		
 
 <programlisting>
-binaryfile f1&lt;fixed_mapper;file="/home/yongzh/data/file1.bin"&gt;
+binaryfile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
 </programlisting>
 
 		</para>
 				
 		<para>
-		The above example declares a dataset called f1, which uses a fixed_mapper to map a file from a specific location. What the fixed_mapper does is merely returning the file name to the system. VDL2 also has a simplified syntax for such cases since fixed_mapper is the default mapper used:
+		The above example declares a dataset called f1, which uses a single file mapper to map a file from a specific location. What the mapper does is merely returning the file name to the system. VDL2 also has a simplified syntax for such cases since single_file_mapper is the default mapper used:
 
 <programlisting>
 binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
@@ -251,14 +251,14 @@ count = wc(list);
 <programlisting>
 type file {}
 
-(file t) echo (string s[]) {
+(file t) echo_array (string s[]) {
 	app {
 		echo s[*] stdout=@filename(t);
 	}
 }
 
 string s[] = ["how","are","you"];
-file hw = echo(s);
+file hw = echo_array(s);
 </programlisting>
 
 		</para>
@@ -302,7 +302,7 @@ fa = echo_batch(sa);
 <programlisting>
 type file {};
 
-file files[]&lt;simple_mapper;pattern="*",location="/usr/bin"&gt;;
+file files[]&lt;filesys_mapper;pattern="*",location="/usr/bin"&gt;;
 
 foreach f in files {
 	print(f);
@@ -361,16 +361,16 @@ Various mappers are available by default. The (will be) documented in the
 following sections.
 		</para>
 
-		<sect2><title>fixed mapper</title>
+		<sect2><title>single file mapper</title>
 			<programlisting>
-	file f &lt;fixed_mapper;file=@arg("plot_outfile_param")&gt;;
+	file f &lt;single_file_mapper;file=@arg("plot_outfile_param")&gt;;
 			</programlisting>
 			<para>
 Parameter is: file, specifying the source file.
 			</para>
 		</sect2>
 
-		<sect2><title>regexp mapper</title>
+		<sect2><title>regular expression mapper</title>
 			<programlisting>
 	file f &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
 			</programlisting>
