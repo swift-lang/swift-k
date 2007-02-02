@@ -505,9 +505,9 @@ countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1cou
 </para>
 </sect1>
 
-<sect1><title>array_mapper</title>
+<sect1><title>fixed_array_mapper</title>
 <para>
-The <firstterm>array mapper</firstterm> maps a directory of files into
+The <firstterm>fixed array mapper</firstterm> maps a list of files into
 an array - each element of the array is mapped into one file in the
 specified directory. see q22.dtm
 </para>
@@ -515,8 +515,8 @@ specified directory. see q22.dtm
 string inputNames = "one.txt two.txt three.txt";
 string outputNames = "one.count two.count three.count";
 
-messagefile inputfiles[] &lt;array_mapper;files=inputNames&gt;;
-countfile outputfiles[] &lt;array_mapper;files=outputNames&gt;;
+messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
+countfile outputfiles[] &lt;fixed_array_mapper;files=outputNames&gt;;
 
 outputfiles[0] = countwords(inputfiles[0]);
 outputfiles[1] = countwords(inputfiles[1]);
@@ -534,11 +534,11 @@ three input files (one.txt, two.txt and three.txt) are supplied. After
 you have run the workflow, you should see that there are three output
 files (one.count, two.count and three.count) each containing the word
 count for the corresponding input file. We combine the use of the
-array_mapper and the regexp_mapper.</para>
+fixed_array_mapper and the regexp_mapper.</para>
 <programlisting>
 string inputNames = "one.txt two.txt three.txt";
 
-messagefile inputfiles[] &lt;array_mapper;files=inputNames&gt;;
+messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
 
 
 foreach f in inputfiles {
