@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.griphyn.vdl.mapping.Path;
 
-public class DirectoryMapper extends AbstractFileMapper {
+public class FileSystemArrayMapper extends AbstractFileMapper {
 	private Map filenames = new HashMap();
 	private int count = 0;
 	

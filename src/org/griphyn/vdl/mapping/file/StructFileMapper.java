@@ -5,9 +5,9 @@ package org.griphyn.vdl.mapping.file;
 
 import java.util.Map;
 
-public class SimpleFileMapper extends AbstractFileMapper {
+public class StructFileMapper extends AbstractFileMapper {
 
-	public SimpleFileMapper() {
+	public StructFileMapper() {
 		super();
 	}
 

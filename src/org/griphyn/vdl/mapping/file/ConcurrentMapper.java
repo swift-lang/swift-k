@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.griphyn.vdl.mapping.MappingParam;
 
-public class ConcurrentMapper extends SimpleFileMapper {
+public class ConcurrentMapper extends StructFileMapper {
 	public static final MappingParam PARAM_THREAD_PREFIX = new MappingParam("thread_prefix");
 
 	public void setParams(Map params) {

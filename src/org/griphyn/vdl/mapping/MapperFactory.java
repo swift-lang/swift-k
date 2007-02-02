@@ -9,24 +9,22 @@ import java.util.Map;
 import org.griphyn.vdl.mapping.file.AirsnMapper;
 import org.griphyn.vdl.mapping.file.CSVMapper;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
-import org.griphyn.vdl.mapping.file.DirectoryMapper;
+import org.griphyn.vdl.mapping.file.FileSystemArrayMapper;
 import org.griphyn.vdl.mapping.file.FixedArrayFileMapper;
-import org.griphyn.vdl.mapping.file.FixedFileMapper;
+import org.griphyn.vdl.mapping.file.SingleFileMapper;
 import org.griphyn.vdl.mapping.file.ROIMapper;
 import org.griphyn.vdl.mapping.file.RegularExpressionMapper;
-import org.griphyn.vdl.mapping.file.SimpleFileMapper;
+import org.griphyn.vdl.mapping.file.StructFileMapper;
 
 public class MapperFactory {
 	private static Map mappers = new HashMap();
 
 	static {
-		registerMapper("simple_mapper", SimpleFileMapper.class);
-		registerMapper("vdl:fixed_mapper", FixedFileMapper.class);
-		registerMapper("fixed_mapper", FixedFileMapper.class);
-		registerMapper("array_mapper", FixedArrayFileMapper.class);
-        registerMapper("temp_mapper", SimpleFileMapper.class);
+		registerMapper("struct_mapper", StructFileMapper.class);
+		registerMapper("single_file_mapper", SingleFileMapper.class);
+		registerMapper("fixed_array_mapper", FixedArrayFileMapper.class);
         registerMapper("concurrent_mapper", ConcurrentMapper.class);
-        registerMapper("dir_mapper", DirectoryMapper.class);
+        registerMapper("filesys_mapper", FileSystemArrayMapper.class);
         registerMapper("regexp_mapper", RegularExpressionMapper.class);
         registerMapper("csv_mapper", CSVMapper.class);
         registerMapper("airsn_mapper", AirsnMapper.class);

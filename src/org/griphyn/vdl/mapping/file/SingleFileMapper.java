@@ -11,10 +11,10 @@ import java.util.Collections;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
-public class FixedFileMapper extends AbstractFileMapper {
+public class SingleFileMapper extends AbstractFileMapper {
     public static final MappingParam PARAM_FILE = new MappingParam("file");
 
-	public FixedFileMapper() {
+	public SingleFileMapper() {
 		super();
 	}
 
