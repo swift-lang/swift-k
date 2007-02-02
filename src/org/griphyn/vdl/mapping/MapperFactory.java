@@ -14,13 +14,13 @@ import org.griphyn.vdl.mapping.file.FixedArrayFileMapper;
 import org.griphyn.vdl.mapping.file.SingleFileMapper;
 import org.griphyn.vdl.mapping.file.ROIMapper;
 import org.griphyn.vdl.mapping.file.RegularExpressionMapper;
-import org.griphyn.vdl.mapping.file.StructFileMapper;
+import org.griphyn.vdl.mapping.file.SimpleFileMapper;
 
 public class MapperFactory {
 	private static Map mappers = new HashMap();
 
 	static {
-		registerMapper("struct_mapper", StructFileMapper.class);
+		registerMapper("simple_mapper", SimpleFileMapper.class);
 		registerMapper("single_file_mapper", SingleFileMapper.class);
 		registerMapper("fixed_array_mapper", FixedArrayFileMapper.class);
         registerMapper("concurrent_mapper", ConcurrentMapper.class);
