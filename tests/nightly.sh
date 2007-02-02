@@ -319,7 +319,7 @@ echo "Path: $PATH" >>$OUT
 cd $RUNDIR
 
 EXITONFAILURE=false
-TESTPART="Part II: Language Tests"
+TESTPART="Part II: Local Tests"
 
 for TEST in `ls $TESTDIR/*.dtm`; do
 	BN=`basename $TEST`
@@ -331,9 +331,26 @@ for TEST in `ls $TESTDIR/*.dtm`; do
 	
 	ssexec "Compile" vdlc $TESTNAME.dtm
 	for ((i=0; $i<9; i=$i+1)); do
-		pexec vdlrun $TESTNAME.kml
+		pexec vdlrun -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
 	done
-	vexec vdlrun $TESTNAME.kml
+	vexec vdlrun -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
+done
+
+TESTPART="Part III: Grid Tests"
+
+for TEST in `ls $TESTDIR/*.dtm`; do
+	BN=`basename $TEST`
+	echo $BN
+	cp $TESTDIR/$BN .
+	
+	TESTNAME=${BN:0:((${#BN}-4))}
+	TEST="<a href=\"$RUNDIRBASE/$TESTNAME.dtm\">$TESTNAME</a>"
+	
+	ssexec "Compile" vdlc $TESTNAME.dtm
+	for ((i=0; $i<9; i=$i+1)); do
+		pexec vdlrun -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+	done
+	vexec vdlrun -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 done
 
 #Don't remove me:
