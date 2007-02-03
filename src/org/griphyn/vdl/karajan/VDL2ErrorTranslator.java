@@ -3,6 +3,12 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -12,6 +18,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
 
 import org.apache.log4j.Logger;
 
@@ -167,11 +177,54 @@ public class VDL2ErrorTranslator {
 		}
 
 		public String get(Matcher m) {
-			return m.group(index);
+			return m.group(index).trim();
 		}
 
 		public String toString() {
 			return "&" + index;
 		}
+	}
+
+	public static void main(String[] args) {
+		final JTextArea ta = new JTextArea();
+		ta.setPreferredSize(new Dimension(630, 220));
+		final JTextArea tb = new JTextArea();
+		tb.setLineWrap(true);
+		tb.setPreferredSize(new Dimension(630, 220));
+		JButton b = new JButton("Translate");
+		b.setSize(100, 30);
+		JFrame frame = new JFrame();
+		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEADING));
+		frame.getContentPane().add(ta);
+		frame.getContentPane().add(b);
+		frame.getContentPane().add(tb);
+		frame.setSize(640, 480);
+		final VDL2ErrorTranslator tr = new VDL2ErrorTranslator();
+		b.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			    tr.load();
+			    String result = tr.translate(ta.getText());
+			    if (result == null) {
+				tb.setText(ta.getText());
+			    }
+			    else {
+				tb.setText(result);
+			    }
+			}
+		});
+		frame.addWindowListener(new WindowListener() {
+			public void windowActivated(WindowEvent e) {}
+			public void windowClosed(WindowEvent e) {}
+
+			public void windowClosing(WindowEvent e) {
+			    System.exit(0);
+			}
+			
+			public void windowDeactivated(WindowEvent e) {}
+			public void windowDeiconified(WindowEvent e) {}
+			public void windowIconified(WindowEvent e) {}
+			public void windowOpened(WindowEvent e) {}
+		});
+		frame.show();
 	}
 }
