@@ -108,7 +108,7 @@ updateOptions "$COG_INSTALL_PATH" "vds.home"
 	</target>
 	
 	<target name="antlr">
-		<java classname="antlr.Tool" fork="true">
+		<java classname="antlr.Tool" fork="true" failonerror="true">
 			<arg value="-o"/>
 			<arg value="${cog.dir}/modules/${module.name}/src/org/griphyn/vdl/parser"/>
 			<arg value="grammars/VDL.g"/>
