@@ -86,16 +86,25 @@ public class ProcessBulkErrors extends AbstractFunction {
 			return Boolean.FALSE;
 		}
 	}
-    
-    protected String getMessageChain(Throwable e) {
-        StringBuffer sb = new StringBuffer();
-    	do {
-            sb.append(e.getMessage());
+
+	protected String getMessageChain(Throwable e) {
+		StringBuffer sb = new StringBuffer();
+		String prev = null;
+        boolean first = true;
+		while (e != null) {
+			String msg = e.getMessage();
+			if (msg != null && !msg.equals(prev)) {
+                if (!first) {
+                    sb.append("\nCaused by:\n\t");
+                }
+                else {
+                    first = false;
+                }
+				sb.append(msg);
+                prev = msg;
+			}
             e = e.getCause();
-            if (e != null) {
-            	sb.append("\nCaused by:\n\t");
-            }
-        } while(e != null);
-        return sb.toString();
-    }
+		}
+		return sb.toString();
+	}
 }
