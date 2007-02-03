@@ -20,16 +20,21 @@ import org.griphyn.vdl.karajan.VDL2ErrorTranslator;
 public class ProcessBulkErrors extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(ProcessBulkErrors.class);
 
+	public static final Arg MESSAGE = new Arg.Positional("message");
 	public static final Arg ERRORS = new Arg.Positional("errors");
+	public static final Arg ONSTDOUT = new Arg.Optional("onstdout", Boolean.FALSE);
 
 	static {
-		setArguments(ProcessBulkErrors.class, new Arg[] { ERRORS });
+		setArguments(ProcessBulkErrors.class, new Arg[] { MESSAGE, ERRORS, ONSTDOUT });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
+		String message = TypeUtil.toString(MESSAGE.getValue(stack));
+		boolean onStdout = TypeUtil.toBoolean(ONSTDOUT.getValue(stack));
+		List l = TypeUtil.toList(ERRORS.getValue(stack));
+
 		VDL2ErrorTranslator translator = VDL2ErrorTranslator.getDefault();
 
-		List l = TypeUtil.toList(ERRORS.getValue(stack));
 		Map count = new HashMap();
 		Iterator i = l.iterator();
 		while (i.hasNext()) {
@@ -40,14 +45,14 @@ public class ProcessBulkErrors extends AbstractFunction {
 			if (logger.isDebugEnabled()) {
 				logger.debug(ex);
 			}
-			String msg = ex.toString();
+			String msg = getMessageChain(ex);
 			String tmsg = translator.translate(msg);
 			if (tmsg == null) {
 				if (msg != null && msg.startsWith("VDL2: ")) {
 					tmsg = ex.getMessage().substring(6);
 				}
 				else {
-					tmsg = ex.toString();
+					tmsg = msg;
 				}
 			}
 			tmsg = tmsg.trim();
@@ -59,18 +64,19 @@ public class ProcessBulkErrors extends AbstractFunction {
 				count.put(tmsg, new Integer(1));
 			}
 		}
+		Arg.Channel channel = onStdout ? STDOUT : STDERR;
 		if (count.size() != 0) {
-			STDERR.ret(stack, "The following errors have occurred:\n");
+			channel.ret(stack, message + "\n");
 			i = count.entrySet().iterator();
 			int k = 1;
 			while (i.hasNext()) {
 				Map.Entry e = (Map.Entry) i.next();
 				Integer j = (Integer) e.getValue();
 				if (j.intValue() == 1) {
-					STDERR.ret(stack, k + ". " + e.getKey() + "\n");
+					channel.ret(stack, k + ". " + e.getKey() + "\n");
 				}
 				else {
-					STDERR.ret(stack, k + ". " + e.getKey() + " (" + j.intValue() + " times)\n");
+					channel.ret(stack, k + ". " + e.getKey() + " (" + j.intValue() + " times)\n");
 				}
 				k++;
 			}
@@ -80,4 +86,16 @@ public class ProcessBulkErrors extends AbstractFunction {
 			return Boolean.FALSE;
 		}
 	}
+    
+    protected String getMessageChain(Throwable e) {
+        StringBuffer sb = new StringBuffer();
+    	do {
+            sb.append(e.getMessage());
+            e = e.getCause();
+            if (e != null) {
+            	sb.append("\nCaused by:\n\t");
+            }
+        } while(e != null);
+        return sb.toString();
+    }
 }
