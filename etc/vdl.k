@@ -122,23 +122,20 @@ namespace("vdl"
 		element(pre, [])
 		element(post, [])
 		
-		element(mains, [channel(cleanup), channel(errors)]
-			anyerrors := vdl:processBulkErrors(errors)
+		element(mains, [channel(cleanup), channel(errors), channel(warnings)]
+			anyerrors := vdl:processBulkErrors("The following errors have occurred:", errors)
 			
 			//this should be reached after everything is done
 			if(
 				not(anyerrors) then(
-					log(LOG:INFO, "Cleanups: ", cleanup)
-					parallelFor(i, cleanup
-						[dir, host] := each(i)
-						cleanup(dir, host)
-					)
+					//hmm, you can append to channels!
+					append(warnings, from(warnings, cleanups(cleanup)))
 				)
 				else(
 					log(LOG:INFO, "Errors detected. Cleanup not done.")
 				)
 			)
-			
+			anywarnings := vdl:processBulkErrors("The following warnings have occurred:", warnings, onStdout=true)
 			if (anyerrors throw("Execution completed with errors"))
 		)
 

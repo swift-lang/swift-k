@@ -174,6 +174,20 @@ namespace("vdl"
 			task:execute("/bin/rm", arguments="-rf {dir}", host=host)
 		)
 		
+		element(cleanups, [cleanup]
+			log(LOG:INFO, "Cleanups: ", cleanup)
+			parallelFor(i, cleanup
+				[dir, host] := each(i)
+				try(
+					cleanup(dir, host)
+					catch(".*",
+						log(LOG:DEBUG, "Exception caught while cleaning up", exception)
+						to(warnings, exception("Cleanup on {host} failed", exception))
+					)
+				)
+			)
+		)
+		
 		element(cleanupFiles, [files, host]
 			uParallelFor(r, files
 				log(LOG:INFO, "Purging ", r, " on ", host)
