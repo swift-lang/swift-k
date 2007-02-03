@@ -1,6 +1,15 @@
 (02/02/07)
 
 *** Renamed a few mappers to better reflect the mapper functionalities.
+
+*** Added warnings mechanism
+
+*** No more Karajan stack traces in errors (only simple chained messages).
+    Those stack traces belong to the logging domain
+	
+*** Capture cleanup problems and print them as warnings
+
+*** Added a few more error translation
  
 (01/30/07)
 
