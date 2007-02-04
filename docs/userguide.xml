@@ -65,7 +65,7 @@ binaryfile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
 		</para>
 				
 		<para>
-		The above example declares a dataset called f1, which uses a single file mapper to map a file from a specific location. What the mapper does is merely returning the file name to the system. VDL2 also has a simplified syntax for such cases since single_file_mapper is the default mapper used:
+		The above example declares a dataset called f1, which uses a single file mapper to map a file from a specific location. What the mapper does is merely returning the file name to the system. VDL2 also has a simplified syntax for such cases since single_file_mapper is frequently used:
 
 <programlisting>
 binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
@@ -214,10 +214,10 @@ hw2 = echo(s="hello again"); // using a different value
 		This workflow is essentially doing a UNIX pipe
 
 <programlisting>
-ls *.txt | wc
+ls /bin | wc
 </programlisting>
 
-that counts the number of ".txt" file and save the output to a file.
+that counts the number of files in /bin and save the output to a file.
 		
 <programlisting>
 type file {}		
@@ -235,7 +235,7 @@ type file {}
 }
 
 file list, count;
-list = ls("*.txt");
+list = ls("/bin");
 count = wc(list);
 </programlisting>
 
@@ -355,37 +355,273 @@ foreach num in nums {
 	</sect1>
 
 	<sect1>
-		<title>Mapper reference</title>
+		<title>Mapper Specification</title>
 		<para>
-Various mappers are available by default. The (will be) documented in the
-following sections.
+While we can define logical dataset types and procedures in VDL2, we need ways to access
+physical data when we invoke a procedure or execute a workflow, and mappers help us to
+do that. A logical dataset can be physically stored in different kinds of format, for 
+instance, in a plain text file, in a spreadsheet, or in a database. A mapper transforms 
+a dataset's logical representation from/to its physical representation. In this section,
+we provide the detailed specifications of a few standard mappers.  
 		</para>
+		
+		<sect2><title>Mapper Initialization</title>
+		<para>
+Since each mapper is associated with a dataset, a mapper is initialized together with
+its dataset. When a workflow is executed, all of its input datasets are evaluated and 
+initialized first, and exceptions will be thrown if there are any problems in locating
+mappers or accessing physical data storage.
+		</para>
+		</sect2>
 
 		<sect2><title>single file mapper</title>
+		
+	<itemizedlist>
+	<listitem>Name: single_file_mapper</listitem>
+    <listitem>Description:
+        A single file mapper provides the physical file location of a dataset.
+    </listitem>
+    <listitem>Parameter:
+        <itemizedlist>
+        <listitem>file:
+          The location including path and file name.
+        </listitem>
+        </itemizedlist>
+    </listitem>
+
+    <listitem> Example:
 			<programlisting>
-	file f &lt;single_file_mapper;file=@arg("plot_outfile_param")&gt;;
+	file f &lt;single_file_mapper;file="plot_outfile_param"&gt;;
 			</programlisting>
-			<para>
-Parameter is: file, specifying the source file.
-			</para>
-		</sect2>
+			
+As mentioned before, there is a simplified syntax for this mapper.
+			
 
-		<sect2><title>regular expression mapper</title>
 			<programlisting>
-	file f &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
+	file f &lt;"plot_outfile_param"&gt;;
 			</programlisting>
-			<para>
-Parameters are: source, specifying a VDL expression that will be used
-at the input to the regular expression; match, specifying the regular
-expression to match; and transform, specifying the file name to be mapped
-and which may use substitutions from the match parameter.
-			</para>
-		</sect2>
+    </listitem>
+	</itemizedlist>
+	</sect2>
 
-		<sect2><title>csv mapper</title>
-		</sect2>
+	<sect2><title>simple mapper</title>
+	<itemizedlist>
+	<listitem>Name: simple_mapper</listitem>
+    <listitem>Description:
+        A mapper that maps a file or a list of files by prefix, suffix, and pattern.
+        if there are more than one file matched, each of the file names would be mapped as 
+        a subelement of the dataset. 
+        
+    </listitem>
+    <listitem>Parameter:
+        <itemizedlist>
+        <listitem>location:
+          A directory that the files are located.
+        </listitem>
+        <listitem>prefix:
+          The prefix of the files
+        </listitem>
+        <listitem>suffix:
+          The suffix of the files, for instance: &quot;.txt&quot;
+        </listitem>
+        <listitem>pattern:
+          A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match all file names 
+		that contain foo. When this mapper is used to specify output filenames, pattern is ignored.
+		
+        </listitem>
+        </itemizedlist>
+    </listitem>
+    <listitem> Example:
+		<programlisting>
+	file f &lt;simple_mapper;prefix="foo", suffix=".txt"&gt;;
+			</programlisting>
+			The above example would map all filenames that start with &quot;foo&quot; and have 
+			an extension &quot;.txt&quot; into file f.
+    </listitem>
+	</itemizedlist>
+	</sect2>
 
-		<sect2><title>array mapper</title>
-		</sect2>
+	<sect2><title>concurrent mapper</title>
+	<itemizedlist>
+	<listitem>Name: concurrent_mapper</listitem>
+    <listitem>Description:
+        Concurrent mapper is almost the same as the simple mapper, except that it is used 
+        to map an output file, and the file name generated will contain an extract sequence that 
+        is unique across threads. This mapper is the default mapper for intermediate variables.
+        
+    </listitem>
+    <listitem>Parameter:
+        <itemizedlist>
+        <listitem>location:
+          A directory that the files are located.
+        </listitem>
+        <listitem>prefix:
+          The prefix of the files
+        </listitem>
+        <listitem>suffix:
+          The suffix of the files, for instance: &quot;.txt&quot;
+        </listitem>
+        <listitem>pattern:
+          A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match all file names 
+		that contain foo. When this mapper is used to specify output filenames, pattern is ignored.
+		
+        </listitem>
+        </itemizedlist>
+    </listitem>
+    <listitem> Example:
+		<programlisting>
+	file f1;
+	file f2 &lt;concurrent_mapper;prefix="foo", suffix=".txt"&gt;;
+			</programlisting>
+			The above example would use concurrent mapper for f1 and f2, and generate f2 file 
+			name with prefix &quot;foo&quot; and extension &quot;.txt&quot;
+    </listitem>
+	</itemizedlist>
+	</sect2>
+
+	<sect2><title>file system mapper</title>
+	<itemizedlist>
+	<listitem>Name: filesys_mapper</listitem>
+    <listitem>Description:
+        This mapper is similar to the simple mapper. But it maps a file or a list of files 
+        to a dataset array. Each of the file names would be mapped as an element in the array. 
+        
+    </listitem>
+    <listitem>Parameter:
+        <itemizedlist>
+        <listitem>location:
+          A directory that the files are located.
+        </listitem>
+        <listitem>prefix:
+          The prefix of the files
+        </listitem>
+        <listitem>suffix:
+          The suffix of the files, for instance: &quot;.txt&quot;
+        </listitem>
+        <listitem>pattern:
+          A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match all file names 
+		that contain foo.
+		
+        </listitem>
+        </itemizedlist>
+    </listitem>
+
+    <listitem> Example:
+			<programlisting>
+	file texts[] &lt;filesys_mapper;prefix="foo", suffix=".txt"&gt;;
+			</programlisting>
+			The above example would map all filenames that start with &quot;foo&quot; and have 
+			an extension &quot;.txt&quot; into the array texts.
+    </listitem>
+	</itemizedlist>
+	</sect2>
+
+	<sect2><title>fixed array mapper</title>
+	<itemizedlist>
+	<listitem>Name: fixed_array_mapper</listitem>
+    <listitem>Description:
+        This mapper maps from a string that contains a list of filenames into a file array. 
+        
+    </listitem>
+    <listitem>Parameter:
+        <itemizedlist>
+        <listitem>files:
+          A string that contains a list of filenames, seprated by space, comma or colon
+        </listitem>
+        </itemizedlist>
+    </listitem>
+
+    <listitem> Example:
+			<programlisting>
+	file texts[] &lt;fixed_array_mapper;files="file1.txt, file2.txt, file3.txt"&gt;;
+			</programlisting>
+    </listitem>
+	</itemizedlist>
+	</sect2>
+
+    <sect2><title>regular expression mapper</title>
+	<itemizedlist>
+	<listitem>Name: regexp_mapper</listitem>
+    <listitem>Description:
+        This mapper transforms one file name to another using regular exression matching. 
+        
+    </listitem>
+    <listitem>Parameter:
+        <itemizedlist>
+        <listitem>source:
+          The source file name
+        </listitem>
+        <listitem>match:
+          Regular expression pattern to match, use ( ) to match whatever regular expression is 
+          inside the parentheses, and indicate the start and end of a group; the contents of a group 
+          can be retrieved with the <emphasis>\number</emphasis> special sequence
+        </listitem>
+        <listitem>tranform:
+          The pattern of the file name to transform to, use <emphasis>\number</emphasis> to 
+          reference the group matched
+        </listitem>
+        </itemizedlist>
+    </listitem>
+
+    <listitem> Example:
+			<programlisting>
+	file f &lt;regexp_mapper;source=@f,match="(.*)gif",transform="\1jpg"&gt;;
+			</programlisting>
+		This example transforms a file ending with &quot;gif&quot; into one ending with 
+		&quot;jpg&quot;, where <emphasis>\1</emphasis> refers to the first group matched.
+    </listitem>
+	</itemizedlist>
+	</sect2>
+
+	<sect2><title>csv mapper</title>
+    <itemizedlist>
+	<listitem>Name: csv_mapper</listitem>
+    <listitem>Description:
+        This mapper maps the content of a CSV (comma-separated value) file into a dataset 
+        array. The dataset type needs to be correctly defined to conform to the column names in
+        the file. For instance, if the file contains columns:
+        <para>	name	age		GPA</para>
+        then the type needs to have the same member elements, say:
+        <programlisting>
+        type student {
+        	string name;
+        	int    age;
+        	float  GPA;
+        }
+        </programlisting>
+        if the file does not contain a header with column info, then the column names are 
+        assumed as &quot;column1&quot;, &quot;column2&quot;, ...
+    </listitem>
+    <listitem>Parameter:
+        <itemizedlist>
+        <listitem>file:
+          The name of the file to read from.
+        </listitem>
+        <listitem>header:
+          whether the file has a line describing header info, default is true
+        </listitem>
+        <listitem>skip:
+          The number of lines to skip at the beginning (after header line)
+        </listitem>
+        <listitem>hdelim:
+          Header delimiter, default is white space
+        </listitem>
+        <listitem>delim:
+          Content delimiter, default is white space
+        </listitem>
+        </itemizedlist>
+    </listitem>
+
+    <listitem> Example:
+			<programlisting>
+	student stus[] &lt;csv_mapper;name="stu_list.txt"&gt;;
+			</programlisting>
+		The above example would read a list of student info from file 
+			&quot;stu_list.txt&quot; and map them into a student array. By default, the file
+			should contain a header line specifying the names of the columns.
+    </listitem>
+	</itemizedlist>
+	</sect2>
+
 	</sect1>
 </article>
