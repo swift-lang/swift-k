@@ -28,7 +28,7 @@ try for yourself as you read along.
 <sect1> <title>Hello World</title>
     <para>
 The first example program (found in the file 
-examples/vdlk/tutorial/q1.dtm) outputs a hello world message into
+examples/vdsk/tutorial/q1.dtm) outputs a hello world message into
 a file called hello.txt.
     </para>
 
@@ -49,7 +49,7 @@ outfile = greeting();
 <para>We can run this program as follows:</para>
 
 <programlisting>
-cd examples/vdlk/tutorial/
+cd examples/vdsk/tutorial/
 
 vdlc q1.dtm
 
