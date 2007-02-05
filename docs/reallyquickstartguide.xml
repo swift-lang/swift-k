@@ -4,7 +4,7 @@
 
 <article>
 	<articleinfo revision="0.1">
-		<title>VDL2 Really Quick Start Guide</title>
+		<title>Swift Really Quick Start Guide</title>
 	
 		<abstract>
 			<formalpara>
@@ -12,7 +12,7 @@
 				<para>
 				
 					This guide is a compressed version of the <ulink
-					url="quickstartguide.shtml">VDL2 Quick Start
+					url="quickstartguide.shtml">Swift Quick Start
 					Guide</ulink>.
 				
 				</para>
@@ -21,7 +21,7 @@
 	</articleinfo>
 
 	<sect1 id="reallyquickstart">
-		<title>VDL2 Really Quick Start Guide</title>
+		<title>Swift Really Quick Start Guide</title>
 		
 		<itemizedlist>
 		
@@ -30,7 +30,7 @@
 				
 					<ulink
 					url="http://vds.uchicago.edu/vdl2/downloads.shtml">Download</ulink>
-					VDL2.
+					Swift.
 				
 				</para>
 			</listitem>	
