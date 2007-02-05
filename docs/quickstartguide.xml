@@ -137,15 +137,22 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 		<sect2 id="certs">
 	
 			<title>User Certificate</title>
-			
+			<para>When submitting jobs to a remote machine (rather than
+				executing locally), Swift makes use of the
+				<ulink
+				url="http://www.globus.org/toolkit/docs/4.0/security/key-index.html">
+				Grid Security Infrastructure (GSI)</ulink> for authentication
+				and authorization. The requirements for this are detailed in
+				the following sections. Note that GSI is not required to be
+				configured for local execution (which will usually be the
+				case when first starting with Swift).
+            </para>
 			<para>
 			
-				Swift uses <ulink
-				url="http://www.globus.org/toolkit/docs/4.0/security/key-index.html">GSI
-				security</ulink> to access <ulink
-				url="http://www.globus.org/toolkit">Globus Toolkit</ulink>
-				services. Consequently it requires a certificate/private key
-				pair for authentication. The certificate and private key should
+				GSI requires a certificate/private key
+				pair for authentication to 
+				<ulink url="http://www.globus.org/toolkit">Globus Toolkit</ulink>
+				services. The certificate and private key should
 				be placed into the <filename
 				class="file">~/.globus/usercert.pem</filename> and <filename
 				class="file">~/.globus/userkey.pem</filename> files,
