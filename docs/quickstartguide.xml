@@ -4,7 +4,7 @@
 
 <article>
 	<articleinfo revision="0.1">
-		<title>VDL2 Quick Start Guide</title>
+		<title>Swift Quick Start Guide</title>
 	
 		<abstract>
 			<formalpara>
@@ -12,13 +12,13 @@
 				<para>
 				
 					The impatient may find the <ulink
-					url="reallyquickstartguide.shtml">VDL2 Really Quick Start
+					url="reallyquickstartguide.shtml">Swift Really Quick Start
 					Guide</ulink> to be more convenient.
 
 					This guide describes the steps needed to download, install,
-					configure, and run the basic examples for VDL2. If you are
-					using a pre-installed version of VDL2, you can skip directly
-					to the <link linkend="configure">configuration
+					configure, and run the basic examples for Swift. If you are
+					using a pre-installed version of Swift, you can skip 
+					directly to the <link linkend="configure">configuration
 					section</link>.
 
 				</para>
@@ -27,11 +27,11 @@
 	</articleinfo>
 
 	<sect1 id="download">
-		<title>Downloading a VDL2 Distribution</title>
+		<title>Downloading a Swift Distribution</title>
 		
 		<para>
 		
-			There are three main ways of getting the VDL2 implementation: <link
+			There are three main ways of getting the Swift implementation: <link
 			linkend="dl-stable">stable releases</link>, <link
 			linkend="dl-nightly">nightly builds</link>, and the <link
 			linkend="dl-repository">source code repository</link>. 
@@ -43,9 +43,9 @@
 		
 			<para>
 			
-				Stable releases can be obtained from the VDL2 download page:
+				Stable releases can be obtained from the Swift download page:
 				<ulink
-				url="http://vds.uchicago.edu/vdl2/downloads.shtml#stable">VDL2
+				url="http://vds.uchicago.edu/vdl2/downloads.shtml#stable">Swift
 				Downloads Page</ulink>. Once you downloaded the package, please
 				move to the <link linkend="install">install section</link>.
 
@@ -57,11 +57,11 @@
 		
 			<para>
 			
-				VDL2 builds and tests are being run every day. The <ulink
-				url="http://vds.uchicago.edu/vdl2/downloads.shtml#nightly">VDL2
+				Swift builds and tests are being run every day. The <ulink
+				url="http://vds.uchicago.edu/vdl2/downloads.shtml#nightly">Swift
 				downloads page</ulink> contains links to the latest build and
 				test page. The nightly builds reflect a development version of
-				the VDL2 code and should not be used in production mode. After
+				the Swift code and should not be used in production mode. After
 				downloading a nightly build package, please continue to the
 				<link linkedn="install">install section</link>.
 			
@@ -73,9 +73,9 @@
 		
 			<para>
 			
-				Details about accessing the VDL2 source repository together with
+				Details about accessing the Swift source repository together with
 				build instructions are available on the <ulink
-				url="http://vds.uchicago.edu/vdl2/downloads.shtml#nightly">VDL2
+				url="http://vds.uchicago.edu/vdl2/downloads.shtml#nightly">Swift
 				downloads page</ulink>. Once built, the <filename
 				class="directory">dist/vdsk-&lt;version&gt;</filename> directory
 				will contain a self-contained build which can be moved to a
@@ -89,7 +89,7 @@
 	</sect1>
 	
 	<sect1 id="install">
-		<title>Installing a VDL2 Binary Package</title>
+		<title>Installing a Swift Binary Package</title>
 		
 		<para>
 		
@@ -112,13 +112,13 @@ class="file">vdsk-&lt;version&gt;.tar.gz</filename>
 	</sect1>
 	
 	<sect1 id="configure">
-		<title>Configuring VDL2</title>
+		<title>Configuring Swift</title>
 		
 		<para>
 		
 			This section describes configuration steps that need to be taken in
-			order to get VDL2 running. Since all command line tools provided
-			with VDL2 can be found in the <filename
+			order to get Swift running. Since all command line tools provided
+			with Swift can be found in the <filename
 			class="directory"><envar>$VDS_HOME</envar>/bin</filename> directory, it may
 			be a good idea to add this directory to your <envar>PATH</envar>
 			environment variable:
@@ -128,9 +128,9 @@ class="file">vdsk-&lt;version&gt;.tar.gz</filename>
 class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 </programlisting>
 			
-			If you are installing VDL2 on a machine with access to a graphical
+			If you are installing Swift on a machine with access to a graphical
 			display, you can run the <command>cog-setup</command> tool to
-			configure various aspects of the environment required by VDL2.
+			configure various aspects of the environment required by Swift.
 		
 		</para>
 		
@@ -140,7 +140,7 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 			
 			<para>
 			
-				VDL2 uses <ulink
+				Swift uses <ulink
 				url="http://www.globus.org/toolkit/docs/4.0/security/key-index.html">GSI
 				security</ulink> to access <ulink
 				url="http://www.globus.org/toolkit">Globus Toolkit</ulink>
@@ -161,9 +161,9 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 			
 			<para>
 			
-				The VDL2 client libraries are generally required to authenticate
+				The Swift client libraries are generally required to authenticate
 				the services to which they connect. This process requires the
-				presence on the VDL2 submit site of the root certificates used
+				presence on the Swift submit site of the root certificates used
 				to sign the host certificates of services used. These root
 				certificates need to be installed in either (or both) the
 				<filename class="directory">~/.globus/certificates</filename>
@@ -181,19 +181,19 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 				
 		<sect2>
 		
-			<title>VDL2 Properties</title>
+			<title>Swift Properties</title>
 			
 			<para>
 			
-				A VDL2 properties file (named <filename
+				A Swift properties file (named <filename
 				class="file">vdl2.properties</filename>) can be used to
-				customize certain configuration aspects of VDL2. A shared
+				customize certain configuration aspects of Swift. A shared
 				version of this file, <filename
 				class="file"><envar>$VDS_HOME</envar>/etc/vdl2.properties</filename>
 				can be used to provide installation-wide defaults. A per-user
 				properties file, <filename
 				class="file">~/.vdl2/vdl2.properties</filename> can be used for
-				user specific settings. VDL2 first loads the shared
+				user specific settings. Swift first loads the shared
 				configuration file and, if present, the user configuration file.
 				Any properties not explicitly set in the user configuration file
 				will be inherited from the shared configuration file. Properties
@@ -208,10 +208,10 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 				properties file is read. Expansion is performed when the name of
 				the variable is used inside the "standard" shell dereference
 				construct: ${<varname>name</varname>}. The following variables
-				can be used in the VDL2 configuration file:
+				can be used in the Swift configuration file:
 				
 				<variablelist>
-					<title>VDL2 Configuration Variables</title>
+					<title>Swift Configuration Variables</title>
 					
 					<varlistentry>
 						<term>
@@ -220,7 +220,7 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 						<listitem>
 							<para>
 							
-								Points to the VDL2 installation directory
+								Points to the Swift installation directory
 								(<filename
 								class="directory"><envar>$VDS_HOME</envar></filename>).
 							
@@ -258,7 +258,7 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 				The following properties can be specified:
 				
 				<variablelist>
-					<title>VDL2 Properties</title>
+					<title>Swift Properties</title>
 					
 					<varlistentry>
 						<term>
@@ -269,7 +269,7 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 							
 								Points to the location of the pool file (site
 								catalog) which contains a list of all sites that
-								VDL2 should use, together with information about
+								Swift should use, together with information about
 								the installed services. Details about the format
 								of the pool file can be found <ulink
 								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html">here</ulink>.
@@ -306,14 +306,14 @@ class="directory"><envar>$VDS_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 								The Globus GRAM service uses a callback
 								mechanism to send notifications about the status
 								of submitted jobs. The callback mechanism
-								requires that the VDL2 client be reachable from
+								requires that the Swift client be reachable from
 								the hosts the GRAM services are running on.
-								Normally, VDL2 can detect the correct IP address
+								Normally, Swift can detect the correct IP address
 								of the client machine. However, in certain cases
 								(such as the client machine having more than one
 								network interface) the automatic detection
 								mechanims is not reliable. In such cases, the IP
-								address of the VDL2 client machine can be
+								address of the Swift client machine can be
 								specified using this property. The value of this
 								property must be a numeric address without quotes.
 								
@@ -337,14 +337,14 @@ ip.address=192.168.0.1
 	
 	<sect1 id="examples">
 		
-		<title>Running VDL2 Examples</title>
+		<title>Running Swift Examples</title>
 		
 		<para>
 		
-			The VDL2 examples can be found in the <filename
+			The Swift examples can be found in the <filename
 			class="directory">&lt;VDS_HOME&gt;/examples</filename> directory.
 			The examples are written in the <ulink
-			url="http://vds.uchicago.edu/vdl2/guides/languageref-0.5.html">VDL2
+			url="http://vds.uchicago.edu/vdl2/guides/languageref-0.5.html">SwiftScript
 			language</ulink>, and have <filename class="file">.dtm</filename> as
 			a file extension. 
 
@@ -352,7 +352,7 @@ ip.address=192.168.0.1
 		
 		<para>
 		
-			The Globus Security Infrastructure, which VDL2 uses, works with
+			The Globus Security Infrastructure, which Swift uses, works with
 			limited time certificates called proxies. These proxies can be
 			generated from your user certificate and private key using one of
 			<command>grid-proxy-init</command> or
@@ -363,7 +363,7 @@ ip.address=192.168.0.1
 		
 		<para>
 
-			Before a VDL2 workflow can be executed it needs to be compiled, a
+			Before a Swift workflow can be executed it needs to be compiled, a
 			task which is achieved using the <command>vdlc</command>, which can
 			be used in the following way:
 			
@@ -380,8 +380,8 @@ class="file">example.dtm</filename></option>
 		
 		<para>
 		
-			Execution of a VDL2 compiled workflow is done using the
-			<command>vdlrun</command> command, which takes the compiled VDL2
+			Execution of a Swift compiled workflow is done using the
+			<command>vdlrun</command> command, which takes the compiled Swift
 			workflow file name as an argument:
 			
 <programlisting>
@@ -393,7 +393,7 @@ class="file">example.kml</filename></option>
 		
 		<para> 
 
-			VDL2 features the ability to re-start failed workflows based on
+			Swift features the ability to re-start failed workflows based on
 			restart log files. Every execution of a workflow creates a restart
 			log file with a named composed of the file name of the workflow
 			being executed, a numeric ID, and the <filename
