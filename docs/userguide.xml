@@ -4,7 +4,7 @@
 
 <article>
 	<articleinfo revision="0.1">
-		<title>The VDL2 User Guide</title>
+		<title>The SwiftScript User Guide</title>
 		<author>
 			<firstname>Yong</firstname>
 			<surname>Zhao</surname>
@@ -13,7 +13,7 @@
 			<formalpara>
 				<title></title>
 				<para>
-VDL2 is an improved version of the Virtual Data Language that supports dataset typing and mapping, dataset iteration, conditional branching, sub-workflow composition and other advanced features. In this document, we give a few examples to illustrate how to write VDL2 programs to exploit such features. VDL2 syntax has two flavors; one is in a textual format, the other in XML. For simplification purpose, all examples in this document are written in the textual format, which can be automatically translated into the XML format using one of the tools in our virtual data system. 				
+SwiftScript is an improved version of the Virtual Data Language that supports dataset typing and mapping, dataset iteration, conditional branching, sub-workflow composition and other advanced features. In this document, we give a few examples to illustrate how to write SwiftScript programs to exploit such features. SwiftScript syntax has two flavors; one is in a textual format, the other in XML. For simplification purpose, all examples in this document are written in the textual format, which can be automatically translated into the XML format using one of the tools in our virtual data system. 				
 				</para>
 			</formalpara>
 		</abstract>
@@ -22,12 +22,12 @@ VDL2 is an improved version of the Virtual Data Language that supports dataset t
 	<sect1>
 		<title>Overview</title>
 		<para>
-Before we get into the details of the examples, let’s first go over some of the major components in VDL2		
+Before we get into the details of the examples, let’s first go over some of the major components in SwiftScript		
 		</para>
 		<sect2>
 			<title>Type System</title>
 			<para>
-The VDL2 type system is based on the XDTM (XML dataset typing and mapping) model, where a dataset’s logical structure is described via (a subset of) XML Schema, which defines primitive scalar data types such as Boolean, Integer, String, Float, and Date, and also allows for the definition of complex types via the composition of simple and complex types. 
+The SwiftScript type system is based on the XDTM (XML dataset typing and mapping) model, where a dataset’s logical structure is described via (a subset of) XML Schema, which defines primitive scalar data types such as Boolean, Integer, String, Float, and Date, and also allows for the definition of complex types via the composition of simple and complex types. 
 			</para>
 			<para>
 We use a C-like syntax to represent VDL types. For instance, we can define an order as composed of an array of items, where each item has a name and a quantity:
@@ -65,7 +65,7 @@ binaryfile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
 		</para>
 				
 		<para>
-		The above example declares a dataset called f1, which uses a single file mapper to map a file from a specific location. What the mapper does is merely returning the file name to the system. VDL2 also has a simplified syntax for such cases since single_file_mapper is frequently used:
+		The above example declares a dataset called f1, which uses a single file mapper to map a file from a specific location. What the mapper does is merely returning the file name to the system. SwiftScript also has a simplified syntax for such cases since single_file_mapper is frequently used:
 
 <programlisting>
 binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
@@ -357,7 +357,7 @@ foreach num in nums {
 	<sect1>
 		<title>Mapper Specification</title>
 		<para>
-While we can define logical dataset types and procedures in VDL2, we need ways to access
+While we can define logical dataset types and procedures in SwiftScript, we need ways to access
 physical data when we invoke a procedure or execute a workflow, and mappers help us to
 do that. A logical dataset can be physically stored in different kinds of format, for 
 instance, in a plain text file, in a spreadsheet, or in a database. A mapper transforms 
