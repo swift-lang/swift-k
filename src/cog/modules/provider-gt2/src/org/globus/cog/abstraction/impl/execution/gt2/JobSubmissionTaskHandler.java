@@ -104,6 +104,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
 
         if (!spec.isBatchJob()) {
+            CallbackHandlerManager.increaseUsageCount(gramJob.getCredentials());
             this.gramJob.addListener(this);
         }
 
@@ -400,6 +401,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                             "Cannot parse the user defined attributes");
                 }
             }
+            
             return rsl.toString();
         }
     }
@@ -466,6 +468,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     private void cleanup() {
         this.gramJob.removeListener(this);
+        CallbackHandlerManager.decreaseUsageCount(gramJob.getCredentials());
         if (gassServer != null) {
             GassServerFactory.decreaseUsageCount(gassServer);
         }
