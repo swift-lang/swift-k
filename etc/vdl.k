@@ -3,7 +3,7 @@ import("task.k")
 import("rlog.k")
 
 once("vdl.k-print-version"
-	echo("VDL/Karajan library V 0.401")
+	echo("Swift/Karajan library V 0.402")
 )
 
 import("vdl-xs.k", export = true)
