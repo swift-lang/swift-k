@@ -9,7 +9,7 @@
 			<property name="class-name" value="org.griphyn.vdl.toolkit.VDLt2VDLx"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="launcher">
-			<property name="launcher-name" value="vdlrun"/>
+			<property name="launcher-name" value="swift"/>
 			<property name="class-name" value="org.griphyn.vdl.karajan.Loader"/>
 		</ant>
 	</target>
