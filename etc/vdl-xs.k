@@ -35,7 +35,7 @@ namespace("xs"
 		)
 		
 		element(simpleType, [name, type]
-			print("Type ", name, ": ", type)
+			//print("Type ", name, ": ", type)
 			addNode(newSimpleNode(name, type))
 		)
 		
@@ -44,7 +44,7 @@ namespace("xs"
 		)
 		
 		element(complexType, [name, ...]
-			print("Type ", name, ": ", list(for(f,..., [n,t,a]:=each(f), if(a==true concat(n,": ",t,"[]") concat(n,": ",t)))))
+			//print("Type ", name, ": ", list(for(f,..., [n,t,a]:=each(f), if(a==true concat(n,": ",t,"[]") concat(n,": ",t)))))
 			node := newComplexNode(name)
 			for(field, ...
 				[name, type, array] := each(field)
