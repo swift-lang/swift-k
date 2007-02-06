@@ -96,7 +96,8 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      */
-    public void setCurrentDirectory(String directoryName) throws FileResourceException;
+    public void setCurrentDirectory(String directoryName)
+            throws FileResourceException;
 
     /**
      * Returns the current working directory
@@ -125,7 +126,8 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      */
-    public void createDirectory(String directoryName) throws FileResourceException;
+    public void createDirectory(String directoryName)
+            throws FileResourceException;
 
     /**
      * Creates the specified directory and all required directories in the
@@ -133,7 +135,8 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      */
-    public void createDirectories(String directoryName) throws FileResourceException;
+    public void createDirectories(String directoryName)
+            throws FileResourceException;
 
     /**
      * Deletes the specified directory. If the "force" flag is true, delete
@@ -161,6 +164,25 @@ public interface FileResource extends GridResource {
             throws FileResourceException;
 
     /**
+     * Retrieve a remote file while providing progress updates. Progress updates
+     * are done on a best effort basis, and some implementations may not support
+     * this feature.
+     * 
+     * @param remoteFileName
+     *            the path to the source file
+     * @param localFileName
+     *            the path to the destination file
+     * @param progressMonitor
+     *            a progress monitor to be used for providing progress
+     *            information. Can be <code>null</code>
+     * 
+     * @throws FileResourceException
+     *             in case a problems occurs during the transfer
+     */
+    public void getFile(String remoteFileName, String localFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException;
+
+    /**
      * Upload the <code>localFileName</code> from the local machine to
      * <code>remoteFileName</code> on the file resource
      * 
@@ -168,6 +190,22 @@ public interface FileResource extends GridResource {
      */
     public void putFile(String localFileName, String remoteFileName)
             throws FileResourceException;
+
+    /**
+     * Transfer a local file to the remote resource while providing transfer
+     * progress updates. Progress updates are done on a best effort basis, and
+     * some implementations may not support this feature.
+     * 
+     * @param localFileName
+     *            the path to the source file
+     * @param remoteFileName
+     *            the path to the destination file
+     * @param progressMonitor
+     *            the progress monitor to use for progress updates. Can be
+     *            <code>null</code>
+     */
+    public void putFile(String localFileName, String remoteFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException;
 
     /**
      * Transfer the entire directory <code>remoteDirectoryName</code> from the
