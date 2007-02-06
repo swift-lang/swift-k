@@ -331,9 +331,9 @@ for TEST in `ls $TESTDIR/*.dtm`; do
 	
 	ssexec "Compile" vdlc $TESTNAME.dtm
 	for ((i=0; $i<9; i=$i+1)); do
-		pexec vdlrun -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
+		pexec swift -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
 	done
-	vexec vdlrun -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
+	vexec swift -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
 done
 
 TESTPART="Part III: Grid Tests"
@@ -348,9 +348,9 @@ for TEST in `ls $TESTDIR/*.dtm`; do
 	
 	ssexec "Compile" vdlc $TESTNAME.dtm
 	for ((i=0; $i<9; i=$i+1)); do
-		pexec vdlrun -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+		pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 	done
-	vexec vdlrun -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+	vexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 done
 
 #Don't remove me:
