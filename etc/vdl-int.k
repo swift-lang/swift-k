@@ -349,7 +349,8 @@ namespace("vdl"
 								"{name}: "
 								try(
 									sequential(
-										task:transfer(srchost=rhost, srcdir=sharedDir, srcfile=file)
+										task:transfer(srchost=rhost, srcdir=sharedDir, srcfile=file,
+											destfile="{jobid}-{file}")
 		
 										file:read(file)
 										 // If multiple concurrent errors occur, 
