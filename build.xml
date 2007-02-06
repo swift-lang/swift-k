@@ -95,7 +95,7 @@
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/karajan.properties" 
 			overwrite="true"/>
-		<replace file="${dist.dir}/bin/vdlrun">
+		<replace file="${dist.dir}/bin/swift">
 			<replacetoken>updateOptions "$COG_INSTALL_PATH" "COG_INSTALL_PATH"
 
 </replacetoken>
@@ -104,7 +104,7 @@ updateOptions "$COG_INSTALL_PATH" "vds.home"
 
 </replacevalue>
 		</replace>
-		<chmod perm="+x" file="${dist.dir}/bin/vdlrun"/>
+		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 	</target>
 	
 	<target name="antlr">
