@@ -14,12 +14,15 @@ import java.util.Properties;
 import org.globus.common.CoGProperties;
 
 public class VDL2Config extends Properties {
-	public static final String CONFIG_FILE_NAME = "vdl2.properties";
+	public static final String CONFIG_FILE_NAME = "swift.properties";
 	public static final String[] CONFIG_FILE_SEARCH_PATH = new String[] {
 			System.getProperty("vds.home") + File.separator + "etc" + File.separator
-					+ "vdl2.properties",
-			System.getProperty("user.home") + File.separator + ".vdl2" + File.separator
-					+ "vdl2.properties" };
+					+ CONFIG_FILE_NAME,
+            //included only for backwards compatibility
+            System.getProperty("user.home") + File.separator + ".vdl2" + File.separator
+                    + "vdl2.properties",
+			System.getProperty("user.home") + File.separator + ".swift" + File.separator
+					+ CONFIG_FILE_NAME };
 
 	
 	private static VDL2Config config;
@@ -73,7 +76,7 @@ public class VDL2Config extends Properties {
 
 	protected VDL2Config check() throws IOException {
 		if (files.size() == 0) {
-			throw new FileNotFoundException("No VDL2 configuration file found. Tried " + tried);
+			throw new FileNotFoundException("No Swift configuration file found. Tried " + tried);
 		}
 		else {
 			return this;
@@ -141,7 +144,7 @@ public class VDL2Config extends Properties {
 	}
 
 	public String toString() {
-		return "VDL2 configuration " + files;
+		return "Swift configuration " + files;
 	}
 
 	public Object clone() {
