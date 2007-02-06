@@ -35,7 +35,6 @@ public class CallbackHandlerManager {
         } else if (i.intValue() == 1) {
             count.remove(cred);
             Gram.deactivateCallbackHandler(cred);
-            System.err.println(count);
         } else {
             count.put(cred, new Integer(i.intValue() - 1));
         }
