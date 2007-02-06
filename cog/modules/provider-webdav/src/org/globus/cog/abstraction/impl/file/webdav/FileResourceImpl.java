@@ -30,6 +30,7 @@ import org.globus.cog.abstraction.impl.file.IrrecoverableResourceException;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
+import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
@@ -182,9 +183,14 @@ public class FileResourceImpl extends AbstractFileResource {
         }
     }
 
-    /** Equivalent to cp/copy command */
     public void getFile(String remoteFilename, String localFileName)
             throws FileResourceException {
+        getFile(remoteFilename, localFileName, null);
+    }
+
+    /** Equivalent to cp/copy command */
+    public void getFile(String remoteFilename, String localFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException {
         try {
             File localFile = new File(localFileName);
             davClient.getMethod(remoteFilename, localFile);
@@ -194,9 +200,14 @@ public class FileResourceImpl extends AbstractFileResource {
         }
     }
 
-    /** Copy a local file to a remote file. Default option 'overwrite' */
     public void putFile(String localFileName, String remoteFileName)
             throws FileResourceException {
+        putFile(localFileName, remoteFileName, null);
+    }
+
+    /** Copy a local file to a remote file. Default option 'overwrite' */
+    public void putFile(String localFileName, String remoteFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException {
         try {
             File localFile = new File(localFileName);
             davClient.putMethod(remoteFileName, localFile);
