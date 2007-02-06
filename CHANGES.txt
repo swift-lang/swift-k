@@ -1,3 +1,20 @@
+(02/05/07)
+
+*** Renamed a few things to swift, including:
+    - vdl2.properties -> swift.properties
+	- ~/.vdl2 -> ~/.swift (the old config is still read though)
+	- the log4j "class" for things in Karajan (vdl2 -> swift)
+	- vdlrun -> swift
+	
+*** swift (vdlrun) will also work with .dtm files now, and compile
+    them on the fly.
+	
+*** Most of the throttle parameters are now settable through 
+    swift.properties
+	
+*** Made some preliminary (and incomplete) changes towards integrating
+    kickstart.
+
 (02/02/07)
 
 *** Renamed a few mappers to better reflect the mapper functionalities.
