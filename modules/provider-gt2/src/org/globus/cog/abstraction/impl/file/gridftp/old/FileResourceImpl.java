@@ -7,6 +7,8 @@
 package org.globus.cog.abstraction.impl.file.gridftp.old;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -31,11 +33,15 @@ import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
+import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
+import org.globus.ftp.Buffer;
 import org.globus.ftp.DataChannelAuthentication;
 import org.globus.ftp.DataSink;
+import org.globus.ftp.DataSinkStream;
 import org.globus.ftp.DataSource;
+import org.globus.ftp.DataSourceStream;
 import org.globus.ftp.FileInfo;
 import org.globus.ftp.GridFTPClient;
 import org.globus.ftp.GridFTPSession;
@@ -222,8 +228,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.makeDir(directory);
         }
         catch (Exception e) {
-            throw translateException("Cannot create directory "
-                    + directory, e);
+            throw translateException("Cannot create directory " + directory, e);
         }
     }
 
@@ -263,8 +268,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.deleteDir(directory);
         }
         catch (Exception e) {
-            throw translateException(
-                    "Cannot delete the given directory", e);
+            throw translateException("Cannot delete the given directory", e);
         }
     }
 
@@ -305,29 +309,66 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
     }
 
-    /** Equivalent to cp/copy command */
     public void getFile(String remoteFileName, String localFileName)
             throws FileResourceException {
+        getFile(remoteFileName, localFileName, null);
+    }
+
+    /** Equivalent to cp/copy command */
+    public void getFile(String remoteFileName, String localFileName,
+            final ProgressMonitor progressMonitor) throws FileResourceException {
         File localFile = new File(localFileName);
         String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
-            gridFTPClient.get(remoteFileName, localFile);
+            final long size = localFile.length();
+            DataSink sink;
+            if (progressMonitor != null) {
+                // The sink is used to follow progress
+                sink = new DataSinkStream(new FileOutputStream(localFile)) {
+                    public void write(Buffer buffer) throws IOException {
+                        super.write(buffer);
+                        progressMonitor.progress(offset, size);
+                    }
+                };
+            }
+            else {
+                sink = new DataSinkStream(new FileOutputStream(localFile));
+            }
+            gridFTPClient.get(remoteFileName, sink, null);
         }
         catch (Exception e) {
             throw translateException("Exception in getFile", e);
         }
     }
 
-    /** Copy a local file to a remote file. Default option 'overwrite' */
     public void putFile(String localFileName, String remoteFileName)
             throws FileResourceException {
+        putFile(localFileName, remoteFileName);
+    }
+
+    /** Copy a local file to a remote file. Default option 'overwrite' */
+    public void putFile(String localFileName, String remoteFileName,
+            final ProgressMonitor progressMonitor) throws FileResourceException {
 
         String currentDirectory = getCurrentDirectory();
         File localFile = new File(localFileName);
         try {
             gridFTPClient.setPassiveMode(true);
-            gridFTPClient.put(localFile, remoteFileName, false);
+            final long size = localFile.length();
+            DataSource source;
+            if (progressMonitor != null) {
+                source = new DataSourceStream(new FileInputStream(localFile)) {
+                    public Buffer read() throws IOException {
+                        progressMonitor.progress(totalRead, size);
+                        return super.read();
+                    }
+                };
+            }
+            else {
+                source = new DataSourceStream(new FileInputStream(localFile));
+            }
+            gridFTPClient.put(remoteFileName, source, null, false);
         }
         catch (Exception e) {
             throw translateException(e);
@@ -387,14 +428,12 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.site(cmd);
         }
         catch (Exception e) {
-            throw translateException(
-                    "Cannot change the file permissions.", e);
+            throw translateException("Cannot change the file permissions.", e);
         }
     }
 
     /** Returns true if the file exists */
-    public boolean exists(String filename)
-            throws FileResourceException {
+    public boolean exists(String filename) throws FileResourceException {
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("exists(" + filename + ")");
