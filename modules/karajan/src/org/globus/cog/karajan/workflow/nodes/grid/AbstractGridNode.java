@@ -136,12 +136,12 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 						+ provider, e);
 			}
 		}
-		bc.addService(new ServiceImpl(provider, Service.JOB_SUBMISSION,
-				new ServiceContactImpl(contact), sc));
-		bc.addService(new ServiceImpl(provider, Service.FILE_OPERATION,
-				new ServiceContactImpl(contact), sc));
-		bc.addService(new ServiceImpl(provider, Service.FILE_TRANSFER,
-				new ServiceContactImpl(contact), sc));
+		bc.addService(new ServiceImpl(provider, Service.JOB_SUBMISSION, new ServiceContactImpl(
+				contact), sc));
+		bc.addService(new ServiceImpl(provider, Service.FILE_OPERATION, new ServiceContactImpl(
+				contact), sc));
+		bc.addService(new ServiceImpl(provider, Service.FILE_TRANSFER, new ServiceContactImpl(
+				contact), sc));
 	}
 
 	public static final Arg A_SECURITY_CONTEXT = new Arg.TypedPositional("securityContext",
@@ -212,6 +212,10 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 
 	public void submitScheduled(Scheduler scheduler, Task task, VariableStack stack,
 			Object constraints) {
+		if (logger.isInfoEnabled()) {
+			logger.info(task);
+			logger.info("Submitting task " + task.getIdentity());
+		}
 		scheduler.addJobStatusListener(this, task);
 		synchronized (tasks) {
 			tasks.put(task, stack);
@@ -222,6 +226,9 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 	public void statusChanged(StatusEvent e) {
 		try {
 			int status = e.getStatus().getStatusCode();
+			if (logger.isInfoEnabled()) {
+				logger.info("Task status changed " + e.getSource().getIdentity() + " " + status);
+			}
 			if (!e.getStatus().isTerminal()) {
 				return;
 			}
@@ -264,7 +271,9 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 
 	protected void removeTask(Task task) {
 		synchronized (tasks) {
-			tasks.remove(task);
+			if (tasks.remove(task) == null) {
+				logger.warn("Task being removed twice?", new Throwable());
+			}
 		}
 		logger.debug("Tasks in the map: " + tasks.size());
 	}
