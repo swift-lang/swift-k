@@ -7,6 +7,8 @@
 package org.globus.cog.abstraction.impl.file.ftp;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.PasswordAuthentication;
 import java.util.Collection;
@@ -27,8 +29,14 @@ import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
+import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
+import org.globus.ftp.Buffer;
+import org.globus.ftp.DataSink;
+import org.globus.ftp.DataSinkStream;
+import org.globus.ftp.DataSource;
+import org.globus.ftp.DataSourceStream;
 import org.globus.ftp.FTPClient;
 import org.globus.ftp.FileInfo;
 import org.globus.ftp.Session;
@@ -56,9 +64,12 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
     /**
      * Create the ftpClient and authenticate with the resource.
-     * @throws FileResourceException if an exception occurs during the resource start-up
+     * 
+     * @throws FileResourceException
+     *             if an exception occurs during the resource start-up
      */
-    public void start() throws InvalidSecurityContextException, FileResourceException {
+    public void start() throws InvalidSecurityContextException,
+            FileResourceException {
 
         try {
             String host = getServiceContact().getHost();
@@ -75,7 +86,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             ftpClient.authorize(username, password);
             ftpClient.setType(Session.TYPE_IMAGE);
             setStarted(true);
-        } catch (Exception se) {
+        }
+        catch (Exception se) {
             throw translateException(
                     "Error while communicating with the FTP server", se);
         }
@@ -91,9 +103,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         try {
             ftpClient.close();
             setStarted(false);
-        } catch (Exception e) {
-            throw translateException(
-                    "Error while stopping the FTP server", e);
+        }
+        catch (Exception e) {
+            throw translateException("Error while stopping the FTP server", e);
         }
     }
 
@@ -103,12 +115,13 @@ public class FileResourceImpl extends AbstractFTPFileResource {
      * @throws IOException
      * @throws FileResourceException
      */
-    public void setCurrentDirectory(String directory) throws FileResourceException {
+    public void setCurrentDirectory(String directory)
+            throws FileResourceException {
         try {
             ftpClient.changeDir(directory);
-        } catch (Exception e) {
-            throw translateException("Cannot set the current directory",
-                    e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot set the current directory", e);
         }
     }
 
@@ -121,9 +134,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public String getCurrentDirectory() throws FileResourceException {
         try {
             return ftpClient.getCurrentDir();
-        } catch (Exception e) {
-            throw translateException("Cannot get the current directory",
-                    e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot get the current directory", e);
         }
     }
 
@@ -148,7 +161,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             }
             return gridFileList;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw translateException(
                     "Cannot list the elements of the current directory", e);
         }
@@ -170,7 +184,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             ftpClient.setType(Session.TYPE_ASCII);
             list = list();
             ftpClient.setType(Session.TYPE_IMAGE);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw translateException("Error in list directory", e);
         }
 
@@ -183,7 +198,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void createDirectory(String directory) throws FileResourceException {
         try {
             ftpClient.makeDir(directory);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw translateException("Cannot create the directory", e);
         }
     }
@@ -210,7 +226,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                     if (gridFile.isFile()) {
                         ftpClient.deleteFile(directory + "/"
                                 + gridFile.getName());
-                    } else {
+                    }
+                    else {
                         deleteDirectory(directory + "/" + gridFile.getName(),
                                 force);
                     }
@@ -220,9 +237,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             if (!list(directory).iterator().hasNext()) {
                 ftpClient.deleteDir(directory);
             }
-        } catch (Exception e) {
-            throw translateException(
-                    "Cannot delete the given directory", e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot delete the given directory", e);
         }
     }
 
@@ -230,35 +247,75 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void deleteFile(String file) throws FileResourceException {
         try {
             ftpClient.deleteFile(file);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw translateException("Cannot delete the given file", e);
         }
     }
 
-    /** Equivalent to cp/copy command */
     public void getFile(String remoteFilename, String localFileName)
             throws FileResourceException {
+        getFile(remoteFilename, localFileName, null);
+    }
+
+    /** Equivalent to cp/copy command */
+    public void getFile(String remoteFilename, String localFileName,
+            final ProgressMonitor progressMonitor) throws FileResourceException {
         String currentDirectory = getCurrentDirectory();
         File localFile = new File(localFileName);
         try {
             ftpClient.setPassive();
             ftpClient.setLocalActive();
-            ftpClient.get(remoteFilename, localFile);
-        } catch (Exception e) {
+            final long size = localFile.length();
+            DataSink sink;
+            if (progressMonitor != null) {
+                // The sink is used to follow progress
+                sink = new DataSinkStream(new FileOutputStream(localFile)) {
+                    public void write(Buffer buffer) throws IOException {
+                        super.write(buffer);
+                        progressMonitor.progress(offset, size);
+                    }
+                };
+            }
+            else {
+                sink = new DataSinkStream(new FileOutputStream(localFile));
+            }
+            ftpClient.get(remoteFilename, sink, null);
+        }
+        catch (Exception e) {
             throw translateException("Cannot retrieve the given file", e);
         }
     }
 
-    /** Copy a local file to a remote file. Default option 'overwrite' */
     public void putFile(String localFileName, String remoteFileName)
             throws FileResourceException {
+        putFile(localFileName, remoteFileName, null);
+    }
+
+    /** Copy a local file to a remote file. Default option 'overwrite' */
+    public void putFile(String localFileName, String remoteFileName,
+            final ProgressMonitor progressMonitor) throws FileResourceException {
         String currentDirectory = getCurrentDirectory();
         File localFile = new File(localFileName);
         try {
             ftpClient.setPassive();
             ftpClient.setLocalActive();
-            ftpClient.put(localFile, remoteFileName, false);
-        } catch (Exception e) {
+            final long size = localFile.length();
+            DataSource source;
+            if (progressMonitor != null) {
+                source = new DataSourceStream(new FileInputStream(localFile)) {
+                    public Buffer read() throws IOException {
+                        progressMonitor.progress(totalRead, size);
+                        return super.read();
+                    }
+                };
+            }
+            else {
+                source = new DataSourceStream(new FileInputStream(localFile));
+            }
+            ftpClient.put(remoteFileName, source, null, false);
+        }
+        catch (Exception e) {
             throw translateException("Cannot transfer the given file", e);
         }
     }
@@ -270,7 +327,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             throws FileResourceException {
         try {
             ftpClient.rename(remoteFileName1, remoteFileName2);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw translateException("Rename for ftp failed", e);
         }
     }
@@ -283,9 +341,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         String cmd = "chmod " + mode + " " + filename; // or something else
         try {
             ftpClient.site(cmd);
-        } catch (Exception e) {
-            throw translateException(
-                    "Cannot change the file permissions", e);
+        }
+        catch (Exception e) {
+            throw translateException("Cannot change the file permissions", e);
         }
     }
 
@@ -296,7 +354,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         int endIndex = fileName.lastIndexOf("/");
         if (endIndex < 0) {
             directory = getCurrentDirectory();
-        } else {
+        }
+        else {
             directory = fileName.substring(0, endIndex);
             fileName = fileName.substring(endIndex + 1, fileName.length());
         }
@@ -329,7 +388,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public boolean exists(String filename) throws FileResourceException {
         try {
             return ftpClient.exists(filename);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw translateException(
                     "Cannot determine the existence of the file", e);
         }
@@ -344,12 +404,15 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         String currentDirectory = getCurrentDirectory();
         try {
             setCurrentDirectory(dirName);
-        } catch (FileResourceException e) {
+        }
+        catch (FileResourceException e) {
             isDir = false;
-        } finally {
+        }
+        finally {
             try {
                 setCurrentDirectory(currentDirectory);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 // do nothihng
                 // ???
             }
@@ -374,7 +437,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         String directory = getCurrentDirectory();
         if (directory.endsWith("/")) {
             gridFile.setAbsolutePathName(directory + fileInfo.getName());
-        } else {
+        }
+        else {
             gridFile.setAbsolutePathName(directory + "/" + fileInfo.getName());
         }
         gridFile.setLastModified(fileInfo.getDate());
@@ -429,7 +493,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                         + fileNames[i]);
                 if (newFile.isFile() == true) {
                     newFile.delete();
-                } else {
+                }
+                else {
                     removeLocalDirectory(newFile.getAbsolutePath());
                 }
             }
