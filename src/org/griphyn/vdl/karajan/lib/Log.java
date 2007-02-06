@@ -10,6 +10,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.Trace;
+import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -30,7 +31,7 @@ public class Log extends AbstractSequentialWithArguments {
 		synchronized (loggers) {
 			logger = (Logger) loggers.get(cls);
 			if (logger == null) {
-				logger = Logger.getLogger("vdl2." + cls);
+				logger = Logger.getLogger("swift." + cls);
 				loggers.put(cls, logger);
 			}
 		}
@@ -54,7 +55,13 @@ public class Log extends AbstractSequentialWithArguments {
 
 	protected void post(VariableStack stack) throws ExecutionException {
 		String cls;
-		FlowElement fe = (FlowElement) stack.getDeepVar(Trace.ELEMENT);
+		FlowElement fe;
+		try{
+			fe = (FlowElement) stack.getDeepVar(Trace.ELEMENT);
+		}
+		catch (VariableNotFoundException e) {
+			fe = null;
+		}
 		if (fe != null) {
 			cls = fe.getElementType();
 		}
