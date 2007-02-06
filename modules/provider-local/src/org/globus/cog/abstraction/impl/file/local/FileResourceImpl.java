@@ -30,6 +30,7 @@ import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
+import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 
 /**
  * enables access to local file system through the file resource interface
@@ -179,9 +180,14 @@ public class FileResourceImpl extends AbstractFileResource {
         localFile.delete();
     }
 
-    /** copy a file */
     public void getFile(String remoteFileName, String localFileName)
             throws FileResourceException {
+        getFile(remoteFileName, localFileName, null);
+    }
+
+    /** copy a file */
+    public void getFile(String remoteFileName, String localFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException {
 
         try {
             File remote = new File(resolveName(remoteFileName));
@@ -196,15 +202,27 @@ public class FileResourceImpl extends AbstractFileResource {
             }
             FileInputStream remoteStream = new FileInputStream(remote);
             FileOutputStream localStream = new FileOutputStream(local);
+            long crt = 0;
+            long total = remote.length();
+            byte[] buf = new byte[16384];
             int read;
-            while ((read = remoteStream.read()) != -1) {
-                localStream.write(read);
+            while ((read = remoteStream.read(buf)) != -1) {
+                localStream.write(buf, 0, read);
+                crt += read;
+                if (progressMonitor != null) {
+                    progressMonitor.progress(crt, total);
+                }
             }
             remoteStream.close();
             localStream.close();
         } catch (IOException e) {
             throw new FileResourceException(e);
         }
+    }
+
+    public void putFile(String localFileName, String remoteFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException {
+        getFile(localFileName, remoteFileName, progressMonitor);
     }
 
     /** copy a file */
