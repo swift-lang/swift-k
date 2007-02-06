@@ -6,9 +6,18 @@ STDERR=$3
 DIRS=$4
 LINKS=$5
 OUTS=$6
+KICKSTART=$7
+KICKSTARTREC=$8
 WRAPPERLOG=$PWD/wrapper.log
 
-shift 6
+echo "DIR=$DIR">>$WRAPPERLOG
+echo "STDOUT=$STDOUT">>$WRAPPERLOG
+echo "STDERR=$STDERR">>$WRAPPERLOG
+echo "DIRS=$DIRS">>$WRAPPERLOG
+echo "LINKS=$LINKS">>$WRAPPERLOG
+echo "OUTS=$OUTS">>$WRAPPERLOG
+
+shift 8
 
 IFS=" "
 
@@ -21,8 +30,13 @@ for L in $LINKS ; do
 done
 
 cd $DIR
-"$@" 1>$STDOUT 2>$STDERR
-EXITCODE=$?
+if [ "$KICKSTART" == "" ]; then
+	"$@" 1>$STDOUT 2>$STDERR
+	EXITCODE=$?
+else
+	$KICKSTART -H -o $STDOUT -e $STDERR "$@" 1>$KICKSTARTREC
+	EXITCODE=$?
+fi
 cd ..
 
 
@@ -41,7 +55,11 @@ else
 	done
 	if [ "$ECP" == "y" ]; then
 		echo "Errors encountered while copying output files; keeping job directory" >>$WRAPPERLOG
+		echo "Failed to copy output files to shared directory" >>$DIR/exitcode
+		$EXITCODE=128
 	else
 		rm -rf $DIR >>$WRAPPERLOG 2>&1
 	fi
 fi
+
+exit $EXITCODE
