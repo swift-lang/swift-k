@@ -1,3 +1,8 @@
+(02/06/2007)
+
+*** The job task handler now shuts down callback handlers from 
+    JGlobus if they have no more registered jobs.
+
 (01/28/2006)
 
 *** Updated file resource exceptions
