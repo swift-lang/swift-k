@@ -32,6 +32,7 @@ import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
+import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -274,7 +275,11 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                         logger.debug("File transfer with resource remote->tmp");
                     }
                     this.sourceResource.getFile(spec.getSource(),
-                            localDestination.getAbsolutePath());
+                            localDestination.getAbsolutePath(), new ProgressMonitor() {
+                                public void progress(long current, long total) {
+                                	task.setStdOutput(current+"/"+total);
+                                }
+                    });
                 }
                 return localDestination;
             }
@@ -351,7 +356,12 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                                 .debug("File transfer with resource local->remote");
                     }
                     this.destinationResource.putFile(localSource
-                            .getAbsolutePath(), spec.getDestination());
+                            .getAbsolutePath(), spec.getDestination(),
+                            new ProgressMonitor() {
+                                public void progress(long current, long total) {
+                                    task.setStdOutput(current + "/" + total);
+                                }
+                            });
                 }
             }
             else {
@@ -631,12 +641,12 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
         }
         else {
             if (logger.isDebugEnabled()) {
-                logger.debug(current + " out of " + total + " bytes transferred");
+                logger.debug(current + " out of " + total
+                        + " bytes transferred");
             }
             this.task.setStdOutput(current + " out of " + total
                     + " bytes transfered");
         }
-
     }
 
     public void transferError(Exception error) {
