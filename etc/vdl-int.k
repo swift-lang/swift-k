@@ -289,8 +289,11 @@ namespace("vdl"
 					throw(exception("Could not initialize shared directory on {rhost}", exception))
 				)
 				
-				jobdir := concat(tr, "-", uid())
-				tmpdir := dircat(wfdir, jobdir)
+				jobid := concat(tr, "-", uid())
+				tmpdir := dircat(wfdir, jobid)
+				
+				stdout := try(stdout, "stdout.txt")
+				stderr := try(stderr, "stderr.txt")
 				
 				try(
 					sequential(
@@ -308,19 +311,23 @@ namespace("vdl"
 						log(LOG:INFO, "Running job ", tr, maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
 																	
 						task:execute("/bin/sh",
-							list("shared/wrapper.sh", jobdir, 
-								try(stdout, "stdout.txt"), try(stderr, "stderr.txt"),
-								flatten(each(fileDirs)), flatten(each(stagein)), 
+							list("shared/wrapper.sh", jobid, 
+								stdout, stderr
+								flatten(each(fileDirs)),
+								flatten(each(stagein)), 
 								flatten(outfiles(stageout)),
-								vdl:executable(tr, rhost), maybe(each(arguments)))
+								"",
+								"",
+								vdl:executable(tr, rhost),
+								maybe(each(arguments)))
 							directory=wfdir
-							maybe(stdin="{jobdir}/{stdin}")
+							maybe(stdin="{jobid}/{stdin}")
 							redirect = false
 							host = rhost
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
 						)
 							
-						checkExitCode(rhost, tmpdir, jobdir, tr)
+						checkExitCode(rhost, tmpdir, jobid, tr)
 		
 						log(LOG:INFO, "Completed job ", tr, maybe(" with arguments ", arguments), " on {rhost}")
 
@@ -336,18 +343,18 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 						
 						outs := concat(
-							for(f, ["stderr.txt", "stdout.txt"]
+							for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))
+								[name, file] := each(f)
 								nl()
-								"{f}: "
+								"{name}: "
 								try(
 									sequential(
-										task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=f,
-											destfile="{jobdir}-{f}")
+										task:transfer(srchost=rhost, srcdir=sharedDir, srcfile=file)
 		
-										file:read("{jobdir}-{f}")
+										file:read(file)
 										 // If multiple concurrent errors occur, 
 										 // the files might not get deleted
-										maybe(file:remove("{jobdir}-{f}"))
+										maybe(file:remove(file))
 									)
 									nl()
 								)
@@ -375,7 +382,7 @@ namespace("vdl"
 			pgraph := vdl:configProperty("pgraph")
 			gname := if(pgraph == "true" concat("graph-", uid(), ".dot") pgraph)
 			file:write(gname
-				"digraph VDL2provenance {{", nl()
+				"digraph SwiftProvenance {{", nl()
 				"	graph [", vdl:configProperty("pgraph.graph.options"), "];", nl()
 				"	node [", vdl:configProperty("pgraph.node.options"), "];", nl()
 						
