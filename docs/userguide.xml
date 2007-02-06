@@ -30,7 +30,7 @@ Before we get into the details of the examples, let’s first go over some of th
 The SwiftScript type system is based on the XDTM (XML dataset typing and mapping) model, where a dataset’s logical structure is described via (a subset of) XML Schema, which defines primitive scalar data types such as Boolean, Integer, String, Float, and Date, and also allows for the definition of complex types via the composition of simple and complex types. 
 			</para>
 			<para>
-We use a C-like syntax to represent VDL types. For instance, we can define an order as composed of an array of items, where each item has a name and a quantity:
+We use a C-like syntax to represent SwiftScript types. For instance, we can define an order as composed of an array of items, where each item has a name and a quantity:
 
 <programlisting>
 type order {
@@ -82,7 +82,7 @@ binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
 			</para>
 			
 			<para>
-			A procedure declaration is like a function definition, where we specify the function name and the formal parameters. VDL procedures can take multiple inputs and produce multiple outputs, and inputs are organized to the right of the function name where outputs to the left. For instance:
+			A procedure declaration is like a function definition, where we specify the function name and the formal parameters. SwiftScript procedures can take multiple inputs and produce multiple outputs, and inputs are organized to the right of the function name where outputs to the left. For instance:
 
 <programlisting>
 (type3 out1, type4 out2) myproc (type1 in1, type2 in2)
@@ -141,7 +141,7 @@ Which specifies that myproc1 invokes an executable, passing the values of i, s a
 		<sect2>
 			<title>"Control Constructs"</title>
 			<para>
-			Control constructs are special control entities in a workflow to control the direction of execution. VDL provides if, switch, foreach, and while constructs, with syntax and semantics similar to comparable constructs in high-level languages. 
+			Control constructs are special control entities in a workflow to control the direction of execution. SwiftScript provides if, switch, foreach, and while constructs, with syntax and semantics similar to comparable constructs in high-level languages. 
 			</para>
 			
 			<para>
