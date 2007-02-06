@@ -12,8 +12,15 @@
 		<vdl:configProperty name="clustering.min.time"/>
 	</set>
 	
-	<print message="Using sites file: {sites}"/>
-	<print message="Using tc.data: {tcfile}"/>
+	<set names="hostSubmitThrottle, submitThrottle, maxTransfers, maxFileOperations">
+		<vdl:configProperty name="throttle.host.submit"/>
+		<vdl:configProperty name="throttle.submit"/>
+		<vdl:configProperty name="throttle.transfers"/>
+		<vdl:configProperty name="throttle.file.operations"/>
+	</set>
+	
+	<log level="info"><string>Using sites file: {sites}</string></log>
+	<log level="info"><string>Using tc.data: {tcfile}</string></log>
   
 	<scheduler type="vds-adaptive" shareID="vdl2:scheduler:{sites}">
 		<property name="transformationCatalogFile" value="{tcfile}"/>
@@ -21,10 +28,11 @@
 		<property name="clusteringQueueDelay" value="{clusteringQueueDelay}"/>
 		<property name="clusteringMinTime" value="{clusteringMinTime}"/>
 		
-		<property name="hostSubmitThrottle" value="2"/>
-		<property name="submitThrottle" value="4"/>
-		<property name="jobsPerCpu" value="10"/>
-		<property name="maxTransfers" value="8"/>
+		<property name="hostSubmitThrottle" value="{hostSubmitThrottle}"/>
+		<property name="submitThrottle" value="{submitThrottle}"/>
+		<property name="jobsPerCpu" value="999999"/>
+		<property name="maxTransfers" value="{maxTransfers}"/>
+		<property name="maxFileOperations" value="{maxFileOperations}"/>
 		
 		<task:handler type="execution" provider="gt2"/>
 		<task:handler type="execution" provider="gt4"/>
