@@ -3,7 +3,12 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,7 +23,9 @@ import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
+import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
+import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 import org.griphyn.vdl.util.VDL2ConfigProperties.PropInfo;
@@ -26,8 +33,6 @@ import org.griphyn.vdl.util.VDL2ConfigProperties.PropInfo;
 public class Loader extends org.globus.cog.karajan.Loader {
 	private static final Logger logger = Logger.getLogger(Loader.class);
 
-	public static final String ARG_SHOWSTATS = "showstats";
-	public static final String ARG_DEBUGGER = "debugger";
 	public static final String ARG_HELP = "help";
 	public static final String ARG_MONITOR = "monitor";
 	public static final String ARG_RESUME = "resume";
@@ -69,6 +74,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		boolean runerror = false;
 
 		try {
+			if (project.endsWith(".dtm")) {
+				project = compile(project);
+			}
 			ElementTree tree = null;
 			if (project != null) {
 				tree = load(project);
@@ -121,6 +129,33 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		System.exit(runerror ? 2 : 0);
 	}
 
+	private static String compile(String project) throws Exception {
+		try {
+			File dtm = new File(project);
+			File dir = dtm.getParentFile();
+			File xml = new File(project.substring(0, project.length() - 4) + ".xml");
+			File kml = new File(project.substring(0, project.length() - 4) + ".kml");
+			if (dtm.lastModified() > kml.lastModified()) {
+				logger.info(".kml file is out of date. Recompiling.");
+				InputStream stdin = System.in;
+				PrintStream stdout = System.out;
+
+				System.setIn(new FileInputStream(dtm));
+				System.setOut(new PrintStream(new FileOutputStream(xml)));
+				VDLt2VDLx.main(new String[0]);
+
+				System.setIn(stdin);
+				System.setOut(new PrintStream(new FileOutputStream(kml)));
+				Karajan.main(new String[] { xml.getAbsolutePath() });
+				System.setOut(stdout);
+			}
+			return kml.getAbsolutePath();
+		}
+		catch (Exception e) {
+			throw new Exception("Failed to compile " + project, e);
+		}
+	}
+
 	private static VDL2Config loadConfig(ArgumentParser ap, VariableStack stack) throws IOException {
 		VDL2Config conf;
 		if (ap.hasValue(ARG_INSTANCE_CONFIG)) {
@@ -150,8 +185,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	private static ArgumentParser buildArgumentParser() {
 		ArgumentParser ap = new ArgumentParser();
 		ap.setArguments(true);
-		ap.setExecutableName("vdlrun");
-		ap.addOption(ArgumentParser.DEFAULT, "A file (.xml or .k) to execute", "file",
+		ap.setExecutableName("swift");
+		ap.addOption(ArgumentParser.DEFAULT, "A file (.dtm or .kml) to execute", "file",
 				ArgumentParser.OPTIONAL);
 
 		ap.addFlag(ARG_HELP, "Display usage information");
