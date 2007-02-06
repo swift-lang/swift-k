@@ -236,8 +236,16 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 
 		public void run() {
 			try {
-				long crt = TypeUtil.toNumber(task.getAttribute("transferedBytes")).longValue();
-				long total = TypeUtil.toNumber(task.getAttribute("totalBytes")).longValue();
+				Object attrcrt = task.getAttribute("transferedBytes");
+				if (attrcrt == null) {
+					return;
+				}
+				long crt = TypeUtil.toNumber(attrcrt).longValue();
+				Object attrtotal = task.getAttribute("totalBytes");
+				if (attrtotal == null) {
+					return;
+				}
+				long total = TypeUtil.toNumber(attrtotal).longValue();
 				MonitoringEvent me = new ProgressMonitoringEvent(element,
 						ProgressMonitoringEventType.TRANSFER_PROGRESS, stack, crt, total);
 				element.fireMonitoringEvent(me);
