@@ -321,15 +321,15 @@ cd $RUNDIR
 EXITONFAILURE=false
 TESTPART="Part II: Local Tests"
 
-for TEST in `ls $TESTDIR/*.dtm`; do
+for TEST in $TESTDIR/*.dtm $TESTDIR/*.swift; do
 	BN=`basename $TEST`
 	echo $BN
 	cp $TESTDIR/$BN .
 	
 	TESTNAME=${BN:0:((${#BN}-4))}
-	TEST="<a href=\"$RUNDIRBASE/$TESTNAME.dtm\">$TESTNAME</a>"
+	TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
 	
-	ssexec "Compile" vdlc $TESTNAME.dtm
+	ssexec "Compile" vdlc $BN
 	for ((i=0; $i<9; i=$i+1)); do
 		pexec swift -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
 	done
@@ -338,15 +338,15 @@ done
 
 TESTPART="Part III: Grid Tests"
 
-for TEST in `ls $TESTDIR/*.dtm`; do
+for TEST in $TESTDIR/*.dtm $TESTDIR/*.swift; do
 	BN=`basename $TEST`
 	echo $BN
 	cp $TESTDIR/$BN .
 	
 	TESTNAME=${BN:0:((${#BN}-4))}
-	TEST="<a href=\"$RUNDIRBASE/$TESTNAME.dtm\">$TESTNAME</a>"
+	TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
 	
-	ssexec "Compile" vdlc $TESTNAME.dtm
+	ssexec "Compile" vdlc $BN
 	for ((i=0; $i<9; i=$i+1)); do
 		pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 	done
