@@ -340,12 +340,14 @@ cd $RUNDIR
 EXITONFAILURE=false
 TESTPART="Part II: Local Tests"
 
-for TEST in $TESTDIR/*.dtm $TESTDIR/*.swift; do
+for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
 	BN=`basename $TEST`
 	echo $BN
 	cp $TESTDIR/$BN .
 	
-	TESTNAME=${BN:0:((${#BN}-4))}
+	
+	TESTNAME=${BN%.dtm}
+	TESTNAME=${TESTNAME%.swift}
 	TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
 	
 	ssexec "Compile" vdlc $BN
@@ -357,12 +359,13 @@ done
 
 TESTPART="Part III: Grid Tests"
 
-for TEST in $TESTDIR/*.dtm $TESTDIR/*.swift; do
+for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
 	BN=`basename $TEST`
 	echo $BN
 	cp $TESTDIR/$BN .
 	
-	TESTNAME=${BN:0:((${#BN}-4))}
+	TESTNAME=${BN%.dtm}
+	TESTNAME=${TESTNAME%.swift}
 	TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
 	
 	ssexec "Compile" vdlc $BN
