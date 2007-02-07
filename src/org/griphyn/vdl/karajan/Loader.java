@@ -74,7 +74,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		boolean runerror = false;
 
 		try {
-			if (project.endsWith(".dtm")) {
+			if (project.endsWith(".dtm") || project.endsWith(".swift")) {
 				project = compile(project);
 			}
 			ElementTree tree = null;
@@ -133,10 +133,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		try {
 			File dtm = new File(project);
 			File dir = dtm.getParentFile();
-			File xml = new File(project.substring(0, project.length() - 4) + ".xml");
-			File kml = new File(project.substring(0, project.length() - 4) + ".kml");
+			File xml = new File(project.substring(0, project.lastIndexOf('.')) + ".xml");
+			File kml = new File(project.substring(0, project.lastIndexOf('.')) + ".kml");
 			if (dtm.lastModified() > kml.lastModified()) {
-				logger.info(".kml file is out of date. Recompiling.");
+				logger.info(project + ": file is out of date. Recompiling.");
 				InputStream stdin = System.in;
 				PrintStream stdout = System.out;
 
