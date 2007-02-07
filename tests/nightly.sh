@@ -77,6 +77,7 @@ html() {
 }
 
 tail() {
+	MONTHS=("" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
 	html "</tr></table></tr></table>"
 	
 	if [ "$BINPACKAGE" != "" ]; then
@@ -90,12 +91,30 @@ tail() {
 DOH
 	fi
 	
+	LASTYR="00"
+	LASTMO="00"
 	html "<h1>Older tests</h1>"
 	html '<a name="older">'
-	for OLDER in `ls $OUTDIR/tests-*.html`; do
+	html "<table><tr>"
+	for OLDER in `ls $OUTDIR/tests-*.html|sort`; do
 		O=`basename $OLDER`
-		html "<a href=\"$O\">$O</a><br>"
+		YR=${O:6:2}
+		MO=${O:8:2}
+		DY=${O:10:2}
+		if [ $LASTYR != $YR ]; then
+			html "</tr></table>"
+			html "<h2>20$YR</h2>"
+			LASTYR=$YR
+		fi
+		if [ $LASTMO != $MO ]; then
+			html "</tr></table>"
+			html "<h3>${MONTHS[$MO]}</h3>"
+			html "<table border=\"0\"><tr>"
+			LASTMO=$MO
+		fi
+		html "<td bgcolor=\"#e0e0e0\"><a href=\"$O\">$DY</a></td>"
 	done
+	html "</tr></table><br><br>"
 	cat <<DOH >>$HTML
 	<a href="addtests.html">How to add new tests</a>
 	</body>
