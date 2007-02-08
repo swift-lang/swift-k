@@ -12,6 +12,7 @@ options {
     k=3;
     codeGenMakeSwitchThreshold = 2;  // Some optimizations
     codeGenBitsetTestThreshold = 3;
+    defaultErrorHandler=false;
 }
 
 {
