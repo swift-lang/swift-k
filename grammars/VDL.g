@@ -43,117 +43,117 @@ String quote(String s) {
 
 void setReturnVariables(StringTemplate container, StringTemplate statement) {
     if (!statement.getName().equals("call"))
-	 return;
+     return;
     Object outputs = statement.getAttribute("outputs");
 
     if (outputs == null)
-	 return;
+     return;
     if (outputs instanceof List) {
          for (Iterator it=((List)outputs).iterator(); it.hasNext();) {
-	     StringTemplate param = (StringTemplate) it.next();
-	     Object type = param.getAttribute("type");
+         StringTemplate param = (StringTemplate) it.next();
+         Object type = param.getAttribute("type");
              if (type != null) {
-	        StringTemplate var = template("variable");
-	        var.setAttribute("name", param.getAttribute("name"));
-	        var.setAttribute("type", type); 
+            StringTemplate var = template("variable");
+            var.setAttribute("name", param.getAttribute("name"));
+            var.setAttribute("type", type);
                 container.setAttribute("statements", var);
              }
          }
     } else {
-	 StringTemplate param = (StringTemplate) outputs;
-	 Object type = param.getAttribute("type");
+     StringTemplate param = (StringTemplate) outputs;
+     Object type = param.getAttribute("type");
          if (type != null) {
-	    StringTemplate var = template("variable");
-	    var.setAttribute("name", param.getAttribute("name"));
-	    var.setAttribute("type", type); 
+        StringTemplate var = template("variable");
+        var.setAttribute("name", param.getAttribute("name"));
+        var.setAttribute("type", type);
             container.setAttribute("statements", var);
          }
-    }	 
+    }
 }
 }
 
 // The specification for a VDL program
 program returns [StringTemplate code=template("program")]
-    :   
-	(nsdecl[code])*		//namespace declaration
-	(typedecl[code])*	//type declaration
-	(declaration[code])*	//procedures
-//	(declORstat[code])*	//variable or dataset or call declaration
+    :
+    (nsdecl[code])*        //namespace declaration
+    (typedecl[code])*    //type declaration
+    (declaration[code])*    //procedures
+//    (declORstat[code])*    //variable or dataset or call declaration
     ;
 
 nsdecl [StringTemplate code]
 {StringTemplate ns=null;}
-    :   ns=nsdef 
-	{
-	  code.setAttribute("namespaces", ns);
-	  if (ns.getAttribute("prefix") == null)
-	     code.setAttribute("targetNS", ns.getAttribute("uri"));
-	}
+    :   ns=nsdef
+    {
+      code.setAttribute("namespaces", ns);
+      if (ns.getAttribute("prefix") == null)
+         code.setAttribute("targetNS", ns.getAttribute("uri"));
+    }
     ;
 
 nsdef returns [StringTemplate code=template("nsDef")]
     :   "namespace" (prefix:ID{code.setAttribute("prefix", prefix.getText());})? uri:STRING_LITERAL SEMI
-	{
-	  code.setAttribute("uri", uri.getText());
-	} 
+    {
+      code.setAttribute("uri", uri.getText());
+    }
     ;
 
 typedecl [StringTemplate code]
 {StringTemplate t=null;}
     :   t=typedef {code.setAttribute("types", t);}
     ;
-	
+
 typedef returns [StringTemplate code=template("typeDef")]
 {StringTemplate t=null;}
-    :	"type" id:ID {	code.setAttribute("name", id.getText()); }
-	(
-	    (t=type
-	    {
-	       code.setAttribute("type", t);
-	    }
-	    SEMI
-	    ) 
-	    | structdecl[code]
-	)
+    :    "type" id:ID {    code.setAttribute("name", id.getText()); }
+    (
+        (t=type
+        {
+           code.setAttribute("type", t);
+        }
+        SEMI
+        )
+        | structdecl[code]
+    )
     ;
 
 structdecl [StringTemplate code]
 {StringTemplate e=null, e1=null, t=null;}
-    :   LCURLY 
-	(t=type id:ID
-	{
-	e=template("member");
-	e.setAttribute("type", t);
-	e.setAttribute("name", id.getText());
-	}
-	(LBRACK RBRACK {e.setAttribute("isArray", "true");})?
-	{ code.setAttribute("members", e); }
-	(
-	    COMMA
-	    id1:ID
-	    {
-		e1=template("member");
-		e1.setAttribute("type", t);
-		e1.setAttribute("name", id1.getText());
-	    }
-	    (LBRACK RBRACK {e1.setAttribute("isArray", "true");})?
-	    { code.setAttribute("members", e1); }
-	)*
-	SEMI
-	)* 
-	RCURLY
-	(options {
-	   warnWhenFollowAmbig = false;
-	 } 
-	:SEMI
-	)?
+    :   LCURLY
+    (t=type id:ID
+    {
+    e=template("member");
+    e.setAttribute("type", t);
+    e.setAttribute("name", id.getText());
+    }
+    (LBRACK RBRACK {e.setAttribute("isArray", "true");})?
+    { code.setAttribute("members", e); }
+    (
+        COMMA
+        id1:ID
+        {
+        e1=template("member");
+        e1.setAttribute("type", t);
+        e1.setAttribute("name", id1.getText());
+        }
+        (LBRACK RBRACK {e1.setAttribute("isArray", "true");})?
+        { code.setAttribute("members", e1); }
+    )*
+    SEMI
+    )*
+    RCURLY
+    (options {
+       warnWhenFollowAmbig = false;
+     }
+    :SEMI
+    )?
     ;
 
 declaration[StringTemplate code]
 {StringTemplate f=null;}
 
-   :    (declORstat[code])=>declORstat[code] 
-        |   
+   :    (declORstat[code])=>declORstat[code]
+        |
         f=function {code.setAttribute("functions", f);}
     ;
 
@@ -161,23 +161,23 @@ variable [StringTemplate code]
 {StringTemplate v1=null, v2=null,t=null, d=null, i1=null, i2=null;}
     :   t=type d=declarator (b1:LBRACK RBRACK)? i1=varInitializer
 
-	{
-		if ( currentFunctionName==null ) {
-			v1 = template("globalVariable");
-		}
-		else {
-			v1 = template("variable");
-		}
-		v1.setAttribute("type", t);
-		v1.setAttribute("name", d);
-		if (b1 != null)
-			v1.setAttribute("isArray", "true");
-		if (i1 != null)
-			v1.setAttribute("value", i1);
-		code.setAttribute("statements", v1);
-	}
-	( COMMA d=declarator (b2:LBRACK RBRACK)? i2=varInitializer
-	  {
+    {
+        if ( currentFunctionName==null ) {
+            v1 = template("globalVariable");
+        }
+        else {
+            v1 = template("variable");
+        }
+        v1.setAttribute("type", t);
+        v1.setAttribute("name", d);
+        if (b1 != null)
+            v1.setAttribute("isArray", "true");
+        if (i1 != null)
+            v1.setAttribute("value", i1);
+        code.setAttribute("statements", v1);
+    }
+    ( COMMA d=declarator (b2:LBRACK RBRACK)? i2=varInitializer
+      {
             if ( currentFunctionName==null ) {
                 v2 = template("globalVariable");
             }
@@ -186,14 +186,14 @@ variable [StringTemplate code]
             }
             v2.setAttribute("type", t);
             v2.setAttribute("name", d);
-	 	    if (b2 != null)
-		       v2.setAttribute("isArray", "true");
-	    	if (i2 != null)
-	    	   v2.setAttribute("value", i2);
-	    	code.setAttribute("statements", v2);
+             if (b2 != null)
+               v2.setAttribute("isArray", "true");
+            if (i2 != null)
+               v2.setAttribute("value", i2);
+            code.setAttribute("statements", v2);
           }
-	)*
-	SEMI
+    )*
+    SEMI
     ;
 
 declarator returns [StringTemplate code=null]
@@ -201,88 +201,88 @@ declarator returns [StringTemplate code=null]
     ;
 
 varInitializer returns [StringTemplate code=null]
-    :	( ASSIGN code=initializer )?
+    :    ( ASSIGN code=initializer )?
     ;
 
 initializer returns [StringTemplate code=null]
     :   code=expression
-	| code=arrayInitializer
+    | code=arrayInitializer
     ;
 
 // This is an initializer used to set up an array.
 // currently does not support nested array.
 arrayInitializer returns [StringTemplate code=template("arrayInit")]
 {StringTemplate e=null,from=null,to=null,step=null;}
-    :	LBRACK 
-	(
-	 (expression COLON) =>
-	 (
-	  from=expression COLON to=expression (COLON step=expression)?
-	  {
-	    StringTemplate range=template("range");
-	    range.setAttribute("from", from);
-	    range.setAttribute("to", to);
-	    if (step != null)
-		range.setAttribute("step", step);
-	    code.setAttribute("range", range);
-	  }
-	 ) 
-	 |
-	 (
-	  e=expression {code.setAttribute("elements", e);}
-	  (
-  	  // CONFLICT: does a COMMA after an initializer start a new
-	  //           initializer or start the option ',' at end?
-	  //           ANTLR generates proper code by matching
-	  //			 the comma as soon as possible.
-	    options {
-	      warnWhenFollowAmbig = false;
-	    } : COMMA e=expression {code.setAttribute("elements", e);}
-	  )*
-	  (COMMA)?
-	 )
-	)?
-	RBRACK
-	;
+    :    LBRACK
+    (
+     (expression COLON) =>
+     (
+      from=expression COLON to=expression (COLON step=expression)?
+      {
+        StringTemplate range=template("range");
+        range.setAttribute("from", from);
+        range.setAttribute("to", to);
+        if (step != null)
+        range.setAttribute("step", step);
+        code.setAttribute("range", range);
+      }
+     )
+     |
+     (
+      e=expression {code.setAttribute("elements", e);}
+      (
+        // CONFLICT: does a COMMA after an initializer start a new
+      //           initializer or start the option ',' at end?
+      //           ANTLR generates proper code by matching
+      //             the comma as soon as possible.
+        options {
+          warnWhenFollowAmbig = false;
+        } : COMMA e=expression {code.setAttribute("elements", e);}
+      )*
+      (COMMA)?
+     )
+    )?
+    RBRACK
+    ;
 
 datasetdecl [StringTemplate code]
 {StringTemplate dataset=null, t=null, m=null, d=null;}
     :   t=type d=declarator (b1:LBRACK RBRACK)? LT (m=mappingdecl | f:STRING_LITERAL) GT SEMI
-	{
-	   dataset=template("dataset");
-	   dataset.setAttribute("type", t);
-	   dataset.setAttribute("name", d);
-	   if (m!=null)
-	       dataset.setAttribute("mapping", m);
-	   else
-	       dataset.setAttribute("lfn", f.getText());
-	   if (b1 != null)
-	       dataset.setAttribute("isArray", "true");
-	   code.setAttribute("statements", dataset);
-	}
+    {
+       dataset=template("dataset");
+       dataset.setAttribute("type", t);
+       dataset.setAttribute("name", d);
+       if (m!=null)
+           dataset.setAttribute("mapping", m);
+       else
+           dataset.setAttribute("lfn", f.getText());
+       if (b1 != null)
+           dataset.setAttribute("isArray", "true");
+       code.setAttribute("statements", dataset);
+    }
     ;
 
 mappingdecl returns [StringTemplate code=template("mapping")]
 {StringTemplate p=null, d=null;}
     :  d=declarator {code.setAttribute("descriptor",d);} SEMI
-       mapparamdecl[code]	
-    ; 
+       mapparamdecl[code]
+    ;
 
 mapparamdecl [StringTemplate code]
 {StringTemplate p=null;}
     :  (  p=mapparam {code.setAttribute("params", p);}
           ( COMMA p=mapparam {code.setAttribute("params", p);} )*
-	  (COMMA)?
+      (COMMA)?
        )?
     ;
 
 mapparam returns [StringTemplate code=template("mapParam")]
 {StringTemplate n=null, v=null;}
-    :  n=declarator ASSIGN v=mappingExpr 
-	{
-	    code.setAttribute("name", n);
-	    code.setAttribute("value", v);
-	}
+    :  n=declarator ASSIGN v=mappingExpr
+    {
+        code.setAttribute("name", n);
+        code.setAttribute("value", v);
+    }
     ;
 
 function returns [StringTemplate code=template("function")]
@@ -290,35 +290,35 @@ function returns [StringTemplate code=template("function")]
     :  ( LPAREN
         f=formalParameter
         {
-		f.setAttribute("outlink", "true");
-		code.setAttribute("outputs", f);
-		}
+        f.setAttribute("outlink", "true");
+        code.setAttribute("outputs", f);
+        }
         (   COMMA f=formalParameter
             {
-	    	f.setAttribute("outlink", "true");
-	    	code.setAttribute("outputs", f);
-	    	}
+            f.setAttribute("outlink", "true");
+            code.setAttribute("outputs", f);
+            }
         )*
         RPAREN )?
-		id:ID {currentFunctionName=id.getText();} LPAREN
+        id:ID {currentFunctionName=id.getText();} LPAREN
         (   f=formalParameter
-	    	{
-	    	code.setAttribute("inputs", f);
-	    	}
+            {
+            code.setAttribute("inputs", f);
+            }
             (   COMMA f=formalParameter
                 {
-				code.setAttribute("inputs", f);
-	        	}
+                code.setAttribute("inputs", f);
+                }
             )*
         )?
         RPAREN
- 		LCURLY
+         LCURLY
         (
-		atomicBody[code]
-		|
+        atomicBody[code]
+        |
         compoundBody[code]
         )
-		RCURLY
+        RCURLY
         {
         code.setAttribute("name", id.getText());
         currentFunctionName=null;
@@ -332,18 +332,18 @@ formalParameter returns [StringTemplate code=template("parameter")]
         code.setAttribute("type", t);
         code.setAttribute("name", d);
         }
-		(
-		(LBRACK RBRACK {code.setAttribute("isArray", "true");})
-		| (ASSIGN v=constant 
-	  	{
-	  	String value = (String)v.getAttribute("value");
-	  	if (v.getName().equals("sConst")) {
-	    	v.removeAttribute("value");
-	     	v.setAttribute("value", quote(value));
+        (
+        (LBRACK RBRACK {code.setAttribute("isArray", "true");})
+        | (ASSIGN v=constant
+          {
+          String value = (String)v.getAttribute("value");
+          if (v.getName().equals("sConst")) {
+            v.removeAttribute("value");
+             v.setAttribute("value", quote(value));
         }
-	  	code.setAttribute("defaultv", v);
-	  }) 
-	)?
+          code.setAttribute("defaultv", v);
+      })
+    )?
     ;
 
 type
@@ -357,76 +357,76 @@ type
     ;
 
 builtInType returns [StringTemplate code=null]
-    :	"int"   {code=template("type_int");}
+    :    "int"   {code=template("type_int");}
     |   "string"  {code=template("type_string");}
     |   "float" {code=template("type_float");}
     |   "date" {code=template("type_date");}
     |   "uri"  {code=template("type_uri");}
     |   "bool" {code=template("type_bool");}
     ;
-	
+
 compoundStat[StringTemplate code]
     :   LCURLY
-	( declORstat[code] )*
+    ( declORstat[code] )*
         RCURLY
     ;
 
 compoundBody[StringTemplate code]
-    :	( declORstat[code] )*
+    :    ( declORstat[code] )*
     ;
 
 declORstat[StringTemplate code]
 {StringTemplate s=null;}
-    : 
-	(variable[code]) => variable[code]
-	|  (datasetdecl[code]) => datasetdecl[code]
-	|  s=statement 
-	   {
-	    code.setAttribute("statements",s);
-	    setReturnVariables(code, s);
-	   }
-    ;	
+    :
+    (variable[code]) => variable[code]
+    |  (datasetdecl[code]) => datasetdecl[code]
+    |  s=statement
+       {
+        code.setAttribute("statements",s);
+        setReturnVariables(code, s);
+       }
+    ;
 
 statement returns [StringTemplate code=null]
-    : 
-	// a list of statements in curly braces -- start a new scope
-	compoundStat[code=template("statementList")]
+    :
+    // a list of statements in curly braces -- start a new scope
+    compoundStat[code=template("statementList")]
 
         // for statement
-       	| code=forStat
+           | code=forStat
 
         // if statement
-       	| code=ifStat
+           | code=ifStat
 
         // foreach statement
-       	| code=foreachStat
+           | code=foreachStat
 
         // switch statement
-       	| code=switchStat
+           | code=switchStat
 
         // repeat statement
-       	| code=repeatStat SEMI
+           | code=repeatStat SEMI
 
         // while statement
-       	| code=whileStat
+           | code=whileStat
 
-		// break
-		| "break" {code=template("break");} SEMI
+        // break
+        | "break" {code=template("break");} SEMI
 
-		// continue
-		| "continue" {code=template("continue");} SEMI
+        // continue
+        | "continue" {code=template("continue");} SEMI
 
-		// assignment statement
-    	| code=assignStat SEMI
+        // assignment statement
+        | code=assignStat SEMI
 
-    	// empty statement	
-    	| SEMI
+        // empty statement
+        | SEMI
     ;
 
 forStat returns [StringTemplate code=template("forLoop")]
 {StringTemplate e1=null,e2=null,e3=null,s=null;}
-    :   "for" LPAREN e1=assignStat SEMI e2=expression SEMI e3=assignStat RPAREN 
-	compoundStat[code]
+    :   "for" LPAREN e1=assignStat SEMI e2=expression SEMI e3=assignStat RPAREN
+    compoundStat[code]
         {
             code.setAttribute("e1", e1);
             code.setAttribute("e2", e2);
@@ -441,17 +441,17 @@ ifStat returns [StringTemplate code=template("if")]
   StringTemplate els=template("statementList");
 }
     :  "if" LPAREN cond=expression RPAREN
-		{
-		code.setAttribute("cond", cond);
-		}
-		compoundStat[body] {code.setAttribute("body", body);}
-		(
-	  	options { 
-  	    	warnWhenFollowAmbig = false;
-	  	}
-	  	: "else" 
-	  	compoundStat[els] {code.setAttribute("els", els);}
-		)?
+        {
+        code.setAttribute("cond", cond);
+        }
+        compoundStat[body] {code.setAttribute("body", body);}
+        (
+          options {
+              warnWhenFollowAmbig = false;
+          }
+          : "else"
+          compoundStat[els] {code.setAttribute("els", els);}
+        )?
     ;
 
 foreachStat returns [StringTemplate code=template("foreach")]
@@ -459,33 +459,33 @@ foreachStat returns [StringTemplate code=template("foreach")]
   StringTemplate ds=null, t=null;
   StringTemplate body=template("statementList");
 }
-    :  "foreach" (t=type)? id:ID (COMMA indexId:ID)? "in" ds=expression 
-	{
-	    if (t != null) {
+    :  "foreach" (t=type)? id:ID (COMMA indexId:ID)? "in" ds=expression
+    {
+        if (t != null) {
                StringTemplate v= template("variable");
-	       v.setAttribute("type", t);
-	       v.setAttribute("name", id.getText());
-	       code.setAttribute("variables", v);
-	    }
-	    code.setAttribute("var", id.getText());
-	    code.setAttribute("in", ds);
-	    if (indexId != null) {
-	       code.setAttribute("index", indexId.getText());
-	    }
-	}
-	compoundStat[body] {code.setAttribute("body", body);}
+           v.setAttribute("type", t);
+           v.setAttribute("name", id.getText());
+           code.setAttribute("variables", v);
+        }
+        code.setAttribute("var", id.getText());
+        code.setAttribute("in", ds);
+        if (indexId != null) {
+           code.setAttribute("index", indexId.getText());
+        }
+    }
+    compoundStat[body] {code.setAttribute("body", body);}
     ;
-  
+
 whileStat returns [StringTemplate code=template("while")]
 {
   StringTemplate cond=null;
   StringTemplate body=template("statementList");
 }
     :  "while" LPAREN cond=expression RPAREN
-	{
-	code.setAttribute("cond", cond);
-	}
-	compoundStat[body] {code.setAttribute("body", body);}
+    {
+    code.setAttribute("cond", cond);
+    }
+    compoundStat[body] {code.setAttribute("body", body);}
     ;
 
 repeatStat returns [StringTemplate code=template("repeat")]
@@ -493,65 +493,65 @@ repeatStat returns [StringTemplate code=template("repeat")]
   StringTemplate cond=null;
   StringTemplate body=template("statementList");
 }
-    :  "repeat" 
-	compoundStat[body] {code.setAttribute("body", body);}
-	"until" LPAREN cond=expression RPAREN
-	{
-	code.setAttribute("cond", cond);
-	}
+    :  "repeat"
+    compoundStat[body] {code.setAttribute("body", body);}
+    "until" LPAREN cond=expression RPAREN
+    {
+    code.setAttribute("cond", cond);
+    }
     ;
 
 switchStat returns [StringTemplate code=template("switch")]
 {
   StringTemplate cond=null, b=null;
 }
-    :	"switch" LPAREN cond=expression RPAREN 
-	{code.setAttribute("cond", cond);}
-	LCURLY
-	( b = casesGroup {code.setAttribute("cases", b);} )*
-	RCURLY
+    :    "switch" LPAREN cond=expression RPAREN
+    {code.setAttribute("cond", cond);}
+    LCURLY
+    ( b = casesGroup {code.setAttribute("cases", b);} )*
+    RCURLY
     ;
 
 casesGroup returns [StringTemplate code=template("case")]
 {StringTemplate b=null;}
-    :	(	// CONFLICT: to which case group do the statements bind?
-			//           ANTLR generates proper code: it groups the
-			//           many "case"/"default" labels together then
-			//           follows them with the statements
-			options {
-				greedy = true;
-			}
-			:
-			aCase[code]
-		)
-		caseSList[code] 
+    :    (    // CONFLICT: to which case group do the statements bind?
+            //           ANTLR generates proper code: it groups the
+            //           many "case"/"default" labels together then
+            //           follows them with the statements
+            options {
+                greedy = true;
+            }
+            :
+            aCase[code]
+        )
+        caseSList[code]
     ;
 
 aCase [StringTemplate code]
 {StringTemplate v=null;}
-    :	(
-		  "case" v=expression {code.setAttribute("value", v);} 
-		  | "default"
-                ) 
-		COLON
+    :    (
+          "case" v=expression {code.setAttribute("value", v);}
+          | "default"
+                )
+        COLON
     ;
 
 caseSList [StringTemplate code]
 {StringTemplate s=null;}
-    :	(s=statement {code.setAttribute("statements", s);})*
+    :    (s=statement {code.setAttribute("statements", s);})*
     ;
 
 assignStat returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
     :   (functioncallStat) => code=functioncallStat
-	|
-	id=identifier ASSIGN ( e=expression | a=arrayInitializer )
+    |
+    id=identifier ASSIGN ( e=expression | a=arrayInitializer )
         {
             code=template("assign");
             code.setAttribute("lhs", id);
-	    if (e != null ) 
+        if (e != null )
                 code.setAttribute("rhs", e);
-	    else
+        else
                 code.setAttribute("rhs", a);
         }
     ;
@@ -559,31 +559,31 @@ assignStat returns [StringTemplate code=null]
 functioncallStat returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :   (
-	    (( LPAREN
+        (( LPAREN
               f=returnParameter
               {
-	      code.setAttribute("outputs", f);
+          code.setAttribute("outputs", f);
               }
               (   COMMA f=returnParameter
                   {
-	          code.setAttribute("outputs", f);
-	          }
+              code.setAttribute("outputs", f);
+              }
               )*
               RPAREN )
-	    | (f= returnParameter { code.setAttribute("outputs", f); })
-	    )
-	    ASSIGN
-		)?
-		id:ID {code.setAttribute("func", id.getText());} 
-		LPAREN
+        | (f= returnParameter { code.setAttribute("outputs", f); })
+        )
+        ASSIGN
+        )?
+        id:ID {code.setAttribute("func", id.getText());}
+        LPAREN
         (   f=actualParameter
-	    {
-	    code.setAttribute("inputs", f);
-	    }
+        {
+        code.setAttribute("inputs", f);
+        }
             (   COMMA f=actualParameter
                 {
-		code.setAttribute("inputs", f);
-	        }
+        code.setAttribute("inputs", f);
+            }
             )*
         )?
         RPAREN
@@ -591,16 +591,16 @@ functioncallStat returns [StringTemplate code=template("call")]
 
 returnParameter returns [StringTemplate code=template("returnParam")]
 {StringTemplate t=null, id=null, d=null;}
-    :   (t=type{        code.setAttribute("type", t);})? 
-		id=identifier
+    :   (t=type{        code.setAttribute("type", t);})?
+        id=identifier
         {
         code.setAttribute("name", id);
         }
-		(
-	  	(ASSIGN declarator)=>(ASSIGN d=declarator)
-	  	{
-	  	code.setAttribute("bind", d);
-	  	}
+        (
+          (ASSIGN declarator)=>(ASSIGN d=declarator)
+          {
+          code.setAttribute("bind", d);
+          }
         )?
     ;
 
@@ -609,160 +609,160 @@ actualParameter returns [StringTemplate code=template("actualParam")]
     :   (
           (declarator ASSIGN)=> (d=declarator ASSIGN)
           {
- 	  		code.setAttribute("bind", d);
-	  	  }
+               code.setAttribute("bind", d);
+            }
         )?
-	(
-	  id=expression
+    (
+      id=expression
       {
       code.setAttribute("value", id);
       }
-	  | ai=arrayInitializer
-	  {
-	  code.setAttribute("value", ai);
-	  }
-        ) 
+      | ai=arrayInitializer
+      {
+      code.setAttribute("value", ai);
+      }
+        )
     ;
 
 atomicBody [StringTemplate code]
 {StringTemplate app=null, svc=null;}
-    :  	app=appSpec
-	{code.setAttribute("config",app);}
-	|
-	svc=serviceSpec
-	{code.setAttribute("config",svc);}
+    :      app=appSpec
+    {code.setAttribute("config",app);}
+    |
+    svc=serviceSpec
+    {code.setAttribute("config",svc);}
     ;
 
 appSpec returns [StringTemplate code=template("app")]
 {StringTemplate exec=null;}
-    :  "app" LCURLY  
-	exec=declarator 
-	{ code.setAttribute("exec", exec);}
-	(
-	  appArg[code] 
-	)*
-	SEMI RCURLY
-    ;	
+    :  "app" LCURLY
+    exec=declarator
+    { code.setAttribute("exec", exec);}
+    (
+      appArg[code]
+    )*
+    SEMI RCURLY
+    ;
 
 appArg [StringTemplate code]
 {StringTemplate arg=null;}
-    :   arg=mappingExpr 
-	{code.setAttribute("arguments", arg);}
-	| 
-	stdioArg[code]
+    :   arg=mappingExpr
+    {code.setAttribute("arguments", arg);}
+    |
+    stdioArg[code]
     ;
 
 mappingExpr returns [StringTemplate code=null]
 {StringTemplate e=null;}
-    :   (mappingFunc) => code = mappingFunc 
-	|
-	(
-	e = expression
-	{
-	  code=template("mappingExpr");
-	  code.setAttribute("expr", e);
-	}
-	)
+    :   (mappingFunc) => code = mappingFunc
+    |
+    (
+    e = expression
+    {
+      code=template("mappingExpr");
+      code.setAttribute("expr", e);
+    }
+    )
     ;
 
 mappingFunc returns [StringTemplate code=template("mappingFunc")]
 {StringTemplate func=null, e=null;}
     :   AT (
-	(declarator LPAREN) =>
-	(func=declarator LPAREN e=expression RPAREN
-	{
-	  code.setAttribute("name", func);
-	  code.setAttribute("arg", e);
-	}
-	)
-	|
-	(e=identifier | (LPAREN e=identifier RPAREN) )
-	{
-	  code.setAttribute("name", "filename");
-	  code.setAttribute("arg", e);
-	}
-	)
+    (declarator LPAREN) =>
+    (func=declarator LPAREN e=expression RPAREN
+    {
+      code.setAttribute("name", func);
+      code.setAttribute("arg", e);
+    }
+    )
+    |
+    (e=identifier | (LPAREN e=identifier RPAREN) )
+    {
+      code.setAttribute("name", "filename");
+      code.setAttribute("arg", e);
+    }
+    )
     ;
 
 stdioArg [StringTemplate code]
 {StringTemplate t=null,m=null;}
-    :	("stdin" {t=template("stdin");}
-	|
-	"stdout" {t=template("stdout");}
-	|
-	"stderr" {t=template("stderr");}
-	)
-	ASSIGN
-	m=mappingExpr
-	{
-	    t.setAttribute("content", m);
-	    code.setAttribute("stdio", t);	
-	}
+    :    ("stdin" {t=template("stdin");}
+    |
+    "stdout" {t=template("stdout");}
+    |
+    "stderr" {t=template("stderr");}
+    )
+    ASSIGN
+    m=mappingExpr
+    {
+        t.setAttribute("content", m);
+        code.setAttribute("stdio", t);
+    }
     ;
-		
+
 serviceSpec returns [StringTemplate code=template("service")]
 {
 String w=null, p=null, o=null;
 StringTemplate m=null;
 }
-    : 	"service" 
-	LCURLY 
-	w=wsdl (p=port)? o=operation 
-	{
-	    code.setAttribute("wsdlURI", w);
-	    if (p != null)
-	        code.setAttribute("portType", p);
-	    code.setAttribute("operation", o);
-	}
-	(
-	    m=message 
-	    {code.setAttribute("messages", m);}
-	)*
-	RCURLY
+    :     "service"
+    LCURLY
+    w=wsdl (p=port)? o=operation
+    {
+        code.setAttribute("wsdlURI", w);
+        if (p != null)
+            code.setAttribute("portType", p);
+        code.setAttribute("operation", o);
+    }
+    (
+        m=message
+        {code.setAttribute("messages", m);}
+    )*
+    RCURLY
     ;
 
 wsdl returns [String code=null]
     : "wsdlURI" ASSIGN u:STRING_LITERAL SEMI
-	{code=u.getText();}
+    {code=u.getText();}
     ;
 
 port returns [String code=null]
     : "portType" ASSIGN u:STRING_LITERAL SEMI
-	{code=u.getText();}
+    {code=u.getText();}
     ;
 
 operation returns [String code=null]
     : "operation" ASSIGN u:STRING_LITERAL SEMI
-	{code=u.getText();}
+    {code=u.getText();}
     ;
 
 message returns [StringTemplate code=template("message")]
 {StringTemplate p=null, e=null;}
     :  (
-	 ("request" {code.setAttribute("type", "request");}) 
-	 |
-	 ("response" {code.setAttribute("type", "response");}) 
-	)
-	element:ID ASSIGN
-	{code.setAttribute("name", element.getText());}
-	( 
-	  (LCURLY 
-	    ( p=part {code.setAttribute("parts", p);} )+ 
-	   RCURLY)
-	   |
-	   (e=mappingExpr {code.setAttribute("expr", e);})
-	)
-	SEMI
+     ("request" {code.setAttribute("type", "request");})
+     |
+     ("response" {code.setAttribute("type", "response");})
+    )
+    element:ID ASSIGN
+    {code.setAttribute("name", element.getText());}
+    (
+      (LCURLY
+        ( p=part {code.setAttribute("parts", p);} )+
+       RCURLY)
+       |
+       (e=mappingExpr {code.setAttribute("expr", e);})
+    )
+    SEMI
     ;
 
 part returns [StringTemplate code=template("part")]
 {StringTemplate e=null;}
-    :	p:ID ASSIGN
-	{code.setAttribute("name", p.getText());}
-	( 
-	e=mappingExpr {code.setAttribute("expr", e);}
-	)
-	SEMI
+    :    p:ID ASSIGN
+    {code.setAttribute("name", p.getText());}
+    (
+    e=mappingExpr {code.setAttribute("expr", e);}
+    )
+    SEMI
     ;
 
 expression returns [StringTemplate code=null]
@@ -802,12 +802,12 @@ Token op=null;
 }
     :   code=condExpr
         (
-   	    {op=LT(1);}
+           {op=LT(1);}
             ( EQ | NE ) b=condExpr
             {
             a = code;
             code=template("cond");
-	    code.setAttribute("op", escape(op.getText()));
+        code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
@@ -821,17 +821,17 @@ Token op=null;
 }
     :   code=additiveExpr
         (
-	    options {
-		greedy = true;
-		//warnWhenFollowAmbig = false;
-	    }
-	    :
-   	    {op=LT(1);}
+        options {
+        greedy = true;
+        //warnWhenFollowAmbig = false;
+        }
+        :
+           {op=LT(1);}
             ( LT | LE | GT | GE ) b=additiveExpr
             {
             a = code;
             code=template("cond");
-	    code.setAttribute("op", escape(op.getText()));
+        code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
@@ -844,18 +844,18 @@ StringTemplate a,b=null;
 Token op=null;
 }
     :   code=multiExpr
-	(
-	    options {
-		greedy = true;
-		//warnWhenFollowAmbig = false;
-	    }
-	    :
+    (
+        options {
+        greedy = true;
+        //warnWhenFollowAmbig = false;
+        }
+        :
             {op=LT(1);}
             ( PLUS | MINUS ) b=multiExpr
             {
             a = code;
             code=template("arith");
-	    code.setAttribute("op", escape(op.getText()));
+        code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
@@ -868,18 +868,18 @@ StringTemplate a,b=null;
 Token op=null;
 }
     :   code=unaryExpr
-	(
-	    options {
-		greedy = true;
-		//warnWhenFollowAmbig = false;
-	    }
-	    :
+    (
+        options {
+        greedy = true;
+        //warnWhenFollowAmbig = false;
+        }
+        :
             {op=LT(1);}
             ( STAR | DIV | MOD ) b=unaryExpr
             {
             a = code;
             code=template("arith");
-	    code.setAttribute("op", escape(op.getText()));
+        code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
@@ -888,41 +888,41 @@ Token op=null;
 
 unaryExpr returns [StringTemplate code=null]
 {StringTemplate u=null;}
-    : MINUS u=unaryExpr 
+    : MINUS u=unaryExpr
       {code=template("unary"); code.setAttribute("sign", "-"); code.setAttribute("exp", u);}
-    | PLUS u=unaryExpr 
+    | PLUS u=unaryExpr
       {code=template("unary"); code.setAttribute("sign", "+"); code.setAttribute("exp", u);}
-    | NOT u=unaryExpr 
+    | NOT u=unaryExpr
       {code=template("not"); code.setAttribute("exp", u);}
     | code=primExpr
     ;
 
 primExpr returns [StringTemplate code=null]
 {StringTemplate id=null, exp=null;}
-    : code=identifier 
+    : code=identifier
     | LPAREN exp=orExpr RPAREN { code=template("paren");
-		code.setAttribute("exp", exp);}
+        code.setAttribute("exp", exp);}
     | code=constant
-	| code=mappingFunc
-    ; 
+    | code=mappingFunc
+    ;
 
 identifier returns [StringTemplate code=null]
 {
-  String s=""; 
+  String s="";
   StringTemplate sub1=null, sub2=null, t=null, t1=null;
 }
-    : sub1=subscript 
+    : sub1=subscript
       {
-	t=template("id");
-	code = t;
-	t.setAttribute("var", sub1);
+    t=template("id");
+    code = t;
+    t.setAttribute("var", sub1);
       }
       (d:DOT (sub2=subscript | STAR {sub2=template("subscript"); sub2.setAttribute("var","*");})
-      { 
-	t1=template("id");
-	t1.setAttribute("var", sub2);
-	t.setAttribute("path", t1);
-	t=t1;
+      {
+    t1=template("id");
+    t1.setAttribute("var", sub2);
+    t.setAttribute("path", t1);
+    t=t1;
       }
       )*
     ;
@@ -931,18 +931,18 @@ subscript returns [StringTemplate code=null]
 {StringTemplate e=null, s=null;}
     : id:ID (LBRACK (e=expression | t:STAR) RBRACK)?
       {
-	code=template("subscript");
-	code.setAttribute("var", id.getText());
-	if (e != null) code.setAttribute("index", e);
-	if (t != null) 
-	{ s=template("sConst");
-	  s.setAttribute("value", "*");
-	  code.setAttribute("index", s);
-	}
+    code=template("subscript");
+    code.setAttribute("var", id.getText());
+    if (e != null) code.setAttribute("index", e);
+    if (t != null)
+    { s=template("sConst");
+      s.setAttribute("value", "*");
+      code.setAttribute("index", s);
+    }
       }
     ;
 
-constant returns [StringTemplate code=null] 
+constant returns [StringTemplate code=null]
     : i:INT_LITERAL
       {
         code=template("iConst");
@@ -959,18 +959,18 @@ constant returns [StringTemplate code=null]
         code.setAttribute("value",quote("\""+s.getText()+"\""));
         code.setAttribute("innervalue",quote(s.getText()));
       }
-    | t:"true" 
-      { 
-        code=template("bConst"); 
-        code.setAttribute("value", t.getText()); 
+    | t:"true"
+      {
+        code=template("bConst");
+        code.setAttribute("value", t.getText());
       }
     | f:"false"
-      { 
+      {
         code=template("bConst");
-        code.setAttribute("value", f.getText()); 
+        code.setAttribute("value", f.getText());
       }
-    | n:"null" 
-      { 
+    | n:"null"
+      {
         code=template("null");
       }
     ;
@@ -983,71 +983,71 @@ options {
     k=2;
 }
 
-AT		:   "@" ;
+AT        :   "@" ;
 PLUS    :   "+" ;
 MINUS   :   '-' ;
-DIV		:   '/' ;
-MOD		:   '%' ;
-EQ  	:   "==" ;
-NE		:   "!=" ;
+DIV        :   '/' ;
+MOD        :   '%' ;
+EQ      :   "==" ;
+NE        :   "!=" ;
 LT      :   '<' ;
-LE		:   "<=" ;
-GT		:   ">" ;
-GE		:   ">=";
+LE        :   "<=" ;
+GT        :   ">" ;
+GE        :   ">=";
 ASSIGN  :   '=' ;
-AND		:   "&&";
-OR		:   "||";
-NOT		:   "!";
-LBRACK	:   '[' ;
-RBRACK	:   ']' ;	
+AND        :   "&&";
+OR        :   "||";
+NOT        :   "!";
+LBRACK    :   '[' ;
+RBRACK    :   ']' ;
 LPAREN  :   '(' ;
 RPAREN  :   ')' ;
 LCURLY  :   '{' ;
 RCURLY  :   '}' ;
-SEMI    :   ';' ; 
+SEMI    :   ';' ;
 COMMA   :   ',' ;
-COLON	:   ':' ;
-STAR	:   '*' ;
-	
+COLON    :   ':' ;
+STAR    :   '*' ;
+
 ID     options
         {
           testLiterals = true;
         }
-	:
-	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*
+    :
+    ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*
     ;
 
 // string literals
 STRING_LITERAL
-	:	'"'! (~('"'|'\n'|'\r'))* '"'!
-//	:	'"'! (ESC|~('"'|'\\'|'\n'|'\r'))* '"'!
-	;
+    :    '"'! (~('"'|'\n'|'\r'))* '"'!
+//    :    '"'! (ESC|~('"'|'\\'|'\n'|'\r'))* '"'!
+    ;
 
 // a numeric literal
 NUMBER
-	{boolean isDecimal=false; Token t=null;}
+    {boolean isDecimal=false; Token t=null;}
     :   '.' {_ttype = DOT;}
-	    (
-            ('0'..'9')+ (EXPONENT)? 
+        (
+            ('0'..'9')+ (EXPONENT)?
                 {
-                	_ttype = FLOAT_LITERAL;
-				}
-        	)?
+                    _ttype = FLOAT_LITERAL;
+                }
+            )?
 
-			|	(	'0' {isDecimal = true; _ttype = INT_LITERAL; } // special case for just '0'
-				// may add octal or hex support here
-			|	('1'..'9') ('0'..'9')*  {isDecimal=true; _ttype = INT_LITERAL;}	// non-zero decimal
-		)
-		(	
-			{isDecimal}?
-            (   '.'  ('0'..'9')* (EXPONENT)? 
-	           	    {
-                		_ttype = FLOAT_LITERAL;
- 		    	    }
-			)
-		    |   ( EXPONENT )?
+            |    (    '0' {isDecimal = true; _ttype = INT_LITERAL; } // special case for just '0'
+                // may add octal or hex support here
+            |    ('1'..'9') ('0'..'9')*  {isDecimal=true; _ttype = INT_LITERAL;}    // non-zero decimal
         )
-	;
+        (
+            {isDecimal}?
+            (   '.'  ('0'..'9')* (EXPONENT)?
+                       {
+                        _ttype = FLOAT_LITERAL;
+                     }
+            )
+            |   ( EXPONENT )?
+        )
+    ;
 
 // white spaces
 WS  :   (   ' '
@@ -1056,56 +1056,56 @@ WS  :   (   ' '
         |   '\n' {newline();}
         )+
         { $setType(Token.SKIP); }
-    ;    
+    ;
 
 // Single-line comments, c style
 SL_CCOMMENT
-	:	"//"
-		(~('\n'|'\r'))* ('\n'|'\r'('\n')?)
-		{$setType(Token.SKIP); newline();}
-	;
+    :    "//"
+        (~('\n'|'\r'))* ('\n'|'\r'('\n')?)
+        {$setType(Token.SKIP); newline();}
+    ;
 
 // Single-line comments, shell style
 SL_SCOMMENT
-	:	"#"
-		(~('\n'|'\r'))* ('\n'|'\r'('\n')?)
-		{$setType(Token.SKIP); newline();}
-	;
+    :    "#"
+        (~('\n'|'\r'))* ('\n'|'\r'('\n')?)
+        {$setType(Token.SKIP); newline();}
+    ;
 
 // multiple-line comments
 ML_COMMENT
-	:	"/*"
-		(
-		options {
-			generateAmbigWarnings=false;
-		}
-		:
-			{ LA(2)!='/' }? '*'
-		|	'\r' '\n'		{newline();}
-		|	'\r'			{newline();}
-		|	'\n'			{newline();}
-		|	~('*'|'\n'|'\r')
-		)*
-		"*/"
-		{$setType(Token.SKIP);}
-	;
+    :    "/*"
+        (
+        options {
+            generateAmbigWarnings=false;
+        }
+        :
+            { LA(2)!='/' }? '*'
+        |    '\r' '\n'        {newline();}
+        |    '\r'            {newline();}
+        |    '\n'            {newline();}
+        |    ~('*'|'\n'|'\r')
+        )*
+        "*/"
+        {$setType(Token.SKIP);}
+    ;
 
 // escape sequence
 protected
 ESC
-    :	'\\'
-	(	'n'
-	|	'r'
-	|	't'
-	|	'b'
-	|	'f'
-	|	'"'
-	|	'\''
-	|	'\\'
-	)
-    ;	
+    :    '\\'
+    (    'n'
+    |    'r'
+    |    't'
+    |    'b'
+    |    'f'
+    |    '"'
+    |    '\''
+    |    '\\'
+    )
+    ;
 
 protected
 EXPONENT
-	:	('e'|'E') ('+'|'-')? ('0'..'9')+
-	;
+    :    ('e'|'E') ('+'|'-')? ('0'..'9')+
+    ;
