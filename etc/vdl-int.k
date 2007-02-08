@@ -112,7 +112,7 @@ namespace("vdl"
 		
 		element(initSharedDir, [rhost]
 			once(list(rhost, "shared")
-				wfdir := concat("run-", uid())
+				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				sharedDir := dircat(wfdir, "shared")
 				dir:make(sharedDir, host=rhost)
 				transfer(srcdir="{vds.home}/libexec/", srcfile="wrapper.sh", destdir=sharedDir, desthost=rhost)
@@ -419,7 +419,7 @@ namespace("vdl"
 		
 		element(generateProvenanceGraph, [gdata]
 			pgraph := vdl:configProperty("pgraph")
-			gname := if(pgraph == "true" concat("graph-", uid(), ".dot") pgraph)
+			gname := if(pgraph == "true" "{VDL:SCRIPTNAME}-{VDL:RUNID}.dot" pgraph)
 			file:write(gname
 				"digraph SwiftProvenance {{", nl()
 				"	graph [", vdl:configProperty("pgraph.graph.options"), "];", nl()
@@ -430,7 +430,7 @@ namespace("vdl"
 				)
 				"}", nl()
 			)
-			echo("Provenance graph saved in ", gname)
+			log(LOG:INFO, "Provenance graph saved in ", gname)
 		)
 	)
 )
