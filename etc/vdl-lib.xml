@@ -43,5 +43,7 @@
 	<export name="cacheUnlockFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheUnlockFiles"/></export>
 	
 	<export name="log"><elementDef classname="org.griphyn.vdl.karajan.lib.Log"/></export>
+	
+	<export name="kickstart"><elementDef classname="org.griphyn.vdl.karajan.lib.Kickstart"/></export>
   </namespace>
 </karajan>

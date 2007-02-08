@@ -277,6 +277,40 @@ namespace("vdl"
 				for(f, files, file:size(file))
 			)
 		)
+		
+		element(transferSTDs, [rhost, tmpdir, jobid, stdout, stderr]
+			concat(
+				for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))	
+					[name, file] := each(f)
+					destfile := "{jobid}-{file}"
+					nl()
+					"{name}: "
+					try(
+						sequential(
+							task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=file,
+								destfile=destfile)
+
+							file:read(destfile)
+							 // If multiple concurrent errors occur, 
+							 // then files might not get deleted (in non-lazy error mode)
+						)
+						nl()
+					)
+					maybe(file:remove(destfile))
+				)
+			)
+		)
+		
+		element(transferKickstartRec, [rhost, srcdir, recfile]
+			try(
+				task:transfer(srchost=rhost, srcdir=srcdir, srcfile="kickstart.xml",
+					destfile=recfile)
+				(
+					maybe(file:remove(recfile))
+					throw(exception("Failed to transfer kickstart records from {srcdir}/{rhost}", exception))
+				)
+			)
+		)
 	
 		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
 			stagein := list(unique(each(stagein)))
@@ -294,6 +328,8 @@ namespace("vdl"
 				
 				stdout := try(stdout, "stdout.txt")
 				stderr := try(stderr, "stderr.txt")
+				
+				kickstart := vdl:kickstart(rhost)
 				
 				try(
 					sequential(
@@ -316,8 +352,7 @@ namespace("vdl"
 								flatten(each(fileDirs)),
 								flatten(each(stagein)), 
 								flatten(outfiles(stageout)),
-								"",
-								"",
+								kickstart,
 								vdl:executable(tr, rhost),
 								maybe(each(arguments)))
 							directory=wfdir
@@ -342,25 +377,22 @@ namespace("vdl"
 						log(LOG:DEBUG, "Application exception: ", exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 						
-						outs := concat(
-							for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))
-								[name, file] := each(f)
-								nl()
-								"{name}: "
+						outs := transferSTDs(rhost, tmpdir, jobid, stdout, stderr)
+						
+						kickstartRec := if(
+							kickstart == "" ""
+							else(
 								try(
-									sequential(
-										task:transfer(srchost=rhost, srcdir=sharedDir, srcfile=file,
-											destfile="{jobid}-{file}")
-		
-										file:read(file)
-										 // If multiple concurrent errors occur, 
-										 // the files might not get deleted
-										maybe(file:remove(file))
+									(
+										recfile := "{jobid}-kickstart.xml"
+										transferKickstartRec(rhost, tmpdir, recfile)
+										"KickstartRecord: {recfile}"
 									)
-									nl()
+									""
 								)
 							)
 						)
+						
 						throw(
 							exception(
 								concat(
@@ -369,7 +401,8 @@ namespace("vdl"
 									"Host: {rhost}", nl(),
 									"Directory: {tmpdir}",
 									"{outs}", nl(),
-									"----"
+									"----", nl(),
+									kickstartRec
 								)
 								exception
 							)
