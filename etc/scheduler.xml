@@ -34,6 +34,9 @@
 		<property name="maxTransfers" value="{maxTransfers}"/>
 		<property name="maxFileOperations" value="{maxFileOperations}"/>
 		
+		<!-- maybe this is a more sensible value than the default of 2 -->
+		<property name="jobThrottle" value="4"/>
+		
 		<task:handler type="execution" provider="gt2"/>
 		<task:handler type="execution" provider="gt4"/>
 		<task:handler type="execution" provider="local"/>
