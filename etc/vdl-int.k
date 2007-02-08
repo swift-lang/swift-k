@@ -301,15 +301,17 @@ namespace("vdl"
 			)
 		)
 		
-		element(transferKickstartRec, [rhost, srcdir, recfile]
+		element(transferKickstartRec, [rhost, wfdir, jobid]
+			recfile := "{jobid}-kickstart.xml"
+			srcdir := dircat(wfdir, "kickstart")
 			try(
-				task:transfer(srchost=rhost, srcdir=srcdir, srcfile="kickstart.xml",
-					destfile=recfile)
+				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile)
 				(
 					maybe(file:remove(recfile))
 					throw(exception("Failed to transfer kickstart records from {srcdir}/{rhost}", exception))
 				)
 			)
+			recfile
 		)
 	
 		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
@@ -371,6 +373,10 @@ namespace("vdl"
 						   before all the files get cleaned out */
 					
 						doStageout(stageout, sharedDir, rhost)
+						if(
+							kickstart != "" & vdl:configProperty("kickstart.always.transfer") == "true"
+							discard(transferKickstartRec(rhost, wfdir, jobid))
+						)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
 					catch(".*"
@@ -384,8 +390,7 @@ namespace("vdl"
 							else(
 								try(
 									(
-										recfile := "{jobid}-kickstart.xml"
-										transferKickstartRec(rhost, tmpdir, recfile)
+										recfile := transferKickstartRec(rhost, wfdir, jobid)
 										"KickstartRecord: {recfile}"
 									)
 									""
