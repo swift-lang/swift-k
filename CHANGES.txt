@@ -1,3 +1,7 @@
+(02/08/07)
+
+*** Added option to always transfer Kickstart records
+
 (02/07/07)
 
 *** Added Kickstart support (optional)
