@@ -142,6 +142,10 @@ public class VDL2Config extends Properties {
 	public boolean getLazyErrors() {
 		return Boolean.valueOf(getProperty(VDL2ConfigProperties.LAZY_ERRORS, "true")).booleanValue();
 	}
+    
+    public TriStateBoolean getKickstartEnabled() {
+        return TriStateBoolean.valueOf(getProperty(VDL2ConfigProperties.KICKSTART_ENABLED, "false"));
+    }
 
 	public String toString() {
 		return "Swift configuration " + files;
