@@ -48,9 +48,15 @@ public class TCProfile extends VDLFunction {
 		TCCache tc = getTC(stack);
 		String tr = TypeUtil.toString(PA_TR.getValue(stack));
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
+		
+		NamedArguments named = ArgUtil.getNamedReturn(stack);
+		Map attrs = null;
+		
+		attrs = attributesFromHost(bc, attrs);
+
 		FQN fqn = new FQN(tr);
 		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
-		NamedArguments named = ArgUtil.getNamedReturn(stack);
+		
 		Map env = new HashMap();
 		if (tce != null) {
 			addEnvironment(env, tce);
@@ -59,8 +65,9 @@ public class TCProfile extends VDLFunction {
 				named.add(GridExec.A_ENVIRONMENT, env);
 			}
 
-			addGlobusAttributes(named, tce);
+			attrs = attributesFromTC(tce, attrs);
 		}
+		addAttributes(named, attrs);
 		return null;
 	}
 
@@ -74,9 +81,9 @@ public class TCProfile extends VDLFunction {
 			}
 		}
 	}
-	
+
 	public static final String PROFILE_GLOBUS_PREFIX = Profile.GLOBUS + "::";
-	
+
 	private void addEnvironment(Map m, BoundContact bc) {
 		Map props = bc.getProperties();
 		Iterator i = props.entrySet().iterator();
@@ -89,28 +96,58 @@ public class TCProfile extends VDLFunction {
 			}
 		}
 	}
+	
+	private void addAttributes(NamedArguments named, Map attrs) {
+	    if (attrs == null || attrs.size() == 0) {
+	        return;
+	    }
+	    System.err.println(attrs);
+	    Iterator i = attrs.entrySet().iterator();
+	    while (i.hasNext()) {
+	        Map.Entry e = (Map.Entry) i.next();
+	        Arg a = (Arg) PROFILE_T.get(e.getKey());
+	        if (a != null) {
+	            named.add(a, e.getValue());
+	            i.remove();
+	        }
+	    }
+	    if (attrs.size() == 0) {
+	        return;
+	    }
+	    named.add(GridExec.A_ATTRIBUTES, attrs);
+	}
 
-	private void addGlobusAttributes(NamedArguments named, TransformationCatalogEntry tce) {
-        Map attrs = null;
+	private Map attributesFromTC(TransformationCatalogEntry tce, Map attrs) {
 		List l = tce.getProfiles(Profile.GLOBUS);
 		if (l != null) {
 			Iterator i = l.iterator();
 			while (i.hasNext()) {
 				Profile p = (Profile) i.next();
-				Arg a = (Arg) PROFILE_T.get(p.getProfileKey());
-				if (a != null) {
-					named.add(a, p.getProfileValue());
+				if (attrs == null) {
+				    attrs = new HashMap();
 				}
-                else {
-                    if (attrs == null) {
-                        attrs = new HashMap();
-                    }
-                    attrs.put(p.getProfileKey(), p.getProfileValue());
-                }
+				attrs.put(p.getProfileKey(), p.getProfileValue());
 			}
-            if (attrs != null) {
-                named.add(GridExec.A_ATTRIBUTES, attrs);
-            }
 		}
+		return attrs;
+	}
+	
+	private Map attributesFromHost(BoundContact bc, Map attrs) {
+		Map props = bc.getProperties();
+		if (props != null) {
+		    System.err.println(props);
+		    Iterator i = props.entrySet().iterator();
+		    while (i.hasNext()) {
+		        Map.Entry e = (Map.Entry) i.next();
+		        FQN fqn = new FQN((String) e.getKey());
+		        if (Profile.GLOBUS.equalsIgnoreCase(fqn.getNamespace())) {
+		            if (attrs == null) {
+		                attrs = new HashMap();
+		            }
+		            attrs.put(fqn.getName(), e.getValue());
+		        }
+		    }
+		}
+		return attrs;
 	}
 }
