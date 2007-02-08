@@ -344,3 +344,6 @@ bConst(value) ::= "$value$"
 sConst(value,innervalue) ::= "$value$"
 
 null() ::= "null"
+
+blank() ::= ""
+

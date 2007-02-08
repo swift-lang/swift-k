@@ -420,7 +420,7 @@ statement returns [StringTemplate code=null]
         | code=assignStat SEMI
 
         // empty statement
-        | SEMI
+        | SEMI {code=template("blank");}
     ;
 
 forStat returns [StringTemplate code=template("forLoop")]
