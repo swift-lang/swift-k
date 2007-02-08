@@ -7,7 +7,6 @@ DIRS=$4
 LINKS=$5
 OUTS=$6
 KICKSTART=$7
-KICKSTARTREC=$8
 WRAPPERLOG=$PWD/wrapper.log
 
 echo "DIR=$DIR">>$WRAPPERLOG
@@ -17,7 +16,7 @@ echo "DIRS=$DIRS">>$WRAPPERLOG
 echo "LINKS=$LINKS">>$WRAPPERLOG
 echo "OUTS=$OUTS">>$WRAPPERLOG
 
-shift 8
+shift 7
 
 IFS=" "
 
@@ -34,8 +33,20 @@ if [ "$KICKSTART" == "" ]; then
 	"$@" 1>$STDOUT 2>$STDERR
 	EXITCODE=$?
 else
-	$KICKSTART -H -o $STDOUT -e $STDERR "$@" 1>$KICKSTARTREC
-	EXITCODE=$?
+	if [ ! -f $KICKSTART ]; then
+		echo "Kickstart executable ($KICKSTART) not found" >>$WRAPPERLOG
+		echo "Kickstart executable ($KICKSTART) not found" >>$STDERR
+		#surely, we can use any numbers here
+		EXITCODE=1024
+	elif [ ! -x $KICKSTART ]; then
+		echo "Kickstart executable ($KICKSTART) is not executable" >>$WRAPPERLOG
+		echo "Kickstart executable ($KICKSTART) is not executable" >>$STDERR
+		EXITCODE=1025
+	else
+		echo "Using Kickstart ($KICKSTART)" >>$WRAPPERLOG
+		$KICKSTART -H -o $STDOUT -e $STDERR "$@" 1>kickstart.xml 2>$STDERR
+		EXITCODE=$?
+	fi
 fi
 cd ..
 
