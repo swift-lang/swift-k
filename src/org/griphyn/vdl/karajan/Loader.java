@@ -9,16 +9,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.LinkedStack;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Monitor;
 import org.globus.cog.karajan.workflow.ElementTree;
-import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.util.ArgumentParser;
@@ -39,6 +43,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static final String ARG_INSTANCE_CONFIG = "config";
 	public static final String ARG_TYPECHECK = "typecheck";
 	public static final String ARG_DRYRUN = "dryrun";
+	public static final String ARG_VERBOSE = "verbose";
+	public static final String ARG_DEBUG = "debug";
+	public static final String ARG_LOGFILE = "logfile";
 
 	public static final String CONST_VDL_OPERATION = "vdl:operation";
 	public static final String VDL_OPERATION_RUN = "run";
@@ -90,7 +97,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			tree.setName(project);
 			tree.getRoot().setProperty(FlowElement.FILENAME, project);
 
-			ExecutionContext ec = new VDL2ExecutionContext(tree);
+			VDL2ExecutionContext ec = new VDL2ExecutionContext(tree, project);
+			setupLogging(ap, project, ec.getRunID());
 
 			// no order
 			ec.setStdout(new PrintStreamChannel(System.out, true));
@@ -207,6 +215,17 @@ public class Loader extends org.globus.cog.karajan.Loader {
 						+ " Properties in this configuration file will override the default properties. "
 						+ "If individual command line arguments are used for properties, they will override "
 						+ "the contents of this file.", "file", ArgumentParser.OPTIONAL);
+		ap.addFlag(ARG_VERBOSE,
+				"Increases the level of output that Swift produces on the console to include more detail "
+						+ "about the execution");
+		ap.addFlag(ARG_DEBUG,
+				"Increases the level of output that Swift produces on the console to include lots of "
+						+ "detail about the execution");
+		ap.addOption(
+				ARG_LOGFILE,
+				"Specifies a file where log messages should go to. By default Swift "
+						+ "uses the name of the workflow being run and a numeric index (e.g. myworkflow.1.log)",
+				"file", ArgumentParser.OPTIONAL);
 
 		Map desc = VDL2ConfigProperties.getPropertyDescriptions();
 		Iterator i = desc.entrySet().iterator();
@@ -216,5 +235,60 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			ap.addOption((String) e.getKey(), pi.desc, pi.validValues, ArgumentParser.OPTIONAL);
 		}
 		return ap;
+	}
+
+	protected static void setupLogging(ArgumentParser ap, String project, String runID)
+			throws IOException {
+		String logfile;
+		if (ap.isPresent(ARG_LOGFILE)) {
+			logfile = ap.getStringValue(ARG_LOGFILE);
+		}
+		else {
+			String name;
+			if (project.indexOf('.') == -1) {
+				name = "swift";
+			}
+			else {
+				name = project.substring(0, project.lastIndexOf('.'));
+			}
+            
+			File f = new File(name + "-" + runID + ".log");
+            
+			FileAppender fa = (FileAppender) getAppender(FileAppender.class);
+			if (fa == null) {
+				logger.warn("Failed to configure log file name");
+			}
+			else {
+				fa.setFile(f.getAbsolutePath());
+				fa.activateOptions();
+			}
+		}
+		Level level = Level.WARN;
+		if (ap.isPresent(ARG_VERBOSE)) {
+			level = Level.INFO;
+		}
+		if (ap.isPresent(ARG_DEBUG)) {
+			level = Level.DEBUG;
+		}
+		ConsoleAppender ca = (ConsoleAppender) getAppender(ConsoleAppender.class);
+		if (ca == null) {
+			logger.warn("Failed to configure console log level");
+		}
+		else {
+			ca.setThreshold(level);
+			ca.activateOptions();
+		}
+	}
+
+	protected static Appender getAppender(Class cls) {
+		Logger root = Logger.getRootLogger();
+		Enumeration e = root.getAllAppenders();
+		while (e.hasMoreElements()) {
+			Appender a = (Appender) e.nextElement();
+			if (cls.isAssignableFrom(a.getClass())) {
+				return a;
+			}
+		}
+		return null;
 	}
 }
