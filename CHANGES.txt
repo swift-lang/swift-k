@@ -2,6 +2,8 @@
 
 *** Added option to always transfer Kickstart records
 
+*** Improved error handling for compilation of SwiftScript code
+
 (02/07/07)
 
 *** Added Kickstart support (optional)
