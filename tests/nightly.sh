@@ -101,9 +101,17 @@ DOH
 		YR=${O:6:2}
 		MO=${O:8:2}
 		DY=${O:10:2}
+		if echo "$DY$MO$YR"|egrep -v "[0-9]{6}"; then
+			YR=${O#tests-}
+			YR=${YR%.html}
+			MO=0
+			DY=$YR
+		else
+			YR="20$YR"
+		fi
 		if [ $LASTYR != $YR ]; then
 			html "</tr></table>"
-			html "<h2>20$YR</h2>"
+			html "<h2>$YR</h2>"
 			LASTYR=$YR
 		fi
 		if [ $LASTMO != $MO ]; then
@@ -112,7 +120,14 @@ DOH
 			html "<table border=\"0\"><tr>"
 			LASTMO=$MO
 		fi
-		html "<td bgcolor=\"#e0e0e0\"><a href=\"$O\">$DY</a></td>"
+		SUCCESS=`grep 'class="success"' $OLDER|wc -l`
+		FAILURE=`grep 'class="failure"' $OLDER|wc -l`
+		if [ "$SUCCESS$FAILURE" == "00" ]; then
+			COLOR="#e0e0e0"
+		else
+			COLOR=`perl -e "printf \"#%02x%02x%02x\", $FAILURE/($SUCCESS+$FAILURE)*220+35, $SUCCESS/($SUCCESS+$FAILURE)*220+35, 40;"`
+		fi
+		html "<td bgcolor=\"$COLOR\"><a href=\"$O\">$DY</a></td>"
 	done
 	html "</tr></table><br><br>"
 	cat <<DOH >>$HTML
@@ -121,6 +136,7 @@ DOH
 </html>
 DOH
 }
+
 
 outecho() {
 	TYPE=$1
