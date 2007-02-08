@@ -142,7 +142,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
 				System.setIn(new FileInputStream(dtm));
 				System.setOut(new PrintStream(new FileOutputStream(xml)));
-				VDLt2VDLx.main(new String[0]);
+				VDLt2VDLx.compile(new String[0]);
 
 				System.setIn(stdin);
 				System.setOut(new PrintStream(new FileOutputStream(kml)));
