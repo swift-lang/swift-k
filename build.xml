@@ -95,6 +95,9 @@
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/karajan.properties" 
 			overwrite="true"/>
+		<copy todir="${dist.dir}/etc" 
+			file="${cog.dir}/modules/${module.name}/etc/log4j.properties" 
+			overwrite="true"/>
 		<replace file="${dist.dir}/bin/swift">
 			<replacetoken>updateOptions "$COG_INSTALL_PATH" "COG_INSTALL_PATH"
 
