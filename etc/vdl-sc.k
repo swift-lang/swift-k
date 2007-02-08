@@ -9,7 +9,10 @@ namespace("vdl"
 			element(pool, [handle, optional(gridlaunch), sysinfo, optional(lrc), ..., channel(properties)]
 				host(name = handle
 					each(...)
-					to(properties, each(properties))
+					to(properties
+						each(properties)
+						maybe(property("gridlaunch", gridlaunch))
+					)
 				)
 			)
 				
@@ -36,7 +39,7 @@ namespace("vdl"
 			)
 			
 			element(profile, [namespace, key, value]
-				property("{namespace}::{key}", value)
+				property("{namespace}:{key}", value)
 			)
 				
 			element(workdirectory, [dir]
