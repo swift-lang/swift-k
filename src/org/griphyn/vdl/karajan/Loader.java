@@ -218,9 +218,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		ap.addFlag(ARG_VERBOSE,
 				"Increases the level of output that Swift produces on the console to include more detail "
 						+ "about the execution");
+        ap.addAlias(ARG_VERBOSE, "v");
 		ap.addFlag(ARG_DEBUG,
 				"Increases the level of output that Swift produces on the console to include lots of "
 						+ "detail about the execution");
+        ap.addAlias(ARG_DEBUG, "d");
 		ap.addOption(
 				ARG_LOGFILE,
 				"Specifies a file where log messages should go to. By default Swift "
