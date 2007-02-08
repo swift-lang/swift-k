@@ -43,9 +43,11 @@ else
 		echo "Kickstart executable ($KICKSTART) is not executable" >>$STDERR
 		EXITCODE=1025
 	else
+		mkdir -p ../kickstart
 		echo "Using Kickstart ($KICKSTART)" >>$WRAPPERLOG
 		$KICKSTART -H -o $STDOUT -e $STDERR "$@" 1>kickstart.xml 2>$STDERR
 		EXITCODE=$?
+		mv -f kickstart.xml ../kickstart/$DIR-kickstart.xml >>$WRAPPERLOG 2>&1
 	fi
 fi
 cd ..
