@@ -1,3 +1,12 @@
+(02/09/07)
+
+*** Reorganized logging. Log always goes to a file. Console
+    gets little stuff unless -verbose or -debug are used.
+	
+*** Use a unified run id which is used as a prefix for the
+    log, the restart log, the provenance graph, and the 
+	remote run directories
+
 (02/08/07)
 
 *** Added option to always transfer Kickstart records
