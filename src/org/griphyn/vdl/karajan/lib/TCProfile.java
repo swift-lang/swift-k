@@ -101,7 +101,6 @@ public class TCProfile extends VDLFunction {
 	    if (attrs == null || attrs.size() == 0) {
 	        return;
 	    }
-	    System.err.println(attrs);
 	    Iterator i = attrs.entrySet().iterator();
 	    while (i.hasNext()) {
 	        Map.Entry e = (Map.Entry) i.next();
@@ -135,7 +134,6 @@ public class TCProfile extends VDLFunction {
 	private Map attributesFromHost(BoundContact bc, Map attrs) {
 		Map props = bc.getProperties();
 		if (props != null) {
-		    System.err.println(props);
 		    Iterator i = props.entrySet().iterator();
 		    while (i.hasNext()) {
 		        Map.Entry e = (Map.Entry) i.next();
