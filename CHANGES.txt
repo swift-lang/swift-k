@@ -1,3 +1,12 @@
+(02/07/07)
+
+*** Added Kickstart support (optional)
+
+*** Added support for GLOBUS profiles in the site catalog
+
+*** Updated error translations to include a pointer to the
+    Kickstart info if available
+
 (02/05/07)
 
 *** Renamed a few things to swift, including:
