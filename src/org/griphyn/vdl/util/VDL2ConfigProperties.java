@@ -19,6 +19,7 @@ public class VDL2ConfigProperties {
 	public static final String CLUSTERING_QUEUE_DELAY = "clustering.queue.delay";
 	public static final String CLUSTERING_MIN_TIME = "clustering.min.time";
 	public static final String KICKSTART_ENABLED = "kickstart.enabled";
+	public static final String KICKSTART_ALWAYS_TRANSFER = "kickstart.always.transfer";
 	public static final Map PROPERTIES;
 
 	static {
@@ -66,6 +67,13 @@ public class VDL2ConfigProperties {
 		PROPERTIES.put(KICKSTART_ENABLED, new PropInfo("<true|false|maybe>",
 				"Controls the use of Kickstart by Swift. The \"maybe\" "
 						+ "value tells Swift to use Kickstart on sites where it is available."));
+		PROPERTIES.put(KICKSTART_ALWAYS_TRANSFER, new PropInfo("<true|false>",
+				"If Kickstart is used (see \"" + KICKSTART_ENABLED + "\"), it controls when " 
+				+ "Kickstart records are transfered back to the submit host. If set to \"false\" " 
+				+ "Swift will only transfer a Kicstart record for a job when the job fails. " 
+				+ "If set to \"true\", Swift will transfer Kickstart records whether a job " 
+				+ "fails or not."));
+
 	}
 
 	public static Map getPropertyDescriptions() {
