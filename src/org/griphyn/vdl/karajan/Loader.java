@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -79,8 +81,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 
 		boolean runerror = false;
+		String projectName = projectName(project);
+		String runID = getUUID();
 
 		try {
+			setupLogging(ap, projectName, runID);
 			if (project.endsWith(".dtm") || project.endsWith(".swift")) {
 				project = compile(project);
 			}
@@ -94,12 +99,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				System.exit(1);
 			}
 
-			tree.setName(project);
+			tree.setName(project + "-" + runID);
 			tree.getRoot().setProperty(FlowElement.FILENAME, project);
 
-			VDL2ExecutionContext ec = new VDL2ExecutionContext(tree, project);
-			setupLogging(ap, project, ec.getRunID());
-
+			VDL2ExecutionContext ec = new VDL2ExecutionContext(tree, projectName);
+            ec.setRunID(runID);
 			// no order
 			ec.setStdout(new PrintStreamChannel(System.out, true));
 
@@ -131,6 +135,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 		catch (Exception e) {
 			logger.debug("Detailed exception:", e);
+			e.printStackTrace();
 			error("Could not start execution.\n\t" + e.getMessage());
 		}
 
@@ -218,11 +223,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		ap.addFlag(ARG_VERBOSE,
 				"Increases the level of output that Swift produces on the console to include more detail "
 						+ "about the execution");
-        ap.addAlias(ARG_VERBOSE, "v");
+		ap.addAlias(ARG_VERBOSE, "v");
 		ap.addFlag(ARG_DEBUG,
 				"Increases the level of output that Swift produces on the console to include lots of "
 						+ "detail about the execution");
-        ap.addAlias(ARG_DEBUG, "d");
+		ap.addAlias(ARG_DEBUG, "d");
 		ap.addOption(
 				ARG_LOGFILE,
 				"Specifies a file where log messages should go to. By default Swift "
@@ -239,23 +244,15 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		return ap;
 	}
 
-	protected static void setupLogging(ArgumentParser ap, String project, String runID)
+	protected static void setupLogging(ArgumentParser ap, String projectName, String runID)
 			throws IOException {
 		String logfile;
 		if (ap.isPresent(ARG_LOGFILE)) {
 			logfile = ap.getStringValue(ARG_LOGFILE);
 		}
 		else {
-			String name;
-			if (project.indexOf('.') == -1) {
-				name = "swift";
-			}
-			else {
-				name = project.substring(0, project.lastIndexOf('.'));
-			}
-            
-			File f = new File(name + "-" + runID + ".log");
-            
+			File f = new File(projectName + "-" + runID + ".log");
+
 			FileAppender fa = (FileAppender) getAppender(FileAppender.class);
 			if (fa == null) {
 				logger.warn("Failed to configure log file name");
@@ -293,4 +290,56 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 		return null;
 	}
+
+	protected static String projectName(String project) {
+		project = project.substring(project.lastIndexOf(File.separatorChar) + 1);
+		return project.substring(0, project.lastIndexOf('.'));
+	}
+
+	private static long lastTime = 0;
+
+	public static synchronized String getUUID() {
+		long l;
+		// 40 lsbits (should cover about 20 years)
+		while (true) {
+			l = System.currentTimeMillis() & 0x000000ffffffffffl;
+			if (l != lastTime) {
+				lastTime = l;
+				break;
+			}
+			else {
+				try {
+					Thread.sleep(1000);
+				}
+				catch (InterruptedException e) {
+				}
+			}
+		}
+		// and for the msbs, some random stuff
+		int rnd;
+		try {
+			SecureRandom prng = SecureRandom.getInstance("SHA1PRNG");
+			rnd = prng.nextInt();
+		}
+		catch (NoSuchAlgorithmException e) {
+			rnd = (int) (Math.random() * 0xffffff);
+		}
+		rnd &= 0x007fffff;
+		l += ((long) rnd) << 40;
+		return alphanum(l);
+	}
+
+	public static final String codes = "0123456789abcdefghijklmnopqrstuvxyz";
+
+	protected static String alphanum(long val) {
+		StringBuffer sb = new StringBuffer();
+		int base = codes.length();
+		for (int i = 0; i < 13; i++) {
+			int c = (int) (val % base);
+			sb.append(codes.charAt(c));
+			val = val / base;
+		}
+		return sb.toString();
+	}
+
 }
