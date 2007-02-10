@@ -58,6 +58,22 @@ public class VDL2Config extends Properties {
 	private VDL2Config() {
 		files = new LinkedList();
 		tried = new LinkedList();
+		put("sites.file", "${vds.home}/etc/sites.xml");
+		put("tc.file", "${vds.home}/var/tc.data");
+		put("lazy.errors", "true");
+		put("caching.algorithm", "LRU");
+		put("pgraph", "true");
+		put("pgraph.graph.options", "splines=\"compound\", rankdir=\"TB\"");
+		put("pgraph.node.options", "color=\"seagreen\", style=\"filled\"");
+		put("clustering.enabled", "true");
+		put("clustering.queue.delay", "4");
+		put("clustering.min.time", "60");
+		put("kickstart.enabled", "maybe");
+		put("kickstart.always.transfer", "false");
+		put("throttle.submit", "4");
+		put("throttle.host.submit", "2");
+		put("throttle.transfers", "4"); 
+		put("throttle.file.operations", "8");
 	}
 
 	private VDL2Config(VDL2Config other) {
