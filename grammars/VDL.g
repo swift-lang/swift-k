@@ -989,19 +989,20 @@ ASSIGN  :   '=' ;
 AND        :   "&&";
 OR        :   "||";
 NOT        :   "!";
-LBRACK    :   '[' ;
-RBRACK    :   ']' ;
-LPAREN  :   '(' ;
-RPAREN  :   ')' ;
-LCURLY  :   '{' ;
-RCURLY  :   '}' ;
-SEMI    :   ';' ;
+LBRACK options { paraphrase = "'['"; }   :   '[' ;
+RBRACK options { paraphrase = "']'"; }   :   ']' ;
+LPAREN options { paraphrase = "'('"; } :   '(' ;
+RPAREN options { paraphrase = "')'"; } :   ')' ;
+LCURLY options { paraphrase = "'{'"; } :   '{' ;
+RCURLY options { paraphrase = "'}'"; } :   '}' ;
+SEMI options { paraphrase = "a semicolon"; } : ';' ;
 COMMA   :   ',' ;
 COLON    :   ':' ;
 STAR    :   '*' ;
 
 ID     options
         {
+          paraphrase = "an identifier";
           testLiterals = true;
         }
     :
