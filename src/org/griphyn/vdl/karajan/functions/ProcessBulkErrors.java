@@ -87,13 +87,13 @@ public class ProcessBulkErrors extends AbstractFunction {
 		}
 	}
 
-	protected String getMessageChain(Throwable e) {
+	public static String getMessageChain(Throwable e) {
 		StringBuffer sb = new StringBuffer();
 		String prev = null;
         boolean first = true;
 		while (e != null) {
 			String msg = e.getMessage();
-			if (msg != null && !msg.equals(prev)) {
+			if (msg != null && (prev == null || prev.indexOf(msg) == -1)) {
                 if (!first) {
                     sb.append("\nCaused by:\n\t");
                 }

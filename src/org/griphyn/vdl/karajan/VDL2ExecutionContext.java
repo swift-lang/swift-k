@@ -7,6 +7,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.griphyn.vdl.karajan.functions.ProcessBulkErrors;
 
 public class VDL2ExecutionContext extends ExecutionContext {
 	public static final String RUN_ID = "vdl:runid";
@@ -32,7 +33,7 @@ public class VDL2ExecutionContext extends ExecutionContext {
 				getStderr().append(translation);
 			}
 			else {
-				getStderr().append(e.getException().toString());
+				getStderr().append(ProcessBulkErrors.getMessageChain(e.getException()));
 			}
 			getStderr().append("\n");
 		}
@@ -47,12 +48,11 @@ public class VDL2ExecutionContext extends ExecutionContext {
 		stack.setGlobal(SCRIPT_NAME, scriptName);
 	}
 
-	
 	public String getRunID() {
 		return runID;
 	}
-	
+
 	public void setRunID(String runID) {
 		this.runID = runID;
-	}	
+	}
 }
