@@ -83,39 +83,30 @@ program returns [StringTemplate code=template("program")]
     ;
 
 nsdecl [StringTemplate code]
-{StringTemplate ns=null;}
-    :   ns=nsdef
+{StringTemplate ns=template("nsDef");}
+    :   "namespace" (prefix:ID{ns.setAttribute("prefix", prefix.getText());})? uri:STRING_LITERAL SEMI
     {
+      ns.setAttribute("uri", uri.getText());
       code.setAttribute("namespaces", ns);
       if (ns.getAttribute("prefix") == null)
          code.setAttribute("targetNS", ns.getAttribute("uri"));
     }
     ;
 
-nsdef returns [StringTemplate code=template("nsDef")]
-    :   "namespace" (prefix:ID{code.setAttribute("prefix", prefix.getText());})? uri:STRING_LITERAL SEMI
-    {
-      code.setAttribute("uri", uri.getText());
-    }
-    ;
-
 typedecl [StringTemplate code]
-{StringTemplate t=null;}
-    :   t=typedef {code.setAttribute("types", t);}
-    ;
-
-typedef returns [StringTemplate code=template("typeDef")]
-{StringTemplate t=null;}
-    :    "type" id:ID {    code.setAttribute("name", id.getText()); }
+{StringTemplate r=template("typeDef");
+ StringTemplate t=null;}
+    :    "type" id:ID {    r.setAttribute("name", id.getText()); }
     (
         (t=type
         {
-           code.setAttribute("type", t);
+           r.setAttribute("type", t);
         }
         SEMI
         )
-        | structdecl[code]
+        | structdecl[r]
     )
+    {code.setAttribute("types", r);}
     ;
 
 structdecl [StringTemplate code]
