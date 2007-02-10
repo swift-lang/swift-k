@@ -6,6 +6,11 @@
 *** Use a unified run id which is used as a prefix for the
     log, the restart log, the provenance graph, and the 
 	remote run directories
+	
+*** Hmm. Did I mess up the dates on the changelog?
+
+*** Added default properties that work in case
+    swift/etc/swift.properties is missing some.
 
 (02/08/07)
 
