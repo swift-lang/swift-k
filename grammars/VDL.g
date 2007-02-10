@@ -79,7 +79,6 @@ program returns [StringTemplate code=template("program")]
     (nsdecl[code])*        //namespace declaration
     (typedecl[code])*    //type declaration
     (declaration[code])*    //procedures
-//    (declORstat[code])*    //variable or dataset or call declaration
     ;
 
 nsdecl [StringTemplate code]
