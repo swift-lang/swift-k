@@ -525,7 +525,8 @@ caseSList [StringTemplate code]
 
 assignStat returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
-    :   (functioncallStat) => code=functioncallStat
+    :   (functioncallStatAssign) => code=functioncallStatAssign
+    |   (functioncallStatNoAssign) => code=functioncallStatNoAssign
     |
     id=identifier ASSIGN ( e=expression | a=arrayInitializer )
         {
@@ -538,9 +539,28 @@ assignStat returns [StringTemplate code=null]
         }
     ;
 
-functioncallStat returns [StringTemplate code=template("call")]
+functioncallStatNoAssign returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
-    :   (
+    :
+        id:ID {code.setAttribute("func", id.getText());}
+        LPAREN
+        (   f=actualParameter
+        {
+        code.setAttribute("inputs", f);
+        }
+            (   COMMA f=actualParameter
+                {
+        code.setAttribute("inputs", f);
+            }
+            )*
+        )?
+        RPAREN
+    ;
+
+
+functioncallStatAssign returns [StringTemplate code=template("call")]
+{StringTemplate f=null;}
+    :
         (( LPAREN
               f=returnParameter
               {
@@ -555,7 +575,6 @@ functioncallStat returns [StringTemplate code=template("call")]
         | (f= returnParameter { code.setAttribute("outputs", f); })
         )
         ASSIGN
-        )?
         id:ID {code.setAttribute("func", id.getText());}
         LPAREN
         (   f=actualParameter
