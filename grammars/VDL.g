@@ -524,10 +524,14 @@ caseSList [StringTemplate code]
     ;
 
 assignStat returns [StringTemplate code=null]
-{StringTemplate a=null, e=null, id=null;}
     :   (functioncallStatAssign) => code=functioncallStatAssign
     |   (functioncallStatNoAssign) => code=functioncallStatNoAssign
-    |
+    |   (variableAssign) => code=variableAssign
+    ;
+
+variableAssign returns [StringTemplate code=null]
+{StringTemplate a=null, e=null, id=null;}
+    :
     id=identifier ASSIGN ( e=expression | a=arrayInitializer )
         {
             code=template("assign");
