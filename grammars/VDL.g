@@ -77,8 +77,7 @@ void setReturnVariables(StringTemplate container, StringTemplate statement) {
 program returns [StringTemplate code=template("program")]
     :
     (nsdecl[code])*        //namespace declaration
-    (typedecl[code])*    //type declaration
-    (declaration[code])*    //procedures
+    (declaration[code])*
     ;
 
 nsdecl [StringTemplate code]
@@ -144,7 +143,8 @@ declaration[StringTemplate code]
 {StringTemplate d=null;}
 
    :
-      d=ll1statement
+      typedecl[code]
+    | d=ll1statement
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
