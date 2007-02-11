@@ -151,7 +151,13 @@ declaration[StringTemplate code]
        }
     | (variable[code]) => variable[code]
     | (datasetdecl[code]) => datasetdecl[code]
-    | (nonll1statement) => d=nonll1statement
+
+    |   (functioncallStatNoAssign) => d=functioncallStatNoAssign
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
+    |   (assignStat) => d=assignStat
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
@@ -392,13 +398,9 @@ declORstat[StringTemplate code]
 // the handling of 'code' here is probably wrong TODO
 
 statement returns [StringTemplate code=null]
-    :
-    code=ll1statement | code=nonll1statement
-    ;
-
-nonll1statement returns [StringTemplate code=null]
-    :   (functioncallStatNoAssign) => code=functioncallStatNoAssign
-    |   (assignStat) => code=assignStat
+    :  code=ll1statement
+    |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
+    |  (assignStat) => code=assignStat
     ;
 
 // These are the statements that we can predict with ll(1) grammer
