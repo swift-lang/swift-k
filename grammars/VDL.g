@@ -141,11 +141,22 @@ structdecl [StringTemplate code]
     ;
 
 declaration[StringTemplate code]
-{StringTemplate f=null;}
+{StringTemplate d=null;}
 
-   :    (declORstat[code])=>declORstat[code]
-        |
-        f=function {code.setAttribute("functions", f);}
+   :
+      d=ll1statement
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
+    | (variable[code]) => variable[code]
+    | (datasetdecl[code]) => datasetdecl[code]
+    | (nonll1statement) => d=nonll1statement
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
+    | d=function {code.setAttribute("functions", d);}
     ;
 
 variable [StringTemplate code]
@@ -378,37 +389,31 @@ declORstat[StringTemplate code]
        }
     ;
 
+// the handling of 'code' here is probably wrong TODO
+
 statement returns [StringTemplate code=null]
     :
-    // a list of statements in curly braces -- start a new scope
+    code=ll1statement | code=nonll1statement
+    ;
+
+nonll1statement returns [StringTemplate code=null]
+    :
+    code=assignStat SEMI
+    ;
+
+// These are the statements that we can predict with ll(1) grammer
+// i.e. with one token of lookahead
+ll1statement returns [StringTemplate code=null]
+    :
     compoundStat[code=template("statementList")]
-
-        // if statement
-           | code=ifStat
-
-        // foreach statement
-           | code=foreachStat
-
-        // switch statement
-           | code=switchStat
-
-        // repeat statement
-           | code=repeatStat SEMI
-
-        // while statement
-           | code=whileStat
-
-        // break
-        | "break" {code=template("break");} SEMI
-
-        // continue
-        | "continue" {code=template("continue");} SEMI
-
-        // assignment statement
-        | code=assignStat SEMI
-
-        // empty statement
-        | SEMI {code=template("blank");}
+    | code=ifStat
+    | code=foreachStat
+    | code=switchStat
+    | code=repeatStat SEMI
+    | code=whileStat
+    | "break" {code=template("break");} SEMI
+    | "continue" {code=template("continue");} SEMI
+    | SEMI {code=template("blank");}
     ;
 
 ifStat returns [StringTemplate code=template("if")]
