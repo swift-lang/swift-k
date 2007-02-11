@@ -156,7 +156,7 @@ declaration[StringTemplate code]
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
-    | d=function {code.setAttribute("functions", d);}
+    | (function) => d=function {code.setAttribute("functions", d);}
     ;
 
 variable [StringTemplate code]
