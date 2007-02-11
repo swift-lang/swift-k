@@ -397,8 +397,8 @@ statement returns [StringTemplate code=null]
     ;
 
 nonll1statement returns [StringTemplate code=null]
-    :
-    code=assignStat
+    :   (functioncallStatNoAssign) => code=functioncallStatNoAssign
+    |   (assignStat) => code=assignStat
     ;
 
 // These are the statements that we can predict with ll(1) grammer
@@ -526,7 +526,6 @@ caseSList [StringTemplate code]
 assignStat returns [StringTemplate code=null]
     :
     (   (functioncallStatAssign) => code=functioncallStatAssign
-    |   (functioncallStatNoAssign) => code=functioncallStatNoAssign
     |   (variableAssign) => code=variableAssign
     )
     ;
