@@ -398,7 +398,7 @@ statement returns [StringTemplate code=null]
 
 nonll1statement returns [StringTemplate code=null]
     :
-    code=assignStat SEMI
+    code=assignStat
     ;
 
 // These are the statements that we can predict with ll(1) grammer
@@ -409,7 +409,7 @@ ll1statement returns [StringTemplate code=null]
     | code=ifStat
     | code=foreachStat
     | code=switchStat
-    | code=repeatStat SEMI
+    | code=repeatStat
     | code=whileStat
     | "break" {code=template("break");} SEMI
     | "continue" {code=template("continue");} SEMI
@@ -477,7 +477,7 @@ repeatStat returns [StringTemplate code=template("repeat")]
 }
     :  "repeat"
     compoundStat[body] {code.setAttribute("body", body);}
-    "until" LPAREN cond=expression RPAREN
+    "until" LPAREN cond=expression RPAREN SEMI
     {
     code.setAttribute("cond", cond);
     }
@@ -524,15 +524,17 @@ caseSList [StringTemplate code]
     ;
 
 assignStat returns [StringTemplate code=null]
-    :   (functioncallStatAssign) => code=functioncallStatAssign
+    :
+    (   (functioncallStatAssign) => code=functioncallStatAssign
     |   (functioncallStatNoAssign) => code=functioncallStatNoAssign
     |   (variableAssign) => code=variableAssign
+    )
     ;
 
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
     :
-    id=identifier ASSIGN ( e=expression | a=arrayInitializer )
+    id=identifier ASSIGN ( e=expression | a=arrayInitializer ) SEMI
         {
             code=template("assign");
             code.setAttribute("lhs", id);
@@ -559,6 +561,7 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
             )*
         )?
         RPAREN
+        SEMI
     ;
 
 
@@ -592,6 +595,7 @@ functioncallStatAssign returns [StringTemplate code=template("call")]
             )*
         )?
         RPAREN
+        SEMI
     ;
 
 returnParameter returns [StringTemplate code=template("returnParam")]
