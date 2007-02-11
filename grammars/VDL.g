@@ -383,9 +383,6 @@ statement returns [StringTemplate code=null]
     // a list of statements in curly braces -- start a new scope
     compoundStat[code=template("statementList")]
 
-        // for statement
-           | code=forStat
-
         // if statement
            | code=ifStat
 
@@ -412,17 +409,6 @@ statement returns [StringTemplate code=null]
 
         // empty statement
         | SEMI {code=template("blank");}
-    ;
-
-forStat returns [StringTemplate code=template("forLoop")]
-{StringTemplate e1=null,e2=null,e3=null,s=null;}
-    :   "for" LPAREN e1=assignStat SEMI e2=expression SEMI e3=assignStat RPAREN
-    compoundStat[code]
-        {
-            code.setAttribute("e1", e1);
-            code.setAttribute("e2", e2);
-            code.setAttribute("e3", e3);
-        }
     ;
 
 ifStat returns [StringTemplate code=template("if")]
