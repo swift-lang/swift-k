@@ -535,14 +535,11 @@ assignStat returns [StringTemplate code=null]
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
     :
-    id=identifier ASSIGN ( e=expression | a=arrayInitializer ) SEMI
+    id=identifier ASSIGN e=initializer SEMI
         {
             code=template("assign");
             code.setAttribute("lhs", id);
-        if (e != null )
-                code.setAttribute("rhs", e);
-        else
-                code.setAttribute("rhs", a);
+            code.setAttribute("rhs", e);
         }
     ;
 
