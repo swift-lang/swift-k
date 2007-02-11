@@ -1,3 +1,12 @@
+(02/10/07)
+
+*** On-going parser changes primarily aimed at producing more user-friendly
+    syntax errors but also including these syntax changes:
+      - parser no longer recognises vestigial for(;;) construct
+      - parser allows type declarations and other top level statements
+        (aside from namespace declarations) to be mixed together. Previously,
+        all type declarations had to occur before other statements.
+
 (02/09/07)
 
 *** Reorganized logging. Log always goes to a file. Console
