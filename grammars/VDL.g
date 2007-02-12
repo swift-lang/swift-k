@@ -150,7 +150,7 @@ topLevelStatement[StringTemplate code]
         setReturnVariables(code, d);
        }
     | (variableDecl[code]) => variableDecl[code]
-    | (datasetdecl[code]) => datasetdecl[code]
+    | (predictDatasetdecl) => datasetdecl[code]
 
     |   (functioncallStatNoAssign) => d=functioncallStatNoAssign
        {
@@ -262,6 +262,8 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
     )?
     RBRACK
     ;
+
+predictDatasetdecl: type declarator (LBRACK RBRACK)? LT;
 
 datasetdecl [StringTemplate code]
 {StringTemplate dataset=null, t=null, m=null, d=null;}
@@ -397,7 +399,7 @@ innerStatement[StringTemplate code]
 {StringTemplate s=null;}
     :
     (variableDecl[code]) => variableDecl[code]
-    |  (datasetdecl[code]) => datasetdecl[code]
+    |  (predictDatasetdecl) => datasetdecl[code]
     |  s=statement
        {
         code.setAttribute("statements",s);
