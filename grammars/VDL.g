@@ -77,7 +77,7 @@ void setReturnVariables(StringTemplate container, StringTemplate statement) {
 program returns [StringTemplate code=template("program")]
     :
     (nsdecl[code])*        //namespace declaration
-    (declaration[code])*
+    (topLevelStatement[code])*
     ;
 
 nsdecl [StringTemplate code]
@@ -139,7 +139,7 @@ structdecl [StringTemplate code]
     )?
     ;
 
-declaration[StringTemplate code]
+topLevelStatement[StringTemplate code]
 {StringTemplate d=null;}
 
    :
@@ -149,7 +149,7 @@ declaration[StringTemplate code]
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
-    | (variable[code]) => variable[code]
+    | (variableDecl[code]) => variableDecl[code]
     | (datasetdecl[code]) => datasetdecl[code]
 
     |   (functioncallStatNoAssign) => d=functioncallStatNoAssign
@@ -162,10 +162,10 @@ declaration[StringTemplate code]
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
-    | (function) => d=function {code.setAttribute("functions", d);}
+    | (functiondecl) => d=functiondecl {code.setAttribute("functions", d);}
     ;
 
-variable [StringTemplate code]
+variableDecl [StringTemplate code]
 {StringTemplate v1=null, v2=null,t=null, d=null, i1=null, i2=null;}
     :   t=type d=declarator (b1:LBRACK RBRACK)? i1=varInitializer
 
@@ -293,7 +293,7 @@ mapparam returns [StringTemplate code=template("mapParam")]
     }
     ;
 
-function returns [StringTemplate code=template("function")]
+functiondecl returns [StringTemplate code=template("function")]
 {StringTemplate f=null;}
     :  ( LPAREN
         f=formalParameter
@@ -375,18 +375,18 @@ builtInType returns [StringTemplate code=null]
 
 compoundStat[StringTemplate code]
     :   LCURLY
-    ( declORstat[code] )*
+    ( innerStatement[code] )*
         RCURLY
     ;
 
 compoundBody[StringTemplate code]
-    :    ( declORstat[code] )*
+    :    ( innerStatement[code] )*
     ;
 
-declORstat[StringTemplate code]
+innerStatement[StringTemplate code]
 {StringTemplate s=null;}
     :
-    (variable[code]) => variable[code]
+    (variableDecl[code]) => variableDecl[code]
     |  (datasetdecl[code]) => datasetdecl[code]
     |  s=statement
        {
