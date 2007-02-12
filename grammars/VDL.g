@@ -539,27 +539,45 @@ caseSList [StringTemplate code]
     :    (s=statement {code.setAttribute("statements", s);})*
     ;
 
-assignStat returns [StringTemplate code=null]
-    :
-    (  (functioncallStatAssignOneReturnParamAsAssign) => code=functioncallStatAssignOneReturnParamAsAssign
-    |  (variableAssign) => code=variableAssign
-    )
-    ;
-
-// This matches enough of variableAssign and functioncallStatAssign
-// to predict that this is an assignment statement.
 predictAssignStat
     : identifier ASSIGN ;
+
+assignStat returns [StringTemplate code=null]
+{StringTemplate id=null;}
+    :
+    id=identifier
+    ASSIGN
+    (
+      (predictFunctioncallStatAssignOneReturnParamAsAssign) => code=functioncallStatAssignOneReturnParamAsAssign
+        { StringTemplate o = template("returnParam");
+          o.setAttribute("name",id);
+          code.setAttribute("outputs",o);
+        }
+    |
+      code=variableAssign
+      {
+          code.setAttribute("lhs",id);
+      }
+    )
+    ;
 
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
     :
-    id=identifier ASSIGN e=initializer SEMI
+    e=initializer SEMI
         {
             code=template("assign");
-            code.setAttribute("lhs", id);
             code.setAttribute("rhs", e);
         }
+    ;
+
+predictFunctioncallStatAssignOneReturnParamAsAssign
+    : ID LPAREN ;
+
+functioncallStatAssignOneReturnParamAsAssign returns [StringTemplate code=template("call")]
+{StringTemplate f=null;}
+    :
+        functionInvocation[code]
     ;
 
 functionInvocation [StringTemplate code]
@@ -589,14 +607,6 @@ functioncallStatAssignOneReturnParamAsDecl returns [StringTemplate code=template
 {StringTemplate f=null;}
     :
         f= singleReturnParameterMandatoryType { code.setAttribute("outputs", f); }
-        ASSIGN
-        functionInvocation[code]
-    ;
-
-functioncallStatAssignOneReturnParamAsAssign returns [StringTemplate code=template("call")]
-{StringTemplate f=null;}
-    :
-        f= singleReturnParameterNoType { code.setAttribute("outputs", f); }
         ASSIGN
         functionInvocation[code]
     ;
@@ -641,14 +651,6 @@ singleReturnParameter returns [StringTemplate code=template("returnParam")]
 {StringTemplate t=null, id=null, d=null;}
     :   (t=type{        code.setAttribute("type", t);})?
         id=identifier
-        {
-        code.setAttribute("name", id);
-        }
-    ;
-
-singleReturnParameterNoType returns [StringTemplate code=template("returnParam")]
-{StringTemplate id=null, d=null;}
-    :   id=identifier
         {
         code.setAttribute("name", id);
         }
