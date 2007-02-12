@@ -533,7 +533,8 @@ caseSList [StringTemplate code]
 
 assignStat returns [StringTemplate code=null]
     :
-    (   (functioncallStatAssignOneReturnParam) => code=functioncallStatAssignOneReturnParam
+    (   (functioncallStatAssignOneReturnParamAsDecl) => code=functioncallStatAssignOneReturnParamAsDecl
+    |   (functioncallStatAssignOneReturnParamAsAssign) => code=functioncallStatAssignOneReturnParamAsAssign
     |   (variableAssign) => code=variableAssign
     )
     ;
@@ -585,13 +586,22 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
     : functionInvocation[code]
     ;
 
-functioncallStatAssignOneReturnParam returns [StringTemplate code=template("call")]
+functioncallStatAssignOneReturnParamAsDecl returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
         f= singleReturnParameter { code.setAttribute("outputs", f); }
         ASSIGN
         functionInvocation[code]
     ;
+
+functioncallStatAssignOneReturnParamAsAssign returns [StringTemplate code=template("call")]
+{StringTemplate f=null;}
+    :
+        f= singleReturnParameter { code.setAttribute("outputs", f); }
+        ASSIGN
+        functionInvocation[code]
+    ;
+
 
 
 
