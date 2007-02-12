@@ -143,8 +143,28 @@ topLevelStatement[StringTemplate code]
 {StringTemplate d=null;}
 
    :
+
+// these are ll(1) and easy to predict
+
       typedecl[code]
     | d=ll1statement
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
+
+// these are non-declaration assign-like statements
+
+    |   (predictAssignStat) => d=assignStat
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
+
+
+// these are variable-like declaration statements
+
+    |   (functioncallStatAssignOneReturnParamAsDecl) => d=functioncallStatAssignOneReturnParamAsDecl
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
@@ -152,26 +172,24 @@ topLevelStatement[StringTemplate code]
     | (variableDecl[code]) => variableDecl[code]
     | (predictDatasetdecl) => datasetdecl[code]
 
+// more complicated function invocations
+// note that function invocations can happen in above statements too
+// this section is just the remaining more specialised invocations
+
     |   (functioncallStatNoAssign) => d=functioncallStatNoAssign
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
+
     |   (functioncallStatAssignManyReturnParam) => d=functioncallStatAssignManyReturnParam
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
-    |   (functioncallStatAssignOneReturnParamAsDecl) => d=functioncallStatAssignOneReturnParamAsDecl
-       {
-        code.setAttribute("statements",d);
-        setReturnVariables(code, d);
-       }
-    |   (predictAssignStat) => d=assignStat
-       {
-        code.setAttribute("statements",d);
-        setReturnVariables(code, d);
-       }
+
+// this is a declaration, but not sorted out the predications yet to
+// group it into a decl block
     | (functiondecl) => d=functiondecl {code.setAttribute("functions", d);}
     ;
 
