@@ -549,15 +549,7 @@ assignStat returns [StringTemplate code=null]
 // This matches enough of variableAssign and functioncallStatAssign
 // to predict that this is an assignment statement.
 predictAssignStat
-    :   (( LPAREN
-              returnParameter
-              (   COMMA returnParameter
-              )*
-              RPAREN )
-        | (singleReturnParameter)
-        )
-        ASSIGN
-        ;
+    : identifier ASSIGN ;
 
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
