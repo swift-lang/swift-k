@@ -162,6 +162,11 @@ topLevelStatement[StringTemplate code]
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
+    |   (functioncallStatAssignOneReturnParamAsDecl) => d=functioncallStatAssignOneReturnParamAsDecl
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
     |   (predictAssignStat) => d=assignStat
        {
         code.setAttribute("statements",d);
@@ -406,6 +411,7 @@ statement returns [StringTemplate code=null]
     :  code=ll1statement
     |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
     |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
+    |   (functioncallStatAssignOneReturnParamAsDecl) => code=functioncallStatAssignOneReturnParamAsDecl
     |  (predictAssignStat) => code=assignStat
     ;
 
@@ -533,9 +539,8 @@ caseSList [StringTemplate code]
 
 assignStat returns [StringTemplate code=null]
     :
-    (   (functioncallStatAssignOneReturnParamAsDecl) => code=functioncallStatAssignOneReturnParamAsDecl
-    |   (functioncallStatAssignOneReturnParamAsAssign) => code=functioncallStatAssignOneReturnParamAsAssign
-    |   (variableAssign) => code=variableAssign
+    (  (functioncallStatAssignOneReturnParamAsAssign) => code=functioncallStatAssignOneReturnParamAsAssign
+    |  (variableAssign) => code=variableAssign
     )
     ;
 
@@ -589,7 +594,7 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
 functioncallStatAssignOneReturnParamAsDecl returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
-        f= singleReturnParameter { code.setAttribute("outputs", f); }
+        f= singleReturnParameterMandatoryType { code.setAttribute("outputs", f); }
         ASSIGN
         functionInvocation[code]
     ;
@@ -597,7 +602,7 @@ functioncallStatAssignOneReturnParamAsDecl returns [StringTemplate code=template
 functioncallStatAssignOneReturnParamAsAssign returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
-        f= singleReturnParameter { code.setAttribute("outputs", f); }
+        f= singleReturnParameterNoType { code.setAttribute("outputs", f); }
         ASSIGN
         functionInvocation[code]
     ;
@@ -641,6 +646,23 @@ returnParameter returns [StringTemplate code=template("returnParam")]
 singleReturnParameter returns [StringTemplate code=template("returnParam")]
 {StringTemplate t=null, id=null, d=null;}
     :   (t=type{        code.setAttribute("type", t);})?
+        id=identifier
+        {
+        code.setAttribute("name", id);
+        }
+    ;
+
+singleReturnParameterNoType returns [StringTemplate code=template("returnParam")]
+{StringTemplate id=null, d=null;}
+    :   id=identifier
+        {
+        code.setAttribute("name", id);
+        }
+    ;
+
+singleReturnParameterMandatoryType returns [StringTemplate code=template("returnParam")]
+{StringTemplate t=null, id=null, d=null;}
+    :   t=type{        code.setAttribute("type", t);}
         id=identifier
         {
         code.setAttribute("name", id);
