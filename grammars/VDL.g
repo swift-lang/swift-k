@@ -157,7 +157,7 @@ declaration[StringTemplate code]
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
-    |   (assignStat) => d=assignStat
+    |   (predictAssignStat) => d=assignStat
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
@@ -400,7 +400,7 @@ declORstat[StringTemplate code]
 statement returns [StringTemplate code=null]
     :  code=ll1statement
     |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
-    |  (assignStat) => code=assignStat
+    |  (predictAssignStat) => code=assignStat
     ;
 
 // These are the statements that we can predict with ll(1) grammer
@@ -531,6 +531,19 @@ assignStat returns [StringTemplate code=null]
     |   (variableAssign) => code=variableAssign
     )
     ;
+
+// This matches enough of variableAssign and functioncallStatAssign
+// to predict that this is an assignment statement.
+predictAssignStat
+    :   (( LPAREN
+              returnParameter
+              (   COMMA returnParameter
+              )*
+              RPAREN )
+        | (singleReturnParameter)
+        )
+        ASSIGN
+        ;
 
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
