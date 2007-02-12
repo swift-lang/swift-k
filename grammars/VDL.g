@@ -162,15 +162,8 @@ topLevelStatement[StringTemplate code]
        }
 
 
-// these are variable-like declaration statements
-
-    |   (functioncallStatAssignOneReturnParamAsDecl) => d=functioncallStatAssignOneReturnParamAsDecl
-       {
-        code.setAttribute("statements",d);
-        setReturnVariables(code, d);
-       }
-    | (variableDecl[code]) => variableDecl[code]
-    | (predictDatasetdecl) => datasetdecl[code]
+// they all begin with (id name)
+    | (topLevelDeclaration[code]) => topLevelDeclaration[code]
 
 // more complicated function invocations
 // note that function invocations can happen in above statements too
@@ -191,6 +184,18 @@ topLevelStatement[StringTemplate code]
 // this is a declaration, but not sorted out the predications yet to
 // group it into a decl block
     | (functiondecl) => d=functiondecl {code.setAttribute("functions", d);}
+    ;
+
+topLevelDeclaration [StringTemplate code]
+{StringTemplate d=null;}
+    :
+     (functioncallStatAssignOneReturnParamAsDecl) => d=functioncallStatAssignOneReturnParamAsDecl
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
+    | (variableDecl[code]) => variableDecl[code]
+    | (predictDatasetdecl) => datasetdecl[code]
     ;
 
 variableDecl [StringTemplate code]
