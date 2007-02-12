@@ -163,7 +163,7 @@ topLevelStatement[StringTemplate code]
 
 
 // they all begin with (id name)
-    | (topLevelDeclaration[code]) => topLevelDeclaration[code]
+    | (predictDeclaration) => topLevelDeclaration[code]
 
 // more complicated function invocations
 // note that function invocations can happen in above statements too
@@ -185,6 +185,8 @@ topLevelStatement[StringTemplate code]
 // group it into a decl block
     | (functiondecl) => d=functiondecl {code.setAttribute("functions", d);}
     ;
+
+predictDeclaration : type declarator ;
 
 topLevelDeclaration [StringTemplate code]
 {StringTemplate d=null;}
