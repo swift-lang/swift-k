@@ -527,7 +527,8 @@ caseSList [StringTemplate code]
 
 assignStat returns [StringTemplate code=null]
     :
-    (   (functioncallStatAssign) => code=functioncallStatAssign
+    (   (functioncallStatAssignOneReturnParam) => code=functioncallStatAssignOneReturnParam
+    |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
     |   (variableAssign) => code=variableAssign
     )
     ;
@@ -575,12 +576,34 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
         SEMI
     ;
 
-
-functioncallStatAssign returns [StringTemplate code=template("call")]
+functioncallStatAssignOneReturnParam returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
-        (( LPAREN
-              f=returnParameter
+        f= singleReturnParameter { code.setAttribute("outputs", f); }
+        ASSIGN
+        id:ID {code.setAttribute("func", id.getText());}
+        LPAREN
+        (   f=actualParameter
+        {
+        code.setAttribute("inputs", f);
+        }
+            (   COMMA f=actualParameter
+                {
+        code.setAttribute("inputs", f);
+            }
+            )*
+        )?
+        RPAREN
+        SEMI
+    ;
+
+
+
+functioncallStatAssignManyReturnParam returns [StringTemplate code=template("call")]
+{StringTemplate f=null;}
+    :
+        LPAREN
+        f=returnParameter
               {
           code.setAttribute("outputs", f);
               }
@@ -589,9 +612,7 @@ functioncallStatAssign returns [StringTemplate code=template("call")]
               code.setAttribute("outputs", f);
               }
               )*
-              RPAREN )
-        | (f= singleReturnParameter { code.setAttribute("outputs", f); })
-        )
+        RPAREN
         ASSIGN
         id:ID {code.setAttribute("func", id.getText());}
         LPAREN
