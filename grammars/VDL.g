@@ -562,7 +562,7 @@ variableAssign returns [StringTemplate code=null]
         }
     ;
 
-functioncallStatNoAssign returns [StringTemplate code=template("call")]
+functionInvocation [StringTemplate code]
 {StringTemplate f=null;}
     :
         id:ID {code.setAttribute("func", id.getText());}
@@ -581,25 +581,16 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
         SEMI
     ;
 
+functioncallStatNoAssign returns [StringTemplate code=template("call")]
+    : functionInvocation[code]
+    ;
+
 functioncallStatAssignOneReturnParam returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
         f= singleReturnParameter { code.setAttribute("outputs", f); }
         ASSIGN
-        id:ID {code.setAttribute("func", id.getText());}
-        LPAREN
-        (   f=actualParameter
-        {
-        code.setAttribute("inputs", f);
-        }
-            (   COMMA f=actualParameter
-                {
-        code.setAttribute("inputs", f);
-            }
-            )*
-        )?
-        RPAREN
-        SEMI
+        functionInvocation[code]
     ;
 
 
@@ -619,20 +610,7 @@ functioncallStatAssignManyReturnParam returns [StringTemplate code=template("cal
               )*
         RPAREN
         ASSIGN
-        id:ID {code.setAttribute("func", id.getText());}
-        LPAREN
-        (   f=actualParameter
-        {
-        code.setAttribute("inputs", f);
-        }
-            (   COMMA f=actualParameter
-                {
-        code.setAttribute("inputs", f);
-            }
-            )*
-        )?
-        RPAREN
-        SEMI
+        functionInvocation[code]
     ;
 
 returnParameter returns [StringTemplate code=template("returnParam")]
