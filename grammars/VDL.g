@@ -157,6 +157,11 @@ topLevelStatement[StringTemplate code]
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
+    |   (functioncallStatAssignManyReturnParam) => d=functioncallStatAssignManyReturnParam
+       {
+        code.setAttribute("statements",d);
+        setReturnVariables(code, d);
+       }
     |   (predictAssignStat) => d=assignStat
        {
         code.setAttribute("statements",d);
@@ -400,6 +405,7 @@ innerStatement[StringTemplate code]
 statement returns [StringTemplate code=null]
     :  code=ll1statement
     |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
+    |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
     |  (predictAssignStat) => code=assignStat
     ;
 
@@ -528,7 +534,6 @@ caseSList [StringTemplate code]
 assignStat returns [StringTemplate code=null]
     :
     (   (functioncallStatAssignOneReturnParam) => code=functioncallStatAssignOneReturnParam
-    |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
     |   (variableAssign) => code=variableAssign
     )
     ;
