@@ -577,7 +577,7 @@ functioncallStatAssign returns [StringTemplate code=template("call")]
               }
               )*
               RPAREN )
-        | (f= returnParameter { code.setAttribute("outputs", f); })
+        | (f= singleReturnParameter { code.setAttribute("outputs", f); })
         )
         ASSIGN
         id:ID {code.setAttribute("func", id.getText());}
@@ -609,6 +609,15 @@ returnParameter returns [StringTemplate code=template("returnParam")]
           code.setAttribute("bind", d);
           }
         )?
+    ;
+
+singleReturnParameter returns [StringTemplate code=template("returnParam")]
+{StringTemplate t=null, id=null, d=null;}
+    :   (t=type{        code.setAttribute("type", t);})?
+        id=identifier
+        {
+        code.setAttribute("name", id);
+        }
     ;
 
 actualParameter returns [StringTemplate code=template("actualParam")]
