@@ -5,6 +5,7 @@
 <article>
 	<articleinfo revision="0.1">
 		<title>The SwiftScript User Guide</title>
+        <subtitle>Source control $LastChangedRevision$</subtitle>
 		<author>
 			<firstname>Yong</firstname>
 			<surname>Zhao</surname>
