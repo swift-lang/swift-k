@@ -57,8 +57,9 @@ public final class And extends AbstractGrammarElement {
 			try {
 				if (!ge.parse(context, stack)) {
 					debug(stack);
-					throw new ParsingException(context.tok.currentLine() + "\nExpected "
-							+ ge.errorForm() + " but got '" + context.tok.peekToken() + "'");
+					throw new ParsingException("Line " + context.tok.getLineNumber() + ": "
+							+ context.tok.currentLine() + "\nExpected " + ge.errorForm()
+							+ " but got '" + context.tok.peekToken() + "'");
 				}
 			}
 			catch (ParsingException e) {
@@ -81,7 +82,7 @@ public final class And extends AbstractGrammarElement {
 
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		for(int i = 0; i < elements.length; i++) {
+		for (int i = 0; i < elements.length; i++) {
 			sb.append(elements[i]);
 			sb.append(' ');
 		}
