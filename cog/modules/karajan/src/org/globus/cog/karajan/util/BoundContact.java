@@ -213,7 +213,7 @@ public class BoundContact extends Contact {
 		public Service getService(int type, String provider) {
 			if (type == Service.FILE_OPERATION || type == Service.FILE_TRANSFER
 					|| type == Service.JOB_SUBMISSION) {
-				return new ServiceImpl("local", LOCALHOST, null);
+				return new ServiceImpl(provider, LOCALHOST, null);
 			}
 			else {
 				return super.getService(type, provider);
