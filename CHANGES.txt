@@ -1,5 +1,7 @@
 (02/13/07)
 
+*** Ongoing parser changes
+
 *** Make sure /bin and /usr/bin are added to the path in the
     wrapper.
 	
