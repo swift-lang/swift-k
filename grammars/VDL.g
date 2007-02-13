@@ -452,10 +452,6 @@ caseInnerStatement returns [StringTemplate code=null]
     :  code=ll1statement
     |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
     |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
-// TODO fix this... need to pull in types to pass in that we've factored out
-// which I guess really means this ceases to be a general statement.
-// I think its only used in switch anyway...
-    |   (functioncallStatAssignOneReturnParamAsDecl[null,null]) => code=functioncallStatAssignOneReturnParamAsDecl[null,null]
     |  (predictAssignStat) => code=assignStat
     ;
 
