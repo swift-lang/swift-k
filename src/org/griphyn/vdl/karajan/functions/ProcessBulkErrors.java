@@ -3,6 +3,8 @@
  */
 package org.griphyn.vdl.karajan.functions;
 
+import java.io.CharArrayWriter;
+import java.io.PrintWriter;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -92,7 +94,15 @@ public class ProcessBulkErrors extends AbstractFunction {
 		String prev = null;
         boolean first = true;
 		while (e != null) {
-			String msg = e.getMessage();
+			String msg;
+			if (e instanceof NullPointerException || e instanceof ClassCastException) {
+			    CharArrayWriter caw = new CharArrayWriter();
+			    e.printStackTrace(new PrintWriter(caw));
+			    msg = caw.toString();
+			}
+			else {
+			    msg = e.getMessage();
+			}
 			if (msg != null && (prev == null || prev.indexOf(msg) == -1)) {
                 if (!first) {
                     sb.append("\nCaused by:\n\t");
