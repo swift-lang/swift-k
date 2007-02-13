@@ -163,7 +163,7 @@ topLevelStatement[StringTemplate code]
 
 
 // they all begin with (id name)
-    | (predictDeclaration) => topLevelDeclaration[code]
+    | (predictDeclaration) => declaration[code]
 
 // more complicated function invocations
 // note that function invocations can happen in above statements too
@@ -188,7 +188,7 @@ topLevelStatement[StringTemplate code]
 
 predictDeclaration : type declarator ;
 
-topLevelDeclaration [StringTemplate code]
+declaration [StringTemplate code]
 {StringTemplate d=null;}
     :
      (functioncallStatAssignOneReturnParamAsDecl) => d=functioncallStatAssignOneReturnParamAsDecl
@@ -422,7 +422,7 @@ compoundBody[StringTemplate code]
 
 innerStatement[StringTemplate code]
 {StringTemplate s=null;}
-    : (predictDeclaration) => innerDeclaration[code]
+    : (predictDeclaration) => declaration[code]
     |  s=ll1statement
        {
         code.setAttribute("statements",s);
@@ -439,17 +439,6 @@ innerStatement[StringTemplate code]
         setReturnVariables(code, s);
        }
     |  (predictAssignStat) => s=assignStat
-       {
-        code.setAttribute("statements",s);
-        setReturnVariables(code, s);
-       }
-    ;
-
-innerDeclaration [StringTemplate code]
-{StringTemplate s=null;}
-    :  (variableDecl[code]) => variableDecl[code]
-    |  (predictDatasetdecl) => datasetdecl[code]
-    |  (functioncallStatAssignOneReturnParamAsDecl) => s=functioncallStatAssignOneReturnParamAsDecl
        {
         code.setAttribute("statements",s);
         setReturnVariables(code, s);
