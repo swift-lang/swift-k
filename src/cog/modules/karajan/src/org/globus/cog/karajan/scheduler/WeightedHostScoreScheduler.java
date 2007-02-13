@@ -78,6 +78,9 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 
 	public void setResources(ContactSet grid) {
 		super.setResources(grid);
+        if (grid.getContacts() == null) {
+            return;
+        }
 		sorted = new WeightedHostSet(scoreHighCap);
 		Iterator i = grid.getContacts().iterator();
 		while (i.hasNext()) {
