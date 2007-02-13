@@ -14,9 +14,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
@@ -24,8 +26,8 @@ import org.globus.cog.abstraction.impl.scheduler.common.Job;
 public class QueuePoller extends Thread {
     public static final Logger logger = Logger.getLogger(QueuePoller.class);
 
-    private String qstat;
     private LinkedList newjobs, donejobs;
+    private Set processed;
     private Map jobs;
     boolean any = false;
     private int sleepTime;
@@ -37,7 +39,7 @@ public class QueuePoller extends Thread {
         newjobs = new LinkedList();
         donejobs = new LinkedList();
         sleepTime = Properties.getProperties().getPollInterval() * 1000;
-        qstat = Properties.getProperties().getQStat();
+        processed = new HashSet();
     }
 
     public void addJob(Job job) {
@@ -122,7 +124,8 @@ public class QueuePoller extends Thread {
         jobs.clear();
     }
 
-    private static String[] cmdarray;
+    private static final String[] QSTAT = new String[] {
+            Properties.getProperties().getQStat(), "-f" };
 
     protected void pollQueue() {
         try {
@@ -132,18 +135,7 @@ public class QueuePoller extends Thread {
             if (jobs.size() == 0) {
                 return;
             }
-            if (cmdarray == null || cmdarray.length != jobs.size() + 2) {
-                cmdarray = new String[jobs.size() + 2];
-                cmdarray[0] = qstat;
-                cmdarray[1] = "-f";
-            }
-            Iterator i = jobs.keySet().iterator();
-            int j = 2;
-            while (i.hasNext()) {
-                cmdarray[j] = (String) i.next();
-                j++;
-            }
-            Process pqstat = Runtime.getRuntime().exec(cmdarray);
+            Process pqstat = Runtime.getRuntime().exec(QSTAT);
             int ec = pqstat.waitFor();
             if (ec != 0) {
                 failAll("QStat failed (exit code " + ec + ")");
@@ -158,6 +150,7 @@ public class QueuePoller extends Thread {
 
     protected void processStdout(InputStream is) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        processed.clear();
         String line;
         String currentJobID = null;
         Job currentJob = null;
@@ -167,6 +160,7 @@ public class QueuePoller extends Thread {
                 line = line.trim();
                 if (line.startsWith("Job Id: ")) {
                     currentJobID = line.substring("Job Id: ".length());
+                    processed.add(currentJobID);
                     currentJob = (Job) jobs.get(currentJobID);
                     continue;
                 }
@@ -195,37 +189,23 @@ public class QueuePoller extends Thread {
                 }
             }
         } while (line != null);
+        Iterator i = jobs.entrySet().iterator();
+        while (i.hasNext()) {
+            Map.Entry e = (Map.Entry) i.next();
+            String id = (String) e.getKey();
+            if (!processed.contains(id)) {
+                Job job = (Job) e.getValue();
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Status for " + id + " is Done");
+                }
+                job.setState(Job.STATE_DONE);
+                if (job.getState() == Job.STATE_DONE) {
+                    donejobs.add(id);
+                }
+            }
+        }
     }
 
     protected void processStderr(InputStream is) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        String line;
-        do {
-            line = br.readLine();
-            if (line != null) {
-                line = line.trim();
-                if (line.startsWith("qstat: Unknown Job Id ")) {
-                    String jobid = line.substring("qstat: Unknown Job Id "
-                            .length());
-                    Job job = (Job) jobs.get(jobid);
-                    if (job != null) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Status for " + jobid + " is Done");
-                        }
-
-                        /*
-                         * The state setting is vetoable since the exit code file must
-                         * be present on the disk before the job can be marked as done.
-                         * This is done in order to be safe with the NFS case, but it also
-                         * needs to be done so that it works with my PBS emulator ;)
-                         */ 
-                        job.setState(Job.STATE_DONE);
-                        if (job.getState() == Job.STATE_DONE) {
-                            donejobs.add(jobid);
-                        }
-                    }
-                }
-            }
-        } while (line != null);
     }
 }

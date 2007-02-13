@@ -27,6 +27,7 @@ public class QueuePoller extends Thread {
     public static final Logger logger = Logger.getLogger(QueuePoller.class);
 
     private LinkedList newjobs, donejobs;
+    private Set processed;
     private Map jobs;
     boolean any = false;
     private int sleepTime;
@@ -38,6 +39,7 @@ public class QueuePoller extends Thread {
         newjobs = new LinkedList();
         donejobs = new LinkedList();
         sleepTime = Properties.getProperties().getPollInterval() * 1000;
+        processed = new HashSet();
     }
 
     public void addJob(Job job) {
@@ -155,8 +157,6 @@ public class QueuePoller extends Thread {
         }
         return null;
     }
-
-    private static Set processed = new HashSet();
 
     protected void processStdout(InputStream is) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
