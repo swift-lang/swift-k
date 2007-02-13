@@ -2,6 +2,9 @@
 
 *** Make sure /bin and /usr/bin are added to the path in the
     wrapper.
+	
+*** When there's a NPE or CCE in an exception chain that causes the
+    execution to fail, the full stack trace is printed.
 
 (02/11/07)
 
