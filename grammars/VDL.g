@@ -425,6 +425,12 @@ innerStatement[StringTemplate code]
     :
     (variableDecl[code]) => variableDecl[code]
     |  (predictDatasetdecl) => datasetdecl[code]
+    |   (functioncallStatAssignOneReturnParamAsDecl) => s=functioncallStatAssignOneReturnParamAsDecl
+       {
+        code.setAttribute("statements",s);
+        setReturnVariables(code, s);
+       }
+
     |  s=ll1statement
        {
         code.setAttribute("statements",s);
@@ -436,11 +442,6 @@ innerStatement[StringTemplate code]
         setReturnVariables(code, s);
        }
     |   (functioncallStatAssignManyReturnParam) => s=functioncallStatAssignManyReturnParam
-       {
-        code.setAttribute("statements",s);
-        setReturnVariables(code, s);
-       }
-    |   (functioncallStatAssignOneReturnParamAsDecl) => s=functioncallStatAssignOneReturnParamAsDecl
        {
         code.setAttribute("statements",s);
         setReturnVariables(code, s);
