@@ -422,15 +422,7 @@ compoundBody[StringTemplate code]
 
 innerStatement[StringTemplate code]
 {StringTemplate s=null;}
-    :
-    (variableDecl[code]) => variableDecl[code]
-    |  (predictDatasetdecl) => datasetdecl[code]
-    |   (functioncallStatAssignOneReturnParamAsDecl) => s=functioncallStatAssignOneReturnParamAsDecl
-       {
-        code.setAttribute("statements",s);
-        setReturnVariables(code, s);
-       }
-
+    : (predictDeclaration) => innerDeclaration[code]
     |  s=ll1statement
        {
         code.setAttribute("statements",s);
@@ -447,6 +439,17 @@ innerStatement[StringTemplate code]
         setReturnVariables(code, s);
        }
     |  (predictAssignStat) => s=assignStat
+       {
+        code.setAttribute("statements",s);
+        setReturnVariables(code, s);
+       }
+    ;
+
+innerDeclaration [StringTemplate code]
+{StringTemplate s=null;}
+    :  (variableDecl[code]) => variableDecl[code]
+    |  (predictDatasetdecl) => datasetdecl[code]
+    |  (functioncallStatAssignOneReturnParamAsDecl) => s=functioncallStatAssignOneReturnParamAsDecl
        {
         code.setAttribute("statements",s);
         setReturnVariables(code, s);
