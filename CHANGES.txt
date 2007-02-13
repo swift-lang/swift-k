@@ -1,3 +1,8 @@
+(02/13/07)
+
+*** Make sure /bin and /usr/bin are added to the path in the
+    wrapper.
+
 (02/11/07)
 
 *** SwiftScript syntax change: The function invocation (i=q)=f(1) must 
