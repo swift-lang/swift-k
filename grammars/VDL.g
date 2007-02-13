@@ -456,9 +456,7 @@ innerDeclaration [StringTemplate code]
        }
     ;
 
-// the handling of 'code' here is probably wrong TODO
-
-statement returns [StringTemplate code=null]
+caseInnerStatement returns [StringTemplate code=null]
     :  code=ll1statement
     |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
     |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
@@ -585,7 +583,7 @@ aCase [StringTemplate code]
 
 caseSList [StringTemplate code]
 {StringTemplate s=null;}
-    :    (s=statement {code.setAttribute("statements", s);})*
+    :    (s=caseInnerStatement {code.setAttribute("statements", s);})*
     ;
 
 predictAssignStat
