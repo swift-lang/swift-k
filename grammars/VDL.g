@@ -189,20 +189,23 @@ topLevelStatement[StringTemplate code]
 predictDeclaration : type declarator ;
 
 declaration [StringTemplate code]
-{StringTemplate d=null;}
-    :
-     (functioncallStatAssignOneReturnParamAsDecl) => d=functioncallStatAssignOneReturnParamAsDecl
+{StringTemplate d=null, t=null, n=null;}
+    : t=type
+      n=declarator
+    (
+     (functioncallStatAssignOneReturnParamAsDecl[null,null]) => d=functioncallStatAssignOneReturnParamAsDecl[t, n]
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
-    | (variableDecl[code]) => variableDecl[code]
-    | (predictDatasetdecl) => datasetdecl[code]
+    | (variableDecl[code,null,null]) => variableDecl[code, t, n]
+    | (predictDatasetdecl) => datasetdecl[code, t, n]
+    )
     ;
 
-variableDecl [StringTemplate code]
-{StringTemplate v1=null, v2=null,t=null, d=null, i1=null, i2=null;}
-    :   t=type d=declarator (b1:LBRACK RBRACK)? i1=varInitializer
+variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
+{StringTemplate v1=null, v2=null, i1=null, i2=null;}
+    :  (b1:LBRACK RBRACK)? i1=varInitializer
 
     {
         if ( currentFunctionName==null ) {
@@ -288,11 +291,11 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
     RBRACK
     ;
 
-predictDatasetdecl: type declarator (LBRACK RBRACK)? LT;
+predictDatasetdecl: (LBRACK RBRACK)? LT;
 
-datasetdecl [StringTemplate code]
-{StringTemplate dataset=null, t=null, m=null, d=null;}
-    :   t=type d=declarator (b1:LBRACK RBRACK)? LT (m=mappingdecl | f:STRING_LITERAL) GT SEMI
+datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d]
+{StringTemplate dataset=null, m=null;}
+    :  (b1:LBRACK RBRACK)? LT (m=mappingdecl | f:STRING_LITERAL) GT SEMI
     {
        dataset=template("dataset");
        dataset.setAttribute("type", t);
@@ -449,7 +452,10 @@ caseInnerStatement returns [StringTemplate code=null]
     :  code=ll1statement
     |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
     |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
-    |   (functioncallStatAssignOneReturnParamAsDecl) => code=functioncallStatAssignOneReturnParamAsDecl
+// TODO fix this... need to pull in types to pass in that we've factored out
+// which I guess really means this ceases to be a general statement.
+// I think its only used in switch anyway...
+    |   (functioncallStatAssignOneReturnParamAsDecl[null,null]) => code=functioncallStatAssignOneReturnParamAsDecl[null,null]
     |  (predictAssignStat) => code=assignStat
     ;
 
@@ -639,10 +645,16 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
     : functionInvocation[code]
     ;
 
-functioncallStatAssignOneReturnParamAsDecl returns [StringTemplate code=template("call")]
-{StringTemplate f=null;}
+functioncallStatAssignOneReturnParamAsDecl
+  [StringTemplate t, StringTemplate d]
+  returns [StringTemplate code=template("call")]
+{
+StringTemplate f=template("returnParam");
+code.setAttribute("outputs", f);
+f.setAttribute("type", t);
+f.setAttribute("name", d);
+}
     :
-        f= singleReturnParameterMandatoryType { code.setAttribute("outputs", f); }
         ASSIGN
         functionInvocation[code]
     ;
