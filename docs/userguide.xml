@@ -40,9 +40,45 @@ blocks of statements.
 Data in SwiftScript is strongly typed. It may be represented in-memory
 (as with conventional languages) or as an out-of-core file on disk.
 For out-of-core files, a mapper (see mapper section) is used to
-identify which files are used as backing store for the data.
+identify which files are used as backing store for the data. When data is
+mapped externally this way, it is called a dataset.
 		</para>
+<para>
+A dataset's physical representation is declared by a mapping descriptor, 
+which defines how each element in the dataset's logical schema is 
+stored in, and fetched from, physical structures such as directories,
+files, and database tables
+</para>
+
+<para>
+In order to permit reuse for different datasets, mapping functions may
+be parameterized for such things as dataset locations. Thus, in order
+to access a dataset, we need to know three things: its type schema, 
+its mapping descriptor, and the value(s) of any parameter(s) associated 
+with the mapping descriptor. For example, if we want to describe a dataset,
+whose logical structure is defined by binaryfile, and whose physical
+reprentation is a file called "file1.bin" located at "/home/yongzh/data/",
+then the dataset might be declared as follows:
+</para>
+
+<programlisting>
+binaryfile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
+</programlisting>
+
+<para>
+The above example declares a dataset called f1, which uses a single 
+file mapper to map a file from a specific location. What the mapper does 
+is merely returning the file name to the system. SwiftScript also 
+has a simplified syntax for such cases since single_file_mapper 
+is frequently used:
+
+<programlisting>
+binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
+</programlisting>
+</para>
+
 		</sect2>
+
 		<sect2>
 			<title>Type System</title>
 			<para>
@@ -96,14 +132,40 @@ variables, and express operations over arrays.
 			<para>
 Declaration statements declare new variables and optionally assign
 a value to them or map those variables to on-disk files.
+SwiftScript variables are single-assignment - they may be assigned to
+once, either at the time of declaration or later. Attempting to assign
+a value a second or subsequent time is an error.
 			</para>
+<para>
+Declaration statements have the general form:
+<programlisting>
+  typename variablename (&lt;mapping&gt; | = initialValue ) ;
+</programlisting>
+The format of the mapping expression is defined in the Mappers section.
+initialValue may be either an expression or a procedure call that
+returns a single value.
+</para>
+<para>Variables can also be declared in a multivalued-procedure statement,
+described in another section.</para>
 		</sect2>
 
 		<sect2>
 			<title>Assignment Statements</title>
 			<para>
 Assignment statements assign values to previously declared variables.
-SwiftScript variables have single assignment semantics.
+Assignments may only be made to variables that have already been 
+assigned. Assignment statements have the general form:
+
+<programlisting>
+  variable = value;
+</programlisting>
+
+where value can be either an expression or a value 
+			</para>
+
+			<para>
+Variables can also be assigned in a multivalued-procedure statement,
+described in another section.
 			</para>
 		</sect2>
 
@@ -345,6 +407,10 @@ As mentioned before, there is a simplified syntax for this mapper.
 	</sect2>
 
 	<sect2><title>file system mapper</title>
+<para>TODO: note on difference between location as a relative vs absolute
+path wrt staging to remote location - as mihael said:
+It's because you specify that location in the mapper. Try location="."          
+instead of location="/sandbox/..."</para>
 	<itemizedlist>
 	<listitem>Name: filesys_mapper</listitem>
     <listitem>Description:
@@ -515,4 +581,19 @@ The swift command may exit with the following return codes:
 	</sect2>
 	</sect1>
 
+	<sect1> <title>Kickstart</title>.
+		<para>
+Kickstart provides information about the execution of remote jobs, in the
+form of an XML invocation record collected on the remote system. By default,
+it is not used but configuration options allow it to be enabled.
+		</para>
+	</sect1>
+
+	<sect1> <title>Invoking an application from Swift</title>.
+	<para>
+There are certain requirements for invoking application code from Swift,
+mostly related to their treatment of input and output data.
+	</para>
+	</sect1>
 </article>
+
