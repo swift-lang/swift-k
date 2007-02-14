@@ -1,3 +1,13 @@
+(02/14/2007)
+
+*** Merged the following from trunk:
+
+    *** Fixed some issues with comments not being parsed correctly
+
+    *** [u]parallelFor didn't handle concurrent exceptions correctly.
+        Fixed.
+
+
 (01/04/2007)
 
 *** Backported some fixes to the adaptive scheduler from trunk.

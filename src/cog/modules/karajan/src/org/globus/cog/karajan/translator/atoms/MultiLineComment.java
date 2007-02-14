@@ -23,14 +23,14 @@ public class MultiLineComment extends SingleLineComment {
 				sb.append(c);
 			}
 			else if (context.tok.hasMoreTokens()) {
-				c = context.tok.nextChar();
+				c = context.tok.peekChar();
 				if (c == '/') {
+					context.tok.nextChar();
 					stack.push(new Eval(sb.toString()));
 					return true;
 				}
 				else {
 					sb.append('*');
-					sb.append(c);
 				}
 			}
 			else {
