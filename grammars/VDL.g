@@ -186,7 +186,7 @@ topLevelStatement[StringTemplate code]
     | (functiondecl) => d=functiondecl {code.setAttribute("functions", d);}
     ;
 
-predictDeclaration : x=type y=declarator ;
+predictDeclaration {StringTemplate x,y;} : x=type y=declarator ;
 
 declaration [StringTemplate code]
 {StringTemplate t=null, n=null;}
@@ -565,6 +565,7 @@ caseSList [StringTemplate code]
     ;
 
 predictAssignStat
+{StringTemplate x=null;}
     : x=identifier ASSIGN ;
 
 assignStat returns [StringTemplate code=null]
