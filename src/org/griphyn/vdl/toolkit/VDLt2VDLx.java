@@ -4,6 +4,8 @@ import java.io.InputStreamReader;
 
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Logger;
 import org.griphyn.vdl.parser.VDLtLexer;
 import org.griphyn.vdl.parser.VDLtParser;
 
@@ -16,6 +18,8 @@ import org.griphyn.vdl.parser.VDLtParser;
 
 public class VDLt2VDLx {
 
+	private static final Logger logger = Logger.getLogger(VDLt2VDLx.class);
+
 	public static void main(String[] args) throws Exception {
 		try {
 			compile(args);
@@ -27,7 +31,8 @@ public class VDLt2VDLx {
 		System.exit(0);
 	}
 
-	public static int compile(String[] args) throws Exception {
+	public static int compile(String[] args) 
+        throws ParsingException, IncorrectInvocationException {
 		try {
 			String templateFileName = null;
 			switch(args.length) {
@@ -50,14 +55,15 @@ public class VDLt2VDLx {
 			StringTemplate code = parser.program();
 			System.out.println(code.toString());
 		} catch(Exception e) {
-			System.err.println("Error parsing SwiftScript source file: "+e);
+			logger.error("Could not compile SwiftScript source: "+e);
+			logger.debug("Full parser exception",e);
 			throw new ParsingException();
 		}
 		return 0;
 	}
 
-	static class IncorrectInvocationException extends Exception {}
-	static class ParsingException extends Exception {}
+	static public class IncorrectInvocationException extends Exception {}
+	static public class ParsingException extends Exception {}
 
 }
 

@@ -5,6 +5,7 @@ package org.griphyn.vdl.karajan;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,8 @@ import org.globus.cog.util.ArgumentParserException;
 import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
+import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
+import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
 import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 import org.griphyn.vdl.util.VDL2ConfigProperties.PropInfo;
@@ -87,7 +90,15 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		try {
 			setupLogging(ap, projectName, runID);
 			if (project.endsWith(".dtm") || project.endsWith(".swift")) {
-				project = compile(project);
+				try {
+					project = compile(project);
+				} catch(ParsingException pe) {
+					// the compiler should have already logged useful
+					// error messages, so this log line is just for
+					// debugging
+					logger.debug("Exception when compiling "+project,pe);
+					System.exit(3);
+				}
 			}
 			ElementTree tree = null;
 			if (project != null) {
@@ -142,31 +153,36 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		System.exit(runerror ? 2 : 0);
 	}
 
-	private static String compile(String project) throws Exception {
-		try {
-			File dtm = new File(project);
-			File dir = dtm.getParentFile();
-			File xml = new File(project.substring(0, project.lastIndexOf('.')) + ".xml");
-			File kml = new File(project.substring(0, project.lastIndexOf('.')) + ".kml");
-			if (dtm.lastModified() > kml.lastModified()) {
-				logger.info(project + ": file is out of date. Recompiling.");
-				InputStream stdin = System.in;
-				PrintStream stdout = System.out;
+	private static String compile(String project) 
+		throws FileNotFoundException, ParsingException,
+		IncorrectInvocationException {
+		File dtm = new File(project);
+		File dir = dtm.getParentFile();
+		File xml = new File(project.substring(0, project.lastIndexOf('.')) + ".xml");
+		File kml = new File(project.substring(0, project.lastIndexOf('.')) + ".kml");
 
-				System.setIn(new FileInputStream(dtm));
-				System.setOut(new PrintStream(new FileOutputStream(xml)));
-				VDLt2VDLx.compile(new String[0]);
+		if (dtm.lastModified() > kml.lastModified()) {
 
-				System.setIn(stdin);
+			logger.info(project + ": source file is new. Recompiling.");
+
+			InputStream stdin = System.in;
+			PrintStream stdout = System.out;
+			System.setIn(new FileInputStream(dtm));
+			System.setOut(new PrintStream(new FileOutputStream(xml)));
+			VDLt2VDLx.compile(new String[0]);
+			System.setIn(stdin);
+
+			try{
 				System.setOut(new PrintStream(new FileOutputStream(kml)));
 				Karajan.main(new String[] { xml.getAbsolutePath() });
 				System.setOut(stdout);
+			} catch(Exception e) {
+				throw new RuntimeException("Failed to convert .xml to .kml for "+project,e);
 			}
-			return kml.getAbsolutePath();
+		} else {
+			logger.debug("Recompilation suppressed.");
 		}
-		catch (Exception e) {
-			throw new Exception("Failed to compile " + project, e);
-		}
+		return kml.getAbsolutePath();
 	}
 
 	private static VDL2Config loadConfig(ArgumentParser ap, VariableStack stack) throws IOException {
