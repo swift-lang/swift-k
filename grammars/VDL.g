@@ -189,15 +189,11 @@ topLevelStatement[StringTemplate code]
 predictDeclaration : type declarator ;
 
 declaration [StringTemplate code]
-{StringTemplate d=null, t=null, n=null;}
+{StringTemplate t=null, n=null;}
     : t=type
       n=declarator
     (
-     (functioncallStatAssignOneReturnParamAsDecl[null,null]) => d=functioncallStatAssignOneReturnParamAsDecl[t, n]
-       {
-        code.setAttribute("statements",d);
-        setReturnVariables(code, d);
-       }
+     (predictFunctioncallStatAssignOneReturnParamAsDecl) => functioncallStatAssignOneReturnParamAsDecl[code, t, n]
     | (variableDecl[code,null,null]) => variableDecl[code, t, n]
     | (predictDatasetdecl) => datasetdecl[code, t, n]
     )
@@ -641,14 +637,21 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
     : functionInvocation[code]
     ;
 
+
+predictFunctioncallStatAssignOneReturnParamAsDecl
+{ StringTemplate dummy=template("call"); }
+    : ASSIGN functionInvocation[dummy] ;
+
 functioncallStatAssignOneReturnParamAsDecl
-  [StringTemplate t, StringTemplate d]
+  [StringTemplate x, StringTemplate t, StringTemplate d]
   returns [StringTemplate code=template("call")]
 {
 StringTemplate f=template("returnParam");
 code.setAttribute("outputs", f);
 f.setAttribute("type", t);
 f.setAttribute("name", d);
+x.setAttribute("statements",code);
+setReturnVariables(x, code);
 }
     :
         ASSIGN
