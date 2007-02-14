@@ -14,7 +14,15 @@
 			<formalpara>
 				<title></title>
 				<para>
-SwiftScript is an improved version of the Virtual Data Language that supports dataset typing and mapping, dataset iteration, conditional branching, sub-workflow composition and other advanced features. In this document, we give a few examples to illustrate how to write SwiftScript programs to exploit such features. SwiftScript syntax has two flavors; one is in a C-like format, the other in XML. For simplification purpose, all examples in this document are written in the C-like format, which can be automatically translated into the XML format using one of the tools in our virtual data system. 				
+SwiftScript is an improved version of the Virtual Data Language that
+supports dataset typing and mapping, dataset iteration, conditional
+branching, sub-workflow composition and other advanced features. In
+this document, we give a few examples to illustrate how to write
+SwiftScript programs to exploit such features. SwiftScript syntax has
+two flavors; one is in a C-like format, the other in XML. For
+simplification purpose, all examples in this document are written
+in the C-like format, which can be automatically translated into
+the XML format using one of the tools in our virtual data system.
 				</para>
 			</formalpara>
 		</abstract>
@@ -170,36 +178,72 @@ described in another section.
 		</sect2>
 
 		<sect2>
+			<title>Multivalued procedure invocation statements</title>
+<para>
+Procedures can return more than one value. In such case, the previously
+mentioned declaration and assignent statements are insufficient. A
+multi-valued procedure invocation can be used. This has the general
+form:
+
+<programlisting>
+'(' ((type)? variableName ( '=' binding ))+ ')' = procedureinvocation
+</programlisting>
+
+Variables can be either declared (if a type is included) or assigned (if
+a type is not included). If no bindings are specified, then variables
+are assigned in the same order that they are specified in the
+procedure declaration. If bindings are specified, then variables are
+assigned to the named return parameter.
+</para>
+
+		</sect2>
+
+		<sect2>
 			<title>Procedures</title>
 			<para>
 Datasets are operated on by procedures, which take typed data as input,
-perform computations on those data, and produce typed data as output. An atomic procedure defines an interface to an executable program or service, while a compound procedure composes calls to atomic procedures, compound procedures, and/or control statements. 
+perform computations on those data, and produce typed data as output. An
+atomic procedure defines an interface to an executable program or
+service, while a compound procedure composes calls to atomic
+procedures, compound procedures, and/or control statements.
 			</para>
 			
 			<para>
-			A procedure declaration is like a function definition, where we specify the function name and the formal parameters. SwiftScript procedures can take multiple inputs and produce multiple outputs, and inputs are organized to the right of the function name where outputs to the left. For instance:
+A procedure declaration is like a function definition, where we
+specify the function name and the formal parameters. SwiftScript
+procedures can take multiple inputs and produce multiple outputs.
+Inputs are specified to the right of the function name where 
+outputs to the left. For instance:
 
 <programlisting>
 (type3 out1, type4 out2) myproc (type1 in1, type2 in2)
 </programlisting>
 
-			The above example declares a procedure called myproc, which has two inputs in1 (of type type1) and in2 (of type type2) and two outputs out1 (of type type3) and out2 (of type type4).
+The above example declares a procedure called myproc, which 
+has two inputs in1 (of type type1) and in2 (of type type2) 
+and two outputs out1 (of type type3) and out2 (of type type4).
 			</para>
 	
 			<para>
-	A formal parameter can have a default value, in which case this parameter is also deemed an optional parameter. When we call a procedure, passing in the actual parameters, we allow both positional parameter and keyword parameter passing, provided that all optional parameters have to be declared after the required parameters and any optional parameter has to be bound using keyword parameter passing. So for instance if we declare a procedure myproc1:
+A procedure input parameter can have a default value, in which case
+the parameter is deemed an optional parameter. When we call a
+procedure, passing in the actual parameters, we allow both positional
+parameter and keyword parameter passing, provided that all optional
+parameters have to be declared after the required parameters and any
+optional parameter has to be bound using keyword parameter passing.
+So for instance if we declare a procedure myproc1:
 
 <programlisting>
 (binaryfile bf) myproc1 (int i, string s="foo")
 </programlisting>
 
-			Then the procedure can be called like this
+Then the procedure can be called like this
 
 <programlisting>
 binaryfile mybf = myproc1(1);
 </programlisting>
 
-			or like this supplying the value for the optional parameter s:
+or like this supplying the value for the optional parameter s:
 
 <programlisting>
 binaryfile mybf = myproc1 (1, s="bar");
@@ -208,7 +252,10 @@ binaryfile mybf = myproc1 (1, s="bar");
 			</para>
 			
 			<para>
-			The body of an atomic procedure specifies how to invoke an external executable program or Web Service, and how logical data types are mapped to command line arguments or SOAP messages. A complete specification for myproc1 can be:
+The body of an atomic procedure specifies how to invoke an
+external executable program or Web Service, and how logical data
+types are mapped to command line arguments or SOAP messages. A
+complete specification for myproc1 can be:
 
 <programlisting>
 (binaryfile bf) myproc1 (int i, string s="foo") {
@@ -218,9 +265,19 @@ binaryfile mybf = myproc1 (1, s="bar");
 }			
 </programlisting>
 
-Which specifies that myproc1 invokes an executable, passing the values of i, s and the file name of bf as command line arguments. The @filename notation serves as a mapping function denoting that the argument should be mapped as a file name, and since the notation is often required in invoking applications, often we can omit the filename part and use the @ sign only.			
+Which specifies that myproc1 invokes an executable, passing the values
+of i, s and the file name of bf as command line arguments. The
+@filename notation serves as a mapping function denoting that the
+argument should be mapped as a file name, and since the notation is
+often required in invoking applications, often we can omit the
+filename part and use the @ sign only.
 			</para>
-			A compound procedure contains a set of calls to other procedures. Shared variables in the body of a compound procedure specify data dependencies and thus the execution sequence of the procedure calls. For simple illustration, we define a compound procedure in below:
+
+			<para>
+A compound procedure contains a set of calls to other procedures. Shared
+variables in the body of a compound procedure specify data dependencies
+and thus the execution sequence of the procedure calls. For simple 
+illustration, we define a compound procedure in below:
 
 <programlisting>
 (type2 b) foo_bar (type1 a) {
@@ -229,18 +286,23 @@ Which specifies that myproc1 invokes an executable, passing the values of i, s a
 	b = bar(c);    // c is an input to bar
 }
 </programlisting>
-
+		</para>
 		</sect2>
 		
-		
 		<sect2>
-			<title>"Control Constructs"</title>
+			<title>Control Constructs</title>
 			<para>
-			Control constructs are special control entities in a workflow to control the direction of execution. SwiftScript provides if, switch, foreach, and while constructs, with syntax and semantics similar to comparable constructs in high-level languages. 
+Control constructs are special control entities in a workflow to 
+control the direction of execution. SwiftScript provides if, switch,
+foreach, and while constructs, with syntax and semantics similar
+to comparable constructs in other high-level languages.
 			</para>
 			
 			<para>
-			The foreach construct is used for dataset iteration. It iterates over each of the items in a composite dataset, and applies some operations to that item. We illustrate the use of the foreach construct in the following example using the type order defined above:
+The foreach construct is used for dataset iteration. It iterates
+over each of the items in a composite dataset, and applies some
+operations to that item. We illustrate the use of the foreach
+construct in the following example using the type order defined above:
 
 <programlisting>
 check_order (order o) {
@@ -262,7 +324,11 @@ check_order (order o) {
 		<title>Hello World</title>
 		
 		<para>
-		The hello world example calls to the UNIX command echo to print the text “hello world” and redirect the standard output into a file. Please note that the echo command in the procedure body is only a logical command, it needs to be mapped to an executable by means of a transformation catalog.
+The hello world example calls to the UNIX command echo to print
+the text "hello world" and redirect the standard output into a
+file. Note that the echo command in the procedure body is only
+a logical command and needs to be mapped to an executable by means 
+of a transformation catalog.
 
 <programlisting>
 type file {} //define a type for file
@@ -335,10 +401,9 @@ As mentioned before, there is a simplified syntax for this mapper.
 	<itemizedlist>
 	<listitem>Name: simple_mapper</listitem>
     <listitem>Description:
-        A mapper that maps a file or a list of files by prefix, suffix, and pattern.
-        if there are more than one file matched, each of the file names would be mapped as 
-        a subelement of the dataset. 
-        
+A mapper that maps a file or a list of files by prefix, suffix, and pattern
+if there are more than one file matched, each of the file names would
+be mapped as a subelement of the dataset.
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
@@ -352,9 +417,9 @@ As mentioned before, there is a simplified syntax for this mapper.
           The suffix of the files, for instance: &quot;.txt&quot;
         </listitem>
         <listitem>pattern:
-          A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match all file names 
-		that contain foo. When this mapper is used to specify output filenames, pattern is ignored.
-		
+A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match 
+all file names that contain foo. When this mapper is used to specify
+output filenames, pattern is ignored.
         </listitem>
         </itemizedlist>
     </listitem>
@@ -362,8 +427,8 @@ As mentioned before, there is a simplified syntax for this mapper.
 		<programlisting>
 	file f &lt;simple_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
-			The above example would map all filenames that start with &quot;foo&quot; and have 
-			an extension &quot;.txt&quot; into file f.
+The above example would map all filenames that start 
+with &quot;foo&quot; and have an extension &quot;.txt&quot; into file f.
     </listitem>
 	</itemizedlist>
 	</sect2>
@@ -520,25 +585,25 @@ instead of location="/sandbox/..."</para>
         	float  GPA;
         }
         </programlisting>
-        if the file does not contain a header with column info, then the column names are 
-        assumed as &quot;column1&quot;, &quot;column2&quot;, ...
+if the file does not contain a header with column info, then the
+column names are assumed as &quot;column1&quot;, &quot;column2&quot;, ...
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
         <listitem>file:
-          The name of the file to read from.
+The name of the file to read from.
         </listitem>
         <listitem>header:
-          whether the file has a line describing header info, default is true
+whether the file has a line describing header info, default is true
         </listitem>
         <listitem>skip:
-          The number of lines to skip at the beginning (after header line)
+The number of lines to skip at the beginning (after header line)
         </listitem>
         <listitem>hdelim:
-          Header delimiter, default is white space
+Header delimiter, default is white space
         </listitem>
         <listitem>delim:
-          Content delimiter, default is white space
+Content delimiter, default is white space
         </listitem>
         </itemizedlist>
     </listitem>
@@ -547,9 +612,9 @@ instead of location="/sandbox/..."</para>
 			<programlisting>
 	student stus[] &lt;csv_mapper;name="stu_list.txt"&gt;;
 			</programlisting>
-		The above example would read a list of student info from file 
-			&quot;stu_list.txt&quot; and map them into a student array. By default, the file
-			should contain a header line specifying the names of the columns.
+The above example would read a list of student info from file 
+&quot;stu_list.txt&quot; and map them into a student array. By default, 
+the file should contain a header line specifying the names of the columns.
     </listitem>
 	</itemizedlist>
 	</sect2>
