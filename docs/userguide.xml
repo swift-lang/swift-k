@@ -489,4 +489,29 @@ As mentioned before, there is a simplified syntax for this mapper.
 	</sect2>
 
 	</sect1>
+
+	<sect1>
+	<title>The swift command</title>
+	<para>
+The swift command is the main commandline tool for executing SwiftScript
+programs.
+	</para>
+	<sect2><title>Syntax</title>
+<para>
+Command-line syntax can be seen by typing swift -help
+</para>
+	</sect2>
+	<sect2><title>Return codes</title>
+	<para>
+The swift command may exit with the following return codes:
+<itemizedlist>
+<listitem>0 - success</listitem>
+<listitem>1 - commandline syntax error or missing project name</listitem>
+<listitem>2 - error during workflow execution</listitem>
+<listitem>3 - error during compilation of SwiftScript program</listitem>
+</itemizedlist>
+	</para>
+	</sect2>
+	</sect1>
+
 </article>
