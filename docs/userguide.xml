@@ -372,10 +372,6 @@ As mentioned before, there is a simplified syntax for this mapper.
 	</sect2>
 
 	<sect2><title>file system mapper</title>
-<para>TODO: note on difference between location as a relative vs absolute
-path wrt staging to remote location - as mihael said:
-It's because you specify that location in the mapper. Try location="."          
-instead of location="/sandbox/..."</para>
 	<itemizedlist>
 	<listitem>Name: filesys_mapper</listitem>
     <listitem>Description:
@@ -520,15 +516,4 @@ instead of location="/sandbox/..."</para>
 	</sect2>
 
 	</sect1>
-
-	<sect1> <title>Kickstart</title> 
-<para>Give details on how to install and configure kickstart.</para>
-	</sect1>
-	<sect1> <title>Wrapping an application inside Swift</title> 
-<para>i) what the applications interface must look like to go with
-swift.
-ii) how to implement that
-</para>
-	</sect1>
 </article>
-
