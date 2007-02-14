@@ -422,26 +422,17 @@ compoundBody[StringTemplate code]
 innerStatement[StringTemplate code]
 {StringTemplate s=null;}
     : (predictDeclaration) => declaration[code]
-    |  s=ll1statement
-       {
-        code.setAttribute("statements",s);
-        setReturnVariables(code, s);
-       }
+    |
+    ((
+       s=ll1statement
     |  (functioncallStatNoAssign) => s=functioncallStatNoAssign
-       {
-        code.setAttribute("statements",s);
-        setReturnVariables(code, s);
-       }
-    |   (functioncallStatAssignManyReturnParam) => s=functioncallStatAssignManyReturnParam
-       {
-        code.setAttribute("statements",s);
-        setReturnVariables(code, s);
-       }
+    |  (functioncallStatAssignManyReturnParam) => s=functioncallStatAssignManyReturnParam
     |  (predictAssignStat) => s=assignStat
+    )
        {
         code.setAttribute("statements",s);
         setReturnVariables(code, s);
-       }
+       })
     ;
 
 caseInnerStatement returns [StringTemplate code=null]
