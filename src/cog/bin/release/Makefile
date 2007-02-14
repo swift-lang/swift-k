@@ -9,7 +9,7 @@ export CVSROOT
 #must be after the above
 VERSION=$(shell release.sh cogversion $(CVSROOT) $(TAG))
 EXCLUDEMODULES=qos common portlets template monitor provider-gt3_0_2 provider-gt3_2_0 broker provider-ws provider-mpichg2
-PROVIDERS=gt4_0_0 local webdav ssh condor gt2ft
+PROVIDERS=gt4_0_0 webdav ssh condor gt2ft
 #PUBLISHHOST=hategan@www.cogkit.org
 PUBLISHHOST=dkodeboy@www.cogkit.org
 #PUBLISHROOT=/www/www.cogkit/org/release
@@ -211,7 +211,8 @@ copy-guides: $(OUTDIR)
 	@echo Copying guides to release dir
 	@cp -r doc/manual/guide/release/$(VERSION)/* $(OUTDIR)/
 
-web: index metaindex
+#web: index metaindex
+web: metaindex
 
 index: copy-index
 
