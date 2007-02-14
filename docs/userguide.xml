@@ -297,22 +297,34 @@ control the direction of execution. SwiftScript provides if, switch,
 foreach, and while constructs, with syntax and semantics similar
 to comparable constructs in other high-level languages.
 			</para>
-			
+			<sect3><title>foreach</title>
 			<para>
-The foreach construct is used for dataset iteration. It iterates
-over each of the items in a composite dataset, and applies some
-operations to that item. We illustrate the use of the foreach
-construct in the following example using the type order defined above:
+The foreach construct is used to apply a block of statements to
+each element in a dataset.
+We illustrate the use of the foreach
+construct in the following example:
 
 <programlisting>
-check_order (order o) {
-	foreach item it in o.items {
-		check_item(it);
+check_order (file a[]) {
+	foreach file f in a {
+		compute(f);
 	}
 }
 </programlisting>
 
+foreach statements have the general form:
+
+<programlisting>
+foreach (type) controlvariable in expression {
+    statements
+}
+</programlisting>
+
+The block of statements is evaluated once for each element in 'expression',
+with the controlvariable set to the corresponding element.
+
 			</para>
+			</sect3>
 		</sect2>
 	</sect1>
 	
