@@ -186,7 +186,7 @@ topLevelStatement[StringTemplate code]
     | (functiondecl) => d=functiondecl {code.setAttribute("functions", d);}
     ;
 
-predictDeclaration : type declarator ;
+predictDeclaration : x=type y=declarator ;
 
 declaration [StringTemplate code]
 {StringTemplate t=null, n=null;}
@@ -565,7 +565,7 @@ caseSList [StringTemplate code]
     ;
 
 predictAssignStat
-    : identifier ASSIGN ;
+    : x=identifier ASSIGN ;
 
 assignStat returns [StringTemplate code=null]
 {StringTemplate id=null;}
@@ -633,10 +633,9 @@ predictFunctioncallDecl
 { StringTemplate dummy=template("call"); }
     : ASSIGN functionInvocation[dummy] ;
 
-functioncallDecl
-  [StringTemplate x, StringTemplate t, StringTemplate d]
-  returns [StringTemplate code=template("call")]
+functioncallDecl [StringTemplate x, StringTemplate t, StringTemplate d]
 {
+StringTemplate code=template("call");
 StringTemplate f=template("returnParam");
 code.setAttribute("outputs", f);
 f.setAttribute("type", t);
