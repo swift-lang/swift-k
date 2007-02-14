@@ -82,6 +82,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			ap.usage();
 			System.exit(1);
 		}
+		
+		if (!new File(project).exists()) {
+		    System.err.println("Invalid workflow file: " + project + "\n");
+			ap.usage();
+			System.exit(1);
+		}
 
 		boolean runerror = false;
 		String projectName = projectName(project);
