@@ -325,9 +325,49 @@ with the controlvariable set to the corresponding element.
 
 			</para>
 			</sect3>
+
+			<sect3><title>if</title>
+			<para>
+The 'if' statement allows one of two blocks of statements to be
+executed, based on a boolean predicate. 'if' statements generally
+have the form:
+<programlisting>
+if(predicate) {
+    statements
+} else {
+    statements
+}
+</programlisting>
+
+where predicate is a boolean expression.
+			</para>
+			</sect3>
+
+			<sect3><title>switch</title>
+			<para>
+Switch expressions allow one of a selection of blocks to be chosen based on
+the value of a numerical control expression. Switch statements take the
+general form:
+<programlisting>
+switch(controlExpression) {
+    case n1:
+        statements2
+    case n2:
+        statements2
+    [...]
+    default:
+        statements
+}
+</programlisting>
+The control expression is evaluated and the resulting numerical value used to
+select a corresponding case, and the statements belonging to that case
+are evaluated. If no case corresponds, then the statements belonging to
+the default block are evaluated.
+			</para>
+			</sect3>
+
 		</sect2>
 	</sect1>
-	
 	
 	<sect1>
 		<title> Simple Examples </title>
@@ -356,40 +396,45 @@ file hw = echo("hello world"); //procedure call
 		</para>
 		</sect2>	
 	</sect1>
-	
+
 	<sect1>
-		<title>Mapper Specification</title>
+		<title>Mappers</title>
 		<para>
 While we can define logical dataset types and procedures in SwiftScript,
 we need ways to access physical data when we invoke a procedure or execute 
 a workflow, and mappers help us to do that. A logical dataset can be 
 physically stored in different kinds of format, for instance, in a plain 
 text file, in a spreadsheet, or in a database. A mapper transforms a dataset's
-logical representation from/to its physical representation. In this section,
-we provide the detailed specifications of a few standard mappers.  
+logical representation from/to its physical representation.
 		</para>
-		
+		<para>
+Swift provides a number of mappers that are useful in common cases. This
+section details those standard mappers. For more complex cases, it is
+possible to write application-specific mappers in another language and
+use them within a SwiftScript program.
+		</para>
+
 		<sect2><title>Mapper Initialization</title>
 		<para>
 Since each mapper is associated with a dataset, a mapper is initialized 
-together with its dataset. When a workflow is executed, all of its input
-datasets are evaluated and initialized first, and exceptions will be 
+together with its dataset. When a workflow is executed, each input
+datasets are evaluated and initialized first, and exceptions will be
 thrown if there are any problems in locating mappers or accessing physical
 data storage.
 		</para>
 		</sect2>
 
-		<sect2><title>single file mapper</title>
+		<sect2><title>The single file mapper</title>
 		
 	<itemizedlist>
 	<listitem>Name: single_file_mapper</listitem>
     <listitem>Description:
-        A single file mapper provides the physical file location of a dataset.
+A single file mapper maps a single physical file to a dataset.
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
         <listitem>file:
-          The location including path and file name.
+          The location of the physical file including path and file name.
         </listitem>
         </itemizedlist>
     </listitem>
@@ -399,7 +444,7 @@ data storage.
 	file f &lt;single_file_mapper;file="plot_outfile_param"&gt;;
 			</programlisting>
 			
-As mentioned before, there is a simplified syntax for this mapper.
+There is a simplified syntax for this mapper:
 			
 
 			<programlisting>
@@ -409,11 +454,12 @@ As mentioned before, there is a simplified syntax for this mapper.
 	</itemizedlist>
 	</sect2>
 
-	<sect2><title>simple mapper</title>
+	<sect2><title>The simple mapper</title>
 	<itemizedlist>
 	<listitem>Name: simple_mapper</listitem>
     <listitem>Description:
-A mapper that maps a file or a list of files by prefix, suffix, and pattern
+A mapper that maps a file or a list of files into an array.
+by prefix, suffix, and pattern.
 if there are more than one file matched, each of the file names would
 be mapped as a subelement of the dataset.
     </listitem>
@@ -449,10 +495,11 @@ with &quot;foo&quot; and have an extension &quot;.txt&quot; into file f.
 	<itemizedlist>
 	<listitem>Name: concurrent_mapper</listitem>
     <listitem>Description:
-        Concurrent mapper is almost the same as the simple mapper, except that it is used 
-        to map an output file, and the file name generated will contain an extract sequence that 
-        is unique across threads. This mapper is the default mapper for intermediate variables.
-        
+Concurrent mapper is almost the same as the simple mapper,
+except that it is used to map an output file, and the filename
+generated will contain an extract sequence that is unique.
+This mapper is the default mapper for variables when no mapper is
+specified.
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
@@ -466,9 +513,9 @@ with &quot;foo&quot; and have an extension &quot;.txt&quot; into file f.
           The suffix of the files, for instance: &quot;.txt&quot;
         </listitem>
         <listitem>pattern:
-          A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match all file names 
-		that contain foo. When this mapper is used to specify output filenames, pattern is ignored.
-		
+A UNIX glob style pattern, for instance: &quot;*foo*&quot; would
+match all file names that contain foo. When this mapper is used
+to specify output filenames, pattern is ignored.
         </listitem>
         </itemizedlist>
     </listitem>
@@ -477,8 +524,8 @@ with &quot;foo&quot; and have an extension &quot;.txt&quot; into file f.
 	file f1;
 	file f2 &lt;concurrent_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
-			The above example would use concurrent mapper for f1 and f2, and generate f2 file 
-			name with prefix &quot;foo&quot; and extension &quot;.txt&quot;
+The above example would use concurrent mapper for f1 and f2, and 
+generate f2 filename with prefix &quot;foo&quot; and extension &quot;.txt&quot;
     </listitem>
 	</itemizedlist>
 	</sect2>
@@ -491,9 +538,9 @@ instead of location="/sandbox/..."</para>
 	<itemizedlist>
 	<listitem>Name: filesys_mapper</listitem>
     <listitem>Description:
-        This mapper is similar to the simple mapper. But it maps a file or a list of files 
-        to a dataset array. Each of the file names would be mapped as an element in the array. 
-        
+This mapper is similar to the simple mapper, but maps a file or 
+a list of files to a dataset array. Each of the filenames would
+be mapped as an element in the array.
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
@@ -507,8 +554,8 @@ instead of location="/sandbox/..."</para>
           The suffix of the files, for instance: &quot;.txt&quot;
         </listitem>
         <listitem>pattern:
-          A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match all file names 
-		that contain foo.
+A UNIX glob style pattern, for instance: &quot;*foo*&quot; would
+match all file names that contain foo.
 		
         </listitem>
         </itemizedlist>
@@ -518,8 +565,8 @@ instead of location="/sandbox/..."</para>
 			<programlisting>
 	file texts[] &lt;filesys_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
-			The above example would map all filenames that start with &quot;foo&quot; and have 
-			an extension &quot;.txt&quot; into the array texts.
+The above example would map all filenames that start with &quot;foo&quot; 
+and have an extension &quot;.txt&quot; into the array texts.
     </listitem>
 	</itemizedlist>
 	</sect2>
@@ -528,13 +575,13 @@ instead of location="/sandbox/..."</para>
 	<itemizedlist>
 	<listitem>Name: fixed_array_mapper</listitem>
     <listitem>Description:
-        This mapper maps from a string that contains a list of filenames into a file array. 
-        
+This mapper maps from a string that contains a list of filenames 
+into a file array.
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
         <listitem>files:
-          A string that contains a list of filenames, seprated by space, comma or colon
+A string that contains a list of filenames, seprated by space, comma or colon
         </listitem>
         </itemizedlist>
     </listitem>
@@ -551,8 +598,8 @@ instead of location="/sandbox/..."</para>
 	<itemizedlist>
 	<listitem>Name: regexp_mapper</listitem>
     <listitem>Description:
-        This mapper transforms one file name to another using regular exression matching. 
-        
+This mapper transforms one file name to another using
+regular exression matching.
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
@@ -560,13 +607,14 @@ instead of location="/sandbox/..."</para>
           The source file name
         </listitem>
         <listitem>match:
-          Regular expression pattern to match, use ( ) to match whatever regular expression is 
-          inside the parentheses, and indicate the start and end of a group; the contents of a group 
-          can be retrieved with the <emphasis>\number</emphasis> special sequence
+Regular expression pattern to match, use ( ) to match whatever regular
+expression is inside the parentheses, and indicate the start and end
+of a group; the contents of a group can be retrieved with the
+<emphasis>\number</emphasis> special sequence
         </listitem>
-        <listitem>tranform:
-          The pattern of the file name to transform to, use <emphasis>\number</emphasis> to 
-          reference the group matched
+        <listitem>transform:
+The pattern of the file name to transform to, use
+<emphasis>\number</emphasis> to reference the group matched.
         </listitem>
         </itemizedlist>
     </listitem>
@@ -575,8 +623,9 @@ instead of location="/sandbox/..."</para>
 			<programlisting>
 	file f &lt;regexp_mapper;source=@f,match="(.*)gif",transform="\1jpg"&gt;;
 			</programlisting>
-		This example transforms a file ending with &quot;gif&quot; into one ending with 
-		&quot;jpg&quot;, where <emphasis>\1</emphasis> refers to the first group matched.
+This example transforms a file ending with &quot;gif&quot; into one 
+ending with &quot;jpg&quot;, where <emphasis>\1</emphasis> refers to
+the first group matched.
     </listitem>
 	</itemizedlist>
 	</sect2>
@@ -585,9 +634,10 @@ instead of location="/sandbox/..."</para>
     <itemizedlist>
 	<listitem>Name: csv_mapper</listitem>
     <listitem>Description:
-        This mapper maps the content of a CSV (comma-separated value) file into a dataset 
-        array. The dataset type needs to be correctly defined to conform to the column names in
-        the file. For instance, if the file contains columns:
+This mapper maps the content of a CSV (comma-separated value) file into 
+a dataset array. The dataset type needs to be correctly defined to 
+conform to the column names in the file. For instance, if the file
+contains columns:
         <para>	name	age		GPA</para>
         then the type needs to have the same member elements, say:
         <programlisting>
@@ -598,7 +648,7 @@ instead of location="/sandbox/..."</para>
         }
         </programlisting>
 if the file does not contain a header with column info, then the
-column names are assumed as &quot;column1&quot;, &quot;column2&quot;, ...
+column names are assumed as &quot;column1&quot;, &quot;column2&quot;,
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
