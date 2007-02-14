@@ -55,7 +55,7 @@
     <!-- | Dist                                                            | -->
     <!-- \_________________________________________________________________/ -->
 	
-	<target name="dist" unless="no.providers">
+	<target name="dist">
 		<ant antfile="${main.buildfile}" target="dist"/>
 	</target>
 
