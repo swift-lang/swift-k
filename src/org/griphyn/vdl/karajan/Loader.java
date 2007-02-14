@@ -89,6 +89,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
 		try {
 			setupLogging(ap, projectName, runID);
+
+			if(!(new File(project).exists())) {
+				logger.error("Input file "+project+" does not exist.");
+				System.exit(4);
+			}
+
 			if (project.endsWith(".dtm") || project.endsWith(".swift")) {
 				try {
 					project = compile(project);

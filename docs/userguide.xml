@@ -509,6 +509,7 @@ The swift command may exit with the following return codes:
 <listitem>1 - commandline syntax error or missing project name</listitem>
 <listitem>2 - error during workflow execution</listitem>
 <listitem>3 - error during compilation of SwiftScript program</listitem>
+<listitem>4 - input file does not exist</listitem>
 </itemizedlist>
 	</para>
 	</sect2>
