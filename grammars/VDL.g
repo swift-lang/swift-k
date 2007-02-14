@@ -9,7 +9,7 @@ import java.util.Iterator;
 class VDLtParser extends Parser;
 
 options {
-    k=3;
+    k=2;
     codeGenMakeSwitchThreshold = 2;  // Some optimizations
     codeGenBitsetTestThreshold = 3;
     defaultErrorHandler=false;
