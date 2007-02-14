@@ -193,7 +193,7 @@ declaration [StringTemplate code]
     : t=type
       n=declarator
     (
-     (predictFunctioncallStatAssignOneReturnParamAsDecl) => functioncallStatAssignOneReturnParamAsDecl[code, t, n]
+     (predictFunctioncallDecl) => functioncallDecl[code, t, n]
     | (variableDecl[code,null,null]) => variableDecl[code, t, n]
     | (predictDatasetdecl) => datasetdecl[code, t, n]
     )
@@ -573,7 +573,7 @@ assignStat returns [StringTemplate code=null]
     id=identifier
     ASSIGN
     (
-      (predictFunctioncallStatAssignOneReturnParamAsAssign) => code=functioncallStatAssignOneReturnParamAsAssign
+      (predictFunctioncallAssign) => code=functioncallAssign
         { StringTemplate o = template("returnParam");
           o.setAttribute("name",id);
           code.setAttribute("outputs",o);
@@ -596,10 +596,10 @@ variableAssign returns [StringTemplate code=null]
         }
     ;
 
-predictFunctioncallStatAssignOneReturnParamAsAssign
+predictFunctioncallAssign
     : ID LPAREN ;
 
-functioncallStatAssignOneReturnParamAsAssign returns [StringTemplate code=template("call")]
+functioncallAssign returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
         functionInvocation[code]
@@ -629,11 +629,11 @@ functioncallStatNoAssign returns [StringTemplate code=template("call")]
     ;
 
 
-predictFunctioncallStatAssignOneReturnParamAsDecl
+predictFunctioncallDecl
 { StringTemplate dummy=template("call"); }
     : ASSIGN functionInvocation[dummy] ;
 
-functioncallStatAssignOneReturnParamAsDecl
+functioncallDecl
   [StringTemplate x, StringTemplate t, StringTemplate d]
   returns [StringTemplate code=template("call")]
 {
