@@ -30,7 +30,7 @@ item :=
 separator := COMMASEP() | HVSPACES() ;
 		
 comment :=
-	LITERAL("//") SINGLELINECOMMENT() |
+	LITERAL("//") SINGLELINECOMMENT() HVSPACES() |
 	LITERAL("/*") MULTILINECOMMENT() HVSPACES() ;
 			
 list := LITERAL("[") IDENTIFIER("kernel:quotedlist") BEGINELEMENT() moreItems LITERAL("]") ENDELEMENT() ;
