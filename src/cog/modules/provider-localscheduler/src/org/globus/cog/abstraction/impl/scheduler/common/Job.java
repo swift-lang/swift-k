@@ -28,8 +28,8 @@ public class Job {
     private String jobID;
     private String exitcodeFileName;
     private String stdout, stderr;
-    private ProcessListener listener;
-    private int state;
+    protected ProcessListener listener;
+    protected int state;
     private int ticks;
 
     public Job(String jobID, String stdout, String stderr,

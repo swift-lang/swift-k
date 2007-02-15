@@ -187,7 +187,7 @@ public class QueuePoller extends Thread {
                 if (job == null) {
                     continue;
                 }
-                processed.add(job);
+                processed.add(jobid);
                 if (state.equals("queued")) {
                     if (logger.isDebugEnabled()) {
                         logger.debug("Status for " + jobid + " is Q");
