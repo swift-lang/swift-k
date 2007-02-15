@@ -38,7 +38,7 @@ the Swift tutorial.
 	</sect1>
 	<sect1>
 		<title>The SwiftScript Language</title>
-<para>The syntax of SwiftScript has a superficial resemblence to C and
+<para>The syntax of SwiftScript has a superficial resemblance to C and
 Java, for example in its use of the { and } characters to enclose
 blocks of statements.
 </para>
@@ -65,7 +65,7 @@ to access a dataset, we need to know three things: its type schema,
 its mapping descriptor, and the value(s) of any parameter(s) associated 
 with the mapping descriptor. For example, if we want to describe a dataset,
 whose logical structure is defined by binaryfile, and whose physical
-reprentation is a file called "file1.bin" located at "/home/yongzh/data/",
+representation is a file called "file1.bin" located at "/home/yongzh/data/",
 then the dataset might be declared as follows:
 </para>
 
@@ -117,7 +117,7 @@ type item {
 		
 		<para>
 Sometimes, the inner structure of a file on disk is irrelevant and we do
-not need ot look at the content of the file in the SwiftScript program.
+not need to look at the content of the file in the SwiftScript program.
 In this case, an empty type can be used, such as:
 
 <programlisting>
@@ -181,7 +181,7 @@ described in another section.
 			<title>Multivalued procedure invocation statements</title>
 <para>
 Procedures can return more than one value. In such case, the previously
-mentioned declaration and assignent statements are insufficient. A
+mentioned declaration and assignment statements are insufficient. A
 multi-valued procedure invocation can be used. This has the general
 form:
 
@@ -581,7 +581,7 @@ into a file array.
     <listitem>Parameter:
         <itemizedlist>
         <listitem>files:
-A string that contains a list of filenames, seprated by space, comma or colon
+A string that contains a list of filenames, separated by space, comma or colon
         </listitem>
         </itemizedlist>
     </listitem>
@@ -599,7 +599,7 @@ A string that contains a list of filenames, seprated by space, comma or colon
 	<listitem>Name: regexp_mapper</listitem>
     <listitem>Description:
 This mapper transforms one file name to another using
-regular exression matching.
+regular expression matching.
     </listitem>
     <listitem>Parameter:
         <itemizedlist>
@@ -682,11 +682,661 @@ the file should contain a header line specifying the names of the columns.
 	</sect2>
 
 	</sect1>
+	
+	<sect1 id="engineconfiguration">	
+	
+		<title>Swift Engine Configuration</title>
+		
+		<para>
+		
+			Various aspects of the behavior of the Swift Engine can be
+			configured through properties. The Swift Engine recognizes a global,
+			per installation properties file which can found in <filename
+			class="file">$SWIFT_HOME/etc/swift.properties</filename> and a user
+			properties file which can be created by each user in <filename
+			class="file">~/.swift/swift.properties</filename>. The Swift Engine
+			will first load the global properties file. It will then try to load
+			the user properties file. If a user properties file is found,
+			individual properties explicitly set in that file will override the
+			respective properties in the global properties file. Furthermore,
+			some of the properties can be overridden directly using command line
+			arguments to the <link
+			linkend="swiftcommand"><command>swift</command> command</link>.
+		
+		</para>
+		
+		<sect2 id="properties">
+		
+			<title>Swift Properties</title>
+			
+			<para>
+			
+				Swift properties are specified in the following format:
+				
+<programlisting>
+&lt;name&gt;=&lt;value&gt;
+</programlisting>
+			
+				The value can contain variables which will be expanded when the
+				properties file is read. Expansion is performed when the name of
+				the variable is used inside the "standard" shell dereference
+				construct: ${<varname>name</varname>}. The following variables
+				can be used in the Swift configuration file:
+				
+				<variablelist>
+					<title>Swift Configuration Variables</title>
+					
+					<varlistentry>
+						<term>
+							<varname>swift.home</varname>
+						</term>
+						<listitem>
+							<para>
+							
+								Points to the Swift installation directory
+								(<filename
+								class="directory"><envar>$SWIFT_HOME</envar></filename>).
+							
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<varname>user.name</varname>
+						</term>
+						<listitem>
+							<para>
+							
+								The name of the current logged in user.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<varname>user.home</varname>
+						</term>	
+						<listitem>
+							<para>
+							
+								The user's home directory.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+				</variablelist>
+				
+				The following is a list of valid Swift properties:
+				
+				<variablelist>
+					<title>Swift Properties</title>
+					
+					<varlistentry>
+						<term>
+							<property>sites.file</property>
+						</term>
+						<listitem>
+							
+							<para>
+								Valid values: <parameter>&lt;file&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: ${<varname>swift.home</varname>}<literal>/etc/sites.xml</literal>
+							</para>
+						
+							<para>
+							
+								Points to the location of the pool file (site
+								catalog) which contains a list of all sites that
+								Swift should use, together with information about
+								the installed services. Details about the format
+								of the pool file can be found <ulink
+								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html">here</ulink>.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>tc.file</property>
+						</term>
+						<listitem>
+							<para>
+								Valid values: <parameter>&lt;file&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: ${<varname>swift.home</varname>}<literal>/var/tc.data</literal>
+							</para>
+						
+							<para>
+							
+								Points to the location of the transformation
+								catalog file which contains information about
+								installed applications. Details about the format
+								of the transformation catalog can be found
+								<ulink
+								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_TranformationCatalog.html">here</ulink>.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>ip.address</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;ipaddress&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: N/A
+							</para>
+						
+							<para>
+							
+								The Globus GRAM service uses a callback
+								mechanism to send notifications about the status
+								of submitted jobs. The callback mechanism
+								requires that the Swift client be reachable from
+								the hosts the GRAM services are running on.
+								Normally, Swift can detect the correct IP address
+								of the client machine. However, in certain cases
+								(such as the client machine having more than one
+								network interface) the automatic detection
+								mechanism is not reliable. In such cases, the IP
+								address of the Swift client machine can be
+								specified using this property. The value of this
+								property must be a numeric address without quotes.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					
+					<varlistentry>
+						<term>
+							<property>lazy.errors</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>true</literal>
+							</para>
+						
+							<para>
+							
+								Swift can report application errors in two
+								modes, depending on the value of this property.
+								If set to <constant>false</constant>, Swift will
+								report the first error encountered and
+								immediately stop execution. If set to
+								<constant>true</constant>, Swift will attempt to
+								run as much as possible from a workflow before
+								stopping execution and reporting all errors
+								encountered.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>caching.algorithm</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>LRU</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>LRU</literal>
+							</para>
+						
+							<para>
+							
+								Swift caches files that are staged in on remote
+								resources, and files that are produced remotely
+								by applications, such that they can be re-used
+								if needed without being transfered again.
+								However, the amount of remote file system space
+								to be used for caching can be limited using the
+								<property>SWIFT:storagesize</property> profile
+								entry in the sites.xml file. Example:
+								
+<programlisting>
 
-	<sect1>
+&lt;pool handle="example" sysinfo="INTEL32::LINUX"&gt;
+	&lt;gridftp url="gsiftp://example.org" storage="/sratch/swift" major="2" minor="4" patch="3"/&gt;
+	&lt;jobmanager universe="vanilla" url="example.org/jobmanager-pbs" major="2" minor="4" patch="3"/&gt;
+	&lt;workdirectory&gt;/scratch/swift&lt;/workdirectory&gt;
+	&lt;profile namespace="SWIFT" key="storagesize"&gt;20000000&lt;/profile&gt;
+&lt;/pool&gt;
+
+</programlisting>
+								
+								
+								The decision of which files to keep in the cache
+								and which files to remove is made considering
+								the value of the
+								<property>caching.algorithm</property> property. 							
+								Currently, the only available value for this 							
+								property is <literal>LRU</literal>, which would
+								cause the least recently used files to be
+								deleted first.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>pgraph</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>, <parameter>&lt;file&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>true</literal>
+							</para>
+							
+							<para>
+							
+								Swift can generate a provenance graph that shows
+								the structure of the workflow it runs. If this
+								property is set to <literal>true</literal>,
+								Swift will save the provenance graph in a file
+								named by concatenating the workflow name and the
+								instance ID (e.g. <filename
+								class="file">helloworld-ht0adgi315l61.dot</filename>). 
+								If set to <literal>false</literal>, no
+								provenance  graph will be generated. If a file
+								name is used, then  the provenance graph will be
+								saved in the specified file.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>pgraph.graph.options</property>
+						</term>
+						<listitem>
+							
+							<para>
+								Valid values: <parameter>&lt;string&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>splines="compound", rankdir="TB"</literal>
+							</para>
+						
+							<para>
+							
+								This property specifies a <ulink
+								url="http://www.graphviz.org">Graphviz</ulink>
+								specific set of parameters for the graph.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>pgraph.node.options</property>
+						</term>
+						<listitem>
+							
+							<para>
+								Valid values: <parameter>&lt;string&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>color="seagreen", style="filled"</literal>
+							</para>
+						
+							<para>
+							
+								Used to specify a set of <ulink
+								url="http://www.graphviz.org">Graphviz</ulink>
+								specific properties for the nodes in the graph.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>clustering.enabled</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>true</literal>
+							</para>
+							
+							<para>
+							
+								Clustering enables sending of short jobs to
+								remote resources in a single request in order to
+								minimize various overheads involved in launching
+								jobs. Clustering works in the following way: If
+								a job is clusterable (meaning that it has the
+								<property>GLOBUS::maxwalltime</property> profile
+								specified in <filename
+								type="file">tc.data</filename> and its value is
+								less than the value of the Swift
+								<property>min.cluster.time</property> property -
+								described below) it will be put in a clustering
+								queue. The queue is processed at intervals 
+								specified by the
+								<property>clustering.queue.delay</property>
+								property (also described below). The processing
+								of the clustering queue consists of selecting
+								compatible jobs and grouping them in clusters
+								whose max wall time does not exceed twice the
+								value of the
+								<property>clustering.min.time</property>
+								property. Two or more jobs are  considered
+								compatible if they share the same site and do
+								not have conflicting profiles (e.g. different
+								values for the same environment variable). 
+
+							</para>
+							
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>clustering.queue.delay</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>4</literal>
+							</para>
+							
+							<para>
+							
+								This property indicates the interval, in
+								seconds, at which the clustering queue is
+								processed.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>clustering.min.time</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>60</literal>
+							</para>
+						
+							<para>
+							
+								Indicates the threshold wall time for
+								clustering. Jobs that have a wall time smaller
+								than the value of this property will be tagged
+								for clustering.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>kickstart.enabled</property>
+						</term>
+						<listitem>
+							
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>, <literal>maybe</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>maybe</literal>
+							</para>
+								
+							<para>
+								
+								Kickstart is a useful tool that can be used to
+								gather various information about a remote
+								process. Before it can be used it must be
+								installed on the remote site and the
+								corresponding entry be set in the sites file,
+								using the <parameter>gridlaunch</parameter>
+								attribute to the <function>pool</function>
+								element:
+								
+<programlisting>
+
+&lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
+    ...
+&lt;/pool&gt;
+
+</programlisting>
+								
+								This option allows controlling of 							
+								how Swift uses Kickstart. A value of
+								<literal>false</literal> disables the use of
+								Kickstart, while a value of
+								<literal>true</literal> enables the use of
+								Kickstart, in which case sites specified in the
+								<filename type="file">sites.xml</filename> file
+								must have valid
+								<parameter>gridlaunch</parameter> attributes.
+								The <literal>maybe</literal> value can be used
+								to selectively enable the use of Kickstart only
+								on sites that have the
+								<parameter>gridlaunch</parameter> attribute
+								specified.
+
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>kickstart.always.transfer</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+							
+							<para>
+							
+								This property controls when output from
+								Kickstart is transfered back to the submit site,
+								if Kickstart is enabled. When set to
+								<literal>false</literal>, Kickstart output is
+								only transfered for jobs that fail. If set to
+								<literal>true</literal>, Kickstart output is
+								transfered after every job is completed or
+								failed.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>throttle.submit</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>4</literal>
+							</para>
+						
+							<para>
+							
+								Limits the number of concurrent submissions for
+								a workflow instance. This throttle only limits
+								the number of concurrent tasks (jobs) that are
+								being sent to sites, not the total number of
+								concurrent jobs that can be run. The submission
+								stage in GRAM is one of the most CPU expensive
+								stages (due mostly to the mutual authentication
+								and delegation). Having too many  concurrent
+								submissions can overload either or both the
+								submit host CPU and the remote host/head node
+								causing degraded performance.
+								
+							</para>
+							
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>throttle.host.submit</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>2</literal>
+							</para>
+							
+							<para>
+							
+								Limits the number of concurrent submissions for
+								any of the sites Swift will try to send jobs to.
+								In other words it guarantees that no more than
+								the  value of this throttle jobs sent to any
+								site will be concurrently in a state of being
+								submitted.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>throttle.transfers</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+						
+							<para>
+								Default value: <literal>4</literal>	
+							</para>
+							
+							<para>
+							
+								Limits the total number of concurrent file
+								transfers that can happen at any given time.
+								File transfers consume bandwidth. Too many
+								concurrent transfers can cause the network to be
+								overloaded preventing various other signaling
+								traffic from flowing properly.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>throttle.file.operations</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>8</literal>
+							</para>
+							
+							<para>
+							
+								Limits the total number of concurrent file
+								operations that can happen at any given time.
+								File operations (like transfers) require an
+								exclusive connection to a site. These
+								connections can be expensive to establish. A
+								large number of concurrent file operations may
+								cause Swift to attempt to establish many  such
+								expensive connections to various sites. Limiting
+								the number of concurrent file operations causes
+								Swift to use a small number of cached
+								connections and achieve better overall
+								performance. 
+								
+							</para>
+						</listitem>
+					</varlistentry>
+										
+				</variablelist>
+				
+				Example:
+				
+<programlisting>
+sites.file=${vds.home}/etc/sites.xml
+tc.file=${vds.home}/var/tc.data
+ip.address=192.168.0.1
+</programlisting>
+			
+			</para>
+		
+		</sect2>
+		
+	</sect1>
+
+	<sect1 id="swiftcommand">
 	<title>The swift command</title>
 	<para>
-The swift command is the main commandline tool for executing SwiftScript
+The swift command is the main command line tool for executing SwiftScript
 programs.
 	</para>
 	<sect2><title>Syntax</title>
@@ -699,7 +1349,7 @@ Command-line syntax can be seen by typing swift -help
 The swift command may exit with the following return codes:
 <itemizedlist>
 <listitem>0 - success</listitem>
-<listitem>1 - commandline syntax error or missing project name</listitem>
+<listitem>1 - command line syntax error or missing project name</listitem>
 <listitem>2 - error during workflow execution</listitem>
 <listitem>3 - error during compilation of SwiftScript program</listitem>
 <listitem>4 - input file does not exist</listitem>
