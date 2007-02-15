@@ -68,6 +68,21 @@ into the workspace element
     <jobmanager universe="vanilla" url="tg-gatekeeper.purdue.teragrid.org" major="2" minor="2"/>
     <workdirectory >/scratch/teragrid/stef</workdirectory>
 </pool>
+
+<!-- TACC CERT MISSING
+<pool handle="tacc" sysinfo="INTEL32::LINUX">
+    <gridftp  url="gsiftp://tg-login.tacc.teragrid.org" storage="/work" major="2" minor="2" />
+    <jobmanager universe="vanilla" url="tg-login.tacc.teragrid.org/jobmanager-lsf" major="2" minor="2"/>
+    <workdirectory >/work</workdirectory>
+</pool>
+-->
+<!-- 
+<pool handle="UC" sysinfo="INTEL32::LINUX">
+    <gridftp  url="gsiftp://tg-gridftp.uc.teragrid.org" storage="/disks/scratchgpfs1/tstef" major="2" minor="2" />
+    <jobmanager universe="vanilla" url="tg-grid.uc.teragrid.org/jobmanager-pbs" major="2" minor="2"/>
+    <workdirectory >/disks/scratchgpfs1/tstef</workdirectory>
+</pool>
+ -->
 <!-- OSG SITES -->
 <!-- VERY SLOW
 <pool handle="fnal" sysinfo="INTEL32::LINUX">
