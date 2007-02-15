@@ -122,7 +122,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				System.exit(1);
 			}
 
-			tree.setName(project + "-" + runID);
+			tree.setName(projectName + "-" + runID);
 			tree.getRoot().setProperty(FlowElement.FILENAME, project);
 
 			VDL2ExecutionContext ec = new VDL2ExecutionContext(tree, projectName);
