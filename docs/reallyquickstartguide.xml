@@ -3,9 +3,9 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
 
 <article>
-	<articleinfo revision="0.1">
+	<articleinfo revision="0.2">
 		<title>Swift Really Quick Start Guide</title>
-		<subtitle>Source control $LastChangedRevision: 430 $</subtitle>
+		<subtitle>Source control $LastChangedRevision: 431 $</subtitle>
 	
 		<abstract>
 			<formalpara>
@@ -99,7 +99,7 @@
 			<listitem>
 				<para>
 				
-					Use <command>swift -resume file.dtm.?.rlog
+					Use <command>swift -resume file-&lt;runid&gt;.?.rlog
 					file.dtm</command> to resume a failed run.
 				
 				</para>
