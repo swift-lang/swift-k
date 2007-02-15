@@ -10,20 +10,16 @@
 package org.globus.cog.abstraction.impl.scheduler.cobalt;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -38,8 +34,7 @@ public class CobaltExecutor implements ProcessListener {
     private Task task;
     private static QueuePoller poller;
     private ProcessListener listener;
-    private String stdout, stderr, exitcode;
-    private File script;
+    private String stdout, stderr;
     private String cqsub;
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
@@ -69,18 +64,12 @@ public class CobaltExecutor implements ProcessListener {
             throw new IOException("Failed to create script directory ("
                     + scriptdir + ")");
         }
-        script = File.createTempFile("cobalt", ".sh", scriptdir);
-        stdout = spec.getStdOutput() == null ? script.getAbsolutePath()
-                + ".stdout" : spec.getStdOutput();
-        stderr = spec.getStdError() == null ? script.getAbsolutePath()
-                + ".stderr" : spec.getStdError();
-        exitcode = script.getAbsolutePath() + ".exitcode";
-        writeScript(new BufferedWriter(new FileWriter(script)), exitcode,
-                stdout, stderr);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Wrote submit script to " + script);
-        }
-        String[] cmdline = buildCMDLine(script.getAbsolutePath());
+        stdout = File.createTempFile("cobalt", ".stdout", scriptdir)
+                .getAbsolutePath();
+        stderr = stdout.substring(0, stdout.length() - ".stdout".length())
+                + ".stderr";
+
+        String[] cmdline = buildCMDLine(stdout, stderr);
 
         Process process = Runtime.getRuntime().exec(cmdline, null, null);
 
@@ -93,13 +82,15 @@ public class CobaltExecutor implements ProcessListener {
         try {
             int code = process.waitFor();
             if (code != 0) {
+                // grr. cqsub outputs error messages on stdout
                 throw new ProcessException(
-                        "Could not submit job (qsub reported an exit code of "
+                        "Could not submit job (cqsub reported an exit code of "
                                 + code + "). "
-                                + getOutput(process.getErrorStream()));
+                                + getOutput(process.getErrorStream())
+                                + getOutput(process.getInputStream()));
             }
             if (logger.isDebugEnabled()) {
-                logger.debug("QSub done (exit code " + code + ")");
+                logger.debug("cqsub done (exit code " + code + ")");
             }
         }
         catch (InterruptedException e) {
@@ -113,57 +104,38 @@ public class CobaltExecutor implements ProcessListener {
         }
 
         String jobid = getOutput(process.getInputStream());
+        if (jobid == null || jobid.equals("")) {
+            throw new IOException("cqsub returned empty job ID");
+        }
 
         getProcessPoller().addJob(
-                new Job(jobid, spec.isRedirected() ? stdout : null, spec
-                        .isRedirected() ? stderr : null, exitcode, this));
+                new CobaltJob(jobid, spec.isRedirected(), stdout, stderr, spec
+                        .getStdOutput(), spec.getStdError(), this));
     }
 
     private void error(String message) {
         listener.processFailed(message);
     }
 
-    protected void writeScript(Writer wr, String exitcodefile, String stdout,
-            String stderr) throws IOException {
-        if (spec.getStdInput() != null) {
-            throw new IOException("The Cobalt provider cannot redirect STDIN");
-        }
-        Iterator i = spec.getEnvironmentVariableNames().iterator();
-        while (i.hasNext()) {
-            String name = (String) i.next();
-            wr.write(name);
-            wr.write('=');
-            wr.write(quote(spec.getEnvironmentVariable(name)));
-            wr.write('\n');
-        }
-        wr.write(quote(spec.getExecutable()));
-        List args = spec.getArgumentsAsList();
-        if (args != null && args.size() > 0) {
-            wr.write(' ');
-            i = args.iterator();
-            while (i.hasNext()) {
-                wr.write(quote((String) i.next()));
-                wr.write(' ');
-            }
-        }
-        wr.write(" 1>" + quote(stdout) + ' ');
-        wr.write(" 2>" + quote(stderr) + '\n');
-        wr.write("/bin/echo $? >" + exitcodefile + '\n');
-        wr.close();
-    }
-    
     protected void addAttr(String attrName, String option, List l) {
+        addAttr(attrName, option, l, null);
+    }
+
+    protected void addAttr(String attrName, String option, List l, String defval) {
         Object value = spec.getAttribute(attrName);
         if (value != null) {
             l.add(option);
             l.add(String.valueOf(value));
         }
+        else if (defval != null) {
+            l.add(option);
+            l.add(defval);
+        }
     }
 
-    protected String[] buildCMDLine(String script) {
+    protected String[] buildCMDLine(String stdout, String stderr) {
         List l = new ArrayList();
         l.add(cqsub);
-        addAttr("queue", "-q", l);
         Collection names = spec.getEnvironmentVariableNames();
         if (names != null && names.size() > 0) {
             l.add("-e");
@@ -181,17 +153,25 @@ public class CobaltExecutor implements ProcessListener {
             l.add(sb.toString());
         }
         addAttr("mode", "-m", l);
-        //We're gonna treat this as the process count
-        addAttr("count", "-c", l);
+        // We're gonna treat this as the node count
+        addAttr("count", "-n", l, "1");
         addAttr("project", "-p", l);
         addAttr("queue", "-q", l);
-        addAttr("maxwalltime", "-t", l);
+        // cqsub seems to require both the node count and time args
+        addAttr("maxwalltime", "-t", l, "10");
         if (spec.getDirectory() != null) {
             l.add("-C");
             l.add(spec.getDirectory());
         }
-        l.add("/bin/sh");
-        l.add(script);
+        l.add("-o");
+        l.add(stdout);
+        l.add("-E");
+        l.add(stderr);
+        l.add(spec.getExecutable());
+        List args = spec.getArgumentsAsList();
+        if (logger.isDebugEnabled()) {
+            logger.debug("Cqsub cmd line: " + l);
+        }
         return (String[]) l.toArray(EMPTY_STRING_ARRAY);
     }
 
@@ -228,21 +208,15 @@ public class CobaltExecutor implements ProcessListener {
         if (logger.isDebugEnabled()) {
             logger.debug("Output from qsub is: \"" + out + "\"");
         }
-        if ("".equals(out)) {
-            throw new IOException("Qsub returned empty job ID");
+        if (out == null) {
+            out = "";
         }
         return out;
     }
 
     protected void cleanup() {
-        script.delete();
-        new File(exitcode).delete();
-        if (spec.getStdOutput() == null && stdout != null) {
-            new File(stdout).delete();
-        }
-        if (spec.getStdError() == null && stderr != null) {
-            new File(stderr).delete();
-        }
+        new File(stdout).delete();
+        new File(stderr).delete();
     }
 
     public void processCompleted(int exitCode) {
