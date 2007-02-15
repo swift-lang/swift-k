@@ -5,6 +5,7 @@
 <article>
 	<articleinfo revision="0.1">
 		<title>Swift Really Quick Start Guide</title>
+		<subtitle>Source control $LastChangedRevision: 430 $</subtitle>
 	
 		<abstract>
 			<formalpara>
@@ -62,7 +63,7 @@
 				<para>
 				
 					Edit <filename
-					class="file">vdsk-xyz/etc/vdl2.properties</filename>. You
+					class="file">vdsk-xyz/etc/swift.properties</filename>. You
 					should add your numeric IP address there
 					(<property>ip.address</property>=<literal>x.y.z.w</literal>).
 				
@@ -85,13 +86,12 @@
 				
 				</para>
 			</listitem>
-			
+						
 			<listitem>
 				<para>
 				
-					Use <command>vdlc file.dtm</command> to compile <filename
-					class="file">.dtm</filename> files to <filename
-					class="file">.kml</filename> files.
+					Use <command>swift file.dtm</command> to compile and execute
+					<filename class="file">file.dtm</filename>.
 				
 				</para>
 			</listitem>	
@@ -99,18 +99,8 @@
 			<listitem>
 				<para>
 				
-					Use <command>vdlrun file.kml</command> to execute <filename
-					class="file">.kml</filename> files.
-				
-				</para>
-			</listitem>	
-			
-			<listitem>
-				<para>
-				
-					Use <command>vdlrun file.kml
-					-rlog:resume=file.kml.?.rlog</command> to resume a failed
-					run.
+					Use <command>swift -resume file.dtm.?.rlog
+					file.dtm</command> to resume a failed run.
 				
 				</para>
 			</listitem>	
