@@ -3,10 +3,11 @@
 DIR=$1
 STDOUT=$2
 STDERR=$3
-DIRS=$4
-LINKS=$5
-OUTS=$6
-KICKSTART=$7
+STDIN=$4
+DIRS=$5
+LINKS=$6
+OUTS=$7
+KICKSTART=$8
 WRAPPERLOG=$PWD/wrapper.log
 
 PATH=$PATH:/bin:/usr/bin
@@ -18,7 +19,7 @@ echo "DIRS=$DIRS">>$WRAPPERLOG
 echo "LINKS=$LINKS">>$WRAPPERLOG
 echo "OUTS=$OUTS">>$WRAPPERLOG
 
-shift 7
+shift 8
 
 IFS=" "
 
@@ -31,8 +32,13 @@ for L in $LINKS ; do
 done
 
 cd $DIR
+ls >>$WRAPPERLOG
 if [ "$KICKSTART" == "" ]; then
-	"$@" 1>$STDOUT 2>$STDERR
+	if [ "$STDIN" == "" ]; then
+		"$@" 1>$STDOUT 2>$STDERR
+	else
+		"$@" 1>$STDOUT 2>$STDERR <$STDIN
+	fi
 	EXITCODE=$?
 else
 	if [ ! -f $KICKSTART ]; then
@@ -47,7 +53,11 @@ else
 	else
 		mkdir -p ../kickstart
 		echo "Using Kickstart ($KICKSTART)" >>$WRAPPERLOG
-		$KICKSTART -H -o $STDOUT -e $STDERR "$@" 1>kickstart.xml 2>$STDERR
+		if [ "$STDIN" == "" ]; then
+			$KICKSTART -H -o $STDOUT -e $STDERR "$@" 1>kickstart.xml 2>$STDERR
+		else
+			$KICKSTART -H -o $STDOUT -e $STDERR "$@" 1>kickstart.xml 2>$STDERR <$STDIN
+		fi
 		EXITCODE=$?
 		mv -f kickstart.xml ../kickstart/$DIR-kickstart.xml >>$WRAPPERLOG 2>&1
 	fi
