@@ -1,3 +1,10 @@
+(02/16/07)
+
+*** Fixed stdin issue (bug #19)
+
+*** Fixed an issue with vdl:cacheAndLockFile considering files for 
+    which the transfers failed as being actually cached.
+
 (02/14/07)
 
 *** Print usage  and exit instead of a nasty exception if the input 
