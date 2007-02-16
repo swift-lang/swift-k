@@ -326,6 +326,7 @@ namespace("vdl"
 				)
 				
 				jobid := concat(tr, "-", uid())
+				log(LOG:DEBUG, "{jobid} running in thread {#thread}, run {vdl:runid}")
 				tmpdir := dircat(wfdir, jobid)
 				
 				stdout := try(stdout, "stdout.txt")
@@ -346,11 +347,11 @@ namespace("vdl"
 						
 						doStagein(stagein, sharedDir, rhost)
 
-						log(LOG:INFO, "Running job ", tr, maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
+						log(LOG:INFO, "Running job {jobid} {tr}", maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
 																	
 						task:execute("/bin/sh",
 							list("shared/wrapper.sh", jobid, 
-								stdout, stderr
+								stdout, stderr, try(stdin, ""),
 								flatten(each(fileDirs)),
 								flatten(each(stagein)), 
 								flatten(outfiles(stageout)),
@@ -358,7 +359,6 @@ namespace("vdl"
 								vdl:executable(tr, rhost),
 								maybe(each(arguments)))
 							directory=wfdir
-							maybe(stdin="{jobid}/{stdin}")
 							redirect = false
 							host = rhost
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
@@ -366,7 +366,7 @@ namespace("vdl"
 							
 						checkExitCode(rhost, tmpdir, jobid, tr)
 		
-						log(LOG:INFO, "Completed job ", tr, maybe(" with arguments ", arguments), " on {rhost}")
+						log(LOG:INFO, "Completed job {jobid} {tr}", maybe(" with arguments ", arguments), " on {rhost}")
 
 									
 						/* need to stage the files to upper scratch area in case they are not transfered to another site
@@ -381,7 +381,9 @@ namespace("vdl"
 					)
 					catch(".*"
 						log(LOG:DEBUG, "Application exception: ", exception)
-						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
+						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
+							cleanupFiles(cacheFilesToRemove, rhost)
+						)
 						
 						outs := transferSTDs(rhost, tmpdir, jobid, stdout, stderr)
 						

@@ -3,7 +3,7 @@ import("task.k")
 import("rlog.k")
 
 once("vdl.k-print-version"
-	echo("Swift V 0.0404")
+	echo("Swift V 0.0405")
 	echo("RunID: {VDL:RUNID}")
 )
 
