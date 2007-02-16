@@ -10,8 +10,8 @@ public class File {
 	private Object host;
 	private long size, lastAccess;
 	private int locked;
-	private boolean removalLock;
-	private LinkedList removalListeners;
+	private boolean processingLock;
+	private LinkedList processingListeners;
 
 	public File(String file, String dir, Object host, long size) {
 		if (dir.endsWith("/")) {
@@ -126,26 +126,31 @@ public class File {
 	 * nothing else can be done on it. It cannot be added or removed from the
 	 * cache.
 	 */
-	public void lockForRemoval() {
-		removalLock = true;
+	public void lockForProcessing() {
+		processingLock = true;
+	}
+	
+	public void unlockFromProcessing() {
+		processingLock = false;
+		notifyListeners();
 	}
 
-	public boolean isLockedForRemoval() {
-		return removalLock;
+	public boolean isLockedForProcessing() {
+		return processingLock;
 	}
 
-	public synchronized void addRemovalListener(RemovalListener l, Object param) {
-		if (removalListeners == null) {
-			removalListeners = new LinkedList();
+	public synchronized void addProcessingListener(ProcessingListener l, Object param) {
+		if (processingListeners == null) {
+			processingListeners = new LinkedList();
 		}
-		removalListeners.add(new Object[] { l, param });
+		processingListeners.add(new Object[] { l, param });
 	}
 
 	public synchronized void notifyListeners() {
-		if (removalListeners != null) {
-			while (removalListeners.size() > 0) {
-				Object[] p = (Object[]) removalListeners.removeFirst();
-				((RemovalListener) p[0]).fileRemoved(this, p[1]);
+		if (processingListeners != null) {
+			while (processingListeners.size() > 0) {
+				Object[] p = (Object[]) processingListeners.removeFirst();
+				((ProcessingListener) p[0]).processingComplete(this, p[1]);
 			}
 		}
 	}

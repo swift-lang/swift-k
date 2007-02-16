@@ -72,6 +72,9 @@ public class Site {
 	public synchronized CacheReturn addAndLockFile(File f) {
 		CacheReturn cr = addFile(f);
 		cr.cached.lock();
+		if (!cr.alreadyCached) {
+			cr.cached.lockForProcessing();
+		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("CacheLockFile(file=" + f + ")");
 		}
@@ -88,21 +91,24 @@ public class Site {
 			throw new IllegalStateException(
 					"fileRemoved() called with a file that is not in the cache (" + f + ")");
 		}
-		if (!cached.isLockedForRemoval()) {
+		if (!cached.isLockedForProcessing()) {
 			throw new IllegalStateException(
-					"fileRemoved() called on a file that was not locked for removal (" + f + ")");
+					"fileRemoved() called on a file that was not locked for processing (" + f + ")");
 		}
 		usage -= cached.getSize();
-		cached.notifyListeners();
+		cached.unlockFromProcessing();
 		return new CacheReturn(true, Collections.EMPTY_LIST, cached);
 	}
 
-	public synchronized CacheReturn unlockEntry(File f) {
+	public synchronized CacheReturn unlockEntry(File f, boolean force) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("CacheUnlockFile(file=" + f + ")");
 		}
 		File cached = (File) files.get(f.getPath());
 		if (cached == null) {
+			if (!force) {
+				return new CacheReturn(false, purge(), null);
+			}
 			if (logger.isInfoEnabled()) {
 				logger.info("Cache contents: " + files);
 			}
@@ -112,6 +118,22 @@ public class Site {
 		cached.unlock();
 		return new CacheReturn(true, purge(), cached);
 	}
+	
+	public synchronized CacheReturn unlockFromProcessing(File f) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("CacheUnlockFromProcessing(file=" + f + ")");
+		}
+		File cached = (File) files.get(f.getPath());
+		if (cached == null) {
+			if (logger.isInfoEnabled()) {
+				logger.info("Cache contents: " + files);
+			}
+			throw new IllegalStateException(
+					"unlockEntry() called with a file that is not in the cache (" + f + ")");
+		}
+		cached.unlockFromProcessing();
+		return new CacheReturn(true, purge(), cached);
+	}
 
 	private synchronized List purge() {
 		List l = new ArrayList();
@@ -119,8 +141,8 @@ public class Site {
 		Iterator i = accessTimes.values().iterator();
 		while (i.hasNext() && targetUsage > storageSize) {
 			File f = (File) i.next();
-			if (!f.isLocked() && !f.isLockedForRemoval()) {
-				f.lockForRemoval();
+			if (!f.isLocked() && !f.isLockedForProcessing()) {
+				f.lockForProcessing();
 				l.add(f.getPath());
 				targetUsage -= f.getSize();
 			}

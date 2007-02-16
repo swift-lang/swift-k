@@ -28,9 +28,14 @@ public class LRUFileCache implements VDLFileCache {
 		return s.fileRemoved(f);
 	}
 	
-	public CacheReturn unlockEntry(File f) {
+	public CacheReturn unlockEntry(File f, boolean force) {
 		Site s = getSite(f.getHost());
-		return s.unlockEntry(f);
+		return s.unlockEntry(f, force);
+	}
+	
+	public CacheReturn unlockFromProcessing(File f) {
+		Site s = getSite(f.getHost());
+		return s.unlockFromProcessing(f);
 	}
 
 	protected Site getSite(Object host) {
