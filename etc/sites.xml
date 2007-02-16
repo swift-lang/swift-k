@@ -21,17 +21,18 @@ into the workspace element
 
 -->
 
+<!-- This localhost entry should work on most linux-like systems. It may
+be necessary to change the two occurences of /var/tmp to a different
+working directory. -->
 
-
-<!--
   <pool handle="localhost" sysinfo="INTEL32::LINUX">
     <lrc url="local://localhost"/>
-    <gridftp  url="local://localhost" storage="/home/tiberius" major="1" minor="0" patch="0"> 
+    <gridftp  url="local://localhost" storage="/var/tmp" major="1" minor="0" patch="0"> 
     </gridftp>
     <jobmanager universe="vanilla" url="local://localhost" major="1" minor="0" patch="0" />
-    <workdirectory >/home/tiberius</workdirectory>
+    <workdirectory >/var/tmp</workdirectory>
   </pool>
--->
+
 <!--
   <pool handle="skynet" sysinfo="INTEL32::LINUX">
     <gridftp  url="gsiftp://skynet-login.isi.edu" storage="/nfs/scratch01/tiberius" major="2" minor="2" patch="4"> 
@@ -62,13 +63,14 @@ into the workspace element
     <jobmanager universe="vanilla" url="grid-w.ncsa.teragrid.org/jobmanager" major="2" minor="2" /> 
     <workdirectory >/u/ac/tstef</workdirectory>
 </pool>
--->    
+-->
+<!--
 <pool handle="purdue" sysinfo="INTEL64::LINUX">
     <gridftp  url="gsiftp://tg-data.purdue.teragrid.org" storage="/scratch/teragrid/stef" major="2" minor="2" />
     <jobmanager universe="vanilla" url="tg-gatekeeper.purdue.teragrid.org" major="2" minor="2"/>
     <workdirectory >/scratch/teragrid/stef</workdirectory>
 </pool>
-
+-->
 <!-- TACC CERT MISSING
 <pool handle="tacc" sysinfo="INTEL32::LINUX">
     <gridftp  url="gsiftp://tg-login.tacc.teragrid.org" storage="/work" major="2" minor="2" />
