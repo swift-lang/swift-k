@@ -144,6 +144,10 @@ public class File {
 			processingListeners = new LinkedList();
 		}
 		processingListeners.add(new Object[] { l, param });
+		if (!processingLock) {
+			//the processing lock was removed since
+			notifyListeners();
+		}
 	}
 
 	public synchronized void notifyListeners() {
