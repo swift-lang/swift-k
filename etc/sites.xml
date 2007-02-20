@@ -90,12 +90,18 @@ working directory. -->
  -->
  
 <!-- OSG SITES -->
-
+<!-- 
+<pool handle="OSG_LIGO_PSU" sysinfo="INTEL32::LINUX">
+    <gridftp  url="gsiftp://grid3.aset.psu.edu" storage="/usr1/grid3/data" major="2" minor="2" />
+    <jobmanager universe="vanilla" url="grid3.aset.psu.edu/jobmanager-pbs" major="2" minor="2" />
+    <workdirectory >/usr1/grid3/data</workdirectory>
+</pool>
+ -->
 <!-- 
 <pool handle="fnal" sysinfo="INTEL32::LINUX">
-    <gridftp  url="gsiftp://iogw1.hpc.ufl.edu" storage="/scratch/ufhpc/osg/data" major="2" minor="2" />
-    <jobmanager universe="vanilla" url="iogw1.hpc.ufl.edu/jobmanager-pbs" major="2" minor="2" />
-    <workdirectory >/scratch/ufhpc/osg/data</workdirectory>
+    <gridftp  url="gsiftp://fngp-osg.fnal.gov" storage="/grid/data" major="2" minor="2" />
+    <jobmanager universe="vanilla" url="fngp-osg.fnal.gov/jobmanager-pbs" major="2" minor="2" />
+    <workdirectory >/grid/data</workdirectory>
 </pool>
 -->
 <!-- 
