@@ -50,7 +50,7 @@ DOH
 	cat <<DOH >$HTML
 <html>
 	<head>
-		<title>VDL2 nightly integration tests and build ($DATE $TIME)</title>
+		<title>Swift nightly integration tests and build ($DATE $TIME)</title>
 		<style type="text/css">
 			a:link {color:black}
 			a:visited {color:black}
@@ -61,7 +61,7 @@ DOH
 		</style>
 	</head>
 	<body>
-	<h1>VDL2 nightly integration tests and build ($DATE $TIME)</h1>
+	<h1>Swift nightly integration tests and build ($DATE $TIME)</h1>
 	<ol>
 		<li><a href="#tests">Test results</a>
 		<li><a href="#packages">Compiled packages</a>
@@ -321,15 +321,15 @@ if [ "$FCO" != "1" ]; then
 	pexec rm -rf cog
 	vexec svn co https://svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog
 
-	TEST="Checkout VDL2"
-	pexec rm -rf src
+	TEST="Checkout Swift"
+	pexec rm -rf trunk
 	#vexec cvs -d :pserver:anonymous@cvs.cogkit.org:/cvs/cogkit co src/vdsk
-	svn co https://svn.ci.uchicago.edu/svn/vdl2
+	svn co https://svn.ci.uchicago.edu/svn/vdl2/trunk
 fi
 
 TEST="Directory setup"
 pexec mkdir cog/modules/vdsk
-vexec cp -r vdl2/trunk/* cog/modules/vdsk
+vexec cp -r trunk/* cog/modules/vdsk
 
 TEST="Compile"
 pexec cd cog/modules/vdsk
