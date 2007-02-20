@@ -2,13 +2,13 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
 
 <article>
-    <articleinfo revision="0.1">
+    <articleinfo>
         <title>A Swift Tutorial</title>
         <abstract>
             <formalpara>
                 <para>
-This is a tutorial on the use of Swift, and its programming language
-SwiftScript. It is not intended as a reference manual.
+This is an introductory tutorial on the use of Swift and its 
+programming language SwiftScript.
                 </para>
                 <para>
 $LastChangedRevision$
@@ -23,8 +23,17 @@ This tutorial is intended to introduce new users to the basics of Swift.
 It is structured as a series of small exercise/examples which you can
 try for yourself as you read along.
     </para>
-
+    <para>
+For information on getting an installation of Swift running, consult the
+Swift Quickstart Guide, and return to this document when you have
+successfully run the test SwiftScript program mentioned there.
+    </para>
+    <para>
+There is also a Swift User's Guide which contains more detailed reference
+material on topics covered in this manual.
+    </para>
 </sect1>
+
 <sect1> <title>Hello World</title>
     <para>
 The first example program (found in the file 
