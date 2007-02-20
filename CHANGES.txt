@@ -1,3 +1,7 @@
+(02/19/07)
+
+*** Fixed a race in the cache
+
 (02/16/07)
 
 *** Fixed stdin issue (bug #19)
