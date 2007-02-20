@@ -60,12 +60,7 @@ outfile = greeting();
 <programlisting>
 cd examples/vdsk/tutorial/
 
-vdlc q1.dtm
-
-ls q1.kml
-q1.kml
-
-vdlrun q1.kml
+swift q1.dtm
 VDL/Karajan library V 0.312
 Adding file service local://localhost
 Adding local execution service local://localhost
@@ -146,12 +141,10 @@ to the greeting function.</para>
 We'll also encounter a new built-in data type, 'string'.
 </para>
 <para>The code for this section can be found in q2.dtm. It can be 
-invoked using vdlc and vdlrun, with output appearing in hello2.txt:</para>
+invoked using the swift command, with output appearing in hello2.txt:</para>
 
 <programlisting>
-vdlc q2.dtm
-vdlrun q2.kml
-cat hello2.txt
+swift q2.dtm
 </programlisting>
 
 <para>The code changes from q1.dtm are highlighted below.</para>
@@ -186,7 +179,7 @@ string is supplied.</para>
 <para>Now that we can choose our greeting text, we can call the same
 procedure with different parameters to generate several output files with
 different greetings. The code is in q12.dtm and can be run as before
-using vdlc and vdlrun.
+using the swift command.
 </para>
 
 <programlisting>
@@ -301,12 +294,10 @@ wc utility with appropriate parameters. Finally, we define a variable,
 c, which we map to count.txt and to which we assign the count of words
 in a greeting message.</para>
 
-<para>We can use vdlc and vdlrun to run q13.dtm:</para>
+<para>We can use the swift command to run q13.dtm:</para>
 
 <programlisting>
-vdlc q13.dtm
-[...]
-vdlrun q13.kml
+swift q13.dtm
 [...]
 cat count.txt 
   3 q13greeting.txt
@@ -575,7 +566,7 @@ afternoon'.
 When running a workflow, its possible to generate a provenance graph at the
 same time:
 <programlisting>
-vdlrun -pgraph graph1.dot q1.kml 
+swift -pgraph graph1.dot q1.dtm
 dot -ograph.png -Tpng graph1.dot
 </programlisting>
 which can then be viewed using your favourite image viewer.
@@ -587,7 +578,7 @@ which can then be viewed using your favourite image viewer.
 <para>As configured by default, all jobs are run locally. In the previous
 examples, we've invoked 'echo' and 'wc' executables from our
 SwiftScript program. These have been run on the local system
-(the same computer on which you ran vdlrun). We can also make our 
+(the same computer on which you ran 'swift'). We can also make our 
 computations run on a remote resource.</para> 
 
 <para>WARNING: This example is necessarily more vague than previous examples,
