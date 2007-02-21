@@ -1,0 +1,598 @@
+group Karajan;
+
+program(types,procedures,declarations,statements) ::= <<
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  $if(types)$
+  <types>
+    $types$
+  </types>
+  $endif$
+  $procedures;separator="\n"$
+  $declarations;separator="\n"$
+  $if(statements)$
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  $statements;separator="\n"$
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+  $endif$
+</project>
+>>
+
+procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config) ::= <<
+<element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$>
+  $optargs:default_arg();separator="\n"$
+  $outputs:typecheck();separator="\n"$
+  $inputs:typecheck();separator="\n"$
+$if(binding)$
+  $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application)$
+
+$else$
+  $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements)$
+
+$endif$
+</element>
+
+>>
+
+compound(outputs,inputs,declarations,statements,config) ::= <<
+$declarations;separator="\n"$
+$if(statements)$
+<parallel>
+  $statements;separator="\n"$
+</parallel>
+
+$endif$
+$outputs:vdl_closedataset();separator="\n"$
+>>
+
+proc_args(args) ::= <<
+$args:arg_name();separator=","$
+>>
+
+arg_name() ::= <<
+$it.name$
+>>
+
+default_arg() ::= <<
+$if(it.default)$
+<default name="$it.name$">
+  <vdl:new type="$it.type.name$" value="$it.default$"/>
+</default>
+$endif$
+>>
+
+typecheck() ::= <<
+<vdl:typecheck argname="$it.name$" var="{$it.name$}" type="$it.type.name$"$if(it.isArray)$ isArray="true"$endif$/>
+>>
+
+vdl_execute(outputs,inputs,application) ::= <<
+<vdl:execute>
+  <vdl:tr>$application.exec$</vdl:tr>
+  $inputs:vdl_stagein();separator="\n"$
+  $outputs:vdl_stageout();separator="\n"$
+  $vdl_arguments(arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
+</vdl:execute>
+$outputs:vdl_closedataset();separator="\n"$
+>>
+
+vdl_stagein() ::= <<
+<vdl:stagein var="{$it.name$}"/>
+>>
+
+vdl_stageout(outputs) ::= <<
+<vdl:stageout var="{$it.name$}"/>
+>>
+
+vdl_closedataset() ::= <<
+<vdl:closedataset var="{$it.name$}"/>
+>>
+
+vdl_arguments(arguments,stdin,stdout,stderr) ::= <<
+<vdl:arguments>
+  $arguments;separator="\n"$
+</vdl:arguments>
+$if (stdin)$
+<vdl:stdin>
+  $stdin$
+</vdl:stdin>
+$endif$
+$if (stdout)$
+<vdl:stdout>
+  $stdout$
+</vdl:stdout>
+$endif$
+$if (stderr)$
+<vdl:stderr>
+  $stderr$
+</vdl:stderr>
+$endif$
+>>
+
+argument(func) ::= <<
+$func;separator="\n"$	
+>>
+
+function(name, var, path, expr, value) ::= <<
+$if(name)$
+<vdl:$name$$if(path)$ path="$path$"$endif$$if(var)$ var="{$var$}"/>$else$>
+  $if(value)$
+    $value$
+  $else$
+  $if(expr)$
+    $expr$
+  $endif$
+  $endif$
+</vdl:$name$>
+$endif$
+$else$
+$if(value)$
+<string>$value$</string>
+$else$
+$expr$
+$endif$
+$endif$
+>>
+
+functionm(func, var, path, value) ::= <<
+$if(func)$
+<vdl:$func$$if(path)$ path="$path$"$endif$ var="{$var$}"/>
+$else$
+$if(value)$
+<string>$value$</string>
+$else$
+<vdl:getfieldvalue$if(path)$ path="$path$"$endif$ var="{$var$}"/>
+$endif$
+$endif$
+>>
+
+foreach(var,in,indexVar,declarations,statements) ::= <<
+$if(indexVar)$
+<parallelFor name="\$">
+  <vdl:getarrayfieldvalue path="$in.path$" var="{$in.var$}"/>
+    <set names="$indexVar$, $var$">
+      <each items="{\$}"/>
+    </set>
+
+$else$
+<parallelFor name="\$">
+  <vdl:getarrayfieldvalue path="$in.path$" var="{$in.var$}"/>
+    <set names="\$\$, $var$">
+      <each items="{\$}"/>
+    </set>
+
+$endif$
+    $declarations;separator="\n"$
+    $if(statements)$
+    <parallel>
+      $statements;separator="\n"$
+    </parallel>
+    $endif$
+</parallelFor>
+>>
+
+call(func, outputs, inputs) ::= <<
+<$func$>
+  <parallel>
+    $outputs;separator="\n"$
+    $inputs;separator="\n"$
+  </parallel>
+</$func$>
+>>
+
+call_arg(bind, expr, value, array, range) ::= <<
+$if(bind)$
+<argument name="$bind$">
+  $call_arg_value(expr=expr,value=value,array=array,range=range)$
+</argument>
+$else$
+$call_arg_value(expr=expr,value=value,array=array,range=range)$
+$endif$
+>>
+
+call_arg_value(expr, value, array, range) ::= <<
+$if(expr)$
+$expr$
+$else$
+$if(array)$
+$array$
+$else$
+$if(range)$
+$range$
+$else$
+$if(value)$
+<vdl:new value="$value$"/>
+$endif$
+$endif$
+$endif$
+$endif$
+>>
+
+dataset(name,type,mapping,file,isArray) ::= <<
+<set name="$name$">
+  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
+    $vdl_mapping(mapping=mapping,file=file)$
+  </vdl:new>
+</set>
+>>
+
+vdl_mapping(mapping,file) ::= <<
+$if(file)$
+<vdl:mapping descriptor="single_file_mapper">
+  <vdl:parameter name="file" value="$file.name$"/>
+  $if(file.params)$$file.params;separator="\n"$$endif$
+</vdl:mapping>
+$else$
+<vdl:mapping descriptor="$mapping.descriptor$">
+  $mapping.params;separator="\n"$
+</vdl:mapping>
+$endif$
+>>
+
+vdl_parameter(name,value,func,expr) ::= <<
+<vdl:parameter name="$name$"$if(func)$>
+  $func$
+</vdl:parameter>
+$else$$if(expr)$>
+  $expr$
+</vdl:parameter>
+$else$ value="$value$"/>
+$endif$
+$endif$
+>>
+
+variable(name,type,isArray,array,range,expr,value,mapping,nil) ::= <<
+<set name="$name$">
+  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
+  $if(mapping)$
+    $vdl_mapping(mapping=mapping)$
+  $else$$if(value)$
+    <argument name="value">$value$</argument>
+  $else$
+    <argument name="value">
+  $if(array)$
+      $array$
+  $else$$if(range)$
+      $range$
+  $else$
+      $expr$
+  $endif$$endif$
+    </argument>
+  $endif$
+  $endif$
+  </vdl:new>
+</set>
+>>
+
+aassign(path,var,expr,value,array,range) ::= <<
+$if(value)$
+<vdl:setfieldvalue$if(path)$ path="$path$"$endif$ var="{$var$}" value="$value$"/>
+$else$
+<vdl:assign$if(path)$ dpath="$path$"$endif$ dvar="{$var$}">
+  <argument name="svar">
+	$if(array)$
+	$array$
+	$else$$if(range)$
+	$range$
+	$else$
+	$expr$
+	$endif$$endif$
+  </argument>
+</vdl:assign>
+$endif$
+>>
+
+assign(path,var,expr,value,array,range) ::= <<
+$if(value)$
+<vdl:setfieldvalue$if(path)$ path="$path$"$endif$ var="{$var$}" value="$value$"/>
+$else$
+$if(!path)$
+$if(expr.var)$
+<set name="$var$">
+  $expr$
+</set>
+$else$
+<vdl:assign dvar="{$var$}">
+  <argument name="svar">
+	$if(array)$
+	$array$
+	$else$$if(range)$
+	$range$
+	$else$
+	$expr$
+	$endif$$endif$
+  </argument>
+</vdl:assign>
+$endif$$else$
+<vdl:assign dpath="$path$" dvar="{$var$}">
+  <argument name="svar">
+	$if(array)$
+	$array$
+	$else$$if(range)$
+	$range$
+	$else$
+	$expr$
+	$endif$$endif$
+  </argument>
+</vdl:assign>
+$endif$$endif$
+>>
+
+array(elements) ::= <<
+<list>
+  $elements;separator="\n"$
+</list>
+>>
+
+range(from,to,step) ::= <<
+<vdl:range>
+  <argument name="from">
+    $from$
+  </argument>
+  <argument name="to">
+    $to$
+  </argument>
+  $if(step)$
+  <argument name="step">
+    $step$
+  </argument>
+  $endif$
+</vdl:range>
+>>
+
+element(expr,value) ::= <<
+$if(value)$
+<vdl:new value="$value$"/>
+$else$
+$expr$
+$endif$
+>>
+
+if(condition,vthen,velse) ::= <<
+<if>
+  $condition$
+  <then>
+    $vthen$
+  </then>
+  $if(velse)$
+  <else>
+    $velse$
+  </else>
+  $endif$
+</if>
+>>
+
+sub_comp(declarations,statements) ::= <<
+$declarations;separator="\n"$
+$if(statements)$
+<parallel>
+  $statements;separator="\n"$
+</parallel>
+$endif$
+>>
+
+while(condition,declarations,statements) ::= <<
+<while>
+  $condition$
+  $sub_comp(declarations=declarations,statements=statements)$
+</while>
+>>
+
+repeat(condition,declarations,statements) ::= <<
+<while>
+  $sub_comp(declarations=declarations,statements=statements)$
+  $condition$
+</while>
+>>
+
+switch(condition,cases,sdefault) ::= <<
+<sequential>
+  <set name="\$_sw">
+    $condition$
+  </set>
+  <if>
+$cases:{case |
+    <equals>
+       <variable>\$_sw</variable>
+       $case.value$
+    </equals>
+    <then>
+      $sub_comp(declarations=case.declarations, statements=case.statements)$
+    </then>
+}$
+$if(sdefault)$
+    <else>
+      $sdefault$
+    </else>
+
+$endif$
+  </if>
+</sequential>
+>>
+
+operator ::= [
+  "+":"sum",
+  "-":"subtraction",
+  "*":"product",
+  "/":"quotient",
+  "%":"remainder",
+  "&lt;=":"lessOrEqual",
+  "&gt;=":"greaterOrEqual",
+  "&gt;":"greaterThan",
+  "&lt;":"lessThan",
+  "<=":"lessOrEqual",
+  ">=":"greaterOrEqual",
+  ">":"greaterThan",
+  "<":"lessThan",
+  "==":"equals"
+]
+
+unary(sign,exp) ::= <<
+<product>
+  <number>$sign$1</number>
+  $exp$
+</product>
+>>
+
+cond(op,left,right) ::= <<
+<$operator.(op)$>
+  $left$
+  $right$
+</$operator.(op)$>
+>>
+
+and(left,right) ::= <<
+<and>
+  $left$
+  $right$
+</and>
+>>
+
+or(left, right) ::= <<
+<or>
+  $left$
+  $right$
+</or>
+>>
+
+not(exp) ::= <<
+<not>
+  $exp$
+</not>
+>>
+
+arith(op, left,right) ::= <<
+<$operator.(op)$>
+  $left$
+  $right$
+</$operator.(op)$>
+>>
+
+paren(exp) ::= <<
+$exp$
+>>
+
+id(var,path,reference) ::= <<
+$if(var.index)$
+<vdl:getfield$if(!reference)$value$endif$ var="{$var.var$}"$if(var.index.value)$$if(!path)$ path="[$var.index.value$]"/>$else$>
+  <argument name="path">
+    <concat>
+      <string>[$var.index.value$]</string>
+      <string>.</string>
+      $path(var=path.var,path=path.path)$
+    </concat>
+  </argument>
+</vdl:getfield$if(!reference)$value$endif$>  
+$endif$
+$else$>
+  <argument name="path">
+$if(!var.index.path)$
+$if(!var.index.var.index)$
+    <concat>
+      <string>[$var.index.var.var$]</string>
+$else$
+    <concat>
+      <string>[</string>
+      $var.index$
+      <string>]</string>
+$endif$
+$else$
+    <concat>
+      <string>[</string>
+      $var.index$
+      <string>]</string>
+$endif$
+$if(path)$
+
+      <string>.</string>
+      $path(var=path.var,path=path.path)$
+    $endif$
+    </concat>
+  </argument>
+</vdl:getfield$if(!reference)$value$endif$>  
+$endif$
+$else$
+$if(!path)$$if(reference)$
+<variable>$var.var$</variable>
+$else$
+<vdl:getfieldvalue var="{$var.var$}"/>
+$endif$
+$else$
+<vdl:getfield$if(!reference)$value$endif$ var="{$var.var$}"$if(!path.path)$$if(!path.var.index)$ path="$path.var.var$"/>$else$
+$if(path.var.index.value)$ path="$path.var.var$[$path.var.index.value$]"/>$else$>
+  <argument name="path">
+    <concat>
+      $path(var=path.var,path=path.path)$
+    </concat>
+  </argument>
+</vdl:getfield$if(!reference)$value$endif$>
+$endif$$endif$$else$>
+  <argument name="path">
+    <concat>
+      $path(var=path.var,path=path.path)$
+    </concat>
+  </argument>
+</vdl:getfield$if(!reference)$value$endif$>
+$endif$
+$endif$
+$endif$
+>>
+
+path(var,path) ::=<<
+<string>$var.var$</string>
+$if(var.index)$
+$if(var.index.value)$
+<string>[$var.index.value$]</string>
+$else$
+$if(!var.index.path)$
+$if(!var.index.var.index)$
+<string>[$var.index.var.var$]</string>
+$else$
+<string>[</string>
+$var.index$
+<string>]</string>
+$endif$$else$
+<string>[</string>
+$var.index$
+<string>]</string>
+$endif$
+$endif$$endif$
+$if(path)$
+<string>.</string>
+$path(var=path.var,path=path.path)$
+$endif$
+>>
+
+subscript(var,index) ::= <<
+>>
+
+
+iConst(value) ::= <<
+<number>$value$</number>
+>>
+
+fConst(value) ::= <<
+<number>$value$</number>
+>>
+
+bConst(value) ::= <<
+<$value$/>
+>>
+
+sConst(value,innervalue) ::= <<
+<string>$innervalue$</string>
+>>
+
+null() ::= <<
+<null/>
+>>

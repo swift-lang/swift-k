@@ -1,0 +1,75 @@
+program := 
+	DEFWHITESPACE(" \n\t")
+	DEFCOMMENTLINE("#")
+	types 
+	items ;
+	
+types :=
+"	<types>\n" .
+	type moreTypes 
+"	</types>\n" . ;
+
+moreTypes :=
+	type moreTypes |
+	E() ;
+	
+type := 
+	LITERAL("type")
+	identifier LITERAL("{") complexOrSimpleType ;
+	
+complexOrSimpleType :=
+	LITERAL("}")
+	simpleType
+	|
+	complexTypeStart
+	fields 
+	complexTypeEnd 
+	;
+	
+simpleType :=
+"		<xs:simpleType name=\"" . . "\">\n" .
+"			<xs:restriction base=\"xs:string\"/>\n" .
+"		</xs:simpleType>\n" . ;
+	
+complexTypeStart :=
+"		<xs:complexType name=\"" . . "\">\n" .
+"			<xs:sequence>\n" . ;
+
+complexTypeEnd :=
+"			</xs:sequence>\n" . 
+"		</xs:complexType>\n" . ;
+
+fields :=
+	field moreFields ;
+	
+moreFields :=
+	field moreFields |
+	E() ;
+	
+field :=
+	identifier identifier simpleFieldOrArray ;
+	
+simpleFieldOrArray :=
+	LITERAL(";")
+"				<xs:element name=\"" . . "\" type=\"" . . "\"/>\n" . 
+	|
+	LITERAL("[") LITERAL("]") LITERAL(";")
+"				<xs:sequence minOccurs=\"0\" maxOccurs=\"unbounded\">\n" .
+"					<xs:element name=\"" . . "\" type=\"" . . "\"/>\n" .
+	;
+	
+
+	
+items := 
+	item moreItems ;
+	
+moreItems := 
+	item | E() ;
+	
+item := 
+	LITERAL("(") rprocdef |
+	ANYTOKEN() other ;
+	
+typedef := 
+	ANYTOKEN() 
+	
