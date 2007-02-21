@@ -67,10 +67,6 @@
 	
 	<target name="dist" depends="antlr">
 		<ant antfile="${main.buildfile}" target="dist"/>
-		<mkdir dir="${dist.dir}/var"/>
-		<copy todir="${dist.dir}/var">
-			<fileset dir="${cog.dir}/modules/${module.name}/var"/>
-		</copy>
 		<mkdir dir="${dist.dir}/libexec"/>
 		<copy todir="${dist.dir}/libexec">
 			<fileset dir="${cog.dir}/modules/${module.name}/libexec"/>
