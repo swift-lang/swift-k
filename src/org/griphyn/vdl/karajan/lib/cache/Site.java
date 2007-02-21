@@ -14,7 +14,7 @@ import java.util.TreeMap;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.griphyn.vdl.util.VDL2Profile;
+import org.griphyn.vdl.util.SwiftProfile;
 
 public class Site {
 	public static final Logger logger = Logger.getLogger(Site.class);
@@ -31,7 +31,7 @@ public class Site {
 		long quota = Long.MAX_VALUE;
 		if (host instanceof BoundContact) {
 			BoundContact bc = (BoundContact) host;
-			Object ss = bc.getProperty(VDL2Profile.KEY_STORAGE_SIZE);
+			Object ss = bc.getProperty(SwiftProfile.KEY_STORAGE_SIZE);
 			if (ss != null) {
 				quota = TypeUtil.toLong(ss);
 				if (quota < 0) {
