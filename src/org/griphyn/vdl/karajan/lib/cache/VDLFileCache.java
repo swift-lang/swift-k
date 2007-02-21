@@ -75,8 +75,8 @@ public interface VDLFileCache {
 	CacheReturn addAndLockEntry(File file);
 
 	/**
-	 * Removes an entry from the cache. This must be called on entries marked
-	 * for removal by one of the calls to the other caching functions.
+	 * Removes an entry from the cache. This must be called on entries locked
+	 * for processing by one of the calls to the other caching functions.
 	 */
 	CacheReturn entryRemoved(File f);
 
