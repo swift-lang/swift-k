@@ -99,13 +99,35 @@
 			file="${cog.dir}/modules/${module.name}/etc/log4j.properties" 
 			overwrite="true"/>
 		<replace file="${dist.dir}/bin/swift">
-			<replacetoken>updateOptions "$COG_INSTALL_PATH" "COG_INSTALL_PATH"
+			<replacetoken>COG_INSTALL_PATH</replacetoken>
+			<replacevalue>SWIFT_HOME</replacevalue>
+		</replace>
+		<replace file="${dist.dir}/bin/swift">
+			<replacetoken>LOCALCLASSPATH=$CLASSPATH$CPDELIM$SWIFT_HOME/etc</replacetoken>
+			<replacevalue>LOCALCLASSPATH=$CLASSPATH$CPDELIM$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec</replacevalue>
+		</replace>
+		<replace file="${dist.dir}/bin/swift">
+			<replacetoken>updateOptions "$SWIFT_HOME" "SWIFT_HOME"
 
 </replacetoken>
-			<replacevalue>updateOptions "$COG_INSTALL_PATH" "COG_INSTALL_PATH"
-updateOptions "$COG_INSTALL_PATH" "vds.home"
+			<replacevalue>updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
+updateOptions "$SWIFT_HOME" "vds.home"
+updateOptions "$SWIFT_HOME" "swift.home"
 
 </replacevalue>
+		</replace>
+		
+		<replace file="${dist.dir}/bin/swift.bat">
+			<replacetoken>COG_INSTALL_PATH</replacetoken>
+			<replacevalue>SWIFT_HOME</replacevalue>
+		</replace>
+		<replace file="${dist.dir}/bin/swift.bat">
+			<replacetoken>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc</replacetoken>
+			<replacevalue>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec</replacevalue>
+		</replace>
+		<replace file="${dist.dir}/bin/swift.bat">
+			<replacetoken>set COG_OPTS=</replacetoken>
+			<replacevalue>set COG_OPTS=-DCOG_INSTALL_PATH=%SWIFT_HOME% -Dswift.home=%SWIFT_HOME% -Dvds.home=%SWIFT_HOME% </replacevalue>
 		</replace>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 	</target>
@@ -114,7 +136,7 @@ updateOptions "$COG_INSTALL_PATH" "vds.home"
 		<java classname="antlr.Tool" fork="true" failonerror="true">
 			<arg value="-o"/>
 			<arg value="${cog.dir}/modules/${module.name}/src/org/griphyn/vdl/parser"/>
-			<arg value="grammars/VDL.g"/>
+			<arg value="resources/VDL.g"/>
 			<classpath>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/antlr-2.7.5.jar"/>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/stringtemplate.jar"/>
@@ -127,8 +149,8 @@ updateOptions "$COG_INSTALL_PATH" "vds.home"
 			<arg value="-src"/><arg value="src"/>
 			<arg value="-javasource"/><arg value="1.4"/>
 			<arg value="-out"/><arg value="${cog.dir}/modules/${module.name}/lib/vdldefinitions.jar"/>
-			<arg value="etc/VDL.xsd"/>
-			<arg value="etc/VDL.xsdconfig"/>
+			<arg value="resources/VDL.xsd"/>
+			<arg value="resources/VDL.xsdconfig"/>
 			<classpath>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/xbean.jar"/>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/resolver.jar"/>
