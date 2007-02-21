@@ -79,8 +79,6 @@
 <programlisting>
 <command>cd</command> vdsk-xyz/etc
 <command>cp</command> sites.xml.example sites.xml
-
-<command>cd</command> ../var
 <command>cp</command> tc.data.example tc.data
 </programlisting>
 				
