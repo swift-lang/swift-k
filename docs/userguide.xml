@@ -810,7 +810,7 @@ the file should contain a header line specifying the names of the columns.
 							</para>
 							
 							<para>
-								Default value: ${<varname>swift.home</varname>}<literal>/var/tc.data</literal>
+								Default value: ${<varname>swift.home</varname>}<literal>/etc/tc.data</literal>
 							</para>
 						
 							<para>
@@ -913,7 +913,7 @@ the file should contain a header line specifying the names of the columns.
 								if needed without being transfered again.
 								However, the amount of remote file system space
 								to be used for caching can be limited using the
-								<property>SWIFT:storagesize</property> profile
+								<property>swift:storagesize</property> profile
 								entry in the sites.xml file. Example:
 								
 <programlisting>
@@ -1323,7 +1323,7 @@ the file should contain a header line specifying the names of the columns.
 				
 <programlisting>
 sites.file=${vds.home}/etc/sites.xml
-tc.file=${vds.home}/var/tc.data
+tc.file=${vds.home}/etc/tc.data
 ip.address=192.168.0.1
 </programlisting>
 			
