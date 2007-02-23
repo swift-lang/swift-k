@@ -19,7 +19,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextExcepti
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
-import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -33,8 +32,8 @@ import org.globus.io.gass.server.JobOutputListener;
 import org.globus.io.gass.server.JobOutputStream;
 import org.globus.rsl.Binding;
 import org.globus.rsl.Bindings;
-import org.globus.rsl.ListRslNode;
 import org.globus.rsl.NameOpValue;
+import org.globus.rsl.ParseException;
 import org.globus.rsl.RSLParser;
 import org.globus.rsl.RslNode;
 import org.globus.rsl.Value;
@@ -66,27 +65,29 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         JobSpecification spec;
         try {
             spec = (JobSpecification) this.task.getSpecification();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new IllegalSpecException(
                     "Exception while retreiving Job Specification", e);
         }
-        rsl = prepareSpecification(spec);
         RslNode rslTree = null;
         try {
-            rslTree = RSLParser.parse(rsl);
-        } catch (Throwable e) {
+            rslTree = prepareSpecification(spec);
+        }
+        catch (Throwable e) {
             throw new IllegalSpecException("Cannot parse the given RSL", e);
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("RSL: " + rsl);
+            logger.debug("RSL: " + rslTree);
         }
 
         if (rslTree.getOperator() == RslNode.MULTI) {
             this.task.setAttribute("jobCount", "multiple");
             submitMultipleJobs(rslTree, spec);
-        } else {
+        }
+        else {
             this.task.setAttribute("jobCount", "single");
-            submitSingleJob(rsl, spec);
+            submitSingleJob(rslTree.toString(), spec);
         }
     }
 
@@ -98,7 +99,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         try {
             this.gramJob.setCredentials((GSSCredential) securityContext
                     .getCredentials());
-        } catch (IllegalArgumentException iae) {
+        }
+        catch (IllegalArgumentException iae) {
             throw new InvalidSecurityContextException(
                     "Cannot set the SecurityContext twice", iae);
         }
@@ -137,7 +139,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     this.task.setStatus(Status.COMPLETED);
                 }
             }
-        } catch (GramException ge) {
+        }
+        catch (GramException ge) {
             Status newStatus = new StatusImpl();
             Status oldStatus = this.task.getStatus();
             newStatus.setPrevStatusCode(oldStatus.getStatusCode());
@@ -146,7 +149,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             this.task.setStatus(newStatus);
             cleanup();
             throw new TaskSubmissionException("Cannot submit job", ge);
-        } catch (GSSException gsse) {
+        }
+        catch (GSSException gsse) {
             Status newStatus = new StatusImpl();
             Status oldStatus = this.task.getStatus();
             newStatus.setPrevStatusCode(oldStatus.getStatusCode());
@@ -178,7 +182,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             if (nv == null) {
                 throw new IllegalSpecException(
                         "Error: No resource manager contact for job.");
-            } else {
+            }
+            else {
                 Object obj = nv.getFirstValue();
                 if (obj instanceof Value) {
                     rmc = ((Value) obj).getValue();
@@ -200,7 +205,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             job
                     .setCredentials((GSSCredential) securityContext
                             .getCredentials());
-        } catch (IllegalArgumentException iae) {
+        }
+        catch (IllegalArgumentException iae) {
             throw new InvalidSecurityContextException(
                     "Cannot set the SecurityContext twice", iae);
         }
@@ -212,7 +218,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 logger.debug("Submitted job with Globus ID: "
                         + job.getIDAsString());
             }
-        } catch (GramException ge) {
+        }
+        catch (GramException ge) {
             Status newStatus = new StatusImpl();
             Status oldStatus = this.task.getStatus();
             newStatus.setPrevStatusCode(oldStatus.getStatusCode());
@@ -221,7 +228,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             this.task.setStatus(newStatus);
             listener.failed(true);
             throw new TaskSubmissionException("Cannot submit job", ge);
-        } catch (GSSException gsse) {
+        }
+        catch (GSSException gsse) {
             Status newStatus = new StatusImpl();
             Status oldStatus = this.task.getStatus();
             newStatus.setPrevStatusCode(oldStatus.getStatusCode());
@@ -259,26 +267,36 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     GramJob job = (GramJob) iterator.next();
                     job.cancel();
                 }
-            } else {
+            }
+            else {
                 this.gramJob.cancel();
             }
             this.task.setStatus(Status.CANCELED);
-        } catch (GramException ge) {
+        }
+        catch (GramException ge) {
             cleanup();
             throw new TaskSubmissionException("Cannot cancel job", ge);
-        } catch (GSSException gsse) {
+        }
+        catch (GSSException gsse) {
             cleanup();
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
                     gsse);
         }
     }
 
-    private String prepareSpecification(JobSpecification spec)
+    private RslNode prepareSpecification(JobSpecification spec)
             throws IllegalSpecException, TaskSubmissionException {
-        ListRslNode rsl = new ListRslNode(RslNode.AND);
+        RslNode rsl = new RslNode(RslNode.AND);
         if (spec.getSpecification() != null) {
-            return spec.getSpecification();
-        } else {
+            try {
+                return RSLParser.parse(spec.getSpecification());
+            }
+            catch (ParseException e) {
+                throw new IllegalSpecException("Failed to parse specification",
+                        e);
+            }
+        }
+        else {
             boolean batchJob = spec.isBatchJob();
             boolean redirected = spec.isRedirected();
             boolean localExecutable = spec.isLocalExecutable();
@@ -301,12 +319,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 if (this.startGassServer && localExecutable) {
                     rsl.add(new NameOpValue("executable", NameOpValue.EQ,
                             new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
-                                    spec.getExecutable()))));
-                } else {
+                                    fixAbsPath(spec.getExecutable())))));
+                }
+                else {
                     rsl.add(new NameOpValue("executable", NameOpValue.EQ, spec
                             .getExecutable()));
                 }
-            } else {
+            }
+            else {
                 throw new IllegalSpecException("Missing executable");
             }
 
@@ -346,8 +366,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 if (this.startGassServer && localInput) {
                     rsl.add(new NameOpValue("stdin", NameOpValue.EQ,
                             new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
-                                    spec.getStdInput()))));
-                } else {
+                                    fixAbsPath(spec.getStdInput())))));
+                }
+                else {
                     rsl.add(new NameOpValue("stdin", NameOpValue.EQ, spec
                             .getStdInput()));
                 }
@@ -361,12 +382,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         || (spec.getStdOutput().equals(""))) {
                     v = new Value("/dev/stdout-"
                             + this.task.getIdentity().toString());
-                } else {
-                    v = new Value(spec.getStdOutput());
+                }
+                else {
+                    v = new Value(fixAbsPath(spec.getStdOutput()));
                 }
                 rsl.add(new NameOpValue("stdout", NameOpValue.EQ, new VarRef(
                         "GLOBUSRUN_GASS_URL", null, v)));
-            } else if (spec.getStdOutput() != null) {
+            }
+            else if (spec.getStdOutput() != null) {
                 // output on the remote machine
                 rsl.add(new NameOpValue("stdout", NameOpValue.EQ, spec
                         .getStdOutput()));
@@ -379,12 +402,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         || (spec.getStdError().equals(""))) {
                     v = new Value("/dev/stderr-"
                             + this.task.getIdentity().toString());
-                } else {
-                    v = new Value(spec.getStdError());
+                }
+                else {
+                    v = new Value(fixAbsPath(spec.getStdError()));
                 }
                 rsl.add(new NameOpValue("stderr", NameOpValue.EQ, new VarRef(
                         "GLOBUSRUN_GASS_URL", null, v)));
-            } else if (spec.getStdError() != null) {
+            }
+            else if (spec.getStdError() != null) {
                 // error on the remote machine
                 rsl.add(new NameOpValue("stderr", NameOpValue.EQ, spec
                         .getStdError()));
@@ -396,13 +421,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     String key = (String) i.next();
                     rsl.add(new NameOpValue(key, NameOpValue.EQ, (String) spec
                             .getAttribute(key)));
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     throw new IllegalSpecException(
                             "Cannot parse the user defined attributes");
                 }
             }
-            
-            return rsl.toString();
+
+            return rsl;
         }
     }
 
@@ -416,7 +442,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     .getGassServer((GSSCredential) securityContext
                             .getCredentials());
             this.gassServer.registerDefaultDeactivator();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new TaskSubmissionException(
                     "Problems while creating a Gass Server", e);
         }
@@ -478,7 +505,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         String output = this.task.getStdOutput();
         if (output == null) {
             output = s;
-        } else {
+        }
+        else {
             output += s;
         }
         this.task.setStdOutput(output);
@@ -499,20 +527,24 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     private String handleJobManager(String server, String jobmanager)
             throws InvalidServiceContactException {
-        if (jobmanager.equalsIgnoreCase(ExecutionService.FORK_JOBMANAGER)
-                || jobmanager.equalsIgnoreCase("jobmanager-"
-                        + ExecutionService.FORK_JOBMANAGER)) {
-            logger.debug("Using the FORK jobmanager: " + server
-                    + "/jobmanager-fork");
-            return server + "/jobmanager-fork";
-        } else if (jobmanager.equalsIgnoreCase(ExecutionService.PBS_JOBMANAGER)
-                || jobmanager.equalsIgnoreCase("jobmanager-"
-                        + ExecutionService.PBS_JOBMANAGER)) {
-            logger.debug("Using the PBS jobmanager: " + server
-                    + "/jobmanager-pbs");
-            return server + "/jobmanager-pbs";
+        if (server.indexOf("/jobmanager-") != -1) {
+            // the jobmanager attribute takes precedence
+            server = server.substring(0, server.lastIndexOf("/jobmanager-"));
         }
-        throw new InvalidServiceContactException(jobmanager
-                + " job manager is not supported by the GT2 provider");
+        String lcjm = jobmanager.toLowerCase();
+        server = server + "/jobmanager-" + lcjm;
+        return server;
+    }
+
+    private String fixAbsPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        else if (path.startsWith("/") && !path.startsWith("///")) {
+            return "//" + path;
+        }
+        else {
+            return path;
+        }
     }
 }
