@@ -1,3 +1,14 @@
+(02/23/2007)
+
+*** Fixed:
+      http://bugzilla.globus.org/globus/show_bug.cgi?id=4996
+	  http://bugzilla.globus.org/globus/show_bug.cgi?id=5021
+
+*** There was some useless parse(rsl) call, since the rsl was
+    constructed using the RSL API in JGlobus, so it should have
+	been correct in the first place.
+
+
 (02/06/2007)
 
 *** The job task handler now shuts down callback handlers from 
