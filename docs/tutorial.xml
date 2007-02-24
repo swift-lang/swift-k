@@ -37,7 +37,7 @@ material on topics covered in this manual.
 <sect1> <title>Hello World</title>
     <para>
 The first example program (found in the file 
-examples/vdsk/tutorial/q1.dtm) outputs a hello world message into
+examples/vdsk/tutorial/q1.swift) outputs a hello world message into
 a file called hello.txt.
     </para>
 
@@ -60,7 +60,7 @@ outfile = greeting();
 <programlisting>
 cd examples/vdsk/tutorial/
 
-swift q1.dtm
+swift q1.swift
 VDL/Karajan library V 0.312
 Adding file service local://localhost
 Adding local execution service local://localhost
@@ -140,14 +140,14 @@ to the greeting function.</para>
 <para>
 We'll also encounter a new built-in data type, 'string'.
 </para>
-<para>The code for this section can be found in q2.dtm. It can be 
+<para>The code for this section can be found in q2.swift. It can be 
 invoked using the swift command, with output appearing in hello2.txt:</para>
 
 <programlisting>
-swift q2.dtm
+swift q2.swift
 </programlisting>
 
-<para>The code changes from q1.dtm are highlighted below.</para>
+<para>The code changes from q1.swift are highlighted below.</para>
 
 <programlisting>
 type messagefile {} 
@@ -178,7 +178,7 @@ string is supplied.</para>
 <sect1><title>Calling the same function with different parameters</title>
 <para>Now that we can choose our greeting text, we can call the same
 procedure with different parameters to generate several output files with
-different greetings. The code is in q12.dtm and can be run as before
+different greetings. The code is in q12.swift and can be run as before
 using the swift command.
 </para>
 
@@ -294,10 +294,10 @@ wc utility with appropriate parameters. Finally, we define a variable,
 c, which we map to count.txt and to which we assign the count of words
 in a greeting message.</para>
 
-<para>We can use the swift command to run q13.dtm:</para>
+<para>We can use the swift command to run q13.swift:</para>
 
 <programlisting>
-swift q13.dtm
+swift q13.swift
 [...]
 cat count.txt 
   3 q13greeting.txt
@@ -328,7 +328,7 @@ messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
 messagefile outfile;
 </programlisting>
 
-<para>q14.dtm contains the code and can be run in the usual way. After
+<para>q14.swift contains the code and can be run in the usual way. After
 execution, the results can be found in count14.txt</para>
 
 <programlisting>
@@ -358,7 +358,7 @@ markers on files that we don't need to look at the content of in SwiftScript.
 It is also possible to create types with structure, as in other 
 programming languages.</para>
 
-<para>q15.dtm contains the code for this exercise, based on the q2 
+<para>q15.swift contains the code for this exercise, based on the q2 
 code.</para>
 
 <programlisting>
@@ -392,7 +392,7 @@ We define a new type, details, with members, a string and an integer.
 <sect1><title>Arrays</title>
 <para>We can define arrays of values. For example, we could specify each
 word in a greeting as a separate element of a string array, as seen in 
-q5.dtm:</para>
+q5.swift:</para>
 
 <programlisting>
 type messagefile {} 
@@ -486,7 +486,7 @@ disk files to SwiftScript variables.</para>
 This mapper transforms a string expression using a regular expression,
 and uses the result of that transformation as the filename to map.</para>
 <para>
-q16.dtm demonstrates the use of this by placing output into a file that
+q16.swift demonstrates the use of this by placing output into a file that
 is based on the name of the input file: our input file is mapped
 to the inputfile variable using the simple named mapper, and then
 we use the regular expression mapper to map the output file. Then we
@@ -496,7 +496,7 @@ output file.
 </para>
 
 <para>
-The important bit of q16.dtm is:
+The important bit of q16.swift is:
 <programlisting>
 messagefile inputfile &lt;"q16.txt"&gt;;
 
@@ -509,7 +509,7 @@ countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1cou
 <para>
 The <firstterm>fixed array mapper</firstterm> maps a list of files into
 an array - each element of the array is mapped into one file in the
-specified directory. see q22.dtm
+specified directory. see q22.swift
 </para>
 <programlisting>
 string inputNames = "one.txt two.txt three.txt";
@@ -529,7 +529,7 @@ outputfiles[2] = countwords(inputfiles[2]);
 on each element of an array.</para>
 <para>In this example, we will run the previous word counting example
 over each file in an array without having to explicitly list the
-array elements. The source code for this example is in q17.dtm. The
+array elements. The source code for this example is in q17.swift. The
 three input files (one.txt, two.txt and three.txt) are supplied. After
 you have run the workflow, you should see that there are three output
 files (one.count, two.count and three.count) each containing the word
@@ -552,8 +552,8 @@ foreach f in inputfiles {
 <sect1><title>If</title>
 <para>
 Decisions can be made using 'if', in a style reminiscent of many other
-languages. q20.dtm contains a simple example of this. Compile and run
-q20.dtm and see that it outputs 'good morning'. Changing the 'morning'
+languages. q20.swift contains a simple example of this. Compile and run
+q20.swift and see that it outputs 'good morning'. Changing the 'morning'
 variable from true to false will cause the program to output 'good
 afternoon'.
 </para>
@@ -566,7 +566,7 @@ afternoon'.
 When running a workflow, its possible to generate a provenance graph at the
 same time:
 <programlisting>
-swift -pgraph graph1.dot q1.dtm
+swift -pgraph graph1.dot q1.swift
 dot -ograph.png -Tpng graph1.dot
 </programlisting>
 which can then be viewed using your favourite image viewer.
