@@ -183,7 +183,7 @@ topLevelStatement[StringTemplate code]
 
 // this is a declaration, but not sorted out the predications yet to
 // group it into a decl block
-    | (functiondecl) => d=functiondecl {code.setAttribute("functions", d);}
+    | (predictFunctiondecl) => d=functiondecl {code.setAttribute("functions", d);}
     ;
 
 predictDeclaration {StringTemplate x,y;} : x=type y=declarator ;
@@ -329,6 +329,22 @@ mapparam returns [StringTemplate code=template("mapParam")]
     }
     ;
 
+// this goes as far as the LCURLY so that we don't mistake it for
+// a function invocation. with more thought can be made shorter, perhaps.
+predictFunctiondecl
+{StringTemplate f=null;}
+    :  ( LPAREN
+        f=formalParameter
+        (   COMMA f=formalParameter
+        )*
+        RPAREN )?
+        id:ID LPAREN
+        ( f=formalParameter
+            (COMMA f=formalParameter)*
+        )?
+        RPAREN
+         LCURLY
+    ;
 functiondecl returns [StringTemplate code=template("function")]
 {StringTemplate f=null;}
     :  ( LPAREN
