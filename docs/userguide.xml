@@ -672,7 +672,7 @@ Content delimiter, default is white space
 
     <listitem> Example:
 			<programlisting>
-	student stus[] &lt;csv_mapper;name="stu_list.txt"&gt;;
+	student stus[] &lt;csv_mapper;file="stu_list.txt"&gt;;
 			</programlisting>
 The above example would read a list of student info from file 
 &quot;stu_list.txt&quot; and map them into a student array. By default, 
