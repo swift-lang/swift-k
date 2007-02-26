@@ -297,8 +297,12 @@ public class FileResourceCache {
                     fr.stop();
                 }
                 catch (Exception e) {
-                    logger.info("Failed to stop resource");
-                    logger.debug("Failed to stop resource", e);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Failed to stop resource", e);
+                    }
+                    else {
+                        logger.info("Failed to stop resource");
+                    }
                 }
                 fr = nextResource();
             }
