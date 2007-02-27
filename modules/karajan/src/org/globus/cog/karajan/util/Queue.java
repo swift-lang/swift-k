@@ -79,13 +79,17 @@ public final class Queue {
 			return crt.next != head;
 		}
 
-		public synchronized Object next() {
-			crt = crt.next;
-			return crt.obj;
+		public Object next() {
+			synchronized(Queue.this) {
+				crt = crt.next;
+				return crt.obj;
+			}
 		}
 
-		public synchronized void remove() {
-			remove(crt);
+		public void remove() {
+			synchronized(Queue.this) {
+				remove(crt);
+			}
 		}
 
 		private void remove(Entry e) {
