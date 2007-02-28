@@ -136,12 +136,15 @@ public class QueuePoller extends Thread {
                 return;
             }
             Process pqstat = Runtime.getRuntime().exec(QSTAT);
+            processStdout(pqstat.getInputStream());
+            processStderr(pqstat.getErrorStream());
             int ec = pqstat.waitFor();
             if (ec != 0) {
                 failAll("QStat failed (exit code " + ec + ")");
             }
-            processStdout(pqstat.getInputStream());
-            processStderr(pqstat.getErrorStream());
+            if (logger.isDebugEnabled()) {
+                logger.debug("QStat done");
+            }
         }
         catch (Exception e) {
             failAll(e);
