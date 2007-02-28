@@ -1,3 +1,9 @@
+(02/27/07)
+
+*** I think Process.waitFor() can deadlock if there's too
+    much stuff on std*. The processing of stdout from qstat
+	is now done while the qstat process is running.
+
 (02/14/07)
 
 *** Fixed Cobalt
