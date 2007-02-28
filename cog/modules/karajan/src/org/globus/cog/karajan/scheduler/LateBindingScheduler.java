@@ -106,12 +106,12 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return allocateContact(null);
 	}
 
-	public synchronized void releaseContact(BoundContact contact) {
-		virtualContacts.remove(contact.getHost());
+	public synchronized void releaseContact(Contact contact) {
+		virtualContacts.remove(contact);
 		tasksFinished = true;
 	}
 
-	public synchronized BoundContact resolveVirtualContact(Task t, Contact contact)
+	public synchronized BoundContact resolveVirtualContact(Contact contact)
 			throws NoFreeResourceException {
 		if (contact.isVirtual()) {
 			BoundContact next;
@@ -382,7 +382,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		}
 		else {
 			if (contact.isVirtual()) {
-				boundContact = resolveVirtualContact(t, contact);
+				boundContact = resolveVirtualContact(contact);
 			}
 			else {
 				boundContact = (BoundContact) contact;
@@ -447,12 +447,21 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			throws TaskSubmissionException {
 		if (t instanceof ContactAllocationTask) {
 			((ContactAllocationTask) t).setContact((BoundContact) contacts[0]);
+			removeConstraints(t);
 			Status status = t.getStatus();
 			status.setPrevStatusCode(status.getStatusCode());
 			status.setStatusCode(Status.COMPLETED);
 			StatusEvent se = new StatusEvent(t, status);
 			fireJobStatusChangeEvent(se);
 			return;
+		}
+		for (int i = 0; i < contacts.length; i++) {
+			if (!(contacts[i] instanceof BoundContact)) {
+				throw new TaskSubmissionException(
+						"submitBoundToServices called but at least a contact is not bound");
+			}
+			BoundContact c = (BoundContact) contacts[i];
+			c.setActiveTasks(c.getActiveTasks() + 1);
 		}
 		applyTaskTransformers(t, contacts, services);
 		t.addStatusListener(this);
@@ -466,14 +475,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		handlers.put(t, handler);
 		synchronized (taskContacts) {
 			taskContacts.put(t, contacts);
-		}
-		for (int i = 0; i < contacts.length; i++) {
-			if (!(contacts[i] instanceof BoundContact)) {
-				throw new TaskSubmissionException(
-						"submitBoundToServices called but at least a contact is not bound");
-			}
-			BoundContact c = (BoundContact) contacts[i];
-			c.setActiveTasks(c.getActiveTasks() + 1);
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("Submitting task " + t);

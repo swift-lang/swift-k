@@ -152,7 +152,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 
 	public void fireJobStatusChangeEvent(StatusEvent e) {
 		List jobListeners = null;
-		synchronized(listeners) {
+		synchronized (listeners) {
 			if (listeners.containsKey(e.getSource())) {
 				jobListeners = new ArrayList((List) listeners.get(e.getSource()));
 			}

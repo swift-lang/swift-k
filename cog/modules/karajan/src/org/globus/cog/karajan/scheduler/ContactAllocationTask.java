@@ -12,9 +12,11 @@ package org.globus.cog.karajan.scheduler;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;
+import org.globus.cog.karajan.util.Contact;
 
 public class ContactAllocationTask extends TaskImpl {
 	private BoundContact contact;
+	private Contact virtualContact;
 	private VariableStack stack;
 	
 	public ContactAllocationTask() {
@@ -39,5 +41,13 @@ public class ContactAllocationTask extends TaskImpl {
 
 	public int getRequiredServices() {
 		return 1;
+	}
+
+	public void setVirtualContact(Contact vc) {
+		this.virtualContact = vc;
+	}
+	
+	public Contact getVirtualContact() {
+		return this.virtualContact;
 	}
 }
