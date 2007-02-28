@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.TaskHandlerWrapper;
@@ -41,7 +40,7 @@ public interface Scheduler {
 	 * Can be used to tell the scheduler that a previously allocated contact
 	 * (using allocateContact()) is not used any more.
 	 */
-	void releaseContact(BoundContact sc);
+	void releaseContact(Contact sc);
 
 	/**
 	 * Sets the set of resources that the scheduler will use

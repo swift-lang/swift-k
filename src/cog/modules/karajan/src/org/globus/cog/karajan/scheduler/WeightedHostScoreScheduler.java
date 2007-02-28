@@ -78,9 +78,9 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 
 	public void setResources(ContactSet grid) {
 		super.setResources(grid);
-        if (grid.getContacts() == null) {
-            return;
-        }
+		if (grid.getContacts() == null) {
+			return;
+		}
 		sorted = new WeightedHostSet(scoreHighCap);
 		Iterator i = grid.getContacts().iterator();
 		while (i.hasNext()) {
@@ -184,26 +184,33 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			throw new KarajanRuntimeException("Invalid policy number: " + policy);
 		}
 		if (logger.isDebugEnabled()) {
-			logger.debug("Next contact: " + selected.getHost());
+			logger.debug("Next contact: " + selected);
 		}
 		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
 		return selected.getHost();
 	}
 
-	public synchronized void releaseContact(BoundContact contact) {
+	public synchronized void releaseContact(Contact contact) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Releasing contact " + contact);
 		}
-		super.releaseContact(contact);
-		WeightedHost wh = sorted.findHost(contact);
-		if (wh != null) {
-			change = true;
-			sorted.changeLoad(wh, -1);
-			sorted.changeScore(wh, wh.getScore() + wh.getDelayedDelta());
+		try {
+			BoundContact bc = this.resolveVirtualContact(contact);
+			super.releaseContact(contact);
+
+			WeightedHost wh = sorted.findHost(bc);
+			if (wh != null) {
+				change = true;
+				sorted.changeLoad(wh, -1);
+				sorted.changeScore(wh, wh.getScore() + wh.getDelayedDelta());
+			}
+			else {
+				logger.warn("ghost contact (" + contact + ") in releaseContact");
+			}
 		}
-		else {
-			logger.warn("ghost contact (" + contact + ") in releaseContact");
+		catch (NoFreeResourceException e) {
+			logger.warn("Failed to release contact " + contact, e);
 		}
 	}
 
