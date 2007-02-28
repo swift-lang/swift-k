@@ -1,3 +1,8 @@
+(02/27/2007)
+
+*** AllocateHost was leaking a few things in the schedulers.
+    Fixed.
+
 (02/14/2007)
 
 *** Fixed some issues with comments not being parsed correctly
