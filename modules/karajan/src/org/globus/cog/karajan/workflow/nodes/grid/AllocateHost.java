@@ -15,7 +15,6 @@ import org.globus.cog.karajan.scheduler.ContactAllocationTask;
 import org.globus.cog.karajan.scheduler.Scheduler;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -54,6 +53,7 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 				ContactAllocationTask t = new ContactAllocationTask();
 				t.setStack(stack.copy());
 				Contact contact = s.allocateContact(constraints);
+                t.setVirtualContact(contact);
 				s.addJobStatusListener(this, t);
 				s.enqueue(t, new Contact[] { contact });
 			}
@@ -70,7 +70,11 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 		ContactAllocationTask t = (ContactAllocationTask) event.getSource();
 		VariableStack stack = t.getStack();
 		try {
+            Scheduler s = (Scheduler) stack.getDeepVar(SchedulerNode.SCHEDULER);
 			int code = event.getStatus().getStatusCode();
+            if (code == Status.FAILED || code == Status.COMPLETED) {
+            	s.removeJobStatusListener(this, t);   
+            }
 			if (code == Status.FAILED) {
 				Exception e = event.getStatus().getException();
 				if (e == null) {
@@ -82,7 +86,7 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 			}
 			else if (code == Status.COMPLETED) {
 				stack.setVar(TypeUtil.toString(A_NAME.getValue(stack)), t.getContact());
-				stack.setVar(HOST, t.getContact());
+				stack.setVar(HOST, t.getVirtualContact());
 				super.partialArgumentsEvaluated(stack);
 				startRest(stack);
 			}
@@ -97,8 +101,8 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 		try {
 			Scheduler s = (Scheduler) stack.getDeepVar(SchedulerNode.SCHEDULER);
 			Contact c = (Contact) stack.currentFrame().getVar(HOST);
-			if (s != null && c instanceof BoundContact) {
-				s.releaseContact((BoundContact) c);
+			if (s != null && c != null) {
+				s.releaseContact(c);
 			}
 		}
 		catch (VariableNotFoundException e) {
