@@ -26,6 +26,7 @@ import org.globus.cog.karajan.stack.LinkedStack;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Monitor;
 import org.globus.cog.karajan.workflow.ElementTree;
+import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.util.ArgumentParser;
@@ -58,6 +59,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static final String VDL_OPERATION_DRYRUN = "dryrun";
 
 	public static void main(String[] argv) {
+		logger.debug("Loader started");
 		ArgumentParser ap = buildArgumentParser();
 		long start = System.currentTimeMillis();
 		String project = null;
@@ -151,6 +153,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
 			ec.start(stack);
 			ec.setArguments(ap.getArguments());
+            stack.setGlobal(ExecutionContext.CMDLINE_ARGS, ap.getArguments());
 			ec.waitFor();
 			if (ec.isFailed()) {
 				runerror = true;
