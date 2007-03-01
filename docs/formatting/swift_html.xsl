@@ -137,7 +137,7 @@
 	<!-- add elements to the HEAD tag -->
 
 	<xsl:template name="user.head.content"> 
-		<link href="../css/style2.css" rel="stylesheet" type="text/css" />
+		<link href="../css/style1col.css" rel="stylesheet" type="text/css" />
 	</xsl:template>
 
 	<!-- add an attribute to the BODY tag -->
