@@ -3,7 +3,7 @@
 html() {
 	guide=$1
 	xsl=$2
-	out=${guide:0:${#guide}-4}.shtml
+	out=${guide:0:${#guide}-4}.php
 	xsltproc formatting/$xsl $guide
 	#that's 'cause --output doesn't work
 	sed -e "s/index.html#/#/g" index.html >$out
@@ -18,14 +18,14 @@ pdf() {
 
 process() {
 	html $1 $2
-	pdf $1
+	#pdf $1
 }
 
 
 
-process "userguide.xml" "vdl2sh_html.xsl"
-process "tutorial.xml" "vdl2sh_html.xsl"
-process "quickstartguide.xml" "vdl2_html.xsl"
-process "reallyquickstartguide.xml" "vdl2_html.xsl"
-process "languagespec.xml" "vdl2_html.xsl"
-process "languagespec-0.6.xml" "vdl2_html.xsl"
+process "userguide.xml" "swiftsh_html.xsl"
+process "tutorial.xml" "swiftsh_html.xsl"
+process "quickstartguide.xml" "swift_html.xsl"
+process "reallyquickstartguide.xml" "swift_html.xsl"
+process "languagespec.xml" "swift_html.xsl"
+process "languagespec-0.6.xml" "swift_html.xsl"
