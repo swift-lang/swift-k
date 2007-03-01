@@ -225,21 +225,12 @@
 			<!-- end nav -->
 			<!-- content container -->
 			<div id="content">
-				<!-- left side content -->
-				<div id="left">
 		]]>
 		</xsl:text>
 	</xsl:template>
 	
 	<xsl:template name="user.footer.content">
 		<xsl:text disable-output-escaping="yes"><![CDATA[
-				</div>
-				<!-- end left side content -->
-				<!-- right side content -->
-				<div id="right">
-					<?php require('../inc/side_content.php') ?>
-				</div>
-				<!-- end right side content -->
 			</div>
 			<!-- end content container-->
 			<!-- footer -->
