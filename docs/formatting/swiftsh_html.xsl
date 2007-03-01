@@ -137,10 +137,10 @@
 	<!-- add elements to the HEAD tag -->
 
 	<xsl:template name="user.head.content"> 
-		<link href="../css/style1col.css" rel="stylesheet" type="text/css" />
+		<link href="../css/style1col.css" rel="stylesheet" type="text/css"/>
 		<script type="text/javascript" src="http://vds.uchicago.edu/vdl2/dhtml.js"></script>
-		<script class="javascript" src="http://vds.uchicago.edu/vdl2/shCoreu.js"></script>
-		<script class="javascript" src="http://vds.uchicago.edu/vdl2/shBrushVDL2.js"></script>
+		<script type="text/javascript" src="http://vds.uchicago.edu/vdl2/shCoreu.js"></script>
+		<script type="text/javascript" src="http://vds.uchicago.edu/vdl2/shBrushVDL2.js"></script>
 	</xsl:template>
 
 	<!-- add an attribute to the BODY tag -->
