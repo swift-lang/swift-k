@@ -153,7 +153,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
 			ec.start(stack);
 			ec.setArguments(ap.getArguments());
-            stack.setGlobal(ExecutionContext.CMDLINE_ARGS, ap.getArguments());
+			stack.setGlobal(ExecutionContext.CMDLINE_ARGS, ap.getArguments());
 			ec.waitFor();
 			if (ec.isFailed()) {
 				runerror = true;
