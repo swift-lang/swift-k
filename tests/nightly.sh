@@ -324,7 +324,7 @@ if [ "$FCO" != "1" ]; then
 	TEST="Checkout Swift"
 	pexec rm -rf trunk
 	#vexec cvs -d :pserver:anonymous@cvs.cogkit.org:/cvs/cogkit co src/vdsk
-	svn co https://svn.ci.uchicago.edu/svn/vdl2/trunk
+	vexec svn co https://svn.ci.uchicago.edu/svn/vdl2/trunk
 fi
 
 TEST="Directory setup"
