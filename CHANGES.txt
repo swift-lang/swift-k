@@ -2,6 +2,9 @@
 
 *** Added log message to print full stack trace of exceptions
     that cause Swift to fail
+	
+*** Better handling of default values for mapping parameters, 
+    and better handling of mapping parameter errors.
 
 (03/01/07)
 
