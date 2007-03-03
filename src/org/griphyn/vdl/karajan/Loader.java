@@ -161,7 +161,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 		catch (Exception e) {
 			logger.debug("Detailed exception:", e);
-			e.printStackTrace();
 			error("Could not start execution.\n\t" + e.getMessage());
 		}
 
