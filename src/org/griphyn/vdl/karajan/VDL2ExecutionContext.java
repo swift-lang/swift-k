@@ -3,6 +3,7 @@
  */
 package org.griphyn.vdl.karajan;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
@@ -10,6 +11,8 @@ import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.griphyn.vdl.karajan.functions.ProcessBulkErrors;
 
 public class VDL2ExecutionContext extends ExecutionContext {
+	public static final Logger logger = Logger.getLogger(VDL2ExecutionContext.class);
+	
 	public static final String RUN_ID = "vdl:runid";
 	public static final String SCRIPT_NAME = "vdl:scriptname";
 
@@ -22,6 +25,9 @@ public class VDL2ExecutionContext extends ExecutionContext {
 	}
 
 	protected void printFailure(FailureNotificationEvent e) {
+		if (logger.isDebugEnabled()) {
+			logger.debug(e.getMessage(), e.getException());
+		}
 		String msg = e.getMessage();
 		if (!"Execution completed with errors".equals(msg)) {
 			if (msg == null && e.getException() != null) {
