@@ -1,3 +1,10 @@
+(03/03/07)
+
+*** The default values for mapping parameters handling below
+    did not allow implementations to get the value of an 
+	optional parameter by checking if it's not null. This can
+	now be done by specifying null as a default value.
+
 (03/02/07)
 
 *** Added log message to print full stack trace of exceptions
