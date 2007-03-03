@@ -15,10 +15,10 @@ import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public abstract class AbstractFileMapper extends AbstractMapper {
-	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix");
-	public static final MappingParam PARAM_SUFFIX = new MappingParam("suffix");
-	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern");
-	public static final MappingParam PARAM_LOCATION = new MappingParam("location");
+	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
+	public static final MappingParam PARAM_SUFFIX = new MappingParam("suffix", null);
+	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern", null);
+	public static final MappingParam PARAM_LOCATION = new MappingParam("location", null);
 
 	protected FileNameElementMapper elementMapper;
 

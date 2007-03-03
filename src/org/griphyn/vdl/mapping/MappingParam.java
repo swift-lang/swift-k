@@ -10,14 +10,17 @@ import org.griphyn.vdl.karajan.VDL2FutureException;
 public class MappingParam {
 	private final String name;
 	private Object defValue;
+	private boolean defSet; 
 
 	public MappingParam(String name, Object defValue) {
 		this.name = name;
 		this.defValue = defValue;
+		this.defSet = true;
 	}
 
 	public MappingParam(String name) {
-		this(name, null);
+		this.name = name;
+		this.defSet = false;
 	}
 
 	public Object getValue(Mapper mapper) {
@@ -28,7 +31,7 @@ public class MappingParam {
 			return handle.getValue();
 		}
 		else if (value == null) {
-			if (defValue == null) {
+			if (!defSet) {
 				throw new InvalidMappingParameterException("Missing required mapping parameter: "
 						+ name);
 			}
