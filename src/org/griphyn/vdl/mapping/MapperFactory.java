@@ -41,6 +41,9 @@ public class MapperFactory {
 			mapper.setParams(params);
             return mapper;
 		}
+		catch (InvalidMappingParameterException e) {
+			throw new InvalidMapperException(type + ": " + e.getMessage(), e);
+		}
 		catch (Exception e) {
 			throw new InvalidMapperException(type, e);
 		}

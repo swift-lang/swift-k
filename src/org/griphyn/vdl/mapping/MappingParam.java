@@ -9,9 +9,15 @@ import org.griphyn.vdl.karajan.VDL2FutureException;
 
 public class MappingParam {
 	private final String name;
+	private Object defValue;
+
+	public MappingParam(String name, Object defValue) {
+		this.name = name;
+		this.defValue = defValue;
+	}
 
 	public MappingParam(String name) {
-		this.name = name;
+		this(name, null);
 	}
 
 	public Object getValue(Mapper mapper) {
@@ -20,6 +26,15 @@ public class MappingParam {
 			DSHandle handle = (DSHandle) value;
 			checkHandle(handle);
 			return handle.getValue();
+		}
+		else if (value == null) {
+			if (defValue == null) {
+				throw new InvalidMappingParameterException("Missing required mapping parameter: "
+						+ name);
+			}
+			else {
+				return defValue;
+			}
 		}
 		else {
 			return value;
@@ -92,11 +107,11 @@ public class MappingParam {
 			throw new NumberFormatException(String.valueOf(value));
 		}
 	}
-	
+
 	public Object getValue(Map map) {
-		return map.get(name); 
+		return map.get(name);
 	}
-	
+
 	public void setValue(Map map, Object value) {
 		map.put(name, value);
 	}

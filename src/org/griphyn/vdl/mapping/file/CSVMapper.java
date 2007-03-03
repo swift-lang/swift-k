@@ -13,19 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class CSVMapper extends AbstractMapper {
 	public static final MappingParam PARAM_FILE = new MappingParam("file");
 	// whether the file has a line describing header info, default is true
-	public static final MappingParam PARAM_HEADER = new MappingParam("header");
+	public static final MappingParam PARAM_HEADER = new MappingParam("header", "true");
 	// skip a number of lines at the beginning
-	public static final MappingParam PARAM_SKIP = new MappingParam("skip");
+	public static final MappingParam PARAM_SKIP = new MappingParam("skip", "0");
 	// header delimiter, default is white space
 	public static final MappingParam PARAM_HDELIMITER = new MappingParam("hdelim");
 	// content delimiter, default is white space
-	public static final MappingParam PARAM_DELIMITER = new MappingParam("delim");
+	public static final MappingParam PARAM_DELIMITER = new MappingParam("delim", " \t");
 
 	// keep a list of column name
 	private List cols = new ArrayList();
@@ -41,13 +42,7 @@ public class CSVMapper extends AbstractMapper {
 	public void setParams(Map params) {
 		super.setParams(params);
 		if (!PARAM_FILE.isPresent(this)) {
-			throw new RuntimeException("CSV mapper must have a file parameter!");
-		}
-		if (!PARAM_HEADER.isPresent(this)) {
-			PARAM_HEADER.setValue(this, "true");
-		}
-		if (!PARAM_DELIMITER.isPresent(this)) {
-			PARAM_DELIMITER.setValue(this, " \t");
+			throw new InvalidMappingParameterException("CSV mapper must have a file parameter!");
 		}
 		if (!PARAM_HDELIMITER.isPresent(this)) {
 			PARAM_HDELIMITER.setValue(this, PARAM_DELIMITER.getValue(this));

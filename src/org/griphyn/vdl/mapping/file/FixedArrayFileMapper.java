@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
@@ -26,7 +27,8 @@ public class FixedArrayFileMapper extends AbstractFileMapper {
 		super.setParams(params);
 		String cfiles = PARAM_FILES.getStringValue(this);
 		if (cfiles == null) {
-			throw new IllegalArgumentException("Missing required mapper parameter: " + PARAM_FILES);
+			throw new InvalidMappingParameterException("Missing required mapper parameter: "
+					+ PARAM_FILES);
 		}
 		StringTokenizer st = new StringTokenizer(cfiles, " ,;");
 		String[] files = new String[st.countTokens()];
@@ -35,7 +37,7 @@ public class FixedArrayFileMapper extends AbstractFileMapper {
 		}
 		PARAM_FILES.setValue(this, files);
 	}
-	
+
 	protected String[] getFiles() {
 		return (String[]) PARAM_FILES.getValue(this);
 	}
