@@ -222,14 +222,6 @@ statementList(statements) ::= <<
   $statements;separator="\n"$
 >>
 
-forLoop(e1,e2,e3,statements) ::= <<
-$e1$
-<while test="$e2$">
-  $statements;separator="\n"$
-  $e3$
-</while>
->>
-
 if(cond,body,els) ::= <<
 <if test="$cond$">
   <then>
