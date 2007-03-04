@@ -153,13 +153,6 @@
     </xs:annotation>
 
     <xs:sequence>
-      <xs:element minOccurs="0" name="appenv">
-        <xs:annotation>
-          <xs:documentation>Specifies the environment in which the application
-          runs</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-
       <xs:element name="executable">
         <xs:annotation>
           <xs:documentation>Specifies the location and name of the
@@ -193,13 +186,6 @@
           </xs:annotation>
         </xs:element>
 
-        <xs:element maxOccurs="unbounded" minOccurs="0" name="profile"
-                    type="Profile">
-          <xs:annotation>
-            <xs:documentation>Specifies other required information for the
-            application to run</xs:documentation>
-          </xs:annotation>
-        </xs:element>
       </xs:sequence>
     </xs:sequence>
   </xs:complexType>
