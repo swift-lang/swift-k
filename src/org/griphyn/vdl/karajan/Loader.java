@@ -172,8 +172,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		IncorrectInvocationException {
 		File dtm = new File(project);
 		File dir = dtm.getParentFile();
-		File xml = new File(project.substring(0, project.lastIndexOf('.')) + ".xml");
-		File kml = new File(project.substring(0, project.lastIndexOf('.')) + ".kml");
+		String projectBase = project.substring(0, project.lastIndexOf('.'));
+		File xml = new File(projectBase + ".xml");
+		File kml = new File(projectBase + ".kml");
 
 		if (dtm.lastModified() > kml.lastModified()) {
 
