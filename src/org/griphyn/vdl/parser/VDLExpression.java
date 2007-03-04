@@ -36,7 +36,7 @@ public class VDLExpression {
 	}
 
 	/**
-	 * returns null if unseccessful
+	 * returns null if unsuccessful
 	 * 
 	 * @param expression
 	 * @return

@@ -218,7 +218,7 @@
 
   <xs:complexType mixed="true" name="Function">
     <xs:annotation>
-      <xs:documentation>A mapping function, the paramters to the function
+      <xs:documentation>A mapping function, the parameters to the function
       itself can be text, reference and function.</xs:documentation>
     </xs:annotation>
 
@@ -462,7 +462,7 @@
   <xs:complexType name="Call">
     <xs:annotation>
       <xs:documentation>a call essentially defines a task to perform, it calls
-      a procedure with actual paramters</xs:documentation>
+      a procedure with actual parameters</xs:documentation>
     </xs:annotation>
 
     <xs:sequence>
