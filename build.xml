@@ -65,7 +65,7 @@
 		</copy>
 	</target>
 
-	<target name="dist" depends="antlr">
+	<target name="dist" depends="antlr, compileSchema">
 		<ant antfile="${main.buildfile}" target="dist"/>
 		<mkdir dir="${dist.dir}/libexec"/>
 		<copy todir="${dist.dir}/libexec">
@@ -141,7 +141,7 @@ updateOptions "$SWIFT_HOME" "swift.home"
 	</target>
 
 	<target name="compileSchema">
-		<java classname="org.apache.xmlbeans.impl.tool.SchemaCompiler" fork="true">
+		<java classname="org.apache.xmlbeans.impl.tool.SchemaCompiler" fork="true" failonerror="true">
 			<arg value="-src"/><arg value="src"/>
 			<arg value="-javasource"/><arg value="1.4"/>
 			<arg value="-out"/><arg value="${cog.dir}/modules/${module.name}/lib/vdldefinitions.jar"/>
