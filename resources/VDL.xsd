@@ -223,7 +223,7 @@
     </xs:annotation>
 
     <xs:sequence maxOccurs="unbounded" minOccurs="0">
-		<xs:group ref="ArgumentGroup"/>
+      <xs:group ref="ArgumentGroup"/>
     </xs:sequence>
 
     <xs:attribute name="name" type="xs:NMTOKEN">
@@ -351,8 +351,8 @@
       <xs:element name="array" type="Array"/>
 
       <xs:element name="range" type="Range"/>
-	  
-	  <xs:element name="function" type="Function"/>
+
+      <xs:element name="function" type="Function"/>
     </xs:choice>
 
     <xs:attribute name="name" type="xs:NCName" use="required"/>
@@ -405,8 +405,8 @@
     <xs:attribute name="name" type="xs:NCName"/>
 
     <xs:attribute name="type" type="xs:QName" use="required"/>
-	
-	<xs:attribute name="isArray" type="xs:boolean"/>
+
+    <xs:attribute name="isArray" type="xs:boolean"/>
   </xs:complexType>
 
   <xs:simpleType name="Mode">
@@ -452,8 +452,8 @@
       <xs:element name="array" type="Array"/>
 
       <xs:element name="range" type="Range"/>
-	  
-	  <xs:element name="function" type="Function"/>
+
+      <xs:element name="function" type="Function"/>
     </xs:choice>
 
     <xs:attribute name="to" type="xs:string"/>
@@ -704,3 +704,4 @@
     </xs:choice>
   </xs:group>
 </xs:schema>
+
