@@ -12,59 +12,59 @@
 	<property name="dist.dir" 		value="${cog.dir}/modules/${module.name}/dist/${module.name}-${version}"/>
 	<property name="build.dir" 		value="${cog.dir}/modules/${module.name}/build"/>
 
-    <!-- ================================================ -->
-    <!-- Help                                             -->
-    <!-- ================================================ -->
-	
-    <target name="help">
-        <echo>
-			Available targets:
-            	help:
-		        prints out this help message
-					
-            	dist:
+	<!-- ================================================ -->
+	<!-- Help                                             -->
+	<!-- ================================================ -->
+
+	<target name="help">
+		<echo>
+	Available targets:
+		help:
+			prints out this help message
+
+		dist:
 			creates a distribution directory of the 
 			${project} ${long.name}
-					
-            	jar:
+
+		jar:
 			creates a jar file for the ${project} ${long.name}
 			named ${jar.filename}
-					
-            	javadoc:
+
+		javadoc:
 			creates the documentation
-					
-            	clean:
+
+		clean:
 			removes the compiled classes
-					
-            	distclean:
+
+		distclean:
 			deletes the distribution directory
 
 		all:
 			dist and javadoc
-				
+
 		deploy.webstart:
 			deploys the module as a webstart application
-					
+
 		dist.joint:
 			builds everything into one jar file. Should only
 			be used globally (from all)
 
-                fixeol:
-                        change newlines to the unix standard  
-        </echo>
-    </target>
+		fixeol:
+			change newlines to the unix standard.
+		</echo>
+	</target>
 
 
-    <!-- ================================================ -->
-    <!-- Dist                                             -->
-    <!-- ================================================ -->
-	
+	<!-- ================================================ -->
+	<!-- Dist                                             -->
+	<!-- ================================================ -->
+
 	<target name="etc">
 		<copy todir="${dist.dir}/etc">
 			<fileset dir="${cog.dir}/modules/${module.name}/etc"/>
 		</copy>
 	</target>
-	
+
 	<target name="dist" depends="antlr">
 		<ant antfile="${main.buildfile}" target="dist"/>
 		<mkdir dir="${dist.dir}/libexec"/>
@@ -112,7 +112,7 @@ updateOptions "$SWIFT_HOME" "swift.home"
 
 </replacevalue>
 		</replace>
-		
+
 		<replace file="${dist.dir}/bin/swift.bat">
 			<replacetoken>COG_INSTALL_PATH</replacetoken>
 			<replacevalue>SWIFT_HOME</replacevalue>
@@ -127,7 +127,7 @@ updateOptions "$SWIFT_HOME" "swift.home"
 		</replace>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 	</target>
-	
+
 	<target name="antlr">
 		<java classname="antlr.Tool" fork="true" failonerror="true">
 			<arg value="-o"/>
@@ -139,7 +139,7 @@ updateOptions "$SWIFT_HOME" "swift.home"
 			</classpath>
 		</java>
 	</target>
-	
+
 	<target name="compileSchema">
 		<java classname="org.apache.xmlbeans.impl.tool.SchemaCompiler" fork="true">
 			<arg value="-src"/><arg value="src"/>
@@ -156,35 +156,35 @@ updateOptions "$SWIFT_HOME" "swift.home"
 	</target>
 
 
-    <!-- ================================================ -->
-    <!-- Compile                                          -->
-    <!-- ================================================ -->
-	
+	<!-- ================================================ -->
+	<!-- Compile                                          -->
+	<!-- ================================================ -->
+
 	<target name="compile">
 		<ant antfile="${main.buildfile}" target="compile"/>
 	</target>
 
-    <!-- ================================================ -->
-    <!-- Clean                                            -->
-    <!-- ================================================ -->
-	
+	<!-- ================================================ -->
+	<!-- Clean                                            -->
+	<!-- ================================================ -->
+
 	<target name="clean">
 		<ant antfile="${main.buildfile}" target="clean"/>
 	</target>
 
 
-    <!-- ================================================ -->
-    <!-- Distclean                                        -->
-    <!-- ================================================ -->
-	
+	<!-- ================================================ -->
+	<!-- Distclean                                        -->
+	<!-- ================================================ -->
+
 	<target name="distclean">
 		<ant antfile="${main.buildfile}" target="distclean"/>
 	</target>
 
 
-    <!-- ================================================ -->
-    <!-- Jar                                              -->
-    <!-- ================================================ -->
+	<!-- ================================================ -->
+	<!-- Jar                                              -->
+	<!-- ================================================ -->
 
 	<target name="jar">
 		<ant antfile="${main.buildfile}" target="jar"/>
@@ -192,9 +192,9 @@ updateOptions "$SWIFT_HOME" "swift.home"
 
 
 
-    <!-- ================================================ -->
-    <!-- Javadoc                                          -->
-    <!-- ================================================ -->
+	<!-- ================================================ -->
+	<!-- Javadoc                                          -->
+	<!-- ================================================ -->
 
 	<target name="javadoc">
 		<ant antfile="${main.buildfile}" target="javadoc"/>
@@ -202,48 +202,48 @@ updateOptions "$SWIFT_HOME" "swift.home"
 
 
 
-    <!-- ================================================ -->
-    <!-- PMD                                              -->
-    <!-- ================================================ -->
+	<!-- ================================================ -->
+	<!-- PMD                                              -->
+	<!-- ================================================ -->
 
 	<target name="pmd">
 		<ant antfile="${main.buildfile}" target="pmd"/>
 	</target>
 
-    <!-- ================================================ -->
-    <!-- deploy.webstart                                  -->
-    <!-- ================================================ -->
-	
+	<!-- ================================================ -->
+	<!-- deploy.webstart                                  -->
+	<!-- ================================================ -->
+
 	<target name="deploy.webstart">
 		<ant antfile="${main.buildfile}" target="deploy.webstart"/>
 	</target>
 
-    <!-- ================================================ -->
-    <!-- replacelibs                                      -->
-    <!-- ================================================ -->
+	<!-- ================================================ -->
+	<!-- replacelibs                                      -->
+	<!-- ================================================ -->
 
 	<target name="replacelibs">
 		<ant antfile="${main.buildfile}" target="replacelibs"/>
 	</target>
-	
-    <!-- ================================================ -->
-    <!-- webstart.launchers                               -->
-    <!-- ================================================ -->
+
+	<!-- ================================================ -->
+	<!-- webstart.launchers                               -->
+	<!-- ================================================ -->
 
 	<target name="webstart.launchers">
 		<ant antfile="${main.buildfile}" target="webstart.launchers"/>
 	</target>
-	
-    <!-- ================================================ -->
-    <!-- dist.joint                                       -->
-    <!-- ================================================ -->
+
+	<!-- ================================================ -->
+	<!-- dist.joint                                       -->
+	<!-- ================================================ -->
 
 	<target name="dist.joint">
 		<ant antfile="${main.buildfile}" target="dist.all"/>
 	</target>
-    <!-- ================================================ -->
-    <!-- fixeol                                           -->
-    <!-- ================================================ -->
+	<!-- ================================================ -->
+	<!-- fixeol                                           -->
+	<!-- ================================================ -->
 
 	<target name="fixeol">
 		<ant antfile="${main.buildfile}" target="fixeol"/>
