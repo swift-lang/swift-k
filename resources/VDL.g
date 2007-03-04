@@ -769,15 +769,12 @@ appArg [StringTemplate code]
 
 mappingExpr returns [StringTemplate code=null]
 {StringTemplate e=null;}
-    :   (mappingFunc) => code = mappingFunc
-    |
-    (
+    :
     e = expression
     {
       code=template("mappingExpr");
       code.setAttribute("expr", e);
     }
-    )
     ;
 
 mappingFunc returns [StringTemplate code=template("mappingFunc")]
