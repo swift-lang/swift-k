@@ -62,7 +62,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
      * By default JGlobus sets this to 6000 ms. Experience has proved that it
      * may be too low.
      */
-    public static final int MAX_REPLY_WAIT_TIME = 12000; // ms
+    public static final int MAX_REPLY_WAIT_TIME = 30000; // ms
 
     private GridFTPClient gridFTPClient;
 
