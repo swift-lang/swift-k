@@ -70,6 +70,7 @@ namespace("vdl"
 					[path, var] := each(pv)
 					vdl:isLogged(var, path)
 				)
+				not(isEmpty(stageout))
 			)
 		)
 			
