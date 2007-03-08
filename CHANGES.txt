@@ -1,3 +1,7 @@
+(03/03/08)
+
+*** Moved job directory creation to the wrapper
+
 (03/03/07)
 
 *** The default values for mapping parameters handling below
