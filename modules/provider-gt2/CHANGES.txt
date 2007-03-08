@@ -1,3 +1,7 @@
+(03/07/2007)
+
+*** Increased GridFTP default timeout from 12s to 30s
+
 (02/23/2007)
 
 *** Fixed:
