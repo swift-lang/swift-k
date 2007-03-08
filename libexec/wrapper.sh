@@ -23,6 +23,8 @@ shift 8
 
 IFS=" "
 
+mkdir -p $DIR
+
 for D in $DIRS ; do
 	mkdir -p $DIR/$D >>$WRAPPERLOG 2>&1
 done

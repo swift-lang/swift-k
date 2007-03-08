@@ -338,7 +338,6 @@ namespace("vdl"
 				try(
 					sequential(
 						log(LOG:INFO, "Creating temporary directory {tmpdir} on {rhost}")
-						dir:make(tmpdir, host=rhost)
 					
 						/* May need to consult RLS to find the physical file names for stagein and stageout. */
 						
