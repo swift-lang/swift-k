@@ -13,7 +13,7 @@
 				<para>
 				
 					The impatient may find the <ulink
-					url="reallyquickstartguide.shtml">Swift Really Quick Start
+					url="reallyquickstartguide.php">Swift Really Quick Start
 					Guide</ulink> to be more convenient.
 
 					This guide describes the steps needed to download, install,
@@ -46,7 +46,7 @@
 			
 				Stable releases can be obtained from the Swift download page:
 				<ulink
-				url="http://www.ci.uchicago.edu/swift/download.shtml#stable">Swift
+				url="http://www.ci.uchicago.edu/swift/download.php#stable">Swift
 				Downloads Page</ulink>. Once you downloaded the package, please
 				move to the <link linkend="install">install section</link>.
 
@@ -59,7 +59,7 @@
 			<para>
 			
 				Swift builds and tests are being run every day. The <ulink
-				url="http://www.ci.uchicago.edu/swift/download.shtml#nightly">Swift
+				url="http://www.ci.uchicago.edu/swift/download.php#nightly">Swift
 				downloads page</ulink> contains links to the latest build and
 				test page. The nightly builds reflect a development version of
 				the Swift code and should not be used in production mode. After
@@ -76,7 +76,7 @@
 			
 				Details about accessing the Swift source repository together with
 				build instructions are available on the <ulink
-				url="http://www.ci.uchicago.edu/swift/download.shtml#nightly">Swift
+				url="http://www.ci.uchicago.edu/swift/download.php#nightly">Swift
 				downloads page</ulink>. Once built, the <filename
 				class="directory">dist/vdsk-&lt;version&gt;</filename> directory
 				will contain a self-contained build which can be moved to a
@@ -213,9 +213,9 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 
 				For details about the various properties Swift accepts, please
 				take a look at the <ulink
-				url="http://www.ci.uchicago.edu/swift/userguide.shtml#properties">Swift
+				url="http://www.ci.uchicago.edu/swift/userguide.php#properties">Swift
 				Properties Section</ulink> in the <ulink
-				url="http://www.ci.uchicago.edu/swift/userguide.shtml">Swift
+				url="http://www.ci.uchicago.edu/swift/userguide.php">Swift
 				User Guide</ulink>.
 
 			</para>
@@ -261,9 +261,9 @@ class="file">example.swift</filename></option>
 </programlisting>
 
 			The <ulink 		
-			url="http://www.ci.uchicago.edu/swift/userguide.shtml#swiftcommand">Swift
+			url="http://www.ci.uchicago.edu/swift/userguide.php#swiftcommand">Swift
 			Command Options Section</ulink> in the <ulink 			
-			url="http://www.ci.uchicago.edu/swift/userguide.shtml">Swift 			
+			url="http://www.ci.uchicago.edu/swift/userguide.php">Swift 			
 			User Guide</ulink> contains details about the various options of the
 			<command>swift</command>.
 		
