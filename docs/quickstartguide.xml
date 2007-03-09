@@ -213,9 +213,9 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 
 				For details about the various properties Swift accepts, please
 				take a look at the <ulink
-				url="http://www.ci.uchicago.edu/swift/userguide.php#properties">Swift
+				url="http://www.ci.uchicago.edu/swift/guides/userguide.php#properties">Swift
 				Properties Section</ulink> in the <ulink
-				url="http://www.ci.uchicago.edu/swift/userguide.php">Swift
+				url="http://www.ci.uchicago.edu/swift/guides/userguide.php">Swift
 				User Guide</ulink>.
 
 			</para>
@@ -261,9 +261,9 @@ class="file">example.swift</filename></option>
 </programlisting>
 
 			The <ulink 		
-			url="http://www.ci.uchicago.edu/swift/userguide.php#swiftcommand">Swift
+			url="http://www.ci.uchicago.edu/swift/guides/userguide.php#swiftcommand">Swift
 			Command Options Section</ulink> in the <ulink 			
-			url="http://www.ci.uchicago.edu/swift/userguide.php">Swift 			
+			url="http://www.ci.uchicago.edu/swift/guides/userguide.php">Swift 			
 			User Guide</ulink> contains details about the various options of the
 			<command>swift</command>.
 		
