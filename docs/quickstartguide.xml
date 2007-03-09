@@ -232,8 +232,8 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 			The Swift examples can be found in the <filename
 			class="directory">&lt;SWIFT_HOME&gt;/examples</filename> directory.
 			The examples are written in the <ulink
-			url="http://vds.uchicago.edu/swift/guides/languagespec.shtml">SwiftScript
-			Language</ulink>, and have <filename class="file">.dtm</filename> as
+			url="http://www.ci.uchicago.edu/swift/guides/languagespec.php">SwiftScript
+			Language</ulink>, and have <filename class="file">.swift</filename> as
 			a file extension. 
 
 		</para>
@@ -257,11 +257,11 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 			
 <programlisting>
 <prompt>&gt;</prompt> <command>swift</command> <option><filename
-class="file">example.dtm</filename></option>
+class="file">example.swift</filename></option>
 </programlisting>
 
 			The <ulink 		
-			url="http://www.ci.uchicago.edu/swift/userguide.shtml#options">Swift 			
+			url="http://www.ci.uchicago.edu/swift/userguide.shtml#swiftcommand">Swift
 			Command Options Section</ulink> in the <ulink 			
 			url="http://www.ci.uchicago.edu/swift/userguide.shtml">Swift 			
 			User Guide</ulink> contains details about the various options of the
@@ -276,7 +276,7 @@ class="file">example.dtm</filename></option>
 			log file with a named composed of the file name of the workflow
 			being executed, an invocation ID, a numeric ID, and the <filename
 			class="file">.rlog</filename> extension. For example, <filename
-			class="file">example.dtm</filename>, when executed, could produce
+			class="file">example.swift</filename>, when executed, could produce
 			the following restart log file: <filename
 			class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
 			the workflow completes successfully, the restart log file is
@@ -291,7 +291,7 @@ class="file">example.dtm</filename></option>
 <programlisting>
 <prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
 class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
-class="file">example.dtm</filename></option> 
+class="file">example.swift</filename></option> 
 </programlisting>
 		
 		</para>
