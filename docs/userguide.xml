@@ -820,7 +820,7 @@ the file should contain a header line specifying the names of the columns.
 								installed applications. Details about the format
 								of the transformation catalog can be found
 								<ulink
-								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_TranformationCatalog.html">here</ulink>.
+								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_TransformationCatalog.html">here</ulink>.
 								
 							</para>
 						</listitem>
