@@ -46,7 +46,7 @@
 			
 				Stable releases can be obtained from the Swift download page:
 				<ulink
-				url="http://www.ci.uchicago.edu/swift/download.php#stable">Swift
+				url="http://www.ci.uchicago.edu/swift/downloads/index.php#stable">Swift
 				Downloads Page</ulink>. Once you downloaded the package, please
 				move to the <link linkend="install">install section</link>.
 
@@ -59,7 +59,7 @@
 			<para>
 			
 				Swift builds and tests are being run every day. The <ulink
-				url="http://www.ci.uchicago.edu/swift/download.php#nightly">Swift
+				url="http://www.ci.uchicago.edu/swift/downloads/index.php#nightly">Swift
 				downloads page</ulink> contains links to the latest build and
 				test page. The nightly builds reflect a development version of
 				the Swift code and should not be used in production mode. After
@@ -76,7 +76,7 @@
 			
 				Details about accessing the Swift source repository together with
 				build instructions are available on the <ulink
-				url="http://www.ci.uchicago.edu/swift/download.php#nightly">Swift
+				url="http://www.ci.uchicago.edu/swift/downloads/index.php#nightly">Swift
 				downloads page</ulink>. Once built, the <filename
 				class="directory">dist/vdsk-&lt;version&gt;</filename> directory
 				will contain a self-contained build which can be moved to a
