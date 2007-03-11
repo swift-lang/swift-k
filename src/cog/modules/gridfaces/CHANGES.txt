@@ -1,4 +1,6 @@
-(06/12/2005)    Fixed bug: 
-		http://www.cogkit.org/bugzilla/show_bug.cgi?id=130
+(06/12/2005)
+
+*** Fixed bug: 
+    http://www.cogkit.org/bugzilla/show_bug.cgi?id=130
 
 ---------------------- 1.0 --------------------------------
