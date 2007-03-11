@@ -81,66 +81,98 @@
 	
 *** Added Task.waitFor(); it blocks until the task completes/failes/is canceled
 
-(09/30/2005) 	Removed the old sandboxing strategy. The new one allows for 
-		concurrent requests. The context class loader is changed before a call
-		then restored after a call to a sandboxed class.
+(09/30/2005) 	
+
+*** Removed the old sandboxing strategy. The new one allows for 
+    concurrent requests. The context class loader is changed before a call
+    then restored after a call to a sandboxed class.
 		
-				Updated the caching file handler to always release resources
-		after being done.
+*** Updated the caching file handler to always release resources
+    after being done.
 		
-				Added the trap logic to the factory in order to detect possibly
-		improper class path settings.
+*** Added the trap logic to the factory in order to detect possibly
+    improper class path settings.
 
-(09/08/2005) 	Updated the castor jar to version 0.9.6
+(09/08/2005)
 
-(08/27/2005) 	Improved the Javadoc comments of the abstractions interfaces 
+*** Updated the castor jar to version 0.9.6
 
-(08/23/2005) 	Fixed Bug: 
-		http://www.cogkit.org/bugzilla/show_bug.cgi?id=32 
+(08/27/2005)
 
-(06/24/2005) 	Updated the thirdparty file transfer logic to get proper 
-		status notification on transfer COMPLETE in 
-		org.globus.cog.abstraction.impl.fileTransfer.DelegatedFileTransferHandler.java
+*** Improved the Javadoc comments of the abstractions interfaces 
 
-(06/08/2005) 	Added support for service attributes in service.xsd schema and
-		org.globus.cog.abstraction.impl.xml package
+(08/23/2005)
 
-(06/08/2005) 	Added support for JobManager abstractions in 
-		org.globus.cog.abstraction.interfaces.ExecutionService.java and
-                org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl.java 
+*** Fixed Bug: 
+    http://www.cogkit.org/bugzilla/show_bug.cgi?id=32 
 
-(05/24/2005) 	Added support for environment variables in 
-		org.globus.cog.abstraction.interfaces.JobSpecification.java and 
-		org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl.java 
+(06/24/2005)
 
-(05/10/2005) 	Fixed the concurrent modification of the available Vector in 
-		org.globus.cog.abstraction.impl.common.taskgraph.TaskGraphHandlerImpl.java
+*** Updated the thirdparty file transfer logic to get proper 
+    status notification on transfer COMPLETE in 
+    org.globus.cog.abstraction.impl.fileTransfer.DelegatedFileTransferHandler.java
 
-(05/03/2005)	Committed fixes for http://www.cogkit.org/bugzilla/show_bug.cgi?id=90 
+(06/08/2005)
 
-(05/02/2005)    Made the loadProviderProperties method in AbstractionProperties
-		synchronized, so multiple parallel requests to it will work as expected.
+*** Added support for service attributes in service.xsd schema and
+    org.globus.cog.abstraction.impl.xml package
+
+(06/08/2005)
+
+*** Added support for JobManager abstractions in 
+    org.globus.cog.abstraction.interfaces.ExecutionService.java and
+    org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl.java 
+
+(05/24/2005)
+
+*** Added support for environment variables in 
+    org.globus.cog.abstraction.interfaces.JobSpecification.java and 
+    org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl.java 
+
+(05/10/2005)
+
+*** Fixed the concurrent modification of the available Vector in 
+    org.globus.cog.abstraction.impl.common.taskgraph.TaskGraphHandlerImpl.java
+
+(05/03/2005)
+
+*** Committed fixes for http://www.cogkit.org/bugzilla/show_bug.cgi?id=90 
+
+(05/02/2005)
+
+*** Made the loadProviderProperties method in AbstractionProperties
+    synchronized, so multiple parallel requests to it will work as expected.
 		
-(04/18/2005)	Renamed the module from "core-common" to 
-		"abstraction-common"
+(04/18/2005)
+
+*** Renamed the module from "core-common" to 
+    "abstraction-common"
 
 -------------------------------2.0----------------------------------
 
-(04/08/2005)    Updated config file deployment to not fail when individual
-		files are missing, but rather copy what is available. Such behaviour
-		is not intended to make it in to a release, but it's better for testing
+(04/08/2005)
+
+*** Updated config file deployment to not fail when individual
+    files are missing, but rather copy what is available. Such behaviour
+    is not intended to make it in to a release, but it's better for testing
 		
-(03/24/2005)  	Updated the implementation of 
-		org.globus.cog.core.impl.common.task.FileOperationSpecificationImpl.java
-		to make it compatible with the updated interfaces
+(03/24/2005)
 
-(03/24/2005)  	Cleaned the implementation of 
-		org.globus.cog.core.impl.file.TaskHandlerImpl.java
-		and made it compatible with the updated interfaces 
+*** Updated the implementation of 
+    org.globus.cog.core.impl.common.task.FileOperationSpecificationImpl.java
+    to make it compatible with the updated interfaces
 
-(03/24/2005)  	Streamlined the interface definition for 
-		FileOperationSpecification, FileResource, and 
- 		GridFile	
+(03/24/2005)
+
+*** Cleaned the implementation of 
+    org.globus.cog.core.impl.file.TaskHandlerImpl.java
+    and made it compatible with the updated interfaces 
+
+(03/24/2005)
+
+*** Streamlined the interface definition for 
+    FileOperationSpecification, FileResource, and 
+    GridFile	
 
 -------------------------------1.0----------------------------------
 
