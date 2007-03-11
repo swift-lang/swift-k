@@ -192,6 +192,10 @@ for line in f:
 		job = Job(name, thread)
 		threads[thread] = job
 		jobs[name] = job
+		
+if len(jobs) == 0:
+	print "ERROR: no jobs found"
+	sys.exit()
 	
 f.seek(0)
 #now let's populate the jobs
