@@ -1,3 +1,10 @@
+(03/11/2007)
+
+*** Use a thread pool for submission instead of starting
+    a new thread every time. The thread pool is a cached
+	thread pool. It starts new threads as needed and shuts them
+	down after a certain idle time.
+
 (02/27/2007)
 
 *** AllocateHost was leaking a few things in the schedulers.
