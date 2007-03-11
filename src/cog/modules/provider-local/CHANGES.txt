@@ -32,15 +32,23 @@
     based on spaces. This allows passing of arguments that contain spaces
 	to the sub-process
 
-(04/29/2005)    Don't change to the user's home directory on start-up.
-                Default directory is the current directory.
+(04/29/2005)
 
-(04/19/2005)	Renamed the module from "core-provider-local" to 
-		"provider-local"
+*** Don't change to the user's home directory on start-up.
+	Default directory is the current directory.
+
+(04/19/2005)
+
+*** Renamed the module from "core-provider-local" to 
+	"provider-local"
+	
 -----------------------------2.0----------------------------------
 
-(03/24/2005)    Updated the implementation of
-                org.globus.cog.core.impl.file.local.FileResourceImpl.java
-                to make it compatible with the changes in its interface
+(03/24/2005)
+
+*** Updated the implementation of
+    org.globus.cog.core.impl.file.local.FileResourceImpl.java
+    to make it compatible with the changes in its interface
+	
 -----------------------------1.2----------------------------------
 
