@@ -15,9 +15,13 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
+import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
+import edu.emory.mathcs.backport.java.util.concurrent.Executors;
+
 public class NonBlockingSubmit implements Runnable {
 	private static final Logger logger = Logger.getLogger(NonBlockingSubmit.class);
 
+    private static ExecutorService pool = Executors.newCachedThreadPool();
 	private final TaskHandler taskHandler;
 	private final Task task;
 	private SubmitQueue[] queues;
@@ -44,7 +48,7 @@ public class NonBlockingSubmit implements Runnable {
 			queues[currentQueue++].queue(this);
 		}
 		else {
-			new Thread(this, "Submit"+id).start();
+            pool.submit(this);
 		}
 	}
 
