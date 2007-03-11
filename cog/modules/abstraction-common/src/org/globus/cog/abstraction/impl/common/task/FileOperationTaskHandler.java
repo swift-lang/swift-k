@@ -44,16 +44,15 @@ public class FileOperationTaskHandler implements TaskHandler {
         }
         String provider = task.getService(0).getProvider().toLowerCase();
         TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
-        if (taskHandler != null) {
-            taskHandler.submit(task);
-        } else {
+        if (taskHandler == null) {
             try {
                 taskHandler = createTaskHandler(provider);
             } catch (InvalidProviderException ipe) {
                 throw new TaskSubmissionException("Cannot submit task", ipe);
             }
-            taskHandler.submit(task);
         }
+                 
+        taskHandler.submit(task);
     }
 
     public void suspend(Task task) throws InvalidSecurityContextException,
