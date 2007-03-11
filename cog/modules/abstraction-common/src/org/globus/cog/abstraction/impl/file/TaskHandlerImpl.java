@@ -273,91 +273,91 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
             FileOperationSpecification spec) throws FileResourceException,
             IOException {
         Object output = null;
-        String operation = spec.getOperation();
+        //FileOperationSpecification commands are lowercase
+        String operation = spec.getOperation().toLowerCase();
         try {
-            // System.err.println(operation + " + " + Thread.currentThread());
-            if (operation.equalsIgnoreCase(FileOperationSpecification.LS)
+            if (operation.equals(FileOperationSpecification.LS)
                     && spec.getArgumentSize() == 0) {
                 output = fileResource.list();
             }
-            else if (operation.equalsIgnoreCase(FileOperationSpecification.LS)
+            else if (operation.equals(FileOperationSpecification.LS)
                     && spec.getArgumentSize() == 1) {
                 output = fileResource.list(spec.getArgument(0));
             }
-            else if (operation.equalsIgnoreCase(FileOperationSpecification.PWD)) {
+            else if (operation.equals(FileOperationSpecification.PWD)) {
                 output = fileResource.getCurrentDirectory();
             }
-            else if (operation.equalsIgnoreCase(FileOperationSpecification.CD)
+            else if (operation.equals(FileOperationSpecification.CD)
                     && spec.getArgumentSize() == 1) {
                 fileResource.setCurrentDirectory(spec.getArgument(0));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.MKDIR)
+                    .equals(FileOperationSpecification.MKDIR)
                     && spec.getArgumentSize() == 1) {
                 fileResource.createDirectory(spec.getArgument(0));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.MKDIRS)
+                    .equals(FileOperationSpecification.MKDIRS)
                     && spec.getArgumentSize() == 1) {
                 fileResource.createDirectories(spec.getArgument(0));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.RMDIR)
+                    .equals(FileOperationSpecification.RMDIR)
                     && spec.getArgumentSize() == 2) {
                 fileResource.deleteDirectory(spec.getArgument(0), Boolean
                         .valueOf(spec.getArgument(1)).booleanValue());
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.RMFILE)
+                    .equals(FileOperationSpecification.RMFILE)
                     && spec.getArgumentSize() == 1) {
                 fileResource.deleteFile(spec.getArgument(0));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.ISDIRECTORY)
+                    .equals(FileOperationSpecification.ISDIRECTORY)
                     && spec.getArgumentSize() == 1) {
                 output = Boolean.valueOf(fileResource.isDirectory(spec
                         .getArgument(0)));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.EXISTS)
+                    .equals(FileOperationSpecification.EXISTS)
                     && spec.getArgumentSize() == 1) {
                 output = Boolean.valueOf(fileResource.exists(spec
                         .getArgument(0)));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.FILEINFO)
+                    .equals(FileOperationSpecification.FILEINFO)
                     && spec.getArgumentSize() == 1) {
                 output = fileResource.getGridFile(spec.getArgument(0));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.GETFILE)
+                    .equals(FileOperationSpecification.GETFILE)
                     && spec.getArgumentSize() == 2) {
                 fileResource.getFile(spec.getArgument(0), spec.getArgument(1));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.PUTFILE)
+                    .equals(FileOperationSpecification.PUTFILE)
                     && spec.getArgumentSize() == 2) {
                 fileResource.putFile(spec.getArgument(0), spec.getArgument(1));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.GETDIR)
+                    .equals(FileOperationSpecification.GETDIR)
                     && spec.getArgumentSize() == 2) {
                 fileResource.getDirectory(spec.getArgument(0), spec
                         .getArgument(1));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.PUTDIR)
+                    .equals(FileOperationSpecification.PUTDIR)
                     && spec.getArgumentSize() == 2) {
                 fileResource.putDirectory(spec.getArgument(0), spec
                         .getArgument(1));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.RENAME)
+                    .equals(FileOperationSpecification.RENAME)
                     && spec.getArgumentSize() == 2) {
                 fileResource.rename(spec.getArgument(0), spec.getArgument(1));
             }
             else if (operation
-                    .equalsIgnoreCase(FileOperationSpecification.CHMOD)
+                    .equals(FileOperationSpecification.CHMOD)
                     && spec.getArgumentSize() == 2) {
                 fileResource.changeMode(spec.getArgument(0), Integer.valueOf(
                         spec.getArgument(1)).intValue());
@@ -372,8 +372,8 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
     /** is the specification valid */
     public boolean isValidSpecification(FileOperationSpecification spec) {
 
-        if (spec.getOperation().equalsIgnoreCase(
-                FileOperationSpecification.START) == true) {
+        String operation = spec.getOperation().toLowerCase();
+        if (operation.equals(FileOperationSpecification.START)) {
             if (task.getService(0).getServiceContact() == null) {
                 return false;
             }
@@ -383,15 +383,15 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
         }
 
         if ((spec.getArgumentSize() == 0)
-                && !oneWordCommands.contains(spec.getOperation())) {
+                && !oneWordCommands.contains(operation)) {
             return false;
         }
         else if ((spec.getArgumentSize() == 1)
-                && !twoWordCommands.contains(spec.getOperation())) {
+                && !twoWordCommands.contains(operation)) {
             return false;
         }
         else if ((spec.getArgumentSize() == 2)
-                && !threeWordCommands.contains(spec.getOperation())) {
+                && !threeWordCommands.contains(operation)) {
             return false;
         }
         else {
