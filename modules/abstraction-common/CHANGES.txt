@@ -1,3 +1,9 @@
+(03/11/2007)
+
+*** The file operation task handler used many cascading ifs with 
+    equalsIgnoreCase tests. Better to convert the string to lowercase
+	in the beginning
+
 (02/05/2007)
 
 *** Added two methods to FileResource to allow transfers that provide
