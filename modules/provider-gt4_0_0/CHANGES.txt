@@ -10,56 +10,89 @@
 	oddness in jobs having no initial status (which could cause
 	NPEs on anything that would query details of the status)
 
-(04/12/2006)    Use the new spec.isDelegationEnabled()
-                Fixed boot crash when no ip set in cog.properties
-				Some cleanups
+(04/12/2006)
 
-(10/14/2005)    Committed an updated wsrf_core jar which fixes the following:
-				http://bugzilla.globus.org/globus/show_bug.cgi?id=3813
-				http://bugzilla.globus.org/globus/show_bug.cgi?id=3814
+*** Use the new spec.isDelegationEnabled()
 
-(09/20/2005)	updated class loader configuration
+*** Fixed boot crash when no ip set in cog.properties
 
-(08/26/2005)    Added patch from David Del Vecchio (ddelvecc@yahoo.com)
-                to support passing environment variables
+*** Some cleanups
+
+(10/14/2005)
+
+*** Committed an updated wsrf_core jar which fixes the following:
+	http://bugzilla.globus.org/globus/show_bug.cgi?id=3813
+	http://bugzilla.globus.org/globus/show_bug.cgi?id=3814
+
+(09/20/2005)
+
+*** updated class loader configuration
+
+(08/26/2005)
+
+*** Added patch from David Del Vecchio (ddelvecc@yahoo.com)
+    to support passing environment variables
 
 -------------------------------2.3---------------------------------
-(08/23/2005)	Uptaded GT4 jars to GT4.0.1
+
+(08/23/2005)
+
+*** Uptaded GT4 jars to GT4.0.1
 	
-(08/18/2005)    Fixed Bug #3666 (lowercasing of job managers that are not
-                in the job manager map)
+(08/18/2005)
+
+*** Fixed Bug #3666 (lowercasing of job managers that are not
+    in the job manager map)
 
 -------------------------------2.2---------------------------------
 
-(06/21/2005)	Updated GT4 jars
+(06/21/2005)
 
-		Added logic for polling in GT4FT job re-connect	in package
-		org.globus.cog.abstraction.impl.execution.gt4_0_0ft
+*** Updated GT4 jars
 
-(06/14/2005)	Added the GT4FT provider in package
-		org.globus.cog.abstraction.impl.execution.gt4_0_0ft
+*** Added logic for polling in GT4FT job re-connect	in package
+	org.globus.cog.abstraction.impl.execution.gt4_0_0ft
 
-		Added jars:
-		globus_wsrf_rendezvous_service.jar  
-		globus_wsrf_rendezvous_stubs.jar		
+(06/14/2005)
 
-(06/10/2005)	Removed jglobus and the jce provider from the sandboxed jars, 
-		and added dependency to jglobus.
+*** Added the GT4FT provider in package
+	org.globus.cog.abstraction.impl.execution.gt4_0_0ft
 
-(04/19/2005)	Renamed this module from "core-provider-gt4.0.0" to 
-		"provider-gt4.0.0"
+*** Added jars:
+	globus_wsrf_rendezvous_service.jar  
+	globus_wsrf_rendezvous_stubs.jar		
+
+(06/10/2005)
+
+*** Removed jglobus and the jce provider from the sandboxed jars, 
+	and added dependency to jglobus.
+
+(04/19/2005)
+
+*** Renamed this module from "core-provider-gt4.0.0" to 
+	"provider-gt4.0.0"
+	
 -------------------------------2.0---------------------------------
 
-(04/12/2005) 	JobDescriptionType would throw a NPE if setArgument(int, String) was used.
-		Changed to setArgument(String[])
+(04/12/2005)
 
-(04/08/2005)	Fixed deployment of config files. Index was pointing to 
-		files that didn't actually exist
+*** JobDescriptionType would throw a NPE if setArgument(int, String) was used.
+	Changed to setArgument(String[])
+
+(04/08/2005)
+
+*** Fixed deployment of config files. Index was pointing to 
+	files that didn't actually exist
+	
 -------------------------------0.21---------------------------------
 
-(03/29/2005) 	Updated to work with GT3.9.5
+(03/29/2005)
+
+*** Updated to work with GT3.9.5
+
 -------------------------------0.2---------------------------------
 	
-		Works with GT3.9.3
+*** Works with GT3.9.3
+
 -------------------------------0.1---------------------------------
 
