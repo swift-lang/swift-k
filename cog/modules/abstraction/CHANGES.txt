@@ -1,6 +1,10 @@
+(12/22/2006)
+
 Version 2.1
 
 - Cleaned up some of the FileResource interfaces/implementations
+
+(08/20/2006)
 
 Version 2.0
 -----------
