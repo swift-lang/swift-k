@@ -38,7 +38,6 @@ public class ChangelogAggregator {
 	}
 	
 	public static TreeMap populate(File f, String defname) throws IOException {
-		System.err.println("Reading log " + f.getAbsolutePath());
 		/*
 		 * Structure:
 		 * DATE_HEADING
