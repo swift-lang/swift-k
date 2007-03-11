@@ -1,3 +1,11 @@
+(03/11/2007)
+
+*** Improved the implementation of the execution provider:
+    - using readers added an extra layer of unnecessary 
+	character manipulation/conversion
+	- when there is only file redirection, there was some
+	unnecessary task output redirection
+
 (01/28/2006)
 
 *** Updated exceptions in file resource
