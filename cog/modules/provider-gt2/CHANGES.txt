@@ -55,46 +55,67 @@
 
 -------------------------------2.2----------------------------------
 
-(08/11/2005)	Added support for MPICH-G2 job submissions and mutli-job 
-		rsl in 
-                org.globus.cog.abstraction.impl.execution.gt2.JobSubmissionTaskHandler.java
+(08/11/2005)
+
+*** Added support for MPICH-G2 job submissions and mutli-job 
+    rsl in 
+    org.globus.cog.abstraction.impl.execution.gt2.JobSubmissionTaskHandler.java
 
 
-(06/14/2005)	Fixed the GridFTP provider to do recursive deleletes with 
-		GridFTP v2.0 server.
-		http://www.cogkit.org/bugzilla/show_bug.cgi?id=152
+(06/14/2005)
+
+*** Fixed the GridFTP provider to do recursive deleletes with 
+    GridFTP v2.0 server.
+    http://www.cogkit.org/bugzilla/show_bug.cgi?id=152
+	
 -------------------------------2.1----------------------------------
 
-(06/10/2005)	Split into new and old gridftp providers. The new one should work with
-		post gt3.2 servers. The old one does not work with servers from gt4.
+(06/10/2005)
+
+*** Split into new and old gridftp providers. The new one should work with
+    post gt3.2 servers. The old one does not work with servers from gt4.
 			
-		Re-implemented isDirectory in the new gridftp file resource. The old one
-		was doing a cwd to check if a file was a directory. The new one does a
-		mlst(), and checks the returned file type. It's twice as fast.
+*** Re-implemented isDirectory in the new gridftp file resource. The old one
+    was doing a cwd to check if a file was a directory. The new one does a
+    mlst(), and checks the returned file type. It's twice as fast.
 
-(06/08/2005)    Added support for FORK and PBS JobManagers in
-                org.globus.cog.abstraction.impl.execution.gt2.JobSubmissionTaskHandler.java
+(06/08/2005)
 
-(05/24/2005)    Added support for environment variables in
-                org.globus.cog.abstraction.impl.execution.gt2.JobSubmissionTaskHandler.java
+*** Added support for FORK and PBS JobManagers in
+    org.globus.cog.abstraction.impl.execution.gt2.JobSubmissionTaskHandler.java
 
-(04/18/2005)	Renamed the module from "core-provider-gt2" to 
-		"provider-gt2"
+(05/24/2005)
+
+*** Added support for environment variables in
+    org.globus.cog.abstraction.impl.execution.gt2.JobSubmissionTaskHandler.java
+
+(04/18/2005)
+
+*** Renamed the module from "core-provider-gt2" to 
+    "provider-gt2"
+	
 -------------------------------2.0----------------------------------
 
 -------------------------------1.1----------------------------------
-(03/29/2005)	If no IP can be figured out from CoGProperties, throw an 
-		exception 
 
-(03/24/2005)  	Updated the implementation of 
-		org.globus.cog.core.impl.file.ftp.FileResourceImpl.java 
-		and 
-		org.globus.cog.core.impl.file.gridftp.FileResourceImpl.java 
-		to make them compatible with the changes in their 
-		interface
+(03/29/2005)
 
-(03/17/2005)  	Updated the FTPSecurityCredentialImpl to show a dialog box 
-		prompting the user to enter credentials (if null
-		credentials are specified)   
+*** If no IP can be figured out from CoGProperties, throw an 
+    exception 
+
+(03/24/2005)
+
+*** Updated the implementation of 
+    org.globus.cog.core.impl.file.ftp.FileResourceImpl.java 
+     and 
+    org.globus.cog.core.impl.file.gridftp.FileResourceImpl.java 
+    to make them compatible with the changes in their 
+    interface
+
+(03/17/2005)
+
+*** Updated the FTPSecurityCredentialImpl to show a dialog box 
+    prompting the user to enter credentials (if null
+    credentials are specified)   
 
 -------------------------------1.0----------------------------------
