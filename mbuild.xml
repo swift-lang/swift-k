@@ -581,6 +581,13 @@
         <antcall target="log4j.check.module"/>
         <antcall target="log4j.properties.init"/>
         <antcall target="log4j.properties.update"/>
+		<!-- aggregate changelogs; the wrong place to be, but it works -->
+		<java classname="org.globus.cog.tools.ChangelogAggregator"
+			  classpath="${cog.dir}/tools">
+			  <arg value="${dist.dir}/CHANGES.txt"/>
+			  <arg value="${cog.dir}/modules/${module.name}/CHANGES.txt"/>
+			  <arg value="${module.name}"/>
+		</java>
     </target>
     
     <target name="log4j.check.module" unless="toplevel.updated">
@@ -592,6 +599,7 @@
     
     <target name="log4j.properties.init" if="toplevel.updated">
         <delete file="${dist.dir}/etc/log4j.properties" quiet="true"/>
+		<delete file="${dist.dir}/CHANGES.txt" quiet="true"/>
         <copy file="${cog.dir}/etc/log4j.properties.root" tofile="${dist.dir}/etc/log4j.properties"/>
     </target>
     
