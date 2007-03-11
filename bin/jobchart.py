@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+#
+# To get meaningful values for JOB_*_SCHED:
+# 	log4j.logger.org.globus.cog.karajan.scheduler.LateBindingScheduler=DEBUG
+#
+# For JOB_SUBMITTED_TH (this may or may not work properly):
+#	log4j.logger.org.globus.cog.abstraction.impl.execution.local.JobSubmissionTaskHandler=INFO
+#	log4j.logger.org.globus.cog.abstraction.impl.execution.gt2.JobSubmissionTaskHandler=INFO
+# 
+# Without the proper log messages, these will default to the JOB_SUBMITTED/COMPLETED values
+#
+
 import sys
 import re
 import datetime
@@ -26,6 +37,9 @@ TIMESTAMP = "(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d),(\d\d\d)"
 APP_THREAD = re.compile(".* vdl:execute2 Job (\S*) running in thread (\S*) .*")
 APP_START = re.compile(TIMESTAMP + ".* vdl:execute2 Running job (\S*) .*")
 APP_END = re.compile(TIMESTAMP + ".* vdl:execute2 Completed job (\S*) .*")
+JOB_SUBMITTED_SCHED = re.compile(TIMESTAMP + ".* LateBindingScheduler Submitting task Task\(type=1, identity=urn:([\d-]*)-\d*\).*");
+JOB_SUBMITTED_TH = re.compile(TIMESTAMP + ".* JobSubmissionTaskHandler Submitting task Task\(type=1, identity=urn:([\d-]*)-\d*\).*");
+JOB_COMPLETED_SCHED = re.compile(TIMESTAMP + ".* LateBindingScheduler Task\(type=1, identity=urn:([\d-]*)-\d*\) Completed.*");
 JOB_SUBMITTED = re.compile(taskStatus("1", "Submitted"))
 JOB_ACTIVE = re.compile(taskStatus("1", "Active"))
 JOB_COMPLETED = re.compile(taskStatus("1", "Completed"))
@@ -49,6 +63,9 @@ class Job:
 		self.name = name
 		self.thread = thread
 		self.appstart = None
+		self.sjobsubmitted = None
+		self.sjobcompleted = None
+		self.thjobsubmitted = None
 		self.jobsubmitted = None
 		self.jobactive = None
 		self.jobdone = None
@@ -69,6 +86,14 @@ class Job:
 	def jobSubmitted(self, time, id, args):
 		if not self.jobsubmitted:
 			self.jobsubmitted = time
+			if not self.sjobsubmitted: self.sjobsubmitted = time
+			if not self.thjobsubmitted: self.thjobsubmitted = time
+				
+	def sJobSubmitted(self, time, id, args):
+		self.sjobsubmitted = time
+			
+	def thJobSubmitted(self, time, id, args):
+		self.thjobsubmitted = time
 		
 	def jobActive(self, time, id, args):
 		if not self.jobactive:
@@ -79,6 +104,10 @@ class Job:
 		if not self.jobdone:
 			self.jobdone = time
 			self.jobActive(time, id, args)
+			if not self.sjobcompleted: self.sjobcompleted = time
+			
+	def sJobCompleted(self, time, id, args):
+		self.sjobcompleted = time
 		
 	def jobFailed(self, time, id, args):
 		if not self.jobdone:
@@ -174,7 +203,9 @@ TS = [ LogEvent(APP_START, False, Job.appStart), LogEvent(APP_END, False, Job.ap
 	   LogEvent(TRANSFER_SUBMITTED, True, Job.transferSubmitted), LogEvent(TRANSFER_ACTIVE, True, Job.transferActive), 
 	   LogEvent(TRANSFER_COMPLETED, True, Job.transferCompleted), LogEvent(TRANSFER_FAILED, True, Job.transferFailed), 
 	   LogEvent(FILEOP_SUBMITTED, True, Job.fileopSubmitted), LogEvent(FILEOP_ACTIVE, True, Job.fileopActive),
-	   LogEvent(FILEOP_COMPLETED, True, Job.fileopCompleted), LogEvent(FILEOP_FAILED, True, Job.fileopFailed) ]
+	   LogEvent(FILEOP_COMPLETED, True, Job.fileopCompleted), LogEvent(FILEOP_FAILED, True, Job.fileopFailed),
+	   LogEvent(JOB_SUBMITTED_SCHED, True, Job.sJobSubmitted), LogEvent(JOB_SUBMITTED_TH, True, Job.thJobSubmitted),
+	   LogEvent(JOB_COMPLETED_SCHED, True, Job.sJobCompleted) ]
 
 	
 threads = {}
@@ -212,8 +243,8 @@ joblist = []
 for job in jobs.values():
 	joblist.append(job)
 
-for i in range(0, len(joblist) - 2):
-	for j in range(i + 1, len(joblist) - 1):
+for i in range(0, len(joblist) - 1):
+	for j in range(i + 1, len(joblist)):
 		if joblist[i].appstart > joblist[j].appstart:
 			tmp = joblist[j]
 			joblist[j] = joblist[i]
@@ -278,6 +309,9 @@ for j in joblist:
 		g.write(str(j.jobactive - mintime) + " ")# + str(j.jobdone - j.jobactive) + "\n")
 		g.write(str(j.jobdone - mintime) + " ")
 		g.write(str(j.append - mintime) + " ")
+		g.write(str(j.sjobsubmitted - mintime) + " ")
+		g.write(str(j.thjobsubmitted - mintime) + " ")
+		g.write(str(j.sjobcompleted - mintime) + " ")
 		g.write("\n")
 	except:
 		print j
@@ -296,6 +330,7 @@ pl.write("	file: " + data + "\n")
 pl.write("#proc categories\n")
 pl.write("  axis: y\n")
 pl.write("  comparemethod: exact\n")
+pl.write("	listsize: " + str(len(joblist)) + "\n")
 	
 pl.write("#proc areadef\n")
 pl.write("	xrange: 0.0 " + str(scaleduration) + "\n")
@@ -330,22 +365,40 @@ pl.write("  grid: color=gray(0.8)\n")
 
 colors = ["blue", "orange", "kelleygreen", "claret"]
 legend = ["Pre-processing", "Queue", "Execution", "Post-processing"]
-widths = ["0.08", "0.06", "0.04", "0.08"]
+widths = ["0.04", "0.04", "0.04", "0.04"]
 
 for i in range(0, 4): 
 	pl.write("#proc bars\n")
 	pl.write("	horizontalbars: yes\n")
-	pl.write("	locfield: 1\n")
+#	pl.write("	locfield: 1\n")
 	pl.write("	segmentfields: " + str(i + 2) + " " + str(i + 3) + "\n")
 	pl.write("	barwidth: " + widths[i] + "\n")
 	pl.write("	color: " + colors[i] + "\n")
 #	pl.write("	outline: color=" + colors[i] + "\n")
 	pl.write("	outline: no\n")
+#	pl.write("	showvalues: yes\n")
 	
-	pl.write("	#proc legendentry\n")
+	pl.write("#proc legendentry\n")
 	pl.write("  sampletype: color\n")
 	pl.write("  label: " + legend[i] + "\n")
 	pl.write("  details: " + colors[i] + "\n")
+	
+scolors = ["black", "purple", "yellow"]
+slegend = ["Scheduler job submit", "Task handler job submit", "Scheduler job completion"]
+
+for i in range(0, 3):	
+	pl.write("#proc scatterplot\n")
+	pl.write("	yfield: 1\n")
+	pl.write("	xfield: " + str(i + 7) + "\n")
+	pl.write("	linelen: 0.11\n")
+	pl.write("	linedir: v\n")
+	pl.write("	linedetails: color=" + scolors[i] + " width=1.0\n")
+	
+	pl.write("#proc legendentry\n")
+	pl.write("  sampletype: color\n")
+	pl.write("  label: " + slegend[i] + "\n")
+	pl.write("  details: " + scolors[i] + "\n")
+
 	
 pl.write("#proc legend\n")
 pl.write("  format: across\n")
@@ -354,3 +407,4 @@ pl.write("  location: min+0.5 max+0.2\n")
 pl.close()
 os.system("ploticus " + pls + " -eps -o " + eps)
 os.system("convert -density 96x96 " + eps + " " + image)
+os.system("eog " + image)
