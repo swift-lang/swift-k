@@ -1,3 +1,7 @@
+(03/12/07)
+
+*** Cache remote directory structure creation.
+
 (03/03/07)
 
 *** Moved job directory creation to the wrapper
