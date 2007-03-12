@@ -166,7 +166,9 @@ namespace("vdl"
 			 */
 	
 			for(u, dirs
-				createdirs(u, destdir, host)
+				cacheOn(list(u, destdir, host)
+					createdirs(u, destdir, host)
+				)
 			)
 		)
 				
