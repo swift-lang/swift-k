@@ -9,9 +9,8 @@ package org.globus.cog.abstraction.impl.common;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.Vector;
+import java.util.Iterator;
 
-import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.ActiveTaskException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
@@ -19,32 +18,17 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Status;
-import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 /**
  * Provides an abstract <code>TaskHandler</code>.
  */
-public abstract class AbstractTaskHandler implements TaskHandler, StatusListener {
-	private Vector submittedList = null;
-	private Vector activeList = null;
-	private Vector suspendedList = null;
-	private Vector resumedList = null;
-	private Vector failedList = null;
-	private Vector canceledList = null;
-	private Vector completedList = null;
+public abstract class AbstractTaskHandler implements TaskHandler {
 	private Hashtable handleMap = null;
 	private int type;
 
 	public AbstractTaskHandler() {
-		this.submittedList = new Vector();
-		this.activeList = new Vector();
-		this.suspendedList = new Vector();
-		this.resumedList = new Vector();
-		this.failedList = new Vector();
-		this.canceledList = new Vector();
-		this.completedList = new Vector();
 		this.handleMap = new Hashtable();
 		this.type = TaskHandler.GENERIC;
 	}
@@ -64,8 +48,9 @@ public abstract class AbstractTaskHandler implements TaskHandler, StatusListener
 		}
 		int type = task.getType();
 		DelegatedTaskHandler dth = newDelegatedTaskHandler(type);
-		task.addStatusListener(this);
-		this.handleMap.put(task, dth);
+		synchronized(this.handleMap) {
+		    this.handleMap.put(task, dth);
+		}
 		dth.submit(task);
 	}
 
@@ -106,24 +91,9 @@ public abstract class AbstractTaskHandler implements TaskHandler, StatusListener
 			throw new ActiveTaskException("Cannot remove an active or suspended Task");
 		}
 		else {
-			task.removeStatusListener(this);
-			this.failedList.remove(task);
-			this.canceledList.remove(task);
-			this.completedList.remove(task);
-			this.suspendedList.remove(task);
-			this.submittedList.remove(task);
-			this.handleMap.remove(task);
-
-			/*
-			 * this is required because statusChange listeners are invoked in a
-			 * single thread So if one listener that wants to remove a task from
-			 * the handler is invoked before the listener implemented by this
-			 * object, the task will be be in the activeList and will not be
-			 * actually removed.
-			 * 
-			 * To solve this we remove tasks from active list too
-			 */
-			this.activeList.remove(task);
+		    synchronized(this.handleMap) {
+		        this.handleMap.remove(task);
+		    }
 		}
 	}
 
@@ -136,96 +106,48 @@ public abstract class AbstractTaskHandler implements TaskHandler, StatusListener
 			return null;
 		}
 	}
+	
+	protected Collection getTasksWithStatus(int code) {
+        ArrayList l = new ArrayList();
+        synchronized(handleMap) {
+            Iterator i = handleMap.keySet().iterator();
+            while (i.hasNext()) {
+                Task t = (Task) i.next();
+                if (t.getStatus().getStatusCode() == code) {
+                	l.add(t);
+                }
+            }
+        }
+        return l;
+    }
 
 	/** return a collection of active tasks */
 	public Collection getActiveTasks() {
-		return new ArrayList(this.activeList);
+	    return getTasksWithStatus(Status.ACTIVE);
 	}
 
 	/** return a collection of failed tasks */
 	public Collection getFailedTasks() {
-		return new ArrayList(this.failedList);
+	    return getTasksWithStatus(Status.FAILED);
 	}
 
 	/** return a collection of completed tasks */
 	public Collection getCompletedTasks() {
-		return new ArrayList(this.completedList);
+	    return getTasksWithStatus(Status.COMPLETED);
 	}
 
 	/** return a collection of suspended tasks */
 	public Collection getSuspendedTasks() {
-		return new ArrayList(this.suspendedList);
+	    return getTasksWithStatus(Status.SUSPENDED);
 	}
 
 	/** return a collection of resumed tasks */
 	public Collection getResumedTasks() {
-		return new ArrayList(this.resumedList);
+	    return getTasksWithStatus(Status.RESUMED);
 	}
 
 	/** return a collection of canceled tasks */
 	public Collection getCanceledTasks() {
-		return new ArrayList(this.canceledList);
-	}
-
-	public void statusChanged(StatusEvent event) {
-		Task task = (Task) event.getSource();
-		Status status = event.getStatus();
-		int prevStatus = status.getPrevStatusCode();
-		int curStatus = status.getStatusCode();
-		switch (prevStatus) {
-			case Status.SUBMITTED:
-				this.submittedList.remove(task);
-				break;
-			case Status.ACTIVE:
-				this.activeList.remove(task);
-				break;
-			case Status.SUSPENDED:
-				this.suspendedList.remove(task);
-				break;
-			case Status.RESUMED:
-				this.resumedList.remove(task);
-				break;
-			case Status.FAILED:
-				this.failedList.remove(task);
-				break;
-			case Status.CANCELED:
-				this.canceledList.remove(task);
-				break;
-			case Status.COMPLETED:
-				this.completedList.remove(task);
-				break;
-			default:
-				break;
-		}
-		if (task != null) {
-			switch (curStatus) {
-				case Status.SUBMITTED:
-					this.submittedList.add(task);
-					break;
-				case Status.ACTIVE:
-					this.activeList.add(task);
-					break;
-				case Status.SUSPENDED:
-					this.suspendedList.add(task);
-					break;
-				case Status.RESUMED:
-					this.resumedList.add(task);
-					break;
-				case Status.FAILED:
-					this.failedList.add(task);
-					this.handleMap.remove(task);
-					break;
-				case Status.CANCELED:
-					this.canceledList.add(task);
-					this.handleMap.remove(task);
-					break;
-				case Status.COMPLETED:
-					this.completedList.add(task);
-					this.handleMap.remove(task);
-					break;
-				default:
-					break;
-			}
-		}
+	    return getTasksWithStatus(Status.CANCELED);
 	}
 }
