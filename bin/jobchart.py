@@ -60,6 +60,7 @@ class Interval:
 
 class Job:
 	def __init__(self, name, thread):
+		global mintime
 		self.name = name
 		self.thread = thread
 		self.appstart = None
@@ -69,7 +70,7 @@ class Job:
 		self.jobsubmitted = None
 		self.jobactive = None
 		self.jobdone = None
-		self.jobfailed = False
+		self.jobfailed = None
 		self.append = None
 		self.transfers = {}
 		self.fileops = {}
@@ -86,8 +87,6 @@ class Job:
 	def jobSubmitted(self, time, id, args):
 		if not self.jobsubmitted:
 			self.jobsubmitted = time
-			if not self.sjobsubmitted: self.sjobsubmitted = time
-			if not self.thjobsubmitted: self.thjobsubmitted = time
 				
 	def sJobSubmitted(self, time, id, args):
 		self.sjobsubmitted = time
@@ -98,13 +97,10 @@ class Job:
 	def jobActive(self, time, id, args):
 		if not self.jobactive:
 			self.jobactive = time
-			self.jobSubmitted(time, id, args)
 		
 	def jobCompleted(self, time, id, args):
 		if not self.jobdone:
 			self.jobdone = time
-			self.jobActive(time, id, args)
-			if not self.sjobcompleted: self.sjobcompleted = time
 			
 	def sJobCompleted(self, time, id, args):
 		self.sjobcompleted = time
@@ -112,8 +108,7 @@ class Job:
 	def jobFailed(self, time, id, args):
 		if not self.jobdone:
 			self.jobdone = time
-			self.jobActive(time, id, args)
-		self.jobfailed = True
+			self.jobfailed = True
 		
 	def transferSubmitted(self, time, id, args):
 		if not id in self.transfers:
@@ -189,6 +184,8 @@ class LogEvent:
 	def getTime(self, t):
 		t = time.mktime((int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), 0, 0, 0))+float(t[6])/1000
 		global mintime, maxtime
+		if not mintime:
+			mintime = time
 		if t < mintime:
 			mintime = t
 		if t > maxtime:
@@ -210,8 +207,8 @@ TS = [ LogEvent(APP_START, False, Job.appStart), LogEvent(APP_END, False, Job.ap
 	
 threads = {}
 jobs = {}
-mintime = 9999999999999999
-maxtime = 0000000000000000
+mintime = 0
+maxtime = 0
 
 f = open(log)
 
@@ -300,21 +297,29 @@ if duration > 7200:
 else:
 	scaleduration = int(duration) + 1;
 	
+reorder = [0, 3, 4, 5, 7, 1, 2, 6]
+
+def writeTimeline(t, g):
+	if not t[0]:
+		t[0] = mintime
+	for i in range(1, len(t)):
+		if not t[i]:
+			t[i] = t[i - 1]
+	for i in range(0, len(t)):
+		t[i] = t[i] - mintime
+	
+	for i in range(0, len(reorder)):
+		g.write(str(t[reorder[i]]))
+		g.write(" ")
+	
+
 g = open(sys.argv[1]+".data", "w")
 for j in joblist:
-	try:
-		g.write(j.name + " ")
-		g.write(str(j.appstart - mintime) + " ")# + str(j.jobsubmitted - j.appstart) + " ")
-		g.write(str(j.jobsubmitted - mintime) + " ")# + str(j.jobactive - j.jobsubmitted) + " ")
-		g.write(str(j.jobactive - mintime) + " ")# + str(j.jobdone - j.jobactive) + "\n")
-		g.write(str(j.jobdone - mintime) + " ")
-		g.write(str(j.append - mintime) + " ")
-		g.write(str(j.sjobsubmitted - mintime) + " ")
-		g.write(str(j.thjobsubmitted - mintime) + " ")
-		g.write(str(j.sjobcompleted - mintime) + " ")
-		g.write("\n")
-	except:
-		print j
+	timeline = [j.appstart, j.sjobsubmitted, j.thjobsubmitted, j.jobsubmitted, j.jobactive, j.jobdone, j.sjobcompleted, j.append]
+	g.write(j.name + " ")
+	writeTimeline(timeline, g)
+	g.write("\n")
+
 g.close()
 
 
