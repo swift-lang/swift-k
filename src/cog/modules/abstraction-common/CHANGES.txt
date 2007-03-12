@@ -3,6 +3,10 @@
 *** The file operation task handler used many cascading ifs with 
     equalsIgnoreCase tests. Better to convert the string to lowercase
 	in the beginning
+	
+*** Cleaned up some of the task handlers. They kept lists or vectors
+    of tasks in various states and did O(n) operations for things that
+	they aren't even used for in general.
 
 (02/05/2007)
 
