@@ -1,3 +1,7 @@
+(03/16/07)
+
+*** Labels in graphs are quoted now
+
 (03/12/07)
 
 *** Cache remote directory structure creation.
