@@ -10,7 +10,7 @@ class VDLtParser extends Parser;
 
 options {
     k=2;
-    codeGenMakeSwitchThreshold = 2;  // Some optimizations
+    codeGenMakeSwitchThreshold = 2;
     codeGenBitsetTestThreshold = 3;
     defaultErrorHandler=false;
 }
