@@ -144,18 +144,6 @@ $endif$
 $endif$
 >>
 
-functionm(func, var, path, value) ::= <<
-$if(func)$
-<vdl:$func$$if(path)$ path="$path$"$endif$ var="{$var$}"/>
-$else$
-$if(value)$
-<string>$value$</string>
-$else$
-<vdl:getfieldvalue$if(path)$ path="$path$"$endif$ var="{$var$}"/>
-$endif$
-$endif$
->>
-
 foreach(var,in,indexVar,declarations,statements) ::= <<
 $if(indexVar)$
 <parallelFor name="\$">
