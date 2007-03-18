@@ -781,17 +781,29 @@ mappingFunc returns [StringTemplate code=template("mappingFunc")]
 {StringTemplate func=null, e=null;}
     :   AT (
     (declarator LPAREN) =>
-    (func=declarator LPAREN e=expression RPAREN
-    {
-      code.setAttribute("name", func);
-      code.setAttribute("arg", e);
-    }
+    (func=declarator
+     {
+       code.setAttribute("name", func);
+     }
+     LPAREN
+     e=expression
+     {
+      code.setAttribute("args", e);
+     }
+     (
+       COMMA
+       e=expression
+       {
+         code.setAttribute("args", e);
+       }
+     )*
+     RPAREN
     )
     |
     (e=identifier | (LPAREN e=identifier RPAREN) )
     {
       code.setAttribute("name", "filename");
-      code.setAttribute("arg", e);
+      code.setAttribute("args", e);
     }
     )
     ;

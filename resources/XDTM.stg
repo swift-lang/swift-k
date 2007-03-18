@@ -200,8 +200,8 @@ part(name,expr) ::= <<
 <part name="$name$">$expr$</part>
 >>
 
-mappingFunc(name,arg) ::= <<
-<function name="$name$">$arg$</function>
+mappingFunc(name,args) ::= <<
+<function name="$name$">$args;separator=", "$</function>
 >>
 
 mappingExpr(expr) ::= "$expr$"
