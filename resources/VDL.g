@@ -777,7 +777,7 @@ mappingExpr returns [StringTemplate code=null]
     }
     ;
 
-mappingFunc returns [StringTemplate code=template("mappingFunc")]
+functionInvocation returns [StringTemplate code=template("functionInvocation")]
 {StringTemplate func=null, e=null;}
     :   AT (
     (declarator LPAREN) =>
@@ -1027,7 +1027,7 @@ primExpr returns [StringTemplate code=null]
     | LPAREN exp=orExpr RPAREN { code=template("paren");
         code.setAttribute("exp", exp);}
     | code=constant
-    | code=mappingFunc
+    | code=functionInvocation
     ;
 
 identifier returns [StringTemplate code=null]

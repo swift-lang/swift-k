@@ -200,7 +200,7 @@ part(name,expr) ::= <<
 <part name="$name$">$expr$</part>
 >>
 
-mappingFunc(name,args) ::= <<
+functionInvocation(name,args) ::= <<
 <function name="$name$">$args;separator=", "$</function>
 >>
 
