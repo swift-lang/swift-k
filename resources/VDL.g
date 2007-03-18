@@ -169,13 +169,13 @@ topLevelStatement[StringTemplate code]
 // note that function invocations can happen in above statements too
 // this section is just the remaining more specialised invocations
 
-    |   (functioncallStatNoAssign) => d=functioncallStatNoAssign
+    |   (procedurecallStatNoAssign) => d=procedurecallStatNoAssign
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
        }
 
-    |   (functioncallStatAssignManyReturnParam) => d=functioncallStatAssignManyReturnParam
+    |   (procedurecallStatAssignManyReturnParam) => d=procedurecallStatAssignManyReturnParam
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
@@ -183,7 +183,7 @@ topLevelStatement[StringTemplate code]
 
 // this is a declaration, but not sorted out the predications yet to
 // group it into a decl block
-    | (predictFunctiondecl) => d=functiondecl {code.setAttribute("functions", d);}
+    | (predictProceduredecl) => d=proceduredecl {code.setAttribute("functions", d);}
     ;
 
 predictDeclaration {StringTemplate x,y;} : x=type y=declarator ;
@@ -193,7 +193,7 @@ declaration [StringTemplate code]
     : t=type
       n=declarator
     (
-     (predictFunctioncallDecl) => functioncallDecl[code, t, n]
+     (predictProcedurecallDecl) => procedurecallDecl[code, t, n]
     | (variableDecl[code,null,null]) => variableDecl[code, t, n]
     | (predictDatasetdecl) => datasetdecl[code, t, n]
     )
@@ -331,7 +331,7 @@ mapparam returns [StringTemplate code=template("mapParam")]
 
 // this goes as far as the LCURLY so that we don't mistake it for
 // a function invocation. with more thought can be made shorter, perhaps.
-predictFunctiondecl
+predictProceduredecl
 {StringTemplate f=null;}
     :  ( LPAREN
         f=formalParameter
@@ -345,7 +345,7 @@ predictFunctiondecl
         RPAREN
          LCURLY
     ;
-functiondecl returns [StringTemplate code=template("function")]
+proceduredecl returns [StringTemplate code=template("function")]
 {StringTemplate f=null;}
     :  ( LPAREN
         f=formalParameter
@@ -441,8 +441,8 @@ innerStatement[StringTemplate code]
     |
     ((
        s=ll1statement
-    |  (functioncallStatNoAssign) => s=functioncallStatNoAssign
-    |  (functioncallStatAssignManyReturnParam) => s=functioncallStatAssignManyReturnParam
+    |  (procedurecallStatNoAssign) => s=procedurecallStatNoAssign
+    |  (procedurecallStatAssignManyReturnParam) => s=procedurecallStatAssignManyReturnParam
     |  (predictAssignStat) => s=assignStat
     )
        {
@@ -453,8 +453,8 @@ innerStatement[StringTemplate code]
 
 caseInnerStatement returns [StringTemplate code=null]
     :  code=ll1statement
-    |  (functioncallStatNoAssign) => code=functioncallStatNoAssign
-    |   (functioncallStatAssignManyReturnParam) => code=functioncallStatAssignManyReturnParam
+    |  (procedurecallStatNoAssign) => code=procedurecallStatNoAssign
+    |   (procedurecallStatAssignManyReturnParam) => code=procedurecallStatAssignManyReturnParam
     |  (predictAssignStat) => code=assignStat
     ;
 
@@ -590,7 +590,7 @@ assignStat returns [StringTemplate code=null]
     id=identifier
     ASSIGN
     (
-      (predictFunctioncallAssign) => code=functioncallAssign
+      (predictProcedurecallAssign) => code=procedurecallAssign
         { StringTemplate o = template("returnParam");
           o.setAttribute("name",id);
           code.setAttribute("outputs",o);
@@ -613,16 +613,16 @@ variableAssign returns [StringTemplate code=null]
         }
     ;
 
-predictFunctioncallAssign
+predictProcedurecallAssign
     : ID LPAREN ;
 
-functioncallAssign returns [StringTemplate code=template("call")]
+procedurecallAssign returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
-        functionInvocation[code]
+        procedureInvocation[code]
     ;
 
-functionInvocation [StringTemplate code]
+procedureInvocation [StringTemplate code]
 {StringTemplate f=null;}
     :
         id:ID {code.setAttribute("func", id.getText());}
@@ -641,16 +641,16 @@ functionInvocation [StringTemplate code]
         SEMI
     ;
 
-functioncallStatNoAssign returns [StringTemplate code=template("call")]
-    : functionInvocation[code]
+procedurecallStatNoAssign returns [StringTemplate code=template("call")]
+    : procedureInvocation[code]
     ;
 
 
-predictFunctioncallDecl
+predictProcedurecallDecl
 { StringTemplate dummy=template("call"); }
-    : ASSIGN functionInvocation[dummy] ;
+    : ASSIGN procedureInvocation[dummy] ;
 
-functioncallDecl [StringTemplate x, StringTemplate t, StringTemplate d]
+procedurecallDecl [StringTemplate x, StringTemplate t, StringTemplate d]
 {
 StringTemplate code=template("call");
 StringTemplate f=template("returnParam");
@@ -662,13 +662,13 @@ setReturnVariables(x, code);
 }
     :
         ASSIGN
-        functionInvocation[code]
+        procedureInvocation[code]
     ;
 
 
 
 
-functioncallStatAssignManyReturnParam returns [StringTemplate code=template("call")]
+procedurecallStatAssignManyReturnParam returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
         LPAREN
@@ -683,7 +683,7 @@ functioncallStatAssignManyReturnParam returns [StringTemplate code=template("cal
               )*
         RPAREN
         ASSIGN
-        functionInvocation[code]
+        procedureInvocation[code]
     ;
 
 returnParameter returns [StringTemplate code=template("returnParam")]
