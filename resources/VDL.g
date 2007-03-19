@@ -786,16 +786,10 @@ functionInvocation returns [StringTemplate code=template("functionInvocation")]
        code.setAttribute("name", func);
      }
      LPAREN
-     e=expression
-     {
-      code.setAttribute("args", e);
-     }
+     functionInvocationArgument[code]
      (
        COMMA
-       e=expression
-       {
-         code.setAttribute("args", e);
-       }
+       functionInvocationArgument[code]
      )*
      RPAREN
     )
@@ -807,6 +801,15 @@ functionInvocation returns [StringTemplate code=template("functionInvocation")]
     }
     )
     ;
+
+functionInvocationArgument [StringTemplate code]
+{StringTemplate e = null;}
+    :
+     e=expression
+     {
+      code.setAttribute("args", e);
+     }
+     ;
 
 stdioArg [StringTemplate code]
 {StringTemplate t=null,m=null;}
