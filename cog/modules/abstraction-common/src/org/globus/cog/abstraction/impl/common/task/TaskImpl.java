@@ -32,9 +32,9 @@ import org.globus.cog.util.CopyOnWriteHashSet;
 
 public class TaskImpl implements Task {
     public static final Logger logger = Logger.getLogger(TaskImpl.class);
-    
-	public static final Status STATUS_NONE = new StatusImpl();
-	
+
+    public static final Status STATUS_NONE = new StatusImpl();
+
     private Identity id = null;
     private String name = null;
     private int type = 0;
@@ -51,7 +51,7 @@ public class TaskImpl implements Task {
     private Calendar completedTime = null;
     private ArrayList serviceList = null;
     private int requiredServices = 0;
-    
+
     private boolean anythingWaiting;
 
     public TaskImpl() {
@@ -112,9 +112,11 @@ public class TaskImpl implements Task {
         int sz = this.serviceList.size();
         if (sz == index) {
             this.serviceList.add(index, service);
-        } else if (sz > index) {
+        }
+        else if (sz > index) {
             this.serviceList.set(index, service);
-        } else {
+        }
+        else {
             throw new IllegalArgumentException("index(" + index + ") > size("
                     + sz + ")");
         }
@@ -129,9 +131,9 @@ public class TaskImpl implements Task {
     }
 
     public Service getService(int index) {
-    	if (index >= serviceList.size()) {
-    		return null;
-    	}
+        if (index >= serviceList.size()) {
+            return null;
+        }
         return (Service) serviceList.get(index);
     }
 
@@ -175,7 +177,8 @@ public class TaskImpl implements Task {
                 OutputListener listener = (OutputListener) i.next();
                 listener.outputChanged(event);
             }
-        } finally {
+        }
+        finally {
             outputListeners.release();
         }
     }
@@ -194,13 +197,14 @@ public class TaskImpl implements Task {
 
     public void setStatus(Status status) {
         if (logger.isDebugEnabled()) {
-        	logger.debug(this + " setting status to " + status);
+            logger.debug(this + " setting status to " + status);
         }
         this.status = status;
 
         if (this.status.getStatusCode() == Status.SUBMITTED) {
             this.submittedTime = this.status.getTime();
-        } else if (this.status.getStatusCode() == Status.COMPLETED) {
+        }
+        else if (this.status.getStatusCode() == Status.COMPLETED) {
             this.completedTime = this.status.getTime();
         }
 
@@ -211,13 +215,14 @@ public class TaskImpl implements Task {
                 StatusListener listener = (StatusListener) i.next();
                 listener.statusChanged(event);
             }
-        } finally {
+        }
+        finally {
             statusListeners.release();
         }
         synchronized (this) {
-        	if (anythingWaiting) {
-        		notifyAll();
-        	}
+            if (anythingWaiting) {
+                notifyAll();
+            }
         }
     }
 
@@ -265,8 +270,7 @@ public class TaskImpl implements Task {
     }
 
     public String toString() {
-        return "Task: \n\tSpecification: " + specification + "\n\tServices: "
-                + serviceList + "\n\tStatus: " + status;
+        return "Task(type=" + type + ", identity=" + id + ")";
     }
 
     public boolean isUnsubmitted() {
@@ -310,7 +314,7 @@ public class TaskImpl implements Task {
     }
 
     public synchronized void waitFor() throws InterruptedException {
-    	anythingWaiting = true;
+        anythingWaiting = true;
         while (!isFailed() && !isCompleted() && !isCanceled()) {
             wait();
         }
