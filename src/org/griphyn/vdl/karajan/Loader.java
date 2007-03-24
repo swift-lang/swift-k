@@ -15,6 +15,7 @@ import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Appender;
@@ -26,7 +27,6 @@ import org.globus.cog.karajan.stack.LinkedStack;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Monitor;
 import org.globus.cog.karajan.workflow.ElementTree;
-import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.util.ArgumentParser;
@@ -132,9 +132,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			// no order
 			ec.setStdout(new PrintStreamChannel(System.out, true));
 
-			if (ap.hasValue(ARG_RESUME)) {
-				ec.addArgument("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
-			}
+			
 
 			VariableStack stack = new LinkedStack(ec);
 			VDL2Config config = loadConfig(ap, stack);
@@ -151,9 +149,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			}
 			stack.setGlobal("vds.home", System.getProperty("vds.home"));
 
-			ec.start(stack);
-			ec.setArguments(ap.getArguments());
-			stack.setGlobal(ExecutionContext.CMDLINE_ARGS, ap.getArguments());
+            List arguments = ap.getArguments();
+            if (ap.hasValue(ARG_RESUME)) {
+                arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
+            }
+			ec.setArguments(arguments);
+            
+            ec.start(stack);
 			ec.waitFor();
 			if (ec.isFailed()) {
 				runerror = true;
