@@ -1,0 +1,42 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="messagefile">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="greeting">
+    <output name="t" type="messagefile"/>
+    <input name="s" type="string"/>
+    <binding type="app">
+      <application>
+        <executable>echo</executable>
+        <argument>s</argument>
+        <stdout><function name="filename">t</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <dataset name="english" type="messagefile">
+    <file name="english.txt"/>
+  </dataset>
+  <dataset name="french" type="messagefile">
+    <file name="francais.txt"/>
+  </dataset>
+  <call proc="greeting">
+    <output>english</output>
+    <input>&quot;hello&quot;</input>
+  </call>
+  <call proc="greeting">
+    <output>french</output>
+    <input>&quot;bonjour&quot;</input>
+  </call>
+  <dataset name="japanese" type="messagefile">
+    <file name="nihongo.txt"/>
+  </dataset>
+  <call proc="greeting">
+    <output>japanese</output>
+    <input>&quot;konnichiwa&quot;</input>
+  </call>
+</program>

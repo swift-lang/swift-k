@@ -1,0 +1,6 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="p" type="int" isArray="true">
+    <range from="1" to="9" step="2"/>
+  </variable>
+</program>

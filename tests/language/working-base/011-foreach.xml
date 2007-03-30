@@ -1,0 +1,9 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <foreach var="s" in="zdata">
+    <call proc="echo">
+      <output>a</output>
+      <input>s</input>
+    </call>
+  </foreach>
+</program>

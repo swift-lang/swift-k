@@ -1,0 +1,10 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="t" type="string"/>
+  <foreach var="t" in="subjectNo" indexVar="j">
+    <variable name="s" type="string"/>
+    <foreach var="s" in="trialTypes" indexVar="i">
+      <assign to="outputs[i * j]">3</assign>
+    </foreach>
+  </foreach>
+</program>

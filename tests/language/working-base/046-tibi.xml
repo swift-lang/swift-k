@@ -1,0 +1,66 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="waveletTransf">
+    <output name="wavelets" type="file" isArray="true"/>
+    <input name="waveletScript" type="file"/>
+    <input name="subjNo" type="int"/>
+    <input name="trialType" type="string"/>
+    <input name="dataFiles" type="file"/>
+    <binding type="app">
+      <application>
+        <executable>cwtsmall</executable>
+        <argument><function name="filename">waveletScript</function></argument>
+        <argument>subjNo</argument>
+        <argument>trialType</argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="batchTrials">
+    <output name="outputs" type="file" isArray="true"/>
+    <input name="trialTypes" type="string" isArray="true"/>
+    <dataset name="waveletScript" type="file">
+      <mapping descriptor="single_file_mapper">
+        <param name="file">&quot;scripts/runTrialSubjectWavelet.R&quot;</param>
+      </mapping>
+    </dataset>
+    <variable name="s" type="string"/>
+    <foreach var="s" in="trialTypes" indexVar="i">
+      <dataset name="dataFiles" type="file">
+        <mapping descriptor="simple_mapper">
+          <param name="prefix">&quot;101_&quot;</param>
+          <param name="suffix">s</param>
+        </mapping>
+      </dataset>
+      <call proc="waveletTransf">
+        <output>outputs</output>
+        <input>waveletScript</input>
+        <input>101</input>
+        <input>s</input>
+        <input>dataFiles</input>
+      </call>
+    </foreach>
+  </procedure>
+  <variable name="trialTypes" type="string" isArray="true">
+    <array>
+      <element>&quot;FB&quot;</element>
+    </array>
+  </variable>
+  <variable name="allOutputs" type="file" isArray="true"/>
+  <dataset name="namedOutputs" type="file" isArray="true">
+    <mapping descriptor="fixed_array_mapper">
+      <param name="files">&quot;101-FBchannel10_cwt-results.Rdata, 101-FBchannel11_cwt-results.Rdata, 101-FBchannel12_cwt-results.Rdata, 101-FBchannel13_cwt-results.Rdata, 101-FBchannel14_cwt-results.Rdata, 101-FBchannel15_cwt-results.Rdata, 101-FBchannel16_cwt-results.Rdata, 101-FBchannel17_cwt-results.Rdata, 101-FBchannel18_cwt-results.Rdata, 101-FBchannel19_cwt-results.Rdata, 101-FBchannel1_cwt-results.Rdata, 101-FBchannel20_cwt-results.Rdata, 101-FBchannel21_cwt-results.Rdata, 101-FBchannel22_cwt-results.Rdata, 101-FBchannel23_cwt-results.Rdata, 101-FBchannel24_cwt-results.Rdata, 101-FBchannel25_cwt-results.Rdata, 101-FBchannel26_cwt-results.Rdata, 101-FBchannel27_cwt-results.Rdata, 101-FBchannel28_cwt-results.Rdata, 101-FBchannel2_cwt-results.Rdata, 101-FBchannel3_cwt-results.Rdata, 101-FBchannel4_cwt-results.Rdata, 101-FBchannel5_cwt-results.Rdata, 101-FBchannel6_cwt-results.Rdata, 101-FBchannel7_cwt-results.Rdata, 101-FBchannel8_cwt-results.Rdata, 101-FBchannel9_cwt-results.Rdata&quot;</param>
+    </mapping>
+  </dataset>
+  <assign to="file">&quot;scripts/runTrialSubjectWavelet.R&quot;</assign>
+  <call proc="batchTrials">
+    <output>namedOutputs</output>
+    <input>trialTypes</input>
+  </call>
+</program>

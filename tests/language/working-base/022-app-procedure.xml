@@ -1,0 +1,17 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="generate">
+    <output name="f" type="file"/>
+    <input name="p1" type="float"/>
+    <binding type="app">
+      <application>
+        <executable>generate</executable>
+        <argument>&quot;-aTOP -T4&quot;</argument>
+        <argument>&quot;-p&quot;</argument>
+        <argument>p1</argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">f</function></argument>
+      </application>
+    </binding>
+  </procedure>
+</program>

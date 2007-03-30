@@ -1,0 +1,3 @@
+digraph VDL2provenance {
+	graph [splines="compound", rankdir="TB"];
+	node [color="seagreen", style="filled"];

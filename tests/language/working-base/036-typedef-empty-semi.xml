@@ -1,0 +1,8 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:element name="foo" type="bar"/>
+    </xs:schema>
+  </types>
+</program>

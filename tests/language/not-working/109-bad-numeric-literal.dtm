@@ -1,0 +1,2 @@
+// the spec says that an integer literal cannot begin with a 0
+int i = 00009;

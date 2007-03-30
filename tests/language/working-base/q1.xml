@@ -1,0 +1,26 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="messagefile">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="greeting">
+    <output name="t" type="messagefile"/>
+    <binding type="app">
+      <application>
+        <executable>echo</executable>
+        <argument>&quot;Hello, world!&quot;</argument>
+        <stdout><function name="filename">t</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <dataset name="outfile" type="messagefile">
+    <file name="hello.txt"/>
+  </dataset>
+  <call proc="greeting">
+    <output>outfile</output>
+  </call>
+</program>

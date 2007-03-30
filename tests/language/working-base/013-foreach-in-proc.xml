@@ -1,0 +1,14 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="echo_batch">
+    <output name="fa" type="file" isArray="true"/>
+    <input name="sa" type="string" isArray="true"/>
+    <variable name="s" type="string"/>
+    <foreach var="s" in="sa" indexVar="i">
+      <call proc="echo">
+        <output>fa[i]</output>
+        <input>s</input>
+      </call>
+    </foreach>
+  </procedure>
+</program>

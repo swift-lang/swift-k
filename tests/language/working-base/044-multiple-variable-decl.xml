@@ -1,0 +1,10 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="a" type="int">5</variable>
+  <variable name="c" type="int">7</variable>
+  <variable name="q" type="int">8</variable>
+  <variable name="r" type="int"/>
+  <variable name="s" type="int"/>
+  <variable name="t" type="int"/>
+  <variable name="p" type="int">99</variable>
+</program>

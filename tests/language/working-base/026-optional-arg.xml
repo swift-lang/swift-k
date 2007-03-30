@@ -1,0 +1,9 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <call proc="myproc1">
+    <output>out</output>
+    <input>100</input>
+    <input bind="optional_arg">&quot;foo&quot;</input>
+  </call>
+  <variable name="out" type="File"/>
+</program>

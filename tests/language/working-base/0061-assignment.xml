@@ -1,0 +1,7 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <call proc="echo">
+    <output>a</output>
+    <input>s</input>
+  </call>
+</program>

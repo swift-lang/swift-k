@@ -1,0 +1,8 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="p" type="int">3</variable>
+  <variable name="q" type="bool">false</variable>
+  <variable name="r" type="bool">true</variable>
+  <variable name="n" type="string">&quot;hello&quot;</variable>
+  <variable name="x" type="uri">&quot;http://www.ci.uchicago.edu/&quot;</variable>
+</program>

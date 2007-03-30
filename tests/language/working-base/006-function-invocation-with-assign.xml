@@ -1,0 +1,8 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <call proc="echo">
+    <output>hw</output>
+    <input>greetings</input>
+  </call>
+  <variable name="hw" type="file"/>
+</program>

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+pushd working
+rm -v *.?ml
+for a in *.dtm; do 
+  echo Attempting vdlc known-good $a
+  vdlc $a
+  if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
+  b=$(basename -s .dtm $a).xml
+  diff -q $b ../working-base/$b
+  if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+
+# echo Attempting hswift known-good $a
+#  ~/work/hswift/a.out $a
+#  if [ "$?" -ne "0" ]; then echo "TEST FAILED" ; exit; fi
+
+done
+popd
+
+pushd not-working
+rm -v *.?ml
+for a in *.dtm; do
+
+  echo Attempting vdlc known-bad $a
+  vdlc $a
+  if [ "$?" -eq "0" ]; then echo "TEST FAILED"; exit; fi
+
+#  echo Attempting hswift known-bad $a
+#  ~/work/hswift/a.out $a
+#  if [ "$?" -eq "0" ]; then echo "TEST FAILED" ; exit; fi
+
+done
+echo Finished all syntax tests

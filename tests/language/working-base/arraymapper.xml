@@ -1,0 +1,20 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <dataset name="files" type="file" isArray="true">
+    <mapping descriptor="simple_mapper">
+      <param name="pattern">&quot;*&quot;</param>
+    </mapping>
+  </dataset>
+  <foreach var="f" in="files">
+    <call proc="print">
+      <input>f</input>
+    </call>
+  </foreach>
+</program>

@@ -1,0 +1,298 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="stageIn">
+    <output name="gauge" type="file"/>
+    <input name="input" type="file"/>
+    <input name="config" type="string"/>
+    <binding type="app">
+      <application>
+        <executable>stageIn</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-i&quot;</argument>
+        <argument><function name="filename">input</function></argument>
+        <argument>&quot;-c&quot;</argument>
+        <argument>config</argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">gauge</function></argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="stagSolve">
+    <output name="output" type="file" isArray="true"/>
+    <input name="gauge" type="file"/>
+    <input name="mass" type="string"/>
+    <input name="source" type="string"/>
+    <binding type="app">
+      <application>
+        <executable>stagSolve</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-g&quot;</argument>
+        <argument><function name="filename">gauge</function></argument>
+        <argument>&quot;-m&quot;</argument>
+        <argument>mass</argument>
+        <argument>&quot;-s&quot;</argument>
+        <argument>source</argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">output[*]</function></argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="cloverSolve">
+    <output name="output" type="file"/>
+    <input name="kappa" type="float"/>
+    <input name="cSW" type="float"/>
+    <input name="gauge" type="file"/>
+    <input name="source" type="string"/>
+    <binding type="app">
+      <application>
+        <executable>cloverSolve</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-k&quot;</argument>
+        <argument>kappa</argument>
+        <argument>&quot;-c&quot;</argument>
+        <argument>cSW</argument>
+        <argument>&quot;-g&quot;</argument>
+        <argument><function name="filename">gauge</function></argument>
+        <argument>&quot;-s&quot;</argument>
+        <argument>source</argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">output</function></argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="cvt12x12">
+    <output name="output" type="file"/>
+    <input name="input" type="file"/>
+    <binding type="app">
+      <application>
+        <executable>CVT12x12</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-i&quot;</argument>
+        <argument><function name="filename">input</function></argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">output</function></argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="archive">
+    <output name="output" type="file"/>
+    <input name="input" type="file"/>
+    <binding type="app">
+      <application>
+        <executable>Archive</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-i&quot;</argument>
+        <argument><function name="filename">input</function></argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">output</function></argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="archiveStag">
+    <output name="output" type="file"/>
+    <input name="mass" type="string"/>
+    <input name="input" type="file" isArray="true"/>
+    <binding type="app">
+      <application>
+        <executable>ArchiveStag</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-m&quot;</argument>
+        <argument>mass</argument>
+        <argument>&quot;-i&quot;</argument>
+        <argument><function name="filename">input[*]</function></argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">output</function></argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="twoPtHH">
+    <output name="sdo" type="file"/>
+    <input name="gauge" type="file"/>
+    <input name="antiQ" type="file"/>
+    <input name="Q0" type="file"/>
+    <input name="Q1" type="file"/>
+    <input name="Q2" type="file"/>
+    <binding type="app">
+      <application>
+        <executable>TwoPtHH</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-g&quot;</argument>
+        <argument><function name="filename">gauge</function></argument>
+        <argument>&quot;-a&quot;</argument>
+        <argument>antiQ</argument>
+        <argument>&quot;-0&quot;</argument>
+        <argument>Q0</argument>
+        <argument>&quot;-1&quot;</argument>
+        <argument>Q1</argument>
+        <argument>&quot;-2&quot;</argument>
+        <argument>Q2</argument>
+        <stdout><function name="filename">sdo</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="twoPtSH">
+    <output name="sdo" type="file"/>
+    <input name="gauge" type="file"/>
+    <input name="stag" type="file"/>
+    <input name="antiQ" type="file"/>
+    <input name="Q0" type="file"/>
+    <input name="Q1" type="file"/>
+    <input name="Q2" type="file"/>
+    <binding type="app">
+      <application>
+        <executable>TwoPtSH</executable>
+        <argument>&quot;-v&quot;</argument>
+        <argument>&quot;-g&quot;</argument>
+        <argument><function name="filename">gauge</function></argument>
+        <argument>&quot;-s&quot;</argument>
+        <argument>stag</argument>
+        <argument>&quot;-a&quot;</argument>
+        <argument>antiQ</argument>
+        <argument>&quot;-0&quot;</argument>
+        <argument>Q0</argument>
+        <argument>&quot;-1&quot;</argument>
+        <argument>Q1</argument>
+        <argument>&quot;-2&quot;</argument>
+        <argument>Q2</argument>
+        <stdout><function name="filename">sdo</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <variable name="confList" type="string" isArray="true">
+    <array>
+      <element>&quot;000102&quot;</element>
+      <element>&quot;000108&quot;</element>
+      <element>&quot;000114&quot;</element>
+    </array>
+  </variable>
+  <variable name="kappaQ" type="float">0.127</variable>
+  <variable name="cSW" type="float">1.75</variable>
+  <variable name="mass" type="string">&quot;0.005,0.007,0.01,0.02,0.03&quot;</variable>
+  <variable name="fn" type="string" isArray="true">
+    <array>
+      <element>&quot;m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000102&quot;</element>
+      <element>&quot;m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108&quot;</element>
+      <element>&quot;m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114&quot;</element>
+    </array>
+  </variable>
+  <variable name="config" type="string"/>
+  <foreach var="config" in="conflist" indexVar="i">
+    <variable name="source" type="string">&quot;local,0,0,0,0&quot;</variable>
+    <dataset name="template" type="file">
+      <file name="foo"/>
+    </dataset>
+    <call proc="stageIn">
+      <output>gauge</output>
+      <input>template</input>
+      <input>config</input>
+    </call>
+    <variable name="gauge" type="file"/>
+    <dataset name="stags" type="file" isArray="true">
+      <mapping descriptor="fixed_array_mapper">
+        <param name="files">fn[i]</param>
+      </mapping>
+    </dataset>
+    <call proc="stagSolve">
+      <output>stags</output>
+      <input>gauge</input>
+      <input>mass</input>
+      <input>source</input>
+    </call>
+    <dataset name="stagTar" type="file">
+      <mapping descriptor="simple_mapper">
+        <param name="suffix">&quot;.tar&quot;</param>
+      </mapping>
+    </dataset>
+    <call proc="archiveStag">
+      <output>stagTar</output>
+      <input>mass</input>
+      <input>stags</input>
+    </call>
+    <call proc="cloverSolve">
+      <output>clover0</output>
+      <input>kappaQ</input>
+      <input>cSW</input>
+      <input>gauge</input>
+      <input>source</input>
+    </call>
+    <variable name="clover0" type="file"/>
+    <call proc="cvt12x12">
+      <output>q0</output>
+      <input>clover0</input>
+    </call>
+    <variable name="q0" type="file"/>
+    <call proc="archive">
+      <output>cvtArch0</output>
+      <input>q0</input>
+    </call>
+    <variable name="cvtArch0" type="file"/>
+    <variable name="source1" type="string">&quot;wavefunction,0,1S&quot;</variable>
+    <call proc="cloverSolve">
+      <output>clover1</output>
+      <input>kappaQ</input>
+      <input>cSW</input>
+      <input>gauge</input>
+      <input>source1</input>
+    </call>
+    <variable name="clover1" type="file"/>
+    <call proc="cvt12x12">
+      <output>q1</output>
+      <input>clover1</input>
+    </call>
+    <variable name="q1" type="file"/>
+    <call proc="archive">
+      <output>cvtArch1</output>
+      <input>q1</input>
+    </call>
+    <variable name="cvtArch1" type="file"/>
+    <variable name="source2" type="string">&quot;wavefunction,0,2S&quot;</variable>
+    <call proc="cloverSolve">
+      <output>clover2</output>
+      <input>kappaQ</input>
+      <input>cSW</input>
+      <input>gauge</input>
+      <input>source2</input>
+    </call>
+    <variable name="clover2" type="file"/>
+    <call proc="cvt12x12">
+      <output>q2</output>
+      <input>clover2</input>
+    </call>
+    <variable name="q2" type="file"/>
+    <call proc="archive">
+      <output>cvtArch2</output>
+      <input>q2</input>
+    </call>
+    <variable name="cvtArch2" type="file"/>
+    <variable name="antiQ" type="file">q0</variable>
+    <call proc="twoPtHH">
+      <output>pStdout</output>
+      <input>gauge</input>
+      <input>antiQ</input>
+      <input>q0</input>
+      <input>q1</input>
+      <input>q2</input>
+    </call>
+    <variable name="pStdout" type="file"/>
+    <variable name="stag" type="file"/>
+    <foreach var="stag" in="stags">
+      <call proc="twoPtSH">
+        <output>sStdout</output>
+        <input>gauge</input>
+        <input>stag</input>
+        <input>antiQ</input>
+        <input>q0</input>
+        <input>q1</input>
+        <input>q2</input>
+      </call>
+      <variable name="sStdout" type="file"/>
+    </foreach>
+  </foreach>
+</program>

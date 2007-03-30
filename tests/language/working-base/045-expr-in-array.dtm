@@ -1,0 +1,10 @@
+// see thread rooted at
+// <fec1351f0702060809p7264eddfsc63232f0a2d0d78d@mail.gmail.com>
+// it's unclear whether this should work or not, from that thread
+// (at least as much had progressed at time of writing)
+
+foreach string t,j in subjectNo {                                       
+     foreach string s,i in trialTypes {                                      
+       outputs[i*j]=3;                                                     
+   }                                                                         
+} 

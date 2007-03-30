@@ -1,0 +1,11 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <switch test="t">
+    <case value="3">
+      <call proc="f">
+        <output>j</output>
+        <input>9</input>
+      </call>
+    </case>
+  </switch>
+</program>

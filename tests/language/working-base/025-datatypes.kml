@@ -1,0 +1,31 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="p">
+    <vdl:new type="int" dbgname="p">
+      <argument name="value">3</argument>
+    </vdl:new>
+  </set>
+  <set name="q">
+    <vdl:new type="bool" dbgname="q">
+      <argument name="value">false</argument>
+    </vdl:new>
+  </set>
+  <set name="r">
+    <vdl:new type="bool" dbgname="r">
+      <argument name="value">true</argument>
+    </vdl:new>
+  </set>
+  <set name="n">
+    <vdl:new type="string" dbgname="n">
+      <argument name="value">hello</argument>
+    </vdl:new>
+  </set>
+  <set name="x">
+    <vdl:new type="uri" dbgname="x">
+      <argument name="value">http://www.ci.uchicago.edu/</argument>
+    </vdl:new>
+  </set>
+</project>

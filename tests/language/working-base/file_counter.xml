@@ -1,0 +1,42 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="ls">
+    <output name="f" type="file"/>
+    <input name="s" type="string"/>
+    <binding type="app">
+      <application>
+        <executable>ls</executable>
+        <argument>s</argument>
+        <stdout><function name="filename">f</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="wc">
+    <output name="c" type="file"/>
+    <input name="f" type="file"/>
+    <binding type="app">
+      <application>
+        <executable>wc</executable>
+        <stdin><function name="filename">f</function></stdin>
+        <stdout><function name="filename">c</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <variable name="list" type="file"/>
+  <variable name="count" type="file"/>
+  <call proc="ls">
+    <output>list</output>
+    <input>&quot;*.txt&quot;</input>
+  </call>
+  <call proc="wc">
+    <output>count</output>
+    <input>list</input>
+  </call>
+</program>

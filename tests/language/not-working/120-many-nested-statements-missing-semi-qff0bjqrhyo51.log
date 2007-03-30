@@ -1,0 +1,23 @@
+2007-02-13 23:23:01,515 INFO  Loader 120-many-nested-statements-missing-semi.dtm: source file is new. Recompiling.
+2007-02-13 23:23:02,132 ERROR VDLt2VDLx Could not compile SwiftScript source: line 6:25: unexpected token: int
+2007-02-13 23:23:02,143 DEBUG VDLt2VDLx Full parser exception
+line 6:25: unexpected token: int
+	at org.griphyn.vdl.parser.VDLtParser.innerStatement(VDLtParser.java:1866)
+	at org.griphyn.vdl.parser.VDLtParser.compoundStat(VDLtParser.java:1754)
+	at org.griphyn.vdl.parser.VDLtParser.ll1statement(VDLtParser.java:547)
+	at org.griphyn.vdl.parser.VDLtParser.innerStatement(VDLtParser.java:1804)
+	at org.griphyn.vdl.parser.VDLtParser.compoundStat(VDLtParser.java:1754)
+	at org.griphyn.vdl.parser.VDLtParser.ll1statement(VDLtParser.java:547)
+	at org.griphyn.vdl.parser.VDLtParser.innerStatement(VDLtParser.java:1804)
+	at org.griphyn.vdl.parser.VDLtParser.compoundStat(VDLtParser.java:1754)
+	at org.griphyn.vdl.parser.VDLtParser.ll1statement(VDLtParser.java:547)
+	at org.griphyn.vdl.parser.VDLtParser.topLevelStatement(VDLtParser.java:201)
+	at org.griphyn.vdl.parser.VDLtParser.program(VDLtParser.java:125)
+	at org.griphyn.vdl.toolkit.VDLt2VDLx.compile(VDLt2VDLx.java:55)
+	at org.griphyn.vdl.karajan.Loader.compile(Loader.java:172)
+	at org.griphyn.vdl.karajan.Loader.main(Loader.java:94)
+2007-02-13 23:23:02,150 DEBUG Loader Exception when compiling 120-many-nested-statements-missing-semi.dtm
+org.griphyn.vdl.toolkit.VDLt2VDLx$ParsingException
+	at org.griphyn.vdl.toolkit.VDLt2VDLx.compile(VDLt2VDLx.java:60)
+	at org.griphyn.vdl.karajan.Loader.compile(Loader.java:172)
+	at org.griphyn.vdl.karajan.Loader.main(Loader.java:94)

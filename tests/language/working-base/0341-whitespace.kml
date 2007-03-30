@@ -1,0 +1,17 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <vdl:assign dvar="{i}">
+    <argument name="svar">
+  	<product>
+  	  <sum>
+  	    <vdl:getfieldvalue var="{a}"/>
+  	    <vdl:getfieldvalue var="{b}"/>
+  	  </sum>
+  	  <number>5</number>
+  	</product>
+    </argument>
+  </vdl:assign>
+</project>

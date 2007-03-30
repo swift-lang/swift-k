@@ -1,0 +1,4 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="i" type="int"><function name="foo">1</function> + 2</variable>
+</program>

@@ -1,0 +1,552 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <types>
+    <xs:schema targetNamespace="http://www.griphyn.org/2006/08/vdl" xmlns="http://www.griphyn.org/2006/08/vdl" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:simpleType name="file">
+        <xs:restriction base="xs:string"/>
+      </xs:simpleType>
+    </xs:schema>
+  </types>
+  <element name="stageIn" arguments="gauge,input,config">
+    <vdl:typecheck argname="gauge" var="{gauge}" type="file"/>
+    <vdl:typecheck argname="input" var="{input}" type="file"/>
+    <vdl:typecheck argname="config" var="{config}" type="string"/>
+    <vdl:execute>
+      <vdl:tr>stageIn</vdl:tr>
+      <vdl:stagein var="{input}"/>
+      <vdl:stagein var="{config}"/>
+      <vdl:stageout var="{gauge}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-i</string>	
+        <vdl:filename var="{input}"/>	
+        <string>-c</string>	
+        <vdl:getfieldvalue var="{config}"/>	
+        <string>-o</string>	
+        <vdl:filename var="{gauge}"/>	
+      </vdl:arguments>
+
+    </vdl:execute>
+    <vdl:closedataset var="{gauge}"/>
+  </element>
+
+  <element name="stagSolve" arguments="output,gauge,mass,source">
+    <vdl:typecheck argname="output" var="{output}" type="file" isArray="true"/>
+    <vdl:typecheck argname="gauge" var="{gauge}" type="file"/>
+    <vdl:typecheck argname="mass" var="{mass}" type="string"/>
+    <vdl:typecheck argname="source" var="{source}" type="string"/>
+    <vdl:execute>
+      <vdl:tr>stagSolve</vdl:tr>
+      <vdl:stagein var="{gauge}"/>
+      <vdl:stagein var="{mass}"/>
+      <vdl:stagein var="{source}"/>
+      <vdl:stageout var="{output}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-g</string>	
+        <vdl:filename var="{gauge}"/>	
+        <string>-m</string>	
+        <vdl:getfieldvalue var="{mass}"/>	
+        <string>-s</string>	
+        <vdl:getfieldvalue var="{source}"/>	
+        <string>-o</string>	
+        <vdl:filename path="[*]" var="{output}"/>	
+      </vdl:arguments>
+
+    </vdl:execute>
+    <vdl:closedataset var="{output}"/>
+  </element>
+
+  <element name="cloverSolve" arguments="output,kappa,cSW,gauge,source">
+    <vdl:typecheck argname="output" var="{output}" type="file"/>
+    <vdl:typecheck argname="kappa" var="{kappa}" type="float"/>
+    <vdl:typecheck argname="cSW" var="{cSW}" type="float"/>
+    <vdl:typecheck argname="gauge" var="{gauge}" type="file"/>
+    <vdl:typecheck argname="source" var="{source}" type="string"/>
+    <vdl:execute>
+      <vdl:tr>cloverSolve</vdl:tr>
+      <vdl:stagein var="{kappa}"/>
+      <vdl:stagein var="{cSW}"/>
+      <vdl:stagein var="{gauge}"/>
+      <vdl:stagein var="{source}"/>
+      <vdl:stageout var="{output}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-k</string>	
+        <vdl:getfieldvalue var="{kappa}"/>	
+        <string>-c</string>	
+        <vdl:getfieldvalue var="{cSW}"/>	
+        <string>-g</string>	
+        <vdl:filename var="{gauge}"/>	
+        <string>-s</string>	
+        <vdl:getfieldvalue var="{source}"/>	
+        <string>-o</string>	
+        <vdl:filename var="{output}"/>	
+      </vdl:arguments>
+
+    </vdl:execute>
+    <vdl:closedataset var="{output}"/>
+  </element>
+
+  <element name="cvt12x12" arguments="output,input">
+    <vdl:typecheck argname="output" var="{output}" type="file"/>
+    <vdl:typecheck argname="input" var="{input}" type="file"/>
+    <vdl:execute>
+      <vdl:tr>CVT12x12</vdl:tr>
+      <vdl:stagein var="{input}"/>
+      <vdl:stageout var="{output}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-i</string>	
+        <vdl:filename var="{input}"/>	
+        <string>-o</string>	
+        <vdl:filename var="{output}"/>	
+      </vdl:arguments>
+
+    </vdl:execute>
+    <vdl:closedataset var="{output}"/>
+  </element>
+
+  <element name="archive" arguments="output,input">
+    <vdl:typecheck argname="output" var="{output}" type="file"/>
+    <vdl:typecheck argname="input" var="{input}" type="file"/>
+    <vdl:execute>
+      <vdl:tr>Archive</vdl:tr>
+      <vdl:stagein var="{input}"/>
+      <vdl:stageout var="{output}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-i</string>	
+        <vdl:filename var="{input}"/>	
+        <string>-o</string>	
+        <vdl:filename var="{output}"/>	
+      </vdl:arguments>
+
+    </vdl:execute>
+    <vdl:closedataset var="{output}"/>
+  </element>
+
+  <element name="archiveStag" arguments="output,mass,input">
+    <vdl:typecheck argname="output" var="{output}" type="file"/>
+    <vdl:typecheck argname="mass" var="{mass}" type="string"/>
+    <vdl:typecheck argname="input" var="{input}" type="file" isArray="true"/>
+    <vdl:execute>
+      <vdl:tr>ArchiveStag</vdl:tr>
+      <vdl:stagein var="{mass}"/>
+      <vdl:stagein var="{input}"/>
+      <vdl:stageout var="{output}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-m</string>	
+        <vdl:getfieldvalue var="{mass}"/>	
+        <string>-i</string>	
+        <vdl:filename path="[*]" var="{input}"/>	
+        <string>-o</string>	
+        <vdl:filename var="{output}"/>	
+      </vdl:arguments>
+
+    </vdl:execute>
+    <vdl:closedataset var="{output}"/>
+  </element>
+
+  <element name="twoPtHH" arguments="sdo,gauge,antiQ,Q0,Q1,Q2">
+    <vdl:typecheck argname="sdo" var="{sdo}" type="file"/>
+    <vdl:typecheck argname="gauge" var="{gauge}" type="file"/>
+    <vdl:typecheck argname="antiQ" var="{antiQ}" type="file"/>
+    <vdl:typecheck argname="Q0" var="{Q0}" type="file"/>
+    <vdl:typecheck argname="Q1" var="{Q1}" type="file"/>
+    <vdl:typecheck argname="Q2" var="{Q2}" type="file"/>
+    <vdl:execute>
+      <vdl:tr>TwoPtHH</vdl:tr>
+      <vdl:stagein var="{gauge}"/>
+      <vdl:stagein var="{antiQ}"/>
+      <vdl:stagein var="{Q0}"/>
+      <vdl:stagein var="{Q1}"/>
+      <vdl:stagein var="{Q2}"/>
+      <vdl:stageout var="{sdo}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-g</string>	
+        <vdl:filename var="{gauge}"/>	
+        <string>-a</string>	
+        <vdl:getfieldvalue var="{antiQ}"/>	
+        <string>-0</string>	
+        <vdl:getfieldvalue var="{Q0}"/>	
+        <string>-1</string>	
+        <vdl:getfieldvalue var="{Q1}"/>	
+        <string>-2</string>	
+        <vdl:getfieldvalue var="{Q2}"/>	
+      </vdl:arguments>
+      <vdl:stdout>
+        <vdl:filename var="{sdo}"/>	
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{sdo}"/>
+  </element>
+
+  <element name="twoPtSH" arguments="sdo,gauge,stag,antiQ,Q0,Q1,Q2">
+    <vdl:typecheck argname="sdo" var="{sdo}" type="file"/>
+    <vdl:typecheck argname="gauge" var="{gauge}" type="file"/>
+    <vdl:typecheck argname="stag" var="{stag}" type="file"/>
+    <vdl:typecheck argname="antiQ" var="{antiQ}" type="file"/>
+    <vdl:typecheck argname="Q0" var="{Q0}" type="file"/>
+    <vdl:typecheck argname="Q1" var="{Q1}" type="file"/>
+    <vdl:typecheck argname="Q2" var="{Q2}" type="file"/>
+    <vdl:execute>
+      <vdl:tr>TwoPtSH</vdl:tr>
+      <vdl:stagein var="{gauge}"/>
+      <vdl:stagein var="{stag}"/>
+      <vdl:stagein var="{antiQ}"/>
+      <vdl:stagein var="{Q0}"/>
+      <vdl:stagein var="{Q1}"/>
+      <vdl:stagein var="{Q2}"/>
+      <vdl:stageout var="{sdo}"/>
+      <vdl:arguments>
+        <string>-v</string>	
+        <string>-g</string>	
+        <vdl:filename var="{gauge}"/>	
+        <string>-s</string>	
+        <vdl:getfieldvalue var="{stag}"/>	
+        <string>-a</string>	
+        <vdl:getfieldvalue var="{antiQ}"/>	
+        <string>-0</string>	
+        <vdl:getfieldvalue var="{Q0}"/>	
+        <string>-1</string>	
+        <vdl:getfieldvalue var="{Q1}"/>	
+        <string>-2</string>	
+        <vdl:getfieldvalue var="{Q2}"/>	
+      </vdl:arguments>
+      <vdl:stdout>
+        <vdl:filename var="{sdo}"/>	
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{sdo}"/>
+  </element>
+
+  <set name="confList">
+    <vdl:new type="string" dbgname="confList" isArray="true">
+      <argument name="value">
+        <list>
+          <vdl:new value="&quot;000102&quot;"/>
+          <vdl:new value="&quot;000108&quot;"/>
+          <vdl:new value="&quot;000114&quot;"/>
+        </list>
+      </argument>
+    </vdl:new>
+  </set>
+  <set name="kappaQ">
+    <vdl:new type="float" dbgname="kappaQ">
+      <argument name="value">0.127</argument>
+    </vdl:new>
+  </set>
+  <set name="cSW">
+    <vdl:new type="float" dbgname="cSW">
+      <argument name="value">1.75</argument>
+    </vdl:new>
+  </set>
+  <set name="mass">
+    <vdl:new type="string" dbgname="mass">
+      <argument name="value">0.005,0.007,0.01,0.02,0.03</argument>
+    </vdl:new>
+  </set>
+  <set name="fn">
+    <vdl:new type="string" dbgname="fn" isArray="true">
+      <argument name="value">
+        <list>
+          <vdl:new value="&quot;m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000102&quot;"/>
+          <vdl:new value="&quot;m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108&quot;"/>
+          <vdl:new value="&quot;m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114&quot;"/>
+        </list>
+      </argument>
+    </vdl:new>
+  </set>
+  <set name="config">
+    <vdl:new type="string" dbgname="config">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="config-ed4faa9b-9d00-43dd-ad81-9bc4b9a29fcd"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  <parallelFor name="$">
+    		    <vdl:getarrayfieldvalue path="" var="{conflist}"/>
+    		      <set names="i, config">
+    		        <each items="{$}"/>
+    		      </set>
+    		      <set name="source">
+    		        <vdl:new type="string" dbgname="source">
+    		          <argument name="value">local,0,0,0,0</argument>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="template">
+    		        <vdl:new type="file" dbgname="template">
+    		          <vdl:mapping descriptor="single_file_mapper">
+    		            <vdl:parameter name="file" value="foo"/>
+    		            <vdl:parameter name="input" value="true"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="gauge">
+    		        <vdl:new type="file" dbgname="gauge">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="gauge-2d66324c-d6d1-415a-981c-e45eee7134d9"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="stags">
+    		        <vdl:new type="file" dbgname="stags" isArray="true">
+    		          <vdl:mapping descriptor="fixed_array_mapper">
+    		            <vdl:parameter name="files">
+    		              <vdl:getfield var="{fn}">
+    		                <argument name="path">
+    		                  <concat>
+    		                    <string>[i]</string>
+    		                  </concat>
+    		                </argument>
+    		              </vdl:getfield>  
+    		            </vdl:parameter>
+    		            <vdl:parameter name="input" value="false"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="stagTar">
+    		        <vdl:new type="file" dbgname="stagTar">
+    		          <vdl:mapping descriptor="simple_mapper">
+    		            <vdl:parameter name="suffix">
+    		              <string>.tar</string>
+    		            </vdl:parameter>
+    		            <vdl:parameter name="input" value="false"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="clover0">
+    		        <vdl:new type="file" dbgname="clover0">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="clover0-3882f9ca-08cc-4171-b908-b751b375658b"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="q0">
+    		        <vdl:new type="file" dbgname="q0">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="q0-82bf4b88-dfbe-4fcb-92d6-b01cd06af7b7"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="cvtArch0">
+    		        <vdl:new type="file" dbgname="cvtArch0">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="cvtArch0-0d5b700a-3e2f-4fe7-a4f0-a9da94c3af25"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="source1">
+    		        <vdl:new type="string" dbgname="source1">
+    		          <argument name="value">wavefunction,0,1S</argument>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="clover1">
+    		        <vdl:new type="file" dbgname="clover1">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="clover1-853b8c17-5e3e-400b-8127-dbe1db9e5085"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="q1">
+    		        <vdl:new type="file" dbgname="q1">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="q1-2acc32a8-80cb-448c-8f67-784bc5e4e5dc"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="cvtArch1">
+    		        <vdl:new type="file" dbgname="cvtArch1">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="cvtArch1-ad3ef926-8375-494a-8be2-a6c3dbc2f564"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="source2">
+    		        <vdl:new type="string" dbgname="source2">
+    		          <argument name="value">wavefunction,0,2S</argument>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="clover2">
+    		        <vdl:new type="file" dbgname="clover2">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="clover2-d5822349-194e-4981-9db2-cc64ceb0d1f0"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="q2">
+    		        <vdl:new type="file" dbgname="q2">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="q2-e3d4aaa7-d105-4661-b93b-131ec5da59fd"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="cvtArch2">
+    		        <vdl:new type="file" dbgname="cvtArch2">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="cvtArch2-4fcd6d45-f213-404d-908a-f100ccab5c1c"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="antiQ">
+    		        <vdl:new type="file" dbgname="antiQ">
+    		          <argument name="value">
+    		            <variable>q0</variable>
+    		          </argument>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="pStdout">
+    		        <vdl:new type="file" dbgname="pStdout">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="pStdout-91894744-e68a-4942-a7fa-93e8b24230ee"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <set name="stag">
+    		        <vdl:new type="file" dbgname="stag">
+    		          <vdl:mapping descriptor="concurrent_mapper">
+    		            <vdl:parameter name="prefix" value="stag-550c0066-fc91-4e26-a308-627bd49d8d13"/>
+    		          </vdl:mapping>
+    		        </vdl:new>
+    		      </set>
+    		      <parallel>
+    		        <stageIn>
+    		          <parallel>
+    		            <variable>gauge</variable>
+    		            <variable>template</variable>
+    		            <variable>config</variable>
+    		          </parallel>
+    		        </stageIn>
+    		        <stagSolve>
+    		          <parallel>
+    		            <variable>stags</variable>
+    		            <variable>gauge</variable>
+    		            <variable>mass</variable>
+    		            <variable>source</variable>
+    		          </parallel>
+    		        </stagSolve>
+    		        <archiveStag>
+    		          <parallel>
+    		            <variable>stagTar</variable>
+    		            <variable>mass</variable>
+    		            <variable>stags</variable>
+    		          </parallel>
+    		        </archiveStag>
+    		        <cloverSolve>
+    		          <parallel>
+    		            <variable>clover0</variable>
+    		            <variable>kappaQ</variable>
+    		            <variable>cSW</variable>
+    		            <variable>gauge</variable>
+    		            <variable>source</variable>
+    		          </parallel>
+    		        </cloverSolve>
+    		        <cvt12x12>
+    		          <parallel>
+    		            <variable>q0</variable>
+    		            <variable>clover0</variable>
+    		          </parallel>
+    		        </cvt12x12>
+    		        <archive>
+    		          <parallel>
+    		            <variable>cvtArch0</variable>
+    		            <variable>q0</variable>
+    		          </parallel>
+    		        </archive>
+    		        <cloverSolve>
+    		          <parallel>
+    		            <variable>clover1</variable>
+    		            <variable>kappaQ</variable>
+    		            <variable>cSW</variable>
+    		            <variable>gauge</variable>
+    		            <variable>source1</variable>
+    		          </parallel>
+    		        </cloverSolve>
+    		        <cvt12x12>
+    		          <parallel>
+    		            <variable>q1</variable>
+    		            <variable>clover1</variable>
+    		          </parallel>
+    		        </cvt12x12>
+    		        <archive>
+    		          <parallel>
+    		            <variable>cvtArch1</variable>
+    		            <variable>q1</variable>
+    		          </parallel>
+    		        </archive>
+    		        <cloverSolve>
+    		          <parallel>
+    		            <variable>clover2</variable>
+    		            <variable>kappaQ</variable>
+    		            <variable>cSW</variable>
+    		            <variable>gauge</variable>
+    		            <variable>source2</variable>
+    		          </parallel>
+    		        </cloverSolve>
+    		        <cvt12x12>
+    		          <parallel>
+    		            <variable>q2</variable>
+    		            <variable>clover2</variable>
+    		          </parallel>
+    		        </cvt12x12>
+    		        <archive>
+    		          <parallel>
+    		            <variable>cvtArch2</variable>
+    		            <variable>q2</variable>
+    		          </parallel>
+    		        </archive>
+    		        <twoPtHH>
+    		          <parallel>
+    		            <variable>pStdout</variable>
+    		            <variable>gauge</variable>
+    		            <variable>antiQ</variable>
+    		            <variable>q0</variable>
+    		            <variable>q1</variable>
+    		            <variable>q2</variable>
+    		          </parallel>
+    		        </twoPtHH>
+    		        <parallelFor name="$">
+    		          <vdl:getarrayfieldvalue path="" var="{stags}"/>
+    		            <set names="$$, stag">
+    		              <each items="{$}"/>
+    		            </set>
+    		            <set name="sStdout">
+    		              <vdl:new type="file" dbgname="sStdout">
+    		                <vdl:mapping descriptor="concurrent_mapper">
+    		                  <vdl:parameter name="prefix" value="sStdout-78990ad2-dc01-459c-be82-650cb478aa96"/>
+    		                </vdl:mapping>
+    		              </vdl:new>
+    		            </set>
+    		            <parallel>
+    		              <twoPtSH>
+    		                <parallel>
+    		                  <variable>sStdout</variable>
+    		                  <variable>gauge</variable>
+    		                  <variable>stag</variable>
+    		                  <variable>antiQ</variable>
+    		                  <variable>q0</variable>
+    		                  <variable>q1</variable>
+    		                  <variable>q2</variable>
+    		                </parallel>
+    		              </twoPtSH>
+    		            </parallel>
+    		        </parallelFor>
+    		      </parallel>
+    		  </parallelFor>
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+</project>

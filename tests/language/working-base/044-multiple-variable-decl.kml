@@ -1,0 +1,47 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="a">
+    <vdl:new type="int" dbgname="a">
+      <argument name="value">5</argument>
+    </vdl:new>
+  </set>
+  <set name="c">
+    <vdl:new type="int" dbgname="c">
+      <argument name="value">7</argument>
+    </vdl:new>
+  </set>
+  <set name="q">
+    <vdl:new type="int" dbgname="q">
+      <argument name="value">8</argument>
+    </vdl:new>
+  </set>
+  <set name="r">
+    <vdl:new type="int" dbgname="r">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="r-faed922b-b287-46cd-8f10-0a91d5f4c0f9"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <set name="s">
+    <vdl:new type="int" dbgname="s">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="s-fd061bdd-fbbc-4044-acf1-6f115b1fdb7a"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <set name="t">
+    <vdl:new type="int" dbgname="t">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="t-41cf2997-e97c-4cbf-927c-4da660e64e1f"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <set name="p">
+    <vdl:new type="int" dbgname="p">
+      <argument name="value">99</argument>
+    </vdl:new>
+  </set>
+</project>

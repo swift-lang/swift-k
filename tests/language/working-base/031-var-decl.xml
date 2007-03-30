@@ -1,0 +1,10 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="f" type="float" isArray="true">
+    <array>
+      <element>1.0</element>
+      <element>2.0</element>
+      <element>3.0</element>
+    </array>
+  </variable>
+</program>

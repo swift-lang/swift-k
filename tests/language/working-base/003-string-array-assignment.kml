@@ -1,0 +1,17 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="greetings">
+    <vdl:new type="string" dbgname="greetings" isArray="true">
+      <argument name="value">
+        <list>
+          <vdl:new value="&quot;how&quot;"/>
+          <vdl:new value="&quot;are&quot;"/>
+          <vdl:new value="&quot;you&quot;"/>
+        </list>
+      </argument>
+    </vdl:new>
+  </set>
+</project>

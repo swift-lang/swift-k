@@ -1,0 +1,15 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="v">
+    <vdl:new type="myfile" dbgname="v">
+      <vdl:mapping descriptor="simple_mapper">
+        <vdl:parameter name="pattern">
+          <string>*</string>
+        </vdl:parameter>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+</project>

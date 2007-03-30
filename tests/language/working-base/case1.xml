@@ -1,0 +1,22 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <switch test="d">
+    <case value="1">
+      <call proc="f">
+        <input>g</input>
+      </call>
+      <break/>
+    </case>
+    <case value="5">
+      <assign to="j">7</assign>
+      <call proc="fn">
+        <output>uuu</output>
+        <input>t + 7 + e + 3 * 2</input>
+      </call>
+      <break/>
+    </case>
+    <default>
+      <assign to="s">&quot;the default&quot;</assign>
+    </default>
+  </switch>
+</program>

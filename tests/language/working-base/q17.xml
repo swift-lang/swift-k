@@ -1,0 +1,44 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="messagefile">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+     <xs:simpleType name="countfile">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="countwords">
+    <output name="t" type="countfile"/>
+    <input name="f" type="messagefile"/>
+    <binding type="app">
+      <application>
+        <executable>wc</executable>
+        <argument>&quot;-w&quot;</argument>
+        <argument><function name="filename">f</function></argument>
+        <stdout><function name="filename">t</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <variable name="inputNames" type="string">&quot;one.txt two.txt three.txt&quot;</variable>
+  <dataset name="inputfiles" type="messagefile" isArray="true">
+    <mapping descriptor="array_mapper">
+      <param name="files">inputNames</param>
+    </mapping>
+  </dataset>
+  <foreach var="f" in="inputfiles">
+    <dataset name="c" type="countfile">
+      <mapping descriptor="regexp_mapper">
+        <param name="source"><function name="filename">f</function></param>
+        <param name="match">&quot;(.*)txt&quot;</param>
+        <param name="transform">&quot;\1count&quot;</param>
+      </mapping>
+    </dataset>
+    <call proc="countwords">
+      <output>c</output>
+      <input>f</input>
+    </call>
+  </foreach>
+</program>

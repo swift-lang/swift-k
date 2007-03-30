@@ -1,0 +1,134 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <types>
+    <xs:schema targetNamespace="http://www.griphyn.org/2006/08/vdl" xmlns="http://www.griphyn.org/2006/08/vdl" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:simpleType name="file">
+        <xs:restriction base="xs:string"/>
+      </xs:simpleType>
+    </xs:schema>
+  </types>
+  <element name="waveletTransf" arguments="wavelets,waveletScript,subjNo,trialType,dataFiles">
+    <vdl:typecheck argname="wavelets" var="{wavelets}" type="file" isArray="true"/>
+    <vdl:typecheck argname="waveletScript" var="{waveletScript}" type="file"/>
+    <vdl:typecheck argname="subjNo" var="{subjNo}" type="int"/>
+    <vdl:typecheck argname="trialType" var="{trialType}" type="string"/>
+    <vdl:typecheck argname="dataFiles" var="{dataFiles}" type="file"/>
+    <vdl:execute>
+      <vdl:tr>cwtsmall</vdl:tr>
+      <vdl:stagein var="{waveletScript}"/>
+      <vdl:stagein var="{subjNo}"/>
+      <vdl:stagein var="{trialType}"/>
+      <vdl:stagein var="{dataFiles}"/>
+      <vdl:stageout var="{wavelets}"/>
+      <vdl:arguments>
+        <vdl:filename var="{waveletScript}"/>	
+        <vdl:getfieldvalue var="{subjNo}"/>	
+        <vdl:getfieldvalue var="{trialType}"/>	
+      </vdl:arguments>
+
+    </vdl:execute>
+    <vdl:closedataset var="{wavelets}"/>
+  </element>
+
+  <element name="batchTrials" arguments="outputs,trialTypes">
+    <vdl:typecheck argname="outputs" var="{outputs}" type="file" isArray="true"/>
+    <vdl:typecheck argname="trialTypes" var="{trialTypes}" type="string" isArray="true"/>
+    <set name="waveletScript">
+      <vdl:new type="file" dbgname="waveletScript">
+        <vdl:mapping descriptor="single_file_mapper">
+          <vdl:parameter name="file">
+            <string>scripts/runTrialSubjectWavelet.R</string>
+          </vdl:parameter>
+          <vdl:parameter name="input" value="true"/>
+        </vdl:mapping>
+      </vdl:new>
+    </set>
+    <set name="s">
+      <vdl:new type="string" dbgname="s">
+        <vdl:mapping descriptor="concurrent_mapper">
+          <vdl:parameter name="prefix" value="s-df619f18-2c76-4c47-8e95-3bd09029b9e3"/>
+        </vdl:mapping>
+      </vdl:new>
+    </set>
+    <parallel>
+      <parallelFor name="$">
+        <vdl:getarrayfieldvalue path="" var="{trialTypes}"/>
+          <set names="i, s">
+            <each items="{$}"/>
+          </set>
+          <set name="dataFiles">
+            <vdl:new type="file" dbgname="dataFiles">
+              <vdl:mapping descriptor="simple_mapper">
+                <vdl:parameter name="prefix">
+                  <string>101_</string>
+                </vdl:parameter>
+                <vdl:parameter name="suffix">
+                  <variable>s</variable>
+                </vdl:parameter>
+                <vdl:parameter name="input" value="true"/>
+              </vdl:mapping>
+            </vdl:new>
+          </set>
+          <parallel>
+            <waveletTransf>
+              <parallel>
+                <variable>outputs</variable>
+                <variable>waveletScript</variable>
+                <vdl:new value="101"/>
+                <variable>s</variable>
+                <variable>dataFiles</variable>
+              </parallel>
+            </waveletTransf>
+          </parallel>
+      </parallelFor>
+    </parallel>
+    <vdl:closedataset var="{outputs}"/>
+  </element>
+
+  <set name="trialTypes">
+    <vdl:new type="string" dbgname="trialTypes" isArray="true">
+      <argument name="value">
+        <list>
+          <vdl:new value="&quot;FB&quot;"/>
+        </list>
+      </argument>
+    </vdl:new>
+  </set>
+  <set name="allOutputs">
+    <vdl:new type="file" dbgname="allOutputs" isArray="true">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="allOutputs-1f2bc25d-d3de-43c0-a04b-29b4fda0b9ba"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <set name="namedOutputs">
+    <vdl:new type="file" dbgname="namedOutputs" isArray="true">
+      <vdl:mapping descriptor="fixed_array_mapper">
+        <vdl:parameter name="files">
+          <string>101-FBchannel10_cwt-results.Rdata, 101-FBchannel11_cwt-results.Rdata, 101-FBchannel12_cwt-results.Rdata, 101-FBchannel13_cwt-results.Rdata, 101-FBchannel14_cwt-results.Rdata, 101-FBchannel15_cwt-results.Rdata, 101-FBchannel16_cwt-results.Rdata, 101-FBchannel17_cwt-results.Rdata, 101-FBchannel18_cwt-results.Rdata, 101-FBchannel19_cwt-results.Rdata, 101-FBchannel1_cwt-results.Rdata, 101-FBchannel20_cwt-results.Rdata, 101-FBchannel21_cwt-results.Rdata, 101-FBchannel22_cwt-results.Rdata, 101-FBchannel23_cwt-results.Rdata, 101-FBchannel24_cwt-results.Rdata, 101-FBchannel25_cwt-results.Rdata, 101-FBchannel26_cwt-results.Rdata, 101-FBchannel27_cwt-results.Rdata, 101-FBchannel28_cwt-results.Rdata, 101-FBchannel2_cwt-results.Rdata, 101-FBchannel3_cwt-results.Rdata, 101-FBchannel4_cwt-results.Rdata, 101-FBchannel5_cwt-results.Rdata, 101-FBchannel6_cwt-results.Rdata, 101-FBchannel7_cwt-results.Rdata, 101-FBchannel8_cwt-results.Rdata, 101-FBchannel9_cwt-results.Rdata</string>
+        </vdl:parameter>
+        <vdl:parameter name="input" value="false"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <vdl:setfieldvalue var="{file}" value="scripts/runTrialSubjectWavelet.R"/>
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  <batchTrials>
+    		    <parallel>
+    		      <variable>namedOutputs</variable>
+    		      <variable>trialTypes</variable>
+    		    </parallel>
+    		  </batchTrials>
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+</project>

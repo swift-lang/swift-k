@@ -1,0 +1,11 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="q" type="int">1</variable>
+  <variable name="r" type="int">23</variable>
+  <variable name="s" type="int">-7</variable>
+  <variable name="t" type="float">1e2</variable>
+  <variable name="u" type="float">.9</variable>
+  <variable name="v" type="float">.9e3</variable>
+  <variable name="w" type="float">987E-1</variable>
+  <variable name="x" type="float">6e+3</variable>
+</program>

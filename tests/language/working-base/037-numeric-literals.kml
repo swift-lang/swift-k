@@ -1,0 +1,51 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="q">
+    <vdl:new type="int" dbgname="q">
+      <argument name="value">1</argument>
+    </vdl:new>
+  </set>
+  <set name="r">
+    <vdl:new type="int" dbgname="r">
+      <argument name="value">23</argument>
+    </vdl:new>
+  </set>
+  <set name="s">
+    <vdl:new type="int" dbgname="s">
+      <argument name="value">
+        <product>
+          <number>-1</number>
+          <number>7</number>
+        </product>
+      </argument>
+    </vdl:new>
+  </set>
+  <set name="t">
+    <vdl:new type="float" dbgname="t">
+      <argument name="value">1e2</argument>
+    </vdl:new>
+  </set>
+  <set name="u">
+    <vdl:new type="float" dbgname="u">
+      <argument name="value">.9</argument>
+    </vdl:new>
+  </set>
+  <set name="v">
+    <vdl:new type="float" dbgname="v">
+      <argument name="value">.9e3</argument>
+    </vdl:new>
+  </set>
+  <set name="w">
+    <vdl:new type="float" dbgname="w">
+      <argument name="value">987E-1</argument>
+    </vdl:new>
+  </set>
+  <set name="x">
+    <vdl:new type="float" dbgname="x">
+      <argument name="value">6e+3</argument>
+    </vdl:new>
+  </set>
+</project>

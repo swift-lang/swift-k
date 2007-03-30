@@ -1,0 +1,47 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="nums">
+    <vdl:new type="int" dbgname="nums" isArray="true">
+      <argument name="value">
+        <vdl:range>
+          <argument name="from">
+            <vdl:new value="0"/>
+          </argument>
+          <argument name="to">
+            <vdl:new value="20"/>
+          </argument>
+          <argument name="step">
+            <vdl:new value="2"/>
+          </argument>
+        </vdl:range>
+      </argument>
+    </vdl:new>
+  </set>
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  <parallelFor name="$">
+    		    <vdl:getarrayfieldvalue path="" var="{nums}"/>
+    		      <set names="$$, num">
+    		        <each items="{$}"/>
+    		      </set>
+
+    		      <parallel>
+    		        <print>
+    		          <parallel>
+    		            <variable>num</variable>
+    		          </parallel>
+    		        </print>
+    		      </parallel>
+    		  </parallelFor>
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+</project>

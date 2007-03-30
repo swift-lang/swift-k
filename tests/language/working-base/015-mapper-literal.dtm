@@ -1,0 +1,1 @@
+myfile v<"literalfilename.txt">;

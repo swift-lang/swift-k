@@ -1,0 +1,5 @@
+(file fa[]) echo_batch (string sa[]) {
+    foreach string s, i in sa {
+        fa[i] = echo(s);
+    }
+}

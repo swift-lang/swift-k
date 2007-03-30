@@ -1,0 +1,100 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <types>
+    <xs:schema targetNamespace="http://www.griphyn.org/2006/08/vdl" xmlns="http://www.griphyn.org/2006/08/vdl" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:simpleType name="file">
+        <xs:restriction base="xs:string"/>
+      </xs:simpleType>
+    </xs:schema>
+  </types>
+  <element name="echo" arguments="f,s">
+    <vdl:typecheck argname="f" var="{f}" type="file"/>
+    <vdl:typecheck argname="s" var="{s}" type="string"/>
+    <vdl:execute>
+      <vdl:tr>echo</vdl:tr>
+      <vdl:stagein var="{s}"/>
+      <vdl:stageout var="{f}"/>
+      <vdl:arguments>
+        <vdl:getfieldvalue var="{s}"/>	
+      </vdl:arguments>
+      <vdl:stdout>
+        <vdl:filename var="{f}"/>	
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{f}"/>
+  </element>
+
+  <element name="echo_batch" arguments="fa,sa">
+    <vdl:typecheck argname="fa" var="{fa}" type="file" isArray="true"/>
+    <vdl:typecheck argname="sa" var="{sa}" type="string" isArray="true"/>
+    <set name="s">
+      <vdl:new type="string" dbgname="s">
+        <vdl:mapping descriptor="concurrent_mapper">
+          <vdl:parameter name="prefix" value="s-04051869-dec3-4ef1-889e-5a42306452d0"/>
+        </vdl:mapping>
+      </vdl:new>
+    </set>
+    <parallel>
+      <parallelFor name="$">
+        <vdl:getarrayfieldvalue path="" var="{sa}"/>
+          <set names="i, s">
+            <each items="{$}"/>
+          </set>
+
+          <parallel>
+            <echo>
+              <parallel>
+                <vdl:getfield var="{fa}">
+                  <argument name="path">
+                    <concat>
+                      <string>[i]</string>
+                    </concat>
+                  </argument>
+                </vdl:getfield>  
+                <variable>s</variable>
+              </parallel>
+            </echo>
+          </parallel>
+      </parallelFor>
+    </parallel>
+    <vdl:closedataset var="{fa}"/>
+  </element>
+
+  <set name="sa">
+    <vdl:new type="string" dbgname="sa" isArray="true">
+      <argument name="value">
+        <list>
+          <vdl:new value="&quot;hello&quot;"/>
+          <vdl:new value="&quot;hi there&quot;"/>
+          <vdl:new value="&quot;how are you&quot;"/>
+        </list>
+      </argument>
+    </vdl:new>
+  </set>
+  <set name="fa">
+    <vdl:new type="file" dbgname="fa" isArray="true">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="fa-335ef58f-6d8d-4b8b-ab53-92eba6545062"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  <echo_batch>
+    		    <parallel>
+    		      <variable>fa</variable>
+    		      <variable>sa</variable>
+    		    </parallel>
+    		  </echo_batch>
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+</project>

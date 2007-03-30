@@ -1,0 +1,6 @@
+
+// this tests an inner statement dataset declaration
+
+{
+int i <"filename">;
+}

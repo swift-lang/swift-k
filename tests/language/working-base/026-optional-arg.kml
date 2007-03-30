@@ -1,0 +1,32 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="out">
+    <vdl:new type="File" dbgname="out">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="out-e79a9c65-a4a1-4932-9431-0ea49d8c6bf7"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  <myproc1>
+    		    <parallel>
+    		      <variable>out</variable>
+    		      <vdl:new value="100"/>
+    		      <argument name="optional_arg">
+    		        <vdl:new value="&quot;foo&quot;"/>
+    		      </argument>
+    		    </parallel>
+    		  </myproc1>
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+</project>

@@ -1,0 +1,38 @@
+type file {}
+(file t) Pre_antchmbr (file f[]) {     
+    app {  
+        pre_ch;  
+    }  
+}
+
+(file k, file m, file n) Antchmbr (file l) {
+	app { 
+	antch "-s" "2" "-i" @l "-fi" "mol2" "-rn" "m001" "-o" @l "-fo" "charmm" "-c" "bcc";
+	}
+}
+
+(file out1, file out2, file out3, file out4, file out5, file out6) CHARMM (file in1, file in2, file in3, file in4, file in5, file in6, file in7)  {
+	app {
+	chrm "system:solv_m001" "title:solv" "stitle:m001" "rtffile:"@in1 "paramfile:"@in2 "gaff:m001_am1" "nwater:400" "ligcrd:lyz" "rforce:0" "iseed:3131887" "rwater:15" "nstep:100" "minstep:100" "skipstep:100" "startstep:10000" stdin=@in3 stdout=@out1;
+	}
+}
+
+file files[]<filesys_mapper;pattern="*mol2",location=".">;  
+file am1_file <"m001_am1">;
+file rtf_file <"m001_am1.rtf">;
+file crd_file <"m001_am1.crd">;
+file prm_file <"m001_am1.prm">;
+file gaff_rft <"parm03_gaff_all.rtf">;
+file gaff_prm <"parm03_gaffnb_all.prm">;
+file stdn <"equil_solv.inp">;
+file water_file <"water_400.crd">;
+file stdt <"equil_solv.out">;
+file psf_file <"solv_m001.psf">;
+file crd_eq_file <"solv_m001_eq.crd">;
+file rst_file <"solv_m001.rst">;
+file trj_file <"solv_m001.trj">;
+file crd_min_file <"solv_m001_min.crd">;
+
+am1_file = Pre_antchmbr (@files);
+(rtf_file, crd_file, prm_file) = Antchmbr (am1_file);
+(stdt, psf_file, crd_eq_file, rst_file, trj_file, crd_min_file) = CHARMM (gaff_rft, gaff_prm, stdn, rtf_file, prm_file, crd_file, water_file);

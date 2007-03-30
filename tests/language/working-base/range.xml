@@ -1,0 +1,11 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="nums" type="int" isArray="true">
+    <range from="0" to="20" step="2"/>
+  </variable>
+  <foreach var="num" in="nums">
+    <call proc="print">
+      <input>num</input>
+    </call>
+  </foreach>
+</program>

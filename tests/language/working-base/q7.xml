@@ -1,0 +1,33 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="echo">
+    <output name="t" type="file"/>
+    <input name="s" type="string"/>
+    <binding type="app">
+      <application>
+        <executable>echo</executable>
+        <argument>s</argument>
+        <stdout><function name="filename">t</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <variable name="outputNames" type="string">&quot;one two three&quot;</variable>
+  <dataset name="outputFiles" type="file" isArray="true">
+    <mapping descriptor="array_mapper">
+      <param name="files">outputNames</param>
+    </mapping>
+  </dataset>
+  <foreach var="f" in="outputFiles">
+    <call proc="echo">
+      <output>f</output>
+      <input>&quot;hello&quot;</input>
+    </call>
+  </foreach>
+</program>

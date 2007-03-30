@@ -1,0 +1,88 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <types>
+    <xs:schema targetNamespace="http://www.griphyn.org/2006/08/vdl" xmlns="http://www.griphyn.org/2006/08/vdl" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:simpleType name="messagefile">
+        <xs:restriction base="xs:string"/>
+      </xs:simpleType>
+      <xs:simpleType name="countfile">
+        <xs:restriction base="xs:string"/>
+      </xs:simpleType>
+    </xs:schema>
+  </types>
+  <element name="greeting" arguments="t,s">
+    <vdl:typecheck argname="t" var="{t}" type="messagefile"/>
+    <vdl:typecheck argname="s" var="{s}" type="string"/>
+    <vdl:execute>
+      <vdl:tr>echo</vdl:tr>
+      <vdl:stagein var="{s}"/>
+      <vdl:stageout var="{t}"/>
+      <vdl:arguments>
+        <vdl:getfieldvalue var="{s}"/>	
+      </vdl:arguments>
+      <vdl:stdout>
+        <vdl:filename var="{t}"/>	
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{t}"/>
+  </element>
+
+  <element name="countwords" arguments="t,f">
+    <vdl:typecheck argname="t" var="{t}" type="countfile"/>
+    <vdl:typecheck argname="f" var="{f}" type="messagefile"/>
+    <vdl:execute>
+      <vdl:tr>wc</vdl:tr>
+      <vdl:stagein var="{f}"/>
+      <vdl:stageout var="{t}"/>
+      <vdl:arguments>
+        <string>-w</string>	
+        <vdl:filename var="{f}"/>	
+      </vdl:arguments>
+      <vdl:stdout>
+        <vdl:filename var="{t}"/>	
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{t}"/>
+  </element>
+
+  <set name="outfile">
+    <vdl:new type="messagefile" dbgname="outfile">
+      <vdl:mapping descriptor="concurrent_mapper">
+        <vdl:parameter name="prefix" value="outfile-035f8231-cd24-4aa9-b3d9-a5ebc1e6937a"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <set name="c">
+    <vdl:new type="countfile" dbgname="c">
+      <vdl:mapping descriptor="single_file_mapper">
+        <vdl:parameter name="file" value="count14.txt"/>
+        <vdl:parameter name="input" value="false"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  <greeting>
+    		    <parallel>
+    		      <variable>outfile</variable>
+    		      <vdl:new value="&quot;hello from Swift&quot;"/>
+    		    </parallel>
+    		  </greeting>
+    		  <countwords>
+    		    <parallel>
+    		      <variable>c</variable>
+    		      <variable>outfile</variable>
+    		    </parallel>
+    		  </countwords>
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+</project>

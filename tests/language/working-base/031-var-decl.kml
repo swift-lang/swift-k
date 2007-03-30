@@ -1,0 +1,17 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <set name="f">
+    <vdl:new type="float" dbgname="f" isArray="true">
+      <argument name="value">
+        <list>
+          <vdl:new value="1.0"/>
+          <vdl:new value="2.0"/>
+          <vdl:new value="3.0"/>
+        </list>
+      </argument>
+    </vdl:new>
+  </set>
+</project>

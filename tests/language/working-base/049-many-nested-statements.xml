@@ -1,0 +1,6 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <variable name="a" type="int"/>
+      <variable name="b" type="int"/>
+        <variable name="c" type="int"/>
+</program>

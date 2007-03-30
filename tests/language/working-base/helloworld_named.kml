@@ -1,0 +1,54 @@
+<project>
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <types>
+    <xs:schema targetNamespace="http://www.griphyn.org/2006/08/vdl" xmlns="http://www.griphyn.org/2006/08/vdl" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:simpleType name="file">
+        <xs:restriction base="xs:string"/>
+      </xs:simpleType>
+    </xs:schema>
+  </types>
+  <element name="echo" arguments="t,s">
+    <vdl:typecheck argname="t" var="{t}" type="file"/>
+    <vdl:typecheck argname="s" var="{s}" type="string"/>
+    <vdl:execute>
+      <vdl:tr>echo</vdl:tr>
+      <vdl:stagein var="{s}"/>
+      <vdl:stageout var="{t}"/>
+      <vdl:arguments>
+        <vdl:getfieldvalue var="{s}"/>	
+      </vdl:arguments>
+      <vdl:stdout>
+        <vdl:filename var="{t}"/>	
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{t}"/>
+  </element>
+
+  <set name="hw">
+    <vdl:new type="file" dbgname="hw">
+      <vdl:mapping descriptor="single_file_mapper">
+        <vdl:parameter name="file" value="helloworld.txt"/>
+        <vdl:parameter name="input" value="false"/>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <restartLog>
+  	<vdl:pre/>
+  	<vdl:mains>
+		<vdl:mainp>
+		    <parallel>
+    		  <echo>
+    		    <parallel>
+    		      <variable>hw</variable>
+    		      <vdl:new value="&quot;hello world&quot;"/>
+    		    </parallel>
+    		  </echo>
+	    	</parallel>
+		</vdl:mainp>
+	</vdl:mains>
+	<vdl:post/>
+  </restartLog>  
+</project>

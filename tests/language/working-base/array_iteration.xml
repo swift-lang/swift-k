@@ -1,0 +1,44 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="echo">
+    <output name="f" type="file"/>
+    <input name="s" type="string"/>
+    <binding type="app">
+      <application>
+        <executable>echo</executable>
+        <argument>s</argument>
+        <stdout><function name="filename">f</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="echo_batch">
+    <output name="fa" type="file" isArray="true"/>
+    <input name="sa" type="string" isArray="true"/>
+    <variable name="s" type="string"/>
+    <foreach var="s" in="sa" indexVar="i">
+      <call proc="echo">
+        <output>fa[i]</output>
+        <input>s</input>
+      </call>
+    </foreach>
+  </procedure>
+  <variable name="sa" type="string" isArray="true">
+    <array>
+      <element>&quot;hello&quot;</element>
+      <element>&quot;hi there&quot;</element>
+      <element>&quot;how are you&quot;</element>
+    </array>
+  </variable>
+  <variable name="fa" type="file" isArray="true"/>
+  <call proc="echo_batch">
+    <output>fa</output>
+    <input>sa</input>
+  </call>
+</program>

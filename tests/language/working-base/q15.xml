@@ -1,0 +1,41 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="messagefile">
+       <xs:restriction base="xs:string"/>
+     </xs:simpleType>
+     <xs:complexType name="details">
+       <xs:sequence>
+           <xs:element name="name" type="xs:string"/>
+           <xs:element name="pies" type="xs:int"/>
+       </xs:sequence>
+     </xs:complexType>
+    </xs:schema>
+  </types>
+  <procedure name="greeting">
+    <output name="t" type="messagefile"/>
+    <input name="d" type="details"/>
+    <binding type="app">
+      <application>
+        <executable>echo</executable>
+        <argument>&quot;Hello. Your names is&quot;</argument>
+        <argument>d.name</argument>
+        <argument>&quot;and you have eaten&quot;</argument>
+        <argument>d.pies</argument>
+        <argument>&quot;pies.&quot;</argument>
+        <stdout><function name="filename">t</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <variable name="person" type="details"/>
+  <assign to="person.name">&quot;John&quot;</assign>
+  <assign to="person.pies">3</assign>
+  <dataset name="outfile" type="messagefile">
+    <file name="q15.txt"/>
+  </dataset>
+  <call proc="greeting">
+    <output>outfile</output>
+    <input>person</input>
+  </call>
+</program>

@@ -1,0 +1,17 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:complexType name="foo">
+       <xs:sequence>
+           <xs:element name="a" type="xs:int"/>
+         <xs:sequence minOccurs="0" maxOccurs="unbounded">
+           <xs:element name="b" type="xs:int"/>
+         </xs:sequence>
+           <xs:element name="c" type="xs:int"/>
+           <xs:element name="d" type="xs:int"/>
+       </xs:sequence>
+     </xs:complexType>
+    </xs:schema>
+  </types>
+</program>

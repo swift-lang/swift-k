@@ -1,0 +1,16 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="x" type="int"/>
+  <variable name="y" type="int">2</variable>
+  <variable name="s" type="String">&quot;hello&quot;</variable>
+  <variable name="f" type="float" isArray="true">
+    <array>
+      <element>1.0</element>
+      <element>2.0</element>
+      <element>3.0</element>
+    </array>
+  </variable>
+  <variable name="p" type="int" isArray="true">
+    <range from="1" to="9" step="2"/>
+  </variable>
+</program>

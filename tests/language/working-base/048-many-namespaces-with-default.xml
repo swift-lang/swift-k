@@ -1,0 +1,7 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	 targetNamespace="http://namespace"
+	 xmlns:foo="http://first/"
+	 xmlns:bar="http://second/"
+	 xmlns:qux="http://third/">
+</program>
