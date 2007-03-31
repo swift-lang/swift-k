@@ -48,7 +48,8 @@ public class VDLExpression {
 			return null;
 		
 		String expr = expression + ";";
-		VDLtLexer lexer = new VDLtLexer(new StringReader(expr));
+		StringReader reader = new StringReader(expr);
+		VDLtLexer lexer = new VDLtLexer(reader);
 		VDLtParser parser = new VDLtParser(lexer);
 		parser.setTemplateGroup(templates);
 		StringTemplate exprST = null;
@@ -60,6 +61,15 @@ public class VDLExpression {
 		}
 		catch (TokenStreamException e) {
 			throw new TokenStreamException(e + "\n in " + expression);
+		}
+
+		try {
+			int c = reader.read();
+			if(-1 != c) {
+				throw new RuntimeException("didn't parse whole expression\n in " + expression + ". Next character is "+(char)c);
+			}
+		} catch(IOException e) {
+			throw new RuntimeException("while checking that whole expression was parsed", e);
 		}
 		return exprST;
 	}
