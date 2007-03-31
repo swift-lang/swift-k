@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# run this with vdlc on the path, with pwd set to the directory
+# in which you found this script, so that it can find the working/ etc
+# subdirectories.
+
 pushd working
 rm -v *.?ml
 for a in *.dtm; do 
@@ -9,10 +13,6 @@ for a in *.dtm; do
   b=$(basename -s .dtm $a).xml
   diff -q $b ../working-base/$b
   if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
-
-# echo Attempting hswift known-good $a
-#  ~/work/hswift/a.out $a
-#  if [ "$?" -ne "0" ]; then echo "TEST FAILED" ; exit; fi
 
 done
 popd
@@ -24,10 +24,6 @@ for a in *.dtm; do
   echo Attempting vdlc known-bad $a
   vdlc $a
   if [ "$?" -eq "0" ]; then echo "TEST FAILED"; exit; fi
-
-#  echo Attempting hswift known-bad $a
-#  ~/work/hswift/a.out $a
-#  if [ "$?" -eq "0" ]; then echo "TEST FAILED" ; exit; fi
 
 done
 echo Finished all syntax tests
