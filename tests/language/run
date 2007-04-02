@@ -10,7 +10,7 @@ for a in *.dtm; do
   echo Attempting vdlc known-good $a
   vdlc $a
   if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
-  b=$(basename -s .dtm $a).xml
+  b=$(basename -s .swift $(basename -s .dtm $a)).xml
   diff -q $b ../working-base/$b
   if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
 
@@ -19,7 +19,7 @@ popd
 
 pushd not-working
 rm -v *.?ml
-for a in *.dtm; do
+for a in *.dtm *.swift; do
 
   echo Attempting vdlc known-bad $a
   vdlc $a
