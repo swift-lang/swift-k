@@ -1,0 +1,4 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="v" type="int">7 + 3 + 2 * 6</variable>
+</program>
