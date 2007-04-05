@@ -75,9 +75,12 @@ public class PBSExecutor implements ProcessListener {
             logger.debug("Wrote PBS script to " + script);
         }
 
-        Process process = Runtime.getRuntime().exec(
-                new String[] { Properties.getProperties().getQSub(),
-                        script.getAbsolutePath() }, null, null);
+        String[] cmdline = new String[] { Properties.getProperties().getQSub(),
+                script.getAbsolutePath() };
+        if (logger.isDebugEnabled()) {
+            logger.debug(cmdline[0]+" "+cmdline[1]);
+        }
+        Process process = Runtime.getRuntime().exec(cmdline, null, null);
 
         try {
             process.getOutputStream().close();
@@ -117,11 +120,12 @@ public class PBSExecutor implements ProcessListener {
     private void error(String message) {
         listener.processFailed(message);
     }
-    
-    protected void writeAttr(String attrName, String arg, Writer wr) throws IOException {
+
+    protected void writeAttr(String attrName, String arg, Writer wr)
+            throws IOException {
         Object value = spec.getAttribute(attrName);
         if (value != null) {
-            wr.write("#PBS "+arg + String.valueOf(value) + '\n');
+            wr.write("#PBS " + arg + String.valueOf(value) + '\n');
         }
     }
 
@@ -168,6 +172,9 @@ public class PBSExecutor implements ProcessListener {
     }
 
     protected String quote(String s) {
+        if ("".equals(s)) {
+            return "\"\"";
+        }
         boolean quotes = false;
         if (s.indexOf(' ') != -1) {
             quotes = true;
