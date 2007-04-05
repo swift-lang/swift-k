@@ -134,6 +134,7 @@ public class PBSExecutor implements ProcessListener {
         wr.write("#PBS -S /bin/sh\n");
         wr.write("#PBS -N " + task.getName() + '\n');
         wr.write("#PBS -m n\n");
+        writeAttr("project", "-A", wr);
         writeAttr("count", "-l nodes=", wr);
         writeAttr("maxwalltime", "-l walltime=", wr);
         writeAttr("queue", "-q ", wr);
