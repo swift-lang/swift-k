@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
@@ -146,7 +147,6 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 
 	public static final Arg A_SECURITY_CONTEXT = new Arg.TypedPositional("securityContext",
 			SecurityContext.class, "Security Context");
-
 	public void setSecurityContext(VariableStack stack, Service service) throws ExecutionException {
 		if (A_SECURITY_CONTEXT.isPresent(stack)) {
 			SecurityContext sc = (SecurityContext) A_SECURITY_CONTEXT.getValue(stack);
@@ -187,7 +187,6 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			}
 		}
 	}
-
 	public void submitUnscheduled(TaskHandler handler, Task task, VariableStack stack)
 			throws ExecutionException {
 		task.addStatusListener(this);
@@ -201,7 +200,9 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		catch (Exception e) {
 			// avoid failing twice if status is already set
 			if (task.getStatus().getStatusCode() != Status.FAILED) {
-				logger.debug("Exception caught while submitting task: ", e);
+				if (logger.isDebugEnabled()) {
+					logger.debug("Exception caught while submitting task: ", e);
+				}
 				throw new ExecutionException(ExecutionContext.getMeaningfulMessage(e), e);
 			}
 			else {
@@ -209,12 +210,17 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			}
 		}
 	}
-
 	public void submitScheduled(Scheduler scheduler, Task task, VariableStack stack,
 			Object constraints) {
-		if (logger.isInfoEnabled()) {
-			logger.info(task);
-			logger.info("Submitting task " + task.getIdentity());
+		try {
+			task.setIdentity(new IdentityImpl(ThreadingContext.get(stack).toString()));
+		}
+		catch (VariableNotFoundException e) {
+			// such is life
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug(task);
+			logger.debug("Submitting task " + task.getIdentity());
 		}
 		scheduler.addJobStatusListener(this, task);
 		synchronized (tasks) {
@@ -226,19 +232,25 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 	public void statusChanged(StatusEvent e) {
 		try {
 			int status = e.getStatus().getStatusCode();
-			if (logger.isInfoEnabled()) {
-				logger.info("Task status changed " + e.getSource().getIdentity() + " " + status);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Task status changed " + e.getSource().getIdentity() + " " + status);
 			}
 			if (!e.getStatus().isTerminal()) {
 				return;
 			}
 			Task task = (Task) e.getSource();
-			VariableStack stack = (VariableStack) tasks.get(task);
+			VariableStack stack;
+			synchronized (tasks) {
+				stack = (VariableStack) tasks.get(task);
+			}
 			if (stack == null) {
 				logger.warn("Received status event from unknown task " + e.getSource());
+				return;
 			}
 			try {
-				logger.debug("Got status event: " + status);
+				if (logger.isDebugEnabled()) {
+					logger.debug("Got status event: " + status);
+				}
 				Scheduler scheduler = getScheduler(stack);
 				if (scheduler != null) {
 					scheduler.removeJobStatusListener(this, task);
@@ -275,13 +287,15 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 				logger.warn("Task being removed twice?", new Throwable());
 			}
 		}
-		logger.debug("Tasks in the map: " + tasks.size());
+		if (logger.isDebugEnabled()) {
+			logger.debug("Tasks in the map: " + tasks.size());
+		}
 	}
 
 	protected void taskFailed(StatusEvent e, VariableStack stack) throws ExecutionException {
-		if (logger.isInfoEnabled()) {
+		if (logger.isDebugEnabled()) {
 			Task t = (Task) e.getSource();
-			logger.info("Failed task: " + t.getSpecification() + " on " + t.getAllServices());
+			logger.debug("Failed task: " + t.getSpecification() + " on " + t.getAllServices());
 		}
 		Exception ex = e.getStatus().getException();
 		if (ex != null) {
