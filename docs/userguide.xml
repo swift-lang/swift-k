@@ -5,7 +5,7 @@
 <article>
 	<articleinfo revision="0.1">
 		<title>The SwiftScript User Guide</title>
-        <subtitle>Source control $LastChangedRevision$</subtitle>
+		<subtitle>Source control $LastChangedRevision$</subtitle>
 		<author>
 			<firstname>Yong</firstname>
 			<surname>Zhao</surname>
@@ -428,24 +428,24 @@ data storage.
 		
 	<itemizedlist>
 	<listitem>Name: single_file_mapper</listitem>
-    <listitem>Description:
+	<listitem>Description:
 A single file mapper maps a single physical file to a dataset.
-    </listitem>
-    <listitem>Parameter:
-        <itemizedlist>
-        <listitem>file:
-          The location of the physical file including path and file name.
-        </listitem>
-        </itemizedlist>
-    </listitem>
+	</listitem>
+	<listitem>Parameter:
+		<itemizedlist>
+		<listitem>file:
+			The location of the physical file including path and file name.
+		</listitem>
+		</itemizedlist>
+	</listitem>
 
-    <listitem> Example:
+	<listitem> Example:
 			<programlisting>
 	file f &lt;single_file_mapper;file="plot_outfile_param"&gt;;
 			</programlisting>
-			
+
 There is a simplified syntax for this mapper:
-			
+
 
 			<programlisting>
 	file f &lt;"plot_outfile_param"&gt;;
@@ -457,83 +457,83 @@ There is a simplified syntax for this mapper:
 	<sect2><title>The simple mapper</title>
 	<itemizedlist>
 	<listitem>Name: simple_mapper</listitem>
-    <listitem>Description:
+	<listitem>Description:
 A mapper that maps a file or a list of files into an array.
 by prefix, suffix, and pattern.
 if there are more than one file matched, each of the file names would
 be mapped as a subelement of the dataset.
-    </listitem>
-    <listitem>Parameter:
-        <itemizedlist>
-        <listitem>location:
-          A directory that the files are located.
-        </listitem>
-        <listitem>prefix:
-          The prefix of the files
-        </listitem>
-        <listitem>suffix:
-          The suffix of the files, for instance: &quot;.txt&quot;
-        </listitem>
-        <listitem>pattern:
+	</listitem>
+	<listitem>Parameter:
+		<itemizedlist>
+		<listitem>location:
+			A directory that the files are located.
+		</listitem>
+		<listitem>prefix:
+			The prefix of the files
+		</listitem>
+		<listitem>suffix:
+			The suffix of the files, for instance: &quot;.txt&quot;
+		</listitem>
+		<listitem>pattern:
 A UNIX glob style pattern, for instance: &quot;*foo*&quot; would match 
 all file names that contain foo. When this mapper is used to specify
 output filenames, pattern is ignored.
-        </listitem>
-        </itemizedlist>
-    </listitem>
-    <listitem> Example:
+		</listitem>
+		</itemizedlist>
+	</listitem>
+	<listitem> Example:
 		<programlisting>
 	file f &lt;simple_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
 The above example would map all filenames that start 
 with &quot;foo&quot; and have an extension &quot;.txt&quot; into file f.
-    </listitem>
+	</listitem>
 	</itemizedlist>
 	</sect2>
 
 	<sect2><title>concurrent mapper</title>
 	<itemizedlist>
 	<listitem>Name: concurrent_mapper</listitem>
-    <listitem>Description:
+	<listitem>Description:
 Concurrent mapper is almost the same as the simple mapper,
 except that it is used to map an output file, and the filename
 generated will contain an extract sequence that is unique.
 This mapper is the default mapper for variables when no mapper is
 specified.
-    </listitem>
-    <listitem>Parameter:
-        <itemizedlist>
-        <listitem>location:
-          A directory that the files are located.
-        </listitem>
-        <listitem>prefix:
-          The prefix of the files
-        </listitem>
-        <listitem>suffix:
-          The suffix of the files, for instance: &quot;.txt&quot;
-        </listitem>
-        <listitem>pattern:
+	</listitem>
+		<listitem>Parameter:
+		<itemizedlist>
+		<listitem>location:
+			A directory that the files are located.
+		</listitem>
+		<listitem>prefix:
+			The prefix of the files
+		</listitem>
+		<listitem>suffix:
+			The suffix of the files, for instance: &quot;.txt&quot;
+		</listitem>
+		<listitem>pattern:
 A UNIX glob style pattern, for instance: &quot;*foo*&quot; would
 match all file names that contain foo. When this mapper is used
 to specify output filenames, pattern is ignored.
-        </listitem>
-        </itemizedlist>
-    </listitem>
-    <listitem> Example:
+		</listitem>
+		</itemizedlist>
+	</listitem>
+	<listitem> Example:
 		<programlisting>
 	file f1;
 	file f2 &lt;concurrent_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
 The above example would use concurrent mapper for f1 and f2, and 
 generate f2 filename with prefix &quot;foo&quot; and extension &quot;.txt&quot;
-    </listitem>
+	</listitem>
 	</itemizedlist>
 	</sect2>
 
 	<sect2><title>file system mapper</title>
 <para>TODO: note on difference between location as a relative vs absolute
 path wrt staging to remote location - as mihael said:
-It's because you specify that location in the mapper. Try location="."          
+It's because you specify that location in the mapper. Try location="."
 instead of location="/sandbox/..."</para>
 	<itemizedlist>
 	<listitem>Name: filesys_mapper</listitem>
@@ -541,33 +541,33 @@ instead of location="/sandbox/..."</para>
 This mapper is similar to the simple mapper, but maps a file or 
 a list of files to a dataset array. Each of the filenames would
 be mapped as an element in the array.
-    </listitem>
-    <listitem>Parameter:
-        <itemizedlist>
-        <listitem>location:
-          A directory that the files are located.
-        </listitem>
-        <listitem>prefix:
-          The prefix of the files
-        </listitem>
-        <listitem>suffix:
-          The suffix of the files, for instance: &quot;.txt&quot;
-        </listitem>
-        <listitem>pattern:
+	</listitem>
+		<listitem>Parameter:
+		<itemizedlist>
+		<listitem>location:
+			A directory that the files are located.
+		</listitem>
+		<listitem>prefix:
+			The prefix of the files
+		</listitem>
+		<listitem>suffix:
+			The suffix of the files, for instance: &quot;.txt&quot;
+		</listitem>
+	<listitem>pattern:
 A UNIX glob style pattern, for instance: &quot;*foo*&quot; would
 match all file names that contain foo.
-		
-        </listitem>
-        </itemizedlist>
-    </listitem>
 
-    <listitem> Example:
+		</listitem>
+		</itemizedlist>
+	</listitem>
+
+	<listitem> Example:
 			<programlisting>
 	file texts[] &lt;filesys_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
 The above example would map all filenames that start with &quot;foo&quot; 
 and have an extension &quot;.txt&quot; into the array texts.
-    </listitem>
+	</listitem>
 	</itemizedlist>
 	</sect2>
 
@@ -577,100 +577,100 @@ and have an extension &quot;.txt&quot; into the array texts.
     <listitem>Description:
 This mapper maps from a string that contains a list of filenames 
 into a file array.
-    </listitem>
-    <listitem>Parameter:
-        <itemizedlist>
-        <listitem>files:
+	</listitem>
+	<listitem>Parameter:
+		<itemizedlist>
+		<listitem>files:
 A string that contains a list of filenames, separated by space, comma or colon
-        </listitem>
-        </itemizedlist>
-    </listitem>
+		</listitem>
+		</itemizedlist>
+	</listitem>
 
-    <listitem> Example:
+	<listitem> Example:
 			<programlisting>
 	file texts[] &lt;fixed_array_mapper;files="file1.txt, file2.txt, file3.txt"&gt;;
 			</programlisting>
-    </listitem>
+	</listitem>
 	</itemizedlist>
 	</sect2>
 
-    <sect2><title>regular expression mapper</title>
+	<sect2><title>regular expression mapper</title>
 	<itemizedlist>
 	<listitem>Name: regexp_mapper</listitem>
-    <listitem>Description:
+	<listitem>Description:
 This mapper transforms one file name to another using
 regular expression matching.
-    </listitem>
-    <listitem>Parameter:
-        <itemizedlist>
-        <listitem>source:
-          The source file name
-        </listitem>
-        <listitem>match:
+	</listitem>
+	<listitem>Parameter:
+		<itemizedlist>
+		<listitem>source:
+		The source file name
+		</listitem>
+		<listitem>match:
 Regular expression pattern to match, use ( ) to match whatever regular
 expression is inside the parentheses, and indicate the start and end
 of a group; the contents of a group can be retrieved with the
 <emphasis>\number</emphasis> special sequence
-        </listitem>
-        <listitem>transform:
+		</listitem>
+		<listitem>transform:
 The pattern of the file name to transform to, use
 <emphasis>\number</emphasis> to reference the group matched.
-        </listitem>
-        </itemizedlist>
-    </listitem>
+		</listitem>
+		</itemizedlist>
+	</listitem>
 
-    <listitem> Example:
+	<listitem> Example:
 			<programlisting>
 	file f &lt;regexp_mapper;source=@f,match="(.*)gif",transform="\1jpg"&gt;;
 			</programlisting>
 This example transforms a file ending with &quot;gif&quot; into one 
 ending with &quot;jpg&quot;, where <emphasis>\1</emphasis> refers to
 the first group matched.
-    </listitem>
+	</listitem>
 	</itemizedlist>
 	</sect2>
 
 	<sect2><title>csv mapper</title>
-    <itemizedlist>
+	<itemizedlist>
 	<listitem>Name: csv_mapper</listitem>
-    <listitem>Description:
+	<listitem>Description:
 This mapper maps the content of a CSV (comma-separated value) file into 
 a dataset array. The dataset type needs to be correctly defined to 
 conform to the column names in the file. For instance, if the file
 contains columns:
-        <para>	name	age		GPA</para>
-        then the type needs to have the same member elements, say:
-        <programlisting>
-        type student {
-        	string name;
-        	int    age;
-        	float  GPA;
-        }
-        </programlisting>
+		<para>name age GPA</para>
+		then the type needs to have the same member elements, say:
+		<programlisting>
+		type student {
+			string name;
+			int    age;
+			float  GPA;
+		}
+		</programlisting>
 if the file does not contain a header with column info, then the
 column names are assumed as &quot;column1&quot;, &quot;column2&quot;,
-    </listitem>
-    <listitem>Parameter:
-        <itemizedlist>
-        <listitem>file:
+	</listitem>
+	<listitem>Parameter:
+		<itemizedlist>
+		<listitem>file:
 The name of the file to read from.
-        </listitem>
-        <listitem>header:
+		</listitem>
+		<listitem>header:
 whether the file has a line describing header info, default is true
-        </listitem>
-        <listitem>skip:
+		</listitem>
+		<listitem>skip:
 The number of lines to skip at the beginning (after header line)
-        </listitem>
-        <listitem>hdelim:
+		</listitem>
+		<listitem>hdelim:
 Header delimiter, default is white space
-        </listitem>
-        <listitem>delim:
+		</listitem>
+		<listitem>delim:
 Content delimiter, default is white space
-        </listitem>
-        </itemizedlist>
-    </listitem>
+		</listitem>
+		</itemizedlist>
+	</listitem>
 
-    <listitem> Example:
+	<listitem> Example:
 			<programlisting>
 	student stus[] &lt;csv_mapper;file="stu_list.txt"&gt;;
 			</programlisting>
@@ -1144,7 +1144,7 @@ the file should contain a header line specifying the names of the columns.
 <programlisting>
 
 &lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
-    ...
+
 &lt;/pool&gt;
 
 </programlisting>
