@@ -19,24 +19,30 @@ import org.griphyn.vdl.mapping.Path;
 
 public class CSVMapper extends AbstractMapper {
 	public static final MappingParam PARAM_FILE = new MappingParam("file");
-	// whether the file has a line describing header info, default is true
+
+	/** whether the file has a line describing header info. default is true. */
 	public static final MappingParam PARAM_HEADER = new MappingParam("header", "true");
-	// skip a number of lines at the beginning
+
+	/** the number of lines to skip at the start of the file. default is 0. */
 	public static final MappingParam PARAM_SKIP = new MappingParam("skip", "0");
-	// header delimiter, default is white space
+
+	/** delimiter between header fields. defaults to the value of the
+	"delim" field. */
 	public static final MappingParam PARAM_HDELIMITER = new MappingParam("hdelim");
-	// content delimiter, default is white space
+
+	/** delimiters between content fields. default is space and tabs. */
 	public static final MappingParam PARAM_DELIMITER = new MappingParam("delim", " \t");
 
-	// keep a list of column name
+	/** list of column names */
 	private List cols = new ArrayList();
 
-	// keep the column name to index map
+	/** column name to index map */
 	private Map colindex = new HashMap();
 
-	// keep the content of the CSV file
+	/** the content of the CSV file */
 	private List content = new ArrayList();
 
+	/** whether the CSV file has been read already. */
 	private boolean read = false;
 
 	public void setParams(Map params) {
