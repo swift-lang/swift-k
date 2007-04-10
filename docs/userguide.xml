@@ -1149,7 +1149,7 @@ the file should contain a header line specifying the names of the columns.
 
 </programlisting>
 								
-								This option allows controlling of 							
+								This option allows controlling of
 								how Swift uses Kickstart. A value of
 								<literal>false</literal> disables the use of
 								Kickstart, while a value of
@@ -1358,11 +1358,15 @@ The swift command may exit with the following return codes:
 	</sect2>
 	</sect1>
 
-	<sect1> <title>Kickstart</title>.
+	<sect1 id="kickstart"> <title>Kickstart</title>.
 		<para>
 Kickstart provides information about the execution of remote jobs, in the
-form of an XML invocation record collected on the remote system. By default,
-it is not used but configuration options allow it to be enabled.
+form of an XML invocation record collected on the remote system. It can be
+enabled for a site by specifying the gridstart attribute on a site in
+the site catalog. There are various configuration parameters associated
+with kickstart, documented in the engine configuration chapter. These control
+when kickstart will be used and when kickstart output will be transferred
+from the execution site to the submitting location.
 		</para>
 	</sect1>
 
