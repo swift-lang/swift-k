@@ -216,7 +216,7 @@
 
 <sect1>
   <title>Introduction</title>
-  <para>VDL is a language for workflow specification in Data Grid environments, in which:</para>
+  <para>SwiftScript is a language for workflow specification in Data Grid environments, in which:</para>
   <itemizedlist>
   <listitem>
     <para>Data lives in files, in a variety of different file system organizations and file formats;</para>
@@ -228,17 +228,17 @@
     <para>We want to be able to execute these procedures on distributed resources. </para>
   </listitem>
 </itemizedlist>
-<para>VDL addresses the challenges associated with such environments by defining:</para>
+<para>SwiftScript addresses the challenges associated with such environments by defining:</para>
 <itemizedlist>
   <listitem>a language for describing operations on typed <emphasis>data items</emphasis>; and </listitem>
   <listitem>mechanisms for binding data items defined in this language to <emphasis>datasets</emphasis> stored on persistent storage.</listitem>
 </itemizedlist>
-<para>The binding between data item and dataset is based on the XDTM (XML dataset typing and mapping) model [ref], which separates the declaration of the logical structure of datasets from their physical representation. The logical structure is specified via a subset of XML Schema, where a physical representation is defined by a mapping descriptor<emphasis>,</emphasis> which describes how each element in the dataset&#x2019;s VDL representation can be mapped to a corresponding physical structure such as a directory, file, or database table.</para><para>This manual documents the XDTM-based VDL, which uses a C-like syntax to represent XML Schema types and procedures. This C-like syntax is easier to read and write than XML, but can easily be mapped to XML. </para>
+<para>The binding between data item and dataset is based on the XDTM (XML dataset typing and mapping) model [ref], which separates the declaration of the logical structure of datasets from their physical representation. The logical structure is specified via a subset of XML Schema, where a physical representation is defined by a mapping descriptor<emphasis>,</emphasis> which describes how each element in the dataset&#x2019;s SwiftScript representation can be mapped to a corresponding physical structure such as a directory, file, or database table.</para><para>This manual documents the XDTM-based SwiftScript, which uses a C-like syntax to represent XML Schema types and procedures. This C-like syntax is easier to read and write than XML, but can easily be mapped to XML. </para>
 </sect1>
 
 <sect1>
 <title>Namespaces</title>
-<para>Since VDL is to be used in Grid environments, the type definitions and procedure definitions can be shared across multiple virtual organizations, groups, and project development stages. Thus namespaces issue is important to address.</para><para>In general, every type definition and procedure definition has an associated namespace. When they are referenced from within another namespace, they must be referenced with their namespace specified explicitly, so as to avoid any confliction with types and procedures defined in the origin namespace.</para><para>If the namespace for a definition is not specified, it uses </para><para>&#x2018;http://www.griphyn.org/vds/2006/08/nonamespace&#x2019; </para><para>as the default namespace. </para><para>A namespace prefix can be defined to represent an XML-style namespace (in the form of a URI or URN), We follow the XML <emphasis>prefix:localname</emphasis> convention and use &#x2018;:&#x2019; as the separator between the namespace and the local name of a definition. Examples of namespace declaration can be found in Section 
+<para>Since Swift is to be used in Grid environments, the type definitions and procedure definitions can be shared across multiple virtual organizations, groups, and project development stages. Thus namespaces issue is important to address.</para><para>In general, every type definition and procedure definition has an associated namespace. When they are referenced from within another namespace, they must be referenced with their namespace specified explicitly, so as to avoid any confliction with types and procedures defined in the origin namespace.</para><para>If the namespace for a definition is not specified, it uses </para><para>&#x2018;http://www.griphyn.org/vds/2006/08/nonamespace&#x2019; </para><para>as the default namespace. </para><para>A namespace prefix can be defined to represent an XML-style namespace (in the form of a URI or URN), We follow the XML <emphasis>prefix:localname</emphasis> convention and use &#x2018;:&#x2019; as the separator between the namespace and the local name of a definition. Examples of namespace declaration can be found in Section 
 <link linkend='sect10_1' endterm="sect10_1.title"/>.</para>
 </sect1>
 
@@ -396,7 +396,7 @@
 
     <sect2>
       <title>Literals</title>
-      <para>VDL <emphasis>literals</emphasis> are constant values that are represented as strings in the program. The types and formats of literals are drawn from the set of atomic values defined by XML Schema. The type of a literal value is implicit from its context &#x2013; from the type of the variable that its being assigned to or the type of the procedure parameter that it is being passed to, or the type of value that is expected in a specific position of a statement such as an <emphasis>if</emphasis>, <emphasis>while</emphasis>, or <emphasis>switch</emphasis>.</para><para>Some literal types can be identified without being enclosed in quotes; string literals and similar types based on strings must be enclosed in quotes.</para>
+      <para>Swift <emphasis>literals</emphasis> are constant values that are represented as strings in the program. The types and formats of literals are drawn from the set of atomic values defined by XML Schema. The type of a literal value is implicit from its context &#x2013; from the type of the variable that its being assigned to or the type of the procedure parameter that it is being passed to, or the type of value that is expected in a specific position of a statement such as an <emphasis>if</emphasis>, <emphasis>while</emphasis>, or <emphasis>switch</emphasis>.</para><para>Some literal types can be identified without being enclosed in quotes; string literals and similar types based on strings must be enclosed in quotes.</para>
 
       <sect3>
       <title>Integer literals</title>
@@ -640,7 +640,7 @@
 
 <sect1>
   <title>Type Definitions</title>
-  <para>All data objects processed by VDL are typed. We distinguish between <emphasis>primitive types</emphasis> and <emphasis>composite types.</emphasis></para>
+  <para>All data objects processed by Swift are typed. We distinguish between <emphasis>primitive types</emphasis> and <emphasis>composite types.</emphasis></para>
 
   <sect2>
   <title>Primitive types</title>
@@ -665,13 +665,13 @@
   
 <sect1>
   <title>Datasets</title>
-  <para>VDL provides a logical programming model for data Grids. A VDL program consists of procedure calls that operate on data items. VDL provides the level of abstraction such that operations can be specified on a data item without regard to its physical location or representation. Within the VDL logical space, a data item is called a <emphasis>data object</emphasis>, and its physical counterpart is called a <emphasis>dataset</emphasis>.</para><para>A <emphasis>d</emphasis><emphasis>ataset</emphasis> is a data item that has persistent physical storage. Datasets have both logical representations and physical representations. A dataset&#x2019;s logical structure is declared using VDL type definition, where its physical representation describes how the dataset is physically stored and cataloged on persistent storage.</para><para>A VDL program specifies the operations on a dataset&#x2019;s logical structure. The physical dataset is accessed via a mapper, which translates between the physical, persistent structure of the dataset and its logical representation.</para><para>A physical dataset is referenced via a <emphasis>dataset handle</emphasis>, which contains name, type, and mapping information. The name of the dataset handle uniquely identifies the dataset; the type information specifies the logical type the dataset conforms to; and the mapping information comprises the name of a <emphasis>mapping descriptor</emphasis> and the necessary parameters to the mapper.  A dataset handle builds the connection between a data object and its corresponding physical dataset.</para>
+  <para>Swift provides a logical programming model for data Grids. A SwiftScript program consists of procedure calls that operate on data items. Swift provides the level of abstraction such that operations can be specified on a data item without regard to its physical location or representation. Within the Swift logical space, a data item is called a <emphasis>data object</emphasis>, and its physical counterpart is called a <emphasis>dataset</emphasis>.</para><para>A <emphasis>d</emphasis><emphasis>ataset</emphasis> is a data item that has persistent physical storage. Datasets have both logical representations and physical representations. A dataset&#x2019;s logical structure is declared using a SwiftScript type definition, where its physical representation describes how the dataset is physically stored and cataloged on persistent storage.</para><para>A SwiftScript program specifies the operations on a dataset&#x2019;s logical structure. The physical dataset is accessed via a mapper, which translates between the physical, persistent structure of the dataset and its logical representation.</para><para>A physical dataset is referenced via a <emphasis>dataset handle</emphasis>, which contains name, type, and mapping information. The name of the dataset handle uniquely identifies the dataset; the type information specifies the logical type the dataset conforms to; and the mapping information comprises the name of a <emphasis>mapping descriptor</emphasis> and the necessary parameters to the mapper.  A dataset handle builds the connection between a data object and its corresponding physical dataset.</para>
   <para>The declaration of a dataset handle is defined in Section <link linkend='sect10_4_2' endterm="sect10_4_2.title"/></para>
 </sect1>
 
 <sect1>
   <title>Mapping</title>
-  <para>The process of mapping, as defined by XDTM, converts between a dataset&#x2019;s physical representation (typically in persistent storage) and a logical XML view of that data. VDL programs operate on this logical view, and mapping functions implement the actions used to convert back and forth between the logical view and the physical representation.</para><para>Associated with each logical type is a mapping descriptor, which describes the implementation of the mapping functions and necessary mapping parameters to the implementation. </para><para>A mapping descriptor contains the following fields:</para>
+  <para>The process of mapping, as defined by XDTM, converts between a dataset&#x2019;s physical representation (typically in persistent storage) and a logical XML view of that data. SwiftScript programs operate on this logical view, and mapping functions implement the actions used to convert back and forth between the logical view and the physical representation.</para><para>Associated with each logical type is a mapping descriptor, which describes the implementation of the mapping functions and necessary mapping parameters to the implementation. </para><para>A mapping descriptor contains the following fields:</para>
   <itemizedlist> 
   <listitem>name - name of the descriptor</listitem>
   <listitem>description- a brief description of the mapper</listitem>
@@ -689,7 +689,7 @@
   
   <sect2>
   <title>Global variables</title>
-  <para>Global variables are the variables declared in the main body of a VDL program. A global variable extends to any procedures and blocks defined in the program and can be referenced anywhere within the program. The syntax for declaring a global variable is not different from the others, it is just that its scope applies to the whole program.</para>
+  <para>Global variables are the variables declared in the main body of a SwiftScript program. A global variable extends to any procedures and blocks defined in the program and can be referenced anywhere within the program. The syntax for declaring a global variable is not different from the others, it is just that its scope applies to the whole program.</para>
   </sect2>
   
   <sect2>
@@ -717,7 +717,7 @@
 <sect1>
   <title>Procedure Definitions</title>
   <para>Datasets are operated on by <emphasis>procedures</emphasis>, which take one or more typed data items as input, perform computations on those data item(s), and produce zero or more data items as output.</para>
-  <para>A VDL procedure can be either an <emphasis>atomic procedure</emphasis> or a <emphasis>compound procedure</emphasis>. An <emphasis>atomic </emphasis>procedure definition specifies an interface to an executable program or service. A <emphasis>compound </emphasis><emphasis>procedure</emphasis> composes calls to atomic procedures, other compound procedures, and/or control statements: it can be viewed as a named workflow template defining a graph of multiple nodes.</para>
+  <para>A SwiftScript procedure can be either an <emphasis>atomic procedure</emphasis> or a <emphasis>compound procedure</emphasis>. An <emphasis>atomic </emphasis>procedure definition specifies an interface to an executable program or service. A <emphasis>compound </emphasis><emphasis>procedure</emphasis> composes calls to atomic procedures, other compound procedures, and/or control statements: it can be viewed as a named workflow template defining a graph of multiple nodes.</para>
   <para>A procedure definition has the form</para>
   <informaltable>
   <tgroup cols="3">
@@ -848,7 +848,7 @@
   <sect3>
   <title>Application procedure body</title>
   <para>An application procedure defines the interface to an application program that should be invoked, typically by a POSIX exec() primitive.</para>
-  <para>A program procedure body maps the VDL arguments to the information needed to ultimately invoke an application through the POSIX interface, which involves setting arguments and environment variables, and passing back a return code (via an exit value).</para><para>Provisions for handling file descriptors (stdin, stdout, stderr) are provided in the body.</para>
+  <para>A program procedure body maps the SwiftScript arguments to the information needed to ultimately invoke an application through the POSIX interface, which involves setting arguments and environment variables, and passing back a return code (via an exit value).</para><para>Provisions for handling file descriptors (stdin, stdout, stderr) are provided in the body.</para>
   <para>(TODO: environment variable and other configuration handling, probably using Profile)</para>
   <para>In addition, we define the mapping from logical types to physical representations, via mapping functions.</para>
   <informaltable>
@@ -1016,7 +1016,7 @@
   
   <sect2>
   <title>Compound procedure body</title>
-  <para>A compound procedure body is a block of one or more VDL statements, which are executed in an order determined by their data dependencies.  </para><para>The body is comprised of <emphasis>procedure-statement-sequence</emphasis>, which is just a sequence of statements:</para>
+  <para>A compound procedure body is a block of one or more SwiftScript statements, which are executed in an order determined by their data dependencies.  </para><para>The body is comprised of <emphasis>procedure-statement-sequence</emphasis>, which is just a sequence of statements:</para>
   <informaltable>
   <tgroup cols="3">
     <colspec colnum="1" colname="col1" colwidth="141.75pt"/>
@@ -1300,7 +1300,7 @@
   
   <sect2 id="sect10_1">
   <title id="Namespace Statement">Namespace Statement</title>
-  <para>The namespace statement MUST appear at the very beginning of a VDL program, and the namespace must be unique. It serves similar purpose as a Java package definition, so that the type definitions and procedure definitions defined in this namespace would not collide with others defined outside. The syntax for namespace definition is as follows:</para><para>&#x201C;<emphasis role="bold">namespace</emphasis>&#x201D;  (<emphasis>prefix</emphasis>)?<emphasis/><emphasis> &#x2018;&#x201C;&#x2019;  </emphasis><emphasis>uri</emphasis><emphasis>  &#x2018;&#x201D;&#x2019;  </emphasis>(<emphasis>&#x2018;;&#x2019;</emphasis>)?</para><para><emphasis>prefix</emphasis> is the abbreviation of the namespace denoted by <emphasis>uri</emphasis>. If prefix is ommitted, then the namespace is regarded as the default namespace. If a default namespace is not defined in the program, it assumes the value</para>
+  <para>The namespace statement MUST appear at the very beginning of a SwiftScript program, and the namespace must be unique. It serves similar purpose as a Java package definition, so that the type definitions and procedure definitions defined in this namespace would not collide with others defined outside. The syntax for namespace definition is as follows:</para><para>&#x201C;<emphasis role="bold">namespace</emphasis>&#x201D;  (<emphasis>prefix</emphasis>)?<emphasis/><emphasis> &#x2018;&#x201C;&#x2019;  </emphasis><emphasis>uri</emphasis><emphasis>  &#x2018;&#x201D;&#x2019;  </emphasis>(<emphasis>&#x2018;;&#x2019;</emphasis>)?</para><para><emphasis>prefix</emphasis> is the abbreviation of the namespace denoted by <emphasis>uri</emphasis>. If prefix is ommitted, then the namespace is regarded as the default namespace. If a default namespace is not defined in the program, it assumes the value</para>
   <para>&#x201C;http://www.griphyn.org/vds/2006/08/nonamespace&#x201D;</para>
   <para>Some examples:</para>
   <programlisting>
@@ -1312,7 +1312,7 @@
   
   <sect2>
   <title>Include Statements</title>
-  <para>An include statement is used to include type definitions defined in an external XML Schema document, or to include another program defined in VDL, so that the type definitions and procedure definitions can be used directly within the current VDL program.</para>
+  <para>An include statement is used to include type definitions defined in an external XML Schema document, or to include another program defined in SwiftScript, so that the type definitions and procedure definitions can be used directly within the current SwiftScript program.</para>
   <para>An include statement is of the form:</para>
   <para>&#x201C;<emphasis role="bold">include</emphasis>&#x201D;<emphasis role="bold"> </emphasis>&#x2018;<emphasis role="bold">&#x201C;</emphasis>&#x2019;<emphasis role="bold"> </emphasis><emphasis>include-file-name</emphasis><emphasis> &#x2018;</emphasis><emphasis role="bold"><emphasis>&#x201D;</emphasis></emphasis><emphasis>&#x2019;</emphasis></para>
   <para>Since the definitions in the included file may have a different namespace from the one in the current program, it is necessary to explicitly specify the namespace for those definitions when they are used in the current program.</para>
@@ -1917,7 +1917,7 @@
 
 <sect1>
   <title>Examples</title>
-  <para>For detailed examples, please refer to the User Guide document in the VDS public release.</para>
+  <para>For detailed examples, please refer to the User Guide document in the Swift public release.</para>
 </sect1>
   
 <sect1>
