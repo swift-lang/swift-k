@@ -30,8 +30,8 @@ public class CSVMapper extends AbstractMapper {
 	"delim" field. */
 	public static final MappingParam PARAM_HDELIMITER = new MappingParam("hdelim");
 
-	/** delimiters between content fields. default is space and tabs. */
-	public static final MappingParam PARAM_DELIMITER = new MappingParam("delim", " \t");
+	/** delimiters between content fields. default is space, tab, comma */
+	public static final MappingParam PARAM_DELIMITER = new MappingParam("delim", " \t,");
 
 	/** list of column names */
 	private List cols = new ArrayList();

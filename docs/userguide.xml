@@ -656,16 +656,16 @@ column names are assumed as &quot;column1&quot;, &quot;column2&quot;,
 The name of the file to read from.
 		</listitem>
 		<listitem>header:
-whether the file has a line describing header info, default is true
+whether the file has a line describing header info; default is true
 		</listitem>
 		<listitem>skip:
-The number of lines to skip at the beginning (after header line)
+The number of lines to skip at the beginning (after header line); default is 0.
 		</listitem>
 		<listitem>hdelim:
-Header delimiter, default is white space
+Header field delimiter; default is the value of the "delim" parameter
 		</listitem>
 		<listitem>delim:
-Content delimiter, default is white space
+Content field delimiter; default is space, tab and comma.
 		</listitem>
 		</itemizedlist>
 	</listitem>
