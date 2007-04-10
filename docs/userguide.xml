@@ -1376,5 +1376,53 @@ There are certain requirements for invoking application code from Swift,
 mostly related to their treatment of input and output data.
 	</para>
 	</sect1>
+
+	<sect1> <title>Technical overview of the Swift architecture</title>
+	<para>
+This section attempts to provide a technical overview of the Swift
+architecture.
+	</para>
+
+	<sect2><title>karajan - the core exectuion engine</title>
+	</sect2>
+
+	<sect2><title>Execution layer</title>
+	<para>
+The execution layer causes an application program (in the form of a unix
+executable) to be executed either locally or remotely.
+	</para>
+	<para>
+Two main choices - local unix fork() and Globus GRAM (in various verions).
+CoG provides plug-in support here [link to that] to allow other
+execution layers to be plugged in. [can karajan use any cog execution
+layer?]
+	</para>
+	<para>
+Additionally, the kickstart utility can be used (in both fork and
+GRAM mode) to capture environmental information at execution time
+to aid in debugging and provenance capture. See the kickstart
+chapter for information about using kickstart.
+	</para>
+
+	<sect2><title>SwiftScript language compilation layer</title>
+	<para>
+Step i: text to XML intermediate form parser/processor. parser written in
+ANTLR - see resources/VDL.g. The XML Schema Definition (XSD) for the
+intermediate language is in resources/XDTM.xsd.
+	</para>
+	<para>
+Step ii: XML intermediate form to Karajan workflow. Karajan.java - reads
+the XML intermediate form. compiles to karajan workflow language.
+	</para>
+	</sect2>
+
+	<sect2><title>Swift/karajan library layer</title>
+Some Swift functionality is provided in the form of Karajan libraries
+that are used at runtime by the Karajan workflows that the Swift
+compiler generates.
+	</sect2>
+
+	</sect1>
+
 </article>
 
