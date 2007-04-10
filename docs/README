@@ -1,8 +1,7 @@
-Edited with Eclipse, with OrangeVolt plugins.
 General principles:
  - sections and subsections are ordered from <sect1>, <sect2>, etc
  - the code is inputted as <programlisting>
- - be CAREFUL to translate in-text "<" to "&lt;"
+ - be careful to escape in-text "<" to "&lt;"
 
 Generate the html with:
 $ xsltproc formatting/custom_html.xsl userguide.xml
