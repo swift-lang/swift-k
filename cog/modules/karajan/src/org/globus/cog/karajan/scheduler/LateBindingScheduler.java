@@ -47,7 +47,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public static final String SUBMIT_THROTTLE = "submitThrottle";
 	public static final String MAX_TRANSFERS = "maxTransfers";
 	public static final String SSH_INITIAL_RATE = "sshInitialRate";
-	public static final String MAX_FILE_OPERATIONS = "maxFileOperations";
+	public static final String MAX_FILE_OPERATIONS = "maxFileOperations"; 
 
 	public static final int K = 1024;
 	public static final int THREAD_STACK_SIZE = 192 * K;
@@ -71,7 +71,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	private final Map handlers, taskContacts;
 
 	private int jobsPerCPU, maxTransfers, currentTransfers, sshInitialRate, maxFileOperations,
-			currentFileOperations;
+			currentFileOperations, currentJobs;
 
 	private InstanceSubmitQueue submitQueue;
 
@@ -197,19 +197,19 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected void checkGlobalLoadConditions() throws NoFreeResourceException {
-		if (getRunning() >= getMaxSimultaneousJobs()) {
-			throw new NoFreeResourceException("Maximum total tasks already running");
-		}
 		if (!checkFreeMemory()) {
 			throw new NoFreeResourceException("Not enough free memory for another job");
 		}
 	}
 
 	protected void checkTaskLoadConditions(Task t) throws NoFreeResourceException {
+		if (t.getType() == Task.FILE_OPERATION && (currentFileOperations >= maxFileOperations)) {
+			throw new NoFreeResourceException();
+		}
 		if (t.getType() == Task.FILE_TRANSFER && (currentTransfers >= maxTransfers)) {
 			throw new NoFreeResourceException();
 		}
-		else if (t.getType() == Task.FILE_OPERATION && (currentFileOperations >= maxFileOperations)) {
+		if (t.getType() == Task.JOB_SUBMISSION && (currentJobs >= getMaxSimultaneousJobs())) {
 			throw new NoFreeResourceException();
 		}
 	}
@@ -234,7 +234,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		Queue queue = getJobQueue();
 		Queue.Cursor c = queue.cursor();
 		while (!isDone()) {
-			while (queue.isEmpty() || (running >= getMaxSimultaneousJobs())) {
+			while (queue.isEmpty()) {
 				synchronized (this) {
 					if (!sleep()) {
 						return;
@@ -490,12 +490,15 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			NonBlockingSubmit nbs = new NonBlockingSubmit(handler, t, queues);
 			nbs.go();
 			incRunning();
-			if (t.getType() == Task.FILE_TRANSFER) {
-				currentTransfers++;
-			}
-			else if (t.getType() == Task.FILE_OPERATION) {
+			if (t.getType() == Task.FILE_OPERATION) {
 				currentFileOperations++;
 			}
+			else if (t.getType() == Task.FILE_TRANSFER) {
+				currentTransfers++;
+			}
+			else if (t.getType() == Task.JOB_SUBMISSION) {
+				currentJobs++;
+			}	
 		}
 	}
 
@@ -569,11 +572,14 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					tasksFinished = true;
 					decRunning();
 					task.removeStatusListener(this);
-					if (task.getType() == Task.FILE_TRANSFER) {
+					if (task.getType() == Task.FILE_OPERATION) {
+						currentFileOperations--;
+					}
+					else if (task.getType() == Task.FILE_TRANSFER) {
 						currentTransfers--;
 					}
-					else if (task.getType() == Task.FILE_OPERATION) {
-						currentFileOperations--;
+					if (task.getType() == Task.JOB_SUBMISSION) {
+						currentJobs--;
 					}
 					synchronized (taskContacts) {
 						taskContacts.remove(task);
