@@ -1,3 +1,7 @@
+(04/11/2007)
+
+*** Fixed global throttling of job submission
+
 (03/11/2007)
 
 *** Use a thread pool for submission instead of starting
