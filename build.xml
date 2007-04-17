@@ -168,7 +168,7 @@ updateOptions "$SWIFT_HOME" "swift.home"
 	<!-- Clean                                            -->
 	<!-- ================================================ -->
 
-	<target name="clean">
+	<target name="clean" depends="cleanGenerated">
 		<ant antfile="${main.buildfile}" target="clean"/>
 	</target>
 
@@ -177,10 +177,16 @@ updateOptions "$SWIFT_HOME" "swift.home"
 	<!-- Distclean                                        -->
 	<!-- ================================================ -->
 
-	<target name="distclean">
+	<target name="distclean" depends="cleanGenerated">
 		<ant antfile="${main.buildfile}" target="distclean"/>
 	</target>
 
+
+	<target name="cleanGenerated">
+		<delete includeEmptyDirs="true">
+			<fileset dir="src/org/griphyn/vdl/model/" includes="**/*.java"/>
+		</delete>
+	</target>
 
 	<!-- ================================================ -->
 	<!-- Jar                                              -->
