@@ -96,6 +96,8 @@ typedecl [StringTemplate code]
  StringTemplate t=null;}
     :    "type" id:ID {    r.setAttribute("name", id.getText()); }
     (
+        SEMI
+        |
         (t=type
         {
            r.setAttribute("type", t);

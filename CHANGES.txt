@@ -1,3 +1,14 @@
+(04/12/07)
+
+*** Marker types (that is, types with no content) can now be specified without
+    an empty {} block. So what was previous written as:
+
+      type imagefile {};
+
+    can now be written as
+
+      type imagefile;
+
 (04/11/07)
 
 *** CSV mapper will now take commas as a field separator (in addition to the
