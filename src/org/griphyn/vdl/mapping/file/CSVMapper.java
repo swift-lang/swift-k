@@ -114,10 +114,10 @@ public class CSVMapper extends AbstractMapper {
 			read = true;
 		}
 		catch (FileNotFoundException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e.getMessage(), e);
 		}
 		catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
