@@ -1427,5 +1427,30 @@ compiler generates.
 
 	</sect1>
 
+	<sect1><title>Function reference</title>
+		<para>
+This section details functions that are available for use in the SwiftScript
+language.
+		</para>
+		<sect2><title>@filename</title>
+			<para>
+@filename(v) will return a string containing the filename for the file that
+is mapped to the variable v.
+			</para>
+		</sect2>
+	</sect1>
+
+	<sect1><title>Built-in procedure reference</title>
+		<para>
+This section details built-in procedures that are available for use in
+the SwiftScript language.
+		</para>
+		<sect2><title>print</title>
+			<para>
+print will output its argument to stdout.
+			</para>
+		</sect2>
+	</sect1>
+
 </article>
 
