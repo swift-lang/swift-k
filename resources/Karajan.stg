@@ -123,6 +123,30 @@ argument(func) ::= <<
 $func;separator="\n"$	
 >>
 
+// the 'function' template in general outputs a karajan code fragment
+// that calls a function in the vdl namespace.
+
+// there are a number of special cases:
+
+//   i. if the 'name' attribute is not set, then
+//      either the 'value' attribute will be output as a <string> literal
+//      or if value is not set, then the 'expr' attribute will be
+//      copied through literally.
+//      TODO benc   not sure what this special
+
+//  ii. if the 'path' or 'var' attributes are set, then special
+//      processing of parameters happens:
+//      ii.a: the 'path' attribute (if set) becomes an XML attribute
+//            to the function invocation element
+//      ii.b: if the 'var' attribute is set, then it becomes an XML
+//            attribute to the function invocation element, and processing
+//            of the body of the element does not occur.
+
+// if neither i) or ii.b) have occurred, then an XML element body is
+// constructed, using the 'value' attribute if it exists, otherwise
+// using the 'expr' attribute if it exists.
+
+
 function(name, var, path, expr, value) ::= <<
 $if(name)$
 <vdl:$name$$if(path)$ path="$path$"$endif$$if(var)$ var="{$var$}"/>$else$>
