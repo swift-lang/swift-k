@@ -572,22 +572,6 @@ public class Karajan {
 		}
 	}
 
-	/*
-	 * public void setPathOrValue(StringTemplate st, String content) {
-	 * setPathOrValue(st, content, false); }
-	 * 
-	 * public void setPathOrValue(StringTemplate st, String content, boolean
-	 * dequote) { if (content == null || content.trim().equals("")) {
-	 * st.setAttribute("nil", new Boolean(true)); } if (content.startsWith("\"") // ||
-	 * content.startsWith("&apos;") || // content.startsWith("'") ||
-	 * content.startsWith("&quot;")) { if (dequote) { st.setAttribute("value",
-	 * dequote(content)); } else { st.setAttribute("value", quote(content)); } }
-	 * else if (content.charAt(0) == '-' || Character.isDigit(content.charAt(0)) ||
-	 * (content.length() > 1 && content.charAt(0) == '.' &&
-	 * Character.isDigit(content.charAt(1)))) { st.setAttribute("value",
-	 * content); } else { setPath(st, content); } }
-	 */
-
 	/**
 	 * default string dequote to true
 	 */
