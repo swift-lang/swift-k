@@ -45,13 +45,23 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public String toString() {
+		String r = null;
+
 		String prefix = getDisplayableName();
+
+
 		if (Path.EMPTY_PATH.equals(getPathFromRoot())) {
-			return prefix;
+			r= prefix;
 		}
 		else {
-			return prefix + nicePath(getPathFromRoot());
+			r= prefix + nicePath(getPathFromRoot());
 		}
+
+		if(this.value != null) {
+			r = r + " with value "+getValue().toString();
+		}
+
+		return r;
 	}
 
 	protected String nicePath(Path path) {
@@ -76,6 +86,9 @@ public abstract class AbstractDataNode implements DSHandle {
 		String prefix = getRoot().getParam("dbgname");
 		if (prefix == null) {
 			prefix = getRoot().getParam("prefix");
+		}
+		if (prefix == null) {
+			prefix = "unnamed SwiftScript value";
 		}
 		return prefix;
 	}
