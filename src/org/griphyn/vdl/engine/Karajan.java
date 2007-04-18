@@ -587,6 +587,25 @@ public class Karajan {
 		setExprOrValue(st, content, dequote, true);
 	}
 
+	/** sets the 'expr' or 'value' attributes of the supplied StringTemplate
+	 *  based on the supplied 'content' parameter.
+	 *
+	 *  This is used as a helper for the convention in Karajan.stg
+	 *  templates that a template can have various attributes, one of which
+	 *  will be set depending on the results of parsing the content
+	 *  parameter: If the content is empty, then the 'nil' attribute will
+	 *  be set on the supplied template; otherwise, if the content is
+	 *  a constant, then that constant value will be placed in the
+	 *  'value' attribute; otherwise, the 'expr' attribute will be set
+	 *  to a karajan code fragment representing the input expression.
+	 *
+	 *  @param st A StringTemplate object to populate
+	 *  @param content The content to parse and use for template population
+	 *  @param dequote
+	 *  @param reference If set to true, then the 'reference' attribute will
+	 *    be set to 'true' when the content parses to a SwiftScript identifier.
+	 */
+
 	public void setExprOrValue(StringTemplate st, String content, boolean dequote, boolean reference)
 			throws Exception {
 		if (content == null || content.trim().equals("")) {
