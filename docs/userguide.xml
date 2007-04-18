@@ -1403,6 +1403,7 @@ GRAM mode) to capture environmental information at execution time
 to aid in debugging and provenance capture. See the kickstart
 chapter for information about using kickstart.
 	</para>
+	</sect2>
 
 	<sect2><title>SwiftScript language compilation layer</title>
 	<para>
@@ -1417,9 +1418,11 @@ the XML intermediate form. compiles to karajan workflow language.
 	</sect2>
 
 	<sect2><title>Swift/karajan library layer</title>
+	<para>
 Some Swift functionality is provided in the form of Karajan libraries
 that are used at runtime by the Karajan workflows that the Swift
 compiler generates.
+	</para>
 	</sect2>
 
 	</sect1>
