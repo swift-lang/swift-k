@@ -49,7 +49,7 @@ public class Karajan {
 		String templateFileName = "Karajan.stg";
 
 		if (args.length < 1) {
-			System.err.println("please provide a SwiftScript program file.");
+			System.err.println("Please provide a SwiftScript program file.");
 			System.exit(1);
 		}
 
