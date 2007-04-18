@@ -551,6 +551,23 @@ public class Karajan {
 		return funcST;
 	}
 
+	/** Populates 'var' and 'path' attributes of the supplied StringTemplate
+	 *  based on the supplied SwiftScript identifier.
+	 *  The 'var' attribute will be populated with the base name of the
+	 *  identifier. The 'path' attribute will be populated with the
+	 *  remainder of the identifier, or will be left unset if there
+	 *  is no further part to the identifier.
+	 *
+	 *  Examples:
+	 *
+	 *    content = "foo"      var = "foo"  path unset.
+	 *    content = "foo[3]"   var = "foo"  path = "[3]"
+	 *    content = "foo.bar"  var = "foo"  path = "bar"
+	 *
+	 *  @param st the StringTemplate to populate
+	 *  @param content the SwiftScript variable identifier
+	 */
+
 	protected void setPath(StringTemplate st, String content) {
 		if (content == null || content.trim().equals(""))
 			return;
