@@ -3,9 +3,9 @@ group XDTM;
 program(namespaces,targetNS,functions,types,statements) ::= <<
 <program xmlns=$defaultNS()$
          xmlns:xs="http://www.w3.org/2001/XMLSchema"$if(!namespaces)$>
-	 $else$
+     $else$
 
-	 $namespaces;separator="\n"$>$endif$
+     $namespaces;separator="\n"$>$endif$
   $if(types)$
   <types>
     <xs:schema xmlns=$defaultNS(targetNS)$ targetNamespace=$defaultNS(targetNS)$>
@@ -175,7 +175,7 @@ argument() ::= <<
 service(wsdlURI,portType,operation,messages) ::= <<
 <binding type="service">
   <service>
-    <wsdl uri=$wsdlURI$/>$if(portType)$	
+    <wsdl uri=$wsdlURI$/>$if(portType)$
     <portType>$portType$</portType>
 $endif$
 
