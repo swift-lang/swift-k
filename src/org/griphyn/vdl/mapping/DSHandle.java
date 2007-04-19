@@ -14,11 +14,11 @@ public interface DSHandle extends Serializable {
     public void init(Map params);
 
     public DSHandle getRoot();
-    
+
     public DSHandle getParent();
 
     public DSHandle getField(Path path) throws InvalidPathException;
-    
+
     public Collection getFields(Path path) throws InvalidPathException, HandleOpenException;
 
     public Object getValue();
@@ -34,7 +34,7 @@ public interface DSHandle extends Serializable {
     // special file oriented methods, not sure if these apply to 
     // all datasets
 
-    //get the filename of a specific field	
+    //get the filename of a specific field
     public String getFilename();
 
     // get all the leaf file names for a sub-component
@@ -42,22 +42,23 @@ public interface DSHandle extends Serializable {
 
     // close
     public void closeShallow();
-    
+
     public void closeDeep();
 
-	public Collection getFringePaths() throws HandleOpenException;
+    public Collection getFringePaths() throws HandleOpenException;
 
-	public Map getArrayValue();
+    public Map getArrayValue();
 
-	public Path getPathFromRoot();
+    public Path getPathFromRoot();
 
-	public void set(DSHandle svar);
-	
-	public String getParam(String name);
-	
-	public boolean isArray();
-	
-	public boolean isClosed();
+    public void set(DSHandle svar);
 
-	public void addListener(DSHandleListener listener);
+    public String getParam(String name);
+
+    public boolean isArray();
+
+    public boolean isClosed();
+
+    public void addListener(DSHandleListener listener);
 }
+
