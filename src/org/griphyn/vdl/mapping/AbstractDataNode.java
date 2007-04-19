@@ -44,24 +44,21 @@ public abstract class AbstractDataNode implements DSHandle {
 		return field;
 	}
 
+	/** create a String representation of this node. If the node has a
+	    value, then uses the String representation of that value. Otherwise,
+	    generates a text description. */
 	public String toString() {
-		String r = null;
 
-		String prefix = getDisplayableName();
+		if(this.value != null) return this.value.toString();
 
+		String prefix = this.getClass().toString() + " with no value at ";
+		prefix = prefix + getDisplayableName();
 
-		if (Path.EMPTY_PATH.equals(getPathFromRoot())) {
-			r= prefix;
-		}
-		else {
-			r= prefix + nicePath(getPathFromRoot());
+		if (! Path.EMPTY_PATH.equals(getPathFromRoot())) {
+			prefix = prefix + nicePath(getPathFromRoot());
 		}
 
-		if(this.value != null) {
-			r = r + " with value "+getValue().toString();
-		}
-
-		return r;
+		return prefix;
 	}
 
 	protected String nicePath(Path path) {
