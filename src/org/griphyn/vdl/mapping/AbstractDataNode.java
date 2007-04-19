@@ -49,7 +49,8 @@ public abstract class AbstractDataNode implements DSHandle {
 	    generates a text description. */
 	public String toString() {
 
-		if(this.value != null) return this.value.toString();
+		if(this.value != null && !(this.value instanceof Exception))
+			return this.value.toString();
 
 		String prefix = this.getClass().toString() + " with no value at ";
 		prefix = prefix + getDisplayableName();
