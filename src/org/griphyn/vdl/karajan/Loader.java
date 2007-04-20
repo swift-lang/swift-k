@@ -81,13 +81,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 		catch (ArgumentParserException e) {
 			System.err.println("Error parsing arguments: " + e.getMessage() + "\n");
-			ap.usage();
+			shortUsage();
 			System.exit(1);
 		}
 		
 		if (!new File(project).exists()) {
-		    System.err.println("Invalid workflow file: " + project + "\n");
-			ap.usage();
+		    System.err.println("Workflow file does not exist: " + project + "\n");
+			shortUsage();
 			System.exit(1);
 		}
 
@@ -119,8 +119,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				tree = load(project);
 			}
 			else {
-				System.err.println("No project specified");
-				ap.usage();
+				System.err.println("No source file specified");
+				shortUsage();
 				System.exit(1);
 			}
 
@@ -167,6 +167,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 
 		System.exit(runerror ? 2 : 0);
+	}
+
+	private static void shortUsage() {
+		System.err.print("For usage information:  swift -help\n\n");
 	}
 
 	private static String compile(String project) 
