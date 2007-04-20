@@ -23,12 +23,12 @@ public class MapperFactory {
 		registerMapper("simple_mapper", SimpleFileMapper.class);
 		registerMapper("single_file_mapper", SingleFileMapper.class);
 		registerMapper("fixed_array_mapper", FixedArrayFileMapper.class);
-        registerMapper("concurrent_mapper", ConcurrentMapper.class);
-        registerMapper("filesys_mapper", FileSystemArrayMapper.class);
-        registerMapper("regexp_mapper", RegularExpressionMapper.class);
-        registerMapper("csv_mapper", CSVMapper.class);
-        registerMapper("airsn_mapper", AirsnMapper.class);
-        registerMapper("roi_mapper", ROIMapper.class);
+		registerMapper("concurrent_mapper", ConcurrentMapper.class);
+		registerMapper("filesys_mapper", FileSystemArrayMapper.class);
+		registerMapper("regexp_mapper", RegularExpressionMapper.class);
+		registerMapper("csv_mapper", CSVMapper.class);
+		registerMapper("airsn_mapper", AirsnMapper.class);
+		registerMapper("roi_mapper", ROIMapper.class);
 	}
 
 	public synchronized static Mapper getMapper(String type, Map params) throws InvalidMapperException {
@@ -39,7 +39,7 @@ public class MapperFactory {
 		try {
 			Mapper mapper = (Mapper) cls.newInstance();
 			mapper.setParams(params);
-            return mapper;
+			return mapper;
 		}
 		catch (InvalidMappingParameterException e) {
 			throw new InvalidMapperException(type + ": " + e.getMessage(), e);
