@@ -7,8 +7,9 @@ import java.util.Map;
 
 public interface DSHandle extends Serializable {
 
-    // get the type of the dataset, need to replace return type
-    // with a Type interface.
+    /** get the type of the dataset, need to replace return type
+     * with a Type interface.
+     */
     public String getType();
 
     public void init(Map params);
@@ -25,22 +26,22 @@ public interface DSHandle extends Serializable {
 
     public void setValue(Object value) throws InvalidPathException;
 
-    //create a new logical component
+    /** create a new logical component */
     public DSHandle createDSHandle(String fieldName) throws NoSuchFieldException;
 
-    //write to the data source
+    /** write to the data source */
     public void commit();
 
     // special file oriented methods, not sure if these apply to 
     // all datasets
 
-    //get the filename of a specific field
+    /** get the filename of a specific field */
     public String getFilename();
 
-    // get all the leaf file names for a sub-component
+    /** get all the leaf file names for a sub-component */
     public List getFileSet();
 
-    // close
+    /** close */
     public void closeShallow();
 
     public void closeDeep();
