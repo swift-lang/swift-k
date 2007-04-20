@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;

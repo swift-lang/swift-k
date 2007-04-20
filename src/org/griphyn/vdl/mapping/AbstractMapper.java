@@ -1,7 +1,4 @@
-/*
- * Created on Jan 8, 2007
- */
-package org.griphyn.vdl.mapping.file;
+package org.griphyn.vdl.mapping;
 
 import java.util.HashMap;
 import java.util.Map;
