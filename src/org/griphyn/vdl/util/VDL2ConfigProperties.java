@@ -29,35 +29,35 @@ public class VDL2ConfigProperties {
 		PROPERTIES.put(TC_FILE, new PropInfo("file", "Points to the location of the tc.data file"));
 		PROPERTIES.put(IP_ADDRESS, new PropInfo("aaa.bbb.ccc.ddd",
 				"Can be used to specify a publicly reacheable IP address for "
-						+ "this machine which is generally used for Globus callbacks. "
-						+ "Normally this should be auto-detected, but if you have "
-						+ "multiple network cards or NAT then " + "you may need to set this"));
+				+ "this machine which is generally used for Globus callbacks. "
+				+ "Normally this should be auto-detected, but if you have "
+				+ "multiple network cards or NAT then you may need to set this"));
 		PROPERTIES.put(LAZY_ERRORS, new PropInfo("true|false",
-				"Use a lazy mode to deal with errors. When set to 'true' VDL2 will proceed with the "
-						+ "execution until no more data can be derived because of "
-						+ "errors in dependent steps. If set to 'false', an error will "
-						+ "cause the execution to immediately stop"));
+				"Use a lazy mode to deal with errors. When set to 'true' swift will proceed with the "
+				+ "execution until no more data can be derived because of "
+				+ "errors in dependent steps. If set to 'false', an error will "
+				+ "cause the execution to immediately stop"));
 		PROPERTIES.put(PGRAPH, new PropInfo("true|false|<filename>",
-				"Whether to generate a provenance"
-						+ "graph or not. If a 'true' is used, the file name for the graph will "
-						+ "be chosen by VDL2."));
+				"Whether to generate a provenance "
+				+ "graph or not. If a 'true' is used, the file name for the graph will "
+				+ "be chosen by swift."));
 		PROPERTIES.put(PGRAPH_GRAPH_OPTIONS, new PropInfo("<string>",
-				"Graph options to be passed to the .dot file."
-						+ "These will appear in the 'graph' clause in the .dot file: "
-						+ "graph [<string>]; "));
+				"Graph options to be passed to the .dot file. "
+				+ "These will appear in the 'graph' clause in the .dot file: "
+				+ "graph [<string>]; "));
 		PROPERTIES.put(PGRAPH_NODE_OPTIONS, new PropInfo("<string>",
 				"Node options to be passed to the .dot file."
-						+ "These will appear in the 'node' clause in the .dot file: "
-						+ "node [<string>]; "));
+				+ "These will appear in the 'node' clause in the .dot file: "
+				+ "node [<string>]; "));
 		PROPERTIES.put(CACHING_ALGORITHM, new PropInfo("[LRU]", "The algorithm to use for the "
-				+ "VDL2 file caching mechanism. LRU is the only one available now."));
+		+ "swift file caching mechanism. LRU is the only one available now."));
 		PROPERTIES.put(CLUSTERING_ENABLED, new PropInfo("true|false",
 				"Whether to enable clustering of small jobs. If enabled, jobs with a "
-						+ "max wall time which is less than the value of the "
-						+ CLUSTERING_MIN_TIME
-						+ " property will be clustered into one job which has a cummulative"
-						+ " max wall time greater or equal to the value of the "
-						+ CLUSTERING_MIN_TIME + " property."));
+				+ "max wall time which is less than the value of the "
+				+ CLUSTERING_MIN_TIME
+				+ " property will be clustered into one job which has a cummulative"
+				+ " max wall time greater or equal to the value of the "
+				+ CLUSTERING_MIN_TIME + " property."));
 		PROPERTIES.put(CLUSTERING_QUEUE_DELAY, new PropInfo("<seconds>", "The delay at which "
 				+ "the clustering code scans the clustering queue. A job marked for clustering "
 				+ "will spend no more than the value of this property in the clustering queue."));
@@ -66,7 +66,7 @@ public class VDL2ConfigProperties {
 				+ "wall time that a cluster will have."));
 		PROPERTIES.put(KICKSTART_ENABLED, new PropInfo("<true|false|maybe>",
 				"Controls the use of Kickstart by Swift. The \"maybe\" "
-						+ "value tells Swift to use Kickstart on sites where it is available."));
+				+ "value tells Swift to use Kickstart on sites where it is available."));
 		PROPERTIES.put(KICKSTART_ALWAYS_TRANSFER, new PropInfo("<true|false>",
 				"If Kickstart is used (see \"" + KICKSTART_ENABLED + "\"), it controls when " 
 				+ "Kickstart records are transfered back to the submit host. If set to \"false\" " 
