@@ -7,20 +7,20 @@ import java.util.Collection;
 import java.util.Map;
 
 public interface Mapper {
-	void setParams(Map params);
-    
+    void setParams(Map params);
+
     String map(Path path);
-    
+
     boolean exists(Path path);
-    
+
     Collection existing();
-    
+
     /**
      * Returns true if data mapped by this mapper cannot
      * change in structure at run-time. Typically this applies
      * to all mappers which work on pre determined data.
      */
-    
+
     /* A short explanation of why this is here:
      *   Since we don't yet deal with apps returning things with
      *   undetermined sizes, yet I2U2 needs to return arrays, this
@@ -31,8 +31,8 @@ public interface Mapper {
      *   but a necessary compromise.
      */
     boolean isStatic();
-    
+
     void setParam(String name, Object value);
-    
+
     Object getParam(String name);
 }
