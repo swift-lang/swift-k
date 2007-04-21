@@ -20,6 +20,8 @@ public class MapperFactory {
 	private static Map mappers = new HashMap();
 
 	static {
+
+		// the following are general purpose file mappers
 		registerMapper("simple_mapper", SimpleFileMapper.class);
 		registerMapper("single_file_mapper", SingleFileMapper.class);
 		registerMapper("fixed_array_mapper", FixedArrayFileMapper.class);
@@ -27,6 +29,8 @@ public class MapperFactory {
 		registerMapper("filesys_mapper", FileSystemArrayMapper.class);
 		registerMapper("regexp_mapper", RegularExpressionMapper.class);
 		registerMapper("csv_mapper", CSVMapper.class);
+
+		// the following are application-specific mappers
 		registerMapper("airsn_mapper", AirsnMapper.class);
 		registerMapper("roi_mapper", ROIMapper.class);
 	}
