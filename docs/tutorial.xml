@@ -604,6 +604,172 @@ applications can be run on the remote resource) and workdirectory
 remote resource).</para>
 </sect1>
 
+<sect1><title>Writing a mapper</title>
+
+<para>
+This section will introduce writing a custom mapper so that Swift is able
+to access data files laid out in application-specific ways.
+</para>
+<para>
+An application-specific mapper must take the form of a Java class
+that implements the org.griphyn.vdl.mapping.Mapper interface. Refer
+to the javadocs for that class for specific information about each
+method.
+</para>
+<para>
+In this section, we'll develop a mapper that maps SwiftScript structures
+to a set of files, with a basename specified as a mapper parameter and
+an extension corresponding to the SwiftScript structure name.
+</para>
+<para>
+To illustrate, consider the following code fragment.
+</para>
+
+<programlisting>
+struct volume {
+    file img;
+    file hdr;
+}
+
+volume v &lt;tutorial_mapper;basename=&quot;subject1&quot;&gt;;
+</programlisting>
+
+<para>
+Our mapper will map the volume variable v into two files, called
+"subject1.img" and "subject1.hdr" corresponding to the two elements in
+the structure.
+</para>
+
+<para>
+We can implement the mapper in several steps. First we must write a Java
+class implementing the mapper. Then we must tell Swift about this new mapper.
+</para>
+
+<para>
+Here is the Java source code for our mapper. Read it and then we will go
+through the various pieces.
+</para>
+
+<programlisting>
+
+package org.griphyn.vdl.mapping.file;
+
+import java.io.File;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.Path;
+
+public class TutorialExtensionMapper extends AbstractMapper
+{
+
+    /** defines the single parameter to this mapper */
+    public static final MappingParam PARAM_BASE = new MappingParam("base");
+
+    public String map(Path p) {
+        String basename = PARAM_BASE.getStringValue(this);
+        String filename = basename + "." + p;
+        System.err.println("this is the tutorial mapper, mapping path "+p+" to filename "+filename);
+        return filename;
+    }
+
+    public boolean exists(Path p) {
+        String fn = map(p);
+        File f = new File(fn);
+        return f.exists();
+    }
+
+    public Collection existing() {
+        return new ArrayList();
+    }
+
+
+    public boolean isStatic() {
+        return true;
+    }
+}
+
+
+</programlisting>
+
+<para>
+Our mapper class, TutorialExtensionMapper, must implement the Mapper interface.
+We do this by extending the AbstractMapper class, which provides
+implementations for some of the Mapper methods
+whilst leaving others to be implemented by the specific
+mapper.
+</para>
+
+<para>
+There is helper code to handle most tasks related to mapper parameters.
+We need to create a MapperParam object for our single parameter, 'base'.
+If we wanted more than one parameter, we would create a MapperParam
+object for each parameter. We can then use the mapper parameter object
+later on in the code to retrieve the value of the parameter as specified
+in the SwiftScript mapper description.
+</para>
+
+<para>
+The core mapping functionality appears in the map method. This method will
+be called by the Swift engine whenever it needs to translate a SwiftScript
+variable into a filename. It is passed a Path object, which represents
+the path from the top level to the part that we want to filename for.
+So when swift wants the filename for v.img in the above
+usage example, it will ask the mapper for v to map the path "img" to a
+filename. In our example, the mapping consists of taking the 'base'
+parameter and combining it with the path to give a filename.
+</para>
+
+<para>
+A few other methods need to be implemented.
+</para>
+
+<para> exists() takes a Path
+and returns true if the file backing that path exists. It is implemented
+in a straightforward fashion.
+</para>
+
+<para>existing() returns a Collection of Paths, listing the paths that
+already exist. In the tutorial, we cheat and return an empty collection.
+</para>
+
+<para>isStatic() identifies whether mappings from this mapper are
+fixed at creation time, or can change over time. For most simple
+mappers, it should return true. There is more discussion in the
+Mapper class javadoc.
+</para>
+
+<para>
+We place the above java source file into the Swift source tree
+in a file called src/org/griphyn/vdl/mapping/file/TutorialExtensionMapper.java
+</para>
+
+<para>Now we need to inform the Swift engine about the existence of this
+mapper. We do that by editing the MapperFactory class definition, in
+src/org/griphyn/vdl/mapping/MapperFactory.java and adding a
+registerMapper call alongside the existing registerMapper calls, like this:
+</para>
+<programlisting>
+registerMapper("tutorial_extension_mapper",
+org.griphyn.vdl.mapping.file.TutorialExtensionMapper.class);
+</programlisting>
+
+<para>The first parameter is the name of the mapper that will be used
+in SwiftScript mapper declarations. The second parameter is the class
+that we defined above that implements the mapping behaviour.
+</para>
+
+<para>
+With the mapper source file in place, and MapperFactory updated, we can
+recompile Swift (see instructions elsewhere on the Swift web site) and
+then write SwiftScript programs which use our new mapper.
+</para>
+
+</sect1>
+
 <sect1><title>Tips and Tricks</title>
 
 <para>

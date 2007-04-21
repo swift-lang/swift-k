@@ -5,6 +5,12 @@ import java.util.Map;
 
 import org.griphyn.vdl.mapping.Mapper;
 
+/** AbstractMapper provides an implementation of the Mapper interface to be
+    used as a base class for writing other mappers. It provides handling
+    for mapper properties in a simple fashion that should be suitable for
+    most cases.
+*/
+
 public abstract class AbstractMapper implements Mapper {
 
 	protected Map params;
