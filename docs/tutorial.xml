@@ -631,7 +631,7 @@ struct volume {
     file hdr;
 }
 
-volume v &lt;tutorial_mapper;basename=&quot;subject1&quot;&gt;;
+volume v &lt;tutorial_extension_mapper;basename=&quot;subject1&quot;&gt;;
 </programlisting>
 
 <para>
