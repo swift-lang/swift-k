@@ -181,13 +181,6 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		return PARAM_LOCATION.getStringValue(this);
 	}
 
-	/**
-	 * @deprecated Do not use this since it does not properly deal with futures
-	 */
-	public Map getParams() {
-		return params;
-	}
-
 	public String getPrefix() {
 		return PARAM_PREFIX.getStringValue(this);
 	}
