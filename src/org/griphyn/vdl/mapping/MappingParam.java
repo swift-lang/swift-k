@@ -1,28 +1,44 @@
-/*
- * Created on Jan 8, 2007
- */
 package org.griphyn.vdl.mapping;
 
 import java.util.Map;
 
 import org.griphyn.vdl.karajan.VDL2FutureException;
 
+/** The MappingParam class provides helper methods to deal with
+  * parameters to mappers. The basic usage pattern is to
+  * create a MappingParam class for each parameter of a particular
+  * Mapper parameter, and then use various getTypeValue methods to
+  * retrieve parameters in the mapper code.
+  */
 public class MappingParam {
 	private final String name;
 	private Object defValue;
-	private boolean defSet; 
+	private boolean defSet;
 
-	public MappingParam(String name, Object defValue) {
+	/** Creates a mapper parameter with a default value to be used
+	  * if none is specified in the SwiftScript program.
+	  */
+	public MappingParam(String name, Object defaultValue) {
 		this.name = name;
-		this.defValue = defValue;
+		this.defValue = defaultValue;
 		this.defSet = true;
 	}
 
+	/** Creates a mapper parameter with no default value. If no value
+	  * is specified in the SwiftScript program for this parameter,
+	  * then calls to the getValue methods will fail with an
+	  * InvalidMappingParameterException.
+	  */
 	public MappingParam(String name) {
 		this.name = name;
 		this.defSet = false;
 	}
 
+	/** Returns the value of this parameter. If the value is a dataset,
+	  * then the value will be converted to a string. If no value is
+	  * specified in the SwiftScript program, then the default value
+	  * will be returned.
+	  */
 	public Object getValue(Mapper mapper) {
 		Object value = mapper.getParam(name);
 		if (value instanceof DSHandle) {
@@ -51,6 +67,10 @@ public class MappingParam {
 		Object value = handle.getValue();
 	}
 
+	/** Returns the mapper parameter value as a filename. If the parameter
+	    is a SwiftScript dataset, then the filename for that dataset will
+	    be returned. If the parameter is a String then that String will be
+	    returned. Otherwise, an exception will be thrown. */
 	public String getFileName(Mapper mapper) {
 		Object value = mapper.getParam(name);
 		if (value instanceof DSHandle) {
@@ -66,6 +86,8 @@ public class MappingParam {
 		}
 	}
 
+	/** Returns the mapper parameter as a String. Other data types will be
+	    converted to a String as appropriate. */
 	public String getStringValue(Mapper mapper) {
 		Object value = getValue(mapper);
 		if (value == null)
@@ -85,6 +107,13 @@ public class MappingParam {
 		return map.containsKey(name);
 	}
 
+
+	/** Returns the parameter value as a boolean. The native SwiftScript
+	  * types for this parameter can be boolean (in which case that
+	  * value is returned) or Strings "true" or "false". If none of these
+	  * match, then 'false' is returned (note an exception is not thrown,
+	  * unlike other getValue methods).
+	  */
 	public boolean getBooleanValue(Mapper mapper) {
 		Object value = getValue(mapper);
 		if (value instanceof String) {
@@ -98,6 +127,10 @@ public class MappingParam {
 		}
 	}
 
+	/** Returns the parameter value as an int. If the SwiftScript value 
+	  * is a string, * then the string will be parsed to an int. If the
+	  * value is an int,  then this will be passed through. Otherwise,
+	  * a NumberFormatException will be thrown. */
 	public int getIntValue(Mapper mapper) {
 		Object value = getValue(mapper);
 		if (value instanceof String) {
