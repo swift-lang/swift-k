@@ -151,4 +151,8 @@ public class MappingParam {
 	public void setValue(Map map, Object value) {
 		map.put(name, value);
 	}
+
+	public String toString() {
+		return "mapping parameter "+name;
+	}
 }
