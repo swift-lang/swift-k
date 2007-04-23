@@ -22,6 +22,7 @@ import org.griphyn.vdl.model.Dataset;
 import org.griphyn.vdl.model.Foreach;
 import org.griphyn.vdl.model.FormalParameter;
 import org.griphyn.vdl.model.Function;
+import org.griphyn.vdl.model.FunctionArgument;
 import org.griphyn.vdl.model.If;
 import org.griphyn.vdl.model.Procedure;
 import org.griphyn.vdl.model.ProgramDocument;
@@ -527,27 +528,35 @@ public class Karajan {
 	public StringTemplate function(Function func) throws Exception {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", func.getName());
-		// TODO: deal with nested functions.
-		Function[] nested = func.getFunctionArray();
-		if (nested != null && nested.length != 0) {
-			StringTemplate[] nestedST = new StringTemplate[nested.length]; 
-			for (int i = 0; i < nested.length; i++) {
-				nestedST[i] = function(nested[i]);
-			}
-			funcST.setAttribute("expr", nestedST);
-		}
-		else {
-			String content = getText(func);
-			setExprOrValue(funcST, content, false);
-			// TODO: make function deal with expr directly.
-			StringTemplate exprST = (StringTemplate) funcST.getAttribute("expr");
-			if (exprST != null) {
-				// special case
-				if (exprST.getName().equals("id")) {
-					setPath(funcST, content);
+		FunctionArgument[] arguments = func.getArgumentArray();
+		for(int i = 0; i < arguments.length; i++ ) {
+			FunctionArgument thisArgument = arguments[i];
+			// handle each argument in turn
+			// its either an expression or a function invocation
+			// and we need to treat the argument differently
+			// depending on which it is.
+			if(thisArgument.isSetFunction()) {
+				funcST.setAttribute("args", function(thisArgument.getFunction()));
+			} else { // it is an expression or value
+				StringTemplate argST = template("functionArg");
+				String content = getText(thisArgument);
+				setExprOrValue(argST, content, true);
+
+				// TODO: make function deal with expr directly.
+				StringTemplate exprST = (StringTemplate) argST.getAttribute("expr");
+
+				// In the case that the supplied expression is an identifier,
+				// we override the normal parameter passing (through expr
+				// or value, and instead pass a var/path pair for that
+				// identifier
+				if (exprST != null && exprST.getName().equals("id")) {
+					setPath(argST, content);
 				}
+
+				funcST.setAttribute("args",argST);
 			}
 		}
+
 		return funcST;
 	}
 
@@ -571,6 +580,10 @@ public class Karajan {
 	protected void setPath(StringTemplate st, String content) {
 		if (content == null || content.trim().equals(""))
 			return;
+
+		// whitespace on the start or finish causes whitespace to
+		// appear in bad places in the output karajan code
+		content = content.trim();
 
 		int i = content.indexOf('.');
 		int j = content.indexOf('[');

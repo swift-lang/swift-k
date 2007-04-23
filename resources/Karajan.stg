@@ -147,15 +147,11 @@ $func;separator="\n"$
 // using the 'expr' attribute if it exists.
 
 
-function(name, var, path, expr, value) ::= <<
+function(name, var, path, expr, value, args) ::= <<
 $if(name)$
 <vdl:$name$$if(path)$ path="$path$"$endif$$if(var)$ var="{$var$}"/>$else$>
-  $if(value)$
-    $value$
-  $else$
-  $if(expr)$
-    $expr$
-  $endif$
+  $if(args)$
+    $args$
   $endif$
 </vdl:$name$>
 $endif$
@@ -165,6 +161,21 @@ $if(value)$
 $else$
 $expr$
 $endif$
+$endif$
+>>
+
+functionArg(var, path, expr, value) ::= <<
+$if(var)$
+  <string>$path$</string>
+  <variable>$var$</variable>
+$else$
+  $if(value)$
+    <string>$value$</string>
+  $else$
+    $if(expr)$
+      $expr$
+    $endif$
+  $endif$
 $endif$
 >>
 

@@ -202,14 +202,21 @@
     </xs:sequence>
   </xs:group>
 
-  <xs:complexType mixed="true" name="Function">
+  <xs:complexType mixed="true" name="FunctionArgument">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="function" type="Function"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Function">
     <xs:annotation>
       <xs:documentation>A mapping function, the parameters to the function
       itself can be text, reference and function.</xs:documentation>
     </xs:annotation>
 
-    <xs:sequence maxOccurs="unbounded" minOccurs="0">
-      <xs:group ref="ArgumentGroup"/>
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="argument"
+        type="FunctionArgument" />
     </xs:sequence>
 
     <xs:attribute name="name" type="xs:NMTOKEN">

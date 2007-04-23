@@ -201,7 +201,13 @@ part(name,expr) ::= <<
 >>
 
 functionInvocation(name,args) ::= <<
-<function name="$name$">$args;separator=", "$</function>
+<function name="$name$">
+$if(args)$
+<argument>
+  $args;separator="</argument><argument>"$
+</argument>
+$endif$
+</function>
 >>
 
 mappingExpr(expr) ::= "$expr$"
