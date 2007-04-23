@@ -38,18 +38,15 @@ public class MapperFactory {
 	public synchronized static Mapper getMapper(String type, Map params) throws InvalidMapperException {
 		Class cls = (Class) mappers.get(type);
 		if (cls == null) {
-			throw new InvalidMapperException(type);
+			throw new InvalidMapperException("no such mapper: "+type);
 		}
 		try {
 			Mapper mapper = (Mapper) cls.newInstance();
 			mapper.setParams(params);
 			return mapper;
 		}
-		catch (InvalidMappingParameterException e) {
-			throw new InvalidMapperException(type + ": " + e.getMessage(), e);
-		}
 		catch (Exception e) {
-			throw new InvalidMapperException(type, e);
+			throw new InvalidMapperException(type + ": " + e.getMessage(), e);
 		}
 	}
 
