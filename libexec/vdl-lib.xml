@@ -2,6 +2,7 @@
   <namespace prefix="vdl">
 	<export name="new"><elementDef classname="org.griphyn.vdl.karajan.lib.New"/></export>
 	
+<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.Misc"/></export>
 	<!-- used from VDL2 for arguments to apps and returns relative paths -->
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.FileName"/></export>
 	<!-- returns multiple names instead of concatenating them -->
