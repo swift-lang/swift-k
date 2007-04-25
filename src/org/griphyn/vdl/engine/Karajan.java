@@ -525,6 +525,14 @@ public class Karajan {
 		return argumentST;
 	}
 
+	/** Produces a Karajan function invocation from a SwiftScript invocation.
+	  * The Karajan invocation will have the same name as the SwiftScript
+	  * function, in the 'vdl' Karajan namespace. Parameters to the
+	  * Karajan function will differ from the SwiftScript parameters in
+	  * a number of ways - read the source for the exact ways in which
+	  * that happens.
+	  */
+
 	public StringTemplate function(Function func) throws Exception {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", func.getName());

@@ -1413,7 +1413,11 @@ intermediate language is in resources/XDTM.xsd.
 	</para>
 	<para>
 Step ii: XML intermediate form to Karajan workflow. Karajan.java - reads
-the XML intermediate form. compiles to karajan workflow language.
+the XML intermediate form. compiles to karajan workflow language - for
+example, expressions are converted from SwiftScript syntax into Karajan
+syntax, and function invocations become karajan function invocations
+with various modifications to parameters to accomodate return parameters
+and dataset handling.
 	</para>
 	</sect2>
 
