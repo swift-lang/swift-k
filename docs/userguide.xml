@@ -411,7 +411,8 @@ logical representation from/to its physical representation.
 Swift provides a number of mappers that are useful in common cases. This
 section details those standard mappers. For more complex cases, it is
 possible to write application-specific mappers in another language and
-use them within a SwiftScript program.
+use them within a SwiftScript program. For more information on writing
+an application specific mapper, see the tutorial module on mappers.
 		</para>
 
 		<sect2><title>Mapper Initialization</title>
