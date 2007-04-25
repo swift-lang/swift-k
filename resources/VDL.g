@@ -788,11 +788,12 @@ functionInvocation returns [StringTemplate code=template("functionInvocation")]
        code.setAttribute("name", func);
      }
      LPAREN
+     (
      functionInvocationArgument[code]
      (
        COMMA
        functionInvocationArgument[code]
-     )*
+     )*)?
      RPAREN
     )
     |
