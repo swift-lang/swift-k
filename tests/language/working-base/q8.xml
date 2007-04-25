@@ -14,7 +14,10 @@
       <application>
         <executable>echo</executable>
         <argument>s</argument>
-        <stdout><function name="filename">t</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          t
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>
@@ -28,6 +31,9 @@
   </dataset>
   <call proc="echo">
     <output>o</output>
-    <input><function name="filenames">inputFiles</function></input>
+    <input><function name="filenames">
+    <argument>
+      inputFiles
+    </argument></function></input>
   </call>
 </program>

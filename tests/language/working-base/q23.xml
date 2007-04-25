@@ -14,14 +14,20 @@
       <application>
         <executable>echo</executable>
         <argument>s</argument>
-        <stdout><function name="filename">t</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          t
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>
   <dataset name="outfile" type="messagefile">
     <file name="q23.txt"/>
   </dataset>
-  <variable name="message" type="string"><function name="arg">&quot;text&quot;</function></variable>
+  <variable name="message" type="string"><function name="arg">
+  <argument>
+    &quot;text&quot;
+  </argument></function></variable>
   <call proc="greeting">
     <output>outfile</output>
     <input>message</input>

@@ -24,7 +24,10 @@
         <argument>&quot;and you have eaten&quot;</argument>
         <argument>d.pies</argument>
         <argument>&quot;pies.&quot;</argument>
-        <stdout><function name="filename">t</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          t
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>

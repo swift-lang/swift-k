@@ -16,7 +16,10 @@
     <binding type="app">
       <application>
         <executable>cwtsmall</executable>
-        <argument><function name="filename">waveletScript</function></argument>
+        <argument><function name="filename">
+        <argument>
+          waveletScript
+        </argument></function></argument>
         <argument>subjNo</argument>
         <argument>trialType</argument>
       </application>

@@ -17,8 +17,14 @@
       <application>
         <executable>wc</executable>
         <argument>&quot;-w&quot;</argument>
-        <argument><function name="filename">f</function></argument>
-        <stdout><function name="filename">t</function></stdout>
+        <argument><function name="filename">
+        <argument>
+          f
+        </argument></function></argument>
+        <stdout><function name="filename">
+        <argument>
+          t
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>

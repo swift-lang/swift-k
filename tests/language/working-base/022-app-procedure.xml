@@ -10,7 +10,10 @@
         <argument>&quot;-p&quot;</argument>
         <argument>p1</argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">f</function></argument>
+        <argument><function name="filename">
+        <argument>
+          f
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>

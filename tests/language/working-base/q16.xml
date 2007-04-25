@@ -17,8 +17,14 @@
       <application>
         <executable>wc</executable>
         <argument>&quot;-w&quot;</argument>
-        <argument><function name="filename">f</function></argument>
-        <stdout><function name="filename">t</function></stdout>
+        <argument><function name="filename">
+        <argument>
+          f
+        </argument></function></argument>
+        <stdout><function name="filename">
+        <argument>
+          t
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>
@@ -27,7 +33,10 @@
   </dataset>
   <dataset name="c" type="countfile">
     <mapping descriptor="regexp_mapper">
-      <param name="source"><function name="filename">inputfile</function></param>
+      <param name="source"><function name="filename">
+      <argument>
+        inputfile
+      </argument></function></param>
       <param name="match">&quot;(.*)txt&quot;</param>
       <param name="transform">&quot;\1count&quot;</param>
     </mapping>

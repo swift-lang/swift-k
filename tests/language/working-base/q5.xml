@@ -16,7 +16,10 @@
         <argument>s[0]</argument>
         <argument>s[1]</argument>
         <argument>s[2]</argument>
-        <stdout><function name="filename">t</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          t
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>

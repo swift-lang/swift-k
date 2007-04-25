@@ -16,11 +16,17 @@
         <executable>stageIn</executable>
         <argument>&quot;-v&quot;</argument>
         <argument>&quot;-i&quot;</argument>
-        <argument><function name="filename">input</function></argument>
+        <argument><function name="filename">
+        <argument>
+          input
+        </argument></function></argument>
         <argument>&quot;-c&quot;</argument>
         <argument>config</argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">gauge</function></argument>
+        <argument><function name="filename">
+        <argument>
+          gauge
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -34,13 +40,19 @@
         <executable>stagSolve</executable>
         <argument>&quot;-v&quot;</argument>
         <argument>&quot;-g&quot;</argument>
-        <argument><function name="filename">gauge</function></argument>
+        <argument><function name="filename">
+        <argument>
+          gauge
+        </argument></function></argument>
         <argument>&quot;-m&quot;</argument>
         <argument>mass</argument>
         <argument>&quot;-s&quot;</argument>
         <argument>source</argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">output[*]</function></argument>
+        <argument><function name="filename">
+        <argument>
+          output[*]
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -59,11 +71,17 @@
         <argument>&quot;-c&quot;</argument>
         <argument>cSW</argument>
         <argument>&quot;-g&quot;</argument>
-        <argument><function name="filename">gauge</function></argument>
+        <argument><function name="filename">
+        <argument>
+          gauge
+        </argument></function></argument>
         <argument>&quot;-s&quot;</argument>
         <argument>source</argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">output</function></argument>
+        <argument><function name="filename">
+        <argument>
+          output
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -75,9 +93,15 @@
         <executable>CVT12x12</executable>
         <argument>&quot;-v&quot;</argument>
         <argument>&quot;-i&quot;</argument>
-        <argument><function name="filename">input</function></argument>
+        <argument><function name="filename">
+        <argument>
+          input
+        </argument></function></argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">output</function></argument>
+        <argument><function name="filename">
+        <argument>
+          output
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -89,9 +113,15 @@
         <executable>Archive</executable>
         <argument>&quot;-v&quot;</argument>
         <argument>&quot;-i&quot;</argument>
-        <argument><function name="filename">input</function></argument>
+        <argument><function name="filename">
+        <argument>
+          input
+        </argument></function></argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">output</function></argument>
+        <argument><function name="filename">
+        <argument>
+          output
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -106,9 +136,15 @@
         <argument>&quot;-m&quot;</argument>
         <argument>mass</argument>
         <argument>&quot;-i&quot;</argument>
-        <argument><function name="filename">input[*]</function></argument>
+        <argument><function name="filename">
+        <argument>
+          input[*]
+        </argument></function></argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">output</function></argument>
+        <argument><function name="filename">
+        <argument>
+          output
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -124,7 +160,10 @@
         <executable>TwoPtHH</executable>
         <argument>&quot;-v&quot;</argument>
         <argument>&quot;-g&quot;</argument>
-        <argument><function name="filename">gauge</function></argument>
+        <argument><function name="filename">
+        <argument>
+          gauge
+        </argument></function></argument>
         <argument>&quot;-a&quot;</argument>
         <argument>antiQ</argument>
         <argument>&quot;-0&quot;</argument>
@@ -133,7 +172,10 @@
         <argument>Q1</argument>
         <argument>&quot;-2&quot;</argument>
         <argument>Q2</argument>
-        <stdout><function name="filename">sdo</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          sdo
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>
@@ -150,7 +192,10 @@
         <executable>TwoPtSH</executable>
         <argument>&quot;-v&quot;</argument>
         <argument>&quot;-g&quot;</argument>
-        <argument><function name="filename">gauge</function></argument>
+        <argument><function name="filename">
+        <argument>
+          gauge
+        </argument></function></argument>
         <argument>&quot;-s&quot;</argument>
         <argument>stag</argument>
         <argument>&quot;-a&quot;</argument>
@@ -161,7 +206,10 @@
         <argument>Q1</argument>
         <argument>&quot;-2&quot;</argument>
         <argument>Q2</argument>
-        <stdout><function name="filename">sdo</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          sdo
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>

@@ -17,7 +17,10 @@
         <argument>&quot;-p&quot;</argument>
         <argument>p1</argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">f</function></argument>
+        <argument><function name="filename">
+        <argument>
+          f
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -35,9 +38,15 @@
         <argument>&quot;-p&quot;</argument>
         <argument>p2</argument>
         <argument>&quot;-i&quot;</argument>
-        <argument><function name="filename">f1</function></argument>
+        <argument><function name="filename">
+        <argument>
+          f1
+        </argument></function></argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">f2</function></argument>
+        <argument><function name="filename">
+        <argument>
+          f2
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>
@@ -50,10 +59,19 @@
         <executable>combine</executable>
         <argument>&quot;-aBOTTOM -T4&quot;</argument>
         <argument>&quot;-i&quot;</argument>
-        <argument><function name="filename">f1</function></argument>
-        <argument><function name="filename">f2</function></argument>
+        <argument><function name="filename">
+        <argument>
+          f1
+        </argument></function></argument>
+        <argument><function name="filename">
+        <argument>
+          f2
+        </argument></function></argument>
         <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">f3</function></argument>
+        <argument><function name="filename">
+        <argument>
+          f3
+        </argument></function></argument>
       </application>
     </binding>
   </procedure>

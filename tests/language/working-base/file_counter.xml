@@ -14,7 +14,10 @@
       <application>
         <executable>ls</executable>
         <argument>s</argument>
-        <stdout><function name="filename">f</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          f
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>
@@ -24,8 +27,14 @@
     <binding type="app">
       <application>
         <executable>wc</executable>
-        <stdin><function name="filename">f</function></stdin>
-        <stdout><function name="filename">c</function></stdout>
+        <stdin><function name="filename">
+        <argument>
+          f
+        </argument></function></stdin>
+        <stdout><function name="filename">
+        <argument>
+          c
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>

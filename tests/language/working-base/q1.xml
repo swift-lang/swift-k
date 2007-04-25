@@ -13,7 +13,10 @@
       <application>
         <executable>echo</executable>
         <argument>&quot;Hello, world!&quot;</argument>
-        <stdout><function name="filename">t</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          t
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>

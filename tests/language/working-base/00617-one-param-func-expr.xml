@@ -1,4 +1,7 @@
 <program xmlns="http://www.griphyn.org/2006/08/vdl"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <variable name="i" type="int"><function name="foo">1 + 2</function></variable>
+  <variable name="i" type="int"><function name="foo">
+  <argument>
+    1 + 2
+  </argument></function></variable>
 </program>

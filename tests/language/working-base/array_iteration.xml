@@ -14,7 +14,10 @@
       <application>
         <executable>echo</executable>
         <argument>s</argument>
-        <stdout><function name="filename">f</function></stdout>
+        <stdout><function name="filename">
+        <argument>
+          f
+        </argument></function></stdout>
       </application>
     </binding>
   </procedure>
