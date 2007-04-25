@@ -1442,6 +1442,13 @@ language.
 is mapped to the variable v.
 			</para>
 		</sect2>
+		<sect2><title>@strcat</title>
+			<para>
+@strcat(a,b,c,d,...) will return a string containing all of the strings
+passed as parameters joined into a single string. There may be any number
+of parameters.
+			</para>
+		</sect2>
 	</sect1>
 
 	<sect1><title>Built-in procedure reference</title>
