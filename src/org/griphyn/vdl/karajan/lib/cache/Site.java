@@ -118,18 +118,21 @@ public class Site {
 		cached.unlock();
 		return new CacheReturn(true, purge(), cached);
 	}
-	
-	public synchronized CacheReturn unlockFromProcessing(File f) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("CacheUnlockFromProcessing(file=" + f + ")");
-		}
-		File cached = (File) files.get(f.getPath());
-		if (cached == null) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Cache contents: " + files);
+
+	public CacheReturn unlockFromProcessing(File f) {
+		File cached;
+		synchronized (this) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("CacheUnlockFromProcessing(file=" + f + ")");
 			}
-			throw new IllegalStateException(
-					"unlockEntry() called with a file that is not in the cache (" + f + ")");
+			cached = (File) files.get(f.getPath());
+			if (cached == null) {
+				if (logger.isInfoEnabled()) {
+					logger.info("Cache contents: " + files);
+				}
+				throw new IllegalStateException(
+						"unlockEntry() called with a file that is not in the cache (" + f + ")");
+			}
 		}
 		cached.unlockFromProcessing();
 		return new CacheReturn(true, purge(), cached);
