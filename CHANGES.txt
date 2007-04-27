@@ -1,3 +1,7 @@
+(04/27/07)
+
+*** Fixed a deadlock in the remote caching code.
+
 (04/12/07)
 
 *** Marker types (that is, types with no content) can now be specified without
