@@ -166,8 +166,7 @@ $endif$
 
 functionArg(var, path, expr, value) ::= <<
 $if(var)$
-  <string>$path$</string>
-  <variable>$var$</variable>
+<getfield path="$path$"><variable>$var$</variable></getfield>
 $else$
   $if(value)$
     <string>$value$</string>

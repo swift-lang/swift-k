@@ -9,7 +9,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 
 public class FileNames extends VDLFunction {
 	static {
-		setArguments(FileNames.class, new Arg[] { PA_PATH, PA_VAR });
+		setArguments(FileNames.class, new Arg[] { PA_VAR });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {

@@ -189,50 +189,22 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	public String[] filename(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		try {
-			Path path;
-			if (PA_PATH.isPresent(stack)) {
-				path = parsePath(PA_PATH.getValue(stack), stack);
+			if (var.isArray()) {
+				List l = var.getFileSet();
+				return (String[]) l.toArray(EMPTY_STRING_ARRAY);
 			}
 			else {
-				path = Path.EMPTY_PATH;
-			}
-			if (path.hasWildcards()) {
-				try {
-					List l = new ArrayList();
-					Iterator i = var.getFields(path).iterator();
-					while (i.hasNext()) {
-						DSHandle handle = (DSHandle) i.next();
-						l.add(handle.getFilename());
-					}
-					return (String[]) l.toArray(EMPTY_STRING_ARRAY);
-				}
-				catch (HandleOpenException e) {
-					throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-				}
-			}
-			else {
-				var = var.getField(path);
-				if (var.isArray()) {
-					List l = var.getFileSet();
-					return (String[]) l.toArray(EMPTY_STRING_ARRAY);
+				String filename = var.getFilename();
+				if (filename == null) {
+					throw new ExecutionException("Mapper did not provide a file name");
 				}
 				else {
-					String filename = var.getFilename();
-					if (filename == null) {
-						throw new ExecutionException("Mapper did not provide a file name for "
-								+ path);
-					}
-					else {
-						return new String[] { filename };
-					}
+					return new String[] { filename };
 				}
 			}
 		}
 		catch (DependentException e) {
 			return new String[0];
-		}
-		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
 		}
 	}
 
