@@ -66,7 +66,7 @@ namespace("vdl"
 						)
 						channel:to(stagein,
 							for(path, fp
-								vdl:absFileName(getfield(var, path = path))
+								vdl:absFileName(vdl:getfield(var, path = path))
 							)
 						)
 					)

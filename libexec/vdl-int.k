@@ -134,7 +134,7 @@ namespace("vdl"
 			for(pv, stageouts
 				[path, var] := each(pv)
 			
-				file := vdl:absfilename(getfield(var, path = path))
+				file := vdl:absfilename(vdl:getfield(var, path = path))
 				
 				dirname(file)
 			)
@@ -144,7 +144,7 @@ namespace("vdl"
 			for(pv, stageouts
 				[path, var] := each(pv)
 			
-				file := vdl:absfilename(getfield(var, path = path))
+				file := vdl:absfilename(vdl:getfield(var, path = path))
 				
 				file
 			)
@@ -221,7 +221,7 @@ namespace("vdl"
 		element(doStageout, [stageouts, dir, host]
 			uparallelFor(pv, stageouts
 				[path, var] := each(pv)
-				file := vdl:absfilename(getfield(var, path = path))
+				file := vdl:absfilename(vdl:getfield(var, path = path))
 				rdir := dircat(dir, reldirname(file))
 				bname := basename(file)
 				ldir := dirname(file)
@@ -264,7 +264,7 @@ namespace("vdl"
 					)
 					for(pv, stageout
 						[path, var] := each(pv)
-						file := vdl:fileName(getfield(var, path=path))
+						file := vdl:fileName(vdl:getfield(var, path=path))
 						label := vdl:niceName(var, path = path)
 						to(graph
 							concat(str:quote(file), " [shape=parallelogram,label=", 
