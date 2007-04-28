@@ -30,10 +30,11 @@ namespace("vdl"
 				
 			element(jobmanager, [universe, url, major, minor, patch]
 				provider := if(
+					url == "local://localhost" "local"
+					url == "pbs://localhost" "pbs"
 					major == "4" "GT4"
 					major == "2" "GT2"
-					url == "local://localhost" "local"
-					throw("Unknown job manager version: major = {major}, minor = {minor}, patch = {patch}")
+					throw("Unknown job manager version: major = {major}, minor = {minor}, patch = {patch}, url = {url}")
 				)
 				service(type="execution", provider=provider, url=url)
 			)
