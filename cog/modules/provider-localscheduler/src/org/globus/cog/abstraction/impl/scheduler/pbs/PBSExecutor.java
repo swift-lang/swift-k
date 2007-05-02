@@ -78,7 +78,7 @@ public class PBSExecutor implements ProcessListener {
         String[] cmdline = new String[] { Properties.getProperties().getQSub(),
                 script.getAbsolutePath() };
         if (logger.isDebugEnabled()) {
-            logger.debug(cmdline[0]+" "+cmdline[1]);
+            logger.debug(cmdline[0] + " " + cmdline[1]);
         }
         Process process = Runtime.getRuntime().exec(cmdline, null, null);
 
@@ -154,6 +154,25 @@ public class PBSExecutor implements ProcessListener {
             wr.write(quote(spec.getEnvironmentVariable(name)));
             wr.write('\n');
         }
+        String type = (String) spec.getAttribute("jobType");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job type: " + type);
+        }
+        if (type != null) {
+            String wrapper = Properties.getProperties().getProperty(
+                    "wrapper." + type);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Wrapper: " + wrapper);
+            }
+            if (wrapper != null) {
+                wrapper = replaceVars(wrapper);
+                wr.write(wrapper);
+                wr.write(' ');
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Wrapper after variable substitution: " + wrapper);
+            }
+        }
         wr.write(quote(spec.getExecutable()));
         List args = spec.getArgumentsAsList();
         if (args != null && args.size() > 0) {
@@ -188,7 +207,6 @@ public class PBSExecutor implements ProcessListener {
             char c = s.charAt(i);
             if (c == '"' || c == '\\') {
                 sb.append('\\');
-                break;
             }
             sb.append(c);
         }
@@ -212,6 +230,50 @@ public class PBSExecutor implements ProcessListener {
             throw new IOException("Qsub returned empty job ID");
         }
         return out;
+    }
+
+    protected String replaceVars(String str) {
+        StringBuffer sb = new StringBuffer();
+        boolean escaped = false;
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c == '\\') {
+            	if (escaped) {
+            	    sb.append('\\');
+            	}
+            	else {
+            	    escaped = true;
+            	}
+            }
+            else {
+                if (c == '$' && !escaped) {
+                	if (i == str.length() - 1) {
+                		sb.append('$');
+                	}
+                	else {
+                	    int e = str.indexOf(' ', i);
+                	    if (e == -1) {
+                	        e = str.length();
+                	    }
+                	    String name = str.substring(i + 1, e);
+                	    Object attr = spec.getAttribute(name);
+                	    if (attr != null) {
+                	    	sb.append(attr.toString());
+                	    }
+                	    else {
+                	    	sb.append('$');
+                	    	sb.append(name);
+                	    }
+                	    i = e;
+                	}
+                }
+                else {
+                    sb.append(c);
+                }
+                escaped = false;
+            }
+        }
+        return sb.toString();
     }
 
     protected void cleanup() {
