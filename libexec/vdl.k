@@ -3,7 +3,7 @@ import("task.k")
 import("rlog.k")
 
 once("vdl.k-print-version"
-	echo("Swift V 0.0405")
+	echo(sys:file:read("{vds.home}/libexec/version.txt"))
 	echo("RunID: {VDL:RUNID}")
 )
 

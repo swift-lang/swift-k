@@ -65,7 +65,7 @@
 		</copy>
 	</target>
 
-	<target name="dist" depends="antlr, compileSchema">
+	<target name="dist" depends="generateVersion, antlr, compileSchema">
 		<ant antfile="${main.buildfile}" target="dist"/>
 		<mkdir dir="${dist.dir}/libexec"/>
 		<copy todir="${dist.dir}/libexec">
@@ -258,6 +258,10 @@ updateOptions "$SWIFT_HOME" "swift.home"
 
 	<target name="module.package">
 		<ant antfile="${main.buildfile}" target="module.package"/>
+	</target>
+
+	<target name="generateVersion">
+		<echo file="libexec/version.txt">Swift v${version}</echo>
 	</target>
 
 </project>
