@@ -59,7 +59,7 @@ public class Monitor implements ActionListener, MouseListener {
 	public Monitor(WrapperMap map) {
 		this.map = map;
 		Service s = new Service();
-		new Thread(s).start();
+		new Thread(s, "network debugger").start();
 	}
 
 	private synchronized void init() {

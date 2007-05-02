@@ -21,7 +21,7 @@ public class InHook extends InputStream implements Runnable {
 		if (is instanceof BufferedInputStream) {
 			this.is = (BufferedInputStream) is;
 			this.m = m;
-			Thread t = new Thread(this);
+			Thread t = new Thread(this, "stdin debugger");
 			t.setDaemon(true);
 			t.start();
 		}
