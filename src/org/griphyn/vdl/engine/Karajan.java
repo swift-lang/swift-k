@@ -788,7 +788,7 @@ public class Karajan {
 	protected void checkAssign(String name, StringTemplate assignST, StringTemplate st,
 			boolean isInput) {
 		if (!isInput) {
-			throw new RuntimeException("The varible " + name + " can not be used as an output!\n"
+			throw new RuntimeException("The variable " + name + " can not be used as an output!\n"
 					+ assignST);
 		}
 		// stop if it is primitive value
