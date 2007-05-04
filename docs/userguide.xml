@@ -4,7 +4,7 @@
 
 <article>
 	<articleinfo revision="0.1">
-		<title>The SwiftScript User Guide</title>
+		<title>The Swift User Guide</title>
 		<subtitle>Source control $LastChangedRevision$</subtitle>
 		<author>
 			<firstname>Yong</firstname>
@@ -32,7 +32,7 @@ the XML format using one of the tools in our virtual data system.
 		<title>Overview</title>
 		<para>
 This manual provides reference material for the SwiftScript language
-and the swift runtime system. For more introductory material, consult
+and the Swift runtime system. For more introductory material, consult
 the Swift tutorial.
 		</para>
 	</sect1>
