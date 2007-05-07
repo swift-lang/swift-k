@@ -35,9 +35,11 @@ import org.griphyn.vdl.model.Dataset.Mapping;
 import org.griphyn.vdl.model.Dataset.Mapping.Param;
 import org.griphyn.vdl.model.If.Else;
 import org.griphyn.vdl.model.If.Then;
+import org.griphyn.vdl.model.Procedure;
 import org.griphyn.vdl.model.ProgramDocument.Program;
 import org.griphyn.vdl.model.Switch.Case;
 import org.griphyn.vdl.model.Switch.Default;
+import org.griphyn.vdl.model.TypesDocument.Types;
 import org.griphyn.vdl.parser.VDLExpression;
 import org.safehaus.uuid.UUIDGenerator;
 
@@ -326,6 +328,13 @@ public class Karajan {
 				st = template("switch");
 				progST.setAttribute("statements", st);
 				switchStat(switchstat, st);
+			} else if (child instanceof Procedure
+				|| child instanceof Types
+				|| child instanceof FormalParameter) {
+				// ignore these - they're expected but we don't need to
+				// do anything for them here
+			} else {
+				throw new RuntimeException("Unexpected element in XML. Implementing class "+child.getClass()+", content "+child);
 			}
 		}
 	}
@@ -487,7 +496,7 @@ public class Karajan {
 		if ((app = bind.getApplication()) != null) {
 			bindST.setAttribute("application", application(app));
 			procST.setAttribute("binding", bindST);
-		}
+		} else throw new RuntimeException("Unknown binding: "+bind);
 	}
 
 	public StringTemplate application(ApplicationBinding app) throws Exception {
