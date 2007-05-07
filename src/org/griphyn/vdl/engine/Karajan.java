@@ -17,7 +17,9 @@ import org.griphyn.vdl.model.Argument;
 import org.griphyn.vdl.model.Array;
 import org.griphyn.vdl.model.Assign;
 import org.griphyn.vdl.model.Binding;
+import org.griphyn.vdl.model.Break;
 import org.griphyn.vdl.model.Call;
+import org.griphyn.vdl.model.Continue;
 import org.griphyn.vdl.model.Dataset;
 import org.griphyn.vdl.model.Foreach;
 import org.griphyn.vdl.model.FormalParameter;
@@ -330,6 +332,8 @@ public class Karajan {
 				switchStat(switchstat, st);
 			} else if (child instanceof Procedure
 				|| child instanceof Types
+				|| child instanceof Break
+				|| child instanceof Continue
 				|| child instanceof FormalParameter) {
 				// ignore these - they're expected but we don't need to
 				// do anything for them here

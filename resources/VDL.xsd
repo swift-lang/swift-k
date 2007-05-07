@@ -691,10 +691,14 @@
 
       <xs:element name="switch" type="Switch"/>
 
-      <xs:element name="continue"/>
+      <xs:element name="continue" type="Continue"/>
 
-      <xs:element name="break"/>
+      <xs:element name="break" type="Break"/>
     </xs:choice>
   </xs:group>
+
+
+  <xs:complexType name="Continue"/>
+  <xs:complexType name="Break"/>
 </xs:schema>
 
