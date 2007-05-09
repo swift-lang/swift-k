@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<article>
+    <articleinfo>
+        <title>A Swift Tutorial</title>
+        <abstract>
+            <formalpara>
+                <para>
+This is an introductory tutorial on the use of Swift and its
+programming language SwiftScript.
+                </para>
+                <para>
+$LastChangedRevision$
+                </para>
+            </formalpara>
+        </abstract>
+    </articleinfo>
+
+<sect1> <title>Introduction</title>
+    <para>
+This tutorial is intended to introduce new users to the basics of Swift.
+It is structured as a series of small exercise/examples which you can
+try for yourself as you read along.
+    </para>
+    <para>
+For information on getting an installation of Swift running, consult the
+Swift Quickstart Guide, and return to this document when you have
+successfully run the test SwiftScript program mentioned there.
+    </para>
+    <para>
+There is also a Swift User's Guide which contains more detailed reference
+material on topics covered in this manual.
+    </para>
+</sect1>
+
+<sect1> <title>Hello World</title>
+    <para>
+The first example program (found in the file
+examples/vdsk/tutorial/q1.swift) outputs a hello world message into
+a file called hello.txt.
+    </para>
+
+<programlisting>
+type messagefile;
+
+(messagefile t) greeting () {
+    app {
+        echo &quot;Hello, world!&quot; stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
+
+outfile = greeting();
+</programlisting>
+
+<para>We can run this program as follows:</para>
+
+<programlisting>
+cd examples/vdsk/tutorial/
+
+swift q1.swift
+
+Swift v0.1-dev
+
+RunID: e1bupgygrzn12
+echo started
+echo completed
+
+cat hello.txt
+Hello, world!
+</programlisting>
+
+<para>The basic structure of this program is a type definition,
+a procedure definition, a variable definition and
+then a call to the procedure:</para>
+
+
+<programlisting>
+type messagefile;
+</programlisting>
+
+<para>
+First we define a new type, called messagefile. Data in SwiftScript
+must be typed,
+whether it is stored in memory or on disk. In this example, we will use
+this as the type for our output message. The ; indicates that no
+internal structure is defined for the data.
+</para>
+
+<programlisting>
+(messagefile t) greeting () {
+    app {
+        echo &quot;Hello, world!&quot; stdout=@filename(t);
+    }
+}
+</programlisting>
+
+<para>
+Next we define a procedure called write. This procedure will write out
+the &quot;hello world&quot; message to a file. The procedure takes no parameters
+and outputs a messagefile.
+</para>
+
+<para>
+To achieve this, it executes the unix utility 'echo' with a parameter
+&quot;Hello, world!&quot; and directs the standard output into the output file.
+</para>
+
+<programlisting>
+messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
+</programlisting>
+
+<para>
+Here we define a variable called outfile. The type of this variable is
+messagefile, and we specify that the contents of this variable will
+be stored on disk in a file called hello.txt
+</para>
+
+<programlisting>
+outfile = greeting();
+</programlisting>
+
+<para>
+Now we call the greeting procedure, with its output going to the
+outfile variable and therefore to hello.txt on disk.
+</para>
+
+<para>Over the following exercises, we'll extend this simple
+hello world program to demonstrate various features of Swift.</para>
+
+</sect1>
+
+<sect1> <title>Parameters</title>
+
+<para>
+Procedures can have parameters. Input parameters specify inputs to the
+procedure and output parameters specify outputs. Our helloworld greeting
+procedure already uses an output parameter, t, which indicates where the
+greeting output will go. In this section, we will add an input parameter
+to the greeting function.</para>
+<para>
+We will also encounter a new built-in data type, 'string'.
+</para>
+<para>The code for this section can be found in q2.swift. It can be
+invoked using the swift command, with output appearing in hello2.txt:</para>
+
+<programlisting>
+swift q2.swift
+</programlisting>
+
+<para>The code changes from q1.swift are highlighted below.</para>
+
+<programlisting>
+type messagefile;
+
+(messagefile t) greeting (string s) {
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;hello2.txt&quot;&gt;;
+
+outfile = greeting(&quot;hello world&quot;);
+</programlisting>
+
+<para>We have modified the signature of the greeting procedure to indicate
+that it takes a single parameter, s, of type 'string'.</para>
+<para>We have modified the invocation of the 'echo' utility so that it
+takes the value of s as a parameter, instead of the string literal
+&quot;Hello, world!&quot;.</para>
+<para>We have modified the output file definition to point to a different
+file on disk.</para>
+<para>We have modified the invocation of greeting so that a greeting
+string is supplied.</para>
+
+</sect1>
+
+<sect1><title>Calling the same function with different parameters</title>
+<para>Now that we can choose our greeting text, we can call the same
+procedure with different parameters to generate several output files with
+different greetings. The code is in q12.swift and can be run as before
+using the swift command.
+</para>
+
+<programlisting>
+type messagefile;
+
+(messagefile t) greeting (string s) {
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+
+messagefile english &lt;&quot;english.txt&quot;&gt;;
+messagefile french &lt;&quot;francais.txt&quot;&gt;;
+
+english = greeting(&quot;hello&quot;);
+french = greeting(&quot;bonjour&quot;);
+
+messagefile japanese &lt;&quot;nihongo.txt&quot;&gt;;
+japanese = greeting(&quot;konnichiwa&quot;);
+</programlisting>
+
+<para>Note that we can intermingle definitions of variables with invocations
+of procedures.</para>
+<para>When this program has been run, there should be three new files in the
+working directory (english.txt, francais.txt and nihongo.txt) each containing
+a greeting in a different language.</para>
+
+</sect1>
+
+<sect1><title>Named and optional parameters</title>
+<para>In addition to specifying parameters positionally, parameters can
+be named, and if desired a default value can be specified:
+
+<programlisting>
+(messagefile t) greeting (string s="hello") {
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+</programlisting>
+
+When we invoke the procedure, we can specify values for the parameters
+by name:
+
+<programlisting>
+french = greeting(s="bonjour");
+</programlisting>
+
+or we can let the default value apply:
+
+<programlisting>
+english = greeting();
+</programlisting>
+
+</para>
+</sect1>
+
+<sect1><title>Another procedure</title>
+<para>
+Now we'll define a new simple procedure. This will take an input file and
+count the number of words in that input file, storing the count in
+another file.
+</para>
+
+<para>To do this, we'll use the unix 'wc' (word-count) utility.</para>
+
+<para>First we need to modify the Transformation Catalog to define
+a logical transformation for the wc utility.  The transformation
+catalog can be found in var/tc.data.
+There is already one entry specifying where 'echo' can
+be found. Add a new line to the file, specifying where wc can be found
+(usually in /usr/bin/wc but it may vary depending on your system), like this:
+</para>
+
+<programlisting>
+local      wc  /bin/wc  INSTALLED INTEL32::LINUX null
+</programlisting>
+
+<para>For now, ignore all of the fields except the second and the third.
+The second field 'wc' specifies a logical transformation name and the
+third specifies the location of an executable to perform that
+transformation.</para>
+
+<para>Now that we have defined the logical transformation 'wc', we can
+use it in SwiftScript:
+</para>
+
+<programlisting>
+type messagefile;
+type countfile;
+
+(messagefile t) greeting (string s) {
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+
+(countfile t) countwords (messagefile f) {
+    app {
+        wc &quot;-w&quot; @filename(f) stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
+countfile c &lt;&quot;count.txt&quot;&gt;;
+
+outfile = greeting(&quot;hello from Swift&quot;);
+c = countwords(outfile);
+</programlisting>
+
+<para>We define a new data type for files containing counts (although
+like messagefile, we don't specify any internal structure for that
+file). Then we define a 'countwords' procedure which invokes the
+wc utility with appropriate parameters. Finally, we define a variable,
+c, which we map to count.txt and to which we assign the count of words
+in a greeting message.</para>
+
+<para>We can use the swift command to run q13.swift:</para>
+
+<programlisting>
+swift q13.swift
+[...]
+cat count.txt
+  3 q13greeting.txt
+</programlisting>
+
+<para>and thus we discover that the phrase &quot;hello from Swift&quot; contains
+precisely three words.</para>
+
+</sect1>
+
+<sect1><title>Anonymous files</title>
+
+<para>In the previous section, the file 'q13greeting.txt' is used only to
+store an intermediate result. We don't really care about which name is used
+for the file, as no matter which intermediate name is used we will still
+get the same word count.</para>
+
+<para>In this case, we can omit the filename mapping part of the variable
+declaration. Instead of:</para>
+
+<programlisting>
+messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
+</programlisting>
+
+<para>we can instead write:</para>
+
+<programlisting>
+messagefile outfile;
+</programlisting>
+
+<para>q14.swift contains the code and can be run in the usual way. After
+execution, the results can be found in count14.txt</para>
+
+<programlisting>
+cat count14.txt
+     3 outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60
+</programlisting>
+
+<para>Observe that a generated name,
+outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60, was
+automatically mapped to outfile.</para>
+
+</sect1>
+<sect1><title>More on datatypes</title>
+
+<para>
+As mentioned earlier, all data in variables and files has a datatype.  So
+far, we've seen the built-in 'string' data type and simple user-defined
+datatypes (messagefile and countfile).</para>
+
+<para>
+SwiftScript has the additional built-in types, based on XML types:
+Boolean, Integer, Float, and Date.
+</para>
+
+<para>We've seen empty user-defined types already, which are used as
+markers on files that we don't need to look at the content of in SwiftScript.
+It is also possible to create types with structure, as in other
+programming languages.</para>
+
+<para>q15.swift contains the code for this exercise, based on the q2
+code.</para>
+
+<programlisting>
+type messagefile;
+
+type details {
+    string name;
+    string place;
+}
+
+(messagefile t) greeting (details d) {
+    app {
+        echo &quot;Hello&quot; d.name &quot;You live in&quot; d.place stdout=@filename(t);
+    }
+}
+
+details person;
+
+person.name = &quot;John&quot;;
+person.place = &quot;Namibia&quot;;
+
+messagefile outfile &lt;&quot;q15.txt&quot;&gt;;
+
+outfile = greeting(person);
+</programlisting>
+
+We define a new type, details, with members, a string and an integer.
+
+</sect1>
+
+<sect1><title>Arrays</title>
+<para>We can define arrays of values. For example, we could specify each
+word in a greeting as a separate element of a string array, as seen in
+q5.swift:</para>
+
+<programlisting>
+type messagefile;
+
+(messagefile t) greeting (string s[]) {
+    app {
+        echo s[0] s[1] s[2] stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;&quot;q5out.txt&quot;&gt;;
+
+string words[] = [&quot;how&quot;,&quot;are&quot;,&quot;you&quot;];
+
+outfile = greeting(words);
+
+</programlisting>
+
+<para>Observe that the type of the parameter to greeting is now an
+array of strings, 'string s[]', instead of a single string, 'string s',
+that elements of the array can be referenced numerically, for example
+s[0], and that the array is initialised using an array literal,
+[&quot;how&quot;,&quot;are&quot;,&quot;you&quot;].</para>
+
+</sect1>
+
+<sect1><title>Mappers</title>
+
+<para>A significant difference between SwiftScript and other languages is
+that data can be referred to on disk through variables in a very
+similar fashion to data in memory.  For example, in the above
+examples we have seen a variable definition like this:</para>
+
+<programlisting>
+messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
+</programlisting>
+
+<para>This means that 'outfile' is a dataset variable, which is
+mapped to a file on disk called 'g13greeting.txt'. This variable
+can be assigned to using = in a similar fashion to an in-memory
+variable.  We can say that 'outfile' is mapped onto the disk file
+'q13greeting.txt' by a <firstterm>mapper</firstterm>.
+</para>
+
+<para>There are various ways of mapping in SwiftScript. Two forms have already
+been seen in this tutorial. Later exercises will introduce more forms.
+</para>
+
+<para>The two forms of mapping seen so far are:</para>
+
+<itemizedlist>
+<para>
+simple named mapping - the name of the file that a variable is
+mapped to is explictly listed. Like this:
+<programlisting>
+messagefile outfile &lt;&quot;greeting.txt&quot;&gt;;
+</programlisting>
+
+This is useful when you want to explicitly name input and output
+files for your program. For example, 'outfile' in exercise HELLOWORLD.
+
+</para>
+
+<para>
+anonymous mapping - no name is specified in the source code.
+A name is automatically generated for the file. This is useful
+for intermediate files that are only referenced through SwiftScript,
+such as 'outfile' in exercise ANONYMOUSFILE. A variable declaration
+is mapped anonymously by ommitting any mapper definition, like this:
+
+<programlisting>
+messagefile outfile;
+</programlisting>
+
+</para>
+
+</itemizedlist>
+
+<para>Later exercises will introduce other ways of mapping from
+disk files to SwiftScript variables.</para>
+
+<para>TODO: introduce @v syntax.</para>
+
+<para>There is no hands on exercise for this section</para>
+
+</sect1>
+
+
+<sect1><title>The regexp mapper</title>
+<para>In this exercise, we introduce the <firstterm>regexp mapper</firstterm>.
+This mapper transforms a string expression using a regular expression,
+and uses the result of that transformation as the filename to map.</para>
+<para>
+q16.swift demonstrates the use of this by placing output into a file that
+is based on the name of the input file: our input file is mapped
+to the inputfile variable using the simple named mapper, and then
+we use the regular expression mapper to map the output file. Then we
+use the countwords() procedure that we defined in exercise ANOTHERPROCEDURE
+to count the works in the input file and store the result in the
+output file.
+</para>
+
+<para>
+The important bit of q16.swift is:
+<programlisting>
+messagefile inputfile &lt;"q16.txt"&gt;;
+
+countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1count"&gt;;
+</programlisting>
+</para>
+</sect1>
+
+<sect1><title>fixed_array_mapper</title>
+<para>
+The <firstterm>fixed array mapper</firstterm> maps a list of files into
+an array - each element of the array is mapped into one file in the
+specified directory. see q22.swift
+</para>
+<programlisting>
+string inputNames = "one.txt two.txt three.txt";
+string outputNames = "one.count two.count three.count";
+
+messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
+countfile outputfiles[] &lt;fixed_array_mapper;files=outputNames&gt;;
+
+outputfiles[0] = countwords(inputfiles[0]);
+outputfiles[1] = countwords(inputfiles[1]);
+outputfiles[2] = countwords(inputfiles[2]);
+</programlisting>
+</sect1>
+
+<sect1><title>foreach</title>
+<para>SwiftScript provides a control structure, foreach, to operate
+on each element of an array.</para>
+<para>In this example, we will run the previous word counting example
+over each file in an array without having to explicitly list the
+array elements. The source code for this example is in q17.swift. The
+three input files (one.txt, two.txt and three.txt) are supplied. After
+you have run the workflow, you should see that there are three output
+files (one.count, two.count and three.count) each containing the word
+count for the corresponding input file. We combine the use of the
+fixed_array_mapper and the regexp_mapper.</para>
+<programlisting>
+string inputNames = "one.txt two.txt three.txt";
+
+messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
+
+
+foreach f in inputfiles {
+  countfile c &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
+  c = countwords(f);
+}
+</programlisting>
+
+</sect1>
+
+<sect1><title>If</title>
+<para>
+Decisions can be made using 'if', in a style reminiscent of many other
+languages. q20.swift contains a simple example of this. Compile and run
+q20.swift and see that it outputs 'good morning'. Changing the 'morning'
+variable from true to false will cause the program to output 'good
+afternoon'.
+</para>
+</sect1>
+
+
+<sect1><title>Visualising the workflow as a graph</title>
+
+<para>
+When running a workflow, its possible to generate a provenance graph at the
+same time:
+<programlisting>
+swift -pgraph graph1.dot q1.swift
+dot -ograph.png -Tpng graph1.dot
+</programlisting>
+which can then be viewed using your favourite image viewer.
+</para>
+</sect1>
+
+<sect1><title>Running on a remote site</title>
+
+<para>As configured by default, all jobs are run locally. In the previous
+examples, we've invoked 'echo' and 'wc' executables from our
+SwiftScript program. These have been run on the local system
+(the same computer on which you ran 'swift'). We can also make our
+computations run on a remote resource.</para>
+
+<para>WARNING: This example is necessarily more vague than previous examples,
+because its requires access to remote resources. You should ensure that you
+can submit a job using the globus-job-run (or globusrun-ws?) command(s).
+</para>
+
+<para>We do not need to modify any SwiftScript code to run on another resource.
+Instead, we must modify another catalog, the 'site catalog'. This catalog
+provides details of the location that applications will be run, with the
+default settings referring to the local machine. We will modify it to
+refer to a remote resource - the UC Teraport cluster. If you are not a
+UC Teraport user, you should use details of a different resource that
+you do have access to.
+</para>
+
+<para>The site catalog is located in etc/sites.xml and is a relatively
+straightforward XML format file. We must modify each of the following
+three settings: gridftp (which indicates how and where data can be
+transferred to the remote resource), jobmanager (which indicates how
+applications can be run on the remote resource) and workdirectory
+(which indicates where working storage can be found on the
+remote resource).</para>
+</sect1>
+
+<sect1><title>Writing a mapper</title>
+
+<para>
+This section will introduce writing a custom mapper so that Swift is able
+to access data files laid out in application-specific ways.
+</para>
+<para>
+An application-specific mapper must take the form of a Java class
+that implements the org.griphyn.vdl.mapping.Mapper interface. Refer
+to the javadocs for that class for specific information about each
+method.
+</para>
+<para>
+In this section, we'll develop a mapper that maps SwiftScript structures
+to a set of files, with a basename specified as a mapper parameter and
+an extension corresponding to the SwiftScript structure name.
+</para>
+<para>
+To illustrate, consider the following code fragment.
+</para>
+
+<programlisting>
+struct volume {
+    file img;
+    file hdr;
+}
+
+volume v &lt;tutorial_extension_mapper;basename=&quot;subject1&quot;&gt;;
+</programlisting>
+
+<para>
+Our mapper will map the volume variable v into two files, called
+"subject1.img" and "subject1.hdr" corresponding to the two elements in
+the structure.
+</para>
+
+<para>
+We can implement the mapper in several steps. First we must write a Java
+class implementing the mapper. Then we must tell Swift about this new mapper.
+</para>
+
+<para>
+Here is the Java source code for our mapper. Read it and then we will go
+through the various pieces.
+</para>
+
+<programlisting>
+
+package org.griphyn.vdl.mapping.file;
+
+import java.io.File;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.Path;
+
+public class TutorialExtensionMapper extends AbstractMapper
+{
+
+    /** defines the single parameter to this mapper */
+    public static final MappingParam PARAM_BASE = new MappingParam("base");
+
+    public String map(Path p) {
+        String basename = PARAM_BASE.getStringValue(this);
+        String filename = basename + "." + p;
+        System.err.println("this is the tutorial mapper, mapping path "+p+" to filename "+filename);
+        return filename;
+    }
+
+    public boolean exists(Path p) {
+        String fn = map(p);
+        File f = new File(fn);
+        return f.exists();
+    }
+
+    public Collection existing() {
+        return new ArrayList();
+    }
+
+
+    public boolean isStatic() {
+        return true;
+    }
+}
+
+
+</programlisting>
+
+<para>
+Our mapper class, TutorialExtensionMapper, must implement the Mapper interface.
+We do this by extending the AbstractMapper class, which provides
+implementations for some of the Mapper methods
+whilst leaving others to be implemented by the specific
+mapper.
+</para>
+
+<para>
+There is helper code to handle most tasks related to mapper parameters.
+We need to create a MapperParam object for our single parameter, 'base'.
+If we wanted more than one parameter, we would create a MapperParam
+object for each parameter. We can then use the mapper parameter object
+later on in the code to retrieve the value of the parameter as specified
+in the SwiftScript mapper description.
+</para>
+
+<para>
+The core mapping functionality appears in the map method. This method will
+be called by the Swift engine whenever it needs to translate a SwiftScript
+variable into a filename. It is passed a Path object, which represents
+the path from the top level to the part that we want to filename for.
+So when swift wants the filename for v.img in the above
+usage example, it will ask the mapper for v to map the path "img" to a
+filename. In our example, the mapping consists of taking the 'base'
+parameter and combining it with the path to give a filename.
+</para>
+
+<para>
+A few other methods need to be implemented.
+</para>
+
+<para> exists() takes a Path
+and returns true if the file backing that path exists. It is implemented
+in a straightforward fashion.
+</para>
+
+<para>existing() returns a Collection of Paths, listing the paths that
+already exist. In the tutorial, we cheat and return an empty collection.
+</para>
+
+<para>isStatic() identifies whether mappings from this mapper are
+fixed at creation time, or can change over time. For most simple
+mappers, it should return true. There is more discussion in the
+Mapper class javadoc.
+</para>
+
+<para>
+We place the above java source file into the Swift source tree
+in a file called src/org/griphyn/vdl/mapping/file/TutorialExtensionMapper.java
+</para>
+
+<para>Now we need to inform the Swift engine about the existence of this
+mapper. We do that by editing the MapperFactory class definition, in
+src/org/griphyn/vdl/mapping/MapperFactory.java and adding a
+registerMapper call alongside the existing registerMapper calls, like this:
+</para>
+<programlisting>
+registerMapper("tutorial_extension_mapper",
+org.griphyn.vdl.mapping.file.TutorialExtensionMapper.class);
+</programlisting>
+
+<para>The first parameter is the name of the mapper that will be used
+in SwiftScript mapper declarations. The second parameter is the class
+that we defined above that implements the mapping behaviour.
+</para>
+
+<para>
+With the mapper source file in place, and MapperFactory updated, we can
+recompile Swift (see instructions elsewhere on the Swift web site) and
+then write SwiftScript programs which use our new mapper.
+</para>
+
+</sect1>
+
+<sect1><title>Tips and Tricks</title>
+
+<para>
+	<simplelist>
+		<member>DO NOT put functions invocations as actual arguments for procedures</member>
+		<member>Put ITERATION loops in procedures, when they produce ARRAY outputs</member>
+	</simplelist>
+</para>
+
+
+</sect1>
+
+</article>
+
