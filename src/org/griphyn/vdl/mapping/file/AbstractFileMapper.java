@@ -1,6 +1,3 @@
-/*
- * Created on Jun 30, 2006
- */
 package org.griphyn.vdl.mapping.file;
 
 import java.io.File;
@@ -15,6 +12,32 @@ import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
+/** An base class to build mappers which map based on filename patterns.
+  * It provides a large amount of default behaviour which can be
+  * reused or override as necessary by subclasses.
+  * <br />
+  * Subclasses must specify a FileNameElementMapper, which can be the
+  * Swift supplied DefaultFileNameElementMapper or an application
+  * specific mapper.
+  * <br />
+  * The default mapping algorithm implemented by the map and rmap methods uses
+  * a number of mapper parameters:
+  * <ul>
+  *   <li>location - if specified, then all generated filenames
+  *                  will be prefixed with this directory, and all lookups
+  *                  for files will happen in this directory</li>
+  *   <li>prefix - if specified, then all filenames will be prefixed
+  *                  with this string</li>
+  *   <li>suffix - if specified, then all filenames will be suffixed with
+  *                  this string. If suffix does not begin with a '.'
+  *                  character, then a '.' will be added automatically to
+  *                  separate the rest of the filename from the suffix</li>
+  *   <li>pattern - if specified, then filenames will be selected from
+  *                 the location directory when they match the unix glob
+  *                 pattern supplied in this parameter.</li>
+  * </ul>
+  */
+
 public abstract class AbstractFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
 	public static final MappingParam PARAM_SUFFIX = new MappingParam("suffix", null);
@@ -27,10 +50,14 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		this.elementMapper = elementMapper;
 	}
 
+	/** Creates an AbstractFileMapper without specifying a
+	  * FileNameElementMapper. The elementMapper must be specified
+	  * in another way, such as through the setElementMapper method.
+	  */
 	protected AbstractFileMapper() {
 		this(null);
 	}
-	
+
 	protected FileNameElementMapper getElementMapper() {
 		return elementMapper;
 	}
@@ -159,7 +186,6 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			}
 			level++;
 		}
-
 	}
 
 	protected Path rmapElement(Path path, String e) {
@@ -185,6 +211,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		return PARAM_PREFIX.getStringValue(this);
 	}
 
+
+	/** Converts a unix-style glob pattern into a regular expression. */
 	public static String replaceWildcards(String wild) {
 		StringBuffer buffer = new StringBuffer();
 
