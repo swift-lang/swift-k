@@ -3,12 +3,14 @@
 
 <article>
     <articleinfo>
-        <title>A Swift Tutorial</title>
+        <title>A Swift Tutorial for Live Presentation</title>
         <abstract>
             <formalpara>
                 <para>
 This is an introductory tutorial on the use of Swift and its
-programming language SwiftScript.
+programming language SwiftScript. It is intended for use as part of a live
+tutorial with instructor-provided exercise environments, and as such probably
+doesn't make much sense to attempt outside of those environments.
                 </para>
                 <para>
 $LastChangedRevision$
@@ -22,15 +24,6 @@ $LastChangedRevision$
 This tutorial is intended to introduce new users to the basics of Swift.
 It is structured as a series of small exercise/examples which you can
 try for yourself as you read along.
-    </para>
-    <para>
-For information on getting an installation of Swift running, consult the
-Swift Quickstart Guide, and return to this document when you have
-successfully run the test SwiftScript program mentioned there.
-    </para>
-    <para>
-There is also a Swift User's Guide which contains more detailed reference
-material on topics covered in this manual.
     </para>
 </sect1>
 
@@ -212,107 +205,108 @@ a greeting in a different language.</para>
 
 </sect1>
 
-<sect1><title>Named and optional parameters</title>
-<para>In addition to specifying parameters positionally, parameters can
-be named, and if desired a default value can be specified:
-
-<programlisting>
-(messagefile t) greeting (string s="hello") {
-    app {
-        echo s stdout=@filename(t);
-    }
-}
-</programlisting>
-
-When we invoke the procedure, we can specify values for the parameters
-by name:
-
-<programlisting>
-french = greeting(s="bonjour");
-</programlisting>
-
-or we can let the default value apply:
-
-<programlisting>
-english = greeting();
-</programlisting>
-
-</para>
-</sect1>
-
 <sect1><title>Another procedure</title>
 <para>
-Now we'll define a new simple procedure. This will take an input file and
-count the number of words in that input file, storing the count in
-another file.
+Now we'll define a new application procedure. This will take an image as an
+in PGM format and convert it to a GIF format image file.
 </para>
 
-<para>To do this, we'll use the unix 'wc' (word-count) utility.</para>
+<para>To do this, we'll use the ImageMagick 'convert' utility.</para>
 
 <para>First we need to modify the Transformation Catalog to define
 a logical transformation for the wc utility.  The transformation
 catalog can be found in var/tc.data.
 There is already one entry specifying where 'echo' can
-be found. Add a new line to the file, specifying where wc can be found
-(usually in /usr/bin/wc but it may vary depending on your system), like this:
+be found. Add a new line to the file, specifying where 'convert' can be found
 </para>
 
 <programlisting>
-local      wc  /bin/wc  INSTALLED INTEL32::LINUX null
+local    convert    /usr/bin/convert    INSTALLED INTEL32::LINUX null
 </programlisting>
 
 <para>For now, ignore all of the fields except the second and the third.
-The second field 'wc' specifies a logical transformation name and the
+The second field 'convert' specifies a logical transformation name and the
 third specifies the location of an executable to perform that
 transformation.</para>
 
-<para>Now that we have defined the logical transformation 'wc', we can
+<para>Now that we have defined the logical transformation 'convert', we can
 use it in SwiftScript:
 </para>
 
 <programlisting>
-type messagefile;
-type countfile;
+type giffile;
+type pgmfile;
 
-(messagefile t) greeting (string s) {
+(giffile outgif) convert(pgmfile inpgm)
+{
     app {
-        echo s stdout=@filename(t);
+        convert @inpgm @outgif;
     }
 }
 
-(countfile t) countwords (messagefile f) {
-    app {
-        wc &quot;-w&quot; @filename(f) stdout=@filename(t);
-    }
-}
-
-messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
-countfile c &lt;&quot;count.txt&quot;&gt;;
-
-outfile = greeting(&quot;hello from Swift&quot;);
-c = countwords(outfile);
+pgmfile infile &lt;&quot;in.pgm&quot;&gt;;
+giffile outfile &lt;&quot;out.gif&quot;&gt;;
 </programlisting>
 
-<para>We define a new data type for files containing counts (although
-like messagefile, we don't specify any internal structure for that
-file). Then we define a 'countwords' procedure which invokes the
-wc utility with appropriate parameters. Finally, we define a variable,
-c, which we map to count.txt and to which we assign the count of words
-in a greeting message.</para>
+<para>We define new data types for files containing PGM and GIF images
+(although like messagefile, we don't specify any internal structure for those
+files). Then we define a 'convert' procedure which invokes the
+convert utility with appropriate parameters. 
+Finally, we define input and output variables of the appropriate type
+and invoke convert to perform the conversion.
+</para>
 
-<para>We can use the swift command to run q13.swift:</para>
+<para>We can use the swift command to run this program (as in the previous
+exercise). After running the command, there will be a file called out.gif
+which contains the swift logo, converted from its pgm source.</para>
+</sect1>
+
+<sect1><title>More on datatypes</title>
+
+<para>
+As mentioned earlier, all data in variables and files has a datatype.  So
+far, we've seen simple user-defined datatypes (pgmfile and giffile) used
+as marker types.</para>
+
+<para>It is also possible to create types with structure, like in other
+programming languages.</para>
+
+<para>
+In the FMRI workflow that we will write in this exercise, we will be dealing
+with input data files that consist of a three dimensional brain volume
+split into two files, the image data and the header data. So our data will
+always come in pairs (such as subject1.img and subject1.hdr together, or
+reference.img and reference.hdr together).
+</para>
+
+<para>We can tell Swift about this pairing of files using a complex data
+type.</para>
+
+<para>First define marker types for the header and image files, as before.
+</para>
 
 <programlisting>
-swift q13.swift
-[...]
-cat count.txt
-  3 q13greeting.txt
+type imagefile;
+type headerfile;
 </programlisting>
 
-<para>and thus we discover that the phrase &quot;hello from Swift&quot; contains
-precisely three words.</para>
+<para>Now we can define a volume data type that consists of an image file
+and a header file.
+</para>
+
+<programlisting>
+type volume {
+    imagefile img;
+    headerfile hdr;
+};
+</programlisting>
+
+<para>Using a complex type like this, swift can ensure that files that belong
+with each other are always kept together.
+</para>
 
 </sect1>
+
 
 <sect1><title>Anonymous files</title>
 
@@ -347,54 +341,6 @@ outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60, was
 automatically mapped to outfile.</para>
 
 </sect1>
-<sect1><title>More on datatypes</title>
-
-<para>
-As mentioned earlier, all data in variables and files has a datatype.  So
-far, we've seen the built-in 'string' data type and simple user-defined
-datatypes (messagefile and countfile).</para>
-
-<para>
-SwiftScript has the additional built-in types, based on XML types:
-Boolean, Integer, Float, and Date.
-</para>
-
-<para>We've seen empty user-defined types already, which are used as
-markers on files that we don't need to look at the content of in SwiftScript.
-It is also possible to create types with structure, as in other
-programming languages.</para>
-
-<para>q15.swift contains the code for this exercise, based on the q2
-code.</para>
-
-<programlisting>
-type messagefile;
-
-type details {
-    string name;
-    string place;
-}
-
-(messagefile t) greeting (details d) {
-    app {
-        echo &quot;Hello&quot; d.name &quot;You live in&quot; d.place stdout=@filename(t);
-    }
-}
-
-details person;
-
-person.name = &quot;John&quot;;
-person.place = &quot;Namibia&quot;;
-
-messagefile outfile &lt;&quot;q15.txt&quot;&gt;;
-
-outfile = greeting(person);
-</programlisting>
-
-We define a new type, details, with members, a string and an integer.
-
-</sect1>
-
 <sect1><title>Arrays</title>
 <para>We can define arrays of values. For example, we could specify each
 word in a greeting as a separate element of a string array, as seen in
