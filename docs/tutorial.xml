@@ -42,7 +42,7 @@ a file called hello.txt.
     </para>
 
 <programlisting>
-type messagefile {}
+type messagefile;
 
 (messagefile t) greeting () { 
     app {
@@ -85,13 +85,13 @@ then a call to the procedure:</para>
 
 
 <programlisting>
-type messagefile {}
+type messagefile;
 </programlisting>
 
 First we define a new type, called messagefile. Data in SwiftScript
 must be typed,
 whether it is stored in memory or on disk. In this example, we will use
-this as the type for our output message. The {} indicates that no 
+this as the type for our output message. The ; indicates that no 
 internal structure is defined for the data.
 
 <programlisting>
@@ -150,7 +150,7 @@ swift q2.swift
 <para>The code changes from q1.swift are highlighted below.</para>
 
 <programlisting>
-type messagefile {} 
+type messagefile;
 
 (messagefile t) greeting (string s) {   
     app {
@@ -183,7 +183,7 @@ using the swift command.
 </para>
 
 <programlisting>
-type messagefile {} 
+type messagefile;
 
 (messagefile t) greeting (string s) {   
     app {
@@ -265,8 +265,8 @@ use it in SwiftScript:
 </para>
 
 <programlisting>
-type messagefile {} 
-type countfile {} 
+type messagefile;
+type countfile;
 
 (messagefile t) greeting (string s) {   
     app {
@@ -362,7 +362,7 @@ programming languages.</para>
 code.</para>
 
 <programlisting>
-type messagefile {} 
+type messagefile;
 
 type details {
     string name;
@@ -395,7 +395,7 @@ word in a greeting as a separate element of a string array, as seen in
 q5.swift:</para>
 
 <programlisting>
-type messagefile {} 
+type messagefile;
 
 (messagefile t) greeting (string s[]) {   
     app {
