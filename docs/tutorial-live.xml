@@ -307,6 +307,76 @@ with each other are always kept together.
 
 </sect1>
 
+<sect1><title>Mappers</title>
+
+<para>A significant difference between SwiftScript and other languages is
+that data can be referred to on disk through variables in a very
+similar fashion to data in memory.  For example, in the above
+examples we have seen a variable definition like this:</para>
+
+<programlisting>
+messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
+</programlisting>
+
+<para>This means that 'outfile' is a dataset variable, which is
+mapped to a file on disk called 'g13greeting.txt'. This variable
+can be assigned to using = in a similar fashion to an in-memory
+variable.  We can say that 'outfile' is mapped onto the disk file
+'q13greeting.txt' by a <firstterm>mapper</firstterm>.
+</para>
+
+<para>There are various ways of mapping in SwiftScript. Two forms have already
+been seen in this tutorial. Later exercises will introduce more forms.
+</para>
+
+<para>The two forms of mapping seen so far are:</para>
+
+<itemizedlist>
+<para>
+simple named mapping - the name of the file that a variable is
+mapped to is explictly listed. Like this:
+<programlisting>
+messagefile outfile &lt;&quot;greeting.txt&quot;&gt;;
+</programlisting>
+
+This is useful when you want to explicitly name input and output
+files for your program. For example, 'outfile' in exercise HELLOWORLD.
+
+</para>
+
+<para>
+anonymous mapping - no name is specified in the source code.
+A name is automatically generated for the file. This is useful
+for intermediate files that are only referenced through SwiftScript,
+such as 'outfile' in exercise ANONYMOUSFILE. A variable declaration
+is mapped anonymously by ommitting any mapper definition, like this:
+
+<programlisting>
+messagefile outfile;
+</programlisting>
+
+</para>
+
+</itemizedlist>
+
+<para>Later exercises will introduce other ways of mapping from
+disk files to SwiftScript variables.</para>
+
+<para>We can't use the single filename mapping technique to map into our
+new 'volume' structure because a volume value consists of several files.
+</para>
+<para>Instead, we must use a more complicated mapper which understands how
+files are laid out in relation to the structure that we have defined.
+</para>
+<para>There are two cases in our workflow where we need to refer to a single
+volume (the reference and atlas cases) and another case where we need to
+refer to an array of volumes (the subject case).
+</para>
+
+</sect1>
+
+
+
 
 <sect1><title>Anonymous files</title>
 
@@ -368,67 +438,6 @@ array of strings, 'string s[]', instead of a single string, 'string s',
 that elements of the array can be referenced numerically, for example
 s[0], and that the array is initialised using an array literal,
 [&quot;how&quot;,&quot;are&quot;,&quot;you&quot;].</para>
-
-</sect1>
-
-<sect1><title>Mappers</title>
-
-<para>A significant difference between SwiftScript and other languages is
-that data can be referred to on disk through variables in a very
-similar fashion to data in memory.  For example, in the above
-examples we have seen a variable definition like this:</para>
-
-<programlisting>
-messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
-</programlisting>
-
-<para>This means that 'outfile' is a dataset variable, which is
-mapped to a file on disk called 'g13greeting.txt'. This variable
-can be assigned to using = in a similar fashion to an in-memory
-variable.  We can say that 'outfile' is mapped onto the disk file
-'q13greeting.txt' by a <firstterm>mapper</firstterm>.
-</para>
-
-<para>There are various ways of mapping in SwiftScript. Two forms have already
-been seen in this tutorial. Later exercises will introduce more forms.
-</para>
-
-<para>The two forms of mapping seen so far are:</para>
-
-<itemizedlist>
-<para>
-simple named mapping - the name of the file that a variable is
-mapped to is explictly listed. Like this:
-<programlisting>
-messagefile outfile &lt;&quot;greeting.txt&quot;&gt;;
-</programlisting>
-
-This is useful when you want to explicitly name input and output
-files for your program. For example, 'outfile' in exercise HELLOWORLD.
-
-</para>
-
-<para>
-anonymous mapping - no name is specified in the source code.
-A name is automatically generated for the file. This is useful
-for intermediate files that are only referenced through SwiftScript,
-such as 'outfile' in exercise ANONYMOUSFILE. A variable declaration
-is mapped anonymously by ommitting any mapper definition, like this:
-
-<programlisting>
-messagefile outfile;
-</programlisting>
-
-</para>
-
-</itemizedlist>
-
-<para>Later exercises will introduce other ways of mapping from
-disk files to SwiftScript variables.</para>
-
-<para>TODO: introduce @v syntax.</para>
-
-<para>There is no hands on exercise for this section</para>
 
 </sect1>
 
