@@ -1439,8 +1439,15 @@ language.
 		</para>
 		<sect2><title>@filename</title>
 			<para>
-@filename(v) will return a string containing the filename for the file that
-is mapped to the variable v.
+@filename(v) will return a string containing the filename(s) for the file(s)
+mapped to the variable v. When more than one filename is returned, the
+filenames will be space separated inside a single string return value.
+			</para>
+		</sect2>
+		<sect2><title>@filenames</title>
+			<para>
+@filenames(v) will return multiple values (!) containing the filename(s) for
+the file(s) mapped to the variable v. (compare to @filename)
 			</para>
 		</sect2>
 		<sect2><title>@strcat</title>

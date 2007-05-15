@@ -1,6 +1,3 @@
-/*
- * Created on Dec 26, 2006
- */
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
@@ -186,6 +183,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
+
+	/** Given a field on the stack, returns the filename that backs that
+	    field. */
 	public String[] filename(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		try {
@@ -208,6 +208,11 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
+	/** Given an input of an array of strings, returns a single string
+	    with the input strings separated by a space. If the 'relative' flag
+	    is set to true, then each input string will be passed through the
+	    relativize function.
+	*/
 	public String argList(String[] s, boolean relative) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < s.length; i++) {
@@ -222,6 +227,8 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return sb.toString();
 	}
 
+	/** removes leading / character from a supplied filename if present, so
+	    that the path can be used as a relative path. */
 	public String relativize(String name) {
 		if (name != null && name.length() > 0 && name.charAt(0) == '/') {
 			return name.substring(1);
