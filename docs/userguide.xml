@@ -1437,6 +1437,12 @@ compiler generates.
 This section details functions that are available for use in the SwiftScript
 language.
 		</para>
+		<sect2><title>@arg</title>
+			<para>
+Takes a command line parameter name as a string parameter and returns the
+name of that string parameter from the command line.
+			</para>
+		</sect2>
 		<sect2><title>@filename</title>
 			<para>
 @filename(v) will return a string containing the filename(s) for the file(s)
