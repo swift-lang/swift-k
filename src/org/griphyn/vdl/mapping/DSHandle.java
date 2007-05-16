@@ -18,8 +18,18 @@ public interface DSHandle extends Serializable {
 
     public DSHandle getParent();
 
+    /** returns the field below this node that is referred to by the
+     *  supplied path. The path must have no wildcards.
+     */
     public DSHandle getField(Path path) throws InvalidPathException;
 
+    /** returns a collection of fields below this node that are referred to
+     *  by the supplied path. The path may contain wildcards. If it does not,
+     *  then the returned collection should contain a single member, which is
+     *  the same as would be returned by getField().
+     *
+     *  @return a Collection of DSHandle objects
+     */
     public Collection getFields(Path path) throws InvalidPathException, HandleOpenException;
 
     public Object getValue();
