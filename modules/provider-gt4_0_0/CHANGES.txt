@@ -4,6 +4,8 @@
 
 *** Fixed a bug that could cause a NPE if WS-GRAM would report a
     failed job without an attached fault.
+	
+*** Updated WS-GRAM jars to 4.0.4.
 
 
 -------------------------------2.4---------------------------------
