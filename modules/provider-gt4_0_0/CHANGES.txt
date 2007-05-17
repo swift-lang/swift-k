@@ -1,3 +1,11 @@
+(05/17/2007)
+
+*** Fixed flow issues when canceling a job
+
+*** Fixed a bug that could cause a NPE if WS-GRAM would report a
+    failed job without an attached fault.
+
+
 -------------------------------2.4---------------------------------
 
 (11/24/2006)
