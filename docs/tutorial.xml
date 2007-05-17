@@ -251,7 +251,7 @@ another file.
 
 <para>First we need to modify the Transformation Catalog to define
 a logical transformation for the wc utility.  The transformation
-catalog can be found in var/tc.data.
+catalog can be found in etc/tc.data.
 There is already one entry specifying where 'echo' can
 be found. Add a new line to the file, specifying where wc can be found
 (usually in /usr/bin/wc but it may vary depending on your system), like this:
