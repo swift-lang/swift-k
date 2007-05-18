@@ -22,6 +22,9 @@ public class GetFieldValue extends VDLFunction {
 		setArguments(GetFieldValue.class, new Arg[] { PA_VAR1, OA_PATH });
 	}
 
+	/** Takes a supplied variable and path, and returns the unique value at
+	 *  that path. The end value must not be an array. Path can contain
+	 *  wildcards, in which case an array is returned. */
 	public Object function(VariableStack stack) throws ExecutionException {
 		Object var1 = PA_VAR1.getValue(stack);
 		if (!(var1 instanceof DSHandle)) {
