@@ -278,12 +278,13 @@ public class JobSubmission implements StatusListener {
             }
         }
         if (status.getStatusCode() == Status.FAILED) {
-            if (event.getStatus().getMessage() != null) {
-                System.out.println("Job failed: "
-                        + event.getStatus().getMessage());
-            } else if (event.getStatus().getException() != null) {
+            if (event.getStatus().getException() != null) {
                 System.out.println("Job failed: ");
                 event.getStatus().getException().printStackTrace();
+            }
+            else if (event.getStatus().getMessage() != null) {
+                System.out.println("Job failed: "
+                        + event.getStatus().getMessage());
             } else {
                 System.out.println("Job failed");
             }
