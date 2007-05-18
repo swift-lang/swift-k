@@ -1,3 +1,7 @@
+(05/18/2007)
+
+*** Better (more consistent) way to specify delegation
+
 (03/11/2007)
 
 *** The file operation task handler used many cascading ifs with 
