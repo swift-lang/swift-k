@@ -156,6 +156,10 @@
 	<target name="fixeol">
 		<ant antfile="${main.buildfile}" target="fixeol"/>
 	</target>
+	
+	<target name="module.package">
+		<ant antfile="${main.buildfile}" target="module.package"/>
+	</target>
 </project>
 
 
