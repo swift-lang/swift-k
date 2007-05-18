@@ -52,7 +52,7 @@ import org.ietf.jgss.GSSCredential;
 public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         GramJobListener {
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
-    
+
     private Task task = null;
     private GramJob gramJob;
     private boolean canceling;
@@ -188,13 +188,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 }
             }
             catch (Exception e) {
-                Status newStatus = new StatusImpl();
-                Status oldStatus = this.task.getStatus();
-                newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-                newStatus.setStatusCode(Status.FAILED);
-                newStatus.setException(e);
-                this.task.setStatus(newStatus);
-                cleanup();
+                failTask(e.getMessage(), e);
+                try {
+                    cleanup();
+                }
+                catch (Exception ex) {
+                    logger.info("Unable to destroy remote service for task "
+                            + this.task.getIdentity().toString(), ex);
+                }
                 throw new TaskSubmissionException("Cannot submit job: "
                         + e.getMessage(), e);
             }
@@ -218,7 +219,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 canceling = true;
             }
             this.gramJob.cancel();
-            //no cleanup since cancel() calls destroy()
+            // no cleanup since cancel() calls destroy()
         }
         catch (Exception e) {
             throw new TaskSubmissionException("Cannot cancel job", e);
@@ -331,13 +332,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             if (canceled) {
                 this.task.setStatus(Status.CANCELED);
-                gramJob.removeListener(this);
             }
             else {
-                Status newStatus = new StatusImpl();
-                Status oldStatus = this.task.getStatus();
-                newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-                newStatus.setStatusCode(Status.FAILED);
                 int errorCode = job.getError();
                 if (job.getFault() != null) {
                     failTask("#" + errorCode + " "
@@ -347,9 +343,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 else {
                     failTask("#" + errorCode, null);
                 }
-                this.task.setStatus(newStatus);
-                cleanup();
             }
+            gramJob.removeListener(this);
         }
         else if (state.equals(StateEnumeration.Done)) {
             if (job.getExitCode() != 0) {
@@ -360,7 +355,13 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             else {
                 this.task.setStatus(Status.COMPLETED);
             }
-            cleanup();
+            try {
+                cleanup();
+            }
+            catch (Exception e) {
+                logger.warn("Unable to destroy remote service for task "
+                        + this.task.getIdentity().toString(), e);
+            }
         }
         else if (state.equals(StateEnumeration.Suspended)) {
             this.task.setStatus(Status.SUSPENDED);
@@ -383,18 +384,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         this.task.setStatus(newStatus);
     }
 
-    private void cleanup() {
+    private void cleanup() throws Exception {
         this.gramJob.removeListener(this);
-        logger.debug("Destroying remote service for task "
-                + this.task.getIdentity().toString());
-        try {
-            gramJob.release();
-            gramJob.destroy();
+        if (logger.isDebugEnabled()) {
+            logger.debug("Destroying remote service for task "
+                    + this.task.getIdentity().toString());
         }
-        catch (Exception e) {
-            logger.warn("Unable to destroy remote service for task "
-                    + this.task.getIdentity().toString(), e);
-        }
+        gramJob.release();
+        gramJob.destroy();
     }
 
     private Authorization getAuthorization(
