@@ -19,6 +19,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextExcepti
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
+import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -123,8 +124,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         if (logger.isDebugEnabled()) {
             logger.debug("Execution server: " + server);
         }
-        boolean limitedDeleg = (securityContext.getDelegation() != GlobusSecurityContextImpl.FULL_DELEGATION);
-        limitedDeleg &= !spec.isDelegationEnabled();
+        boolean limitedDeleg = (securityContext.getDelegation() != Delegation.FULL_DELEGATION);
+        if (spec.getDelegation() == Delegation.FULL_DELEGATION) {
+            limitedDeleg = false;
+        }
         try {
             // check if the task has not been canceled after it was
             // submitted for execution

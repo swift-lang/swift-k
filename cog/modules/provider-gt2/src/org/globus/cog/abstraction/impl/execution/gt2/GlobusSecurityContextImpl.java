@@ -7,17 +7,15 @@
 package org.globus.cog.abstraction.impl.execution.gt2;
 
 import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
+import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.gsi.gssapi.auth.Authorization;
 import org.globus.gsi.gssapi.auth.HostAuthorization;
 
-public class GlobusSecurityContextImpl extends SecurityContextImpl {
+public class GlobusSecurityContextImpl extends SecurityContextImpl implements Delegation {
     public static final int XML_ENCRYPTION = 1;
     public static final int XML_SIGNATURE = 2;
 
-    public static final int NO_DELEGATION = 0;
-    public static final int FULL_DELEGATION = 1;
-    public static final int PARTIAL_DELEGATION = 2;
-
+    
     public void setAuthorization(Authorization authorization) {
         setAttribute("authorization", authorization);
     }
