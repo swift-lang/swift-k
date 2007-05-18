@@ -1,3 +1,16 @@
+(05/18/2007)
+
+*** Failure to destroy a resource causes a warning only if the
+    job is completed, but not when the submission process fails.
+	It's impossible (I can't figure out an easy way with my 
+	current knowledge) to know whether the submit call has 
+	succeeded in creating the resource or not.
+	
+*** Don't clean up after a failure. WS-GRAM seems to do that
+    automatically
+	
+*** Removed a spurious failure state change
+
 (05/17/2007)
 
 *** Fixed flow issues when canceling a job
