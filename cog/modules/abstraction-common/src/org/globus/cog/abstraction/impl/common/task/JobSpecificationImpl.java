@@ -16,251 +16,284 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
 
 public class JobSpecificationImpl implements JobSpecification {
-	private int type;
-	private Map attributes;
-	private Map additionalAttributes;
-	private List arguments;
-	private Map environment;
-	private String directory;
-	private String executable;
+    public static final String ATTR_DELEGATION_ENABLED = "delegationEnabled";
+    public static final String ATTR_DELEGATION = "delegation";
+    // "rsl" is for backwards compatibility purposes
+    public static final String ATTR_NATIVE_SPECIFICATION = "rsl";
+    public static final String ATTR_STDOUT = "stdout";
+    public static final String ATTR_STDERR = "stderror";// ??
+    public static final String ATTR_STDIN = "stdin";
+    public static final String ATTR_BATCH_JOB = "batchJob";
+    public static final String ATTR_REDIRECTED = "redirected";
+    public static final String ATTR_LOCAL_EXECUTABLE = "localExecutable";
+    public static final String ATTR_LOCAL_INPUT = "localInput";
 
-	public JobSpecificationImpl() {
-		this.type = Specification.JOB_SUBMISSION;
-		this.attributes = new HashMap();
-		this.additionalAttributes = new HashMap();
-		this.arguments = new ArrayList();
-		this.environment = new HashMap();
-	}
+    private int type;
+    private Map attributes;
+    private Map additionalAttributes;
+    private List arguments;
+    private Map environment;
+    private String directory;
+    private String executable;
 
-	public void setType(int type) {
-		// By default = JOB_SUBMISSION
-	}
+    public JobSpecificationImpl() {
+        this.type = Specification.JOB_SUBMISSION;
+        this.attributes = new HashMap();
+        this.additionalAttributes = new HashMap();
+        this.arguments = new ArrayList();
+        this.environment = new HashMap();
+    }
 
-	public int getType() {
-		return this.type;
-	}
+    public void setType(int type) {
+        // By default = JOB_SUBMISSION
+    }
 
-	public void setSpecification(String specification) {
-		this.attributes.put("rsl", specification);
-	}
+    public int getType() {
+        return this.type;
+    }
 
-	public String getSpecification() {
-		return (String) this.attributes.get("rsl");
-	}
+    public void setSpecification(String specification) {
+        this.attributes.put(ATTR_NATIVE_SPECIFICATION, specification);
+    }
 
-	public void setExecutable(String executable) {
-		this.executable = executable;
-	}
+    public String getSpecification() {
+        return (String) this.attributes.get(ATTR_NATIVE_SPECIFICATION);
+    }
 
-	public String getExecutable() {
-		return executable;
-	}
+    public void setExecutable(String executable) {
+        this.executable = executable;
+    }
 
-	public void setDirectory(String directory) {
-		this.directory = directory;
-	}
+    public String getExecutable() {
+        return executable;
+    }
 
-	public String getDirectory() {
-		return directory;
-	}
+    public void setDirectory(String directory) {
+        this.directory = directory;
+    }
 
-	public void addArgument(String argument) {
-		this.arguments.add(argument);
-	}
+    public String getDirectory() {
+        return directory;
+    }
 
-	public void addArgument(int index, String argument) {
-		// That was useless since it only increased the underlying array, not
-		// that of the vector/list
-		// this.arguments.ensureCapacity(index + 1);
-		this.arguments.add(index, argument);
-	}
+    public void addArgument(String argument) {
+        this.arguments.add(argument);
+    }
 
-	public void setArgument(int index, String argument) {
-		this.arguments.set(index, argument);
-	}
+    public void addArgument(int index, String argument) {
+        // That was useless since it only increased the underlying array, not
+        // that of the vector/list
+        // this.arguments.ensureCapacity(index + 1);
+        this.arguments.add(index, argument);
+    }
 
-	public void removeArgument(String argument) {
-		this.arguments.remove(argument);
-	}
+    public void setArgument(int index, String argument) {
+        this.arguments.set(index, argument);
+    }
 
-	public String removeArgument(int index) {
-		return (String) this.arguments.remove(index);
-	}
+    public void removeArgument(String argument) {
+        this.arguments.remove(argument);
+    }
 
-	public Vector getArgumentsAsVector() {
-		return new Vector(this.arguments);
-	}
+    public String removeArgument(int index) {
+        return (String) this.arguments.remove(index);
+    }
 
-	public List getArgumentsAsList() {
-		return arguments;
-	}
+    public Vector getArgumentsAsVector() {
+        return new Vector(this.arguments);
+    }
 
-	public void setArguments(Vector arguments) {
-		this.arguments = new ArrayList(arguments);
-	}
+    public List getArgumentsAsList() {
+        return arguments;
+    }
 
-	public void setArguments(List arguments) {
-		this.arguments = arguments;
-	}
+    public void setArguments(Vector arguments) {
+        this.arguments = new ArrayList(arguments);
+    }
 
-	public void setArguments(String arguments) {
-		this.arguments = new ArrayList();
-		StringTokenizer st = new StringTokenizer(arguments);
-		while (st.hasMoreTokens()) {
-			this.arguments.add(st.nextToken());
-		}
-	}
+    public void setArguments(List arguments) {
+        this.arguments = arguments;
+    }
 
-	public String getArguments() {
-		return getArgumentsAsString();
-	}
+    public void setArguments(String arguments) {
+        this.arguments = new ArrayList();
+        StringTokenizer st = new StringTokenizer(arguments);
+        while (st.hasMoreTokens()) {
+            this.arguments.add(st.nextToken());
+        }
+    }
 
-	public String getArgumentsAsString() {
-		String arg;
-		if (!this.arguments.isEmpty()) {
-			StringBuffer sb = new StringBuffer();
-			Iterator i = this.arguments.iterator();
-			while (i.hasNext()) {
-				sb.append(i.next());
-				if (i.hasNext()) {
-					sb.append(' ');
-				}
-			}
-			return sb.toString();
-		}
-		else {
-			return "";
-		}
-	}
+    public String getArguments() {
+        return getArgumentsAsString();
+    }
 
-	public void addEnvironmentVariable(String name, String value) {
-		this.environment.put(name, value);
-	}
+    public String getArgumentsAsString() {
+        String arg;
+        if (!this.arguments.isEmpty()) {
+            StringBuffer sb = new StringBuffer();
+            Iterator i = this.arguments.iterator();
+            while (i.hasNext()) {
+                sb.append(i.next());
+                if (i.hasNext()) {
+                    sb.append(' ');
+                }
+            }
+            return sb.toString();
+        }
+        else {
+            return "";
+        }
+    }
 
-	public String removeEnvironmentVariable(String name) {
-		return (String) this.environment.remove(name);
-	}
+    public void addEnvironmentVariable(String name, String value) {
+        this.environment.put(name, value);
+    }
 
-	public String getEnvironmentVariable(String name) {
-		return (String) this.environment.get(name);
-	}
+    public String removeEnvironmentVariable(String name) {
+        return (String) this.environment.remove(name);
+    }
 
-	public Collection getEnvironment() {
-		return this.environment.keySet();
-	}
-	
-	public Collection getEnvironmentVariableNames() {
-		return this.environment.keySet();
-	}
+    public String getEnvironmentVariable(String name) {
+        return (String) this.environment.get(name);
+    }
 
-	public void setStdOutput(String output) {
-		this.attributes.put("stdout", output);
-	}
+    public Collection getEnvironment() {
+        return this.environment.keySet();
+    }
 
-	public String getStdOutput() {
-		return (String) this.attributes.get("stdout");
-	}
+    public Collection getEnvironmentVariableNames() {
+        return this.environment.keySet();
+    }
 
-	public void setStdInput(String input) {
-		this.attributes.put("stdin", input);
-	}
+    public void setStdOutput(String output) {
+        this.attributes.put(ATTR_STDOUT, output);
+    }
 
-	public String getStdInput() {
-		return (String) this.attributes.get("stdin");
-	}
+    public String getStdOutput() {
+        return (String) this.attributes.get(ATTR_STDOUT);
+    }
 
-	public void setStdError(String error) {
-		this.attributes.put("stderror", error);
-	}
+    public void setStdInput(String input) {
+        this.attributes.put(ATTR_STDIN, input);
+    }
 
-	public String getStdError() {
-		return (String) this.attributes.get("stderror");
-	}
+    public String getStdInput() {
+        return (String) this.attributes.get(ATTR_STDIN);
+    }
 
-	public void setBatchJob(boolean bool) {
-		this.attributes.put("batchJob", bool ? "true" : "false");
-	}
+    public void setStdError(String error) {
+        this.attributes.put(ATTR_STDERR, error);
+    }
 
-	public boolean isBatchJob() {
-		Boolean bool = Boolean.valueOf((String) this.attributes.get("batchJob"));
-		return bool.booleanValue();
-	}
+    public String getStdError() {
+        return (String) this.attributes.get(ATTR_STDERR);
+    }
 
-	public void setRedirected(boolean bool) {
-		this.attributes.put("redirected", bool ? "true" : "false");
-	}
+    public void setBatchJob(boolean bool) {
+        this.attributes.put(ATTR_BATCH_JOB, Boolean.valueOf(bool));
+    }
 
-	public boolean isRedirected() {
-		Boolean bool = Boolean.valueOf((String) this.attributes.get("redirected"));
-		return bool.booleanValue();
-	}
+    public boolean isBatchJob() {
+        return getBooleanAttribute(ATTR_BATCH_JOB, false);
+    }
 
-	public void setLocalInput(boolean bool) {
-		this.attributes.put("localInput", bool ? "true" : "false");
-	}
+    public void setRedirected(boolean bool) {
+        this.attributes.put(ATTR_REDIRECTED, Boolean.valueOf(bool));
+    }
 
-	public boolean isLocalInput() {
-		Boolean bool = Boolean.valueOf((String) this.attributes.get("localInput"));
-		return bool.booleanValue();
-	}
+    public boolean isRedirected() {
+        return getBooleanAttribute(ATTR_REDIRECTED, false);
+    }
 
-	public void setLocalExecutable(boolean bool) {
-		this.attributes.put("localExecutable", Boolean.valueOf(bool));
-	}
+    public void setLocalInput(boolean bool) {
+        this.attributes.put(ATTR_LOCAL_INPUT, Boolean.valueOf(bool));
+    }
 
-	public boolean isLocalExecutable() {
-		return getBooleanAttribute("localExecutable", false);
-	}
+    public boolean isLocalInput() {
+        return getBooleanAttribute(ATTR_LOCAL_INPUT, false);
+    }
 
-	private boolean getBooleanAttribute(final String name, boolean def) {
-		Boolean bool = ((Boolean) this.attributes.get(name));
-		if (bool == null) {
-			return def;
-		}
-		else {
-			return bool.booleanValue();
-		}
-	}
+    public void setLocalExecutable(boolean bool) {
+        this.attributes.put(ATTR_LOCAL_EXECUTABLE, Boolean.valueOf(bool));
+    }
 
-	public void setAttribute(String name, Object value) {
-		this.additionalAttributes.put(name, value);
-	}
+    public boolean isLocalExecutable() {
+        return getBooleanAttribute(ATTR_LOCAL_EXECUTABLE, false);
+    }
 
-	public Object getAttribute(String name) {
-		return this.additionalAttributes.get(name);
-	}
+    private boolean getBooleanAttribute(final String name, boolean def) {
+        Boolean bool = ((Boolean) this.attributes.get(name));
+        if (bool == null) {
+            return def;
+        }
+        else {
+            return bool.booleanValue();
+        }
+    }
 
-	public Enumeration getAllAttributes() {
-		return new Vector(additionalAttributes.keySet()).elements();
-	}
-	
-	public Collection getAttributeNames() {
-		return additionalAttributes.keySet();
-	}
+    private int getIntAttribute(final String name, int def) {
+        Integer val = ((Integer) this.attributes.get(name));
+        if (val == null) {
+            return def;
+        }
+        else {
+            return val.intValue();
+        }
+    }
 
-	public boolean isDelegationEnabled() {
-		return getBooleanAttribute("delegationEnabled", false);
-	}
+    public void setAttribute(String name, Object value) {
+        this.additionalAttributes.put(name, value);
+    }
 
-	public void setDelegationEnabled(boolean delegation) {
-		this.attributes.put("delegationEnabled", Boolean.valueOf(delegation));
-	}
+    public Object getAttribute(String name) {
+        return this.additionalAttributes.get(name);
+    }
 
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("Job: ");
-		sb.append("\n\texecutable: " + getExecutable());
-		sb.append("\n\targuments:  " + getArguments());
-		sb.append("\n\tstdout:     " + getStdOutput());
-		sb.append("\n\tstderr:     " + getStdError());
-		sb.append("\n\tdirectory:  " + getDirectory());
-		sb.append("\n\tbatch:      " + isBatchJob());
-		sb.append("\n\tredirected: " + isRedirected());
-		sb.append('\n');
-		return sb.toString();
-	}
+    public Enumeration getAllAttributes() {
+        return new Vector(additionalAttributes.keySet()).elements();
+    }
+
+    public Collection getAttributeNames() {
+        return additionalAttributes.keySet();
+    }
+
+    public boolean isDelegationEnabled() {
+        return getBooleanAttribute(
+                ATTR_DELEGATION_ENABLED,
+                getIntAttribute(ATTR_DELEGATION, Delegation.NO_DELEGATION) != Delegation.NO_DELEGATION);
+    }
+
+    public void setDelegationEnabled(boolean delegation) {
+        this.attributes.put(ATTR_DELEGATION, new Integer(
+                delegation ? Delegation.LIMITED_DELEGATION
+                        : Delegation.FULL_DELEGATION));
+    }
+    
+    public int getDelegation() {
+        return getIntAttribute(ATTR_DELEGATION, Delegation.NO_DELEGATION);
+    }
+    
+    public void setDelegation(int delegation) {
+        this.attributes.put(ATTR_DELEGATION, new Integer(delegation));
+    }
+
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("Job: ");
+        sb.append("\n\texecutable: " + getExecutable());
+        sb.append("\n\targuments:  " + getArguments());
+        sb.append("\n\tstdout:     " + getStdOutput());
+        sb.append("\n\tstderr:     " + getStdError());
+        sb.append("\n\tdirectory:  " + getDirectory());
+        sb.append("\n\tbatch:      " + isBatchJob());
+        sb.append("\n\tredirected: " + isRedirected());
+        sb.append('\n');
+        return sb.toString();
+    }
+
 }
