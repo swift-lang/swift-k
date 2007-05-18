@@ -60,6 +60,15 @@ public class MappingParam {
 		}
 	}
 
+
+	/** return the raw value of this parameter. Defaulting and type
+	  * conversion will not occur. */
+	public Object getRawValue(Mapper mapper) {
+		Object value = mapper.getParam(name);
+		return value;
+	}
+
+
 	private void checkHandle(DSHandle handle) {
 		if (!handle.isClosed()) {
 			throw new VDL2FutureException(handle);
