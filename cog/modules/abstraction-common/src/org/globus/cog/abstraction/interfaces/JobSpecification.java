@@ -330,9 +330,9 @@ public interface JobSpecification extends Specification {
      * delegation settings only apply to Globus providers and can take one of
      * the following values:
      * <ul>
-     * <li>{@see org.globus.cog.abstraction.impl.execution.gt2.GlobusSecurityContext#NO_DELEGATION}
-     * <li>{@see org.globus.cog.abstraction.impl.execution.gt2.GlobusSecurityContext#FULL_DELEGATION}
-     * <li>{@see org.globus.cog.abstraction.impl.execution.gt2.GlobusSecurityContext#LIMITED_DELEGATION}
+     * <li>{@see org.globus.cog.abstraction.interfaces.Delegation#NO_DELEGATION}
+     * <li>{@see org.globus.cog.abstraction.interfaces.Delegation#FULL_DELEGATION}
+     * <li>{@see org.globus.cog.abstraction.interfaces.Delegation#LIMITED_DELEGATION}
      * </ul>
      * 
      * Most of the currently implemented providers will default to using the
@@ -347,9 +347,9 @@ public interface JobSpecification extends Specification {
      * credential delegation. At this time delegation settings only apply to
      * Globus providers and can take one of the following values:
      * <ul>
-     * <li>{@see org.globus.cog.abstraction.impl.execution.gt2.GlobusSecurityContext#NO_DELEGATION}
-     * <li>{@see org.globus.cog.abstraction.impl.execution.gt2.GlobusSecurityContext#FULL_DELEGATION}
-     * <li>{@see org.globus.cog.abstraction.impl.execution.gt2.GlobusSecurityContext#LIMITED_DELEGATION}
+     * <li>{@see org.globus.cog.abstraction.interfaces.Delegation#NO_DELEGATION}
+     * <li>{@see org.globus.cog.abstraction.interfaces.Delegation#FULL_DELEGATION}
+     * <li>{@see org.globus.cog.abstraction.interfaces.Delegation#LIMITED_DELEGATION}
      * </ul>
      * 
      * Most of the currently implemented providers will default to using the
