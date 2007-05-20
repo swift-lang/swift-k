@@ -189,13 +189,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             catch (Exception e) {
                 failTask(e.getMessage(), e);
-                try {
-                    cleanup();
-                }
-                catch (Exception ex) {
-                    logger.info("Unable to destroy remote service for task "
-                            + this.task.getIdentity().toString(), ex);
-                }
+                //No need for cleanup. Reportedly no resource has been created
+                //if an exception is thrown
+                gramJob.removeListener(this);
                 throw new TaskSubmissionException("Cannot submit job: "
                         + e.getMessage(), e);
             }
@@ -319,6 +315,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     public void stateChanged(GramJob job) {
+        boolean cleanup = false;
         StateEnumeration state = job.getState();
         if (state.equals(StateEnumeration.Active)) {
             this.task.setStatus(Status.ACTIVE);
@@ -332,6 +329,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             if (canceled) {
                 this.task.setStatus(Status.CANCELED);
+                this.gramJob.removeListener(this);
             }
             else {
                 int errorCode = job.getError();
@@ -343,8 +341,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 else {
                     failTask("#" + errorCode, null);
                 }
+                cleanup = true;
             }
-            gramJob.removeListener(this);
         }
         else if (state.equals(StateEnumeration.Done)) {
             if (job.getExitCode() != 0) {
@@ -355,13 +353,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             else {
                 this.task.setStatus(Status.COMPLETED);
             }
-            try {
-                cleanup();
-            }
-            catch (Exception e) {
-                logger.warn("Unable to destroy remote service for task "
-                        + this.task.getIdentity().toString(), e);
-            }
+            cleanup = true;
         }
         else if (state.equals(StateEnumeration.Suspended)) {
             this.task.setStatus(Status.SUSPENDED);
@@ -371,6 +363,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         else {
             logger.debug("Unknown status: " + state.getValue());
+        }
+        if (cleanup) {
+            try {
+                cleanup();
+            }
+            catch (Exception e) {
+                logger.warn("Unable to destroy remote service for task "
+                        + this.task.getIdentity().toString(), e);
+            }
         }
     }
 

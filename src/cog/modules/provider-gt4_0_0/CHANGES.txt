@@ -1,3 +1,7 @@
+(05/20/2007)
+
+*** Corrected instances in which cleanup is done
+
 (05/18/2007)
 
 *** Failure to destroy a resource causes a warning only if the
