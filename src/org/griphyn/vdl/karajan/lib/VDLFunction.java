@@ -1,6 +1,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -49,7 +50,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final Arg OA_PATH = new Arg.Optional("path", "");
 	public static final Arg PA_PATH = new Arg.Positional("path");
-	public static final Arg PA_VAR = new Arg.TypedPositional("var", DSHandle.class, "handle");
+	public static final Arg PA_VAR = new Arg.Positional("var");
 	public static final Arg OA_ISARRAY = new Arg.Optional("isArray", Boolean.FALSE);
 
 	public final void post(VariableStack stack) throws ExecutionException {
@@ -184,26 +185,44 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
 
-	/** Given a field on the stack, returns the filename that backs that
-	    field. */
+	/** Given a field (or Collection of fields) on the stack, returns 
+	 *  the filename(s) that are mapped that field(s).
+	 */
 	public String[] filename(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
-		try {
-			if (var.isArray()) {
-				List l = var.getFileSet();
-				return (String[]) l.toArray(EMPTY_STRING_ARRAY);
-			}
-			else {
-				String filename = var.getFilename();
-				if (filename == null) {
-					throw new ExecutionException("Mapper did not provide a file name");
+
+		Object ovar = PA_VAR.getValue(stack);
+		if(ovar instanceof DSHandle) {
+			DSHandle var = (DSHandle) ovar;
+
+			try {
+				if (var.isArray()) {
+					List l = var.getFileSet();
+					return (String[]) l.toArray(EMPTY_STRING_ARRAY);
 				}
 				else {
-					return new String[] { filename };
+					String filename = var.getFilename();
+					if (filename == null) {
+						throw new ExecutionException("Mapper did not provide a file name");
+					}
+					else {
+						return new String[] { filename };
+					}
 				}
 			}
-		}
-		catch (DependentException e) {
+			catch (DependentException e) {
+				return new String[0];
+			}
+		} else if(ovar instanceof Collection) {
+			// assume here that the Collection is all DSHandles
+			Iterator iterator = ((Collection)ovar).iterator();
+			ArrayList out = new ArrayList();
+			while(iterator.hasNext()) {
+				DSHandle h = (DSHandle)iterator.next();
+				String filename = h.getFilename();
+				out.add(filename);
+			}
+			return (String[]) out.toArray(EMPTY_STRING_ARRAY);
+		} else {
 			return new String[0];
 		}
 	}
