@@ -1446,6 +1446,31 @@ compiler generates.
 
 	</sect1>
 
+	<sect1><title>Ways in which Swift can be extended</title>
+<para>Swift is extensible in a number of ways. It is possible to add
+mappers to accomodate different filesystem arrangements, site selectors
+to change how Swift decides where to run each job, and job submission
+interfaces to submit jobs through different mechanisms.
+</para>
+<para>A number of mappers are provided as part of the Swift release. These
+are documented in the section above on mappers. New mappers can be implemented
+in Java by implementing the org.griphyn.vdl.mapping.Mapper interface. The
+Swift tutorial contains a simple example of this.
+</para>
+<para>Swift provides a default site selector, the VDS Adaptive Scheduler.
+Additional site selectors can be plugged in by implementing the
+org.globus.cog.karajan.scheduler.Scheduler interface and modifying
+libexec/scheduler.xml and etc/karajan.properties to refer to the new
+scheduler.
+</para>
+<para>There are two execution providers that are supported in the release,
+the local provider (for local execution on the host that Swift is running
+on) and the GRAM provider (for execution using GRAM2 gatekeepers).
+In principle any execution provider supported by the Java CoG kit will
+work.
+</para>
+	</sect1>
+
 	<sect1><title>Function reference</title>
 		<para>
 This section details functions that are available for use in the SwiftScript
