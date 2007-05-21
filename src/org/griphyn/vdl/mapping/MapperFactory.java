@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.griphyn.vdl.mapping.file.AirsnMapper;
+import org.griphyn.vdl.mapping.file.ArrayFileMapper;
 import org.griphyn.vdl.mapping.file.CSVMapper;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.mapping.file.FileSystemArrayMapper;
@@ -29,6 +30,7 @@ public class MapperFactory {
 		registerMapper("filesys_mapper", FileSystemArrayMapper.class);
 		registerMapper("regexp_mapper", RegularExpressionMapper.class);
 		registerMapper("csv_mapper", CSVMapper.class);
+		registerMapper("array_mapper", ArrayFileMapper.class);
 
 		// the following are application-specific mappers
 		registerMapper("airsn_mapper", AirsnMapper.class);

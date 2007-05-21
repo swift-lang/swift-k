@@ -595,6 +595,20 @@ A string that contains a list of filenames, separated by space, comma or colon
 	</itemizedlist>
 	</sect2>
 
+	<sect2><title>array mapper</title>
+	<itemizedlist>
+	<listitem>Name: array_mapper</listitem>
+	<listitem>Description: This mapper froms an array of strings into a file
+array.</listitem>
+	<listitem>Parameter: 
+		<itemizedlist>
+		<listitem>files:
+An array of strings containing one filename per element</listitem>
+		</itemizedlist>
+	</listitem>
+	</itemizedlist>
+	</sect2>
+
 	<sect2><title>regular expression mapper</title>
 	<itemizedlist>
 	<listitem>Name: regexp_mapper</listitem>

@@ -1,3 +1,8 @@
+(05/21/07)
+
+*** Add a mapper, array_mapper, which maps from a string array of filenames.
+    This was requested in bug 27.
+
 (04/27/07)
 
 *** Fixed a deadlock in the remote caching code.
