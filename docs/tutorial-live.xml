@@ -51,9 +51,9 @@ outfile = greeting();
 <para>We can run this program as follows:</para>
 
 <programlisting>
-cd examples/vdsk/tutorial/
+$ cd examples/vdsk/tutorial/
 
-swift q1.swift
+$ swift q1.swift
 
 Swift v0.1-dev
 
@@ -61,7 +61,7 @@ RunID: e1bupgygrzn12
 echo started
 echo completed
 
-cat hello.txt
+$ cat hello.txt
 Hello, world!
 </programlisting>
 
@@ -69,17 +69,29 @@ Hello, world!
 a procedure definition, a variable definition and
 then a call to the procedure:</para>
 
+<para>
+All data in SwiftScript must have a type. This line defines a new type
+called messagefile, which will be the type of the in which we will store
+our 'hello world' message.
+</para>
 
 <programlisting>
 type messagefile;
 </programlisting>
 
 <para>
-First we define a new type, called messagefile. Data in SwiftScript
-must be typed,
-whether it is stored in memory or on disk. In this example, we will use
-this as the type for our output message. The ; indicates that no
-internal structure is defined for the data.
+Next we define a procedure called write. This procedure will write out
+the &quot;hello world&quot; message to a file.
+</para>
+
+<para>
+To achieve this, it executes the standard unix utility 'echo' with a parameter
+&quot;Hello, world!&quot; and send the standard output into the output file t.
+</para>
+
+<para>
+The output of a program looks like a return value. It has a type, but also
+has a variable name (unlike in other programming languages).
 </para>
 
 <programlisting>
@@ -90,26 +102,19 @@ internal structure is defined for the data.
 }
 </programlisting>
 
-<para>
-Next we define a procedure called write. This procedure will write out
-the &quot;hello world&quot; message to a file. The procedure takes no parameters
-and outputs a messagefile.
-</para>
 
 <para>
-To achieve this, it executes the unix utility 'echo' with a parameter
-&quot;Hello, world!&quot; and directs the standard output into the output file.
+Next we define a variable called outfile. The type of this variable is
+messagefile, and we specify that the contents of this variable will
+be stored on disk in a file called hello.txt. This is called Mapping
+and will be discussed in more depth later, but for now accept that
+it means that assigning to outfile will cause data to appear in a disk
+file called &quot;hello.txt&quot;.
 </para>
 
 <programlisting>
 messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
 </programlisting>
-
-<para>
-Here we define a variable called outfile. The type of this variable is
-messagefile, and we specify that the contents of this variable will
-be stored on disk in a file called hello.txt
-</para>
 
 <programlisting>
 outfile = greeting();
@@ -133,17 +138,12 @@ procedure and output parameters specify outputs. Our helloworld greeting
 procedure already uses an output parameter, t, which indicates where the
 greeting output will go. In this section, we will add an input parameter
 to the greeting function.</para>
+
 <para>
 We will also encounter a new built-in data type, 'string'.
 </para>
-<para>The code for this section can be found in q2.swift. It can be
-invoked using the swift command, with output appearing in hello2.txt:</para>
 
-<programlisting>
-swift q2.swift
-</programlisting>
-
-<para>The code changes from q1.swift are highlighted below.</para>
+<para>Here's the next version of the program:</para>
 
 <programlisting>
 type messagefile;
@@ -159,15 +159,62 @@ messagefile outfile &lt;&quot;hello2.txt&quot;&gt;;
 outfile = greeting(&quot;hello world&quot;);
 </programlisting>
 
-<para>We have modified the signature of the greeting procedure to indicate
-that it takes a single parameter, s, of type 'string'.</para>
-<para>We have modified the invocation of the 'echo' utility so that it
-takes the value of s as a parameter, instead of the string literal
-&quot;Hello, world!&quot;.</para>
-<para>We have modified the output file definition to point to a different
-file on disk.</para>
-<para>We have modified the invocation of greeting so that a greeting
-string is supplied.</para>
+
+<para>The code for this section can be found in q2.swift. It can be
+invoked using the swift command, with output appearing in hello2.txt.</para>
+
+<programlisting>
+$ swift q2.swift
+</programlisting>
+
+<para>The code changes from q1.swift are highlighted below.</para>
+
+<para>As before, we define a type for our message files:</para>
+<programlisting>
+type messagefile;
+</programlisting>
+
+<para>
+We define a greeting function again. It is different from before in two ways:
+firstly, we have added an input parameter 's'. We will use this parameter
+to pass in a message. It has type 'string', which is a built in Swift type
+for representing strings.
+</para>
+
+<programlisting>
+(messagefile t) greeting (string s) {
+    app {
+</programlisting>
+
+<para>
+We modify the call to echo to use the message parameter s instead of
+the previously used hard-coded string.
+</para>
+
+<programlisting>
+        echo s stdout=@filename(t);
+    }
+}
+</programlisting>
+<para>
+We define an output variable, this time indicating that its contents will be
+stored in "hello2.txt".
+</para>
+
+<programlisting>
+messagefile outfile &lt;&quot;hello2.txt&quot;&gt;;
+</programlisting>
+
+<para>Finally, our call to greeting needs to have a parameter. We pass in the
+string &quot;hello world&quot;.
+</para>
+<programlisting>
+outfile = greeting(&quot;hello world&quot;);
+</programlisting>
+
+<para>After running this program, you should find the hello world message
+inside hello2.txt
+</para>
 
 </sect1>
 
@@ -178,6 +225,10 @@ different greetings. The code is in q12.swift and can be run as before
 using the swift command.
 </para>
 
+<para>
+We keep the type and procedure definitions the same...
+</para>
+
 <programlisting>
 type messagefile;
 
@@ -186,7 +237,14 @@ type messagefile;
         echo s stdout=@filename(t);
     }
 }
+</programlisting>
 
+<para>
+The program differs here, though. We define three variables and invoke
+the greeting procedure three times.
+</para>
+
+<programlisting>
 messagefile english &lt;&quot;english.txt&quot;&gt;;
 messagefile french &lt;&quot;francais.txt&quot;&gt;;
 
@@ -199,6 +257,7 @@ japanese = greeting(&quot;konnichiwa&quot;);
 
 <para>Note that we can intermingle definitions of variables with invocations
 of procedures.</para>
+
 <para>When this program has been run, there should be three new files in the
 working directory (english.txt, francais.txt and nihongo.txt) each containing
 a greeting in a different language.</para>
@@ -207,17 +266,17 @@ a greeting in a different language.</para>
 
 <sect1><title>Another procedure</title>
 <para>
-Now we'll define a new application procedure. This will take an image as an
-in PGM format and convert it to a GIF format image file.
+Now we'll define a new application procedure. This will take an
+image in PGM format and convert it to a GIF format image file.
 </para>
 
 <para>To do this, we'll use the ImageMagick 'convert' utility.</para>
 
-<para>First we need to modify the Transformation Catalog to define
-a logical transformation for the wc utility.  The transformation
-catalog can be found in var/tc.data.
-There is already one entry specifying where 'echo' can
-be found. Add a new line to the file, specifying where 'convert' can be found
+<para>First we need to tell Swift where it can find the convert utility.
+</para>
+<para>This information is stored in the Transformation Catalog, in
+etc/tc.data. We must add a line to specify the location of convert,
+like this:
 </para>
 
 <programlisting>
@@ -225,7 +284,7 @@ local    convert    /usr/bin/convert    INSTALLED INTEL32::LINUX null
 </programlisting>
 
 <para>For now, ignore all of the fields except the second and the third.
-The second field 'convert' specifies a logical transformation name and the
+The second field 'convert' specifies a Logical Transformation name and the
 third specifies the location of an executable to perform that
 transformation.</para>
 
@@ -246,12 +305,13 @@ type pgmfile;
 
 pgmfile infile &lt;&quot;in.pgm&quot;&gt;;
 giffile outfile &lt;&quot;out.gif&quot;&gt;;
+
+outfile = convert(infile);
 </programlisting>
 
 <para>We define new data types for files containing PGM and GIF images
-(although like messagefile, we don't specify any internal structure for those
-files). Then we define a 'convert' procedure which invokes the
-convert utility with appropriate parameters. 
+Then we define a 'convert' procedure which invokes the
+convert utility with appropriate parameters.
 Finally, we define input and output variables of the appropriate type
 and invoke convert to perform the conversion.
 </para>
@@ -264,11 +324,12 @@ which contains the swift logo, converted from its pgm source.</para>
 <sect1><title>More on datatypes</title>
 
 <para>
-As mentioned earlier, all data in variables and files has a datatype.  So
-far, we've seen simple user-defined datatypes (pgmfile and giffile) used
-as marker types.</para>
+As mentioned earlier, all data in Swift has a datatype. So
+far, we've seen simple user-defined datatypes (messagefile, pgmfile
+and giffile)
+</para>
 
-<para>It is also possible to create types with structure, like in other
+<para>It is also possible to create types with more structure, like in other
 programming languages.</para>
 
 <para>
@@ -282,7 +343,7 @@ reference.img and reference.hdr together).
 <para>We can tell Swift about this pairing of files using a complex data
 type.</para>
 
-<para>First define marker types for the header and image files, as before.
+<para>First define types for the header and image files, as before.
 </para>
 
 <programlisting>
@@ -318,49 +379,27 @@ examples we have seen a variable definition like this:</para>
 messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
 </programlisting>
 
-<para>This means that 'outfile' is a dataset variable, which is
-mapped to a file on disk called 'g13greeting.txt'. This variable
-can be assigned to using = in a similar fashion to an in-memory
-variable.  We can say that 'outfile' is mapped onto the disk file
-'q13greeting.txt' by a <firstterm>mapper</firstterm>.
-</para>
-
-<para>There are various ways of mapping in SwiftScript. Two forms have already
-been seen in this tutorial. Later exercises will introduce more forms.
-</para>
-
-<para>The two forms of mapping seen so far are:</para>
-
-<itemizedlist>
-<para>
-simple named mapping - the name of the file that a variable is
-mapped to is explictly listed. Like this:
-<programlisting>
-messagefile outfile &lt;&quot;greeting.txt&quot;&gt;;
-</programlisting>
-
-This is useful when you want to explicitly name input and output
-files for your program. For example, 'outfile' in exercise HELLOWORLD.
-
+<para>This means that the 'outfile' variable is
+mapped to a file on disk called 'g13greeting.txt'. The contents of the
+variable are the contents of the file q13greeting.txt.
 </para>
 
 <para>
-anonymous mapping - no name is specified in the source code.
-A name is automatically generated for the file. This is useful
-for intermediate files that are only referenced through SwiftScript,
-such as 'outfile' in exercise ANONYMOUSFILE. A variable declaration
-is mapped anonymously by ommitting any mapper definition, like this:
-
-<programlisting>
-messagefile outfile;
-</programlisting>
-
+Assigning to this variable is the same as writing to the file, and
+reading from this variable is the same as reading from the file.
 </para>
 
-</itemizedlist>
+<para>We say that outfile is <firstterm>mapped</firstterm> to 
+q13greeting.txt
+</para>
 
-<para>Later exercises will introduce other ways of mapping from
-disk files to SwiftScript variables.</para>
+<para>There are various ways of mapping in SwiftScript. The syntax above
+is the simplest form. It associates a variable with an explicitly named
+file. Later exercises will introduce other ways of mapping from
+on-disk files to SwiftScript variables.</para>
+
+
+<para>TODO this text should move / be rephrased</para>
 
 <para>We can't use the single filename mapping technique to map into our
 new 'volume' structure because a volume value consists of several files.
@@ -372,6 +411,7 @@ files are laid out in relation to the structure that we have defined.
 volume (the reference and atlas cases) and another case where we need to
 refer to an array of volumes (the subject case).
 </para>
+<para>END TODO</para>
 
 </sect1>
 
@@ -379,6 +419,11 @@ refer to an array of volumes (the subject case).
 
 
 <sect1><title>Anonymous files</title>
+
+<para>TODO the previous exercise used to chain two procedures together
+so that this would be demonstrated, but the conversion to using convert
+lost that. should diddle first two exercises to put that back in,
+for example by changing the first exercise to be graphics based too.</para>
 
 <para>In the previous section, the file 'q13greeting.txt' is used only to
 store an intermediate result. We don't really care about which name is used
@@ -397,6 +442,9 @@ messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
 <programlisting>
 messagefile outfile;
 </programlisting>
+
+<para>In this case, swift will still store outfile on disk when necessary,
+but will generate a new name automatically.</para>
 
 <para>q14.swift contains the code and can be run in the usual way. After
 execution, the results can be found in count14.txt</para>
@@ -441,6 +489,8 @@ s[0], and that the array is initialised using an array literal,
 
 </sect1>
 
+<para>TODO: don't need regexp mapper - the FMRI example code I wrote
+uses csv mapper and simple_mapper and single_file_mapper</para>
 
 <sect1><title>The regexp mapper</title>
 <para>In this exercise, we introduce the <firstterm>regexp mapper</firstterm>.
@@ -510,17 +560,6 @@ foreach f in inputfiles {
 
 </sect1>
 
-<sect1><title>If</title>
-<para>
-Decisions can be made using 'if', in a style reminiscent of many other
-languages. q20.swift contains a simple example of this. Compile and run
-q20.swift and see that it outputs 'good morning'. Changing the 'morning'
-variable from true to false will cause the program to output 'good
-afternoon'.
-</para>
-</sect1>
-
-
 <sect1><title>Visualising the workflow as a graph</title>
 
 <para>
@@ -563,184 +602,6 @@ transferred to the remote resource), jobmanager (which indicates how
 applications can be run on the remote resource) and workdirectory
 (which indicates where working storage can be found on the
 remote resource).</para>
-</sect1>
-
-<sect1><title>Writing a mapper</title>
-
-<para>
-This section will introduce writing a custom mapper so that Swift is able
-to access data files laid out in application-specific ways.
-</para>
-<para>
-An application-specific mapper must take the form of a Java class
-that implements the org.griphyn.vdl.mapping.Mapper interface. Refer
-to the javadocs for that class for specific information about each
-method.
-</para>
-<para>
-In this section, we'll develop a mapper that maps SwiftScript structures
-to a set of files, with a basename specified as a mapper parameter and
-an extension corresponding to the SwiftScript structure name.
-</para>
-<para>
-To illustrate, consider the following code fragment.
-</para>
-
-<programlisting>
-struct volume {
-    file img;
-    file hdr;
-}
-
-volume v &lt;tutorial_extension_mapper;basename=&quot;subject1&quot;&gt;;
-</programlisting>
-
-<para>
-Our mapper will map the volume variable v into two files, called
-"subject1.img" and "subject1.hdr" corresponding to the two elements in
-the structure.
-</para>
-
-<para>
-We can implement the mapper in several steps. First we must write a Java
-class implementing the mapper. Then we must tell Swift about this new mapper.
-</para>
-
-<para>
-Here is the Java source code for our mapper. Read it and then we will go
-through the various pieces.
-</para>
-
-<programlisting>
-
-package org.griphyn.vdl.mapping.file;
-
-import java.io.File;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
-import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.MappingParam;
-import org.griphyn.vdl.mapping.Path;
-
-public class TutorialExtensionMapper extends AbstractMapper
-{
-
-    /** defines the single parameter to this mapper */
-    public static final MappingParam PARAM_BASE = new MappingParam("base");
-
-    public String map(Path p) {
-        String basename = PARAM_BASE.getStringValue(this);
-        String filename = basename + "." + p;
-        System.err.println("this is the tutorial mapper, mapping path "+p+" to filename "+filename);
-        return filename;
-    }
-
-    public boolean exists(Path p) {
-        String fn = map(p);
-        File f = new File(fn);
-        return f.exists();
-    }
-
-    public Collection existing() {
-        return new ArrayList();
-    }
-
-
-    public boolean isStatic() {
-        return true;
-    }
-}
-
-
-</programlisting>
-
-<para>
-Our mapper class, TutorialExtensionMapper, must implement the Mapper interface.
-We do this by extending the AbstractMapper class, which provides
-implementations for some of the Mapper methods
-whilst leaving others to be implemented by the specific
-mapper.
-</para>
-
-<para>
-There is helper code to handle most tasks related to mapper parameters.
-We need to create a MapperParam object for our single parameter, 'base'.
-If we wanted more than one parameter, we would create a MapperParam
-object for each parameter. We can then use the mapper parameter object
-later on in the code to retrieve the value of the parameter as specified
-in the SwiftScript mapper description.
-</para>
-
-<para>
-The core mapping functionality appears in the map method. This method will
-be called by the Swift engine whenever it needs to translate a SwiftScript
-variable into a filename. It is passed a Path object, which represents
-the path from the top level to the part that we want to filename for.
-So when swift wants the filename for v.img in the above
-usage example, it will ask the mapper for v to map the path "img" to a
-filename. In our example, the mapping consists of taking the 'base'
-parameter and combining it with the path to give a filename.
-</para>
-
-<para>
-A few other methods need to be implemented.
-</para>
-
-<para> exists() takes a Path
-and returns true if the file backing that path exists. It is implemented
-in a straightforward fashion.
-</para>
-
-<para>existing() returns a Collection of Paths, listing the paths that
-already exist. In the tutorial, we cheat and return an empty collection.
-</para>
-
-<para>isStatic() identifies whether mappings from this mapper are
-fixed at creation time, or can change over time. For most simple
-mappers, it should return true. There is more discussion in the
-Mapper class javadoc.
-</para>
-
-<para>
-We place the above java source file into the Swift source tree
-in a file called src/org/griphyn/vdl/mapping/file/TutorialExtensionMapper.java
-</para>
-
-<para>Now we need to inform the Swift engine about the existence of this
-mapper. We do that by editing the MapperFactory class definition, in
-src/org/griphyn/vdl/mapping/MapperFactory.java and adding a
-registerMapper call alongside the existing registerMapper calls, like this:
-</para>
-<programlisting>
-registerMapper("tutorial_extension_mapper",
-org.griphyn.vdl.mapping.file.TutorialExtensionMapper.class);
-</programlisting>
-
-<para>The first parameter is the name of the mapper that will be used
-in SwiftScript mapper declarations. The second parameter is the class
-that we defined above that implements the mapping behaviour.
-</para>
-
-<para>
-With the mapper source file in place, and MapperFactory updated, we can
-recompile Swift (see instructions elsewhere on the Swift web site) and
-then write SwiftScript programs which use our new mapper.
-</para>
-
-</sect1>
-
-<sect1><title>Tips and Tricks</title>
-
-<para>
-	<simplelist>
-		<member>DO NOT put functions invocations as actual arguments for procedures</member>
-		<member>Put ITERATION loops in procedures, when they produce ARRAY outputs</member>
-	</simplelist>
-</para>
-
-
 </sect1>
 
 </article>
