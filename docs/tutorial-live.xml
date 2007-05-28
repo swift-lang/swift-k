@@ -575,33 +575,29 @@ which can then be viewed using your favourite image viewer.
 
 <sect1><title>Running on a remote site</title>
 
-<para>As configured by default, all jobs are run locally. In the previous
-examples, we've invoked 'echo' and 'wc' executables from our
-SwiftScript program. These have been run on the local system
-(the same computer on which you ran 'swift'). We can also make our
-computations run on a remote resource.</para>
+<para>So far, all applications that we've run so far has been run on our
+<firstterm>submit system</firstterm>, the place where the swift command
+has been run.</para>
 
-<para>WARNING: This example is necessarily more vague than previous examples,
-because its requires access to remote resources. You should ensure that you
-can submit a job using the globus-job-run (or globusrun-ws?) command(s).
-</para>
+<para>Now, we are going to tell swift to run procedures on remote
+grid systems.</para>
 
 <para>We do not need to modify any SwiftScript code to run on another resource.
-Instead, we must modify another catalog, the 'site catalog'. This catalog
-provides details of the location that applications will be run, with the
-default settings referring to the local machine. We will modify it to
-refer to a remote resource - the UC Teraport cluster. If you are not a
-UC Teraport user, you should use details of a different resource that
-you do have access to.
+Instead, we must modify a configuration file, the 
+<firstterm>site catalog</firstterm>. This catalog
+provides details of the location that applications will be run. By default,
+the site catalog specifies that applications will run on the local
+system. There is a commented out section that give details of a different
+grid system. Comment out the local definition, and uncomment the other
+site definition.
 </para>
 
-<para>The site catalog is located in etc/sites.xml and is a relatively
-straightforward XML format file. We must modify each of the following
-three settings: gridftp (which indicates how and where data can be
-transferred to the remote resource), jobmanager (which indicates how
-applications can be run on the remote resource) and workdirectory
-(which indicates where working storage can be found on the
-remote resource).</para>
+<para>Now try running any of the swift commands that you've run 
+earlier in this tutorial. Any of them should work, but will now
+result in jobs running on the remote site instead of the local one.
+The output files should be exactly the same, but now you have used a
+grid resource to run the application.
+</para>
 </sect1>
 
 </article>
