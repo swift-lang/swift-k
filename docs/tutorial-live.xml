@@ -29,40 +29,35 @@ try for yourself as you read along.
 
 <sect1> <title>Hello World</title>
     <para>
-The first example program (found in the file
-examples/vdsk/tutorial/q1.swift) outputs a hello world message into
-a file called hello.txt.
+The first example program uses an image processing utility to perform
+a visual special effect on a supplied file.
     </para>
 
+<para>
+This simple workflow has the effect of running this command:
+</para>
 <programlisting>
-type messagefile;
-
-(messagefile t) greeting () {
-    app {
-        echo &quot;Hello, world!&quot; stdout=@filename(t);
-    }
-}
-
-messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
-
-outfile = greeting();
+convert -flip Gridworkshop3.jpg output.jpg
 </programlisting>
 
-<para>We can run this program as follows:</para>
+<para>We can run this program like this:</para>
 
 <programlisting>
-$ cd examples/vdsk/tutorial/
 
-$ swift q1.swift
+$ ls *.jpg
+Gridworkshop3.jpg
+
+$ swift flipper.swift
 
 Swift v0.1-dev
 
 RunID: e1bupgygrzn12
-echo started
-echo completed
+convert started
+convert completed
 
-$ cat hello.txt
-Hello, world!
+$ ls *.jpg
+Gridworkshop3.jpg
+output.jpg
 </programlisting>
 
 <para>The basic structure of this program is a type definition,
@@ -71,203 +66,418 @@ then a call to the procedure:</para>
 
 <para>
 All data in SwiftScript must have a type. This line defines a new type
-called messagefile, which will be the type of the in which we will store
-our 'hello world' message.
+called imagefile, which will be the type that all of our images will be.
 </para>
 
 <programlisting>
-type messagefile;
+type imagefile;
 </programlisting>
 
 <para>
-Next we define a procedure called write. This procedure will write out
-the &quot;hello world&quot; message to a file.
-</para>
-
-<para>
-To achieve this, it executes the standard unix utility 'echo' with a parameter
-&quot;Hello, world!&quot; and send the standard output into the output file t.
-</para>
-
-<para>
-The output of a program looks like a return value. It has a type, but also
-has a variable name (unlike in other programming languages).
+Next we define a procedure called flip. This procedure will use the
+ImageMagick convert application to flip a picture around.
 </para>
 
 <programlisting>
-(messagefile t) greeting () {
-    app {
-        echo &quot;Hello, world!&quot; stdout=@filename(t);
-    }
+(imagefile output) flip(imagefile input) {
+  app {
+    convert "-flip" @input @output;
+  }
 }
 </programlisting>
 
+<para>
+To achieve this, it executes the ImageMagick utility 'convert', passing
+in the appropriate commandline option and the name of the input and output
+files.
 
 <para>
-Next we define a variable called outfile. The type of this variable is
-messagefile, and we specify that the contents of this variable will
-be stored on disk in a file called hello.txt. This is called Mapping
-and will be discussed in more depth later, but for now accept that
-it means that assigning to outfile will cause data to appear in a disk
-file called &quot;hello.txt&quot;.
+In swift, the output of a program looks like a return value. 
+It has a type, and also has a variable name
+(unlike in other programming languages).
 </para>
 
+<para>
+We define two variables, called spacegirl and flipped. These variables will
+contain our input and output images, respectively.
+</para>
+
+<para>We tell swift that the contents of the variables will be stored on
+disk (rather than in memory) in the files "Gridworkshop3.jpg" (which already
+exists), and in "output.jpg". This is calle <firstterm>mapping</firstterm>
+and will be discussed in more depth later.</para>
+
 <programlisting>
-messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
+imagefile spacegirl <"Gridworkshop3.jpg">;
+imagefile flipped <"output.jpg">;
 </programlisting>
 
 <programlisting>
-outfile = greeting();
+flipped = flip(spacegirl);
 </programlisting>
 
 <para>
-Now we call the greeting procedure, with its output going to the
-outfile variable and therefore to hello.txt on disk.
+Now we call the flip procedure, with 'spacegirl' as its input and its
+output going into 'flipped'.
 </para>
 
-<para>Over the following exercises, we'll extend this simple
-hello world program to demonstrate various features of Swift.</para>
+<para>Over the following exercises, we'll extend this relatively
+simple SwiftScript program to demonstrate various features of Swift.</para>
 
 </sect1>
 
+<!-- TODO this text needs to be pushed down into the following 
+exercise body
 <sect1> <title>Parameters</title>
 
 <para>
 Procedures can have parameters. Input parameters specify inputs to the
-procedure and output parameters specify outputs. Our helloworld greeting
-procedure already uses an output parameter, t, which indicates where the
-greeting output will go. In this section, we will add an input parameter
-to the greeting function.</para>
-
-<para>
-We will also encounter a new built-in data type, 'string'.
+procedure and output parameters specify outputs. Parameters have a name
+and a type.
+Our flip procedure
+has one input parameter  ('input', of type imagefile) and one output
+parameter ('output', of type imagefile).
 </para>
 
-<para>Here's the next version of the program:</para>
+
+<sect1><title>Arrays</title>
+<para>We can define arrays of values. For example, we could specify each
+word in a greeting as a separate element of a string array, as seen in
+q5.swift:</para>
 
 <programlisting>
 type messagefile;
 
-(messagefile t) greeting (string s) {
+(messagefile t) greeting (string s[]) {
     app {
-        echo s stdout=@filename(t);
+        echo s[0] s[1] s[2] stdout=@filename(t);
     }
 }
 
-messagefile outfile &lt;&quot;hello2.txt&quot;&gt;;
+messagefile outfile &lt;&quot;q5out.txt&quot;&gt;;
 
-outfile = greeting(&quot;hello world&quot;);
+string words[] = [&quot;how&quot;,&quot;are&quot;,&quot;you&quot;];
+
+outfile = greeting(words);
+
 </programlisting>
 
-
-<para>The code for this section can be found in q2.swift. It can be
-invoked using the swift command, with output appearing in hello2.txt.</para>
-
-<programlisting>
-$ swift q2.swift
-</programlisting>
-
-<para>The code changes from q1.swift are highlighted below.</para>
-
-<para>As before, we define a type for our message files:</para>
-<programlisting>
-type messagefile;
-</programlisting>
-
-<para>
-We define a greeting function again. It is different from before in two ways:
-firstly, we have added an input parameter 's'. We will use this parameter
-to pass in a message. It has type 'string', which is a built in Swift type
-for representing strings.
-</para>
-
-<programlisting>
-(messagefile t) greeting (string s) {
-    app {
-</programlisting>
-
-<para>
-We modify the call to echo to use the message parameter s instead of
-the previously used hard-coded string.
-</para>
-
-<programlisting>
-        echo s stdout=@filename(t);
-    }
-}
-</programlisting>
-<para>
-We define an output variable, this time indicating that its contents will be
-stored in "hello2.txt".
-</para>
-
-<programlisting>
-messagefile outfile &lt;&quot;hello2.txt&quot;&gt;;
-</programlisting>
-
-<para>Finally, our call to greeting needs to have a parameter. We pass in the
-string &quot;hello world&quot;.
-</para>
-<programlisting>
-outfile = greeting(&quot;hello world&quot;);
-</programlisting>
-
-<para>After running this program, you should find the hello world message
-inside hello2.txt
-</para>
+<para>Observe that the type of the parameter to greeting is now an
+array of strings, 'string s[]', instead of a single string, 'string s',
+that elements of the array can be referenced numerically, for example
+s[0], and that the array is initialised using an array literal,
+[&quot;how&quot;,&quot;are&quot;,&quot;you&quot;].</para>
 
 </sect1>
 
-<sect1><title>Calling the same function with different parameters</title>
-<para>Now that we can choose our greeting text, we can call the same
-procedure with different parameters to generate several output files with
-different greetings. The code is in q12.swift and can be run as before
-using the swift command.
+
+<sect1><title>The single_file_mapper</title>
+<para>
+This exercise introduces the <firstterm>single_file_mapper</firstterm>.
+This mapper allows you to map a file based on the result of a string
+expression. We can use string concatenation to assemble a filename, and
+then map that filename to a variable.
 </para>
+<para>Previously we've used syntax like this:
+</para>
+<para>TODO - this example needs making coherent with rest</para>
+<programlisting>
+giffile outputgif <"atlas-x.gif">;
+</programlisting>
+<para>We can instead assemble the filename and map that, like this:
+</para>
+<programlisting>
+string direction = "x";
+giffile outputgif &lt;single_file_mapper;file=@strcat("atlas-",direction,".gif")&gt;;
+</programlisting>
+</sect1>
+
+
+<sect1><title>foreach</title>
+<para>SwiftScript provides a control structure, foreach, to operate
+on each element of an array.</para>
+<para>In this example, we will run the previous word counting example
+over each file in an array without having to explicitly list the
+array elements. The source code for this example is in q17.swift. The
+three input files (one.txt, two.txt and three.txt) are supplied. After
+you have run the workflow, you should see that there are three output
+files (one.count, two.count and three.count) each containing the word
+count for the corresponding input file. We combine the use of the
+fixed_array_mapper and the regexp_mapper.</para>
+<programlisting>
+string inputNames = "one.txt two.txt three.txt";
+
+messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
+
+
+foreach f in inputfiles {
+  countfile c &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
+  c = countwords(f);
+}
+</programlisting>
+
+</sect1>
+
+-->
 
 <para>
-We keep the type and procedure definitions the same...
+Our next example program uses some more swift syntax to produce images that are
+rotated by different angles, instead of flipped over all the way.
+</para>
+
+<para>Here is the program in full. We'll go over it section by section.</para>
+<programlisting>
+type imagefile;
+
+(imagefile output) rotate(imagefile input, int angle) {
+  app {
+    convert "-rotate" angle @input @output;
+  }
+}
+
+imagefile spacegirl <"Gridworkshop3.jpg">;
+
+int angles[] = [45, 90, 120];
+
+foreach a in angles {
+    imagefile output &lt;single_file_mapper;file=@strcat("rotated-",a,".jpg")&gt;;
+    output = rotate(spacegirl, a);
+}
+</programlisting>
+
+<programlisting>
+type imagefile;
+</programlisting>
+
+<para>
+We keep the type definition the same as in the previous program.
 </para>
 
 <programlisting>
-type messagefile;
+(imagefile output) rotate(imagefile input, int angle) {
+  app {
+    convert "-rotate" angle @input @output;
+  }
+}
+</programlisting>
 
-(messagefile t) greeting (string s) {
+<para>
+This rotate procedure looks very much like the flip procedure 
+from the previous program,
+but we have added another parameter, called angle. Angle is of type 'int',
+which is a built-in SwiftScript type for integers. We use that on the
+commandline instead of a hard coded 180 degrees.
+</para>
+
+<programlisting>
+imagefile spacegirl <"Gridworkshop3.jpg">;
+</programlisting>
+
+<para>
+Our input image is the same as before.
+</para>
+
+<programlisting>
+int angles[] = [45, 90, 120];
+</programlisting>
+
+<para>
+Now we define an array of integers, and initialise it with three angles.
+</para>
+
+<programlisting>
+foreach a in angles {
+</programlisting>
+
+<para>
+Now we have a foreach loop. This loop will iterate over each of the elements
+in angles. In each iteration, the element will be put in the variable 'a'.
+</para>
+
+<programlisting>
+    imagefile output &lt;single_file_mapper;file=@strcat("rotated-",a,".jpg")&gt;;
+</programlisting>
+
+<para>
+Inside the loop body, we have an output variable that is mapped differently
+for each iteration. We use the single_file_mapper and the @strcat function
+to construct a filename and then map that filename to our output variable.
+</para>
+
+<programlisting>
+    output = rotate(spacegirl, a);
+}
+</programlisting>
+
+<para>Now we invoke rotate, passing in our input image and the angle to
+use, and 
+
+</para>
+<programlisting>
+$ ls rotated*
+rotated-120.jpg rotated-45.jpg  rotated-90.jpg
+</programlisting>
+
+<para>
+Our third example will introduce some more concepts: complex data
+types, the comma-separated values mapper, and the transformation
+catalog.
+</para>
+
+<para>
+Here's the complete listing:
+</para>
+
+<programlisting>
+
+type imagefile;
+type pgmfile;
+
+type voxelfile;
+type headerfile;
+
+type volume {
+    voxelfile img;
+    headerfile hdr;
+};
+
+
+volume references[] &lt;csv_mapper;file="reference.csv"&gt;;
+volume reference=references[0];
+
+(pgmfile outslice) slicer(volume input, string axis, string position)
+{
     app {
-        echo s stdout=@filename(t);
+        slicer @input.img axis position @outslice;
+    }
+}
+
+(imagefile output) convert(pgmfile inpgm)
+{
+    app {
+        convert @inpgm @output;
+    }
+}
+
+pgmfile slice;
+
+imagefile slicejpeg <"slice.jpeg">;
+
+slice = slicer(reference, "-x", ".5");
+
+slicejpeg = convert(slice);
+
+</programlisting>
+
+
+<programlisting>
+type imagefile;
+type pgmfile;
+type voxelfile;
+type headerfile;
+</programlisting>
+
+<para>
+We define some simple types - imagefile as before, as well as three new ones.
+</para>
+
+<programlisting>
+type volume {
+    voxelfile img;
+    headerfile hdr;
+};
+</programlisting>
+
+<para>
+Now we define a <firstterm>complex type</firstterm> to represent a brain scan.
+Our programs store brain data in two files - a .img file and a .hdr file.
+This complex type defines a volume type, consisting of a voxelfile and a
+headerfile.
+</para>
+
+<programlisting>
+volume references[] &lt;csv_mapper;file="reference.csv"&gt;;
+</programlisting>
+
+<para>
+Now that we have defined a more complex type that consists of several
+elements (and hence several files on disk), we can no longer use the
+same ways of mapping. Instead, we will use a new mapper, the CSV mapper.
+This maps rows of a comma-separated value file into an array of complex
+types. The content of reference.csv looks like this:
+</para>
+<programlisting>
+$ cat reference.csv
+img,hdr
+Raw/reference.img,Raw/reference.hdr
+</programlisting>
+<para>Our mapped structure will be a 1 element array (because there was one
+data line in the CSV file), and that element will be mapped to two
+files: the img component will map to the file Raw/reference.img and the
+hdr component will map to Raw/reference.hdr
+</para>
+
+<programlisting>
+volume reference=references[0];
+</programlisting>
+
+<para>
+We only want the single first element of the references array, so this line
+makes a new volume variable and extracts the first element of references.
+</para>
+
+<programlisting>
+(imagefile output) convert(pgmfile inpgm)
+{
+    app {
+        convert @inpgm @output;
     }
 }
 </programlisting>
 
 <para>
-The program differs here, though. We define three variables and invoke
-the greeting procedure three times.
+This procedure is like the previous flip and rotate procedures. It uses
+convert to change a file from one file format (.pgm format) to another
+format (.jpeg format)
 </para>
 
 <programlisting>
-messagefile english &lt;&quot;english.txt&quot;&gt;;
-messagefile french &lt;&quot;francais.txt&quot;&gt;;
-
-english = greeting(&quot;hello&quot;);
-french = greeting(&quot;bonjour&quot;);
-
-messagefile japanese &lt;&quot;nihongo.txt&quot;&gt;;
-japanese = greeting(&quot;konnichiwa&quot;);
+(pgmfile outslice) slicer(volume input, string axis, string position)
+{
+    app {
+        slicer @input.img axis position @outslice;
+    }
+}
 </programlisting>
 
-<para>Note that we can intermingle definitions of variables with invocations
-of procedures.</para>
+<para>
+Now we define another procedure that uses a new application called 'slicer'.
+Slicer will take a slice through a supplied brain scan volume and produce
+a 2d image in PGM format.
+</para>
 
-<para>When this program has been run, there should be three new files in the
-working directory (english.txt, francais.txt and nihongo.txt) each containing
-a greeting in a different language.</para>
+<para>
+We must tell Swift how to run 'slicer' by modifying the
+<firstterm>transformation catalog</firstterm>.
+</para>
 
-</sect1>
+<programlisting>
+pgmfile slice;
 
+imagefile slicejpeg <"slice.jpeg">;
+
+slice = slicer(reference, "-x", ".5");
+
+slicejpeg = convert(slice);
+
+</programlisting>
+
+
+TODO integrate the following sections
 <sect1><title>Another procedure</title>
 <para>
 Now we'll define a new application procedure. This will take an
-image in PGM format and convert it to a GIF format image file.
+ mage in PGM format and convert it to a GIF format image file.
 </para>
 
 <para>To do this, we'll use the ImageMagick 'convert' utility.</para>
@@ -359,7 +569,7 @@ and a header file.
 type volume {
     imagefile img;
     headerfile hdr;
-};
+} '11;
 </programlisting>
 
 <para>Using a complex type like this, swift can ensure that files that belong
@@ -459,62 +669,28 @@ outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60, was
 automatically mapped to outfile.</para>
 
 </sect1>
-<sect1><title>Arrays</title>
-<para>We can define arrays of values. For example, we could specify each
-word in a greeting as a separate element of a string array, as seen in
-q5.swift:</para>
 
-<programlisting>
-type messagefile;
-
-(messagefile t) greeting (string s[]) {
-    app {
-        echo s[0] s[1] s[2] stdout=@filename(t);
-    }
-}
-
-messagefile outfile &lt;&quot;q5out.txt&quot;&gt;;
-
-string words[] = [&quot;how&quot;,&quot;are&quot;,&quot;you&quot;];
-
-outfile = greeting(words);
-
-</programlisting>
-
-<para>Observe that the type of the parameter to greeting is now an
-array of strings, 'string s[]', instead of a single string, 'string s',
-that elements of the array can be referenced numerically, for example
-s[0], and that the array is initialised using an array literal,
-[&quot;how&quot;,&quot;are&quot;,&quot;you&quot;].</para>
-
-</sect1>
-
-<para>TODO: don't need regexp mapper - the FMRI example code I wrote
-uses csv mapper and simple_mapper and single_file_mapper</para>
-
-<sect1><title>The regexp mapper</title>
-<para>In this exercise, we introduce the <firstterm>regexp mapper</firstterm>.
-This mapper transforms a string expression using a regular expression,
-and uses the result of that transformation as the filename to map.</para>
-<para>
-q16.swift demonstrates the use of this by placing output into a file that
-is based on the name of the input file: our input file is mapped
-to the inputfile variable using the simple named mapper, and then
-we use the regular expression mapper to map the output file. Then we
-use the countwords() procedure that we defined in exercise ANOTHERPROCEDURE
-to count the works in the input file and store the result in the
-output file.
+<sect1><title>simple_mapper</title>
+<para>None of the ways of mapping that we've seen so far can be used to
+map a complex structure. We have only seen ways to map from a simple-typed
+variable to a single file.</para>
+<para>The <firstterm>simple_mapper</firstterm> can map between a
+complex structure and a set of files in a directory.
 </para>
-
-<para>
-The important bit of q16.swift is:
-<programlisting>
-messagefile inputfile &lt;"q16.txt"&gt;;
-
-countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1count"&gt;;
-</programlisting>
+<para>Here's an example:
 </para>
-</sect1>
+<programlisting>
+volume a &lt;simple_mapper;prefix="atlas"&gt;;
+</programlisting>
+<para>
+This will map members of the volume structure to files, like this:
+</para>
+<para>TODO formatting</para>
+<para>variable -> filename</para>
+<para>v.img  -> atlas.img</para>
+<para>v.hdr  -> atlas.hdr</para>
+<sect1>
+
 
 <sect1><title>fixed_array_mapper</title>
 <para>
@@ -534,32 +710,6 @@ outputfiles[1] = countwords(inputfiles[1]);
 outputfiles[2] = countwords(inputfiles[2]);
 </programlisting>
 </sect1>
-
-<sect1><title>foreach</title>
-<para>SwiftScript provides a control structure, foreach, to operate
-on each element of an array.</para>
-<para>In this example, we will run the previous word counting example
-over each file in an array without having to explicitly list the
-array elements. The source code for this example is in q17.swift. The
-three input files (one.txt, two.txt and three.txt) are supplied. After
-you have run the workflow, you should see that there are three output
-files (one.count, two.count and three.count) each containing the word
-count for the corresponding input file. We combine the use of the
-fixed_array_mapper and the regexp_mapper.</para>
-<programlisting>
-string inputNames = "one.txt two.txt three.txt";
-
-messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
-
-
-foreach f in inputfiles {
-  countfile c &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
-  c = countwords(f);
-}
-</programlisting>
-
-</sect1>
-
 <sect1><title>Visualising the workflow as a graph</title>
 
 <para>
