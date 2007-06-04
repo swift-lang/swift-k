@@ -264,6 +264,9 @@ foreach f in inputfiles {
 
 -->
 
+<sect1>
+<title>A second program</title>
+
 <para>
 Our next example program uses some more swift syntax to produce images that are
 rotated by different angles, instead of flipped over all the way.
@@ -584,6 +587,7 @@ then convert that slice into a jpeg.
 make the other modifications discussed above. Then run the workflow
 with the swift command, as before.</para>
 
+</sect1>
 
 
 <sect1><title>A bigger workflow example</title>
