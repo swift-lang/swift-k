@@ -585,299 +585,284 @@ make the other modifications discussed above. Then run the workflow
 with the swift command, as before.</para>
 
 
-TODO integrate the following sections
-<sect1><title>Another procedure</title>
+
+<sect1><title>A bigger workflow example</title>
+
+<para>Now we'll make a bigger workflow that will execute a total of
+15 jobs.
+</para>
+
 <para>
-Now we'll define a new application procedure. This will take an
- mage in PGM format and convert it to a GIF format image file.
-</para>
-
-<para>To do this, we'll use the ImageMagick 'convert' utility.</para>
-
-<para>First we need to tell Swift where it can find the convert utility.
-</para>
-<para>This information is stored in the Transformation Catalog, in
-etc/tc.data. We must add a line to specify the location of convert,
-like this:
+As before, here is the entire program listing. Afterwards, we will go through
+the listing step by step.
 </para>
 
 <programlisting>
-local    convert    /usr/bin/convert    INSTALLED INTEL32::LINUX null
-</programlisting>
+type voxelfile;
+type headerfile;
 
-<para>For now, ignore all of the fields except the second and the third.
-The second field 'convert' specifies a Logical Transformation name and the
-third specifies the location of an executable to perform that
-transformation.</para>
-
-<para>Now that we have defined the logical transformation 'convert', we can
-use it in SwiftScript:
-</para>
-
-<programlisting>
-type giffile;
 type pgmfile;
+type imagefile;
 
-(giffile outgif) convert(pgmfile inpgm)
-{
+type warpfile;
+
+type volume {
+    voxelfile img;
+    headerfile hdr;
+};
+
+(warpfile warp) align_warp(volume reference, volume subject, string model, string quick) {
     app {
-        convert @inpgm @outgif;
+        align_warp @reference.img @subject.img @warp "-m " model quick;
     }
 }
 
-pgmfile infile &lt;&quot;in.pgm&quot;&gt;;
-giffile outfile &lt;&quot;out.gif&quot;&gt;;
+(volume sliced) reslice(warpfile warp, volume subject)
+{
+    app {
+        reslice @warp @sliced.img;
+    }
+}
 
-outfile = convert(infile);
+(volume sliced) align_and_reslice(volume reference, volume subject, string model, string quick) {
+    warpfile warp;
+    warp = align_warp(reference, subject, model, quick);
+    sliced = reslice(warp, subject);
+}
+
+
+(volume atlas) softmean(volume sliced[])
+{
+    app {
+        softmean @atlas.img "y" "null" @filenames(sliced[*].img);
+    }
+}
+
+
+(pgmfile outslice) slicer(volume input, string axis, string position)
+{
+    app {
+        slicer @input.img axis position @outslice;
+    }
+}
+
+(imagefile outimg) convert(pgmfile inpgm)
+{
+    app {
+        convert @inpgm @outimg;
+    }
+}
+
+(imagefile outimg) slice_to_jpeg(volume inp, string axis, string position)
+{
+    pgmfile outslice;
+    outslice = slicer(inp, axis, position);
+    outimg = convert(outslice);
+}
+
+(volume s[]) all_align_reslices(volume reference, volume subjects[]) {
+
+    foreach subject, i in subjects {
+        s[i] = align_and_reslice(reference, subjects[i], "12", "-q");
+    }
+
+}
+
+
+volume references[] &gt;csv_mapper;file="reference.csv"&lt;;
+volume reference=references[0];
+
+volume subjects[] &gt;csv_mapper;file="subjects.csv"&lt;;
+
+volume slices[] &gt;csv_mapper;file="slices.csv"&lt;;
+slices = all_align_reslices(reference, subjects);
+
+volume atlas &gt;simple_mapper;prefix="atlas"&lt;;
+atlas = softmean(slices);
+
+string directions[] = [ "x", "y", "z"];
+
+foreach direction in directions {
+    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".gif")&lt;;
+    string option = @strcat("-",direction);
+    o = slice_to_jpeg(atlas, option, ".5");
+}
+
 </programlisting>
 
-<para>We define new data types for files containing PGM and GIF images
-Then we define a 'convert' procedure which invokes the
-convert utility with appropriate parameters.
-Finally, we define input and output variables of the appropriate type
-and invoke convert to perform the conversion.
-</para>
-
-<para>We can use the swift command to run this program (as in the previous
-exercise). After running the command, there will be a file called out.gif
-which contains the swift logo, converted from its pgm source.</para>
-</sect1>
-
-<sect1><title>More on datatypes</title>
-
 <para>
-As mentioned earlier, all data in Swift has a datatype. So
-far, we've seen simple user-defined datatypes (messagefile, pgmfile
-and giffile)
-</para>
-
-<para>It is also possible to create types with more structure, like in other
-programming languages.</para>
-
-<para>
-In the FMRI workflow that we will write in this exercise, we will be dealing
-with input data files that consist of a three dimensional brain volume
-split into two files, the image data and the header data. So our data will
-always come in pairs (such as subject1.img and subject1.hdr together, or
-reference.img and reference.hdr together).
-</para>
-
-<para>We can tell Swift about this pairing of files using a complex data
-type.</para>
-
-<para>First define types for the header and image files, as before.
+As before, there are some other changes to make to the environment
+in addition to running the program. These are discussed inline below.
 </para>
 
 <programlisting>
-type imagefile;
+type voxelfile;
 type headerfile;
+
+type pgmfile;
+type imagefile;
+
+type warpfile;
 </programlisting>
 
-<para>Now we can define a volume data type that consists of an image file
-and a header file.
+<para>
+We define some simple types, like in the previous programs. We add another
+one for a new kind of intermediate file - a warpfile, which will be used by
+some new applications that we will use.
 </para>
 
 <programlisting>
+
 type volume {
-    imagefile img;
+    voxelfile img;
     headerfile hdr;
 };
 </programlisting>
 
-<para>Using a complex type like this, swift can ensure that files that
-logically belong with each other are always kept together.
-</para>
-
-</sect1>
-
-<sect1><title>Mappers</title>
-
-<para>A significant difference between SwiftScript and other languages is
-that data can be referred to on disk through variables in a very
-similar fashion to data in memory.  For example, in the above
-examples we have seen a variable definition like this:</para>
-
-<programlisting>
-messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
-</programlisting>
-
-<para>This means that the 'outfile' variable is
-mapped to a file on disk called 'g13greeting.txt'. The contents of the
-variable are the contents of the file q13greeting.txt.
-</para>
-
 <para>
-Assigning to this variable is the same as writing to the file, and
-reading from this variable is the same as reading from the file.
-</para>
-
-<para>We say that outfile is <firstterm>mapped</firstterm> to 
-q13greeting.txt
-</para>
-
-<para>There are various ways of mapping in SwiftScript. The syntax above
-is the simplest form. It associates a variable with an explicitly named
-file. Later exercises will introduce other ways of mapping from
-on-disk files to SwiftScript variables.</para>
-
-
-<para>TODO this text should move / be rephrased</para>
-
-<para>We can't use the single filename mapping technique to map into our
-new 'volume' structure because a volume value consists of several files.
-</para>
-<para>Instead, we must use a more complicated mapper which understands how
-files are laid out in relation to the structure that we have defined.
-</para>
-<para>There are two cases in our workflow where we need to refer to a single
-volume (the reference and atlas cases) and another case where we need to
-refer to an array of volumes (the subject case).
-</para>
-<para>END TODO</para>
-
-</sect1>
-
-
-
-
-<sect1><title>Anonymous files</title>
-
-<para>TODO the previous exercise used to chain two procedures together
-so that this would be demonstrated, but the conversion to using convert
-lost that. should diddle first two exercises to put that back in,
-for example by changing the first exercise to be graphics based too.</para>
-
-<para>In the previous section, the file 'q13greeting.txt' is used only to
-store an intermediate result. We don't really care about which name is used
-for the file, as no matter which intermediate name is used we will still
-get the same word count.</para>
-
-<para>In this case, we can omit the filename mapping part of the variable
-declaration. Instead of:</para>
-
-<programlisting>
-messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
-</programlisting>
-
-<para>we can instead write:</para>
-
-<programlisting>
-messagefile outfile;
-</programlisting>
-
-<para>In this case, swift will still store outfile on disk when necessary,
-but will generate a new name automatically.</para>
-
-<para>q14.swift contains the code and can be run in the usual way. After
-execution, the results can be found in count14.txt</para>
-
-<programlisting>
-cat count14.txt
-     3 outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60
-</programlisting>
-
-<para>Observe that a generated name,
-outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60, was
-automatically mapped to outfile.</para>
-
-</sect1>
-
-<sect1><title>simple_mapper</title>
-<para>None of the ways of mapping that we've seen so far can be used to
-map a complex structure. We have only seen ways to map from a simple-typed
-variable to a single file.</para>
-<para>The <firstterm>simple_mapper</firstterm> can map between a
-complex structure and a set of files in a directory.
-</para>
-<para>Here's an example:
-</para>
-<programlisting>
-volume a &lt;simple_mapper;prefix="atlas"&gt;;
-</programlisting>
-<para>
-This will map members of the volume structure to files, like this:
-</para>
-<para>TODO formatting</para>
-<para>variable -> filename</para>
-<para>v.img  -> atlas.img</para>
-<para>v.hdr  -> atlas.hdr</para>
-</sect1>
-
-<sect1><title>fixed_array_mapper</title>
-<para>
-The <firstterm>fixed array mapper</firstterm> maps a list of files into
-an array - each element of the array is mapped into one file in the
-specified directory. see q22.swift
-</para>
-<programlisting>
-string inputNames = "one.txt two.txt three.txt";
-string outputNames = "one.count two.count three.count";
-
-messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
-countfile outputfiles[] &lt;fixed_array_mapper;files=outputNames&gt;;
-
-outputfiles[0] = countwords(inputfiles[0]);
-outputfiles[1] = countwords(inputfiles[1]);
-outputfiles[2] = countwords(inputfiles[2]);
-</programlisting>
-</sect1>
-
-
-<sect1><title>Running on a remote site</title>
-
-<para>So far, all applications that we've run so far has been run on our
-<firstterm>submit system</firstterm>, the place where the swift command
-has been run.</para>
-
-<para>Now, we are going to tell swift to run procedures on remote
-grid systems.</para>
-
-<para>We do not need to modify any SwiftScript code to run on another resource.
-Instead, we must modify some configuration files: the transformation catalog,
-which we have seen before, and a new file, the 
-<firstterm>site catalog</firstterm>. The site catalog
-provides details of the location that applications will be run. By default,
-the site catalog specifies that applications will run on the local
-system. There is a commented out section that give details of a different
-grid system. Comment out the definition block, and uncomment the other
-site definition in that file. This tells Swift that computational jobs
-should be executed on a different compute resource using the various
-parameters in that file.
-</para>
-
-<para>You will also need to add entries to the transformation catalog, to
-tell swift where the necessary executables can be found on the remote site.
-</para>
-
-<para>The instructors will provide the necessary paths during the tutorial.
-</para>
-
-<para>Now try running any of the swift commands that you've run
-earlier in this tutorial. Any of them should work, but will now
-result in jobs running on the remote site instead of the local one.
-The output files should be exactly the same, but now you have used a
-grid resource to run the application.
-</para>
-
-</sect1>
-
-<sect1><title>Visualising the workflow as a graph</title>
-
-<para>
-When running a workflow, its possible to generate a provenance graph at the
-same time:
+The same complex type as before, a volume consisting of a pair of files -
+the voxel data and the header data.
 </para>
 
 <programlisting>
-swift -pgraph graph1.dot q1.swift
-dot -ograph.png -Tpng graph1.dot
+
+(warpfile warp) align_warp(volume reference, volume subject, string model, string quick) {
+    app {
+        align_warp @reference.img @subject.img @warp "-m " model quick;
+    }
+}
+
 </programlisting>
 
 <para>
-The graph will be stored in graph.png and can be viewed in an image viewer.
+Now we define a new transformation called align_warp. We haven't used
+align_warp before, so we need to add in a transformation catalog entry
+for it. We will be adding some other transformations too, so add those
+entries now too.
 </para>
 
-</sect1>
+<para>
+ACTION REQUIRED: Edit the transformation catalog (like in the third
+exercise). Add entries for the following transformations. The table
+below lists the path. You must write the appropriate syntax for
+transformation catalog entries yourself, using the existing two
+entries as examples.
+</para>
 
+<para>Here is the list of transformations to add:</para>
+<programlisting>
+align_warp (the path is /sw/workflow/app/AIR/bin/align_warp)
+reslice   (the path is /sw/workflow/app/AIR/bin/reslice)
+softmean  (the path is /sw/workflow/app/softmean-swift)
+</programlisting>
+
+<para>Make sure you have added three entries to the transformation
+catalog, listing the above three transformations and the appropriate
+path</para>
+
+<programlisting>
+
+(volume sliced) reslice(warpfile warp, volume subject)
+{
+    app {
+        reslice @warp @sliced.img;
+    }
+}
+
+</programlisting>
+
+<para>
+This adds another transformation, called reslice. We already added the
+transformation catalog entry for this, in the previous step.
+</para>
+
+<programlisting>
+
+
+(volume sliced) align_and_reslice(volume reference, volume subject, string model, string quick) {
+    warpfile warp;
+    warp = align_warp(reference, subject, model, quick);
+    sliced = reslice(warp, subject);
+}
+
+</programlisting>
+
+<para>
+This is a new kind of procedure, called a <firstterm>compound
+procedure</firstterm>. A compound procedure does not call applications
+directly. Instead it calls other procedures, connecting them together
+with variables. This procedure above calls align_warp and then reslice.
+</para>
+
+<programlisting>
+
+(volume atlas) softmean(volume sliced[])
+{
+    app {
+        softmean @atlas.img "y" "null" @filenames(sliced[*].img);
+    }
+}
+
+</programlisting>
+
+<para>
+Yet another application procedure. Again, we added the transformation catalog
+entry for this above.
+</para>
+
+<programlisting>
+
+(pgmfile outslice) slicer(volume input, string axis, string position)
+{
+    app {
+        slicer @input.img axis position @outslice;
+    }
+}
+
+(imagefile outimg) convert(pgmfile inpgm)
+{
+    app {
+        convert @inpgm @outimg;
+    }
+}
+
+(imagefile outimg) slice_to_jpeg(volume inp, string axis, string position)
+{
+    pgmfile outslice;
+    outslice = slicer(inp, axis, position);
+    outimg = convert(outslice);
+}
+
+(volume s[]) all_align_reslices(volume reference, volume subjects[]) {
+
+    foreach subject, i in subjects {
+        s[i] = align_and_reslice(reference, subjects[i], "12", "-q");
+    }
+
+}
+
+
+volume references[] &gt;csv_mapper;file="reference.csv"&lt;;
+volume reference=references[0];
+
+volume subjects[] &gt;csv_mapper;file="subjects.csv"&lt;;
+
+volume slices[] &gt;csv_mapper;file="slices.csv"&lt;;
+slices = all_align_reslices(reference, subjects);
+
+volume atlas &gt;simple_mapper;prefix="atlas"&lt;;
+atlas = softmean(slices);
+
+string directions[] = [ "x", "y", "z"];
+
+foreach direction in directions {
+    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".gif")&lt;;
+    string option = @strcat("-",direction);
+    o = slice_to_jpeg(atlas, option, ".5");
+}
+
+</programlisting>
+
+</sect1>
 </article>
 
