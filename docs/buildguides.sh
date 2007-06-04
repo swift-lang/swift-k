@@ -25,6 +25,7 @@ process() {
 
 process "userguide.xml" "swiftsh_html.xsl"
 process "tutorial.xml" "swiftsh_html.xsl"
+process "tutorial-live.xml" "swiftsh_html.xsl"
 process "quickstartguide.xml" "swift_html.xsl"
 process "reallyquickstartguide.xml" "swift_html.xsl"
 process "languagespec.xml" "swift_html.xsl"
