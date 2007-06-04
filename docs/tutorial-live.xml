@@ -264,8 +264,7 @@ foreach f in inputfiles {
 
 -->
 
-<sect1>
-<title>A second program</title>
+<sect1><title>A second program</title>
 
 <para>
 Our next example program uses some more swift syntax to produce images that are
@@ -371,6 +370,8 @@ execute it with the swift command, like we did for flipper.swift above.
 $ ls rotated*
 rotated-120.jpg rotated-45.jpg  rotated-90.jpg
 </programlisting>
+
+<sect1><title>Third example</title>
 
 <para>
 Our third example will introduce some more concepts: complex data
@@ -673,15 +674,15 @@ type volume {
 }
 
 
-volume references[] &gt;csv_mapper;file="reference.csv"&lt;;
+volume references[] &lt;csv_mapper;file="reference.csv"&gt;;
 volume reference=references[0];
 
-volume subjects[] &gt;csv_mapper;file="subjects.csv"&lt;;
+volume subjects[] &lt;csv_mapper;file="subjects.csv"&gt;;
 
-volume slices[] &gt;csv_mapper;file="slices.csv"&lt;;
+volume slices[] &lt;csv_mapper;file="slices.csv"&gt;;
 slices = all_align_reslices(reference, subjects);
 
-volume atlas &gt;simple_mapper;prefix="atlas"&lt;;
+volume atlas &lt;simple_mapper;prefix="atlas"&gt;;
 atlas = softmean(slices);
 
 string directions[] = [ "x", "y", "z"];
