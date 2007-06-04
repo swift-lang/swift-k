@@ -55,7 +55,7 @@ flipped = flip(spacegirl);
 
 <para>
 This simple workflow has the effect of running this command:
-convert -flip Gridworkshop3.jpg output.jpg
+convert -rotate 180 Gridworkshop3.jpg output.jpg
 </para>
 
 <para>First prepare your working environment:</para>
