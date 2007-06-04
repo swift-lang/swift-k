@@ -27,25 +27,63 @@ try for yourself as you read along.
     </para>
 </sect1>
 
-<sect1> <title>Hello World</title>
+<sect1> <title>A first workflow</title>
     <para>
 The first example program uses an image processing utility to perform
 a visual special effect on a supplied file.
     </para>
 
-<para>
-This simple workflow has the effect of running this command:
-</para>
+<para>Here is the program we will use:</para>
+
 <programlisting>
-convert -flip Gridworkshop3.jpg output.jpg
+
+type imagefile;
+
+(imagefile output) flip(imagefile input) {
+  app {
+    convert "-rotate" "180" @input @output;
+  }
+}
+
+imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
+imagefile flipped &lt;"output.jpg"&gt;;
+
+flipped = flip(spacegirl);
+
 </programlisting>
 
-<para>We can run this program like this:</para>
+
+<para>
+This simple workflow has the effect of running this command:
+convert -flip Gridworkshop3.jpg output.jpg
+</para>
+
+<para>First prepare your working environment:</para>
 
 <programlisting>
+
+$ cp /sw/workflow/Gridworkshop3.jpg .
 
 $ ls *.jpg
 Gridworkshop3.jpg
+
+</programlisting>
+
+<para>Point your web browser at: http://128.104.145.24/~train99/
+and click on Gridworkshop3.jpg. You should see a picture. This is the
+picture that we will modify in our first workflow.</para>
+
+<para>
+Now use your favourite text editor to put the above SwiftScript 
+program into a file called
+flipper.swift
+</para>
+
+<para>Once you have put the program into flipper.swift, you can execute
+the workflow like this:
+</para>
+
+<programlisting>
 
 $ swift flipper.swift
 
@@ -59,6 +97,11 @@ $ ls *.jpg
 Gridworkshop3.jpg
 output.jpg
 </programlisting>
+
+<para>A new jpeg has appeared - output.jpeg. Use the same URL,
+http://128.104.145.24/~train99/ and click on output.jpeg to see it.
+You should see that the image is different from the input image - it
+should be rotated 180 degress.</para>
 
 <para>The basic structure of this program is a type definition,
 a procedure definition, a variable definition and
@@ -90,11 +133,12 @@ ImageMagick convert application to flip a picture around.
 To achieve this, it executes the ImageMagick utility 'convert', passing
 in the appropriate commandline option and the name of the input and output
 files.
+</para>
 
 <para>
-In swift, the output of a program looks like a return value. 
+In swift, the output of a program looks like a return value.
 It has a type, and also has a variable name
-(unlike in other programming languages).
+(unlike in most other programming languages).
 </para>
 
 <para>
@@ -108,8 +152,8 @@ exists), and in "output.jpg". This is calle <firstterm>mapping</firstterm>
 and will be discussed in more depth later.</para>
 
 <programlisting>
-imagefile spacegirl <"Gridworkshop3.jpg">;
-imagefile flipped <"output.jpg">;
+imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
+imagefile flipped &lt;"output.jpg"&gt;;
 </programlisting>
 
 <programlisting>
@@ -235,7 +279,7 @@ type imagefile;
   }
 }
 
-imagefile spacegirl <"Gridworkshop3.jpg">;
+imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
 
 int angles[] = [45, 90, 120];
 
@@ -270,7 +314,7 @@ commandline instead of a hard coded 180 degrees.
 </para>
 
 <programlisting>
-imagefile spacegirl <"Gridworkshop3.jpg">;
+imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
 </programlisting>
 
 <para>
@@ -310,9 +354,16 @@ to construct a filename and then map that filename to our output variable.
 </programlisting>
 
 <para>Now we invoke rotate, passing in our input image and the angle to
-use, and 
-
+use, and putting the output in the mapped output file. This will happen
+three times, with a different output filename and a different angle
+each time.
 </para>
+
+<para>
+Put the program source into a file (for example, in rotate.swift) and
+execute it with the swift command, like we did for flipper.swift above.
+</para>
+
 <programlisting>
 $ ls rotated*
 rotated-120.jpg rotated-45.jpg  rotated-90.jpg
@@ -361,7 +412,7 @@ volume reference=references[0];
 
 pgmfile slice;
 
-imagefile slicejpeg <"slice.jpeg">;
+imagefile slicejpeg &lt;"slice.jpeg"&gt;;
 
 slice = slicer(reference, "-x", ".5");
 
@@ -369,6 +420,9 @@ slicejpeg = convert(slice);
 
 </programlisting>
 
+<para>IMPORTANT! We need to make some changes to other files in addition
+to putting the above source into a file. Read the following notes
+carefully to find out what to change.</para>
 
 <programlisting>
 type imagefile;
@@ -404,10 +458,12 @@ Now that we have defined a more complex type that consists of several
 elements (and hence several files on disk), we can no longer use the
 same ways of mapping. Instead, we will use a new mapper, the CSV mapper.
 This maps rows of a comma-separated value file into an array of complex
-types. The content of reference.csv looks like this:
+types.</para>
+
+<para>ACTION REQUIRED: Make a file called reference.csv using your
+favourite unix text editor. This is what it should look contain (2 lines):
 </para>
 <programlisting>
-$ cat reference.csv
 img,hdr
 Raw/reference.img,Raw/reference.hdr
 </programlisting>
@@ -415,6 +471,19 @@ Raw/reference.img,Raw/reference.hdr
 data line in the CSV file), and that element will be mapped to two
 files: the img component will map to the file Raw/reference.img and the
 hdr component will map to Raw/reference.hdr
+</para>
+<para>
+We also need to put the Raw/reference files into the current directory
+so that swift can find them.
+</para>
+<para>ACTION REQUIRED: Type the following:
+</para>
+<programlisting>
+$ mkdir Raw
+$ cp /sw/workflow/data/reference.* Raw/
+</programlisting>
+<para>
+Now you will have the reference files in your home directory.
 </para>
 
 <programlisting>
@@ -458,19 +527,62 @@ a 2d image in PGM format.
 
 <para>
 We must tell Swift how to run 'slicer' by modifying the
-<firstterm>transformation catalog</firstterm>.
+<firstterm>transformation catalog</firstterm>. The transformation catalog
+maps logical transformation names into unix executable names.
 </para>
+
+<para>The transformation catalog is in your home directory, in a file called
+tc.data.
+There is already one entry there, for convert.</para>
+
+<programlisting>
+localhost    convert    /usr/bin/convert    INSTALLED INTEL32::LINUX null
+</programlisting>
+
+<para>ACTION REQUIRED: Open tc.data in your favourite unix text
+editor, and add a new line to configure the location of slicer:</para>
+
+<programlisting>
+localhost    slicer    /sw/workflow/app/slicer-swift    INSTALLED INTEL32::LINUX null
+</programlisting>
+
+<para>For now, ignore all of the fields except the second and the third.
+The second field 'slicer' specifies a logical transformation name and the
+third specifies the location of an executable to perform that
+transformation.</para>
 
 <programlisting>
 pgmfile slice;
+</programlisting>
 
-imagefile slicejpeg <"slice.jpeg">;
+<para>
+Now we define a variable which will store the sliced image. It will be
+a file on disk, but note that there is no filename mapping defined. This
+means that swift will choose a filename automatically. This is useful for
+intermediate files in a workflow.
+</para>
 
+<programlisting>
+imagefile slicejpeg &lt;"slice.jpeg"&gt;;
+</programlisting>
+
+<para>Now we declare a variable for our output and map it to a filename.
+</para>
+
+<programlisting>
 slice = slicer(reference, "-x", ".5");
 
 slicejpeg = convert(slice);
-
 </programlisting>
+
+<para>
+Finally we invoke the two procedures to slice the brain volume and
+then convert that slice into a jpeg.
+</para>
+
+<para>Place the source above into a file (for example, third.swift) and
+make the other modifications discussed above. Then run the workflow
+with the swift command, as before.</para>
 
 
 TODO integrate the following sections
@@ -569,11 +681,11 @@ and a header file.
 type volume {
     imagefile img;
     headerfile hdr;
-} '11;
+};
 </programlisting>
 
-<para>Using a complex type like this, swift can ensure that files that belong
-with each other are always kept together.
+<para>Using a complex type like this, swift can ensure that files that
+logically belong with each other are always kept together.
 </para>
 
 </sect1>
@@ -689,8 +801,7 @@ This will map members of the volume structure to files, like this:
 <para>variable -> filename</para>
 <para>v.img  -> atlas.img</para>
 <para>v.hdr  -> atlas.hdr</para>
-<sect1>
-
+</sect1>
 
 <sect1><title>fixed_array_mapper</title>
 <para>
@@ -710,18 +821,7 @@ outputfiles[1] = countwords(inputfiles[1]);
 outputfiles[2] = countwords(inputfiles[2]);
 </programlisting>
 </sect1>
-<sect1><title>Visualising the workflow as a graph</title>
 
-<para>
-When running a workflow, its possible to generate a provenance graph at the
-same time:
-<programlisting>
-swift -pgraph graph1.dot q1.swift
-dot -ograph.png -Tpng graph1.dot
-</programlisting>
-which can then be viewed using your favourite image viewer.
-</para>
-</sect1>
 
 <sect1><title>Running on a remote site</title>
 
@@ -733,21 +833,50 @@ has been run.</para>
 grid systems.</para>
 
 <para>We do not need to modify any SwiftScript code to run on another resource.
-Instead, we must modify a configuration file, the 
-<firstterm>site catalog</firstterm>. This catalog
+Instead, we must modify some configuration files: the transformation catalog,
+which we have seen before, and a new file, the 
+<firstterm>site catalog</firstterm>. The site catalog
 provides details of the location that applications will be run. By default,
 the site catalog specifies that applications will run on the local
 system. There is a commented out section that give details of a different
-grid system. Comment out the local definition, and uncomment the other
-site definition.
+grid system. Comment out the definition block, and uncomment the other
+site definition in that file. This tells Swift that computational jobs
+should be executed on a different compute resource using the various
+parameters in that file.
 </para>
 
-<para>Now try running any of the swift commands that you've run 
+<para>You will also need to add entries to the transformation catalog, to
+tell swift where the necessary executables can be found on the remote site.
+</para>
+
+<para>The instructors will provide the necessary paths during the tutorial.
+</para>
+
+<para>Now try running any of the swift commands that you've run
 earlier in this tutorial. Any of them should work, but will now
 result in jobs running on the remote site instead of the local one.
 The output files should be exactly the same, but now you have used a
 grid resource to run the application.
 </para>
+
+</sect1>
+
+<sect1><title>Visualising the workflow as a graph</title>
+
+<para>
+When running a workflow, its possible to generate a provenance graph at the
+same time:
+</para>
+
+<programlisting>
+swift -pgraph graph1.dot q1.swift
+dot -ograph.png -Tpng graph1.dot
+</programlisting>
+
+<para>
+The graph will be stored in graph.png and can be viewed in an image viewer.
+</para>
+
 </sect1>
 
 </article>
