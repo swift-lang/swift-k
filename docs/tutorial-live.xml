@@ -683,7 +683,7 @@ atlas = softmean(slices);
 string directions[] = [ "x", "y", "z"];
 
 foreach direction in directions {
-    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".gif")&lt;;
+    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".jpg")&lt;;
     string option = @strcat("-",direction);
     o = slice_to_jpeg(atlas, option, ".5");
 }
@@ -807,7 +807,7 @@ with variables. This procedure above calls align_warp and then reslice.
 
 <para>
 Yet another application procedure. Again, we added the transformation catalog
-entry for this above.
+entry for this above. Note the special @filenames ... [*] syntax.
 </para>
 
 <programlisting>
@@ -826,6 +826,12 @@ entry for this above.
     }
 }
 
+</programlisting>
+
+<para>These are two more straightforward application transforms</para>
+
+<programlisting>
+
 (imagefile outimg) slice_to_jpeg(volume inp, string axis, string position)
 {
     pgmfile outslice;
@@ -841,13 +847,86 @@ entry for this above.
 
 }
 
+</programlisting>
 
+<para>
+slice_to_jpeg and all_align_reslices are compound procedures. They call
+other procedures, like align_and_reslice did above. Note how 
+all_align_reslices uses foreach to run the same procedure on each element
+in an array.
+</para>
+
+<programlisting>
 volume references[] &gt;csv_mapper;file="reference.csv"&lt;;
 volume reference=references[0];
+</programlisting>
 
+<para>The same mapping we used in the previous exercise to map a pair
+of reference files into the reference variable using a complex type.
+</para>
+
+<programlisting>
 volume subjects[] &gt;csv_mapper;file="subjects.csv"&lt;;
+</programlisting>
 
+<para>
+Now we map a number of subject images into the subjects array.
+</para>
+
+<para>ACTION REQUIRED: Copy the subjects data files into your
+working directory, like this:
+</para>
+
+<programlisting>
+$ cp /sw/workflow/data/anatomy.* Raw/
+$ ls Raw/
+anatomy1.hdr  anatomy2.hdr  anatomy3.hdr  anatomy4.hdr  reference.hdr
+anatomy1.img  anatomy2.img  anatomy3.img  anatomy4.img  reference.img
+</programlisting>
+
+<para>ACTION REQUIRED: Create a text file called subjects.csv using your
+favourite unix text editor. List all four image pairs. Here is an example
+of how to start:
+</para>
+
+<programlisting>
+img,hdr
+Raw/anatomy1.img,Raw/anatomy1.hdr
+Raw/anatomy2.img,Raw/anatomy2.hdr
+</programlisting>
+
+<para>
+Put the above text in students.csv and also add two new lines to list
+anatomy data sets 3 and 4.
+</para>
+
+<programlisting>
 volume slices[] &gt;csv_mapper;file="slices.csv"&lt;;
+</programlisting>
+
+<para>
+Slices will hold intermediate volumes that have been processed by some
+of our tools. We need to map to tell swift where to put these intermediate
+files. Because we need the filenames to correspond, we cannot use
+anonymous mapping for these intermediate values like in the second
+exercise. We need to populate slices.csv, but we do not need to find
+the corresponding files. Swift will create these files as part of
+executing the workflow.
+</para>
+
+<para>ACTION REQUIRED: Create a text file called slices.csv with your
+text editor, and put the following content into it:
+</para>
+
+<programlisting>
+img,hdr
+slice1.img,slice1.hdr
+slice2.img,slice2.hdr
+slice3.img,slice3.hdr
+slice4.img,slice4.hdr
+</programlisting>
+
+<programlisting>
 slices = all_align_reslices(reference, subjects);
 
 volume atlas &gt;simple_mapper;prefix="atlas"&lt;;
@@ -856,12 +935,23 @@ atlas = softmean(slices);
 string directions[] = [ "x", "y", "z"];
 
 foreach direction in directions {
-    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".gif")&lt;;
+    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".jpg")&lt;;
     string option = @strcat("-",direction);
     o = slice_to_jpeg(atlas, option, ".5");
 }
-
 </programlisting>
+
+<para>
+Finally we make a number of actual procedure invocations (and declare a few
+more variables). The ultimate output of our workflow comes from the o
+variable inside the foreach look. This is mapped to a different filename
+in each iteration, similar to exercise two.
+</para>
+
+<para>
+Run the workflow with the swift command, and then using your web browser open
+the resulting files - atlas-x.jpg, atlas-y.jpg and atlas-z.jpg.
+</para>
 
 </sect1>
 </article>
