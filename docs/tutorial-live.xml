@@ -427,7 +427,28 @@ from sites.xml.</para>
 
 <para>Now we will run the first flipper exercise again, but this time on
 the site in Chicago.</para>
-<para>To do this, we use the same swift command as before, but with an
+
+<para>We will use this other sites file to run the first workflow. In
+addition to telling swift about the other site in the sites file,
+we need to tell swift where to find transformations on the new site.
+</para>
+<para>Edit the transformation catalog and add a line to tell swift where
+it can find convert. Conveniently, it is in the same path on both the
+local site and the remote site. Here is the line to add:
+</para>
+
+<programlisting>
+chicago  convert  /usr/bin/convert   INSTALLED   INTEL32::LINUX  null
+</programlisting>
+
+<para>Note the different between this line and the existing convert
+definition in the file. All fields are the same except for the first
+column, which is the site column. We say 'chicago' here instead of
+localhost. This matches up with the site name 'chicago' defined in
+the new site catalog.
+</para>
+
+<para>Now use the same swift command as before, but with an
 extra parameter to tell swift to use a different sites file:
 </para>
 
