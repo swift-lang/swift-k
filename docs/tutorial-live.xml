@@ -124,7 +124,7 @@ ImageMagick convert application to flip a picture around.
 <programlisting>
 (imagefile output) flip(imagefile input) {
   app {
-    convert "-flip" @input @output;
+    convert "-rotate" "180" @input @output;
   }
 }
 </programlisting>
@@ -979,7 +979,7 @@ working directory, like this:
 </para>
 
 <programlisting>
-$ cp /sw/workflow/data/anatomy.* Raw/
+$ cp /sw/workflow/data/anatomy* Raw/
 $ ls Raw/
 anatomy1.hdr  anatomy2.hdr  anatomy3.hdr  anatomy4.hdr  reference.hdr
 anatomy1.img  anatomy2.img  anatomy3.img  anatomy4.img  reference.img
