@@ -4,19 +4,6 @@
 <article>
     <articleinfo>
         <title>A Swift Tutorial for Live Presentation</title>
-        <abstract>
-            <formalpara>
-                <para>
-This is an introductory tutorial on the use of Swift and its
-programming language SwiftScript. It is intended for use as part of a live
-tutorial with instructor-provided exercise environments, and as such probably
-doesn't make much sense to attempt outside of those environments.
-                </para>
-                <para>
-$LastChangedRevision$
-                </para>
-            </formalpara>
-        </abstract>
     </articleinfo>
 
 <sect1> <title>Introduction</title>
@@ -25,6 +12,7 @@ This tutorial is intended to introduce new users to the basics of Swift.
 It is structured as a series of small exercise/examples which you can
 try for yourself as you read along.
     </para>
+    <para>This is version: $LastChangedRevision$</para>
 </sect1>
 
 <sect1> <title>A first workflow</title>
@@ -373,99 +361,6 @@ rotated-120.jpg rotated-45.jpg  rotated-90.jpg
 
 </sect1>
 
-<sect1><title>Running on another site</title>
-
-<para>
-So far everything has been run on the local site at the TeraGrid conference.
-Swift can run jobs over the grid to remote resources. It will handle the
-transfer of files to and from the remote resource, and execution of jobs
-on the remote resource.
-</para>
-
-<para>
-We will run the first flip program, but this time on a grid resource
-located in chicago.
-</para>
-
-<para>
-First clear away the output from the first program:
-</para>
-
-<programlisting>
-$ rm output.jpg
-$ ls output.jpg
-ls: output.jpg: No such file or directory
-</programlisting>
-
-<para>
-Now initialise your grid proxy, to log-in to the grid.
-</para>
-
-<programlisting>
-$ grid-proxy-init
-$ Your identity: /O=Grid/OU=OSG/CN=Training User 09
-Enter GRID pass phrase for this identity:
-</programlisting>
-
-<para>Your password is: train</para>
-
-<para>Now we must tell Swift about the other site. This is done through
-another catalog file, the <firstterm>site catalog</firstterm>.</para>
-
-<para>The site catalog is found in sites.xml</para>
-
-<para>Open sites.xml. There is one entry in there in XML defining the
-local site. Because this is the only site defined, all execution will
-happen locally.</para>
-
-<para>Another sites.xml is available for use, in 
-/sw/workflow/sites-chicago.xml
-</para>
-
-<para>Open /sw/workflow/sites-chicago.xml and look inside. See how it differs
-from sites.xml.</para>
-
-<para>Now we will run the first flipper exercise again, but this time on
-the site in Chicago.</para>
-
-<para>We will use this other sites file to run the first workflow. In
-addition to telling swift about the other site in the sites file,
-we need to tell swift where to find transformations on the new site.
-</para>
-<para>Edit the transformation catalog and add a line to tell swift where
-it can find convert. Conveniently, it is in the same path on both the
-local site and the remote site. Here is the line to add:
-</para>
-
-<programlisting>
-chicago  convert  /usr/bin/convert   INSTALLED   INTEL32::LINUX  null
-</programlisting>
-
-<para>Note the different between this line and the existing convert
-definition in the file. All fields are the same except for the first
-column, which is the site column. We say 'chicago' here instead of
-localhost. This matches up with the site name 'chicago' defined in
-the new site catalog.
-</para>
-
-<para>Now use the same swift command as before, but with an
-extra parameter to tell swift to use a different sites file:
-</para>
-
-<programlisting>
-$ swift -sites.file /sw/workflow/sites-chicago.xml flipper.swift
-</programlisting>
-
-<para>
-If this runs successfully, you should now have an output.jpeg file with
-a flipped picture in it. It should look exactly the same as when run locally.
-You have used the same program to produce the same output, but used a remote
-resource to do it.
-</para>
-
-</sect1>
-
-
 
 <sect1><title>Third example</title>
 
@@ -685,6 +580,100 @@ make the other modifications discussed above. Then run the workflow
 with the swift command, as before.</para>
 
 </sect1>
+
+<sect1><title>Running on another site</title>
+
+<para>
+So far everything has been run on the local site.
+Swift can run jobs over the grid to remote resources. It will handle the
+transfer of files to and from the remote resource, and execution of jobs
+on the remote resource.
+</para>
+
+<para>
+We will run the first flip program, but this time on a grid resource
+located in chicago.
+</para>
+
+<para>
+First clear away the output from the first program:
+</para>
+
+<programlisting>
+$ rm output.jpg
+$ ls output.jpg
+ls: output.jpg: No such file or directory
+</programlisting>
+
+<para>
+Now initialise your grid proxy, to log-in to the grid.
+</para>
+
+<programlisting>
+$ grid-proxy-init
+$ Your identity: /O=Grid/OU=OSG/CN=Training User 09
+Enter GRID pass phrase for this identity:
+</programlisting>
+
+<para>Your password is: train</para>
+
+<para>Now we must tell Swift about the other site. This is done through
+another catalog file, the <firstterm>site catalog</firstterm>.</para>
+
+<para>The site catalog is found in sites.xml</para>
+
+<para>Open sites.xml. There is one entry in there in XML defining the
+local site. Because this is the only site defined, all execution will
+happen locally.</para>
+
+<para>Another sites.xml is available for use, in 
+/sw/workflow/sites-chicago.xml
+</para>
+
+<para>Open /sw/workflow/sites-chicago.xml and look inside. See how it differs
+from sites.xml.</para>
+
+<para>Now we will run the first flipper exercise again, but this time on
+the site in Chicago.</para>
+
+<para>We will use this other sites file to run the first workflow. In
+addition to telling swift about the other site in the sites file,
+we need to tell swift where to find transformations on the new site.
+</para>
+<para>Edit the transformation catalog and add a line to tell swift where
+it can find convert. Conveniently, it is in the same path on both the
+local site and the remote site. Here is the line to add:
+</para>
+
+<programlisting>
+chicago  convert  /usr/bin/convert   INSTALLED   INTEL32::LINUX  null
+</programlisting>
+
+<para>Note the different between this line and the existing convert
+definition in the file. All fields are the same except for the first
+column, which is the site column. We say 'chicago' here instead of
+localhost. This matches up with the site name 'chicago' defined in
+the new site catalog.
+</para>
+
+<para>Now use the same swift command as before, but with an
+extra parameter to tell swift to use a different sites file:
+</para>
+
+<programlisting>
+$ swift -sites.file /sw/workflow/sites-chicago.xml flipper.swift
+</programlisting>
+
+<para>
+If this runs successfully, you should now have an output.jpeg file with
+a flipped picture in it. It should look exactly the same as when run locally.
+You have used the same program to produce the same output, but used a remote
+resource to do it.
+</para>
+
+</sect1>
+
+
 
 
 <sect1><title>A bigger workflow example</title>
