@@ -776,6 +776,198 @@ then write SwiftScript programs which use our new mapper.
 
 </sect1>
 
+<sect1> <title>Starting and restarting</title>
+
+<para>
+Now we're going to try out the restart capabilities of Swift. We will make
+a workflow that will deliberately fail, and then we will fix the problem
+so that Swift can continue with the workflow.
+</para>
+
+<para>
+First we have the program in working form, restart.swift.
+</para>
+
+<programlisting>
+type file;
+
+(file f) touch() {
+  app {
+    touch @f;
+  }
+}
+
+(file f) processL(file inp) {
+  app {
+    echo "processL" stdout=@f;
+  }
+}
+
+(file f) processR(file inp) {
+  app {
+    broken "process" stdout=@f;
+  }
+}
+
+(file f) join(file left, file right) {
+  app { 
+    echo "join" @left @right stdout=@f;
+  } 
+}
+
+file f = touch();
+
+file g = processL(f);
+file h = processR(f);
+
+file i = join(g,h);
+</programlisting>
+
+<para>
+We must define some transformation catalog entries:
+</para>
+
+<programlisting>
+localhost       touch           /usr/bin/touch  INSTALLED       INTEL32::LINUX  null
+localhost       broken          /bin/true   INSTALLED       INTEL32::LINUX  null
+</programlisting>
+
+<para>
+Now we can run the program:
+</para>
+
+<programlisting>
+$ swift restart.swift  
+
+Swift v0.1-dev
+
+RunID: php8y7ydim8x0
+touch started
+echo started
+broken started
+touch completed
+broken completed
+echo completed
+echo started
+echo completed
+</programlisting>
+
+<para>
+Four jobs run - touch, echo, broken and a final echo. (note that broken
+isn't actually broken yet).
+</para>
+
+<para>
+Now we will break the 'broken' job and see what happens. Replace the
+definition in tc.data for 'broken' with this:
+</para>
+<programlisting>
+localhost    broken     /bin/false   INSTALLED       INTEL32::LINUX  null
+</programlisting>
+
+<para>Now when we run the workflow, the broken task fails:</para>
+
+<programlisting>
+$ swift restart.swift 
+
+Swift v0.1-dev
+
+RunID: 6y3urvnm5kch1
+touch started
+broken started
+touch completed
+echo started
+echo completed
+broken failed
+The following errors have occurred:
+1. Application echo not executed due to errors in dependencies
+2. Application "broken" failed (Job failed with an exit code of 1)
+        Arguments: "process"
+        Host: localhost
+        Directory: restart-6y3urvnm5kch1/broken-4empvyci
+        STDERR: 
+        STDOUT:
+</programlisting>
+
+<para>From the output we can see that touch and the first echo completed,
+but then broken failed and so swift did not attempt to execute the
+final echo.</para>
+
+<para>There will be a restart log with the same name as the RunID:
+</para>
+
+<programlisting>
+$ ls *6y3urvnm5kch1*rlog
+restart-6y3urvnm5kch1.0.rlog
+</programlisting>
+
+<para>This restart log contains enough information for swift to know
+which parts of the workflow were executed successfully.</para>
+
+<para>We can try to rerun it immediately, like this:</para>
+
+<programlisting>
+$ swift -resume restart-6y3urvnm5kch1.0.rlog restart.swift 
+
+Swift v0.1-dev
+
+RunID: nyrg0sqeudnu1
+broken started
+broken failed
+The following errors have occurred:
+1. Application echo not executed due to errors in dependencies
+2. Application "broken" failed (Job failed with an exit code of 1)
+        Arguments: "process"
+        Host: localhost
+        Directory: restart-nyrg0sqeudnu1/broken-i2guvyci
+        STDERR: 
+        STDOUT:
+</programlisting>
+
+<para>
+Swift tried to resume the workflow by executing 'broken' again. It did not
+try to run the touch or first echo jobs, because the restart log says that
+they do not need to be executed again.
+</para>
+
+<para>Broken failed again, leaving the original restart log in place.</para>
+
+<para>Now we will fix the problem with 'broken' by restoring the original
+tc.data line that works.</para>
+
+<para>Remove the existing 'broken' line and replace it with the successful
+tc.data entry above:
+</para>
+
+<programlisting>
+localhost       broken          /bin/true   INSTALLED       INTEL32::LINUX  null
+</programlisting>
+
+<para>
+Now run again:
+</para>
+
+<programlisting>
+$ swift -resume restart-6y3urvnm5kch1.0.rlog restart.swift 
+
+Swift v0.1-dev
+
+RunID: x03l8zci03il1
+broken started
+echo started
+broken completed
+echo completed
+
+</programlisting>
+
+<para>Swift tries to run 'broken' again. This time it works, and so
+Swift continues on to execute the final piece of the workflow as if
+nothing had ever gone wrong.
+</para>
+
+</sect1>
+
+
 <sect1><title>Tips and Tricks</title>
 
 <para>
