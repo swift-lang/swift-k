@@ -1385,6 +1385,18 @@ from the execution site to the submitting location.
 		</para>
 	</sect1>
 
+	<sect1 id="restart"> <title>Workflow restart/recovery</title>
+		<para>
+If a workflow fails, Swift can resume that workflow from the point of
+failure. If a Swift workflow fails, a restart log file will be generated
+using the unique job ID, with a .rlog extension. This restart log
+can then be passed to a subsequent swift invocation using the -resume
+parameter. Swift will resume executing the workflow. Previously executed
+tasks will not be run a second time. The SwiftScript source file should
+not be modified between invocations.
+		</para>
+	</sect1> 
+
 	<sect1> <title>Invoking an application from Swift</title>.
 	<para>
 There are certain requirements for invoking application code from Swift,
