@@ -43,7 +43,7 @@ public class New extends VDLFunction {
 			mapping.put("dbgname", dbgname);
 		}
 		if (type == null && value == null) {
-			throw new ExecutionException("You must specify either a type or a value!");
+			throw new ExecutionException("You must specify either a type or a value");
 		}
 		if (mapping != null) {
 			String mapper = (String) mapping.get("descriptor");
@@ -64,7 +64,7 @@ public class New extends VDLFunction {
 					else {
 						if (!(value instanceof List)) {
 							throw new ExecutionException(
-									"An array variable can only be initialized with a list of values!");
+									"An array variable can only be initialized with a list of values");
 						}
 						int index = 0;
 						Iterator i = ((List) value).iterator();
