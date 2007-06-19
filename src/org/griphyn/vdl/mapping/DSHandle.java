@@ -1,6 +1,5 @@
 package org.griphyn.vdl.mapping;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,7 @@ import java.util.Map;
  * other complex structures. Each of those descendant nodes is a
  * DSHandle.
  */
-public interface DSHandle extends Serializable {
+public interface DSHandle {
 
     /** get the type of the dataset. TODO need to replace return type
      * with a Type interface.
