@@ -937,7 +937,7 @@ Token op=null;
             {
             a = code;
             code=template("cond");
-        code.setAttribute("op", escape(op.getText()));
+            code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
@@ -961,7 +961,7 @@ Token op=null;
             {
             a = code;
             code=template("cond");
-        code.setAttribute("op", escape(op.getText()));
+            code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
@@ -985,7 +985,7 @@ Token op=null;
             {
             a = code;
             code=template("arith");
-        code.setAttribute("op", escape(op.getText()));
+            code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
@@ -1009,7 +1009,7 @@ Token op=null;
             {
             a = code;
             code=template("arith");
-        code.setAttribute("op", escape(op.getText()));
+            code.setAttribute("op", escape(op.getText()));
             code.setAttribute("left", a);
             code.setAttribute("right", b);
             }
