@@ -346,15 +346,11 @@ public class Karajan {
 	public void call(Call call, StringTemplate callST) throws Exception {
 		callST.setAttribute("func", call.getProc().getLocalPart());
 		StringTemplate parentST = callST.getEnclosingInstance();
-		try {
-			for (int i = 0; i < call.sizeOfInputArray(); i++) {
-				ActualParameter input = call.getInputArray(i);
-				StringTemplate argST = actualParameter(input);
-				callST.setAttribute("inputs", argST);
-				markDataset((StringTemplate) argST.getAttribute("expr"), parentST, true);
-			}
-		} catch(Exception e) {
-			throw new RuntimeException("Unable to compile call: "+call,e);
+		for (int i = 0; i < call.sizeOfInputArray(); i++) {
+			ActualParameter input = call.getInputArray(i);
+			StringTemplate argST = actualParameter(input);
+			callST.setAttribute("inputs", argST);
+			markDataset((StringTemplate) argST.getAttribute("expr"), parentST, true);
 		}
 		for (int i = 0; i < call.sizeOfOutputArray(); i++) {
 			ActualParameter output = call.getOutputArray(i);
