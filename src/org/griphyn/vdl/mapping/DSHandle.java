@@ -5,12 +5,36 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+/** A DSHandle refers to a (possibly complex) piece of SwiftScript
+ *  data.
+ *
+ * A DSHandles has a type.
+ *
+ * A DSHandle may have a value that is accessible
+ * as a Java object through the getValue() method, however that is
+ * not always the case. For example in the case of data mapped from
+ * files on disk, the value of those files is inaccessible through
+ * the getValue methods.
+ *
+ * A DSHandle may have a filename (on disk) indicating where the
+ * data for this DSHandle is stored. That data is not accessible
+ * through the getValue interfaces.
+ *
+ * A DSHandle may have descendant nodes, in the case of arrays or
+ * other complex structures. Each of those descendant nodes is a
+ * DSHandle.
+ */
 public interface DSHandle extends Serializable {
 
-    /** get the type of the dataset, need to replace return type
+    /** get the type of the dataset. TODO need to replace return type
      * with a Type interface.
      */
     public String getType();
+
+    /** returns true when the dataset is an array. TODO this should
+     *  become part of the type specification returned by getType.
+     */
+    public boolean isArray();
 
     public void init(Map params);
 
@@ -65,8 +89,6 @@ public interface DSHandle extends Serializable {
     public void set(DSHandle svar);
 
     public String getParam(String name);
-
-    public boolean isArray();
 
     public boolean isClosed();
 
