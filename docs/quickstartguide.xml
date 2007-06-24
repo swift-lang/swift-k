@@ -240,7 +240,7 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 		
 		<para>
 		
-			The Globus Security Infrastructure, which Swift uses, works with
+			The Grid Security Infrastructure, which Swift uses, works with
 			limited time certificates called proxies. These proxies can be
 			generated from your user certificate and private key using one of
 			<command>grid-proxy-init</command> or
