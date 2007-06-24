@@ -690,6 +690,24 @@ public class Karajan {
 		return null;
 	}
 
+
+	/** Traverses an expression template marking input datasets as such.
+	  *
+	  * If the expression is an identifier, get the variable name
+	  * and call markDataset on that.
+	  *
+	  * Otherwise, go through all the subelements of expr
+	  * and call markdataset on them, keeping st and isInput the
+	  * same.
+	  *
+	  * @param exprST an expression
+	  *
+	  * @param st a program context
+	  *
+	  * @param isInput whether the expression is to be regarded as 
+	  *        an input or an output
+	  **/
+
 	protected void markDataset(StringTemplate exprST, StringTemplate st, boolean isInput) {
 		if (exprST == null || st == null)
 			return;
@@ -708,6 +726,33 @@ public class Karajan {
 			}
 		}
 	}
+
+
+	/** Mark datasets given a name rather than an expr. 
+	  * (c.f.  markdataset which takes StringTemplate as first parameter).
+	  *
+	  * If 'st' is a foreach statement and 'name' is the name of the
+	  * iteration variable of the foreach statement, we mark the
+	  * input variable rather than continuing with the rest of the procedure.
+	  *
+	  * Otherwise, we go through the <em>declarations</em> in the 'st'
+	  * enclosing structure (if the enclosing structure has any or is a
+	  * declaration set?) and consider each declaration in turn to see if
+	  * its an assign, a variable or a dataset. In the case of a dataset,
+	  * recurse on the dataset parameters.
+	  *
+	  * If it is any of those, we call <code>checkAssign</code> and/or
+	  * <code>markDataset</code> on the particular declaration and then return.
+	  *
+	  * Otherwise, if 'st' is a procedure we give up and return
+	  *
+	  * Otherwise, we find the structure the encloses 'st' and recurse
+	  * over that greater scope.
+	  *
+	  * @param name the name of variable to mark. may be null.
+	  * @param st a program fragment
+	  * @param isInput whether the variable is null or not.
+	  **/
 
 	protected void markDataset(String name, StringTemplate st, boolean isInput) {
 		if (name == null || st == null)
@@ -798,6 +843,24 @@ public class Karajan {
 		markDataset(name, parentST, isInput);
 	}
 
+
+	/** given a name and a assignment for a variable (in the declaration
+	  * of the variable or as an explicit assigment), check that
+	  * the variable can be used as an input, and recurse over the
+	  * assigned value of that variable.
+	  *
+	  * If there is no expression in 'assignST' then we assume this is
+	  * an array assignment, in which case we recurse over the
+	  * individual elements of the array definition (or the range
+	  * definition the array is initialised by a range).
+	  *
+	  * @param name the name of the variable
+	  * @param assignST the assignment statement (?or some wrapper of such?)
+	  * @param st the enclosing context
+	  * @param isInput whether the variable is an input or not
+	  *
+	  **/
+
 	protected void checkAssign(String name, StringTemplate assignST, StringTemplate st,
 			boolean isInput) {
 		if (!isInput) {
@@ -858,8 +921,10 @@ public class Karajan {
 		}
 	}
 
+
+	/** mark all the dataset references in a function as input. */
+
 	protected void markFunction(StringTemplate funcST, StringTemplate st) {
-		// mark all the dataset references in a function as input
 		Object expr = funcST.getAttribute("expr");
 		if (expr == null)
 			return;
@@ -876,6 +941,23 @@ public class Karajan {
 			}
 		}
 	}
+
+	/** Marks parameters of dataset declarations.
+	  *
+	  * If there is a parameter labelled 'input' and this method
+	  * is called with isInput false, then that parameter will be
+	  * replaced by one indicating that this is not an input.  If
+	  * we reach the end of the parameters without finding an 'input',
+	  * then we create one.
+	  *
+	  * For other parameters, markDataset will be recursed into,
+	  * indicating each parameter is an input (rather than passing
+	  * through the supplied 'isInput' value).
+	  *
+	  * This method mutates the template structures, and is the only one 
+	  * to do so.
+	  **/
+
 	protected void markDatasetParam(StringTemplate datasetST, StringTemplate st, boolean isInput) {
 		if (datasetST == null)
 			return;
