@@ -35,7 +35,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			checkInputs();
 		}
 		catch (InvalidMapperException e) {
-			throw new IllegalArgumentException(e.getMessage(),e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
