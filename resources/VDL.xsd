@@ -134,15 +134,13 @@
     <xs:choice>
       <xs:element name="application" type="ApplicationBinding"/>
 
-      <xs:element name="service" type="ServiceBinding"/>
     </xs:choice>
 
     <xs:attribute name="type" type="xs:string">
       <xs:annotation>
-        <xs:documentation>specifies the type of the binding, current supported
-        bindings are AppBinding and ServiceBinding. we may define other
-        bindings later, and this type attribute should ideally be a
-        QName.</xs:documentation>
+        <xs:documentation>specifies the type of the binding. currently,
+        AppBinding is the only supported one.
+        </xs:documentation>
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>
@@ -245,68 +243,6 @@
     </xs:attribute>
 
     <xs:attribute name="key" type="xs:NMTOKEN" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="ServiceBinding">
-    <xs:annotation>
-      <xs:documentation>Defines a binding to a wsdl service</xs:documentation>
-    </xs:annotation>
-
-    <xs:sequence>
-      <xs:element name="wsdluri">
-        <xs:annotation>
-          <xs:documentation>The URI to the wsdl defintion</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-
-      <xs:element minOccurs="0" name="portype">
-        <xs:annotation>
-          <xs:documentation>The portType name defined in the wsdl
-          doc</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-
-      <xs:element name="operation">
-        <xs:annotation>
-          <xs:documentation>The operation defined in the wsdl
-          doc</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-
-      <xs:element minOccurs="0" name="request" type="Message">
-        <xs:annotation>
-          <xs:documentation>Specifies the mapping from inputs to soap request
-          message of the operation</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-
-      <xs:element minOccurs="0" name="response" type="Message">
-        <xs:annotation>
-          <xs:documentation>Specifies the mapping from soap response message
-          to ouputs</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType mixed="true" name="Message">
-    <xs:sequence maxOccurs="unbounded" minOccurs="0">
-      <xs:element name="part" type="Part"/>
-    </xs:sequence>
-
-    <xs:attribute name="name" type="xs:string"/>
-  </xs:complexType>
-
-  <xs:complexType mixed="true" name="Part">
-    <xs:sequence>
-      <xs:group ref="ArgumentGroup"/>
-    </xs:sequence>
-
-    <xs:attribute name="name" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>Selects the part to map to</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="Array">
