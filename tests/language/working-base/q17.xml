@@ -13,7 +13,7 @@
   <procedure name="countwords">
     <output name="t" type="countfile"/>
     <input name="f" type="messagefile"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>wc</executable>
         <argument>&quot;-w&quot;</argument>

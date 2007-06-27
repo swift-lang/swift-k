@@ -10,7 +10,7 @@
   <procedure name="Pre_antchmbr">
     <output name="t" type="file"/>
     <input name="f" type="file" isArray="true"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>pre_ch</executable>
       </application>
@@ -21,7 +21,7 @@
     <output name="m" type="file"/>
     <output name="n" type="file"/>
     <input name="l" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>antch</executable>
         <argument>&quot;-s&quot;</argument>
@@ -55,7 +55,7 @@
     <input name="in5" type="file"/>
     <input name="in6" type="file"/>
     <input name="in7" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>chrm</executable>
         <argument>&quot;system:solv_m001&quot;</argument>

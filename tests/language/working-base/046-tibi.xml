@@ -13,7 +13,7 @@
     <input name="subjNo" type="int"/>
     <input name="trialType" type="string"/>
     <input name="dataFiles" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>cwtsmall</executable>
         <argument><function name="filename">

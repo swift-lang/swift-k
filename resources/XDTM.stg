@@ -153,7 +153,7 @@ $endif$
 >>
 
 app(exec,arguments,stdio) ::= <<
-<binding type="app">
+<binding>
   <application>
     <executable>$exec$</executable>
 $if(arguments)$

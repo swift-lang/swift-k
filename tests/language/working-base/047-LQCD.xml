@@ -11,7 +11,7 @@
     <output name="gauge" type="file"/>
     <input name="input" type="file"/>
     <input name="config" type="string"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>stageIn</executable>
         <argument>&quot;-v&quot;</argument>
@@ -35,7 +35,7 @@
     <input name="gauge" type="file"/>
     <input name="mass" type="string"/>
     <input name="source" type="string"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>stagSolve</executable>
         <argument>&quot;-v&quot;</argument>
@@ -62,7 +62,7 @@
     <input name="cSW" type="float"/>
     <input name="gauge" type="file"/>
     <input name="source" type="string"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>cloverSolve</executable>
         <argument>&quot;-v&quot;</argument>
@@ -88,7 +88,7 @@
   <procedure name="cvt12x12">
     <output name="output" type="file"/>
     <input name="input" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>CVT12x12</executable>
         <argument>&quot;-v&quot;</argument>
@@ -108,7 +108,7 @@
   <procedure name="archive">
     <output name="output" type="file"/>
     <input name="input" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>Archive</executable>
         <argument>&quot;-v&quot;</argument>
@@ -129,7 +129,7 @@
     <output name="output" type="file"/>
     <input name="mass" type="string"/>
     <input name="input" type="file" isArray="true"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>ArchiveStag</executable>
         <argument>&quot;-v&quot;</argument>
@@ -155,7 +155,7 @@
     <input name="Q0" type="file"/>
     <input name="Q1" type="file"/>
     <input name="Q2" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>TwoPtHH</executable>
         <argument>&quot;-v&quot;</argument>
@@ -187,7 +187,7 @@
     <input name="Q0" type="file"/>
     <input name="Q1" type="file"/>
     <input name="Q2" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>TwoPtSH</executable>
         <argument>&quot;-v&quot;</argument>

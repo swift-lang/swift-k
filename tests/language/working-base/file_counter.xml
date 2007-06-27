@@ -10,7 +10,7 @@
   <procedure name="ls">
     <output name="f" type="file"/>
     <input name="s" type="string"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>ls</executable>
         <argument>s</argument>
@@ -24,7 +24,7 @@
   <procedure name="wc">
     <output name="c" type="file"/>
     <input name="f" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>wc</executable>
         <stdin><function name="filename">

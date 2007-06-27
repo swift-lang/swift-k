@@ -135,13 +135,6 @@
 
     </xs:choice>
 
-    <xs:attribute name="type" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>specifies the type of the binding. currently,
-        AppBinding is the only supported one.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="ApplicationBinding">

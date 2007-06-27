@@ -10,7 +10,7 @@
   <procedure name="echo">
     <output name="t" type="file"/>
     <input name="s" type="string" default="&quot;hello world&quot;"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>echo</executable>
         <argument>s</argument>

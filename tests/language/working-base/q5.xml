@@ -10,7 +10,7 @@
   <procedure name="greeting">
     <output name="t" type="messagefile"/>
     <input name="s" type="string" isArray="true"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>echo</executable>
         <argument>s[0]</argument>

@@ -3,7 +3,7 @@
   <procedure name="generate">
     <output name="f" type="file"/>
     <input name="p1" type="float"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>generate</executable>
         <argument>&quot;-aTOP -T4&quot;</argument>

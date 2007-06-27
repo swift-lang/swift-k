@@ -10,7 +10,7 @@
   <procedure name="echo">
     <output name="f" type="file"/>
     <input name="s" type="string"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>echo</executable>
         <argument>s</argument>

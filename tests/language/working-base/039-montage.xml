@@ -33,7 +33,7 @@
     <output name="projectedArea" type="Image"/>
     <input name="rawImage" type="Image"/>
     <input name="template" type="Header"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mProjectPP</executable>
         <argument>&quot;-X&quot;</argument>
@@ -92,7 +92,7 @@
   <procedure name="mOverlaps">
     <output name="diffsTbl" type="Table"/>
     <input name="imagesTbl" type="Table"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mOverlaps</executable>
         <argument><function name="filename">
@@ -114,7 +114,7 @@
     <input name="projectedImage2" type="Image"/>
     <input name="projectedArea2" type="Image"/>
     <input name="template" type="Header"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mDiffFit</executable>
         <argument>&quot;-s&quot;</argument>
@@ -213,7 +213,7 @@
   <procedure name="mStatTbl">
     <output name="statusFilesTbl" type="Table"/>
     <input name="diffsTbl" type="Table"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mStatTbl</executable>
         <argument><function name="filename">
@@ -232,7 +232,7 @@
     <input name="statusFilesTbl" type="Table"/>
     <input name="statusFiles" type="TxtFile" isArray="true"/>
     <input name="statusDir" type="string"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mConcatFit</executable>
         <argument><function name="filename">
@@ -251,7 +251,7 @@
     <output name="correctionsTbl" type="Table"/>
     <input name="projectedImagesTbl" type="Table"/>
     <input name="fitsTbl" type="Table"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mBgModel</executable>
         <argument><function name="filename">
@@ -276,7 +276,7 @@
     <input name="projectedArea" type="Image"/>
     <input name="projectedImagesTbl" type="Table"/>
     <input name="correctionsTbl" type="Table"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mBackground</executable>
         <argument>&quot;-t&quot;</argument>
@@ -344,7 +344,7 @@
     <output name="imagesTbl" type="Table"/>
     <input name="imageDir" type="string"/>
     <input name="images" type="Image" isArray="true"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mImgtbl</executable>
         <argument>imageDir</argument>
@@ -360,7 +360,7 @@
     <input name="imageDir" type="string"/>
     <input name="images" type="Image" isArray="true"/>
     <input name="oldImagesTbl" type="Table"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mImgtbl</executable>
         <argument>imageDir</argument>
@@ -383,7 +383,7 @@
     <input name="template" type="Header"/>
     <input name="images" type="Image" isArray="true"/>
     <input name="imageAreas" type="Image" isArray="true"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mAdd</executable>
         <argument>&quot;-e&quot;</argument>
@@ -406,7 +406,7 @@
     <output name="shrunkImage" type="Image"/>
     <input name="image" type="Image"/>
     <input name="factor" type="float"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mShrink</executable>
         <argument><function name="filename">
@@ -424,7 +424,7 @@
   <procedure name="mJPEG">
     <output name="jpeg" type="JPEG"/>
     <input name="image" type="Image"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>mJPEG</executable>
         <argument>&quot;-ct&quot;</argument>

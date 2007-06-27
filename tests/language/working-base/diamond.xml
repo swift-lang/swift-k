@@ -10,7 +10,7 @@
   <procedure name="generate">
     <output name="f" type="file"/>
     <input name="p1" type="float"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>generate</executable>
         <argument>&quot;-aTOP -T4&quot;</argument>
@@ -29,7 +29,7 @@
     <input name="f1" type="file"/>
     <input name="name" type="string"/>
     <input name="p2" type="float"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>process</executable>
         <argument>&quot;-a&quot;</argument>
@@ -54,7 +54,7 @@
     <output name="f3" type="file"/>
     <input name="f1" type="file"/>
     <input name="f2" type="file"/>
-    <binding type="app">
+    <binding>
       <application>
         <executable>combine</executable>
         <argument>&quot;-aBOTTOM -T4&quot;</argument>
