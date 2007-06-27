@@ -172,34 +172,6 @@ argument() ::= <<
 <argument>$it$</argument>
 >>
 
-service(wsdlURI,portType,operation,messages) ::= <<
-<binding type="service">
-  <service>
-    <wsdl uri=$wsdlURI$/>$if(portType)$
-    <portType>$portType$</portType>
-$endif$
-
-    <operation>$operation$</operation>
-$if(messages)$
-    $messages;separator="\n"$
-$endif$
-
-  </service> 
-</binding>
->>
-
-message(name,type,expr,parts) ::= <<
-<$type$ name="$name$">$if(expr)$$expr$</$type$>$else$
-
-  $parts;separator="\n"$
-</$type$>
-$endif$
->>
-
-part(name,expr) ::= <<
-<part name="$name$">$expr$</part>
->>
-
 functionInvocation(name,args) ::= <<
 <function name="$name$">
 $if(args)$
