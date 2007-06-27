@@ -84,9 +84,8 @@
 
       <xs:choice>
         <xs:annotation>
-          <xs:documentation>the body of a procedure can be either an
-          application or service invocation, or a compound workflow
-          structure</xs:documentation>
+          <xs:documentation>the body of a procedure can be either a
+          binding or a compound procedure</xs:documentation>
         </xs:annotation>
 
         <xs:element name="binding" type="Binding"/>
