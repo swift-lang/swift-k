@@ -171,7 +171,7 @@ topLevelStatement[StringTemplate code]
 // note that function invocations can happen in above statements too
 // this section is just the remaining more specialised invocations
 
-    |   (procedurecallStatNoAssign) => d=procedurecallStatNoAssign
+    |   (procedurecallCode) => d=procedurecallCode
        {
         code.setAttribute("statements",d);
         setReturnVariables(code, d);
@@ -443,7 +443,7 @@ innerStatement[StringTemplate code]
     |
     ((
        s=ll1statement
-    |  (procedurecallStatNoAssign) => s=procedurecallStatNoAssign
+    |  (procedurecallCode) => s=procedurecallCode
     |  (procedurecallStatAssignManyReturnParam) => s=procedurecallStatAssignManyReturnParam
     |  (predictAssignStat) => s=assignStat
     )
@@ -455,7 +455,7 @@ innerStatement[StringTemplate code]
 
 caseInnerStatement returns [StringTemplate code=null]
     :  code=ll1statement
-    |  (procedurecallStatNoAssign) => code=procedurecallStatNoAssign
+    |  (procedurecallCode) => code=procedurecallCode
     |   (procedurecallStatAssignManyReturnParam) => code=procedurecallStatAssignManyReturnParam
     |  (predictAssignStat) => code=assignStat
     ;
@@ -592,7 +592,7 @@ assignStat returns [StringTemplate code=null]
     id=identifier
     ASSIGN
     (
-      (predictProcedurecallAssign) => code=procedurecallAssign
+      (predictProcedurecallAssign) => code=procedurecallCode
         { StringTemplate o = template("returnParam");
           o.setAttribute("name",id);
           code.setAttribute("outputs",o);
@@ -618,7 +618,7 @@ variableAssign returns [StringTemplate code=null]
 predictProcedurecallAssign
     : ID LPAREN ;
 
-procedurecallAssign returns [StringTemplate code=template("call")]
+procedurecallCode returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
         procedureInvocation[code]
@@ -642,11 +642,6 @@ procedureInvocation [StringTemplate code]
         RPAREN
         SEMI
     ;
-
-procedurecallStatNoAssign returns [StringTemplate code=template("call")]
-    : procedureInvocation[code]
-    ;
-
 
 predictProcedurecallDecl
 { StringTemplate dummy=template("call"); }
