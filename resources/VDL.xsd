@@ -471,24 +471,6 @@
       </xs:annotation>
     </xs:attribute>
 
-    <xs:attribute name="begin" type="xs:int">
-      <xs:annotation>
-        <xs:documentation>the begin index of the items</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-
-    <xs:attribute name="end" type="xs:int">
-      <xs:annotation>
-        <xs:documentation>the end index of the items</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-
-    <xs:attribute name="step" type="xs:int">
-      <xs:annotation>
-        <xs:documentation>the step for each iteration</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-
     <xs:attribute name="indexVar" type="xs:NMTOKEN">
       <xs:annotation>
         <xs:documentation>the variable name to hold the index
@@ -496,12 +478,6 @@
       </xs:annotation>
     </xs:attribute>
 
-    <xs:attribute name="mode" type="Mode">
-      <xs:annotation>
-        <xs:documentation>whether the iteration can be run parallely or
-        sequentially</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="If">
