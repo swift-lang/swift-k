@@ -698,24 +698,6 @@ returnParameter returns [StringTemplate code=template("returnParam")]
         )?
     ;
 
-singleReturnParameter returns [StringTemplate code=template("returnParam")]
-{StringTemplate t=null, id=null, d=null;}
-    :   (t=type{        code.setAttribute("type", t);})?
-        id=identifier
-        {
-        code.setAttribute("name", id);
-        }
-    ;
-
-singleReturnParameterMandatoryType returns [StringTemplate code=template("returnParam")]
-{StringTemplate t=null, id=null, d=null;}
-    :   t=type{        code.setAttribute("type", t);}
-        id=identifier
-        {
-        code.setAttribute("name", id);
-        }
-    ;
-
 actualParameter returns [StringTemplate code=template("actualParam")]
 {StringTemplate d=null, id=null, ai=null;}
     :   (
