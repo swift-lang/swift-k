@@ -54,7 +54,7 @@ public class VariableArgumentsImpl implements VariableArguments {
 
 	public synchronized void merge(VariableArguments args) {
 		if (vargs == null) {
-			vargs = new LinkedList(args.getAll());
+			vargs = new ArrayList(args.getAll());
 		}
 		else {
 			vargs.addAll(args.getAll());
