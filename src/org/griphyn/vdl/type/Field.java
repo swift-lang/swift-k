@@ -39,23 +39,24 @@ public interface Field {
 	 */
 	public void setType(Type type);
 
-    /**
-     * A factory class with static methods for creating instances
-     * of Field.
-     */
-    
-    public static final class Factory
-    {
-    	public static Field newInstance() {
-    		return new FieldImpl();
-    	}
-    	
-    	public static Field createField(String name, Type type) {
-    		return new FieldImpl(name, type);
-    	}
+	/**
+	 * A factory class with static methods for creating instances
+	 * of Field.
+	 */
 
-    	public static Field createField(String name, Type type, boolean array) {
-    		return new FieldImpl(name, type, array);
-    	}
-    }
-  }
+	public static final class Factory
+	{
+		public static Field newInstance() {
+			return new FieldImpl();
+		}
+		
+		public static Field createField(String name, Type type) {
+			return new FieldImpl(name, type);
+		}
+
+		public static Field createField(String name, Type type, boolean array) {
+			return new FieldImpl(name, type, array);
+		}
+	}
+}
+
