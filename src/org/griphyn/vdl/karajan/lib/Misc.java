@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -46,6 +47,10 @@ public class Misc extends FunctionsCollection {
 
 	private static final Logger logger = Logger.getLogger(FunctionsCollection.class);
 
+
+	public static final Arg PA_INPUT = new Arg.Positional("input");
+	public static final Arg PA_PATTERN = new Arg.Positional("regexp");
+
 // TODO note that using concat here caused namespace conflict errors
 // that suggest that either my understanding of how these names are
 // registered is wrong or that there is something not working as
@@ -53,6 +58,7 @@ public class Misc extends FunctionsCollection {
 
 	static {
 		setArguments("vdl_strcat", new Arg[] { Arg.VARGS });
+		setArguments("vdl_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
 	}
 
 	public String vdl_strcat(VariableStack stack) throws ExecutionException {
@@ -62,6 +68,20 @@ public class Misc extends FunctionsCollection {
 			buf.append(TypeUtil.toString(args[i]));
 		}
 		return buf.toString();
+	}
+
+	public String vdl_strcut(VariableStack stack) throws ExecutionException {
+		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
+System.err.println("Will match '"+inputString+"' with pattern '"+pattern+"'");
+		Pattern p = Pattern.compile(pattern);
+// TODO probably should memoize this?
+
+		Matcher m = p.matcher(inputString);
+		m.find();
+		String group = m.group(1);
+System.err.println("Group is '"+group+"'");
+		return group;
 	}
 
 }
