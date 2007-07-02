@@ -298,38 +298,44 @@ variable(name,type,isArray,array,range,expr,value,mapping,nil) ::= <<
 
 assign(path,var,expr,value,array,range) ::= <<
 $if(value)$
-<vdl:setfieldvalue$if(path)$ path="$path$"$endif$ var="{$var$}" value="$value$"/>
+   <vdl:setfieldvalue$if(path)$ path="$path$"$endif$ var="{$var$}" value="$value$"/>
 $else$
-$if(!path)$
-$if(expr.var)$
-<set name="$var$">
-  $expr$
-</set>
-$else$
-<vdl:assign dvar="{$var$}">
-  <argument name="svar">
-	$if(array)$
-	$array$
-	$else$$if(range)$
-	$range$
-	$else$
-	$expr$
-	$endif$$endif$
-  </argument>
-</vdl:assign>
-$endif$$else$
-<vdl:assign dpath="$path$" dvar="{$var$}">
-  <argument name="svar">
-	$if(array)$
-	$array$
-	$else$$if(range)$
-	$range$
-	$else$
-	$expr$
-	$endif$$endif$
-  </argument>
-</vdl:assign>
-$endif$$endif$
+  $if(!path)$
+    $if(expr.var)$
+      <set name="$var$">
+      $expr$
+      </set>
+    $else$
+      <vdl:assign dvar="{$var$}">
+       <argument name="svar">
+       $if(array)$
+         $array$
+       $else$
+         $if(range)$
+           $range$
+         $else$
+           $expr$
+         $endif$
+       $endif$
+       </argument>
+      </vdl:assign>
+    $endif$
+  $else$
+    <vdl:assign dpath="$path$" dvar="{$var$}">
+      <argument name="svar">
+      $if(array)$
+        $array$
+      $else$
+        $if(range)$
+          $range$
+        $else$
+          $expr$
+        $endif$
+      $endif$
+      </argument>
+    </vdl:assign>
+  $endif$
+$endif$
 >>
 
 array(elements) ::= <<
