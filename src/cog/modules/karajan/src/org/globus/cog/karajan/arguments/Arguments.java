@@ -9,15 +9,18 @@
  */
 package org.globus.cog.karajan.arguments;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.globus.cog.karajan.arguments.Arg.Channel;
 
 public class Arguments {
 	private Object type;
 	private NamedArguments named;
 	private VariableArguments vargs;
-	private final Map channels = new HashMap();
+	private Map channels = Collections.EMPTY_MAP;
 
 	private static final VariableArguments EMPTYVARGS = new VariableArgumentsImpl();
 	private static final NamedArguments EMPTYNARGS = new NamedArgumentsImpl();
@@ -91,10 +94,14 @@ public class Arguments {
 		args.type = type;
 		args.named = named.copy();
 		args.vargs = vargs.copy();
-		Iterator i = channels.keySet().iterator();
-		while (i.hasNext()) {
-			String name = (String) i.next();
-			args.channels.put(name, ((VariableArguments) channels.get(name)).copy());
+		if (!channels.isEmpty()) {
+			args.channels = new HashMap(channels.size());
+			Iterator i = channels.entrySet().iterator();
+			while (i.hasNext()) {
+				Map.Entry e = (Map.Entry) i.next();
+				String name = (String) e.getKey();
+				args.channels.put(name, ((VariableArguments) e.getValue()).copy());
+			}
 		}
 		return args;
 	}
@@ -109,12 +116,12 @@ public class Arguments {
 			buf.append(vargs.toString());
 			buf.append('\n');
 		}
-		Iterator i = channels.keySet().iterator();
+		Iterator i = channels.entrySet().iterator();
 		while (i.hasNext()) {
-			String name = (String) i.next();
-			buf.append(name);
+			Map.Entry e = (Map.Entry) i.next();
+			buf.append(e.getKey());
 			buf.append(": ");
-			buf.append(channels.get(name).toString());
+			buf.append(e.getValue());
 		}
 		return buf.toString();
 	}
@@ -147,5 +154,12 @@ public class Arguments {
 
 	public void setType(Object type) {
 		this.type = type;
+	}
+
+	public void addChannel(Channel channel, VariableArguments channelArguments) {
+		if (channels.size() == 0) {
+			channels = new HashMap(8);
+		}
+		channels.put(channel, channelArguments);
 	}
 }
