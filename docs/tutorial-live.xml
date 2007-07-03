@@ -3,7 +3,7 @@
 
 <article>
     <articleinfo>
-        <title>A Swift Tutorial for Live Presentation</title>
+        <title>A Swift Tutorial for ISSGC07</title>
     </articleinfo>
 
 <sect1> <title>Introduction</title>
@@ -13,6 +13,18 @@ It is structured as a series of small exercise/examples which you can
 try for yourself as you read along.
     </para>
     <para>This is version: $LastChangedRevision$</para>
+</sect1>
+
+<sect1><title>Environment setup</title>
+
+<para>First set up the swift environment:
+</para>
+
+<programlisting>
+$ cp ~benc/workflow/vdsk-0.1-r877/etc/tc.data ~
+$ export PATH=$PATH:~benc/workflow/vdsk-0.1-r877/bin
+</programlisting>
+
 </sect1>
 
 <sect1> <title>A first workflow</title>
@@ -33,36 +45,38 @@ type imagefile;
   }
 }
 
-imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
-imagefile flipped &lt;"output.jpg"&gt;;
+imagefile puppy &lt;"input-1.jpeg"&gt;;
+imagefile flipped &lt;"output.jpeg"&gt;;
 
-flipped = flip(spacegirl);
+flipped = flip(puppy);
 
 </programlisting>
 
 
 <para>
 This simple workflow has the effect of running this command:
-convert -rotate 180 Gridworkshop3.jpg output.jpg
+convert -rotate 180 input-1.jpeg output.jpeg
 </para>
 
-<para>First prepare your working environment:</para>
+<para>ACTION: First prepare your working environment:</para>
 
 <programlisting>
 
-$ cp /sw/workflow/Gridworkshop3.jpg .
+$ cp ~benc/workflow/input-1.jpeg .
 
-$ ls *.jpg
-Gridworkshop3.jpg
+$ ls *.jpeg
+input-1.jpeg
 
 </programlisting>
 
-<para>Point your web browser at: http://128.104.145.24/~train99/
-and click on Gridworkshop3.jpg. You should see a picture. This is the
+<para>ACTION: Open input-1.jpeg</para>
+
+<para>
+You should see a picture. This is the
 picture that we will modify in our first workflow.</para>
 
 <para>
-Now use your favourite text editor to put the above SwiftScript 
+ACTION: use your favourite text editor to put the above SwiftScript
 program into a file called
 flipper.swift
 </para>
@@ -81,15 +95,16 @@ RunID: e1bupgygrzn12
 convert started
 convert completed
 
-$ ls *.jpg
-Gridworkshop3.jpg
-output.jpg
+$ ls *.jpeg
+input-1.jpeg
+output.jpeg
 </programlisting>
 
-<para>A new jpeg has appeared - output.jpeg. Use the same URL,
-http://128.104.145.24/~train99/ and click on output.jpeg to see it.
+<para>A new jpeg has appeared - output.jpeg.</para>
+
+<para>ACTION: Open it.
 You should see that the image is different from the input image - it
-should be rotated 180 degress.</para>
+has been rotated 180 degress.</para>
 
 <para>The basic structure of this program is a type definition,
 a procedure definition, a variable definition and
@@ -106,7 +121,7 @@ type imagefile;
 
 <para>
 Next we define a procedure called flip. This procedure will use the
-ImageMagick convert application to flip a picture around.
+ImageMagick convert application to rotate a picture around by 180 degrees.
 </para>
 
 <programlisting>
@@ -129,128 +144,34 @@ It has a type, and also has a variable name
 (unlike in most other programming languages).
 </para>
 
+<programlisting>
+imagefile puppy &lt;"input-1.jpeg"&gt;;
+imagefile flipped &lt;"output.jpeg"&gt;;
+</programlisting>
+
 <para>
-We define two variables, called spacegirl and flipped. These variables will
+We define two variables, called puppy and flipped. These variables will
 contain our input and output images, respectively.
 </para>
 
 <para>We tell swift that the contents of the variables will be stored on
-disk (rather than in memory) in the files "Gridworkshop3.jpg" (which already
-exists), and in "output.jpg". This is calle <firstterm>mapping</firstterm>
+disk (rather than in memory) in the files "input-1.jpeg" (which already
+exists), and in "output.jpeg". This is called <firstterm>mapping</firstterm>
 and will be discussed in more depth later.</para>
 
 <programlisting>
-imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
-imagefile flipped &lt;"output.jpg"&gt;;
-</programlisting>
-
-<programlisting>
-flipped = flip(spacegirl);
+flipped = flip(puppy);
 </programlisting>
 
 <para>
-Now we call the flip procedure, with 'spacegirl' as its input and its
+Now we call the flip procedure, with 'puppy' as its input and its
 output going into 'flipped'.
 </para>
 
-<para>Over the following exercises, we'll extend this relatively
-simple SwiftScript program to demonstrate various features of Swift.</para>
+<para>Over the following exercises, we will use this relatively
+simple SwiftScript program as a base for future exercises.</para>
 
 </sect1>
-
-<!-- TODO this text needs to be pushed down into the following 
-exercise body
-<sect1> <title>Parameters</title>
-
-<para>
-Procedures can have parameters. Input parameters specify inputs to the
-procedure and output parameters specify outputs. Parameters have a name
-and a type.
-Our flip procedure
-has one input parameter  ('input', of type imagefile) and one output
-parameter ('output', of type imagefile).
-</para>
-
-
-<sect1><title>Arrays</title>
-<para>We can define arrays of values. For example, we could specify each
-word in a greeting as a separate element of a string array, as seen in
-q5.swift:</para>
-
-<programlisting>
-type messagefile;
-
-(messagefile t) greeting (string s[]) {
-    app {
-        echo s[0] s[1] s[2] stdout=@filename(t);
-    }
-}
-
-messagefile outfile &lt;&quot;q5out.txt&quot;&gt;;
-
-string words[] = [&quot;how&quot;,&quot;are&quot;,&quot;you&quot;];
-
-outfile = greeting(words);
-
-</programlisting>
-
-<para>Observe that the type of the parameter to greeting is now an
-array of strings, 'string s[]', instead of a single string, 'string s',
-that elements of the array can be referenced numerically, for example
-s[0], and that the array is initialised using an array literal,
-[&quot;how&quot;,&quot;are&quot;,&quot;you&quot;].</para>
-
-</sect1>
-
-
-<sect1><title>The single_file_mapper</title>
-<para>
-This exercise introduces the <firstterm>single_file_mapper</firstterm>.
-This mapper allows you to map a file based on the result of a string
-expression. We can use string concatenation to assemble a filename, and
-then map that filename to a variable.
-</para>
-<para>Previously we've used syntax like this:
-</para>
-<para>TODO - this example needs making coherent with rest</para>
-<programlisting>
-giffile outputgif <"atlas-x.gif">;
-</programlisting>
-<para>We can instead assemble the filename and map that, like this:
-</para>
-<programlisting>
-string direction = "x";
-giffile outputgif &lt;single_file_mapper;file=@strcat("atlas-",direction,".gif")&gt;;
-</programlisting>
-</sect1>
-
-
-<sect1><title>foreach</title>
-<para>SwiftScript provides a control structure, foreach, to operate
-on each element of an array.</para>
-<para>In this example, we will run the previous word counting example
-over each file in an array without having to explicitly list the
-array elements. The source code for this example is in q17.swift. The
-three input files (one.txt, two.txt and three.txt) are supplied. After
-you have run the workflow, you should see that there are three output
-files (one.count, two.count and three.count) each containing the word
-count for the corresponding input file. We combine the use of the
-fixed_array_mapper and the regexp_mapper.</para>
-<programlisting>
-string inputNames = "one.txt two.txt three.txt";
-
-messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
-
-
-foreach f in inputfiles {
-  countfile c &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
-  c = countwords(f);
-}
-</programlisting>
-
-</sect1>
-
--->
 
 <sect1><title>A second program</title>
 
@@ -269,13 +190,13 @@ type imagefile;
   }
 }
 
-imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
+imagefile puppy &lt;"input-1.jpeg"&gt;;
 
 int angles[] = [45, 90, 120];
 
 foreach a in angles {
-    imagefile output &lt;single_file_mapper;file=@strcat("rotated-",a,".jpg")&gt;;
-    output = rotate(spacegirl, a);
+    imagefile output &lt;single_file_mapper;file=@strcat("rotated-",a,".jpeg")&gt;;
+    output = rotate(puppy, a);
 }
 </programlisting>
 
@@ -304,7 +225,7 @@ commandline instead of a hard coded 180 degrees.
 </para>
 
 <programlisting>
-imagefile spacegirl &lt;"Gridworkshop3.jpg"&gt;;
+imagefile puppy &lt;"input-1.jpeg"&gt;;
 </programlisting>
 
 <para>
@@ -329,7 +250,7 @@ in angles. In each iteration, the element will be put in the variable 'a'.
 </para>
 
 <programlisting>
-    imagefile output &lt;single_file_mapper;file=@strcat("rotated-",a,".jpg")&gt;;
+    imagefile output &lt;single_file_mapper;file=@strcat("rotated-",a,".jpeg")&gt;;
 </programlisting>
 
 <para>
@@ -339,7 +260,7 @@ to construct a filename and then map that filename to our output variable.
 </para>
 
 <programlisting>
-    output = rotate(spacegirl, a);
+    output = rotate(puppy, a);
 }
 </programlisting>
 
@@ -350,13 +271,13 @@ each time.
 </para>
 
 <para>
-Put the program source into a file (for example, in rotate.swift) and
+ACTION: Put the program source into a file called in rotate.swift and
 execute it with the swift command, like we did for flipper.swift above.
 </para>
 
 <programlisting>
 $ ls rotated*
-rotated-120.jpg rotated-45.jpg  rotated-90.jpg
+rotated-120.jpeg rotated-45.jpeg  rotated-90.jpeg
 </programlisting>
 
 </sect1>
@@ -455,8 +376,8 @@ same ways of mapping. Instead, we will use a new mapper, the CSV mapper.
 This maps rows of a comma-separated value file into an array of complex
 types.</para>
 
-<para>ACTION REQUIRED: Make a file called reference.csv using your
-favourite unix text editor. This is what it should look contain (2 lines):
+<para>ACTION: Make a file called reference.csv using your
+favourite text editor. This is what it should look contain (2 lines):
 </para>
 <programlisting>
 img,hdr
@@ -475,7 +396,7 @@ so that swift can find them.
 </para>
 <programlisting>
 $ mkdir Raw
-$ cp /sw/workflow/data/reference.* Raw/
+$ cp ~benc/workflow/data/reference.* Raw/
 </programlisting>
 <para>
 Now you will have the reference files in your home directory.
@@ -535,10 +456,11 @@ localhost    convert    /usr/bin/convert    INSTALLED INTEL32::LINUX null
 </programlisting>
 
 <para>ACTION REQUIRED: Open tc.data in your favourite unix text
-editor, and add a new line to configure the location of slicer:</para>
+editor, and add a new line to configure the location of slicer. Note that
+you must use TABS and not spaces to separate the fields:</para>
 
 <programlisting>
-localhost    slicer    /sw/workflow/app/slicer-swift    INSTALLED INTEL32::LINUX null
+localhost    slicer    /afs/pdc.kth.se/home/b/benc/workflow/slicer-swift    INSTALLED INTEL32::LINUX null
 </programlisting>
 
 <para>For now, ignore all of the fields except the second and the third.
@@ -575,7 +497,7 @@ Finally we invoke the two procedures to slice the brain volume and
 then convert that slice into a jpeg.
 </para>
 
-<para>Place the source above into a file (for example, third.swift) and
+<para>ACTION: Place the source above into a file (for example, third.swift) and
 make the other modifications discussed above. Then run the workflow
 with the swift command, as before.</para>
 
@@ -600,22 +522,23 @@ First clear away the output from the first program:
 </para>
 
 <programlisting>
-$ rm output.jpg
-$ ls output.jpg
-ls: output.jpg: No such file or directory
+$ rm output.jpeg
+$ ls output.jpeg
+ls: output.jpeg: No such file or directory
 </programlisting>
 
 <para>
 Now initialise your grid proxy, to log-in to the grid.
+(NOTE TO TESTERS - this assumes that you already have a grid
+certificate correctly installed and mapped. I'm working on the
+assumption that this will be the case, but I haven't confirmed
+this is true yet. If you don't have one set up for testing, skip
+this section)
 </para>
 
 <programlisting>
 $ grid-proxy-init
-$ Your identity: /O=Grid/OU=OSG/CN=Training User 09
-Enter GRID pass phrase for this identity:
 </programlisting>
-
-<para>Your password is: train</para>
 
 <para>Now we must tell Swift about the other site. This is done through
 another catalog file, the <firstterm>site catalog</firstterm>.</para>
@@ -773,7 +696,7 @@ atlas = softmean(slices);
 string directions[] = [ "x", "y", "z"];
 
 foreach direction in directions {
-    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".jpg")&lt;;
+    imagefile o &lt;single_file_mapper;file=@strcat("atlas-",direction,".jpeg")&gt;;
     string option = @strcat("-",direction);
     o = slice_to_jpeg(atlas, option, ".5");
 }
@@ -832,7 +755,7 @@ entries now too.
 </para>
 
 <para>
-ACTION REQUIRED: Edit the transformation catalog (like in the third
+ACTION: Edit the transformation catalog (like in the third
 exercise). Add entries for the following transformations. The table
 below lists the path. You must write the appropriate syntax for
 transformation catalog entries yourself, using the existing two
@@ -841,9 +764,9 @@ entries as examples.
 
 <para>Here is the list of transformations to add:</para>
 <programlisting>
-align_warp (the path is /sw/workflow/app/AIR/bin/align_warp)
-reslice   (the path is /sw/workflow/app/AIR/bin/reslice)
-softmean  (the path is /sw/workflow/app/softmean-swift)
+align_warp (the path is /afs/pdc.kth.se/home/b/benc/workflow/app/AIR/bin/align_warp)
+reslice   (the path is /afs/pdc.kth.se/home/b/benc/workflow/app/AIR/bin/reslice)
+softmean  (the path is /afs/pdc.kth.se/home/b/benc/workflow/app/softmean-swift)
 </programlisting>
 
 <para>Make sure you have added three entries to the transformation
@@ -968,14 +891,14 @@ working directory, like this:
 </para>
 
 <programlisting>
-$ cp /sw/workflow/data/anatomy* Raw/
+$ cp ~benc/workflow/data/anatomy* Raw/
 $ ls Raw/
 anatomy1.hdr  anatomy2.hdr  anatomy3.hdr  anatomy4.hdr  reference.hdr
 anatomy1.img  anatomy2.img  anatomy3.img  anatomy4.img  reference.img
 </programlisting>
 
 <para>ACTION REQUIRED: Create a text file called subjects.csv using your
-favourite unix text editor. List all four image pairs. Here is an example
+favourite text editor. List all four image pairs. Here is an example
 of how to start:
 </para>
 
@@ -1025,7 +948,7 @@ atlas = softmean(slices);
 string directions[] = [ "x", "y", "z"];
 
 foreach direction in directions {
-    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".jpg")&lt;;
+    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".jpeg")&lt;;
     string option = @strcat("-",direction);
     o = slice_to_jpeg(atlas, option, ".5");
 }
@@ -1039,10 +962,17 @@ in each iteration, similar to exercise two.
 </para>
 
 <para>
-Run the workflow with the swift command, and then using your web browser open
-the resulting files - atlas-x.jpg, atlas-y.jpg and atlas-z.jpg.
+ACTION:
+Put the workflow into a file called final.swift, and 
+then run the workflow with the swift command. Then open
+the resulting files - atlas-x.jpeg, atlas-y.jpeg and atlas-z.jpeg.
+</para>
+<para>
+You should see three brain images, along three different axes.
 </para>
 
 </sect1>
+
+<para>The End</para>
 </article>
 
