@@ -126,7 +126,7 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 		Iterator i = getChannels().iterator();
 		while(i.hasNext()) {
 			Arg.Channel channel = (Arg.Channel) i.next();
-			fnargs.getChannels().put(channel.getName(), ArgUtil.getChannelArguments(stack, channel));
+			fnargs.addChannel(channel, ArgUtil.getChannelArguments(stack, channel));
 		}
 
 		return fnargs;
@@ -193,8 +193,8 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 
 		Iterator i = getChannels().iterator();
 		while(i.hasNext()) {
-			String name = ((Arg.Channel) i.next()).getName();
-			stack.setVar(name, fnargs.getChannels().get(name));
+			Arg.Channel channel = (Arg.Channel) i.next();
+			stack.setVar(channel.getName(), fnargs.getChannels().get(channel));
 		}
 
 		if (this.hasNamed()) {
