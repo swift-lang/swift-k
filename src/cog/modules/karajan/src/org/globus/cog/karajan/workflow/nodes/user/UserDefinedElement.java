@@ -12,7 +12,7 @@ package org.globus.cog.karajan.workflow.nodes.user;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -227,7 +227,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		}
 
 		if (this.named) {
-			Map named = new Hashtable();
+			Map named = new HashMap();
 			Iterator i = fnargs.getNamed().getNames();
 			while (i.hasNext()) {
 				String name = (String) i.next();
