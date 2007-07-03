@@ -70,9 +70,8 @@ public class SequentialImplicitExecutionUDE extends UserDefinedElement {
 		Iterator i = getChannels().iterator();
 		while (i.hasNext()) {
 			Arg.Channel channel = (Arg.Channel) i.next();
-			fnargs.getChannels().put(channel, ArgUtil.getChannelArguments(stack, channel));
+			fnargs.addChannel(channel, ArgUtil.getChannelArguments(stack, channel));
 		}
-
 		return fnargs;
 	}
 

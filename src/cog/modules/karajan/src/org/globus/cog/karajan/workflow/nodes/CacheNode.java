@@ -150,7 +150,7 @@ public class CacheNode extends PartialArgumentsContainer {
 		Iterator i = channels.iterator();
 		while (i.hasNext()) {
 			Arg.Channel channel = (Arg.Channel) i.next();
-			args.getChannels().put(channel, ArgUtil.getChannelArguments(stack, channel));
+			args.addChannel(channel, ArgUtil.getChannelArguments(stack, channel));
 		}
 		return args;
 	}
