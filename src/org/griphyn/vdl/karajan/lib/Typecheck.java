@@ -22,7 +22,7 @@ public class Typecheck extends VDLFunction {
 		boolean isArray = TypeUtil.toBoolean(OA_ISARRAY.getValue(stack));
 		Object ovar = PA_VAR.getValue(stack);
 		if(!(ovar instanceof DSHandle)) {
-			throw new ExecutionException("Wrong java type for argument."
+			throw new ExecutionException("Wrong java type for argument. "
             + "Expected DSHandle containing "+type+(isArray ? "[]" : "")
 			+"; got java object of class "+ovar.getClass()+" with value "+ovar);
 		}
