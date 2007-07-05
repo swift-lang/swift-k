@@ -1,0 +1,23 @@
+#!/bin/bash
+
+echo Removing files from previous runs
+rm -fv *.out *.xml *.kml *.dot *.log *.rlog
+
+TESTS=*.swift
+
+for testfn in $TESTS; do
+
+  export t=$(basename $testfn .swift)
+
+  echo Running test $t
+  swift ${t}.swift
+  if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
+  diff -q ${t}.out ${t}.out.expected
+  if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+
+done
+
+echo All language behaviour tests passed
+
+
+
