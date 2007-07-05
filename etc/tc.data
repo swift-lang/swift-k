@@ -1,22 +1,17 @@
+#This is the transformation catalog.
+#
+#It comes pre-configured with a number of simple transformations with
+#paths that are likely to work on a linux box. However, on some systems,
+#the paths to these executables will be different (for example, sometimes
+#some of these programs are found in /usr/bin rather than in /bin)
+#
+#NOTE WELL: fields in this file must be separated by tabs, not spaces; and
+#there must be no trailing whitespace at the end of each line.
+#
+# sitename  transformation  path   INSTALLED  platform  profiles
 localhost 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
 localhost 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
 localhost 	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
 localhost 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
 localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
 localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
-localhost 	generate 	/home/yongzh/bin/keg	INSTALLED	INTEL32::LINUX	null
-localhost 	process 	/home/yongzh/bin/keg	INSTALLED	INTEL32::LINUX	null
-localhost 	combine 	/home/yongzh/bin/keg	INSTALLED	INTEL32::LINUX	null
-
-teraport 	reorient 	/home/yongzh/fmri/AIR/bin/reorient	INSTALLED	INTEL32::LINUX	null
-teraport	alignlinear	/home/yongzh/fmri/AIR/bin/alignlinear	INSTALLED	INTEL32::LINUX	null
-teraport	alignwarp	/home/yongzh/fmri/AIR/bin/align_warp	INSTALLED       INTEL32::LINUX	null
-teraport	combinewarp	/home/yongzh/fmri/AIR/bin/combine_warp	INSTALLED       INTEL32::LINUX	null
-teraport	betpremask	/home/yongzh/fmri/betpremask.sh	INSTALLED       INTEL32::LINUX	null
-teraport 	softmean 	/home/yongzh/fmri/AIR/bin/softmean INSTALLED       INTEL32::LINUX	null
-teraport   	gsmooth 	/home/yongzh/fmri/AIR/bin/gsmooth INSTALLED       INTEL32::LINUX	null
-teraport   	strictmean 	/home/yongzh/fmri/AIR/bin/strictmean INSTALLED       INTEL32::LINUX	null
-teraport 	reslicewarp 	/home/yongzh/fmri/AIR/bin/reslice_warp INSTALLED       INTEL32::LINUX	null
-teraport 	reslice 	/home/yongzh/fmri/AIR/bin/reslice INSTALLED       INTEL32::LINUX	null
-teraport 	combinewarp 	/home/yongzh/fmri/AIR/bin/combine_warp INSTALLED       INTEL32::LINUX	null
-teraport	binarize 	/home/yongzh/fmri/AIR/bin/binarize INSTALLED       INTEL32::LINUX	null
