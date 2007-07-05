@@ -69,18 +69,20 @@ public class OrderedParallelVariableArguments extends AbstractWriteOnlyVariableA
 		}
 	}
 
-	protected synchronized void prevClosed() {
-        OrderedParallelVariableArguments i = this;
-        while (i != null) {
-        	i.flushBuffer();
-            i.prevClosed = true;
-            if (i.closed) {
-                i = i.next;
-            }
-            else {
-                break;
-            }
-        };
+	protected void prevClosed() {
+		OrderedParallelVariableArguments i = this;
+		while (i != null) {
+			synchronized (i) {
+				i.flushBuffer();
+				i.prevClosed = true;
+				if (i.closed) {
+					i = i.next;
+				}
+				else {
+					break;
+				}
+			}
+		}
 	}
 
 	public void merge(VariableArguments args) {
