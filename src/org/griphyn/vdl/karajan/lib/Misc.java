@@ -73,15 +73,15 @@ public class Misc extends FunctionsCollection {
 	public String vdl_strcut(VariableStack stack) throws ExecutionException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
-System.err.println("Will match '"+inputString+"' with pattern '"+pattern+"'");
+		if(logger.isDebugEnabled()) logger.debug("strcut will match '"+inputString+"' with pattern '"+pattern+"'");
 		Pattern p = Pattern.compile(pattern);
 // TODO probably should memoize this?
 
 		Matcher m = p.matcher(inputString);
 		m.find();
 		String group = m.group(1);
-System.err.println("Group is '"+group+"'");
+		if(logger.isDebugEnabled()) logger.debug("strcut matched '"+group+"'");
 		return group;
 	}
-
 }
+
