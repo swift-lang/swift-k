@@ -29,9 +29,7 @@ be necessary to change the two occurences of /var/tmp to a different
 working directory. -->
 
   <pool handle="localhost" sysinfo="INTEL32::LINUX">
-    <lrc url="local://localhost"/>
-    <gridftp  url="local://localhost" storage="/var/tmp" major="1" minor="0" patch="0"> 
-    </gridftp>
+    <gridftp  url="local://localhost" storage="/var/tmp" major="1" minor="0" patch="0" />
     <jobmanager universe="vanilla" url="local://localhost" major="1" minor="0" patch="0" />
     <workdirectory >/var/tmp</workdirectory>
   </pool>
