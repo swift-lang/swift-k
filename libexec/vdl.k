@@ -12,31 +12,31 @@ import("vdl-xs.k", export = true)
 namespace("vdl"
 	import("vdl-sc.k", export = true)
 	import("vdl-lib.xml", export = true)
-	
+
 	import("vdl-int.k")
 	import("java.k")
-	
+
 	export(
-	
+
 		element(split, [var], each(str:split(vdl:getFieldValue(var), " ")))
-	
+
 		element(quote, [var, optional(path)],
 			str:quote(vdl:getFieldValue(var, maybe(path = path)))
 		)
-	
+
 		element(types, [])
-		
+
 		element(arguments, [...]
 			arguments=list(each(...))
 		)
-				
+
 		export(arg, 
 			if (
 				vdl:operation == "typecheck" | vdl:operation == "graph" element([name], "")
 				elementDef(classname="org.griphyn.vdl.karajan.functions.FnArg")
 			)
 		)
-		
+
 		export(execute
 			executeFile(
 				if(
@@ -45,11 +45,11 @@ namespace("vdl"
 					vdl:operation == "typecheck"
 						"execute-typecheck.k"
 					vdl:operation == "run"
-						"execute-default.k"	
+						"execute-default.k"
 				)
 			)
 		)
-		
+
 		element(stagein, [var]
 			if(
 				vdl:isDatasetBound(var) try(
@@ -78,7 +78,7 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(stageout, [var]
 			try(
 				if(vdl:isDatasetBound(var) 
@@ -95,37 +95,37 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(mapping, [descriptor, ...]
 			mapping=map(map:entry("descriptor", descriptor), each(...))
 		)
-		
+
 		element(parameter, [name, value]
 			map:entry(name, value)
 		)
-				
+
 		element(stdout, [file]
 			stdout = file
 		)
-		
+
 		element(stdin, [file]
 			stdin = file
 		)
-		
+
 		element(stderr, [file]
 			stderr = file
 		)
-		
+
 		element(tr, [name]
 			tr = name
 		)
-		
+
 		element(pre, [])
 		element(post, [])
-		
+
 		element(mains, [channel(cleanup), channel(errors), channel(warnings)]
 			anyerrors := vdl:processBulkErrors("The following errors have occurred:", errors)
-			
+
 			//this should be reached after everything is done
 			if(
 				not(anyerrors) then(
