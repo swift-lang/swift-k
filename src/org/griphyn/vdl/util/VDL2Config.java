@@ -62,7 +62,7 @@ public class VDL2Config extends Properties {
 		put("tc.file", "${vds.home}/var/tc.data");
 		put("lazy.errors", "true");
 		put("caching.algorithm", "LRU");
-		put("pgraph", "true");
+		put("pgraph", "false");
 		put("pgraph.graph.options", "splines=\"compound\", rankdir=\"TB\"");
 		put("pgraph.node.options", "color=\"seagreen\", style=\"filled\"");
 		put("clustering.enabled", "true");
