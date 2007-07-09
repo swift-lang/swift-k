@@ -1514,6 +1514,27 @@ passed as parameters joined into a single string. There may be any number
 of parameters.
 			</para>
 		</sect2>
+		<sect2><title>@strcut</title>
+			<para>
+@strcut(input,pattern) will match the regular expression in the pattern
+parameter against the supplied input string and return the section that
+matches the first matching parenthesised group.
+			</para>
+			<para>
+For example:
+			</para>
+
+			<programlisting>
+string t = "my name is John and i like puppies.";
+string name = @strcut(t, "my name is ([^ ]*) ");
+string out = @strcat("Your name is ",name);
+print(out);
+			</programlisting>
+
+			<para>
+will output the message 'Your name is John'.
+			</para>
+		</sect2>
 	</sect1>
 
 	<sect1><title>Built-in procedure reference</title>
