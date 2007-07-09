@@ -19,24 +19,24 @@ public class TypeImpl implements Type {
 	private boolean primitive;
 	private Map fields;
 	private Type baseType;
-	
+
 	public TypeImpl() {
 		fields = new HashMap();
 		baseType = null;
 		primitive = false;
 	}
-	
+
 	public TypeImpl(String namespace, String name, boolean primitive) {
 		this();
 		this.namespace = namespace;
 		this.name = name;
 		this.primitive = primitive;
 	}
-	
+
 	public TypeImpl(String name, boolean primitive) {
 		this(null, name, primitive);
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -126,13 +126,13 @@ public class TypeImpl implements Type {
 	}
 
 	public void addField(String name, Type type) throws DuplicateFieldException {
-		addField(name, type, false);		
+		addField(name, type, false);
 	}
 
 	public Field getField(String name) throws NoSuchFieldException {
 		if (name == null)
 			return null;
-		
+
 		Field field = (Field) fields.get(name);
 		if (field != null)
 			return field;

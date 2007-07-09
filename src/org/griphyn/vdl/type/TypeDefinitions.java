@@ -8,7 +8,7 @@ public class TypeDefinitions {
 
 	//TODO: check namespace references in type definitions
 	private static Map types = new HashMap();
-	
+
 	private String namespace = null;
 
 	public TypeDefinitions() {
@@ -17,15 +17,15 @@ public class TypeDefinitions {
 	public TypeDefinitions(String namespace) {
 		this.namespace = namespace;
 	}
-	
+
 	public String getNamespace() {
 		return namespace;
 	}
-	
+
 	public void setNamespace(String namespace) {
 		this.namespace = namespace;
 	}
-	
+
 	public synchronized static Type getType(String name) throws NoSuchTypeException {
 		Type type = (Type) types.get(name);
 		if (type == null) {
@@ -40,12 +40,12 @@ public class TypeDefinitions {
 	public synchronized static void addType(Type type) {
 		types.put(type.getName(), type);
 	}
-	
+
 	private static void addPrimitiveType(String name) {
 		Type type = Type.Factory.createType(name, true);
 		addType(type);
 	}
-	
+
 	// add built-in primitive types
 	static {
 		addPrimitiveType("string");
