@@ -186,6 +186,7 @@ updateOptions "$SWIFT_HOME" "swift.home"
 		<delete includeEmptyDirs="true">
 			<fileset dir="src/org/griphyn/vdl/model/" includes="**/*.java"/>
 		</delete>
+		<delete file="lib/vdldefinitions.jar"/>
 	</target>
 
 	<!-- ================================================ -->
