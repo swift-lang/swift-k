@@ -8,12 +8,23 @@ TESTS=*.swift
 for testfn in $TESTS; do
 
   export t=$(basename $testfn .swift)
+  export EXPECTEDS="$t.*.expected"
 
   echo Running test $t
   swift ${t}.swift
-  if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
-  diff -q ${t}.out ${t}.out.expected
-  if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+
+  echo expecting $EXPECTEDS
+
+  for e in $EXPECTEDS; do
+
+    echo checking $e
+    out=$(basename $e .expected)
+
+    if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
+    diff -q ${out} ${e}
+    if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+
+  done
 
 done
 
