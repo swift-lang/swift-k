@@ -22,6 +22,7 @@ try for yourself as you read along.
 
 <programlisting>
 $ cp ~benc/workflow/vdsk-0.1-r877/etc/tc.data ~
+$ cp ~benc/workflow/vdsk-0.1-r877/etc/sites.xml ~
 $ export PATH=$PATH:~benc/workflow/vdsk-0.1-r877/bin
 </programlisting>
 
@@ -529,11 +530,6 @@ ls: output.jpeg: No such file or directory
 
 <para>
 Now initialise your grid proxy, to log-in to the grid.
-(NOTE TO TESTERS - this assumes that you already have a grid
-certificate correctly installed and mapped. I'm working on the
-assumption that this will be the case, but I haven't confirmed
-this is true yet. If you don't have one set up for testing, skip
-this section)
 </para>
 
 <programlisting>
@@ -550,33 +546,34 @@ local site. Because this is the only site defined, all execution will
 happen locally.</para>
 
 <para>Another sites.xml is available for use, in 
-/sw/workflow/sites-chicago.xml
+~benc/workflow/sites-iceage.xml
 </para>
 
-<para>Open /sw/workflow/sites-chicago.xml and look inside. See how it differs
-from sites.xml.</para>
+<para>ACTION: Copy ~benc/workflow/sites-iceage.xml to your home directory
+ and look inside.  See how it differs from sites.xml.</para>
 
-<para>Now we will run the first flipper exercise again, but this time on
-the site in Chicago.</para>
+<para>Now we will run the first flipper exercise again, but this time via
+Globus GRAM.</para>
 
 <para>We will use this other sites file to run the first workflow. In
 addition to telling swift about the other site in the sites file,
 we need to tell swift where to find transformations on the new site.
 </para>
-<para>Edit the transformation catalog and add a line to tell swift where
-it can find convert. Conveniently, it is in the same path on both the
-local site and the remote site. Here is the line to add:
+<para>ACTION: Edit the transformation catalog and add a line to tell swift where
+it can find convert. Conveniently, it is in the same path when running
+locally and through GRAM.
+Here is the line to add:
 </para>
 
 <programlisting>
-chicago  convert  /usr/bin/convert   INSTALLED   INTEL32::LINUX  null
+iceage  convert  /usr/bin/convert   INSTALLED   INTEL32::LINUX  null
 </programlisting>
 
 <para>Note the different between this line and the existing convert
 definition in the file. All fields are the same except for the first
-column, which is the site column. We say 'chicago' here instead of
-localhost. This matches up with the site name 'chicago' defined in
-the new site catalog.
+column, which is the site column. We say 'iceage' here instead of
+localhost. This matches up with the site name 'iceage' defined in
+the new site catalog, and identifies the name of the remote site.
 </para>
 
 <para>Now use the same swift command as before, but with an
@@ -584,7 +581,7 @@ extra parameter to tell swift to use a different sites file:
 </para>
 
 <programlisting>
-$ swift -sites.file /sw/workflow/sites-chicago.xml flipper.swift
+$ swift -sites.file ~benc/workflow/sites-iceage.xml flipper.swift
 </programlisting>
 
 <para>
