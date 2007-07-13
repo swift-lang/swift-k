@@ -867,7 +867,7 @@ in an array.
 </para>
 
 <programlisting>
-volume references[] &gt;csv_mapper;file="reference.csv"&lt;;
+volume references[] &lt;csv_mapper;file="reference.csv"&gt;;
 volume reference=references[0];
 </programlisting>
 
@@ -876,7 +876,7 @@ of reference files into the reference variable using a complex type.
 </para>
 
 <programlisting>
-volume subjects[] &gt;csv_mapper;file="subjects.csv"&lt;;
+volume subjects[] &lt;csv_mapper;file="subjects.csv"&gt;;
 </programlisting>
 
 <para>
