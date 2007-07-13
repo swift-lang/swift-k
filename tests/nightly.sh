@@ -319,7 +319,7 @@ EXITONFAILURE=true
 if [ "$FCO" != "1" ]; then
 	TEST="Checkout CoG"
 	pexec rm -rf cog
-	vexec svn co https://svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog
+	vexec svn co https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog
 
 	TEST="Checkout Swift"
 	pexec rm -rf trunk
