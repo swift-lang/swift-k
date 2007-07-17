@@ -918,7 +918,7 @@ anatomy data sets 3 and 4.
 </para>
 
 <programlisting>
-volume slices[] &gt;csv_mapper;file="slices.csv"&lt;;
+volume slices[] &lt;csv_mapper;file="slices.csv"&gt;;
 </programlisting>
 
 <para>
