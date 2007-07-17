@@ -946,13 +946,13 @@ slice4.img,slice4.hdr
 <programlisting>
 slices = all_align_reslices(reference, subjects);
 
-volume atlas &gt;simple_mapper;prefix="atlas"&lt;;
+volume atlas &lt;simple_mapper;prefix="atlas"&gt;;
 atlas = softmean(slices);
 
 string directions[] = [ "x", "y", "z"];
 
 foreach direction in directions {
-    imagefile o &gt;single_file_mapper;file=@strcat("atlas-",direction,".jpeg")&lt;;
+    imagefile o &lt;single_file_mapper;file=@strcat("atlas-",direction,".jpeg")&gt;;
     string option = @strcat("-",direction);
     o = slice_to_jpeg(atlas, option, ".5");
 }
