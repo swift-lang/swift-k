@@ -766,6 +766,13 @@ reslice   (the path is /afs/pdc.kth.se/home/b/benc/workflow/app/AIR/bin/reslice)
 softmean  (the path is /afs/pdc.kth.se/home/b/benc/workflow/app/softmean-swift)
 </programlisting>
 
+<para>
+These programs come from several software packages:
+the AIR (Automated Image Registration) suite
+http://bishopw.loni.ucla.edu/AIR5/index.html and
+FSL http://www.fmrib.ox.ac.uk/fsl/fsl/intro.html
+</para>
+
 <para>Make sure you have added three entries to the transformation
 catalog, listing the above three transformations and the appropriate
 path</para>
