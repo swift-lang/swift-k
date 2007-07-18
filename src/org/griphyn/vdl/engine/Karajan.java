@@ -366,13 +366,9 @@ public class Karajan {
 		String in = foreach.getIn();
 		StringTemplate inST = template("in");
 		setPath(inST, in);
-StringTemplate parentST = foreachST.getEnclosingInstance();
-System.err.println("marking dataset");
-// NEED TO MARKDATASET ON THE INPUT
-markDataset(inST, parentST, true);
-System.err.println("done marking dataset");
+		StringTemplate parentST = foreachST.getEnclosingInstance();
+		markDataset(inST, parentST, true);
 		foreachST.setAttribute("in", inST);
-
 		statements(foreach, foreachST);
 	}
 
