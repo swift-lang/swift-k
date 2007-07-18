@@ -199,6 +199,9 @@ $endif$
 </parallelFor>
 >>
 
+in(var) ::= <<
+>>
+
 call(func, outputs, inputs) ::= <<
 <$func$>
   <parallel>

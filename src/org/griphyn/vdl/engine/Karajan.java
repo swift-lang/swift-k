@@ -364,9 +364,13 @@ public class Karajan {
 		foreachST.setAttribute("var", foreach.getVar());
 		foreachST.setAttribute("indexVar", foreach.getIndexVar());
 		String in = foreach.getIn();
-		StringTemplate inST = new StringTemplate("in");
+		StringTemplate inST = template("in");
 		setPath(inST, in);
-
+StringTemplate parentST = foreachST.getEnclosingInstance();
+System.err.println("marking dataset");
+// NEED TO MARKDATASET ON THE INPUT
+markDataset(inST, parentST, true);
+System.err.println("done marking dataset");
 		foreachST.setAttribute("in", inST);
 
 		statements(foreach, foreachST);
@@ -715,8 +719,9 @@ public class Karajan {
 			// variable reference, mark the variable
 			StringTemplate varST = (StringTemplate) exprST.getAttribute("var");
 			markDataset((String) varST.getAttribute("var"), st, isInput);
-		}
-		else {
+		} else if(exprST.getName().equals("in")) {
+			markDataset((String) exprST.getAttribute("var"), st, isInput);
+		} else {
 			// an expression, mark all subelements
 			Map subSTMap = exprST.getAttributes();
 			for (Iterator it = subSTMap.values().iterator(); it.hasNext();) {
