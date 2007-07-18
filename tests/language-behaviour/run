@@ -17,12 +17,18 @@ for testfn in $TESTS; do
 
   for e in $EXPECTEDS; do
 
-    echo checking $e
-    out=$(basename $e .expected)
+    if [ -f $e ]; then
 
-    if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
-    diff -q ${out} ${e}
-    if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+      echo checking $e
+      out=$(basename $e .expected)
+
+      if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
+      diff -q ${out} ${e}
+      if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+
+    else
+      echo "$e does not exist"
+    fi
 
   done
 
