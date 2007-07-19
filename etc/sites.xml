@@ -4,8 +4,8 @@ xsi:schemaLocation="http://www.griphyn.org/chimera/GVDS  http://www.griphyn.org/
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.5">
 
 <!--
-by tiberius@ci.uchicago.edu
-How I build this list
+How this list was constructed:
+
 1. Teragrid
 http://www.teragrid.org/userinfo/hardware/resources.php
 fill out the gatekeeper info and the gridftp hostname
