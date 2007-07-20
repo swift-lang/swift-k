@@ -19,7 +19,11 @@ public class GetField extends VDLFunction {
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+		Object var1 = PA_VAR.getValue(stack);
+		if(!(var1 instanceof DSHandle)) {
+			throw new ExecutionException("was expecting a dshandle, got: "+var1.getClass());
+		}
+		DSHandle var = (DSHandle) var1;
 		try {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
 			Collection fields = var.getFields(path);
