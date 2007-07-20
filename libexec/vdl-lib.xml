@@ -1,16 +1,18 @@
 <karajan>
   <namespace prefix="vdl">
 	<export name="new"><elementDef classname="org.griphyn.vdl.karajan.lib.New"/></export>
-	
-<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.Misc"/></export>
-<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.Misc"/></export>
+
+	<!-- string functions library -->
+	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.Misc"/></export>
+	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.Misc"/></export>
+
 	<!-- used from VDL2 for arguments to apps and returns relative paths -->
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.FileName"/></export>
 	<!-- returns multiple names instead of concatenating them -->
 	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.FileNames"/></export>
 	<!-- for internal use and does not force relative paths -->
 	<export name="absFileName"><elementDef classname="org.griphyn.vdl.karajan.lib.AbsFileName"/></export>
-	
+
 	<export name="jobConstraints"><elementDef classname="org.griphyn.vdl.karajan.lib.JobConstraints"/></export>
 	<export name="getField"><elementDef classname="org.griphyn.vdl.karajan.lib.GetField"/></export>
 	<export name="setFieldValue"><elementDef classname="org.griphyn.vdl.karajan.lib.SetFieldValue"/></export>
@@ -22,30 +24,30 @@
 	<export name="assign"><elementDef classname="org.griphyn.vdl.karajan.lib.Assign"/></export>
 	<export name="closeDataset"><elementDef classname="org.griphyn.vdl.karajan.lib.CloseDataset"/></export>
 	<export name="range"><elementDef classname="org.griphyn.vdl.karajan.lib.Range"/></export>
-	
+
 	<export name="isLogged"><elementDef classname="org.griphyn.vdl.karajan.lib.IsLogged"/></export>
 	<export name="logVar"><elementDef classname="org.griphyn.vdl.karajan.lib.LogVar"/></export>
 	<export name="typecheck"><elementDef classname="org.griphyn.vdl.karajan.lib.Typecheck"/></export>
-	
+
 	<export name="threadPrefix"><elementDef classname="org.griphyn.vdl.karajan.lib.ThreadPrefix"/></export>
-	
+
 	<export name="executable"><elementDef classname="org.griphyn.vdl.karajan.lib.Executable"/></export>
 	<export name="TCProfile"><elementDef classname="org.griphyn.vdl.karajan.lib.TCProfile"/></export>
-	
+
 	<export name="setFutureFault"><elementDef classname="org.griphyn.vdl.karajan.lib.SetFutureFault"/></export>
-	
+
 	<export name="configProperty"><elementDef classname="org.griphyn.vdl.karajan.functions.ConfigProperty"/></export>
 	<export name="processBulkErrors"><elementDef classname="org.griphyn.vdl.karajan.functions.ProcessBulkErrors"/></export>
-	
+
 	<export name="niceName"><elementDef classname="org.griphyn.vdl.karajan.lib.NiceName"/></export>
-	
+
 	<export name="cacheAddAndLockFile"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheAddAndLockFile"/></export>
 	<export name="cacheAddFile"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheAddFile"/></export>
 	<export name="cacheFileRemoved"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheFileRemoved"/></export>
 	<export name="cacheUnlockFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheUnlockFiles"/></export>
-	
+
 	<export name="log"><elementDef classname="org.griphyn.vdl.karajan.lib.Log"/></export>
-	
+
 	<export name="kickstart"><elementDef classname="org.griphyn.vdl.karajan.lib.Kickstart"/></export>
   </namespace>
 </karajan>
