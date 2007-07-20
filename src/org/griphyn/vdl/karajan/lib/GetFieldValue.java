@@ -36,7 +36,8 @@ public class GetFieldValue extends VDLFunction {
 					return var.getFields(path).toArray();
 				}
 				catch (HandleOpenException e) {
-					logger.debug("Waiting for var="+var+" path="+path);
+					if(logger.isDebugEnabled())
+						logger.debug("Waiting for var="+var+" path="+path);
 					throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
 				}
 			}
@@ -50,7 +51,8 @@ public class GetFieldValue extends VDLFunction {
 				}
 				synchronized (var) {
 					if (!var.isClosed()) {
-						logger.debug("Waiting for "+var);
+						if(logger.isDebugEnabled())
+							logger.debug("Waiting for "+var);
 						throw new FutureNotYetAvailable(addFutureListener(stack, var));
 					}
 					else {
