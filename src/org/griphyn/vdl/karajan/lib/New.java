@@ -53,7 +53,7 @@ public class New extends VDLFunction {
 			}
 		}
 		try {
-			AbstractDataNode handle;
+			DSHandle handle;
 			if (isArray) {
 				// dealing with array variable
 				handle = new RootArrayDataNode(type);
@@ -91,11 +91,9 @@ public class New extends VDLFunction {
 				if (mapping != null) {
 					handle.init(mapping);
 				}
-
-				return handle;
 			}
-			if (value instanceof DSHandle) {
-				return value;
+			else if (value instanceof DSHandle) {
+				handle = (DSHandle) value;
 			}
 			else if (type != null) {
 				handle = new RootDataNode(type);
