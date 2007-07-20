@@ -62,9 +62,6 @@ public interface DSHandle {
     /** create a new logical component */
     public DSHandle createDSHandle(String fieldName) throws NoSuchFieldException;
 
-    /** write to the data source */
-    public void commit();
-
     // special file oriented methods, not sure if these apply to 
     // all datasets
 

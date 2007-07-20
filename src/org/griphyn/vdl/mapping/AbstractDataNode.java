@@ -265,9 +265,6 @@ public abstract class AbstractDataNode implements DSHandle {
 		this.value = leafValue;
 	}
 
-	public void commit() {
-	}
-
 	public String getFilename() {
 		checkMappingException();
 		Path path = Path.EMPTY_PATH;
