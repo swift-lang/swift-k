@@ -277,7 +277,7 @@ namespace("vdl"
 		)
 		
 		element(fileSizes, [files]
-			sum(
+			math:sum(
 				for(f, files, file:size(file))
 			)
 		)
