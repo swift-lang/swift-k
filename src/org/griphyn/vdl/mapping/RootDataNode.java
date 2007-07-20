@@ -59,7 +59,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
 	public static void checkInputs(Map params, Mapper mapper, AbstractDataNode root) {
 		String input = (String) params.get("input");
-		if (input != null && Boolean.valueOf(input).booleanValue()) {
+		if (input != null && Boolean.valueOf(input.trim()).booleanValue()) {
 			Iterator i = mapper.existing().iterator();
 			while (i.hasNext()) {
 				Path p = (Path) i.next();
