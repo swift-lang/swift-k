@@ -60,7 +60,6 @@ public class Karajan {
 
 		String defs = args[0];
 
-		// System.out.println("input:" + defs);
 		StringTemplateGroup templates = new StringTemplateGroup(new InputStreamReader(
 				Karajan.class.getClassLoader().getResource(templateFileName).openStream()));
 
