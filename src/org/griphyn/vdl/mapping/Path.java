@@ -1,6 +1,3 @@
-/*
- * Created on Jun 9, 2006
- */
 package org.griphyn.vdl.mapping;
 
 import java.util.ArrayList;
@@ -8,11 +5,17 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+/** Represents a path (into a DSHandle?) and contains helper methods
+    and member classes. */
+
 public class Path {
 	public static final Path EMPTY_PATH = new EmptyPath();
 	public static final Path CHILDREN = Path.parse("*");
 
+	/** A list of Path.Entry objects that represent the path. */
 	private List elements;
+
+	/** True if any element of the Path contains a wildcard. */
 	private boolean wildcard;
 
 	public static class EmptyPath extends Path {
@@ -25,8 +28,17 @@ public class Path {
 		}
 	}
 
+
+	/** Represents a component of a path. */
 	public static class Entry {
+
+		/** Indicates whether this path component is an array index.
+		  * If so, then name will be the index into the array. If not, then
+		  * name will be the name of the subelement. */
 		private boolean index;
+
+		/** The name of this path entry (either the array offset or the
+		  * type member name. */
 		private String name;
 
 		public Entry(String name, boolean index) {
@@ -94,7 +106,8 @@ public class Path {
 			switch (c) {
 				case '[': {
 					if (sb.length() == 0) {
-						continue;
+						continue; // TODO: what case does this capture?
+						          // attempt to use multidim arrays?
 					}
 				}
 				case '.': {
@@ -187,8 +200,6 @@ public class Path {
 		return addFirst(element, false);
 	}
 
-	// TODO must check if new entry is a wildcard or not and update the variable
-	// properly
 	public Path addLast(String element, boolean index) {
 		Path p = new Path(this);
 		Entry e;
