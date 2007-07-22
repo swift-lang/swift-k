@@ -13,6 +13,8 @@ for testfn in $TESTS; do
   echo Running test $t
   swift ${t}.swift
 
+  if [ "$?" -ne "0" ]; then echo "RETURN CODE NON-ZERO"; exit; fi
+
   echo expecting $EXPECTEDS
 
   for e in $EXPECTEDS; do
