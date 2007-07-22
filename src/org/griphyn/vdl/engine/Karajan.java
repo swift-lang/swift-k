@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
+import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
 import org.griphyn.vdl.model.ActualParameter;
@@ -46,6 +47,8 @@ import org.griphyn.vdl.parser.VDLExpression;
 import org.safehaus.uuid.UUIDGenerator;
 
 public class Karajan {
+	public static final Logger logger = Logger.getLogger(Karajan.class);
+
 	StringTemplateGroup m_templates;
 	VDLExpression m_exprParser;
 
