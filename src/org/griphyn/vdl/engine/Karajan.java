@@ -67,6 +67,14 @@ public class Karajan {
 				Karajan.class.getClassLoader().getResource(templateFileName).openStream()));
 
 		ProgramDocument programDoc = ProgramDocument.Factory.parse(new File(defs));
+
+		if(programDoc.validate()) {
+			logger.debug("Validation of XML intermediate file was successful");
+		} else {
+			logger.warn("Validation of XML intermediate file failed");
+			System.exit(1);
+		}
+
 		Program prog = programDoc.getProgram();
 
 		me.setTemplateGroup(templates);
