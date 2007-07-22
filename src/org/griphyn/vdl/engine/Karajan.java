@@ -3,15 +3,19 @@ package org.griphyn.vdl.engine;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlObject;
+import org.apache.xmlbeans.XmlOptions;
 import org.griphyn.vdl.model.ActualParameter;
 import org.griphyn.vdl.model.ApplicationBinding;
 import org.griphyn.vdl.model.Argument;
@@ -67,19 +71,34 @@ public class Karajan {
 				Karajan.class.getClassLoader().getResource(templateFileName).openStream()));
 
 		ProgramDocument programDoc = ProgramDocument.Factory.parse(new File(defs));
-
-		if(programDoc.validate()) {
-			logger.debug("Validation of XML intermediate file was successful");
-		} else {
-			logger.warn("Validation of XML intermediate file failed");
-			System.exit(1);
-		}
+		validateProgramXML(programDoc);
 
 		Program prog = programDoc.getProgram();
 
 		me.setTemplateGroup(templates);
 		StringTemplate code = me.program(prog);
 		System.out.println(code.toString());
+	}
+
+	public static void validateProgramXML(ProgramDocument programDoc) {
+
+		XmlOptions options = new XmlOptions();
+		Collection errors = new ArrayList();
+		options.setErrorListener(errors);
+		if(programDoc.validate(options)) {
+			logger.debug("Validation of XML intermediate file was successful");
+		} else {
+			logger.warn("Validation of XML intermediate file failed.");
+				// these errors look rather scary, so output them at
+				// debug level
+			logger.debug("Validation errors:");
+			Iterator i = errors.iterator();
+			while(i.hasNext()) {
+				XmlError error = (XmlError) i.next();
+				logger.debug(error.toString());
+			}
+			System.exit(1);
+		}
 	}
 
 	public Karajan() {
