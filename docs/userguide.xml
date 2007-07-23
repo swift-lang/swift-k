@@ -967,7 +967,7 @@ the file should contain a header line specifying the names of the columns.
 							</para>
 							
 							<para>
-								Default value: <literal>true</literal>
+								Default value: <literal>false</literal>
 							</para>
 							
 							<para>
