@@ -968,19 +968,31 @@ the file should contain a header line specifying the names of the columns.
 							
 							<para>
 							
-								Swift can generate a provenance graph that shows
+								Swift can generate a graphviz file representing 
 								the structure of the workflow it runs. If this
 								property is set to <literal>true</literal>,
 								Swift will save the provenance graph in a file
 								named by concatenating the workflow name and the
 								instance ID (e.g. <filename
 								class="file">helloworld-ht0adgi315l61.dot</filename>). 
+							</para>
+							<para>
 								If set to <literal>false</literal>, no
 								provenance  graph will be generated. If a file
 								name is used, then  the provenance graph will be
 								saved in the specified file.
-								
 							</para>
+							<para>
+								The generated dot file can be rendered
+								into a graphical form using
+								<ulink
+								url="http://www.graphviz.org">Graphviz</ulink>,
+								for example with a command-line such as:
+							</para>
+							<programlisting>
+								swift -pgraph graph1.dot q1.swift
+								dot -ograph.png -Tpng graph1.dot
+							</programlisting>
 						</listitem>
 					</varlistentry>
 					
