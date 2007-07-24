@@ -3,7 +3,12 @@
 echo Removing files from previous runs
 rm -fv *.out *.xml *.kml *.dot *.log *.rlog
 
-TESTS=*.swift
+
+if [ "X$1" == "X" ]; then
+  TESTS=*.swift
+else
+  TESTS="$@"
+fi
 
 for testfn in $TESTS; do
 
