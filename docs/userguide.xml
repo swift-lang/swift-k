@@ -1418,7 +1418,7 @@ This section attempts to provide a technical overview of the Swift
 architecture.
 	</para>
 
-	<sect2><title>karajan - the core exectuion engine</title>
+	<sect2><title>karajan - the core execution engine</title>
 	</sect2>
 
 	<sect2><title>Execution layer</title>
