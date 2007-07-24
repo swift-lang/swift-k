@@ -455,9 +455,9 @@ There is a simplified syntax for this mapper:
 	<itemizedlist>
 	<listitem>Name: simple_mapper</listitem>
 	<listitem>Description:
-A mapper that maps a file or a list of files into an array.
+A mapper that maps a file or a list of files into an array
 by prefix, suffix, and pattern.
-if there are more than one file matched, each of the file names would
+If more than one file is matched, each of the file names will
 be mapped as a subelement of the dataset.
 	</listitem>
 	<listitem>Parameter:
