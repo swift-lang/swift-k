@@ -16,5 +16,5 @@ type file {}
 }
 
 file list, count;
-list = ls("*.txt");
+list = ls("/");
 count = wc(list);
