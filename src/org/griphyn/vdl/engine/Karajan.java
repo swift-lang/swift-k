@@ -97,7 +97,7 @@ public class Karajan {
 				XmlError error = (XmlError) i.next();
 				logger.debug(error.toString());
 			}
-			System.exit(1);
+			System.exit(3);
 		}
 	}
 
