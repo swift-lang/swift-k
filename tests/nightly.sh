@@ -3,7 +3,7 @@
 OUTDIR=$PWD
 LOGCOUNT=0
 SEQ=1
-DATE=`date +"%y%m%d"`
+DATE=`date +"%Y-%m-%d"`
 TIME=`date +"%T %Z(%z)"`
 RUNDIRBASE="run-$DATE"
 RUNDIR=$OUTDIR/$RUNDIRBASE
@@ -61,7 +61,12 @@ DOH
 		</style>
 	</head>
 	<body>
-	<h1>Swift nightly integration tests and build ($DATE $TIME)</h1>
+	<h1>Swift nightly integration tests and build</h1>
+	<ul>
+	  <li>Date: $DATE</li>
+	  <li>Time: $TIME</li>
+	  <li>Test host: $(hostname)</li>
+	</ul>
 	<ol>
 		<li><a href="#tests">Test results</a>
 		<li><a href="#packages">Compiled packages</a>
