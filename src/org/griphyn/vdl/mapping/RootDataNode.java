@@ -14,8 +14,9 @@ import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.TypeDefinitions;
 
 public class RootDataNode extends AbstractDataNode implements DSHandleListener {
-	public static final Logger logger = Logger.getLogger(RootDataNode.class);
-	
+
+	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
+
 	private Mapper mapper;
 	private Map params;
 
@@ -26,13 +27,14 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
 	public void init(Map params) {
 		this.params = params;
-		getField().setName((String) params.get("prefix"));
+
 		String desc = (String) params.get("descriptor");
 		if (desc == null)
 			return;
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
 			checkInputs();
+			getField().setName(PARAM_PREFIX.getStringValue(mapper));
 		}
 		catch (InvalidMapperException e) {
 			throw new IllegalArgumentException(e.getMessage());
