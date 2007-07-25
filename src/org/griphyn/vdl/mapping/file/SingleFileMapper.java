@@ -1,6 +1,3 @@
-/*
- * Created on Jun 30, 2006
- */
 package org.griphyn.vdl.mapping.file;
 
 import java.io.File;
@@ -11,8 +8,12 @@ import java.util.Collections;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
+/** Maps every Path to a single file name (specified by the "file" parameter),
+  *  and every filename to the empty path.
+  */
 public class SingleFileMapper extends AbstractFileMapper {
-    public static final MappingParam PARAM_FILE = new MappingParam("file");
+
+	public static final MappingParam PARAM_FILE = new MappingParam("file");
 
 	public SingleFileMapper() {
 		super();

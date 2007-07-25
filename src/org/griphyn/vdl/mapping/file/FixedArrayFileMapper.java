@@ -1,6 +1,3 @@
-/*
- * Created on Jun 30, 2006
- */
 package org.griphyn.vdl.mapping.file;
 
 import java.util.ArrayList;
@@ -14,6 +11,9 @@ import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
+
+/** Maps a string (separated by space, comma or semicolon) of filenames to
+    an array. */
 public class FixedArrayFileMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_FILES = new MappingParam("files");
 

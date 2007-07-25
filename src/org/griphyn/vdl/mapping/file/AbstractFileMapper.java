@@ -161,6 +161,25 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		return l;
 	}
 
+
+	/** Returns the SwiftScript path for a supplied filename.
+	  *
+	  * Splits the filename into components using the separator
+	  * supplied by the relevant FileNameElementMapper.
+	  *
+	  * If no separator is provided at any time during the processing,
+	  * then somewhat different behaviour occurs:
+	  *   the remaining filename is split using "."
+	  *   if the remaining path does not have two components, then 
+	  *      map the whole remaining path (including dots) at once
+	  *   otherwise (when the remaining path has exactly two components):
+	  *      if either of the components is of length 0, then return null
+	  *      otherwise construct path out of two path components
+	  *
+	  * @param name the filename to map to a path
+	  * @return a Path to the supplied filename, null on failure
+	  */
+
 	public Path rmap(String name) {
 		Path path = Path.EMPTY_PATH;
 		int level = 0;
@@ -188,6 +207,11 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		}
 	}
 
+	/** maps the supplied filename component to a path segment and appends it
+	  * to the supplied path. If the filename component is a numerical
+	  * digit, then it will be treated as an array index; otherwise it
+	  * will be treated as a structure field name.
+	  */
 	protected Path rmapElement(Path path, String e) {
 		if (Character.isDigit(e.charAt(0))) {
 			return path.addLast(String.valueOf(getElementMapper().rmapIndex(e)), true);
@@ -197,6 +221,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		}
 	}
 
+	/** Appends the string representation of obj to the string buffer
+	    if obj is not null. */
 	private void maybeAppend(StringBuffer sb, Object obj) {
 		if (obj != null) {
 			sb.append(obj.toString());
