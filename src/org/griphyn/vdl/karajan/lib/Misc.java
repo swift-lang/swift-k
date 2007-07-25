@@ -69,12 +69,18 @@ public class Misc extends FunctionsCollection {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
 		if(logger.isDebugEnabled()) logger.debug("strcut will match '"+inputString+"' with pattern '"+pattern+"'");
-		Pattern p = Pattern.compile(pattern);
+
+		String group;
+		try {
+			Pattern p = Pattern.compile(pattern);
 // TODO probably should memoize this?
 
-		Matcher m = p.matcher(inputString);
-		m.find();
-		String group = m.group(1);
+			Matcher m = p.matcher(inputString);
+			m.find();
+			group = m.group(1);
+		} catch(IllegalStateException e) {
+			throw new ExecutionException("@strcut could not match pattern "+pattern+" against string "+inputString,e);
+		}
 		if(logger.isDebugEnabled()) logger.debug("strcut matched '"+group+"'");
 		return group;
 	}
