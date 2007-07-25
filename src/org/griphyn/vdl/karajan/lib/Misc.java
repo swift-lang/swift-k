@@ -51,11 +51,6 @@ public class Misc extends FunctionsCollection {
 	public static final Arg PA_INPUT = new Arg.Positional("input");
 	public static final Arg PA_PATTERN = new Arg.Positional("regexp");
 
-// TODO note that using concat here caused namespace conflict errors
-// that suggest that either my understanding of how these names are
-// registered is wrong or that there is something not working as
-// i expect in karajan - investigate that (with mihael's help...)
-
 	static {
 		setArguments("vdl_strcat", new Arg[] { Arg.VARGS });
 		setArguments("vdl_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
