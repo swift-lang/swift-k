@@ -145,7 +145,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	public void set(DSHandle handle) {
 		// TODO check type
 		if (closed) {
-			throw new IllegalArgumentException(this + " is already assigned");
+			throw new IllegalArgumentException(this.getDisplayableName() + " is already assigned");
 		}
 		if (getParent() == null) {
 			/*
@@ -252,7 +252,7 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public void setValue(Object value) {
 		if (this.value != null) {
-			throw new IllegalArgumentException(this + " is already assigned with a value of "
+			throw new IllegalArgumentException(this.getDisplayableName() + " is already assigned with a value of "
 					+ this.value);
 		}
 		Object leafValue = value;
