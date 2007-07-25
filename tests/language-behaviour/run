@@ -18,7 +18,7 @@ for testfn in $TESTS; do
   echo Running test $t
   swift ${t}.swift
 
-  if [ "$?" -ne "0" ]; then echo "RETURN CODE NON-ZERO"; exit; fi
+  if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO"; exit 1; fi
 
   echo expecting $EXPECTEDS
 
@@ -29,9 +29,8 @@ for testfn in $TESTS; do
       echo checking $e
       out=$(basename $e .expected)
 
-      if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
       diff -q ${out} ${e}
-      if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+      if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit 1; fi
 
     else
       echo "$e does not exist"
@@ -43,5 +42,5 @@ done
 
 echo All language behaviour tests passed
 
-
+exit 0
 

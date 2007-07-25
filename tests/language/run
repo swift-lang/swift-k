@@ -9,10 +9,17 @@ rm -v *.?ml
 for a in *.dtm; do 
   echo Attempting vdlc known-good $a
   vdlc $a
-  if [ "$?" -ne "0" ]; then echo "TEST FAILED"; exit; fi
+  VDLCRETURN=$?
+  if [ "$VDLCRETURN" -ne "0" ]; then 
+    echo "COMPILE FAILED WITH RETURN CODE $VDLCRETURN"
+    exit 1
+  fi
   b=$(basename -s .dtm $a).xml
   diff -q $b ../working-base/$b
-  if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit; fi
+  if [ "$?" -ne "0" ]; then
+    echo "OUTPUT DIFFERS"
+    exit 1
+  fi
 
 done
 popd
@@ -23,7 +30,9 @@ for a in *.dtm; do
 
   echo Attempting vdlc known-bad $a
   vdlc $a
-  if [ "$?" -eq "0" ]; then echo "TEST FAILED"; exit; fi
+  if [ "$?" -eq "0" ]; then echo "TEST FAILED - COMPILE SUCCEEDED"; exit; fi
 
 done
 echo Finished all syntax tests
+exit 0
+
