@@ -255,10 +255,6 @@ repeat(cond,body) ::= <<
 </repeat>
 >>
 
-break() ::= <<
-<break/>
->>
-
 continue() ::= <<
 <continue/>
 >>

@@ -1,3 +1,10 @@
+(07/28/07)
+
+*** Removed break; statement from the language. It was previously unimplemented
+    and acted as a no-op. Any code which now does not compile can be made to
+    compile by removing the break statements. No other changes should be
+    necessary, and no behavioural changes should result.
+
 (07/19/07)
 
 *** Swift 0.2 release made from Swift SVN r915 and CoG SVN r1658

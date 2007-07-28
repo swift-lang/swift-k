@@ -470,7 +470,6 @@ ll1statement returns [StringTemplate code=null]
     | code=switchStat
     | code=repeatStat
     | code=whileStat
-    | "break" {code=template("break");} SEMI
     | "continue" {code=template("continue");} SEMI
     | SEMI {code=template("blank");}
     ;
