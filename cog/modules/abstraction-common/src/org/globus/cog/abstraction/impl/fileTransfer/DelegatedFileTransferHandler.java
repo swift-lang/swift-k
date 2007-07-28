@@ -146,7 +146,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                     "Invalid destination provider");
         }
 
-        if (spec.isThirdParty()) {
+        if (spec.isThirdParty() || spec.isThirdPartyIfPossible()) {
             if ((sourceService.getProvider().equalsIgnoreCase("gridftp")
                     || sourceService.getProvider().equalsIgnoreCase("gsiftp") || sourceService
                     .getProvider().equalsIgnoreCase("gridftp-old"))
@@ -157,7 +157,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                             .getProvider().equalsIgnoreCase("gridftp-old"))) {
                 this.thirdparty = true;
             }
-            else {
+            else if (spec.isThirdParty()) {
                 throw new IllegalSpecException(
                         "Third party transfers between providers "
                                 + sourceService.getProvider() + " and "
@@ -165,14 +165,13 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                                 + " is not supported");
             }
         }
-        else {
-            if (!canHandle(sourceService) || !canHandle(destinationService)) {
-                throw new TaskSubmissionException(
-                        "Could not find appropriate providers to handle a "
-                                + sourceService.getProvider() + " -> "
-                                + destinationService.getProvider()
-                                + " transfer");
-            }
+
+        if (!this.thirdparty
+                && (!canHandle(sourceService) || !canHandle(destinationService))) {
+            throw new TaskSubmissionException(
+                    "Could not find appropriate providers to handle a "
+                            + sourceService.getProvider() + " -> "
+                            + destinationService.getProvider() + " transfer");
         }
     }
 
@@ -275,11 +274,12 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                         logger.debug("File transfer with resource remote->tmp");
                     }
                     this.sourceResource.getFile(spec.getSource(),
-                            localDestination.getAbsolutePath(), new ProgressMonitor() {
+                            localDestination.getAbsolutePath(),
+                            new ProgressMonitor() {
                                 public void progress(long current, long total) {
-                                	task.setStdOutput(current+"/"+total);
+                                    task.setStdOutput(current + "/" + total);
                                 }
-                    });
+                            });
                 }
                 return localDestination;
             }
