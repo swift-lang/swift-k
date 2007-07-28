@@ -93,6 +93,16 @@ public interface FileTransferSpecification extends Specification {
      * Checks if the transfer is a third party file transfer.
      */
     public boolean isThirdParty();
+    
+    /**
+     * Specifies that the implementation should attempt a third party transfer if possible
+     * given the other constraints, but it should fall back to second party or simulated
+     * third party transfers otherwise. This setting has no effect if third party transfers
+     * are forced using <code>setThirdParty(true)</code> 
+     */
+    public void setThirdPartyIfPossible(boolean bool);
+    
+    public boolean isThirdPartyIfPossible();
 
     public void setAttribute(String name, Object value);
 
