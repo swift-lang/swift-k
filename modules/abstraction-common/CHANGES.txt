@@ -1,3 +1,12 @@
+(07/28/2007)
+
+*** Added a thirdPartyIfPossible property to file transfer specifications.
+    The behavior of the existing thirdParty flag in implementations would
+    be to fail if the flag is set to true, but no actual third party transfer
+    is possible (due to, for example, the providers not supporting it).
+    The new flag allows a lenient request to be made. If this flag is set, 
+    implementations should attempt 3rd party transfers if possible, but
+    fall back to simulating it if necessary.
 
 (05/18/2007)
 
