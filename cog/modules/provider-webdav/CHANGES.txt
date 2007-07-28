@@ -1,3 +1,8 @@
+(07/28/2007)
+
+*** Added a http provider that can fetch documents and/or files
+    through the http protocol
+
 (01/28/2007)
 
 *** Updated file resource exceptions
