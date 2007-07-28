@@ -14,13 +14,14 @@ import org.globus.cog.abstraction.interfaces.Specification;
 
 public class FileTransferSpecificationImpl implements FileTransferSpecification {
 	private int type;
-	private String sourceDirectory = null;
-	private String destinationDirectory = null;
-	private String sourceFile = null;
-	private String destinationFile = null;
-	private String source = null;
-	private String destination = null;
-	private boolean thirdparty = false;
+	private String sourceDirectory;
+	private String destinationDirectory;
+	private String sourceFile;
+	private String destinationFile;
+	private String source;
+	private String destination;
+	private boolean thirdparty;
+    private boolean thirdPartyIfPossible;
 	private long sourceFileOffset, destinationFileOffset, sourceFileLength;
 	private Hashtable attributes;
 
@@ -111,7 +112,12 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 		}
 		else {
 			if ((sourceDirectory != null) && !sourceDirectory.equals("")) {
-				return sourceDirectory + "/" + sourceFile;
+				if (sourceDirectory.endsWith("/")) {
+					return sourceDirectory + sourceFile;
+				}
+				else {
+				    return sourceDirectory + "/" + sourceFile;
+				}
 			}
 			else {
 				return sourceFile;
@@ -131,7 +137,12 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 		}
 		else {
 			if ((destinationDirectory != null) && !destinationDirectory.equals("")) {
-				return destinationDirectory + "/" + destinationFile;
+				if (destinationDirectory.endsWith("/")) {
+				    return destinationDirectory + destinationFile;
+				}
+				else {
+					return destinationDirectory + "/" + destinationFile;
+				}
 			}
 			else {
 				return destinationFile;
@@ -147,7 +158,15 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 		return this.thirdparty;
 	}
 
-	public void setAttribute(String name, Object value) {
+	public boolean isThirdPartyIfPossible() {
+        return thirdPartyIfPossible;
+    }
+
+    public void setThirdPartyIfPossible(boolean thirdPartyIfPossible) {
+        this.thirdPartyIfPossible = thirdPartyIfPossible;
+    }
+
+    public void setAttribute(String name, Object value) {
 		this.attributes.put(name, value);
 	}
 
