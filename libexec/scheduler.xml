@@ -40,8 +40,10 @@
 		<task:handler type="execution" provider="gt2"/>
 		<task:handler type="execution" provider="gt4"/>
 		<task:handler type="execution" provider="local"/>
+		<!--<task:handler type="execution" provider="pbs"/>-->
 		<task:handler type="file" provider="gsiftp"/>
 		<task:handler type="file" provider="local"/>
+		<task:handler type="file" provider="http"/>
 		
 		<vdl:siteCatalog file="{sites}"/>
 	</scheduler>
