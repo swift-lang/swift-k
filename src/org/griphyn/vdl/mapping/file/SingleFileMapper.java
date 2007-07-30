@@ -1,10 +1,10 @@
 package org.griphyn.vdl.mapping.file;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
@@ -20,7 +20,7 @@ public class SingleFileMapper extends AbstractFileMapper {
 	}
 
 	public Collection existing() {
-		if (new File(PARAM_FILE.getStringValue(this)).exists()) {
+		if (new AbsFile(PARAM_FILE.getStringValue(this)).exists()) {
 			return Arrays.asList(new Path[] {Path.EMPTY_PATH});
 		}
 		else {

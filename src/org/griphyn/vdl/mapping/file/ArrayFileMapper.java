@@ -1,25 +1,19 @@
 package org.griphyn.vdl.mapping.file;
 
-import java.io.File;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.AbstractMapper;
 
-public class ArrayFileMapper extends AbstractMapper {
+public class ArrayFileMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_FILES = new MappingParam("files");
 
 	public Collection existing() {
@@ -62,10 +56,4 @@ public class ArrayFileMapper extends AbstractMapper {
 	public boolean isStatic() {
 		return false;
 	}
-
-	public boolean exists(Path path) {
-		File f = new File(map(path));
-		return f.exists();
-	}
-
 }

@@ -14,6 +14,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.lib.cache.CacheReturn;
 import org.griphyn.vdl.karajan.lib.cache.File;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
+import org.griphyn.vdl.mapping.AbsFile;
 
 public class CacheUnlockFiles extends CacheFunction {
 	public static final Arg FILE = new Arg.Positional("files");
@@ -35,7 +36,7 @@ public class CacheUnlockFiles extends CacheFunction {
 		Iterator i = pairs.iterator();
 		while (i.hasNext()) {
 			String file = (String) i.next();
-			File f = new File(file, dir, host, 0);
+			File f = new File(new AbsFile(file).getPath(), dir, host, 0);
 			CacheReturn cr = cache.unlockEntry(f, TypeUtil.toBoolean(FORCE.getValue(stack)));
 			rem.addAll(cr.remove);
 		}

@@ -24,7 +24,6 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -35,6 +34,7 @@ import org.griphyn.vdl.karajan.Monitor;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.WrapperMap;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.HandleOpenException;
@@ -67,7 +67,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			throw new ExecutionException(e);
 		}
 	}
-	
+
 	protected void ret(VariableStack stack, final Object value) throws ExecutionException {
 		if (value != null) {
 			final VariableArguments vret = ArgUtil.getVariableReturn(stack);
@@ -190,14 +190,14 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-
-	/** Given a field (or Collection of fields) on the stack, returns 
-	 *  the filename(s) that are mapped that field(s).
+	/**
+	 * Given a field (or Collection of fields) on the stack, returns the
+	 * filename(s) that are mapped that field(s).
 	 */
 	public String[] filename(VariableStack stack) throws ExecutionException {
 
 		Object ovar = PA_VAR.getValue(stack);
-		if(ovar instanceof DSHandle) {
+		if (ovar instanceof DSHandle) {
 			DSHandle var = (DSHandle) ovar;
 
 			try {
@@ -218,26 +218,50 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			catch (DependentException e) {
 				return new String[0];
 			}
-		} else if(ovar instanceof Collection) {
+		}
+		else if (ovar instanceof Collection) {
 			// assume here that the Collection is all DSHandles
-			Iterator iterator = ((Collection)ovar).iterator();
+			Iterator iterator = ((Collection) ovar).iterator();
 			ArrayList out = new ArrayList();
-			while(iterator.hasNext()) {
-				DSHandle h = (DSHandle)iterator.next();
+			while (iterator.hasNext()) {
+				DSHandle h = (DSHandle) iterator.next();
 				String filename = h.getFilename();
 				out.add(filename);
 			}
 			return (String[]) out.toArray(EMPTY_STRING_ARRAY);
-		} else {
+		}
+		else {
 			return new String[0];
 		}
 	}
+    
+    protected Object pathOnly(Object f) {
+    	if (f instanceof String[]) {
+    		return pathOnly((String[]) f);
+        }
+        else {
+        	return pathOnly((String) f);
+        }
+    }
+    
+    protected String pathOnly(String file) {
+    	return new AbsFile(file).getPath();
+    }
+    
+    protected String[] pathOnly(String[] files) {
+    	String[] p = new String[files.length];
+        for (int i = 0; i < files.length; i++) {
+        	p[i] = pathOnly(files[i]);
+        }
+        return p;
+    }
 
-	/** Given an input of an array of strings, returns a single string
-	    with the input strings separated by a space. If the 'relative' flag
-	    is set to true, then each input string will be passed through the
-	    relativize function.
-	*/
+	/**
+	 * Given an input of an array of strings, returns a single string with the
+	 * input strings separated by a space. If the 'relative' flag is set to
+	 * true, then each input string will be passed through the relativize
+	 * function.
+	 */
 	public String argList(String[] s, boolean relative) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < s.length; i++) {
@@ -252,9 +276,12 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return sb.toString();
 	}
 
-	/** removes leading / character from a supplied filename if present, so
-	    that the path can be used as a relative path. */
+	/**
+	 * removes leading / character from a supplied filename if present, so that
+	 * the path can be used as a relative path.
+	 */
 	public String relativize(String name) {
+        name = pathOnly(name);
 		if (name != null && name.length() > 0 && name.charAt(0) == '/') {
 			return name.substring(1);
 		}

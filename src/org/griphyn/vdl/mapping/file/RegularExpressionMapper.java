@@ -1,6 +1,5 @@
 package org.griphyn.vdl.mapping.file;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,11 +8,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
-public class RegularExpressionMapper extends AbstractMapper {
+public class RegularExpressionMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
 	public static final MappingParam PARAM_MATCH = new MappingParam("match");
 	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
@@ -34,11 +32,6 @@ public class RegularExpressionMapper extends AbstractMapper {
 		else {
 			return Collections.EMPTY_LIST;
 		}
-	}
-
-	public boolean exists(Path path) {
-		File f = new File(map(path));
-		return f.exists();
 	}
 
 	public String map(Path path) {

@@ -1,7 +1,6 @@
 package org.griphyn.vdl.mapping.file;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,12 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
-public class CSVMapper extends AbstractMapper {
+public class CSVMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_FILE = new MappingParam("file");
 
 	/** whether the file has a line describing header info. default is true. */
@@ -142,11 +140,6 @@ public class CSVMapper extends AbstractMapper {
 			ii++;
 		}
 		return l;
-	}
-
-	public boolean exists(Path path) {
-		File f = new File(map(path));
-		return f.exists();
 	}
 
 	public boolean isStatic() {

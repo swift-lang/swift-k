@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
@@ -123,7 +124,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	}
 
 	public boolean exists(Path path) {
-		File f = new File(map(path));
+		AbsFile f = new AbsFile(map(path));
 		return f.exists();
 	}
 
@@ -133,14 +134,14 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		final String suffix = PARAM_SUFFIX.getStringValue(this);
 		final String pattern = PARAM_PATTERN.getStringValue(this);
 		List l = new ArrayList();
-		final File f;
+		final AbsFile f;
 		if (location == null) {
-			f = new File(".");
+			f = new AbsFile(".");
 		}
 		else {
-			f = new File(location);
+			f = new AbsFile(location);
 		}
-		File[] files = f.listFiles(new FilenameFilter() {
+		AbsFile[] files = f.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return f.equals(dir) && (prefix == null || name.startsWith(prefix))
 						&& (suffix == null || name.endsWith(suffix))
