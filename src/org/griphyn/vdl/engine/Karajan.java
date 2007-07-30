@@ -664,7 +664,7 @@ public class Karajan {
 			return;
 		}
 		StringTemplate valueST = m_exprParser.parse(content);
-		String name = (String) valueST.getName();
+		String name = valueST.getName();
 		if (dequote && name.equals("sConst")) {
 			st.setAttribute("value", valueST.getAttribute("innervalue"));
 			return;
