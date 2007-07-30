@@ -10,6 +10,12 @@
 *** There are now two division operators, / and %/ of which the first (/)
     returns a floating point value and %/ returns an integer value.
     The mod operator is relabelled %% instead of %.
+    
+*** Mappers can now map files on remote sites (use protocol://host/path)
+    for file name(s), and the engine can actually stage things in and out
+    from/to arbitrary locations
+    
+*** Moved some path manipulation function to Java
 
 (07/29/07)
 
