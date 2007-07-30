@@ -28,7 +28,7 @@ public class GetField extends VDLFunction {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
 			Collection fields = var.getFields(path);
 			if(fields.size() == 1) {
-				return fields.toArray()[0];
+				return fields.iterator().next();
 			} else {
 				return fields;
 			}
