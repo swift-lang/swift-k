@@ -68,7 +68,7 @@ public class File {
 	}
 
 	public String toString() {
-		return host + "/" + path;
+		return host + ":" + path;
 	}
 
 	public String getPath() {
