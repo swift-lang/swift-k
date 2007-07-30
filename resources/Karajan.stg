@@ -180,7 +180,7 @@ $endif$
 
 foreach(var,in,indexVar,declarations,statements) ::= <<
 <parallelFor name="\$">
-  <vdl:getarrayfieldvalue path="$in.path$" var="{$in.var$}"/>
+  <vdl:getfieldvalue path="$in.path$" var="{$in.var$}"/>
 $if(indexVar)$
     <set names="$indexVar$, $var$">
       <each items="{\$}"/>
