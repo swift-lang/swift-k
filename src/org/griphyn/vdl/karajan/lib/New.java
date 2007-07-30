@@ -69,18 +69,15 @@ public class New extends VDLFunction {
 						int index = 0;
 						Iterator i = ((List) value).iterator();
 						while (i.hasNext()) {
+							// TODO check type consistency of elements with
+							// the type of the array
 							Object n = i.next();
 							Path p = Path.EMPTY_PATH.addLast(String.valueOf(index), true);
-							// TODO check consistency of the list: primitive or
-							// dataset
 							if (n instanceof DSHandle) {
 								handle.getField(p).set((DSHandle) n);
 							}
 							else {
-								DSHandle field = handle.getField(p);
-								field.setValue(n);
-
-								closeShallow(stack, field);
+								throw new RuntimeException("An array variable can only be initialized by a list of DSHandle values");
 							}
 							index++;
 						}
