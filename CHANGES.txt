@@ -1,3 +1,11 @@
+(07/29/07)
+
+*** Use /dev/urandom by default on UNIX platforms to avoid large
+    delays at start-up (and Yoya knows when else). It will lower the
+    security of anything that relies on java.security.SecureRandom 
+    for RNG, but there is no nice way to initialize different SecureRandom
+    instances with different seed generators.
+
 (07/28/07)
 
 *** Removed break; statement from the language. It was previously unimplemented

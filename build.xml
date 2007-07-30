@@ -109,6 +109,10 @@
 			<replacevalue>updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
 updateOptions "$SWIFT_HOME" "vds.home"
 updateOptions "$SWIFT_HOME" "swift.home"
+#Use /dev/urandom instead of /dev/random for seeding RNGs
+#This will lower the randomness of the seed, but avoid
+#large delays if /dev/random does not have enough entropy collected
+updateOptions "file:/dev/urandom" "java.security.egd"
 
 </replacevalue>
 		</replace>
