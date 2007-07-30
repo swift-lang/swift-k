@@ -173,7 +173,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		System.err.print("For usage information:  swift -help\n\n");
 	}
 
-	private static String compile(String project) 
+	public static String compile(String project) 
 		throws FileNotFoundException, ParsingException,
 		IncorrectInvocationException {
 		File dtm = new File(project);
