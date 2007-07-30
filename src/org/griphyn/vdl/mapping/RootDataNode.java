@@ -6,7 +6,6 @@ package org.griphyn.vdl.mapping;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
