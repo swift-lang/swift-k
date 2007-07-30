@@ -1,3 +1,16 @@
+(07/30/07)
+
+*** All simple types are now passed around inside of DSHandle objects,
+    instead of sometimes inside DSHandles and sometimes as rawer Java
+    objects.
+
+*** Swift operators now implemented in their own class, rather than using
+    the Karajan implementation.
+
+*** There are now two division operators, / and %/ of which the first (/)
+    returns a floating point value and %/ returns an integer value.
+    The mod operator is relabelled %% instead of %.
+
 (07/29/07)
 
 *** Use /dev/urandom by default on UNIX platforms to avoid large

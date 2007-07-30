@@ -8,7 +8,7 @@ type messagefile {}
 
 messagefile outfile <"010-divide.out">;
 
-int i = 99/3;
+int i = 99%/3;
 
 outfile = greeting(i);
 

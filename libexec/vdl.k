@@ -1,6 +1,7 @@
 import("sys.k")
 import("task.k")
 import("rlog.k")
+import("operators.xml", export = true)
 
 once("vdl.k-print-version"
 	echo(sys:file:read("{vds.home}/libexec/version.txt"))

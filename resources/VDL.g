@@ -981,7 +981,7 @@ Token op=null;
         }
         :
             {op=LT(1);}
-            ( STAR | DIV | MOD ) b=unaryExpr
+            ( STAR | IDIV | FDIV | MOD ) b=unaryExpr
             {
             a = code;
             code=template("arith");
@@ -1092,8 +1092,9 @@ options {
 AT        :   "@" ;
 PLUS    :   "+" ;
 MINUS   :   '-' ;
-DIV        :   '/' ;
-MOD        :   '%' ;
+FDIV        :   '/' ;
+IDIV        :   "%/" ;
+MOD        :   "%%" ;
 EQ      :   "==" ;
 NE        :   "!=" ;
 LT      :   '<' ;

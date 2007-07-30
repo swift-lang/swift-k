@@ -8,7 +8,7 @@ type messagefile {}
 
 messagefile outfile <"013-mod.out">;
 
-int i = 99 % 20;
+int i = 99 %% 20;
 
 outfile = greeting(i);
 

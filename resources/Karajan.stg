@@ -181,13 +181,12 @@ $endif$
 foreach(var,in,indexVar,declarations,statements) ::= <<
 <parallelFor name="\$">
   <vdl:getfieldvalue path="$in.path$" var="{$in.var$}"/>
+  <set names="\$\$, $var$">
+    <each items="{\$}"/>
+  </set>
 $if(indexVar)$
-    <set names="$indexVar$, $var$">
-      <each items="{\$}"/>
-    </set>
-$else$
-    <set names="\$\$, $var$">
-      <each items="{\$}"/>
+    <set name="$indexVar$">
+      <vdl:new type="int" value="{\$\$}"/>
     </set>
 $endif$
     $declarations;separator="\n"$
@@ -411,10 +410,12 @@ switch(condition,cases,sdefault) ::= <<
   </set>
   <if>
 $cases:{case |
-    <equals>
+    <getfieldvalue>
+    <vdlop:eq>
        <variable>\$_sw</variable>
        $case.value$
-    </equals>
+    </vdlop:eq>
+    </getfieldvalue>
     <then>
       $sub_comp(declarations=case.declarations, statements=case.statements)$
     </then>
@@ -429,28 +430,30 @@ $endif$
 </sequential>
 >>
 
+
 operator ::= [
-  "+":"sum",
-  "-":"subtraction",
-  "*":"product",
-  "/":"quotient",
-  "%":"remainder",
-  "&lt;=":"lessOrEqual",
-  "&gt;=":"greaterOrEqual",
-  "&gt;":"greaterThan",
-  "&lt;":"lessThan",
-  "<=":"lessOrEqual",
-  ">=":"greaterOrEqual",
-  ">":"greaterThan",
-  "<":"lessThan",
-  "==":"equals"
+  "+":"vdlop:sum",
+  "-":"vdlop:subtraction",
+  "*":"vdlop:product",
+  "/":"vdlop:fquotient",
+  "%/":"vdlop:iquotient",
+  "%%":"vdlop:remainder",
+  "&lt;=":"vdlop:le",
+  "&gt;=":"vdlop:ge",
+  "&gt;":"vdlop:gt",
+  "&lt;":"vdlop:lt",
+  "<=":"vdlop:le",
+  ">=":"vdlop:ge",
+  ">":"vdlop:gt",
+  "<":"vdlop:lt",
+  "==":"vdlop:eq"
 ]
 
 unary(sign,exp) ::= <<
-<product>
-  <number>$sign$1</number>
+<vdlop:product>
+  <vdl:new type="int" value="$sign$1" />
   $exp$
-</product>
+</vdlop:product>
 >>
 
 cond(op,left,right) ::= <<
@@ -461,23 +464,23 @@ cond(op,left,right) ::= <<
 >>
 
 and(left,right) ::= <<
-<and>
+<vdlop:and>
   $left$
   $right$
-</and>
+</vdlop:and>
 >>
 
 or(left, right) ::= <<
-<or>
+<vdlop:or>
   $left$
   $right$
-</or>
+</vdlop:or>
 >>
 
 not(exp) ::= <<
-<not>
+<vdlop:not>
   $exp$
-</not>
+</vdlop:not>
 >>
 
 arith(op, left,right) ::= <<
@@ -587,19 +590,19 @@ subscript(var,index) ::= <<
 
 
 iConst(value) ::= <<
-<number>$value$</number>
+<vdl:new type="int" value="$value$" />
 >>
 
 fConst(value) ::= <<
-<number>$value$</number>
+<vdl:new type="float" value="$value$" />
 >>
 
 bConst(value) ::= <<
-<$value$/>
+<vdl:new type="boolean" value="$value$" />
 >>
 
 sConst(value,innervalue) ::= <<
-<string>$innervalue$</string>
+<vdl:new type="string" value="$innervalue$" />
 >>
 
 null() ::= <<

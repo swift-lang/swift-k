@@ -101,13 +101,13 @@ public class New extends VDLFunction {
 					handle.init(mapping);
 				}
 				if (value != null) {
-					handle.setValue(internalValue(value));
+					handle.setValue(internalValue(type, value));
 					closeShallow(stack, handle);
 				}
 			}
 			else {
 				handle = new RootDataNode(inferType(value));
-				handle.setValue(internalValue(value));
+				handle.setValue(internalValue(handle.getType(), value));
 				closeShallow(stack, handle);
 			}
 			return handle;

@@ -41,6 +41,13 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
 
+import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.RootDataNode;
+
+import org.griphyn.vdl.type.NoSuchTypeException;
+import org.griphyn.vdl.mapping.InvalidPathException;
+
+
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 
 public class Misc extends FunctionsCollection {
@@ -56,16 +63,22 @@ public class Misc extends FunctionsCollection {
 		setArguments("vdl_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
 	}
 
-	public String vdl_strcat(VariableStack stack) throws ExecutionException {
+	public DSHandle vdl_strcat(VariableStack stack) throws ExecutionException,
+		 NoSuchTypeException, InvalidPathException
+ {
 		Object[] args = Arg.VARGS.asArray(stack);
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < args.length; i++) {
 			buf.append(TypeUtil.toString(args[i]));
 		}
-		return buf.toString();
+		DSHandle handle = new RootDataNode("string");
+		handle.setValue(buf.toString());
+		handle.closeShallow();
+		return handle;
 	}
 
-	public String vdl_strcut(VariableStack stack) throws ExecutionException {
+	public DSHandle vdl_strcut(VariableStack stack) throws ExecutionException,
+		NoSuchTypeException, InvalidPathException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
 		if(logger.isDebugEnabled()) logger.debug("strcut will match '"+inputString+"' with pattern '"+pattern+"'");
@@ -82,7 +95,10 @@ public class Misc extends FunctionsCollection {
 			throw new ExecutionException("@strcut could not match pattern "+pattern+" against string "+inputString,e);
 		}
 		if(logger.isDebugEnabled()) logger.debug("strcut matched '"+group+"'");
-		return group;
+		DSHandle handle = new RootDataNode("string");
+		handle.setValue(group);
+		handle.closeShallow();
+		return handle;
 	}
 }
 

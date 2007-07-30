@@ -167,8 +167,14 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected Object internalValue(Object value) {
-		if (value instanceof String) {
+	protected Object internalValue(String type, Object value) {
+		if ("int".equals(type)) {
+			return TypeUtil.toInteger(value);
+		}
+		else if ("float".equals(type)) {
+			return new Double(TypeUtil.toDouble(value));
+		}
+		else if (value instanceof String) {
 			String strval = (String) value;
 			if (strval.startsWith("\"") && strval.endsWith("\"")) {
 				return strval.substring(1, strval.length() - 1);

@@ -1,6 +1,6 @@
 type messagefile {}
 
-(messagefile t) greeting(int m) { 
+(messagefile t) greeting(float m) { 
     app {
         echo m stdout=@filename(t);
     }
@@ -8,7 +8,7 @@ type messagefile {}
 
 messagefile outfile <"030-mix-float-int.out">;
 
-int i = 42 + 12.3;
+float f = 42 + 12.3;
 
-outfile = greeting(i);
+outfile = greeting(f);
 
