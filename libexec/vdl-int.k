@@ -13,35 +13,6 @@ global(LOG:FATAL, "fatal")
 
 namespace("vdl"
 	export(
-		element(basename, [file]
-			last(str:split(file, "/"))
-		)
-		
-		element(pathelements, [file]
-			elements := butLast(str:split(file, "/"))
-			
-			for(element, elements
-				element
-				"/"
-			)
-		)
-		
-		element(dirname, [file]
-			concat(
-				if (
-					file == "" ()
-					substring(file, 0, to = 1) == "/" "/"
-				)
-			
-				pathelements(file)
-			)
-		)
-		
-		element(reldirname, [file]
-			concat(
-				pathelements(file)
-			)
-		)
 		
 		element(rmdir, [dir, host]
 			parallelFor(entry, file:list(dir, host=host)
@@ -59,11 +30,7 @@ namespace("vdl"
 			log(LOG:INFO, "Creating directory structure {path} in {dir} ({dc})")
 			dir:make(dc, host=host)
 		)
-					
-		element(dircat, [dir, sub], 
-			if (dir != "" concat(dir, "/", sub) sub)
-		)
-		
+							
 		element(isDone, [stageout]
 			and(
 				for(pv, stageout
@@ -126,7 +93,7 @@ namespace("vdl"
 		
 		element(inFileDirs, [stageins]
 			for(file, stageins
-		 		dirname(file)
+		 		reldirname(file)
 			)
 		)
 		
@@ -134,17 +101,21 @@ namespace("vdl"
 			for(pv, stageouts
 				[path, var] := each(pv)
 			
-				file := vdl:absfilename(vdl:getfield(var, path = path))
+				file := vdl:filename(vdl:getfield(var, path = path))
 				
 				dirname(file)
 			)
+		)
+		
+		element(inFiles, [stageins]
+			pathnames(stageins)
 		)
 		
 		element(outFiles, [stageouts]
 			for(pv, stageouts
 				[path, var] := each(pv)
 			
-				file := vdl:absfilename(vdl:getfield(var, path = path))
+				file := vdl:filename(vdl:getfield(var, path = path))
 				
 				file
 			)
@@ -201,19 +172,20 @@ namespace("vdl"
 				
 		element(doStagein, [files, dir, host]
 			uParallelFor(file, files
-				[srcdir, destdir, filename] := (dirname(file), dircat(dir, reldirname(file)), basename(file))
+				[provider, srchost, srcdir, destdir, filename] := 
+					(provider(file), hostname(file), dirname(file), dircat(dir, reldirname(file)), basename(file))
 				
 				vdl:cacheAddAndLockFile(filename, destdir, host, file:size(file)
 					//This is kinda hackish, but these files should be cleaned before
 					//the other ones are uploaded, and doing it nicer is a complex
 					//business. So vdl:cacheAddAndLockFile defines "filesToRemove"
 					cleanupFiles(cacheFilesToRemove, host)
-					log(LOG:INFO, "Staging in {srcdir}{filename} to {destdir} on {host}")
+					log(LOG:INFO, "Staging in {file} ({srcdir} - {filename} to {destdir} on {host}")
 					restartOnError(".*", 2
-					    task:transfer(srcfile=filename, srcdir=srcdir,
-						    desthost=host, destdir=destdir)
+					    task:transfer(srcprovider=provider, srchost=srchost, srcfile=filename, 
+					    	srcdir=srcdir, desthost=host, destdir=destdir)
 					)
-					log(LOG:INFO, "Staged in {srcdir}{filename} to {destdir} on {host}")
+					log(LOG:INFO, "Staged in {file} to {destdir} on {host}")
 				)
 			)
 		)
@@ -222,18 +194,20 @@ namespace("vdl"
 			uparallelFor(pv, stageouts
 				[path, var] := each(pv)
 				file := vdl:absfilename(vdl:getfield(var, path = path))
+				provider := vdl:provider(file)
+				dhost := vdl:hostname(file)
 				rdir := dircat(dir, reldirname(file))
 				bname := basename(file)
 				ldir := dirname(file)
 				fullLocal := dircat(ldir, bname)
 				fullRemote := dircat(rdir, bname)
-					
-				log(LOG:INFO, "Staging out ", dircat(rdir, bname), " to {fullLocal} from {host}")
+									
+				log(LOG:INFO, "Staging out ", dircat(rdir, bname), " to {provider}://{dhost}/{fullLocal} from {host}")
 				//make sure we do have the directory on the client side
 				dir:make(ldir)
 				restartOnError(".*", 2
 				    task:transfer(srchost=host, srcfile=bname,
-				        srcdir=rdir, destdir=ldir)
+				        srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)
 				)
 		        vdl:logvar(var, path)
 		        log(LOG:INFO, "Staged out {fullRemote} to {fullLocal} from {host}")
@@ -351,12 +325,12 @@ namespace("vdl"
 						doStagein(stagein, sharedDir, rhost)
 
 						log(LOG:INFO, "Running job {jobid} {tr}", maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
-																	
+				
 						task:execute("/bin/sh",
 							list("shared/wrapper.sh", jobid, 
 								stdout, stderr, try(stdin, ""),
 								flatten(each(fileDirs)),
-								flatten(each(stagein)), 
+								flatten(infiles(stagein)), 
 								flatten(outfiles(stageout)),
 								kickstart,
 								vdl:executable(tr, rhost),
