@@ -1,3 +1,9 @@
+(07/31/07)
+
+*** Prototype structured_regexp_mapper for performing a regexp transformation
+    on the filenames of one dataset to produce another dataset with the
+    same structure but different leaf filenames.
+
 (07/30/07)
 
 *** All simple types are now passed around inside of DSHandle objects,

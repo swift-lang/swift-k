@@ -16,6 +16,7 @@ import org.griphyn.vdl.mapping.file.SingleFileMapper;
 import org.griphyn.vdl.mapping.file.ROIMapper;
 import org.griphyn.vdl.mapping.file.RegularExpressionMapper;
 import org.griphyn.vdl.mapping.file.SimpleFileMapper;
+import org.griphyn.vdl.mapping.file.StructuredRegularExpressionMapper;
 
 public class MapperFactory {
 	private static Map mappers = new HashMap();
@@ -29,6 +30,8 @@ public class MapperFactory {
 		registerMapper("concurrent_mapper", ConcurrentMapper.class);
 		registerMapper("filesys_mapper", FileSystemArrayMapper.class);
 		registerMapper("regexp_mapper", RegularExpressionMapper.class);
+		registerMapper("structured_regexp_mapper",
+			StructuredRegularExpressionMapper.class);
 		registerMapper("csv_mapper", CSVMapper.class);
 		registerMapper("array_mapper", ArrayFileMapper.class);
 
