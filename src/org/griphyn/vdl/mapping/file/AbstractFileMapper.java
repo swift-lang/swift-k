@@ -143,7 +143,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		}
 		AbsFile[] files = f.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return f.equals(dir) && (prefix == null || name.startsWith(prefix))
+				return (prefix == null || name.startsWith(prefix))
 						&& (suffix == null || name.endsWith(suffix))
 						&& (pattern == null || name.matches(pattern));
 			}
