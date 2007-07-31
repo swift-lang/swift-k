@@ -157,7 +157,7 @@ $if(name)$
 $endif$
 $else$
 $if(value)$
-<string>$value$</string>
+<vdl:new type="string" value="$value$" />
 $else$
 $expr$
 $endif$
@@ -169,7 +169,7 @@ $if(var)$
 <vdl:getfield path="$path$"><variable>$var$</variable></vdl:getfield>
 $else$
   $if(value)$
-    <string>$value$</string>
+    <vdl:new type="string" value="$value$" />
   $else$
     $if(expr)$
       $expr$
