@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 echo Removing files from previous runs
 rm -fv *.out *.xml *.kml *.dot *.log *.rlog
 
