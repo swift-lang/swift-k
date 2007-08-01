@@ -6,7 +6,7 @@ type messagefile {}
     }
 }
 
-messagefile outfile <"100-comparison.out">;
+messagefile outfile <"101-comparison-string.out">;
 
 string s = "hello";
 
