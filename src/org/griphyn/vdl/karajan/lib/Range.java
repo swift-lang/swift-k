@@ -14,7 +14,7 @@ import org.griphyn.vdl.mapping.RootArrayDataNode;
 public class Range extends VDLFunction {
 	public static final SwiftArg PA_FROM = new SwiftArg.Positional("from");
 	public static final SwiftArg PA_TO = new SwiftArg.Positional("to");
-	public static final SwiftArg OA_STEP = new SwiftArg.Optional("step", new Double(1), "int");
+	public static final SwiftArg OA_STEP = new SwiftArg.Optional("step", new Double(1),"float");
 
 	static {
 		setArguments(Range.class, new Arg[] { PA_FROM, PA_TO, OA_STEP });
