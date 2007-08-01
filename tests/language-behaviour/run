@@ -38,7 +38,7 @@ for testfn in $TESTS; do
     fi
 
   done
-
+  echo ----------===========================----------
 done
 
 echo All language behaviour tests passed

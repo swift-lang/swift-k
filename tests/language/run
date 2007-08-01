@@ -20,7 +20,7 @@ for a in *.dtm; do
     echo "OUTPUT DIFFERS"
     exit 1
   fi
-
+  echo ----------===========================----------
 done
 popd
 
@@ -31,7 +31,7 @@ for a in *.dtm; do
   echo Attempting vdlc known-bad $a
   vdlc $a
   if [ "$?" -eq "0" ]; then echo "TEST FAILED - COMPILE SUCCEEDED"; exit; fi
-
+  echo ----------===========================----------
 done
 echo Finished all syntax tests
 exit 0
