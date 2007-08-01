@@ -1,4 +1,4 @@
-type messagefile {}
+type messagefile;
 
 (messagefile t) greeting() { 
     app {
