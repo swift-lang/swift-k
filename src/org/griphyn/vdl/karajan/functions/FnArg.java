@@ -14,11 +14,12 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
+import org.griphyn.vdl.karajan.lib.SwiftArg;
 
 public class FnArg extends AbstractFunction {
 	public static final String PARSED_ARGS = "cmdline:named";
 
-	public static final Arg P_NAME = new Arg.Positional("name");
+	public static final SwiftArg P_NAME = new SwiftArg.Positional("name");
 
 	static {
 		setArguments(FnArg.class, new Arg[] { P_NAME });
