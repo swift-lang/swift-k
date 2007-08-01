@@ -149,11 +149,11 @@ $func;separator="\n"$
 
 function(name, var, path, expr, value, args) ::= <<
 $if(name)$
-<vdl:$name$$if(path)$ path="$path$"$endif$$if(var)$ var="{$var$}"/>$else$>
+<swiftscript:$name$$if(path)$ path="$path$"$endif$$if(var)$ var="{$var$}"/>$else$>
   $if(args)$
     $args$
   $endif$
-</vdl:$name$>
+</swiftscript:$name$>
 $endif$
 $else$
 $if(value)$

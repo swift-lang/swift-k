@@ -1,11 +1,14 @@
 <karajan>
+
+  <namespace prefix="swiftscript">
+	<!-- string functions library -->
+	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
+  </namespace>
+
   <namespace prefix="vdl">
 	<export name="new"><elementDef classname="org.griphyn.vdl.karajan.lib.New"/></export>
-
-	<!-- string functions library -->
-	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.Misc"/></export>
-	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.Misc"/></export>
-
 	<!-- used from VDL2 for arguments to apps and returns relative paths -->
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.FileName"/></export>
 	<!-- returns multiple names instead of concatenating them -->

@@ -1,4 +1,7 @@
-package org.griphyn.vdl.karajan.lib;
+package org.griphyn.vdl.karajan.lib.swiftscript;
+
+import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.karajan.lib.SwiftArg;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,14 +27,12 @@ public class Misc extends FunctionsCollection {
 	public static final SwiftArg PA_PATTERN = new SwiftArg.Positional("regexp");
 
 	static {
-		//Don't use SwiftArg.VARGS here, since Karajan won't recognize it
-		setArguments("vdl_strcat", new Arg[] { Arg.VARGS });
-		setArguments("vdl_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
+		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
+		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
 	}
 
-	public DSHandle vdl_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
-		//Use SwiftArg.VARGS to unwrap DSHandles automatically
 		Object[] args = SwiftArg.VARGS.asArray(stack);
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < args.length; i++) {
@@ -43,7 +44,7 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle vdl_strcut(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+	public DSHandle swiftscript_strcut(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
@@ -72,4 +73,27 @@ public class Misc extends FunctionsCollection {
 		handle.closeShallow();
 		return handle;
 	}
+
+	public DSHandle swiftscript_filename(VariableStack stack) 
+		throws InvalidPathException, NoSuchTypeException,
+		ExecutionException {
+		FileName f = new FileName();
+		String s = (String) f.function(stack);
+		DSHandle handle = new RootDataNode("string");
+		handle.setValue(s);
+		handle.closeShallow();
+		return handle;
+	}
+
+	public DSHandle swiftscript_filenames(VariableStack stack)
+		throws InvalidPathException, NoSuchTypeException,
+		ExecutionException {
+		FileNames f = new FileNames();
+		String s = (String) f.function(stack);
+		DSHandle handle = new RootDataNode("string");
+		handle.setValue(s);
+		handle.closeShallow();
+		return handle;
+	}
 }
+
