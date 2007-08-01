@@ -11,28 +11,12 @@ import org.griphyn.vdl.mapping.RootDataNode;
 public class Operators extends FunctionsCollection {
 	private static final Logger logger = Logger.getLogger(Operators.class);
 
-	public static final Arg L = new Arg.Positional("left");
-	public static final Arg R = new Arg.Positional("right");
+	public static final SwiftArg L = new SwiftArg.Positional("left");
+	public static final SwiftArg R = new SwiftArg.Positional("right");
 
 	public static final String FLOAT = "float";
 	public static final String INT = "int";
 	public static final String BOOLEAN = "boolean";
-
-	private DSHandle getArg(final Arg arg, final VariableStack stack) throws ExecutionException {
-		Object value = arg.getValue(stack);
-		try {
-			return (DSHandle) value;
-		}
-		catch (ClassCastException e) {
-			if (value == null) {
-				throw new ExecutionException("Null argument supplied to Swift operator");
-			}
-			else {
-				throw new ExecutionException("Invalid argument type supplied to Swift operator ("
-						+ value.getClass() + ")");
-			}
-		}
-	}
 
 	private DSHandle newNum(String type, double value) throws ExecutionException {
 		try {
@@ -63,25 +47,8 @@ public class Operators extends FunctionsCollection {
 		}
 	}
 
-	private double value(DSHandle handle) throws ExecutionException {
-		String type = handle.getType();
-		if (INT.equals(type) || FLOAT.equals(type)) {
-			try {
-				return ((Number) handle.getValue()).doubleValue();
-			}
-			catch (ClassCastException e) {
-				throw new ExecutionException("Handle says it's a numeric type, but it holds a "
-						+ handle.getValue().getClass());
-			}
-		}
-		else {
-			throw new ExecutionException(
-					"Type error. Numeric operator used with a non-numeric operand (" + type + ")");
-		}
-	}
-
-	private String type(DSHandle l, DSHandle r) {
-		if (FLOAT.equals(l.getType()) || FLOAT.equals(r.getType())) {
+	private String type(VariableStack stack) throws ExecutionException {
+		if (FLOAT.equals(L.getType(stack)) || FLOAT.equals(R.getType(stack))) {
 			return FLOAT;
 		}
 		else {
@@ -102,21 +69,21 @@ public class Operators extends FunctionsCollection {
 	}
 
 	public Object vdlop_sum(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newNum(type(l, r), value(l) + value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newNum(type(stack), l + r);
 	}
 
 	public Object vdlop_subtraction(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newNum(type(l, r), value(l) - value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newNum(type(stack), l - r);
 	}
 
 	public Object vdlop_product(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newNum(type(l, r), value(l) * value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newNum(type(stack), l * r);
 	}
 
 	public Object vdlop_quotient(VariableStack stack) throws ExecutionException {
@@ -125,50 +92,56 @@ public class Operators extends FunctionsCollection {
 	}
 
 	public Object vdlop_fquotient(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newNum(FLOAT, value(l) / value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newNum(FLOAT, l / r);
 	}
 
 	public Object vdlop_iquotient(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newNum(INT, value(l) / value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newNum(INT, l / r);
 	}
 
 	public Object vdlop_remainder(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newNum(type(l, r), value(l) % value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newNum(type(stack), l % r);
 	}
 
 	public Object vdlop_le(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newBool(value(l) <= value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newBool(l <= r);
 	}
 
 	public Object vdlop_ge(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newBool(value(l) >= value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newBool(l >= r);
 	}
 
 	public Object vdlop_gt(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newBool(value(l) > value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newBool(l > r);
 	}
 
 	public Object vdlop_lt(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newBool(value(l) < value(r));
+		double l = L.getDoubleValue(stack);
+		double r = R.getDoubleValue(stack);
+		return newBool(l < r);
 	}
 
 	public Object vdlop_eq(VariableStack stack) throws ExecutionException {
-		DSHandle l = getArg(L, stack);
-		DSHandle r = getArg(R, stack);
-		return newBool(value(l) == value(r));
+		Object l = L.getValue(stack);
+		Object r = R.getValue(stack);
+		if (l == null) {
+			throw new ExecutionException("First operand is null");
+		}
+		if (r == null) {
+			throw new ExecutionException("Second operand is null");
+		}
+		return newBool(l.equals(r));
 	}
 }

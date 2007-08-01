@@ -168,10 +168,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 
 	protected Object internalValue(String type, Object value) {
-		if ("int".equals(type)) {
-			return TypeUtil.toInteger(value);
-		}
-		else if ("float".equals(type)) {
+		if ("float".equals(type) || "int".equals(type)) {
 			return new Double(TypeUtil.toDouble(value));
 		}
 		else if (value instanceof String) {
@@ -292,7 +289,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final String VDL_FUTURE_WRAPPER_MAP = "#vdl:futureWrapperMap";
 
-	private WrapperMap getFutureWrapperMap(VariableStack stack) throws ExecutionException {
+	protected static WrapperMap getFutureWrapperMap(VariableStack stack) throws ExecutionException {
 		synchronized (stack.getExecutionContext()) {
 			WrapperMap hash = (WrapperMap) stack.firstFrame().getVar(VDL_FUTURE_WRAPPER_MAP);
 			if (hash == null) {
@@ -407,12 +404,12 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return getFutureWrapperMap(stack).isClosed(handle);
 	}
 
-	protected Future addFutureListener(VariableStack stack, DSHandle handle)
+	protected static Future addFutureListener(VariableStack stack, DSHandle handle)
 			throws ExecutionException {
 		return getFutureWrapperMap(stack).addNodeListener(handle);
 	}
 
-	protected FutureIterator addFutureListListener(VariableStack stack, DSHandle handle, Map value)
+	protected static FutureIterator addFutureListListener(VariableStack stack, DSHandle handle, Map value)
 			throws ExecutionException {
 		return getFutureWrapperMap(stack).addFutureListListener(handle, value).futureIterator(stack);
 	}

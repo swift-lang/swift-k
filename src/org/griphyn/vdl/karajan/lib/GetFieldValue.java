@@ -23,9 +23,10 @@ public class GetFieldValue extends VDLFunction {
 		setArguments(GetFieldValue.class, new Arg[] { PA_VAR, OA_PATH });
 	}
 
-	/** Takes a supplied variable and path, and returns the unique value at
-	 *  that path. Path can contain wildcards, in which case an array is
-	 *  returned. */
+	/**
+	 * Takes a supplied variable and path, and returns the unique value at that
+	 * path. Path can contain wildcards, in which case an array is returned.
+	 */
 	public Object function(VariableStack stack) throws ExecutionException {
 		Object var1 = PA_VAR.getValue(stack);
 		if (!(var1 instanceof DSHandle)) {
@@ -39,17 +40,17 @@ public class GetFieldValue extends VDLFunction {
 					return var.getFields(path).toArray();
 				}
 				catch (HandleOpenException e) {
-					if(logger.isDebugEnabled())
-						logger.debug("Waiting for var="+var+" path="+path);
+					if (logger.isDebugEnabled())
+						logger.debug("Waiting for var=" + var + " path=" + path);
 					throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
 				}
 			}
 			else {
 				var = var.getField(path);
 				if (var.isArray()) {
-// this bit from GetArrayFieldValue
+					// this bit from GetArrayFieldValue
 					Map value = var.getArrayValue();
-					if(var.isClosed()) {
+					if (var.isClosed()) {
 						return new PairIterator(value);
 					}
 					else {
@@ -61,8 +62,9 @@ public class GetFieldValue extends VDLFunction {
 				}
 				synchronized (var) {
 					if (!var.isClosed()) {
-						if(logger.isDebugEnabled())
-							logger.debug("Waiting for "+var);
+						if (logger.isDebugEnabled()) {
+							logger.debug("Waiting for " + var);
+						}
 						throw new FutureNotYetAvailable(addFutureListener(stack, var));
 					}
 					else {

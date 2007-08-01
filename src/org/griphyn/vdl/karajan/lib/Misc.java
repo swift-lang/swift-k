@@ -14,26 +14,25 @@ import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 
-
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 
 public class Misc extends FunctionsCollection {
 
 	private static final Logger logger = Logger.getLogger(FunctionsCollection.class);
 
-
-	public static final Arg PA_INPUT = new Arg.Positional("input");
-	public static final Arg PA_PATTERN = new Arg.Positional("regexp");
+	public static final SwiftArg PA_INPUT = new SwiftArg.Positional("input");
+	public static final SwiftArg PA_PATTERN = new SwiftArg.Positional("regexp");
 
 	static {
+		//Don't use SwiftArg.VARGS here, since Karajan won't recognize it
 		setArguments("vdl_strcat", new Arg[] { Arg.VARGS });
 		setArguments("vdl_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
 	}
 
-	public DSHandle vdl_strcat(VariableStack stack) throws ExecutionException,
-		 NoSuchTypeException, InvalidPathException
- {
-		Object[] args = Arg.VARGS.asArray(stack);
+	public DSHandle vdl_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+			InvalidPathException {
+		//Use SwiftArg.VARGS to unwrap DSHandles automatically
+		Object[] args = SwiftArg.VARGS.asArray(stack);
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < args.length; i++) {
 			buf.append(TypeUtil.toString(args[i]));
@@ -44,11 +43,13 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle vdl_strcut(VariableStack stack) throws ExecutionException,
-		NoSuchTypeException, InvalidPathException {
+	public DSHandle vdl_strcut(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+			InvalidPathException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
-		if(logger.isDebugEnabled()) logger.debug("strcut will match '"+inputString+"' with pattern '"+pattern+"'");
+		if (logger.isDebugEnabled()) {
+			logger.debug("strcut will match '" + inputString + "' with pattern '" + pattern + "'");
+		}
 
 		String group;
 		try {
@@ -58,14 +59,17 @@ public class Misc extends FunctionsCollection {
 			Matcher m = p.matcher(inputString);
 			m.find();
 			group = m.group(1);
-		} catch(IllegalStateException e) {
-			throw new ExecutionException("@strcut could not match pattern "+pattern+" against string "+inputString,e);
 		}
-		if(logger.isDebugEnabled()) logger.debug("strcut matched '"+group+"'");
+		catch (IllegalStateException e) {
+			throw new ExecutionException("@strcut could not match pattern " + pattern
+					+ " against string " + inputString, e);
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("strcut matched '" + group + "'");
+		}
 		DSHandle handle = new RootDataNode("string");
 		handle.setValue(group);
 		handle.closeShallow();
 		return handle;
 	}
 }
-
