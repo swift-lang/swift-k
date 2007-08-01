@@ -74,26 +74,5 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle swiftscript_filename(VariableStack stack) 
-		throws InvalidPathException, NoSuchTypeException,
-		ExecutionException {
-		FileName f = new FileName();
-		String s = (String) f.function(stack);
-		DSHandle handle = new RootDataNode("string");
-		handle.setValue(s);
-		handle.closeShallow();
-		return handle;
-	}
-
-	public DSHandle swiftscript_filenames(VariableStack stack)
-		throws InvalidPathException, NoSuchTypeException,
-		ExecutionException {
-		FileNames f = new FileNames();
-		String s = (String) f.function(stack);
-		DSHandle handle = new RootDataNode("string");
-		handle.setValue(s);
-		handle.closeShallow();
-		return handle;
-	}
 }
 
