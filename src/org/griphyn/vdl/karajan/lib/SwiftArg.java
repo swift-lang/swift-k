@@ -122,7 +122,7 @@ public abstract class SwiftArg extends Arg {
 				return defaultValue;
 			}
 			else {
-				return unwrap(stack, o);
+				return o;
 			}
 		}
 
