@@ -255,14 +255,7 @@ public abstract class AbstractDataNode implements DSHandle {
 			throw new IllegalArgumentException(this.getDisplayableName() + " is already assigned with a value of "
 					+ this.value);
 		}
-		Object leafValue = value;
-		if (getType().equals("int")) {
-			if (value instanceof Double ) {
-				leafValue = new Integer(((Double)value).intValue());
-			}
-		}
-		
-		this.value = leafValue;
+		this.value = value;
 	}
 
 	public String getFilename() {
