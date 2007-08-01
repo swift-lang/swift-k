@@ -368,7 +368,7 @@ $endif$
 
 if(condition,vthen,velse) ::= <<
 <if>
-  $condition$
+  <getfieldvalue>$condition$</getfieldvalue>
   <then>
     $vthen$
   </then>
