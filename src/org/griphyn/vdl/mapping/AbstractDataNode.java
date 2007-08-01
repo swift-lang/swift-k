@@ -49,8 +49,17 @@ public abstract class AbstractDataNode implements DSHandle {
 	    generates a text description. */
 	public String toString() {
 
-		if(this.value != null && !(this.value instanceof Exception))
-			return this.value.toString();
+		if(this.value != null && !(this.value instanceof Exception)) {
+
+			// special handling for ints...
+			if(this.getType() == "int" &&  !this.isArray() && this.getValue() instanceof Number) {
+				Number n = (Number)this.getValue();
+				int i = n.intValue();
+				return ""+i;
+			} else {
+				return this.value.toString();
+			}
+		}
 
 		String prefix = this.getClass().toString() + " with no value at ";
 		prefix = prefix + getDisplayableName();
