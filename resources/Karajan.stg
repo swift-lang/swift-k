@@ -537,7 +537,7 @@ $else$
 $if(!path)$$if(reference)$
 <variable>$var.var$</variable>
 $else$
-<vdl:getfieldvalue var="{$var.var$}"/>
+<vdl:getfield var="{$var.var$}"/>
 $endif$
 $else$
 <vdl:getfield$if(!reference)$value$endif$ var="{$var.var$}"$if(!path.path)$$if(!path.var.index)$ path="$path.var.var$"/>$else$
