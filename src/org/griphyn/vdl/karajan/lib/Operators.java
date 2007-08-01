@@ -21,12 +21,7 @@ public class Operators extends FunctionsCollection {
 	private DSHandle newNum(String type, double value) throws ExecutionException {
 		try {
 			DSHandle handle = new RootDataNode(type);
-			if (INT.equals(type)) {
-				handle.setValue(new Integer((int) value));
-			}
-			else {
-				handle.setValue(new Double(value));
-			}
+			handle.setValue(new Double(value));
 			handle.closeShallow();
 			return handle;
 		}
