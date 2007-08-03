@@ -19,9 +19,9 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 
 	public void init(Map params) {
 		this.params = params;
-		String prefix = (String) params.get("prefix");
+		Object prefix = params.get("prefix");
 		if (prefix != null) {
-			getField().setName(prefix);
+			getField().setName(prefix.toString());
 		}
 		String desc = (String) params.get("descriptor");
 		if (desc == null) {
