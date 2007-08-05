@@ -177,6 +177,7 @@ topLevelStatement[StringTemplate code]
     |   (procedurecallStatAssignManyReturnParam) => d=procedurecallStatAssignManyReturnParam
        {
         code.setAttribute("statements",d);
+        setReturnVariables(code,d);
        }
 
 // this is a declaration, but not sorted out the predications yet to
@@ -430,12 +431,16 @@ innerStatement[StringTemplate code]
     ((
        s=ll1statement
     |  (procedurecallCode) => s=procedurecallCode
-    |  (procedurecallStatAssignManyReturnParam) => s=procedurecallStatAssignManyReturnParam
     |  (predictAssignStat) => s=assignStat
     )
        {
         code.setAttribute("statements",s);
        })
+    |  (procedurecallStatAssignManyReturnParam) => s=procedurecallStatAssignManyReturnParam
+       {
+        code.setAttribute("statements",s);
+        setReturnVariables(code,s);
+       }
     ;
 
 caseInnerStatement returns [StringTemplate code=null]
