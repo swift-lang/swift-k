@@ -6,7 +6,7 @@ type messagefile;
     }
 }
 
-messagefile outfile <"001-echo.out">;
+messagefile outfile <"105-if.out">;
 
 boolean b = 1==1;
 
