@@ -43,34 +43,36 @@ String quote(String s) {
 }
 
 void setReturnVariables(StringTemplate container, StringTemplate statement) {
+
     if (!statement.getName().equals("call"))
-     return;
+        throw new RuntimeException("setReturnVariables happened on template "+statement.getName());
+
     Object outputs = statement.getAttribute("outputs");
 
     if (outputs == null)
-     return;
+        return;
+
     if (outputs instanceof List) {
-         for (Iterator it=((List)outputs).iterator(); it.hasNext();) {
-         StringTemplate param = (StringTemplate) it.next();
-         Object type = param.getAttribute("type");
-             if (type != null) {
+        for (Iterator it=((List)outputs).iterator(); it.hasNext();) {
+            setReturnVariable(container, (StringTemplate) it.next());
+        }
+    } else {
+        setReturnVariable(container, (StringTemplate) outputs);
+    }
+}
+
+void setReturnVariable(StringTemplate container, StringTemplate param) {
+        Object type = param.getAttribute("type");
+        if (type != null) {
             StringTemplate var = template("variable");
             var.setAttribute("name", param.getAttribute("name"));
             var.setAttribute("type", type);
-                container.setAttribute("statements", var);
-             }
-         }
-    } else {
-     StringTemplate param = (StringTemplate) outputs;
-     Object type = param.getAttribute("type");
-         if (type != null) {
-        StringTemplate var = template("variable");
-        var.setAttribute("name", param.getAttribute("name"));
-        var.setAttribute("type", type);
             container.setAttribute("statements", var);
          }
-    }
+
+
 }
+
 }
 
 // The specification for a VDL program
@@ -152,7 +154,6 @@ topLevelStatement[StringTemplate code]
     | d=ll1statement
        {
         code.setAttribute("statements",d);
-        setReturnVariables(code, d);
        }
 
 // these are non-declaration assign-like statements
@@ -160,7 +161,6 @@ topLevelStatement[StringTemplate code]
     |   (predictAssignStat) => d=assignStat
        {
         code.setAttribute("statements",d);
-        setReturnVariables(code, d);
        }
 
 
@@ -174,13 +174,11 @@ topLevelStatement[StringTemplate code]
     |   (procedurecallCode) => d=procedurecallCode
        {
         code.setAttribute("statements",d);
-        setReturnVariables(code, d);
        }
 
     |   (procedurecallStatAssignManyReturnParam) => d=procedurecallStatAssignManyReturnParam
        {
         code.setAttribute("statements",d);
-        setReturnVariables(code, d);
        }
 
 // this is a declaration, but not sorted out the predications yet to
@@ -439,7 +437,6 @@ innerStatement[StringTemplate code]
     )
        {
         code.setAttribute("statements",s);
-        setReturnVariables(code, s);
        })
     ;
 
