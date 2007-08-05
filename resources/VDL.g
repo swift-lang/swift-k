@@ -206,12 +206,7 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
     :  (b1:LBRACK RBRACK)? i1=varInitializer
 
     {
-        if ( currentFunctionName==null ) {
-            v1 = template("globalVariable");
-        }
-        else {
-            v1 = template("variable");
-        }
+        v1 = template("variable");
         v1.setAttribute("type", t);
         v1.setAttribute("name", d);
         if (b1 != null)
@@ -222,12 +217,7 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
     }
     ( COMMA d=declarator (b2:LBRACK RBRACK)? i2=varInitializer
       {
-            if ( currentFunctionName==null ) {
-                v2 = template("globalVariable");
-            }
-            else {
-                v2 = template("variable");
-            }
+            v2 = template("variable");
             v2.setAttribute("type", t);
             v2.setAttribute("name", d);
              if (b2 != null)
