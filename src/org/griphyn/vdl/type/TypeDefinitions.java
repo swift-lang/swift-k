@@ -51,9 +51,7 @@ public class TypeDefinitions {
 		addPrimitiveType("string");
 		addPrimitiveType("int");
 		addPrimitiveType("float");
-		addPrimitiveType("date");
 		addPrimitiveType("boolean");
-		addPrimitiveType("uri");
 	}
 
 	public synchronized static void resolveTypes() throws NoSuchTypeException {
