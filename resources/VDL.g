@@ -69,8 +69,6 @@ void setReturnVariable(StringTemplate container, StringTemplate param) {
             var.setAttribute("type", type);
             container.setAttribute("statements", var);
          }
-
-
 }
 
 }
