@@ -1,3 +1,9 @@
+(08/10/2007)
+
+*** Removed a puzzling thing. Seems like most put/get methods in
+    the file resource would ask the for the current directory only
+    to not use it at all.
+
 (05/18/2007)
 
 *** Updated delegation bits
