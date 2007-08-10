@@ -285,7 +285,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     /** get a remote file to the local stream */
     public void get(String remoteFileName, DataSink sink,
             MarkerListener mListener) throws FileResourceException {
-        String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.get(remoteFileName, sink, mListener);
@@ -298,7 +297,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     /** get a remote file */
     public void get(String remoteFileName, File localFile)
             throws FileResourceException {
-        String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.get(remoteFileName, localFile);
@@ -318,7 +316,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void getFile(String remoteFileName, String localFileName,
             final ProgressMonitor progressMonitor) throws FileResourceException {
         File localFile = new File(localFileName);
-        String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             final long size = localFile.length();
@@ -351,7 +348,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void putFile(String localFileName, String remoteFileName,
             final ProgressMonitor progressMonitor) throws FileResourceException {
 
-        String currentDirectory = getCurrentDirectory();
         File localFile = new File(localFileName);
         try {
             gridFTPClient.setPassiveMode(true);
@@ -379,7 +375,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void put(File localFile, String remoteFileName, boolean append)
             throws FileResourceException {
 
-        String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.put(localFile, remoteFileName, append);
@@ -395,7 +390,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
      */
     public void put(DataSource source, String remoteFileName,
             MarkerListener mListener) throws FileResourceException {
-        String currentDirectory = getCurrentDirectory();
         try {
             gridFTPClient.setPassiveMode(true);
             gridFTPClient.put(remoteFileName, source, mListener);
