@@ -21,7 +21,6 @@ public final class DefaultStackFrame implements StackFrame {
 	
 	private Map map = Collections.EMPTY_MAP;
 	
-	private boolean barrier;
 	private final Regs regs = new Regs();
 
 	public boolean isDefined(final String varName) {
@@ -34,15 +33,13 @@ public final class DefaultStackFrame implements StackFrame {
 
 	public void setVar(final String name, final Object value) {
 		if (map.size() == 0) {
-			map = new HashMap(4);
+			map = new HashMap(4, 1f);
 		}
 		map.put(name, value);
 	}
 
 	public void rename(final String oldName, final String newName) {
-		if (map.containsKey(oldName)) {
-			map.put(newName, map.remove(oldName));
-		}
+		map.put(newName, map.remove(oldName));
 	}
 
 	public void setIntVar(final String name, final int value) {
@@ -70,11 +67,11 @@ public final class DefaultStackFrame implements StackFrame {
 	}
 
 	public boolean hasBarrier() {
-		return barrier;
+		return regs.getBarrier();
 	}
 
 	public void setBarrier(final boolean barrier) {
-		this.barrier = barrier;
+		regs.setBarrier(barrier);
 	}
 
 	public Object getVarAndDelete(final String name) {
