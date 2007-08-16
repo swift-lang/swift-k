@@ -19,8 +19,7 @@ public class ThrottlingScheduler extends LateBindingScheduler {
 		throw new UnsupportedOperationException("No host(s) specified");
 	}
 	
-	public Service resolveService(BoundContact contact, int taskType)
-			throws NoFreeResourceException {
+	public Service resolveService(BoundContact contact, int taskType) {
 		TaskConstraints tc = contact.getConstraints();
 		if (tc != null) {
 			String provider = (String) tc.getConstraint("provider");
