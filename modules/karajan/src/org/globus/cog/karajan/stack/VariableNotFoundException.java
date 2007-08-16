@@ -20,23 +20,27 @@ public class VariableNotFoundException extends ExecutionException {
 		super();
 	}
 
-	public VariableNotFoundException(String message) {
-		super(message);
+	public VariableNotFoundException(String name) {
+		super(name);
 	}
 
-	public VariableNotFoundException(String message, Throwable cause) {
-		super(message, cause);
+	public VariableNotFoundException(String name, Throwable cause) {
+		super(name, cause);
 	}
 
 	public VariableNotFoundException(Throwable cause) {
 		super(cause);
 	}
 
-	public VariableNotFoundException(VariableStack stack, String message) {
-		super(stack, message);
+	public VariableNotFoundException(VariableStack stack, String name) {
+		super(stack, name);
 	}
 
-	public VariableNotFoundException(VariableStack stack, String message, Throwable cause) {
-		super(stack, message, cause);
+	public VariableNotFoundException(VariableStack stack, String name, Throwable cause) {
+		super(stack, name, cause);
+	}
+	
+	public String getMessage() {
+		return "Variable not found: " + super.getMessage();
 	}
 }
