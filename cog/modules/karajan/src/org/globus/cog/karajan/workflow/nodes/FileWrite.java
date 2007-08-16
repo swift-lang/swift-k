@@ -51,7 +51,6 @@ public class FileWrite extends PartialArgumentsContainer {
 					if (item != null) {
 						try {
 							os.write(TypeUtil.toString(item).getBytes());
-							os.flush();
 						}
 						catch (IOException e) {
 							throw new KarajanRuntimeException(e);
