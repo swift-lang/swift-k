@@ -15,7 +15,6 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
@@ -91,7 +90,7 @@ public class NamedArgumentsImpl implements NamedArguments {
 
 	public Iterator getNames() {
 		if (named == null) {
-			return new EmptyIterator();
+			return Collections.EMPTY_LIST.iterator();
 		}
 		return named.keySet().iterator();
 	}
@@ -146,21 +145,6 @@ public class NamedArgumentsImpl implements NamedArguments {
 			return named.hashCode();
 		}
 		return getClass().hashCode();
-	}
-
-	private static class EmptyIterator implements Iterator {
-
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
-
-		public boolean hasNext() {
-			return false;
-		}
-
-		public Object next() {
-			throw new NoSuchElementException();
-		}
 	}
 
 	public String toString() {
