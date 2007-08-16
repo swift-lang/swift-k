@@ -1,3 +1,9 @@
+(08/16/07)
+
+*** A different site catalog element <execution> that fills a similar role
+    to the existing <jobmanager> element with a syntax more sympathetic to
+    submitting via non-GRAM submission systems.
+
 (07/31/07)
 
 *** Prototype structured_regexp_mapper for performing a regexp transformation

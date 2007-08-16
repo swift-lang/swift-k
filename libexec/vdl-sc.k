@@ -39,6 +39,10 @@ namespace("vdl"
 				service(type="execution", provider=provider, url=url)
 			)
 			
+			element(execution, [provider,universe, url, major, minor, patch]
+				service(type="execution", provider=provider, url=url)
+			)
+			
 			element(profile, [namespace, key, value]
 				property("{namespace}:{key}", value)
 			)
