@@ -18,6 +18,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.arguments.ArgUtil;
+import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.LoadListener;
@@ -135,7 +136,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			if (!errorHandler) {
 				fireNotificationEvent(fne, stack);
 				fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack,
-						fne.getMessage());
+						fne.getException());
 			}
 		}
 		catch (ExecutionException e) {
@@ -193,9 +194,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public final void fireStatusMonitoringEvent(final MonitoringEventType type,
-			final VariableStack stack, final String message) {
+			final VariableStack stack, final Object detail) {
 		if (stack.getExecutionContext().isMonitoringEnabled()) {
-			fireMonitoringEvent(new StatusMonitoringEvent(this, type, stack, message));
+			fireMonitoringEvent(new StatusMonitoringEvent(this, type, stack, detail));
 		}
 	}
 
@@ -229,7 +230,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public final void restart(final VariableStack stack) throws ExecutionException {
 		startCount++;
-		if (!logger.isInfoEnabled()) {
+		if (logger.isInfoEnabled()) {
 			logger.info("Executing " + this + "; thread: " + ThreadingContext.get(stack));
 			if (FlowNode.debug) {
 				checkStackReuse(stack);
@@ -409,7 +410,6 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public void fail(VariableStack stack, String message, Throwable cause)
 			throws ExecutionException {
-		checkCompleted(stack);
 		throw new ExecutionException(stack.copy(), message, cause);
 	}
 
@@ -536,6 +536,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public synchronized void removeElement(int index) {
 		elements.remove(index);
+	}
+	
+	public synchronized void removeElement(FlowElement element) {
+		elements.remove(element);
 	}
 
 	public FlowElement getElement(int index) {
@@ -743,6 +747,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public void loadStarted() {
 
+	}
+
+	public Integer getUID() {
+		return uid;
 	}
 
 	public void loadComplete() {
