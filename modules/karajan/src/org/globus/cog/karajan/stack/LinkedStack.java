@@ -114,13 +114,18 @@ public final class LinkedStack implements VariableStack {
 				return null;
 			}
 			if (!ignoreBarrier && frame.hasBarrier()) {
-				if (firstFrame().isDefined(name)) {
-					return firstFrame().getVar(name);
+				final StackFrame first = firstFrame();
+				final Object g = first.getVar(name);
+				if (g != null) {
+					return g;
+				}
+				else if (first.isDefined(name)) {
+					return null;
 				}
 				break;
 			}
 		}
-		throw new VariableNotFoundException("Variable not found: " + name);
+		throw new VariableNotFoundException(name);
 	}
 
 	private Object _getVarFromFrame(final String name, final int index)
@@ -276,7 +281,7 @@ public final class LinkedStack implements VariableStack {
 		return executionContext;
 	}
 
-	private final class Entry {
+	private static final class Entry {
 		private final StackFrame frame;
 		private final Entry prev;
 
