@@ -63,7 +63,9 @@ public abstract class SwiftArg extends Arg {
 	}
 
 	public Object getValue(VariableStack stack) throws ExecutionException {
-		return unwrap(stack, super.getValue(stack));
+		Object v = super.getValue(stack);
+		if(v == null) return v;
+			else return unwrap(stack, super.getValue(stack));
 	}
 
 	public double getDoubleValue(VariableStack stack) throws ExecutionException {
