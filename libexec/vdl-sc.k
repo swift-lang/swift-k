@@ -39,7 +39,7 @@ namespace("vdl"
 				service(type="execution", provider=provider, url=url)
 			)
 			
-			element(execution, [provider,universe, url, major, minor, patch]
+			element(execution, [provider, url]
 				service(type="execution", provider=provider, url=url)
 			)
 			

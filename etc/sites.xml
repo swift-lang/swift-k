@@ -30,7 +30,7 @@ working directory. -->
 
   <pool handle="localhost" sysinfo="INTEL32::LINUX">
     <gridftp  url="local://localhost" storage="/var/tmp" major="1" minor="0" patch="0" />
-    <jobmanager universe="vanilla" url="local://localhost" major="1" minor="0" patch="0" />
+    <execution provider="local" url="none" />
     <workdirectory >/var/tmp</workdirectory>
   </pool>
 
