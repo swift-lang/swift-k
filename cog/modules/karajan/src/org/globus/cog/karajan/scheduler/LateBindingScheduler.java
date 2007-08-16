@@ -47,7 +47,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public static final String SUBMIT_THROTTLE = "submitThrottle";
 	public static final String MAX_TRANSFERS = "maxTransfers";
 	public static final String SSH_INITIAL_RATE = "sshInitialRate";
-	public static final String MAX_FILE_OPERATIONS = "maxFileOperations"; 
+	public static final String MAX_FILE_OPERATIONS = "maxFileOperations";
 
 	public static final int K = 1024;
 	public static final int THREAD_STACK_SIZE = 192 * K;
@@ -345,9 +345,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					services[i] = resolveService((BoundContact) contacts[i], t.getType());
 				}
 				if (services[i] == null) {
-					failTask(t, "Could not find a suitable service/provider for host "
-							+ contacts[i], null);
-					return;
+					throw new NoSuchResourceException(
+							"Could not find a suitable service/provider for host " + contacts[i]);
 				}
 				t.setService(i, services[i]);
 			}
@@ -392,8 +391,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return boundContact;
 	}
 
-	public Service resolveService(BoundContact contact, int taskType)
-			throws NoFreeResourceException {
+	public Service resolveService(BoundContact contact, int taskType) {
 		Iterator h = this.getTaskHandlerWrappers(getHandlerType(taskType)).iterator();
 		while (h.hasNext()) {
 			TaskHandlerWrapper handler = (TaskHandlerWrapper) h.next();
@@ -401,7 +399,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				return contact.getService(handler);
 			}
 		}
-		throw new NoFreeResourceException("No service found");
+		return null;
 	}
 
 	public int getHandlerType(int taskType) {
@@ -498,7 +496,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			}
 			else if (t.getType() == Task.JOB_SUBMISSION) {
 				currentJobs++;
-			}	
+			}
 		}
 	}
 
@@ -558,9 +556,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			}
 			if (code == Status.COMPLETED) {
 				if (logger.isInfoEnabled()) {
-					logger.info(task + " Completed. Waiting: "
-							+ getJobQueue().size() + ", Running: " + (getRunning() - 1)
-							+ ". Heap size: "
+					logger.info(task + " Completed. Waiting: " + getJobQueue().size()
+							+ ", Running: " + (getRunning() - 1) + ". Heap size: "
 							+ (Runtime.getRuntime().totalMemory() / (1024 * 1024))
 							+ "M, Heap free: "
 							+ (Runtime.getRuntime().freeMemory() / (1024 * 1024)) + "M, Max heap: "
