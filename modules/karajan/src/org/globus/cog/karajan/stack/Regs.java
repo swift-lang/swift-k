@@ -10,23 +10,53 @@
 package org.globus.cog.karajan.stack;
 
 public final class Regs {
+	public static final int BA = 0x00000001;
+	public static final int BB = 0x00000002;
+	public static final int BARRIER = 0x00000004;
+	public static final int NBA = 0xfffffffe;
+	public static final int NBB = 0xfffffffd;
+	public static final int NBARRIER = 0xfffffffb;
+	
 	private int iA, iB;
-	private boolean bA, bB;
+	private int b;
 
 	public boolean getBA() {
-		return bA;
+		return (b & BA) != 0;
 	}
 
 	public void setBA(boolean ba) {
-		this.bA = ba;
+		if (ba) {
+			b |= BA;
+		}
+		else {
+			b &= NBA;
+		}
 	}
 
 	public boolean getBB() {
-		return bB;
+		return (b & BB) != 0;
 	}
 
 	public void setBB(boolean bb) {
-		this.bB = bb;
+		if (bb) {
+			b |= BB;
+		}
+		else {
+			b &= NBB;
+		}
+	}
+	
+	public boolean getBarrier() {
+		return (b & BARRIER) != 0;
+	}
+
+	public void setBarrier(boolean bc) {
+		if (bc) {
+			b |= BARRIER;
+		}
+		else {
+			b &= NBARRIER;
+		}
 	}
 
 	public int getIA() {
@@ -66,6 +96,6 @@ public final class Regs {
 	}
 	
 	public String toString() {
-		return "[iA = " + iA + ", iB = " + iB + ", bA = " + bA + ", bB = " + bB + "]";
+		return "[iA = " + iA + ", iB = " + iB + ", bA = " + getBA() + ", bB = " + getBB() + "]";
 	}
 }
