@@ -286,7 +286,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 				STDOUT.ret(stack, t.getStdOutput());
 			}
 			if (t.getStdError() != null) {
-				STDOUT.ret(stack, t.getStdError());
+				STDERR.ret(stack, t.getStdError());
 			}
 		}
 		super.taskCompleted(e, stack);
