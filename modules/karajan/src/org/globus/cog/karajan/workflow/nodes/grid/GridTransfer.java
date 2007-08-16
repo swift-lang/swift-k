@@ -86,7 +86,7 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 				destprovider = srcprovider;
 			}
 			srcprovider = TypeUtil.toString(A_SRCPROVIDER.getValue(stack, srcprovider));
-			destprovider = TypeUtil.toString(A_SRCPROVIDER.getValue(stack, destprovider));
+			destprovider = TypeUtil.toString(A_DESTPROVIDER.getValue(stack, destprovider));
 
 			fs.setSourceFile(srcfile);
 			fs.setDestinationFile(destfile);
@@ -111,6 +111,9 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 			if (A_THIRDPARTY.isPresent(stack)) {
 				fs.setThirdParty(TypeUtil.toBoolean(A_THIRDPARTY.getValue(stack)));
 			}
+            else {
+                fs.setThirdPartyIfPossible(true);
+            }
 
 			if (A_SRCOFFSET.isPresent(stack)) {
 				fs.setSourceOffset(TypeUtil.toNumber(A_SRCOFFSET.getValue(stack)).longValue());
