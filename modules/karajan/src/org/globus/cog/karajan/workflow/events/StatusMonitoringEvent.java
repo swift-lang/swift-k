@@ -17,27 +17,27 @@ public final class StatusMonitoringEvent extends MonitoringEvent {
 	public static final MonitoringEventType EXECUTION_STARTED = new MonitoringEventType("EXECUTION_STARTED", 0);
 	public static final MonitoringEventType EXECUTION_COMPLETED = new MonitoringEventType("EXECUTION_COMPLETED", 1);
 	public static final MonitoringEventType EXECUTION_FAILED = new MonitoringEventType("EXECUTION_FAILED", 2);
-	public static final MonitoringEventType EXECUTION_ABORTED = new MonitoringEventType("EXECUTION_BORTED", 3);
+	public static final MonitoringEventType EXECUTION_ABORTED = new MonitoringEventType("EXECUTION_ABORTED", 3);
 
-	private final String message;
+	private final Object details;
 
 	public StatusMonitoringEvent(FlowElement flowElement, MonitoringEventType type, VariableStack stack,
-			String message) {
+			Object details) {
 		super(flowElement, type, stack);
-		this.message = message;
+		this.details = details;
 	}
 
 	public String getMessage() {
-		return message;
+		return String.valueOf(details);
 	}
 
 	public String toString() {
-		if (message == null) {
+		if (details == null) {
 			return "StatusMonitoringEvent: " + getFlowElement() + " - " + getType();
 		}
 		else {
 			return "StatusMonitoringEvent: " + getFlowElement() + " - " + getType() + " ("
-					+ message + ")";
+					+ details + ")";
 		}
 	}
 }
