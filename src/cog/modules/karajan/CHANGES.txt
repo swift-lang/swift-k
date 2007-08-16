@@ -1,3 +1,30 @@
+(08/16/2007)
+
+*** task:execute() would redirect the job stderr to stdout. Fixed.
+
+*** Some space optimizations on commonly (read heavily) used types.
+
+*** Global variables set to the Java "null" would be reported as
+    not found. Fixed.
+    
+*** task:transfer now sets thirdPartyIfPossible to true by default
+    when the third party argument is not specified. This means that
+    third party transfers would be automatically attempted if possible,
+    while falling back to simulating them if not. If one needs to force
+    third party transfer to always off or always on, the thirdParty 
+    argument would do the trick.
+    
+*** sys:readFile (or sys:file:read) would add extra newlines of their
+    own for no good reason. Fixed.
+    
+*** sys:file:write used to flush the stream after every write. Not
+    any more.
+    
+*** Fixed a bug in the scheduler which would cause it to endlessly
+    wait for resources that weren't there to begin with before
+    scheduling certain tasks.
+
+
 (07/02/2007)
 
 *** A few size/performance optimizations on argument related things
