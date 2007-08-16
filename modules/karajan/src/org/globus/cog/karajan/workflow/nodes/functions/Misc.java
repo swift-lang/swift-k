@@ -115,12 +115,12 @@ public class Misc extends FunctionsCollection {
 			BufferedReader br = new BufferedReader(new FileReader(new File(
 					TypeUtil.toString(PA_FILE.getValue(stack)))));
 			StringBuffer text = new StringBuffer();
-			String line = "";
-			do {
+			String line = br.readLine();
+			while (line != null) {
 				text.append(line);
 				text.append('\n');
 				line = br.readLine();
-			} while (line != null);
+			};
 			return text.toString();
 		}
 		catch (Exception e) {
