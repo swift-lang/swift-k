@@ -72,9 +72,11 @@ cat hello.txt
 Hello, world!
 </programlisting>
 
-<para>The basic structure of this program is a type definition,
-a procedure definition, a variable definition and
-then a call to the procedure:</para>
+<para>The basic structure of this program is a
+<firstterm>type definition</firstterm>,
+an <firstterm>application procedure definition</firstterm>,
+a <firstterm>variable definition</firstterm> and
+then a <firstterm>call</firstterm> to the procedure:</para>
 
 
 <programlisting>
@@ -82,12 +84,17 @@ type messagefile;
 </programlisting>
 
 <para>
-First we define a new type, called messagefile. Data in SwiftScript
-must be typed,
-whether it is stored in memory or on disk. In this example, we will use
-this as the type for our output message. The ; indicates that no
-internal structure is defined for the data.
+First we define a new type, called messagefile.
+In this example, we will use this messagefile
+type as the type for our output message.
 </para>
+
+<sidebar><para>All data in SwiftScript must be typed,
+whether it is stored in memory or on disk. This example defines a
+very simple type. Later on we will see more complex type examples.
+</para>
+</sidebar>
+
 
 <programlisting>
 (messagefile t) greeting () {
@@ -99,13 +106,17 @@ internal structure is defined for the data.
 
 <para>
 Next we define a procedure called write. This procedure will write out
-the &quot;hello world&quot; message to a file. The procedure takes no parameters
-and outputs a messagefile.
+the &quot;hello world&quot; message to a file.
 </para>
 
 <para>
 To achieve this, it executes the unix utility 'echo' with a parameter
 &quot;Hello, world!&quot; and directs the standard output into the output file.
+</para>
+
+<para>
+The actual file to use is specified by the
+<firstterm>return parameter</firstterm>, t.
 </para>
 
 <programlisting>
@@ -391,7 +402,8 @@ messagefile outfile &lt;&quot;q15.txt&quot;&gt;;
 outfile = greeting(person);
 </programlisting>
 
-We define a new type, details, with members, a string and an integer.
+<para>We define a new type, details, with members, a string and an integer.
+</para>
 
 </sect1>
 
