@@ -5,24 +5,19 @@
 # subdirectories.
 
 pushd working
-#rm -v *.?ml
+rm -v *.?ml
 for a in *.dtm; do 
   echo Attempting vdlc known-good $a
-  b=$(basename -s .dtm $a).xml
-  if [ ! -f $b ] ; then 
-    vdlc $a
-  else
-    touch /tmp/ads
-  fi
+  vdlc $a
   VDLCRETURN=$?
   if [ "$VDLCRETURN" -ne "0" ]; then 
     echo "COMPILE FAILED WITH RETURN CODE $VDLCRETURN"
     exit 1
   fi
+  b=$(basename -s .dtm $a).xml
   diff -q $b ../working-base/$b
   if [ "$?" -ne "0" ]; then
     echo "OUTPUT DIFFERS"
-    diff -U 100000 ../working-base/$b $b
     exit 1
   fi
   echo ----------===========================----------
