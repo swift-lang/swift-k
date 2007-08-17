@@ -37,8 +37,9 @@ material on topics covered in this manual.
 <sect1> <title>Hello World</title>
     <para>
 The first example program (found in the file
-examples/vdsk/tutorial/q1.swift) outputs a hello world message into
-a file called hello.txt.
+<filename>examples/vdsk/tutorial/first.swift</filename>)
+outputs a hello world message into
+a file called <filename>hello.txt</filename>.
     </para>
 
 <programlisting>
@@ -57,20 +58,18 @@ outfile = greeting();
 
 <para>We can run this program as follows:</para>
 
-<programlisting>
-cd examples/vdsk/tutorial/
-
-swift q1.swift
-
-Swift v0.1-dev
+<screen>
+$ <userinput>cd examples/vdsk/tutorial/</userinput>
+$ <userinput>swift first.swift</userinput>
+Swift v0.2
 
 RunID: e1bupgygrzn12
 echo started
 echo completed
 
-cat hello.txt
+$ <userinput>cat hello.txt</userinput>
 Hello, world!
-</programlisting>
+</screen>
 
 <para>The basic structure of this program is a
 <firstterm>type definition</firstterm>,
@@ -154,14 +153,17 @@ to the greeting function.</para>
 <para>
 We will also encounter a new built-in data type, 'string'.
 </para>
-<para>The code for this section can be found in q2.swift. It can be
-invoked using the swift command, with output appearing in hello2.txt:</para>
+<para>The code for this section can be found in 
+<filename>q2.swift</filename>. It can be
+invoked using the swift command, with output appearing in 
+<filename>hello2.txt</filename>:</para>
 
-<programlisting>
-swift q2.swift
-</programlisting>
+<screen>
+$ <userinput>swift q2.swift</userinput>
+</screen>
 
-<para>The code changes from q1.swift are highlighted below.</para>
+<para>The code changes from <filename>first.swift</filename>
+are highlighted below.</para>
 
 <programlisting>
 type messagefile;
@@ -253,31 +255,41 @@ english = greeting();
 
 <sect1><title>Another procedure</title>
 <para>
-Now we'll define a new simple procedure. This will take an input file and
-count the number of words in that input file, storing the count in
-another file.
+Now we'll define a new application procedure. The procedure we define
+will capitalise all the words in the input file.
 </para>
 
-<para>To do this, we'll use the unix 'wc' (word-count) utility.</para>
+<para>To do this, we'll use the unix 'tr' (translate) utility.
 
-<para>First we need to modify the Transformation Catalog to define
-a logical transformation for the wc utility.  The transformation
-catalog can be found in etc/tc.data.
-There is already one entry specifying where 'echo' can
-be found. Add a new line to the file, specifying where wc can be found
-(usually in /usr/bin/wc but it may vary depending on your system), like this:
+Here is an example of <command>tr</command> at the unix
+command line, not using swift:</para>
+
+<screen>
+$ <userinput>echo hello | tr '[a-z]' '[A-Z]'</userinput>
+HELLO
+</screen>
+
+<para>First we need to modify the
+<firstterm>transformation catalog</firstterm> to define
+a logical transformation for the tc utility.  The transformation
+catalog can be found in <filename>etc/tc.data</filename>.
+There is already one entry specifying where <command>echo</command> can
+be found. Add a new line to the file, specifying where 
+<command>tr</command> can be found
+(usually in <filename>/usr/bin/tr</filename>
+ but it may vary depending on your system), like this:
 </para>
 
 <programlisting>
-local      wc  /bin/wc  INSTALLED INTEL32::LINUX null
+local      tr  /usr/bin/tr  INSTALLED INTEL32::LINUX null
 </programlisting>
 
 <para>For now, ignore all of the fields except the second and the third.
-The second field 'wc' specifies a logical transformation name and the
-third specifies the location of an executable to perform that
-transformation.</para>
+The second field 'tr' specifies a logical application name and the
+third specifies the location of the executable for that application.
+</para>
 
-<para>Now that we have defined the logical transformation 'wc', we can
+<para>Now that we have defined where to find <command>tr</command>, we can
 use it in SwiftScript:
 </para>
 
@@ -293,7 +305,7 @@ type countfile;
 
 (countfile t) countwords (messagefile f) {
     app {
-        wc &quot;-w&quot; @filename(f) stdout=@filename(t);
+        tc &quot;-w&quot; @filename(f) stdout=@filename(t);
     }
 }
 
@@ -307,18 +319,19 @@ c = countwords(outfile);
 <para>We define a new data type for files containing counts (although
 like messagefile, we don't specify any internal structure for that
 file). Then we define a 'countwords' procedure which invokes the
-wc utility with appropriate parameters. Finally, we define a variable,
+tr utility with appropriate parameters. Finally, we define a variable,
 c, which we map to count.txt and to which we assign the count of words
 in a greeting message.</para>
 
-<para>We can use the swift command to run q13.swift:</para>
+<para>We can use the swift command to run 
+<filename>q13.swift</filename>:</para>
 
-<programlisting>
-swift q13.swift
+<screen>
+$ <userinput>swift q13.swift</userinput>
 [...]
-cat count.txt
+$ <userinput>cat count.txt</userinput>
   3 q13greeting.txt
-</programlisting>
+</screen>
 
 <para>and thus we discover that the phrase &quot;hello from Swift&quot; contains
 precisely three words.</para>
@@ -327,7 +340,8 @@ precisely three words.</para>
 
 <sect1><title>Anonymous files</title>
 
-<para>In the previous section, the file 'q13greeting.txt' is used only to
+<para>In the previous section, the file 
+<filename>q13greeting.txt</filename> is used only to
 store an intermediate result. We don't really care about which name is used
 for the file, as no matter which intermediate name is used we will still
 get the same word count.</para>
@@ -345,29 +359,34 @@ messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
 messagefile outfile;
 </programlisting>
 
-<para>q14.swift contains the code and can be run in the usual way. After
-execution, the results can be found in count14.txt</para>
+<para><filename>q14.swift</filename> contains the code and can be
+run in the usual way. After
+execution, the results can be found in
+<filename>count14.txt</filename>.</para>
 
-<programlisting>
-cat count14.txt
+<screen>
+$ <userinput>cat count14.txt</userinput>
      3 outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60
-</programlisting>
+</screen>
 
-<para>Observe that a generated name,
-outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60, was
-automatically mapped to outfile.</para>
+<para>Observe that a generated name was automatically mapped
+to outfile. Here, Swift chose
+<filename>outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60</filename>.
+but it will be differente each time.</para>
 
 </sect1>
+
 <sect1><title>More on datatypes</title>
 
 <para>
 As mentioned earlier, all data in variables and files has a datatype.  So
-far, we've seen the built-in 'string' data type and simple user-defined
-datatypes (messagefile and countfile).</para>
+far, we've seen the built-in 'string' data type and a simple user-defined
+datatype 'messagefile'.</para>
 
 <para>
 SwiftScript has the additional built-in types, based on XML types:
-Boolean, Integer, Float, and Date.
+<firstterm>boolean</firstterm>, <firstterm>integer</firstterm> and
+<firstterm>float</firstterm>.
 </para>
 
 <para>We've seen empty user-defined types already, which are used as
@@ -375,8 +394,8 @@ markers on files that we don't need to look at the content of in SwiftScript.
 It is also possible to create types with structure, as in other
 programming languages.</para>
 
-<para>q15.swift contains the code for this exercise, based on the q2
-code.</para>
+<para><filename>q15.swift</filename> contains the code for this 
+exercise, based on the q2 code.</para>
 
 <programlisting>
 type messagefile;
@@ -402,7 +421,7 @@ messagefile outfile &lt;&quot;q15.txt&quot;&gt;;
 outfile = greeting(person);
 </programlisting>
 
-<para>We define a new type, details, with members, a string and an integer.
+<para>We define a new type, details, with two members: a string and an integer.
 </para>
 
 </sect1>
@@ -410,7 +429,7 @@ outfile = greeting(person);
 <sect1><title>Arrays</title>
 <para>We can define arrays of values. For example, we could specify each
 word in a greeting as a separate element of a string array, as seen in
-q5.swift:</para>
+<filename>q5.swift</filename>:</para>
 
 <programlisting>
 type messagefile;
@@ -494,17 +513,12 @@ disk files to SwiftScript variables.</para>
 
 <para>TODO: introduce @v syntax.</para>
 
-<para>There is no hands on exercise for this section</para>
-
-</sect1>
-
-
-<sect1><title>The regexp mapper</title>
+<section><title>The regexp mapper</title>
 <para>In this exercise, we introduce the <firstterm>regexp mapper</firstterm>.
 This mapper transforms a string expression using a regular expression,
 and uses the result of that transformation as the filename to map.</para>
 <para>
-q16.swift demonstrates the use of this by placing output into a file that
+<filename>q16.swift</filename> demonstrates the use of this by placing output into a file that
 is based on the name of the input file: our input file is mapped
 to the inputfile variable using the simple named mapper, and then
 we use the regular expression mapper to map the output file. Then we
@@ -514,32 +528,38 @@ output file.
 </para>
 
 <para>
-The important bit of q16.swift is:
+The important bit of <filename>q16.swift</filename> is:
 <programlisting>
 messagefile inputfile &lt;"q16.txt"&gt;;
 
-countfile c &lt;regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1count"&gt;;
+countfile c &lt;regexp_mapper;
+             source=@inputfile,
+             match="(.*)txt",
+             transform="\1count"
+            &gt;;
 </programlisting>
 </para>
-</sect1>
+</section>
 
-<sect1><title>fixed_array_mapper</title>
+<section><title>fixed_array_mapper</title>
 <para>
 The <firstterm>fixed array mapper</firstterm> maps a list of files into
 an array - each element of the array is mapped into one file in the
-specified directory. see q22.swift
+specified directory. See <filename>q22.swift</filename>.
 </para>
 <programlisting>
 string inputNames = "one.txt two.txt three.txt";
 string outputNames = "one.count two.count three.count";
 
-messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
-countfile outputfiles[] &lt;fixed_array_mapper;files=outputNames&gt;;
+messagefile inputfiles[] &lt;fixed_array_mapper; files=inputNames&gt;;
+countfile outputfiles[] &lt;fixed_array_mapper; files=outputNames&gt;;
 
 outputfiles[0] = countwords(inputfiles[0]);
 outputfiles[1] = countwords(inputfiles[1]);
 outputfiles[2] = countwords(inputfiles[2]);
 </programlisting>
+</section>
+
 </sect1>
 
 <sect1><title>foreach</title>
@@ -547,20 +567,26 @@ outputfiles[2] = countwords(inputfiles[2]);
 on each element of an array.</para>
 <para>In this example, we will run the previous word counting example
 over each file in an array without having to explicitly list the
-array elements. The source code for this example is in q17.swift. The
-three input files (one.txt, two.txt and three.txt) are supplied. After
+array elements. The source code for this example is in 
+<filename>q17.swift</filename>. The three input files
+(<filename>one.txt</filename>, <filename>two.txt</filename> and
+<filename>three.txt</filename>) are supplied. After
 you have run the workflow, you should see that there are three output
-files (one.count, two.count and three.count) each containing the word
+files (<filename>one.count</filename>, <filename>two.count</filename>
+and <filename>three.count</filename>) each containing the word
 count for the corresponding input file. We combine the use of the
 fixed_array_mapper and the regexp_mapper.</para>
 <programlisting>
 string inputNames = "one.txt two.txt three.txt";
 
-messagefile inputfiles[] &lt;fixed_array_mapper;files=inputNames&gt;;
+messagefile inputfiles[] &lt;fixed_array_mapper; files=inputNames&gt;;
 
 
 foreach f in inputfiles {
-  countfile c &lt;regexp_mapper;source=@f,match="(.*)txt",transform="\1count"&gt;;
+  countfile c &lt;regexp_mapper;
+               source=@f,
+               match="(.*)txt",
+               transform="\1count"&gt;;
   c = countwords(f);
 }
 </programlisting>
@@ -569,9 +595,21 @@ foreach f in inputfiles {
 
 <sect1><title>If</title>
 <para>
-Decisions can be made using 'if', in a style reminiscent of many other
-languages. q20.swift contains a simple example of this. Compile and run
-q20.swift and see that it outputs 'good morning'. Changing the 'morning'
+Decisions can be made using 'if', like this:
+</para>
+
+<programlisting>
+if(morning) {
+  outfile = greeting("good morning");
+} else {
+  outfile = greeting("good afternoon");
+}
+</programlisting>
+
+<para>
+ <filename>if.swift</filename> contains a simple example of 
+this. Compile and run <filename>if.swift</filename> and see that it
+outputs 'good morning'. Changing the 'morning'
 variable from true to false will cause the program to output 'good
 afternoon'.
 </para>
@@ -583,10 +621,10 @@ afternoon'.
 <para>
 When running a workflow, its possible to generate a provenance graph at the
 same time:
-<programlisting>
-swift -pgraph graph1.dot q1.swift
-dot -ograph.png -Tpng graph1.dot
-</programlisting>
+<screen>
+$ <userinput>swift -pgraph graph.dot first.swift</userinput>
+$ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
+</screen>
 which can then be viewed using your favourite image viewer.
 </para>
 </sect1>
@@ -594,7 +632,7 @@ which can then be viewed using your favourite image viewer.
 <sect1><title>Running on a remote site</title>
 
 <para>As configured by default, all jobs are run locally. In the previous
-examples, we've invoked 'echo' and 'wc' executables from our
+examples, we've invoked 'echo' and 'tr' executables from our
 SwiftScript program. These have been run on the local system
 (the same computer on which you ran 'swift'). We can also make our
 computations run on a remote resource.</para>
@@ -649,7 +687,7 @@ struct volume {
     file hdr;
 }
 
-volume v &lt;tutorial_extension_mapper;basename=&quot;subject1&quot;&gt;;
+volume v &lt;tutorial_extension_mapper; basename=&quot;subject1&quot;&gt;;
 </programlisting>
 
 <para>
