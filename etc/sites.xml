@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<config xmlns="http://www.griphyn.org/chimera/GVDS-PoolConfig" 
-xsi:schemaLocation="http://www.griphyn.org/chimera/GVDS  http://www.griphyn.org/chimera/gvds-poolcfg-1.5.xsd" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.5">
+<config>
 
 <!--
 How this list was constructed:
