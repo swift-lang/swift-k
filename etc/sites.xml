@@ -1,7 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <config>
 
-<!--
+<!-- sites.xml specifies details of the sites that Swift can run on.
+
+The first entry entry, for localhost, should work on most linux-like systems
+without any change.
+
+It may be necessary to change the two occurences of /var/tmp to a different
+working directory.
+
+-->
+
+
+  <pool handle="localhost" sysinfo="INTEL32::LINUX">
+    <gridftp  url="local://localhost" storage="/var/tmp" major="1" minor="0" patch="0" />
+    <execution provider="local" url="none" />
+    <workdirectory >/var/tmp</workdirectory>
+  </pool>
+
+
+
+
+
+<!-- The remainder of this file is commented out by default. It contains
+example site definitions for a number of sites on TeraGrid and OSG.
+
 How this list was constructed:
 
 1. Teragrid
@@ -22,15 +44,6 @@ customize the storage and workdirectory to use your personal working directories
 
 -->
 
-<!-- This localhost entry should work on most linux-like systems. It may
-be necessary to change the two occurences of /var/tmp to a different
-working directory. -->
-
-  <pool handle="localhost" sysinfo="INTEL32::LINUX">
-    <gridftp  url="local://localhost" storage="/var/tmp" major="1" minor="0" patch="0" />
-    <execution provider="local" url="none" />
-    <workdirectory >/var/tmp</workdirectory>
-  </pool>
 
 <!--
   <pool handle="skynet" sysinfo="INTEL32::LINUX">
