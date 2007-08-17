@@ -434,10 +434,6 @@ public class Karajan {
 		String value = casestat.getValue();
 		StringTemplate valueST = m_exprParser.parse(value);
 		caseST.setAttribute("value", valueST.toString());
-		if (casestat.getFallThrough()) {
-			caseST.setAttribute("break", new Boolean(true));
-		}
-
 		statements(casestat, caseST);
 	}
 

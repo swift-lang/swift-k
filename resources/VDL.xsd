@@ -547,12 +547,6 @@
 
             <xs:attribute name="value" type="xs:string" use="required"/>
 
-            <xs:attribute name="fallThrough" type="xs:boolean">
-              <xs:annotation>
-                <xs:documentation>whether to fall through to the next
-                case</xs:documentation>
-              </xs:annotation>
-            </xs:attribute>
           </xs:complexType>
         </xs:element>
       </xs:sequence>
