@@ -409,8 +409,6 @@ builtInType returns [StringTemplate code=null]
     :    "int"   {code=template("type_int");}
     |   "string"  {code=template("type_string");}
     |   "float" {code=template("type_float");}
-    |   "date" {code=template("type_date");}
-    |   "uri"  {code=template("type_uri");}
     |   "bool" {code=template("type_bool");}
     ;
 

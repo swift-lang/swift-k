@@ -294,8 +294,6 @@ paren(exp) ::= "($exp$)"
 type_int() ::= "int"
 type_string() ::= "string"
 type_float() ::= "float"
-type_date() ::= "date"
-type_uri() ::= "uri"
 type_bool() ::= "bool"
 
 type_user_object(name) ::= "$name$"
