@@ -109,8 +109,9 @@ public class CobaltExecutor implements ProcessListener {
         }
 
         getProcessPoller().addJob(
-                new CobaltJob(jobid, spec.isRedirected(), stdout, stderr, spec
-                        .getStdOutput(), spec.getStdError(), this));
+                new CobaltJob(jobid, stdout, stderr, spec.getStdOutput(), spec
+                        .getStdOutputLocation(), spec.getStdError(), spec
+                        .getStdErrorLocation(), this));
     }
 
     private void error(String message) {

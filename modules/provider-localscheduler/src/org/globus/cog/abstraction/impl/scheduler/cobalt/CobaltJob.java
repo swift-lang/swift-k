@@ -15,28 +15,33 @@ import java.io.CharArrayWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.util.NullWriter;
+import org.globus.cog.abstraction.impl.common.util.WriterMultiplexer;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 
 public class CobaltJob extends Job {
     public static final Logger logger = Logger.getLogger(CobaltJob.class);
 
     private String stdout, stderr, tstdout, tstderr;
-    private boolean redirect;
+    private FileLocation outLoc, errLoc;
     private int exitcode;
 
-    public CobaltJob(String jobID, boolean redirect, String stdout,
-            String stderr, String tstdout, String tstderr,
+    public CobaltJob(String jobID, String stdout,
+            String stderr, String tstdout, FileLocation outLoc, String tstderr, FileLocation errLoc, 
             ProcessListener listener) {
-        super(jobID, null, null, null, listener);
-        this.redirect = redirect;
+        super(jobID, null, null, null, null, null, listener);
         this.stdout = stdout;
         this.stderr = stderr;
         this.tstdout = tstdout;
+        this.outLoc = outLoc;
         this.tstderr = tstderr;
+        this.errLoc = errLoc;
         int exitcode = Integer.MIN_VALUE;
     }
 
@@ -54,36 +59,31 @@ public class CobaltJob extends Job {
 
     protected boolean processStdout() {
         try {
+            Writer wr = null;
             CharArrayWriter caw = null;
-            if (redirect) {
+            if (FileLocation.MEMORY.overlaps(outLoc)) {
                 caw = new CharArrayWriter();
+                wr = caw;
             }
-            BufferedWriter bw = null;
-            if (tstdout != null) {
-                bw = new BufferedWriter(new FileWriter(tstdout));
+            if (tstdout != null && LOCAL_AND_REMOTE.overlaps(outLoc)) {
+                wr = WriterMultiplexer.multiplex(wr, new BufferedWriter(new FileWriter(tstdout)));
+            }
+            if (wr == null) {
+                wr = new NullWriter();
             }
             BufferedReader br = new BufferedReader(new FileReader(stdout));
             String line;
             do {
                 line = br.readLine();
                 if (line != null) {
-                    if (redirect) {
-                        caw.write(line);
-                        caw.write('\n');
-                    }
-                    else if (tstdout != null) {
-                        bw.write(line);
-                        bw.write('\n');
-                    }
+                    wr.write(line);
+                    wr.write('\n');
                 }
             } while (line != null);
             br.close();
+            wr.close();
             if (caw != null) {
-                caw.close();
                 listener.stdoutUpdated(caw.toString());
-            }
-            if (bw != null) {
-                bw.close();
             }
             return true;
         }
@@ -96,16 +96,22 @@ public class CobaltJob extends Job {
             return false;
         }
     }
+    
+    private static final FileLocation LOCAL_AND_REMOTE = FileLocation.LOCAL.and(FileLocation.REMOTE);
 
     protected boolean processStderr() {
         try {
+            Writer wr = null;
             CharArrayWriter caw = null;
-            if (redirect) {
+            if (FileLocation.MEMORY.overlaps(errLoc)) {
                 caw = new CharArrayWriter();
+                wr = caw;
             }
-            BufferedWriter bw = null;
-            if (tstdout != null) {
-                bw = new BufferedWriter(new FileWriter(tstderr));
+            if (tstdout != null && LOCAL_AND_REMOTE.overlaps(errLoc)) {
+                wr = WriterMultiplexer.multiplex(wr, new BufferedWriter(new FileWriter(tstderr)));
+            }
+            if (wr == null) {
+                wr = new NullWriter();
             }
             BufferedReader br = new BufferedReader(new FileReader(stderr));
             String line;
@@ -121,14 +127,8 @@ public class CobaltJob extends Job {
                     if (started) {
                         if (!line.startsWith("<")
                                 || line.indexOf("(Info)") == -1) {
-                            if (redirect) {
-                                caw.write(line);
-                                caw.write('\n');
-                            }
-                            else if (tstdout != null) {
-                                bw.write(line);
-                                bw.write('\n');
-                            }
+                            wr.write(line);
+                            wr.write('\n');
                         }
                         else {
                             int index = line.indexOf("BG/L job exit status =");
@@ -150,12 +150,9 @@ public class CobaltJob extends Job {
                 }
             } while (line != null);
             br.close();
+            wr.close();
             if (caw != null) {
-                caw.close();
                 listener.stderrUpdated(caw.toString());
-            }
-            if (bw != null) {
-                bw.close();
             }
             
             return true;
