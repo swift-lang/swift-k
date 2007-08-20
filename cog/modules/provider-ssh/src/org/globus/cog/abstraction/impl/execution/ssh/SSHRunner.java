@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class SSHRunner extends Thread{
+public class SSHRunner extends Thread {
 	private Ssh ssh;
 	private List listeners;
 	
@@ -24,7 +24,7 @@ public class SSHRunner extends Thread{
 			notifyListeners(SSHTaskStatusListener.COMPLETED, null);
 		}
 		catch (Exception e){
-			notifyListeners(SSHTaskStatusListener.FAILED, e.getMessage());
+			notifyListeners(SSHTaskStatusListener.FAILED, e);
 		}
 	}
 	
@@ -43,10 +43,10 @@ public class SSHRunner extends Thread{
 		}
 	}
 
-	public void notifyListeners(int event, String message){
+	public void notifyListeners(int event, Exception e){
 		Iterator i = listeners.iterator();
 		while (i.hasNext()){
-			((SSHTaskStatusListener) i.next()).SSHTaskStatusChanged(event, message);
+			((SSHTaskStatusListener) i.next()).SSHTaskStatusChanged(event, e);
 		}
 	}
 }

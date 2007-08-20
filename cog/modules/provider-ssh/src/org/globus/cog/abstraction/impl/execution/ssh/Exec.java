@@ -26,14 +26,19 @@
 package org.globus.cog.abstraction.impl.execution.ssh;
 
 import java.io.BufferedReader;
+import java.io.CharArrayWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Writer;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.common.util.WriterMultiplexer;
 
 import com.sshtools.j2ssh.session.SessionChannelClient;
 
@@ -41,8 +46,9 @@ public class Exec extends Ssh {
 	static Logger logger = Logger.getLogger(Exec.class.getName());
 	private String cmd;
 	private String dir;
-	private StringBuffer taskOutput = new StringBuffer();
-	private StringBuffer taskError = new StringBuffer();
+	private String outFile, errFile;
+	private boolean outMem, errMem;
+    private CharArrayWriter out, err;
 
 	public void setCmd(String cmd) {
 		this.cmd = cmd;
@@ -61,7 +67,9 @@ public class Exec extends Ssh {
 	}
 
 	public void execute() throws IllegalSpecException, InvalidSecurityContextException,
-			InvalidServiceContactException, TaskSubmissionException {
+			InvalidServiceContactException, TaskSubmissionException, JobException {
+        setOutput(outMem || outFile != null);
+        setError(errMem || errFile != null);
 		super.execute();
 		try {
 			SessionChannelClient session = ssh.openSessionChannel();
@@ -81,7 +89,7 @@ public class Exec extends Ssh {
 		}
 	}
 
-	public void executeCommand(SessionChannelClient session) throws TaskSubmissionException {
+	public void executeCommand(SessionChannelClient session) throws TaskSubmissionException, JobException {
 		try {
 			if (getCmd() == null) {
 				throw new TaskSubmissionException("No executable specified");
@@ -99,6 +107,24 @@ public class Exec extends Ssh {
 					session.getInputStream()));
 			BufferedReader stderr = new BufferedReader(new InputStreamReader(
 					session.getStderrInputStream()));
+            
+			Writer owr = null;
+            if (outMem) {
+                out = new CharArrayWriter();
+                owr = out;
+            }
+            if (outFile != null) {
+                owr = WriterMultiplexer.multiplex(owr, new FileWriter(outFile));
+            }
+            
+            Writer ewr = null;
+            if (errMem) {
+                err = new CharArrayWriter();
+                ewr = err;
+            }
+            if (errFile != null) {
+                ewr = WriterMultiplexer.multiplex(ewr, new FileWriter(errFile));
+            }
 
 			/*
 			 * Read all output sent to stdout (line by line) and print it to our
@@ -119,7 +145,7 @@ public class Exec extends Ssh {
 							charsout = 0;
 						}
 						if (charsout > 0) {
-							this.taskOutput.append(new String(bufout, 0, charsout));
+                            owr.write(bufout, 0, charsout);
 						}
 					}
 					if (error) {
@@ -130,7 +156,7 @@ public class Exec extends Ssh {
 							charserr = 0;
 						}
 						if (charserr > 0) {
-							this.taskError.append(new String(buferr, 0, charserr));
+                            ewr.write(buferr, 0, charsout);
 						}
 					}
 
@@ -142,12 +168,20 @@ public class Exec extends Ssh {
 					}
 				}
 			}
+            
+            if (owr != null) {
+                owr.close();
+            }
+            if (ewr != null) {
+                ewr.close();
+            }
 
 			Integer exitcode = session.getExitCode();
 
 			if (exitcode != null) {
 				if (exitcode.intValue() != 0) {
 					logger.info("Exit code " + exitcode.toString());
+                    throw new JobException(exitcode.intValue());
 				}
 			}
 		}
@@ -162,10 +196,52 @@ public class Exec extends Ssh {
 	}
 
 	public String getTaskOutput() {
-		return this.taskOutput.toString();
+		if (out != null) {
+		    return out.toString();
+        }
+        else {
+            return null;
+        }
 	}
 
 	public String getTaskError() {
-		return this.taskError.toString();
+		if (err != null) {
+            return err.toString();
+        }
+        else {
+            return null;
+        }
 	}
+
+    public String getErrFile() {
+        return errFile;
+    }
+
+    public void setErrFile(String errFile) {
+        this.errFile = errFile;
+    }
+
+    public boolean getErrMem() {
+        return errMem;
+    }
+
+    public void setErrMem(boolean errMem) {
+        this.errMem = errMem;
+    }
+
+    public String getOutFile() {
+        return outFile;
+    }
+
+    public void setOutFile(String outFile) {
+        this.outFile = outFile;
+    }
+
+    public boolean getOutMem() {
+        return outMem;
+    }
+
+    public void setOutMem(boolean outMem) {
+        this.outMem = outMem;
+    }   
 }

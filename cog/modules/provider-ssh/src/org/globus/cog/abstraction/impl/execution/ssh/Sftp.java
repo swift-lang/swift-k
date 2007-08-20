@@ -36,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
@@ -119,7 +120,7 @@ public class Sftp extends Ssh {
 			IllegalSpecException,
 			InvalidSecurityContextException,
 			InvalidServiceContactException,
-			TaskSubmissionException {
+			TaskSubmissionException, JobException {
 		super.execute();
 		if ((get != null) && (dest == null)) {
 			logger.debug("You must supply a destination for the get operation");

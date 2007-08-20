@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
@@ -104,7 +105,7 @@ public class Ssh {
 	}
 
 	public void execute() throws IllegalSpecException, InvalidSecurityContextException,
-			InvalidServiceContactException, TaskSubmissionException {
+			InvalidServiceContactException, TaskSubmissionException, JobException {
 		try {
 			if (host == null) {
 				throw new InvalidServiceContactException("You must provide a host to connect to.");
