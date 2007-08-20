@@ -31,6 +31,20 @@ public interface JobSpecification extends Specification {
     public String getExecutable();
 
     /**
+     * Allows specifying the location of the executable. The default is
+     * {@link FileLocation.REMOTE}.
+     * 
+     * @throws IllegalArgumentException if the location is {@link FileLocation.MEMORY}
+     */
+    public void setExecutableLocation(FileLocation location);
+
+    /**
+     * Retrieves the executable location. By default it is
+     * {@link FileLocation.REMOTE}
+     */
+    public FileLocation getExecutableLocation();
+
+    /**
      * Sets the working directory on the remote machine.
      * 
      * @param directory
@@ -223,6 +237,17 @@ public interface JobSpecification extends Specification {
     public String getStdOutput();
 
     /**
+     * Allows specifying the location where the stdout stream of the job should
+     * be redirected.
+     */
+    public void setStdOutputLocation(FileLocation type);
+
+    /**
+     * Retrieves the type of the standard output stream.
+     */
+    public FileLocation getStdOutputLocation();
+
+    /**
      * Sets the file from which to redirect the data as stdin on the remote
      * machine.
      * 
@@ -235,6 +260,17 @@ public interface JobSpecification extends Specification {
      * Returns the file used as stdin on the remote machine.
      */
     public String getStdInput();
+
+    /**
+     * Allows specifying the location of the file to be used for standard input
+     * for this job.
+     */
+    public void setStdInputLocation(FileLocation type);
+
+    /**
+     * Retrieves the type of the standard input stream.
+     */
+    public FileLocation getStdInputLocation();
 
     /**
      * Sets the file for redirecting the error produced on the stderr of the
@@ -251,6 +287,17 @@ public interface JobSpecification extends Specification {
      * the remote machine.
      */
     public String getStdError();
+
+    /**
+     * Allows specifying the location where the stderr stream of the job should
+     * be redirected.
+     */
+    public void setStdErrorLocation(FileLocation type);
+
+    /**
+     * Retrieves the type of the standard error stream.
+     */
+    public FileLocation getStdErrorLocation();
 
     /**
      * Specifies that the <code>Task</code> is to be executed as a batch job.
@@ -272,7 +319,8 @@ public interface JobSpecification extends Specification {
     public boolean isBatchJob();
 
     /**
-     * Specifies if the stdout and stderr have to be redirected.
+     * Specifies that the stdout and stderr streams of the task are to be
+     * redirected.
      * <p>
      * If filename for the <code>setStdOutput</code> in this
      * <code>Specification</code> is <code>null</code> and the
@@ -280,31 +328,43 @@ public interface JobSpecification extends Specification {
      * stdout is redirected to the local machine and can be retrieved from the
      * <code>getOutput</code> method of the container {@link Task}.
      * 
+     * @deprecated Use one of the setStd*Type methods
+     * 
      */
     public void setRedirected(boolean bool);
 
     /**
      * Checks if the stdout and stderror is redirected to the local machine.
+     * 
+     * @deprecated Use one of the getStd*Type methods.
      */
     public boolean isRedirected();
 
     /**
      * Specifies that the stdin must be staged-in from the local machine.
+     * 
+     * @deprecated Use {@link setStdInputType}
      */
     public void setLocalInput(boolean bool);
 
     /**
      * Checks if the stdin is staged-in from the local machine.
+     * 
+     * @deprecated Use {@link getStdInputType}
      */
     public boolean isLocalInput();
 
     /**
      * Specifies that the executable must be staged-in from the local machine.
+     * 
+     * @deprecated Use {@link setExecutableLocation}
      */
     public void setLocalExecutable(boolean bool);
 
     /**
      * Checks if the executable is staged-in from the local machine.
+     * 
+     * @deprecated Use {@link getExecutableLocation}
      */
     public boolean isLocalExecutable();
 
@@ -358,17 +418,19 @@ public interface JobSpecification extends Specification {
      * <code>FULL_DELEGATION</code>
      */
     public void setDelegation(int delegation);
-    
-    /**
-	 * Queries whether delegation is enabled for this job
-	 * @deprecated Use {@link #getDelegation()}
-	 */
-	public boolean isDelegationEnabled();
 
-	/**
-	 * Enables credential delegation for this job. Not all providers may support
-	 * credential delegation. Delegation is disabled by default.
-	 * @deprecated Use {@link #setDelegation(int)}
-	 */
-	public void setDelegationEnabled(boolean delegation);
+    /**
+     * Queries whether delegation is enabled for this job
+     * 
+     * @deprecated Use {@link #getDelegation()}
+     */
+    public boolean isDelegationEnabled();
+
+    /**
+     * Enables credential delegation for this job. Not all providers may support
+     * credential delegation. Delegation is disabled by default.
+     * 
+     * @deprecated Use {@link #setDelegation(int)}
+     */
+    public void setDelegationEnabled(boolean delegation);
 }
