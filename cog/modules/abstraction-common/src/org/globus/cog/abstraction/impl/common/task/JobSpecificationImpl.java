@@ -19,6 +19,7 @@ import java.util.Vector;
 import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 
 public class JobSpecificationImpl implements JobSpecification {
     public static final String ATTR_DELEGATION_ENABLED = "delegationEnabled";
@@ -40,6 +41,8 @@ public class JobSpecificationImpl implements JobSpecification {
     private Map environment;
     private String directory;
     private String executable;
+    private FileLocation stdinLocation, stdoutLocation, stderrLocation,
+            executableLocation;
 
     public JobSpecificationImpl() {
         this.type = Specification.JOB_SUBMISSION;
@@ -47,6 +50,10 @@ public class JobSpecificationImpl implements JobSpecification {
         this.additionalAttributes = new HashMap();
         this.arguments = new ArrayList();
         this.environment = new HashMap();
+        this.stdinLocation = FileLocation.REMOTE;
+        this.stdoutLocation = FileLocation.REMOTE;
+        this.stderrLocation = FileLocation.REMOTE;
+        this.executableLocation = FileLocation.REMOTE;
     }
 
     public void setType(int type) {
@@ -172,6 +179,8 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void setStdOutput(String output) {
         this.attributes.put(ATTR_STDOUT, output);
+        this.stdoutLocation = inferStreamType(isRedirected(), output != null,
+                true);
     }
 
     public String getStdOutput() {
@@ -180,6 +189,10 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void setStdInput(String input) {
         this.attributes.put(ATTR_STDIN, input);
+        if (this.attributes.containsKey(ATTR_REDIRECTED)) {
+            this.stdinLocation = inferStreamType(isLocalExecutable(),
+                    input != null, false);
+        }
     }
 
     public String getStdInput() {
@@ -188,6 +201,10 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void setStdError(String error) {
         this.attributes.put(ATTR_STDERR, error);
+        if (this.attributes.containsKey(ATTR_REDIRECTED)) {
+            this.stderrLocation = inferStreamType(isRedirected(),
+                    error != null, true);
+        }
     }
 
     public String getStdError() {
@@ -204,6 +221,29 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void setRedirected(boolean bool) {
         this.attributes.put(ATTR_REDIRECTED, Boolean.valueOf(bool));
+        this.stdoutLocation = inferStreamType(isRedirected(),
+                getStdOutput() != null, true);
+        this.stderrLocation = inferStreamType(isRedirected(),
+                getStdError() != null, true);
+    }
+
+    protected FileLocation inferStreamType(boolean redir, boolean isSet,
+            boolean mem) {
+        FileLocation type = FileLocation.NONE;
+        if (redir) {
+            if (mem) {
+                type = type.and(FileLocation.MEMORY);
+            }
+            if (isSet) {
+                type = type.and(FileLocation.LOCAL);
+            }
+        }
+        else {
+            if (isSet) {
+                type = type.and(FileLocation.REMOTE);
+            }
+        }
+        return type;
     }
 
     public boolean isRedirected() {
@@ -211,19 +251,20 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public void setLocalInput(boolean bool) {
-        this.attributes.put(ATTR_LOCAL_INPUT, Boolean.valueOf(bool));
+        this.stdinLocation = bool ? FileLocation.LOCAL : FileLocation.REMOTE;
     }
 
     public boolean isLocalInput() {
-        return getBooleanAttribute(ATTR_LOCAL_INPUT, false);
+        return FileLocation.LOCAL.equals(this.stdinLocation);
     }
 
     public void setLocalExecutable(boolean bool) {
-        this.attributes.put(ATTR_LOCAL_EXECUTABLE, Boolean.valueOf(bool));
+        this.executableLocation = bool ? FileLocation.LOCAL
+                : FileLocation.REMOTE;
     }
 
     public boolean isLocalExecutable() {
-        return getBooleanAttribute(ATTR_LOCAL_EXECUTABLE, false);
+        return FileLocation.LOCAL.equals(this.executableLocation);
     }
 
     private boolean getBooleanAttribute(final String name, boolean def) {
@@ -273,11 +314,11 @@ public class JobSpecificationImpl implements JobSpecification {
                 delegation ? Delegation.LIMITED_DELEGATION
                         : Delegation.FULL_DELEGATION));
     }
-    
+
     public int getDelegation() {
         return getIntAttribute(ATTR_DELEGATION, Delegation.NO_DELEGATION);
     }
-    
+
     public void setDelegation(int delegation) {
         this.attributes.put(ATTR_DELEGATION, new Integer(delegation));
     }
@@ -296,4 +337,39 @@ public class JobSpecificationImpl implements JobSpecification {
         return sb.toString();
     }
 
+    public FileLocation getStdErrorLocation() {
+        return stderrLocation;
+    }
+
+    public FileLocation getStdInputLocation() {
+        return stdinLocation;
+    }
+
+    public FileLocation getStdOutputLocation() {
+        return stdoutLocation;
+    }
+
+    public void setStdErrorLocation(FileLocation type) {
+        this.stderrLocation = type;
+    }
+
+    public void setStdInputLocation(FileLocation type) {
+        this.stdinLocation = type;
+    }
+
+    public void setStdOutputLocation(FileLocation type) {
+        this.stdoutLocation = type;
+    }
+
+    public FileLocation getExecutableLocation() {
+        return executableLocation;
+    }
+
+    public void setExecutableLocation(FileLocation executableLocation) {
+        if (FileLocation.MEMORY.equals(executableLocation)) {
+            throw new IllegalArgumentException(
+                    "Memory is not a valid setting for the executable location");
+        }
+        this.executableLocation = executableLocation;
+    }
 }

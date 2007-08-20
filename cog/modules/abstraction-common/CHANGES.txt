@@ -1,3 +1,23 @@
+(08/20/2007)
+
+*** Made the way redirection works more consistent. As it was, a flag
+    (JobSpecification.setRedirected(true)) would be used to indicate
+    that redirection was desired. That, combined with whether the 
+    stdout files were null or not, would dictate, in twisted ways, whether 
+    the output would be redirected to a remote file, a local file, or an
+    in-memory object. The way it works now is that for each file (stdin, 
+    executable, stdout, stderr) a location can be specified. The location
+    can be either memory, local or remote, or an arbitrary combination
+    of these. So, for example, the stdout could be redirected to both
+    a remote file and an in-memory object, while the stderr would be 
+    redirected to a local file. Not all providers will support all
+    combinations of these (GT2 will probably only be able to redirect
+    to one thing at a time). A few things were also deprecated as a 
+    consequence: 
+       JobSpecification.setRedirected
+       JobSpecification.setLocalExecutable
+       JobSpecification.setLocatInput
+
 (07/28/2007)
 
 *** Added a thirdPartyIfPossible property to file transfer specifications.
