@@ -1,3 +1,7 @@
+(08/20/2007)
+
+*** Updated to use new redirection stuff
+
 (05/20/2007)
 
 *** Corrected instances in which cleanup is done
