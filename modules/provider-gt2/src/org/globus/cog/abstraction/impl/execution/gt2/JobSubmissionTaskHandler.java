@@ -20,6 +20,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Delegation;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -301,16 +302,18 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         else {
             boolean batchJob = spec.isBatchJob();
-            boolean redirected = spec.isRedirected();
-            boolean localExecutable = spec.isLocalExecutable();
-            boolean localInput = spec.isLocalInput();
+            boolean redirected = spec.getStdOutputLocation().overlaps(
+                    FileLocation.MEMORY_AND_LOCAL)
+                    || spec.getStdErrorLocation().overlaps(FileLocation.MEMORY_AND_LOCAL);
 
             if (batchJob && redirected) {
                 throw new IllegalSpecException(
                         "Cannot redirect the output/error of a batch job");
             }
 
-            if (redirected || localExecutable || localInput) {
+            if (redirected
+                    || FileLocation.LOCAL.equals(spec.getStdInputLocation())
+                    || FileLocation.LOCAL.equals(spec.getExecutableLocation())) {
                 this.startGassServer = true;
                 String gassURL = startGassServer();
                 Bindings subst = new Bindings("rsl_substitution");
@@ -319,7 +322,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             // sets the executable
             if (spec.getExecutable() != null) {
-                if (this.startGassServer && localExecutable) {
+                if (FileLocation.LOCAL.equals(spec.getExecutableLocation())) {
                     rsl.add(new NameOpValue("executable", NameOpValue.EQ,
                             new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
                                     fixAbsPath(spec.getExecutable())))));
@@ -366,7 +369,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
             // sets the stdin
             if (spec.getStdInput() != null) {
-                if (this.startGassServer && localInput) {
+                if (FileLocation.LOCAL.equals(spec.getStdInputLocation())) {
                     rsl.add(new NameOpValue("stdin", NameOpValue.EQ,
                             new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
                                     fixAbsPath(spec.getStdInput())))));
@@ -378,11 +381,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
 
             // if output is to be redirected
-            if (this.startGassServer && redirected) {
+            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdOutputLocation())) {
                 Value v;
                 // if no output file is specified, use the stdout
-                if ((spec.getStdOutput() == null)
-                        || (spec.getStdOutput().equals(""))) {
+                if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
                     v = new Value("/dev/stdout-"
                             + this.task.getIdentity().toString());
                 }
@@ -398,11 +400,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         .getStdOutput()));
             }
             // if error is to be redirected
-            if (this.startGassServer && redirected) {
+            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdErrorLocation())) {
                 Value v;
                 // if no error file is specified, use the stdout
-                if ((spec.getStdError() == null)
-                        || (spec.getStdError().equals(""))) {
+                if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
                     v = new Value("/dev/stderr-"
                             + this.task.getIdentity().toString());
                 }
