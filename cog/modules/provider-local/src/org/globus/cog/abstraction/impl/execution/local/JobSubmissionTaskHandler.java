@@ -19,11 +19,15 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.common.util.NullOutputStream;
+import org.globus.cog.abstraction.impl.common.util.OutputStreamMultiplexer;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -105,6 +109,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         this.task.setStatus(Status.CANCELED);
     }
 
+    private static final FileLocation REDIRECT_LOCATION = FileLocation.MEMORY
+            .and(FileLocation.LOCAL);
+
     public void run() {
         try {
             // TODO move away from the multi-threaded approach
@@ -129,9 +136,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
              */
             processIN(spec.getStdInput(), dir, buf);
 
-            if (spec.getStdOutput() != null || spec.isRedirected()) {
-                String out = processOUT(spec.getStdOutput(), dir, buf,
-                        process.getInputStream());
+            if (!FileLocation.NONE.equals(spec.getStdOutputLocation())) {
+                String out = processOUT(spec.getStdOutput(), spec
+                        .getStdOutputLocation(), dir, buf, process
+                        .getInputStream());
                 if (out != null) {
                     if (logger.isDebugEnabled()) {
                         logger.debug("STDOUT from job: " + out);
@@ -140,8 +148,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 }
             }
 
-            if (spec.getStdError() != null || spec.isRedirected()) {
-                String err = processOUT(spec.getStdError(), dir, buf, process
+            if (!FileLocation.NONE.equals(spec.getStdErrorLocation())) {
+                String err = processOUT(spec.getStdError(), spec
+                        .getStdErrorLocation(), dir, buf, process
                         .getErrorStream());
                 if (err != null) {
                     if (logger.isDebugEnabled()) {
@@ -165,8 +174,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             if (exitCode == 0) {
                 this.task.setStatus(Status.COMPLETED);
             } else {
-                throw new Exception("Job failed with an exit code of "
-                        + exitCode);
+                throw new JobException(exitCode);
             }
         } catch (Exception e) {
             if (killed) {
@@ -206,23 +214,37 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
     }
 
-    protected String processOUT(String out, File dir, byte[] buf,
-            InputStream pin) throws IOException {
+    protected String processOUT(String out, FileLocation loc, File dir,
+            byte[] buf, InputStream pin) throws IOException {
 
-        OutputStream os;
-        if (out == null) {
-            os = new ByteArrayOutputStream();
-        } else {
-            os = new FileOutputStream(out);
+        OutputStream os = null;
+        ByteArrayOutputStream baos = null;
+        if (FileLocation.MEMORY.overlaps(loc)) {
+            baos = new ByteArrayOutputStream();
+            os = baos;
         }
+        if ((FileLocation.LOCAL.overlaps(loc) || FileLocation.REMOTE
+                .equals(loc))
+                && out != null) {
+            if (os != null) {
+                os = new OutputStreamMultiplexer(os, new FileOutputStream(out));
+            }
+            else {
+                os = new FileOutputStream(out);
+            }
+        }
+        if (os == null) {
+            os = new NullOutputStream();
+        }
+
         int len = pin.read(buf);
         while (len != -1) {
             os.write(buf, 0, len);
             len = pin.read(buf);
         }
         os.close();
-        if (out == null) {
-            return os.toString();
+        if (baos != null) {
+            return baos.toString();
         } else {
             return null;
         }
