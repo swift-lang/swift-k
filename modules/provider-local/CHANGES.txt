@@ -1,3 +1,8 @@
+(08/20/2007)
+
+*** Rimplemented redirection to conform to new things in the
+    interfaces
+
 (03/11/2007)
 
 *** Improved the implementation of the execution provider:
