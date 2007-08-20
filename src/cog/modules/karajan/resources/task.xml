@@ -27,6 +27,11 @@
 		
 			
 			<import file="sys.xml"/>
+			
+			<global name="LOCATION:STREAM" value="1"/>
+			<global name="LOCATION:LOCAL" value="2"/>
+			<global name="LOCATION:REMOTE" value="4"/>
+			
 			<import file="java.xml"/>
 			
 			<export name="SSHSecurityContext">
