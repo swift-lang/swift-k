@@ -8,6 +8,7 @@ package org.globus.cog.abstraction.impl.scheduler.pbs.execution;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
@@ -16,6 +17,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.impl.scheduler.pbs.PBSExecutor;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -103,7 +105,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             else {
                 Status s = new StatusImpl();
-                s.setMessage("Process failed with exit code " + exitCode);
+                s.setException(new JobException(exitCode));
                 s.setStatusCode(Status.FAILED);
                 task.setStatus(s);
             }
@@ -132,13 +134,13 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     public void stderrUpdated(String stderr) {
-        if (spec.isRedirected()) {
+        if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
             task.setStdError(stderr);
         }
     }
 
     public void stdoutUpdated(String stdout) {
-        if (spec.isRedirected()) {
+        if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
             task.setStdOutput(stdout);
         }
     }
