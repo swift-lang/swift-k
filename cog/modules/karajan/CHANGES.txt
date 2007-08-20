@@ -1,3 +1,15 @@
+(08/20/2007)
+
+*** Added failOnJobError flag to task:execute(). Should it be set
+    to false, it would prevent task:execute() from failing when 
+    a non-zero exit code is detected from the application, and 
+    return the exit code instead.
+    
+*** Added stdoutLocation and stderrLocation to task:execute().
+    One can now put these two in either the stdout/stderr channels,
+    local files, remote files, or any possible combination of these
+    (assuming the providers support these).
+
 (08/16/2007)
 
 *** task:execute() would redirect the job stderr to stdout. Fixed.
