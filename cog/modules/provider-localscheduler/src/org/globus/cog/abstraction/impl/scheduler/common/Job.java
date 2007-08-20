@@ -15,6 +15,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 
 public class Job {
     public static final Logger logger = Logger.getLogger(Job.class);
@@ -28,16 +29,19 @@ public class Job {
     private String jobID;
     private String exitcodeFileName;
     private String stdout, stderr;
+    private FileLocation outLoc, errLoc;
     protected ProcessListener listener;
     protected int state;
     private int ticks;
 
-    public Job(String jobID, String stdout, String stderr,
+    public Job(String jobID, String stdout, FileLocation outLoc, String stderr, FileLocation errLoc,
             String exitcodeFileName, ProcessListener listener) {
         this.jobID = jobID;
         this.listener = listener;
         this.stdout = stdout;
         this.stderr = stderr;
+        this.outLoc = outLoc;
+        this.errLoc = errLoc;
         this.state = STATE_NONE;
         this.exitcodeFileName = exitcodeFileName;
         this.ticks = 0;
@@ -87,7 +91,7 @@ public class Job {
 
     protected boolean processStdout() {
         try {
-            if (stdout != null) {
+            if (FileLocation.MEMORY.overlaps(outLoc)) {
                 String out = readFile(stdout);
                 if (out != null && !"".equals(out)) {
                     listener.stdoutUpdated(out);
@@ -107,7 +111,7 @@ public class Job {
 
     protected boolean processStderr() {
         try {
-            if (stderr != null) {
+            if (FileLocation.MEMORY.overlaps(errLoc)) {
                 String err = readFile(stderr);
                 if (err != null && !"".equals(err)) {
                     listener.stderrUpdated(err);

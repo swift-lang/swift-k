@@ -1,3 +1,7 @@
+(08/20/07)
+
+*** Redirection updates
+
 (02/27/07)
 
 *** I think Process.waitFor() can deadlock if there's too
