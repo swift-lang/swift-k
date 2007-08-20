@@ -9,5 +9,5 @@ package org.globus.cog.abstraction.impl.execution.ssh;
 public interface SSHTaskStatusListener {
 	public static final int FAILED = 1;
 	public static final int COMPLETED = 0;
-	public void SSHTaskStatusChanged(int status, String message);
+	public void SSHTaskStatusChanged(int status, Exception e);
 }

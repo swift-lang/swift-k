@@ -128,7 +128,7 @@ public class FileTransferTaskHandler implements DelegatedTaskHandler, SSHTaskSta
 		// perform cleanup if required
 	}
 
-	public void SSHTaskStatusChanged(int status, String message) {
+	public void SSHTaskStatusChanged(int status, Exception e) {
 		if (status == SSHTaskStatusListener.COMPLETED) {
 			this.task.setStatus(Status.COMPLETED);
 		}
@@ -137,7 +137,6 @@ public class FileTransferTaskHandler implements DelegatedTaskHandler, SSHTaskSta
 			Status oldStatus = this.task.getStatus();
 			newStatus.setPrevStatusCode(oldStatus.getStatusCode());
 			newStatus.setStatusCode(Status.FAILED);
-			Exception e = new Exception(message);
 			newStatus.setException(e);
 			this.task.setStatus(newStatus);
 		}
