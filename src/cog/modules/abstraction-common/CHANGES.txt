@@ -17,6 +17,10 @@
        JobSpecification.setRedirected
        JobSpecification.setLocalExecutable
        JobSpecification.setLocatInput
+       
+*** Oh, and application failures caused by non-zero exit codes now have
+    their own exception (JobException), which can also be used to 
+    retrieve the exit code nicely.
 
 (07/28/2007)
 
