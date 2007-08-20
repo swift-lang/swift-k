@@ -25,6 +25,7 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
@@ -189,8 +190,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             catch (Exception e) {
                 failTask(e.getMessage(), e);
-                //No need for cleanup. Reportedly no resource has been created
-                //if an exception is thrown
+                // No need for cleanup. Reportedly no resource has been created
+                // if an exception is thrown
                 gramJob.removeListener(this);
                 throw new TaskSubmissionException("Cannot submit job: "
                         + e.getMessage(), e);
@@ -221,6 +222,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             throw new TaskSubmissionException("Cannot cancel job", e);
         }
     }
+
+    private static final FileLocation REDIRECT_LOCATION = FileLocation.MEMORY
+            .and(FileLocation.LOCAL);
 
     private JobDescriptionType prepareSpecification(JobSpecification spec,
             String server) throws IllegalSpecException, TaskSubmissionException {
@@ -275,7 +279,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 new String[0]));
 
         boolean batchJob = spec.isBatchJob();
-        if (spec.isRedirected()) {
+        if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdOutputLocation()
+                .and(spec.getStdErrorLocation()))) {
             throw new IllegalSpecException(
                     "The gt4.0.0 provider does not support redirection");
         }
@@ -291,7 +296,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
         }
 
-        if (spec.isLocalExecutable()) {
+        if (FileLocation.LOCAL.overlaps(spec.getExecutableLocation())) {
             throw new IllegalSpecException(
                     "The gt4.0.0 provider does not support local executables");
         }
