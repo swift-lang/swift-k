@@ -21,7 +21,8 @@ public class Properties extends java.util.Properties {
 	
 	public static final String POLL_INTERVAL = "poll.interval";
 	public static final String CQSUB = "cqsub";
-	public static final String CQSTAT = "cqstat";	
+	public static final String CQSTAT = "cqstat";
+	public static final String EXITCODE_REGEXP = "exitcode.regexp";
 
 	private static Properties properties;
 
@@ -52,6 +53,7 @@ public class Properties extends java.util.Properties {
 		setPollInterval(5);
 		setCQSub("cqsub");
 		setCQStat("cqstat");
+		setExitcodeRegexp("(?BG/L job exit status = ([0-9]+))|(?exit status = \\(([0-9]+)\\))");
 	}
 
 	public void setPollInterval(int value) {
@@ -76,5 +78,13 @@ public class Properties extends java.util.Properties {
 	
 	public String getCQStat() {
 	    return getProperty(CQSTAT);
+	}
+	
+	public String getExitcodeRegexp() {
+		return getProperty(EXITCODE_REGEXP);
+	}
+	
+	public void setExitcodeRegexp(String value) {
+		setProperty(EXITCODE_REGEXP, value);
 	}
 }
