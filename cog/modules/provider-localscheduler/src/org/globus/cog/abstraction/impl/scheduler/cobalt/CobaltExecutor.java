@@ -169,7 +169,7 @@ public class CobaltExecutor implements ProcessListener {
         l.add("-E");
         l.add(stderr);
         l.add(spec.getExecutable());
-        List args = spec.getArgumentsAsList();
+        l.addAll(spec.getArgumentsAsList());
         if (logger.isDebugEnabled()) {
             logger.debug("Cqsub cmd line: " + l);
         }
