@@ -158,6 +158,7 @@ public class CobaltExecutor implements ProcessListener {
         addAttr("count", "-n", l, "1");
         addAttr("project", "-p", l);
         addAttr("queue", "-q", l);
+        addAttr("kernelprofile", "-k", l);
         // cqsub seems to require both the node count and time args
         addAttr("maxwalltime", "-t", l, "10");
         if (spec.getDirectory() != null) {

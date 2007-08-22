@@ -2,6 +2,9 @@
 
 *** The cobalt provider was not passing command line arguments
     to the job
+    
+*** Added -k <kernel profile> option for cobalt. The spec attribute
+    is "kernelprofile".
 
 (08/20/07)
 
