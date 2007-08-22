@@ -306,6 +306,9 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	protected void taskCompleted(StatusEvent e, VariableStack stack) throws ExecutionException {
 		Task t = (Task) e.getSource();
 		returnOutputs(t, stack);
+        if (!TypeUtil.toBoolean(A_FAIL_ON_JOB_ERROR.getValue(stack))) {
+            Arg.VARGS.ret(stack, new Integer(0));
+        }
 		super.taskCompleted(e, stack);
 	}
 
