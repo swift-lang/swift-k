@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
@@ -36,6 +37,7 @@ public class CobaltExecutor implements ProcessListener {
     private ProcessListener listener;
     private String stdout, stderr;
     private String cqsub;
+    private Pattern exitcodeRegexp;
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
@@ -44,6 +46,7 @@ public class CobaltExecutor implements ProcessListener {
         this.spec = (JobSpecification) task.getSpecification();
         this.listener = listener;
         this.cqsub = Properties.getProperties().getCQSub();
+        this.exitcodeRegexp = Pattern.compile(Properties.getProperties().getExitcodeRegexp());
     }
 
     private static synchronized QueuePoller getProcessPoller() {
@@ -111,7 +114,7 @@ public class CobaltExecutor implements ProcessListener {
         getProcessPoller().addJob(
                 new CobaltJob(jobid, stdout, stderr, spec.getStdOutput(), spec
                         .getStdOutputLocation(), spec.getStdError(), spec
-                        .getStdErrorLocation(), this));
+                        .getStdErrorLocation(), exitcodeRegexp, this));
     }
 
     private void error(String message) {

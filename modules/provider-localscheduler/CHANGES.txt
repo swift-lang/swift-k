@@ -5,6 +5,10 @@
     
 *** Added -k <kernel profile> option for cobalt. The spec attribute
     is "kernelprofile".
+    
+*** Configurable exit code extraction regexps (Kevin Harms points
+    out that looking for a string containing "BG/L job exit status"
+    is likely to not work on a BG/P). D'oh!
 
 (08/20/07)
 
