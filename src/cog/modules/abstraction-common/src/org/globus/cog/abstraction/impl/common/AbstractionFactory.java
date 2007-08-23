@@ -55,7 +55,8 @@ public class AbstractionFactory {
 
     public static TaskHandler newExecutionTaskHandler(String provider)
             throws InvalidProviderException, ProviderMethodException {
-        return newTaskHandler(provider, "executionTaskHandler");
+        return newTaskHandler(provider,
+                AbstractionProperties.TYPE_EXECUTION_TASK_HANDLER);
     }
 
     public static TaskHandler newFileTransferTaskHandler()
@@ -65,7 +66,8 @@ public class AbstractionFactory {
 
     public static TaskHandler newFileTransferTaskHandler(String provider)
             throws InvalidProviderException, ProviderMethodException {
-        return newTaskHandler(provider, "fileTransferTaskHandler");
+        return newTaskHandler(provider,
+                AbstractionProperties.TYPE_FILE_TRANSFER_TASK_HANDLER);
     }
 
     public static TaskHandler newFileOperationTaskHandler()
@@ -75,7 +77,8 @@ public class AbstractionFactory {
 
     public static TaskHandler newFileOperationTaskHandler(String provider)
             throws InvalidProviderException, ProviderMethodException {
-        return newTaskHandler(provider, "fileOperationTaskHandler");
+        return newTaskHandler(provider,
+                AbstractionProperties.TYPE_FILE_OPERATION_TASK_HANDLER);
     }
 
     public static TaskHandler newTaskHandler(String provider, String type)
@@ -87,7 +90,8 @@ public class AbstractionFactory {
         if (sandbox) {
             return new SandboxingTaskHandler(getSandbox(provider),
                     (TaskHandler) newObject(provider, type));
-        } else {
+        }
+        else {
             return (TaskHandler) newObject(provider, type);
         }
     }
@@ -104,12 +108,14 @@ public class AbstractionFactory {
 
     public static FileResource newFileResource(String provider)
             throws InvalidProviderException, ProviderMethodException {
-        return (FileResource) newObject(provider, "fileResource");
+        return (FileResource) newObject(provider,
+                AbstractionProperties.TYPE_FILE_RESOURCE);
     }
 
     public static SecurityContext newSecurityContext(String provider)
             throws InvalidProviderException, ProviderMethodException {
-        return (SecurityContext) newObject(provider, "securityContext");
+        return (SecurityContext) newObject(provider,
+                AbstractionProperties.TYPE_SECURITY_CONTEXT);
     }
 
     public static boolean hasObject(String provider, String role) {
@@ -118,7 +124,8 @@ public class AbstractionFactory {
                     .getProperties(provider);
             String className = providerProps.getProperty(role);
             return className != null;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return false;
         }
     }
@@ -136,11 +143,11 @@ public class AbstractionFactory {
         }
         try {
             return newInstance(provider, className, sandbox);
-        } catch (InvalidClassException e) {
+        }
+        catch (InvalidClassException e) {
             throw new ProviderMethodException("Provider " + provider
                     + " does not provide a valid " + role, e);
         }
-
     }
 
     protected static Object newInstance(String provider, String className,
@@ -154,15 +161,18 @@ public class AbstractionFactory {
             Sandbox sandbox = getSandbox(provider);
             try {
                 return sandbox.newObject(className, null, null);
-            } catch (Throwable e) {
+            }
+            catch (Throwable e) {
                 throw new InvalidClassException("Cannot instantiate "
                         + className, e);
             }
-        } else {
+        }
+        else {
             ClassLoader cl = getLoader(provider);
             try {
                 return cl.loadClass(className).newInstance();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 throw new InvalidClassException(e);
             }
         }
@@ -182,15 +192,18 @@ public class AbstractionFactory {
                             .indexOf('!'));
                     surl = surl.substring(0, surl.lastIndexOf('/'));
                     path = surl;
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                 }
                 if (path == null) {
                     throw new InvalidProviderException(INVALID_CLASSPATH_ERROR);
-                } else {
+                }
+                else {
                     throw new InvalidProviderException(INVALID_CLASSPATH_ERROR
                             + "\nOffending directory: " + path);
                 }
-            } else {
+            }
+            else {
                 trapChecked = true;
             }
         }
@@ -205,7 +218,8 @@ public class AbstractionFactory {
             if (bootClass != null) {
                 try {
                     sandbox.boot(bootClass);
-                } catch (Throwable e) {
+                }
+                catch (Throwable e) {
                     logger.error("Cannot boot sandbox for " + provider
                             + ". Some things may not work as expected.", e);
                 }
@@ -239,7 +253,8 @@ public class AbstractionFactory {
             if (doBoot) {
                 AbstractionClassLoader.initializeLoader(loader, props, boot,
                         system);
-            } else {
+            }
+            else {
                 AbstractionClassLoader.initializeLoader(loader, props, null,
                         system);
             }
