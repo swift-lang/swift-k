@@ -14,6 +14,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
+import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -40,22 +41,13 @@ public class ServiceNode extends AbstractFunction {
 	public Object function(VariableStack stack) throws ExecutionException {
 		Service service = null;
 		String type = TypeUtil.toString(A_TYPE.getValue(stack));
-		int itype = 0;
-		if (type.equals("execution") || type.equals("job-submission")) {
-			itype = Service.JOB_SUBMISSION;
+		int itype = TaskHandlerNode.karajanToHandlerType(type);
+		if (itype == TaskHandler.EXECUTION) {
+			itype = Service.EXECUTION;
 			service = new ExecutionServiceImpl();
 			if (A_JOB_MANAGER.isPresent(stack)) {
 				((ExecutionService) service).setJobManager(TypeUtil.toString(A_JOB_MANAGER.getValue(stack)));
 			}
-		}
-		else if (type.equals("file-transfer")) {
-			itype = Service.FILE_TRANSFER;
-		}
-		else if (type.equals("file-operation") || type.equals("file")) {
-			itype = Service.FILE_OPERATION;
-		}
-		else {
-			throw new ExecutionException("Invalid service type: " + type);
 		}
 
 		if (service == null) {
@@ -75,7 +67,9 @@ public class ServiceNode extends AbstractFunction {
 				sc = (SecurityContext) stack.getVar(scName);
 			}
 			catch (VariableNotFoundException e) {
-				logger.debug("No default security context defined for provider " + provider);
+				if (logger.isDebugEnabled()) {
+					logger.debug("No default security context defined for provider " + provider);
+				}
 				if (sc == null) {
 					try {
 						sc = AbstractionFactory.newSecurityContext(provider);
