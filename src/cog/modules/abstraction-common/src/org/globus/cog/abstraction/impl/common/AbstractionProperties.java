@@ -65,6 +65,7 @@ public class AbstractionProperties extends java.util.Properties {
      */
     public static List getProviders(String type) {
         loadProviderProperties();
+        type = type.toLowerCase();
         List l = new LinkedList();
         Iterator i = providerProperties.entrySet().iterator();
         while (i.hasNext()) {
