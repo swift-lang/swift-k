@@ -1,3 +1,8 @@
+(08/23/2007)
+
+*** Added task:availableHandlers(*type). In case people don't
+    have to manually add handlers.
+
 (08/22/2007)
 
 *** failOnJobError=false would not make task:execute() return 
