@@ -1,3 +1,10 @@
+(08/23/2007)
+
+*** Added ability to query for a list of providers supporting
+    a certain type of task handler.
+    
+*** Deprecated Service.JOB_SUBMISSION. Use Service.EXECUTION.
+
 (08/20/2007)
 
 *** Made the way redirection works more consistent. As it was, a flag

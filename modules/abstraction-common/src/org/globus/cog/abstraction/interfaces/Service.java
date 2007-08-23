@@ -15,9 +15,16 @@ import java.util.Enumeration;
  */
 public interface Service {
     /**
-     * Represents a job submission service
+     * Represents a job submission service.
+     * 
+     * @deprecated For consistency use {@link EXECUTION}
      */
     public static final int JOB_SUBMISSION = 1;
+    
+    /**
+     * Represents an execution service.
+     */
+    public static final int EXECUTION = 1;
 
     /**
      * Represents a file transfer service
