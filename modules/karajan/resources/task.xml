@@ -2,6 +2,7 @@
 	<cache>
 		<namespace prefix="task">
 			<export name="handler"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.TaskHandlerNode"/></export>
+			<export name="availableHandlers"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.AvailableTaskHandlers"/></export>
 			<export name="scheduler"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.SchedulerNode"/></export>
 			<export name="securityContext"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.SecurityContextNode"/></export>
 			<export name="resources"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.GridNode"/></export>
