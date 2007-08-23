@@ -17,6 +17,11 @@ public class TaskHandlerWrapper {
 
 	public TaskHandlerWrapper() {
 	}
+	
+	public TaskHandlerWrapper(String provider, int type) {
+		this.provider = provider;
+		this.type = type;
+	}
 
 	public int getType() {
 		return type;
