@@ -36,7 +36,8 @@ public class FileResourceImpl extends
             if (res != null) {
                 try {
                     properties.load(res.openStream());
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     logger.warn("Failed to load dcache provider properties",
                             e);
                 }
@@ -85,9 +86,11 @@ public class FileResourceImpl extends
                         + "\". dccp failed with an exit code of " + exitcode
                         + ": " + stderr);
             }
-        } catch (FileResourceException e) {
+        }
+        catch (FileResourceException e) {
             throw e;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new FileResourceException(e);
         }
     }
