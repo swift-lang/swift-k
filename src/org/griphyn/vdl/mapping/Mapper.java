@@ -10,7 +10,7 @@ import java.util.Map;
 public interface Mapper {
 
     /** Returns a (?)filename for the specified SwiftScript path. */
-    String map(Path path);
+    PhysicalFormat map(Path path);
 
     /** Returns true if a (file?) backing the specified SwiftScript path
         already exists. */
@@ -43,5 +43,4 @@ public interface Mapper {
     void setParam(String name, Object value);
 
     Object getParam(String name);
-
 }
