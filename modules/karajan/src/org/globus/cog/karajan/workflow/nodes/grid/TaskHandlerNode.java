@@ -58,11 +58,11 @@ public class TaskHandlerNode extends AbstractFunction {
 			throw new IllegalArgumentException("Invalid abstraction handler type: " + type);
 		}
 	}
-	
+		
 	public static int karajanToHandlerType(String type) {
 		return abstractionToHandlerType(karajanToAbstractionType(type));
 	}
-
+	
 	public static final Arg A_TYPE = new Arg.Positional("type");
 	public static final Arg A_PROVIDER = new Arg.Positional("provider");
 	public static final Arg.Channel HANDLERS_CHANNEL = new Arg.Channel("handlers");
