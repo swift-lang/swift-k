@@ -74,26 +74,7 @@ public class MappingParam {
 			throw new VDL2FutureException(handle);
 		}
 		Object value = handle.getValue();
-	}
-
-	/** Returns the mapper parameter value as a filename. If the parameter
-	    is a SwiftScript dataset, then the filename for that dataset will
-	    be returned. If the parameter is a String then that String will be
-	    returned. Otherwise, an exception will be thrown. */
-	public String getFileName(Mapper mapper) {
-		Object value = mapper.getParam(name);
-		if (value instanceof DSHandle) {
-			DSHandle handle = (DSHandle) value;
-			checkHandle(handle);
-			return handle.getFilename();
-		}
-		else if (value instanceof String) {
-			return (String) value;
-		}
-		else {
-			throw new RuntimeException("Could not figure out file name for value " + value);
-		}
-	}
+	}	
 
 	/** Returns the mapper parameter as a String. Other data types will be
 	    converted to a String as appropriate. */
