@@ -14,19 +14,7 @@ public interface Field {
 	 *
 	 */
 	public void setName(String name);
-	
-	/**
-	 * check if the field is an array field
-	 * @return
-	 */
-	public boolean isArray();
-	
-	/**
-	 * set the field to be an array field
-	 * @param array
-	 */
-	public void setArray();
-	
+		
 	/**
 	 * get the type of the field
 	 * @return
@@ -52,11 +40,7 @@ public interface Field {
 		
 		public static Field createField(String name, Type type) {
 			return new FieldImpl(name, type);
-		}
-
-		public static Field createField(String name, Type type, boolean array) {
-			return new FieldImpl(name, type, array);
-		}
+		}		
 	}
 }
 

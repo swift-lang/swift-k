@@ -4,17 +4,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class TypeDefinitions {
+public class Types {
 
 	//TODO: check namespace references in type definitions
 	private static Map types = new HashMap();
 
 	private String namespace = null;
 
-	public TypeDefinitions() {
+	public Types() {
 	}
 
-	public TypeDefinitions(String namespace) {
+	public Types(String namespace) {
 		this.namespace = namespace;
 	}
 
@@ -41,17 +41,21 @@ public class TypeDefinitions {
 		types.put(type.getName(), type);
 	}
 
-	private static void addPrimitiveType(String name) {
-		Type type = Type.Factory.createType(name, true);
+	private static Type addPrimitiveType(String name) {
+		Type type = Type.Factory.createType(name, true, false);
 		addType(type);
+        return type;
 	}
+    
+    public static final Type INT, STRING, FLOAT, BOOLEAN, ANY;
 
 	// add built-in primitive types
 	static {
-		addPrimitiveType("string");
-		addPrimitiveType("int");
-		addPrimitiveType("float");
-		addPrimitiveType("boolean");
+		STRING = addPrimitiveType("string");
+		INT = addPrimitiveType("int");
+		FLOAT = addPrimitiveType("float");
+		BOOLEAN = addPrimitiveType("boolean");
+        ANY = addPrimitiveType("any");
 	}
 
 	public synchronized static void resolveTypes() throws NoSuchTypeException {
