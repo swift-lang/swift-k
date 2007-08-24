@@ -12,6 +12,7 @@ package org.globus.cog.karajan.workflow.nodes.grid;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionProperties;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -21,8 +22,13 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
 
 public class AvailableTaskHandlers extends AbstractFunction {
+	public static final Logger logger = Logger.getLogger(AvailableTaskHandlers.class);
 
 	public static final Arg A_TYPE = new Arg.Optional("type");
+
+	static {
+		setArguments(AvailableTaskHandlers.class, new Arg[] { A_TYPE });
+	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		List providers;
@@ -44,7 +50,11 @@ public class AvailableTaskHandlers extends AbstractFunction {
 		List providers = AbstractionProperties.getProviders(atype);
 		Iterator i = providers.iterator();
 		while (i.hasNext()) {
-			TaskHandlerNode.HANDLERS_CHANNEL.ret(stack, new TaskHandlerWrapper((String) i.next(),
+			String provider = (String) i.next();
+			if (logger.isDebugEnabled()) {
+				logger.debug("Available task handler: " + type + ", " + provider);
+			}
+			TaskHandlerNode.HANDLERS_CHANNEL.ret(stack, new TaskHandlerWrapper(provider,
 					itype));
 		}
 	}
