@@ -18,12 +18,12 @@ import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Service;
 
-public class AbsFile {
+public class AbsFile implements GeneralizedFileFormat {
 	private final String protocol;
 	private final String host;
 	private final String path;
 	private String dir, name;
-
+	
 	public AbsFile(String url) {
 		int pi = url.indexOf("://");
 		if (pi == -1) {
@@ -152,5 +152,13 @@ public class AbsFile {
 
 	public String getPath() {
 		return path;
+	}
+	
+	public String getType() {
+		return "file";
+	}
+	
+	public String toString() {
+		return protocol + "://" + host + '/' + path;
 	}
 }
