@@ -209,7 +209,7 @@ namespace("vdl"
 				    task:transfer(srchost=host, srcfile=bname,
 				        srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)
 				)
-		        vdl:logvar(var, path)
+		        vdl:logvar(var, path, host, dir, bname)
 		        log(LOG:INFO, "Staged out {fullRemote} to {fullLocal} from {host}")
 
 				//there is really no way to tell big files created by apps will be, so
@@ -295,7 +295,6 @@ namespace("vdl"
 		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
-			
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
 			
 				[wfdir, sharedDir] := try(
