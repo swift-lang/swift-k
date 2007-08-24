@@ -1,3 +1,13 @@
+(08/23/07)
+
+*** A few changes to the way types work. Whether something is an array
+    or not is part of the type now.
+    
+*** Cleanups to the way things get stored and mappers
+
+*** It's not necessary to manually add task handlers any more. All the
+    available ones are added automatically
+
 (08/16/07)
 
 *** A different site catalog element <execution> that fills a similar role
