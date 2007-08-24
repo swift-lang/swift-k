@@ -13,6 +13,8 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.type.Field;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public abstract class AbstractDataNode implements DSHandle {
 	public static final Logger logger = Logger.getLogger(AbstractDataNode.class);
@@ -32,8 +34,8 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	}
 
-	public String getType() {
-		return field.getType().getName();
+	public Type getType() {
+		return field.getType();
 	}
 
 	public boolean isPrimitive() {
@@ -44,49 +46,37 @@ public abstract class AbstractDataNode implements DSHandle {
 		return field;
 	}
 
-	/** create a String representation of this node. If the node has a
-	    value, then uses the String representation of that value. Otherwise,
-	    generates a text description. */
+	/**
+	 * create a String representation of this node. If the node has a value,
+	 * then uses the String representation of that value. Otherwise, generates a
+	 * text description.
+	 */
 	public String toString() {
-
-		if(this.value != null && !(this.value instanceof Exception)) {
-
+		if (this.value != null && !(this.value instanceof Exception)) {
 			// special handling for ints...
-			if(this.getType() == "int" &&  !this.isArray() && this.getValue() instanceof Number) {
-				Number n = (Number)this.getValue();
-				int i = n.intValue();
-				return ""+i;
-			} else {
+			if (this.getType().equals(Types.INT)) {
+				try {
+					Number n = (Number) this.getValue();
+					return String.valueOf(n.intValue());
+				}
+				catch (ClassCastException e) {
+					throw new RuntimeException("Internal type error. Value is not a Number for "
+							+ getDisplayableName() + getPathFromRoot());
+				}
+			}
+			else {
 				return this.value.toString();
 			}
 		}
 
-		String prefix = this.getClass().toString() + " with no value at ";
+		String prefix = this.getClass().getName() + " with no value at ";
 		prefix = prefix + getDisplayableName();
 
-		if (! Path.EMPTY_PATH.equals(getPathFromRoot())) {
-			prefix = prefix + nicePath(getPathFromRoot());
+		if (!Path.EMPTY_PATH.equals(getPathFromRoot())) {
+			prefix = prefix + getPathFromRoot().toString();
 		}
 
 		return prefix;
-	}
-
-	protected String nicePath(Path path) {
-		StringBuffer sb = new StringBuffer();
-		Iterator i = path.iterator();
-		while (i.hasNext()) {
-			Path.Entry e = (Path.Entry) i.next();
-			if (e.isIndex()) {
-				sb.append('[');
-				sb.append(e.getName());
-				sb.append(']');
-			}
-			else {
-				sb.append('.');
-				sb.append(e.getName());
-			}
-		}
-		return sb.toString();
 	}
 
 	protected String getDisplayableName() {
@@ -164,8 +154,9 @@ public abstract class AbstractDataNode implements DSHandle {
 			 */
 			throw new RuntimeException("Can't set root data node!");
 		}
-		else
+		else {
 			((AbstractDataNode) getParent()).setField(field.getName(), handle);
+		}
 	}
 
 	protected void setField(String name, DSHandle handle) {
@@ -208,7 +199,7 @@ public abstract class AbstractDataNode implements DSHandle {
 
 		AbstractDataNode child;
 		Field childField = getChildField(fieldName);
-		if (childField.isArray()) {
+		if (childField.getType().isArray()) {
 			child = new ArrayDataNode(getChildField(fieldName), getRoot(), this);
 		}
 		else {
@@ -226,16 +217,15 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	protected Field getChildField(String fieldName) throws NoSuchFieldException {
-		return Field.Factory.createField(fieldName, field.getType().getFieldType(fieldName),
-				field.getType().isArrayField(fieldName));
+		return Field.Factory.createField(fieldName, field.getType().getField(fieldName).getType());
 	}
-	
+
 	protected void checkDataException() {
 		if (value instanceof DependentException) {
 			throw (DependentException) value;
 		}
 	}
-	
+
 	protected void checkMappingException() {
 		if (value instanceof MappingDependentException) {
 			throw (MappingDependentException) value;
@@ -244,12 +234,17 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public Object getValue() {
 		checkDataException();
-		return value;
+		if (field.getType().isArray()) {
+			return handles;
+		}
+		else {
+			return value;
+		}
 	}
 
 	public Map getArrayValue() {
 		checkDataException();
-		if (!field.isArray()) {
+		if (!field.getType().isArray()) {
 			throw new RuntimeException("getArrayValue called on a struct: " + this);
 		}
 		return handles;
@@ -261,44 +256,10 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public void setValue(Object value) {
 		if (this.value != null) {
-			throw new IllegalArgumentException(this.getDisplayableName() + " is already assigned with a value of "
-					+ this.value);
+			throw new IllegalArgumentException(this.getDisplayableName()
+					+ " is already assigned with a value of " + this.value);
 		}
 		this.value = value;
-	}
-
-	public String getFilename() {
-		checkMappingException();
-		Path path = Path.EMPTY_PATH;
-		AbstractDataNode crt = this;
-		while (crt.getParent() != null) {
-			path = path.addFirst(crt.getField().getName(), crt.getParent().isArray());
-			crt = (AbstractDataNode) crt.getParent();
-		}
-		return getMapper().map(path);
-	}
-
-	public List getFileSet() {
-		checkMappingException();
-		ArrayList list = new ArrayList();
-		getFileSet(list);
-		return list;
-	}
-
-	protected void getFileSet(List list) {
-		synchronized (handles) {
-			Iterator i = handles.entrySet().iterator();
-			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
-				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
-				if (!mapper.handles.isEmpty()) {
-					mapper.getFileSet(list);
-				}
-				else if (!mapper.field.getType().isPrimitive()) {
-					list.add(mapper.getFilename());
-				}
-			}
-		}
 	}
 
 	public Collection getFringePaths() throws HandleOpenException {
@@ -365,7 +326,7 @@ public abstract class AbstractDataNode implements DSHandle {
 		Path myPath;
 		if (parent != null) {
 			myPath = parent.getPathFromRoot();
-			return myPath.addLast(getField().getName(), parent.getField().isArray());
+			return myPath.addLast(getField().getName(), parent.getField().getType().isArray());
 		}
 		else {
 			return Path.EMPTY_PATH;

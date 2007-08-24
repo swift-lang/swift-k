@@ -10,7 +10,6 @@ import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
-import org.griphyn.vdl.type.TypeDefinitions;
 
 public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
@@ -19,9 +18,9 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	private Mapper mapper;
 	private Map params;
 
-	public RootDataNode(String type) throws NoSuchTypeException {
+	public RootDataNode(Type type) throws NoSuchTypeException {
 		super(Field.Factory.newInstance());
-		getField().setType(TypeDefinitions.getType(type));
+		getField().setType(type);
 	}
 
 	public void init(Map params) {
@@ -101,7 +100,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	}
 
 	public static void checkConsistency(DSHandle handle) {
-		if (handle.isArray()) {
+		if (handle.getType().isArray()) {
 			// any number of indices is ok
 			try {
 				Iterator i = handle.getFields(Path.CHILDREN).iterator();
@@ -120,25 +119,25 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		}
 		else {
 			// all fields must be present
-			try {
-				Type type = TypeDefinitions.getType(handle.getType());
-				Iterator i = type.getFieldNames().iterator();
-				while (i.hasNext()) {
-					String fieldName = (String) i.next();
-					Path fieldPath = Path.parse(fieldName);
-					try {
-						checkConsistency(handle.getField(fieldPath));
-					}
-					catch (InvalidPathException e) {
-						throw new RuntimeException("Data set initialization failed for " + handle
-								+ ". Missing required field: " + fieldName + " mapped to "
-								+ handle.getFilename());
-					}
+			Type type = handle.getType();
+			Iterator i = type.getFieldNames().iterator();
+			while (i.hasNext()) {
+				String fieldName = (String) i.next();
+				Path fieldPath = Path.parse(fieldName);
+				try {
+					checkConsistency(handle.getField(fieldPath));
+				}
+				catch (InvalidPathException e) {
+					throw new RuntimeException("Data set initialization failed for " + handle
+							+ ". Missing required field: " + fieldName/*
+																		 * + "
+																		 * mapped
+																		 * to " +
+																		 * handle.getFilename()
+																		 */);
 				}
 			}
-			catch (NoSuchTypeException e) {
-				e.printStackTrace();
-			}
+
 		}
 	}
 

@@ -4,24 +4,26 @@ import java.util.Map;
 
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
-import org.griphyn.vdl.type.NoSuchTypeException;
-import org.griphyn.vdl.type.TypeDefinitions;
+import org.griphyn.vdl.type.Type;
 
 public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener {
 	private Mapper mapper;
 	private Map params;
 
-	public RootArrayDataNode(String type) throws NoSuchTypeException {
+	/**
+	 * Instantiate a root array data node with elements of the array
+	 * having the specified type.
+	 */
+	public RootArrayDataNode(Type type) {
 		super(Field.Factory.newInstance(), null, null);
-		getField().setArray();
-		getField().setType(TypeDefinitions.getType(type));
+		getField().setType(type.arrayType());
 	}
 
 	public void init(Map params) {
 		this.params = params;
-		Object prefix = params.get("prefix");
+		String prefix = (String) params.get("prefix");
 		if (prefix != null) {
-			getField().setName(prefix.toString());
+			getField().setName(prefix);
 		}
 		String desc = (String) params.get("descriptor");
 		if (desc == null) {
