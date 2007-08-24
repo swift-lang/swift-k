@@ -128,7 +128,7 @@ public class Monitor implements ActionListener, MouseListener {
 						h = h.substring(0, h.indexOf(' '));
 					}
 					String sz = "-";
-					if (handle.isArray()) {
+					if (handle.getType().isArray()) {
 						if (handle instanceof ArrayDataNode) {
 							sz = String.valueOf(((ArrayDataNode) handle).size());
 						}
