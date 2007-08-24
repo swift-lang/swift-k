@@ -38,4 +38,8 @@ public class TaskHandlerWrapper {
 	public void setProvider(String provider) {
 		this.provider = provider;
 	}
+	
+	public String toString() {
+		return type + ":" + provider;
+	}
 }
