@@ -3,7 +3,9 @@ package org.griphyn.vdl.mapping.file;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 public class FileSystemArrayMapper extends AbstractFileMapper {
 	private Map filenames = new HashMap();
@@ -21,7 +23,7 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 		return p;
 	}
 	
-	public String map(Path path) {
+	public PhysicalFormat map(Path path) {
 		if (path.size()> 1) {
 			return null;
 		}
@@ -41,6 +43,6 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 				filename = location + filename;
 			}
 		}
-		return filename;
+		return new AbsFile(filename);
 	}
 }

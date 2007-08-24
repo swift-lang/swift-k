@@ -8,8 +8,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 public class RegularExpressionMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
@@ -34,7 +36,7 @@ public class RegularExpressionMapper extends AbstractFileMapper {
 		}
 	}
 
-	public String map(Path path) {
+	public PhysicalFormat map(Path path) {
 		String match = PARAM_MATCH.getStringValue(this);
 		String source = PARAM_SOURCE.getStringValue(this);
 		String transform = PARAM_TRANSFORM.getStringValue(this);
@@ -54,7 +56,7 @@ public class RegularExpressionMapper extends AbstractFileMapper {
 			m2.appendReplacement(sb, m.group(g));
 		}
 		m2.appendTail(sb);
-		return sb.toString();
+		return new AbsFile(sb.toString());
 	}
 
 	public Path rmap(String name) {

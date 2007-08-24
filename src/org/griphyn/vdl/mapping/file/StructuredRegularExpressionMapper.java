@@ -1,22 +1,20 @@
 package org.griphyn.vdl.mapping.file;
 
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
-
-import org.griphyn.vdl.type.Field;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
@@ -35,19 +33,22 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 
 	public Collection existing() {
 
-		DSHandle sourceHandle = (DSHandle)PARAM_SOURCE.getRawValue(this);
+		DSHandle sourceHandle = (DSHandle) PARAM_SOURCE.getRawValue(this);
 
 		Collection output = new ArrayList();
 		Collection sourceFields;
 		try {
 			sourceFields = sourceHandle.getFields(Path.parse("[*]"));
-		} catch(InvalidPathException ipe) {
+		}
+		catch (InvalidPathException ipe) {
 			return Collections.EMPTY_LIST;
-		} catch(HandleOpenException hoe) {
-			throw new RuntimeException("Handle open. Throwing this exception may not be the right thing to do. TODO");
+		}
+		catch (HandleOpenException hoe) {
+			throw new RuntimeException(
+					"Handle open. Throwing this exception may not be the right thing to do. TODO");
 		}
 		Iterator i = sourceFields.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			DSHandle f = (DSHandle) i.next();
 			output.add(f.getPathFromRoot());
 		}
@@ -55,21 +56,27 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 		return output;
 	}
 
-	public String map(Path path) {
+	public PhysicalFormat map(Path path) {
 		String match = PARAM_MATCH.getStringValue(this);
 		String transform = PARAM_TRANSFORM.getStringValue(this);
 
-		DSHandle sourceHandle = (DSHandle)PARAM_SOURCE.getRawValue(this);
+		DSHandle sourceHandle = (DSHandle) PARAM_SOURCE.getRawValue(this);
 		DSHandle hereHandle;
 		try {
 			hereHandle = sourceHandle.getField(path);
-		} catch(InvalidPathException ipe) {
-			throw new RuntimeException("Cannot get requested path "+path+" from source data structure");
+		}
+		catch (InvalidPathException ipe) {
+			throw new RuntimeException("Cannot get requested path " + path
+					+ " from source data structure");
 		}
 
-		String source = hereHandle.getFilename();
+		PhysicalFormat source = hereHandle.getRoot().getMapper().map(hereHandle.getPathFromRoot());
+		if (!source.getType().equals("file")) {
+			throw new RuntimeException(
+					"Cannot use the regular expression mapper with a source that has a mapper that is not file-based");
+		}
 		Pattern p = Pattern.compile(match);
-		Matcher m = p.matcher(source);
+		Matcher m = p.matcher(((AbsFile) source).getPath());
 		if (!m.find()) {
 			throw new RuntimeException("No match found! source='" + source + "' match = '" + match
 					+ "'");
@@ -84,7 +91,7 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 			m2.appendReplacement(sb, m.group(g));
 		}
 		m2.appendTail(sb);
-		return sb.toString();
+		return new AbsFile(sb.toString());
 	}
 
 	public Path rmap(String name) {

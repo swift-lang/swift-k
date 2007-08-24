@@ -7,6 +7,7 @@ import java.util.Collections;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 /** Maps every Path to a single file name (specified by the "file" parameter),
   *  and every filename to the empty path.
@@ -28,8 +29,8 @@ public class SingleFileMapper extends AbstractFileMapper {
 		}
 	}
 
-	public String map(Path path) {
-		return PARAM_FILE.getStringValue(this);
+	public PhysicalFormat map(Path path) {
+		return new AbsFile(PARAM_FILE.getStringValue(this));
 	}
 
 	public Path rmap(String name) {

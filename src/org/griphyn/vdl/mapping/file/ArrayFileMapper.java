@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 public class ArrayFileMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_FILES = new MappingParam("files");
@@ -30,7 +32,7 @@ public class ArrayFileMapper extends AbstractFileMapper {
 		return l;
 	}
 
-	public String map(Path path) {
+	public PhysicalFormat map(Path path) {
 
 		if (!path.isArrayIndex(0)) {
 			throw new IllegalArgumentException(path.toString());
@@ -49,7 +51,7 @@ public class ArrayFileMapper extends AbstractFileMapper {
 				return null;
 			}
 			String returnValue = srcNode.getValue().toString();
-			return returnValue;
+			return new AbsFile(returnValue);
 		}
 	}
 

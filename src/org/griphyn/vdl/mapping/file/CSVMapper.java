@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 public class CSVMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_FILE = new MappingParam("file");
@@ -58,7 +60,7 @@ public class CSVMapper extends AbstractFileMapper {
 		if (read) {
 			return;
 		}
-		String file = PARAM_FILE.getFileName(this);
+		String file = PARAM_FILE.getStringValue(this);
 		String delim = PARAM_DELIMITER.getStringValue(this);
 		String hdelim = PARAM_HDELIMITER.getStringValue(this);
 		boolean header = PARAM_HEADER.getBooleanValue(this);
@@ -146,7 +148,7 @@ public class CSVMapper extends AbstractFileMapper {
 		return false;
 	}
 
-	public String map(Path path) {
+	public PhysicalFormat map(Path path) {
 		if (path == null || path == Path.EMPTY_PATH) {
 			return null;
 		}
@@ -174,7 +176,7 @@ public class CSVMapper extends AbstractFileMapper {
 		}
 
 		if (!pi.hasNext()) {
-			return (String) cl.get(0);
+			return new AbsFile((String) cl.get(0));
 		}
 
 		pe = (Path.Entry) pi.next();
@@ -183,6 +185,6 @@ public class CSVMapper extends AbstractFileMapper {
 			return null;
 		}
 		int ci = ((Integer) colindex.get(col)).intValue();
-		return (String) cl.get(ci);
+		return new AbsFile((String) cl.get(ci));
 	}
 }

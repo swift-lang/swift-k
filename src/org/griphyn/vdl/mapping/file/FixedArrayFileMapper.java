@@ -7,9 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 
 /** Maps a string (separated by space, comma or semicolon) of filenames to
@@ -50,13 +52,13 @@ public class FixedArrayFileMapper extends AbstractFileMapper {
 		return l;
 	}
 
-	public String map(Path path) {
+	public PhysicalFormat map(Path path) {
 		if (!path.isArrayIndex(0)) {
 			throw new IllegalArgumentException(path.toString());
 		}
 		else {
 			int index = Integer.parseInt(path.getFirst());
-			return getFiles()[index];
+			return new AbsFile(getFiles()[index]);
 		}
 	}
 

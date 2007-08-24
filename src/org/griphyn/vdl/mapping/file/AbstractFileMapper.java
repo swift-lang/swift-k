@@ -12,6 +12,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
 
 /** An base class to build mappers which map based on filename patterns.
   * It provides a large amount of default behaviour which can be
@@ -81,7 +82,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		}
 	}
 
-	public String map(Path path) {
+	public PhysicalFormat map(Path path) {
 		StringBuffer sb = new StringBuffer();
 		final String location = PARAM_LOCATION.getStringValue(this);
 		final String prefix = PARAM_PREFIX.getStringValue(this);
@@ -120,12 +121,11 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		if (suffix != null) {
 			sb.append(suffix);
 		}
-		return sb.toString();
+		return new AbsFile(sb.toString());
 	}
 
 	public boolean exists(Path path) {
-		AbsFile f = new AbsFile(map(path));
-		return f.exists();
+		return ((AbsFile) map(path)).exists();
 	}
 
 	public Collection existing() {
