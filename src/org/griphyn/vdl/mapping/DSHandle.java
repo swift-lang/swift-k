@@ -1,8 +1,9 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+
+import org.griphyn.vdl.type.Type;
 
 /** A DSHandle refers to a (possibly complex) piece of SwiftScript
  *  data.
@@ -28,13 +29,8 @@ public interface DSHandle {
     /** get the type of the dataset. TODO need to replace return type
      * with a Type interface.
      */
-    public String getType();
-
-    /** returns true when the dataset is an array. TODO this should
-     *  become part of the type specification returned by getType.
-     */
-    public boolean isArray();
-
+    public Type getType();
+    
     public void init(Map params);
 
     public DSHandle getRoot();
@@ -57,19 +53,13 @@ public interface DSHandle {
 
     public Object getValue();
 
-    public void setValue(Object value) throws InvalidPathException;
+    public void setValue(Object value);
 
     /** create a new logical component */
     public DSHandle createDSHandle(String fieldName) throws NoSuchFieldException;
 
     // special file oriented methods, not sure if these apply to 
     // all datasets
-
-    /** get the filename of a specific field */
-    public String getFilename();
-
-    /** get all the leaf file names for a sub-component */
-    public List getFileSet();
 
     /** close */
     public void closeShallow();
@@ -89,5 +79,6 @@ public interface DSHandle {
     public boolean isClosed();
 
     public void addListener(DSHandleListener listener);
+    
+    Mapper getMapper();
 }
-
