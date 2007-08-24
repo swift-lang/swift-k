@@ -24,6 +24,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
+import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -37,9 +38,13 @@ import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 
@@ -128,48 +133,52 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return sb.toString();
 	}
 
-	protected String inferType(Object value) {
+	protected Type inferType(Object value) {
 		// TODO
 		if (value instanceof String) {
 			String str = (String) value;
 			if (str.startsWith("\"")) {
-				return "string";
+				return Types.STRING;
 			}
 			try {
 				Integer.parseInt(str);
-				return "int";
+				return Types.INT;
 			}
 			catch (NumberFormatException e) {
 			}
 			try {
 				Double.parseDouble(str);
-				return "float";
+				return Types.FLOAT;
 			}
 			catch (NumberFormatException e) {
 			}
 
-			if (value.equals("true") || value.equals("false"))
-				return "boolean";
+			if (value.equals("true") || value.equals("false")) {
+				return Types.BOOLEAN;
+			}
 
 			throw new RuntimeException("Invalid value: " + value);
 		}
 		else if (value instanceof Integer) {
-			return "int";
+			return Types.INT;
 		}
 		else if (value instanceof Double) {
-			return "float";
+			return Types.FLOAT;
 		}
 		else if (value instanceof Boolean) {
-			return "boolean";
+			return Types.BOOLEAN;
 		}
 		else {
-			return "string";
+			return Types.STRING;
 		}
 	}
 
-	protected Object internalValue(String type, Object value) {
-		if ("float".equals(type) || "int".equals(type)) {
+	protected Object internalValue(Type type, Object value) {
+		if (Types.FLOAT.equals(type)) {
 			return new Double(TypeUtil.toDouble(value));
+		}
+		else if (Types.INT.equals(type)) {
+			return new Double(TypeUtil.toInt(value));
 		}
 		else if (value instanceof String) {
 			String strval = (String) value;
@@ -192,66 +201,101 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	 * filename(s) that are mapped that field(s).
 	 */
 	public String[] filename(VariableStack stack) throws ExecutionException {
-
 		Object ovar = PA_VAR.getValue(stack);
 		if (ovar instanceof DSHandle) {
-			DSHandle var = (DSHandle) ovar;
-
 			try {
-				if (var.isArray()) {
-					List l = var.getFileSet();
-					return (String[]) l.toArray(EMPTY_STRING_ARRAY);
-				}
-				else {
-					String filename = var.getFilename();
-					if (filename == null) {
-						throw new ExecutionException("Mapper did not provide a file name");
-					}
-					else {
-						return new String[] { filename };
-					}
-				}
+				return filename((DSHandle) ovar);
 			}
-			catch (DependentException e) {
-				return new String[0];
+			catch (HandleOpenException e) {
+				throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
 			}
 		}
 		else if (ovar instanceof Collection) {
-			// assume here that the Collection is all DSHandles
-			Iterator iterator = ((Collection) ovar).iterator();
-			ArrayList out = new ArrayList();
-			while (iterator.hasNext()) {
-				DSHandle h = (DSHandle) iterator.next();
-				String filename = h.getFilename();
-				out.add(filename);
-			}
-			return (String[]) out.toArray(EMPTY_STRING_ARRAY);
+			return filename((Collection) ovar);
 		}
 		else {
 			return new String[0];
 		}
 	}
-    
-    protected Object pathOnly(Object f) {
-    	if (f instanceof String[]) {
-    		return pathOnly((String[]) f);
-        }
-        else {
-        	return pathOnly((String) f);
-        }
-    }
-    
-    protected String pathOnly(String file) {
-    	return new AbsFile(file).getPath();
-    }
-    
-    protected String[] pathOnly(String[] files) {
-    	String[] p = new String[files.length];
-        for (int i = 0; i < files.length; i++) {
-        	p[i] = pathOnly(files[i]);
-        }
-        return p;
-    }
+
+	public String[] filename(Collection vars) throws ExecutionException {
+		// assume here that the Collection is all DSHandles
+		Iterator iterator = vars.iterator();
+		ArrayList out = new ArrayList();
+		while (iterator.hasNext()) {
+			DSHandle h = (DSHandle) iterator.next();
+			String filename = leafFileName(h);
+			out.add(filename);
+		}
+		return (String[]) out.toArray(EMPTY_STRING_ARRAY);
+	}
+
+	public String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
+		try {
+			if (var.getType().isArray()) {
+				return leavesFileNames(var);
+			}
+			else {
+				return new String[] { leafFileName(var) };
+			}
+		}
+		catch (DependentException e) {
+			return new String[0];
+		}
+	}
+
+	public String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
+		List l = new ArrayList();
+		Iterator i;
+		try {
+			i = var.getFringePaths().iterator();
+			while (i.hasNext()) {
+				Path p = (Path) i.next();
+				l.add(leafFileName(var.getField(p)));
+			}
+		}
+		catch (InvalidPathException e) {
+			throw new ExecutionException("DSHandle is lying about its fringe paths");
+		}
+		return (String[]) l.toArray(EMPTY_STRING_ARRAY);
+	}
+
+	public String leafFileName(DSHandle var) throws ExecutionException {
+		PhysicalFormat f = var.getMapper().map(var.getPathFromRoot());
+		if (f instanceof GeneralizedFileFormat) {
+			String filename = ((GeneralizedFileFormat) f).getPath();
+			if (filename == null) {
+				throw new ExecutionException("Mapper did not provide a file name");
+			}
+			else {
+				return filename;
+			}
+		}
+		else {
+			throw new ExecutionException("Only file formats are supported for now");
+		}
+	}
+
+	protected Object pathOnly(Object f) {
+		if (f instanceof String[]) {
+			return pathOnly((String[]) f);
+		}
+		else {
+			return pathOnly((String) f);
+		}
+	}
+
+	protected String pathOnly(String file) {
+		return new AbsFile(file).getPath();
+	}
+
+	protected String[] pathOnly(String[] files) {
+		String[] p = new String[files.length];
+		for (int i = 0; i < files.length; i++) {
+			p[i] = pathOnly(files[i]);
+		}
+		return p;
+	}
 
 	/**
 	 * Given an input of an array of strings, returns a single string with the
@@ -278,7 +322,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	 * the path can be used as a relative path.
 	 */
 	public String relativize(String name) {
-        name = pathOnly(name);
+		name = pathOnly(name);
 		if (name != null && name.length() > 0 && name.charAt(0) == '/') {
 			return name.substring(1);
 		}
@@ -314,25 +358,22 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		try {
 			Path path = parsePath(PA_PATH.getValue(stack), stack);
-			String filename = var.getField(path).getFilename();
-			if (filename == null) {
-				throw new ExecutionException("Mapper did not provide a file name for " + path);
-			}
-			else {
-				return filename;
-			}
+			return leafFileName(var.getField(path));
 		}
 		catch (InvalidPathException e) {
 			throw new ExecutionException(e);
 		}
 	}
 
-	protected boolean compatible(String expectedType, String actualType) {
-		if (expectedType.equals("float")) {
-			if (actualType.equals("float") || actualType.equals("int"))
+	protected boolean compatible(Type expectedType, Type actualType) {
+		if (expectedType.equals(Types.FLOAT)) {
+			if (actualType.equals(Types.FLOAT) || actualType.equals(Types.INT))
 				return true;
 			else
 				return false;
+		}
+		else if (expectedType.equals(Types.ANY)) {
+			return true;
 		}
 		return actualType.equals(expectedType);
 	}
@@ -409,8 +450,8 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return getFutureWrapperMap(stack).addNodeListener(handle);
 	}
 
-	protected static FutureIterator addFutureListListener(VariableStack stack, DSHandle handle, Map value)
-			throws ExecutionException {
+	protected static FutureIterator addFutureListListener(VariableStack stack, DSHandle handle,
+			Map value) throws ExecutionException {
 		return getFutureWrapperMap(stack).addFutureListListener(handle, value).futureIterator(stack);
 	}
 

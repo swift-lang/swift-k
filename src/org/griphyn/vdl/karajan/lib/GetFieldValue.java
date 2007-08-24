@@ -47,7 +47,7 @@ public class GetFieldValue extends VDLFunction {
 			}
 			else {
 				var = var.getField(path);
-				if (var.isArray()) {
+				if (var.getType().isArray()) {
 					// this bit from GetArrayFieldValue
 					Map value = var.getArrayValue();
 					if (var.isClosed()) {

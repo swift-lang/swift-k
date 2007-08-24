@@ -17,6 +17,8 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.PairIterator;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public abstract class SwiftArg extends Arg {
 	public static final Logger logger = Logger.getLogger(SwiftArg.class);
@@ -32,7 +34,7 @@ public abstract class SwiftArg extends Arg {
 	protected Object unwrap(VariableStack stack, Object val) throws ExecutionException {
 		if (val instanceof DSHandle) {
 			DSHandle handle = (DSHandle) val;
-			if (handle.isArray()) {
+			if (handle.getType().isArray()) {
 				Map value = handle.getArrayValue();
 				if (handle.isClosed()) {
 					return new PairIterator(value);
@@ -74,12 +76,20 @@ public abstract class SwiftArg extends Arg {
 			return ((Double) dbl).doubleValue();
 		}
 		else {
-			throw new ExecutionException("Type error. Expected a float or int but got a "
-					+ getType(stack));
+			throw new ExecutionException("Internal type error. Expected a Double. Got " + classOf(dbl));
+		}
+	}
+	
+	private Class classOf(Object object) {
+		if (object == null) {
+			return null;
+		}
+		else {
+			return object.getClass();
 		}
 	}
 
-	protected String getType0(Object o) throws ExecutionException {
+	protected Type getType0(Object o) throws ExecutionException {
 		if (o instanceof DSHandle) {
 			DSHandle handle = (DSHandle) o;
 			return handle.getType();
@@ -90,7 +100,7 @@ public abstract class SwiftArg extends Arg {
 		}
 	}
 
-	public String getType(VariableStack stack) throws ExecutionException {
+	public Type getType(VariableStack stack) throws ExecutionException {
 		return getType0(super.getValue(stack));
 	}
 
@@ -106,16 +116,16 @@ public abstract class SwiftArg extends Arg {
 
 	public static class Optional extends SwiftArg {
 		private final Object defaultValue;
-		private final String defaultType;
+		private final Type defaultType;
 
-		public Optional(String name, Object defaultValue, String defaultType) {
+		public Optional(String name, Object defaultValue, Type defaultType) {
 			super(name, NOINDEX);
 			this.defaultValue = defaultValue;
 			this.defaultType = defaultType;
 		}
 
 		public Optional(String name) {
-			this(name, null, "any");
+			this(name, null, Types.ANY);
 		}
 
 		public Object getValue(VariableStack stack) throws ExecutionException {
@@ -128,7 +138,7 @@ public abstract class SwiftArg extends Arg {
 			}
 		}
 
-		public String getType(VariableStack stack) throws ExecutionException {
+		public Type getType(VariableStack stack) throws ExecutionException {
 			Object o = super.getValue(stack, defaultValue);
 			if (o == null) {
 				return defaultType;

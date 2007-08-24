@@ -8,6 +8,8 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.type.NoSuchTypeException;
+import org.griphyn.vdl.type.Types;
 
 public class Typecheck extends VDLFunction {
 	public static final Arg PA_TYPE = new Arg.Positional("type");
@@ -21,25 +23,30 @@ public class Typecheck extends VDLFunction {
 		String type = TypeUtil.toString(PA_TYPE.getValue(stack));
 		boolean isArray = TypeUtil.toBoolean(OA_ISARRAY.getValue(stack));
 		Object ovar = PA_VAR.getValue(stack);
-		if(!(ovar instanceof DSHandle)) {
+		if (!(ovar instanceof DSHandle)) {
 			throw new ExecutionException("Wrong java type for argument. "
-            + "Expected DSHandle containing "+type+(isArray ? "[]" : "")
-			+"; got java object of class "+ovar.getClass()+" with value "+ovar);
+					+ "Expected DSHandle containing " + type + (isArray ? "[]" : "")
+					+ "; got java object of class " + ovar.getClass() + " with value " + ovar);
 		}
 		DSHandle var = (DSHandle) ovar;
 		String argname = TypeUtil.toString(OA_ARGNAME.getValue(stack, null));
-		if (!compatible(type, var.getType()) || !(isArray == var.isArray())) {
-			if (argname != null) {
-				throw new ExecutionException("Wrong type for argument '" + argname + "'. Expected "
-						+ type + (isArray ? "[]" : "") + "; got " + var.getType()
-						+ (var.isArray() ? "[]" : "") + ". Actual argument: " + var);
-			}
-			else {
-				throw new ExecutionException("Wrong type for argument. Expected " + type
-						+ (isArray ? "[]" : "") + "; got " + var.getType()
-						+ (var.isArray() ? "[]" : "") + ". Actual argument: " + var);
+
+		try {
+			if (!compatible(Types.getType(type), var.getType())) {
+				if (argname != null) {
+					throw new ExecutionException("Wrong type for argument '" + argname + "'. Expected "
+							+ type + "; got " + var.getType() + ". Actual argument: " + var);
+				}
+				else {
+					throw new ExecutionException("Wrong type for argument. Expected " + type + "; got "
+							+ var.getType() + ". Actual argument: " + var);
+				}
 			}
 		}
+		catch (NoSuchTypeException e) {
+			throw new ExecutionException(e);
+		}
+
 		return null;
 	}
 }

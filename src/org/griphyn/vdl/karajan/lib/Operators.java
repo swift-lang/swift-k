@@ -7,6 +7,8 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public class Operators extends FunctionsCollection {
 	private static final Logger logger = Logger.getLogger(Operators.class);
@@ -14,11 +16,7 @@ public class Operators extends FunctionsCollection {
 	public static final SwiftArg L = new SwiftArg.Positional("left");
 	public static final SwiftArg R = new SwiftArg.Positional("right");
 
-	public static final String FLOAT = "float";
-	public static final String INT = "int";
-	public static final String BOOLEAN = "boolean";
-
-	private DSHandle newNum(String type, double value) throws ExecutionException {
+	private DSHandle newNum(Type type, double value) throws ExecutionException {
 		try {
 			DSHandle handle = new RootDataNode(type);
 			handle.setValue(new Double(value));
@@ -32,7 +30,7 @@ public class Operators extends FunctionsCollection {
 
 	private DSHandle newBool(boolean value) throws ExecutionException {
 		try {
-			DSHandle handle = new RootDataNode(BOOLEAN);
+			DSHandle handle = new RootDataNode(Types.BOOLEAN);
 			handle.setValue(new Boolean(value));
 			handle.closeShallow();
 			return handle;
@@ -42,12 +40,12 @@ public class Operators extends FunctionsCollection {
 		}
 	}
 
-	private String type(VariableStack stack) throws ExecutionException {
-		if (FLOAT.equals(L.getType(stack)) || FLOAT.equals(R.getType(stack))) {
-			return FLOAT;
+	private Type type(VariableStack stack) throws ExecutionException {
+		if (Types.FLOAT.equals(L.getType(stack)) || Types.FLOAT.equals(R.getType(stack))) {
+			return Types.FLOAT;
 		}
 		else {
-			return INT;
+			return Types.INT;
 		}
 	}
 
@@ -89,13 +87,13 @@ public class Operators extends FunctionsCollection {
 	public Object vdlop_fquotient(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newNum(FLOAT, l / r);
+		return newNum(Types.FLOAT, l / r);
 	}
 
 	public Object vdlop_iquotient(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newNum(INT, l / r);
+		return newNum(Types.INT, l / r);
 	}
 
 	public Object vdlop_remainder(VariableStack stack) throws ExecutionException {

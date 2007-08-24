@@ -17,6 +17,8 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public class New extends VDLFunction {
 	public static final Arg OA_TYPE = new Arg.Optional("type", null);
@@ -30,7 +32,7 @@ public class New extends VDLFunction {
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
-		String type = TypeUtil.toString(OA_TYPE.getValue(stack));
+		String typename = TypeUtil.toString(OA_TYPE.getValue(stack));
 		Object value = OA_VALUE.getValue(stack);
 		Map mapping = (Map) OA_MAPPING.getValue(stack);
 		boolean isArray = TypeUtil.toBoolean(OA_ISARRAY.getValue(stack));
@@ -41,7 +43,7 @@ public class New extends VDLFunction {
 			}
 			mapping.put("dbgname", dbgname);
 		}
-		if (type == null && value == null) {
+		if (typename == null && value == null) {
 			throw new ExecutionException("You must specify either a type or a value");
 		}
 		if (mapping != null) {
@@ -52,6 +54,13 @@ public class New extends VDLFunction {
 			}
 		}
 		try {
+			Type type;
+			if (typename == null) {
+				type = inferType(value);
+			}
+			else {
+				type = Types.getType(typename);
+			}
 			DSHandle handle;
 			if (isArray) {
 				// dealing with array variable

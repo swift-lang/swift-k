@@ -1,8 +1,5 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
-import org.griphyn.vdl.karajan.lib.VDLFunction;
-import org.griphyn.vdl.karajan.lib.SwiftArg;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,13 +8,13 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.RootDataNode;
-
-import org.griphyn.vdl.type.NoSuchTypeException;
-import org.griphyn.vdl.mapping.InvalidPathException;
-
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.griphyn.vdl.karajan.lib.SwiftArg;
+import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.type.NoSuchTypeException;
+import org.griphyn.vdl.type.Types;
 
 public class Misc extends FunctionsCollection {
 
@@ -38,7 +35,7 @@ public class Misc extends FunctionsCollection {
 		for (int i = 0; i < args.length; i++) {
 			buf.append(TypeUtil.toString(args[i]));
 		}
-		DSHandle handle = new RootDataNode("string");
+		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(buf.toString());
 		handle.closeShallow();
 		return handle;
@@ -68,7 +65,7 @@ public class Misc extends FunctionsCollection {
 		if (logger.isDebugEnabled()) {
 			logger.debug("strcut matched '" + group + "'");
 		}
-		DSHandle handle = new RootDataNode("string");
+		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(group);
 		handle.closeShallow();
 		return handle;
