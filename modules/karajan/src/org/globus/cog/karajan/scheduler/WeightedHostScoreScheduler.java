@@ -109,7 +109,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		wh.setDelayedDelta(wh.getDelayedDelta() + factor);
 	}
 
-	protected double factor(double score, double factor) {
+	protected final double factor(double score, double factor) {
 		return score + factor;
 	}
 
@@ -186,10 +186,13 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Next contact: " + selected);
 		}
+		
 		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
 		return selected.getHost();
 	}
+	
+	
 
 	public synchronized void releaseContact(Contact contact) {
 		if (logger.isDebugEnabled()) {
