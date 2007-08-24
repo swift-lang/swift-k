@@ -53,16 +53,19 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 				super.notificationEvent(e);
 				return;
 			}
-
 			int itimes = stack.currentFrame().preDecrementAtomic("#restartTimes");
 			if (itimes >= 0) {
-				logger.debug("Restarting. " + itimes + " times left.");
-				logger.debug("Stack size: " + stack.frameCount());
+                if (logger.isDebugEnabled()) {
+                	logger.debug("Restarting. " + itimes + " times left.");
+                	logger.debug("Stack size: " + stack.frameCount());
+                }
 				this.startRest(stack);
 				return;
 			}
 			else {
-				logger.debug("Failed too many times.");
+                if (logger.isDebugEnabled()) {
+                	logger.debug("Failed too many times.");
+                }
 			}
 		}
 		super.notificationEvent(e);
