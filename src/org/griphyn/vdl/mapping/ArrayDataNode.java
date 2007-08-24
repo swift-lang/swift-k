@@ -14,10 +14,6 @@ public class ArrayDataNode extends DataNode {
 		super(field, root, parent);
 	}
 
-	protected Field getChildField(String fieldName) throws NoSuchFieldException {
-		return Field.Factory.createField(fieldName, getField().getType());
-	}
-
 	public String toString() {
 		String prefix = getDisplayableName();
 		//return getType() + " " + prefix + "." + getPathFromRoot() + "[]/" + getHandles().size()
