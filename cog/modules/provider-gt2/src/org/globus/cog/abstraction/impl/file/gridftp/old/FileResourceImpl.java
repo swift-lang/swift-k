@@ -527,16 +527,16 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         gridFile.setLastModified(fileInfo.getDate());
 
-        if (fileInfo.isFile() == true) {
+        if (fileInfo.isFile()) {
             gridFile.setFileType(GridFile.FILE);
         }
-        if (fileInfo.isDirectory() == true) {
+        if (fileInfo.isDirectory()) {
             gridFile.setFileType(GridFile.DIRECTORY);
         }
-        if (fileInfo.isDevice() == true) {
+        if (fileInfo.isDevice()) {
             gridFile.setFileType(GridFile.DEVICE);
         }
-        if (fileInfo.isSoftLink() == true) {
+        if (fileInfo.isSoftLink()) {
             gridFile.setFileType(GridFile.SOFTLINK);
         }
 
