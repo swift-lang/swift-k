@@ -6,8 +6,7 @@ package org.griphyn.vdl.mapping;
 public class InvalidPathException extends Exception {
 	public InvalidPathException(String path, DSHandle source) {
 		super("Invalid path (" + path + ") for type "
-			+ source.getType()
-			+ (source.isArray() ? "[]" : ""));
+			+ source.getType());
 	}
 	
 	public InvalidPathException(Path path, DSHandle source) {
