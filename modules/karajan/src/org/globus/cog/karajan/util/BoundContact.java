@@ -85,7 +85,7 @@ public class BoundContact extends Contact {
 
 	public static int getServiceType(int handlerType) {
 		if (handlerType == TaskHandler.EXECUTION) {
-			return Service.JOB_SUBMISSION;
+			return Service.EXECUTION;
 		}
 		else if (handlerType == TaskHandler.FILE_TRANSFER) {
 			return Service.FILE_OPERATION;
@@ -100,15 +100,15 @@ public class BoundContact extends Contact {
 
 	public static int getServiceType(String type) {
 		if (type == null) {
-			return Service.JOB_SUBMISSION;
+			return Service.EXECUTION;
 		}
 		if (type.equalsIgnoreCase("execution") || type.equalsIgnoreCase("job-submission")) {
-			return Service.JOB_SUBMISSION;
+			return Service.EXECUTION;
 		}
 		if (type.equalsIgnoreCase("file")) {
 			return Service.FILE_OPERATION;
 		}
-		return Service.JOB_SUBMISSION;
+		return Service.EXECUTION;
 	}
 
 	public Map getServices() {
@@ -172,9 +172,11 @@ public class BoundContact extends Contact {
 		public boolean equals(Object obj) {
 			if (obj instanceof TypeProviderPair) {
 				TypeProviderPair other = (TypeProviderPair) obj;
+				
 				if (type != other.type) {
 					return false;
 				}
+
 				if (provider == null) {
 					return other.provider == null;
 				}
@@ -184,7 +186,7 @@ public class BoundContact extends Contact {
 		}
 
 		public int hashCode() {
-			return type + (provider == null ? 0 : provider.hashCode());
+			return (provider == null ? 0 : provider.hashCode());
 		}
 
 		public String toString() {
@@ -205,14 +207,16 @@ public class BoundContact extends Contact {
 		public Localhost() {
 			fileService.setType(Service.FILE_OPERATION);
 			transferService.setType(Service.FILE_TRANSFER);
+			executionService.setType(Service.EXECUTION);
 			addService(fileService);
 			addService(transferService);
+			addService(executionService);
 			setHost("localhost");
 		}
 
 		public Service getService(int type, String provider) {
 			if (type == Service.FILE_OPERATION || type == Service.FILE_TRANSFER
-					|| type == Service.JOB_SUBMISSION) {
+					|| type == Service.EXECUTION) {
 				return new ServiceImpl(provider, LOCALHOST, null);
 			}
 			else {
