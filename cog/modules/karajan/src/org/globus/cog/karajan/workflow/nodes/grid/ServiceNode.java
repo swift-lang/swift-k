@@ -6,15 +6,18 @@
 
 package org.globus.cog.karajan.workflow.nodes.grid;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.AbstractionProperties;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
-import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -24,6 +27,32 @@ import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
 
 public class ServiceNode extends AbstractFunction {
 	private static final Logger logger = Logger.getLogger(ServiceNode.class);
+	
+	private static final Map stypes;
+	
+	static {
+		stypes = new HashMap();
+		stypes.put(AbstractionProperties.TYPE_EXECUTION_TASK_HANDLER, new Integer(
+				Service.EXECUTION));
+		stypes.put(AbstractionProperties.TYPE_FILE_TRANSFER_TASK_HANDLER, new Integer(
+				Service.FILE_TRANSFER));
+		stypes.put(AbstractionProperties.TYPE_FILE_OPERATION_TASK_HANDLER, new Integer(
+				Service.FILE_OPERATION));
+	}
+	
+	public static int abstractionToServiceType(String type) {
+		try {
+			return ((Integer) stypes.get(type)).intValue();
+		}
+		catch (NullPointerException e) {
+			throw new IllegalArgumentException("Invalid abstraction handler type: " + type);
+		}
+	}
+	
+	public static int karajanToServiceType(String type) {
+		return abstractionToServiceType(TaskHandlerNode.karajanToAbstractionType(type));
+	}
+
 
 	public static final Arg A_TYPE = new Arg.Positional("type");
 	public static final Arg A_PROVIDER = new Arg.Positional("provider");
@@ -41,8 +70,8 @@ public class ServiceNode extends AbstractFunction {
 	public Object function(VariableStack stack) throws ExecutionException {
 		Service service = null;
 		String type = TypeUtil.toString(A_TYPE.getValue(stack));
-		int itype = TaskHandlerNode.karajanToHandlerType(type);
-		if (itype == TaskHandler.EXECUTION) {
+		int itype = karajanToServiceType(type);
+		if (itype == Service.EXECUTION) {
 			itype = Service.EXECUTION;
 			service = new ExecutionServiceImpl();
 			if (A_JOB_MANAGER.isPresent(stack)) {
