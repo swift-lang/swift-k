@@ -213,18 +213,24 @@ public class Path {
 	public Path addLast(String element) {
 		return addLast(element, false);
 	}
-
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
-		Iterator i = elements.iterator();
-		while (i.hasNext()) {
-			sb.append(((Entry) i.next()).name);
-			if (i.hasNext()) {
-				sb.append('.');
-			}
-		}
-		return sb.toString();
-	}
+    
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        Iterator i = iterator();
+        while (i.hasNext()) {
+            Path.Entry e = (Path.Entry) i.next();
+            if (e.isIndex()) {
+                sb.append('[');
+                sb.append(e.getName());
+                sb.append(']');
+            }
+            else {
+                sb.append('.');
+                sb.append(e.getName());
+            }
+        }
+        return sb.toString();
+    }
 
 	public Iterator iterator() {
 		return elements.iterator();
