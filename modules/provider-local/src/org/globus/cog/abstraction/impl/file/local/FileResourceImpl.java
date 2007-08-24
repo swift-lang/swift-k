@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -37,11 +38,10 @@ import org.globus.cog.abstraction.interfaces.ProgressMonitor;
  * Supports absolute and relative path names
  */
 public class FileResourceImpl extends AbstractFileResource {
-    private File resource = null;
     public static final Logger logger = Logger
-            .getLogger(FileResourceImpl.class.getName());
-
-    public int ltoken;
+            .getLogger(FileResourceImpl.class);
+    
+    private File cwd;
 
     public FileResourceImpl() {
         super();
@@ -54,69 +54,83 @@ public class FileResourceImpl extends AbstractFileResource {
     /** set user's home directory as the current directory */
     public void start() throws IllegalHostException,
             InvalidSecurityContextException, FileResourceException {
-        setCurrentDirectory(new File(".").getAbsoluteFile().toURI().getPath());
+        setCurrentDirectory(new File(".").getAbsoluteFile());
         setStarted(true);
     }
 
     /** close the file */
     public void stop() {
-        resource = null;
         setStarted(false);
     }
 
     /** equivalent to cd */
     public void setCurrentDirectory(String directory)
             throws FileResourceException {
-        if (this.isDirectory(resolveName(directory))) {
-            resource = new File(resolveName(directory));
-        } else {
-            throw new DirectoryNotFoundException("Directory does not exist: "
-                    + directory);
+        setCurrentDirectory(new File(directory));
+    }
+    
+    private void setCurrentDirectory(File f) throws FileResourceException {
+        f = resolve(f);
+        if (!f.exists()) {
+            throw new DirectoryNotFoundException("Directory does not exist: " + f.getAbsolutePath());
         }
+        if (!f.isDirectory()) {
+            throw new DirectoryNotFoundException("Not a directory: " + f.getAbsolutePath());
+        }
+        if (!f.isAbsolute()) {
+            throw new Error("Only absolute paths allowed beyond this point.");
+        }
+        cwd = f;
     }
 
     /** return current path */
     public String getCurrentDirectory() {
-        return resource.toURI().getPath();
+        return cwd.getAbsolutePath();
     }
 
     /**
      * This method checks to see if the given name is an absolute or a relative
      * path name. If its relative appends current path to it.
      */
-    private String resolveName(String fileName) {
-        File newFile = new File(fileName);
-        if (newFile.isAbsolute() == true) {
-            return fileName;
-        } else {
-            return (getCurrentDirectory() + File.separator + fileName);
+    protected File resolve(File f) {
+        if (f.isAbsolute()) {
+            return f;
+        }
+        else {
+            return new File(cwd.getAbsolutePath() + File.separatorChar + f.getPath());
         }
     }
 
+    protected File resolve(String sf) {
+        File f = new File(sf);
+        if (f.isAbsolute()) {
+            return f;
+        }
+        else {
+            return new File(cwd.getAbsolutePath() + File.separatorChar + f.getPath());
+        }
+    }
     /** list the contents of the current directory */
     public Collection list() {
-        ArrayList files = new ArrayList();
-        String fileArray[] = null;
-
-        fileArray = resource.list();
-        for (int i = 0; i < fileArray.length; i++) {
-            files.add(createGridFile(fileArray[i]));
+        List files = new ArrayList();
+        File[] f = cwd.listFiles();
+        for (int i = 0; i < f.length; i++) {
+            files.add(createGridFile(f[i]));
         }
-
         return files;
     }
 
     /** list contents of the given directory */
     public Collection list(String directory) throws FileResourceException {
-        if (!this.isDirectory(resolveName(directory))) {
-            throw new DirectoryNotFoundException("Could not find directory: "
-                    + directory);
+        File tcwd = cwd;
+        try {
+            setCurrentDirectory(new File(directory));
+            Collection list = list();
+            return list;
         }
-        String currentPath = getCurrentDirectory();
-        resource = new File(resolveName(directory));
-        Collection list = list();
-        setCurrentDirectory(currentPath);
-        return list;
+        finally {
+            setCurrentDirectory(tcwd);
+        }
     }
 
     /**
@@ -126,10 +140,10 @@ public class FileResourceImpl extends AbstractFileResource {
      */
     public void createDirectory(String directory)
             throws FileResourceException {
-        String currentPath = getCurrentDirectory();
-        this.resource = new File(resolveName(directory));
-        resource.mkdir();
-        setCurrentDirectory(currentPath);// [m] ???
+        File f = resolve(directory);
+        if (!f.mkdir() && !f.exists()) {
+            throw new FileResourceException("Failed to create directory: " + directory);
+        }
     }
 
     public void createDirectories(String directory)
@@ -137,47 +151,56 @@ public class FileResourceImpl extends AbstractFileResource {
         if (directory == null || directory.equals("")) {
             return;
         }
-        File f = new File(directory);
+        File f = resolve(directory);
         if (!f.mkdirs() && !f.exists()) {
-            throw new FileResourceException("Failed to create directory: "
-                    + directory);
+            throw new FileResourceException("Failed to create directory: " + directory);
         }
     }
 
-    /** delete the given directory. If force == true, recursive delete */
-    public void deleteDirectory(String directory, boolean force)
-            throws FileResourceException {
-
-        String currentPath = getCurrentDirectory();
-        setCurrentDirectory(directory);
-        Iterator fileNames = list().iterator();
-
-        while ((fileNames != null) && (fileNames.hasNext()) && (force = true)) {
-            File newFile = new File(((GridFile) fileNames.next())
-                    .getAbsolutePathName());
-            if (newFile.isFile() == true) {
-                newFile.delete();
-            } else {
-                deleteDirectory(newFile.getAbsolutePath(), force);
+    public void deleteDirectory(String dir, boolean force) throws FileResourceException {
+        deleteDirectory(resolve(dir), force);
+    }
+    
+    private void deleteDirectory(File f, boolean force) throws FileResourceException {
+        File[] fs = f.listFiles();
+        if (force) {
+            for (int i = 0; i < fs.length; i++) {
+                if (fs[i].isFile()) {
+                    if (!fs[i].delete()) {
+                        throw new FileResourceException("Could not delete directory: "
+                        + f.getAbsolutePath() + ". Failed to delete file: " + fs[i].getAbsolutePath());
+                    }
+                }
+                else {
+                    deleteDirectory(fs[i], true);
+                }
+            }
+            fs = f.listFiles();
+        }
+        if (fs.length != 0) {
+            throw new FileResourceException("Could not delete directory: "
+                    + f.getAbsolutePath() + ". Directory not empty.");
+        }
+        else {
+            if (f.delete()) {
+                throw new FileResourceException("Could not delete directory: "
+                        + f.getAbsolutePath());
             }
         }
-
-        resource.delete();
-        setCurrentDirectory(currentPath);
     }
-
+    
     /** remove a file */
     public void deleteFile(String fileName) throws FileResourceException {
-        File localFile = new File(resolveName(fileName));
+        File localFile = resolve(fileName);
         if (!localFile.exists()) {
             throw new FileNotFoundException(fileName + " not found.");
         }
-
         if (isDirectory(fileName) == true) {
             throw new FileResourceException("File is a directory ");
         }
-
-        localFile.delete();
+        if (!localFile.delete()) {
+            throw new FileResourceException("Could not delete file " + fileName);
+        }
     }
 
     public void getFile(String remoteFileName, String localFileName)
@@ -190,20 +213,20 @@ public class FileResourceImpl extends AbstractFileResource {
             ProgressMonitor progressMonitor) throws FileResourceException {
 
         try {
-            File remote = new File(resolveName(remoteFileName));
-            if (!remote.exists()) {
+            File src = resolve(remoteFileName);
+            if (!src.exists()) {
                 throw new FileNotFoundException("File not found: "
-                        + remote.getAbsolutePath());
+                        + src.getAbsolutePath());
             }
-            File local = new File(resolveName(localFileName));
+            File dst = resolve(localFileName);
             // silently ignore requests for which source == destination
-            if (remote.getCanonicalPath().equals(local.getCanonicalPath())) {
+            if (dst.getCanonicalPath().equals(src.getCanonicalPath())) {
                 return;
             }
-            FileInputStream remoteStream = new FileInputStream(remote);
-            FileOutputStream localStream = new FileOutputStream(local);
+            FileInputStream remoteStream = new FileInputStream(src);
+            FileOutputStream localStream = new FileOutputStream(dst);
             long crt = 0;
-            long total = remote.length();
+            long total = src.length();
             byte[] buf = new byte[16384];
             int read;
             while ((read = remoteStream.read(buf)) != -1) {
@@ -322,19 +345,17 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** get file information */
     public GridFile getGridFile(String fileName) throws FileResourceException {
-        return createGridFile(fileName);
+        return createGridFile(resolve(fileName));
     }
 
     /** return true of file exists */
     public boolean exists(String filename) throws FileResourceException {
-        File tempFile = new File(resolveName(filename));
-        return tempFile.exists();
+        return resolve(filename).exists();
     }
 
     /** return true if input is a directory */
     public boolean isDirectory(String dirName) throws FileResourceException {
-        File isDir = new File(resolveName(dirName));
-        return isDir.isDirectory();
+        return resolve(dirName).isDirectory();
     }
 
     /** submit a workflow to local resource. not implemented */
@@ -343,24 +364,22 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** obtain file information in the form of a gridfile */
-    private GridFile createGridFile(Object obj) {
-        String fileName = (String) obj;
+    private GridFile createGridFile(File f) {
         GridFile gridFile = new GridFileImpl();
 
-        File fileInfo = new File(resolveName(fileName));
-        gridFile.setAbsolutePathName(fileInfo.getAbsolutePath());
-        gridFile.setLastModified(String.valueOf(new Date(fileInfo
+        gridFile.setAbsolutePathName(f.getAbsolutePath());
+        gridFile.setLastModified(String.valueOf(new Date(f
                 .lastModified())));
 
-        if (fileInfo.isFile() == true) {
+        if (f.isFile() == true) {
             gridFile.setFileType(GridFile.FILE);
         }
-        if (fileInfo.isDirectory() == true) {
+        if (f.isDirectory() == true) {
             gridFile.setFileType(GridFile.DIRECTORY);
         }
 
-        gridFile.setName(fileInfo.getName());
-        gridFile.setSize(fileInfo.length());
+        gridFile.setName(f.getName());
+        gridFile.setSize(f.length());
 
         Permissions userPermissions = new PermissionsImpl();
         Permissions groupPermissions = new PermissionsImpl();
