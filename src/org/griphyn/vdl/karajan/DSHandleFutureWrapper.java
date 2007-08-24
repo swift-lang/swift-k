@@ -15,7 +15,6 @@ import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DSHandleListener;
-import org.griphyn.vdl.mapping.InvalidPathException;
 
 public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListener {
 	private DSHandle handle;
@@ -105,13 +104,8 @@ public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListene
 	}
 
 	public void fail(FutureEvaluationException e) {
-		try {
-			handle.setValue(e);
-			handle.closeShallow();
-		}
-		catch (InvalidPathException ex) {
-			throw new RuntimeException("Failed to fail future (" + this + ")", ex);
-		}
+		handle.setValue(e);
+		handle.closeShallow();
 	}
 
 	public void handleClosed(DSHandle handle) {
