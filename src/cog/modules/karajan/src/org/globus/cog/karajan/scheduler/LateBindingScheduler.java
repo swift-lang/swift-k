@@ -9,8 +9,10 @@
  */
 package org.globus.cog.karajan.scheduler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -297,6 +299,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected void failTask(Task t, String message, Exception e) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Failing task " + t + " because of " + message, e);
+		}
 		Status s = new StatusImpl();
 		s.setPrevStatusCode(t.getStatus().getStatusCode());
 		s.setStatusCode(Status.FAILED);
@@ -305,6 +310,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		t.setStatus(s);
 		fireJobStatusChangeEvent(t, s);
 	}
+	
+	private List contactTran = new ArrayList();
 
 	void submitUnbound(Task t) throws NoFreeResourceException {
 		try {
@@ -312,6 +319,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				return;
 			}
 			checkTaskLoadConditions(t);
+			contactTran.clear();
 			Service[] services = new Service[t.getRequiredServices()];
 			Contact[] contacts;
 			Object constraints = getConstraints(t);
@@ -319,6 +327,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				contacts = (Contact[]) constraints;
 				if (contacts == null) {
 					contacts = new Contact[] { this.getNextContact(t) };
+					contactTran.add(contacts[0]);
 				}
 			}
 			else {
@@ -326,13 +335,15 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				for (int i = 0; i < t.getRequiredServices(); i++) {
 					if (t.getService(i) == null) {
 						contacts[i] = this.getNextContact(t);
+						contactTran.add(contacts[i]);
 					}
 				}
 			}
-
+ 
 			for (int i = 0; i < services.length; i++) {
 				if (contacts[i] != null && contacts[i].isVirtual()) {
 					contacts[i] = resolveContact(t, contacts[i]);
+					contactTran.add(contacts[i]);
 				}
 				try {
 					services[i] = t.getService(i);
@@ -357,11 +368,15 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					((JobSpecification) t.getSpecification()).setAttribute("project", project);
 				}
 			}
-
+			
 			submitBoundToServices(t, contacts, services);
 			logger.debug("No host specified");
 		}
 		catch (NoFreeResourceException e) {
+			Iterator i = contactTran.iterator();
+			while (i.hasNext()) {
+				releaseContact((Contact) i.next());
+			}
 			throw e;
 		}
 		catch (Exception e) {
