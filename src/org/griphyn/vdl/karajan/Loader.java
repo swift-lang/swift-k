@@ -193,13 +193,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			VDLt2VDLx.compile(new String[0]);
 			System.setIn(stdin);
 
-			try{
+			try {
 				FileOutputStream f = new FileOutputStream(kml);
 				System.setOut(new PrintStream(f));
 				Karajan.main(new String[] { xml.getAbsolutePath() });
 				System.setOut(stdout);
 				f.close();
-			} catch(Exception e) {
+			} 
+			catch(Exception e) {
 
 				// if we leave a kml file around, then a subsequent
 				// re-run will skip recompiling and cause a different
@@ -209,7 +210,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				throw new RuntimeException("Failed to convert .xml to .kml for "+project,e);
 
 			}
-		} else {
+		} 
+		else {
 			logger.debug("Recompilation suppressed.");
 		}
 		return kml.getAbsolutePath();
