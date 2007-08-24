@@ -29,7 +29,7 @@ public class SetFieldValue extends VDLFunction {
 				logger.info("Setting " + leaf + " to " + value);
 			}
 			synchronized (leaf) {
-				leaf.setValue(value);
+				leaf.setValue(internalValue(leaf.getType(), value));
 				closeShallow(stack, leaf);
 			}
 			return null;
