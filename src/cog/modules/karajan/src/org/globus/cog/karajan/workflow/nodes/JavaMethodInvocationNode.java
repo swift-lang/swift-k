@@ -41,6 +41,7 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 		TYPES.put("double", double.class);
 		TYPES.put("char", char.class);
 		TYPES.put("long", long.class);
+		TYPES.put("String", String.class);
 	}
 
 	static {
@@ -247,7 +248,14 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 			if (i != 0) {
 				sb.append(", ");
 			}
-			sb.append(array[i]);
+			if (array[i] instanceof String) {
+				sb.append('"');
+				sb.append(array[i]);
+				sb.append('"');
+			}
+			else {
+				sb.append(array[i]);
+			}
 		}
 		sb.append(']');
 		return sb.toString();
