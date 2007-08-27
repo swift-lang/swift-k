@@ -18,6 +18,7 @@ for a in *.dtm; do
   diff -q $b ../working-base/$b
   if [ "$?" -ne "0" ]; then
     echo "OUTPUT DIFFERS"
+    diff ../working-base/$b $b
     exit 1
   fi
   echo ----------===========================----------
