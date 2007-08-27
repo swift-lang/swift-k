@@ -7,6 +7,8 @@ import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
 public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener {
+
+	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
 	private Mapper mapper;
 	private Map params;
 
@@ -21,10 +23,7 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 
 	public void init(Map params) {
 		this.params = params;
-		String prefix = (String) params.get("prefix");
-		if (prefix != null) {
-			getField().setName(prefix);
-		}
+
 		String desc = (String) params.get("descriptor");
 		if (desc == null) {
 			return;
@@ -32,6 +31,7 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
 			checkInputs();
+			getField().setName(PARAM_PREFIX.getStringValue(mapper));
 		}
 		catch (InvalidMapperException e) {
 			throw new IllegalArgumentException(e.getMessage());
