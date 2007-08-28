@@ -1119,31 +1119,26 @@ STRING_LITERAL
 //    :    '"'! (ESC|~('"'|'\\'|'\n'|'\r'))* '"'!
     ;
 
-// a numeric literal
 NUMBER
-    {boolean isDecimal=false; Token t=null;}
-    :   '.' {_ttype = DOT;}
-        (
-            ('0'..'9')+ (EXPONENT)?
-                {
-                    _ttype = FLOAT_LITERAL;
-                }
-            )?
-
-            |    (    '0' {isDecimal = true; _ttype = INT_LITERAL; } // special case for just '0'
-                // may add octal or hex support here
-            |    ('1'..'9') ('0'..'9')*  {isDecimal=true; _ttype = INT_LITERAL;}    // non-zero decimal
-        )
-        (
-            {isDecimal}?
-            (   '.'  ('0'..'9')* (EXPONENT)?
-                       {
-                        _ttype = FLOAT_LITERAL;
-                     }
-            )
-            |   ( EXPONENT )?
-        )
+    :
+    ( INTPART {_ttype=INT_LITERAL; }
+      ('.' FLOATPART {_ttype=FLOAT_LITERAL; })?
+      (EXPONENT {_ttype=FLOAT_LITERAL; })?
+    )
+    |
+    ( '.' { _ttype=DOT; }
+      ((FLOATPART {_ttype=FLOAT_LITERAL; })
+      (EXPONENT)?)?
+    )
     ;
+
+protected INTPART : (ANYDIGIT)+;
+
+protected ANYDIGIT : ('0'..'9');
+
+protected FLOATPART : (ANYDIGIT)+;
+
+protected EXPONENT : ('e'|'E') ('+'|'-')? (ANYDIGIT)+ ;
 
 // white spaces
 WS  :   (   ' '
@@ -1201,7 +1196,3 @@ ESC
     )
     ;
 
-protected
-EXPONENT
-    :    ('e'|'E') ('+'|'-')? ('0'..'9')+
-    ;
