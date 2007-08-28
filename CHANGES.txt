@@ -1,3 +1,15 @@
+(08/28/07)
+
+*** Added throttle.score.job.factor to swift.properties (the functionality
+    was previously available by manually hacking scheduler.xml)
+    
+*** Throttle options now accept "off" as a valid value
+
+*** Put @arg back in
+
+*** Changes the configuration to allow loading a specific file even
+    if the defaults cannot be found.
+
 (08/23/07)
 
 *** A few changes to the way types work. Whether something is an array
