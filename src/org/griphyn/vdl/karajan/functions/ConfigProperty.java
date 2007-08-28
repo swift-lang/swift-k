@@ -58,7 +58,7 @@ public class ConfigProperty extends AbstractFunction {
                 }
             }
             if (prop == null) {
-                throw new ExecutionException("VDL2 config property \"" + name + "\" not found in "
+                throw new ExecutionException("Swift config property \"" + name + "\" not found in "
                         + conf);
             }
             else {
@@ -66,7 +66,7 @@ public class ConfigProperty extends AbstractFunction {
             }
         }
         catch (IOException e) {
-            throw new ExecutionException("Failed to load VDL2 configuration", e);
+            throw new ExecutionException("Failed to load Swift configuration", e);
         }
     }
 }
