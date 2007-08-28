@@ -80,6 +80,7 @@ public class VDL2Config extends Properties {
 		put("throttle.host.submit", "2");
 		put("throttle.transfers", "4"); 
 		put("throttle.file.operations", "8");
+		put("throttle.score.job.factor", "4");
 	}
 
 	private VDL2Config(VDL2Config other) {
