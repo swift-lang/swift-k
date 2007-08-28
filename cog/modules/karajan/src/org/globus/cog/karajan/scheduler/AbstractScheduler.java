@@ -32,6 +32,8 @@ import org.globus.cog.karajan.util.TypeUtil;
 public abstract class AbstractScheduler extends Thread implements Scheduler {
 
 	private static final Logger logger = Logger.getLogger(AbstractScheduler.class);
+	
+	public static final int THROTTLE_OFF = 100000000;
 
 	private List taskHandlers;
 
@@ -185,12 +187,21 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	public void setProperty(String name, Object value) {
 		if (name.equalsIgnoreCase("maxSimultaneousJobs")) {
 			logger.debug("Scheduler: setting maxSimultaneousJobs to " + value);
-			setMaxSimultaneousJobs(TypeUtil.toInt(value));
+			setMaxSimultaneousJobs(throttleValue(value));
 		}
 		else {
 			throw new IllegalArgumentException("Unsupported property: " + name
 					+ ". Supported properties are: " + Arrays.asList(this.getPropertyNames()));
 		}
+	}
+	
+	protected int throttleValue(Object value) {
+	    if ("off".equalsIgnoreCase(value.toString())) {
+	        return THROTTLE_OFF; 
+	    }
+	    else {
+	        return TypeUtil.toInt(value);
+	    }
 	}
 
 	public Object getProperty(String name) {

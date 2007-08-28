@@ -298,7 +298,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				}
 			}
 			else if (JOB_THROTTLE.equals(name)) {
-				jobThrottle = TypeUtil.toInt(value);
+				jobThrottle = throttleValue(value);
 			}
 			else {
 				double val = TypeUtil.toDouble(value);
