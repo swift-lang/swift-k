@@ -538,22 +538,22 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public void setProperty(String name, Object value) {
 		if (name.equalsIgnoreCase(JOBS_PER_CPU)) {
 			logger.debug("Scheduler: setting jobsPerCpu to " + value);
-			jobsPerCPU = TypeUtil.toInt(value);
+			jobsPerCPU = throttleValue(value);
 		}
 		else if (name.equalsIgnoreCase(SUBMIT_THROTTLE)) {
-			submitQueue.setThrottle(TypeUtil.toInt(value));
+			submitQueue.setThrottle(throttleValue(value));
 		}
 		else if (name.equalsIgnoreCase(HOST_SUBMIT_THROTTLE)) {
-			submitQueue.setHostThrottle(TypeUtil.toInt(value));
+			submitQueue.setHostThrottle(throttleValue(value));
 		}
 		else if (name.equalsIgnoreCase(MAX_TRANSFERS)) {
-			maxTransfers = TypeUtil.toInt(value);
+			maxTransfers = throttleValue(value);
 		}
 		else if (name.equalsIgnoreCase(SSH_INITIAL_RATE)) {
 			sshInitialRate = TypeUtil.toInt(value);
 		}
 		else if (name.equalsIgnoreCase(MAX_FILE_OPERATIONS)) {
-			maxFileOperations = TypeUtil.toInt(value);
+			maxFileOperations = throttleValue(value);
 		}
 		else {
 			super.setProperty(name, value);
