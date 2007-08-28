@@ -9,6 +9,8 @@
 
 *** Changes the configuration to allow loading a specific file even
     if the defaults cannot be found.
+    
+*** Added PBS and dCache providers as dependencies
 
 (08/23/07)
 
