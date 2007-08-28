@@ -368,7 +368,7 @@ $endif$
 
 if(condition,vthen,velse) ::= <<
 <if>
-  <getfieldvalue>$condition$</getfieldvalue>
+  <vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
   <then>
     $vthen$
   </then>
@@ -410,12 +410,12 @@ switch(condition,cases,sdefault) ::= <<
   </set>
   <if>
 $cases:{case |
-    <getfieldvalue>
+    <vdl:getfieldvalue>
     <vdlop:eq>
        <variable>\$_sw</variable>
        $case.value$
     </vdlop:eq>
-    </getfieldvalue>
+    </vdl:getfieldvalue>
     <then>
       $sub_comp(declarations=case.declarations, statements=case.statements)$
     </then>
