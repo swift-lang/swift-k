@@ -5,16 +5,27 @@
 # subdirectories.
 
 pushd working
-rm -v *.?ml
+
+if [ "X$1" != "X-resume" ]; then
+  echo Cleaning previous test results
+  rm -v *.?ml
+else
+  echo Resuming previous test run
+fi
+
 for a in *.dtm; do 
-  echo Attempting vdlc known-good $a
-  vdlc $a
+  b=$(basename -s .dtm $a).xml
+  if [ ! -f $b ]; then
+    echo Attempting vdlc known-good $a
+    vdlc $a
+  else
+    echo Skipping $a
+  fi
   VDLCRETURN=$?
   if [ "$VDLCRETURN" -ne "0" ]; then 
     echo "COMPILE FAILED WITH RETURN CODE $VDLCRETURN"
     exit 1
   fi
-  b=$(basename -s .dtm $a).xml
   diff -q $b ../working-base/$b
   if [ "$?" -ne "0" ]; then
     echo "OUTPUT DIFFERS"
