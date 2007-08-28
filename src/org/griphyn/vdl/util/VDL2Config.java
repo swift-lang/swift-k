@@ -47,8 +47,14 @@ public class VDL2Config extends Properties {
 	}
 
 	public static VDL2Config getConfig(String file) throws IOException {
-		VDL2Config config = getConfig();
-		VDL2Config c = new VDL2Config(config);
+		VDL2Config c;
+		try {
+			VDL2Config config = getConfig();
+			c = new VDL2Config(config);
+		}
+		catch (Exception e) {
+			c = new VDL2Config();
+		}
 		c.load(file);
 		return c.check();
 	}
