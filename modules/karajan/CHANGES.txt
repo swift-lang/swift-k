@@ -1,3 +1,7 @@
+(08/28/2007)
+
+*** "off" is now a valid value for throttling parameters
+
 (08/23/2007)
 
 *** Added task:availableHandlers(*type). In case people don't
