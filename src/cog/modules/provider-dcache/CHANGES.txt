@@ -1,3 +1,8 @@
+(08/28/07)
+
+*** Fixed broken dependency (abstraction-local instead of
+    provider-local)
+
 (08/23/07)
 
 *** Initial commit
