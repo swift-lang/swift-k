@@ -1,3 +1,7 @@
+(08/29/07)
+
+*** Moved @arg to swiftscript namespace/package
+
 (08/28/07)
 
 *** Added throttle.score.job.factor to swift.properties (the functionality

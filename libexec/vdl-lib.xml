@@ -2,10 +2,21 @@
 
   <namespace prefix="swiftscript">
 	<!-- string functions library -->
-	<export name="arg"><elementDef classname="org.griphyn.vdl.karajan.functions.FnArg"/></export>
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
+	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileNames"/></export>
+	<export name="arg">
+		<import file="sys.xml"/>
+		<if>
+			<or>
+				<equals value1="${vdl:operation}" value2="typecheck"/>
+				<equals value1="${vdl:operation}" value2="graph"/>
+			</or>
+			<element arguments="name"><string></string></element>
+			<elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FnArg"/>
+		</if>
+	</export>
   </namespace>
 
   <namespace prefix="vdl">

@@ -31,13 +31,6 @@ namespace("vdl"
 			arguments=list(each(...))
 		)
 
-		export(arg, 
-			if (
-				vdl:operation == "typecheck" | vdl:operation == "graph" element([name], "")
-				elementDef(classname="org.griphyn.vdl.karajan.functions.FnArg")
-			)
-		)
-
 		export(execute
 			executeFile(
 				if(

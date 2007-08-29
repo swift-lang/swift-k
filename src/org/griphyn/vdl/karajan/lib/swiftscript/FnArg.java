@@ -1,7 +1,7 @@
 /*
  * Created on Sep 28, 2006
  */
-package org.griphyn.vdl.karajan.functions;
+package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.util.HashMap;
 import java.util.Iterator;
