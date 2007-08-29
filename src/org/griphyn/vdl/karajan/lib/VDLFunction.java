@@ -367,21 +367,27 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	protected boolean compatible(Type expectedType, Type actualType) {
 		if (expectedType.equals(Types.FLOAT)) {
-			if (actualType.equals(Types.FLOAT) || actualType.equals(Types.INT))
+			if (actualType.equals(Types.FLOAT) || actualType.equals(Types.INT)) {
 				return true;
-			else
+			}
+			else {
 				return false;
+			}
 		}
 		else if (expectedType.equals(Types.FLOAT.arrayType())) {
-            if (actualType.equals(Types.FLOAT.arrayType()) || actualType.equals(Types.INT.arrayType()))
+            if (actualType.equals(Types.FLOAT.arrayType()) || actualType.equals(Types.INT.arrayType())) {
                 return true;
-            else
+            }
+            else {
                 return false;
+            }
         }
 		else if (expectedType.equals(Types.ANY)) {
 			return true;
 		}
-		return actualType.equals(expectedType);
+		else {
+			return actualType.equals(expectedType);
+		}
 	}
 
 	protected void closeChildren(VariableStack stack, DSHandle handle) throws ExecutionException,
