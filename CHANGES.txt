@@ -4,6 +4,12 @@
 
 *** @filenames disappeared at some point in time. It is back.
 
+*** Fixed some issues with paths returned by fringePaths being
+    parsed into the wrong things. It points out that one should 
+    be careful about methods typically used to get some human 
+    readable representation of data (such as toString()) being 
+    relied on to provide any kind of functional consistency.
+
 (08/28/07)
 
 *** Added throttle.score.job.factor to swift.properties (the functionality

@@ -286,9 +286,11 @@ public abstract class AbstractDataNode implements DSHandle {
 							"Inconsistency between type declaration and handle for field '"
 									+ field.getName() + "'");
 				}
-				Path fullPath = parentPath.addLast(mapper.getField().getName());
+				//[m] Hmm. Should there be a difference between field and mapper.getField()?
+				//Path fullPath = parentPath.addLast(mapper.getField().getName());
+				Path fullPath = parentPath.addLast(field.getName());
 				if (!mapper.field.getType().isPrimitive() && !mapper.isArray()) {
-					list.add(fullPath.toString());
+					list.add(fullPath);
 				}
 				else {
 					mapper.getFringePaths(list, fullPath);

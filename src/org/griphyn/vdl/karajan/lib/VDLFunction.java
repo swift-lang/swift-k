@@ -479,7 +479,13 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	protected final Path parsePath(Object o, VariableStack stack) throws ExecutionException {
 		Path q = Path.EMPTY_PATH;
-		Path p = Path.parse(TypeUtil.toString(o));
+		Path p;
+		if (o instanceof Path) {
+			p = (Path) o;
+		}
+		else {
+			p = Path.parse(TypeUtil.toString(o));
+		}
 		for (int i = 0; i < p.size(); i++) {
 			if (p.isArrayIndex(i)) {
 				if (p.isWildcard(i)) {

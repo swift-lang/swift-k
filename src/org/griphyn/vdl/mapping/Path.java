@@ -5,8 +5,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-/** Represents a path (into a DSHandle?) and contains helper methods
-    and member classes. */
+/**
+ * Represents a path (into a DSHandle?) and contains helper methods and member
+ * classes.
+ */
 
 public class Path {
 	public static final Path EMPTY_PATH = new EmptyPath();
@@ -28,17 +30,20 @@ public class Path {
 		}
 	}
 
-
 	/** Represents a component of a path. */
 	public static class Entry {
 
-		/** Indicates whether this path component is an array index.
-		  * If so, then name will be the index into the array. If not, then
-		  * name will be the name of the subelement. */
+		/**
+		 * Indicates whether this path component is an array index. If so, then
+		 * name will be the index into the array. If not, then name will be the
+		 * name of the subelement.
+		 */
 		private boolean index;
 
-		/** The name of this path entry (either the array offset or the
-		  * type member name. */
+		/**
+		 * The name of this path entry (either the array offset or the type
+		 * member name.
+		 */
 		private String name;
 
 		public Entry(String name, boolean index) {
@@ -107,7 +112,8 @@ public class Path {
 				case '[': {
 					if (sb.length() == 0) {
 						continue; // TODO: what case does this capture?
-						          // attempt to use multidim arrays?
+						// attempt to use multidim arrays?
+						//[m] it may simply be incomplete/incorrect
 					}
 				}
 				case '.': {
@@ -195,7 +201,7 @@ public class Path {
 		}
 		return p;
 	}
-	
+
 	public Path addFirst(String element) {
 		return addFirst(element, false);
 	}
@@ -213,24 +219,49 @@ public class Path {
 	public Path addLast(String element) {
 		return addLast(element, false);
 	}
-    
-    public String toString() {
-        StringBuffer sb = new StringBuffer();
-        Iterator i = iterator();
-        while (i.hasNext()) {
-            Path.Entry e = (Path.Entry) i.next();
-            if (e.isIndex()) {
-                sb.append('[');
-                sb.append(e.getName());
-                sb.append(']');
-            }
-            else {
-                sb.append('.');
-                sb.append(e.getName());
-            }
-        }
-        return sb.toString();
-    }
+
+	/**
+	 * Returns a string representation of this path. This method guarantees that
+	 * <code>Path.parse(somePath.stringForm()).equals(somePath)</code>, for
+	 * any legal Path instances. However, there is no guarantee that
+	 * <code>someString.equals(Path.parse(someString).stringForm())</code>.
+	 */
+	public String stringForm() {
+		StringBuffer sb = new StringBuffer();
+		Iterator i = elements.iterator();
+		while (i.hasNext()) {
+			sb.append(((Entry) i.next()).name);
+			if (i.hasNext()) {
+				sb.append('.');
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Returns a human readable string representation of this path. The string
+	 * returned by this method <strong>will not</strong> correctly be parsed
+	 * into the same path by {@link Path.parse}. In other words no guarantee is
+	 * made that <code>Path.parse(somePath.stringForm()).equals(somePath)</code>.
+	 * For a consistent such representation of this path use {@link stringForm}.
+	 */
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		Iterator i = iterator();
+		while (i.hasNext()) {
+			Path.Entry e = (Path.Entry) i.next();
+			if (e.isIndex()) {
+				sb.append('[');
+				sb.append(e.getName());
+				sb.append(']');
+			}
+			else {
+				sb.append('.');
+				sb.append(e.getName());
+			}
+		}
+		return sb.toString();
+	}
 
 	public Iterator iterator() {
 		return elements.iterator();

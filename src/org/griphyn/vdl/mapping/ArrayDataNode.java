@@ -32,14 +32,13 @@ public class ArrayDataNode extends DataNode {
 			while (i.hasNext()) {
 				Map.Entry e = (Map.Entry) i.next();
 				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
-				// Why would I do this?
-				// Path fullPath = parentPath.addLast(mapper.fieldName);
+				
 				Path fullPath = parentPath.addLast((String) e.getKey());
 				if (!mapper.isHandlesEmpty()) {
 					mapper.getFringePaths(list, fullPath);
 				}
 				else if (!mapper.getField().getType().isPrimitive()) {
-					list.add(fullPath.toString());
+					list.add(fullPath);
 				}
 			}
 		}
