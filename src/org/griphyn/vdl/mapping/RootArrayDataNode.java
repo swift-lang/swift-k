@@ -8,7 +8,6 @@ import org.griphyn.vdl.type.Type;
 
 public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener {
 
-	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
 	private Mapper mapper;
 	private Map params;
 

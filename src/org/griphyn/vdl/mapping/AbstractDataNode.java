@@ -18,6 +18,8 @@ import org.griphyn.vdl.type.Types;
 
 public abstract class AbstractDataNode implements DSHandle {
 	public static final Logger logger = Logger.getLogger(AbstractDataNode.class);
+	
+	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
 
 	private Field field;
 	private Map handles;
