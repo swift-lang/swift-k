@@ -1227,7 +1227,7 @@ the file should contain a header line specifying the names of the columns.
 						<listitem>
 						
 							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
 							
 							<para>
@@ -1260,7 +1260,7 @@ the file should contain a header line specifying the names of the columns.
 						<listitem>
 						
 							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
 							
 							<para>
@@ -1287,7 +1287,7 @@ the file should contain a header line specifying the names of the columns.
 						<listitem>
 						
 							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
 						
 							<para>
@@ -1306,7 +1306,7 @@ the file should contain a header line specifying the names of the columns.
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<property>throttle.file.operations</property>
@@ -1314,7 +1314,7 @@ the file should contain a header line specifying the names of the columns.
 						<listitem>
 						
 							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
 							
 							<para>
@@ -1336,6 +1336,46 @@ the file should contain a header line specifying the names of the columns.
 								connections and achieve better overall
 								performance. 
 								
+							</para>
+						</listitem>
+					</varlistentry>
+	
+				
+					<varlistentry>
+						<term>
+							<property>throttle.score.job.factor</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>4</literal>
+							</para>
+							
+							<para>
+								The Swift scheduler has the ability to limit
+								the number of concurrent jobs allowed on a
+								site based on the performance history of that
+								site. Each site is assigned a score (initially
+								1), which can increase or decrease based on
+								whether the site yields successful or faulty
+								job runs. The score for a site can take values
+								in the (0.1, 100) interval. The number of
+								allowed jobs is calculated using the
+								following formula:
+							</para>
+							<para>
+								2 + score*throttle.score.job.factor 
+							</para>
+							<para>
+								This means a site will always be allowed
+								at least two concurrent jobs and at most
+								2 + 100*throttle.score.job.factor. With a
+								default of 4 this means at least 2 jobs and
+								at most 402. 
 							</para>
 						</listitem>
 					</varlistentry>
