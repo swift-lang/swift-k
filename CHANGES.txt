@@ -12,6 +12,13 @@
     
 *** Added PBS and dCache providers as dependencies
 
+*** Typechecks on arrays would fail (this was introduced by the type
+    system changes). Fixed.
+    
+*** Assignments from integer[] to float[] should not fail for type
+    reasons (nor should passing an integer[] for a float[] fail the
+    typecheck).
+
 (08/23/07)
 
 *** A few changes to the way types work. Whether something is an array

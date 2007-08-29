@@ -372,6 +372,12 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			else
 				return false;
 		}
+		else if (expectedType.equals(Types.FLOAT.arrayType())) {
+            if (actualType.equals(Types.FLOAT.arrayType()) || actualType.equals(Types.INT.arrayType()))
+                return true;
+            else
+                return false;
+        }
 		else if (expectedType.equals(Types.ANY)) {
 			return true;
 		}

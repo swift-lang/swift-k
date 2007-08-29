@@ -9,6 +9,7 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.type.NoSuchTypeException;
+import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public class Typecheck extends VDLFunction {
@@ -32,7 +33,11 @@ public class Typecheck extends VDLFunction {
 		String argname = TypeUtil.toString(OA_ARGNAME.getValue(stack, null));
 
 		try {
-			if (!compatible(Types.getType(type), var.getType())) {
+			Type t = Types.getType(type);
+			if (isArray) {
+				t = t.arrayType();
+			}
+			if (!compatible(t, var.getType())) {
 				if (argname != null) {
 					throw new ExecutionException("Wrong type for argument '" + argname + "'. Expected "
 							+ type + "; got " + var.getType() + ". Actual argument: " + var);
@@ -46,7 +51,6 @@ public class Typecheck extends VDLFunction {
 		catch (NoSuchTypeException e) {
 			throw new ExecutionException(e);
 		}
-
 		return null;
 	}
 }
