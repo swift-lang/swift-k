@@ -81,6 +81,52 @@ binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
 </programlisting>
 </para>
 
+
+
+The Swift data model.
+
+Data in an abstract sense is represented in the swift script runtime by
+a DSHandle object. DSHandles don't have any guaranteed to work methods.
+(? is this true? they should have get paremt, and perhaps others - should
+check in source code).
+
+In swift at present DSHandles can represent data in one of three forms.
+
+i) an in-memory value, such as a string or integer. In this case the
+value is accessed through methods such as getValue and setValue.
+
+ii) an on-disk data file, which is not exposed to the swift script language
+as a value. The value is not exposed to the runtime directly, but the
+filename for the file is available through getFilename. The filenames are
+provided to the DSHandle implementation objects (which are instances of
+the various DataNode classes).
+
+iii) a containing structure - either an array or a defined type.
+one of these DSHandles can provide, upon request, subordinate
+DSHandles to member elements. However, it isn't required to generate
+all of the subordinate DSHandles at once and can be used in a lazy
+fashion.
+
+In pracise at the moment the above three are mutually exclusive - for
+example, a data set that is mapped to a file cannot have a value extracted
+from it in to a swift script expression; and a data item that is a
+value cannot be passed into a procedure
+executable as a data file using the @filename function.
+
+However the implementation makes no specific checks for the above - errors
+wil occur if an attempt was made to use the same variable in two different ways,
+but no explicit check is made for the multiple uses of.
+
+In future, it may be the case that the implementation will support multiple forms of access
+There is no exp specific reason why a single data object should not
+be accessible through multiple accessing methods
+
+In future it may be that mappers map into DSHandle objects, rather than providing a filename list - this woul dallow mappeds to provide their own implementations fo the DSHanlde interface customised to their own us - using own getValue/setValue/getFilename/getDescendants methods.
+
+So there's a potential change in what mappers are here - at present, a mapper takes a 'path' which is a path from a root data item downwards to an eplicit data item, making use of explicitly listed members and listed array elements to return a filename for a file; and vice-versa. but really tthere's notreason for that
+to be the specifi API between the two forms.
+
+
 		</sect2>
 
 		<sect2>
@@ -1541,6 +1587,19 @@ language.
 Takes a command line parameter name as a string parameter and returns the
 name of that string parameter from the command line.
 			</para>
+
+			<para>For example:</para>
+			<programlisting>
+print(@arg("myparam"));
+			</programlisting>
+			<screen>
+$ swift arg.swift -myparam=hello 
+Swift v0.2-dev
+
+RunID: p08an4d5yr6g2
+hello
+			</screen>
+
 		</sect2>
 		<sect2><title>@filename</title>
 			<para>
