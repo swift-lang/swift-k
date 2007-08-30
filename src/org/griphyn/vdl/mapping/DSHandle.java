@@ -26,11 +26,10 @@ import org.griphyn.vdl.type.Type;
  */
 public interface DSHandle {
 
-    /** get the type of the dataset. TODO need to replace return type
-     * with a Type interface.
+    /** get the type of the dataset.
      */
     public Type getType();
-    
+
     public void init(Map params);
 
     public DSHandle getRoot();
@@ -79,6 +78,6 @@ public interface DSHandle {
     public boolean isClosed();
 
     public void addListener(DSHandleListener listener);
-    
+
     Mapper getMapper();
 }
