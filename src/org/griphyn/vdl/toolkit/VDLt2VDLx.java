@@ -1,10 +1,10 @@
 package org.griphyn.vdl.toolkit;
 
 import java.io.InputStreamReader;
+import java.net.URL;
 
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
-import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.parser.VDLtLexer;
 import org.griphyn.vdl.parser.VDLtParser;
@@ -47,8 +47,12 @@ public class VDLt2VDLx {
 				throw new IncorrectInvocationException();
 			}
 			StringTemplateGroup templates;
-			templates = new StringTemplateGroup(new InputStreamReader(
-					VDLt2VDLx.class.getClassLoader().getResource(templateFileName).openStream()));
+			URL template = VDLt2VDLx.class.getClassLoader().getResource(templateFileName);
+			if (template == null) {
+				throw new RuntimeException("Invalid configuration. Template file (" + 
+						templateFileName + ") not found on class path"); 
+			}
+			templates = new StringTemplateGroup(new InputStreamReader(template.openStream()));
 			VDLtLexer lexer = new VDLtLexer(System.in);
 			VDLtParser parser = new VDLtParser(lexer);
 			parser.setTemplateGroup(templates);
@@ -57,13 +61,30 @@ public class VDLt2VDLx {
 		} catch(Exception e) {
 			logger.error("Could not compile SwiftScript source: "+e);
 			logger.debug("Full parser exception",e);
-			throw new ParsingException();
+			throw new ParsingException("Could not compile SwiftScript source: " + e.getMessage(), e);
 		}
 		return 0;
 	}
 
 	static public class IncorrectInvocationException extends Exception {}
-	static public class ParsingException extends Exception {}
+	static public class ParsingException extends Exception {
+
+		public ParsingException() {
+			super();
+		}
+
+		public ParsingException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public ParsingException(String message) {
+			super(message);	
+		}
+
+		public ParsingException(Throwable cause) {
+			super(cause);
+		}
+	}
 
 }
 
