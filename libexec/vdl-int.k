@@ -380,7 +380,7 @@ namespace("vdl"
 							exception(
 								concat(
 									"Exception in {tr}:", nl(),
-									"Arguments: {arguments}", nl(),
+									maybe("Arguments: {arguments}", nl()),
 									"Host: {rhost}", nl(),
 									"Directory: {tmpdir}",
 									"{outs}", nl(),
