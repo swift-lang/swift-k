@@ -1,5 +1,5 @@
 header {
-package org.griphyn.vdl.parser;
+package org.globus.swift.parser;
 
 import org.antlr.stringtemplate.*;
 import java.util.List;

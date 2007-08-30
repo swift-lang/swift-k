@@ -4,7 +4,7 @@
  This message may not be removed or altered.
 ==================================================================== -->
 
-<project name="Java CoG Kit" default="dist" basedir=".">
+<project name="Java CoG Kit" default="redist" basedir=".">
 
 	<property file="project.properties"/>
 	<property name="cog.dir"		value="${basedir}/../../"/>
@@ -25,6 +25,10 @@
 		dist:
 			creates a distribution directory of the 
 			${project} ${long.name}
+			
+		redist:
+			does a distclean and then a dist. This is the safest
+			way of building Swift.
 
 		jar:
 			creates a jar file for the ${project} ${long.name}
@@ -135,7 +139,7 @@ updateOptions "file:/dev/urandom" "java.security.egd"
 	<target name="antlr">
 		<java classname="antlr.Tool" fork="true" failonerror="true">
 			<arg value="-o"/>
-			<arg value="${cog.dir}/modules/${module.name}/src/org/griphyn/vdl/parser"/>
+			<arg value="${cog.dir}/modules/${module.name}/src/org/globus/swift/parser"/>
 			<arg value="resources/VDL.g"/>
 			<classpath>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/antlr-2.7.5.jar"/>
@@ -268,6 +272,9 @@ updateOptions "file:/dev/urandom" "java.security.egd"
 	<target name="generateVersion">
 		<echo file="libexec/version.txt">Swift v${version} </echo>
 		<exec executable="libexec/svn-revision" append="true" output="libexec/version.txt"/>
+	</target>
+	
+	<target name="redist" depends="distclean, dist">
 	</target>
 
 </project>
