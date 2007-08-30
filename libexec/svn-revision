@@ -1,0 +1,5 @@
+#!/bin/bash
+R=$(svn info | grep '^Revision' | sed 's/Revision: /r/')
+M=$(svn status | grep --invert-match '^\?' > /dev/null && echo '(modified locally)')
+echo $R $M
+
