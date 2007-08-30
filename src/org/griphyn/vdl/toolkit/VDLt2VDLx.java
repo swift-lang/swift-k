@@ -6,8 +6,9 @@ import java.net.URL;
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
-import org.griphyn.vdl.parser.VDLtLexer;
-import org.griphyn.vdl.parser.VDLtParser;
+import org.globus.swift.parser.VDLtLexer;
+import org.globus.swift.parser.VDLtParser;
+;
 
 /** Commandline tool to convert the textual form of SwiftScript into
 	the XML form.
