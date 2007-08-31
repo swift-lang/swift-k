@@ -271,7 +271,7 @@ updateOptions "file:/dev/urandom" "java.security.egd"
 
 	<target name="generateVersion">
 		<echo file="libexec/version.txt">Swift v${version} </echo>
-		<exec executable="libexec/svn-revision" append="true" output="libexec/version.txt"/>
+		<exec os="Linux, Mac OS X" executable="libexec/svn-revision" append="true" output="libexec/version.txt"/>
 	</target>
 	
 	<target name="redist" depends="distclean, dist">
