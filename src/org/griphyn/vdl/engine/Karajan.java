@@ -12,7 +12,6 @@ import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
-import org.globus.swift.parser.VDLExpression;
 import org.griphyn.vdl.model.ActualParameter;
 import org.griphyn.vdl.model.ApplicationBinding;
 import org.griphyn.vdl.model.Argument;
@@ -43,6 +42,7 @@ import org.griphyn.vdl.model.ProgramDocument.Program;
 import org.griphyn.vdl.model.Switch.Case;
 import org.griphyn.vdl.model.Switch.Default;
 import org.griphyn.vdl.model.TypesDocument.Types;
+import org.griphyn.vdl.util.VDLExpression;
 import org.safehaus.uuid.UUIDGenerator;
 
 public class Karajan {
