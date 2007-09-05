@@ -3,6 +3,7 @@ package org.griphyn.vdl.engine;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -12,32 +13,11 @@ import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
-import org.griphyn.vdl.model.ActualParameter;
-import org.griphyn.vdl.model.ApplicationBinding;
-import org.griphyn.vdl.model.Argument;
-import org.griphyn.vdl.model.Array;
-import org.griphyn.vdl.model.Assign;
-import org.griphyn.vdl.model.Binding;
-import org.griphyn.vdl.model.Call;
-import org.griphyn.vdl.model.Continue;
-import org.griphyn.vdl.model.Dataset;
-import org.griphyn.vdl.model.Foreach;
-import org.griphyn.vdl.model.FormalParameter;
-import org.griphyn.vdl.model.Function;
-import org.griphyn.vdl.model.FunctionArgument;
-import org.griphyn.vdl.model.If;
-import org.griphyn.vdl.model.Procedure;
-import org.griphyn.vdl.model.ProgramDocument;
-import org.griphyn.vdl.model.Range;
-import org.griphyn.vdl.model.Repeat;
-import org.griphyn.vdl.model.Switch;
-import org.griphyn.vdl.model.Variable;
-import org.griphyn.vdl.model.While;
+import org.griphyn.vdl.model.*;
 import org.griphyn.vdl.model.Dataset.Mapping;
 import org.griphyn.vdl.model.Dataset.Mapping.Param;
 import org.griphyn.vdl.model.If.Else;
 import org.griphyn.vdl.model.If.Then;
-import org.griphyn.vdl.model.Procedure;
 import org.griphyn.vdl.model.ProgramDocument.Program;
 import org.griphyn.vdl.model.Switch.Case;
 import org.griphyn.vdl.model.Switch.Default;
@@ -47,30 +27,31 @@ import org.safehaus.uuid.UUIDGenerator;
 
 public class Karajan {
 	public static final Logger logger = Logger.getLogger(Karajan.class);
+	
+	public static final String TEMPLATE_FILE_NAME = "Karajan.stg"; 
 
 	StringTemplateGroup m_templates;
 	VDLExpression m_exprParser;
 
 	public static void main(String[] args) throws Exception {
-		Karajan me = new Karajan();
-		String templateFileName = "Karajan.stg";
-
 		if (args.length < 1) {
 			System.err.println("Please provide a SwiftScript program file.");
 			System.exit(1);
 		}
-
-		String defs = args[0];
-
+		compile(args[0], System.out);
+	}
+	
+	public static void compile(String in, PrintStream out) throws Exception {
+		Karajan me = new Karajan();
 		StringTemplateGroup templates = new StringTemplateGroup(new InputStreamReader(
-				Karajan.class.getClassLoader().getResource(templateFileName).openStream()));
+				Karajan.class.getClassLoader().getResource(TEMPLATE_FILE_NAME).openStream()));
 
-		ProgramDocument programDoc = ProgramDocument.Factory.parse(new File(defs));
+		ProgramDocument programDoc = ProgramDocument.Factory.parse(new File(in));
 		Program prog = programDoc.getProgram();
 
 		me.setTemplateGroup(templates);
 		StringTemplate code = me.program(prog);
-		System.out.println(code.toString());
+		out.println(code.toString());
 	}
 
 	public Karajan() {
