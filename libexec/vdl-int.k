@@ -64,16 +64,22 @@ namespace("vdl"
 			)
 		)
 		
-		element(checkExitCode, [rhost, tmpdir, jobdir, tr]
-			if(
-				file:exists("{tmpdir}/exitcode", host=rhost) then(
-					task:transfer(srchost=rhost, srcdir=tmpdir, srcfile="exitcode",
-						destfile="{jobdir}-exitcode")
-						
-					exitcode := str:strip(file:read("{jobdir}-exitcode"))
-					file:remove("{jobdir}-exitcode")
-													
-					throw("Job {tr} failed with an exit code of {exitcode}")
+		element(checkJobStatus, [rhost, wfdir, jobid, tr]
+			try(
+				sequential(
+					file:remove("{wfdir}/status/{jobid}-success", host=rhost)
+					log(LOG:INFO, "Job {jobid} succeeded")
+				)
+				if(
+					file:exists("{wfdir}/status/{jobid}-error", host=rhost) then(
+						task:transfer(srchost=rhost, srcdir="{wfdir}/status", srcfile="{jobid}-error")
+						error := str:strip(file:read("{jobid}-error"))
+						file:remove("{jobid}-error")
+						throw(error)
+					)
+					else (	
+						throw("No status file was found. Check the shared filesystem on {rhost}")  
+					)
 				)
 			)
 		)
@@ -85,6 +91,9 @@ namespace("vdl"
 				dir:make(sharedDir, host=rhost)
 				transfer(srcdir="{vds.home}/libexec/", srcfile="wrapper.sh", destdir=sharedDir, desthost=rhost)
 				transfer(srcdir="{vds.home}/libexec/", srcfile="seq.sh", destdir=sharedDir, desthost=rhost)
+				dir:make(dircat(wfdir, "kickstart"), host=rhost)
+				dir:make(dircat(wfdir, "status"), host=rhost)
+				dir:make(dircat(wfdir, "info"), host=rhost)
 				wfdir, sharedDir
 				//we send the cleanup data to vdl:main()
 				to(cleanup, list(wfdir, rhost))
@@ -340,7 +349,7 @@ namespace("vdl"
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
 						)
 							
-						checkExitCode(rhost, tmpdir, jobid, tr)
+						checkJobStatus(rhost, wfdir, jobid, tr)
 		
 						log(LOG:INFO, "Completed job {jobid} {tr}", maybe(" with arguments ", arguments), " on {rhost}")
 

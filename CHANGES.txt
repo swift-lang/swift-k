@@ -1,3 +1,7 @@
+(09/04/07)
+
+*** Updated wrapper to be more thorough at diagnosing problems.
+
 (08/29/07)
 
 *** Moved @arg to swiftscript namespace/package
