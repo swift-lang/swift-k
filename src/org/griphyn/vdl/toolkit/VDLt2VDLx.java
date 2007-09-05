@@ -1,6 +1,8 @@
 package org.griphyn.vdl.toolkit;
 
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.URL;
 
 import org.antlr.stringtemplate.StringTemplate;
@@ -18,35 +20,35 @@ import org.globus.swift.parser.VDLtParser;
 */
 
 public class VDLt2VDLx {
-
 	private static final Logger logger = Logger.getLogger(VDLt2VDLx.class);
+	
+	public static final String DEFAULT_TEMPLATE_FILE_NAME = "XDTM.stg";
 
 	public static void main(String[] args) throws Exception {
 		try {
-			compile(args);
+			if (args.length == 0) {
+				compile(System.in, System.out);
+			}
+			else if (args.length == 1) {
+				compile(args[0], System.in, System.out);
+			}
+			else {
+				System.err.println("VDLt2VDLx: Too many parameters specified - expecting a single template filename");
+				System.exit(2);
+			}
 		} catch(ParsingException e) {
 			System.exit(1);
-		} catch(IncorrectInvocationException e) {
-			System.exit(2);
 		}
 		System.exit(0);
 	}
+	
+	public static int compile(InputStream in, PrintStream out) throws ParsingException {
+		return compile(DEFAULT_TEMPLATE_FILE_NAME, in, out);
+	}
 
-	public static int compile(String[] args) 
-        throws ParsingException, IncorrectInvocationException {
+	public static int compile(String templateFileName, InputStream in, PrintStream out) 
+        throws ParsingException {
 		try {
-			String templateFileName = null;
-			switch(args.length) {
-			case 0:
-				templateFileName = "XDTM.stg";
-				break;
-			case 1:
-				templateFileName = args[0];
-				break;
-			default:
-				System.err.println("VDLt2VDLx: Too many parameters specified - expecting a single template filename");
-				throw new IncorrectInvocationException();
-			}
 			StringTemplateGroup templates;
 			URL template = VDLt2VDLx.class.getClassLoader().getResource(templateFileName);
 			if (template == null) {
@@ -54,11 +56,11 @@ public class VDLt2VDLx {
 						templateFileName + ") not found on class path"); 
 			}
 			templates = new StringTemplateGroup(new InputStreamReader(template.openStream()));
-			VDLtLexer lexer = new VDLtLexer(System.in);
+			VDLtLexer lexer = new VDLtLexer(in);
 			VDLtParser parser = new VDLtParser(lexer);
 			parser.setTemplateGroup(templates);
 			StringTemplate code = parser.program();
-			System.out.println(code.toString());
+			out.println(code.toString());
 		} catch(Exception e) {
 			logger.error("Could not compile SwiftScript source: "+e);
 			logger.debug("Full parser exception",e);
