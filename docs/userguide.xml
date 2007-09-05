@@ -1201,25 +1201,8 @@ the file should contain a header line specifying the names of the columns.
 								
 							<para>
 								
-								Kickstart is a useful tool that can be used to
-								gather various information about a remote
-								process. Before it can be used it must be
-								installed on the remote site and the
-								corresponding entry be set in the sites file,
-								using the <parameter>gridlaunch</parameter>
-								attribute to the <function>pool</function>
-								element:
-								
-<programlisting>
-
-&lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
-
-&lt;/pool&gt;
-
-</programlisting>
-								
 								This option allows controlling of
-								how Swift uses Kickstart. A value of
+								when Swift uses <link linkend="kickstart">Kickstart</link>. A value of
 								<literal>false</literal> disables the use of
 								Kickstart, while a value of
 								<literal>true</literal> enables the use of
@@ -1227,8 +1210,8 @@ the file should contain a header line specifying the names of the columns.
 								<filename type="file">sites.xml</filename> file
 								must have valid
 								<parameter>gridlaunch</parameter> attributes.
-								The <literal>maybe</literal> value can be used
-								to selectively enable the use of Kickstart only
+								The <literal>maybe</literal> value will
+								enable the use of Kickstart only
 								on sites that have the
 								<parameter>gridlaunch</parameter> attribute
 								specified.
@@ -1469,14 +1452,56 @@ The swift command may exit with the following return codes:
 
 	<sect1 id="kickstart"> <title>Kickstart</title>.
 		<para>
-Kickstart provides information about the execution of remote jobs, in the
-form of an XML invocation record collected on the remote system. It can be
-enabled for a site by specifying the gridstart attribute on a site in
-the site catalog. There are various configuration parameters associated
-with kickstart, documented in the engine configuration chapter. These control
-when kickstart will be used and when kickstart output will be transferred
-from the execution site to the submitting location.
+
+Kickstart is a tool that can be used to gather various information 
+about the remote execution environment for each job that Swift tries
+to run.
 		</para>
+
+		<para>
+For each job, Kickstart generates an XML <firstterm>invocation
+record</firstterm>. By default this record is staged back to the submit
+host if the job fails.
+		</para>
+
+		<para>
+Before it can be used it must be installed on the remote site and
+the sites file must be configured to point to kickstart.
+		</para>
+
+		<para>
+Kickstart can be downloaded as part of the VDS 'worker package' available
+from the worker packages section of <ulink url="http://www.ci.uchicago.edu/wiki/bin/view/VDS/VDSWeb/VDSDownload">the VDS download page</ulink>.
+		</para>
+		<para>
+Untar the relevant worker package somewhere where it is visible to the
+worker nodes on the remote execution machine (such as in a shared application
+filesystem).
+		</para>
+
+<para>Now configure the gridlaunch attribute of the sites catalog
+to point to that path, by adding a <parameter>gridlaunch</parameter>
+attribute to the <function>pool</function> element in the site
+catalog:
+
+<programlisting>
+
+&lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
+
+&lt;/pool&gt;
+
+</programlisting>
+
+		</para>
+
+		<para>
+There are various kickstat.* properties, which have sensible default
+values. These are documented in <link linkend="properties">the
+properties section</link>.
+		</para>
+
+
+
 	</sect1>
 
 	<sect1 id="restart"> <title>Workflow restart/recovery</title>
