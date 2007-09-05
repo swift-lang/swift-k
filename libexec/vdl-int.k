@@ -67,6 +67,13 @@ namespace("vdl"
 		element(checkJobStatus, [rhost, wfdir, jobid, tr]
 			try(
 				sequential(
+					/*
+					 * This is a bit of optimization, but I'm not completely
+					 * sure of its correctness. The goal is to both detect
+					 * the presence of the success file and remove it, all
+					 * in one operation. It relies on file:remove() throwing 
+					 * an exception if the file is not there. 
+					 */
 					file:remove("{wfdir}/status/{jobid}-success", host=rhost)
 					log(LOG:INFO, "Job {jobid} succeeded")
 				)
