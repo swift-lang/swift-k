@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -183,32 +182,20 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		File kml = new File(projectBase + ".kml");
 
 		if (dtm.lastModified() > kml.lastModified()) {
-
 			logger.info(project + ": source file is new. Recompiling.");
-
-			InputStream stdin = System.in;
-			PrintStream stdout = System.out;
-			System.setIn(new FileInputStream(dtm));
-			System.setOut(new PrintStream(new FileOutputStream(xml)));
-			VDLt2VDLx.compile(new String[0]);
-			System.setIn(stdin);
+			VDLt2VDLx.compile(new FileInputStream(dtm), new PrintStream(new FileOutputStream(xml)));
 
 			try {
 				FileOutputStream f = new FileOutputStream(kml);
-				System.setOut(new PrintStream(f));
-				Karajan.main(new String[] { xml.getAbsolutePath() });
-				System.setOut(stdout);
+				Karajan.compile(xml.getAbsolutePath(), new PrintStream(f));
 				f.close();
 			} 
 			catch(Exception e) {
-
 				// if we leave a kml file around, then a subsequent
 				// re-run will skip recompiling and cause a different
 				// error message for the user
 				kml.delete();
-
 				throw new RuntimeException("Failed to convert .xml to .kml for "+project,e);
-
 			}
 		} 
 		else {
