@@ -264,7 +264,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				ArgumentParser.OPTIONAL);
 		ap.addOption(
 				ARG_INSTANCE_CONFIG,
-				"Indicates the VDL2 configuration file to be used for this run."
+				"Indicates the Swift configuration file to be used for this run."
 						+ " Properties in this configuration file will override the default properties. "
 						+ "If individual command line arguments are used for properties, they will override "
 						+ "the contents of this file.", "file", ArgumentParser.OPTIONAL);
