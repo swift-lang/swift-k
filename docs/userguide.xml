@@ -1514,6 +1514,30 @@ parameter. Swift will resume executing the workflow. Previously executed
 tasks will not be run a second time. The SwiftScript source file should
 not be modified between invocations.
 		</para>
+		<para>
+Every execution of a workflow creates a restart
+log file with a named composed of the file name of the workflow
+being executed, an invocation ID, a numeric ID, and the <filename
+class="file">.rlog</filename> extension. For example, <filename
+class="file">example.swift</filename>, when executed, could produce
+the following restart log file: <filename
+class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
+the workflow completes successfully, the restart log file is
+deleted. If however the workflow fails, <command>swift</command>
+allows the possibility of using the restart log file to continue the
+execution of the workflow from the last consistent point before the
+failure occurred. In order to restart a workflow from a restart log
+file, the <option>-resume <parameter><filename
+class="file">logfile</filename></parameter></option> argument can be
+used after the compiled workflow file name. Example:
+
+<programlisting>
+<prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
+class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
+class="file">example.swift</filename></option>.
+</programlisting>
+
+		</para>
 	</sect1> 
 
 	<sect1> <title>Invoking an application from Swift</title>.
