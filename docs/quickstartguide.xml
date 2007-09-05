@@ -134,12 +134,12 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 			configure various aspects of the environment required by Swift.
 		
 		</para>
-		
-		<sect2 id="certs">
-	
-			<title>User Certificate</title>
-			<para>When submitting jobs to a remote machine (rather than
-				executing locally), Swift makes use of the
+		<sect2 id="security"><title>Grid Security</title>
+			<para>For local execution of jobs, no grid security configuration
+				is necessary.
+			</para>
+			<para>However, when submitting jobs to a remote machine using Globus
+				Toolkit services, Swift makes use of the
 				<ulink
 				url="http://www.globus.org/toolkit/docs/4.0/security/key-index.html">
 				Grid Security Infrastructure (GSI)</ulink> for authentication
@@ -147,7 +147,11 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 				the following sections. Note that GSI is not required to be
 				configured for local execution (which will usually be the
 				case when first starting with Swift).
-            </para>
+			</para>
+
+		<sect3 id="certs">
+	
+			<title>User Certificate</title>
 			<para>
 			
 				GSI requires a certificate/private key
@@ -161,9 +165,9 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 			
 			</para>
 		
-		</sect2>
+		</sect3>
 		
-		<sect2 id="cas">
+		<sect3 id="cas">
 		
 			<title>Certificate Authorities Root Certificates</title>
 			
@@ -185,6 +189,7 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 			
 			</para>
 		
+		</sect3>
 		</sect2>
 				
 		<sect2>
