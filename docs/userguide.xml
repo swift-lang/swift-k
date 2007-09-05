@@ -1487,7 +1487,7 @@ catalog:
 <programlisting>
 
 &lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
-
+[...]
 &lt;/pool&gt;
 
 </programlisting>
