@@ -1,13 +1,24 @@
+Swift Documentation
+===================
+
 General principles:
+
  - sections and subsections are ordered from <sect1>, <sect2>, etc
  - the code is inputted as <programlisting>
  - be careful to escape in-text "<" to "&lt;"
 
-Generate the html with:
-$ xsltproc formatting/custom_html.xsl userguide.xml
 
-Generate the PDF with: (fop can be downloaded from the APACHE project)
-$ fop -xsl formatting/custom_fo.xsl -xml userguide.xml -pdf userguide.pdf
+The first time guides are built in a particular checkout, it is necessary
+to place the docbook formatting stylesheets under the formatting/docbook/
+directory. This can be done with a symlink if docbook is installed elsewhere.
 
-IMPORTANT:
-You need to modify the custom_fo.xsl because currently it uses MAC OSX file locations for FO Stylesheets
+For example, on benc's os x machine:
+
+$ cd formatting
+$ ln -s /opt/local/share/xsl/docbook-xsl/ docbook
+
+
+The buildguides.sh script will build all guides. Run it with no parameters,
+like this:
+
+$ ./buildguides.sh
