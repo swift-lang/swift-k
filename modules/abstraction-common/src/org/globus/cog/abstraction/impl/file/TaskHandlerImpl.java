@@ -275,7 +275,13 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
         Object output = null;
         //FileOperationSpecification commands are lowercase
         String operation = spec.getOperation().toLowerCase();
+        String cwd = null;
+        String taskCwd = (String) spec.getAttribute("cwd");
         try {
+            if (taskCwd != null) {
+                cwd = fileResource.getCurrentDirectory();
+                fileResource.setCurrentDirectory(taskCwd);
+            }
             if (operation.equals(FileOperationSpecification.LS)
                     && spec.getArgumentSize() == 0) {
                 output = fileResource.list();
@@ -362,10 +368,14 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
                 fileResource.changeMode(spec.getArgument(0), Integer.valueOf(
                         spec.getArgument(1)).intValue());
             }
+            fileResource.setCurrentDirectory(cwd);
             return output;
         }
         finally {
             // System.err.println(operation + " - " + Thread.currentThread());
+            if (cwd != null) {
+                fileResource.setCurrentDirectory(cwd);
+            }
         }
     }
 
