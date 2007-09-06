@@ -51,6 +51,9 @@ public abstract class AbstractFileOperation extends AbstractGridNode {
 			
 			String provider = TypeUtil.toString(OA_PROVIDER.getValue(stack));
 			Contact host = getHost(stack, OA_HOST, scheduler, provider);
+			if (host.equals(BoundContact.LOCALHOST)) {
+				spec.setAttribute("cwd", stack.getExecutionContext().getCwd());
+			}
 			
 			if (scheduler == null) {
 				task.setService(0, getService((BoundContact) host, provider));
