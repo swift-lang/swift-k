@@ -1,21 +1,22 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <procedure name="generate">
-    <output name="f" type="file"/>
-    <input name="p1" type="float"/>
+
+      <output 
+    name="f" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="p1" type="float"
+
+     xsi:nil="true" />
     <binding>
       <application>
         <executable>generate</executable>
-        <argument>&quot;-aTOP -T4&quot;</argument>
-        <argument>&quot;-p&quot;</argument>
-        <argument>p1</argument>
-        <argument>&quot;-o&quot;</argument>
-        <argument><function name="filename">
-        <argument>
-          f
-        </argument></function></argument>
-      </application>
+        <stringConstant>-aTOP -T4</stringConstant><stringConstant>-p</stringConstant><variableReference>p1</variableReference><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
 </program>

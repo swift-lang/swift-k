@@ -9,7 +9,7 @@ program(namespaces,targetNS,functions,types,statements) ::= <<
      $namespaces;separator="\n"$>$endif$
   $if(types)$
   <types>
-    <xs:schema xmlns=$defaultNS(targetNS)$ targetNamespace=$defaultNS(targetNS)$>
+    <xs:schema targetNamespace=$defaultNS(targetNS)$>
      $types;separator="\n"$
     </xs:schema>
   </types>
@@ -21,7 +21,7 @@ program(namespaces,targetNS,functions,types,statements) ::= <<
 
 defaultNS(ns) ::= <<
 $if(ns)$"$ns$"$else$
-"http://www.griphyn.org/2006/08/vdl"
+"http://ci.uchicago.edu/swift/2007/07/swiftscript"
 $endif$
 >>
 
@@ -53,7 +53,7 @@ $endif$
 $endif$
 >>
 
-member(type,name, isArray) ::= <<
+memberdefinition(type,name, isArray) ::= <<
 $if(isArray)$
 <xs:sequence minOccurs="0" maxOccurs="unbounded">
   <xs:element name="$name$" type="$if(type.name)$$type$$else$xs:$type$$endif$"/>
@@ -64,7 +64,7 @@ $endif$
 >>
 
 variable(type,name, isArray, value) ::= <<
-<variable name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(!value)$/>$else$>$value$</variable>
+<variable name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(!value)$ xsi:nil="true"/>$else$>$value$</variable>
 $endif$
 >>
 
@@ -99,18 +99,18 @@ $if(range)$
 $else$
 
   <array>
-    $elements:element();separator="\n"$
+    $elements$
   </array>
 
 $endif$
 >>
 
-element() ::= <<
-<element>$it$</element>
->>
-
 range(from, to, step) ::= <<
-<range from="$from$" to="$to$"$if(step)$ step="$step$"$endif$/>
+<range>
+  $from$
+  $to$
+  $if(step)$$step$$endif$
+</range>
 >>
 
 function(name,outputs,inputs,statements,config) ::= <<
@@ -142,12 +142,28 @@ returnParam(type,name,bind) ::= <<
 actualParam(value,bind) ::= <<
 <input$if (bind)$ bind="$bind$"$endif$>$value$</input>
 >>
-  
+
 parameter(type,name,outlink,isArray,defaultv) ::= <<
+
 $if(outlink)$
-<output name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(defaultv)$ default="$defaultv$"$endif$/>
+  <output 
 $else$
-<input name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(defaultv)$ default="$defaultv$"$endif$/>
+  <input 
+$endif$
+
+name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$
+
+$if(defaultv)$> 
+$defaultv$
+
+$if(outlink)$
+  </output>
+$else$
+  </input>
+$endif$
+
+$else$
+ xsi:nil="true" />
 $endif$
 >>
 
@@ -155,28 +171,20 @@ app(exec,arguments,stdio) ::= <<
 <binding>
   <application>
     <executable>$exec$</executable>
-$if(arguments)$
-    $arguments:argument();separator="\n"$
-
-$endif$
 $if(stdio)$
     $stdio;separator="\n"$
-
+$endif$
+$if(arguments)$
+    $arguments$
 $endif$
   </application>
 </binding>
 >>
 
-argument() ::= <<
-<argument>$it$</argument>
->>
-
 functionInvocation(name,args) ::= <<
 <function name="$name$">
 $if(args)$
-<argument>
-  $args;separator="</argument><argument>"$
-</argument>
+  $args$
 $endif$
 </function>
 >>
@@ -200,7 +208,8 @@ statementList(statements) ::= <<
 >>
 
 if(cond,body,els) ::= <<
-<if test="$cond$">
+<if>
+  $cond$
   <then>
   $body$
   </then>
@@ -208,7 +217,6 @@ $if(els)$
   <else>
   $els$
   </else>
-
 $endif$
 </if>
 >>
@@ -218,21 +226,26 @@ $if(variables)$
 $variables$
 
 $endif$
-<foreach var="$var$" in="$in$"$if(index)$ indexVar="$index$"$endif$>
-$body$
+<foreach var="$var$" $if(index)$ indexVar="$index$"$endif$>
+<in>$in$</in>
+<body>$body$</body>
 </foreach>
 >>
 
 switch(cond,cases) ::= <<
-<switch test="$cond$">
+<switch>
+  $cond$
   $cases;separator="\n"$
 </switch>
 >>
 
 case(value, statements) ::= <<
 $if(value)$
-<case value="$value$">
+<case>
+  $value$
+  <statements>
   $statements;separator="\n"$
+  </statements>
 </case>
 $else$
 <default>
@@ -258,38 +271,53 @@ continue() ::= <<
 >>
 
 assign(lhs,rhs) ::= <<
-<assign to="$lhs$">$rhs$</assign>
+<assign>
+ $lhs$
+ $rhs$
+</assign>
 >>
 
-id(var,path) ::= <<
-$if(path)$
-$var$.$path$
-$else$
-$var$
-$endif$
+arraySubscript(array, subscript) ::= <<
+<arraySubscript>
+ $array$
+ $subscript$
+</arraySubscript>
 >>
 
-subscript(var,index) ::= <<
-$if(index)$
-$var$[$index$]
-$else$
-$var$
-$endif$
+memberAccess(structure,name) ::= <<
+<structureMember>
+  $structure$
+  <memberName>$name$</memberName>
+</structureMember>
 >>
 
-unary(sign,exp) ::= "$sign$$exp$"
+unaryNegation(exp) ::= <<
+<unaryNegation>
+  $exp$
+</unaryNegation>
+>>
 
-cond(op,left,right) ::= "$left$ $op$ $right$"
+cond(op,left,right) ::= <<
+<cond op="$op$">
+  $left$
+  $right$
+</cond>
+>>
 
-and(left,right) ::= "$left$ &amp;&amp; $right$"
+and(left,right) ::= "<and><left>$left$</left><right>$right$</right></and>"
 
-or(left, right) ::= "$left$ || $right$"
+or(left, right) ::= "<or><left>$left$</left><right>$right$</right></or>"
 
-not(exp) ::= "!$exp$"
+not(exp) ::= "<not>$exp$</not>"
 
-arith(op, left,right) ::= "$left$ $op$ $right$"
+arith(op, left,right) ::= <<
+<arith op="$op$">
+  $left$
+  $right$
+</arith>
+>>
 
-paren(exp) ::= "($exp$)"
+paren(exp) ::= "$exp$"
 
 type_int() ::= "int"
 type_string() ::= "string"
@@ -298,15 +326,15 @@ type_bool() ::= "bool"
 
 type_user_object(name) ::= "$name$"
 
-iConst(value) ::= "$value$"
+variableReference(name) ::= "<variableReference>$name$</variableReference>"
 
-fConst(value) ::= "$value$"
+iConst(value) ::= "<integerConstant>$value$</integerConstant>"
 
-bConst(value) ::= "$value$"
+fConst(value) ::= "<floatConstant>$value$</floatConstant>"
 
-sConst(value,innervalue) ::= "$value$"
+bConst(value) ::= "<booleanConstant>$value$</booleanConstant>"
 
-null() ::= "null"
+sConst(value) ::= "<stringConstant>$value$</stringConstant>"
 
 blank() ::= ""
 

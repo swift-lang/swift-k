@@ -56,7 +56,7 @@ public class New extends VDLFunction {
 		try {
 			Type type;
 			if (typename == null) {
-				type = inferType(value);
+throw new ExecutionException("vdl:new requires a type specification for value "+value);
 			}
 			else {
 				type = Types.getType(typename);
@@ -111,9 +111,8 @@ public class New extends VDLFunction {
 				}
 			}
 			else {
-				handle = new RootDataNode(inferType(value));
-				handle.setValue(internalValue(handle.getType(), value));
-				closeShallow(stack, handle);
+// TODO when do we hit this case?
+throw new ExecutionException("vdl:new requires a type specification for value "+value);
 			}
 			return handle;
 		}

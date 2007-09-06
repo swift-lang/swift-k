@@ -42,35 +42,6 @@ String quote(String s) {
     return s.replaceAll("\"", "&quot;");
 }
 
-void setReturnVariables(StringTemplate container, StringTemplate statement) {
-
-    if (!statement.getName().equals("call"))
-        throw new RuntimeException("setReturnVariables happened on template "+statement.getName());
-
-    Object outputs = statement.getAttribute("outputs");
-
-    if (outputs == null)
-        return;
-
-    if (outputs instanceof List) {
-        for (Iterator it=((List)outputs).iterator(); it.hasNext();) {
-            setReturnVariable(container, (StringTemplate) it.next());
-        }
-    } else {
-        setReturnVariable(container, (StringTemplate) outputs);
-    }
-}
-
-void setReturnVariable(StringTemplate container, StringTemplate param) {
-        Object type = param.getAttribute("type");
-        if (type != null) {
-            StringTemplate var = template("variable");
-            var.setAttribute("name", param.getAttribute("name"));
-            var.setAttribute("type", type);
-            container.setAttribute("statements", var);
-         }
-}
-
 }
 
 // The specification for a VDL program
@@ -114,7 +85,7 @@ structdecl [StringTemplate code]
     :   LCURLY
     (t=type id:ID
     {
-    e=template("member");
+    e=template("memberdefinition");
     e.setAttribute("type", t);
     e.setAttribute("name", id.getText());
     }
@@ -124,7 +95,7 @@ structdecl [StringTemplate code]
         COMMA
         id1:ID
         {
-        e1=template("member");
+        e1=template("memberdefinition");
         e1.setAttribute("type", t);
         e1.setAttribute("name", id1.getText());
         }
@@ -174,11 +145,7 @@ topLevelStatement[StringTemplate code]
         code.setAttribute("statements",d);
        }
 
-    |   (procedurecallStatAssignManyReturnParam) => d=procedurecallStatAssignManyReturnParam
-       {
-        code.setAttribute("statements",d);
-        setReturnVariables(code,d);
-       }
+    |   (procedurecallStatAssignManyReturnParam[code]) => procedurecallStatAssignManyReturnParam[code]
 
 // this is a declaration, but not sorted out the predications yet to
 // group it into a decl block
@@ -232,12 +199,7 @@ declarator returns [StringTemplate code=null]
     ;
 
 varInitializer returns [StringTemplate code=null]
-    :    ( ASSIGN code=initializer )?
-    ;
-
-initializer returns [StringTemplate code=null]
-    :   code=expression
-    | code=arrayInitializer
+    :    ( ASSIGN code=expression )?
     ;
 
 // This is an initializer used to set up an array.
@@ -434,18 +396,17 @@ innerStatement[StringTemplate code]
        {
         code.setAttribute("statements",s);
        })
-    |  (procedurecallStatAssignManyReturnParam) => s=procedurecallStatAssignManyReturnParam
-       {
-        code.setAttribute("statements",s);
-        setReturnVariables(code,s);
-       }
+    |  (procedurecallStatAssignManyReturnParam[code]) => procedurecallStatAssignManyReturnParam[code]
     ;
 
-caseInnerStatement returns [StringTemplate code=null]
-    :  code=ll1statement
+caseInnerStatement [StringTemplate statements]
+{ StringTemplate code = null; }
+    :
+    (  code=ll1statement
     |  (procedurecallCode) => code=procedurecallCode
-    |   (procedurecallStatAssignManyReturnParam) => code=procedurecallStatAssignManyReturnParam
     |  (predictAssignStat) => code=assignStat
+    ) {statements.setAttribute("statements",code);}
+    |   (procedurecallStatAssignManyReturnParam[statements]) => procedurecallStatAssignManyReturnParam[statements]
     ;
 
 // These are the statements that we can predict with ll(1) grammer
@@ -566,7 +527,7 @@ aCase [StringTemplate code]
 
 caseSList [StringTemplate code]
 {StringTemplate s=null;}
-    :    (s=caseInnerStatement {code.setAttribute("statements", s);})*
+    :    ( caseInnerStatement[code] )*
     ;
 
 predictAssignStat
@@ -595,7 +556,7 @@ assignStat returns [StringTemplate code=null]
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
     :
-    e=initializer SEMI
+    e=expression SEMI
         {
             code=template("assign");
             code.setAttribute("rhs", e);
@@ -634,15 +595,22 @@ predictProcedurecallDecl
 { StringTemplate dummy=template("call"); }
     : ASSIGN procedureInvocation[dummy] ;
 
-procedurecallDecl [StringTemplate x, StringTemplate t, StringTemplate d]
+procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl]
 {
 StringTemplate code=template("call");
 StringTemplate f=template("returnParam");
+
+StringTemplate var = template("variable");
+var.setAttribute("name", decl);
+var.setAttribute("type", type);
+container.setAttribute("statements", var);
+
+StringTemplate declref=template("variableReference");
+declref.setAttribute("name",decl);
+f.setAttribute("name", declref);
 code.setAttribute("outputs", f);
-f.setAttribute("type", t);
-f.setAttribute("name", d);
-x.setAttribute("statements",code);
-setReturnVariables(x, code);
+container.setAttribute("statements",code);
+
 }
     :
         ASSIGN
@@ -651,23 +619,40 @@ setReturnVariables(x, code);
 
 
 
-
-procedurecallStatAssignManyReturnParam returns [StringTemplate code=template("call")]
-{StringTemplate f=null;}
+procedurecallStatAssignManyReturnParam [StringTemplate s]
+{ StringTemplate code=template("call"); StringTemplate f=null;
+  StringTemplate var=null; }
     :
         LPAREN
         f=returnParameter
               {
           code.setAttribute("outputs", f);
+          var = template("variable");
+          if(f.getAttribute("type") != null) {
+            StringTemplate nameST = (StringTemplate)f.getAttribute("name");
+            var.setAttribute("name",nameST.getAttribute("name"));
+            var.setAttribute("type",f.getAttribute("type"));
+            s.setAttribute("statements",var);
+          }
               }
               (   COMMA f=returnParameter
                   {
               code.setAttribute("outputs", f);
+              var = template("variable");
+          if(f.getAttribute("type") != null) {
+            StringTemplate nameST = (StringTemplate)f.getAttribute("name");
+            var.setAttribute("name",nameST.getAttribute("name"));
+              var.setAttribute("type",f.getAttribute("type"));
+              s.setAttribute("statements",var);
+          }
               }
               )*
         RPAREN
         ASSIGN
         procedureInvocation[code]
+        {
+            s.setAttribute("statements",code);
+        }
     ;
 
 returnParameter returns [StringTemplate code=template("returnParam")]
@@ -687,31 +672,23 @@ returnParameter returns [StringTemplate code=template("returnParam")]
 
 actualParameter returns [StringTemplate code=template("actualParam")]
 {StringTemplate d=null, id=null, ai=null;}
-    :   (
-          (declarator ASSIGN)=> (d=declarator ASSIGN)
-          {
-               code.setAttribute("bind", d);
-            }
-        )?
+    :
     (
-      id=expression
-      {
+        (declarator ASSIGN)=> (d=declarator ASSIGN)
+        {
+             code.setAttribute("bind", d);
+          }
+    )?
+    id=expression
+    {
       code.setAttribute("value", id);
-      }
-      | ai=arrayInitializer
-      {
-      code.setAttribute("value", ai);
-      }
-        )
+    }
     ;
 
 atomicBody [StringTemplate code]
 {StringTemplate app=null, svc=null;}
     :      app=appSpec
     {code.setAttribute("config",app);}
-    |
-    svc=serviceSpec
-    {code.setAttribute("config",svc);}
     ;
 
 appSpec returns [StringTemplate code=template("app")]
@@ -792,71 +769,6 @@ stdioArg [StringTemplate code]
         t.setAttribute("content", m);
         code.setAttribute("stdio", t);
     }
-    ;
-
-serviceSpec returns [StringTemplate code=template("service")]
-{
-String w=null, p=null, o=null;
-StringTemplate m=null;
-}
-    :     "service"
-    LCURLY
-    w=wsdl (p=port)? o=operation
-    {
-        code.setAttribute("wsdlURI", w);
-        if (p != null)
-            code.setAttribute("portType", p);
-        code.setAttribute("operation", o);
-    }
-    (
-        m=message
-        {code.setAttribute("messages", m);}
-    )*
-    RCURLY
-    ;
-
-wsdl returns [String code=null]
-    : "wsdlURI" ASSIGN u:STRING_LITERAL SEMI
-    {code=u.getText();}
-    ;
-
-port returns [String code=null]
-    : "portType" ASSIGN u:STRING_LITERAL SEMI
-    {code=u.getText();}
-    ;
-
-operation returns [String code=null]
-    : "operation" ASSIGN u:STRING_LITERAL SEMI
-    {code=u.getText();}
-    ;
-
-message returns [StringTemplate code=template("message")]
-{StringTemplate p=null, e=null;}
-    :  (
-     ("request" {code.setAttribute("type", "request");})
-     |
-     ("response" {code.setAttribute("type", "response");})
-    )
-    element:ID ASSIGN
-    {code.setAttribute("name", element.getText());}
-    (
-      (LCURLY
-        ( p=part {code.setAttribute("parts", p);} )+
-       RCURLY)
-       |
-       (e=mappingExpr {code.setAttribute("expr", e);})
-    )
-    SEMI
-    ;
-
-part returns [StringTemplate code=template("part")]
-{StringTemplate e=null;}
-    :    p:ID ASSIGN
-    {code.setAttribute("name", p.getText());}
-    (
-    e=mappingExpr {code.setAttribute("expr", e);}
-    )
-    SEMI
     ;
 
 expression returns [StringTemplate code=null]
@@ -983,9 +895,9 @@ Token op=null;
 unaryExpr returns [StringTemplate code=null]
 {StringTemplate u=null;}
     : MINUS u=unaryExpr
-      {code=template("unary"); code.setAttribute("sign", "-"); code.setAttribute("exp", u);}
-    | PLUS u=unaryExpr
-      {code=template("unary"); code.setAttribute("sign", "+"); code.setAttribute("exp", u);}
+      {code=template("unaryNegation"); code.setAttribute("exp", u);}
+    | PLUS u=unaryExpr // unary plus has no effect
+      {code=u;}
     | NOT u=unaryExpr
       {code=template("not"); code.setAttribute("exp", u);}
     | code=primExpr
@@ -1000,40 +912,66 @@ primExpr returns [StringTemplate code=null]
     | code=functionInvocation
     ;
 
+// TODO - redo identifier parsing to fit in with the XML style
+// that this patch introduces
+
+// specifically, need the base ID to be distinct from all the
+// other IDs
+
 identifier returns [StringTemplate code=null]
-{
-  String s="";
-  StringTemplate sub1=null, sub2=null, t=null, t1=null;
+{ 
+  StringTemplate c=null;
+  code=template("variableReference");
 }
-    : sub1=subscript
+    :
+    base:ID {code.setAttribute("name",base.getText());}
+    // now we can have an unbounded sequence of
+    // optional array index, then .ID
+
+    (c=arrayIndex 
       {
-    t=template("id");
-    code = t;
-    t.setAttribute("var", sub1);
+         c.setAttribute("array",code);
+         code=c;
       }
-      (d:DOT (sub2=subscript | STAR {sub2=template("subscript"); sub2.setAttribute("var","*");})
+    )?
+    (
+      c=memberName {c.setAttribute("structure",code); code=c;}
+      (c=arrayIndex
       {
-    t1=template("id");
-    t1.setAttribute("var", sub2);
-    t.setAttribute("path", t1);
-    t=t1;
+         c.setAttribute("array",code);
+         code=c;
       }
-      )*
+      )?
+    )*
+
     ;
 
-subscript returns [StringTemplate code=null]
-{StringTemplate e=null, s=null;}
-    : id:ID (LBRACK (e=expression | t:STAR) RBRACK)?
-      {
-    code=template("subscript");
-    code.setAttribute("var", id.getText());
-    if (e != null) code.setAttribute("index", e);
-    if (t != null)
-    { s=template("sConst");
-      s.setAttribute("value", "*");
-      code.setAttribute("index", s);
-    }
+
+arrayIndex returns [StringTemplate code=null]
+{StringTemplate e=null;}
+    :
+    LBRACK
+    (e=expression | s:STAR)
+    RBRACK
+    {
+      code=template("arraySubscript");
+      if(e != null) code.setAttribute("subscript",e);
+      if(s != null) {
+        StringTemplate st = template("sConst");
+        st.setAttribute("value","*");
+        code.setAttribute("subscript",st);
       }
+    }
+    ;
+
+memberName returns [StringTemplate code=null]
+    :
+    d:DOT (member:ID | s:STAR)
+    {
+      code=template("memberAccess");
+      if(member != null) code.setAttribute("name",member.getText());
+      if(s != null) code.setAttribute("name","*");
+    }
     ;
 
 constant returns [StringTemplate code=null]
@@ -1050,8 +988,7 @@ constant returns [StringTemplate code=null]
     | s:STRING_LITERAL
       {
         code=template("sConst");
-        code.setAttribute("value",quote("\""+s.getText()+"\""));
-        code.setAttribute("innervalue",quote(s.getText()));
+        code.setAttribute("value",quote(s.getText()));
       }
     | t:"true"
       {
@@ -1067,7 +1004,10 @@ constant returns [StringTemplate code=null]
       {
         code=template("null");
       }
+    | code=arrayInitializer
     ;
+
+// TODO ^^^^^^ array literal -- rename and rearrange the methods
 
 class VDLtLexer extends Lexer;
 

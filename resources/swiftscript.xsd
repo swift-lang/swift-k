@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
-           targetNamespace="http://www.griphyn.org/2006/08/vdl" version="1.0"
-           xmlns="http://www.griphyn.org/2006/08/vdl"
+           version="1.0"
+           targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript" 
+           xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns:ns="http://www.griphyn.org/2006/08/vdl">
+           xmlns:ns="http://ci.uchicago.edu/swift/2007/07/swiftscript">
   <xs:annotation>
-    <xs:documentation>This XML schema defines the structures of key VDL
-    elements</xs:documentation>
+    <xs:documentation>The XML form of SwiftScript</xs:documentation>
   </xs:annotation>
 
   <xs:element name="program">
@@ -45,7 +45,8 @@
           types</xs:documentation>
         </xs:annotation>
 
-        <xs:any maxOccurs="unbounded" minOccurs="0" namespace="##other"
+        <xs:any maxOccurs="unbounded" minOccurs="0"
+                namespace="http://www.w3.org/2001/XMLSchema"
                 processContents="lax"/>
       </xs:sequence>
     </xs:complexType>
@@ -66,18 +67,18 @@
         </xs:annotation>
 
         <xs:element maxOccurs="unbounded" minOccurs="0" name="output"
-                    type="FormalParameter">
+                    type="FormalParameter" nillable="true">
           <xs:annotation>
-            <xs:documentation>specify an output parameter of the procedure,
-            there can be multiple outputs</xs:documentation>
+            <xs:documentation>specify an output parameter of the procedure
+            </xs:documentation>
           </xs:annotation>
         </xs:element>
 
         <xs:element maxOccurs="unbounded" minOccurs="0" name="input"
-                    type="FormalParameter">
+                    type="FormalParameter" nillable="true">
           <xs:annotation>
-            <xs:documentation>specifies an input parameter to the procedure,
-            there can be multiple inputs</xs:documentation>
+            <xs:documentation>specifies an input parameter to the procedure
+            </xs:documentation>
           </xs:annotation>
         </xs:element>
       </xs:sequence>
@@ -114,20 +115,23 @@
       optional default value</xs:documentation>
     </xs:annotation>
 
+    <xs:sequence>
+      <xs:element ref="abstractExpression"/>
+    </xs:sequence>
+
     <xs:attribute name="name" type="xs:NCName" use="required"/>
 
     <xs:attribute name="type" type="xs:QName" use="required"/>
 
     <xs:attribute default="false" name="isArray" type="xs:boolean"/>
 
-    <xs:attribute name="default" type="xs:string"/>
   </xs:complexType>
 
   <xs:complexType name="Binding">
     <xs:annotation>
       <xs:documentation>specifies the binding of an atomic procedure to its
-      implementation, which can be either an application or a Web
-      service</xs:documentation>
+      implementation, which can be either an application or in future
+      potentially a web service</xs:documentation>
     </xs:annotation>
 
     <xs:choice>
@@ -143,46 +147,41 @@
     </xs:annotation>
 
     <xs:sequence>
-      <xs:element name="executable">
+      <xs:element name="executable" type="xs:string">
         <xs:annotation>
-          <xs:documentation>Specifies the location and name of the
+          <xs:documentation>Specifies name of the
           application</xs:documentation>
         </xs:annotation>
       </xs:element>
 
       <xs:sequence>
-        <xs:sequence maxOccurs="unbounded" minOccurs="0">
-          <xs:element name="argument" type="Argument"/>
-        </xs:sequence>
 
-        <xs:element minOccurs="0" name="stdin" type="Argument">
+        <xs:element minOccurs="0" name="stdin" type="UnlabelledUnaryOperator">
           <xs:annotation>
             <xs:documentation>Specifies redirection mapping for
             stdin</xs:documentation>
           </xs:annotation>
         </xs:element>
 
-        <xs:element minOccurs="0" name="stdout" type="Argument">
+        <xs:element minOccurs="0" name="stdout" type="UnlabelledUnaryOperator">
           <xs:annotation>
             <xs:documentation>Specifies redirection mapping for
             stdout</xs:documentation>
           </xs:annotation>
         </xs:element>
 
-        <xs:element minOccurs="0" name="stderr" type="Argument">
+        <xs:element minOccurs="0" name="stderr" type="UnlabelledUnaryOperator">
           <xs:annotation>
             <xs:documentation>Specifies redirection mapping for
             stderr</xs:documentation>
           </xs:annotation>
         </xs:element>
 
-      </xs:sequence>
-    </xs:sequence>
-  </xs:complexType>
+        <xs:sequence maxOccurs="unbounded" minOccurs="0">
+          <xs:element ref="abstractExpression"/>
+        </xs:sequence>
 
-  <xs:complexType mixed="true" name="Argument">
-    <xs:sequence maxOccurs="unbounded">
-      <xs:group ref="ArgumentGroup"/>
+      </xs:sequence>
     </xs:sequence>
   </xs:complexType>
 
@@ -192,12 +191,6 @@
     </xs:sequence>
   </xs:group>
 
-  <xs:complexType mixed="true" name="FunctionArgument">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="function" type="Function"/>
-    </xs:sequence>
-  </xs:complexType>
-
   <xs:complexType name="Function">
     <xs:annotation>
       <xs:documentation>A mapping function, the parameters to the function
@@ -205,8 +198,7 @@
     </xs:annotation>
 
     <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="unbounded" name="argument"
-        type="FunctionArgument" />
+      <xs:element minOccurs="0" maxOccurs="unbounded" ref="abstractExpression" />
     </xs:sequence>
 
     <xs:attribute name="name" type="xs:NMTOKEN">
@@ -220,7 +212,7 @@
     <xs:annotation>
       <xs:documentation>profile specifies configuration information pertaining
       to the execution of the application or service. For instance,
-      environment variables, Globus config, etc...</xs:documentation>
+      environment variables, Globus config, etc... TODO tighten this typing</xs:documentation>
     </xs:annotation>
 
     <xs:sequence maxOccurs="unbounded" minOccurs="0">
@@ -244,42 +236,34 @@
     </xs:annotation>
 
     <xs:sequence maxOccurs="unbounded" minOccurs="0">
-      <xs:element name="element"/>
+      <xs:element ref="abstractExpression"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="Range">
+
     <xs:annotation>
       <xs:documentation>defines a range, which is a set of values within an
       inclusive range.</xs:documentation>
     </xs:annotation>
 
-    <xs:attribute name="from" use="required"/>
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="3"/>
+    </xs:sequence>
 
-    <xs:attribute name="to" use="required"/>
-
-    <xs:attribute name="step"/>
   </xs:complexType>
 
-  <xs:complexType mixed="true" name="Variable">
+  <xs:complexType name="Variable">
     <xs:annotation>
       <xs:documentation>defines a variable, which has a name, a type, and it
-      may be a collection (an array) and may have an associated initial
-      value.</xs:documentation>
+      may be an array and may have an associated initial value.
+      </xs:documentation>
     </xs:annotation>
-
-    <xs:choice maxOccurs="1" minOccurs="0">
-      <xs:element name="array" type="Array"/>
-
-      <xs:element name="range" type="Range"/>
-
-      <xs:element name="function" type="Function"/>
-    </xs:choice>
-
+    <xs:sequence>
+        <xs:element ref="abstractExpression" />
+    </xs:sequence>
     <xs:attribute name="name" type="xs:NCName" use="required"/>
-
     <xs:attribute name="type" type="xs:QName" use="required"/>
-
     <xs:attribute name="isArray" type="xs:boolean"/>
   </xs:complexType>
 
@@ -306,14 +290,11 @@
         <xs:complexType>
           <xs:sequence maxOccurs="unbounded" minOccurs="0">
             <xs:element name="param">
-              <xs:complexType mixed="true">
-                <xs:sequence maxOccurs="unbounded" minOccurs="0">
-                  <xs:group ref="ArgumentGroup"/>
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element ref="abstractExpression" />
                 </xs:sequence>
-
                 <xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
-
-                <xs:attribute name="value" type="xs:string"/>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -330,54 +311,30 @@
     <xs:attribute name="isArray" type="xs:boolean"/>
   </xs:complexType>
 
-  <xs:simpleType name="Mode">
-    <xs:annotation>
-      <xs:documentation>specifies whether a set of nodes should run parallelly
-      or sequentially</xs:documentation>
-    </xs:annotation>
-
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="parallel"/>
-
-      <xs:enumeration value="sequential"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:complexType mixed="true" name="ActualParameter">
+  <xs:complexType name="ActualParameter">
     <xs:annotation>
       <xs:documentation>defines an actual parameter value that can be bound to
       a formal parameter when calling a procedure</xs:documentation>
     </xs:annotation>
 
-    <xs:choice maxOccurs="1" minOccurs="0">
-      <xs:element name="array" type="Array"/>
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+    </xs:sequence>
 
-      <xs:element name="range" type="Range"/>
-    </xs:choice>
+    <xs:attribute name="bind" type="xs:NMTOKEN" use="optional" />
 
-    <xs:attribute name="bind" type="xs:NMTOKEN" use="optional">
-      <xs:annotation>
-        <xs:documentation>specifies the formal parameter name, for positional
-        call, the name is not required</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
+
   </xs:complexType>
 
-  <xs:complexType mixed="true" name="Assign">
+  <xs:complexType name="Assign">
     <xs:annotation>
       <xs:documentation>assigns an expression to a variable reference
-      (l-value)</xs:documentation>
+      (l-value) - the first abstractExpression is the left, the second the right
+      </xs:documentation>
     </xs:annotation>
-
-    <xs:choice maxOccurs="1" minOccurs="0">
-      <xs:element name="array" type="Array"/>
-
-      <xs:element name="range" type="Range"/>
-
-      <xs:element name="function" type="Function"/>
-    </xs:choice>
-
-    <xs:attribute name="to" type="xs:string"/>
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="Call">
@@ -426,7 +383,7 @@
     </xs:annotation>
 
     <xs:choice>
-      <xs:element name="variable" type="Variable">
+      <xs:element name="variable" type="Variable" nillable="true">
         <xs:annotation>
           <xs:documentation>defines an intermediate variable, so that it can
           link the output of one node to the input of another
@@ -455,19 +412,20 @@
     </xs:annotation>
 
     <xs:sequence>
-      <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+      <xs:element name="in" type="UnlabelledUnaryOperator" />
+      <xs:element name="body">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
 
     <xs:attribute name="var" type="xs:NMTOKEN">
       <xs:annotation>
         <xs:documentation>the variable name to hold each
         item</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-
-    <xs:attribute name="in" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>the items to iterate over</xs:documentation>
       </xs:annotation>
     </xs:attribute>
 
@@ -482,7 +440,10 @@
 
   <xs:complexType name="If">
     <xs:sequence>
-      <xs:element minOccurs="0" name="then">
+
+      <xs:element ref="abstractExpression"/>
+
+      <xs:element name="then">
         <xs:complexType>
           <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
         </xs:complexType>
@@ -497,33 +458,6 @@
       </xs:element>
     </xs:sequence>
 
-    <xs:attribute name="test" type="xs:string"/>
-  </xs:complexType>
-
-  <xs:complexType name="While">
-    <xs:annotation>
-      <xs:documentation>a while loop, the loop continues as long as the test
-      evaluates to true</xs:documentation>
-    </xs:annotation>
-
-    <xs:sequence>
-      <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
-    </xs:sequence>
-
-    <xs:attribute name="test" type="xs:string"/>
-  </xs:complexType>
-
-  <xs:complexType name="Repeat">
-    <xs:annotation>
-      <xs:documentation>a repeat loop, the loop continues until a condition is
-      met</xs:documentation>
-    </xs:annotation>
-
-    <xs:sequence>
-      <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
-    </xs:sequence>
-
-    <xs:attribute name="until" type="xs:string"/>
   </xs:complexType>
 
   <xs:complexType name="Switch">
@@ -532,6 +466,7 @@
     </xs:annotation>
 
     <xs:sequence>
+      <xs:element ref="abstractExpression" />
       <xs:sequence maxOccurs="unbounded" minOccurs="0">
         <xs:element name="case">
           <xs:annotation>
@@ -541,11 +476,16 @@
 
           <xs:complexType>
             <xs:sequence>
-              <xs:group maxOccurs="unbounded" minOccurs="0"
-                        ref="ComponentGroup"/>
+              <xs:element ref="abstractExpression" />
+              <xs:element name="statements">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:group maxOccurs="unbounded" minOccurs="0"
+                              ref="ComponentGroup"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
             </xs:sequence>
-
-            <xs:attribute name="value" type="xs:string" use="required"/>
 
           </xs:complexType>
         </xs:element>
@@ -565,11 +505,6 @@
       </xs:element>
     </xs:sequence>
 
-    <xs:attribute name="test" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>the expression to evaluate</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
   </xs:complexType>
 
   <xs:group name="ControlGroup">
@@ -583,17 +518,68 @@
 
       <xs:element name="if" type="If"/>
 
-      <xs:element name="while" type="While"/>
-
-      <xs:element name="repeat" type="Repeat"/>
-
       <xs:element name="switch" type="Switch"/>
 
       <xs:element name="continue" type="Continue"/>
     </xs:choice>
   </xs:group>
 
-
   <xs:complexType name="Continue"/>
+
+<!-- this is the base expression that means nothing and should never
+be used directly... but other things should substitute for it.
+-->
+  <xs:element name="abstractExpression" abstract="true" />
+
+      <xs:element name="or" type="BinaryOperator" substitutionGroup="abstractExpression"/>
+
+      <xs:element name="and" type="BinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="booleanConstant" type="xs:boolean" substitutionGroup="abstractExpression"/>
+      <xs:element name="integerConstant" type="xs:int" substitutionGroup="abstractExpression"/>
+<!-- TODO is this int or integer? (general question really about the
+space of integers in SwiftScript -->
+      <xs:element name="stringConstant" type="xs:string" substitutionGroup="abstractExpression"/>
+      <xs:element name="floatConstant" type="xs:float" substitutionGroup="abstractExpression"/>
+      <xs:element name="cond" type="LabelledBinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="arith" type="LabelledBinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="unaryNegation" type="UnlabelledUnaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="not" type="UnlabelledUnaryOperator" substitutionGroup="abstractExpression"/>
+<!-- TODO generalise unary operator to more than just plus/minus sign
+and it will absorb 'not' -->
+      <xs:element name="variableReference" type="xs:string" substitutionGroup="abstractExpression"/>
+      <xs:element name="arraySubscript" type="BinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="structureMember" type="StructureMember" substitutionGroup="abstractExpression"/>
+      <xs:element name="array" type="Array" substitutionGroup="abstractExpression"/>
+      <xs:element name="range" type="Range" substitutionGroup="abstractExpression"/>
+      <xs:element name="function" type="Function" substitutionGroup="abstractExpression"/>
+
+  <xs:complexType name="BinaryOperator">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <xs:complexType name="LabelledBinaryOperator">
+    <xs:complexContent>
+      <xs:extension base="BinaryOperator">
+        <xs:attribute name="op" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="UnlabelledUnaryOperator">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="StructureMember">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+      <xs:element name="memberName" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+
 </xs:schema>
 

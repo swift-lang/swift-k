@@ -67,7 +67,7 @@ $it.name$
 default_arg() ::= <<
 $if(it.default)$
 <default name="$it.name$">
-  <vdl:new type="$it.type.name$" value="$it.default$"/>
+$it.default$
 </default>
 $endif$
 >>
@@ -119,20 +119,10 @@ $if (stderr)$
 $endif$
 >>
 
-argument(func) ::= <<
-$func;separator="\n"$	
->>
-
 // the 'function' template in general outputs a karajan code fragment
 // that calls a function in the vdl namespace.
 
 // there are a number of special cases:
-
-//   i. if the 'name' attribute is not set, then
-//      either the 'value' attribute will be output as a <string> literal
-//      or if value is not set, then the 'expr' attribute will be
-//      copied through literally.
-//      TODO benc   not sure what this special
 
 //  ii. if the 'path' or 'var' attributes are set, then special
 //      processing of parameters happens:
@@ -146,41 +136,20 @@ $func;separator="\n"$
 // constructed, using the 'value' attribute if it exists, otherwise
 // using the 'expr' attribute if it exists.
 
+// This patch can maybe move into trunk now rather than being part of the
+// XML merge?
 
-function(name, var, path, expr, value, args) ::= <<
-$if(name)$
-<swiftscript:$name$$if(path)$ path="$path$"$endif$$if(var)$ var="{$var$}"/>$else$>
+function(name, args) ::= <<
+<swiftscript:$name$>
   $if(args)$
     $args$
   $endif$
 </swiftscript:$name$>
-$endif$
-$else$
-$if(value)$
-<vdl:new type="string" value="$value$" />
-$else$
-$expr$
-$endif$
-$endif$
->>
-
-functionArg(var, path, expr, value) ::= <<
-$if(var)$
-<vdl:getfield path="$path$"><variable>$var$</variable></vdl:getfield>
-$else$
-  $if(value)$
-    <vdl:new type="string" value="$value$" />
-  $else$
-    $if(expr)$
-      $expr$
-    $endif$
-  $endif$
-$endif$
 >>
 
 foreach(var,in,indexVar,declarations,statements) ::= <<
 <parallelFor name="\$">
-  <vdl:getfieldvalue path="$in.path$" var="{$in.var$}"/>
+  <getfieldvalue>$in$</getfieldvalue>
   <set names="\$\$, $var$">
     <each items="{\$}"/>
   </set>
@@ -198,9 +167,6 @@ $endif$
 </parallelFor>
 >>
 
-in(var) ::= <<
->>
-
 call(func, outputs, inputs) ::= <<
 <$func$>
   <parallel>
@@ -210,31 +176,13 @@ call(func, outputs, inputs) ::= <<
 </$func$>
 >>
 
-call_arg(bind, expr, value, array, range) ::= <<
+call_arg(bind, expr) ::= <<
 $if(bind)$
 <argument name="$bind$">
-  $call_arg_value(expr=expr,value=value,array=array,range=range)$
+  $expr$
 </argument>
 $else$
-$call_arg_value(expr=expr,value=value,array=array,range=range)$
-$endif$
->>
-
-call_arg_value(expr, value, array, range) ::= <<
-$if(expr)$
 $expr$
-$else$
-$if(array)$
-$array$
-$else$
-$if(range)$
-$range$
-$else$
-$if(value)$
-<vdl:new value="$value$"/>
-$endif$
-$endif$
-$endif$
 $endif$
 >>
 
@@ -259,87 +207,43 @@ $else$
 $endif$
 >>
 
-vdl_parameter(name,value,func,expr) ::= <<
-<vdl:parameter name="$name$"$if(func)$>
-  $func$
-</vdl:parameter>
-$else$$if(expr)$>
-  $expr$
-</vdl:parameter>
-$else$ value="$value$"/>
-$endif$
-$endif$
+vdl_parameter(name,expr) ::= <<
+<vdl:parameter name="$name$">$expr$</vdl:parameter>
 >>
 
-variable(name,type,isArray,array,range,expr,value,mapping,nil) ::= <<
+variable(name,type,isArray,expr,mapping,nil) ::= <<
 <set name="$name$">
-  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
   $if(mapping)$
+  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
     $vdl_mapping(mapping=mapping)$
-  $else$$if(value)$
-    <argument name="value">$value$</argument>
-  $else$
-    <argument name="value">
-  $if(array)$
-      $array$
-  $else$$if(range)$
-      $range$
-  $else$
-      $expr$
-  $endif$$endif$
-    </argument>
-  $endif$
-  $endif$
   </vdl:new>
+  $else$
+  $expr$
+  $endif$
 </set>
 >>
 
-assign(path,var,expr,value,array,range) ::= <<
-$if(value)$
-   <vdl:setfieldvalue$if(path)$ path="$path$"$endif$ var="{$var$}" value="$value$"/>
-$else$
-  $if(!path)$
-    $if(expr.var)$
-      <set name="$var$">
-      $expr$
-      </set>
-    $else$
-      <vdl:assign dvar="{$var$}">
-       <argument name="svar">
-       $if(array)$
-         $array$
-       $else$
-         $if(range)$
-           $range$
-         $else$
-           $expr$
-         $endif$
-       $endif$
-       </argument>
-      </vdl:assign>
-    $endif$
-  $else$
-    <vdl:assign dpath="$path$" dvar="{$var$}">
-      <argument name="svar">
-      $if(array)$
-        $array$
-      $else$
-        $if(range)$
-          $range$
-        $else$
-          $expr$
-        $endif$
-      $endif$
-      </argument>
-    </vdl:assign>
-  $endif$
-$endif$
+assign(var,value) ::= <<
+   <vdl:setfieldvalue>
+     <argument name="var">
+       $var$
+     </argument>
+     <argument name="value">
+<!-- TODO this should be removed and the equivalent code put in the
+java implementation of setfieldvalue itself -->
+<getfieldvalue>
+       $value$
+</getfieldvalue>
+     </argument>
+   </vdl:setfieldvalue>
 >>
 
 array(elements) ::= <<
-<list>
-  $elements;separator="\n"$
-</list>
+<vdl:createarray>
+  <list>
+    $elements;separator="\n"$
+  </list>
+</vdl:createarray>
 >>
 
 range(from,to,step) ::= <<
@@ -356,14 +260,6 @@ range(from,to,step) ::= <<
   </argument>
   $endif$
 </vdl:range>
->>
-
-element(expr,value) ::= <<
-$if(value)$
-<vdl:new value="$value$"/>
-$else$
-$expr$
-$endif$
 >>
 
 if(condition,vthen,velse) ::= <<
@@ -387,20 +283,6 @@ $if(statements)$
   $statements;separator="\n"$
 </parallel>
 $endif$
->>
-
-while(condition,declarations,statements) ::= <<
-<while>
-  $condition$
-  $sub_comp(declarations=declarations,statements=statements)$
-</while>
->>
-
-repeat(condition,declarations,statements) ::= <<
-<while>
-  $sub_comp(declarations=declarations,statements=statements)$
-  $condition$
-</while>
 >>
 
 switch(condition,cases,sdefault) ::= <<
@@ -449,19 +331,20 @@ operator ::= [
   "==":"vdlop:eq"
 ]
 
-unary(sign,exp) ::= <<
+unaryNegation(exp) ::= <<
 <vdlop:product>
-  <vdl:new type="int" value="$sign$1" />
+  <vdl:new type="int" value="-1" />
   $exp$
 </vdlop:product>
 >>
 
-cond(op,left,right) ::= <<
+binaryop(op,left,right) ::= <<
 <$operator.(op)$>
   $left$
   $right$
 </$operator.(op)$>
 >>
+
 
 and(left,right) ::= <<
 <vdlop:and>
@@ -483,111 +366,32 @@ not(exp) ::= <<
 </vdlop:not>
 >>
 
-arith(op, left,right) ::= <<
-<$operator.(op)$>
-  $left$
-  $right$
-</$operator.(op)$>
+id(var) ::= <<
+<variable>$var$</variable>
 >>
 
-paren(exp) ::= <<
-$exp$
+// TODO tidy the interaction with getfield (perhaps by making two new
+// elements, one for structure members, one for array access) that
+// doesn't need this strcat.
+// or make a varargs karajan level accessor?
+
+extractarrayelement(parent, arraychild, memberchild) ::= <<
+
+$if(arraychild)$
+<vdl:getfieldsubscript>
+  <argument name="var">$parent$</argument>
+  <argument name="subscript">$arraychild$</argument>
+</vdl:getfieldsubscript>
+$endif$
+
+$if(memberchild)$
+<getfield>
+  <argument name="var">$parent$</argument>
+  <argument name="path">$memberchild$</argument>
+</getfield>
+$endif$
+
 >>
-
-id(var,path,reference) ::= <<
-$if(var.index)$
-<vdl:getfield$if(!reference)$value$endif$ var="{$var.var$}"$if(var.index.value)$$if(!path)$ path="[$var.index.value$]"/>$else$>
-  <argument name="path">
-    <concat>
-      <string>[$var.index.value$]</string>
-      <string>.</string>
-      $path(var=path.var,path=path.path)$
-    </concat>
-  </argument>
-</vdl:getfield$if(!reference)$value$endif$>  
-$endif$
-$else$>
-  <argument name="path">
-$if(!var.index.path)$
-$if(!var.index.var.index)$
-    <concat>
-      <string>[$var.index.var.var$]</string>
-$else$
-    <concat>
-      <string>[</string>
-      $var.index$
-      <string>]</string>
-$endif$
-$else$
-    <concat>
-      <string>[</string>
-      $var.index$
-      <string>]</string>
-$endif$
-$if(path)$
-
-      <string>.</string>
-      $path(var=path.var,path=path.path)$
-    $endif$
-    </concat>
-  </argument>
-</vdl:getfield$if(!reference)$value$endif$>  
-$endif$
-$else$
-$if(!path)$$if(reference)$
-<variable>$var.var$</variable>
-$else$
-<vdl:getfield var="{$var.var$}"/>
-$endif$
-$else$
-<vdl:getfield$if(!reference)$value$endif$ var="{$var.var$}"$if(!path.path)$$if(!path.var.index)$ path="$path.var.var$"/>$else$
-$if(path.var.index.value)$ path="$path.var.var$[$path.var.index.value$]"/>$else$>
-  <argument name="path">
-    <concat>
-      $path(var=path.var,path=path.path)$
-    </concat>
-  </argument>
-</vdl:getfield$if(!reference)$value$endif$>
-$endif$$endif$$else$>
-  <argument name="path">
-    <concat>
-      $path(var=path.var,path=path.path)$
-    </concat>
-  </argument>
-</vdl:getfield$if(!reference)$value$endif$>
-$endif$
-$endif$
-$endif$
->>
-
-path(var,path) ::=<<
-<string>$var.var$</string>
-$if(var.index)$
-$if(var.index.value)$
-<string>[$var.index.value$]</string>
-$else$
-$if(!var.index.path)$
-$if(!var.index.var.index)$
-<string>[$var.index.var.var$]</string>
-$else$
-<string>[</string>
-$var.index$
-<string>]</string>
-$endif$$else$
-<string>[</string>
-$var.index$
-<string>]</string>
-$endif$
-$endif$$endif$
-$if(path)$
-<string>.</string>
-$path(var=path.var,path=path.path)$
-$endif$
->>
-
-subscript(var,index) ::= <<
->>
-
 
 iConst(value) ::= <<
 <vdl:new type="int" value="$value$" />
@@ -605,6 +409,3 @@ sConst(value,innervalue) ::= <<
 <vdl:new type="string" value="$innervalue$" />
 >>
 
-null() ::= <<
-<null/>
->>

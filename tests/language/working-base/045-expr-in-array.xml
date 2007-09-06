@@ -1,11 +1,22 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <variable name="t" type="string"/>
-  <foreach var="t" in="subjectNo" indexVar="j">
-    <variable name="s" type="string"/>
-    <foreach var="s" in="trialTypes" indexVar="i">
-      <assign to="outputs[i * j]">3</assign>
-    </foreach>
+  <variable name="t" type="string" xsi:nil="true"/>
+  <foreach var="t"  indexVar="j">
+  <in><variableReference>subjectNo</variableReference></in>
+  <body><variable name="s" type="string" xsi:nil="true"/>
+    <foreach var="s"  indexVar="i">
+    <in><variableReference>trialTypes</variableReference></in>
+    <body><assign>
+       <arraySubscript>
+        <variableReference>outputs</variableReference>
+        <arith op="*">
+          <variableReference>i</variableReference>
+          <variableReference>j</variableReference>
+        </arith>
+       </arraySubscript>
+       <integerConstant>3</integerConstant>
+      </assign></body>
+    </foreach></body>
   </foreach>
 </program>

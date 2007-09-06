@@ -1,52 +1,59 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <types>
-    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+    <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:simpleType name="file">
        <xs:restriction base="xs:string"/>
      </xs:simpleType>
     </xs:schema>
   </types>
   <procedure name="ls">
-    <output name="f" type="file"/>
-    <input name="s" type="string"/>
+
+      <output 
+    name="f" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="s" type="string"
+
+     xsi:nil="true" />
     <binding>
       <application>
         <executable>ls</executable>
-        <argument>s</argument>
         <stdout><function name="filename">
-        <argument>
-          f
-        </argument></function></stdout>
-      </application>
+          <variableReference>f</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
   <procedure name="wc">
-    <output name="c" type="file"/>
-    <input name="f" type="file"/>
+
+      <output 
+    name="c" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="f" type="file"
+
+     xsi:nil="true" />
     <binding>
       <application>
         <executable>wc</executable>
         <stdin><function name="filename">
-        <argument>
-          f
-        </argument></function></stdin>
+          <variableReference>f</variableReference></function></stdin>
         <stdout><function name="filename">
-        <argument>
-          c
-        </argument></function></stdout>
-      </application>
+          <variableReference>c</variableReference></function></stdout>  </application>
     </binding>
   </procedure>
-  <variable name="list" type="file"/>
-  <variable name="count" type="file"/>
+  <variable name="list" type="file" xsi:nil="true"/>
+  <variable name="count" type="file" xsi:nil="true"/>
   <call proc="ls">
-    <output>list</output>
-    <input>&quot;*.txt&quot;</input>
+    <output><variableReference>list</variableReference></output>
+    <input><stringConstant>*.txt</stringConstant></input>
   </call>
   <call proc="wc">
-    <output>count</output>
-    <input>list</input>
+    <output><variableReference>count</variableReference></output>
+    <input><variableReference>list</variableReference></input>
   </call>
 </program>

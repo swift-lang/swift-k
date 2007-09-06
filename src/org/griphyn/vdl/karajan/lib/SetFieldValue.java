@@ -29,7 +29,13 @@ public class SetFieldValue extends VDLFunction {
 				logger.info("Setting " + leaf + " to " + value);
 			}
 			synchronized (leaf) {
-				leaf.setValue(internalValue(leaf.getType(), value));
+// TODO want to do a type check here, for runtime type checking
+// and pull out the appropriate internal value from value if it
+// is a DSHandle. There is no need (I think? maybe numerical casting?)
+// for type conversion here; but would be useful to have
+// type checking.
+				// leaf.setValue(internalValue(leaf.getType(), value));
+				leaf.setValue(value);
 				closeShallow(stack, leaf);
 			}
 			return null;

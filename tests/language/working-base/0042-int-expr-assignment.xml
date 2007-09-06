@@ -1,5 +1,14 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <variable name="v" type="int">7 + 3 + 2 * 6</variable>
+  <variable name="v" type="int"><arith op="+">
+    <arith op="+">
+      <integerConstant>7</integerConstant>
+      <integerConstant>3</integerConstant>
+    </arith>
+    <arith op="*">
+      <integerConstant>2</integerConstant>
+      <integerConstant>6</integerConstant>
+    </arith>
+  </arith></variable>
 </program>

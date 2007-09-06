@@ -1,11 +1,9 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="greetings" type="string" isArray="true">
     <array>
-      <element>&quot;how&quot;</element>
-      <element>&quot;are&quot;</element>
-      <element>&quot;you&quot;</element>
+      <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
     </array>
   </variable>
 </program>

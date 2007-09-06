@@ -140,7 +140,7 @@ updateOptions "file:/dev/urandom" "java.security.egd"
 		<java classname="antlr.Tool" fork="true" failonerror="true">
 			<arg value="-o"/>
 			<arg value="${cog.dir}/modules/${module.name}/src/org/globus/swift/parser"/>
-			<arg value="resources/VDL.g"/>
+			<arg value="resources/swiftscript.g"/>
 			<classpath>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/antlr-2.7.5.jar"/>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/stringtemplate.jar"/>
@@ -153,8 +153,8 @@ updateOptions "file:/dev/urandom" "java.security.egd"
 			<arg value="-src"/><arg value="src"/>
 			<arg value="-javasource"/><arg value="1.4"/>
 			<arg value="-out"/><arg value="${cog.dir}/modules/${module.name}/lib/vdldefinitions.jar"/>
-			<arg value="resources/VDL.xsd"/>
-			<arg value="resources/VDL.xsdconfig"/>
+			<arg value="resources/swiftscript.xsd"/>
+			<arg value="resources/swiftscript.xsdconfig"/>
 			<classpath>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/xbean.jar"/>
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/resolver.jar"/>

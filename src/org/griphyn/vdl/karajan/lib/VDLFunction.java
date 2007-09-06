@@ -133,45 +133,18 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return sb.toString();
 	}
 
-	protected Type inferType(Object value) {
-		// TODO
-		if (value instanceof String) {
-			String str = (String) value;
-			if (str.startsWith("\"")) {
-				return Types.STRING;
-			}
-			try {
-				Integer.parseInt(str);
-				return Types.INT;
-			}
-			catch (NumberFormatException e) {
-			}
-			try {
-				Double.parseDouble(str);
-				return Types.FLOAT;
-			}
-			catch (NumberFormatException e) {
-			}
+// TODO - is this needed any more? its doing some type inferencing and
+// object creation and dequoting of strings, but the necessary behaviour
+// here has possibly moved elsewhere, into a more strongly typed intermediate
+// XML form that removes the need for this inference.
 
-			if (value.equals("true") || value.equals("false")) {
-				return Types.BOOLEAN;
-			}
+// we might need to do some casting here for the numerical stuff - eg when
+// asking for a float but we're given an int? not sure? might be the case
+// that we already have value in the Double form already, in which case
+// deference the internal value?
 
-			throw new RuntimeException("Invalid value: " + value);
-		}
-		else if (value instanceof Integer) {
-			return Types.INT;
-		}
-		else if (value instanceof Double) {
-			return Types.FLOAT;
-		}
-		else if (value instanceof Boolean) {
-			return Types.BOOLEAN;
-		}
-		else {
-			return Types.STRING;
-		}
-	}
+// this is only used by VDL new (and really should only be used by
+// VDL new, and should perhaps move to the VDL new source?)
 
 	protected Object internalValue(Type type, Object value) {
 		if (Types.FLOAT.equals(type)) {
@@ -181,13 +154,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			return new Double(TypeUtil.toInt(value));
 		}
 		else if (value instanceof String) {
-			String strval = (String) value;
-			if (strval.startsWith("\"") && strval.endsWith("\"")) {
-				return strval.substring(1, strval.length() - 1);
-			}
-			else {
-				return strval;
-			}
+			return (String) value;
 		}
 		else {
 			return value;

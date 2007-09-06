@@ -1,21 +1,46 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <switch test="d">
-    <case value="1">
+  <switch>
+    <variableReference>d</variableReference>
+    <case>
+      <integerConstant>1</integerConstant>
+      <statements>
       <call proc="f">
-        <input>g</input>
+        <input><variableReference>g</variableReference></input>
       </call>
+      </statements>
     </case>
-    <case value="5">
-      <assign to="j">7</assign>
+    <case>
+      <integerConstant>5</integerConstant>
+      <statements>
+      <assign>
+       <variableReference>j</variableReference>
+       <integerConstant>7</integerConstant>
+      </assign>
       <call proc="fn">
-        <output>uuu</output>
-        <input>t + 7 + e + 3 * 2</input>
+        <output><variableReference>uuu</variableReference></output>
+        <input><arith op="+">
+          <arith op="+">
+            <arith op="+">
+              <variableReference>t</variableReference>
+              <integerConstant>7</integerConstant>
+            </arith>
+            <variableReference>e</variableReference>
+          </arith>
+          <arith op="*">
+            <integerConstant>3</integerConstant>
+            <integerConstant>2</integerConstant>
+          </arith>
+        </arith></input>
       </call>
+      </statements>
     </case>
     <default>
-      <assign to="s">&quot;the default&quot;</assign>
+      <assign>
+       <variableReference>s</variableReference>
+       <stringConstant>the default</stringConstant>
+      </assign>
     </default>
   </switch>
 </program>

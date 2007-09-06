@@ -1,8 +1,8 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <types>
-    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+    <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:simpleType name="messagefile">
        <xs:restriction base="xs:string"/>
      </xs:simpleType>
@@ -12,35 +12,40 @@
     </xs:schema>
   </types>
   <procedure name="greeting">
-    <output name="t" type="messagefile"/>
-    <input name="s" type="string"/>
+
+      <output 
+    name="t" type="messagefile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="s" type="string"
+
+     xsi:nil="true" />
     <binding>
       <application>
         <executable>echo</executable>
-        <argument>s</argument>
         <stdout><function name="filename">
-        <argument>
-          t
-        </argument></function></stdout>
-      </application>
+          <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
   <procedure name="countwords">
-    <output name="t" type="countfile"/>
-    <input name="f" type="messagefile"/>
+
+      <output 
+    name="t" type="countfile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="f" type="messagefile"
+
+     xsi:nil="true" />
     <binding>
       <application>
         <executable>wc</executable>
-        <argument>&quot;-w&quot;</argument>
-        <argument><function name="filename">
-        <argument>
-          f
-        </argument></function></argument>
         <stdout><function name="filename">
-        <argument>
-          t
-        </argument></function></stdout>
-      </application>
+          <variableReference>t</variableReference></function></stdout><stringConstant>-w</stringConstant><function name="filename">
+          <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
   <dataset name="outfile" type="messagefile">
@@ -50,11 +55,11 @@
     <file name="count.txt"/>
   </dataset>
   <call proc="greeting">
-    <output>outfile</output>
-    <input>&quot;hello from Swift&quot;</input>
+    <output><variableReference>outfile</variableReference></output>
+    <input><stringConstant>hello from Swift</stringConstant></input>
   </call>
   <call proc="countwords">
-    <output>c</output>
-    <input>outfile</input>
+    <output><variableReference>c</variableReference></output>
+    <input><variableReference>outfile</variableReference></input>
   </call>
 </program>

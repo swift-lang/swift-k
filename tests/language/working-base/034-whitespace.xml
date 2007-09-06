@@ -1,5 +1,14 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <assign to="i">(1 + 2) * 5</assign>
+  <assign>
+   <variableReference>i</variableReference>
+   <arith op="*">
+     <arith op="+">
+       <integerConstant>1</integerConstant>
+       <integerConstant>2</integerConstant>
+     </arith>
+     <integerConstant>5</integerConstant>
+   </arith>
+  </assign>
 </program>

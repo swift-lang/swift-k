@@ -4,26 +4,58 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.xml.namespace.QName;
 
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
+import org.apache.xmlbeans.XmlBoolean;
 import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlError;
+import org.apache.xmlbeans.XmlException;
+import org.apache.xmlbeans.XmlFloat;
+import org.apache.xmlbeans.XmlInt;
 import org.apache.xmlbeans.XmlObject;
-import org.griphyn.vdl.model.*;
-import org.griphyn.vdl.model.Dataset.Mapping;
-import org.griphyn.vdl.model.Dataset.Mapping.Param;
-import org.griphyn.vdl.model.If.Else;
-import org.griphyn.vdl.model.If.Then;
-import org.griphyn.vdl.model.ProgramDocument.Program;
-import org.griphyn.vdl.model.Switch.Case;
-import org.griphyn.vdl.model.Switch.Default;
-import org.griphyn.vdl.model.TypesDocument.Types;
+import org.apache.xmlbeans.XmlOptions;
+import org.apache.xmlbeans.XmlString;
+import org.globus.swift.language.ActualParameter;
+import org.globus.swift.language.ApplicationBinding;
+import org.globus.swift.language.Array;
+import org.globus.swift.language.Assign;
+import org.globus.swift.language.BinaryOperator;
+import org.globus.swift.language.Binding;
+import org.globus.swift.language.Call;
+import org.globus.swift.language.Continue;
+import org.globus.swift.language.Dataset;
+import org.globus.swift.language.Foreach;
+import org.globus.swift.language.FormalParameter;
+import org.globus.swift.language.Function;
+import org.globus.swift.language.If;
+import org.globus.swift.language.LabelledBinaryOperator;
+import org.globus.swift.language.Procedure;
+import org.globus.swift.language.ProgramDocument;
+import org.globus.swift.language.Range;
+import org.globus.swift.language.Switch;
+import org.globus.swift.language.UnlabelledUnaryOperator;
+import org.globus.swift.language.Variable;
+import org.globus.swift.language.Dataset.Mapping;
+import org.globus.swift.language.Dataset.Mapping.Param;
+import org.globus.swift.language.If.Else;
+import org.globus.swift.language.If.Then;
+import org.globus.swift.language.Procedure;
+import org.globus.swift.language.ProgramDocument.Program;
+import org.globus.swift.language.StructureMember;
+import org.globus.swift.language.Switch.Case;
+import org.globus.swift.language.Switch.Default;
+import org.globus.swift.language.TypesDocument.Types;
 import org.griphyn.vdl.util.VDLExpression;
 import org.safehaus.uuid.UUIDGenerator;
+import org.w3c.dom.Node;
 
 public class Karajan {
 	public static final Logger logger = Logger.getLogger(Karajan.class);
@@ -31,7 +63,6 @@ public class Karajan {
 	public static final String TEMPLATE_FILE_NAME = "Karajan.stg"; 
 
 	StringTemplateGroup m_templates;
-	VDLExpression m_exprParser;
 
 	public static void main(String[] args) throws Exception {
 		if (args.length < 1) {
@@ -46,7 +77,8 @@ public class Karajan {
 		StringTemplateGroup templates = new StringTemplateGroup(new InputStreamReader(
 				Karajan.class.getClassLoader().getResource(TEMPLATE_FILE_NAME).openStream()));
 
-		ProgramDocument programDoc = ProgramDocument.Factory.parse(new File(in));
+		ProgramDocument programDoc = parseProgramXML(in);
+
 		Program prog = programDoc.getProgram();
 
 		me.setTemplateGroup(templates);
@@ -54,36 +86,44 @@ public class Karajan {
 		out.println(code.toString());
 	}
 
+	public static ProgramDocument parseProgramXML(String defs) 
+		throws XmlException, IOException {
+
+		XmlOptions options = new XmlOptions();
+		Collection errors = new ArrayList();
+		options.setErrorListener(errors);
+		options.setValidateOnSet();
+		options.setLoadLineNumbers();
+
+		ProgramDocument programDoc;
+		programDoc  = ProgramDocument.Factory.parse(new File(defs), options);
+
+		if(programDoc.validate(options)) {
+			logger.debug("Validation of XML intermediate file was successful");
+		} else {
+			logger.warn("Validation of XML intermediate file failed.");
+				// these errors look rather scary, so output them at
+				// debug level
+			logger.debug("Validation errors:");
+			Iterator i = errors.iterator();
+			while(i.hasNext()) {
+				XmlError error = (XmlError) i.next();
+				logger.debug(error.toString());
+			}
+			System.exit(3);
+		}
+		return programDoc;
+	}
+
 	public Karajan() {
 	}
 
 	void setTemplateGroup(StringTemplateGroup tempGroup) throws IOException {
 		m_templates = tempGroup;
-		m_exprParser = VDLExpression.instance(m_templates);
 	}
 
 	protected StringTemplate template(String name) {
 		return m_templates.getInstanceOf(name);
-	}
-
-	public String dequote(String s) {
-		if (s == null)
-			return null;
-		if (s.startsWith("\"") && s.endsWith("\"")) {
-			return s.substring(1, s.length() - 1);
-		}
-		if (s.startsWith("&quot;") && s.endsWith("&quot;")) {
-			return s.substring(6, s.length() - 6);
-		}
-		return s;
-	}
-
-	public String quote(String s) {
-		if (s == null)
-			return null;
-		String s1 = s.replaceAll("\"", "&quot;");
-		// String s2 = s1.replaceAll("'", "&apos;");
-		return s1;
 	}
 
 	public StringTemplate program(Program prog) throws Exception {
@@ -108,7 +148,7 @@ public class Karajan {
 			FormalParameter param = proc.getOutputArray(i);
 			StringTemplate paramST = parameter(param);
 			procST.setAttribute("outputs", paramST);
-			if (paramST.getAttribute("default") != null)
+			if (!param.isNil())
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
@@ -117,7 +157,7 @@ public class Karajan {
 			FormalParameter param = proc.getInputArray(i);
 			StringTemplate paramST = parameter(param);
 			procST.setAttribute("inputs", paramST);
-			if (paramST.getAttribute("default") != null)
+			if (!param.isNil())
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
@@ -141,8 +181,8 @@ public class Karajan {
 		typeST.setAttribute("namespace", param.getType().getNamespaceURI());
 		paramST.setAttribute("type", typeST);
 		paramST.setAttribute("isArray", new Boolean(param.getIsArray1()));
-		paramST.defineFormalArgument("default");
-		paramST.setAttribute("default", quote(param.getDefault()));
+		if(!param.isNil())
+			paramST.setAttribute("default",expressionToKarajan(param.getAbstractExpression()));
 		return paramST;
 	}
 
@@ -152,35 +192,20 @@ public class Karajan {
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
 		variableST.setAttribute("isArray", Boolean.valueOf(var.getIsArray1()));
-		Array array = var.getArray();
-		Range range = var.getRange();
-		Function func = var.getFunction();
-		if (array != null) {
-			array(array, variableST);
-		}
-		else if (range != null) {
-			range(range, variableST);
-		}
-		else if (func != null) {
-			String value = getText(var);
-			StringTemplate funcST = function(func);
-			funcST.setName(func.getName());
-			variableST.setAttribute("expr", funcST);
-		}
-		else {
-			String content = getText(var);
-			setExprOrValue(variableST, content);
-		}
-		if (variableST.getAttribute("nil") != null) {
+
+		if(!var.isNil()) {
+			variableST.setAttribute("expr",expressionToKarajan(var.getAbstractExpression()));
+		} else {
 			// add temporary mapping info
 			StringTemplate mappingST = new StringTemplate("mapping");
 			mappingST.setAttribute("descriptor", "concurrent_mapper");
 			StringTemplate paramST = template("vdl_parameter");
 			paramST.setAttribute("name", "prefix");
-			paramST.setAttribute("value", var.getName() + "-"
+			paramST.setAttribute("expr", var.getName() + "-"
 					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
 			mappingST.setAttribute("params", paramST);
 			variableST.setAttribute("mapping", mappingST);
+			variableST.setAttribute("nil", Boolean.TRUE);
 		}
 	}
 
@@ -207,19 +232,7 @@ public class Karajan {
 				Param param = mapping.getParamArray(i);
 				StringTemplate paramST = template("vdl_parameter");
 				paramST.setAttribute("name", param.getName());
-				int j = 0;
-				while (j < param.sizeOfFunctionArray()) {
-					Function func = param.getFunctionArray(j);
-					StringTemplate funcST = function(func);
-					paramST.setAttribute("func", funcST);
-					j++;
-				}
-				if (j == 0) {
-					String value = getText(param);
-					StringTemplate funcST = template("function");
-					setExprOrValue(funcST, value, true, true);
-					paramST.setAttribute("func", funcST);
-				}
+				paramST.setAttribute("expr",expressionToKarajan(param.getAbstractExpression()));
 				mappingST.setAttribute("params", paramST);
 			}
 			datasetST.setAttribute("mapping", mappingST);
@@ -229,34 +242,8 @@ public class Karajan {
 	public void assign(Assign assign, StringTemplate progST) throws Exception {
 		StringTemplate assignST = template("assign");
 		progST.setAttribute("declarations", assignST);
-		String dest = assign.getTo();
-		setPath(assignST, dest);
-
-		Array array = assign.getArray();
-		Range range = assign.getRange();
-		Function func = assign.getFunction();
-		
-		if (array != null) {
-			array(array, assignST);
-		}
-		else if (range != null) {
-			range(range, assignST);
-		}
-		else if (func != null) {
-			String value = getText(assign);
-			StringTemplate funcST = function(func);
-			funcST.setName(func.getName());
-			assignST.setAttribute("expr", funcST);
-		}
-		else {
-			// check the rvalue
-			String src = getText(assign);
-
-			StringTemplate srcST = new StringTemplate("src");
-			setExprOrValue(srcST, src);
-			assignST.setAttribute("value", srcST.getAttribute("value"));
-			assignST.setAttribute("expr", srcST.getAttribute("expr"));
-		}
+		assignST.setAttribute("var", expressionToKarajan(assign.getAbstractExpressionArray(0)));
+		assignST.setAttribute("value", expressionToKarajan(assign.getAbstractExpressionArray(1)));
 	}
 
 	public void statements(XmlObject prog, StringTemplate progST) throws Exception {
@@ -296,17 +283,6 @@ public class Karajan {
 				st = template("if");
 				progST.setAttribute("statements", st);
 				ifStat(ifstat, st);
-			}
-			else if (child instanceof While) {
-				While whilestat = (While) child;
-				st = template("while");
-				progST.setAttribute("statements", st);
-				whileStat(whilestat, st);
-			} else if (child instanceof Repeat) {
-				Repeat repeatstat = (Repeat) child;
-				st = template("repeat");
-				progST.setAttribute("statements", st);
-				repeatStat(repeatstat, st);
 			} else if (child instanceof Switch) {
 				Switch switchstat = (Switch) child;
 				st = template("switch");
@@ -344,34 +320,15 @@ public class Karajan {
 	public void foreachStat(Foreach foreach, StringTemplate foreachST) throws Exception {
 		foreachST.setAttribute("var", foreach.getVar());
 		foreachST.setAttribute("indexVar", foreach.getIndexVar());
-		String in = foreach.getIn();
-		StringTemplate inST = template("in");
-		setPath(inST, in);
-		StringTemplate parentST = foreachST.getEnclosingInstance();
-		markDataset(inST, parentST, true);
+		XmlObject in = foreach.getIn().getAbstractExpression();
+		StringTemplate inST = expressionToKarajan(in);
+		markDataset(inST, foreachST, true);
 		foreachST.setAttribute("in", inST);
-		statements(foreach, foreachST);
-	}
-
-	public void whileStat(While whilestat, StringTemplate whileST) throws Exception {
-		String condition = whilestat.getTest();
-		StringTemplate conditionST = m_exprParser.parse(condition);
-		whileST.setAttribute("condition", conditionST.toString());
-
-		statements(whilestat, whileST);
-	}
-
-	public void repeatStat(Repeat repeatstat, StringTemplate repeatST) throws Exception {
-		String condition = repeatstat.getUntil();
-		StringTemplate conditionST = m_exprParser.parse(condition);
-		repeatST.setAttribute("condition", conditionST.toString());
-
-		statements(repeatstat, repeatST);
+		statements(foreach.getBody(), foreachST);
 	}
 
 	public void ifStat(If ifstat, StringTemplate ifST) throws Exception {
-		String condition = ifstat.getTest();
-		StringTemplate conditionST = m_exprParser.parse(condition);
+		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression());
 		ifST.setAttribute("condition", conditionST.toString());
 
 		Then thenstat = ifstat.getThen();
@@ -392,8 +349,7 @@ public class Karajan {
 	}
 
 	public void switchStat(Switch switchstat, StringTemplate switchST) throws Exception {
-		String condition = switchstat.getTest();
-		StringTemplate conditionST = m_exprParser.parse(condition);
+		StringTemplate conditionST = expressionToKarajan(switchstat.getAbstractExpression());
 		switchST.setAttribute("condition", conditionST.toString());
 
 		for (int i=0; i< switchstat.sizeOfCaseArray(); i++) {
@@ -412,63 +368,16 @@ public class Karajan {
 	}
 
 	public void caseStat(Case casestat, StringTemplate caseST) throws Exception {
-		String value = casestat.getValue();
-		StringTemplate valueST = m_exprParser.parse(value);
+		StringTemplate valueST = expressionToKarajan(casestat.getAbstractExpression());
 		caseST.setAttribute("value", valueST.toString());
-		statements(casestat, caseST);
+		statements(casestat.getStatements(), caseST);
 	}
 
 	public StringTemplate actualParameter(ActualParameter arg) throws Exception {
 		StringTemplate argST = template("call_arg");
 		argST.setAttribute("bind", arg.getBind());
-		Array array = arg.getArray();
-		Range range = arg.getRange();
-		if (array != null) {
-			array(array, argST);
-		}
-		else if (range != null) {
-			range(range, argST);
-		}
-		else {
-			String content = getText(arg);
-			// check for quoted string
-			setExprOrValue(argST, content, false);
-		}
+		argST.setAttribute("expr", expressionToKarajan(arg.getAbstractExpression()));
 		return argST;
-	}
-
-	public void array(Array array, StringTemplate st) throws Exception {
-		StringTemplate arrayST = template("array");
-		st.setAttribute("array", arrayST);
-		for (int i = 0; i < array.sizeOfElementArray(); i++) {
-			XmlObject elem = array.getElementArray(i);
-			StringTemplate elemST = template("element");
-			String content = getText(elem);
-			setExprOrValue(elemST, content, false);
-			arrayST.setAttribute("elements", elemST);
-		}
-	}
-
-	public void range(Range range, StringTemplate st) throws Exception {
-		StringTemplate rangeST = template("range");
-		st.setAttribute("range", rangeST);
-
-		StringTemplate fromST = template("element");
-		String content = range.getFrom().getStringValue();
-		setExprOrValue(fromST, content, false, false);
-		rangeST.setAttribute("from", fromST);
-
-		StringTemplate toST = template("element");
-		content = range.getTo().getStringValue();
-		setExprOrValue(toST, content, false, false);
-		rangeST.setAttribute("to", toST);
-
-		if (range.getStep() != null) {
-			StringTemplate stepST = template("element");
-			content = range.getStep().getStringValue();
-			setExprOrValue(stepST, content, false, false);
-			rangeST.setAttribute("step", stepST);
-		}
 	}
 
 	public void binding(Binding bind, StringTemplate procST) throws Exception {
@@ -482,37 +391,19 @@ public class Karajan {
 
 	public StringTemplate application(ApplicationBinding app) throws Exception {
 		StringTemplate appST = new StringTemplate("application");
-		appST.setAttribute("exec", getText(app.getExecutable()));
-		for (int i = 0; i < app.sizeOfArgumentArray(); i++) {
-			Argument argument = app.getArgumentArray(i);
-			StringTemplate argumentST = argument(argument);
+		appST.setAttribute("exec", app.getExecutable());
+		for (int i = 0; i < app.sizeOfAbstractExpressionArray(); i++) {
+			XmlObject argument = app.getAbstractExpressionArray(i);
+			StringTemplate argumentST = expressionToKarajan(argument);
 			appST.setAttribute("arguments", argumentST);
 		}
-		appST.setAttribute("stdin", argument(app.getStdin()));
-		appST.setAttribute("stdout", argument(app.getStdout()));
-		appST.setAttribute("stderr", argument(app.getStderr()));
+		if(app.getStdin()!=null)
+			appST.setAttribute("stdin", expressionToKarajan(app.getStdin().getAbstractExpression()));
+		if(app.getStdout()!=null)
+			appST.setAttribute("stdout", expressionToKarajan(app.getStdout().getAbstractExpression()));
+		if(app.getStderr()!=null)
+			appST.setAttribute("stderr", expressionToKarajan(app.getStderr().getAbstractExpression()));
 		return appST;
-	}
-
-	public StringTemplate argument(Argument arg) throws Exception {
-		if (arg == null)
-			return null;
-
-		StringTemplate argumentST = template("argument");
-		int i = 0;
-		while (i < arg.sizeOfFunctionArray()) {
-			Function func = arg.getFunctionArray(i);
-			StringTemplate funcST = function(func);
-			argumentST.setAttribute("func", funcST);
-			i++;
-		}
-		if (i == 0) {
-			String value = getText(arg);
-			StringTemplate funcST = template("function");
-			setExprOrValue(funcST, value, true, false);
-			argumentST.setAttribute("func", funcST);
-		}
-		return argumentST;
 	}
 
 	/** Produces a Karajan function invocation from a SwiftScript invocation.
@@ -523,148 +414,156 @@ public class Karajan {
 	  * that happens.
 	  */
 
-	public StringTemplate function(Function func) throws Exception {
+	public StringTemplate function(Function func) {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", func.getName());
-		FunctionArgument[] arguments = func.getArgumentArray();
+		XmlObject[] arguments = func.getAbstractExpressionArray();
 		for(int i = 0; i < arguments.length; i++ ) {
-			FunctionArgument thisArgument = arguments[i];
-			// handle each argument in turn
-			// its either an expression or a function invocation
-			// and we need to treat the argument differently
-			// depending on which it is.
-			if(thisArgument.isSetFunction()) {
-				funcST.setAttribute("args", function(thisArgument.getFunction()));
-			} else { // it is an expression or value
-				StringTemplate argST = template("functionArg");
-				String content = getText(thisArgument);
-				setExprOrValue(argST, content, true);
-
-				// TODO: make function deal with expr directly.
-				StringTemplate exprST = (StringTemplate) argST.getAttribute("expr");
-
-				// In the case that the supplied expression is an identifier,
-				// we override the normal parameter passing (through expr
-				// or value, and instead pass a var/path pair for that
-				// identifier
-				if (exprST != null && exprST.getName().equals("id")) {
-					setPath(argST, content);
-				}
-
-				funcST.setAttribute("args",argST);
-			}
+			funcST.setAttribute("args",expressionToKarajan(arguments[i]));
 		}
 
 		return funcST;
 	}
 
-	/** Populates 'var' and 'path' attributes of the supplied StringTemplate
-	 *  based on the supplied SwiftScript identifier.
-	 *  The 'var' attribute will be populated with the base name of the
-	 *  identifier. The 'path' attribute will be populated with the
-	 *  remainder of the identifier, or will be left unset if there
-	 *  is no further part to the identifier.
-	 *
-	 *  Examples:
-	 *
-	 *    content = "foo"      var = "foo"  path unset.
-	 *    content = "foo[3]"   var = "foo"  path = "[3]"
-	 *    content = "foo.bar"  var = "foo"  path = "bar"
-	 *
-	 *  @param st the StringTemplate to populate
-	 *  @param content the SwiftScript variable identifier
+	static final String SWIFTSCRIPT_NS = "http://ci.uchicago.edu/swift/2007/07/swiftscript";
+
+	static final QName OR_EXPR = new QName(SWIFTSCRIPT_NS, "or");
+	static final QName AND_EXPR = new QName(SWIFTSCRIPT_NS, "and");
+	static final QName BOOL_EXPR = new QName(SWIFTSCRIPT_NS, "booleanConstant");
+	static final QName INT_EXPR = new QName(SWIFTSCRIPT_NS, "integerConstant");
+	static final QName FLOAT_EXPR = new QName(SWIFTSCRIPT_NS, "floatConstant");
+	static final QName STRING_EXPR = new QName(SWIFTSCRIPT_NS, "stringConstant");
+	static final QName COND_EXPR = new QName(SWIFTSCRIPT_NS, "cond");
+	static final QName ARITH_EXPR = new QName(SWIFTSCRIPT_NS, "arith");
+	static final QName UNARY_NEGATION_EXPR = new QName(SWIFTSCRIPT_NS, "unaryNegation");
+	static final QName NOT_EXPR = new QName(SWIFTSCRIPT_NS, "not");
+	static final QName VARIABLE_REFERENCE_EXPR = new QName(SWIFTSCRIPT_NS, "variableReference");
+	static final QName ARRAY_SUBSCRIPT_EXPR = new QName(SWIFTSCRIPT_NS, "arraySubscript");
+	static final QName STRUCTURE_MEMBER_EXPR = new QName(SWIFTSCRIPT_NS, "structureMember");
+	static final QName ARRAY_EXPR = new QName(SWIFTSCRIPT_NS, "array");
+	static final QName RANGE_EXPR = new QName(SWIFTSCRIPT_NS, "range");
+	static final QName FUNCTION_EXPR = new QName(SWIFTSCRIPT_NS, "function");
+
+	/** converts an XML intermediate form expression into a
+	 *  Karajan expression.
 	 */
+	public StringTemplate expressionToKarajan(XmlObject expression)
+	{
+		Node expressionDOM = expression.getDomNode();
+		String namespaceURI = expressionDOM.getNamespaceURI();
+		String localName = expressionDOM.getLocalName();
+		QName expressionQName = new QName(namespaceURI, localName);
 
-	protected void setPath(StringTemplate st, String content) {
-		if (content == null || content.trim().equals(""))
-			return;
+		if(expressionQName.equals(OR_EXPR))
+		{
+			StringTemplate st = template("or");
+			BinaryOperator o = (BinaryOperator)expression;
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			return st;
+		} else if (expressionQName.equals(AND_EXPR)) {
+			StringTemplate st = template("and");
+			BinaryOperator o = (BinaryOperator)expression;
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			return st;
+		} else if (expressionQName.equals(BOOL_EXPR)) {
+			XmlBoolean xmlBoolean = (XmlBoolean) expression;
+			boolean b = xmlBoolean.getBooleanValue();
+			StringTemplate st = template("bConst");
+			st.setAttribute("value",""+b);
+			return st;
+		} else if (expressionQName.equals(INT_EXPR)) {
+			XmlInt xmlInt = (XmlInt) expression;
+			int i = xmlInt.getIntValue();
+			StringTemplate st = template("iConst");
+			st.setAttribute("value",""+i);
+			return st;
+		} else if (expressionQName.equals(FLOAT_EXPR)) {
+			XmlFloat xmlFloat = (XmlFloat) expression;
+			float f = xmlFloat.getFloatValue();
+			StringTemplate st = template("fConst");
+			st.setAttribute("value",""+f);
+			return st;
+		} else if (expressionQName.equals(STRING_EXPR)) {
+			XmlString xmlString = (XmlString) expression;
+			String s = xmlString.getStringValue();
+			StringTemplate st = template("sConst");
+			st.setAttribute("innervalue",s);
+			return st;
+		} else if (expressionQName.equals(COND_EXPR)) {
+			StringTemplate st = template("binaryop");
+			LabelledBinaryOperator o = (LabelledBinaryOperator) expression;
+			st.setAttribute("op", o.getOp());
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			return st;
+		} else if (expressionQName.equals(ARITH_EXPR)) {
+			LabelledBinaryOperator o = (LabelledBinaryOperator) expression;
+			StringTemplate st = template("binaryop");
+			st.setAttribute("op", o.getOp());
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			return st;
+		} else if (expressionQName.equals(UNARY_NEGATION_EXPR)) {
+			UnlabelledUnaryOperator e = (UnlabelledUnaryOperator) expression;
+			StringTemplate st = template("unaryNegation");
+			st.setAttribute("exp",expressionToKarajan(e.getAbstractExpression()));
+			return st;
+		} else if (expressionQName.equals(NOT_EXPR)) {
+// TODO not can probably merge with 'unary'
+			UnlabelledUnaryOperator e = (UnlabelledUnaryOperator)expression;
+			StringTemplate st = template("not");
+			st.setAttribute("exp",expressionToKarajan(e.getAbstractExpression()));
+			return st;
+		} else if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
+			XmlString xmlString = (XmlString) expression;
+			String s = xmlString.getStringValue();
+			StringTemplate st = template("id");
+			st.setAttribute("var",s);
+			return st;
 
-		// whitespace on the start or finish causes whitespace to
-		// appear in bad places in the output karajan code
-		content = content.trim();
-
-		int i = content.indexOf('.');
-		int j = content.indexOf('[');
-		if (i != -1 || j != -1) {
-			if (i == -1 || (j != -1 && j < i)) {
-				st.setAttribute("var", content.substring(0, j));
-				st.setAttribute("path", content.substring(j));
+		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
+			BinaryOperator op = (BinaryOperator) expression;
+			StringTemplate newst = template("extractarrayelement");
+			newst.setAttribute("arraychild",expressionToKarajan(op.getAbstractExpressionArray(1)));
+			newst.setAttribute("parent",expressionToKarajan(op.getAbstractExpressionArray(0)));
+			return newst;
+		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
+			StructureMember sm = (StructureMember) expression;
+			StringTemplate newst = template("extractarrayelement");
+			newst.setAttribute("memberchild", sm.getMemberName());
+			newst.setAttribute("parent",expressionToKarajan(sm.getAbstractExpression()));
+			return newst;
+			// TODO the template layout for this and ARRAY_SUBSCRIPT are
+			// both a bit convoluted for historical reasons.
+			// should be straightforward to tidy up.
+		} else if (expressionQName.equals(ARRAY_EXPR)) {
+			Array array = (Array)expression;
+			StringTemplate st = template("array");
+			for (int i = 0; i < array.sizeOfAbstractExpressionArray(); i++) {
+				XmlObject expr = array.getAbstractExpressionArray(i);
+				st.setAttribute("elements", expressionToKarajan(expr));
 			}
-			else {
-				st.setAttribute("var", content.substring(0, i));
-				st.setAttribute("path", content.substring(i + 1));
-			}
+			return st;
+		} else if (expressionQName.equals(RANGE_EXPR)) {
+			Range range = (Range)expression;
+			StringTemplate st = template("range");
+			st.setAttribute("from", expressionToKarajan(
+				range.getAbstractExpressionArray(0)));
+			st.setAttribute("to", expressionToKarajan(
+				range.getAbstractExpressionArray(1)));
+			if(range.sizeOfAbstractExpressionArray()==3) // step is optional
+				st.setAttribute("step", expressionToKarajan(
+				 range.getAbstractExpressionArray(2)));
+			return st;
+		} else if (expressionQName.equals(FUNCTION_EXPR)) {
+			Function f = (Function) expression;
+			StringTemplate st = function(f);
+			return st;
+		} else {
+			throw new RuntimeException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);
 		}
-		else {
-			st.setAttribute("var", content);
-		}
-	}
-
-	/**
-	 * default string dequote to true
-	 */
-	public void setExprOrValue(StringTemplate st, String content) throws Exception {
-		setExprOrValue(st, content, true);
-	}
-
-	/**
-	 * default reference to true, as most of the time we need the handle itself
-	 * instead of its value
-	 */
-	public void setExprOrValue(StringTemplate st, String content, boolean dequote) throws Exception {
-		setExprOrValue(st, content, dequote, true);
-	}
-
-	/** sets the 'expr' or 'value' attributes of the supplied StringTemplate
-	 *  based on the supplied 'content' parameter.
-	 *
-	 *  This is used as a helper for the convention in Karajan.stg
-	 *  templates that a template can have various attributes, one of which
-	 *  will be set depending on the results of parsing the content
-	 *  parameter: If the content is empty, then the 'nil' attribute will
-	 *  be set on the supplied template; otherwise, if the content is
-	 *  a constant, then that constant value will be placed in the
-	 *  'value' attribute; otherwise, the 'expr' attribute will be set
-	 *  to a karajan code fragment representing the input expression.
-	 *
-	 *  @param st A StringTemplate object to populate
-	 *  @param content The content to parse and use for template population
-	 *  @param dequote
-	 *  @param reference If set to true, then the 'reference' attribute will
-	 *    be set to 'true' when the content parses to a SwiftScript identifier.
-	 */
-
-	public void setExprOrValue(StringTemplate st, String content, boolean dequote, boolean reference)
-			throws Exception {
-		if (content == null || content.trim().equals("")) {
-			st.setAttribute("nil", new Boolean(true));
-			return;
-		}
-		StringTemplate valueST = m_exprParser.parse(content);
-		String name = valueST.getName();
-		if (dequote && name.equals("sConst")) {
-			st.setAttribute("value", valueST.getAttribute("innervalue"));
-			return;
-		}
-		if (name.endsWith("Const")) {
-			st.setAttribute("value", valueST.getAttribute("value"));
-			return;
-		}
-		if (reference && name.equals("id")) {
-			valueST.setAttribute("reference", new Boolean(true));
-		}
-		st.setAttribute("expr", valueST);
-	}
-
-	public String getText(XmlObject xo) {
-		XmlCursor xc = xo.newCursor();
-		while (!xc.toNextToken().isNone()) {
-			if (xc.isText()) {
-				// System.out.println("content - " + xc.getTextValue());
-				return xc.getTextValue();
-			}
-		}
-		return null;
 	}
 
 
@@ -686,12 +585,14 @@ public class Karajan {
 	  **/
 
 	protected void markDataset(StringTemplate exprST, StringTemplate st, boolean isInput) {
+		if(logger.isDebugEnabled()) logger.debug("markDataset exprST="+exprST+" st="+st+" input="+isInput);
 		if (exprST == null || st == null)
 			return;
 		if (exprST.getName().equals("id")) {
 			// variable reference, mark the variable
-			StringTemplate varST = (StringTemplate) exprST.getAttribute("var");
-			markDataset((String) varST.getAttribute("var"), st, isInput);
+			logger.debug("treating as a variable");
+			String var = (String) exprST.getAttribute("var");
+			markDataset(var, st, isInput);
 		} else if(exprST.getName().equals("in")) {
 			markDataset((String) exprST.getAttribute("var"), st, isInput);
 		} else {
@@ -771,7 +672,10 @@ public class Karajan {
 					}
 				} else
 				if (declName.equals("dataset")) {
+					logger.debug("checking(1) dataset for "+name);
+					logger.debug("checking(1) "+declST.getAttribute("name"));
 					if (declST.getAttribute("name").equals(name)) {
+						logger.debug("success(1)");
 						markDatasetParam(declST, st, isInput);
 						return;
 					}
@@ -801,9 +705,12 @@ public class Karajan {
 							checkAssign(name, declST, st, isInput);
 							return;
 						}
-					} else
+					} else 
 					if (declName.equals("dataset")) {
+						logger.debug("checking(2) dataset for "+name);
+						logger.debug("checking(2) "+declST.getAttribute("name"));
 						if (declST.getAttribute("name").equals(name)) {
+							logger.debug("success(2)");
 							markDatasetParam(declST, st, isInput);
 							return;
 						}
@@ -827,11 +734,6 @@ public class Karajan {
 	  * the variable can be used as an input, and recurse over the
 	  * assigned value of that variable.
 	  *
-	  * If there is no expression in 'assignST' then we assume this is
-	  * an array assignment, in which case we recurse over the
-	  * individual elements of the array definition (or the range
-	  * definition the array is initialised by a range).
-	  *
 	  * @param name the name of the variable
 	  * @param assignST the assignment statement (?or some wrapper of such?)
 	  * @param st the enclosing context
@@ -845,58 +747,15 @@ public class Karajan {
 			throw new RuntimeException("The variable " + name + " can not be used as an output!\n"
 					+ assignST);
 		}
-		// stop if it is primitive value
-		if (assignST.getAttribute("value") != null)
-			return;
+
 		StringTemplate exprST = (StringTemplate) assignST.getAttribute("expr");
 
 		if (exprST != null) {
 			// now it comes from another source
 			markDataset(exprST, st, isInput);
 		}
-		else {
-			// assigned value is an array
-			StringTemplate arrayST = (StringTemplate) assignST.getAttribute("array");
-			if (arrayST != null) {
-				// get elements of the array
-				Object elems = arrayST.getAttribute("elements");
-				if (elems instanceof StringTemplate) {
-					// just one single element
-					StringTemplate elemST = (StringTemplate) elems;
-					if (elemST.getAttribute("value") != null)
-						return;
-					StringTemplate elemExprST = (StringTemplate) elemST.getAttribute("expr");
-					markDataset(elemExprST, st, isInput);
-				}
-				else {
-					Iterator it = ((List) elems).iterator();
-					while (it.hasNext()) {
-						StringTemplate elemST = (StringTemplate) it.next();
-						if (elemST.getAttribute("value") != null)
-							continue;
-						StringTemplate elemExprST = (StringTemplate) elemST.getAttribute("expr");
-						markDataset(elemExprST, st, isInput);
-					}
-				}
-			}
-			else {
-				// assigned value is a range
-				StringTemplate rangeST = (StringTemplate) assignST.getAttribute("range");
-				if (rangeST != null) {
-					StringTemplate fromST = (StringTemplate) rangeST.getAttribute("from");
-					StringTemplate fromExprST = (StringTemplate) fromST.getAttribute("expr");
-					markDataset(fromExprST, st, isInput);
-					StringTemplate toST = (StringTemplate) rangeST.getAttribute("to");
-					StringTemplate toExprST = (StringTemplate) toST.getAttribute("expr");
-					markDataset(toExprST, st, isInput);
-					StringTemplate stepST = (StringTemplate) rangeST.getAttribute("step");
-					if (stepST != null) {
-						StringTemplate stepExprST = (StringTemplate) stepST.getAttribute("expr");
-						markDataset(stepExprST, st, isInput);
-					}
-				}
-			}
-		}
+// TODO we used to recurse over arrays here, but now that arrays count as
+// expressions, do we still get the desired behaviour?
 	}
 
 
@@ -937,15 +796,20 @@ public class Karajan {
 	  **/
 
 	protected void markDatasetParam(StringTemplate datasetST, StringTemplate st, boolean isInput) {
-		if (datasetST == null)
+		logger.debug("markdatasetparam(3)");
+		if (datasetST == null) {
+			logger.debug("null dataset - returning. (5)");
 			return;
+		}
 
 		// process file mapping
 		StringTemplate mappingST = (StringTemplate) datasetST.getAttribute("file");
 		if (mappingST == null) {
 			mappingST = (StringTemplate) datasetST.getAttribute("mapping");
-			if (mappingST == null)
+			if (mappingST == null) {
+				logger.debug("dataset mapping and file are both null (6)");
 				return;
+			}
 		}
 
 		// mark input as true or false accordingly
@@ -953,13 +817,19 @@ public class Karajan {
 
 		Object params = mappingST.getAttribute("params");
 		if (params != null) {
+			logger.debug("we have some parameter(s) to process (7): "+params);
 			if (params instanceof StringTemplate) {
+				logger.debug("we have just one parameter to process(8)");
 				StringTemplate paramST = (StringTemplate) params;
 				if (paramST.getAttribute("name").equals("input")) {
+					logger.debug("name is input");
 					if (!isInput) {
+						logger.debug("it is not an input(4)");
 						// mark as false
-						paramST.removeAttribute("value");
-						paramST.setAttribute("value", new Boolean(false));
+						paramST.removeAttribute("expr");
+						paramST.setAttribute("expr", new Boolean(false));
+					} else {
+						logger.debug("it is an input(4)");
 					}
 					return;
 				} else {
@@ -976,6 +846,7 @@ public class Karajan {
 				}
 			}
 			else {
+				logger.debug("we have a list of parameters to process(9)");
 				// a list of params
 				Iterator it = ((List) params).iterator();
 				while (it.hasNext()) {
@@ -984,8 +855,8 @@ public class Karajan {
 					if (paramST.getAttribute("name").equals("input")) {
 						if (!isInput) {
 							// mark as false
-							paramST.removeAttribute("value");
-							paramST.setAttribute("value", new Boolean(false));
+							paramST.removeAttribute("expr");
+							paramST.setAttribute("expr", new Boolean(false));
 						}
 						foundInput = true;
 					} else {
@@ -1005,10 +876,12 @@ public class Karajan {
 					}
 				}
 			}
+		} else {
+			logger.debug("we have no parameter(s) to process (9)");
 		}
 		StringTemplate iparamST = template("vdl_parameter");
 		iparamST.setAttribute("name", "input");
-		iparamST.setAttribute("value", value);
+		iparamST.setAttribute("expr", value);
 		mappingST.setAttribute("params", iparamST);
 	}
 }

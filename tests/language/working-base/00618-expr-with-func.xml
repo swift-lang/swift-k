@@ -1,8 +1,9 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <variable name="i" type="int">1 + <function name="foo">
-  <argument>
-    1
-  </argument></function></variable>
+  <variable name="i" type="int"><arith op="+">
+    <integerConstant>1</integerConstant>
+    <function name="foo">
+      <integerConstant>1</integerConstant></function>
+  </arith></variable>
 </program>

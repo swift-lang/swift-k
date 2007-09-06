@@ -1,48 +1,62 @@
-<program xmlns="http://www.griphyn.org/2006/08/vdl"
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <types>
-    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+    <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:simpleType name="file">
        <xs:restriction base="xs:string"/>
      </xs:simpleType>
     </xs:schema>
   </types>
   <procedure name="echo">
-    <output name="f" type="file"/>
-    <input name="s" type="string"/>
+
+      <output 
+    name="f" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="s" type="string"
+
+     xsi:nil="true" />
     <binding>
       <application>
         <executable>echo</executable>
-        <argument>s</argument>
         <stdout><function name="filename">
-        <argument>
-          f
-        </argument></function></stdout>
-      </application>
+          <variableReference>f</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
   <procedure name="echo_batch">
-    <output name="fa" type="file" isArray="true"/>
-    <input name="sa" type="string" isArray="true"/>
-    <variable name="s" type="string"/>
-    <foreach var="s" in="sa" indexVar="i">
-      <call proc="echo">
-        <output>fa[i]</output>
-        <input>s</input>
-      </call>
+
+      <output 
+    name="fa" type="file" isArray="true"
+
+     xsi:nil="true" />
+
+      <input 
+    name="sa" type="string" isArray="true"
+
+     xsi:nil="true" />
+    <variable name="s" type="string" xsi:nil="true"/>
+    <foreach var="s"  indexVar="i">
+    <in><variableReference>sa</variableReference></in>
+    <body><call proc="echo">
+        <output><arraySubscript>
+         <variableReference>fa</variableReference>
+         <variableReference>i</variableReference>
+        </arraySubscript></output>
+        <input><variableReference>s</variableReference></input>
+      </call></body>
     </foreach>
   </procedure>
   <variable name="sa" type="string" isArray="true">
     <array>
-      <element>&quot;hello&quot;</element>
-      <element>&quot;hi there&quot;</element>
-      <element>&quot;how are you&quot;</element>
+      <stringConstant>hello</stringConstant><stringConstant>hi there</stringConstant><stringConstant>how are you</stringConstant>
     </array>
   </variable>
-  <variable name="fa" type="file" isArray="true"/>
+  <variable name="fa" type="file" isArray="true" xsi:nil="true"/>
   <call proc="echo_batch">
-    <output>fa</output>
-    <input>sa</input>
+    <output><variableReference>fa</variableReference></output>
+    <input><variableReference>sa</variableReference></input>
   </call>
 </program>
