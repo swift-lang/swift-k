@@ -133,12 +133,12 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 			}
 
 			if (sourceContact.equals(BoundContact.LOCALHOST) && fs.getSourceDirectory().equals("")) {
-				fs.setSourceDirectory(new File(".").getAbsolutePath());
+				fs.setSourceDirectory(stack.getExecutionContext().getCwd());
 			}
 
 			if (destinationContact.equals(BoundContact.LOCALHOST)
 					&& fs.getDestinationDirectory().equals("")) {
-				fs.setDestinationDirectory(new File(".").getAbsolutePath());
+				fs.setDestinationDirectory(stack.getExecutionContext().getCwd());
 			}
 
 			task.setType(Task.FILE_TRANSFER);
