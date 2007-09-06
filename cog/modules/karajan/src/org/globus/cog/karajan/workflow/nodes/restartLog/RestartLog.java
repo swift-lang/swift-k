@@ -12,10 +12,8 @@ package org.globus.cog.karajan.workflow.nodes.restartLog;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.channels.FileLock;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +35,7 @@ public class RestartLog extends PartialArgumentsContainer {
 	public static final Arg A_RESUME = new Arg.Optional("resume");
 	public static final Arg A_NAME = new Arg.Optional("name", null);
 	public static final Arg.Channel LOG_CHANNEL = new Arg.Channel("restartlog");
-	
+
 	static {
 		setArguments(RestartLog.class, new Arg[] { A_RESUME, A_NAME });
 	}
@@ -116,7 +114,8 @@ public class RestartLog extends PartialArgumentsContainer {
 		}
 		for (int i = 0; i < Integer.MAX_VALUE; i++) {
 			String index = "." + String.valueOf(i);
-			File f = new File(name + index + ".rlog");
+			File f = new File(stack.getExecutionContext().getCwd() + File.separator + name + index
+					+ ".rlog");
 			if (f.exists()) {
 				continue;
 			}
@@ -149,15 +148,6 @@ public class RestartLog extends PartialArgumentsContainer {
 			throws ExecutionException {
 		LOG_CHANNEL.create(stack, new LogVargOperator(logffw));
 		startRest(stack);
-	}
-
-	private FileLock getLock(File f) throws IOException {
-		FileOutputStream fos = new FileOutputStream(f);
-		FileLock lock = fos.getChannel().tryLock();
-		if (lock == null) {
-			fos.close();
-		}
-		return lock;
 	}
 
 	protected void post(VariableStack stack) throws ExecutionException {

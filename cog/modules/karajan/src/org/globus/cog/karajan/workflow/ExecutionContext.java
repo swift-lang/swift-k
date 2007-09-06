@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.workflow;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -77,6 +78,7 @@ public class ExecutionContext implements EventListener {
 	private transient VariableArguments stdout, stderr;
 	private int id;
 	private long startTime, endTime;
+	private String cwd;
 
 	public ExecutionContext(ElementTree tree) {
 		this(tree, KarajanProperties.getDefault());
@@ -90,6 +92,7 @@ public class ExecutionContext implements EventListener {
 		this.tree = tree;
 		eventListeners = new LinkedList();
 		this.properties = properties;
+		cwd = new File(".").getAbsolutePath();
 	}
 
 	public boolean isMonitoringEnabled() {
@@ -395,5 +398,16 @@ public class ExecutionContext implements EventListener {
 
 	protected void setStartTime(long startTime) {
 		this.startTime = startTime;
-	}	
+	}
+
+	public String getCwd() {
+		return cwd;
+	}
+
+	public void setCwd(String cwd) {
+	    if (cwd == null) {
+	        throw new IllegalArgumentException("CWD cannot be null");
+	    }
+		this.cwd = cwd;
+	}
 }
