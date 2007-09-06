@@ -189,7 +189,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				FileOutputStream f = new FileOutputStream(kml);
 				Karajan.compile(xml.getAbsolutePath(), new PrintStream(f));
 				f.close();
-			} 
+			}
+			catch (Error e) {
+				kml.delete();
+				throw e;
+			}
 			catch(Exception e) {
 				// if we leave a kml file around, then a subsequent
 				// re-run will skip recompiling and cause a different
