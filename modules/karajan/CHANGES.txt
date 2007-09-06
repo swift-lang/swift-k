@@ -1,3 +1,8 @@
+(09/06/2007)
+
+*** Partial ability to have a CWD for each separate execution, 
+    if done from the same JVM.
+
 (08/28/2007)
 
 *** "off" is now a valid value for throttling parameters
