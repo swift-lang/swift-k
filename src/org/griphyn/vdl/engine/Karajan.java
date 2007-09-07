@@ -672,8 +672,8 @@ public class Karajan {
 					}
 				} else
 				if (declName.equals("dataset")) {
-					logger.debug("checking(1) dataset for "+name);
-					logger.debug("checking(1) "+declST.getAttribute("name"));
+					if(logger.isDebugEnabled()) logger.debug("checking(1) dataset for "+name);
+					if(logger.isDebugEnabled()) logger.debug("checking(1) "+declST.getAttribute("name"));
 					if (declST.getAttribute("name").equals(name)) {
 						logger.debug("success(1)");
 						markDatasetParam(declST, st, isInput);
@@ -707,8 +707,8 @@ public class Karajan {
 						}
 					} else 
 					if (declName.equals("dataset")) {
-						logger.debug("checking(2) dataset for "+name);
-						logger.debug("checking(2) "+declST.getAttribute("name"));
+						if(logger.isDebugEnabled()) logger.debug("checking(2) dataset for "+name);
+						if(logger.isDebugEnabled()) logger.debug("checking(2) "+declST.getAttribute("name"));
 						if (declST.getAttribute("name").equals(name)) {
 							logger.debug("success(2)");
 							markDatasetParam(declST, st, isInput);
@@ -817,9 +817,9 @@ public class Karajan {
 
 		Object params = mappingST.getAttribute("params");
 		if (params != null) {
-			logger.debug("we have some parameter(s) to process (7): "+params);
+			if(logger.isDebugEnabled()) logger.debug("we have some parameter(s) to process (7): "+params);
 			if (params instanceof StringTemplate) {
-				logger.debug("we have just one parameter to process(8)");
+				if(logger.isDebugEnabled()) logger.debug("we have just one parameter to process(8)");
 				StringTemplate paramST = (StringTemplate) params;
 				if (paramST.getAttribute("name").equals("input")) {
 					logger.debug("name is input");
