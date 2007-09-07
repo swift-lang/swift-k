@@ -124,7 +124,6 @@ public class Misc extends FunctionsCollection {
 				text.append('\n');
 				line = br.readLine();
 			}
-			;
 			return text.toString();
 		}
 		catch (Exception e) {
