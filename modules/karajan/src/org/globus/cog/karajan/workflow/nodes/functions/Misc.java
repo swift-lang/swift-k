@@ -112,15 +112,19 @@ public class Misc extends FunctionsCollection {
 
 	public Object sys_readfile(VariableStack stack) throws ExecutionException {
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(new File(
-					TypeUtil.toString(PA_FILE.getValue(stack)))));
+			File f = new File(TypeUtil.toString(PA_FILE.getValue(stack)));
+			if (!f.isAbsolute()) {
+				f = new File(stack.getExecutionContext().getCwd() + File.separator + f.getPath());
+			}
+			BufferedReader br = new BufferedReader(new FileReader(f));
 			StringBuffer text = new StringBuffer();
 			String line = br.readLine();
 			while (line != null) {
 				text.append(line);
 				text.append('\n');
 				line = br.readLine();
-			};
+			}
+			;
 			return text.toString();
 		}
 		catch (Exception e) {
