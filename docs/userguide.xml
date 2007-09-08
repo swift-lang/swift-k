@@ -1531,11 +1531,11 @@ file, the <option>-resume <parameter><filename
 class="file">logfile</filename></parameter></option> argument can be
 used after the compiled workflow file name. Example:
 
-<programlisting>
+<screen>
 <prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
 class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
 class="file">example.swift</filename></option>.
-</programlisting>
+</screen>
 
 		</para>
 	</sect1> 
