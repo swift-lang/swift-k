@@ -1,3 +1,9 @@
+(09/08/07)
+
+*** Changed the way arguments are passed to the wrapper. This
+    should be more resilient to broken middleware that doesn't
+    properly quote arguments.
+
 (09/04/07)
 
 *** Updated wrapper to be more thorough at diagnosing problems.

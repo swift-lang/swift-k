@@ -59,7 +59,7 @@ namespace("vdl"
 				isEmpty(...) ""
 				
 				concat(
-					for(i, butLast(...), if(isList(i) flatten(i) i), " ") last(...)
+					for(i, butLast(...), if(isList(i) flatten(i) i), "|") last(...)
 				)
 			)
 		)
@@ -80,8 +80,13 @@ namespace("vdl"
 				if(
 					file:exists("{wfdir}/status/{jobid}-error", host=rhost) then(
 						task:transfer(srchost=rhost, srcdir="{wfdir}/status", srcfile="{jobid}-error")
-						error := str:strip(file:read("{jobid}-error"))
-						file:remove("{jobid}-error")
+						error := parallel(
+							file:remove("{wfdir}/status/{jobid}-error", host=rhost)
+							sequential(
+								str:strip(file:read("{jobid}-error"))
+								file:remove("{jobid}-error")
+							)
+						)
 						throw(error)
 					)
 					else (	
@@ -158,7 +163,7 @@ namespace("vdl"
 				)
 			)
 		)
-				
+		
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "Cleaning up ", dir, " on ", host)
 			task:execute("/bin/rm", arguments="-rf {dir}", host=host)
@@ -342,17 +347,19 @@ namespace("vdl"
 						log(LOG:INFO, "Running job {jobid} {tr}", maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
 				
 						task:execute("/bin/sh",
-							list("shared/wrapper.sh", jobid, 
-								stdout, stderr, try(stdin, ""),
-								flatten(each(fileDirs)),
-								flatten(infiles(stagein)), 
-								flatten(outfiles(stageout)),
-								kickstart,
-								vdl:executable(tr, rhost),
-								maybe(each(arguments)))
+							list("shared/wrapper.sh", jobid,
+								"-e", vdl:executable(tr, rhost), 
+								"-out", stdout, 
+								"-err", stderr, 
+								"-i", maybe(stdin),
+								"-d", flatten(each(fileDirs)),
+								"-if", flatten(infiles(stagein)), 
+								"-of", flatten(outfiles(stageout)),
+								"-k", kickstart,
+								"-a", maybe(each(arguments)))
 							directory=wfdir
-							redirect = false
-							host = rhost
+							redirect=false
+							host=rhost
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
 						)
 							
