@@ -6,37 +6,33 @@
 	<articleinfo revision="0.1">
 		<title>The Swift User Guide</title>
 		<subtitle>Source control $LastChangedRevision$</subtitle>
-		<abstract>
-			<formalpara>
-				<title></title>
-				<para>
-SwiftScript is an improved version of the Virtual Data Language that
-supports dataset typing and mapping, dataset iteration, conditional
-branching, sub-workflow composition and other advanced features. In
-this document, we give a few examples to illustrate how to write
-SwiftScript programs to exploit such features. SwiftScript syntax has
-two flavors; one is in a C-like format, the other in XML. For
-simplification purpose, all examples in this document are written
-in the C-like format, which can be automatically translated into
-the XML format using one of the tools in our virtual data system.
-				</para>
-			</formalpara>
-		</abstract>
 	</articleinfo>
 
 	<sect1>
 		<title>Overview</title>
 		<para>
-This manual provides reference material for the SwiftScript language
-and the Swift runtime system. For more introductory material, consult
-the Swift tutorial.
-		</para>
+This manual provides reference material for Swift: the SwiftScript language
+and the Swift runtime system. For introductory material, consult
+the <ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift tutorial</ulink>.
+	</para>
+	<para>
+SwiftScript is an improved version of the Virtual Data Language that
+supports dataset typing and mapping, dataset iteration, conditional
+branching, sub-workflow composition and other advanced features. In
+this document, we give a few examples to illustrate how to write
+SwiftScript programs to exploit such features.
+	</para>
+<para>SwiftScript syntax has two flavors; one is a C-like format, the
+other is XML-based.  Examples in this document are written in the
+C-like format. Translation into the XML format occurs automatically
+during execution of a SwiftScript program.
+	</para>
 	</sect1>
 	<sect1>
 		<title>The SwiftScript Language</title>
 <para>The syntax of SwiftScript has a superficial resemblance to C and
-Java, for example in its use of the { and } characters to enclose
-blocks of statements.
+Java. For example, { and } characters are used to enclose blocks of
+statements.
 </para>
 		<sect2>
 			<title>Data</title>
