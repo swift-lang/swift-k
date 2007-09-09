@@ -506,7 +506,7 @@ by prefix, suffix, and pattern.
 If more than one file is matched, each of the file names will
 be mapped as a subelement of the dataset.
 	</listitem>
-	<listitem>Parameter:
+	<listitem>Parameters:
 		<itemizedlist>
 		<listitem>location:
 			A directory that the files are located.
@@ -621,7 +621,7 @@ generated will contain an extract sequence that is unique.
 This mapper is the default mapper for variables when no mapper is
 specified.
 	</listitem>
-		<listitem>Parameter:
+		<listitem>Parameters:
 		<itemizedlist>
 		<listitem>location:
 			A directory that the files are located.
@@ -662,7 +662,7 @@ This mapper is similar to the simple mapper, but maps a file or
 a list of files to a dataset array. Each of the filenames would
 be mapped as an element in the array.
 	</listitem>
-		<listitem>Parameter:
+		<listitem>Parameters:
 		<itemizedlist>
 		<listitem>location:
 			A directory that the files are located.
@@ -735,7 +735,7 @@ An array of strings containing one filename per element</listitem>
 This mapper transforms one file name to another using
 regular expression matching.
 	</listitem>
-	<listitem>Parameter:
+	<listitem>Parameters:
 		<itemizedlist>
 		<listitem>source:
 		The source file name
@@ -784,7 +784,7 @@ contains columns:
 if the file does not contain a header with column info, then the
 column names are assumed as &quot;column1&quot;, &quot;column2&quot;,
 	</listitem>
-	<listitem>Parameter:
+	<listitem>Parameters:
 		<itemizedlist>
 		<listitem>file:
 The name of the file to read from.
