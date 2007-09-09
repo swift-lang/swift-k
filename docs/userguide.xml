@@ -524,13 +524,90 @@ output filenames, pattern is ignored.
 		</listitem>
 		</itemizedlist>
 	</listitem>
-	<listitem> Example:
+	<listitem> Examples:
 		<programlisting>
 	file f &lt;simple_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
-The above example would map all filenames that start 
-with &quot;foo&quot; and have an extension &quot;.txt&quot; into file f.
+The above maps all filenames that start with <filename>foo</filename> and
+have an extension <filename>.txt</filename> into file f.
 	</listitem>
+
+	<listitem>
+	<programlisting>
+type messagefile;
+
+(messagefile t) greeting(string m) {.
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;simple_mapper;prefix="foo",suffix=".txt"&gt;;
+
+outfile = greeting("hi");
+	</programlisting>
+
+This will output the string 'hi' to the file <filename>foo.txt</filename>.
+	</listitem>
+
+	<listitem>
+The simple_mapper can be used to map arrays. It will map the array index
+into the filename between the prefix and suffix.
+
+<programlisting>
+type messagefile;
+
+(messagefile t) greeting(string m) { 
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+messagefile outfile[] &lt;simple_mapper;prefix="baz",suffix=".txt"&gt;;
+
+outfile[0] = greeting("hello");
+outfile[1] = greeting("middle");
+outfile[2] = greeting("goodbye");
+</programlisting>
+
+This will output the string &quot;hello&quot; into a file
+called <filename>baz.0.txt</filename>, the string &quot;middle&quot;
+into <filename>baz.1.txt</filename> and the string &quot;goodbye&quot;
+into <filename>baz.2.txt</filename>.
+
+	</listitem>
+
+	<listitem>
+simple_mapper can be used to map structures. It will map the name of the
+structure member into the filename, between the prefix and the
+suffix.
+
+	<programlisting>
+type messagefile;
+
+type mystruct {
+  messagefile left;
+  messagefile right;
+};
+
+(messagefile t) greeting(string m) { 
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+mystruct out &lt;simple_mapper;prefix="qux",suffix=".txt"&gt;;
+
+out.left = greeting("hello");
+out.right = greeting("goodbye");
+	</programlisting>
+
+This will output the string &quot;hello&quot; into the file
+<filename>qux.left.txt</filename> and the string &quot;goodbye&quot;
+into the file <filename>qux.right.txt</filename>.
+
+	</listitem>
+
 	</itemizedlist>
 	</sect2>
 
