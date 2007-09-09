@@ -1087,7 +1087,8 @@ the file should contain a header line specifying the names of the columns.
 							
 							<para>
 							
-								Swift can generate a graphviz file representing 
+								Swift can generate a 
+<ulink url="http://www.graphviz.org/">Graphviz</ulink> file representing 
 								the structure of the workflow it runs. If this
 								property is set to <literal>true</literal>,
 								Swift will save the provenance graph in a file
