@@ -18,7 +18,7 @@ pdf() {
 
 process() {
 	html $1 $2
-	#pdf $1
+	pdf $1
 }
 
 
