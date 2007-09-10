@@ -65,6 +65,5 @@ public class PermissionsImpl implements Permissions {
         else {
             return "0";
         }
-
     }
 }
