@@ -368,7 +368,6 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
                 fileResource.changeMode(spec.getArgument(0), Integer.valueOf(
                         spec.getArgument(1)).intValue());
             }
-            fileResource.setCurrentDirectory(cwd);
             return output;
         }
         finally {
