@@ -4,46 +4,36 @@
 
 <article>
 	<articleinfo revision="0.1">
-		<title>The Swift User Guide</title>
+		<title>Swift User Guide</title>
 		<subtitle>Source control $LastChangedRevision$</subtitle>
 	</articleinfo>
 
-	<sect1>
+	<section>
 		<title>Overview</title>
 		<para>
 This manual provides reference material for Swift: the SwiftScript language
 and the Swift runtime system. For introductory material, consult
-the <ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift tutorial</ulink>.
+the <ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift
+tutorial</ulink>.
 	</para>
 	<para>
-SwiftScript is an improved version of the Virtual Data Language that
-supports dataset typing and mapping, dataset iteration, conditional
-branching, sub-workflow composition and other advanced features. In
-this document, we give a few examples to illustrate how to write
-SwiftScript programs to exploit such features.
+SwiftScript is a data-oriented workflow language that
+supports dataset typing and mapping, dataset iteration,
+conditional branching, and sub-workflow composition.
 	</para>
-<para>SwiftScript syntax has two flavors; one is a C-like format, the
-other is XML-based.  Examples in this document are written in the
-C-like format. Translation into the XML format occurs automatically
-during execution of a SwiftScript program.
-	</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>The SwiftScript Language</title>
-<para>The syntax of SwiftScript has a superficial resemblance to C and
-Java. For example, { and } characters are used to enclose blocks of
-statements.
-</para>
-		<sect2>
+<section><title>Data model</title>
+<para>Data processed by Swift is strongly typed. It may be take the form
+of values in memory or as out-of-core files on disk. Language constructs
+called mappers specify how each piece of data is stored.</para>
+		<section>
 			<title>Data</title>
 		<para>
-Data in SwiftScript is strongly typed. It may be represented in-memory
-(as with conventional languages) or as an out-of-core file on disk.
 For out-of-core files, a mapper (see mapper section) is used to
 identify which files are used as backing store for the data. When data is
 mapped externally this way, it is called a dataset.
-		</para>
-<para>
 A dataset's physical representation is declared by a mapping descriptor, 
 which defines how each element in the dataset's logical schema is 
 stored in, and fetched from, physical structures such as directories,
@@ -51,18 +41,19 @@ files, and database tables
 </para>
 
 <para>
-In order to permit reuse for different datasets, mapping functions may
-be parameterized for such things as dataset locations. Thus, in order
+Mappers are parameterized to take into account properties such as
+varying dataset location.
+In order
 to access a dataset, we need to know three things: its type schema, 
-its mapping descriptor, and the value(s) of any parameter(s) associated 
+its mapping, and the value(s) of any parameter(s) associated 
 with the mapping descriptor. For example, if we want to describe a dataset,
-whose logical structure is defined by binaryfile, and whose physical
+of type imagefile, and whose physical
 representation is a file called "file1.bin" located at "/home/yongzh/data/",
 then the dataset might be declared as follows:
 </para>
 
 <programlisting>
-binaryfile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
+imagefile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
 </programlisting>
 
 <para>
@@ -77,110 +68,96 @@ binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
 </programlisting>
 </para>
 
-
-
-The Swift data model.
-
-Data in an abstract sense is represented in the swift script runtime by
+<para>
+Data in an abstract sense is represented in the Swift runtime by
 a DSHandle object. DSHandles don't have any guaranteed to work methods.
 (? is this true? they should have get paremt, and perhaps others - should
 check in source code).
+</para>
 
-In swift at present DSHandles can represent data in one of three forms.
-
+<para>
+In Swift at present DSHandles can represent data in one of three forms.
+</para>
+<para>
 i) an in-memory value, such as a string or integer. In this case the
 value is accessed through methods such as getValue and setValue.
-
-ii) an on-disk data file, which is not exposed to the swift script language
+</para>
+<para>
+ii) an on-disk data file, which is not exposed to the SwiftScript language
 as a value. The value is not exposed to the runtime directly, but the
 filename for the file is available through getFilename. The filenames are
 provided to the DSHandle implementation objects (which are instances of
 the various DataNode classes).
-
+</para>
+<para>
 iii) a containing structure - either an array or a defined type.
 one of these DSHandles can provide, upon request, subordinate
 DSHandles to member elements. However, it isn't required to generate
 all of the subordinate DSHandles at once and can be used in a lazy
 fashion.
-
-In pracise at the moment the above three are mutually exclusive - for
-example, a data set that is mapped to a file cannot have a value extracted
-from it in to a swift script expression; and a data item that is a
-value cannot be passed into a procedure
+</para>
+The above three are mutually exclusive - for example, a data set
+that is mapped to a file cannot have a value that can be used in a
+SwiftScript expression; and a data item that is a
+value cannot be passed into an application
 executable as a data file using the @filename function.
 
-However the implementation makes no specific checks for the above - errors
-wil occur if an attempt was made to use the same variable in two different ways,
-but no explicit check is made for the multiple uses of.
+		</section>
 
-In future, it may be the case that the implementation will support multiple forms of access
-There is no exp specific reason why a single data object should not
-be accessible through multiple accessing methods
-
-In future it may be that mappers map into DSHandle objects, rather than providing a filename list - this woul dallow mappeds to provide their own implementations fo the DSHanlde interface customised to their own us - using own getValue/setValue/getFilename/getDescendants methods.
-
-So there's a potential change in what mappers are here - at present, a mapper takes a 'path' which is a path from a root data item downwards to an eplicit data item, making use of explicitly listed members and listed array elements to return a filename for a file; and vice-versa. but really tthere's notreason for that
-to be the specifi API between the two forms.
-
-
-		</sect2>
-
-		<sect2>
+		<section>
 			<title>Type System</title>
 			<para>
-The SwiftScript type system is based on the XDTM (XML dataset typing 
-and mapping) model, where a dataset's logical structure is described 
-via (a subset of) XML Schema, which defines primitive scalar data types 
-such as Boolean, Integer, String, Float, and Date, and also allows 
-for the definition of complex types via the composition of simple 
-and complex types.
+The SwiftScript type system consists of a number of <firstterm>simple
+types</firstterm>, <firstterm>marker types</firstterm> for files,
+arrays, and <firstterm>complex types</firstterm> compsed of these types.
 			</para>
 			<para>
-Types can be specified in C-like syntax to represent SwiftScript types.
-For instance, we can define an order as composed of an array of items,
-where each item has a name and a quantity:
+The simple types are: string, float, int and boolean.
+			</para>
 
+			<para>
+Complex types are specified using the <firstterm>type</firstterm>
+keyword. The syntax is similar to struct in C or class in Java.
+For example, the below example declares a complex type with two
+members, a string called name and an integer called age.
 <programlisting>
-type order {
-	item[] items;
-}
-
-type item {
+type person {
 	string name;
-	integer quantity;
+	int age;
 }
 </programlisting>
-
 		</para>
 		
 		<para>
-Sometimes, the inner structure of a file on disk is irrelevant and we do
-not need to look at the content of the file in the SwiftScript program.
-In this case, an empty type can be used, such as:
+When referring to files on disk, the internal structure of the
+file is irrelevant; but it is still useful to declare types for those
+files so that Swift can perform type-checking on SwiftScript programs.
+In this case, a marker type can be declared, like this:
 
 <programlisting>
-type binaryfile {}
+type binaryfile;
 </programlisting>
 		</para>
-		</sect2>
+		</section>
+</section>
 
-		<sect2>
-			<title>Statements</title>
-			<para>
-A SwiftScript program consists of a number of statements.
-Statements may declare types, procedures and variables, assign values to
-variables, and express operations over arrays.
-			</para>
-		</sect2>
+		<section><title>Variables</title>
+<para>Variables in SwiftScript are declared to be of a specific type.
+Assignments to those variables must be data of that type.
+SwiftScript variables are single-assignment - a value may be assigned
+to a variable at most once. This assignment can happen at declaration time
+or later on in execution. When an attempt to read from a variable
+that has not yet been assigned is made, the code performing the read
+is suspended until that variable has been written to. This forms the
+basis for Swift's ability to parallelise execution - all code will
+execute in parallel unless there are variables shared between the code
+that cause sequencing.</para>
 
-		<sect2>
-			<title>Declaration Statements</title>
+		<section>
+			<title>Variable Declarations</title>
 			<para>
-Declaration statements declare new variables and optionally assign
-a value to them or map those variables to on-disk files.
-SwiftScript variables are single-assignment - they may be assigned to
-once, either at the time of declaration or later. Attempting to assign
-a value a second or subsequent time is an error.
+Variable declaration statements declare new variables. They can
+optionally assign a value to them or map those variables to on-disk files.
 			</para>
 <para>
 Declaration statements have the general form:
@@ -193,63 +170,44 @@ returns a single value.
 </para>
 <para>Variables can also be declared in a multivalued-procedure statement,
 described in another section.</para>
-		</sect2>
+		</section>
 
-		<sect2>
+		<section>
 			<title>Assignment Statements</title>
 			<para>
 Assignment statements assign values to previously declared variables.
-Assignments may only be made to variables that have already been 
+Assignments may only be made to variables that have not already been 
 assigned. Assignment statements have the general form:
 
 <programlisting>
   variable = value;
 </programlisting>
-
-where value can be either an expression or a value 
+where value can be either an expression or a procedure call that returns
+a single value.
 			</para>
 
 			<para>
 Variables can also be assigned in a multivalued-procedure statement,
 described in another section.
 			</para>
-		</sect2>
+		</section>
 
-		<sect2>
-			<title>Multivalued procedure invocation statements</title>
-<para>
-Procedures can return more than one value. In such case, the previously
-mentioned declaration and assignment statements are insufficient. A
-multi-valued procedure invocation can be used. This has the general
-form:
-
-<programlisting>
-'(' ((type)? variableName ( '=' binding ))+ ')' = procedureinvocation
-</programlisting>
-
-Variables can be either declared (if a type is included) or assigned (if
-a type is not included). If no bindings are specified, then variables
-are assigned in the same order that they are specified in the
-procedure declaration. If bindings are specified, then variables are
-assigned to the named return parameter.
-</para>
-
-		</sect2>
-
-		<sect2>
+		</section>
+		<section>
 			<title>Procedures</title>
 			<para>
-Datasets are operated on by procedures, which take typed data as input,
-perform computations on those data, and produce typed data as output. An
-atomic procedure defines an interface to an executable program or
-service, while a compound procedure composes calls to atomic
-procedures, compound procedures, and/or control statements.
-			</para>
-			
+Datasets are operated on by procedures, which take input in the form of 
+mapped variables, perform computations, and produce typed data as output
+that is again mapped to variables.</para>
+<para>There are two kinds of procedure: An atomic procedure, which
+describeds how an external program can be executed; and compound
+procedures which consist of a sequence of SwiftScript statements.
+</para>
+
 			<para>
-A procedure declaration is like a function definition, where we
-specify the function name and the formal parameters. SwiftScript
-procedures can take multiple inputs and produce multiple outputs.
+A procedure declaration defines the name of a procedure and its
+input and output parameters. SwiftScript procedures can take multiple
+inputs and produce multiple outputs.
 Inputs are specified to the right of the function name where 
 outputs to the left. For instance:
 
@@ -263,10 +221,11 @@ and two outputs out1 (of type type3) and out2 (of type type4).
 			</para>
 	
 			<para>
-A procedure input parameter can have a default value, in which case
-the parameter is deemed an optional parameter. When we call a
+A procedure input parameter can be an <firstterm>optional
+parameter</firstterm> in which case it must be declared with a default
+value.  When we call a
 procedure, passing in the actual parameters, we allow both positional
-parameter and keyword parameter passing, provided that all optional
+parameter and named parameter passing, provided that all optional
 parameters have to be declared after the required parameters and any
 optional parameter has to be bound using keyword parameter passing.
 So for instance if we declare a procedure myproc1:
@@ -289,11 +248,12 @@ binaryfile mybf = myproc1 (1, s="bar");
 
 			</para>
 			
+<section><title>Atomic procedures</title>
 			<para>
 The body of an atomic procedure specifies how to invoke an
 external executable program or Web Service, and how logical data
-types are mapped to command line arguments or SOAP messages. A
-complete specification for myproc1 can be:
+types are mapped to command line arguments. A complete specification
+for myproc1 can be:
 
 <programlisting>
 (binaryfile bf) myproc1 (int i, string s="foo") {
@@ -303,14 +263,16 @@ complete specification for myproc1 can be:
 }			
 </programlisting>
 
-Which specifies that myproc1 invokes an executable, passing the values
-of i, s and the file name of bf as command line arguments. The
-@filename notation serves as a mapping function denoting that the
+which specifies that myproc1 invokes an executable called myapp1,
+passing the values of i, s and the file name of bf as command line arguments.
+The @filename notation serves as a function denoting that the
 argument should be mapped as a file name, and since the notation is
-often required in invoking applications, often we can omit the
-filename part and use the @ sign only.
+often required in invoking applications, a shorter syntax is defined where
+we can omit the filename part and use the @ sign only.
 			</para>
+</section>
 
+<section><title>Compound procedures</title>
 			<para>
 A compound procedure contains a set of calls to other procedures. Shared
 variables in the body of a compound procedure specify data dependencies
@@ -325,22 +287,52 @@ illustration, we define a compound procedure in below:
 }
 </programlisting>
 		</para>
-		</sect2>
-		
-		<sect2>
+		</section>
+	</section>
+		<section>
+			<title>Syntax, Statements</title>
+<para>The syntax of SwiftScript has a superficial resemblance to C and
+Java. For example, { and } characters are used to enclose blocks of
+statements.
+</para>
+			<para>
+A SwiftScript program consists of a number of statements.
+Statements may declare types, procedures and variables, assign values to
+variables, and express operations over arrays.
+			</para>
+		</section>
+		<section>
+			<title>Multivalued procedure invocation statements</title>
+<para>
+Procedures can return more than one value. In such case, the previously
+mentioned declaration and assignment statements are insufficient. A
+multi-valued procedure invocation can be used. This has the general
+form:
+
+<programlisting>
+'(' ((type)? variableName ( '=' binding ))+ ')' = procedureinvocation
+</programlisting>
+
+Variables can be either declared (if a type is included) or assigned (if
+a type is not included). If no bindings are specified, then variables
+are assigned in the same order that they are specified in the
+procedure declaration. If bindings are specified, then variables are
+assigned to the named return parameter.
+</para>
+
+		</section>
+	
+		<section>
 			<title>Control Constructs</title>
 			<para>
-Control constructs are special control entities in a workflow to 
-control the direction of execution. SwiftScript provides if, switch,
-foreach, and while constructs, with syntax and semantics similar
-to comparable constructs in other high-level languages.
+SwiftScript provides if, switch, foreach, and while constructs,
+with syntax and semantics similar to comparable constructs in
+other high-level languages.
 			</para>
-			<sect3><title>foreach</title>
+			<section><title>foreach</title>
 			<para>
 The foreach construct is used to apply a block of statements to
-each element in a dataset.
-We illustrate the use of the foreach
-construct in the following example:
+each element in an array. For example:
 
 <programlisting>
 check_order (file a[]) {
@@ -349,22 +341,24 @@ check_order (file a[]) {
 	}
 }
 </programlisting>
-
+</para>
+<para>
 foreach statements have the general form:
 
 <programlisting>
-foreach (type) controlvariable in expression {
+foreach controlvariable (,index) in expression {
     statements
 }
 </programlisting>
 
 The block of statements is evaluated once for each element in 'expression',
-with the controlvariable set to the corresponding element.
+with controlvariable set to the corresponding element and index set to the
+integer position in the array that is being iterated over.
 
 			</para>
-			</sect3>
+			</section>
 
-			<sect3><title>if</title>
+			<section><title>if</title>
 			<para>
 The 'if' statement allows one of two blocks of statements to be
 executed, based on a boolean predicate. 'if' statements generally
@@ -379,9 +373,9 @@ if(predicate) {
 
 where predicate is a boolean expression.
 			</para>
-			</sect3>
+			</section>
 
-			<sect3><title>switch</title>
+			<section><title>switch</title>
 			<para>
 Switch expressions allow one of a selection of blocks to be chosen based on
 the value of a numerical control expression. Switch statements take the
@@ -402,49 +396,21 @@ select a corresponding case, and the statements belonging to that case
 are evaluated. If no case corresponds, then the statements belonging to
 the default block are evaluated.
 			</para>
-			</sect3>
+<para>Unlike C or Java switch statements, execution does not fall through to
+subsequent case blocks, and no break statement is necessary at the end
+of each block.
+</para>
+			</section>
+		</section>
 
-		</sect2>
-	</sect1>
-	
-	<sect1>
-		<title> Simple Examples </title>
-		
-		<sect2>
-		<title>Hello World</title>
-		
-		<para>
-The hello world example calls to the UNIX command echo to print
-the text "hello world" and redirect the standard output into a
-file. Note that the echo command in the procedure body is only
-a logical command and needs to be mapped to an executable by means 
-of a transformation catalog.
+	</section>
 
-<programlisting>
-type file {} //define a type for file
-(file t) echo (string s) { //procedure declaration
-	app {
-		echo s stdout=@filename(t); //redirect stdout to a file
-	}
-}
-
-file hw = echo("hello world"); //procedure call
-</programlisting>
-
-		</para>
-		</sect2>	
-	</sect1>
-
-	<sect1>
+		<section id="mappers">
 		<title>Mappers</title>
 		<para>
-While we can define logical dataset types and procedures in SwiftScript,
-we need ways to access physical data when we invoke a procedure or execute 
-a workflow, and mappers help us to do that. A logical dataset can be 
-physically stored in different kinds of format, for instance, in a plain 
-text file, in a spreadsheet, or in a database. A mapper transforms a dataset's
-logical representation from/to its physical representation.
-		</para>
+Mappers provide a mechanism to specify the layout of mapped datasets on
+disk. This is needed when Swift must access files to transfer them to
+remote sites for execution or to pass to applications.</para>
 		<para>
 Swift provides a number of mappers that are useful in common cases. This
 section details those standard mappers. For more complex cases, it is
@@ -453,17 +419,7 @@ use them within a SwiftScript program. For more information on writing
 an application specific mapper, see the tutorial module on mappers.
 		</para>
 
-		<sect2><title>Mapper Initialization</title>
-		<para>
-Since each mapper is associated with a dataset, a mapper is initialized 
-together with its dataset. When a workflow is executed, each input
-datasets are evaluated and initialized first, and exceptions will be
-thrown if there are any problems in locating mappers or accessing physical
-data storage.
-		</para>
-		</sect2>
-
-		<sect2><title>The single file mapper</title>
+		<section><title>The single file mapper</title>
 		
 	<itemizedlist>
 	<listitem>Name: single_file_mapper</listitem>
@@ -491,9 +447,9 @@ There is a simplified syntax for this mapper:
 			</programlisting>
     </listitem>
 	</itemizedlist>
-	</sect2>
+	</section>
 
-	<sect2><title>The simple mapper</title>
+	<section><title>The simple mapper</title>
 	<itemizedlist>
 	<listitem>Name: simple_mapper</listitem>
 	<listitem>Description:
@@ -605,9 +561,9 @@ into the file <filename>qux.right.txt</filename>.
 	</listitem>
 
 	</itemizedlist>
-	</sect2>
+	</section>
 
-	<sect2><title>concurrent mapper</title>
+	<section><title>concurrent mapper</title>
 	<itemizedlist>
 	<listitem>Name: concurrent_mapper</listitem>
 	<listitem>Description:
@@ -644,9 +600,9 @@ The above example would use concurrent mapper for f1 and f2, and
 generate f2 filename with prefix &quot;foo&quot; and extension &quot;.txt&quot;
 	</listitem>
 	</itemizedlist>
-	</sect2>
+	</section>
 
-	<sect2><title>file system mapper</title>
+	<section><title>file system mapper</title>
 <para>TODO: note on difference between location as a relative vs absolute
 path wrt staging to remote location - as mihael said:
 It's because you specify that location in the mapper. Try location="."
@@ -685,9 +641,9 @@ The above example would map all filenames that start with &quot;foo&quot;
 and have an extension &quot;.txt&quot; into the array texts.
 	</listitem>
 	</itemizedlist>
-	</sect2>
+	</section>
 
-	<sect2><title>fixed array mapper</title>
+	<section><title>fixed array mapper</title>
 	<itemizedlist>
 	<listitem>Name: fixed_array_mapper</listitem>
     <listitem>Description:
@@ -708,9 +664,9 @@ A string that contains a list of filenames, separated by space, comma or colon
 			</programlisting>
 	</listitem>
 	</itemizedlist>
-	</sect2>
+	</section>
 
-	<sect2><title>array mapper</title>
+	<section><title>array mapper</title>
 	<itemizedlist>
 	<listitem>Name: array_mapper</listitem>
 	<listitem>Description: This mapper froms an array of strings into a file
@@ -722,9 +678,9 @@ An array of strings containing one filename per element</listitem>
 		</itemizedlist>
 	</listitem>
 	</itemizedlist>
-	</sect2>
+	</section>
 
-	<sect2><title>regular expression mapper</title>
+	<section><title>regular expression mapper</title>
 	<itemizedlist>
 	<listitem>Name: regexp_mapper</listitem>
 	<listitem>Description:
@@ -758,9 +714,9 @@ ending with &quot;jpg&quot;, where <emphasis>\1</emphasis> refers to
 the first group matched.
 	</listitem>
 	</itemizedlist>
-	</sect2>
+	</section>
 
-	<sect2><title>csv mapper</title>
+	<section><title>csv mapper</title>
 	<itemizedlist>
 	<listitem>Name: csv_mapper</listitem>
 	<listitem>Description:
@@ -809,11 +765,9 @@ The above example would read a list of student info from file
 the file should contain a header line specifying the names of the columns.
     </listitem>
 	</itemizedlist>
-	</sect2>
-
-	</sect1>
-	
-	<sect1 id="engineconfiguration">	
+	</section>
+	</section>
+	<section id="engineconfiguration">	
 	
 		<title>Swift Engine Configuration</title>
 		
@@ -835,7 +789,7 @@ the file should contain a header line specifying the names of the columns.
 		
 		</para>
 		
-		<sect2 id="properties">
+		<section id="properties">
 		
 			<title>Swift Properties</title>
 			
@@ -1049,7 +1003,7 @@ the file should contain a header line specifying the names of the columns.
 <programlisting>
 
 &lt;pool handle="example" sysinfo="INTEL32::LINUX"&gt;
-	&lt;gridftp url="gsiftp://example.org" storage="/sratch/swift" major="2" minor="4" patch="3"/&gt;
+	&lt;gridftp url="gsiftp://example.org" storage="/scratch/swift" major="2" minor="4" patch="3"/&gt;
 	&lt;jobmanager universe="vanilla" url="example.org/jobmanager-pbs" major="2" minor="4" patch="3"/&gt;
 	&lt;workdirectory&gt;/scratch/swift&lt;/workdirectory&gt;
 	&lt;profile namespace="SWIFT" key="storagesize"&gt;20000000&lt;/profile&gt;
@@ -1495,22 +1449,22 @@ ip.address=192.168.0.1
 			
 			</para>
 		
-		</sect2>
+		</section>
 		
-	</sect1>
+	</section>
 
-	<sect1 id="swiftcommand">
+	<section id="swiftcommand">
 	<title>The swift command</title>
 	<para>
-The swift command is the main command line tool for executing SwiftScript
-programs.
+The <command>swift</command> command is the main command line tool
+for executing SwiftScript programs.
 	</para>
-	<sect2><title>Syntax</title>
+	<section><title>Syntax</title>
 <para>
 Command-line syntax can be seen by typing swift -help
 </para>
-	</sect2>
-	<sect2><title>Return codes</title>
+	</section>
+	<section><title>Return codes</title>
 	<para>
 The swift command may exit with the following return codes:
 <itemizedlist>
@@ -1521,10 +1475,10 @@ The swift command may exit with the following return codes:
 <listitem>4 - input file does not exist</listitem>
 </itemizedlist>
 	</para>
-	</sect2>
-	</sect1>
+	</section>
+	</section>
 
-	<sect1 id="kickstart"> <title>Kickstart</title>.
+	<section id="kickstart"> <title>Kickstart</title>
 		<para>
 
 Kickstart is a tool that can be used to gather various information 
@@ -1576,14 +1530,14 @@ properties section</link>.
 
 
 
-	</sect1>
+	</section>
 
-	<sect1 id="restart"> <title>Workflow restart/recovery</title>
+	<section id="restart"> <title>Workflow restart/recovery</title>
 		<para>
 If a workflow fails, Swift can resume that workflow from the point of
 failure. If a Swift workflow fails, a restart log file will be generated
 using the unique job ID, with a .rlog extension. This restart log
-can then be passed to a subsequent swift invocation using the -resume
+can then be passed to a subsequent Swift invocation using the -resume
 parameter. Swift will resume executing the workflow. Previously executed
 tasks will not be run a second time. The SwiftScript source file should
 not be modified between invocations.
@@ -1612,44 +1566,76 @@ class="file">example.swift</filename></option>.
 </screen>
 
 		</para>
-	</sect1> 
+	</section> 
 
-	<sect1> <title>Invoking an application from Swift</title>.
+	<section> <title>Invoking an application from Swift</title>
 	<para>
-There are certain requirements for invoking application code from Swift,
-mostly related to their treatment of input and output data.
+There are certain requirements on the behaviour of application programs
+used in SwiftScript programs. These requirements are primarily to ensure
+that the Swift can run your application in different places.
 	</para>
-	</sect1>
+<para>
+Swift must know about all of your data files - when Swift has decided where
+to run your application, it will transfer the necessary input files there
+before execution and transfer the output files back to the submitting
+system afterwards. If Swift does not know about your files, then it cannot
+do this. The way to tell Swift about files is by mapping them to variables
+and using those variables as parameters to your application.
+</para>
+<para>
+Applications should take the name of input and output files on the
+command line - Sometimes Swift will decide on the name of your input
+and output files automatically (for example, if you do not specify a mapping
+explicitly for an input or output variable). Swift must be able to
+tell your application which filename it has chosen, and the commandline
+is the way it does that. Use the @filename function to determine the filename
+of a variable.
+</para>
+<para>
+Applications should not assume that they are running in a particular
+location or on a particular host - Swift will decide which site to run
+a job on automatically (based on the sites that it knows have the
+application installed, by looking at the transformation catalog). On that
+site, it will create a unique working directory every time that it runs
+your jobs. Your job should expect to be run in an arbitrary working directory
+on any of the available hosts.
+</para>
+<para>
+Running your application on the same input files multiple times should
+always give equivalent output files. Swift expects to be able to run a job
+multiple times, perhaps on the same site, perhaps on different sites, in
+order to deal with error conditions. For example, applications should not
+make modifications to external databases that causes their output to
+differ if they are run more than once.
+</para>
+	</section>
 
-	<sect1> <title>Technical overview of the Swift architecture</title>
+	<section> <title>Technical overview of the Swift architecture</title>
 	<para>
 This section attempts to provide a technical overview of the Swift
 architecture.
 	</para>
 
-	<sect2><title>karajan - the core execution engine</title>
-	</sect2>
+	<section><title>karajan - the core execution engine</title>
+	</section>
 
-	<sect2><title>Execution layer</title>
+	<section><title>Execution layer</title>
 	<para>
 The execution layer causes an application program (in the form of a unix
 executable) to be executed either locally or remotely.
 	</para>
 	<para>
-Two main choices - local unix fork() and Globus GRAM (in various verions).
-CoG provides plug-in support here [link to that] to allow other
-execution layers to be plugged in. [can karajan use any cog execution
-layer?]
+The two main choices are local unix execution and execution through GRAM.
+Other options are available, and user provided code can also be plugged in.
 	</para>
 	<para>
-Additionally, the kickstart utility can be used (in both fork and
-GRAM mode) to capture environmental information at execution time
-to aid in debugging and provenance capture. See the kickstart
-chapter for information about using kickstart.
+The <link linkend="kickstart">kickstart</link> utility can
+be used to capture environmental information at execution time
+to aid in debugging and provenance capture. 
 	</para>
-	</sect2>
+	</section>
 
-	<sect2><title>SwiftScript language compilation layer</title>
+	<section><title>SwiftScript language compilation layer</title>
 	<para>
 Step i: text to XML intermediate form parser/processor. parser written in
 ANTLR - see resources/VDL.g. The XML Schema Definition (XSD) for the
@@ -1663,49 +1649,49 @@ syntax, and function invocations become karajan function invocations
 with various modifications to parameters to accomodate return parameters
 and dataset handling.
 	</para>
-	</sect2>
+	</section>
 
-	<sect2><title>Swift/karajan library layer</title>
+	<section><title>Swift/karajan library layer</title>
 	<para>
 Some Swift functionality is provided in the form of Karajan libraries
 that are used at runtime by the Karajan workflows that the Swift
 compiler generates.
 	</para>
-	</sect2>
+	</section>
 
-	</sect1>
+	</section>
 
-	<sect1><title>Ways in which Swift can be extended</title>
+	<section id="extending"><title>Ways in which Swift can be extended</title>
 <para>Swift is extensible in a number of ways. It is possible to add
 mappers to accomodate different filesystem arrangements, site selectors
 to change how Swift decides where to run each job, and job submission
 interfaces to submit jobs through different mechanisms.
 </para>
-<para>A number of mappers are provided as part of the Swift release. These
-are documented in the section above on mappers. New mappers can be implemented
+<para>A number of mappers are provided as part of the Swift release and
+documented in the <link ref="mappers">mappers</link> section.
+New mappers can be implemented
 in Java by implementing the org.griphyn.vdl.mapping.Mapper interface. The
-Swift tutorial contains a simple example of this.
+<ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift
+tutorial</ulink> contains a simple example of this.
 </para>
-<para>Swift provides a default site selector, the VDS Adaptive Scheduler.
-Additional site selectors can be plugged in by implementing the
+<para>Swift provides a default site selector, the Adaptive Scheduler.
+New site selectors can be plugged in by implementing the
 org.globus.cog.karajan.scheduler.Scheduler interface and modifying
 libexec/scheduler.xml and etc/karajan.properties to refer to the new
 scheduler.
 </para>
-<para>There are two execution providers that are supported in the release,
-the local provider (for local execution on the host that Swift is running
-on) and the GRAM provider (for execution using GRAM2 gatekeepers).
-In principle any execution provider supported by the Java CoG kit will
-work.
+<para>Execution providers, which allow to Swift to execute jobs through
+specific mechanisms (such as local fork or through GRAM) can be
+implemented as Java CoG kit providers.
 </para>
-	</sect1>
+	</section>
 
-	<sect1><title>Function reference</title>
+	<section><title>Function reference</title>
 		<para>
 This section details functions that are available for use in the SwiftScript
 language.
 		</para>
-		<sect2><title>@arg</title>
+		<section><title>@arg</title>
 			<para>
 Takes a command line parameter name as a string parameter and returns the
 name of that string parameter from the command line.
@@ -1723,28 +1709,28 @@ RunID: p08an4d5yr6g2
 hello
 			</screen>
 
-		</sect2>
-		<sect2><title>@filename</title>
+		</section>
+		<section><title>@filename</title>
 			<para>
 @filename(v) will return a string containing the filename(s) for the file(s)
 mapped to the variable v. When more than one filename is returned, the
 filenames will be space separated inside a single string return value.
 			</para>
-		</sect2>
-		<sect2><title>@filenames</title>
+		</section>
+		<section><title>@filenames</title>
 			<para>
 @filenames(v) will return multiple values (!) containing the filename(s) for
 the file(s) mapped to the variable v. (compare to @filename)
 			</para>
-		</sect2>
-		<sect2><title>@strcat</title>
+		</section>
+		<section><title>@strcat</title>
 			<para>
 @strcat(a,b,c,d,...) will return a string containing all of the strings
 passed as parameters joined into a single string. There may be any number
 of parameters.
 			</para>
-		</sect2>
-		<sect2><title>@strcut</title>
+		</section>
+		<section><title>@strcut</title>
 			<para>
 @strcut(input,pattern) will match the regular expression in the pattern
 parameter against the supplied input string and return the section that
@@ -1764,20 +1750,20 @@ print(out);
 			<para>
 will output the message 'Your name is John'.
 			</para>
-		</sect2>
-	</sect1>
+		</section>
+	</section>
 
-	<sect1><title>Built-in procedure reference</title>
+	<section><title>Built-in procedure reference</title>
 		<para>
 This section details built-in procedures that are available for use in
 the SwiftScript language.
 		</para>
-		<sect2><title>print</title>
+		<section><title>print</title>
 			<para>
 print will output its argument to stdout.
 			</para>
-		</sect2>
-	</sect1>
+		</section>
+	</section>
 
 </article>
 
