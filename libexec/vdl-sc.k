@@ -44,7 +44,11 @@ namespace("vdl"
 			)
 			
 			element(profile, [namespace, key, value]
-				property("{namespace}:{key}", value)
+				if(
+					namespace == "karajan"
+					property("{key}", value)
+					property("{namespace}:{key}", value)
+				)
 			)
 				
 			element(workdirectory, [dir]
