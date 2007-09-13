@@ -27,7 +27,7 @@ public class InstanceSubmitQueue extends AbstractSubmitQueue {
 		synchronized (queues) {
 			HostSubmitQueue hq = (HostSubmitQueue) queues.get(contact);
 			if (hq == null) {
-				hq = new HostSubmitQueue(hostThrottle);
+				hq = new HostSubmitQueue(contact, hostThrottle);
 				queues.put(contact, hq);
 			}
 			return hq;
