@@ -1,3 +1,10 @@
+(09/13/2007)
+
+*** Added a fixed rate submit queue. It can be enabled by specifying
+    the maxSubmitRate property for a host. The value is a floating
+    point number. So if you wanted at most one job submitted every
+    ten seconds, the rate would be 0.1.
+
 (09/06/2007)
 
 *** Partial ability to have a CWD for each separate execution, 
