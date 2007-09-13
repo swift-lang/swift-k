@@ -12,11 +12,16 @@ package org.globus.cog.karajan.scheduler.submitQueue;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.globus.cog.karajan.util.BoundContact;
+
 public class HostSubmitQueue extends AbstractSubmitQueue {
 	private Map providerQueues;
+	private BoundContact contact;
+	private FixedRateQueue rlq;
 
-	public HostSubmitQueue(int throttle) {
+	public HostSubmitQueue(BoundContact contact, int throttle) {
 		super(throttle);
+		this.contact = contact;
 	}
 
 	private static final NullQueue NULL_QUEUE = new NullQueue();
@@ -33,7 +38,12 @@ public class HostSubmitQueue extends AbstractSubmitQueue {
 				sq = new RateLimiterQueue(initialRate, maxRetries, errorRegexp);
 				providerQueues.put(provider, sq);
 			}
-
+		}
+		else if (contact.getProperty("maxSubmitRate") != null) {
+			if (rlq == null) {
+				rlq = new FixedRateQueue(Double.parseDouble(contact.getProperty("maxSubmitRate").toString()));
+			}
+			sq = rlq;
 		}
 		else {
 			sq = NULL_QUEUE;
