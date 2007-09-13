@@ -3,8 +3,8 @@
 // it's unclear whether this should work or not, from that thread
 // (at least as much had progressed at time of writing)
 
-foreach string t,j in subjectNo {                                       
-     foreach string s,i in trialTypes {                                      
+foreach t,j in subjectNo {                                       
+     foreach s,i in trialTypes {                                      
        outputs[i*j]=3;                                                     
    }                                                                         
 } 

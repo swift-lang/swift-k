@@ -451,10 +451,7 @@ foreachStat returns [StringTemplate code=template("foreach")]
     :  "foreach" (t=type)? id:ID (COMMA indexId:ID)? "in" ds=expression
     {
         if (t != null) {
-               StringTemplate v= template("variable");
-           v.setAttribute("type", t);
-           v.setAttribute("name", id.getText());
-           code.setAttribute("variables", v);
+            throw new SemanticException("Type specification of foreach iteration variable no longer supported. Remove it and recompile.");
         }
         code.setAttribute("var", id.getText());
         code.setAttribute("in", ds);

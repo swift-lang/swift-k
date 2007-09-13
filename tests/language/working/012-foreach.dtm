@@ -1,1 +1,1 @@
-foreach footype s in sa { a = echo(s); }
+foreach s in sa { a = echo(s); }

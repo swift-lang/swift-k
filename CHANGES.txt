@@ -1,3 +1,10 @@
+(09/10/07)
+
+*** Removed ability to specify type of index variable in foreach loops. This
+    type was never checked. Any programs which specify the type in a foreach
+    statement will need a code modification to remove that type specification.
+    Making such a change will not modify workflow behaviour.
+
 (09/08/07)
 
 *** Changed the way arguments are passed to the wrapper. This

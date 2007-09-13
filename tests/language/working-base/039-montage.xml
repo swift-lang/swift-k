@@ -80,7 +80,6 @@
     name="template" type="Header"
 
      xsi:nil="true" />
-    <variable name="img" type="Image" xsi:nil="true"/>
     <foreach var="img"  indexVar="i">
     <in><variableReference>rawImages</variableReference></in>
     <body><dataset name="projImg" type="Image">

@@ -16,7 +16,7 @@ string trialType, file dataFiles) {
 file="scripts/runTrialSubjectWavelet.R">;
     //file dataFiles[]<simple_mapper; prefix="101_", suffix="-epochs.Rdata">;
 
-    foreach string s,i in trialTypes {
+    foreach s,i in trialTypes {
         //file output<simple_mapper;prefix=s,suffix="101.tgz">;
         file dataFiles<simple_mapper; prefix="101_", suffix=s>;
         outputs = waveletTransf(waveletScript,101,s,dataFiles);

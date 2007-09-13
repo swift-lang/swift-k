@@ -37,7 +37,6 @@
     name="sa" type="string" isArray="true"
 
      xsi:nil="true" />
-    <variable name="s" type="string" xsi:nil="true"/>
     <foreach var="s"  indexVar="i">
     <in><variableReference>sa</variableReference></in>
     <body><call proc="echo">

@@ -221,11 +221,7 @@ $endif$
 </if>
 >>
 
-foreach(variables,var,in,index,body) ::= <<
-$if(variables)$
-$variables$
-
-$endif$
+foreach(var,in,index,body) ::= <<
 <foreach var="$var$" $if(index)$ indexVar="$index$"$endif$>
 <in>$in$</in>
 <body>$body$</body>

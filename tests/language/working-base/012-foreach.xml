@@ -1,7 +1,6 @@
 <program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <variable name="s" type="footype" xsi:nil="true"/>
   <foreach var="s" >
   <in><variableReference>sa</variableReference></in>
   <body><call proc="echo">

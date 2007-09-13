@@ -59,7 +59,7 @@ string fn[] = [ "m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000
 		"m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108",
 		"m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114" ];
 
-foreach string config,i in conflist {
+foreach config,i in conflist {
 	string source = "local,0,0,0,0";
 
 	# gauge template name 
@@ -92,7 +92,7 @@ foreach string config,i in conflist {
 
 	file antiQ = q0;
 	file pStdout = twoPtHH(gauge, antiQ, q0, q1, q2);
-	foreach file stag in stags {
+	foreach stag in stags {
 		file sStdout = twoPtSH(gauge, stag, antiQ, q0, q1, q2);
 	}
 }

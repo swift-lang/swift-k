@@ -57,7 +57,6 @@
         <param name="file"><stringConstant>scripts/runTrialSubjectWavelet.R</stringConstant></param>
       </mapping>
     </dataset>
-    <variable name="s" type="string" xsi:nil="true"/>
     <foreach var="s"  indexVar="i">
     <in><variableReference>trialTypes</variableReference></in>
     <body><dataset name="dataFiles" type="file">

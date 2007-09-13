@@ -21,7 +21,7 @@ type JPEG {};
 }
 
 ( Image projectedImages[], Image projectedAreas[] ) mProjectPPBatch ( Image rawImages[], Header template ) {
-	foreach Image img, i in rawImages {
+	foreach img, i in rawImages {
 		Image projImg<regexp_mapper;source=@img,match=".*\/(.*)",transform="proj_\1">;
 		Image areaImg<regexp_mapper;source=@projImg,match="(.*)\.(.*)",transform="\1_area.\2">;
 		( projImg, areaImg ) = mProjectPP ( img, template );

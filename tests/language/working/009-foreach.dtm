@@ -1,1 +1,1 @@
-foreach string s, i in sa { a = echo(s); }
+foreach s, i in sa { a = echo(s); }
