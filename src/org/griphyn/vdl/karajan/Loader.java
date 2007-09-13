@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -336,12 +339,15 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	}
 
 	private static long lastTime = 0;
+	
+	private static DateFormat UID_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmm");
 
 	public static synchronized String getUUID() {
 		long l;
-		// 40 lsbits (should cover about 20 years)
+		// we want seconds and milliseconds from this one
+		// that's 16 bits
 		while (true) {
-			l = System.currentTimeMillis() & 0x000000ffffffffffl;
+			l = System.currentTimeMillis() % (60*1000); 
 			if (l != lastTime) {
 				lastTime = l;
 				break;
@@ -363,9 +369,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		catch (NoSuchAlgorithmException e) {
 			rnd = (int) (Math.random() * 0xffffff);
 		}
-		rnd &= 0x007fffff;
-		l += ((long) rnd) << 40;
-		return alphanum(l);
+		//and 24 bits
+		rnd &= 0x00ffffff;
+		l += ((long) rnd) << 16;
+		return UID_DATE_FORMAT.format(new Date()) + '-' + alphanum(l);
 	}
 
 	public static final String codes = "0123456789abcdefghijklmnopqrstuvxyz";
@@ -373,7 +380,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	protected static String alphanum(long val) {
 		StringBuffer sb = new StringBuffer();
 		int base = codes.length();
-		for (int i = 0; i < 13; i++) {
+		for (int i = 0; i < 8; i++) {
 			int c = (int) (val % base);
 			sb.append(codes.charAt(c));
 			val = val / base;
