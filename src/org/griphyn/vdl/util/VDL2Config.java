@@ -66,7 +66,7 @@ public class VDL2Config extends Properties {
 		tried = new LinkedList();
 		put("sites.file", "${vds.home}/etc/sites.xml");
 		put("tc.file", "${vds.home}/var/tc.data");
-		put("lazy.errors", "true");
+		put("lazy.errors", "false");
 		put("caching.algorithm", "LRU");
 		put("pgraph", "false");
 		put("pgraph.graph.options", "splines=\"compound\", rankdir=\"TB\"");
