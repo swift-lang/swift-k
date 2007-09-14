@@ -12,16 +12,17 @@ package org.globus.cog.karajan.scheduler.submitQueue;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.globus.cog.abstraction.interfaces.Task;
+
 public class FixedRateQueue extends AbstractSubmitQueue {
 	private long lastSubmit, delay;
 	private static Timer timer;
 
-
 	public FixedRateQueue(long delay) {
-		super(Math.max(1, (int) (delay/1000)));
+		super(Math.max(1, (int) (delay / 1000)));
 		this.delay = delay;
 	}
-	
+
 	public FixedRateQueue(double rate) {
 		super(Math.max(1, (int) rate));
 		this.delay = (long) (1000 / rate);
@@ -54,6 +55,20 @@ public class FixedRateQueue extends AbstractSubmitQueue {
 		}
 		if (nbs != null) {
 			nbs.nextQueue();
+		}
+	}
+
+	public void queue(NonBlockingSubmit nbs) {
+		if (nbs != null) {
+			if (nbs.getTask().getType() == Task.JOB_SUBMISSION) {
+				super.queue(nbs);
+			}
+			else {
+				nbs.nextQueue();
+			}
+		}
+		else {
+			super.queue(nbs);
 		}
 	}
 }
