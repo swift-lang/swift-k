@@ -1765,5 +1765,18 @@ print will output its argument to stdout.
 		</section>
 	</section>
 
+	<section id="profiles"><title>Profiles</title>
+		<section><title>Karajan namespace</title>
+			<para>maxSubmitRate - limits the maximum rate of job submission.
+For example:
+<screen>
+&lt;profile namespace="karajan" key="maxSubmitRate"&gt;0.2&lt;/profile&gt;
+</screen>
+will limit job submission to 0.2 jobs per second (or equivalently,
+one job every five seconds).
+			</para>
+		</section>
+	</section>
+
 </article>
 
