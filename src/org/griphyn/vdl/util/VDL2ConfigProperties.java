@@ -39,7 +39,7 @@ public class VDL2ConfigProperties {
 				+ "cause the execution to immediately stop"));
 		PROPERTIES.put(PGRAPH, new PropInfo("true|false|<filename>",
 				"Whether to generate a provenance "
-				+ "graph or not. If a 'true' is used, the file name for the graph will "
+				+ "graph or not. If 'true' is used, the file name for the graph will "
 				+ "be chosen by swift."));
 		PROPERTIES.put(PGRAPH_GRAPH_OPTIONS, new PropInfo("<string>",
 				"Graph options to be passed to the .dot file. "
