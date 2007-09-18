@@ -137,7 +137,7 @@
 	<!-- add elements to the HEAD tag -->
 
 	<xsl:template name="user.head.content"> 
-		<link href="http://vds.uchicago.edu/vdl2/style.css" rel="stylesheet" type="text/css"/>
+		<link href="http://www.ci.uchicago.edu/swift/style.css" rel="stylesheet" type="text/css"/>
 	</xsl:template>
 
 	<!-- add an attribute to the BODY tag -->

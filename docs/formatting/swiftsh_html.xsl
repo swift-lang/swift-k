@@ -138,9 +138,9 @@
 
 	<xsl:template name="user.head.content"> 
 		<link href="http://www.ci.uchicago.edu/swift/css/style1col.css" rel="stylesheet" type="text/css"/>
-		<script type="text/javascript" src="http://vds.uchicago.edu/vdl2/dhtml.js"></script>
-		<script type="text/javascript" src="http://vds.uchicago.edu/vdl2/shCoreu.js"></script>
-		<script type="text/javascript" src="http://vds.uchicago.edu/vdl2/shBrushVDL2.js"></script>
+		<script type="text/javascript" src="http://www.ci.uchicago.edu/swift/dhtml.js"></script>
+		<script type="text/javascript" src="http://www.ci.uchicago.edu/swift/shCoreu.js"></script>
+		<script type="text/javascript" src="http://www.ci.uchicago.edu/swift/shBrushVDL2.js"></script>
 	</xsl:template>
 
 	<!-- add an attribute to the BODY tag -->
