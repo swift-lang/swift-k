@@ -1,5 +1,8 @@
 (09/18/07)
 
+*** Add a basic iterate {} language construct, and an @extractint function
+    that can be used with it.
+
 *** Add a @regexp language function which provides more regular expression
     functionality than is provided by @strcut. This is intended to allow
     the regular expression mapper to be removed (with uses of it replaced
