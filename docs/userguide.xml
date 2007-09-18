@@ -100,7 +100,7 @@ The above three are mutually exclusive - for example, a data set
 that is mapped to a file cannot have a value that can be used in a
 SwiftScript expression; and a data item that is a
 value cannot be passed into an application
-executable as a data file using the @filename function.
+executable as a data file using the <link linkend="function.filename">@filename</link> function.
 
 		</section>
 
@@ -265,7 +265,7 @@ for myproc1 can be:
 
 which specifies that myproc1 invokes an executable called myapp1,
 passing the values of i, s and the file name of bf as command line arguments.
-The @filename notation serves as a function denoting that the
+The <link linkend="function.filename">@filename</link> notation serves as a function denoting that the
 argument should be mapped as a file name, and since the notation is
 often required in invoking applications, a shorter syntax is defined where
 we can omit the filename part and use the @ sign only.
@@ -970,12 +970,18 @@ the file should contain a header line specifying the names of the columns.
 								run as much as possible from a workflow before
 								stopping execution and reporting all errors
 								encountered.
-								
+							</para>
+							<para>When deveoping workflows, using the
+								default value of <constant>false</constant> can
+								make the workflow easier to debug. However
+								in production runs, using <constant>true</constant>
+								will allow more of a workflow to be run before
+								Swift aborts execution.
 							</para>
 						</listitem>
 					</varlistentry>
 					
-					<varlistentry>
+					<varlistentry id="property.caching.algorithm">
 						<term>
 							<property>caching.algorithm</property>
 						</term>
@@ -997,7 +1003,7 @@ the file should contain a header line specifying the names of the columns.
 								if needed without being transfered again.
 								However, the amount of remote file system space
 								to be used for caching can be limited using the
-								<property>swift:storagesize</property> profile
+								<link linkend="profile.swift.storagesize"><property>swift:storagesize</property></link> profile
 								entry in the sites.xml file. Example:
 								
 <programlisting>
@@ -1118,7 +1124,7 @@ the file should contain a header line specifying the names of the columns.
 						</listitem>
 					</varlistentry>
 					
-					<varlistentry>
+					<varlistentry id="property.clustering.enabled">
 						<term>
 							<property>clustering.enabled</property>
 						</term>
@@ -1139,16 +1145,16 @@ the file should contain a header line specifying the names of the columns.
 								minimize various overheads involved in launching
 								jobs. Clustering works in the following way: If
 								a job is clusterable (meaning that it has the
-								<property>GLOBUS::maxwalltime</property> profile
+								<link linkend="profile.globus.maxwalltime"><property>GLOBUS::maxwalltime</property></link> profile
 								specified in <filename
 								type="file">tc.data</filename> and its value is
-								less than the value of the Swift
-								<property>min.cluster.time</property> property -
-								described below) it will be put in a clustering
+								less than the value of the
+								<link linkend="property.clustering.min.time"><property>clustering.min.time</property></link>
+								property) it will be put in a clustering
 								queue. The queue is processed at intervals 
 								specified by the
-								<property>clustering.queue.delay</property>
-								property (also described below). The processing
+								<link linkend="property.clustering.queue.delay"><property>clustering.queue.delay</property></link>
+								property. The processing
 								of the clustering queue consists of selecting
 								compatible jobs and grouping them in clusters
 								whose max wall time does not exceed twice the
@@ -1164,7 +1170,7 @@ the file should contain a header line specifying the names of the columns.
 						</listitem>
 					</varlistentry>
 					
-					<varlistentry>
+					<varlistentry id="property.clustering.queue.delay">
 						<term>
 							<property>clustering.queue.delay</property>
 						</term>
@@ -1188,7 +1194,7 @@ the file should contain a header line specifying the names of the columns.
 						</listitem>
 					</varlistentry>
 					
-					<varlistentry>
+					<varlistentry id="property.clustering.min.time">
 						<term>
 							<property>clustering.min.time</property>
 						</term>
@@ -1552,8 +1558,8 @@ the following restart log file: <filename
 class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
 the workflow completes successfully, the restart log file is
 deleted. If however the workflow fails, <command>swift</command>
-allows the possibility of using the restart log file to continue the
-execution of the workflow from the last consistent point before the
+can use the restart log file to continue the
+execution of the workflow from a point before the
 failure occurred. In order to restart a workflow from a restart log
 file, the <option>-resume <parameter><filename
 class="file">logfile</filename></parameter></option> argument can be
@@ -1588,8 +1594,9 @@ command line - Sometimes Swift will decide on the name of your input
 and output files automatically (for example, if you do not specify a mapping
 explicitly for an input or output variable). Swift must be able to
 tell your application which filename it has chosen, and the commandline
-is the way it does that. Use the @filename function to determine the filename
-of a variable.
+is the way it does that. Use the
+<link linkend="function.filename">@filename</link> function to determine
+the filename of a variable.
 </para>
 <para>
 Applications should not assume that they are running in a particular
@@ -1691,7 +1698,7 @@ implemented as Java CoG kit providers.
 This section details functions that are available for use in the SwiftScript
 language.
 		</para>
-		<section><title>@arg</title>
+		<section id="function.arg"><title>@arg</title>
 			<para>
 Takes a command line parameter name as a string parameter and returns the
 name of that string parameter from the command line.
@@ -1710,27 +1717,28 @@ hello
 			</screen>
 
 		</section>
-		<section><title>@filename</title>
+		<section id="function.filename"><title>@filename</title>
 			<para>
 @filename(v) will return a string containing the filename(s) for the file(s)
 mapped to the variable v. When more than one filename is returned, the
 filenames will be space separated inside a single string return value.
 			</para>
 		</section>
-		<section><title>@filenames</title>
+		<section id="function.filenames"><title>@filenames</title>
 			<para>
 @filenames(v) will return multiple values (!) containing the filename(s) for
-the file(s) mapped to the variable v. (compare to @filename)
+the file(s) mapped to the variable v. (compare to
+<link linkend="function.filename">@filename</link>)
 			</para>
 		</section>
-		<section><title>@strcat</title>
+		<section id="function.strcat"><title>@strcat</title>
 			<para>
 @strcat(a,b,c,d,...) will return a string containing all of the strings
 passed as parameters joined into a single string. There may be any number
 of parameters.
 			</para>
 		</section>
-		<section><title>@strcut</title>
+		<section id="function.strcut"><title>@strcut</title>
 			<para>
 @strcut(input,pattern) will match the regular expression in the pattern
 parameter against the supplied input string and return the section that
@@ -1767,7 +1775,7 @@ print will output its argument to stdout.
 
 	<section id="profiles"><title>Profiles</title>
 		<section><title>Karajan namespace</title>
-			<para>maxSubmitRate - limits the maximum rate of job submission.
+			<para id="profile.karajan.maxsubmitrate">maxSubmitRate - limits the maximum rate of job submission.
 For example:
 <screen>
 &lt;profile namespace="karajan" key="maxSubmitRate"&gt;0.2&lt;/profile&gt;
@@ -1776,7 +1784,23 @@ will limit job submission to 0.2 jobs per second (or equivalently,
 one job every five seconds).
 			</para>
 		</section>
+		<section><title>swift namespace</title>
+			<para id="profile.swift.storagesize">storagesize limits the
+amount of space that will be used on the remote site for temporary files.
+When more than that amount of space is used, the remote temporary file
+cache will be cleared using the algorithm specified in the
+<link linkend="property.caching.algorithm"><property>caching.algorithm</property></link> property.
+			</para>
+		</section>
+		<section><title>Globus namespace</title>
+			<para id="profile.globus.maxwalltime"><property>maxwalltime</property> specifies a walltime limit for each job. This profile setting also interacts
+with the clustering mechanism when the 
+<link linkend="property.clustering.enabled">clustering.enabled</link>
+property is set.
+			</para>
+		</section>
 	</section>
+	
 
 </article>
 
