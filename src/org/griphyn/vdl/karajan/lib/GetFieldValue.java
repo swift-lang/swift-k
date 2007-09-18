@@ -57,9 +57,6 @@ public class GetFieldValue extends VDLFunction {
 						return addFutureListListener(stack, var, value);
 					}
 				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("GetFieldValue(" + var + ")");
-				}
 				synchronized (var) {
 					if (!var.isClosed()) {
 						if (logger.isDebugEnabled()) {
