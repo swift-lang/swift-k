@@ -7,14 +7,15 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
+import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.lib.cache.CacheReturn;
 import org.griphyn.vdl.karajan.lib.cache.File;
-import org.griphyn.vdl.karajan.lib.cache.ProcessingListener;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 
-public class CacheAddAndLockFile extends CacheFunction implements ProcessingListener {
+public class CacheAddAndLockFile extends CacheFunction {
 	public static final String PFILE = "#pfile";
 
 	public static final Arg FILE = new Arg.Positional("file");
@@ -38,7 +39,7 @@ public class CacheAddAndLockFile extends CacheFunction implements ProcessingList
 		if (cr.alreadyCached) {
 			if (cr.cached.isLockedForProcessing()) {
 				// then we must wait for it to be processed
-				cr.cached.addProcessingListener(this, stack);
+				throw new FutureNotYetAvailable(cr.cached);
 			}
 			else {
 				complete(stack);
@@ -62,6 +63,10 @@ public class CacheAddAndLockFile extends CacheFunction implements ProcessingList
 		super.post(stack);
 	}
 
+	public void event(Event e) throws ExecutionException {
+		super.event(e);
+	}
+
 	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
 		VariableStack stack = e.getStack();
 		if (e.getType().equals(NotificationEventType.EXECUTION_FAILED)
@@ -70,17 +75,5 @@ public class CacheAddAndLockFile extends CacheFunction implements ProcessingList
 			cache.entryRemoved((File) stack.currentFrame().getVar(PFILE));
 		}
 		super.notificationEvent(e);
-	}
-
-	public void processingComplete(File f, Object param) {
-		VariableStack stack = (VariableStack) param;
-		try {
-			// it's important to restart the whole thing since the actual
-			// transfer operation might have failed
-			partialArgumentsEvaluated(stack);
-		}
-		catch (ExecutionException e) {
-			failImmediately(stack, e);
-		}
 	}
 }

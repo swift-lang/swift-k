@@ -3,15 +3,25 @@
  */
 package org.griphyn.vdl.karajan.lib.cache;
 
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
-public class File {
+import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.events.EventTargetPair;
+import org.globus.cog.karajan.workflow.futures.Future;
+import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
+
+public class File implements Future {
 	private String path;
 	private Object host;
 	private long size, lastAccess;
 	private int locked;
 	private boolean processingLock;
-	private LinkedList processingListeners;
+	private List listeners;
 
 	public File(String file, String dir, Object host, long size) {
 		if (dir.endsWith("/")) {
@@ -126,11 +136,11 @@ public class File {
 	 * nothing else can be done on it. It cannot be added or removed from the
 	 * cache.
 	 */
-	public void lockForProcessing() {
+	public synchronized void lockForProcessing() {
 		processingLock = true;
 	}
 	
-	public void unlockFromProcessing() {
+	public synchronized void unlockFromProcessing() {
 		processingLock = false;
 		notifyListeners();
 	}
@@ -139,23 +149,38 @@ public class File {
 		return processingLock;
 	}
 
-	public synchronized void addProcessingListener(ProcessingListener l, Object param) {
-		if (processingListeners == null) {
-			processingListeners = new LinkedList();
+	public void notifyListeners() {
+		if (listeners != null) {
+			Iterator i = listeners.iterator();
+			while (i.hasNext()) {
+				EventTargetPair etp = (EventTargetPair) i.next();
+				i.remove();
+				EventBus.post(etp.getTarget(), etp.getEvent());
+			}
 		}
-		processingListeners.add(new Object[] { l, param });
-		if (!processingLock) {
-			//the processing lock was removed since
+	}
+
+	public synchronized void addModificationAction(EventListener target, Event event) {
+		if (listeners == null) {
+			listeners = new LinkedList();
+		}
+		listeners.add(new EventTargetPair(event, target));
+		if (isClosed()) {
 			notifyListeners();
 		}
 	}
 
-	public synchronized void notifyListeners() {
-		if (processingListeners != null) {
-			while (processingListeners.size() > 0) {
-				Object[] p = (Object[]) processingListeners.removeFirst();
-				((ProcessingListener) p[0]).processingComplete(this, p[1]);
-			}
-		}
+	public void close() {
+	}
+
+	public void fail(FutureEvaluationException e) {
+	}
+
+	public Object getValue() throws ExecutionException {
+		return null;
+	}
+
+	public synchronized boolean isClosed() {
+		return !processingLock;
 	}
 }
