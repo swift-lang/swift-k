@@ -1017,6 +1017,89 @@ nothing had ever gone wrong.
 
 </sect1>
 
+<sect1 id="tutorial.iterate"><title>The sequential iteration construct</title>
+<para>A development version of Swift after 0.2 (revision 1230) introduces
+an experimental sequential iteration construct.</para>
+<para>
+The following example demonstrates a simple application: each step of the
+iteration is a string representation of the byte count of the previous
+step's output, with iteration terminating when the byte count reaches zero.
+</para>
+
+<para>
+Here's the program:
+</para>
+<programlisting>
+
+type counterfile;
+
+(counterfile t) echo(string m) { 
+  app {
+    echo m stdout=@filename(t);
+  }
+}
+
+(counterfile t) countstep(counterfile i) {
+  app {
+    wcl @filename(i) @filename(t);
+  }
+}
+
+counterfile a[]  &lt;simple_mapper;prefix="foldout"&gt;;
+
+a[0] = echo("793578934574893");
+
+iterate v {
+  a[v+1] = countstep(a[v]);
+ print("extract int value ",@extractint(a[v+1]));
+} until (@extractint(a[v+1]) &lt;= 1);
+
+</programlisting>
+
+<para>
+<command>echo</command> is the standard unix echo.</para>
+
+<para> <command>wcl</command>
+is our application code - it counts the number of bytes in the one file
+and writes that count out to another, like this:
+</para>
+<screen>
+$ <userinput>cat ../wcl</userinput>
+#!/bin/bash
+echo -n $(wc -c &lt; $1) &gt; $2
+
+$ <userinput>echo -n hello &gt; a</userinput>
+$ <userinput>wcl a b</userinput>
+$ <userinput>cat b</userinput>
+5
+</screen>
+
+<para>Install the above wcl script somewhere and add a transformation catalog
+entry for it. Then run the example program like this:
+</para>
+
+<screen>
+$ <userinput>swift fold9.swift</userinput>
+Swift v0.2-dev r1230
+
+RunID: 20070918-1434-l6bt8x4a
+echo started
+echo completed
+wcl started
+extract int value 16.0
+wcl completed
+wcl started
+extract int value 2.0
+wcl completed
+wcl started
+extract int value 1.0
+wcl completed
+
+$ <userinput>ls foldout.*</userinput>
+foldout.0 foldout.1 foldout.2 foldout.3
+</screen>
+
+</sect1>
 
 <sect1><title>Tips and Tricks</title>
 
