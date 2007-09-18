@@ -36,6 +36,7 @@ import org.globus.swift.language.Foreach;
 import org.globus.swift.language.FormalParameter;
 import org.globus.swift.language.Function;
 import org.globus.swift.language.If;
+import org.globus.swift.language.Iterate;
 import org.globus.swift.language.LabelledBinaryOperator;
 import org.globus.swift.language.Procedure;
 import org.globus.swift.language.ProgramDocument;
@@ -278,6 +279,12 @@ public class Karajan {
 				progST.setAttribute("statements", st);
 				foreachStat(foreach, st);
 			}
+			else if (child instanceof Iterate) {
+				Iterate iterate = (Iterate) child;
+				st = template("iterate");
+				progST.setAttribute("statements",st);
+				iterateStat(iterate, st);
+			}
 			else if (child instanceof If) {
 				If ifstat = (If) child;
 				st = template("if");
@@ -316,6 +323,16 @@ public class Karajan {
 			markDataset((StringTemplate) argST.getAttribute("expr"), parentST, false);
 		}
 	}
+
+	public void iterateStat(Iterate iterate, StringTemplate iterateST) throws Exception {
+		XmlObject cond = iterate.getAbstractExpression();
+		StringTemplate condST = expressionToKarajan(cond);
+		markDataset(condST, iterateST, true);
+		iterateST.setAttribute("cond", condST);
+		iterateST.setAttribute("var", iterate.getVar());
+		statements(iterate.getBody(), iterateST);
+	}
+
 
 	public void foreachStat(Foreach foreach, StringTemplate foreachST) throws Exception {
 		foreachST.setAttribute("var", foreach.getVar());

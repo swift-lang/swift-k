@@ -438,6 +438,26 @@
 
   </xs:complexType>
 
+  <xs:complexType name="Iterate">
+    <xs:sequence>
+      <xs:element name="body">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element ref="abstractExpression"/>
+   </xs:sequence>
+   <xs:attribute name="var" type="xs:NMTOKEN">
+     <xs:annotation>
+       <xs:documentation>the variable name to hold each
+       item</xs:documentation>
+     </xs:annotation>
+   </xs:attribute>
+
+  </xs:complexType>
+
   <xs:complexType name="If">
     <xs:sequence>
 
@@ -521,6 +541,8 @@
       <xs:element name="switch" type="Switch"/>
 
       <xs:element name="continue" type="Continue"/>
+
+      <xs:element name="iterate" type="Iterate"/>
     </xs:choice>
   </xs:group>
 

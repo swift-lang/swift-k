@@ -417,7 +417,7 @@ ll1statement returns [StringTemplate code=null]
     | code=ifStat
     | code=foreachStat
     | code=switchStat
-    | code=repeatStat
+    | code=iterateStat
     | code=whileStat
     | "continue" {code=template("continue");} SEMI
     | SEMI {code=template("blank");}
@@ -474,15 +474,16 @@ whileStat returns [StringTemplate code=template("while")]
     compoundStat[body] {code.setAttribute("body", body);}
     ;
 
-repeatStat returns [StringTemplate code=template("repeat")]
+iterateStat returns [StringTemplate code=template("iterate")]
 {
   StringTemplate cond=null;
   StringTemplate body=template("statementList");
 }
-    :  "repeat"
+    :  "iterate" id:ID
     compoundStat[body] {code.setAttribute("body", body);}
     "until" LPAREN cond=expression RPAREN SEMI
     {
+    code.setAttribute("var", id.getText());
     code.setAttribute("cond", cond);
     }
     ;

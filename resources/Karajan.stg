@@ -147,6 +147,21 @@ function(name, args) ::= <<
 </swiftscript:$name$>
 >>
 
+iterate(declarations,statements,cond,var) ::= <<
+
+<vdl:infinitecountingwhile>
+  <set name="$var$">
+    <vdl:new type="int" value="{\$}" />
+  </set>
+  $sub_comp(declarations=declarations, statements=statements)$
+  <sys:if>
+    <vdl:getfieldvalue>$cond$</vdl:getfieldvalue>
+    <sys:break/>
+  </sys:if>
+  
+</vdl:infinitecountingwhile>
+>>
+
 foreach(var,in,indexVar,declarations,statements) ::= <<
 <parallelFor name="\$">
   <getfieldvalue>$in$</getfieldvalue>

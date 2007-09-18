@@ -22,6 +22,7 @@
   </namespace>
 
   <namespace prefix="vdl">
+	<export name="infinitecountingwhile"><elementDef classname="org.griphyn.vdl.karajan.lib.InfiniteCountingWhile"/></export>
 	<export name="new"><elementDef classname="org.griphyn.vdl.karajan.lib.New"/></export>
 	<export name="createarray"><elementDef classname="org.griphyn.vdl.karajan.lib.CreateArray"/></export>
 	<!-- used from VDL2 for arguments to apps and returns relative paths -->

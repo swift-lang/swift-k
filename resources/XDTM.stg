@@ -256,10 +256,13 @@ while(cond,body) ::= <<
 </while>
 >>
 
-repeat(cond,body) ::= <<
-<repeat until="$cond$">
-  $body$
-</repeat>
+iterate(cond,body,var) ::= <<
+<iterate var="$var$">
+  <body>
+    $body$
+  </body>
+  $cond$
+</iterate>
 >>
 
 continue() ::= <<
