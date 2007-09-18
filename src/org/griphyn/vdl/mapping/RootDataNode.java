@@ -17,20 +17,13 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	private Map params;
 	
 	public static DSHandle newNode(Type type, Object value) {
-		try {
-			DSHandle handle = new RootDataNode(type);
-			handle.setValue(value);
-			handle.closeShallow();
-			return handle;
-		}
-		catch (NoSuchTypeException e) {
-			//TODO this isn't actually thrown any more, so it
-			//should be removed from the RootDataNode constructor
-			throw new RuntimeException(e);
-		}
+		DSHandle handle = new RootDataNode(type);
+		handle.setValue(value);
+		handle.closeShallow();
+		return handle;
 	}
 
-	public RootDataNode(Type type) throws NoSuchTypeException {
+	public RootDataNode(Type type) {
 		super(Field.Factory.newInstance());
 		getField().setType(type);
 	}
