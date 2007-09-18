@@ -176,8 +176,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 this.gramJob.addListener(this);
             }
 
-            this.gramJob
-                    .setDelegationEnabled(spec.getDelegation() != Delegation.NO_DELEGATION);
+            setMiscJobParams(spec, this.gramJob);
 
             try {
                 this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
@@ -196,6 +195,23 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 throw new TaskSubmissionException("Cannot submit job: "
                         + e.getMessage(), e);
             }
+        }
+    }
+
+    protected void setMiscJobParams(JobSpecification spec, GramJob job) {
+        job
+                .setDelegationEnabled(spec.getDelegation() != Delegation.NO_DELEGATION);
+
+        Object soTimeout = spec.getAttribute("socketTimeout");
+        if (soTimeout instanceof Integer) {
+            job.setTimeOut(((Integer) soTimeout).intValue());
+        }
+        else if (soTimeout instanceof String) {
+            job.setTimeOut(Integer.parseInt((String) soTimeout));
+        }
+        else {
+            logger.warn("Unknown value for socketTimeout attribute ("
+                    + soTimeout + "). Ignoring.");
         }
     }
 
