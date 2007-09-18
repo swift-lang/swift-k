@@ -3,10 +3,17 @@ Swift Documentation
 
 General principles:
 
- - sections and subsections are ordered from <sect1>, <sect2>, etc
- - the code is inputted as <programlisting>
+ - sections and subsections are ordered from <sect1>, <sect2>, or using
+   arbitrary depth <section> tags
+ - code samples are given inside <programlisting> tags, which will cause
+   syntax highlighting to happen automatically
+ - user interactions / screen output are given inside <screen> tags.
  - be careful to escape in-text "<" to "&lt;"
-
+ - there are some conventions for using id attributes at various
+   places in the documents - for example, some tutorial sections use
+   'tutorial.<something>'; profile entries in the user guide use
+   'profile.<namespace>.<key>'. Try to keep id attributes unique across
+   the entire document set.
 
 The first time guides are built in a particular checkout, it is necessary
 to place the docbook formatting stylesheets under the formatting/docbook/
