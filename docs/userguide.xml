@@ -1717,6 +1717,14 @@ hello
 			</screen>
 
 		</section>
+
+		<section id="function.extractint"><title>@extractint</title>
+			<para>
+@extractint(file) will read the specified file, parse an integer from the
+file contents and return that integer.
+			</para>
+		</section>
+
 		<section id="function.filename"><title>@filename</title>
 			<para>
 @filename(v) will return a string containing the filename(s) for the file(s)
