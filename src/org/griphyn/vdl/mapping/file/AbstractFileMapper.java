@@ -14,9 +14,9 @@ import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
-/** An base class to build mappers which map based on filename patterns.
+/** A base class to build mappers which map based on filename patterns.
   * It provides a large amount of default behaviour which can be
-  * reused or override as necessary by subclasses.
+  * reused or overridden as necessary by subclasses.
   * <br />
   * Subclasses must specify a FileNameElementMapper, which can be the
   * Swift supplied DefaultFileNameElementMapper or an application
