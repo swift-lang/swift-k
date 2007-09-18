@@ -401,6 +401,25 @@ subsequent case blocks, and no break statement is necessary at the end
 of each block.
 </para>
 			</section>
+
+			<section id="construct.iterate"><title>iterate</title>
+				<para>
+Iterate expressions allow a block of code to be evaluated repeatedly, with an
+integer parameter sweeping upwards from 0 until a termination condition
+holds.
+				</para>
+				<para>
+The general form is:
+<programlisting>
+iterate var {
+	statements;
+} until (terminationExpression);
+</programlisting>
+with the variable var starting at 0 and increasing each iteration. That
+variable is in scope in the statements block and when evaluating the
+termination expression.
+				</para>
+			</section>
 		</section>
 
 	</section>
