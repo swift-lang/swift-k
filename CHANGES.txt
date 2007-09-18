@@ -1,3 +1,10 @@
+(09/18/07)
+
+*** Add a @regexp language function which provides more regular expression
+    functionality than is provided by @strcut. This is intended to allow
+    the regular expression mapper to be removed (with uses of it replaced
+    with the single file mapper and the @regexp function)
+
 (09/13/07)
 
 *** Changed lazy error default from true to false. This affect how

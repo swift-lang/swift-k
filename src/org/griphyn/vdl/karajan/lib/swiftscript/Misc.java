@@ -22,10 +22,12 @@ public class Misc extends FunctionsCollection {
 
 	public static final SwiftArg PA_INPUT = new SwiftArg.Positional("input");
 	public static final SwiftArg PA_PATTERN = new SwiftArg.Positional("regexp");
+	public static final SwiftArg PA_TRANSFORM = new SwiftArg.Positional("transform");
 
 	static {
 		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
+		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
 	}
 
 	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
@@ -71,5 +73,35 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
+	public DSHandle swiftscript_regexp(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+			InvalidPathException {
+		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
+		String transform = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
+		if (logger.isDebugEnabled()) {
+			logger.debug("regexp will match '" + inputString + "' with pattern '" + pattern + "'");
+		}
+
+		String group;
+		try {
+			Pattern p = Pattern.compile(pattern);
+			// TODO probably should memoize this?
+
+			Matcher m = p.matcher(inputString);
+			m.find();
+			group = m.replaceFirst(transform);
+		}
+		catch (IllegalStateException e) {
+			throw new ExecutionException("@regexp could not match pattern " + pattern
+					+ " against string " + inputString, e);
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("regexp replacement produced '" + group + "'");
+		}
+		DSHandle handle = new RootDataNode(Types.STRING);
+		handle.setValue(group);
+		handle.closeShallow();
+		return handle;
+	}
 }
 

@@ -1731,6 +1731,16 @@ the file(s) mapped to the variable v. (compare to
 <link linkend="function.filename">@filename</link>)
 			</para>
 		</section>
+		<section id="function.regexp"><title>@regexp</title>
+			<para>
+@regexp(input,pattern,replacement) will apply regular expression
+substitution using the Java java.util.regexp API. For example:
+<programlisting>
+string v =  @regexp("abcdefghi", "c(def)g","monkey");
+</programlisting>
+will assing the value "abmonkeyhi" to the variable v.
+			</para>
+		</section>
 		<section id="function.strcat"><title>@strcat</title>
 			<para>
 @strcat(a,b,c,d,...) will return a string containing all of the strings
