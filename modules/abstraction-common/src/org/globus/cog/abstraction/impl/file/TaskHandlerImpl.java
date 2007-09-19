@@ -166,11 +166,7 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
             }
         }
         catch (Exception e) {
-            Status status = new StatusImpl();
-            status.setStatusCode(Status.FAILED);
-            status.setException(e);
-            task.setStatus(status);
-            return;
+            throw new TaskSubmissionException(e);
         }
         task.setStatus(Status.COMPLETED);
     }
