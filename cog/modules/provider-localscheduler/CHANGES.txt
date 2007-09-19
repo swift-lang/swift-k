@@ -3,7 +3,8 @@
 *** Cobalt: 'count' attribute mapped to '-c'. The default should
     be figured by cqsub from 'hostCount'. Looking at the cqsub
     code, it seems like count = 2 * hostCount on a BG/L and
-    count = 4 * hostCount on a BG/P.
+    count = 4 * hostCount on a BG/P. That's in vn mode. In
+    co mode count = hostCount.
 
 *** Cobalt: 'hostCount' attribute mapped to '-n', with a default
     of 1
