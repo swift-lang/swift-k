@@ -9,11 +9,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
-public class RegularExpressionMapper extends AbstractFileMapper {
+public class RegularExpressionMapper extends AbstractMapper {
 	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
 	public static final MappingParam PARAM_MATCH = new MappingParam("match");
 	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
@@ -57,10 +58,6 @@ public class RegularExpressionMapper extends AbstractFileMapper {
 		}
 		m2.appendTail(sb);
 		return new AbsFile(sb.toString());
-	}
-
-	public Path rmap(String name) {
-		return Path.EMPTY_PATH;
 	}
 
 	public boolean isStatic() {

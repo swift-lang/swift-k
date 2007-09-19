@@ -147,20 +147,6 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		return new AbsFile(sb.toString());
 	}
 
-	public boolean exists(Path path) {
-		if(logger.isDebugEnabled())
-			logger.debug("checking for existence of "+path);
-		boolean r = ((AbsFile) map(path)).exists();
-		if(logger.isDebugEnabled()) {
-			if(r) {
-				logger.debug(""+path+" exists");
-			} else {
-				logger.debug(""+path+" does not exist");
-			}
-		}
-		return r;
-	}
-
 	public Collection existing() {
 		if(logger.isDebugEnabled())
 			logger.debug("list existing paths for mapper id="+this.hashCode());

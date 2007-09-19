@@ -3,6 +3,8 @@ package org.griphyn.vdl.mapping;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import org.griphyn.vdl.mapping.Mapper;
 
 /** AbstractMapper provides an implementation of the Mapper interface to be
@@ -12,6 +14,8 @@ import org.griphyn.vdl.mapping.Mapper;
 */
 
 public abstract class AbstractMapper implements Mapper {
+
+	public static final Logger logger = Logger.getLogger(AbstractMapper.class);
 
 	protected Map params;
 
@@ -35,5 +39,18 @@ public abstract class AbstractMapper implements Mapper {
 		this.params = params;
 	}
 
+	public boolean exists(Path path) {
+		if(logger.isDebugEnabled())
+			logger.debug("checking for existence of "+path);
+		boolean r = ((AbsFile) map(path)).exists();
+		if(logger.isDebugEnabled()) {
+			if(r) {
+				logger.debug(""+path+" exists");
+			} else {
+				logger.debug(""+path+" does not exist");
+			}
+		}
+		return r;
+	}
 
 }

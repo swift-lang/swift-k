@@ -13,12 +13,13 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
-public class CSVMapper extends AbstractFileMapper {
+public class CSVMapper extends AbstractMapper {
 	public static final MappingParam PARAM_FILE = new MappingParam("file");
 
 	/** whether the file has a line describing header info. default is true. */

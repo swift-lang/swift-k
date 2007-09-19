@@ -8,13 +8,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
-public class ArrayFileMapper extends AbstractFileMapper {
+public class ArrayFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_FILES = new MappingParam("files");
 
 	public Collection existing() {
