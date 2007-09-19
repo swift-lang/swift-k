@@ -1,3 +1,18 @@
+(09/19/07)
+
+*** Subtle changes to the behaviour of AbstractFileMapper and its subclasses
+    (primarily any of the mappers that take prefix, suffix or location
+    parameters). The behaviour of prefixes and suffixes was not consistent
+    between forward and reverse mapping - this has been made more consistent.
+    Prefixes are now added when mapping directly as strings, rather than
+    passing them through the path component mapping code first. Handling of
+    separators between fields is slightly changed to accomodate this - a
+    special case for the first separator is removed. Detection of the
+    types of fields/indices in a path is now done using Path.Entry methods
+    rather than guessing based on the first character of the field name.
+
+*** Added lots of debug logging to AbstractFileMapper
+
 (09/18/07)
 
 *** Add a basic iterate {} language construct, and an @extractint function

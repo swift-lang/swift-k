@@ -29,7 +29,7 @@ type messagestruct {
 }
 
 messagestruct outstruct <simple_mapper;
-                         prefix="T077-simplemapper-bug80",
+                         prefix="T077-simplemapper-bug80.",
                          suffix=".out">;
 
 outstruct.aleph = stringToFile("foo");

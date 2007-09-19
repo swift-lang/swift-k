@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParam;
@@ -46,9 +48,14 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern", null);
 	public static final MappingParam PARAM_LOCATION = new MappingParam("location", null);
 
+	public static final Logger logger = Logger.getLogger(AbstractFileMapper.class);
+
 	protected FileNameElementMapper elementMapper;
 
 	protected AbstractFileMapper(FileNameElementMapper elementMapper) {
+		if(logger.isDebugEnabled())
+			logger.debug("Creating abstract file mapper id="+this.hashCode()+" class="+this.getClass().getName());
+
 		this.elementMapper = elementMapper;
 	}
 
@@ -83,6 +90,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	}
 
 	public PhysicalFormat map(Path path) {
+		if(logger.isDebugEnabled())
+			logger.debug("mapper id="+this.hashCode()+" starting to map "+path);
 		StringBuffer sb = new StringBuffer();
 		final String location = PARAM_LOCATION.getStringValue(this);
 		final String prefix = PARAM_PREFIX.getStringValue(this);
@@ -92,43 +101,69 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			sb.append('/');
 		}
 		if (prefix != null) {
-			path = path.addFirst(prefix);
+			sb.append(prefix);
 		}
 
 		Iterator pi = path.iterator();
 		int level = 0, tokenCount = path.size();
 		while (pi.hasNext()) {
-			String token = ((Path.Entry) pi.next()).getName();
-			if (!pi.hasNext()) {
-				sb.append(getElementMapper().mapField(token));
+			Path.Entry nextPathElement = (Path.Entry) pi.next();
+			String token = nextPathElement.getName();
+			if (nextPathElement.isIndex()) {
+				if(logger.isDebugEnabled())
+					logger.debug("Mapping path component index "+token);
+				String f = getElementMapper().mapIndex(Integer.parseInt(token));
+				if(logger.isDebugEnabled())
+					logger.debug("field is mapped to: "+f);
+				sb.append(f);
 			}
 			else {
-				if (Character.isDigit(token.charAt(0))) {
-					sb.append(getElementMapper().mapIndex(Integer.parseInt(token)));
-				}
-				else {
-					sb.append(getElementMapper().mapField(token));
-				}
-				if (level < tokenCount - 2) {
-					sb.append(getElementMapper().getSeparator(level));
-				}
-				else {
-					sb.append('.');
-				}
+				if(logger.isDebugEnabled())
+					logger.debug("Mapping path component field "+token);
+				String f = getElementMapper().mapField(token);
+				if(logger.isDebugEnabled())
+					logger.debug("field is mapped to: "+f);
+				sb.append(f);
+			}
+
+			if (!pi.hasNext()) {
+				logger.debug("last element in name - not using a separator");
+			}
+			else if (level < tokenCount - 2) {
+				logger.debug("Adding mapper-specified separator");
+				sb.append(getElementMapper().getSeparator(level));
+			}
+			else {
+				logger.debug("Adding '.' instead of mapper-specified separator");
+				sb.append('.');
 			}
 			level++;
 		}
 		if (suffix != null) {
 			sb.append(suffix);
 		}
+		if(logger.isDebugEnabled())
+			logger.debug("mapper id="+this.hashCode()+" finished mapping "+path+" to "+sb.toString());
 		return new AbsFile(sb.toString());
 	}
 
 	public boolean exists(Path path) {
-		return ((AbsFile) map(path)).exists();
+		if(logger.isDebugEnabled())
+			logger.debug("checking for existence of "+path);
+		boolean r = ((AbsFile) map(path)).exists();
+		if(logger.isDebugEnabled()) {
+			if(r) {
+				logger.debug(""+path+" exists");
+			} else {
+				logger.debug(""+path+" does not exist");
+			}
+		}
+		return r;
 	}
 
 	public Collection existing() {
+		if(logger.isDebugEnabled())
+			logger.debug("list existing paths for mapper id="+this.hashCode());
 		final String location = PARAM_LOCATION.getStringValue(this);
 		final String prefix = PARAM_PREFIX.getStringValue(this);
 		final String suffix = PARAM_SUFFIX.getStringValue(this);
@@ -141,27 +176,37 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		else {
 			f = new AbsFile(location);
 		}
+		logger.debug("Processing file list.");
 		AbsFile[] files = f.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return (prefix == null || name.startsWith(prefix))
+				boolean accept = (prefix == null || name.startsWith(prefix))
 						&& (suffix == null || name.endsWith(suffix))
 						&& (pattern == null || name.matches(pattern));
+				logger.debug("file "+name+"? "+accept);
+				return accept;
 			}
 		});
 		if (files != null) {
 			for (int i = 0; i < files.length; i++) {
+				if(logger.isDebugEnabled()) logger.debug("Processing existing file "+files[i].getName());
 				Path p = rmap(files[i].getName());
 				if (p != null) {
+					if(logger.isDebugEnabled()) logger.debug("reverse-mapped to path "+p);
 					l.add(p);
+				} else {
+					logger.debug("reverse-mapped to nothing");
 				}
 			}
 		}
 		else {
+			logger.debug("list existing paths failed for mapper id="+this.hashCode());
 			throw new IllegalArgumentException("Directory not found: " + location);
+		}
+		if(logger.isDebugEnabled()) {
+			logger.debug("Finish list existing paths for mapper "+this.hashCode()+" list="+l);
 		}
 		return l;
 	}
-
 
 	/** Returns the SwiftScript path for a supplied filename.
 	  *
@@ -182,6 +227,27 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	  */
 
 	public Path rmap(String name) {
+		logger.debug("rmap "+name);
+
+		final String prefix = PARAM_PREFIX.getStringValue(this);
+
+		if(prefix!=null) {
+			if(name.startsWith(prefix)) {
+				name = name.substring(prefix.length());
+			} else {
+				throw new RuntimeException("filename '"+name+"' does not begin with prefix '"+prefix+"'");
+			}
+		}
+
+		final String suffix = PARAM_SUFFIX.getStringValue(this);
+		if(suffix!=null) {
+			if(name.endsWith(suffix)) {
+				name = name.substring(0,name.length() - suffix.length());
+			} else {
+				throw new RuntimeException("filename '"+name+"' does not end with suffix '"+suffix+"'");
+			}
+		}
+
 		Path path = Path.EMPTY_PATH;
 		int level = 0;
 		while (true) {
@@ -189,14 +255,18 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			if (index == -1) {
 				String[] e = name.split("\\.");
 				if (e.length != 2) {
-					return rmapElement(path, name);
+					Path p = rmapElement(path, name);
+					logger.debug("rmap filename "+name+" to path "+p+", codepath 1");
+					return p;
 				}
 				else {
-					if (e[0].length() * e[1].length() == 0) {
+					if (e[0].length() == 0 || e[1].length() == 0) {
+						logger.debug("e[0] or e[1] was zero - returning null. e[0]"+e[0]+" e[1]="+e[1]);
 						return null;
 					}
 					path = rmapElement(path, e[0]);
 					path = rmapElement(path, e[1]);
+					logger.debug("rmap filename "+name+" to path "+path+", codepath 2");
 					return path;
 				}
 			}
@@ -264,3 +334,4 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		return false;
 	}
 }
+
