@@ -75,19 +75,22 @@ public interface TaskHandler {
      * {@link ExecutableObject#addStatusListener(StatusListener)}and
      * {@link Task#addOutputListener(OutputListener)}methods respectively.
      * 
+     * If the submission fails, the task handler should throw an exception
+     * and not set the status of the task to {@link Task#FAILED}.
+     * 
      * @param task
      *            the <code>Task</code> to be submitted
      * @throws IllegalSpecException
-     *             when the {@link Specification}associated with the task is
+     *             when the {@link Specification} associated with the task is
      *             illegal
      * @throws InvalidSecurityContextException
-     *             when the {@link SecurityContext}associated with the task is
+     *             when the {@link SecurityContext} associated with the task is
      *             invalid
      * @throws InvalidServiceContactException
-     *             when the {@link ServiceContact}associated with the task is
+     *             when the {@link ServiceContact} associated with the task is
      *             invalid
      * @throws TaskSubmissionException
-     *             when generic errors occur during task submission
+     *             when a generic errors occur during task submission
      */
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
