@@ -188,7 +188,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 }
             }
             catch (Exception e) {
-                failTask(e.getMessage(), e);
                 // No need for cleanup. Reportedly no resource has been created
                 // if an exception is thrown
                 gramJob.removeListener(this);
