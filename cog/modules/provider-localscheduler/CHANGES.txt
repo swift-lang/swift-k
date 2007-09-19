@@ -1,3 +1,13 @@
+(09/19/07)
+
+*** Cobalt: 'count' attribute mapped to '-c'. The default should
+    be figured by cqsub from 'hostCount'. Looking at the cqsub
+    code, it seems like count = 2 * hostCount on a BG/L and
+    count = 4 * hostCount on a BG/P.
+
+*** Cobalt: 'hostCount' attribute mapped to '-n', with a default
+    of 1
+
 (08/22/07)
 
 *** The cobalt provider was not passing command line arguments

@@ -158,7 +158,8 @@ public class CobaltExecutor implements ProcessListener {
         }
         addAttr("mode", "-m", l);
         // We're gonna treat this as the node count
-        addAttr("count", "-n", l, "1");
+        addAttr("count", "-c", l);
+        addAttr("hostCount", "-n", l, "1");
         addAttr("project", "-p", l);
         addAttr("queue", "-q", l);
         addAttr("kernelprofile", "-k", l);
