@@ -16,4 +16,8 @@ public class TaskSubmissionException extends Exception {
     public TaskSubmissionException(String message, Throwable parent) {
         super(message, parent);
     }
+    
+    public TaskSubmissionException(Throwable parent) {
+        super(parent);
+    }
 }
