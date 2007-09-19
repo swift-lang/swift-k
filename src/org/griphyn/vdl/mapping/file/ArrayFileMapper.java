@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParam;
@@ -20,13 +19,12 @@ public class ArrayFileMapper extends AbstractFileMapper {
 
 	public Collection existing() {
 		List l = new ArrayList();
-		AbstractDataNode dn = (AbstractDataNode) PARAM_FILES.getRawValue(this);
+		DSHandle dn = (DSHandle) PARAM_FILES.getRawValue(this);
 		Map m = dn.getArrayValue();
 		Set s = m.keySet();
 		Iterator i = s.iterator();
 		while(i.hasNext()) {
 			String nextKey = i.next().toString();
-			System.err.println("key: "+nextKey);
 			l.add(Path.EMPTY_PATH.addLast(nextKey,true));
 		}
 		return l;
@@ -42,7 +40,7 @@ public class ArrayFileMapper extends AbstractFileMapper {
 
 			// we could typecheck more elegantly here to make sure that
 			// we really do have an array of strings as parameter.
-			AbstractDataNode dn = (AbstractDataNode) PARAM_FILES.getRawValue(this);
+			DSHandle dn = (DSHandle) PARAM_FILES.getRawValue(this);
 
 			DSHandle srcNode = null;
 			try {
