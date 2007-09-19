@@ -71,11 +71,11 @@ public abstract class AbstractDataNode implements DSHandle {
 			}
 		}
 
-		String prefix = this.getClass().getName() + " with no value at ";
+		String prefix = this.getClass().getName() + " with no value at dataset=";
 		prefix = prefix + getDisplayableName();
 
 		if (!Path.EMPTY_PATH.equals(getPathFromRoot())) {
-			prefix = prefix + getPathFromRoot().toString();
+			prefix = prefix + " path="+ getPathFromRoot().toString();
 		}
 
 		return prefix;
