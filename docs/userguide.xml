@@ -1230,7 +1230,7 @@ the file should contain a header line specifying the names of the columns.
 							<para>
 							
 								Indicates the threshold wall time for
-								clustering. Jobs that have a wall time smaller
+								clustering, in seconds. Jobs that have a wall time smaller
 								than the value of this property will be tagged
 								for clustering.
 								
@@ -1812,7 +1812,7 @@ print will output its argument to stdout.
 
 	<section id="profiles"><title>Profiles</title>
 		<section><title>Karajan namespace</title>
-			<para id="profile.karajan.maxsubmitrate">maxSubmitRate - limits the maximum rate of job submission.
+			<para id="profile.karajan.maxsubmitrate">maxSubmitRate - limits the maximum rate of job submission, in jobs per second.
 For example:
 <screen>
 &lt;profile namespace="karajan" key="maxSubmitRate"&gt;0.2&lt;/profile&gt;
@@ -1830,7 +1830,7 @@ cache will be cleared using the algorithm specified in the
 			</para>
 		</section>
 		<section><title>Globus namespace</title>
-			<para id="profile.globus.maxwalltime"><property>maxwalltime</property> specifies a walltime limit for each job. This profile setting also interacts
+			<para id="profile.globus.maxwalltime"><property>maxwalltime</property> specifies a walltime limit for each job, in minutes. This profile setting also interacts
 with the clustering mechanism when the 
 <link linkend="property.clustering.enabled">clustering.enabled</link>
 property is set.
