@@ -1,3 +1,11 @@
+(09/19/2007)
+
+*** Added hostCount argument to task:execute. This means that, in
+    general, count should be understood to mean "process count"
+    
+*** Added batch argument to task:execute. It allows for 
+    "fire and forget" jobs.
+
 (09/13/2007)
 
 *** Added a fixed rate submit queue. It can be enabled by specifying
