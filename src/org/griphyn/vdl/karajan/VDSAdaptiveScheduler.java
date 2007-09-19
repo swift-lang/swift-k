@@ -343,6 +343,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					Object[] h = (Object[]) i.next();
 					Task ct = (Task) h[0];
 					StatusEvent nse = new StatusEvent(ct, e.getStatus());
+					ct.setStatus(e.getStatus());
 					fireJobStatusChangeEvent(nse);
 				}
 				if (e.getStatus().isTerminal()) {
