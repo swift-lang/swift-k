@@ -162,7 +162,7 @@ public class AbstractionProperties extends java.util.Properties {
                     loadProviderProperties(((URL) e.nextElement()).openStream());
                 }
                 catch (Exception ee) {
-                    logger.debug("Error reading from provider properties", ee);
+                    logger.warn("Error reading from provider properties", ee);
                 }
             }
         }
