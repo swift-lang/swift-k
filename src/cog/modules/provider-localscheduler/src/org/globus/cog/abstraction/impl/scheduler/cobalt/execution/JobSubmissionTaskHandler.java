@@ -68,12 +68,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 }
             }
             catch (Exception e) {
-                Status newStatus = new StatusImpl();
-                Status oldStatus = this.task.getStatus();
-                newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-                newStatus.setStatusCode(Status.FAILED);
-                newStatus.setException(e);
-                this.task.setStatus(newStatus);
                 if (e.getMessage() != null) {
                     throw new TaskSubmissionException("Cannot submit job: "
                             + e.getMessage(), e);
