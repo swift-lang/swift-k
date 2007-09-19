@@ -52,6 +52,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	public static final Arg A_PROVIDER = new Arg.Optional("provider");
 	public static final Arg A_SECURITY_CONTEXT = new Arg.Optional("securitycontext");
 	public static final Arg A_COUNT = new Arg.Optional("count");
+	public static final Arg A_HOST_COUNT = new Arg.Optional("hostcount");
 	public static final Arg A_JOBTYPE = new Arg.Optional("jobtype");
 	public static final Arg A_MAXTIME = new Arg.Optional("maxtime");
 	public static final Arg A_MAXWALLTIME = new Arg.Optional("maxwalltime");
@@ -68,13 +69,14 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	public static final Arg.Channel C_ENVIRONMENT = new Arg.Channel("environment");
 	public static final Arg A_ATTRIBUTES = new Arg.Optional("attributes", Collections.EMPTY_MAP);
 	public static final Arg A_FAIL_ON_JOB_ERROR = new Arg.Optional("failonjoberror", Boolean.TRUE);
+	public static final Arg A_BATCH = new Arg.Optional("batch", Boolean.FALSE);
 
 	static {
 		setArguments(GridExec.class, new Arg[] { A_EXECUTABLE, A_ARGS, A_ARGUMENTS, A_HOST,
 				A_STDOUT, A_STDERR, A_STDOUTLOCATION, A_STDERRLOCATION, A_STDIN, A_PROVIDER,
-				A_COUNT, A_JOBTYPE, A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME, A_ENVIRONMENT, A_QUEUE,
+				A_COUNT, A_HOST_COUNT, A_JOBTYPE, A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME, A_ENVIRONMENT, A_QUEUE,
 				A_PROJECT, A_MINMEMORY, A_MAXMEMORY, A_REDIRECT, A_SECURITY_CONTEXT, A_DIRECTORY,
-				A_NATIVESPEC, A_DELEGATION, A_ATTRIBUTES, C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR });
+				A_NATIVESPEC, A_DELEGATION, A_ATTRIBUTES, C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH });
 	}
 
 	public void submitTask(VariableStack stack) throws ExecutionException {
@@ -182,6 +184,9 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 									+ ")", ex);
 						}
 					}
+				}
+				else if (name.equals(A_BATCH.getName())) {
+					js.setBatchJob(TypeUtil.toBoolean(value));
 				}
 				else {
 					js.setAttribute(name, value);
