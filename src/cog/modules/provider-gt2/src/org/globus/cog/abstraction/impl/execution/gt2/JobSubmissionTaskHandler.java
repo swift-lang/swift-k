@@ -145,22 +145,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
         }
         catch (GramException ge) {
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
-            newStatus.setException(ge);
-            this.task.setStatus(newStatus);
             cleanup();
             throw new TaskSubmissionException("Cannot submit job", ge);
         }
         catch (GSSException gsse) {
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
-            newStatus.setException(gsse);
-            this.task.setStatus(newStatus);
             cleanup();
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
                     gsse);
@@ -224,22 +212,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
         }
         catch (GramException ge) {
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
-            newStatus.setException(ge);
-            this.task.setStatus(newStatus);
             listener.failed(true);
             throw new TaskSubmissionException("Cannot submit job", ge);
         }
         catch (GSSException gsse) {
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
-            newStatus.setException(gsse);
-            this.task.setStatus(newStatus);
             listener.failed(true);
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
                     gsse);
