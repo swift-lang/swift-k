@@ -1,14 +1,25 @@
 #!/bin/bash
 
-
-echo Removing files from previous runs
-rm -fv *.out *.xml *.kml *.dot *.log *.rlog
-
-
 if [ "X$1" == "X" ]; then
   TESTS=*.swift
+elif [ "$1" == "-r" ]; then
+	RESUME="y"
+	TESTS=*.swift
+	echo Resuming previous test run
+elif [ "$1" == "-s" ]; then
+  SUB="y"
+  shift
+  TESTS="$@"
 else
   TESTS="$@"
+fi
+
+if [ "$SUB" == "y" ]; then
+	echo Removing files from previous runs for test $1
+	rm -fv $1*.out $1*.xml $1*.kml $1*.dot $1*.log $1*.rlog
+elif [ "$RESUME" != "y" ]; then
+	echo Removing files from previous runs
+	rm -fv *.out *.xml *.kml *.dot *.log *.rlog
 fi
 
 for testfn in $TESTS; do
@@ -16,32 +27,51 @@ for testfn in $TESTS; do
   export t=$(basename $testfn .swift)
   export EXPECTEDS="$t.*.expected"
 
-  echo Running test $t
-  swift ${t}.swift
-
-  if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO"; exit 1; fi
-
-  echo expecting $EXPECTEDS
+  if [ "$RESUME" == "y" ]; then
+  	echo Skipping test $t
+  else
+	echo Running test $t
+	swift ${t}.swift
+	if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO"; exit 1; fi
+	echo expecting $EXPECTEDS
+  fi
 
   for e in $EXPECTEDS; do
 
     if [ -f $e ]; then
 
-      echo checking $e
+	  if [ "$RESUME" != "y" ]; then
+	      echo checking $e
+	  fi
       out=$(basename $e .expected)
 
       diff -q ${out} ${e}
-      if [ "$?" -ne "0" ]; then echo "OUTPUT DIFFERS"; exit 1; fi
+      if [ "$?" -ne "0" ]; then 
+      	if [ "$RESUME" == "y" ]; then
+      		RESUME="n"
+      		$0 -s $t
+      		if [ "$?" -ne "0" ]; then
+      			exit $?
+      		fi
+      	else
+	      	echo "OUTPUT DIFFERS"
+	      	exit 1
+	    fi
+      fi
 
     else
       echo "$e does not exist"
     fi
 
   done
-  echo ----------===========================----------
+  if [ "$SUB" == "" ]; then
+  	echo ----------===========================----------
+  fi
 done
 
-echo All language behaviour tests passed
+if [ "$SUB" == "" ]; then
+	echo All language behaviour tests passed
+fi
 
 exit 0
 
