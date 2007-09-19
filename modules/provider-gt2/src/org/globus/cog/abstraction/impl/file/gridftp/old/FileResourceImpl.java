@@ -25,6 +25,7 @@ import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
+import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.impl.file.ftp.AbstractFTPFileResource;
 import org.globus.cog.abstraction.impl.file.gridftp.DataChannelAuthenticationType;
 import org.globus.cog.abstraction.impl.file.gridftp.DataChannelProtectionType;
@@ -194,7 +195,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.setPassiveMode(true);
             Enumeration list = gridFTPClient.list().elements();
             while (list.hasMoreElements()) {
-                gridFileList.add(createGridFile(list.nextElement()));
+                gridFileList.add(createGridFile((FileInfo) list.nextElement()));
             }
             return gridFileList;
 
@@ -511,60 +512,54 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     }
 
     /** create the file information object */
-    private GridFile createGridFile(Object obj) throws FileResourceException {
+    private GridFile createGridFile(FileInfo fi) throws FileResourceException {
 
         GridFile gridFile = new GridFileImpl();
 
-        FileInfo fileInfo = (FileInfo) obj;
-
         String directory = getCurrentDirectory();
         if (directory.endsWith("/")) {
-            gridFile.setAbsolutePathName(directory + fileInfo.getName());
+            gridFile.setAbsolutePathName(directory + fi.getName());
         }
         else {
-            gridFile.setAbsolutePathName(directory + "/" + fileInfo.getName());
+            gridFile.setAbsolutePathName(directory + "/" + fi.getName());
         }
 
-        gridFile.setLastModified(fileInfo.getDate());
+        gridFile.setLastModified(fi.getDate());
 
-        if (fileInfo.isFile()) {
+        if (fi.isFile()) {
             gridFile.setFileType(GridFile.FILE);
         }
-        if (fileInfo.isDirectory()) {
+        if (fi.isDirectory()) {
             gridFile.setFileType(GridFile.DIRECTORY);
         }
-        if (fileInfo.isDevice()) {
+        if (fi.isDevice()) {
             gridFile.setFileType(GridFile.DEVICE);
         }
-        if (fileInfo.isSoftLink()) {
+        //Grr. softlink and all the other ones are orthogonal
+        if (fi.isSoftLink()) {
             gridFile.setFileType(GridFile.SOFTLINK);
         }
 
-        gridFile.setMode(fileInfo.getModeAsString());
-        gridFile.setName(fileInfo.getName());
-        gridFile.setSize(fileInfo.getSize());
+        gridFile.setMode(fi.getModeAsString());
+        gridFile.setName(fi.getName());
+        gridFile.setSize(fi.getSize());
 
-        Permissions userPermissions = gridFile.getUserPermissions();
-        Permissions groupPermissions = gridFile.getGroupPermissions();
-        Permissions allPermissions = gridFile.getAllPermissions();
-
-        userPermissions.setRead(fileInfo.userCanRead());
-        userPermissions.setWrite(fileInfo.userCanWrite());
-        userPermissions.setExecute(fileInfo.userCanExecute());
-
-        groupPermissions.setRead(fileInfo.groupCanRead());
-        groupPermissions.setWrite(fileInfo.groupCanWrite());
-        groupPermissions.setExecute(fileInfo.groupCanExecute());
-
-        allPermissions.setRead(fileInfo.allCanRead());
-        allPermissions.setWrite(fileInfo.allCanWrite());
-        allPermissions.setExecute(fileInfo.allCanExecute());
-
-        gridFile.setUserPermissions(userPermissions);
-        gridFile.setGroupPermissions(groupPermissions);
-        gridFile.setAllPermissions(allPermissions);
+        gridFile.setUserPermissions(getPermissions(fi.userCanRead(), fi
+                .userCanWrite(), fi.userCanExecute()));
+        gridFile.setGroupPermissions(getPermissions(fi.groupCanRead(), fi
+                .groupCanWrite(), fi.groupCanExecute()));
+        gridFile.setAllPermissions(getPermissions(fi.allCanRead(), fi
+                .allCanWrite(), fi.allCanExecute()));
 
         return gridFile;
+    }
+
+    protected Permissions getPermissions(boolean r, boolean w, boolean x) {
+        Permissions perm = new PermissionsImpl();
+        perm.setRead(r);
+        perm.setWrite(w);
+        perm.setExecute(x);
+        return perm;
     }
 
     private void removeLocalDirectory(String tempDirName) {
