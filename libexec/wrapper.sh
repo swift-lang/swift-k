@@ -125,6 +125,7 @@ PATH=$PATH:/bin:/usr/bin
 
 log "DIR=$DIR"
 log "EXEC=$EXEC"
+log "STDIN=$STDIN"
 log "STDOUT=$STDOUT"
 log "STDERR=$STDERR"
 log "DIRS=$DIRS"
@@ -179,7 +180,7 @@ else
 		if [ "$STDIN" == "" ]; then
 			"$KICKSTART" -H -o "$STDOUT" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR"
 		else
-			"$KICKSTART" -H -o "$STDOUT" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR" <"$STDIN"
+			"$KICKSTART" -H -o "$STDOUT" -i "$STDIN" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR"
 		fi
 		checkError $? "Exit code $?"
 		mv -f kickstart.xml "../kickstart/$ID-kickstart.xml" 2>&1 >>"$INFO"
