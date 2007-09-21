@@ -109,7 +109,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 
 	private boolean shouldBeClustered(Task task, Object constraints) {
 		if (!clusteringEnabled) {
-			return false; 
+			return false;
 		}
 		String reason = null;
 		try {
@@ -146,6 +146,10 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 		}
 	}
 
+	/*
+	 * TODO Add maxmemory=max(maxmemory), minmemory=max(minmemory) and all other
+	 * similar attributes
+	 */
 	private void processDelayQueue() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Processing clustering queue");
@@ -198,9 +202,10 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					boolean attrConflict = false;
 					Iterator ia = js.getAttributeNames().iterator();
 					while (ia.hasNext()) {
-						String attrName = (String)ia.next();	
-						if (attrName.equals("maxwalltime"))
+						String attrName = (String) ia.next();
+						if (attrName.equals("maxwalltime")) {
 							continue;
+						}
 						Object value = env.get(attrName);
 						if (value != null && !value.equals(js.getAttribute(attrName))) {
 							attrConflict = true;
@@ -228,8 +233,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 						attrs.put(attrName, js.getAttribute(attrName));
 					}
 
-					int maxWallTime = getMaxWallTime(task);
-					clusterTime += maxWallTime;
+					clusterTime += getMaxWallTime(task);
 					cluster.addLast(h);
 				}
 
@@ -254,7 +258,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					js.setExecutable("/bin/sh");
 					js.addArgument("shared/seq.sh");
 					js.setDirectory(dir);
-					js.setAttribute("maxwalltime", String.valueOf(clusterTime));
+					js.setAttribute("maxwalltime", secondsToTime(clusterTime));
 
 					Iterator i = cluster.iterator();
 					while (i.hasNext()) {
@@ -296,7 +300,46 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 	}
 
 	private int getMaxWallTime(Task t) {
-		return TypeUtil.toInt(((JobSpecification) t.getSpecification()).getAttribute("maxwalltime"));
+		return timeToSeconds(TypeUtil.toString(((JobSpecification) t.getSpecification()).getAttribute("maxwalltime")));
+	}
+
+	/**
+	 * Valid times formats: Minutes, Hours:Minutes, Hours:Minutes:Seconds
+	 */
+	public static int timeToSeconds(String time) {
+		String[] s = time.split(":");
+		try {
+			if (s.length == 1) {
+				return 60 * Integer.parseInt(s[0]);
+			}
+			else if (s.length == 2) {
+				return 60 * Integer.parseInt(s[1]) + 3600 * Integer.parseInt(s[0]);
+			}
+			else if (s.length == 3) {
+				return Integer.parseInt(s[2]) + 60 * Integer.parseInt(s[1]) + 3600
+						* Integer.parseInt(s[0]);
+			}
+		}
+		catch (NumberFormatException e) {
+		}
+		throw new IllegalArgumentException("Invalid time specification: " + time);
+	}
+
+	public static String secondsToTime(int seconds) {
+		StringBuffer sb = new StringBuffer();
+		pad(sb, seconds / 3600);
+		sb.append(':');
+		pad(sb, (seconds % 3600) / 60);
+		sb.append(':');
+		pad(sb, seconds % 60);
+		return sb.toString();
+	}
+
+	private static void pad(StringBuffer sb, int value) {
+		if (value < 10) {
+			sb.append('0');
+		}
+		sb.append(String.valueOf(value));
 	}
 
 	protected void failTask(Task t, String message, Exception e) {
@@ -372,8 +415,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 			if (isPresent("trfqn", tc)) {
 				FQN tr = (FQN) tc.getConstraint("trfqn");
 				try {
-					List l = this.tc.getTCEntries(tr,
-							resource.getHost(), TCType.INSTALLED);
+					List l = this.tc.getTCEntries(tr, resource.getHost(), TCType.INSTALLED);
 					if (l == null || l.isEmpty()) {
 						return false;
 					}
