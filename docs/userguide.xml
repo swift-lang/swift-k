@@ -1833,7 +1833,12 @@ cache will be cleared using the algorithm specified in the
 			<para id="profile.globus.maxwalltime"><property>maxwalltime</property> specifies a walltime limit for each job, in minutes. This profile setting also interacts
 with the clustering mechanism when the 
 <link linkend="property.clustering.enabled">clustering.enabled</link>
-property is set.
+property is set. The following formats are recognized:
+				<itemizedlist>
+					<listitem>Minutes</listitem>
+					<listitem>Hours:Minutes</listitem>
+					<listitem>Hours:Minutes:Seconds</listitem>
+				</itemizedlist>
 			</para>
 		</section>
 	</section>
