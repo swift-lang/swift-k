@@ -411,7 +411,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             logger.debug("Destroying remote service for task "
                     + this.task.getIdentity().toString());
         }
-        gramJob.release();
         gramJob.destroy();
     }
 
