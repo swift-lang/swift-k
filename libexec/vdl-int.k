@@ -166,7 +166,7 @@ namespace("vdl"
 		
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "Cleaning up ", dir, " on ", host)
-			task:execute("/bin/rm", arguments="-rf {dir}", host=host)
+			task:execute("/bin/rm", arguments="-rf {dir}", host=host, batch=true)
 		)
 		
 		element(cleanups, [cleanup]
@@ -379,7 +379,7 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
 					catch(".*"
-						log(LOG:DEBUG, "Application exception: ", exception)
+						log(LOG:DEBUG, "{jobid} application exception: ", exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
 							cleanupFiles(cacheFilesToRemove, rhost)
 						)
