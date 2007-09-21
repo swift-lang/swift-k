@@ -182,9 +182,12 @@ else
 		else
 			"$KICKSTART" -H -o "$STDOUT" -i "$STDIN" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR"
 		fi
-		checkError $? "Exit code $?"
+		export APPEXIT=$?
 		mv -f kickstart.xml "../kickstart/$ID-kickstart.xml" 2>&1 >>"$INFO"
 		checkError 254 "Failed to copy Kickstart record to shared directory"
+		if [ "$APPEXIT" != "0" ]; then
+			fail $APPEXIT "Exit code $APPEXIT"
+		fi
 	fi
 fi
 cd ..
