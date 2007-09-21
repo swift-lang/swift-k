@@ -270,7 +270,17 @@ public class TaskImpl implements Task {
     }
 
     public String toString() {
-        return "Task(type=" + type + ", identity=" + id + ")";
+        return "Task(type=" + typeString(type) + ", identity=" + id + ")";
+    }
+    
+    public static String typeString(int type) {
+        switch (type) {
+        	case JOB_SUBMISSION: return "JOB_SUBMISSION";
+        	case FILE_TRANSFER: return "FILE_TRANSFER";
+        	case FILE_OPERATION: return "FILE_OPERATION";
+        	case INFORMATION_QUERY: return "INFORMATION_QUERY";
+        	default: return "UNKNOWN";
+        }
     }
 
     public boolean isUnsubmitted() {
