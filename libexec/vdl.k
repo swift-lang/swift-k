@@ -3,22 +3,25 @@ import("task.k")
 import("rlog.k")
 import("operators.xml", export = true)
 
-once("vdl.k-print-version"
-	echo(sys:file:read("{vds.home}/libexec/version.txt"))
-	echo("RunID: {VDL:RUNID}")
-)
-
 import("vdl-xs.k", export = true)
 
 namespace("vdl"
+
 	import("vdl-sc.k", export = true)
 	import("vdl-lib.xml", export = true)
 
 	import("vdl-int.k")
 	import("java.k")
 
-	export(
+	once("vdl.k-print-version"
+		log("info",sys:file:read("{vds.home}/libexec/version.txt"))
+		echo(sys:file:read("{vds.home}/libexec/version.txt"))
 
+		log("info","RunID: {VDL:RUNID}")
+		echo("RunID: {VDL:RUNID}")
+	)
+
+	export(
 		element(split, [var], each(str:split(vdl:getFieldValue(var), " ")))
 
 		element(quote, [var, optional(path)],
