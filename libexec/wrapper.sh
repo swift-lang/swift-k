@@ -155,10 +155,10 @@ done
 cd $DIR
 #ls >>$WRAPPERLOG
 if [ ! -f "$EXEC" ]; then
-	fail 254 "The executable $1 does not exist"
+	fail 254 "The executable $EXEC does not exist"
 fi
 if [ ! -x "$EXEC" ]; then
-	fail 254 "The executable $1 does not have the executable bit set"
+	fail 254 "The executable $EXEC does not have the executable bit set"
 fi
 if [ "$KICKSTART" == "" ]; then
 	if [ "$STDIN" == "" ]; then
