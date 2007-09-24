@@ -438,12 +438,24 @@ use them within a SwiftScript program. For more information on writing
 an application specific mapper, see the tutorial module on mappers.
 		</para>
 
-		<section><title>The single file mapper</title>
+		<section id="mapper.single_file_mapper"><title>The single file mapper</title>
 		
 	<itemizedlist>
 	<listitem>Name: single_file_mapper</listitem>
 	<listitem>Description:
 A single file mapper maps a single physical file to a dataset.
+
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       f                                 myfile
+
+       f[0]                              INVALID
+
+       f.bar                             INVALID
+
+		</screen>
 	</listitem>
 	<listitem>Parameter:
 		<itemizedlist>
@@ -465,10 +477,11 @@ There is a simplified syntax for this mapper:
 	file f &lt;"plot_outfile_param"&gt;;
 			</programlisting>
     </listitem>
+
 	</itemizedlist>
 	</section>
 
-	<section><title>The simple mapper</title>
+	<section id="mapper.simple_mapper"><title>The simple mapper</title>
 	<itemizedlist>
 	<listitem>Name: simple_mapper</listitem>
 	<listitem>Description:
@@ -497,10 +510,19 @@ output filenames, pattern is ignored.
 	</listitem>
 	<listitem> Examples:
 		<programlisting>
+	type file;
 	file f &lt;simple_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
 The above maps all filenames that start with <filename>foo</filename> and
 have an extension <filename>.txt</filename> into file f.
+
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       f                                 foo.txt
+
+		</screen>
 	</listitem>
 
 	<listitem>
@@ -541,10 +563,15 @@ outfile[1] = greeting("middle");
 outfile[2] = greeting("goodbye");
 </programlisting>
 
-This will output the string &quot;hello&quot; into a file
-called <filename>baz.0.txt</filename>, the string &quot;middle&quot;
-into <filename>baz.1.txt</filename> and the string &quot;goodbye&quot;
-into <filename>baz.2.txt</filename>.
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       outfile[0]                        baz0000.txt
+       outfile[1]                        baz0001.txt
+       outfile[2]                        baz0002.txt
+
+		</screen>
 
 	</listitem>
 
@@ -577,12 +604,20 @@ This will output the string &quot;hello&quot; into the file
 <filename>qux.left.txt</filename> and the string &quot;goodbye&quot;
 into the file <filename>qux.right.txt</filename>.
 
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       out.left                          quxleft.txt
+       out.right                         quxright.txt
+
+		</screen>
 	</listitem>
 
 	</itemizedlist>
 	</section>
 
-	<section><title>concurrent mapper</title>
+	<section id="mapper.concurrent_mapper"><title>concurrent mapper</title>
 	<itemizedlist>
 	<listitem>Name: concurrent_mapper</listitem>
 	<listitem>Description:
@@ -621,7 +656,7 @@ generate f2 filename with prefix &quot;foo&quot; and extension &quot;.txt&quot;
 	</itemizedlist>
 	</section>
 
-	<section><title>file system mapper</title>
+	<section id="mapper.filesys_mapper"><title>file system mapper</title>
 <para>TODO: note on difference between location as a relative vs absolute
 path wrt staging to remote location - as mihael said:
 It's because you specify that location in the mapper. Try location="."
@@ -630,13 +665,14 @@ instead of location="/sandbox/..."</para>
 	<listitem>Name: filesys_mapper</listitem>
     <listitem>Description:
 This mapper is similar to the simple mapper, but maps a file or 
-a list of files to a dataset array. Each of the filenames would
-be mapped as an element in the array.
+a list of files to an array. Each of the filename is 
+mapped as an element in the array. The order of files in the resulting
+array is not defined.
 	</listitem>
 		<listitem>Parameters:
 		<itemizedlist>
 		<listitem>location:
-			A directory that the files are located.
+			The directory where the files are located.
 		</listitem>
 		<listitem>prefix:
 			The prefix of the files
@@ -658,11 +694,22 @@ match all file names that contain foo.
 			</programlisting>
 The above example would map all filenames that start with &quot;foo&quot; 
 and have an extension &quot;.txt&quot; into the array texts.
+For example, if the specified directory contains files: foo1.txt, footest.txt,
+foo__1.txt, then the mapping might be:
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       texts[0]                          footest.txt
+       texts[1]                          foo1.txt
+       texts[2]                          foo__1.txt
+
+		</screen>
 	</listitem>
 	</itemizedlist>
 	</section>
 
-	<section><title>fixed array mapper</title>
+	<section id="mapper.fixed_array_mapper"><title>fixed array mapper</title>
 	<itemizedlist>
 	<listitem>Name: fixed_array_mapper</listitem>
     <listitem>Description:
@@ -679,13 +726,23 @@ A string that contains a list of filenames, separated by space, comma or colon
 
 	<listitem> Example:
 			<programlisting>
-	file texts[] &lt;fixed_array_mapper;files="file1.txt, file2.txt, file3.txt"&gt;;
+	file texts[] &lt;fixed_array_mapper;files="file1.txt, fileB.txt, file3.txt"&gt;;
 			</programlisting>
+would cause a mapping like this:
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       texts[0]                          file1.txt
+       texts[1]                          fileB.txt
+       texts[2]                          file3.txt
+
+		</screen>
 	</listitem>
 	</itemizedlist>
 	</section>
 
-	<section><title>array mapper</title>
+	<section id="mapper.array_mapper"><title>array mapper</title>
 	<itemizedlist>
 	<listitem>Name: array_mapper</listitem>
 	<listitem>Description: This mapper froms an array of strings into a file
@@ -696,10 +753,28 @@ array.</listitem>
 An array of strings containing one filename per element</listitem>
 		</itemizedlist>
 	</listitem>
+	<listitem> Example:
+		<programlisting>
+string s[] = [ "a.txt", "b.txt", "c.txt" ];
+
+file f[] &lt;array_mapper;files=s&gt;;
+		</programlisting>
+This will establish the mapping:
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       f[0]                              a.txt
+       f[1]                              b.txt
+       f[2]                              c.txt
+
+		</screen>
+
+	</listitem>
 	</itemizedlist>
 	</section>
 
-	<section><title>regular expression mapper</title>
+	<section id="mapper.regexp_mapper"><title>regular expression mapper</title>
 	<itemizedlist>
 	<listitem>Name: regexp_mapper</listitem>
 	<listitem>Description:
@@ -726,21 +801,28 @@ The pattern of the file name to transform to, use
 
 	<listitem> Example:
 			<programlisting>
-	file f &lt;regexp_mapper;source=@f,match="(.*)gif",transform="\1jpg"&gt;;
+	string s = "picture.gif";
+	file f &lt;regexp_mapper;source=s,match="(.*)gif",transform="\1jpg"&gt;;
 			</programlisting>
-This example transforms a file ending with &quot;gif&quot; into one 
-ending with &quot;jpg&quot;, where <emphasis>\1</emphasis> refers to
-the first group matched.
+This example transforms a string &quot;gif&quot; into one 
+ending with &quot;jpg&quot; and maps that to a file.
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       f                                 picture.jpg
+
+		</screen>
 	</listitem>
 	</itemizedlist>
 	</section>
 
-	<section><title>csv mapper</title>
+	<section id="mapper.csv_mapper"><title>csv mapper</title>
 	<itemizedlist>
 	<listitem>Name: csv_mapper</listitem>
 	<listitem>Description:
 This mapper maps the content of a CSV (comma-separated value) file into 
-a dataset array. The dataset type needs to be correctly defined to 
+an array of structures. The dataset type needs to be correctly defined to 
 conform to the column names in the file. For instance, if the file
 contains columns:
 		<para>name age GPA</para>
@@ -752,16 +834,16 @@ contains columns:
 			float  GPA;
 		}
 		</programlisting>
-if the file does not contain a header with column info, then the
-column names are assumed as &quot;column1&quot;, &quot;column2&quot;,
+If the file does not contain a header with column info, then the
+column names are assumed as &quot;column1&quot;, &quot;column2&quot;, etc.
 	</listitem>
 	<listitem>Parameters:
 		<itemizedlist>
 		<listitem>file:
-The name of the file to read from.
+The name of the CSV file to read mappings from.
 		</listitem>
 		<listitem>header:
-whether the file has a line describing header info; default is true
+Whether the file has a line describing header info; default is true
 		</listitem>
 		<listitem>skip:
 The number of lines to skip at the beginning (after header line); default is 0.
@@ -770,7 +852,7 @@ The number of lines to skip at the beginning (after header line); default is 0.
 Header field delimiter; default is the value of the "delim" parameter
 		</listitem>
 		<listitem>delim:
-Content field delimiter; default is space, tab and comma.
+Content field delimiters; defaults are space, tab and comma.
 		</listitem>
 		</itemizedlist>
 	</listitem>
@@ -782,6 +864,31 @@ Content field delimiter; default is space, tab and comma.
 The above example would read a list of student info from file 
 &quot;stu_list.txt&quot; and map them into a student array. By default, 
 the file should contain a header line specifying the names of the columns.
+
+If <filename>stu_list.txt</filename> contains the following:
+<screen>
+name,age,gpa
+101-name.txt, 101-age.txt, 101-gpa.txt
+name55.txt, age55.txt, age55.txt
+q, r, s
+</screen>
+then some of the mappings produced by this example would be:
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       stus[0].name                         101-name.txt
+       stus[0].age                          101-age.txt
+       stus[0].gpa                          101-gpa.txt
+       stus[1].name                         name55.txt
+       stus[1].age                          age55.txt
+       stus[1].gpa                          gpa55.txt
+       stus[2].name                         q
+       stus[2].age                          r
+       stus[2].gpa                          s
+
+		</screen>
+
     </listitem>
 	</itemizedlist>
 	</section>
