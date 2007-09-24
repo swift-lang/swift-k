@@ -168,6 +168,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			error("Could not start execution.\n\t" + e.getMessage());
 		}
 
+		if(runerror) {
+			logger.debug("Swift finished - workflow had errors");
+		} else {
+			logger.debug("Swift finished - workflow had no errors");
+		}
 		System.exit(runerror ? 2 : 0);
 	}
 
