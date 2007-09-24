@@ -18,9 +18,7 @@ program(types,procedures,declarations,statements) ::= <<
   	<vdl:pre/>
   	<vdl:mains>
 		<vdl:mainp>
-		    <parallel>
-    		  $statements;separator="\n"$
-	    	</parallel>
+		    $parallel(statements=statements)$
 		</vdl:mainp>
 	</vdl:mains>
 	<vdl:post/>
@@ -48,10 +46,7 @@ $endif$
 compound(outputs,inputs,declarations,statements,config) ::= <<
 $declarations;separator="\n"$
 $if(statements)$
-<parallel>
-  $statements;separator="\n"$
-</parallel>
-
+$parallel(statements=statements)$
 $endif$
 $outputs:vdl_closedataset();separator="\n"$
 >>
@@ -119,6 +114,16 @@ $if (stderr)$
 $endif$
 >>
 
+parallel(statements) ::= <<
+$if(rest(statements))$
+<parallel>
+  $statements;separator="\n"$
+</parallel>
+$else$
+$statements$
+$endif$
+>>
+
 // the 'function' template in general outputs a karajan code fragment
 // that calls a function in the vdl namespace.
 
@@ -175,9 +180,7 @@ $if(indexVar)$
 $endif$
     $declarations;separator="\n"$
     $if(statements)$
-    <parallel>
-      $statements;separator="\n"$
-    </parallel>
+      $parallel(statements=statements)$
     $endif$
 </parallelFor>
 >>
@@ -294,9 +297,7 @@ if(condition,vthen,velse) ::= <<
 sub_comp(declarations,statements) ::= <<
 $declarations;separator="\n"$
 $if(statements)$
-<parallel>
-  $statements;separator="\n"$
-</parallel>
+$parallel(statements=statements)$
 $endif$
 >>
 
