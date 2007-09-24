@@ -98,6 +98,8 @@ namespace("vdl"
 		
 		element(initSharedDir, [rhost]
 			once(list(rhost, "shared")
+				log(LOG:INFO, "Initializing shared directory on ", rhost)
+
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				sharedDir := dircat(wfdir, "shared")
 				dir:make(sharedDir, host=rhost)
@@ -106,6 +108,7 @@ namespace("vdl"
 				dir:make(dircat(wfdir, "kickstart"), host=rhost)
 				dir:make(dircat(wfdir, "status"), host=rhost)
 				dir:make(dircat(wfdir, "info"), host=rhost)
+				log(LOG:INFO, "Done initializing shared directory on ", rhost)
 				wfdir, sharedDir
 				//we send the cleanup data to vdl:main()
 				to(cleanup, list(wfdir, rhost))
@@ -324,7 +327,7 @@ namespace("vdl"
 				)
 				
 				jobid := concat(tr, "-", uid())
-				log(LOG:DEBUG, "Job {jobid} running in thread {#thread} run {vdl:runid}")
+				log(LOG:DEBUG, "Job {jobid} running in thread {#thread} on host {rhost}")
 				tmpdir := dircat(wfdir, jobid)
 				
 				stdout := try(stdout, "stdout.txt")

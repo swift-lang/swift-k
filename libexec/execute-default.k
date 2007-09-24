@@ -10,13 +10,14 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 	done := isDone(stageout)
 	derr := try(deperror, false)
 	merr := try(mdeperror, false)
-				
+
 	if(
 		derr == false then(
 			if(
 				not(done) try(
 					sequential(
 						echo("{tr} started")
+						log("info","{tr} started in thread {#thread}")
 						restartOnError(".*", 2,
 							execute2(
 								tr, maybe(arguments=arguments), 
@@ -27,9 +28,11 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 						mark(stageout, err=false, mapping=false)
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
 						echo("{tr} completed")
+						log("info","{tr} completed in thread {#thread}")
 					)
 					catch(".*"
 						echo("{tr} failed")
+						log("info","{tr} failed in thread {#thread}")
 						if(
 							vdl:configProperty("lazy.errors") == "false" then(
 								throw(exception)
