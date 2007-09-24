@@ -29,3 +29,6 @@ The buildguides.sh script will build all guides. Run it with no parameters,
 like this:
 
 $ ./buildguides.sh
+
+This will produced a .php file for each document. These files are
+sufficiently HTML-like that they can be opened in a local web browser.
