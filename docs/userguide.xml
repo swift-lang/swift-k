@@ -1949,7 +1949,25 @@ property is set. The following formats are recognized:
 			</para>
 		</section>
 	</section>
-	
+	<section><title>Alternative providers</title>
+		<para>
+Some of the actions Swift takes - executing jobs and transferring files - 
+take place through <firstterm>cog providers</firstterm>. Swift comes with
+some default providers, but others can be used (both as supplied with Swift
+and of your own making).
+		</para>
+		<section><title>PBS execution provider</title>
+			<para>
+The PBS execution provider allows jobs to be executed through a local
+PBS installation. To use, edit the localhost specification in sites.xml
+to specify provider="pbs" instead of provider="local". Execution jobs
+from Swift will then be submitted to the PBS queue instead of forked locally.
+When using PBS, you must run Swift on the PBS submit node
+and have your workdirectory point to a directory shared between
+all worker nodes and the submit node.
+			</para>
+		</section>
+	</section>
 
 </article>
 
