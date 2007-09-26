@@ -322,7 +322,8 @@ namespace("vdl"
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
 			
 				jobid := concat(tr, "-", uid())
-				log(LOG:DEBUG, "Job {jobid} thread {#thread} host {rhost} starting")
+				log(LOG:DEBUG, "Job {jobid} thread {#thread} site {rhost} starting")
+				log(LOG:DEBUG, "Job {jobid} initializing shared directory")
 				[wfdir, sharedDir] := try(
 					initSharedDir(rhost)
 					throw(exception("Could not initialize shared directory on {rhost}", exception))
@@ -346,6 +347,7 @@ namespace("vdl"
 						
 						createDirSet(sharedDir, rhost, fileDirs)
 						
+						log(LOG:DEBUG, "Job {jobid} staging in")
 						doStagein(stagein, sharedDir, rhost)
 
 						log(LOG:INFO, "Running job {jobid} {tr}", maybe(" with arguments ", arguments), " in {tmpdir} on {rhost}")
@@ -375,12 +377,15 @@ namespace("vdl"
 						/* need to stage the files to upper scratch area in case they are not transfered to another site
 						   before all the files get cleaned out */
 					
+						log(LOG:DEBUG, "Job {jobid} staging out")
 						doStageout(stageout, sharedDir, rhost)
+						log(LOG:DEBUG, "Job {jobid} staging out finished")
 						if(
 							kickstart != "" & vdl:configProperty("kickstart.always.transfer") == "true"
 							discard(transferKickstartRec(rhost, wfdir, jobid))
 						)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
+						log(LOG:DEBUG, "Job {jobid} all finished")
 					)
 					catch(".*"
 						log(LOG:DEBUG, "{jobid} application exception: ", exception)
