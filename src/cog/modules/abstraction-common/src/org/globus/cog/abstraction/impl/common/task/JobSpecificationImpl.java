@@ -288,11 +288,11 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public void setAttribute(String name, Object value) {
-        this.additionalAttributes.put(name, value);
+        this.additionalAttributes.put(name.toLowerCase(), value);
     }
 
     public Object getAttribute(String name) {
-        return this.additionalAttributes.get(name);
+        return this.additionalAttributes.get(name.toLowerCase());
     }
 
     public Enumeration getAllAttributes() {
