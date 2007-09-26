@@ -321,12 +321,13 @@ namespace("vdl"
 			stageout := list(unique(each(stageout)))
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
 			
+				jobid := concat(tr, "-", uid())
+				log(LOG:DEBUG, "Job {jobid} thread {#thread} host {rhost} starting")
 				[wfdir, sharedDir] := try(
 					initSharedDir(rhost)
 					throw(exception("Could not initialize shared directory on {rhost}", exception))
 				)
 				
-				jobid := concat(tr, "-", uid())
 				log(LOG:DEBUG, "Job {jobid} running in thread {#thread} on host {rhost}")
 				tmpdir := dircat(wfdir, jobid)
 				
@@ -337,7 +338,7 @@ namespace("vdl"
 				
 				try(
 					sequential(
-						log(LOG:INFO, "Creating temporary directory {tmpdir} on {rhost}")
+						log(LOG:INFO, "Creating temporary directory {tmpdir} on {rhost} for job {jobid}")
 					
 						/* May need to consult RLS to find the physical file names for stagein and stageout. */
 						
