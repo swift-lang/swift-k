@@ -124,16 +124,36 @@ public class CobaltExecutor implements ProcessListener {
     protected void addAttr(String attrName, String option, List l) {
         addAttr(attrName, option, l, null);
     }
-
+    
+    protected void addAttr(String attrName, String option, List l, boolean round) {
+        addAttr(attrName, option, l, null, round);
+    }
+    
     protected void addAttr(String attrName, String option, List l, String defval) {
+        addAttr(attrName, option, l, defval, false);
+    }
+
+    protected void addAttr(String attrName, String option, List l, String defval, boolean round) {
         Object value = spec.getAttribute(attrName);
         if (value != null) {
+            if (round) {
+                value = round(value);
+            }
             l.add(option);
             l.add(String.valueOf(value));
         }
         else if (defval != null) {
             l.add(option);
             l.add(defval);
+        }
+    }
+    
+    protected Object round(Object value) {
+        if (value instanceof Number) {
+            return new Integer(((Number) value).intValue());
+        }
+        else {
+            return value;
         }
     }
 
@@ -158,8 +178,8 @@ public class CobaltExecutor implements ProcessListener {
         }
         addAttr("mode", "-m", l);
         // We're gonna treat this as the node count
-        addAttr("count", "-c", l);
-        addAttr("hostCount", "-n", l, "1");
+        addAttr("count", "-c", l, true);
+        addAttr("hostCount", "-n", l, "1", true);
         addAttr("project", "-p", l);
         addAttr("queue", "-q", l);
         addAttr("kernelprofile", "-k", l);
