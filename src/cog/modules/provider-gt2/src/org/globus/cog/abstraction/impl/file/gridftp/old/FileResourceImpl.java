@@ -279,7 +279,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.deleteFile(file);
         }
         catch (Exception e) {
-            throw translateException("Cannot delete the given file", e);
+            throw translateException("Cannot delete " + file, e);
         }
     }
 
