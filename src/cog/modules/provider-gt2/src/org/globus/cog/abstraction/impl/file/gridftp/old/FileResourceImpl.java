@@ -269,7 +269,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.deleteDir(directory);
         }
         catch (Exception e) {
-            throw translateException("Cannot delete the given directory", e);
+            throw translateException("Cannot delete " + directory, e);
         }
     }
 
@@ -291,7 +291,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.get(remoteFileName, sink, mListener);
         }
         catch (Exception e) {
-            throw translateException("Cannot retrieve the given file", e);
+            throw translateException("Cannot retrieve " + remoteFileName, e);
         }
     }
 
@@ -303,7 +303,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.get(remoteFileName, localFile);
         }
         catch (Exception e) {
-            throw translateException("Cannot retrieve the given file", e);
+            throw translateException("Cannot retrieve " + remoteFileName
+                    + " to " + localFile, e);
         }
 
     }
@@ -381,7 +382,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.put(localFile, remoteFileName, append);
         }
         catch (Exception e) {
-            throw translateException("Cannot transfer the given file", e);
+            throw translateException("Cannot transfer " + localFile + " to "
+                    + remoteFileName, e);
         }
     }
 
@@ -396,7 +398,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.put(remoteFileName, source, mListener);
         }
         catch (Exception e) {
-            throw translateException("Cannot transfer the given file", e);
+            throw translateException("Cannot transfer to " + remoteFileName, e);
         }
     }
 
@@ -409,7 +411,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.rename(remoteFileName1, remoteFileName2);
         }
         catch (Exception e) {
-            throw translateException("Rename for gridftp failed", e);
+            throw translateException("Renaming of " + remoteFileName1 + " to "
+                    + remoteFileName2 + " failed", e);
         }
     }
 
@@ -423,7 +426,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient.site(cmd);
         }
         catch (Exception e) {
-            throw translateException("Cannot change the file permissions.", e);
+            throw translateException("Cannot change the file permissions for "
+                    + filename, e);
         }
     }
 
@@ -535,7 +539,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         if (fi.isDevice()) {
             gridFile.setFileType(GridFile.DEVICE);
         }
-        //Grr. softlink and all the other ones are orthogonal
+        // Grr. softlink and all the other ones are orthogonal
         if (fi.isSoftLink()) {
             gridFile.setFileType(GridFile.SOFTLINK);
         }
