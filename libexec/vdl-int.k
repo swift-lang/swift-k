@@ -371,6 +371,7 @@ namespace("vdl"
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
 						)
 							
+						log(LOG:DEBUG, "Job {jobid} checking job status")
 						checkJobStatus(rhost, wfdir, jobid, tr)
 		
 						log(LOG:INFO, "Completed job {jobid} {tr}", maybe(" with arguments ", arguments), " on {rhost}")
