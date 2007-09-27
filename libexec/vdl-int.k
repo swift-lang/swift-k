@@ -79,6 +79,7 @@ namespace("vdl"
 				)
 				if(
 					file:exists("{wfdir}/status/{jobid}-error", host=rhost) then(
+						log(LOG:INFO, "Job {jobid} failed. Checking error file.")
 						task:transfer(srchost=rhost, srcdir="{wfdir}/status", srcfile="{jobid}-error")
 						error := parallel(
 							file:remove("{wfdir}/status/{jobid}-error", host=rhost)
@@ -90,6 +91,7 @@ namespace("vdl"
 						throw(error)
 					)
 					else (	
+						log(LOG:INFO, "Job {jobid} is missing both status files.")
 						throw("No status file was found. Check the shared filesystem on {rhost}")  
 					)
 				)
