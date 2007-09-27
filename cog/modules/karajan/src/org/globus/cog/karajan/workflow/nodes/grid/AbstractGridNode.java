@@ -187,8 +187,10 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			}
 		}
 	}
+	
 	public void submitUnscheduled(TaskHandler handler, Task task, VariableStack stack)
 			throws ExecutionException {
+		setTaskIdentity(stack, task);
 		task.addStatusListener(this);
 		stack.setVar(HANDLER, handler);
 		synchronized (tasks) {
@@ -210,14 +212,10 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			}
 		}
 	}
+	
 	public void submitScheduled(Scheduler scheduler, Task task, VariableStack stack,
 			Object constraints) {
-		try {
-			task.setIdentity(new IdentityImpl(ThreadingContext.get(stack).toString()));
-		}
-		catch (VariableNotFoundException e) {
-			// such is life
-		}
+		setTaskIdentity(stack, task);
 		if (logger.isDebugEnabled()) {
 			logger.debug(task);
 			logger.debug("Submitting task " + task.getIdentity());
@@ -227,6 +225,15 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			tasks.put(task, stack);
 		}
 		scheduler.enqueue(task, constraints);
+	}
+	
+	protected void setTaskIdentity(VariableStack stack, Task task) {
+		try {
+			task.setIdentity(new IdentityImpl(ThreadingContext.get(stack).toString()));
+		}
+		catch (VariableNotFoundException e) {
+			// such is life
+		}
 	}
 
 	public void statusChanged(StatusEvent e) {
