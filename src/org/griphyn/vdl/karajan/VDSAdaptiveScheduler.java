@@ -12,6 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
@@ -39,6 +40,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 	private int minClusterTime = 60;
 	private Map tasks;
 	private boolean clusteringEnabled;
+	private int clusterId;
 
 	public VDSAdaptiveScheduler() {
 		dq = new LinkedList();
@@ -167,7 +169,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 				while (clusterTime < minClusterTime && dqi.hasNext()) {
 					Object[] h = (Object[]) dqi.next();
 					Task task = (Task) h[0];
-					boolean envConflict = false;
+
 					JobSpecification js = (JobSpecification) task.getSpecification();
 
 					if (constraints == null) {
@@ -185,53 +187,14 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 						continue;
 					}
 
-					Iterator i = js.getEnvironmentVariableNames().iterator();
-					while (i.hasNext()) {
-						String envName = (String) i.next();
-						Object value = env.get(envName);
-						if (value != null && !value.equals(js.getEnvironmentVariable(envName))) {
-							envConflict = true;
-							break;
-						}
-					}
-
-					if (envConflict) {
-						continue;
-					}
-
-					boolean attrConflict = false;
-					Iterator ia = js.getAttributeNames().iterator();
-					while (ia.hasNext()) {
-						String attrName = (String) ia.next();
-						if (attrName.equals("maxwalltime")) {
-							continue;
-						}
-						Object value = env.get(attrName);
-						if (value != null && !value.equals(js.getAttribute(attrName))) {
-							attrConflict = true;
-							break;
-						}
-					}
-					if (attrConflict) {
+					if (detectConflict(js, env, attrs)) {
 						continue;
 					}
 					else {
 						dqi.remove();
 					}
 
-					i = js.getEnvironmentVariableNames().iterator();
-					while (i.hasNext()) {
-						String envName = (String) i.next();
-						env.put(envName, js.getEnvironmentVariable(envName));
-					}
-
-					i = js.getAttributeNames().iterator();
-					while (i.hasNext()) {
-						String attrName = (String) i.next();
-						if (attrName.equals("maxwalltime"))
-							continue;
-						attrs.put(attrName, js.getAttribute(attrName));
-					}
+					merge(js, env, attrs);
 
 					clusterTime += getMaxWallTime(task);
 					cluster.addLast(h);
@@ -250,6 +213,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 				}
 				else if (cluster.size() > 1) {
 					Task t = new TaskImpl();
+					t.setIdentity(new IdentityImpl("cluster-" + (clusterId++)));
 					t.setType(Task.JOB_SUBMISSION);
 					t.setRequiredService(1);
 
@@ -259,11 +223,18 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					js.addArgument("shared/seq.sh");
 					js.setDirectory(dir);
 					js.setAttribute("maxwalltime", secondsToTime(clusterTime));
+					
+					if (logger.isInfoEnabled()) {
+						logger.info("Creating cluster " + t.getIdentity() + " with size " + cluster.size());
+					}
 
 					Iterator i = cluster.iterator();
 					while (i.hasNext()) {
 						Object[] h = (Object[]) i.next();
 						Task st = (Task) h[0];
+						if (logger.isInfoEnabled()) {
+							logger.info("Task " + st.getIdentity() + " clustered in " + t.getIdentity());
+						}
 						JobSpecification sjs = (JobSpecification) st.getSpecification();
 						js.addArgument(sjs.getExecutable());
 						List args = sjs.getArgumentsAsList();
@@ -296,6 +267,60 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					super.enqueue(t, new Contact[] { (Contact) constraints });
 				}
 			}
+		}
+	}
+
+	private boolean detectConflict(JobSpecification js, Map env, Map attrs) {
+		return detectEnvironmentConflict(js, env) || detectAttributeConflict(js, attrs);
+	}
+
+	private boolean detectEnvironmentConflict(JobSpecification js, Map env) {
+		Iterator i = js.getEnvironmentVariableNames().iterator();
+		while (i.hasNext()) {
+			String envName = (String) i.next();
+			Object value = env.get(envName);
+			if (value != null && !value.equals(js.getEnvironmentVariable(envName))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean detectAttributeConflict(JobSpecification js, Map attrs) {
+		Iterator ia = js.getAttributeNames().iterator();
+		while (ia.hasNext()) {
+			String attrName = (String) ia.next();
+			if (attrName.equals("maxwalltime")) {
+				continue;
+			}
+			Object value = attrs.get(attrName);
+			if (value != null && !value.equals(js.getAttribute(attrName))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void merge(JobSpecification js, Map env, Map attrs) {
+		mergeEnvironment(js, env);
+		mergeAttributes(js, attrs);
+	}
+
+	private void mergeEnvironment(JobSpecification js, Map env) {
+		Iterator i = js.getEnvironmentVariableNames().iterator();
+		while (i.hasNext()) {
+			String envName = (String) i.next();
+			env.put(envName, js.getEnvironmentVariable(envName));
+		}
+	}
+
+	private void mergeAttributes(JobSpecification js, Map attrs) {
+		Iterator i = js.getAttributeNames().iterator();
+		while (i.hasNext()) {
+			String attrName = (String) i.next();
+			if (attrName.equals("maxwalltime"))
+				continue;
+			attrs.put(attrName, js.getAttribute(attrName));
 		}
 	}
 
@@ -390,8 +415,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					fireJobStatusChangeEvent(nse);
 				}
 				if (e.getStatus().isTerminal()) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Removing cluster " + t.getIdentity());
+					if (logger.isInfoEnabled()) {
+						logger.info("Removing cluster " + t.getIdentity());
 					}
 					synchronized (tasks) {
 						tasks.remove(t);
