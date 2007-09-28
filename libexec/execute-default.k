@@ -7,6 +7,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 	   [m] This is done in the scheduler.
     */
     
+    jobid := concat(tr, "-", uid())
 	done := isDone(stageout)
 	derr := try(deperror, false)
 	merr := try(mdeperror, false)
@@ -17,9 +18,10 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 				not(done) try(
 					sequential(
 						echo("{tr} started")
-						log("info","{tr} started in thread {#thread}")
+						log(LOG:INFO, "START jobid={jobid} tr={tr}") 
 						restartOnError(".*", 2,
 							execute2(
+								jobid,
 								tr, maybe(arguments=arguments), 
 								maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
 								stagein, stageout
@@ -28,17 +30,18 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 						mark(stageout, err=false, mapping=false)
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
 						echo("{tr} completed")
-						log("info","{tr} completed in thread {#thread}")
+						log(LOG:INFO, "END SUCCESS jobid={jobid} tr={tr}")
 					)
 					catch(".*"
 						echo("{tr} failed")
-						log("info","{tr} failed in thread {#thread}")
+						log(LOG:INFO, "END FAILURE jobid={jobid} tr={tr}")
 						if(
 							vdl:configProperty("lazy.errors") == "false" then(
 								throw(exception)
 							)
 							else (
 								to(errors, exception)
+								log(LOG:INFO, exception)
 								mark(stageout, err=true, mapping=false)
 								graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
 							)
@@ -50,11 +53,15 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 		else (
 			if(
 				merr == true then(
-					to(errors, exception(concat("VDL2: Application ", str:quote(tr), 
-						" not executed due to errors in mapping dependencies")))
+					exception := exception(concat("VDL2: Application ", str:quote(tr), 
+						" not executed due to errors in mapping dependencies"))
+					to(errors, exception)
+					log(LOG:INFO, exception)
 				)
 				derr == true then(
-					to(errors, exception("VDL2: Application {tr} not executed due to errors in dependencies"))
+					exception := exception("VDL2: Application {tr} not executed due to errors in dependencies")
+					to(errors, exception)
+					log(LOG:INFO, exception)
 				)
 			)
 			mark(stageout, err=true, mapping=merr)
