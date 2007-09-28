@@ -1265,32 +1265,7 @@ then some of the mappings produced by this example would be:
 							</para>
 							
 							<para>
-							
-								Clustering enables sending of short jobs to
-								remote resources in a single request in order to
-								minimize various overheads involved in launching
-								jobs. Clustering works in the following way: If
-								a job is clusterable (meaning that it has the
-								<link linkend="profile.globus.maxwalltime"><property>GLOBUS::maxwalltime</property></link> profile
-								specified in <filename
-								type="file">tc.data</filename> and its value is
-								less than the value of the
-								<link linkend="property.clustering.min.time"><property>clustering.min.time</property></link>
-								property) it will be put in a clustering
-								queue. The queue is processed at intervals 
-								specified by the
-								<link linkend="property.clustering.queue.delay"><property>clustering.queue.delay</property></link>
-								property. The processing
-								of the clustering queue consists of selecting
-								compatible jobs and grouping them in clusters
-								whose max wall time does not exceed twice the
-								value of the
-								<property>clustering.min.time</property>
-								property. Two or more jobs are  considered
-								compatible if they share the same site and do
-								not have conflicting profiles (e.g. different
-								values for the same environment variable). 
-
+								Enables <link linkend="clustering">clustering</link>.
 							</para>
 							
 						</listitem>
@@ -1337,9 +1312,9 @@ then some of the mappings produced by this example would be:
 							<para>
 							
 								Indicates the threshold wall time for
-								clustering, in seconds. Jobs that have a wall time smaller
-								than the value of this property will be tagged
-								for clustering.
+								clustering, in seconds. Jobs that have a 
+								wall time smaller than the value of this
+								property will be considered for clustering.
 								
 							</para>
 						</listitem>
@@ -1938,9 +1913,10 @@ cache will be cleared using the algorithm specified in the
 		</section>
 		<section><title>Globus namespace</title>
 			<para id="profile.globus.maxwalltime"><property>maxwalltime</property> specifies a walltime limit for each job, in minutes. This profile setting also interacts
-with the clustering mechanism when the 
-<link linkend="property.clustering.enabled">clustering.enabled</link>
-property is set. The following formats are recognized:
+with the <link linkend="clustering">clustering mechanism</link>.
+			</para>
+			<para>
+The following formats are recognized:
 				<itemizedlist>
 					<listitem>Minutes</listitem>
 					<listitem>Hours:Minutes</listitem>
@@ -1967,6 +1943,49 @@ and have your workdirectory point to a directory shared between
 all worker nodes and the submit node.
 			</para>
 		</section>
+	</section>
+
+	<section id="clustering"><title>Clustering</title>
+		<para>
+Swift can group a number of short job submissions into a single larger
+job submission to minimize overhead involved in launching jobs (for example,
+caused by security negotiation and remote queuing delay).
+		</para>
+
+		<para>
+By default, clustering is disabled. It can be activated by setting the
+<link linkend="property.clustering.enabled">clustering.enabled</link>
+property to true.
+		</para>
+
+		<para>
+A job is eligible for clustering if
+the <link linkend="profile.globus.maxwalltime"><property>GLOBUS::maxwalltime</property></link> profile is specified in the <filename
+type="file">tc.data</filename> entry for that job, and its value is
+less than the value of the
+<link linkend="property.clustering.min.time"><property>clustering.min.time</property></link>
+property.
+		</para>
+
+		<para>
+Two or more jobs are considered compatible if they share the same site
+and do not have conflicting profiles (e.g. different values for the same
+environment variable). 
+		</para>
+
+		<para>
+When a submitted job is eligible for clustering, 
+it will be put in a clustering queue rather than being submitted to
+a remote site. The clustering queue is processed at intervals 
+specified by the
+<link linkend="property.clustering.queue.delay"><property>clustering.queue.delay</property></link>
+property. The processing of the clustering queue consists of selecting
+compatible jobs and grouping them into clusters whose maximum wall time does
+not exceed twice the value of the <property>clustering.min.time</property>
+property.
+		</para>
+
+		
 	</section>
 
 </article>
