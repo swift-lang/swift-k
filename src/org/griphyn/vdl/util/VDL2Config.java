@@ -71,7 +71,7 @@ public class VDL2Config extends Properties {
 		put("pgraph", "false");
 		put("pgraph.graph.options", "splines=\"compound\", rankdir=\"TB\"");
 		put("pgraph.node.options", "color=\"seagreen\", style=\"filled\"");
-		put("clustering.enabled", "true");
+		put("clustering.enabled", "false");
 		put("clustering.queue.delay", "4");
 		put("clustering.min.time", "60");
 		put("kickstart.enabled", "maybe");

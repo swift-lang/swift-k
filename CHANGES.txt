@@ -1,4 +1,7 @@
 (09/28/07)
+
+*** Clustering is now disabled by default.
+
 *** Over the past week, a number of changes have been made to the logging
     output of Swift to make it richer. This is likely to break existing
     log processing code.
