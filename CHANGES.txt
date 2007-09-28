@@ -1,3 +1,8 @@
+(09/28/07)
+*** Over the past week, a number of changes have been made to the logging
+    output of Swift to make it richer. This is likely to break existing
+    log processing code.
+
 (09/19/07)
 
 *** Subtle changes to the behaviour of AbstractFileMapper and its subclasses
