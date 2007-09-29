@@ -237,7 +237,7 @@ namespace("vdl"
 				fullRemote := dircat(rdir, bname)
 									
 				log(LOG:DEBUG, "FILE_STAGE_OUT_START srcname={bname} srcdir={rdir} srchost={host}",
-						"destdir={destdir} desthost={dhost} provider={provider}")
+						"destdir={ldir} desthost={dhost} provider={provider}")
 				//make sure we do have the directory on the client side
 				dir:make(ldir)
 				restartOnError(".*", 2
@@ -246,7 +246,7 @@ namespace("vdl"
 				)
 		        vdl:logvar(var, path, host, dir, bname)
 		        log(LOG:DEBUG, "FILE_STAGE_OUT_END srcname={bname} srcdir={rdir} srchost={host}",
-						"destdir={destdir} desthost={dhost} provider={provider}")
+						"destdir={ldir} desthost={dhost} provider={provider}")
 
 				//there is really no way to tell big files created by apps will be, so
 				//the decent thing to do is clean things up as much as possible
