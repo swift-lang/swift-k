@@ -329,7 +329,7 @@ namespace("vdl"
 			recfile
 		)
 	
-		element(execute2, [jobid, tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
+		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
@@ -338,6 +338,8 @@ namespace("vdl"
 					initSharedDir(rhost)
 					throw(exception("Could not initialize shared directory on {rhost}", exception))
 				)
+				
+				jobid := concat(tr, "-", uid())
 				
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost}")
 				tmpdir := dircat(wfdir, jobid)

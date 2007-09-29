@@ -7,7 +7,6 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 	   [m] This is done in the scheduler.
     */
     
-    jobid := concat(tr, "-", uid())
 	done := isDone(stageout)
 	derr := try(deperror, false)
 	merr := try(mdeperror, false)
@@ -18,10 +17,9 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 				not(done) try(
 					sequential(
 						echo("{tr} started")
-						log(LOG:INFO, "START jobid={jobid} tr={tr}") 
+						log(LOG:INFO, "START thread={#thread} tr={tr}") 
 						restartOnError(".*", 2,
 							execute2(
-								jobid,
 								tr, maybe(arguments=arguments), 
 								maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
 								stagein, stageout
@@ -30,11 +28,11 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 						mark(stageout, err=false, mapping=false)
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
 						echo("{tr} completed")
-						log(LOG:INFO, "END SUCCESS jobid={jobid} tr={tr}")
+						log(LOG:INFO, "END SUCCESS thread={#thread} tr={tr}")
 					)
 					catch(".*"
 						echo("{tr} failed")
-						log(LOG:INFO, "END FAILURE jobid={jobid} tr={tr}")
+						log(LOG:INFO, "END FAILURE thread={#thread} tr={tr}")
 						if(
 							vdl:configProperty("lazy.errors") == "false" then(
 								throw(exception)
