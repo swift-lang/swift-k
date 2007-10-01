@@ -172,9 +172,9 @@ namespace("vdl"
 		)
 		
 		element(cleanup, [dir, host]
-			log(LOG:INFO, "START dir={dir} hots={host}")
+			log(LOG:INFO, "START dir={dir} host={host}")
 			task:execute("/bin/rm", arguments="-rf {dir}", host=host, batch=true)
-			log(LOG:INFO, "END dir={dir} hots={host}")
+			log(LOG:INFO, "END dir={dir} host={host}")
 		)
 		
 		element(cleanups, [cleanup]
