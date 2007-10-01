@@ -40,8 +40,9 @@ public class GetFieldValue extends VDLFunction {
 					return var.getFields(path).toArray();
 				}
 				catch (HandleOpenException e) {
-					if (logger.isDebugEnabled())
+					if (logger.isDebugEnabled()) {
 						logger.debug("Waiting for var=" + var + " path=" + path);
+					}
 					throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
 				}
 			}
