@@ -24,6 +24,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
+import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileResource;
@@ -177,8 +178,32 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     public GridFile getGridFile(String fileName) throws FileResourceException {
-        throw new UnsupportedOperationException("getGridFile");
-        // return createGridFile(fileName);
+        HeadMethod m = new HeadMethod(contact + '/' + fileName);
+        try {
+            int code = client.executeMethod(m);
+            try {
+                if (code != HttpStatus.SC_OK) {
+                    throw new FileResourceException("Failed to get file information about "
+                            + fileName + " from " + contact
+                            + ". Server returned " + code + " ("
+                            + HttpStatus.getStatusText(code) + ").");
+                }
+                GridFile gf = new GridFileImpl();
+                gf.setName(fileName);
+                Header clh = m.getResponseHeader("Content-Length");
+                gf.setSize(Long.parseLong(clh.getValue()));
+                return gf;
+            }
+            finally {
+                m.releaseConnection();
+            }
+        }
+        catch (FileResourceException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new FileResourceException(e);
+        }
     }
 
     public boolean exists(String filename) throws FileResourceException {
