@@ -17,24 +17,31 @@ $LastChangedRevision$
         </abstract>
     </articleinfo>
 
-<sect1> <title>Introduction</title>
+<section> <title>Introduction</title>
     <para>
 This tutorial is intended to introduce new users to the basics of Swift.
 It is structured as a series of small exercise/examples which you can
-try for yourself as you read along.
+try for yourself as you read along. After the first 'hello world'
+example, there are two tracks - the language track (which introduces
+features of the SwiftScript language) and the runtime track (which
+introduces features of the Swift runtime environment, such as
+running jobs on different sites)
     </para>
     <para>
 For information on getting an installation of Swift running, consult the
-Swift Quickstart Guide, and return to this document when you have
+<ulink url="http://www.ci.uchicago.edu/swift/guides/quickstartguide.php">Swift Quickstart Guide</ulink>,
+and return to this document when you have
 successfully run the test SwiftScript program mentioned there.
     </para>
     <para>
-There is also a Swift User's Guide which contains more detailed reference
+There is also a
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php">Swift User's Guide</ulink>
+which contains more detailed reference
 material on topics covered in this manual.
     </para>
-</sect1>
+</section>
 
-<sect1> <title>Hello World</title>
+<section> <title>Hello World</title>
     <para>
 The first example program (found in the file
 <filename>examples/vdsk/first.swift</filename>)
@@ -140,9 +147,11 @@ outfile variable and therefore to hello.txt on disk.
 <para>Over the following exercises, we'll extend this simple
 hello world program to demonstrate various features of Swift.</para>
 
-</sect1>
+</section>
 
-<sect1> <title>Parameters</title>
+<section><title>Language features</title>
+
+<section> <title>Parameters</title>
 
 <para>
 Procedures can have parameters. Input parameters specify inputs to the
@@ -189,9 +198,9 @@ file on disk.</para>
 <para>We have modified the invocation of greeting so that a greeting
 string is supplied.</para>
 
-</sect1>
+</section>
 
-<sect1><title>Calling the same function with different parameters</title>
+<section><title>Calling the same function with different parameters</title>
 <para>Now that we can choose our greeting text, we can call the same
 procedure with different parameters to generate several output files with
 different greetings. The code is in manyparam.swift and can be run as before
@@ -223,9 +232,9 @@ of procedures.</para>
 working directory (english.txt, francais.txt and nihongo.txt) each containing
 a greeting in a different language.</para>
 
-</sect1>
+</section>
 
-<sect1><title>Named and optional parameters</title>
+<section><title>Named and optional parameters</title>
 <para>In addition to specifying parameters positionally, parameters can
 be named, and if desired a default value can be specified:
 
@@ -251,9 +260,9 @@ english = greeting();
 </programlisting>
 
 </para>
-</sect1>
+</section>
 
-<sect1><title>Another procedure</title>
+<section><title>Another procedure</title>
 <para>
 Now we'll define a new application procedure. The procedure we define
 will capitalise all the words in the input file.
@@ -336,9 +345,9 @@ $ <userinput>cat count.txt</userinput>
 <para>and thus we discover that the phrase &quot;hello from Swift&quot; contains
 precisely three words.</para>
 
-</sect1>
+</section>
 
-<sect1><title>Anonymous files</title>
+<section><title>Anonymous files</title>
 
 <para>In the previous section, the file 
 <filename>q13greeting.txt</filename> is used only to
@@ -374,9 +383,9 @@ to outfile. Here, Swift chose
 <filename>outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60</filename>.
 but it will be differente each time.</para>
 
-</sect1>
+</section>
 
-<sect1><title>More on datatypes</title>
+<section><title>More on datatypes</title>
 
 <para>
 As mentioned earlier, all data in variables and files has a datatype.  So
@@ -424,9 +433,9 @@ outfile = greeting(person);
 <para>We define a new type, details, with two members: a string and an integer.
 </para>
 
-</sect1>
+</section>
 
-<sect1><title>Arrays</title>
+<section><title>Arrays</title>
 <para>We can define arrays of values. For example, we could specify each
 word in a greeting as a separate element of a string array, as seen in
 <filename>q5.swift</filename>:</para>
@@ -454,9 +463,9 @@ that elements of the array can be referenced numerically, for example
 s[0], and that the array is initialised using an array literal,
 [&quot;how&quot;,&quot;are&quot;,&quot;you&quot;].</para>
 
-</sect1>
+</section>
 
-<sect1><title>Mappers</title>
+<section><title>Mappers</title>
 
 <para>A significant difference between SwiftScript and other languages is
 that data can be referred to on disk through variables in a very
@@ -560,9 +569,9 @@ outputfiles[2] = countwords(inputfiles[2]);
 </programlisting>
 </section>
 
-</sect1>
+</section>
 
-<sect1><title>foreach</title>
+<section><title>foreach</title>
 <para>SwiftScript provides a control structure, foreach, to operate
 on each element of an array.</para>
 <para>In this example, we will run the previous word counting example
@@ -591,9 +600,9 @@ foreach f in inputfiles {
 }
 </programlisting>
 
-</sect1>
+</section>
 
-<sect1><title>If</title>
+<section><title>If</title>
 <para>
 Decisions can be made using 'if', like this:
 </para>
@@ -613,10 +622,108 @@ outputs 'good morning'. Changing the 'morning'
 variable from true to false will cause the program to output 'good
 afternoon'.
 </para>
-</sect1>
+</section>
+
+<section id="tutorial.iterate"><title>Sequential iteration</title>
+<para>A development version of Swift after 0.2 (revision 1230) introduces
+a sequential iteration construct.</para>
+<para>
+The following example demonstrates a simple application: each step of the
+iteration is a string representation of the byte count of the previous
+step's output, with iteration terminating when the byte count reaches zero.
+</para>
+
+<para>
+Here's the program:
+</para>
+<programlisting>
+
+type counterfile;
+
+(counterfile t) echo(string m) { 
+  app {
+    echo m stdout=@filename(t);
+  }
+}
+
+(counterfile t) countstep(counterfile i) {
+  app {
+    wcl @filename(i) @filename(t);
+  }
+}
+
+counterfile a[]  &lt;simple_mapper;prefix="foldout"&gt;;
+
+a[0] = echo("793578934574893");
+
+iterate v {
+  a[v+1] = countstep(a[v]);
+ print("extract int value ",@extractint(a[v+1]));
+} until (@extractint(a[v+1]) &lt;= 1);
+
+</programlisting>
+
+<para>
+<command>echo</command> is the standard unix echo.</para>
+
+<para> <command>wcl</command>
+is our application code - it counts the number of bytes in the one file
+and writes that count out to another, like this:
+</para>
+<screen>
+$ <userinput>cat ../wcl</userinput>
+#!/bin/bash
+echo -n $(wc -c &lt; $1) &gt; $2
+
+$ <userinput>echo -n hello &gt; a</userinput>
+$ <userinput>wcl a b</userinput>
+$ <userinput>cat b</userinput>
+5
+</screen>
+
+<para>Install the above wcl script somewhere and add a transformation catalog
+entry for it. Then run the example program like this:
+</para>
+
+<screen>
+$ <userinput>swift fold9.swift</userinput>
+Swift v0.2-dev r1230
+
+RunID: 20070918-1434-l6bt8x4a
+echo started
+echo completed
+wcl started
+extract int value 16.0
+wcl completed
+wcl started
+extract int value 2.0
+wcl completed
+wcl started
+extract int value 1.0
+wcl completed
+
+$ <userinput>ls foldout.*</userinput>
+foldout.0 foldout.1 foldout.2 foldout.3
+</screen>
+
+</section>
+
+<section><title>Tips and Tricks</title>
+
+<para>
+	<simplelist>
+		<member>DO NOT put functions invocations as actual arguments for procedures</member>
+		<member>Put ITERATION loops in procedures, when they produce ARRAY outputs</member>
+	</simplelist>
+</para>
 
 
-<sect1><title>Visualising the workflow as a graph</title>
+</section>
+
+</section>
+<section><title>Runtime features</title>
+
+<section><title>Visualising the workflow as a graph</title>
 
 <para>
 When running a workflow, its possible to generate a provenance graph at the
@@ -627,9 +734,9 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 </screen>
 which can then be viewed using your favourite image viewer.
 </para>
-</sect1>
+</section>
 
-<sect1><title>Running on a remote site</title>
+<section><title>Running on a remote site</title>
 
 <para>As configured by default, all jobs are run locally. In the previous
 examples, we've invoked 'echo' and 'tr' executables from our
@@ -658,9 +765,9 @@ transferred to the remote resource), jobmanager (which indicates how
 applications can be run on the remote resource) and workdirectory
 (which indicates where working storage can be found on the
 remote resource).</para>
-</sect1>
+</section>
 
-<sect1><title>Writing a mapper</title>
+<section><title>Writing a mapper</title>
 
 <para>
 This section will introduce writing a custom mapper so that Swift is able
@@ -724,7 +831,7 @@ file rather than looking at which files are in a directory), then you
 should probably use the AbstractMapper.
 </para>
 
-<sect2><title>Writing a very basic mapper</title>
+<section><title>Writing a very basic mapper</title>
 <para>In this section, we will write a very basic (almost useless)
 mapper that will map a SwiftScript dataset into a hardcoded file
 called <filename>myfile.txt</filename>, like this:
@@ -859,10 +966,10 @@ not much more code to the single_file_mapper - mostly code to deal
 with the file parameter.
 </para>
 
-</sect2>
+</section>
 
 <!--
-<sect2><title>a mapper implementing the AbstractMapper class</title>
+<section><title>a mapper implementing the AbstractMapper class</title>
 <para>
 In this section, we'll develop a mapper that maps SwiftScript structures
 to a set of files, with a basename specified as a mapper parameter and
@@ -1015,11 +1122,11 @@ recompile Swift (see instructions elsewhere on the Swift web site) and
 then write SwiftScript programs which use our new mapper.
 </para>
 
-</sect2>
+</section>
 -->
-</sect1>
+</section>
 
-<sect1> <title>Starting and restarting</title>
+<section> <title>Starting and restarting</title>
 
 <para>
 Now we're going to try out the restart capabilities of Swift. We will make
@@ -1208,103 +1315,8 @@ Swift continues on to execute the final piece of the workflow as if
 nothing had ever gone wrong.
 </para>
 
-</sect1>
-
-<sect1 id="tutorial.iterate"><title>The sequential iteration construct</title>
-<para>A development version of Swift after 0.2 (revision 1230) introduces
-an experimental sequential iteration construct.</para>
-<para>
-The following example demonstrates a simple application: each step of the
-iteration is a string representation of the byte count of the previous
-step's output, with iteration terminating when the byte count reaches zero.
-</para>
-
-<para>
-Here's the program:
-</para>
-<programlisting>
-
-type counterfile;
-
-(counterfile t) echo(string m) { 
-  app {
-    echo m stdout=@filename(t);
-  }
-}
-
-(counterfile t) countstep(counterfile i) {
-  app {
-    wcl @filename(i) @filename(t);
-  }
-}
-
-counterfile a[]  &lt;simple_mapper;prefix="foldout"&gt;;
-
-a[0] = echo("793578934574893");
-
-iterate v {
-  a[v+1] = countstep(a[v]);
- print("extract int value ",@extractint(a[v+1]));
-} until (@extractint(a[v+1]) &lt;= 1);
-
-</programlisting>
-
-<para>
-<command>echo</command> is the standard unix echo.</para>
-
-<para> <command>wcl</command>
-is our application code - it counts the number of bytes in the one file
-and writes that count out to another, like this:
-</para>
-<screen>
-$ <userinput>cat ../wcl</userinput>
-#!/bin/bash
-echo -n $(wc -c &lt; $1) &gt; $2
-
-$ <userinput>echo -n hello &gt; a</userinput>
-$ <userinput>wcl a b</userinput>
-$ <userinput>cat b</userinput>
-5
-</screen>
-
-<para>Install the above wcl script somewhere and add a transformation catalog
-entry for it. Then run the example program like this:
-</para>
-
-<screen>
-$ <userinput>swift fold9.swift</userinput>
-Swift v0.2-dev r1230
-
-RunID: 20070918-1434-l6bt8x4a
-echo started
-echo completed
-wcl started
-extract int value 16.0
-wcl completed
-wcl started
-extract int value 2.0
-wcl completed
-wcl started
-extract int value 1.0
-wcl completed
-
-$ <userinput>ls foldout.*</userinput>
-foldout.0 foldout.1 foldout.2 foldout.3
-</screen>
-
-</sect1>
-
-<sect1><title>Tips and Tricks</title>
-
-<para>
-	<simplelist>
-		<member>DO NOT put functions invocations as actual arguments for procedures</member>
-		<member>Put ITERATION loops in procedures, when they produce ARRAY outputs</member>
-	</simplelist>
-</para>
-
-
-</sect1>
+</section>
+</section>
 
 </article>
 
