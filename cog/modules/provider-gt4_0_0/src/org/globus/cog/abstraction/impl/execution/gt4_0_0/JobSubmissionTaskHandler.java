@@ -208,7 +208,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         else if (soTimeout instanceof String) {
             job.setTimeOut(Integer.parseInt((String) soTimeout));
         }
-        else {
+        else if (soTimeout != null) {
             logger.warn("Unknown value for socketTimeout attribute ("
                     + soTimeout + "). Ignoring.");
         }
