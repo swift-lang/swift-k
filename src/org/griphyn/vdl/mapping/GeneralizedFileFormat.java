@@ -5,4 +5,6 @@ package org.griphyn.vdl.mapping;
 
 public interface GeneralizedFileFormat extends PhysicalFormat {
 	String getPath();
+	
+	String getURIAsString();
 }

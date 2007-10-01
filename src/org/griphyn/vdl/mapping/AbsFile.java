@@ -35,7 +35,11 @@ public class AbsFile implements GeneralizedFileFormat {
 			protocol = url.substring(0, pi);
 			if (protocol.equals("file")) {
 				host = "localhost";
-                path = url.substring(pi + 3);
+				String rp = url.substring(pi + 3);
+				if (rp.startsWith("localhost/")) {
+					rp = rp.substring("localhost/".length());
+				}
+                path = rp;
 			}
 			else {
 				int si = url.indexOf('/', pi + 3);
@@ -158,7 +162,11 @@ public class AbsFile implements GeneralizedFileFormat {
 		return "file";
 	}
 	
-	public String toString() {
+	public String getURIAsString() {
 		return protocol + "://" + host + '/' + path;
+	}
+	
+	public String toString() {
+		return getURIAsString();
 	}
 }
