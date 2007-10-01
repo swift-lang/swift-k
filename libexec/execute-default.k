@@ -28,11 +28,11 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 						mark(stageout, err=false, mapping=false)
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
 						echo("{tr} completed")
-						log(LOG:INFO, "END SUCCESS thread={#thread} tr={tr}")
+						log(LOG:INFO, "END_SUCCESS thread={#thread} tr={tr}")
 					)
 					catch(".*"
 						echo("{tr} failed")
-						log(LOG:INFO, "END FAILURE thread={#thread} tr={tr}")
+						log(LOG:INFO, "END_FAILURE thread={#thread} tr={tr}")
 						if(
 							vdl:configProperty("lazy.errors") == "false" then(
 								throw(exception)
