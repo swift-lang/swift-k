@@ -708,18 +708,6 @@ foldout.0 foldout.1 foldout.2 foldout.3
 
 </section>
 
-<section><title>Tips and Tricks</title>
-
-<para>
-	<simplelist>
-		<member>DO NOT put functions invocations as actual arguments for procedures</member>
-		<member>Put ITERATION loops in procedures, when they produce ARRAY outputs</member>
-	</simplelist>
-</para>
-
-
-</section>
-
 </section>
 <section><title>Runtime features</title>
 
