@@ -48,7 +48,7 @@ public interface Task extends ExecutableObject {
     /**
      * Represents a WS invocation task
      */
-    public static final int WS_INVOCAION = 5;
+    public static final int WS_INVOCATION = 5;
 
     /**
      * Sets the type of this <code>Task</code>. Supported task types include:
