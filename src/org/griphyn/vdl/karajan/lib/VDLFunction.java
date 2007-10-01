@@ -230,7 +230,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	public String leafFileName(DSHandle var) throws ExecutionException {
 		PhysicalFormat f = var.getMapper().map(var.getPathFromRoot());
 		if (f instanceof GeneralizedFileFormat) {
-			String filename = ((GeneralizedFileFormat) f).getPath();
+			String filename = ((GeneralizedFileFormat) f).getURIAsString();
 			if (filename == null) {
 				throw new ExecutionException("Mapper did not provide a file name");
 			}
