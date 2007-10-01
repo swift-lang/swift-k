@@ -32,7 +32,6 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
             TaskSubmissionException {
         Service service = task.getService(0);
         if (service == null) {
-            setTaskStatus(task, Status.FAILED, null, "Service is not set");
             throw new IllegalSpecException("Service is not set");
         }
         FileResource fr = null;
@@ -42,20 +41,17 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
             setTaskStatus(task, Status.COMPLETED, null, null);
         }
         catch (TaskSubmissionException e) {
-            setTaskStatus(task, Status.FAILED, e, e.getMessage());
             throw e;
         }
         catch (IllegalSpecException e) {
-            setTaskStatus(task, Status.FAILED, e, e.getMessage());
             throw e;
         }
         catch (IrrecoverableResourceException e) {
             FileResourceCache.getDefault().invalidateResource(resource);
-            setTaskStatus(task, Status.FAILED, e, e.getMessage());
+            throw new TaskSubmissionException(e);
         }
         catch (Exception e) {
-            setTaskStatus(task, Status.FAILED, e, e.getMessage());
-            throw new TaskSubmissionException(e.getMessage(), e);
+            throw new TaskSubmissionException(e);
         }
         finally {
             stopResources();
