@@ -57,7 +57,7 @@ public class ServiceInvocation implements StatusListener {
         /*
          * Create a new job submission task with the given task name.
          */
-        this.task = new TaskImpl(this.method, Task.WS_INVOCAION);
+        this.task = new TaskImpl(this.method, Task.WS_INVOCATION);
         logger.debug("Task Identity: " + this.task.getIdentity().toString());
 
         /*
