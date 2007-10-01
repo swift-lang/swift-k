@@ -47,6 +47,7 @@ import org.globus.ftp.FileInfo;
 import org.globus.ftp.GridFTPClient;
 import org.globus.ftp.GridFTPSession;
 import org.globus.ftp.MarkerListener;
+import org.globus.ftp.MlsxEntry;
 import org.globus.ftp.Session;
 import org.globus.ftp.exception.ServerException;
 import org.ietf.jgss.GSSCredential;
@@ -473,27 +474,13 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
     /** get remote file information */
     public GridFile getGridFile(String fileName) throws FileResourceException {
-
-        String directory = null;
-        int endIndex = fileName.lastIndexOf("/");
-        if (endIndex < 0) {
-            directory = getCurrentDirectory();
+        try {
+            MlsxEntry e = gridFTPClient.mlst(fileName);
+            return createGridFile(e);
         }
-        else {
-            directory = fileName.substring(0, endIndex);
-            fileName = fileName.substring(endIndex + 1, fileName.length());
+        catch (Exception e) {
+            throw translateException("Failed to retrieve file information about " + fileName, e);
         }
-
-        Iterator gridFiles = list(directory).iterator();
-
-        while (gridFiles.hasNext()) {
-            GridFile gridFile = (GridFile) gridFiles.next();
-            if (gridFile.getName().equals(fileName)) {
-                return gridFile;
-            }
-        }
-
-        return null;
     }
 
     /** change permissions to a remote file */
@@ -554,6 +541,34 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                 .groupCanWrite(), fi.groupCanExecute()));
         gridFile.setAllPermissions(getPermissions(fi.allCanRead(), fi
                 .allCanWrite(), fi.allCanExecute()));
+
+        return gridFile;
+    }
+    
+    private GridFile createGridFile(MlsxEntry e) throws FileResourceException {
+
+        GridFile gridFile = new GridFileImpl();
+
+        String directory = getCurrentDirectory();
+        if (directory.endsWith("/")) {
+            gridFile.setAbsolutePathName(directory + e.getFileName());
+        }
+        else {
+            gridFile.setAbsolutePathName(directory + "/" + e.getFileName());
+        }
+
+        gridFile.setLastModified(e.get(MlsxEntry.MODIFY));
+
+        String type = e.get(MlsxEntry.TYPE);
+        if (MlsxEntry.TYPE_FILE.equals(type)) {
+            gridFile.setFileType(GridFile.FILE);
+        }
+        if (MlsxEntry.TYPE_DIR.equals(type) || MlsxEntry.TYPE_PDIR.equals(type) || MlsxEntry.TYPE_CDIR.equals(type)) {
+            gridFile.setFileType(GridFile.DIRECTORY);
+        }
+
+        gridFile.setName(e.getFileName());
+        gridFile.setSize(Long.parseLong(e.get(MlsxEntry.SIZE)));
 
         return gridFile;
     }
