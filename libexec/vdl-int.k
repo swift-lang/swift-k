@@ -202,22 +202,22 @@ namespace("vdl"
 		element(doStagein, [jobid, files, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - Staging in files")
 			uParallelFor(file, files
+				echo(file)
 				[provider, srchost, srcdir, destdir, filename] := 
 					(provider(file), hostname(file), dirname(file), dircat(dir, reldirname(file)), basename(file))
-				
-				vdl:cacheAddAndLockFile(filename, destdir, host, file:size(file)
+				vdl:cacheAddAndLockFile(filename, destdir, host, file:size("{srcdir}/{filename}", host=srchost, provider=provider)
 					//This is kinda hackish, but these files should be cleaned before
 					//the other ones are uploaded, and doing it nicer is a complex
 					//business. So vdl:cacheAddAndLockFile defines "filesToRemove"
 					cleanupFiles(cacheFilesToRemove, host)
-					log(LOG:DEBUG, "FILE_STAGE_IN_START file={file} srcdir={srcdir} srcname={filename} ",
-						"destdir={destdir} host={host} provider={provider}")
+					log(LOG:DEBUG, "FILE_STAGE_IN_START file={file} srchost={srchost} srcdir={srcdir} srcname={filename} ",
+						"desthost={host} destdir={destdir} provider={provider}")
 					restartOnError(".*", 2
 					    task:transfer(srcprovider=provider, srchost=srchost, srcfile=filename, 
 					    	srcdir=srcdir, desthost=host, destdir=destdir)
 					)
-					log(LOG:DEBUG, "FILE_STAGE_IN_END file={file} srcdir={srcdir} srcname={filename} ",
-						"destdir={destdir} host={host} provider={provider}")
+					log(LOG:DEBUG, "FILE_STAGE_IN_END file={file} srchost={srchost} srcdir={srcdir} srcname={filename} ",
+						"desthost={host} destdir={destdir} provider={provider}")
 				)
 			)
 			log(LOG:INFO, "END jobid={jobid} - Staging in finished")
@@ -354,7 +354,6 @@ namespace("vdl"
 						fileDirs := fileDirs(stagein, stageout)
 						
 						createDirSet(jobid, sharedDir, rhost, fileDirs)
-						
 						doStagein(jobid, stagein, sharedDir, rhost)
 
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
