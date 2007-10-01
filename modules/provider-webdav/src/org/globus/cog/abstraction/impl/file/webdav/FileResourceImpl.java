@@ -69,9 +69,11 @@ public class FileResourceImpl extends AbstractFileResource {
             HttpURL hrl = new HttpURL(contact);
             PasswordAuthentication credentials = (PasswordAuthentication) getSecurityContext()
                     .getCredentials();
+            
             String username = credentials.getUserName();
             String password = String.valueOf(credentials.getPassword());
             hrl.setUserinfo(username, password);
+
             davClient = new WebdavResource(hrl);
             setStarted(true);
         }
