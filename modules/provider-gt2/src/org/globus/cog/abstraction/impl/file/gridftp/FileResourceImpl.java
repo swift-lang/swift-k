@@ -141,7 +141,7 @@ public class FileResourceImpl extends
             catch (Exception e) {
                 throw translateException(
                         "Could not get list of files in " + directory
-                                + "from server", e);
+                                + " from server", e);
             }
         }
     }
