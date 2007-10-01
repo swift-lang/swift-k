@@ -37,7 +37,7 @@ material on topics covered in this manual.
 <sect1> <title>Hello World</title>
     <para>
 The first example program (found in the file
-<filename>examples/vdsk/tutorial/first.swift</filename>)
+<filename>examples/vdsk/first.swift</filename>)
 outputs a hello world message into
 a file called <filename>hello.txt</filename>.
     </para>
@@ -59,7 +59,7 @@ outfile = greeting();
 <para>We can run this program as follows:</para>
 
 <screen>
-$ <userinput>cd examples/vdsk/tutorial/</userinput>
+$ <userinput>cd examples/vdsk/</userinput>
 $ <userinput>swift first.swift</userinput>
 Swift v0.2
 
@@ -154,12 +154,12 @@ to the greeting function.</para>
 We will also encounter a new built-in data type, 'string'.
 </para>
 <para>The code for this section can be found in 
-<filename>q2.swift</filename>. It can be
+<filename>parameter.swift</filename>. It can be
 invoked using the swift command, with output appearing in 
 <filename>hello2.txt</filename>:</para>
 
 <screen>
-$ <userinput>swift q2.swift</userinput>
+$ <userinput>swift parameter.swift</userinput>
 </screen>
 
 <para>The code changes from <filename>first.swift</filename>
@@ -194,7 +194,7 @@ string is supplied.</para>
 <sect1><title>Calling the same function with different parameters</title>
 <para>Now that we can choose our greeting text, we can call the same
 procedure with different parameters to generate several output files with
-different greetings. The code is in q12.swift and can be run as before
+different greetings. The code is in manyparam.swift and can be run as before
 using the swift command.
 </para>
 
@@ -359,7 +359,7 @@ messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
 messagefile outfile;
 </programlisting>
 
-<para><filename>q14.swift</filename> contains the code and can be
+<para><filename>anonymous.swift</filename> contains the code and can be
 run in the usual way. After
 execution, the results can be found in
 <filename>count14.txt</filename>.</para>
@@ -394,8 +394,8 @@ markers on files that we don't need to look at the content of in SwiftScript.
 It is also possible to create types with structure, as in other
 programming languages.</para>
 
-<para><filename>q15.swift</filename> contains the code for this 
-exercise, based on the q2 code.</para>
+<para><filename>types.swift</filename> contains the code for this 
+exercise, based on the parameter.swift code.</para>
 
 <programlisting>
 type messagefile;
@@ -416,7 +416,7 @@ details person;
 person.name = &quot;John&quot;;
 person.place = &quot;Namibia&quot;;
 
-messagefile outfile &lt;&quot;q15.txt&quot;&gt;;
+messagefile outfile &lt;&quot;types.txt&quot;&gt;;
 
 outfile = greeting(person);
 </programlisting>
@@ -518,7 +518,7 @@ disk files to SwiftScript variables.</para>
 This mapper transforms a string expression using a regular expression,
 and uses the result of that transformation as the filename to map.</para>
 <para>
-<filename>q16.swift</filename> demonstrates the use of this by placing output into a file that
+<filename>regexp.swift</filename> demonstrates the use of this by placing output into a file that
 is based on the name of the input file: our input file is mapped
 to the inputfile variable using the simple named mapper, and then
 we use the regular expression mapper to map the output file. Then we
@@ -528,7 +528,7 @@ output file.
 </para>
 
 <para>
-The important bit of <filename>q16.swift</filename> is:
+The important bit of <filename>regexp.swift</filename> is:
 <programlisting>
 messagefile inputfile &lt;"q16.txt"&gt;;
 
@@ -545,7 +545,7 @@ countfile c &lt;regexp_mapper;
 <para>
 The <firstterm>fixed array mapper</firstterm> maps a list of files into
 an array - each element of the array is mapped into one file in the
-specified directory. See <filename>q22.swift</filename>.
+specified directory. See <filename>fixedarray.swift</filename>.
 </para>
 <programlisting>
 string inputNames = "one.txt two.txt three.txt";
@@ -568,7 +568,7 @@ on each element of an array.</para>
 <para>In this example, we will run the previous word counting example
 over each file in an array without having to explicitly list the
 array elements. The source code for this example is in 
-<filename>q17.swift</filename>. The three input files
+<filename>foreach.swift</filename>. The three input files
 (<filename>one.txt</filename>, <filename>two.txt</filename> and
 <filename>three.txt</filename>) are supplied. After
 you have run the workflow, you should see that there are three output
