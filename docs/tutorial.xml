@@ -668,10 +668,201 @@ to access data files laid out in application-specific ways.
 </para>
 <para>
 An application-specific mapper must take the form of a Java class
-that implements the org.griphyn.vdl.mapping.Mapper interface. Refer
-to the javadocs for that class for specific information about each
-method.
+that implements the 
+<ulink url="http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/Mapper.html">Mapper</ulink> interface.
 </para>
+<para>
+Usually you don't need to implement this interface directly, because
+Swift provides a number of more concrete classes with some functionality
+already implemented.
+</para>
+<para>The hierarchy of helper classes is:</para>
+
+<para>
+<ulink url="http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/Mapper.html">Mapper</ulink>
+- This is the abstract interface for mappers in Swift. You
+must implement methods to provide access to mapper properties, to map
+from a SwiftScript dataset path (such as foo[1].bar) to a file name,
+to check whether a file exists. None of the default Swift mappers
+implement this interface directly - instead they use one of the
+following helper classes.</para>
+
+<para>
+<ulink url="http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/AbstractMapper.html">AbstractMapper</ulink>
+- This provides helper methods to manage mapper 
+properties and to handle existance checking. Examples of mappers which
+use this class are:
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.array_mapper">array_mapper</ulink>,
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.csv_mapper">csv_mapper</ulink>,
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.fixed_array_mapper">fixed_array_mapper</ulink>,
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.regexp_mapper">regexp_mapper</ulink> and
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.single_file_mapper">single file mapper</ulink>
+.</para>
+
+<para>
+<ulink url="http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/file/AbstractFileMapper.html">AbstractFileMapper</ulink>
+ - This provides a helper class for mappers
+which select files based on selecting files from a directory listing.
+It is necessary to write some helper methods that are different from
+the above mapper methods. Examples of mappers which use this class
+are:
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.simple_mapper">simple_mapper</ulink>,
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.filesys_mapper">filesys_mapper</ulink> and the (undocumented)
+StructuredRegularExpressionMapper.
+</para>
+
+<para>
+In general, to write a mapper, choose either the AbstractMapper or the
+AbstractFileMapper and extend those. If your mapper will generally
+select the files it returns based on a directory listing and will
+convert paths to filenames using some regular conversion (for example, in
+the way that simple_mapper maps files in a directory that match a
+particular pattern), then you should probably use the AbstractFileMapper.
+If your mapper will produce a list of files in some other way (for example,
+in the way that csv_mapper maps based on filenames given in a CSV
+file rather than looking at which files are in a directory), then you
+should probably use the AbstractMapper.
+</para>
+
+<sect2><title>Writing a very basic mapper</title>
+<para>In this section, we will write a very basic (almost useless)
+mapper that will map a SwiftScript dataset into a hardcoded file
+called <filename>myfile.txt</filename>, like this:
+
+</para>
+<screen>
+
+    Swift variable                            Filename
+
+      var   &lt;-----------------------------&gt;    myfile.txt
+
+</screen>
+
+<para>
+We should be able to use the mapper we write in a SwiftScript program
+like this:
+</para>
+
+<programlisting>
+type file;
+
+file f &lt;my_first_mapper;&gt;;
+</programlisting>
+
+<para>
+First we must choose a base class - AbstractMapper or AbstractFileMapper.
+We aren't going to use a directory listing to decide on our mapping
+- we are getting the mapping from some other source (in fact, it
+will be hard coded). So we will use AbstractMapper.
+</para>
+
+<para>
+So now onto the source code. We must define a subclass of
+<ulink href="http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/AbstractMapper.html">AbstractMapper</ulink> and implement several
+mapper methods: isStatic, existing, and map. These methods are documented
+in the javadoc for the
+<ulink href="http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/Mapper.html">Mapper</ulink>
+interface.
+</para>
+
+<para>
+Here is the code implementing this mapper. Put this in your source 
+<filename>vdsk</filename> directory, make a directory
+<filename>src/tutorial/</filename> and put this
+file in <filename>src/tutorial/MyFirstMapper.java</filename>
+</para>
+<programlisting>
+package tutorial;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
+import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
+
+public class MyFirstMapper extends AbstractMapper {
+
+  AbsFile myfile = new AbsFile("myfile.txt");
+
+  public boolean isStatic() {
+    return false;
+  }
+
+  public Collection existing() {
+    if (myfile.exists())
+      return Arrays.asList(new Path[] {Path.EMPTY_PATH});
+    else
+      return Collections.EMPTY_LIST;
+  }
+
+  public PhysicalFormat map(Path p) {
+    if(p.equals(Path.EMPTY_PATH))
+      return myfile;
+    else
+      return null;
+  }
+}
+
+</programlisting>
+
+<para>Now we need to inform the Swift engine about the existence of this
+mapper. We do that by editing the MapperFactory class definition, in
+<filename>src/org/griphyn/vdl/mapping/MapperFactory.java</filename> and
+adding a registerMapper call alongside the existing registerMapper calls,
+like this:
+</para>
+<programlisting>
+registerMapper("my_first_mapper", tutorial.MyFirstMapper.class);
+</programlisting>
+
+<para>The first parameter is the name of the mapper that will be used
+in SwiftScript program. The second parameter is the new Mapper class
+that we just wrote.
+</para>
+
+<para>
+Now rebuild Swift using the 'ant redist' target.
+</para>
+
+<para>
+This new Swift build will be aware of your new mapper. We can test it out
+with a hello world program:
+</para>
+<programlisting>
+type messagefile;
+
+(messagefile t) greeting() {.
+    app {
+        echo "hello" stdout=@filename(t);
+    }
+}
+
+messagefile outfile &lt;my_first_mapper;&gt;;
+
+outfile = greeting();
+</programlisting>
+<para>Run this program, and hopefully you will find the "hello" string has
+been output into the hard coded output file <filename>myfile.txt</filename>:
+</para>
+<screen>
+$ <userinput>cat myfile.txt</userinput>
+hello
+</screen>
+
+<para>So that's a first very simple mapper implemented. Compare the
+source code to the single_file_mapper in
+<ulink url="http://www.ci.uchicago.edu/trac/swift/browser/trunk/src/org/griphyn/vdl/mapping/file/SingleFileMapper.java">SingleFileMapper.java</ulink>. There is
+not much more code to the single_file_mapper - mostly code to deal
+with the file parameter.
+</para>
+
+</sect2>
+
+<!--
+<sect2><title>a mapper implementing the AbstractMapper class</title>
 <para>
 In this section, we'll develop a mapper that maps SwiftScript structures
 to a set of files, with a basename specified as a mapper parameter and
@@ -824,6 +1015,8 @@ recompile Swift (see instructions elsewhere on the Swift web site) and
 then write SwiftScript programs which use our new mapper.
 </para>
 
+</sect2>
+-->
 </sect1>
 
 <sect1> <title>Starting and restarting</title>
