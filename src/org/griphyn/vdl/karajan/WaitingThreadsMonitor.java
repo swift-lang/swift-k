@@ -4,6 +4,7 @@
 package org.griphyn.vdl.karajan;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,6 +29,11 @@ public class WaitingThreadsMonitor {
 	}
 	
 	public synchronized static Collection getAllThreads() {
-		return new HashSet(threads);
+		if (threads == null) {
+			return Collections.EMPTY_SET;
+		}
+		else {
+			return new HashSet(threads);
+		}
 	}
 }
