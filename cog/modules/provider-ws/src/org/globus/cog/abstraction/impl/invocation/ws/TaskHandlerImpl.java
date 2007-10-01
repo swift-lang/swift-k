@@ -64,7 +64,7 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
             throw new TaskSubmissionException(
                     "TaskHandler can only handle unsubmitted tasks");
         }
-        if (task.getType() != Task.WS_INVOCAION) {
+        if (task.getType() != Task.WS_INVOCATION) {
             throw new TaskSubmissionException(
                     getName()
                             + " execution task handler can only handle WS invocation tasks");
