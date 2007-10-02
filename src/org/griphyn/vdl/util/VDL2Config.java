@@ -42,6 +42,10 @@ public class VDL2Config extends Properties {
 			if (ip != null) {
 				CoGProperties.getDefault().setIPAddress(ip);
 			}
+			String tcpPortRange = config.getTCPPortRange();
+			if (tcpPortRange != null) {
+				CoGProperties.getDefault().put("tcp.port.range", tcpPortRange);
+			}
 		}
 		return config;
 	}
@@ -160,6 +164,10 @@ public class VDL2Config extends Properties {
 
 	public String getIP() {
 		return getProperty(VDL2ConfigProperties.IP_ADDRESS);
+	}
+	
+	public String getTCPPortRange() {
+		return getProperty(VDL2ConfigProperties.TCP_PORT_RANGE);
 	}
 	
 	public boolean getLazyErrors() {
