@@ -202,7 +202,6 @@ namespace("vdl"
 		element(doStagein, [jobid, files, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - Staging in files")
 			uParallelFor(file, files
-				echo(file)
 				[provider, srchost, srcdir, destdir, filename] := 
 					(provider(file), hostname(file), dirname(file), dircat(dir, reldirname(file)), basename(file))
 				vdl:cacheAddAndLockFile(filename, destdir, host, file:size("{srcdir}/{filename}", host=srchost, provider=provider)
