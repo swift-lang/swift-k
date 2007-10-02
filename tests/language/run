@@ -14,7 +14,7 @@ else
 fi
 
 for a in *.dtm; do 
-  b=$(basename -s .dtm $a).xml
+  b=$(basename $a .dtm).xml
   if [ ! -f $b ]; then
     echo Attempting vdlc known-good $a
     vdlc $a
