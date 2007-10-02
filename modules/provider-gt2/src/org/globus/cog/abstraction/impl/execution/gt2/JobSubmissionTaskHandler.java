@@ -54,6 +54,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private GassServer gassServer = null;
     private JobOutputStream stdoutStream;
     private JobOutputStream stderrStream;
+    private boolean cleaned;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
@@ -280,7 +281,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             boolean batchJob = spec.isBatchJob();
             boolean redirected = spec.getStdOutputLocation().overlaps(
                     FileLocation.MEMORY_AND_LOCAL)
-                    || spec.getStdErrorLocation().overlaps(FileLocation.MEMORY_AND_LOCAL);
+                    || spec.getStdErrorLocation().overlaps(
+                            FileLocation.MEMORY_AND_LOCAL);
 
             if (batchJob && redirected) {
                 throw new IllegalSpecException(
@@ -357,7 +359,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
 
             // if output is to be redirected
-            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdOutputLocation())) {
+            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec
+                    .getStdOutputLocation())) {
                 Value v;
                 // if no output file is specified, use the stdout
                 if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
@@ -376,7 +379,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         .getStdOutput()));
             }
             // if error is to be redirected
-            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdErrorLocation())) {
+            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec
+                    .getStdErrorLocation())) {
                 Value v;
                 // if no error file is specified, use the stdout
                 if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
@@ -473,11 +477,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
     }
 
-    private void cleanup() {
-        this.gramJob.removeListener(this);
-        CallbackHandlerManager.decreaseUsageCount(gramJob.getCredentials());
-        if (gassServer != null) {
-            GassServerFactory.decreaseUsageCount(gassServer);
+    private synchronized void cleanup() {
+        if (!cleaned) {
+            this.gramJob.removeListener(this);
+            CallbackHandlerManager.decreaseUsageCount(gramJob.getCredentials());
+            if (gassServer != null) {
+                GassServerFactory.decreaseUsageCount(gassServer);
+            }
+            cleaned = true;
         }
     }
 
