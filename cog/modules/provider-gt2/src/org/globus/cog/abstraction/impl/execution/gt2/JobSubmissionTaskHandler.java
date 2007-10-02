@@ -54,7 +54,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private GassServer gassServer = null;
     private JobOutputStream stdoutStream;
     private JobOutputStream stderrStream;
-    private boolean cleaned;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
@@ -478,13 +477,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     private synchronized void cleanup() {
-        if (!cleaned) {
+        try {
             this.gramJob.removeListener(this);
             CallbackHandlerManager.decreaseUsageCount(gramJob.getCredentials());
             if (gassServer != null) {
                 GassServerFactory.decreaseUsageCount(gassServer);
             }
-            cleaned = true;
+        }
+        catch (Exception e) {
+            logger.warn("Failed to clean up job", e);
         }
     }
 
