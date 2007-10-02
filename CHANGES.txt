@@ -1,3 +1,7 @@
+(10/02/07)
+
+*** Swift 0.3 release candidate 1 built from swift svn r1312, cog r1769
+
 (09/28/07)
 
 *** Clustering is now disabled by default.
