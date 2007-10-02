@@ -64,12 +64,13 @@ public class NonBlockingSubmit implements Runnable {
 		else {
 			if (ex != null) {
 				Status st = task.getStatus();
-				if (st.getStatusCode() != Status.FAILED) {
-					logger.warn("Warning: Task handler throws exception but does not set status",
-							ex);
-					Status ns = new StatusImpl();
-					ns.setStatusCode(Status.FAILED);
-					ns.setException(ex);
+				if (st.getStatusCode() == Status.FAILED) {
+					logger.warn("Warning: Task handler throws exception and also sets status");
+				}
+				else {
+				    Status ns = new StatusImpl();
+				    ns.setStatusCode(Status.FAILED);
+				    ns.setException(ex);
 					task.setStatus(ns);
 				}
 			}
