@@ -18,13 +18,12 @@ public class VDL2Config extends Properties {
 	public static final String[] CONFIG_FILE_SEARCH_PATH = new String[] {
 			System.getProperty("vds.home") + File.separator + "etc" + File.separator
 					+ CONFIG_FILE_NAME,
-            //included only for backwards compatibility
-            System.getProperty("user.home") + File.separator + ".vdl2" + File.separator
-                    + "vdl2.properties",
+			// included only for backwards compatibility
+			System.getProperty("user.home") + File.separator + ".vdl2" + File.separator
+					+ "vdl2.properties",
 			System.getProperty("user.home") + File.separator + ".swift" + File.separator
 					+ CONFIG_FILE_NAME };
 
-	
 	private static VDL2Config config;
 
 	public static VDL2Config getConfig() throws IOException {
@@ -37,14 +36,6 @@ public class VDL2Config extends Properties {
 			config = new VDL2Config();
 			for (int i = 0; i < CONFIG_FILE_SEARCH_PATH.length; i++) {
 				config.load(CONFIG_FILE_SEARCH_PATH[i]);
-			}
-			String ip = config.getIP();
-			if (ip != null) {
-				CoGProperties.getDefault().setIPAddress(ip);
-			}
-			String tcpPortRange = config.getTCPPortRange();
-			if (tcpPortRange != null) {
-				CoGProperties.getDefault().put("tcp.port.range", tcpPortRange);
 			}
 		}
 		return config;
@@ -82,7 +73,7 @@ public class VDL2Config extends Properties {
 		put("kickstart.always.transfer", "false");
 		put("throttle.submit", "4");
 		put("throttle.host.submit", "2");
-		put("throttle.transfers", "4"); 
+		put("throttle.transfers", "4");
 		put("throttle.file.operations", "8");
 		put("throttle.score.job.factor", "4");
 	}
@@ -98,6 +89,14 @@ public class VDL2Config extends Properties {
 		if (f.exists()) {
 			files.add(file);
 			super.load(new FileInputStream(f));
+		}
+		String ip = getIP();
+		if (ip != null) {
+			CoGProperties.getDefault().setIPAddress(ip);
+		}
+		String tcpPortRange = getTCPPortRange();
+		if (tcpPortRange != null) {
+			CoGProperties.getDefault().put("tcp.port.range", tcpPortRange);
 		}
 	}
 
@@ -165,18 +164,18 @@ public class VDL2Config extends Properties {
 	public String getIP() {
 		return getProperty(VDL2ConfigProperties.IP_ADDRESS);
 	}
-	
+
 	public String getTCPPortRange() {
 		return getProperty(VDL2ConfigProperties.TCP_PORT_RANGE);
 	}
-	
+
 	public boolean getLazyErrors() {
 		return Boolean.valueOf(getProperty(VDL2ConfigProperties.LAZY_ERRORS, "true")).booleanValue();
 	}
-    
-    public TriStateBoolean getKickstartEnabled() {
-        return TriStateBoolean.valueOf(getProperty(VDL2ConfigProperties.KICKSTART_ENABLED, "false"));
-    }
+
+	public TriStateBoolean getKickstartEnabled() {
+		return TriStateBoolean.valueOf(getProperty(VDL2ConfigProperties.KICKSTART_ENABLED, "false"));
+	}
 
 	public String toString() {
 		return "Swift configuration " + files;
