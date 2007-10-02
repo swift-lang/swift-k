@@ -7,6 +7,7 @@ html() {
 	xsltproc formatting/$xsl $guide
 	#that's 'cause --output doesn't work
 	sed -e "s/index.html#/#/g" index.html >$out
+	rm index.html
 }
 
 pdf() {
