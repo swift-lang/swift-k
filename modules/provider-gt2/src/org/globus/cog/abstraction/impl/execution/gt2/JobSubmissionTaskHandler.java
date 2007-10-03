@@ -22,6 +22,7 @@ import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -40,8 +41,10 @@ import org.globus.rsl.RSLParser;
 import org.globus.rsl.RslNode;
 import org.globus.rsl.Value;
 import org.globus.rsl.VarRef;
+import org.gridforum.jgss.ExtendedGSSManager;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
+import org.ietf.jgss.GSSManager;
 
 public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         GramJobListener, JobOutputListener {
@@ -52,8 +55,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private Vector jobList = null;
     private boolean startGassServer = false;
     private GassServer gassServer = null;
+    private SecurityContext securityContext;
     private JobOutputStream stdoutStream;
     private JobOutputStream stderrStream;
+    private GSSCredential credential;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
@@ -63,6 +68,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
         }
         this.task = task;
+        this.securityContext = getSecurityContext(task);
+        this.credential = (GSSCredential) securityContext.getCredentials();
         String rsl;
         JobSpecification spec;
         try {
@@ -97,10 +104,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             throws IllegalSpecException, InvalidSecurityContextException,
             InvalidServiceContactException, TaskSubmissionException {
         this.gramJob = new GramJob(rsl);
-        GlobusSecurityContextImpl securityContext = getSecurityContext();
         try {
-            this.gramJob.setCredentials((GSSCredential) securityContext
-                    .getCredentials());
+            this.gramJob.setCredentials(this.credential);
         }
         catch (IllegalArgumentException iae) {
             throw new InvalidSecurityContextException(
@@ -108,7 +113,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
 
         if (!spec.isBatchJob()) {
-            CallbackHandlerManager.increaseUsageCount(gramJob.getCredentials());
+            CallbackHandlerManager.increaseUsageCount(this.credential);
             this.gramJob.addListener(this);
         }
 
@@ -125,7 +130,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         if (logger.isDebugEnabled()) {
             logger.debug("Execution server: " + server);
         }
-        boolean limitedDeleg = (securityContext.getDelegation() != Delegation.FULL_DELEGATION);
+        boolean limitedDeleg = isLimitedDelegation(this.securityContext);
         if (spec.getDelegation() == Delegation.FULL_DELEGATION) {
             limitedDeleg = false;
         }
@@ -152,6 +157,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             cleanup();
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
                     gsse);
+        }
+    }
+    
+    private boolean isLimitedDelegation(SecurityContext sc) {
+        if (sc instanceof GlobusSecurityContextImpl) {
+            return ((GlobusSecurityContextImpl) securityContext).getDelegation() != Delegation.FULL_DELEGATION; 
+        }
+        else {
+            return true;
         }
     }
 
@@ -192,18 +206,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
         job.addListener(listener);
 
-        GlobusSecurityContextImpl securityContext = getSecurityContext();
         try {
-            job
-                    .setCredentials((GSSCredential) securityContext
-                            .getCredentials());
+            job.setCredentials(this.credential);
         }
         catch (IllegalArgumentException iae) {
             throw new InvalidSecurityContextException(
                     "Cannot set the SecurityContext twice", iae);
         }
 
-        boolean limitedDeleg = (securityContext.getDelegation() == GlobusSecurityContextImpl.PARTIAL_DELEGATION);
+        boolean limitedDeleg = isLimitedDelegation(this.securityContext);
         try {
             job.request(rmc, false, limitedDeleg);
             if (logger.isDebugEnabled()) {
@@ -422,8 +433,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
         try {
             this.gassServer = GassServerFactory
-                    .getGassServer((GSSCredential) securityContext
-                            .getCredentials());
+                    .getGassServer(this.credential);
             this.gassServer.registerDefaultDeactivator();
         }
         catch (Exception e) {
@@ -479,7 +489,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private synchronized void cleanup() {
         try {
             this.gramJob.removeListener(this);
-            CallbackHandlerManager.decreaseUsageCount(gramJob.getCredentials());
+            CallbackHandlerManager.decreaseUsageCount(this.credential);
             if (gassServer != null) {
                 GassServerFactory.decreaseUsageCount(gassServer);
             }
@@ -503,14 +513,20 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void outputClosed() {
     }
 
-    private GlobusSecurityContextImpl getSecurityContext() {
-        GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) this.task
-                .getService(0).getSecurityContext();
-        if (securityContext == null) {
+    private SecurityContext getSecurityContext(Task task) throws InvalidSecurityContextException {
+        SecurityContext sc = task.getService(0).getSecurityContext();
+        if (sc == null) {
             // create default credentials
-            securityContext = new GlobusSecurityContextImpl();
+            sc = new GlobusSecurityContextImpl();
+            GSSManager manager = ExtendedGSSManager.getInstance();
+            try {
+                sc.setCredentials(manager.createCredential(GSSCredential.INITIATE_AND_ACCEPT));
+            }
+            catch (GSSException e) {
+                throw new InvalidSecurityContextException(e);
+            }
         }
-        return securityContext;
+        return sc;
     }
 
     private String handleJobManager(String server, String jobmanager)
