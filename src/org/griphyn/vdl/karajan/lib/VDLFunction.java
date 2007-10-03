@@ -133,18 +133,19 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return sb.toString();
 	}
 
-// TODO - is this needed any more? its doing some type inferencing and
-// object creation and dequoting of strings, but the necessary behaviour
-// here has possibly moved elsewhere, into a more strongly typed intermediate
-// XML form that removes the need for this inference.
+	// TODO - is this needed any more? its doing some type inferencing and
+	// object creation and dequoting of strings, but the necessary behaviour
+	// here has possibly moved elsewhere, into a more strongly typed
+	// intermediate
+	// XML form that removes the need for this inference.
 
-// we might need to do some casting here for the numerical stuff - eg when
-// asking for a float but we're given an int? not sure? might be the case
-// that we already have value in the Double form already, in which case
-// deference the internal value?
+	// we might need to do some casting here for the numerical stuff - eg when
+	// asking for a float but we're given an int? not sure? might be the case
+	// that we already have value in the Double form already, in which case
+	// deference the internal value?
 
-// this is only used by VDL new (and really should only be used by
-// VDL new, and should perhaps move to the VDL new source?)
+	// this is only used by VDL new (and really should only be used by
+	// VDL new, and should perhaps move to the VDL new source?)
 
 	protected Object internalValue(Type type, Object value) {
 		if (Types.FLOAT.equals(type)) {
@@ -228,18 +229,23 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 
 	public String leafFileName(DSHandle var) throws ExecutionException {
-		PhysicalFormat f = var.getMapper().map(var.getPathFromRoot());
-		if (f instanceof GeneralizedFileFormat) {
-			String filename = ((GeneralizedFileFormat) f).getURIAsString();
-			if (filename == null) {
-				throw new ExecutionException("Mapper did not provide a file name");
-			}
-			else {
-				return filename;
-			}
+		if (Types.STRING.equals(var.getType())) {
+			return relativize(String.valueOf(var.getValue()));
 		}
 		else {
-			throw new ExecutionException("Only file formats are supported for now");
+			PhysicalFormat f = var.getMapper().map(var.getPathFromRoot());
+			if (f instanceof GeneralizedFileFormat) {
+				String filename = ((GeneralizedFileFormat) f).getURIAsString();
+				if (filename == null) {
+					throw new ExecutionException("Mapper did not provide a file name");
+				}
+				else {
+					return filename;
+				}
+			}
+			else {
+				throw new ExecutionException("Only file formats are supported for now");
+			}
 		}
 	}
 
@@ -342,13 +348,14 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			}
 		}
 		else if (expectedType.equals(Types.FLOAT.arrayType())) {
-            if (actualType.equals(Types.FLOAT.arrayType()) || actualType.equals(Types.INT.arrayType())) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
+			if (actualType.equals(Types.FLOAT.arrayType())
+					|| actualType.equals(Types.INT.arrayType())) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 		else if (expectedType.equals(Types.ANY)) {
 			return true;
 		}
