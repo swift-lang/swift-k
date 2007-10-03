@@ -20,6 +20,8 @@ import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public final class EventBus {
 	public static final Logger logger = Logger.getLogger(EventBus.class);
+	
+	public static final boolean TRACE_EVENTS = false;
 
 	private static final EventBus bus = new EventBus();
 	public volatile static long eventCount;
@@ -116,7 +118,7 @@ public final class EventBus {
 
 	public static void send(final EventListener l, final Event event) {
 		try {
-			if (logger.isDebugEnabled()) {
+			if (TRACE_EVENTS) {
 				logger.debug(event + " -> " + l);
 			}
 			if (l != null) {
@@ -143,7 +145,7 @@ public final class EventBus {
 				logger.fatal("Exception was", e);
 			}
 		}
-		catch (Exception e) {
+		catch (Throwable e) {
 			try {
 				logger.warn("Uncaught exception: " + e.toString() + " in " + l, e);
 				logger.warn("Event was " + event);
@@ -157,7 +159,7 @@ public final class EventBus {
 					logger.fatal("Cannot fail element", ee);
 				}
 			}
-			catch (Exception ee) {
+			catch (Throwable ee) {
 				logger.warn("Another uncaught exception while handling an uncaught exception.", ee);
 				logger.warn("The initial exception was", e);
 				try {
@@ -167,7 +169,7 @@ public final class EventBus {
 								+ e.toString() + "\n" + ee.toString());
 					}
 				}
-				catch (Exception eee) {
+				catch (Throwable eee) {
 					logger.fatal("Cannot fail element", ee);
 				}
 			}
