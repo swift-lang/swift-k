@@ -82,14 +82,14 @@ public class TCProfile extends VDLFunction {
 		}
 	}
 
-	public static final String PROFILE_GLOBUS_PREFIX = Profile.GLOBUS + "::";
+	public static final String PROFILE_GLOBUS_PREFIX = (Profile.GLOBUS + "::").toLowerCase();
 
 	private void addEnvironment(Map m, BoundContact bc) {
 		Map props = bc.getProperties();
 		Iterator i = props.entrySet().iterator();
 		while (i.hasNext()) {
 			Map.Entry e = (Map.Entry) i.next();
-			String name = (String) e.getKey();
+			String name = ((String) e.getKey()).toLowerCase();
 			String value = (String) e.getValue();
 			if (name.startsWith(PROFILE_GLOBUS_PREFIX)) {
 				props.put(name.substring(PROFILE_GLOBUS_PREFIX.length()), value);

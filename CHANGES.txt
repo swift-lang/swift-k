@@ -1,3 +1,7 @@
+(10/03/07)
+
+*** Profile names/keys in tc.data are now case insensitive
+
 (10/02/07)
 
 *** Swift 0.3 release candidate 1 built from swift svn r1312, cog r1769
