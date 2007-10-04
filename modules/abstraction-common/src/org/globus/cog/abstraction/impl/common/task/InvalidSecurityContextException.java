@@ -9,6 +9,11 @@
 package org.globus.cog.abstraction.impl.common.task;
 
 public class InvalidSecurityContextException extends Exception {
+    
+    public InvalidSecurityContextException(Throwable prev) {
+        super(prev);
+    }
+    
     public InvalidSecurityContextException(String message) {
         super(message);
     }
