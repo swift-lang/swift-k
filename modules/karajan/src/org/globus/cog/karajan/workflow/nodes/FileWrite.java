@@ -35,8 +35,7 @@ public class FileWrite extends PartialArgumentsContainer {
 	}
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		String fileName = TypeUtil.toString(A_NAME.getValue(stack));
-		File file = new File(fileName);
+		File file = TypeUtil.toFile(stack, A_NAME);
 		try {
 			final BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file,
 					TypeUtil.toBoolean(A_APPEND.getValue(stack))));
