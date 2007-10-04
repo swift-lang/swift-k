@@ -12,15 +12,17 @@
 package org.globus.cog.karajan.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.parser.ParseTree;
-import org.globus.cog.karajan.stack.Trace;
+import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
@@ -314,5 +316,14 @@ public class TypeUtil {
 		}
 		buf.append(']');
 		return buf.toString();
+	}
+	
+	public static File toFile(VariableStack stack, Arg arg) throws ExecutionException {
+		String fileName = TypeUtil.toString(arg.getValue(stack));
+        File file = new File(fileName);
+        if (!file.isAbsolute()) {
+            file = new File(stack.getExecutionContext().getCwd() + File.separator + fileName); 
+        }
+        return file;
 	}
 }
