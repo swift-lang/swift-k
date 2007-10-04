@@ -89,10 +89,11 @@ public class TCProfile extends VDLFunction {
 		Iterator i = props.entrySet().iterator();
 		while (i.hasNext()) {
 			Map.Entry e = (Map.Entry) i.next();
-			String name = ((String) e.getKey()).toLowerCase();
+			String name = (String) e.getKey();
+			FQN fqn = new FQN(name); 
 			String value = (String) e.getValue();
-			if (name.startsWith(PROFILE_GLOBUS_PREFIX)) {
-				props.put(name.substring(PROFILE_GLOBUS_PREFIX.length()), value);
+			if (Profile.ENV.equalsIgnoreCase(fqn.getNamespace())) {
+				m.put(fqn.getName(), value);
 			}
 		}
 	}
