@@ -130,6 +130,10 @@ public class RestartLog extends PartialArgumentsContainer {
 			if (logffw.isLocked()) {
 				break;
 			}
+			else if (!logffw.lockExists()) {
+				logger.warn("Failed to acquire exclusive lock on log file.");
+				break;
+			}
 		}
 		stack.setVar(LOG_DATA, Collections.EMPTY_MAP);
 		if (logffw == null) {
