@@ -57,9 +57,9 @@ public class Misc extends FunctionsCollection {
 	}
 
 	public boolean sys_contains(VariableStack stack) throws ExecutionException {
-		String file = TypeUtil.toString(PA_FILE.getValue(stack));
+		File f = TypeUtil.toFile(stack, PA_FILE);
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(file));
+			BufferedReader br = new BufferedReader(new FileReader(f));
 			String line = null;
 			String expanded = TypeUtil.toString(PA_VALUE.getValue(stack));
 			do {
@@ -70,7 +70,7 @@ public class Misc extends FunctionsCollection {
 			} while (line != null);
 		}
 		catch (Exception e) {
-			throw new ExecutionException("Error reading file " + file, e);
+			throw new ExecutionException("Error reading file " + f, e);
 		}
 		return false;
 	}
@@ -112,10 +112,7 @@ public class Misc extends FunctionsCollection {
 
 	public Object sys_readfile(VariableStack stack) throws ExecutionException {
 		try {
-			File f = new File(TypeUtil.toString(PA_FILE.getValue(stack)));
-			if (!f.isAbsolute()) {
-				f = new File(stack.getExecutionContext().getCwd() + File.separator + f.getPath());
-			}
+			File f = TypeUtil.toFile(stack, PA_FILE);
 			BufferedReader br = new BufferedReader(new FileReader(f));
 			StringBuffer text = new StringBuffer();
 			String line = br.readLine();
@@ -139,9 +136,9 @@ public class Misc extends FunctionsCollection {
 	}
 
 	public Object sys_file_readline(VariableStack stack) throws ExecutionException {
+		File f = TypeUtil.toFile(stack, PA_FILE);
 		try {
-			RandomAccessFile file = new RandomAccessFile(new File(
-					TypeUtil.toString(PA_FILE.getValue(stack))), "r");
+			RandomAccessFile file = new RandomAccessFile(f, "r");
 			try {
 				file.seek(TypeUtil.toNumber(PA_OFFSET.getValue(stack)).longValue());
 				return file.readLine();
@@ -219,9 +216,9 @@ public class Misc extends FunctionsCollection {
 	public Object sys_outputstream(VariableStack stack) throws ExecutionException {
 		String type = TypeUtil.toString(PA_TYPE.getValue(stack, null));
 		if ("file".equalsIgnoreCase(type) || PA_FILE.isPresent(stack)) {
-			String file = TypeUtil.toString(PA_FILE.getValue(stack));
+			File f = TypeUtil.toFile(stack, PA_FILE);
 			try {
-				return new PrintStream(new FileOutputStream(new File(file)));
+				return new PrintStream(new FileOutputStream(f));
 			}
 			catch (Exception e) {
 				throw new ExecutionException("Could not open file", e);
