@@ -336,7 +336,7 @@ each element in an array. For example:
 
 <programlisting>
 check_order (file a[]) {
-	foreach file f in a {
+	foreach f in a {
 		compute(f);
 	}
 }
