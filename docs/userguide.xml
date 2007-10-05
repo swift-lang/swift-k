@@ -829,9 +829,9 @@ contains columns:
 		then the type needs to have the same member elements, say:
 		<programlisting>
 		type student {
-			string name;
-			int    age;
-			float  GPA;
+			File  name;
+			File  age;
+			File  GPA;
 		}
 		</programlisting>
 If the file does not contain a header with column info, then the
