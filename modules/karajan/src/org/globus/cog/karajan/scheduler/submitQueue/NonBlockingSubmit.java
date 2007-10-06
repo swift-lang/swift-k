@@ -17,25 +17,28 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
 import edu.emory.mathcs.backport.java.util.concurrent.Executors;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
 
 public class NonBlockingSubmit implements Runnable {
 	private static final Logger logger = Logger.getLogger(NonBlockingSubmit.class);
 
-    private static ExecutorService pool = Executors.newCachedThreadPool();
+	private static ExecutorService pool = Executors.newCachedThreadPool(new DaemonThreadFactory(
+			Executors.defaultThreadFactory()));
+
 	private final TaskHandler taskHandler;
 	private final Task task;
 	private SubmitQueue[] queues;
 	private int currentQueue;
 	private int attempts;
-    private int id;
-    
-    private static volatile int sid = 0;
+	private int id;
+
+	private static volatile int sid = 0;
 
 	public NonBlockingSubmit(TaskHandler th, Task task, SubmitQueue[] queues) {
 		this.taskHandler = th;
 		this.task = task;
 		this.queues = queues;
-        id = sid++;
+		id = sid++;
 		attempts = 0;
 	}
 
@@ -48,7 +51,7 @@ public class NonBlockingSubmit implements Runnable {
 			queues[currentQueue++].queue(this);
 		}
 		else {
-            pool.submit(this);
+			pool.submit(this);
 		}
 	}
 
@@ -68,9 +71,9 @@ public class NonBlockingSubmit implements Runnable {
 					logger.warn("Warning: Task handler throws exception and also sets status");
 				}
 				else {
-				    Status ns = new StatusImpl();
-				    ns.setStatusCode(Status.FAILED);
-				    ns.setException(ex);
+					Status ns = new StatusImpl();
+					ns.setStatusCode(Status.FAILED);
+					ns.setException(ex);
 					task.setStatus(ns);
 				}
 			}
@@ -106,6 +109,19 @@ public class NonBlockingSubmit implements Runnable {
 	public TaskHandler getTaskHandler() {
 		return taskHandler;
 	}
-	
-	
+
+	static class DaemonThreadFactory implements ThreadFactory {
+		private ThreadFactory delegate;
+
+		public DaemonThreadFactory(ThreadFactory delegate) {
+			this.delegate = delegate;
+		}
+
+		public Thread newThread(Runnable r) {
+			Thread t = delegate.newThread(r);
+			t.setDaemon(true);
+			return t;
+		}
+
+	}
 }
