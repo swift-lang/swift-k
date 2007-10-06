@@ -57,6 +57,9 @@ public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListene
 		}
 		listeners.add(new EventTargetPair(event, target));
 		WaitingThreadsMonitor.addThread(event.getStack());
+		if (handle.isClosed()) {
+			notifyListeners();
+		}
 	}
 
 	private synchronized void notifyListeners() {
