@@ -46,6 +46,10 @@ public class UnresolvedType implements Type {
 	public Type arrayType() {
 		throw new UnsupportedOperationException();
 	}
+	
+	public Type itemType() {
+		throw new UnsupportedOperationException();
+	}
 
 	public Type getBaseType() {
 		throw new UnsupportedOperationException();
