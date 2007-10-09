@@ -66,6 +66,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			}
 			super.post(stack);
 		}
+		catch (HandleOpenException e) {
+			throw new FutureNotYetAvailable(VDLFunction.addFutureListener(stack, e.getSource()));
+		}
 		catch (DependentException e) {
 			// This would not be the primal fault so in non-lazy errors mode it
 			// should not matter
@@ -94,7 +97,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected abstract Object function(VariableStack stack) throws ExecutionException;
+	protected abstract Object function(VariableStack stack) throws ExecutionException, HandleOpenException;
 
 	/*
 	 * This will likely break if the engine changes in fundamental ways. It also
@@ -400,6 +403,12 @@ public abstract class VDLFunction extends SequentialWithArguments {
 					e.printStackTrace();
 				}
 			}
+		}
+	}
+	
+	protected void waitFor(VariableStack stack, DSHandle handle) throws ExecutionException {
+		if (!handle.isClosed()) {
+			throw new FutureNotYetAvailable(addFutureListener(stack, handle)); 
 		}
 	}
 
