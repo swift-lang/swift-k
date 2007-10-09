@@ -1,3 +1,7 @@
+(10/08/07)
+
+*** Added readData function
+
 (10/03/07)
 
 *** Profile names/keys in tc.data are now case insensitive

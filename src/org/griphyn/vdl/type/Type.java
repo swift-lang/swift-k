@@ -132,6 +132,12 @@ public interface Type {
 	 * type.*
 	 */
 	Type arrayType();
+	
+	/** 
+	 * This method, if invoked on an array type, returns the type of each item.
+	 * If t is a type, t == t.arrayType().itemType();
+	 */
+	Type itemType();
 
 	/**
 	 * A factory class with static methods for creating instances of Type.

@@ -100,6 +100,10 @@ public class TypeImpl extends UnresolvedType {
 		}
 	}
 
+	public Type itemType() {
+		return this;
+	}
+
 	public boolean isPrimitive() {
 		return primitive;
 	}
@@ -114,6 +118,7 @@ public class TypeImpl extends UnresolvedType {
 
 	private static class Array extends TypeImpl {
 		private Field field;
+
 		public Array(Type type, URI namespace, String name) {
 			super(namespace, name, false, true);
 			field = Field.Factory.newInstance();
@@ -130,6 +135,10 @@ public class TypeImpl extends UnresolvedType {
 
 		public Field getField(String name) throws NoSuchFieldException {
 			return field;
+		}
+
+		public Type itemType() {
+			return field.getType();
 		}
 	}
 }
