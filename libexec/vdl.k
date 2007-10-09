@@ -73,6 +73,10 @@ namespace("vdl"
 						deperror = true
 					)
 				)
+				else(
+					//we still wait until the primitive value is there
+					discard(vdl:getFieldValue(var))
+				)
 			)
 		)
 
