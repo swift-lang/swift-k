@@ -312,7 +312,6 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public void closeDeep() {
 		if (!this.closed) {
-			setValue(Boolean.TRUE);
 			closeShallow();
 		}
 		synchronized (handles) {
