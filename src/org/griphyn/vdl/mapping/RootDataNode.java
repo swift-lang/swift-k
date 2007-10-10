@@ -110,7 +110,15 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			try {
 				Iterator i = handle.getFields(Path.CHILDREN).iterator();
 				while (i.hasNext()) {
-					checkConsistency((DSHandle) i.next());
+					DSHandle dh = (DSHandle) i.next();
+					Path path = dh.getPathFromRoot();
+					String index = path.getElement(path.size()-1);
+					try {
+						Integer.parseInt(index);
+					} catch(NumberFormatException nfe) {
+						throw new RuntimeException("Array element has index '"+index+"' that does not parse as an integer.");
+					}
+					checkConsistency(dh);
 				}
 			}
 			catch (HandleOpenException e) {
