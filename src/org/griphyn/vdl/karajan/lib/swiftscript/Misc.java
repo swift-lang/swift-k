@@ -25,9 +25,24 @@ public class Misc extends FunctionsCollection {
 	public static final SwiftArg PA_TRANSFORM = new SwiftArg.Positional("transform");
 
 	static {
+		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
+	}
+
+	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
+	public DSHandle swiftscript_trace(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+			InvalidPathException {
+		Object[] args = SwiftArg.VARGS.asArray(stack);
+		StringBuffer buf = new StringBuffer();
+		buf.append("SwiftScript trace: ");
+		for (int i = 0; i < args.length; i++) {
+			if(i!=0) buf.append(", ");
+			buf.append(TypeUtil.toString(args[i]));
+		}
+		traceLogger.warn(buf);
+		return null;
 	}
 
 	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,

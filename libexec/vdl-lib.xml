@@ -7,6 +7,7 @@
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="regexp"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="trace"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
 	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileNames"/></export>
 	<export name="arg">
