@@ -1885,19 +1885,56 @@ will output the message 'Your name is John'.
 This section details built-in procedures that are available for use in
 the SwiftScript language.
 		</para>
+
+		<section id="procedure.readdata"><title>readData</title>
+			<para>
+readData will read data from a specified file.
+			</para>
+			<para>
+The format of the input file is controlled by the type of the return
+value.
+			</para>
+
+			<para>
+For scalar return types, such as int, the specified file should contain
+a single value of that type.
+			</para>
+			<para>
+For arrays of scalars, the specified file should contain one value
+per line.
+			</para>
+			<para>
+For structs of scalars, the file should contain two rows.
+The first row should be structure member names separated by whitespace.
+The second row should be the corresponding values for each structure
+member, separated by whitespace, in the same order as the header row.
+			</para>
+			<para>
+For arrays of structs, the file should contain a heading row listing
+structure member names separated by whitespace. There should be one row
+for each element of the array, with structure member elements listed in
+the same order as the header row and separated by whitespace.
+			</para>
+
+			<para>
+This procedure is new in 0.4.
+			</para>
+		</section>
 		<section id="procedure.print"><title>print</title>
 			<para>
 Deprecated - use <link linkend="procedure.trace">trace</link> instead.
 			</para>
 			<para>
-print will print its parameters to stdout; but will do this at a point in execution that is undefined. Specifically,
-it will not necessarily wait for its parameters to be properly set.
+print will print its parameters to stdout; but will do this at a point
+in execution that is undefined. Specifically, it will not necessarily
+wait for its parameters to be properly set.
 			</para>
 		</section>
 		<section id="procedure.trace"><title>trace</title>
 			<para>
-Trace will log its parameters. By default these will appear on both stdout and in the run log file. Some formatting occurs
-to produce the log message. The particular output format should not be relied upon.
+Trace will log its parameters. By default these will appear on both stdout
+and in the run log file. Some formatting occurs to produce the log message.
+The particular output format should not be relied upon. (new in 0.4)
 			</para>
 		</section>
 
