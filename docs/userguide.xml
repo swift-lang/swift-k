@@ -1885,11 +1885,22 @@ will output the message 'Your name is John'.
 This section details built-in procedures that are available for use in
 the SwiftScript language.
 		</para>
-		<section><title>print</title>
+		<section id="procedure.print"><title>print</title>
 			<para>
-print will output its argument to stdout.
+Deprecated - use <link linkend="procedure.trace">trace</link> instead.
+			</para>
+			<para>
+print will print its parameters to stdout; but will do this at a point in execution that is undefined. Specifically,
+it will not necessarily wait for its parameters to be properly set.
 			</para>
 		</section>
+		<section id="procedure.trace"><title>trace</title>
+			<para>
+Trace will log its parameters. By default these will appear on both stdout and in the run log file. Some formatting occurs
+to produce the log message. The particular output format should not be relied upon.
+			</para>
+		</section>
+
 	</section>
 
 	<section id="profiles"><title>Profiles</title>
