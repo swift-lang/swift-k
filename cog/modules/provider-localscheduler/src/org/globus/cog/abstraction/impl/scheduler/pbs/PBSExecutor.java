@@ -38,6 +38,11 @@ public class PBSExecutor implements ProcessListener {
     private ProcessListener listener;
     private String stdout, stderr, exitcode;
     private File script;
+    private static boolean debug;
+    
+    static {
+        debug = "true".equals(Properties.getProperties().getProperty("debug"));
+    }
 
     public PBSExecutor(Task task, ProcessListener listener) {
         this.task = task;
@@ -277,13 +282,15 @@ public class PBSExecutor implements ProcessListener {
     }
 
     protected void cleanup() {
-        script.delete();
-        new File(exitcode).delete();
-        if (spec.getStdOutput() == null && stdout != null) {
-            new File(stdout).delete();
-        }
-        if (spec.getStdError() == null && stderr != null) {
-            new File(stderr).delete();
+        if (!debug) {
+            script.delete();
+            new File(exitcode).delete();
+            if (spec.getStdOutput() == null && stdout != null) {
+                new File(stdout).delete();
+            }
+            if (spec.getStdError() == null && stderr != null) {
+                new File(stderr).delete();
+            }
         }
     }
 
