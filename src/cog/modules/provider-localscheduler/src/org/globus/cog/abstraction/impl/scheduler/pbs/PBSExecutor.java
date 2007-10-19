@@ -195,14 +195,34 @@ public class PBSExecutor implements ProcessListener {
         wr.write("/bin/echo $? >" + exitcodefile + '\n');
         wr.close();
     }
+    
+    private static final boolean[] TRIGGERS;
+    
+    static {
+        TRIGGERS = new boolean[128];
+        TRIGGERS[' '] = true;
+        TRIGGERS['\n'] = true;
+        TRIGGERS['\t'] = true;
+        TRIGGERS['|'] = true;
+        TRIGGERS['\\'] = true;
+        TRIGGERS['>'] = true;
+        TRIGGERS['<'] = true;
+    }
 
     protected String quote(String s) {
         if ("".equals(s)) {
             return "\"\"";
         }
         boolean quotes = false;
-        if (s.indexOf(' ') != -1) {
-            quotes = true;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < 128 && TRIGGERS[c]) {
+                quotes = true;
+                break;
+            }
+        }
+        if (!quotes) {
+            return s;
         }
         StringBuffer sb = new StringBuffer();
         if (quotes) {
