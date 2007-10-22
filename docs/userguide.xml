@@ -96,12 +96,13 @@ DSHandles to member elements. However, it isn't required to generate
 all of the subordinate DSHandles at once and can be used in a lazy
 fashion.
 </para>
+<para>
 The above three are mutually exclusive - for example, a data set
 that is mapped to a file cannot have a value that can be used in a
 SwiftScript expression; and a data item that is a
 value cannot be passed into an application
 executable as a data file using the <link linkend="function.filename">@filename</link> function.
-
+</para>
 		</section>
 
 		<section>
