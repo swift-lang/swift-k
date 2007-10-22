@@ -141,7 +141,7 @@ produced the intermediate dataset.
 			<para>
 The SwiftScript type system consists of a number of <firstterm>simple
 types</firstterm>, <firstterm>marker types</firstterm> for files,
-arrays, and <firstterm>complex types</firstterm> compsed of these types.
+arrays, and <firstterm>complex types</firstterm> composed of these types.
 			</para>
 			<para>
 The simple types are: string, float, int and boolean.
