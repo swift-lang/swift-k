@@ -17,9 +17,20 @@ the <ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift
 tutorial</ulink>.
 	</para>
 	<para>
-SwiftScript is a data-oriented workflow language that
+Swift is a data-oriented coarse grained scripting language that
 supports dataset typing and mapping, dataset iteration,
 conditional branching, and sub-workflow composition.
+	</para>
+	<para>
+Swift programs (or <firstterm>workflows</firstterm>) are written in
+a language called <firstterm>SwiftScript</firstterm>.
+	</para>
+	<para>
+SwiftScript programs are dataflow oriented - they are primarily
+concerned with processing (possibly large) data files, by invoking
+programs to do that processing. Swift handles execution of such programs
+on remote sites by choosing sites, handling the staging of input and output
+files to and from the chosen sites and remote execution of program code.
 	</para>
 	</section>
 	<section>
@@ -30,21 +41,56 @@ of values in memory or as out-of-core files on disk. Language constructs
 called mappers specify how each piece of data is stored.</para>
 		<section>
 			<title>Data</title>
+<para>
+Data is represented in Swift by
+<firstterm>DSHandles</firstterm> (<firstterm>Dataset handles</firstterm>).
+</para>
+
+<para>
+In Swift, a DSHandle can represent data in one of three forms:
+</para>
+<orderedlist>
+<listitem> <para>
+an in-memory value, such as a string or integer.
+</para> </listitem>
+<listitem> <para>
+a data file (on local disk or stored elsewhere on the internet). When a
+DSHandle represents an on-disk data file, the name of that file is
+provided by a <firstterm>mapper</firstterm>.
+</para> </listitem>
+<listitem> <para>
+a container of other DSHandles - either an array or a defined type.
+Such a DSHandles contains subordinate DSHandles; these may be nested
+to arbitrary depth.
+</para> </listitem>
+</orderedlist>
+<para>
+The above three are mutually exclusive - for example, a data set
+that is mapped to a file cannot have a value that can be used in a
+SwiftScript expression; and a data item that is a
+value cannot be passed into an application
+executable as a data file using the <link linkend="function.filename">@filename</link> function.
+</para>
+</section>
+
+<section><title>Mappers</title>
 		<para>
-For out-of-core files, a mapper (see mapper section) is used to
-identify which files are used as backing store for the data. When data is
-mapped externally this way, it is called a dataset.
+When a DSHandle represents a data file (or container of datafiles), it is
+associated with  a mapper. The mapper is used to
+identify which files belong to that DSHandle.
+		</para>
+		<para>
 A dataset's physical representation is declared by a mapping descriptor, 
 which defines how each element in the dataset's logical schema is 
 stored in, and fetched from, physical structures such as directories,
-files, and database tables
+files, and remote servers.
 </para>
 
 <para>
 Mappers are parameterized to take into account properties such as
 varying dataset location.
 In order
-to access a dataset, we need to know three things: its type schema, 
+to access a dataset, we need to know three things: its type, 
 its mapping, and the value(s) of any parameter(s) associated 
 with the mapping descriptor. For example, if we want to describe a dataset,
 of type imagefile, and whose physical
@@ -58,9 +104,10 @@ imagefile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
 
 <para>
 The above example declares a dataset called f1, which uses a single 
-file mapper to map a file from a specific location. What the mapper does 
-is merely returning the file name to the system. SwiftScript also 
-has a simplified syntax for such cases since single_file_mapper 
+file mapper to map a file from a specific location.
+</para>
+<para>
+SwiftScript has a simplified syntax for this case, since single_file_mapper 
 is frequently used:
 
 <programlisting>
@@ -69,41 +116,25 @@ binaryfile f1&lt;"/home/yongzh/data/file1.bin"&gt;
 </para>
 
 <para>
-Data in an abstract sense is represented in the Swift runtime by
-a DSHandle object. DSHandles don't have any guaranteed to work methods.
-(? is this true? they should have get paremt, and perhaps others - should
-check in source code).
+Swift comes with a number of mappers that handle common mapping patterns.
+These are documented in the <link linkend="mappers">mappers section</link>
+of this guide.
 </para>
 
+</section>
+
+<section><title>Execution order based on data dependencies</title>
 <para>
-In Swift at present DSHandles can represent data in one of three forms.
+Procedures in swift are by default executed in parallel. If five separate
+procedures are invoked, Swift will attempt to run them all at once.
 </para>
 <para>
-i) an in-memory value, such as a string or integer. In this case the
-value is accessed through methods such as getValue and setValue.
+The main exception to this is when one procedure produces a dataset as an
+output and another procedure uses that dataset as an input. In that case,
+the second procedure will be executed after the first procedure has
+produced the intermediate dataset.
 </para>
-<para>
-ii) an on-disk data file, which is not exposed to the SwiftScript language
-as a value. The value is not exposed to the runtime directly, but the
-filename for the file is available through getFilename. The filenames are
-provided to the DSHandle implementation objects (which are instances of
-the various DataNode classes).
-</para>
-<para>
-iii) a containing structure - either an array or a defined type.
-one of these DSHandles can provide, upon request, subordinate
-DSHandles to member elements. However, it isn't required to generate
-all of the subordinate DSHandles at once and can be used in a lazy
-fashion.
-</para>
-<para>
-The above three are mutually exclusive - for example, a data set
-that is mapped to a file cannot have a value that can be used in a
-SwiftScript expression; and a data item that is a
-value cannot be passed into an application
-executable as a data file using the <link linkend="function.filename">@filename</link> function.
-</para>
-		</section>
+</section>
 
 		<section>
 			<title>Type System</title>
@@ -140,7 +171,7 @@ type binaryfile;
 </programlisting>
 		</para>
 		</section>
-</section>
+		</section>
 
 		<section><title>Variables</title>
 <para>Variables in SwiftScript are declared to be of a specific type.
@@ -1606,11 +1637,11 @@ the sites file must be configured to point to kickstart.
 		</para>
 
 		<para>
-Kickstart can be downloaded as part of the VDS 'worker package' available
-from the worker packages section of <ulink url="http://www.ci.uchicago.edu/wiki/bin/view/VDS/VDSWeb/VDSDownload">the VDS download page</ulink>.
+Kickstart can be downloaded as part of the Pegasus 'worker package' available
+from the worker packages section of <ulink url="http://pegasus.isi.edu/code.php">the Pegasus download page</ulink>.
 		</para>
 		<para>
-Untar the relevant worker package somewhere where it is visible to the
+Untar the relevant worker package somewhere where it is visible to all of the
 worker nodes on the remote execution machine (such as in a shared application
 filesystem).
 		</para>
