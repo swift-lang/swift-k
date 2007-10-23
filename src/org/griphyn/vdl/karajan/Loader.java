@@ -298,16 +298,18 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			logfile = ap.getStringValue(ARG_LOGFILE);
 		}
 		else {
-			File f = new File(projectName + "-" + runID + ".log");
+			logfile = projectName + "-" + runID + ".log";
+		}
 
-			FileAppender fa = (FileAppender) getAppender(FileAppender.class);
-			if (fa == null) {
-				logger.warn("Failed to configure log file name");
-			}
-			else {
-				fa.setFile(f.getAbsolutePath());
-				fa.activateOptions();
-			}
+		File f = new File(logfile);
+
+		FileAppender fa = (FileAppender) getAppender(FileAppender.class);
+		if (fa == null) {
+			logger.warn("Failed to configure log file name");
+		}
+		else {
+			fa.setFile(f.getAbsolutePath());
+			fa.activateOptions();
 		}
 		Level level = Level.WARN;
 		if (ap.isPresent(ARG_VERBOSE)) {
