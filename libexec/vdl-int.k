@@ -173,7 +173,9 @@ namespace("vdl"
 		
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "START dir={dir} host={host}")
-			task:execute("/bin/rm", arguments="-rf {dir}", host=host, batch=true)
+			if(vdl:configProperty("sitedir.keep") == "false"
+				task:execute("/bin/rm", arguments="-rf {dir}", host=host, batch=true)
+			)
 			log(LOG:INFO, "END dir={dir} host={host}")
 		)
 		
