@@ -2068,5 +2068,18 @@ property.
 		
 	</section>
 
+	<section id="localhowtos"><title>How-To Tips for Specific User Communities</title>
+		<section id="savinglogs"><title>Saving Logs - for UChicago CI Users</title>
+			<para>
+If you have a UChicago Computation Institute account, run this command in your 
+submit directory after each run. It will copy all your logs and kickstart 
+records into a directory at the CI for reporting, usage tracking, support and debugging.
+			</para>
+			<para>
+rsync --ignore-existing *.log *-kickstart.xml login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
+			</para>
+		</section>
+	</section>
+
 </article>
 
