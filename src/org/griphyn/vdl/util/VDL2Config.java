@@ -177,6 +177,10 @@ public class VDL2Config extends Properties {
 		return TriStateBoolean.valueOf(getProperty(VDL2ConfigProperties.KICKSTART_ENABLED, "false"));
 	}
 
+	public boolean getSitedirKeep() {
+		return Boolean.valueOf(getProperty(VDL2ConfigProperties.SITEDIR_KEEP, "true")).booleanValue();
+	}
+
 	public String toString() {
 		return "Swift configuration " + files;
 	}
