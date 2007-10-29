@@ -24,6 +24,10 @@ info() {
 	cat /proc/meminfo 2>&1 >>"$INFO"
 }
 
+logstate() {
+	echo "Progress " `date +"%Y-%m-%e %H:%M:%S%z"` " $@" >>"$INFO"
+}
+
 log() {
 	echo "$@" >>"$INFO"
 }
@@ -77,9 +81,11 @@ ID=$1
 checkEmpty "$ID" "Missing job ID"
 INFO=$WFDIR/info/${ID}-info
 rm -f "$INFO"
+logstate "START"
 infosection "Wrapper"
 DIR=$ID
 
+logstate "OPTION_PROCESSING"
 log "Options: $@"
 shift
 
@@ -136,22 +142,26 @@ log "ARGS=$@"
 
 IFS="|"
 
+logstate "CREATE_JOBDIR"
 mkdir -p $DIR
 checkError 254 "Failed to create job directory $DIR"
 log "Created job directory: $DIR"
 
+logstate "CREATE_INPUTDIR"
 for D in $DIRS ; do
 	mkdir -p "$DIR/$D" 2>&1 >>"$INFO"
 	checkError 254 "Failed to create input directory $D"
 	log "Created output directory: $DIR/$D"
 done
 
+logstate "LINK_INPUTS"
 for L in $INF ; do
 	ln -s "$PWD/shared/$L" "$DIR/$L" 2>&1 >>"$INFO"
 	checkError 254 "Failed to link input file $L"
 	log "Linked input: $PWD/shared/$L to $DIR/$L"
 done
 
+logstate "EXECUTE"
 cd $DIR
 #ls >>$WRAPPERLOG
 if [ ! -f "$EXEC" ]; then
@@ -192,6 +202,7 @@ else
 fi
 cd ..
 
+logstate "EXECUTE_DONE"
 log "Job ran successfully"
 
 MISSING=
@@ -208,12 +219,17 @@ if [ "$MISSING" != "" ]; then
 	fail 254 "The following output files were not created by the application: $MISSING"
 fi
 
+logstate "COPYING_OUTPUTS"
 for O in $OUTF ; do
 	cp "$DIR/$O" "shared/$O" 2>&1 >>"$INFO"
 	checkError 254 "Failed to copy output file $O to shared directory"
 done
 
+logstate "RM_JOBDIR"
 rm -rf "$DIR" 2>&1 >>"$INFO"
 checkError 254 "Failed to remove job directory $DIR" 
 
+logstate "TOUCH_SUCCESS"
 touch status/${ID}-success
+logstate "END"
+
