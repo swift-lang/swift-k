@@ -232,7 +232,7 @@ Datasets are operated on by procedures, which take input in the form of
 mapped variables, perform computations, and produce typed data as output
 that is again mapped to variables.</para>
 <para>There are two kinds of procedure: An atomic procedure, which
-describeds how an external program can be executed; and compound
+describes how an external program can be executed; and compound
 procedures which consist of a sequence of SwiftScript statements.
 </para>
 
@@ -1973,7 +1973,7 @@ The particular output format should not be relied upon. (new in 0.4)
 	</section>
 
 	<section id="profiles"><title>Profiles</title>
-		<section><title>Karajan namespace</title>
+		<section id="porfile.karajan"><title>Karajan namespace</title>
 			<para id="profile.karajan.maxsubmitrate">maxSubmitRate - limits the maximum rate of job submission, in jobs per second.
 For example:
 <screen>
@@ -1983,7 +1983,7 @@ will limit job submission to 0.2 jobs per second (or equivalently,
 one job every five seconds).
 			</para>
 		</section>
-		<section><title>swift namespace</title>
+		<section id="profile.swift"><title>swift namespace</title>
 			<para id="profile.swift.storagesize">storagesize limits the
 amount of space that will be used on the remote site for temporary files.
 When more than that amount of space is used, the remote temporary file
@@ -1991,7 +1991,7 @@ cache will be cleared using the algorithm specified in the
 <link linkend="property.caching.algorithm"><property>caching.algorithm</property></link> property.
 			</para>
 		</section>
-		<section><title>Globus namespace</title>
+		<section id="profile.globus"><title>Globus namespace</title>
 			<para id="profile.globus.maxwalltime"><property>maxwalltime</property> specifies a walltime limit for each job, in minutes. This profile setting also interacts
 with the <link linkend="clustering">clustering mechanism</link>.
 			</para>
@@ -2005,14 +2005,14 @@ The following formats are recognized:
 			</para>
 		</section>
 	</section>
-	<section><title>Alternative providers</title>
+	<section id="providers"><title>Alternative providers</title>
 		<para>
 Some of the actions Swift takes - executing jobs and transferring files - 
 take place through <firstterm>cog providers</firstterm>. Swift comes with
 some default providers, but others can be used (both as supplied with Swift
 and of your own making).
 		</para>
-		<section><title>PBS execution provider</title>
+		<section id="provider.pbs"><title>PBS execution provider</title>
 			<para>
 The PBS execution provider allows jobs to be executed through a local
 PBS installation. To use, edit the localhost specification in sites.xml
