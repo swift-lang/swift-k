@@ -1,3 +1,9 @@
+(10/30/2007)
+
+*** Added totalSize implementation to data sources such that 
+    the JGlobus GridFTP client sends the ALLO command before
+    a transfer.
+
 (10/03/2007)
 
 *** Fixed some issues with the credentials used for the callback
