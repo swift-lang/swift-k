@@ -351,7 +351,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void putFile(String localFileName, String remoteFileName,
             final ProgressMonitor progressMonitor) throws FileResourceException {
 
-        File localFile = new File(localFileName);
+        final File localFile = new File(localFileName);
         try {
             gridFTPClient.setPassiveMode(true);
             final long size = localFile.length();
@@ -362,10 +362,18 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                         progressMonitor.progress(totalRead, size);
                         return super.read();
                     }
+                    
+                    public long totalSize() {
+                        return localFile.length();
+                    }
                 };
             }
             else {
-                source = new DataSourceStream(new FileInputStream(localFile));
+                source = new DataSourceStream(new FileInputStream(localFile)) {
+                    public long totalSize() {
+                        return localFile.length();
+                    }
+                };
             }
             gridFTPClient.put(remoteFileName, source, null, false);
         }
