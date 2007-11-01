@@ -64,7 +64,7 @@ namespace("vdl"
 			)
 		)
 		
-		element(checkJobStatus, [rhost, wfdir, jobid, tr]
+		element(checkJobStatus, [rhost, wfdir, jobid, tr, jobdir]
 			log(LOG:DEBUG, "START jobid={jobid}")
 			try(
 				sequential(
@@ -75,15 +75,15 @@ namespace("vdl"
 					 * in one operation. It relies on file:remove() throwing 
 					 * an exception if the file is not there. 
 					 */
-					file:remove("{wfdir}/status/{jobid}-success", host=rhost)
+					file:remove("{wfdir}/status/{jobdir}/{jobid}-success", host=rhost)
 					log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 				)
 				if(
-					file:exists("{wfdir}/status/{jobid}-error", host=rhost) then(
+					file:exists("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost) then(
 						log(LOG:INFO, "FAILURE jobid={jobid} - Failure file found")
-						task:transfer(srchost=rhost, srcdir="{wfdir}/status", srcfile="{jobid}-error")
+						task:transfer(srchost=rhost, srcdir="{wfdir}/status/{jobdir}", srcfile="{jobid}-error")
 						error := parallel(
-							file:remove("{wfdir}/status/{jobid}-error", host=rhost)
+							file:remove("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost)
 							sequential(
 								str:strip(file:read("{jobid}-error"))
 								file:remove("{jobid}-error")
@@ -319,9 +319,9 @@ namespace("vdl"
 			)
 		)
 		
-		element(transferKickstartRec, [rhost, wfdir, jobid]
+		element(transferKickstartRec, [rhost, wfdir, jobid, jobdir]
 			recfile := "{jobid}-kickstart.xml"
-			srcdir := dircat(wfdir, "kickstart")
+			srcdir := dircat(wfdir, "kickstart/", jobdir)
 			try(
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile)
 				(
@@ -342,10 +342,12 @@ namespace("vdl"
 					throw(exception("Could not initialize shared directory on {rhost}", exception))
 				)
 				
-				jobid := concat(tr, "-", uid())
+				uid := uid()
+				jobdir := substring(uid, from=0, to=1)
+				jobid := concat(tr, "-", uid)
 				
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost}")
-				tmpdir := dircat(wfdir, jobid)
+				tmpdir := dircat(concat(wfdir, "/jobs/", jobdir), jobid)
 				
 				stdout := try(stdout, "stdout.txt")
 				stderr := try(stderr, "stderr.txt")
@@ -363,6 +365,7 @@ namespace("vdl"
 				
 						task:execute("/bin/sh",
 							list("shared/wrapper.sh", jobid,
+								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 
 								"-out", stdout, 
 								"-err", stderr, 
@@ -378,7 +381,7 @@ namespace("vdl"
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
 						)
 							
-						checkJobStatus(rhost, wfdir, jobid, tr)
+						checkJobStatus(rhost, wfdir, jobid, tr, jobdir)
 		
 						log(LOG:DEBUG, "JOB_END jobid={jobid}")
 
@@ -407,7 +410,7 @@ namespace("vdl"
 							else(
 								try(
 									(
-										recfile := transferKickstartRec(rhost, wfdir, jobid)
+										recfile := transferKickstartRec(rhost, wfdir, jobid, jobdir)
 										"KickstartRecord: {recfile}"
 									)
 									""

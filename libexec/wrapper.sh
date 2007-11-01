@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 infosection() {
 	echo >>"$INFO"
@@ -35,7 +35,7 @@ log() {
 fail() {
 	EC=$1
 	shift
-	echo $@ >"$WFDIR/status/${ID}-error"
+	echo $@ >"$WFDIR/status/$JOBDIR/${ID}-error"
 	log $@
 	info
 	#exit $EC
@@ -79,15 +79,21 @@ WFDIR=$PWD
 INFO="wrapper.log"
 ID=$1
 checkEmpty "$ID" "Missing job ID"
-INFO=$WFDIR/info/${ID}-info
-rm -f "$INFO"
-logstate "START"
-infosection "Wrapper"
-DIR=$ID
 
-logstate "OPTION_PROCESSING"
-log "Options: $@"
 shift
+
+getarg "-jobdir" "$@"
+JOBDIR=$VALUE
+shift $SHIFTCOUNT
+
+checkEmpty "$JOBDIR" "Missing job directory prefix"
+mkdir -p $WFDIR/info/$JOBDIR
+INFO=$WFDIR/info/$JOBDIR/${ID}-info
+rm -f "$INFO"
+logstate "LOG_START"
+infosection "Wrapper"
+
+mkdir -p $WFDIR/status/$JOBDIR
 
 getarg "-e" "$@"
 EXEC=$VALUE
@@ -126,6 +132,8 @@ if [ "$1" == "-a" ]; then
 else
 	fail 254 "Missing arguments (-a option)"
 fi
+
+DIR=jobs/$JOBDIR/$ID
 
 PATH=$PATH:/bin:/usr/bin
 
@@ -185,7 +193,7 @@ else
 		log "Kickstart executable ($KICKSTART) is not executable"
 		fail 254 "The Kickstart executable ($KICKSTART) does not have the executable bit set"
 	else
-		mkdir -p ../kickstart
+		mkdir -p $WFDIR/kickstart/$JOBDIR
 		log "Using Kickstart ($KICKSTART)"
 		if [ "$STDIN" == "" ]; then
 			"$KICKSTART" -H -o "$STDOUT" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR"
@@ -193,14 +201,15 @@ else
 			"$KICKSTART" -H -o "$STDOUT" -i "$STDIN" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR"
 		fi
 		export APPEXIT=$?
-		mv -f kickstart.xml "../kickstart/$ID-kickstart.xml" 2>&1 >>"$INFO"
+		mv -f kickstart.xml "$WFDIR/kickstart/$JOBDIR/$ID-kickstart.xml" 2>&1 >>"$INFO"
 		checkError 254 "Failed to copy Kickstart record to shared directory"
 		if [ "$APPEXIT" != "0" ]; then
 			fail $APPEXIT "Exit code $APPEXIT"
 		fi
 	fi
 fi
-cd ..
+
+cd $WFDIR
 
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
@@ -230,6 +239,6 @@ rm -rf "$DIR" 2>&1 >>"$INFO"
 checkError 254 "Failed to remove job directory $DIR" 
 
 logstate "TOUCH_SUCCESS"
-touch status/${ID}-success
+touch status/${JOBDIR}/${ID}-success
 logstate "END"
 

@@ -6,6 +6,9 @@
     subdirectories will be permitted at each level. This parameter is set
     to 25.
 
+*** move various job related directories into subdirs on site-side.
+    at present, the subdirs are named by a single digit directory.
+
 (10/31/07)
 
 *** Added an external mapper to allow invoking a script to do the
