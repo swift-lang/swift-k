@@ -10,12 +10,13 @@ import org.griphyn.vdl.mapping.file.AirsnMapper;
 import org.griphyn.vdl.mapping.file.ArrayFileMapper;
 import org.griphyn.vdl.mapping.file.CSVMapper;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
+import org.griphyn.vdl.mapping.file.ExternalMapper;
 import org.griphyn.vdl.mapping.file.FileSystemArrayMapper;
 import org.griphyn.vdl.mapping.file.FixedArrayFileMapper;
-import org.griphyn.vdl.mapping.file.SingleFileMapper;
 import org.griphyn.vdl.mapping.file.ROIMapper;
 import org.griphyn.vdl.mapping.file.RegularExpressionMapper;
 import org.griphyn.vdl.mapping.file.SimpleFileMapper;
+import org.griphyn.vdl.mapping.file.SingleFileMapper;
 import org.griphyn.vdl.mapping.file.StructuredRegularExpressionMapper;
 
 public class MapperFactory {
@@ -38,6 +39,7 @@ public class MapperFactory {
 		// the following are application-specific mappers
 		registerMapper("airsn_mapper", AirsnMapper.class);
 		registerMapper("roi_mapper", ROIMapper.class);
+		registerMapper("ext", ExternalMapper.class);
 	}
 
 	public synchronized static Mapper getMapper(String type, Map params) throws InvalidMapperException {
