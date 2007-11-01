@@ -97,7 +97,8 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected abstract Object function(VariableStack stack) throws ExecutionException, HandleOpenException;
+	protected abstract Object function(VariableStack stack) throws ExecutionException,
+			HandleOpenException;
 
 	/*
 	 * This will likely break if the engine changes in fundamental ways. It also
@@ -245,6 +246,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 				else {
 					return filename;
 				}
+			}
+			else if (f == null) {
+				throw new ExecutionException("Mapper failed to map " + var);
 			}
 			else {
 				throw new ExecutionException("Only file formats are supported for now");
@@ -405,10 +409,10 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			}
 		}
 	}
-	
+
 	protected void waitFor(VariableStack stack, DSHandle handle) throws ExecutionException {
 		if (!handle.isClosed()) {
-			throw new FutureNotYetAvailable(addFutureListener(stack, handle)); 
+			throw new FutureNotYetAvailable(addFutureListener(stack, handle));
 		}
 	}
 
