@@ -22,7 +22,6 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 
 	public void init(Map params) {
 		this.params = params;
-
 		String desc = (String) params.get("descriptor");
 		if (desc == null) {
 			return;
@@ -33,7 +32,7 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 			getField().setName(PARAM_PREFIX.getStringValue(mapper));
 		}
 		catch (InvalidMapperException e) {
-			throw new IllegalArgumentException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 	}
 

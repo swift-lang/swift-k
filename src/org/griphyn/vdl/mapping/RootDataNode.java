@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
-import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 
 public class RootDataNode extends AbstractDataNode implements DSHandleListener {
@@ -40,7 +39,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			getField().setName(PARAM_PREFIX.getStringValue(mapper));
 		}
 		catch (InvalidMapperException e) {
-			throw new IllegalArgumentException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 	}
 
