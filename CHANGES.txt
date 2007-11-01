@@ -1,3 +1,11 @@
+(11/01/07)
+
+*** Concurrent mapper now generates filenames in a relatively deep directory
+    hierarchy in order to reduce the number of files in each directory.
+    There is a (hard-coded) parameter which determines how many files and
+    subdirectories will be permitted at each level. This parameter is set
+    to 25.
+
 (10/31/07)
 
 *** Added an external mapper to allow invoking a script to do the
