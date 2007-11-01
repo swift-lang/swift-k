@@ -213,7 +213,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 				}
 				else if (cluster.size() > 1) {
 					Task t = new TaskImpl();
-					t.setIdentity(new IdentityImpl("cluster-" + (clusterId++)));
+					int thisClusterId = clusterId++;
+					t.setIdentity(new IdentityImpl("cluster-" + thisClusterId));
 					t.setType(Task.JOB_SUBMISSION);
 					t.setRequiredService(1);
 
@@ -221,6 +222,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					t.setSpecification(js);
 					js.setExecutable("/bin/sh");
 					js.addArgument("shared/seq.sh");
+					js.addArgument("cluster-"+thisClusterId);
+					js.addArgument("/clusters/"); // slice path more here TODO
 					js.setDirectory(dir);
 					js.setAttribute("maxwalltime", secondsToTime(clusterTime));
 					
