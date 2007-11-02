@@ -1,6 +1,7 @@
 package org.griphyn.vdl.mapping.file;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -26,6 +27,7 @@ public class ExternalMapper extends AbstractMapper {
 	private Map map, rmap = new HashMap();
 
 	public static final MappingParam PARAM_EXEC = new MappingParam("exec");
+	public static final MappingParam PARAM_BASEDIR = new MappingParam("#basedir", null);
 
 	private static Set ignored;
 
@@ -35,6 +37,7 @@ public class ExternalMapper extends AbstractMapper {
 		ignored.add("input");
 		ignored.add("dbgname");
 		ignored.add("descriptor");
+		ignored.add("#basedir");
 	}
 
 	private static final String[] STRING_ARRAY = new String[0];
@@ -44,6 +47,10 @@ public class ExternalMapper extends AbstractMapper {
 		map = new HashMap();
 		rmap = new HashMap();
 		String exec = PARAM_EXEC.getStringValue(this);
+		String bdir = PARAM_BASEDIR.getStringValue(this);
+		if (bdir != null && !exec.startsWith("/")) {
+			exec = bdir + File.separator + exec;
+		}
 		List cmd = new ArrayList();
 		cmd.add(exec);
 		Iterator i = params.entrySet().iterator();

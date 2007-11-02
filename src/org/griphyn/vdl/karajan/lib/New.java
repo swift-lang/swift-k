@@ -25,10 +25,10 @@ public class New extends VDLFunction {
 	public static final Arg OA_MAPPING = new Arg.Optional("mapping", null);
 	public static final Arg OA_VALUE = new Arg.Optional("value", null);
 	public static final Arg OA_DBGNAME = new Arg.Optional("dbgname", null);
-	
+
 	static {
-		setArguments(New.class, new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_ISARRAY,
-				OA_DBGNAME, });
+		setArguments(New.class,
+				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_ISARRAY, OA_DBGNAME, });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
@@ -52,11 +52,13 @@ public class New extends VDLFunction {
 				String threadPrefix = getThreadPrefix(stack);
 				ConcurrentMapper.PARAM_THREAD_PREFIX.setValue(mapping, threadPrefix);
 			}
+			mapping.put("#basedir", stack.getExecutionContext().getBasedir());
 		}
 		try {
 			Type type;
 			if (typename == null) {
-throw new ExecutionException("vdl:new requires a type specification for value "+value);
+				throw new ExecutionException("vdl:new requires a type specification for value "
+						+ value);
 			}
 			else {
 				type = Types.getType(typename);
@@ -85,7 +87,8 @@ throw new ExecutionException("vdl:new requires a type specification for value "+
 								handle.getField(p).set((DSHandle) n);
 							}
 							else {
-								throw new RuntimeException("An array variable can only be initialized by a list of DSHandle values");
+								throw new RuntimeException(
+										"An array variable can only be initialized by a list of DSHandle values");
 							}
 							index++;
 						}
@@ -111,8 +114,9 @@ throw new ExecutionException("vdl:new requires a type specification for value "+
 				}
 			}
 			else {
-// TODO when do we hit this case?
-throw new ExecutionException("vdl:new requires a type specification for value "+value);
+				// TODO when do we hit this case?
+				throw new ExecutionException("vdl:new requires a type specification for value "
+						+ value);
 			}
 			return handle;
 		}
