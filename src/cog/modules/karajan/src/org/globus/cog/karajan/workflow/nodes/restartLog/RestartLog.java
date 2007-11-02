@@ -110,7 +110,7 @@ public class RestartLog extends PartialArgumentsContainer {
 	protected void create(VariableStack stack, String name) throws ExecutionException {
 		FlushableLockedFileWriter logffw = null;
 		if (name == null) {
-			name = stack.getExecutionContext().getTree().getName();
+			name = new File(stack.getExecutionContext().getTree().getName()).getName();
 		}
 		for (int i = 0; i < Integer.MAX_VALUE; i++) {
 			String index = "." + String.valueOf(i);
