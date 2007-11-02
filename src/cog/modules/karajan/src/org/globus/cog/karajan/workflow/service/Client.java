@@ -120,7 +120,7 @@ public class Client {
 			HostAuthorization hostAuthz = new HostAuthorization("host");
 
 			Authorization authz = new FallbackAuthorization(new Authorization[] { hostAuthz,
-					new SelfAuthorization() });
+					SelfAuthorization.getInstance() });
 
 
 			GSSCredential cred = sc.getCredential();
