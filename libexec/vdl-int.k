@@ -326,7 +326,7 @@ namespace("vdl"
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile)
 				(
 					maybe(file:remove(recfile))
-					throw(exception("Failed to transfer kickstart records from {srcdir}/{rhost}", exception))
+					log(LOG:WARN, "Failed to transfer kickstart records from {srcdir}/{rhost}", exception)
 				)
 			)
 			recfile
