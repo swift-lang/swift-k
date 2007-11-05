@@ -344,7 +344,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
     public void putFile(String localFileName, String remoteFileName)
             throws FileResourceException {
-        putFile(localFileName, remoteFileName);
+        putFile(localFileName, remoteFileName, null);
     }
 
     /** Copy a local file to a remote file. Default option 'overwrite' */
