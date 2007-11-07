@@ -86,7 +86,6 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                 Thread thread = new Thread(this);
                 this.task.setStatus(Status.SUBMITTED);
                 thread.start();
-                this.task.setStatus(Status.ACTIVE);
             }
         }
     }
