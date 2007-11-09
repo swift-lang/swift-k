@@ -111,9 +111,9 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 			if (A_THIRDPARTY.isPresent(stack)) {
 				fs.setThirdParty(TypeUtil.toBoolean(A_THIRDPARTY.getValue(stack)));
 			}
-            else {
-                fs.setThirdPartyIfPossible(true);
-            }
+			else {
+				fs.setThirdPartyIfPossible(true);
+			}
 
 			if (A_SRCOFFSET.isPresent(stack)) {
 				fs.setSourceOffset(TypeUtil.toNumber(A_SRCOFFSET.getValue(stack)).longValue());
@@ -132,13 +132,16 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 						TypeUtil.toString(A_TCP_BUFSZ.getValue(stack)));
 			}
 
-			if (sourceContact.equals(BoundContact.LOCALHOST) && fs.getSourceDirectory().equals("")) {
-				fs.setSourceDirectory(stack.getExecutionContext().getCwd());
+			if (sourceContact.equals(BoundContact.LOCALHOST)
+					&& isRelative(fs.getSourceDirectory())) {
+				fs.setSourceDirectory(pathcat(stack.getExecutionContext().getCwd(),
+						fs.getSourceDirectory()));
 			}
 
 			if (destinationContact.equals(BoundContact.LOCALHOST)
-					&& fs.getDestinationDirectory().equals("")) {
-				fs.setDestinationDirectory(stack.getExecutionContext().getCwd());
+					&& isRelative(fs.getDestinationDirectory())) {
+				fs.setDestinationDirectory(pathcat(stack.getExecutionContext().getCwd(),
+						fs.getDestinationDirectory()));
 			}
 
 			task.setType(Task.FILE_TRANSFER);
@@ -188,6 +191,19 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 		}
 		catch (Exception e) {
 			throw new ExecutionException("Exception caught while submitting job", e);
+		}
+	}
+
+	private boolean isRelative(String dir) {
+		return dir == null || !new File(dir).isAbsolute();
+	}
+	
+	private String pathcat(String a, String b) {
+		if (b == null) {
+			return a;
+		}
+		else {
+			return a + File.separator + b;
 		}
 	}
 
