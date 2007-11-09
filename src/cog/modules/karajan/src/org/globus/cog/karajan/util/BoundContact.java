@@ -211,7 +211,9 @@ public class BoundContact extends Contact {
 			addService(fileService);
 			addService(transferService);
 			addService(executionService);
-			setHost("localhost");
+			//TODO A better way to avoid this being equal to a host who happens
+			//to have the same name should be implemented
+			setHost("_localhost");
 		}
 
 		public Service getService(int type, String provider) {
