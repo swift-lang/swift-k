@@ -29,6 +29,10 @@ import org.griphyn.common.catalog.transformation.File;
 import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.util.FQN;
 
+import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.interfaces.Status;
+
+
 public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 	public static final Logger logger = Logger.getLogger(VDSAdaptiveScheduler.class);
 
@@ -409,12 +413,17 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Got cluster status change for " + t.getIdentity());
 				}
+
+				Status clusterMemberStatus = e.getStatus();
+				if(clusterMemberStatus.getStatusCode() == Status.FAILED) {
+					clusterMemberStatus = new StatusImpl(Status.COMPLETED);
+				}
 				Iterator i = cluster.iterator();
 				while (i.hasNext()) {
 					Object[] h = (Object[]) i.next();
 					Task ct = (Task) h[0];
-					StatusEvent nse = new StatusEvent(ct, e.getStatus());
-					ct.setStatus(e.getStatus());
+					StatusEvent nse = new StatusEvent(ct, clusterMemberStatus);
+					ct.setStatus(clusterMemberStatus);
 					fireJobStatusChangeEvent(nse);
 				}
 				if (e.getStatus().isTerminal()) {
