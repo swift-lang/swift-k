@@ -1575,6 +1575,28 @@ then some of the mappings produced by this example would be:
 							</para>
 						</listitem>
 					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<property>sitedir.keep</property>
+						</term>
+						<listitem>
+							<para>
+								Valid values: <parameter>true</parameter>, <parameter>false</parameter>
+							</para>
+
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+
+							<para>
+Indicates whether the working directory on the remote site should be
+left intact even when the workflow completes successfully. This can be
+used to inspect the site working directory for debugging purposes.
+							</para>
+						</listitem>
+					</varlistentry>
+
 										
 				</variablelist>
 				
