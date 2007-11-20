@@ -37,12 +37,3 @@ file="scripts/runTrialSubjectWavelet.R";
 //namedOutputs = waveletTransf(waveletScript, 101, "FB");
 namedOutputs = batchTrials(trialTypes);
 
-====================
-
--- 
-Tiberiu (Tibi) Stef-Praun, PhD
-Research Staff, Computation Institute
-5640 S. Ellis Ave, #405
-University of Chicago
-http://www-unix.mcs.anl.gov/~tiberius/
-
