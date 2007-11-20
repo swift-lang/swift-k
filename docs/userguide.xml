@@ -1293,7 +1293,7 @@ then some of the mappings produced by this example would be:
 							</para>
 							
 							<para>
-								Default value: <literal>true</literal>
+								Default value: <literal>false</literal>
 							</para>
 							
 							<para>
