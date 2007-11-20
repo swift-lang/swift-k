@@ -6,7 +6,7 @@ namespace("vdl"
 	
 			import("task.k")
 							
-			element(pool, [handle, optional(gridlaunch), sysinfo, optional(lrc), ..., channel(properties)]
+			element(pool, [handle, optional(gridlaunch), optional(sysinfo), optional(lrc), ..., channel(properties)]
 				host(name = handle
 					each(...)
 					to(properties
@@ -20,7 +20,7 @@ namespace("vdl"
 				//not handled yet
 			)
 				
-			element(gridftp, [url, storage, major, minor, patch]
+			element(gridftp, [url, optional(storage), optional(major), optional(minor), optional(patch)]
 				if(
 					url == "local://localhost" 
 						service(type="file", provider="local")
@@ -28,7 +28,7 @@ namespace("vdl"
 				)
 			)
 				
-			element(jobmanager, [universe, url, major, minor, patch]
+			element(jobmanager, [url, major, optional(universe), optional(minor), optional(patch)]
 				provider := if(
 					url == "local://localhost" "local"
 					url == "pbs://localhost" "pbs"
