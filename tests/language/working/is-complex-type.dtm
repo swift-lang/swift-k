@@ -1,6 +1,0 @@
-
-// this tests an inner statement declaration
-
-{
-footype i;
-}

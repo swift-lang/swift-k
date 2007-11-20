@@ -414,8 +414,7 @@ caseInnerStatement [StringTemplate statements]
 // i.e. with one token of lookahead
 ll1statement returns [StringTemplate code=null]
     :
-    compoundStat[code=template("statementList")]
-    | code=ifStat
+    code=ifStat
     | code=foreachStat
     | code=switchStat
     | code=iterateStat

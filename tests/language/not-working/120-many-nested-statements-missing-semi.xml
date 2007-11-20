@@ -1,1 +1,1 @@
-Could not compile SwiftScript source: line 7:17: unexpected token: }
+Could not compile SwiftScript source: line 1:1: expecting EOF, found '{'
