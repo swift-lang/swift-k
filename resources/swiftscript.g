@@ -49,6 +49,7 @@ program returns [StringTemplate code=template("program")]
     :
     (nsdecl[code])*        //namespace declaration
     (topLevelStatement[code])*
+    EOF
     ;
 
 nsdecl [StringTemplate code]
