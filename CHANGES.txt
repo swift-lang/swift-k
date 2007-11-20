@@ -2,6 +2,9 @@
 
 *** Many unused fields in the sites catalog, sites.xml, are now optional.
 
+*** Nested statement blocks are no longer supported. These saw little use
+    and were buggy.
+
 (11/01/07)
 
 *** Concurrent mapper now generates filenames in a relatively deep directory
