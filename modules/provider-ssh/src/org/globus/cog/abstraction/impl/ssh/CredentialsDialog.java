@@ -4,7 +4,7 @@
 //This message may not be removed or altered.
 //----------------------------------------------------------------------
 
-package org.globus.cog.abstraction.impl.execution.ssh;
+package org.globus.cog.abstraction.impl.ssh;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

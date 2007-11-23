@@ -4,17 +4,19 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.abstraction.impl.execution.ssh;
-
-import java.net.PasswordAuthentication;
+package org.globus.cog.abstraction.impl.ssh.execution;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.PublicKeyAuthentication;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.ssh.SSHChannel;
+import org.globus.cog.abstraction.impl.ssh.SSHChannelManager;
+import org.globus.cog.abstraction.impl.ssh.SSHRunner;
+import org.globus.cog.abstraction.impl.ssh.SSHSecurityContextImpl;
+import org.globus.cog.abstraction.impl.ssh.SSHTaskStatusListener;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -28,6 +30,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             .getName());
     private Task task = null;
     private Exec exec;
+    private SSHChannel s;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
@@ -48,63 +51,38 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             // prepare command
             String cmd = prepareSpecification(spec);
+            String host = task.getService(0).getServiceContact().getHost();
+            int port = task.getService(0).getServiceContact().getPort();
+
+            s = SSHChannelManager.getDefault().getChannel(host,
+                    port, getSecurityContext().getCredentials());
             exec = new Exec();
             exec.setCmd(cmd);
             exec.setDir(spec.getDirectory());
 
-            exec.setHost(task.getService(0).getServiceContact().getHost());
-            exec.setVerifyhost(false);
-            if (task.getService(0).getServiceContact().getPort() != -1) {
-                exec.setPort(task.getService(0).getServiceContact().getPort());
-            }
-            else {
-                // default port for ssh
-                exec.setPort(22);
-                logger.debug("Using default ssh port: 22");
-            }
-
-            if (FileLocation.LOCAL.overlaps(spec.getStdOutputLocation()) && notEmpty(spec.getStdOutput())) {
+            if (FileLocation.LOCAL.overlaps(spec.getStdOutputLocation())
+                    && notEmpty(spec.getStdOutput())) {
                 exec.setOutFile(spec.getStdOutput());
             }
             if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
                 exec.setOutMem(true);
             }
-            
-            if (FileLocation.LOCAL.overlaps(spec.getStdErrorLocation()) && notEmpty(spec.getStdError())) {
+
+            if (FileLocation.LOCAL.overlaps(spec.getStdErrorLocation())
+                    && notEmpty(spec.getStdError())) {
                 exec.setErrFile(spec.getStdError());
             }
             if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
                 exec.setErrMem(true);
             }
-            
 
-            SecurityContext sec = getSecurityContext();
-
-            if (sec.getCredentials() instanceof PasswordAuthentication) {
-                PasswordAuthentication auth = (PasswordAuthentication) sec
-                        .getCredentials();
-                exec.setUsername(auth.getUserName());
-                exec.setPassword(new String(auth.getPassword()));
-            }
-            else if (sec.getCredentials() instanceof PublicKeyAuthentication) {
-                PublicKeyAuthentication auth = (PublicKeyAuthentication) sec
-                        .getCredentials();
-                exec.setUsername(auth.getUsername());
-                exec.setPassphrase(new String(auth.getPassPhrase()));
-                exec.setKeyfile(auth.getPrivateKeyFile().getAbsolutePath());
-            }
-            else {
-                throw new InvalidSecurityContextException(
-                        "Unsupported credentials: " + sec.getCredentials());
-            }
-
-            SSHRunner sr = new SSHRunner(exec);
-            sr.addListener(this);
+            SSHRunner r = new SSHRunner(s, exec);
+            r.addListener(this);
             // check if the task has not been canceled after it was submitted
             // for execution
             if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
                 this.task.setStatus(Status.SUBMITTED);
-                sr.start();
+                r.startRun(exec);
                 this.task.setStatus(Status.ACTIVE);
             }
         }
@@ -133,7 +111,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             append(cmd, spec.getArgumentsAsString());
         }
         if (FileLocation.LOCAL.overlaps(spec.getStdInputLocation())) {
-            throw new IllegalSpecException("The SSH provider does not support local input");
+            throw new IllegalSpecException(
+                    "The SSH provider does not support local input");
         }
         if (notEmpty(spec.getStdInput())) {
             append(cmd, " <");
@@ -170,7 +149,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     private void cleanup() {
-
+        SSHChannelManager.getDefault().releaseChannel(s);
     }
 
     /*

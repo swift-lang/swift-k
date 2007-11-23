@@ -4,7 +4,7 @@
 //This message may not be removed or altered.
 //----------------------------------------------------------------------
 
-package org.globus.cog.abstraction.impl.execution.ssh;
+package org.globus.cog.abstraction.impl.ssh;
 
 import java.util.Hashtable;
 
@@ -37,10 +37,6 @@ public class SSHSecurityContextImpl implements SecurityContext {
     }
 
     public Object getCredentials() throws InvalidSecurityContextException {
-        if (credentials == null) {
-            throw new InvalidSecurityContextException(
-                    "SSH provider cannot handle default credentials. Please provide a valid SSH credential");
-        }
         return this.credentials;
     }
 

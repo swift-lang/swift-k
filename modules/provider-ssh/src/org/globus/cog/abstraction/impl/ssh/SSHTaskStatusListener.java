@@ -4,7 +4,7 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.abstraction.impl.execution.ssh;
+package org.globus.cog.abstraction.impl.ssh;
 
 public interface SSHTaskStatusListener {
 	public static final int FAILED = 1;
