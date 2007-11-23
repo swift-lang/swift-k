@@ -1,3 +1,8 @@
+(11/23/07)
+
+*** Added filesystem site catalog element. Looks like 'execution' and
+    allows, for example, SSH to be used for remote filesystem access.
+
 (11/20/07)
 
 *** Many unused fields in the sites catalog, sites.xml, are now optional.
