@@ -4,7 +4,7 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.abstraction.impl.execution.ssh;
+package org.globus.cog.abstraction.impl.ssh.execution;
 
 import org.globus.cog.abstraction.impl.common.AbstractTaskHandler;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;

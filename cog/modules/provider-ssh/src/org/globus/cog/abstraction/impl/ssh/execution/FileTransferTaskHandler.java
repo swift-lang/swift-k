@@ -1,21 +1,22 @@
 // This program is distributed under the following licence:
 // http://www.globus.org/toolkit/download/license.html
 
-package org.globus.cog.abstraction.impl.execution.ssh;
+package org.globus.cog.abstraction.impl.ssh.execution;
 
 import java.io.File;
-import java.net.PasswordAuthentication;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.PublicKeyAuthentication;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.ssh.SSHChannel;
+import org.globus.cog.abstraction.impl.ssh.SSHChannelManager;
+import org.globus.cog.abstraction.impl.ssh.SSHRunner;
+import org.globus.cog.abstraction.impl.ssh.SSHTaskStatusListener;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -65,31 +66,13 @@ public class FileTransferTaskHandler implements DelegatedTaskHandler, SSHTaskSta
 				service = destinationService;
 			}
 
-			sftp.setHost(contact.getHost());
-			sftp.setVerifyhost(false);
-			if (contact.getPort() != -1) {
-				sftp.setPort(contact.getPort());
-			}
-			sftp.setOutput(false);
-			SecurityContext sec = service.getSecurityContext();
-            if (sec.getCredentials() instanceof PasswordAuthentication) {
-            	PasswordAuthentication auth = (PasswordAuthentication) sec.getCredentials();
-            	sftp.setUsername(auth.getUserName());
-            	sftp.setPassword(new String(auth.getPassword()));
-            }
-            else if (sec.getCredentials() instanceof PublicKeyAuthentication) {
-            	PublicKeyAuthentication auth = (PublicKeyAuthentication) sec.getCredentials();
-            	sftp.setUsername(auth.getUsername());
-            	sftp.setPassphrase(new String(auth.getPassPhrase()));
-            	sftp.setKeyfile(auth.getPrivateKeyFile().getAbsolutePath());
-            }
-            else {
-            	throw new InvalidSecurityContextException("Unsupported credentials: "+sec.getCredentials());
-            }
+			SSHChannel s = SSHChannelManager.getDefault().getChannel(contact.getHost(),
+                    contact.getPort(), service.getSecurityContext().getCredentials());
 			
-			SSHRunner sr = new SSHRunner(sftp);
-			sr.addListener(this);
-			sr.start();
+			
+			SSHRunner r = new SSHRunner(s, sftp);
+			r.addListener(this);
+			r.startRun(sftp);
 			task.setStatus(Status.ACTIVE);
 		}
 	}
