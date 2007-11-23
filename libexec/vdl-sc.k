@@ -43,6 +43,10 @@ namespace("vdl"
 				service(type="execution", provider=provider, url=url)
 			)
 			
+			element(filesystem, [provider, url, optional(storage)]
+				service(type="file", provider=provider, url=url)
+			)
+			
 			element(profile, [namespace, key, value]
 				if(
 					namespace == "karajan"
