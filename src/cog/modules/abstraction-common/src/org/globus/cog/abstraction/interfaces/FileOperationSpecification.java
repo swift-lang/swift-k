@@ -110,7 +110,7 @@ public interface FileOperationSpecification extends Specification {
      * Indicated whether a file with the given name is a directory on the remote
      * resource
      */
-    public static final String ISDIRECTORY = "isDirectory";
+    public static final String ISDIRECTORY = "isdirectory";
     
     /**
      * Get info about a file
