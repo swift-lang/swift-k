@@ -44,7 +44,7 @@
 			<export name="InteractiveSSHSecurityContext" restricted="true">
 				<element arguments="" optargs="username, privatekey, nogui">
 					<set name="sc">
-						<java:new classname="org.globus.cog.abstraction.impl.execution.ssh.InteractiveSSHSecurityContextImpl"/>
+						<java:new classname="org.globus.cog.abstraction.impl.ssh.InteractiveSSHSecurityContextImpl"/>
 					</set>
 					<if>
 						<isDefined name="username"/>
