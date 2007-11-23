@@ -4,10 +4,12 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.abstraction.impl.execution.ssh;
+package org.globus.cog.abstraction.impl.ssh.file;
 
-public interface OutputListener {
-	public void outputChanged(String s);
-	
-	public void outputClosed();
+/**
+ * Extends the base class TaskHandlerImpl in org.globus.cog.core.impl.file.
+ * [m] Hmm. We like obvious statements!
+ */
+public class TaskHandlerImpl extends
+        org.globus.cog.abstraction.impl.file.TaskHandlerImpl {
 }

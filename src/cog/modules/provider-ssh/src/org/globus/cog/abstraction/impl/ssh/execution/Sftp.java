@@ -27,7 +27,7 @@
  *  License along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.globus.cog.abstraction.impl.execution.ssh;
+package org.globus.cog.abstraction.impl.ssh.execution;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -41,6 +41,7 @@ import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.ssh.SSHTask;
 
 import com.sshtools.j2ssh.session.SessionChannelClient;
 import com.sshtools.j2ssh.sftp.FileAttributes;
@@ -49,7 +50,7 @@ import com.sshtools.j2ssh.sftp.SftpFileInputStream;
 import com.sshtools.j2ssh.sftp.SftpFileOutputStream;
 import com.sshtools.j2ssh.sftp.SftpSubsystemClient;
 
-public class Sftp extends Ssh {
+public class Sftp implements SSHTask {
 	static Logger logger = Logger.getLogger(Sftp.class.getName());
 	private String dest;
 	private String get;
@@ -115,13 +116,12 @@ public class Sftp extends Ssh {
 		return delete;
 	}
 
-	public void execute()
+	public void execute(SessionChannelClient session)
 		throws
 			IllegalSpecException,
 			InvalidSecurityContextException,
 			InvalidServiceContactException,
 			TaskSubmissionException, JobException {
-		super.execute();
 		if ((get != null) && (dest == null)) {
 			logger.debug("You must supply a destination for the get operation");
 		}
@@ -135,7 +135,6 @@ public class Sftp extends Ssh {
 			logger.debug("You cannot specify a get and put together, use seperate tasks");
 		}
 		try {
-			SessionChannelClient session = ssh.openSessionChannel();
 			SftpSubsystemClient sftp = new SftpSubsystemClient();
 
 			if (!session.startSubsystem(sftp)) {
@@ -143,13 +142,6 @@ public class Sftp extends Ssh {
 			}
 
 			executeSFTP(sftp);
-			if (!session.isClosed()) {
-				session.close();
-			}
-
-			logger.debug("Disconnecting from " + host);
-
-			ssh.disconnect();
 		}
 		catch (IOException sshe) {
 			logger.debug(sshe);
