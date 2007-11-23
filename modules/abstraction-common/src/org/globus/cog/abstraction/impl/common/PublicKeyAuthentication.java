@@ -53,4 +53,8 @@ public class PublicKeyAuthentication {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+	
+	public String toString() {
+	    return username + ":<key>";
+	}
 }
