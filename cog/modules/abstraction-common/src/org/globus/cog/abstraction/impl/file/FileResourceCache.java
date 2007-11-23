@@ -10,6 +10,7 @@
 package org.globus.cog.abstraction.impl.file;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -28,7 +29,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextExcepti
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
-import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 public class FileResourceCache {
     private static Logger logger = Logger.getLogger(FileResourceCache.class);
@@ -47,7 +47,7 @@ public class FileResourceCache {
 
     private LinkedList order;
     private Map releaseTimes;
-    private Map fileResources;
+    private Map fileResources, services;
     private Set invalid;
     private Set inUse;
     private Timer timer;
@@ -56,11 +56,12 @@ public class FileResourceCache {
     private ResourceStopper stopper;
 
     public FileResourceCache() {
-        fileResources = new Hashtable();
+        fileResources = new HashMap();
+        services = new HashMap();
         inUse = new HashSet();
         invalid = new HashSet();
         order = new LinkedList();
-        releaseTimes = new Hashtable();
+        releaseTimes = new HashMap();
         stopper = new ResourceStopper();
     }
 
@@ -72,11 +73,10 @@ public class FileResourceCache {
             logger.debug("Got request for resource for " + service);
         }
         checkTimer();
-        ServiceContact contact = service.getServiceContact();
         FileResource fileResource;
         synchronized (this) {
-            if (fileResources.containsKey(contact)) {
-                List resources = (List) fileResources.get(contact);
+            if (fileResources.containsKey(service)) {
+                List resources = (List) fileResources.get(service);
                 Iterator i = resources.iterator();
                 while (i.hasNext()) {
                     fileResource = (FileResource) i.next();
@@ -111,7 +111,6 @@ public class FileResourceCache {
             logger.debug("Instantiating new resource for " + service);
         }
         String provider = service.getProvider();
-        ServiceContact contact = service.getServiceContact();
         if (provider == null) {
             throw new InvalidProviderException("Provider is null");
         }
@@ -121,17 +120,18 @@ public class FileResourceCache {
         }
         FileResource fileResource = AbstractionFactory
                 .newFileResource(provider);
-        fileResource.setServiceContact(contact);
+        fileResource.setServiceContact(service.getServiceContact());
         fileResource.setSecurityContext(securityContext);
         List resources;
-        if (fileResources.containsKey(contact)) {
-            resources = (List) fileResources.get(contact);
+        if (fileResources.containsKey(service)) {
+            resources = (List) fileResources.get(service);
         }
         else {
             resources = new LinkedList();
-            fileResources.put(contact, resources);
+            fileResources.put(service, resources);
         }
         resources.add(fileResource);
+        services.put(fileResource, service);
         inUse.add(fileResource);
         return fileResource;
     }
@@ -184,9 +184,12 @@ public class FileResourceCache {
 
     private void removeResource(FileResource resource) {
         synchronized (this) {
-            if (fileResources.containsKey(resource.getServiceContact())) {
-                List resources = (List) fileResources.get(resource
-                        .getServiceContact());
+            Service service = (Service) services.remove(resource);
+            if (service == null) {
+                return;
+            }
+            if (fileResources.containsKey(service)) {
+                List resources = (List) fileResources.get(service);
                 resources.remove(resource);
                 stopper.addResource(resource);
             }
