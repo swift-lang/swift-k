@@ -1,3 +1,10 @@
+(11/23/2007)
+
+*** Fixed broken isDirectory file operation
+
+*** Caching of file resources happens on both host name, port and
+    provider rather than just the host name
+
 (08/23/2007)
 
 *** Added ability to query for a list of providers supporting
