@@ -18,7 +18,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 					sequential(
 						echo("{tr} started")
 						log(LOG:INFO, "START thread={#thread} tr={tr}") 
-						restartOnError(".*", 2,
+						restartOnError(".*", vdl:configProperty("execution.retries"),
 							execute2(
 								tr, maybe(arguments=arguments), 
 								maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
