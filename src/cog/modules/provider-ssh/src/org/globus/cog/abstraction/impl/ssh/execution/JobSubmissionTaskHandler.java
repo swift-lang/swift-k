@@ -149,11 +149,20 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     
     static {
         ESCAPE['\''] = true;
+        ESCAPE['\\'] = true;
         ESCAPE[' '] = true;
         ESCAPE['>'] = true;
         ESCAPE['<'] = true;
         ESCAPE['&'] = true;
         ESCAPE['|'] = true;
+        ESCAPE['('] = true;
+        ESCAPE[')'] = true;
+        ESCAPE['~'] = true;
+        ESCAPE['#'] = true;
+        ESCAPE['$'] = true;
+        ESCAPE['*'] = true;
+        ESCAPE['`'] = true;
+        ESCAPE['"'] = true;
     }
 
     private void append(StringBuffer sb, String str) {
