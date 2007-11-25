@@ -6,6 +6,8 @@
 
 package org.globus.cog.abstraction.impl.ssh.execution;
 
+import java.util.Iterator;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -107,26 +109,33 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         StringBuffer cmd = new StringBuffer("/bin/sh -c '");
         append(cmd, spec.getExecutable());
         if (spec.getArgumentsAsString() != null) {
-            append(cmd, " ");
-            append(cmd, spec.getArgumentsAsString());
+            cmd.append(' ');
+            Iterator i = spec.getArgumentsAsList().iterator();
+            while (i.hasNext()) {
+                String arg = (String) i.next();
+                append(cmd, arg);
+                if (i.hasNext()) {
+                    cmd.append(' ');
+                }
+            }
         }
         if (FileLocation.LOCAL.overlaps(spec.getStdInputLocation())) {
             throw new IllegalSpecException(
                     "The SSH provider does not support local input");
         }
         if (notEmpty(spec.getStdInput())) {
-            append(cmd, " <");
+            cmd.append(" <");
             append(cmd, spec.getStdInput());
         }
         if (FileLocation.REMOTE.overlaps(spec.getStdOutputLocation())
                 && notEmpty(spec.getStdOutput())) {
             cmd.append(" 1>");
-            cmd.append(spec.getStdOutput());
+            append(cmd, spec.getStdOutput());
         }
         if (FileLocation.REMOTE.overlaps(spec.getStdErrorLocation())
                 && notEmpty(spec.getStdError())) {
             cmd.append(" 2>");
-            cmd.append(spec.getStdError());
+            append(cmd, spec.getStdError());
         }
         cmd.append('\'');
         return cmd.toString();
@@ -135,17 +144,30 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private boolean notEmpty(String str) {
         return str != null && !str.equals("");
     }
+    
+    private static boolean[] ESCAPE = new boolean[256];
+    
+    static {
+        ESCAPE['\''] = true;
+        ESCAPE[' '] = true;
+        ESCAPE['>'] = true;
+        ESCAPE['<'] = true;
+        ESCAPE['&'] = true;
+        ESCAPE['|'] = true;
+    }
 
     private void append(StringBuffer sb, String str) {
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            if (c == '\'') {
-                sb.append("\\'");
+            if (c < 256 && c > 0 && ESCAPE[c]) {
+                sb.append('\\');
             }
-            else {
-                sb.append(c);
-            }
+            sb.append(c);
         }
+    }
+    
+    private void space(StringBuffer sb) {
+        sb.append(' ');
     }
 
     private void cleanup() {
