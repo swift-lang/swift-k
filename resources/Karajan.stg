@@ -15,13 +15,11 @@ program(types,procedures,declarations,statements) ::= <<
   $declarations;separator="\n"$
   $if(statements)$
   <restartLog>
-  	<vdl:pre/>
   	<vdl:mains>
 		<vdl:mainp>
 		    $parallel(statements=statements)$
 		</vdl:mainp>
 	</vdl:mains>
-	<vdl:post/>
   </restartLog>  
   $endif$
 </project>

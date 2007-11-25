@@ -121,9 +121,6 @@ namespace("vdl"
 			tr = name
 		)
 
-		element(pre, [])
-		element(post, [])
-
 		element(mains, [channel(cleanup), channel(errors), channel(warnings)]
 			anyerrors := vdl:processBulkErrors("The following errors have occurred:", errors)
 
