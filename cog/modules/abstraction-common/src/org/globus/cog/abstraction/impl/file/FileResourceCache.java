@@ -12,7 +12,6 @@ package org.globus.cog.abstraction.impl.file;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,9 +71,9 @@ public class FileResourceCache {
         if (logger.isDebugEnabled()) {
             logger.debug("Got request for resource for " + service);
         }
-        checkTimer();
         FileResource fileResource;
         synchronized (this) {
+            checkTimer();
             if (fileResources.containsKey(service)) {
                 List resources = (List) fileResources.get(service);
                 Iterator i = resources.iterator();
@@ -230,7 +229,7 @@ public class FileResourceCache {
         this.maxIdleTime = maxIdleTime;
     }
 
-    private synchronized void checkTimer() {
+    private void checkTimer() {
         if (timer == null) {
             timer = new Timer(true);
             timer.schedule(new ResourceSwipe(this), 60000, 60000);
