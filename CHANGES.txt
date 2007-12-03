@@ -9,11 +9,10 @@
     might be used, irrespective of (at least) expected run location,
     workflow or user.
 
-
 (11/23/07)
-new parameter, execution.retries to specify th number of time a job
-will be retried if it fails (giving a maximum of 1 + execution.retries
-attempts at execution)
+*** new parameter, execution.retries to specify the number of time a job
+    will be retried if it fails (giving a maximum of 1 + execution.retries
+    attempts at execution)
 
 *** Added filesystem site catalog element. Looks like 'execution' and
     allows, for example, SSH to be used for remote filesystem access.
