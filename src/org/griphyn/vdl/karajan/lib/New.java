@@ -37,10 +37,12 @@ public class New extends VDLFunction {
 		Map mapping = (Map) OA_MAPPING.getValue(stack);
 		boolean isArray = TypeUtil.toBoolean(OA_ISARRAY.getValue(stack));
 		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
+
+		if (mapping == null) {
+			mapping = new HashMap();
+		}
+
 		if (dbgname != null) {
-			if (mapping == null) {
-				mapping = new HashMap();
-			}
 			mapping.put("dbgname", dbgname);
 		}
 		if (typename == null && value == null) {
