@@ -202,11 +202,21 @@ $expr$
 $endif$
 >>
 
-dataset(name,type,mapping,file,isArray) ::= <<
+variable(name,type,isArray,expr,mapping,nil,file) ::= <<
 <set name="$name$">
+  $if(mapping)$
   <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
     $vdl_mapping(mapping=mapping,file=file)$
   </vdl:new>
+  $else$
+    $if(file)$
+      <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
+        $vdl_mapping(mapping=mapping,file=file)$
+      </vdl:new>
+    $else$
+      $expr$
+    $endif$
+  $endif$
 </set>
 >>
 
@@ -225,18 +235,6 @@ $endif$
 
 vdl_parameter(name,expr) ::= <<
 <vdl:parameter name="$name$">$expr$</vdl:parameter>
->>
-
-variable(name,type,isArray,expr,mapping,nil) ::= <<
-<set name="$name$">
-  $if(mapping)$
-  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
-    $vdl_mapping(mapping=mapping)$
-  </vdl:new>
-  $else$
-  $expr$
-  $endif$
-</set>
 >>
 
 assign(var,value) ::= <<

@@ -211,7 +211,7 @@ public class Karajan {
 	}
 
 	public void dataset(Dataset dataset, StringTemplate progST) throws Exception {
-		StringTemplate datasetST = template("dataset");
+		StringTemplate datasetST = template("variable");
 		progST.setAttribute("declarations", datasetST);
 		datasetST.setAttribute("name", dataset.getName());
 		datasetST.setAttribute("type", dataset.getType().getLocalPart());
@@ -637,7 +637,7 @@ public class Karajan {
 	  * its an assign, a variable or a dataset. In the case of a dataset,
 	  * recurse on the dataset parameters.
 	  *
-	  * If it is any of those, we call <code>checkAssign</code> and/or
+	  * If it is any of those, we call
 	  * <code>markDataset</code> on the particular declaration and then return.
 	  *
 	  * Otherwise, if 'st' is a procedure we give up and return
@@ -676,7 +676,7 @@ public class Karajan {
 				if (declName.equals("assign")) {
 					// found that it is assigned
 					if (declST.getAttribute("var").equals(name)) {
-						checkAssign(name, declST, st, isInput);
+						markDatasetParam(declST, st, isInput);
 						return;
 					}
 				} else
@@ -684,18 +684,12 @@ public class Karajan {
 					if (declST.getAttribute("name").equals(name)) {
 						if (declST.getAttribute("nil") != null)
 							return;
-						checkAssign(name, declST, st, isInput);
+						markDatasetParam(declST, st, isInput);
 						return;
 					}
 				} else
 				if (declName.equals("dataset")) {
-					if(logger.isDebugEnabled()) logger.debug("checking(1) dataset for "+name);
-					if(logger.isDebugEnabled()) logger.debug("checking(1) "+declST.getAttribute("name"));
-					if (declST.getAttribute("name").equals(name)) {
-						logger.debug("success(1)");
-						markDatasetParam(declST, st, isInput);
-						return;
-					}
+					throw new RuntimeException("dataset template is unsupported");
 				}
 			}
 			else {
@@ -706,7 +700,7 @@ public class Karajan {
 					if (declST.getName().equals("assign")) {
 						// found that it is assigned
 						if (declST.getAttribute("var").equals(name)) {
-							checkAssign(name, declST, st, isInput);
+							markDatasetParam(declST, st, isInput);
 							return;
 						}
 					}
@@ -719,18 +713,12 @@ public class Karajan {
 						if (declST.getAttribute("name").equals(name)) {
 							if (declST.getAttribute("nil") != null)
 								return;
-							checkAssign(name, declST, st, isInput);
+							markDatasetParam(declST, st, isInput);
 							return;
 						}
 					} else 
 					if (declName.equals("dataset")) {
-						if(logger.isDebugEnabled()) logger.debug("checking(2) dataset for "+name);
-						if(logger.isDebugEnabled()) logger.debug("checking(2) "+declST.getAttribute("name"));
-						if (declST.getAttribute("name").equals(name)) {
-							logger.debug("success(2)");
-							markDatasetParam(declST, st, isInput);
-							return;
-						}
+						throw new RuntimeException("dataset template is unsupported");
 					}
 				}
 			}
@@ -744,37 +732,6 @@ public class Karajan {
 		StringTemplate parentST = st.getEnclosingInstance();
 		markDataset(name, parentST, isInput);
 	}
-
-
-	/** given a name and a assignment for a variable (in the declaration
-	  * of the variable or as an explicit assigment), check that
-	  * the variable can be used as an input, and recurse over the
-	  * assigned value of that variable.
-	  *
-	  * @param name the name of the variable
-	  * @param assignST the assignment statement (?or some wrapper of such?)
-	  * @param st the enclosing context
-	  * @param isInput whether the variable is an input or not
-	  *
-	  **/
-
-	protected void checkAssign(String name, StringTemplate assignST, StringTemplate st,
-			boolean isInput) {
-		if (!isInput) {
-			throw new RuntimeException("The variable " + name + " can not be used as an output!\n"
-					+ assignST);
-		}
-
-		StringTemplate exprST = (StringTemplate) assignST.getAttribute("expr");
-
-		if (exprST != null) {
-			// now it comes from another source
-			markDataset(exprST, st, isInput);
-		}
-// TODO we used to recurse over arrays here, but now that arrays count as
-// expressions, do we still get the desired behaviour?
-	}
-
 
 	/** mark all the dataset references in a function as input. */
 
