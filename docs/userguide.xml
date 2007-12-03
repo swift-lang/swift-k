@@ -1620,10 +1620,108 @@ ip.address=192.168.0.1
 The <command>swift</command> command is the main command line tool
 for executing SwiftScript programs.
 	</para>
-	<section><title>Syntax</title>
-<para>
-Command-line syntax can be seen by typing swift -help
+	<section><title>Command-line Syntax</title>
+<para>The <command>swift</command> command is invoked as follows:
+<command>swift [options] SwiftScript-program [SwiftScript-arguments]</command>
+with options taken from the following list, and SwiftScript-arguments
+made available to the SwiftScript program through the
+<link linkend="function.arg">@arg</link> function.
 </para>
+  <variablelist><title>Swift command-line options</title>
+  <varlistentry><term>-help or -h</term>
+    <listitem><para>
+      Display usage information </para></listitem>
+  </varlistentry>
+  <varlistentry><term>-typecheck</term>
+    <listitem><para>
+      Does a typecheck instead of executing the workflow </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-dryrun</term>
+    <listitem><para>
+      Runs the workflow without submitting any jobs (can be used to get
+      a graph)
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-monitor</term>
+    <listitem><para>
+      Shows a graphical resource monitor 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-resume <literal>file</literal></term>
+    <listitem><para>
+      Resumes the execution using a log file 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-config <literal>file</literal></term>
+    <listitem><para>
+      Indicates the Swift configuration file to be used for this run. 
+      Properties in this configuration file will override the default 
+      properties. If individual command line arguments are used for 
+      properties, they will override the contents of this file. 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-verbose | -v</term>
+    <listitem><para>
+      Increases the level of output that Swift produces on the console 
+      to include more detail about the execution 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-debug | -d</term>
+    <listitem><para>
+      Increases the level of output that Swift produces on the console 
+      to include lots of detail about the execution 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-logfile <literal>file</literal></term>
+    <listitem><para>
+      Specifies a file where log messages should go to. By default 
+      Swift uses the name of the workflow being run and a numeric index
+      (e.g. myworkflow.1.log) 
+    </para></listitem>
+  </varlistentry>
+
+
+  <varlistentry><term>-tcp.port.range <literal>start,end</literal></term>
+    <listitem><para>
+      A TCP port range can be specified to restrict the ports on which 
+      GRAM callback services are started. This is likely needed if your
+      submit host is behind a firewall, in which case the firewall 
+      should be configured to allow incoming connections on ports in 
+      the range. 
+    </para></listitem>
+  </varlistentry>
+
+</variablelist>
+
+<para>In addition, the following Swift properties can be set on the
+command line:
+
+<itemizedlist>
+<listitem>caching.algorithm</listitem>
+<listitem>clustering.enabled</listitem>
+<listitem>clustering.enabled</listitem>
+<listitem>clustering.min.time</listitem>
+<listitem>clustering.queue.delay</listitem>
+<listitem>ip.address</listitem>
+<listitem>kickstart.always.transfer</listitem>
+<listitem>kickstart.enabled</listitem>
+<listitem>lazy.errors</listitem>
+<listitem>pgraph</listitem>
+<listitem>pgraph.graph.options</listitem>
+<listitem>pgraph.node.options</listitem>
+<listitem>sitedir.keep</listitem>
+<listitem>sites.file</listitem>
+<listitem>tc.file</listitem>
+</itemizedlist>
+</para>
+
 	</section>
 	<section><title>Return codes</title>
 	<para>
