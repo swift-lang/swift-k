@@ -49,7 +49,9 @@ import org.globus.ftp.GridFTPSession;
 import org.globus.ftp.MarkerListener;
 import org.globus.ftp.MlsxEntry;
 import org.globus.ftp.Session;
+import org.globus.ftp.exception.ClientException;
 import org.globus.ftp.exception.ServerException;
+import org.globus.ftp.vanilla.Reply;
 import org.ietf.jgss.GSSCredential;
 
 /**
@@ -67,6 +69,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public static final int MAX_REPLY_WAIT_TIME = 30000; // ms
 
     private GridFTPClient gridFTPClient;
+    private boolean dataChannelReuse;
+    private boolean dataChannelInitialized;
 
     /** throws InvalidProviderException */
     public FileResourceImpl() throws Exception {
@@ -96,12 +100,21 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                 port = 2811;
             }
             gridFTPClient = new GridFTPClient(host, port);
+            Reply r = gridFTPClient.getLastReply();
+
+            if (r != null && r.getMessage().indexOf("GridFTP Server 2.3") != -1) {
+                dataChannelReuse = true;
+                logger.debug("GridFTP version is 2.3. Enabling data channel reuse.");
+            }
             gridFTPClient.setClientWaitParams(MAX_REPLY_WAIT_TIME,
                     Session.DEFAULT_WAIT_DELAY);
             GSSCredential proxy = (GSSCredential) getSecurityContext()
                     .getCredentials();
             gridFTPClient.authenticate(proxy);
             gridFTPClient.setType(Session.TYPE_IMAGE);
+            if (dataChannelReuse) {
+                gridFTPClient.setMode(GridFTPSession.MODE_EBLOCK);
+            }
             setSecurityOptions(gridFTPClient);
 
             setStarted(true);
@@ -109,6 +122,14 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         catch (Exception e) {
             throw translateException(
                     "Error communicating with the GridFTP server", e);
+        }
+    }
+
+    private void initializeDataChannel() throws ClientException,
+            ServerException, IOException {
+        if (!dataChannelInitialized || !dataChannelReuse) {
+            gridFTPClient.setPassiveMode(true);
+            dataChannelInitialized = true;
         }
     }
 
@@ -193,7 +214,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         Vector gridFileList = new Vector();
         try {
-            gridFTPClient.setPassiveMode(true);
+            this.initializeDataChannel();
             Enumeration list = gridFTPClient.list().elements();
             while (list.hasMoreElements()) {
                 gridFileList.add(createGridFile((FileInfo) list.nextElement()));
@@ -288,7 +309,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void get(String remoteFileName, DataSink sink,
             MarkerListener mListener) throws FileResourceException {
         try {
-            gridFTPClient.setPassiveMode(true);
+            initializeDataChannel();
             gridFTPClient.get(remoteFileName, sink, mListener);
         }
         catch (Exception e) {
@@ -300,7 +321,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void get(String remoteFileName, File localFile)
             throws FileResourceException {
         try {
-            gridFTPClient.setPassiveMode(true);
+            initializeDataChannel();
             gridFTPClient.get(remoteFileName, localFile);
         }
         catch (Exception e) {
@@ -320,7 +341,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             final ProgressMonitor progressMonitor) throws FileResourceException {
         File localFile = new File(localFileName);
         try {
-            gridFTPClient.setPassiveMode(true);
+            initializeDataChannel();
             final long size = localFile.length();
             DataSink sink;
             if (progressMonitor != null) {
@@ -353,7 +374,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         final File localFile = new File(localFileName);
         try {
-            gridFTPClient.setPassiveMode(true);
+            initializeDataChannel();
             final long size = localFile.length();
             DataSource source;
             if (progressMonitor != null) {
@@ -362,7 +383,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                         progressMonitor.progress(totalRead, size);
                         return super.read();
                     }
-                    
+
                     public long totalSize() {
                         return localFile.length();
                     }
@@ -387,7 +408,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             throws FileResourceException {
 
         try {
-            gridFTPClient.setPassiveMode(true);
+            initializeDataChannel();
             gridFTPClient.put(localFile, remoteFileName, append);
         }
         catch (Exception e) {
@@ -403,7 +424,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void put(DataSource source, String remoteFileName,
             MarkerListener mListener) throws FileResourceException {
         try {
-            gridFTPClient.setPassiveMode(true);
+            initializeDataChannel();
             gridFTPClient.put(remoteFileName, source, mListener);
         }
         catch (Exception e) {
@@ -487,7 +508,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             return createGridFile(e);
         }
         catch (Exception e) {
-            throw translateException("Failed to retrieve file information about " + fileName, e);
+            throw translateException(
+                    "Failed to retrieve file information about " + fileName, e);
         }
     }
 
@@ -552,7 +574,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         return gridFile;
     }
-    
+
     private GridFile createGridFile(MlsxEntry e) throws FileResourceException {
 
         GridFile gridFile = new GridFileImpl();
@@ -571,7 +593,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         if (MlsxEntry.TYPE_FILE.equals(type)) {
             gridFile.setFileType(GridFile.FILE);
         }
-        if (MlsxEntry.TYPE_DIR.equals(type) || MlsxEntry.TYPE_PDIR.equals(type) || MlsxEntry.TYPE_CDIR.equals(type)) {
+        if (MlsxEntry.TYPE_DIR.equals(type) || MlsxEntry.TYPE_PDIR.equals(type)
+                || MlsxEntry.TYPE_CDIR.equals(type)) {
             gridFile.setFileType(GridFile.DIRECTORY);
         }
 
