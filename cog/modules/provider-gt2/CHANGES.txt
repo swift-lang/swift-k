@@ -1,3 +1,9 @@
+(12/03/2007)
+
+*** Added data channel reuse mode for GridFTP if the server
+    version is 2.3. Presumably more versions support this and
+    they should eventually be added.
+
 (10/30/2007)
 
 *** Added totalSize implementation to data sources such that 

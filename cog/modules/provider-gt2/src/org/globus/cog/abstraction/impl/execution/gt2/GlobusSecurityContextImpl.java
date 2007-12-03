@@ -19,7 +19,7 @@ public class GlobusSecurityContextImpl extends SecurityContextImpl implements De
     public void setAuthorization(Authorization authorization) {
         setAttribute("authorization", authorization);
     }
-
+    
     public Authorization getAuthorization() {
         Authorization authorization = (Authorization) getAttribute("authorization");
         if (authorization == null) {
