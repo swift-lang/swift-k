@@ -1687,6 +1687,13 @@ made available to the SwiftScript program through the
     </para></listitem>
   </varlistentry>
 
+  <varlistentry><term>-runid <literal>file</literal></term>
+    <listitem><para>
+Specifies the run identifier. This must be unique for every invocation of a workflow and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier. When using this parameter, care should be taken to ensure
+that the run ID remains unique with respect to all other run IDs that might
+be used, irrespective of (at least) expected run location, workflow or user.
+    </listitem></para>
+  </varlistentry>
 
   <varlistentry><term>-tcp.port.range <literal>start,end</literal></term>
     <listitem><para>

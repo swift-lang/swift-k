@@ -1,3 +1,15 @@
+(12/03/07)
+*** Added -runid parameter that specifies the run identifier on the command
+    line, rather than having it automatically generated. This must
+    be unique for every invocation of a workflow and is used in several
+    places to keep files from different executions cleanly separated. By
+    default, a datestamp and random number are used to generate a run
+    identifier. When using this parameter, care should be taken to ensure
+    that the run ID remains unique with respect to all other run IDs that
+    might be used, irrespective of (at least) expected run location,
+    workflow or user.
+
+
 (11/23/07)
 new parameter, execution.retries to specify th number of time a job
 will be retried if it fails (giving a maximum of 1 + execution.retries

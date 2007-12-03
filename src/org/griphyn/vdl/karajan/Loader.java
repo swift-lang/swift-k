@@ -54,6 +54,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static final String ARG_VERBOSE = "verbose";
 	public static final String ARG_DEBUG = "debug";
 	public static final String ARG_LOGFILE = "logfile";
+	public static final String ARG_RUNID = "runid";
 
 	public static final String CONST_VDL_OPERATION = "vdl:operation";
 	public static final String VDL_OPERATION_RUN = "run";
@@ -95,7 +96,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
 		boolean runerror = false;
 		String projectName = projectName(project);
-		String runID = getUUID();
+
+		String runID;
+		if(ap.isPresent(ARG_RUNID)) {
+			runID = ap.getStringValue(ARG_RUNID);
+		} else {
+			runID = getUUID();
+		}
 
 		try {
 			setupLogging(ap, projectName, runID);
@@ -130,7 +137,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			tree.getRoot().setProperty(FlowElement.FILENAME, project);
 
 			VDL2ExecutionContext ec = new VDL2ExecutionContext(tree, projectName);
-            ec.setRunID(runID);
+			ec.setRunID(runID);
 			// no order
 			ec.setStdout(new PrintStreamChannel(System.out, true));
 
@@ -280,6 +287,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				"Specifies a file where log messages should go to. By default Swift "
 						+ "uses the name of the workflow being run and a numeric index (e.g. myworkflow.1.log)",
 				"file", ArgumentParser.OPTIONAL);
+		ap.addOption(
+				ARG_RUNID,
+				"Specifies the run identifier. This must be unique for every invocation of a workflow and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier.",
+				"string", ArgumentParser.OPTIONAL);
 
 		Map desc = VDL2ConfigProperties.getPropertyDescriptions();
 		Iterator i = desc.entrySet().iterator();
