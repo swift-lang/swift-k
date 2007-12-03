@@ -1188,6 +1188,24 @@ then some of the mappings produced by this example would be:
 							</para>
 						</listitem>
 					</varlistentry>
+
+					<varlistentry id="property.execution.retries">
+						<term>execution.retries</term>
+						<listitem>
+							<para>
+								Valid values: positive integers
+							</para>
+							<para>
+								Default value: 2
+							</para>
+							<para>
+								The number of time a job will be retried if it
+								fails (giving a maximum of 1 +
+								execution.retries attempts at execution)
+							</para>
+						</listitem>
+					</varlistentry>
+
 					
 					<varlistentry>
 						<term>
