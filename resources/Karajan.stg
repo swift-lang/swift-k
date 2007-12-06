@@ -122,25 +122,8 @@ $statements$
 $endif$
 >>
 
-// the 'function' template in general outputs a karajan code fragment
-// that calls a function in the vdl namespace.
-
-// there are a number of special cases:
-
-//  ii. if the 'path' or 'var' attributes are set, then special
-//      processing of parameters happens:
-//      ii.a: the 'path' attribute (if set) becomes an XML attribute
-//            to the function invocation element
-//      ii.b: if the 'var' attribute is set, then it becomes an XML
-//            attribute to the function invocation element, and processing
-//            of the body of the element does not occur.
-
-// if neither i) or ii.b) have occurred, then an XML element body is
-// constructed, using the 'value' attribute if it exists, otherwise
-// using the 'expr' attribute if it exists.
-
-// This patch can maybe move into trunk now rather than being part of the
-// XML merge?
+// the 'function' template outputs a karajan code fragment
+// that calls a function in the 'swiftscript' namespace.
 
 function(name, args) ::= <<
 <swiftscript:$name$>
