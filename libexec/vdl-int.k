@@ -363,7 +363,7 @@ namespace("vdl"
 
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
 				
-						task:execute("/bin/sh",
+						task:execute("/bin/bash",
 							list("shared/wrapper.sh", jobid,
 								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 

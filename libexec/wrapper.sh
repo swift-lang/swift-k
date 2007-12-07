@@ -1,4 +1,4 @@
-#!/bin/bash
+# this script must be invoked inside of bash, not plain sh
 
 infosection() {
 	echo >>"$INFO"
