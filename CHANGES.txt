@@ -1,3 +1,7 @@
+(12/07/07)
+*** Deprecated use of .dtm extension for source files. Use .swift instead.
+    Support for .dtm will be dropped eventually.
+
 (12/03/07)
 *** Added -runid parameter that specifies the run identifier on the command
     line, rather than having it automatically generated. This must

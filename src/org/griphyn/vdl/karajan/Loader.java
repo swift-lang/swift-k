@@ -112,6 +112,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				System.exit(4);
 			}
 
+			/** This deprecation should stay until at least after Swift 0.4 is
+			    released; sometime after that, this test and the subsequent
+			    support for .dtm extensions should be removed. */
+			if (project.endsWith(".dtm")) {
+				logger.warn("Source file extension .dtm is deprecated and will not be supported in future versions. Use .swift extension instead.");
+			}
+
 			if (project.endsWith(".dtm") || project.endsWith(".swift")) {
 				try {
 					project = compile(project);
