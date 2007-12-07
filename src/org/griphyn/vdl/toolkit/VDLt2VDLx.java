@@ -8,8 +8,8 @@ import java.net.URL;
 import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
-import org.globus.swift.parser.VDLtLexer;
-import org.globus.swift.parser.VDLtParser;
+import org.globus.swift.parser.SwiftScriptLexer;
+import org.globus.swift.parser.SwiftScriptParser;
 ;
 
 /** Commandline tool to convert the textual form of SwiftScript into
@@ -56,8 +56,8 @@ public class VDLt2VDLx {
 						templateFileName + ") not found on class path"); 
 			}
 			templates = new StringTemplateGroup(new InputStreamReader(template.openStream()));
-			VDLtLexer lexer = new VDLtLexer(in);
-			VDLtParser parser = new VDLtParser(lexer);
+			SwiftScriptLexer lexer = new SwiftScriptLexer(in);
+			SwiftScriptParser parser = new SwiftScriptParser(lexer);
 			parser.setTemplateGroup(templates);
 			StringTemplate code = parser.program();
 			out.println(code.toString());

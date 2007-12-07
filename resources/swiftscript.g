@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Iterator;
 }
 
-class VDLtParser extends Parser;
+class SwiftScriptParser extends Parser;
 
 options {
     k=2;
@@ -1007,7 +1007,7 @@ constant returns [StringTemplate code=null]
 
 // TODO ^^^^^^ array literal -- rename and rearrange the methods
 
-class VDLtLexer extends Lexer;
+class SwiftScriptLexer extends Lexer;
 
 options {
     charVocabulary = '\1'..'\377';

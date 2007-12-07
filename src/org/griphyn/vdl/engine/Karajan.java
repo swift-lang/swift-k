@@ -54,7 +54,6 @@ import org.globus.swift.language.StructureMember;
 import org.globus.swift.language.Switch.Case;
 import org.globus.swift.language.Switch.Default;
 import org.globus.swift.language.TypesDocument.Types;
-import org.griphyn.vdl.util.VDLExpression;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
 
