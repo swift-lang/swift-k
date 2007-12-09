@@ -25,7 +25,7 @@ info() {
 }
 
 logstate() {
-	echo "Progress " `date +"%Y-%m-%e %H:%M:%S%z"` " $@" >>"$INFO"
+	echo "Progress " `date +"%Y-%m-%d %H:%M:%S%z"` " $@" >>"$INFO"
 }
 
 log() {
