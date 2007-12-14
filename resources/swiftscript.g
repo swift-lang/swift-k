@@ -589,9 +589,7 @@ procedureInvocation [StringTemplate code]
         SEMI
     ;
 
-predictProcedurecallDecl
-{ StringTemplate dummy=template("call"); }
-    : ASSIGN procedureInvocation[dummy] ;
+predictProcedurecallDecl : ASSIGN ID LPAREN ;
 
 procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl]
 {
