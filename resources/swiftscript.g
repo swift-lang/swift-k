@@ -418,7 +418,6 @@ ll1statement returns [StringTemplate code=null]
     | code=foreachStat
     | code=switchStat
     | code=iterateStat
-    | code=whileStat
     | "continue" {code=template("continue");} SEMI
     | SEMI {code=template("blank");}
     ;
@@ -458,18 +457,6 @@ foreachStat returns [StringTemplate code=template("foreach")]
         if (indexId != null) {
            code.setAttribute("index", indexId.getText());
         }
-    }
-    compoundStat[body] {code.setAttribute("body", body);}
-    ;
-
-whileStat returns [StringTemplate code=template("while")]
-{
-  StringTemplate cond=null;
-  StringTemplate body=template("statementList");
-}
-    :  "while" LPAREN cond=expression RPAREN
-    {
-    code.setAttribute("cond", cond);
     }
     compoundStat[body] {code.setAttribute("body", body);}
     ;

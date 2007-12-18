@@ -1,3 +1,8 @@
+(12/18/07)
+*** Complete removal of "while" statements from the language.
+    They do not seem to have a use, and haven't worked for some months
+    due to their removal from the XML intermediate form.
+
 (12/07/07)
 *** Deprecated use of .dtm extension for source files. Use .swift instead.
     Support for .dtm will be dropped eventually.

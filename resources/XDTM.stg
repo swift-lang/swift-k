@@ -250,12 +250,6 @@ $else$
 $endif$
 >>
 
-while(cond,body) ::= <<
-<while test="$cond$">
-  $body$
-</while>
->>
-
 iterate(cond,body,var) ::= <<
 <iterate var="$var$">
   <body>
