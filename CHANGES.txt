@@ -1,4 +1,8 @@
 (12/18/07)
+*** r1214 made type specification illegal in a foreach but still recognised it
+    and threw an error.  This commit removes recognition of that from the
+    parser entirely (as was intended to eventually happen when r1214 was made)
+
 *** Complete removal of "while" statements from the language.
     They do not seem to have a use, and haven't worked for some months
     due to their removal from the XML intermediate form.

@@ -444,14 +444,11 @@ ifStat returns [StringTemplate code=template("if")]
 
 foreachStat returns [StringTemplate code=template("foreach")]
 {
-  StringTemplate ds=null, t=null;
+  StringTemplate ds=null;
   StringTemplate body=template("statementList");
 }
-    :  "foreach" (t=type)? id:ID (COMMA indexId:ID)? "in" ds=expression
+    :  "foreach" id:ID (COMMA indexId:ID)? "in" ds=expression
     {
-        if (t != null) {
-            throw new SemanticException("Type specification of foreach iteration variable no longer supported. Remove it and recompile.");
-        }
         code.setAttribute("var", id.getText());
         code.setAttribute("in", ds);
         if (indexId != null) {
