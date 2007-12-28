@@ -10,5 +10,12 @@
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="provider-dcache"/>
 		</ant>
+		<antcall target="provider-deef"/>
+	</target>
+	
+	<target name="provider-deef" if="with-provider-deef">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-deef"/>
+		</ant>
 	</target>
 </project>
