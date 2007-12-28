@@ -166,6 +166,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     private void append(StringBuffer sb, String str) {
+        if (str.length() == 0) {
+            sb.append("\"\"");
+        }
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
             if (c < 256 && c > 0 && ESCAPE[c]) {
