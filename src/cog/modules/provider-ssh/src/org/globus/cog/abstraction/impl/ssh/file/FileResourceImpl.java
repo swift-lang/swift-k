@@ -72,12 +72,12 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public void start() throws InvalidSecurityContextException,
             FileResourceException {
+        String host = getServiceContact().getHost();
+        int port = getServiceContact().getPort();
+        if (port == -1) {
+            port = 22;
+        }
         try {
-            String host = getServiceContact().getHost();
-            int port = getServiceContact().getPort();
-            if (port == -1) {
-                port = 22;
-            }
             channel = SSHChannelManager.getDefault().getChannel(host, port,
                     getSecurityContext().getCredentials());
             id = channel.getBundle().getId();
@@ -94,7 +94,8 @@ public class FileResourceImpl extends AbstractFileResource {
         }
         catch (Exception se) {
             throw translateException(
-                    "Error while communicating with the SSH server on " + id, se);
+                    "Error while communicating with the SSH server on " + host
+                            + ":" + port, se);
         }
     }
 
@@ -381,7 +382,7 @@ public class FileResourceImpl extends AbstractFileResource {
             }
             else {
                 throw translateException(
-                    "Cannot determine the existence of the file", e);
+                        "Cannot determine the existence of the file", e);
             }
         }
     }
