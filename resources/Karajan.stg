@@ -185,16 +185,16 @@ $expr$
 $endif$
 >>
 
-variable(name,type,isArray,expr,mapping,nil,file) ::= <<
+variable(name,type,isArray,expr,mapping,nil,file,waitfor) ::= <<
 <set name="$name$">
   $if(mapping)$
-  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
-    $vdl_mapping(mapping=mapping,file=file)$
+  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
+    $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
   </vdl:new>
   $else$
     $if(file)$
-      <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$>
-        $vdl_mapping(mapping=mapping,file=file)$
+      <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
+        $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
       </vdl:new>
     $else$
       $expr$
@@ -203,15 +203,21 @@ variable(name,type,isArray,expr,mapping,nil,file) ::= <<
 </set>
 >>
 
-vdl_mapping(mapping,file) ::= <<
+vdl_mapping(mapping,file,waitfor) ::= <<
 $if(file)$
 <vdl:mapping descriptor="single_file_mapper">
   <vdl:parameter name="file" value="$file.name$"/>
   $if(file.params)$$file.params;separator="\n"$$endif$
+  $if(!waitfor)$
+  <vdl:parameter name="input" value="true" />
+  $endif$
 </vdl:mapping>
 $else$
 <vdl:mapping descriptor="$mapping.descriptor$">
   $mapping.params;separator="\n"$
+  $if(!waitfor)$
+  <vdl:parameter name="input" value="true" />
+  $endif$
 </vdl:mapping>
 $endif$
 >>
@@ -306,6 +312,21 @@ $endif$
   </if>
 </sequential>
 >>
+
+// TODO can optimise this like we do with parallel statements so that
+// the wrapping layer disappers in the (perhaps common?) case of a
+// single layer.
+sequential(statements) ::= <<
+  <sequential>
+    $statements;separator="\n"$
+  </sequential>
+>>
+
+
+partialclose(var, closeID) ::= <<
+  <partialCloseDataset var="{$var$}" closeID="$closeID$" />
+>>
+
 
 
 operator ::= [

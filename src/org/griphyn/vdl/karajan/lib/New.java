@@ -25,10 +25,11 @@ public class New extends VDLFunction {
 	public static final Arg OA_MAPPING = new Arg.Optional("mapping", null);
 	public static final Arg OA_VALUE = new Arg.Optional("value", null);
 	public static final Arg OA_DBGNAME = new Arg.Optional("dbgname", null);
+	public static final Arg OA_WAITFOR = new Arg.Optional("waitfor", null);
 
 	static {
 		setArguments(New.class,
-				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_ISARRAY, OA_DBGNAME, });
+				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_ISARRAY, OA_DBGNAME, OA_WAITFOR, });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
@@ -37,6 +38,7 @@ public class New extends VDLFunction {
 		Map mapping = (Map) OA_MAPPING.getValue(stack);
 		boolean isArray = TypeUtil.toBoolean(OA_ISARRAY.getValue(stack));
 		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
+		String waitfor = (String) OA_WAITFOR.getValue(stack);
 
 		if (mapping == null) {
 			mapping = new HashMap();
@@ -45,6 +47,11 @@ public class New extends VDLFunction {
 		if (dbgname != null) {
 			mapping.put("dbgname", dbgname);
 		}
+
+		if(waitfor != null) {
+			mapping.put("waitfor", waitfor);
+		}
+
 		if (typename == null && value == null) {
 			throw new ExecutionException("You must specify either a type or a value");
 		}

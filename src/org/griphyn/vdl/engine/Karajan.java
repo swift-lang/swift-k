@@ -62,6 +62,11 @@ public class Karajan {
 	
 	public static final String TEMPLATE_FILE_NAME = "Karajan.stg"; 
 
+	/** an arbitrary statement identifier. Start at some high number to
+	    aid visual distinction in logs, but the actual value doesn't
+		matter. */
+	int callID = 88000;
+
 	StringTemplateGroup m_templates;
 
 	public static void main(String[] args) throws Exception {
@@ -127,22 +132,23 @@ public class Karajan {
 	}
 
 	public StringTemplate program(Program prog) throws Exception {
-		StringTemplate progST = template("program");
+		VariableScope scope = new VariableScope(this, null);
+		scope.bodyTemplate = template("program");
 
-		progST.setAttribute("types", prog.getTypes());
+		scope.bodyTemplate.setAttribute("types", prog.getTypes());
 
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
 			Procedure proc = prog.getProcedureArray(i);
-			procedure(proc, progST);
+			procedure(proc, scope);
 		}
 
-		statements(prog, progST);
-		return progST;
+		statements(prog, scope);
+		return scope.bodyTemplate;
 	}
 
-	public void procedure(Procedure proc, StringTemplate progST) throws Exception {
+	public void procedure(Procedure proc, VariableScope outerScope) throws Exception {
 		StringTemplate procST = template("procedure");
-		progST.setAttribute("procedures", procST);
+		outerScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("name", proc.getName());
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
@@ -168,7 +174,9 @@ public class Karajan {
 			binding(bind, procST);
 		}
 		else {
-			statements(proc, procST);
+			VariableScope scope = new VariableScope(this, null);
+			scope.bodyTemplate = procST;
+			statements(proc, scope);
 		}
 
 	}
@@ -186,9 +194,9 @@ public class Karajan {
 		return paramST;
 	}
 
-	public void variable(Variable var, StringTemplate progST) throws Exception {
+	public void variable(Variable var, VariableScope scope) throws Exception {
 		StringTemplate variableST = template("variable");
-		progST.setAttribute("declarations", variableST);
+		scope.bodyTemplate.setAttribute("declarations", variableST);
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
 		variableST.setAttribute("isArray", Boolean.valueOf(var.getIsArray1()));
@@ -207,11 +215,12 @@ public class Karajan {
 			variableST.setAttribute("mapping", mappingST);
 			variableST.setAttribute("nil", Boolean.TRUE);
 		}
+		scope.addVariable(var.getName());
 	}
 
-	public void dataset(Dataset dataset, StringTemplate progST) throws Exception {
+	public void dataset(Dataset dataset, VariableScope scope) throws Exception {
 		StringTemplate datasetST = template("variable");
-		progST.setAttribute("declarations", datasetST);
+		scope.bodyTemplate.setAttribute("declarations", datasetST);
 		datasetST.setAttribute("name", dataset.getName());
 		datasetST.setAttribute("type", dataset.getType().getLocalPart());
 		if (dataset.isSetIsArray1()) {
@@ -237,64 +246,51 @@ public class Karajan {
 			}
 			datasetST.setAttribute("mapping", mappingST);
 		}
+		scope.addVariable(dataset.getName());
 	}
 
-	public void assign(Assign assign, StringTemplate progST) throws Exception {
+	public void assign(Assign assign, VariableScope scope) throws Exception {
 		StringTemplate assignST = template("assign");
-		progST.setAttribute("declarations", assignST);
 		assignST.setAttribute("var", expressionToKarajan(assign.getAbstractExpressionArray(0)));
 		assignST.setAttribute("value", expressionToKarajan(assign.getAbstractExpressionArray(1)));
+		String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
+		scope.addWriter(rootvar, new Integer(callID++));
+		scope.appendStatement(assignST);
 	}
 
-	public void statements(XmlObject prog, StringTemplate progST) throws Exception {
+	public void statements(XmlObject prog, VariableScope scope) throws Exception {
 		XmlCursor cursor = prog.newCursor();
 		cursor.selectPath("*");
 
 		while (cursor.toNextSelection()) {
 			XmlObject child = cursor.getObject();
-			statement(child, progST);
+			statement(child, scope);
 		}
 	}
 
-	public void statement(XmlObject child, StringTemplate progST) throws Exception {
-		StringTemplate st = null;
+	public void statement(XmlObject child, VariableScope scope) throws Exception {
 		if (child instanceof Variable) {
-			variable((Variable) child, progST);
+			variable((Variable) child, scope);
 		}
 		else if (child instanceof Dataset) {
-			dataset((Dataset) child, progST);
+			dataset((Dataset) child, scope);
 		}
 		else if (child instanceof Assign) {
-			assign((Assign) child, progST);
+			assign((Assign) child, scope);
 		}
 		else if (child instanceof Call) {
-			Call call = (Call) child;
-			st = template("call");
-			progST.setAttribute("statements", st);
-			call(call, st);
+			call((Call) child, scope);
 		}
 		else if (child instanceof Foreach) {
-			Foreach foreach = (Foreach) child;
-			st = template("foreach");
-			progST.setAttribute("statements", st);
-			foreachStat(foreach, st);
+			foreachStat((Foreach)child, scope);
 		}
 		else if (child instanceof Iterate) {
-			Iterate iterate = (Iterate) child;
-			st = template("iterate");
-			progST.setAttribute("statements",st);
-			iterateStat(iterate, st);
+			iterateStat((Iterate)child, scope);
 		}
 		else if (child instanceof If) {
-			If ifstat = (If) child;
-			st = template("if");
-			progST.setAttribute("statements", st);
-			ifStat(ifstat, st);
+			ifStat((If)child, scope);
 		} else if (child instanceof Switch) {
-			Switch switchstat = (Switch) child;
-			st = template("switch");
-			progST.setAttribute("statements", st);
-			switchStat(switchstat, st);
+			switchStat((Switch) child, scope);
 		} else if (child instanceof Procedure
 			|| child instanceof Types
 			|| child instanceof Continue
@@ -306,87 +302,133 @@ public class Karajan {
 		}
 	}
 
-	public void call(Call call, StringTemplate callST) throws Exception {
+	public void call(Call call, VariableScope scope) throws Exception {
+		StringTemplate callST = template("call");
 		callST.setAttribute("func", call.getProc().getLocalPart());
 		StringTemplate parentST = callST.getEnclosingInstance();
 		for (int i = 0; i < call.sizeOfInputArray(); i++) {
 			ActualParameter input = call.getInputArray(i);
 			StringTemplate argST = actualParameter(input);
 			callST.setAttribute("inputs", argST);
-			markDataset((StringTemplate) argST.getAttribute("expr"), parentST, true);
 		}
 		for (int i = 0; i < call.sizeOfOutputArray(); i++) {
 			ActualParameter output = call.getOutputArray(i);
 			StringTemplate argST = actualParameter(output);
 			callST.setAttribute("outputs", argST);
-			markDataset((StringTemplate) argST.getAttribute("expr"), parentST, false);
+			String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
+			scope.addWriter(rootvar, new Integer(callID++));
 		}
+
+		// scope.bodyTemplate.setAttribute("statements", callST);
+
+// TODO - I think the lack of parent before this point messes up dataset
+// marking (or at least it has potential to).
+		scope.appendStatement(callST);
 	}
 
-	public void iterateStat(Iterate iterate, StringTemplate iterateST) throws Exception {
+	public void iterateStat(Iterate iterate, VariableScope scope) throws Exception {
+		VariableScope innerScope = new VariableScope(this, scope);
+		StringTemplate iterateST = template("iterate");
+
 		XmlObject cond = iterate.getAbstractExpression();
 		StringTemplate condST = expressionToKarajan(cond);
-		markDataset(condST, iterateST, true);
 		iterateST.setAttribute("cond", condST);
 		iterateST.setAttribute("var", iterate.getVar());
-		statements(iterate.getBody(), iterateST);
+		innerScope.addVariable(iterate.getVar());
+		innerScope.bodyTemplate = iterateST;
+
+		statements(iterate.getBody(), innerScope);
+
+		Object statementID = new Integer(callID++);
+		Iterator scopeIterator = innerScope.getVariableIterator();
+		while(scopeIterator.hasNext()) {
+			String v=(String) scopeIterator.next();
+			scope.addWriter(v, statementID);
+		}
+		scope.appendStatement(iterateST);
 	}
 
+	public void foreachStat(Foreach foreach, VariableScope scope) throws Exception {
+		VariableScope innerScope = new VariableScope(this, scope);
 
-	public void foreachStat(Foreach foreach, StringTemplate foreachST) throws Exception {
+		StringTemplate foreachST = template("foreach");
 		foreachST.setAttribute("var", foreach.getVar());
+		innerScope.addVariable(foreach.getVar());
 		foreachST.setAttribute("indexVar", foreach.getIndexVar());
+		if(foreach.getIndexVar() !=null) {
+			innerScope.addVariable(foreach.getIndexVar());
+		}
 		XmlObject in = foreach.getIn().getAbstractExpression();
 		StringTemplate inST = expressionToKarajan(in);
-		markDataset(inST, foreachST, true);
 		foreachST.setAttribute("in", inST);
-		statements(foreach.getBody(), foreachST);
+
+		innerScope.bodyTemplate = foreachST;
+
+		statements(foreach.getBody(), innerScope);
+
+		Object statementID = new Integer(callID++);
+		Iterator scopeIterator = innerScope.getVariableIterator();
+		while(scopeIterator.hasNext()) {
+			String v=(String) scopeIterator.next();
+			scope.addWriter(v, statementID);
+		}
+		scope.appendStatement(foreachST);
+
 	}
 
-	public void ifStat(If ifstat, StringTemplate ifST) throws Exception {
+	public void ifStat(If ifstat, VariableScope scope) throws Exception {
+		StringTemplate ifST = template("if");
+		scope.bodyTemplate.setAttribute("statements", ifST);
 		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression());
 		ifST.setAttribute("condition", conditionST.toString());
 
 		Then thenstat = ifstat.getThen();
 		Else elsestat = ifstat.getElse();
-		StringTemplate thenST = template("sub_comp");
-		ifST.setAttribute("vthen", thenST);
 
-		statements(thenstat, thenST);
+		VariableScope innerThenScope = new VariableScope(this, scope);
+		innerThenScope.bodyTemplate = template("sub_comp");
+		ifST.setAttribute("vthen", innerThenScope.bodyTemplate);
 
-		if (elsestat == null)
-			return;
+		statements(thenstat, innerThenScope);
 
-		StringTemplate elseST = template("sub_comp");
-		ifST.setAttribute("velse", elseST);
+		if (elsestat != null) {
 
-		statements(elsestat, elseST);
+			VariableScope innerElseScope = new VariableScope(this, scope);
+			innerElseScope.bodyTemplate = template("sub_comp");
+			ifST.setAttribute("velse", innerElseScope.bodyTemplate);
+
+			statements(elsestat, innerElseScope);
+		}
 
 	}
 
-	public void switchStat(Switch switchstat, StringTemplate switchST) throws Exception {
+	public void switchStat(Switch switchstat, VariableScope scope) throws Exception {
+		StringTemplate switchST = template("switch");
+		scope.bodyTemplate.setAttribute("statements", switchST);
 		StringTemplate conditionST = expressionToKarajan(switchstat.getAbstractExpression());
 		switchST.setAttribute("condition", conditionST.toString());
 
 		for (int i=0; i< switchstat.sizeOfCaseArray(); i++) {
 			Case casestat = switchstat.getCaseArray(i);
-			StringTemplate caseST = new StringTemplate("case");
-			switchST.setAttribute("cases", caseST);
-			caseStat(casestat, caseST);
+			VariableScope caseScope = new VariableScope(this, scope);
+			caseScope.bodyTemplate = new StringTemplate("case");
+			switchST.setAttribute("cases", caseScope.bodyTemplate);
+			
+			caseStat(casestat, caseScope);
 		}
 		Default defaultstat = switchstat.getDefault();
-		if (defaultstat == null)
-			return;
-		StringTemplate defaultST = template("sub_comp");
-		switchST.setAttribute("sdefault", defaultST);
-
-		statements(defaultstat, defaultST);
+		if (defaultstat != null) {
+			VariableScope defaultScope = new VariableScope(this, scope);
+			defaultScope.bodyTemplate = template("sub_comp");
+			switchST.setAttribute("sdefault", defaultScope.bodyTemplate);
+			statements(defaultstat, defaultScope);
+		}
 	}
 
-	public void caseStat(Case casestat, StringTemplate caseST) throws Exception {
+	public void caseStat(Case casestat, VariableScope scope) throws Exception {
 		StringTemplate valueST = expressionToKarajan(casestat.getAbstractExpression());
-		caseST.setAttribute("value", valueST.toString());
-		statements(casestat.getStatements(), caseST);
+		scope.bodyTemplate.setAttribute("value", valueST.toString());
+		statements(casestat.getStatements(), scope);
 	}
 
 	public StringTemplate actualParameter(ActualParameter arg) throws Exception {
@@ -582,279 +624,25 @@ public class Karajan {
 		}
 	}
 
-
-	/** Traverses an expression template marking input datasets as such.
-	  *
-	  * If the expression is an identifier, get the variable name
-	  * and call markDataset on that.
-	  *
-	  * Otherwise, go through all the subelements of expr
-	  * and call markdataset on them, keeping st and isInput the
-	  * same.
-	  *
-	  * @param exprST an expression
-	  *
-	  * @param st a program context
-	  *
-	  * @param isInput whether the expression is to be regarded as 
-	  *        an input or an output
-	  **/
-
-	protected void markDataset(StringTemplate exprST, StringTemplate st, boolean isInput) {
-		if(logger.isDebugEnabled()) logger.debug("markDataset exprST="+exprST+" st="+st+" input="+isInput);
-		if (exprST == null || st == null)
-			return;
-		if (exprST.getName().equals("id")) {
-			// variable reference, mark the variable
-			logger.debug("treating as a variable");
-			String var = (String) exprST.getAttribute("var");
-			markDataset(var, st, isInput);
-		} else if(exprST.getName().equals("in")) {
-			markDataset((String) exprST.getAttribute("var"), st, isInput);
+	public String abstractExpressionToRootVariable(XmlObject expression) {
+		Node expressionDOM = expression.getDomNode();
+		String namespaceURI = expressionDOM.getNamespaceURI();
+		String localName = expressionDOM.getLocalName();
+		QName expressionQName = new QName(namespaceURI, localName);
+		if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
+			XmlString xmlString = (XmlString) expression;
+			String s = xmlString.getStringValue();
+			return s;
+		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
+			BinaryOperator op = (BinaryOperator) expression;
+			return abstractExpressionToRootVariable(op.getAbstractExpressionArray(0));
+		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
+			StructureMember sm = (StructureMember) expression;
+			return abstractExpressionToRootVariable(sm.getAbstractExpression());
 		} else {
-			// an expression, mark all subelements
-			Map subSTMap = exprST.getAttributes();
-			for (Iterator it = subSTMap.values().iterator(); it.hasNext();) {
-				Object sub = it.next();
-				if (sub instanceof StringTemplate)
-					markDataset((StringTemplate) sub, st, isInput);
-			}
+			throw new RuntimeException("Could not find root for abstract expression.");
 		}
 	}
 
 
-	/** Mark datasets given a name rather than an expr. 
-	  * (c.f.  markdataset which takes StringTemplate as first parameter).
-	  *
-	  * If 'st' is a foreach statement and 'name' is the name of the
-	  * iteration variable of the foreach statement, we mark the
-	  * input variable rather than continuing with the rest of the procedure.
-	  *
-	  * Otherwise, we go through the <em>declarations</em> in the 'st'
-	  * enclosing structure (if the enclosing structure has any or is a
-	  * declaration set?) and consider each declaration in turn to see if
-	  * its an assign, a variable or a dataset. In the case of a dataset,
-	  * recurse on the dataset parameters.
-	  *
-	  * If it is any of those, we call
-	  * <code>markDataset</code> on the particular declaration and then return.
-	  *
-	  * Otherwise, if 'st' is a procedure we give up and return
-	  *
-	  * Otherwise, we find the structure the encloses 'st' and recurse
-	  * over that greater scope.
-	  *
-	  * @param name the name of variable to mark. may be null.
-	  * @param st a program fragment
-	  * @param isInput whether the variable is null or not.
-	  **/
-
-	protected void markDataset(String name, StringTemplate st, boolean isInput) {
-		if (name == null || st == null)
-			return;
-
-		// check if it is an iteration variable in foreach
-		if (st.getName().equals("foreach") && name.equals(st.getAttribute("var"))) {
-			StringTemplate inST = (StringTemplate) st.getAttribute("in");
-			if (inST == null)
-				throw new RuntimeException("invalid foreach statement:\n" + st);
-			String inVar = (String) inST.getAttribute("var");
-			if (inVar == null)
-				throw new RuntimeException("invalid foreach statement:\n" + st);
-			// replace search name with in.var and go up one level
-			markDataset(inVar, st.getEnclosingInstance(), isInput);
-			return;
-		}
-
-		// check assignment/dataset/variable
-		Object decls = st.getAttribute("declarations");
-		if (decls != null) {
-			if (decls instanceof StringTemplate) {
-				StringTemplate declST = (StringTemplate) decls;
-				String declName = declST.getName();
-				if (declName.equals("assign")) {
-					// found that it is assigned
-					if (declST.getAttribute("var").equals(name)) {
-						markDatasetParam(declST, st, isInput);
-						return;
-					}
-				} else
-				if (declName.equals("variable")) {
-					if (declST.getAttribute("name").equals(name)) {
-						if (declST.getAttribute("nil") != null)
-							return;
-						markDatasetParam(declST, st, isInput);
-						return;
-					}
-				} else
-				if (declName.equals("dataset")) {
-					throw new RuntimeException("dataset template is unsupported");
-				}
-			}
-			else {
-				// a list of declarations
-				Iterator it = ((List) decls).iterator();
-				while (it.hasNext()) {
-					StringTemplate declST = (StringTemplate) it.next();
-					if (declST.getName().equals("assign")) {
-						// found that it is assigned
-						if (declST.getAttribute("var").equals(name)) {
-							markDatasetParam(declST, st, isInput);
-							return;
-						}
-					}
-				}
-				it = ((List) decls).iterator();
-				while (it.hasNext()) {
-					StringTemplate declST = (StringTemplate) it.next();
-					String declName = declST.getName();
-					if (declName.equals("variable")) {
-						if (declST.getAttribute("name").equals(name)) {
-							if (declST.getAttribute("nil") != null)
-								return;
-							markDatasetParam(declST, st, isInput);
-							return;
-						}
-					} else 
-					if (declName.equals("dataset")) {
-						throw new RuntimeException("dataset template is unsupported");
-					}
-				}
-			}
-		}
-
-		// for procedures, no need to go up.
-		if (st.getName().equals("procedure"))
-			return;
-
-		// not found, go up one level
-		StringTemplate parentST = st.getEnclosingInstance();
-		markDataset(name, parentST, isInput);
-	}
-
-	/** mark all the dataset references in a function as input. */
-
-	protected void markFunction(StringTemplate funcST, StringTemplate st) {
-		Object expr = funcST.getAttribute("expr");
-		if (expr == null)
-			return;
-		
-		if (expr instanceof StringTemplate) {
-			StringTemplate exprST = (StringTemplate) expr;
-			markDataset(exprST, st, true);
-		} else {
-			// a list of functions
-			Iterator it = ((List) expr).iterator();
-			while (it.hasNext()) {
-				StringTemplate subFuncST = (StringTemplate) it.next();
-				markFunction(subFuncST, st);
-			}
-		}
-	}
-
-	/** Marks parameters of dataset declarations.
-	  *
-	  * If there is a parameter labelled 'input' and this method
-	  * is called with isInput false, then that parameter will be
-	  * replaced by one indicating that this is not an input.  If
-	  * we reach the end of the parameters without finding an 'input',
-	  * then we create one.
-	  *
-	  * For other parameters, markDataset will be recursed into,
-	  * indicating each parameter is an input (rather than passing
-	  * through the supplied 'isInput' value).
-	  *
-	  * This method mutates the template structures, and is the only one 
-	  * to do so.
-	  **/
-
-	protected void markDatasetParam(StringTemplate datasetST, StringTemplate st, boolean isInput) {
-		logger.debug("markdatasetparam(3)");
-		if (datasetST == null) {
-			logger.debug("null dataset - returning. (5)");
-			return;
-		}
-
-		// process file mapping
-		StringTemplate mappingST = (StringTemplate) datasetST.getAttribute("file");
-		if (mappingST == null) {
-			mappingST = (StringTemplate) datasetST.getAttribute("mapping");
-			if (mappingST == null) {
-				logger.debug("dataset mapping and file are both null (6)");
-				return;
-			}
-		}
-
-		// mark input as true or false accordingly
-		Boolean value = new Boolean(isInput);
-
-		Object params = mappingST.getAttribute("params");
-		if (params != null) {
-			if(logger.isDebugEnabled()) logger.debug("we have some parameter(s) to process (7): "+params);
-			if (params instanceof StringTemplate) {
-				if(logger.isDebugEnabled()) logger.debug("we have just one parameter to process(8)");
-				StringTemplate paramST = (StringTemplate) params;
-				if (paramST.getAttribute("name").equals("input")) {
-					logger.debug("name is input");
-					if (!isInput) {
-						logger.debug("it is not an input(4)");
-						// mark as false
-						paramST.removeAttribute("expr");
-						paramST.setAttribute("expr", new Boolean(false));
-					} else {
-						logger.debug("it is an input(4)");
-					}
-					return;
-				} else {
-					// always try to mark references at the RHS of a mapper as input
-					StringTemplate exprST = (StringTemplate)paramST.getAttribute("expr");
-					if (exprST != null) {
-						markDataset(exprST, st, true);
-					} else {
-						StringTemplate funcST = (StringTemplate)paramST.getAttribute("func");
-						if (funcST != null) {
-							markFunction(funcST, st);
-						}
-					}
-				}
-			}
-			else {
-				logger.debug("we have a list of parameters to process(9)");
-				// a list of params
-				Iterator it = ((List) params).iterator();
-				while (it.hasNext()) {
-					StringTemplate paramST = (StringTemplate) it.next();
-					boolean foundInput = false;
-					if (paramST.getAttribute("name").equals("input")) {
-						if (!isInput) {
-							// mark as false
-							paramST.removeAttribute("expr");
-							paramST.setAttribute("expr", new Boolean(false));
-						}
-						foundInput = true;
-					} else {
-						// always try to mark references at the RHS of a mapper as input
-						StringTemplate exprST = (StringTemplate)paramST.getAttribute("expr");
-						if (exprST != null) {
-							markDataset(exprST, st, true);
-						} else {
-							StringTemplate funcST = (StringTemplate)paramST.getAttribute("func");
-							if (funcST != null) {
-								markFunction(funcST, st);
-							}
-						}
-					}
-					if (foundInput) {
-						return;
-					}
-				}
-			}
-		} else {
-			logger.debug("we have no parameter(s) to process (9)");
-		}
-		StringTemplate iparamST = template("vdl_parameter");
-		iparamST.setAttribute("name", "input");
-		iparamST.setAttribute("expr", value);
-		mappingST.setAttribute("params", iparamST);
-	}
 }
