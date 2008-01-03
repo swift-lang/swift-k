@@ -279,21 +279,29 @@ mapparam returns [StringTemplate code=template("mapParam")]
     }
     ;
 
-// this goes as far as the LCURLY so that we don't mistake it for
-// a function invocation. with more thought can be made shorter, perhaps.
+// This predicts in two different ways.
+// The first choice is procedures with no return parameters. For these,
+// we must predict as far as the opening { in order to distinguish
+// from procedure calls to procedures with no return parameters.
+// The second choice is for procedures with return parameters. Here we
+// predict as far as the bracket after the procedure name. We have to
+// predict on the return parameters, which means we won't get good
+// error reporting when there is a syntax error in there.
 predictProceduredecl
 {StringTemplate f=null;}
-    :  ( LPAREN
+    : ( id:ID LPAREN
+        ( f=formalParameter (COMMA f=formalParameter)* )?
+        RPAREN
+        LCURLY
+      )
+      |
+      (
+        LPAREN
         f=formalParameter
         (   COMMA f=formalParameter
         )*
-        RPAREN )?
-        id:ID LPAREN
-        ( f=formalParameter
-            (COMMA f=formalParameter)*
-        )?
-        RPAREN
-         LCURLY
+        RPAREN ID LPAREN
+      )
     ;
 
 proceduredecl returns [StringTemplate code=template("function")]
