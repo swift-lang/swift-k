@@ -7,7 +7,7 @@ phps: userguide.php tutorial.php tutorial-live.php quickstartguide.php reallyqui
 pdfs: userguide.pdf tutorial.pdf tutorial-live.pdf quickstartguide.pdf reallyquickstartguide.pdf languagespec.pdf languagespec-0.6.pdf
 
 %.php: %.xml
-	xsltproc formatting/swiftsh_html.xsl $<
+	xsltproc --nonet formatting/swiftsh_html.xsl $<
 	sed -e "s/index.html#/#/g" index.html >$@
 
 %.pdf: %.xml
