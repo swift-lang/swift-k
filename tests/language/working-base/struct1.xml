@@ -5,12 +5,12 @@
     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:complexType name="foo">
        <xs:sequence>
-           <xs:element name="a" type="xs:int"/>
+           <xs:element name="a" type="int"/>
          <xs:sequence minOccurs="0" maxOccurs="unbounded">
-           <xs:element name="b" type="xs:int"/>
+           <xs:element name="b" type="int"/>
          </xs:sequence>
-           <xs:element name="c" type="xs:int"/>
-           <xs:element name="d" type="xs:int"/>
+           <xs:element name="c" type="int"/>
+           <xs:element name="d" type="int"/>
        </xs:sequence>
      </xs:complexType>
     </xs:schema>

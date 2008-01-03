@@ -364,21 +364,19 @@ formalParameter returns [StringTemplate code=template("parameter")]
     )?
     ;
 
-type
-  returns [StringTemplate code=null]
-    :   code=builtInType
-    |   id:ID
+type returns [StringTemplate code=null]
+{String s = null;}
+    :
+     ( ( "int" {s="int"; } )
+     | ( "float" {s="float"; } )
+     | ( "string" {s="string"; } )
+     | ( "bool" {s="bool"; } )
+     | ( id:ID {s=id.getText();} )
+     ) 
         {
-        code=template("type_user_object");
-        code.setAttribute("name", id.getText());
+        code=template("type");
+        code.setAttribute("name", s);
         }
-    ;
-
-builtInType returns [StringTemplate code=null]
-    :    "int"   {code=template("type_int");}
-    |   "string"  {code=template("type_string");}
-    |   "float" {code=template("type_float");}
-    |   "bool" {code=template("type_bool");}
     ;
 
 compoundStat[StringTemplate code]

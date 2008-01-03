@@ -5,10 +5,10 @@
     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:complexType name="order">
        <xs:sequence>
-           <xs:element name="orderNumber" type="xs:int"/>
-           <xs:element name="description" type="xs:string"/>
+           <xs:element name="orderNumber" type="int"/>
+           <xs:element name="description" type="string"/>
          <xs:sequence minOccurs="0" maxOccurs="unbounded">
-           <xs:element name="itemNumbers" type="xs:int"/>
+           <xs:element name="itemNumbers" type="int"/>
          </xs:sequence>
        </xs:sequence>
      </xs:complexType>

@@ -4,7 +4,7 @@
   <types>
     <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
      <xs:simpleType name="file">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
     </xs:schema>
   </types>

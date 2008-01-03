@@ -4,7 +4,7 @@
   <types>
     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:simpleType name="foo">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
     </xs:schema>
   </types>

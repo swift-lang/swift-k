@@ -4,28 +4,28 @@
   <types>
     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:simpleType name="Image">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
      <xs:simpleType name="Header">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
      <xs:simpleType name="Table">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
      <xs:complexType name="DiffStruct">
        <xs:sequence>
-           <xs:element name="cntr1" type="xs:int"/>
-           <xs:element name="cntr2" type="xs:int"/>
+           <xs:element name="cntr1" type="int"/>
+           <xs:element name="cntr2" type="int"/>
            <xs:element name="plus" type="Image"/>
            <xs:element name="minus" type="Image"/>
            <xs:element name="diff" type="Image"/>
        </xs:sequence>
      </xs:complexType>
      <xs:simpleType name="TxtFile">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
      <xs:simpleType name="JPEG">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
     </xs:schema>
   </types>

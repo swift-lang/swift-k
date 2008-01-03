@@ -4,10 +4,10 @@
   <types>
     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:simpleType name="messagefile">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
      <xs:simpleType name="countfile">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
     </xs:schema>
   </types>

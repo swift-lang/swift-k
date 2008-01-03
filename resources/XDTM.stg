@@ -35,13 +35,13 @@ $if(type.name)$
 <xs:element name="$name$" type="$type$"/>
 $else$
 <xs:simpleType name="$name$">
-  <xs:restriction base="xs:$type$"/>
+  <xs:restriction base="$type$"/>
 </xs:simpleType>
 $endif$
 $else$
 $if(!members)$
 <xs:simpleType name="$name$">
-  <xs:restriction base="xs:string"/>
+  <xs:restriction base="string"/>
 </xs:simpleType>
 $else$
 <xs:complexType name="$name$">
@@ -56,10 +56,10 @@ $endif$
 memberdefinition(type,name, isArray) ::= <<
 $if(isArray)$
 <xs:sequence minOccurs="0" maxOccurs="unbounded">
-  <xs:element name="$name$" type="$if(type.name)$$type$$else$xs:$type$$endif$"/>
+  <xs:element name="$name$" type="$if(type.name)$$type$$else$$type$$endif$"/>
 </xs:sequence>
 $else$
-  <xs:element name="$name$" type="$if(type.name)$$type$$else$xs:$type$$endif$"/>
+  <xs:element name="$name$" type="$if(type.name)$$type$$else$$type$$endif$"/>
 $endif$
 >>
 
@@ -312,12 +312,7 @@ arith(op, left,right) ::= <<
 
 paren(exp) ::= "$exp$"
 
-type_int() ::= "int"
-type_string() ::= "string"
-type_float() ::= "float"
-type_bool() ::= "bool"
-
-type_user_object(name) ::= "$name$"
+type(name) ::= "$name$"
 
 variableReference(name) ::= "<variableReference>$name$</variableReference>"
 

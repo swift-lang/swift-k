@@ -4,12 +4,12 @@
   <types>
     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
      <xs:simpleType name="messagefile">
-       <xs:restriction base="xs:string"/>
+       <xs:restriction base="string"/>
      </xs:simpleType>
      <xs:complexType name="details">
        <xs:sequence>
-           <xs:element name="name" type="xs:string"/>
-           <xs:element name="pies" type="xs:int"/>
+           <xs:element name="name" type="string"/>
+           <xs:element name="pies" type="int"/>
        </xs:sequence>
      </xs:complexType>
     </xs:schema>
