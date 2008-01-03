@@ -602,41 +602,33 @@ container.setAttribute("statements",code);
         procedureInvocationWithoutSemi[code]
     ;
 
-
-
 procedurecallStatAssignManyReturnParam [StringTemplate s]
-{ StringTemplate code=template("call"); StringTemplate f=null;
-  StringTemplate var=null; }
+{ StringTemplate code=template("call"); }
     :
         LPAREN
-        f=returnParameter
-              {
-          code.setAttribute("outputs", f);
-          var = template("variable");
-          if(f.getAttribute("type") != null) {
-            StringTemplate nameST = (StringTemplate)f.getAttribute("name");
-            var.setAttribute("name",nameST.getAttribute("name"));
-            var.setAttribute("type",f.getAttribute("type"));
-            s.setAttribute("statements",var);
-          }
-              }
-              (   COMMA f=returnParameter
-                  {
-              code.setAttribute("outputs", f);
-              var = template("variable");
-          if(f.getAttribute("type") != null) {
-            StringTemplate nameST = (StringTemplate)f.getAttribute("name");
-            var.setAttribute("name",nameST.getAttribute("name"));
-              var.setAttribute("type",f.getAttribute("type"));
-              s.setAttribute("statements",var);
-          }
-              }
-              )*
+        procedurecallStatAssignManyReturnOutput[s,code]
+        (   COMMA procedurecallStatAssignManyReturnOutput[s,code] )*
         RPAREN
         ASSIGN
         procedureInvocation[code]
         {
             s.setAttribute("statements",code);
+        }
+    ;
+
+procedurecallStatAssignManyReturnOutput [StringTemplate s, StringTemplate code]
+{StringTemplate var = null, f = null; }
+    :
+        f=returnParameter
+        {
+            code.setAttribute("outputs", f);
+            var = template("variable");
+            if(f.getAttribute("type") != null) {
+                StringTemplate nameST = (StringTemplate)f.getAttribute("name");
+                var.setAttribute("name",nameST.getAttribute("name"));
+                var.setAttribute("type",f.getAttribute("type"));
+                s.setAttribute("statements",var);
+            }
         }
     ;
 
