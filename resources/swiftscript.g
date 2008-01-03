@@ -266,7 +266,6 @@ mapparamdecl [StringTemplate code]
 {StringTemplate p=null;}
     :  (  p=mapparam {code.setAttribute("params", p);}
           ( COMMA p=mapparam {code.setAttribute("params", p);} )*
-      (COMMA)?
        )?
     ;
 
