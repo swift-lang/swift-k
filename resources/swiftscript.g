@@ -4,6 +4,8 @@ package org.globus.swift.parser;
 import org.antlr.stringtemplate.*;
 import java.util.List;
 import java.util.Iterator;
+import antlr.Token;
+
 }
 
 class SwiftScriptParser extends Parser;
@@ -156,19 +158,28 @@ topLevelStatement[StringTemplate code]
 predictDeclaration {StringTemplate x,y;} : x=type y=declarator ;
 
 declaration [StringTemplate code]
-{StringTemplate t=null, n=null;}
+{StringTemplate t=null;}
     : t=type
-      n=declarator
+      declpart[code, t]
+      (COMMA declpart[code, t])*
+      SEMI
+    ;
+
+declpart [StringTemplate code, StringTemplate t]
+{StringTemplate n=null;}
+    :
+     n=declarator
+     (b1:LBRACK RBRACK)?
     (
-     (predictProcedurecallDecl) => procedurecallDecl[code, t, n]
-    | (variableDecl[code,null,null]) => variableDecl[code, t, n]
-    | (predictDatasetdecl) => datasetdecl[code, t, n]
+      (predictProcedurecallDecl) => procedurecallDecl[code, t, n, b1]
+    | (variableDecl[code,null,null,null]) => variableDecl[code, t, n, b1]
+    | (predictDatasetdecl) => datasetdecl[code, t, n, b1]
     )
     ;
 
-variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
+variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
 {StringTemplate v1=null, v2=null, i1=null, i2=null;}
-    :  (b1:LBRACK RBRACK)? i1=varInitializer
+    :  i1=varInitializer
 
     {
         v1 = template("variable");
@@ -180,19 +191,6 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
             v1.setAttribute("value", i1);
         code.setAttribute("statements", v1);
     }
-    ( COMMA d=declarator (b2:LBRACK RBRACK)? i2=varInitializer
-      {
-            v2 = template("variable");
-            v2.setAttribute("type", t);
-            v2.setAttribute("name", d);
-             if (b2 != null)
-               v2.setAttribute("isArray", "true");
-            if (i2 != null)
-               v2.setAttribute("value", i2);
-            code.setAttribute("statements", v2);
-          }
-    )*
-    SEMI
     ;
 
 declarator returns [StringTemplate code=null]
@@ -239,11 +237,11 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
     RBRACK
     ;
 
-predictDatasetdecl: (LBRACK RBRACK)? LT;
+predictDatasetdecl: LT;
 
-datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d]
+datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
 {StringTemplate dataset=null, m=null;}
-    :  (b1:LBRACK RBRACK)? LT (m=mappingdecl | f:STRING_LITERAL) GT SEMI
+    :  LT (m=mappingdecl | f:STRING_LITERAL) GT
     {
        dataset=template("dataset");
        dataset.setAttribute("type", t);
@@ -297,6 +295,7 @@ predictProceduredecl
         RPAREN
          LCURLY
     ;
+
 proceduredecl returns [StringTemplate code=template("function")]
 {StringTemplate f=null;}
     :  ( LPAREN
@@ -555,6 +554,12 @@ procedurecallCode returns [StringTemplate code=template("call")]
     ;
 
 procedureInvocation [StringTemplate code]
+    :
+        procedureInvocationWithoutSemi[code]
+        SEMI
+    ;
+
+procedureInvocationWithoutSemi [StringTemplate code]
 {StringTemplate f=null;}
     :
         id:ID {code.setAttribute("func", id.getText());}
@@ -570,19 +575,19 @@ procedureInvocation [StringTemplate code]
             )*
         )?
         RPAREN
-        SEMI
     ;
 
 predictProcedurecallDecl : ASSIGN ID LPAREN ;
 
-procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl]
+procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl, Token b1]
 {
 StringTemplate code=template("call");
 StringTemplate f=template("returnParam");
-
 StringTemplate var = template("variable");
 var.setAttribute("name", decl);
 var.setAttribute("type", type);
+if (b1 != null)
+    var.setAttribute("isArray", "true");
 container.setAttribute("statements", var);
 
 StringTemplate declref=template("variableReference");
@@ -594,7 +599,7 @@ container.setAttribute("statements",code);
 }
     :
         ASSIGN
-        procedureInvocation[code]
+        procedureInvocationWithoutSemi[code]
     ;
 
 
