@@ -250,59 +250,59 @@ public class Karajan {
 		XmlCursor cursor = prog.newCursor();
 		cursor.selectPath("*");
 
-		// iterate over the selection
 		while (cursor.toNextSelection()) {
-			// two views of the same data:
-			// move back and forth between XmlObject <-> XmlCursor
 			XmlObject child = cursor.getObject();
+			statement(child, progST);
+		}
+	}
 
-			StringTemplate st = null;
-			if (child instanceof Variable) {
-				variable((Variable) child, progST);
-			}
-			else if (child instanceof Dataset) {
-				dataset((Dataset) child, progST);
-			}
-			else if (child instanceof Assign) {
-				assign((Assign) child, progST);
-			}
-			else if (child instanceof Call) {
-				Call call = (Call) child;
-				st = template("call");
-				progST.setAttribute("statements", st);
-				call(call, st);
-			}
-			else if (child instanceof Foreach) {
-				Foreach foreach = (Foreach) child;
-				st = template("foreach");
-				progST.setAttribute("statements", st);
-				foreachStat(foreach, st);
-			}
-			else if (child instanceof Iterate) {
-				Iterate iterate = (Iterate) child;
-				st = template("iterate");
-				progST.setAttribute("statements",st);
-				iterateStat(iterate, st);
-			}
-			else if (child instanceof If) {
-				If ifstat = (If) child;
-				st = template("if");
-				progST.setAttribute("statements", st);
-				ifStat(ifstat, st);
-			} else if (child instanceof Switch) {
-				Switch switchstat = (Switch) child;
-				st = template("switch");
-				progST.setAttribute("statements", st);
-				switchStat(switchstat, st);
-			} else if (child instanceof Procedure
-				|| child instanceof Types
-				|| child instanceof Continue
-				|| child instanceof FormalParameter) {
-				// ignore these - they're expected but we don't need to
-				// do anything for them here
-			} else {
-				throw new RuntimeException("Unexpected element in XML. Implementing class "+child.getClass()+", content "+child);
-			}
+	public void statement(XmlObject child, StringTemplate progST) throws Exception {
+		StringTemplate st = null;
+		if (child instanceof Variable) {
+			variable((Variable) child, progST);
+		}
+		else if (child instanceof Dataset) {
+			dataset((Dataset) child, progST);
+		}
+		else if (child instanceof Assign) {
+			assign((Assign) child, progST);
+		}
+		else if (child instanceof Call) {
+			Call call = (Call) child;
+			st = template("call");
+			progST.setAttribute("statements", st);
+			call(call, st);
+		}
+		else if (child instanceof Foreach) {
+			Foreach foreach = (Foreach) child;
+			st = template("foreach");
+			progST.setAttribute("statements", st);
+			foreachStat(foreach, st);
+		}
+		else if (child instanceof Iterate) {
+			Iterate iterate = (Iterate) child;
+			st = template("iterate");
+			progST.setAttribute("statements",st);
+			iterateStat(iterate, st);
+		}
+		else if (child instanceof If) {
+			If ifstat = (If) child;
+			st = template("if");
+			progST.setAttribute("statements", st);
+			ifStat(ifstat, st);
+		} else if (child instanceof Switch) {
+			Switch switchstat = (Switch) child;
+			st = template("switch");
+			progST.setAttribute("statements", st);
+			switchStat(switchstat, st);
+		} else if (child instanceof Procedure
+			|| child instanceof Types
+			|| child instanceof Continue
+			|| child instanceof FormalParameter) {
+			// ignore these - they're expected but we don't need to
+			// do anything for them here
+		} else {
+			throw new RuntimeException("Unexpected element in XML. Implementing class "+child.getClass()+", content "+child);
 		}
 	}
 
