@@ -150,12 +150,12 @@ public interface Type {
 			return new TypeImpl();
 		}
 
-		public static Type createType(String name, boolean primitive, boolean array) {
-			return new TypeImpl(name, primitive, array);
+		public static Type createType(String name, boolean primitive) {
+			return new TypeImpl(name, primitive);
 		}
 
-		public static Type createType(String namespace, String name, boolean primitive, boolean array) {
-			return new TypeImpl(namespace, name, primitive, array);
+		public static Type createType(String namespace, String name, boolean primitive) {
+			return new TypeImpl(namespace, name, primitive);
 		}
 
 	}

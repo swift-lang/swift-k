@@ -13,37 +13,34 @@ import org.griphyn.vdl.type.Type;
 public class TypeImpl extends UnresolvedType {
 	private boolean primitive;
 	private Map fields;
-	private Type baseType, arrayType;
+	private Type baseType;
 
 	public TypeImpl() {
-		this((URI) null, null, false, false);
+		this((URI) null, null, false);
 	}
 
-	public TypeImpl(String namespace, String name, boolean primitive, boolean array) {
-		super(namespace, name, array);
-		init(primitive, array);
+	public TypeImpl(String namespace, String name, boolean primitive) {
+		super(namespace, name);
+		init(primitive);
 	}
 
-	public TypeImpl(URI namespace, String name, boolean primitive, boolean array) {
-		super(namespace, name, array);
-		init(primitive, array);
+	public TypeImpl(URI namespace, String name, boolean primitive) {
+		super(namespace, name);
+		init(primitive);
 	}
 
-	private void init(boolean primitive, boolean array) {
+	private void init(boolean primitive) {
 		this.primitive = primitive;
-		if (!array) {
-			this.arrayType = new Array(this, getNamespaceURI(), getName());
-		}
 		fields = new HashMap();
 		baseType = null;
 	}
 
-	public TypeImpl(String name, boolean primitive, boolean array) {
-		this((URI) null, name, primitive, array);
+	public TypeImpl(String name, boolean primitive) {
+		this((URI) null, name, primitive);
 	}
 
 	public TypeImpl(String name) {
-		this(name, false, false);
+		this(name, false);
 	}
 
 	public void addField(Field field) throws DuplicateFieldException {
@@ -92,12 +89,7 @@ public class TypeImpl extends UnresolvedType {
 	}
 
 	public Type arrayType() {
-		if (isArray()) {
-			return this;
-		}
-		else {
-			return arrayType;
-		}
+		return new Array(this);
 	}
 
 	public Type itemType() {
@@ -119,8 +111,10 @@ public class TypeImpl extends UnresolvedType {
 	private static class Array extends TypeImpl {
 		private Field field;
 
-		public Array(Type type, URI namespace, String name) {
-			super(namespace, name, false, true);
+		/** Constructs an array that will contain elements of the
+		    specified type. */
+		public Array(Type type) {
+			super(type.getNamespaceURI(), type.getName()+"[]", false);
 			field = Field.Factory.newInstance();
 			field.setType(type);
 		}

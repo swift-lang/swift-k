@@ -26,7 +26,7 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="string" isArray="true">
+  <variable name="greetings" type="string[]">
     <array>
       <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
     </array>

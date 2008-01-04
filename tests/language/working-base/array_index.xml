@@ -16,7 +16,7 @@
      xsi:nil="true" />
 
       <input 
-    name="s" type="string" isArray="true"
+    name="s" type="string[]"
 
      xsi:nil="true" />
     <binding>
@@ -35,7 +35,7 @@
         </arraySubscript>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="string" isArray="true">
+  <variable name="greetings" type="string[]">
     <array>
       <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
     </array>

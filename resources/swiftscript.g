@@ -8,6 +8,12 @@ import antlr.Token;
 
 }
 
+//TODO for array hadnling, maybe want to have a rule that matches
+//   name and [] (and eventualyl lots of []s) but without the base
+//   type name on the front. pass in the base type name and
+//   and template to be appropriately populated with name and type
+//   variables.
+
 class SwiftScriptParser extends Parser;
 
 options {
@@ -84,26 +90,38 @@ typedecl [StringTemplate code]
     ;
 
 structdecl [StringTemplate code]
-{StringTemplate e=null, e1=null, t=null;}
+{StringTemplate e=null, e1=null, t=null; String thisType = null;}
     :   LCURLY
     (t=type id:ID
     {
+    thisType = (String) t.getAttribute("name");
     e=template("memberdefinition");
-    e.setAttribute("type", t);
     e.setAttribute("name", id.getText());
     }
-    (LBRACK RBRACK {e.setAttribute("isArray", "true");})?
-    { code.setAttribute("members", e); }
+    (LBRACK RBRACK { thisType = thisType + "[]"; })?
+    {
+      StringTemplate thisTypeTemplate;
+      thisTypeTemplate=template("type");
+      thisTypeTemplate.setAttribute("name", thisType);
+      e.setAttribute("type", thisTypeTemplate);
+      code.setAttribute("members", e); 
+    }
     (
         COMMA
         id1:ID
         {
+        thisType = (String) t.getAttribute("name");
         e1=template("memberdefinition");
-        e1.setAttribute("type", t);
         e1.setAttribute("name", id1.getText());
         }
-        (LBRACK RBRACK {e1.setAttribute("isArray", "true");})?
-        { code.setAttribute("members", e1); }
+        (LBRACK RBRACK { thisType = thisType + "[]"; })?
+        {
+           StringTemplate thisTypeTemplate;
+           thisTypeTemplate=template("type");
+           thisTypeTemplate.setAttribute("name", thisType);
+           e1.setAttribute("type", thisTypeTemplate);
+           code.setAttribute("members", e); 
+         }
     )*
     SEMI
     )*
@@ -182,11 +200,17 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
     :  i1=varInitializer
 
     {
+        String thisType = (String) t.getAttribute("name");
         v1 = template("variable");
-        v1.setAttribute("type", t);
         v1.setAttribute("name", d);
         if (b1 != null)
-            v1.setAttribute("isArray", "true");
+        {
+            thisType = thisType + "[]";
+        }
+        StringTemplate thisTypeTemplate;
+        thisTypeTemplate=template("type");
+        thisTypeTemplate.setAttribute("name", thisType);
+        v1.setAttribute("type", thisTypeTemplate);
         if (i1 != null)
             v1.setAttribute("value", i1);
         code.setAttribute("statements", v1);
@@ -243,15 +267,19 @@ datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
 {StringTemplate dataset=null, m=null;}
     :  LT (m=mappingdecl | f:STRING_LITERAL) GT
     {
+       String thisType = (String) t.getAttribute("name");
        dataset=template("dataset");
-       dataset.setAttribute("type", t);
        dataset.setAttribute("name", d);
        if (m!=null)
            dataset.setAttribute("mapping", m);
        else
            dataset.setAttribute("lfn", f.getText());
-       if (b1 != null)
-           dataset.setAttribute("isArray", "true");
+       if (b1 != null) {
+            thisType = thisType + "[]";
+       }
+       StringTemplate thisTypeTemplate = template("type");
+       thisTypeTemplate.setAttribute("name", thisType);
+       dataset.setAttribute("type", thisTypeTemplate);
        code.setAttribute("statements", dataset);
     }
     ;
@@ -343,25 +371,34 @@ proceduredecl returns [StringTemplate code=template("function")]
         }
     ;
 
+// TODO in here, why do we have an | between LBRACKBRACK and ASSIGN?
+// does this mean that we don't have array initialisation in formal
+// params? this wouldn't surprise me given the previous treatment
+// of arrays. investigate this and fix...
 formalParameter returns [StringTemplate code=template("parameter")]
-{StringTemplate t=null,d=null,v=null;}
-    :   t=type d=declarator
+{StringTemplate t=null,d=null,v=null; String thisType = null; }
+    :   (t=type d=declarator
         {
-        code.setAttribute("type", t);
+        thisType = (String) t.getAttribute("name");
         code.setAttribute("name", d);
         }
         (
-        (LBRACK RBRACK {code.setAttribute("isArray", "true");})
+        (LBRACK RBRACK {thisType = thisType + "[]"; })
         | (ASSIGN v=constant
           {
           String value = (String)v.getAttribute("value");
           if (v.getName().equals("sConst")) {
             v.removeAttribute("value");
              v.setAttribute("value", quote(value));
-        }
+          }
           code.setAttribute("defaultv", v);
-      })
-    )?
+          })
+        )?) {
+          StringTemplate thisTypeTemplate;
+          thisTypeTemplate=template("type");
+          thisTypeTemplate.setAttribute("name", thisType);
+          code.setAttribute("type", thisTypeTemplate);
+        }
     ;
 
 type returns [StringTemplate code=null]
@@ -590,9 +627,13 @@ StringTemplate code=template("call");
 StringTemplate f=template("returnParam");
 StringTemplate var = template("variable");
 var.setAttribute("name", decl);
-var.setAttribute("type", type);
-if (b1 != null)
-    var.setAttribute("isArray", "true");
+String thisType = (String) type.getAttribute("name");
+if (b1 != null) thisType = thisType + "[]"; 
+StringTemplate thisTypeTemplate;
+thisTypeTemplate=template("type");
+thisTypeTemplate.setAttribute("name", thisType);
+var.setAttribute("type", thisTypeTemplate);
+
 container.setAttribute("statements", var);
 
 StringTemplate declref=template("variableReference");

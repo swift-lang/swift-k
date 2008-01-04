@@ -4,12 +4,12 @@
   <procedure name="echo_batch">
 
       <output 
-    name="fa" type="file" isArray="true"
+    name="fa" type="file[]"
 
      xsi:nil="true" />
 
       <input 
-    name="sa" type="string" isArray="true"
+    name="sa" type="string[]"
 
      xsi:nil="true" />
     <foreach var="s"  indexVar="i">

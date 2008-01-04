@@ -8,7 +8,7 @@
      </xs:simpleType>
     </xs:schema>
   </types>
-  <dataset name="files" type="file" isArray="true">
+  <dataset name="files" type="file[]">
     <mapping descriptor="simple_mapper">
       <param name="pattern"><stringConstant>*</stringConstant></param>
     </mapping>

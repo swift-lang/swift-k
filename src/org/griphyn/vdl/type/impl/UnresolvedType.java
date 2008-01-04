@@ -16,23 +16,19 @@ import org.griphyn.vdl.type.Type;
 public class UnresolvedType implements Type {
 	private String name;
 	private URI namespaceURI;
-	private boolean array;
 	
-	public UnresolvedType(String namespace, String name, boolean array) {
+	public UnresolvedType(String namespace, String name) {
 		this.setNamespace(namespace);
 		this.name = name;
-		this.array = array;
 	}
 	
-	public UnresolvedType(URI namespace, String name, boolean array) {
+	public UnresolvedType(URI namespace, String name) {
 		this.setNamespace(namespace);
 		this.name = name;
-		this.array = array;
 	}
 	
-	public UnresolvedType(String name, boolean array) {
+	public UnresolvedType(String name) {
 		this.name = name;
-		this.array = array;
 	}
 
 	public void addField(Field field) throws DuplicateFieldException {
@@ -83,12 +79,12 @@ public class UnresolvedType implements Type {
 		return new QName(namespaceURI.toString(), name);
 	}
 
-	public boolean isArray() {
-		return array;
-	}
-
 	public boolean isPrimitive() {
 		throw new UnsupportedOperationException();
+	}
+
+	public boolean isArray() {
+		return this.name.endsWith("[]");
 	}
 
 	public void setBaseType(Type base) {
@@ -139,7 +135,7 @@ public class UnresolvedType implements Type {
             if ((namespaceURI == null || ons == null) && namespaceURI != ons) {
             	return false;   
             }
-			return ot.getName().equals(name) && (array == ot.isArray());
+			return ot.getName().equals(name);
 		}
 		else {
 			return false;
@@ -147,7 +143,7 @@ public class UnresolvedType implements Type {
 	}
 
 	public int hashCode() {
-		return name.hashCode() + (array ? 101 : 23);
+		return name.hashCode();
 	}
 	
 	public String toString() {
@@ -157,9 +153,6 @@ public class UnresolvedType implements Type {
 			sb.append(':');
 		}
 		sb.append(name);
-		if (array) {
-			sb.append("[]");
-		}
 		return sb.toString();
 	}
 }

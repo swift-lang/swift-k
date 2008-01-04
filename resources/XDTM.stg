@@ -53,23 +53,17 @@ $endif$
 $endif$
 >>
 
-memberdefinition(type,name, isArray) ::= <<
-$if(isArray)$
-<xs:sequence minOccurs="0" maxOccurs="unbounded">
-  <xs:element name="$name$" type="$if(type.name)$$type$$else$$type$$endif$"/>
-</xs:sequence>
-$else$
-  <xs:element name="$name$" type="$if(type.name)$$type$$else$$type$$endif$"/>
+memberdefinition(type,name) ::= <<
+  <xs:element name="$name$" type="$type$"/>
+>>
+
+variable(type,name, value) ::= <<
+<variable name="$name$" type="$type$"$if(!value)$ xsi:nil="true"/>$else$>$value$</variable>
 $endif$
 >>
 
-variable(type,name, isArray, value) ::= <<
-<variable name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$$if(!value)$ xsi:nil="true"/>$else$>$value$</variable>
-$endif$
->>
-
-dataset(name,type,mapping, lfn, isArray) ::= <<
-<dataset name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$>
+dataset(name,type,mapping, lfn) ::= <<
+<dataset name="$name$" type="$type$">
 $if(lfn)$
   <file name="$lfn$"/>
 
@@ -143,7 +137,7 @@ actualParam(value,bind) ::= <<
 <input$if (bind)$ bind="$bind$"$endif$>$value$</input>
 >>
 
-parameter(type,name,outlink,isArray,defaultv) ::= <<
+parameter(type,name,outlink,defaultv) ::= <<
 
 $if(outlink)$
   <output 
@@ -151,7 +145,7 @@ $else$
   <input 
 $endif$
 
-name="$name$" type="$type$"$if(isArray)$ isArray="true"$endif$
+name="$name$" type="$type$"
 
 $if(defaultv)$> 
 $defaultv$

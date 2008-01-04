@@ -10,7 +10,7 @@
   </types>
   <procedure name="Pre_antchmbr">
     <output name="t" type="file"/>
-    <input name="f" type="file" isArray="true"/>
+    <input name="f" type="file[]"/>
     <binding>
       <application>
         <executable>pre_ch</executable>
@@ -81,7 +81,7 @@
       </application>
     </binding>
   </procedure>
-  <dataset name="files" type="file" isArray="true">
+  <dataset name="files" type="file[]">
     <mapping descriptor="filesys_mapper">
       <param name="pattern">&quot;*mol2&quot;</param>
       <param name="location">&quot;.&quot;</param>

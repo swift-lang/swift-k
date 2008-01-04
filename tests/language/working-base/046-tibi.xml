@@ -11,7 +11,7 @@
   <procedure name="waveletTransf">
 
       <output 
-    name="wavelets" type="file" isArray="true"
+    name="wavelets" type="file[]"
 
      xsi:nil="true" />
 
@@ -44,12 +44,12 @@
   <procedure name="batchTrials">
 
       <output 
-    name="outputs" type="file" isArray="true"
+    name="outputs" type="file[]"
 
      xsi:nil="true" />
 
       <input 
-    name="trialTypes" type="string" isArray="true"
+    name="trialTypes" type="string[]"
 
      xsi:nil="true" />
     <dataset name="waveletScript" type="file">
@@ -74,13 +74,13 @@
       </call></body>
     </foreach>
   </procedure>
-  <variable name="trialTypes" type="string" isArray="true">
+  <variable name="trialTypes" type="string[]">
     <array>
       <stringConstant>FB</stringConstant>
     </array>
   </variable>
-  <variable name="allOutputs" type="file" isArray="true" xsi:nil="true"/>
-  <dataset name="namedOutputs" type="file" isArray="true">
+  <variable name="allOutputs" type="file[]" xsi:nil="true"/>
+  <dataset name="namedOutputs" type="file[]">
     <mapping descriptor="fixed_array_mapper">
       <param name="files"><stringConstant>101-FBchannel10_cwt-results.Rdata, 101-FBchannel11_cwt-results.Rdata, 101-FBchannel12_cwt-results.Rdata, 101-FBchannel13_cwt-results.Rdata, 101-FBchannel14_cwt-results.Rdata, 101-FBchannel15_cwt-results.Rdata, 101-FBchannel16_cwt-results.Rdata, 101-FBchannel17_cwt-results.Rdata, 101-FBchannel18_cwt-results.Rdata, 101-FBchannel19_cwt-results.Rdata, 101-FBchannel1_cwt-results.Rdata, 101-FBchannel20_cwt-results.Rdata, 101-FBchannel21_cwt-results.Rdata, 101-FBchannel22_cwt-results.Rdata, 101-FBchannel23_cwt-results.Rdata, 101-FBchannel24_cwt-results.Rdata, 101-FBchannel25_cwt-results.Rdata, 101-FBchannel26_cwt-results.Rdata, 101-FBchannel27_cwt-results.Rdata, 101-FBchannel28_cwt-results.Rdata, 101-FBchannel2_cwt-results.Rdata, 101-FBchannel3_cwt-results.Rdata, 101-FBchannel4_cwt-results.Rdata, 101-FBchannel5_cwt-results.Rdata, 101-FBchannel6_cwt-results.Rdata, 101-FBchannel7_cwt-results.Rdata, 101-FBchannel8_cwt-results.Rdata, 101-FBchannel9_cwt-results.Rdata</stringConstant></param>
     </mapping>

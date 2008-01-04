@@ -7,9 +7,7 @@
        <xs:sequence>
            <xs:element name="orderNumber" type="int"/>
            <xs:element name="description" type="string"/>
-         <xs:sequence minOccurs="0" maxOccurs="unbounded">
-           <xs:element name="itemNumbers" type="int"/>
-         </xs:sequence>
+           <xs:element name="itemNumbers" type="int[]"/>
        </xs:sequence>
      </xs:complexType>
     </xs:schema>

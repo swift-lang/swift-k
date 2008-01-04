@@ -62,17 +62,17 @@
   <procedure name="mProjectPPBatch">
 
       <output 
-    name="projectedImages" type="Image" isArray="true"
+    name="projectedImages" type="Image[]"
 
      xsi:nil="true" />
 
       <output 
-    name="projectedAreas" type="Image" isArray="true"
+    name="projectedAreas" type="Image[]"
 
      xsi:nil="true" />
 
       <input 
-    name="rawImages" type="Image" isArray="true"
+    name="rawImages" type="Image[]"
 
      xsi:nil="true" />
 
@@ -189,12 +189,12 @@
   <procedure name="mDiffFitBatch">
 
       <output 
-    name="diffImages" type="Image" isArray="true"
+    name="diffImages" type="Image[]"
 
      xsi:nil="true" />
 
       <output 
-    name="statusFiles" type="TxtFile" isArray="true"
+    name="statusFiles" type="TxtFile[]"
 
      xsi:nil="true" />
 
@@ -207,7 +207,7 @@
     name="template" type="Header"
 
      xsi:nil="true" />
-    <dataset name="diffs" type="DiffStruct" isArray="true">
+    <dataset name="diffs" type="DiffStruct[]">
       <mapping descriptor="csv_mapper">
         <param name="file"><function name="filename">
           <variableReference>diffsTbl</variableReference></function></param>
@@ -315,7 +315,7 @@
      xsi:nil="true" />
 
       <input 
-    name="statusFiles" type="TxtFile" isArray="true"
+    name="statusFiles" type="TxtFile[]"
 
      xsi:nil="true" />
 
@@ -400,22 +400,22 @@
   <procedure name="mBackgroundBatch">
 
       <output 
-    name="correctedImages" type="Image" isArray="true"
+    name="correctedImages" type="Image[]"
 
      xsi:nil="true" />
 
       <output 
-    name="correctedAreas" type="Image" isArray="true"
+    name="correctedAreas" type="Image[]"
 
      xsi:nil="true" />
 
       <input 
-    name="projectedImages" type="Image" isArray="true"
+    name="projectedImages" type="Image[]"
 
      xsi:nil="true" />
 
       <input 
-    name="projectedAreas" type="Image" isArray="true"
+    name="projectedAreas" type="Image[]"
 
      xsi:nil="true" />
 
@@ -487,7 +487,7 @@
      xsi:nil="true" />
 
       <input 
-    name="images" type="Image" isArray="true"
+    name="images" type="Image[]"
 
      xsi:nil="true" />
     <binding>
@@ -510,7 +510,7 @@
      xsi:nil="true" />
 
       <input 
-    name="images" type="Image" isArray="true"
+    name="images" type="Image[]"
 
      xsi:nil="true" />
 
@@ -549,12 +549,12 @@
      xsi:nil="true" />
 
       <input 
-    name="images" type="Image" isArray="true"
+    name="images" type="Image[]"
 
      xsi:nil="true" />
 
       <input 
-    name="imageAreas" type="Image" isArray="true"
+    name="imageAreas" type="Image[]"
 
      xsi:nil="true" />
     <binding>
@@ -609,7 +609,7 @@
           <variableReference>jpeg</variableReference></function>  </application>
     </binding>
   </procedure>
-  <dataset name="rawImages" type="Image" isArray="true">
+  <dataset name="rawImages" type="Image[]">
     <mapping descriptor="dir_mapper">
       <param name="location"><stringConstant>rawdir</stringConstant></param>
       <param name="suffix"><stringConstant>.fits</stringConstant></param>
@@ -618,8 +618,8 @@
   <dataset name="template" type="Header">
     <file name="template.hdr"/>
   </dataset>
-  <variable name="projectedImages" type="Image" isArray="true" xsi:nil="true"/>
-  <variable name="projectedAreas" type="Image" isArray="true" xsi:nil="true"/>
+  <variable name="projectedImages" type="Image[]" xsi:nil="true"/>
+  <variable name="projectedAreas" type="Image[]" xsi:nil="true"/>
   <call proc="mProjectPPBatch">
     <output><variableReference>projectedImages</variableReference></output>
     <output><variableReference>projectedAreas</variableReference></output>
@@ -641,8 +641,8 @@
     <output><variableReference>diffsTbl</variableReference></output>
     <input><variableReference>projImgTbl</variableReference></input>
   </call>
-  <variable name="diffImgs" type="Image" isArray="true" xsi:nil="true"/>
-  <variable name="statusFiles" type="TxtFile" isArray="true" xsi:nil="true"/>
+  <variable name="diffImgs" type="Image[]" xsi:nil="true"/>
+  <variable name="statusFiles" type="TxtFile[]" xsi:nil="true"/>
   <call proc="mDiffFitBatch">
     <output><variableReference>diffImgs</variableReference></output>
     <output><variableReference>statusFiles</variableReference></output>
@@ -673,8 +673,8 @@
     <input><variableReference>projImgTbl</variableReference></input>
     <input><variableReference>fitsTbl</variableReference></input>
   </call>
-  <variable name="correctedImages" type="Image" isArray="true" xsi:nil="true"/>
-  <variable name="correctedAreas" type="Image" isArray="true" xsi:nil="true"/>
+  <variable name="correctedImages" type="Image[]" xsi:nil="true"/>
+  <variable name="correctedAreas" type="Image[]" xsi:nil="true"/>
   <call proc="mBackgroundBatch">
     <output><variableReference>correctedImages</variableReference></output>
     <output><variableReference>correctedAreas</variableReference></output>

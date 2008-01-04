@@ -36,7 +36,6 @@ public class New extends VDLFunction {
 		String typename = TypeUtil.toString(OA_TYPE.getValue(stack));
 		Object value = OA_VALUE.getValue(stack);
 		Map mapping = (Map) OA_MAPPING.getValue(stack);
-		boolean isArray = TypeUtil.toBoolean(OA_ISARRAY.getValue(stack));
 		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
 		String waitfor = (String) OA_WAITFOR.getValue(stack);
 
@@ -73,7 +72,7 @@ public class New extends VDLFunction {
 				type = Types.getType(typename);
 			}
 			DSHandle handle;
-			if (isArray) {
+			if (type.isArray()) {
 				// dealing with array variable
 				handle = new RootArrayDataNode(type);
 				if (value != null) {

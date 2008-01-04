@@ -35,7 +35,7 @@
   <procedure name="stagSolve">
 
       <output 
-    name="output" type="file" isArray="true"
+    name="output" type="file[]"
 
      xsi:nil="true" />
 
@@ -149,7 +149,7 @@
      xsi:nil="true" />
 
       <input 
-    name="input" type="file" isArray="true"
+    name="input" type="file[]"
 
      xsi:nil="true" />
     <binding>
@@ -246,7 +246,7 @@
           <variableReference>gauge</variableReference></function><stringConstant>-s</stringConstant><variableReference>stag</variableReference><stringConstant>-a</stringConstant><variableReference>antiQ</variableReference><stringConstant>-0</stringConstant><variableReference>Q0</variableReference><stringConstant>-1</stringConstant><variableReference>Q1</variableReference><stringConstant>-2</stringConstant><variableReference>Q2</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="confList" type="string" isArray="true">
+  <variable name="confList" type="string[]">
     <array>
       <stringConstant>000102</stringConstant><stringConstant>000108</stringConstant><stringConstant>000114</stringConstant>
     </array>
@@ -254,7 +254,7 @@
   <variable name="kappaQ" type="float"><floatConstant>0.127</floatConstant></variable>
   <variable name="cSW" type="float"><floatConstant>1.75</floatConstant></variable>
   <variable name="mass" type="string"><stringConstant>0.005,0.007,0.01,0.02,0.03</stringConstant></variable>
-  <variable name="fn" type="string" isArray="true">
+  <variable name="fn" type="string[]">
     <array>
       <stringConstant>m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000102</stringConstant><stringConstant>m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108</stringConstant><stringConstant>m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114</stringConstant>
     </array>
@@ -271,7 +271,7 @@
       <input><variableReference>template</variableReference></input>
       <input><variableReference>config</variableReference></input>
     </call>
-    <dataset name="stags" type="file" isArray="true">
+    <dataset name="stags" type="file[]">
       <mapping descriptor="fixed_array_mapper">
         <param name="files"><arraySubscript>
          <variableReference>fn</variableReference>

@@ -22,7 +22,7 @@
       </application>
     </binding>
   </procedure>
-  <dataset name="inputFiles" type="file" isArray="true">
+  <dataset name="inputFiles" type="file[]">
     <mapping descriptor="simple_mapper">
       <param name="pattern">&quot;*&quot;</param>
     </mapping>

@@ -4,7 +4,7 @@ namespace("xs"
 	import("java.k")
 	
 	element(UnresolvedType, [name, isArray]
-		new("org.griphyn.vdl.type.impl.UnresolvedType", types=["String", "boolean"], name, isArray)
+		new("org.griphyn.vdl.type.impl.UnresolvedType", types=["String"], name)
 	)
 	
 	element(typesST, [], types=["String", "org.griphyn.vdl.type.Type"])
@@ -38,7 +38,6 @@ namespace("xs"
 		)
 		
 		element(simpleType, [name, type]
-			//print("Type ", name, ": ", type)
 			addNode(newSimpleNode(name, type))
 		)
 		
@@ -47,7 +46,6 @@ namespace("xs"
 		)
 		
 		element(complexType, [name, ...]
-			//print("Type ", name, ": ", list(for(f,..., [n,t,a]:=each(f), if(a==true concat(n,": ",t,"[]") concat(n,": ",t)))))
 			node := newComplexNode(name)
 			for(field, ...
 				[name, type] := each(field)

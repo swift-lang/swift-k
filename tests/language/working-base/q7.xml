@@ -27,7 +27,7 @@
     </binding>
   </procedure>
   <variable name="outputNames" type="string"><stringConstant>one two three</stringConstant></variable>
-  <dataset name="outputFiles" type="file" isArray="true">
+  <dataset name="outputFiles" type="file[]">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>outputNames</variableReference></param>
     </mapping>

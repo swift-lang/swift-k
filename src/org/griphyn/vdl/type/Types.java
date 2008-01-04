@@ -29,7 +29,15 @@ public class Types {
 	public synchronized static Type getType(String name) throws NoSuchTypeException {
 		Type type = (Type) types.get(name);
 		if (type == null) {
-			throw new NoSuchTypeException(name);
+			if(name.endsWith("[]")) {
+				String base = name.substring(0, name.length() - 2);
+				Type baseType = getType(base);
+				Type arrayType = baseType.arrayType();
+				addType(arrayType);
+				return arrayType;
+			} else {
+				throw new NoSuchTypeException(name);
+			}
 		}
 		else {
 			return type;
@@ -42,7 +50,7 @@ public class Types {
 	}
 
 	private static Type addPrimitiveType(String name) {
-		Type type = Type.Factory.createType(name, true, false);
+		Type type = Type.Factory.createType(name, true);
 		addType(type);
         return type;
 	}

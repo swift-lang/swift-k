@@ -31,7 +31,7 @@
     </binding>
   </procedure>
   <variable name="inputNames" type="string"><stringConstant>one.txt two.txt three.txt</stringConstant></variable>
-  <dataset name="inputfiles" type="messagefile" isArray="true">
+  <dataset name="inputfiles" type="messagefile[]">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>inputNames</variableReference></param>
     </mapping>

@@ -29,12 +29,12 @@
   <procedure name="echo_batch">
 
       <output 
-    name="fa" type="file" isArray="true"
+    name="fa" type="file[]"
 
      xsi:nil="true" />
 
       <input 
-    name="sa" type="string" isArray="true"
+    name="sa" type="string[]"
 
      xsi:nil="true" />
     <foreach var="s"  indexVar="i">
@@ -48,12 +48,12 @@
       </call></body>
     </foreach>
   </procedure>
-  <variable name="sa" type="string" isArray="true">
+  <variable name="sa" type="string[]">
     <array>
       <stringConstant>hello</stringConstant><stringConstant>hi there</stringConstant><stringConstant>how are you</stringConstant>
     </array>
   </variable>
-  <variable name="fa" type="file" isArray="true" xsi:nil="true"/>
+  <variable name="fa" type="file[]" xsi:nil="true"/>
   <call proc="echo_batch">
     <output><variableReference>fa</variableReference></output>
     <input><variableReference>sa</variableReference></input>
