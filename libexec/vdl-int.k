@@ -47,10 +47,6 @@ namespace("vdl"
 					[path, var] := each(pv)
 					vdl:setFutureFault(var, path=path, mapping=mapping)
 				)
-				for(pv, stageout
-					[path, var] := each(pv)
-					maybe(vdl:setFieldValue(var, true, path=path))
-				)
 			)
 		)
 		

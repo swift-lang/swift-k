@@ -69,7 +69,6 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 				Path p = (Path) i.next();
 				try {
 					DSHandle field = root.getField(p);
-					field.setValue(Boolean.TRUE);
 					field.closeShallow();
 					if (logger.isInfoEnabled()) {
 						logger.info("Found data " + root + "." + p);
