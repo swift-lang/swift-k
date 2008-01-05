@@ -104,7 +104,7 @@ public class StateManager {
 			if (te.getThread().isSubContext(context)) {
 				VariableStack stack = (VariableStack) executing.get(te);
 				if (stack != null) {
-					EventBus.sendHooked(te.getElement(), new AbortEvent(null, context, stack.copy()));
+					EventBus.post(te.getElement(), new AbortEvent(null, context, stack.copy()));
 					synchronized(this) {
 						executing.remove(te);
 					}
