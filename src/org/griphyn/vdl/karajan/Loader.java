@@ -78,7 +78,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				new Monitor().start();
 			}
 			if (!ap.hasValue(ArgumentParser.DEFAULT)) {
-				error("No project specified");
+				error("No SwiftScript program specified");
 			}
 			project = ap.getStringValue(ArgumentParser.DEFAULT);
 		}
@@ -89,7 +89,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 		
 		if (!new File(project).exists()) {
-		    System.err.println("Workflow file does not exist: " + project + "\n");
+		    System.err.println("SwiftScript program does not exist: " + project + "\n");
 			shortUsage();
 			System.exit(1);
 		}
@@ -183,9 +183,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 
 		if(runerror) {
-			logger.debug("Swift finished - workflow had errors");
+			logger.debug("Swift finished with errors");
 		} else {
-			logger.debug("Swift finished - workflow had no errors");
+			logger.debug("Swift finished with no errors");
 		}
 		System.exit(runerror ? 2 : 0);
 	}
@@ -266,10 +266,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		ap.addFlag(ARG_HELP, "Display usage information");
 		ap.addAlias(ARG_HELP, "h");
 
-		ap.addFlag(ARG_TYPECHECK, "Does a typecheck instead of executing the workflow");
+		ap.addFlag(ARG_TYPECHECK, "Does a typecheck instead of executing the SwiftScript program");
 
 		ap.addFlag(ARG_DRYRUN,
-				"Runs the workflow without submitting any jobs (can be used to get a graph)");
+				"Runs the SwiftScript program without submitting any jobs (can be used to get a graph)");
 
 		ap.addFlag(ARG_MONITOR, "Shows a graphical resource monitor");
 
@@ -292,7 +292,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		ap.addOption(
 				ARG_LOGFILE,
 				"Specifies a file where log messages should go to. By default Swift "
-						+ "uses the name of the workflow being run and a numeric index (e.g. myworkflow.1.log)",
+						+ "uses the name of the SwiftScript program being run and additional information to make the name unique.",
 				"file", ArgumentParser.OPTIONAL);
 		ap.addOption(
 				ARG_RUNID,
