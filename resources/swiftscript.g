@@ -98,7 +98,7 @@ structdecl [StringTemplate code]
     e=template("memberdefinition");
     e.setAttribute("name", id.getText());
     }
-    (LBRACK RBRACK { thisType = thisType + "[]"; })?
+    (LBRACK RBRACK { thisType = thisType + "[]"; })*
     {
       StringTemplate thisTypeTemplate;
       thisTypeTemplate=template("type");
@@ -114,7 +114,7 @@ structdecl [StringTemplate code]
         e1=template("memberdefinition");
         e1.setAttribute("name", id1.getText());
         }
-        (LBRACK RBRACK { thisType = thisType + "[]"; })?
+        (LBRACK RBRACK { thisType = thisType + "[]"; })*
         {
            StringTemplate thisTypeTemplate;
            thisTypeTemplate=template("type");
@@ -184,18 +184,26 @@ declaration [StringTemplate code]
     ;
 
 declpart [StringTemplate code, StringTemplate t]
-{StringTemplate n=null;}
+    {
+        StringTemplate n=null;
+        StringTemplate thisTypeTemplate=null;
+        String thisType = (String) t.getAttribute("name");
+    }
     :
      n=declarator
-     (b1:LBRACK RBRACK)?
+     (LBRACK RBRACK {thisType = thisType + "[]"; } )*
+     {
+         thisTypeTemplate=template("type");
+         thisTypeTemplate.setAttribute("name", thisType);
+     }
     (
-      (predictProcedurecallDecl) => procedurecallDecl[code, t, n, b1]
-    | (variableDecl[code,null,null,null]) => variableDecl[code, t, n, b1]
-    | (predictDatasetdecl) => datasetdecl[code, t, n, b1]
+      (predictProcedurecallDecl) => procedurecallDecl[code, thisTypeTemplate, n]
+    | (variableDecl[code,null,null]) => variableDecl[code, thisTypeTemplate, n]
+    | (predictDatasetdecl) => datasetdecl[code, thisTypeTemplate, n]
     )
     ;
 
-variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
+variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
 {StringTemplate v1=null, v2=null, i1=null, i2=null;}
     :  i1=varInitializer
 
@@ -203,14 +211,7 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
         String thisType = (String) t.getAttribute("name");
         v1 = template("variable");
         v1.setAttribute("name", d);
-        if (b1 != null)
-        {
-            thisType = thisType + "[]";
-        }
-        StringTemplate thisTypeTemplate;
-        thisTypeTemplate=template("type");
-        thisTypeTemplate.setAttribute("name", thisType);
-        v1.setAttribute("type", thisTypeTemplate);
+        v1.setAttribute("type", t);
         if (i1 != null)
             v1.setAttribute("value", i1);
         code.setAttribute("statements", v1);
@@ -263,7 +264,7 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
 
 predictDatasetdecl: LT;
 
-datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
+datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d]
 {StringTemplate dataset=null, m=null;}
     :  LT (m=mappingdecl | f:STRING_LITERAL) GT
     {
@@ -274,12 +275,7 @@ datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d, Token b1]
            dataset.setAttribute("mapping", m);
        else
            dataset.setAttribute("lfn", f.getText());
-       if (b1 != null) {
-            thisType = thisType + "[]";
-       }
-       StringTemplate thisTypeTemplate = template("type");
-       thisTypeTemplate.setAttribute("name", thisType);
-       dataset.setAttribute("type", thisTypeTemplate);
+       dataset.setAttribute("type", t);
        code.setAttribute("statements", dataset);
     }
     ;
@@ -382,9 +378,8 @@ formalParameter returns [StringTemplate code=template("parameter")]
         thisType = (String) t.getAttribute("name");
         code.setAttribute("name", d);
         }
-        (
-        (LBRACK RBRACK {thisType = thisType + "[]"; })
-        | (ASSIGN v=constant
+        (LBRACK RBRACK {thisType = thisType + "[]"; })*
+        (ASSIGN v=constant
           {
           String value = (String)v.getAttribute("value");
           if (v.getName().equals("sConst")) {
@@ -392,7 +387,7 @@ formalParameter returns [StringTemplate code=template("parameter")]
              v.setAttribute("value", quote(value));
           }
           code.setAttribute("defaultv", v);
-          })
+          }
         )?) {
           StringTemplate thisTypeTemplate;
           thisTypeTemplate=template("type");
@@ -621,18 +616,13 @@ procedureInvocationWithoutSemi [StringTemplate code]
 
 predictProcedurecallDecl : ASSIGN ID LPAREN ;
 
-procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl, Token b1]
+procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl]
 {
 StringTemplate code=template("call");
 StringTemplate f=template("returnParam");
 StringTemplate var = template("variable");
 var.setAttribute("name", decl);
-String thisType = (String) type.getAttribute("name");
-if (b1 != null) thisType = thisType + "[]"; 
-StringTemplate thisTypeTemplate;
-thisTypeTemplate=template("type");
-thisTypeTemplate.setAttribute("name", thisType);
-var.setAttribute("type", thisTypeTemplate);
+var.setAttribute("type", type);
 
 container.setAttribute("statements", var);
 
@@ -948,25 +938,11 @@ identifier returns [StringTemplate code=null]
 }
     :
     base:ID {code.setAttribute("name",base.getText());}
-    // now we can have an unbounded sequence of
-    // optional array index, then .ID
 
-    (c=arrayIndex 
-      {
-         c.setAttribute("array",code);
-         code=c;
-      }
-    )?
-    (
-      c=memberName {c.setAttribute("structure",code); code=c;}
-      (c=arrayIndex
-      {
-         c.setAttribute("array",code);
-         code=c;
-      }
-      )?
+    ( ( c=arrayIndex { c.setAttribute("array",code); code=c; } )
+      |
+      ( c=memberName {c.setAttribute("structure",code); code=c;} )
     )*
-
     ;
 
 

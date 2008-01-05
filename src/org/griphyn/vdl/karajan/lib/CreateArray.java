@@ -62,7 +62,7 @@ public class CreateArray extends VDLFunction {
 
 			}
 
-			DSHandle handle = new RootArrayDataNode(type);
+			DSHandle handle = new RootArrayDataNode(type.arrayType());
 
 			int index = 0;
 			i = ((List) value).iterator();
@@ -82,6 +82,9 @@ public class CreateArray extends VDLFunction {
 			return handle;
 		}
 		catch (Exception e) {
+System.err.println("OOK");
+e.printStackTrace();
+System.err.println("ENDOOK");
 			throw new ExecutionException(e);
 		}
 	}

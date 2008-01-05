@@ -1,3 +1,10 @@
+(01/15/08)
+*** Multidimensional array handling. Can now declare arrays like this:
+       file f[][];
+    and refer to elements like this:
+       f[1][1]
+    f[1] refers to a one dimensional array, in the style of Java arrays.
+
 (12/18/07)
 *** r1214 made type specification illegal in a foreach but still recognised it
     and threw an error.  This commit removes recognition of that from the

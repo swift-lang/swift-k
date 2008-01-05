@@ -17,16 +17,15 @@ public class Typecheck extends VDLFunction {
 	public static final Arg OA_ARGNAME = new Arg.Optional("argname");
 
 	static {
-		setArguments(Typecheck.class, new Arg[] { PA_VAR, PA_TYPE, OA_ISARRAY, OA_ARGNAME });
+		setArguments(Typecheck.class, new Arg[] { PA_VAR, PA_TYPE, OA_ARGNAME });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		String type = TypeUtil.toString(PA_TYPE.getValue(stack));
-		boolean isArray = TypeUtil.toBoolean(OA_ISARRAY.getValue(stack));
 		Object ovar = PA_VAR.getValue(stack);
 		if (!(ovar instanceof DSHandle)) {
 			throw new ExecutionException("Wrong java type for argument. "
-					+ "Expected DSHandle containing " + type + (isArray ? "[]" : "")
+					+ "Expected DSHandle containing " + type
 					+ "; got java object of class " + ovar.getClass() + " with value " + ovar);
 		}
 		DSHandle var = (DSHandle) ovar;
@@ -34,9 +33,6 @@ public class Typecheck extends VDLFunction {
 
 		try {
 			Type t = Types.getType(type);
-			if (isArray) {
-				t = t.arrayType();
-			}
 			if (!compatible(t, var.getType())) {
 				if (argname != null) {
 					throw new ExecutionException("Wrong type for argument '" + argname + "'. Expected "

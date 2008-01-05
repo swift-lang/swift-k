@@ -119,9 +119,11 @@ public class TypeImpl extends UnresolvedType {
 			field.setType(type);
 		}
 
+/*
 		public Type arrayType() {
 			return this;
 		}
+*/
 
 		public boolean isArray() {
 			return true;

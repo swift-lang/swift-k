@@ -37,7 +37,7 @@ public class Range extends VDLFunction {
 		try {
 			AbstractDataNode handle;
 
-			handle = new RootArrayDataNode(type);
+			handle = new RootArrayDataNode(type.arrayType());
 			int index = 0;
 			for (double v = start; v <= stop; v += incr, index++) {
 				Path path = Path.EMPTY_PATH.addLast(String.valueOf(index), true);

@@ -29,7 +29,7 @@ public class New extends VDLFunction {
 
 	static {
 		setArguments(New.class,
-				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_ISARRAY, OA_DBGNAME, OA_WAITFOR, });
+				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_DBGNAME, OA_WAITFOR, });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {

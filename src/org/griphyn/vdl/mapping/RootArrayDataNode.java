@@ -12,12 +12,11 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 	private Map params;
 
 	/**
-	 * Instantiate a root array data node with elements of the array
-	 * having the specified type.
+	 * Instantiate a root array data node with specified type.
 	 */
 	public RootArrayDataNode(Type type) {
 		super(Field.Factory.newInstance(), null, null);
-		getField().setType(type.arrayType());
+		getField().setType(type);
 	}
 
 	public void init(Map params) {
