@@ -31,6 +31,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.scheduler.Scheduler;
+import org.globus.cog.karajan.scheduler.submitQueue.NonBlockingSubmit;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;
@@ -197,7 +198,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			tasks.put(task, stack);
 		}
 		try {
-			handler.submit(task);
+			new NonBlockingSubmit(handler, task, null).go();
 		}
 		catch (Exception e) {
 			// avoid failing twice if status is already set
