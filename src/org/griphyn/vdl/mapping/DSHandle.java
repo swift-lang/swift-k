@@ -80,4 +80,6 @@ public interface DSHandle {
     public void addListener(DSHandleListener listener);
 
     Mapper getMapper();
+
+    public String getIdentifier();
 }

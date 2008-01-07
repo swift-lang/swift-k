@@ -3,6 +3,8 @@
  */
 package org.griphyn.vdl.mapping;
 
+import org.griphyn.vdl.karajan.Loader;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,15 +19,27 @@ import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public abstract class AbstractDataNode implements DSHandle {
+
+	static final String DATASET_URI_PREFIX = "tag:benc@ci.uchicago.edu,2008:swift:dataset:";
+
 	public static final Logger logger = Logger.getLogger(AbstractDataNode.class);
 	
 	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
+
+	/** Datasets are identified within a run by this sequence number. The
+	    initial value is chosen to aid human recognition of sequence
+	    numbers in the wild. There is no requirement that it start at this
+	    (or any other) particular value. Note that this introduces a
+	    maximum on the number of datasets which can be dealt with in any
+	    run to be about 2^62. */
+	private static long datasetIDCounter = 720000000000l;
 
 	private Field field;
 	private Map handles;
 	private Object value;
 	private boolean closed;
 	private List listeners;
+	final String identifierURI = makeIdentifierURIString();
 
 	protected AbstractDataNode(Field field) {
 //try { Thread.sleep(1000); } catch(Exception e) {throw new RuntimeException(e);}
@@ -73,7 +87,12 @@ public abstract class AbstractDataNode implements DSHandle {
 			}
 		}
 
-		String prefix = this.getClass().getName() + " with no value at dataset=";
+		String prefix = this.getClass().getName();
+
+		prefix = prefix + " identifier "+this.getIdentifier(); 
+
+ 		prefix = prefix + " with no value at dataset=";
+
 		prefix = prefix + getDisplayableName();
 
 		if (!Path.EMPTY_PATH.equals(getPathFromRoot())) {
@@ -383,5 +402,15 @@ public abstract class AbstractDataNode implements DSHandle {
 			}
 			listeners = null;
 		}
+	}
+
+
+	public String getIdentifier() {
+		return identifierURI;
+	}
+
+	String makeIdentifierURIString() {
+		datasetIDCounter++;
+		return DATASET_URI_PREFIX + Loader.getRunID() + ":" + datasetIDCounter; 
 	}
 }
