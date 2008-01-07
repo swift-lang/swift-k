@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
@@ -21,6 +23,9 @@ import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public class New extends VDLFunction {
+
+	public static final Logger logger = Logger.getLogger(New.class);
+
 	public static final Arg OA_TYPE = new Arg.Optional("type", null);
 	public static final Arg OA_MAPPING = new Arg.Optional("mapping", null);
 	public static final Arg OA_VALUE = new Arg.Optional("value", null);
@@ -126,6 +131,7 @@ public class New extends VDLFunction {
 				throw new ExecutionException("vdl:new requires a type specification for value "
 						+ value);
 			}
+			logger.info("NEW id="+handle.getIdentifier());
 			return handle;
 		}
 		catch (Exception e) {
