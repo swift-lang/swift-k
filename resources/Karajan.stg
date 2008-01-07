@@ -31,22 +31,24 @@ procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,
   $outputs:typecheck();separator="\n"$
   $inputs:typecheck();separator="\n"$
 $if(binding)$
-  $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application)$
+  $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name)$
 
 $else$
-  $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements)$
+  $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements,name=name)$
 
 $endif$
 </element>
 
 >>
 
-compound(outputs,inputs,declarations,statements,config) ::= <<
+compound(outputs,inputs,declarations,statements,config,name) ::= <<
+<log>STARTCOMPOUND thread={#thread} name=$name$</log>
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
 $endif$
 $outputs:vdl_closedataset();separator="\n"$
+<log>ENDCOMPOUND thread={#thread}</log>
 >>
 
 proc_args(args) ::= <<
@@ -69,7 +71,13 @@ typecheck() ::= <<
 <vdl:typecheck argname="$it.name$" var="{$it.name$}" type="$it.type.name$"$if(it.isArray)$ isArray="true"$endif$/>
 >>
 
-vdl_execute(outputs,inputs,application) ::= <<
+vdl_execute(outputs,inputs,application,name) ::= <<
+<log>
+  <string>info</string>
+  <string>PROCEDURE thread={#thread} name=$name$</string>
+</log>
+$inputs:vdl_log_input();separator="\n"$
+$outputs:vdl_log_output();separator="\n"$
 <vdl:execute>
   <vdl:tr>$application.exec$</vdl:tr>
   $inputs:vdl_stagein();separator="\n"$
@@ -77,6 +85,22 @@ vdl_execute(outputs,inputs,application) ::= <<
   $vdl_arguments(arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 </vdl:execute>
 $outputs:vdl_closedataset();separator="\n"$
+>>
+
+vdl_log_input() ::= <<
+<parameterlog>
+<string>input</string>
+<string>$it.name$</string>
+<vdl:getdatasetprovenanceid var="{$it.name$}" />
+</parameterlog>
+>>
+
+vdl_log_output() ::= <<
+<parameterlog>
+<string>output</string>
+<string>$it.name$</string>
+<vdl:getdatasetprovenanceid var="{$it.name$}" />
+</parameterlog>
 >>
 
 vdl_stagein() ::= <<

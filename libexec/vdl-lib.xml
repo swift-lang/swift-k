@@ -24,6 +24,7 @@
   </namespace>
 
   <namespace prefix="vdl">
+	<export name="vdl:getdatasetprovenanceid"><elementDef classname="org.griphyn.vdl.karajan.lib.GetDatasetProvenanceID"/></export>
 	<export name="infinitecountingwhile"><elementDef classname="org.griphyn.vdl.karajan.lib.InfiniteCountingWhile"/></export>
 	<export name="new"><elementDef classname="org.griphyn.vdl.karajan.lib.New"/></export>
 	<export name="createarray"><elementDef classname="org.griphyn.vdl.karajan.lib.CreateArray"/></export>

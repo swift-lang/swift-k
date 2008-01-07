@@ -336,6 +336,53 @@ public abstract class AbstractDataNode implements DSHandle {
 	public synchronized void closeShallow() {
 		this.closed = true;
 		notifyListeners();
+		logger.info("closed "+this.getIdentifier());
+// so because its closed, we can dump the contents
+		logContent();
+// TODO record retrospective provenance information for this dataset here
+// we should do it at closing time because that's the point at which we
+// know the dataset has its values (all the way down the tree) assigned.
+
+// provenance-id for this dataset should have been assigned at creation time,
+// though, so that we can refer to this dataset elsewhere before it is
+// closed.
+
+// is this method the only one called to set this.closed? or do subclasses
+// or other methods ever change it?
+	}
+
+	public synchronized void logContent() {
+		if(this.getPathFromRoot() != null) {
+			logger.info("ROOTPATH dataset="+this.getIdentifier()+" path="+
+				this.getPathFromRoot());
+			if(this.getType().isPrimitive()) {
+				logger.info("VALUE dataset="+this.getIdentifier()+" VALUE="+this.toString());
+			}
+			if(this.getMapper() != null) {
+// TODO proper type here
+// Not sure catching exception here is really the right thing to do here
+// anyway - should perhaps only be trying to map leafnodes? Mapping
+// non-leaf stuff is giving wierd paths anyway
+				try {
+					Object path=this.getMapper().map(this.getPathFromRoot());
+					logger.info("FILENAME dataset="+this.getIdentifier()+" filename="+
+						this.getMapper().map(this.getPathFromRoot()));
+				} catch(Exception e) {
+					logger.info("dataset "+this.getIdentifier()+" exception while mapping path from root",e);
+				}
+			}
+		}
+
+		synchronized (handles) {
+			Iterator i = handles.entrySet().iterator();
+			while (i.hasNext()) {
+				Map.Entry e = (Map.Entry) i.next();
+				AbstractDataNode node = (AbstractDataNode) e.getValue();
+				logger.info("CONTAINMENT parent="+this.getIdentifier()+" child="+node.getIdentifier());
+				node.logContent();
+			}
+		}
+
 	}
 
 	public boolean isClosed() {
