@@ -319,10 +319,6 @@ public class Karajan {
 			scope.addWriter(rootvar, new Integer(callID++));
 		}
 
-		// scope.bodyTemplate.setAttribute("statements", callST);
-
-// TODO - I think the lack of parent before this point messes up dataset
-// marking (or at least it has potential to).
 		scope.appendStatement(callST);
 	}
 
@@ -378,7 +374,6 @@ public class Karajan {
 
 	public void ifStat(If ifstat, VariableScope scope) throws Exception {
 		StringTemplate ifST = template("if");
-		scope.bodyTemplate.setAttribute("statements", ifST);
 		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression());
 		ifST.setAttribute("condition", conditionST.toString());
 
@@ -391,6 +386,14 @@ public class Karajan {
 
 		statements(thenstat, innerThenScope);
 
+		Object statementID = new Integer(callID++);
+
+		Iterator thenScopeIterator = innerThenScope.getVariableIterator();
+		while(thenScopeIterator.hasNext()) {
+			String v=(String) thenScopeIterator.next();
+			scope.addWriter(v, statementID);
+		}
+
 		if (elsestat != null) {
 
 			VariableScope innerElseScope = new VariableScope(this, scope);
@@ -398,12 +401,19 @@ public class Karajan {
 			ifST.setAttribute("velse", innerElseScope.bodyTemplate);
 
 			statements(elsestat, innerElseScope);
-		}
 
+			Iterator elseScopeIterator = innerElseScope.getVariableIterator();
+			while(elseScopeIterator.hasNext()) {
+				String v=(String) elseScopeIterator.next();
+				scope.addWriter(v, statementID);
+			}
+		}
+		scope.appendStatement(ifST);
 	}
 
 	public void switchStat(Switch switchstat, VariableScope scope) throws Exception {
 		StringTemplate switchST = template("switch");
+		Object statementID = new Integer(callID++);
 		scope.bodyTemplate.setAttribute("statements", switchST);
 		StringTemplate conditionST = expressionToKarajan(switchstat.getAbstractExpression());
 		switchST.setAttribute("condition", conditionST.toString());
@@ -415,6 +425,13 @@ public class Karajan {
 			switchST.setAttribute("cases", caseScope.bodyTemplate);
 			
 			caseStat(casestat, caseScope);
+
+			Iterator caseScopeIterator = caseScope.getVariableIterator();
+			while(caseScopeIterator.hasNext()) {
+				String v=(String) caseScopeIterator.next();
+				scope.addWriter(v, statementID);
+			}
+
 		}
 		Default defaultstat = switchstat.getDefault();
 		if (defaultstat != null) {
@@ -422,6 +439,11 @@ public class Karajan {
 			defaultScope.bodyTemplate = template("sub_comp");
 			switchST.setAttribute("sdefault", defaultScope.bodyTemplate);
 			statements(defaultstat, defaultScope);
+			Iterator defaultScopeIterator = defaultScope.getVariableIterator();
+			while(defaultScopeIterator.hasNext()) {
+				String v=(String) defaultScopeIterator.next();
+				scope.addWriter(v, statementID);
+			}
 		}
 	}
 

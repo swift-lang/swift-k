@@ -104,7 +104,9 @@ public class VariableScope {
 			}
 
 			List statementList = variable.writingStatements;
-			statementList.add(closeID);
+			if(!statementList.contains(closeID)) {
+				statementList.add(closeID);
+			}
 			logger.info("added "+closeID+" to variable "+variableName+" in scope "+hashCode());
 		}
 	}

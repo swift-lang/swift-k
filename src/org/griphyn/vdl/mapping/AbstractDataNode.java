@@ -28,6 +28,8 @@ public abstract class AbstractDataNode implements DSHandle {
 	private List listeners;
 
 	protected AbstractDataNode(Field field) {
+//try { Thread.sleep(1000); } catch(Exception e) {throw new RuntimeException(e);}
+
 		this.field = field;
 		handles = new HashMap();
 	}
@@ -76,6 +78,13 @@ public abstract class AbstractDataNode implements DSHandle {
 
 		if (!Path.EMPTY_PATH.equals(getPathFromRoot())) {
 			prefix = prefix + " path="+ getPathFromRoot().toString();
+		}
+
+		if(closed) {
+			prefix = prefix + " (closed)";
+		}
+		else {
+			prefix = prefix + " (not closed)";
 		}
 
 		return prefix;
@@ -257,6 +266,10 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public void setValue(Object value) {
+		if (this.closed) {
+			throw new IllegalArgumentException(this.getDisplayableName()
+					+ " is closed with a value of "+this.value);
+		}
 		if (this.value != null) {
 			throw new IllegalArgumentException(this.getDisplayableName()
 					+ " is already assigned with a value of " + this.value);

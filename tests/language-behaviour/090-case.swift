@@ -22,5 +22,6 @@ switch(8) {
     message="no message at all...";
 }
 
+trace(message);
 outfile = greeting(message);
 

@@ -65,7 +65,7 @@ public class PartialCloseDataset extends VDLFunction {
 				}
 
 				c.add(statementID);
-			logger.info("Adding token "+statementID);
+			logger.info("Adding token "+statementID+" with hash "+statementID.hashCode());
 
 			// TODO so remove the statement ID from the list of statements we
 			// are waiting for. hmm. no way to write parameters in there.
