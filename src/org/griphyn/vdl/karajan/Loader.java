@@ -61,8 +61,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static final String VDL_OPERATION_TYPECHECK = "typecheck";
 	public static final String VDL_OPERATION_DRYRUN = "dryrun";
 
-	private static String runID = null;
-
 	public static void main(String[] argv) {
 		logger.debug("Loader started");
 		ArgumentParser ap = buildArgumentParser();
@@ -99,6 +97,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		boolean runerror = false;
 		String projectName = projectName(project);
 
+		String runID;
 		if(ap.isPresent(ARG_RUNID)) {
 			runID = ap.getStringValue(ARG_RUNID);
 		} else {
@@ -412,10 +411,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			val = val / base;
 		}
 		return sb.toString();
-	}
-
-	public static String getRunID() {
-		return runID;
 	}
 
 }

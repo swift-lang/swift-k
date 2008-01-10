@@ -26,13 +26,20 @@ public abstract class AbstractDataNode implements DSHandle {
 	
 	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
 
-	/** Datasets are identified within a run by this sequence number. The
-	    initial value is chosen to aid human recognition of sequence
+	/** Datasets are identified within a run by this sequence number and the
+	    partial ID field.
+	    The initial value is chosen to aid human recognition of sequence
 	    numbers in the wild. There is no requirement that it start at this
 	    (or any other) particular value. Note that this introduces a
 	    maximum on the number of datasets which can be dealt with in any
 	    run to be about 2^62. */
 	private static long datasetIDCounter = 720000000000l;
+
+	/** This is used to provide a (hopefully) globally unique identifier for
+	    each time the datasetIDCounter is reset (whenever this class is
+	    loaded, which will usually happen once per JVM). No meaning should be
+	    inferred from this value - it exists purely for making unique URIs. */
+	private static final String datasetIDPartialID = Loader.getUUID();
 
 	private Field field;
 	private Map handles;
@@ -451,13 +458,12 @@ public abstract class AbstractDataNode implements DSHandle {
 		}
 	}
 
-
 	public String getIdentifier() {
 		return identifierURI;
 	}
 
 	String makeIdentifierURIString() {
 		datasetIDCounter++;
-		return DATASET_URI_PREFIX + Loader.getRunID() + ":" + datasetIDCounter; 
+		return DATASET_URI_PREFIX + datasetIDPartialID + ":" + datasetIDCounter; 
 	}
 }
