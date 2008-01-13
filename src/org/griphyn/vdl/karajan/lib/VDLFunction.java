@@ -2,6 +2,8 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -220,7 +222,16 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		List l = new ArrayList();
 		Iterator i;
 		try {
-			i = var.getFringePaths().iterator();
+			Collection fp = var.getFringePaths();
+			List src;
+			if (fp instanceof List) {
+				src = (List) fp;
+			}
+			else {
+				src = new ArrayList(fp);
+			}
+			Collections.sort(src, new PathComparator());
+			i = src.iterator();
 			while (i.hasNext()) {
 				Path p = (Path) i.next();
 				l.add(leafFileName(var.getField(p)));
@@ -230,6 +241,52 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			throw new ExecutionException("DSHandle is lying about its fringe paths");
 		}
 		return (String[]) l.toArray(EMPTY_STRING_ARRAY);
+	}
+	
+	private static class PathComparator implements Comparator {
+		public int compare(Object o1, Object o2) {
+			Path p1 = (Path) o1;
+			Path p2 = (Path) o2;
+			for (int i = 0; i < Math.min(p1.size(), p2.size()); i++) {
+				int d; 
+				d = indexOrder(p1.isArrayIndex(i), p2.isArrayIndex(i));
+				if (d != 0) {
+					return d;
+				}
+				if (p1.isArrayIndex(i)) {
+					d = numericOrder(p1.getElement(i), p2.getElement(i));
+				}
+				else {
+					d = p1.getElement(i).compareTo(p2.getElement(i));
+				}
+				if (d != 0) {
+					return d;
+				}
+			}
+			//the longer one wins
+			return p1.size() - p2.size();
+		}
+		
+		private int indexOrder(boolean i1, boolean i2) {
+			//it doesn't matter much what the order between indices and non-indices is,
+			//but it needs to be consistent
+			if (i1) {
+				if (!i2) {
+					return -1;
+				}
+			}
+			else {
+				if (i2) {
+					return 1;
+				}
+			}
+			return 0;
+		}
+		
+		private int numericOrder(String i1, String i2) {
+			//TODO check if we're actually dealing with numeric indices
+			return Integer.parseInt(i1) - Integer.parseInt(i2);
+		}
 	}
 
 	public String leafFileName(DSHandle var) throws ExecutionException {
