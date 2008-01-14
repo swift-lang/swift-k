@@ -27,6 +27,18 @@ public class Operators extends FunctionsCollection {
 			throw new ExecutionException("Internal error", e);
 		}
 	}
+	
+	private DSHandle newString(String value) throws ExecutionException {
+		try {
+			DSHandle handle = new RootDataNode(Types.STRING);
+			handle.setValue(value);
+			handle.closeShallow();
+			return handle;
+		}
+		catch (Exception e) {
+			throw new ExecutionException("Internal error", e);
+		}
+	}
 
 	private DSHandle newBool(boolean value) throws ExecutionException {
 		try {
@@ -62,9 +74,14 @@ public class Operators extends FunctionsCollection {
 	}
 
 	public Object vdlop_sum(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		return newNum(type(stack), l + r);
+		Object l = L.getValue(stack);
+		Object r = R.getValue(stack);
+		if (l instanceof String || r instanceof String) {
+			return newString(((String) l) + ((String) r));
+		}
+		else {
+			return newNum(type(stack), SwiftArg.checkDouble(l) + SwiftArg.checkDouble(r));
+		}
 	}
 
 	public Object vdlop_subtraction(VariableStack stack) throws ExecutionException {

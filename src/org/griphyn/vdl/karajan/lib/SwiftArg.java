@@ -71,7 +71,10 @@ public abstract class SwiftArg extends Arg {
 	}
 
 	public double getDoubleValue(VariableStack stack) throws ExecutionException {
-		Object dbl = getValue(stack);
+		return checkDouble(getValue(stack));
+	}
+	
+	public static double checkDouble(Object dbl) throws ExecutionException {
 		if (dbl instanceof Double) {
 			return ((Double) dbl).doubleValue();
 		}
@@ -80,7 +83,7 @@ public abstract class SwiftArg extends Arg {
 		}
 	}
 	
-	private Class classOf(Object object) {
+	private static Class classOf(Object object) {
 		if (object == null) {
 			return null;
 		}
