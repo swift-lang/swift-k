@@ -1,9 +1,7 @@
 (01/14/08)
-*** Hmm. Maybe we should use UTC for the timestamps.
-
 *** Overloaded '+' operator to allow string concatenation
 
-(01/15/08)
+(01/05/08)
 *** Multidimensional array handling. Can now declare arrays like this:
        file f[][];
     and refer to elements like this:
