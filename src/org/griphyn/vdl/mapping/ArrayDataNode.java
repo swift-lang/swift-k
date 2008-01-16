@@ -32,8 +32,7 @@ public class ArrayDataNode extends DataNode {
 			while (i.hasNext()) {
 				Map.Entry e = (Map.Entry) i.next();
 				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
-				
-				Path fullPath = parentPath.addLast((String) e.getKey());
+				Path fullPath = parentPath.addLast((String) e.getKey(), getType().isArray());
 				if (!mapper.isHandlesEmpty()) {
 					mapper.getFringePaths(list, fullPath);
 				}
