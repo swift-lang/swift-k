@@ -1978,13 +1978,21 @@ language.
 		</para>
 		<section id="function.arg"><title>@arg</title>
 			<para>
-Takes a command line parameter name as a string parameter and returns the
-name of that string parameter from the command line.
+Takes a command line parameter name as a string parameter and an optional 
+default value and returns the value of that string parameter from the 
+command line. If no default value is specified and the command line parameter
+is missing, an error is generated. If a default value is specified and the
+command line parameter is missing, @arg will return the default value.
+			</para>
+			<para>
+Command line parameters recognized by @arg begin with exactly one hyphen
+and need to be positioned after the script name.
 			</para>
 
 			<para>For example:</para>
 			<programlisting>
 print(@arg("myparam"));
+print(@arg("optionalparam", "defaultvalue"));
 			</programlisting>
 			<screen>
 $ swift arg.swift -myparam=hello 
@@ -1992,6 +2000,7 @@ Swift v0.2-dev
 
 RunID: p08an4d5yr6g2
 hello
+defaultvalue
 			</screen>
 
 		</section>
