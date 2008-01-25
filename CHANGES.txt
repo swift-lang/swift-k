@@ -1,3 +1,7 @@
+(01/25/08)
+*** @arg now takes a second optional argument which stands for a default
+    value in case the command line argument is missing.
+
 (01/14/08)
 *** Overloaded '+' operator to allow string concatenation
 

@@ -22,9 +22,10 @@ public class FnArg extends AbstractFunction {
 	public static final String PARSED_ARGS = "cmdline:named";
 
 	public static final SwiftArg P_NAME = new SwiftArg.Positional("name");
+	public static final SwiftArg P_VALUE = new SwiftArg.Positional("value");
 
 	static {
-		setArguments(FnArg.class, new Arg[] { P_NAME });
+		setArguments(FnArg.class, new Arg[] { P_NAME, P_VALUE });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
@@ -57,6 +58,9 @@ public class FnArg extends AbstractFunction {
 			name = name.substring(1, name.length() - 1);
 		}
 		Object value = args.get(name);
+		if (value == null && P_VALUE.isPresent(stack)) {
+			value = P_VALUE.getValue(stack);
+		}
 		if (value == null) {
 			throw new ExecutionException("Missing command line argument: " + name);
 		}
