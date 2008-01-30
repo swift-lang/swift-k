@@ -8,12 +8,6 @@ import antlr.Token;
 
 }
 
-//TODO for array hadnling, maybe want to have a rule that matches
-//   name and [] (and eventualyl lots of []s) but without the base
-//   type name on the front. pass in the base type name and
-//   and template to be appropriately populated with name and type
-//   variables.
-
 class SwiftScriptParser extends Parser;
 
 options {
@@ -52,7 +46,7 @@ String quote(String s) {
 
 }
 
-// The specification for a VDL program
+// The specification for a SwiftScript program
 program returns [StringTemplate code=template("program")]
     :
     (nsdecl[code])*        //namespace declaration
