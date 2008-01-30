@@ -454,6 +454,24 @@ termination expression.
 			</section>
 		</section>
 
+	<section><title>Operators</title>
+
+<para>The following infix operators are available for use in
+SwiftScript expressions.
+</para>
+<para> + numeric addition; string concatenation </para>
+<para> - numeric subtraction </para>
+<para> * numeric multiplication</para>
+<para> / floating point division </para>
+<para> %/ integer division </para>
+<para> %% integer remainder-of-division</para>
+<para> == != comparison and not-comparison</para>
+<para> &lt; &gt; &lt;= &gt;= </para>
+<para> &amp;&amp; || boolean and, or</para>
+<para> ! boolean not </para>
+
+	</section>
+
 	</section>
 
 		<section id="mappers">
