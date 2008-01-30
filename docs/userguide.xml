@@ -2042,6 +2042,9 @@ will assing the value "abmonkeyhi" to the variable v.
 passed as parameters joined into a single string. There may be any number
 of parameters.
 			</para>
+			<para>
+The + operator concatenates two strings: @strcat(a,b) is the same as a + b
+			</para>
 		</section>
 		<section id="function.strcut"><title>@strcut</title>
 			<para>
