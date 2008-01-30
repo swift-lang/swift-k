@@ -927,7 +927,7 @@ then some of the mappings produced by this example would be:
 	</section>
 	<section id="engineconfiguration">	
 	
-		<title>Swift Engine Configuration</title>
+		<title>Swift configuration properties</title>
 		
 		<para>
 		
@@ -947,10 +947,6 @@ then some of the mappings produced by this example would be:
 		
 		</para>
 		
-		<section id="properties">
-		
-			<title>Swift Properties</title>
-			
 			<para>
 			
 				Swift properties are specified in the following format:
@@ -1627,8 +1623,6 @@ ip.address=192.168.0.1
 </programlisting>
 			
 			</para>
-		
-		</section>
 		
 	</section>
 
