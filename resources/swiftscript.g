@@ -114,7 +114,7 @@ structdecl [StringTemplate code]
            thisTypeTemplate=template("type");
            thisTypeTemplate.setAttribute("name", thisType);
            e1.setAttribute("type", thisTypeTemplate);
-           code.setAttribute("members", e); 
+           code.setAttribute("members", e1); 
          }
     )*
     SEMI
