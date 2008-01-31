@@ -2172,6 +2172,11 @@ The following formats are recognized:
 					<listitem>Hours:Minutes:Seconds</listitem>
 				</itemizedlist>
 			</para>
+			<para id="profile.globus.queue"><property>queue</property> 
+is used by the PBS provider. This profile entry
+specifies which queue jobs will be submitted to. The queue name is
+site-specific.
+			</para>
 		</section>
 	</section>
 	<section id="providers"><title>Alternative providers</title>
@@ -2184,12 +2189,25 @@ and of your own making).
 		<section id="provider.pbs"><title>PBS execution provider</title>
 			<para>
 The PBS execution provider allows jobs to be executed through a local
-PBS installation. To use, edit the localhost specification in sites.xml
-to specify provider="pbs" instead of provider="local". Execution jobs
-from Swift will then be submitted to the PBS queue instead of forked locally.
-When using PBS, you must run Swift on the PBS submit node
-and have your workdirectory point to a directory shared between
-all worker nodes and the submit node.
+PBS installation.
+			</para>
+			<para>
+To use, edit the localhost specification in sites.xml
+to specify provider="pbs" instead of provider="local". Then set the
+site shared directory to a directory that is shared between the
+worker notes and the submit node. Often, the localhost default
+of <filename>/var/tmp</filename> is not shared between nodes; and often
+your home directory is.
+			</para>
+			<para>
+Execution jobs from Swift will then be submitted to the PBS queue
+instead of forked locally.  When using PBS, you must run Swift on
+the PBS submit node.
+			</para>
+			<para>
+The PBS provider can submit to a non-default queue, using the
+<link linkend="profile.globus.queue">queue</link> profile
+key.
 			</para>
 		</section>
 	</section>
