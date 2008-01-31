@@ -13,3 +13,5 @@ pdfs: userguide.pdf tutorial.pdf tutorial-live.pdf quickstartguide.pdf reallyqui
 %.pdf: %.xml
 	fop/fop.sh -xsl formatting/vdl2_fo.xsl -xml $< -pdf $@
 
+%.html: %.php
+	cp $< $@
