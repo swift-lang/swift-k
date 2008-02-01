@@ -69,7 +69,7 @@ public class FileResourceImpl extends
         }
         else {
             try {
-                this.getGridFTPClient().setPassiveMode(true);
+                initializeDataChannel();
                 Vector v = this.getGridFTPClient().mlsd();
                 ArrayList list = new ArrayList();
                 Iterator i = v.iterator();
@@ -126,7 +126,7 @@ public class FileResourceImpl extends
         }
         else {
             try {
-                this.getGridFTPClient().setPassiveMode(true);
+                initializeDataChannel();
                 Vector v = this.getGridFTPClient().mlsd(directory);
                 ArrayList list = new ArrayList();
                 Iterator i = v.iterator();
@@ -155,7 +155,7 @@ public class FileResourceImpl extends
              * It's twice as fast as doing a cwd
              */
             try {
-                this.getGridFTPClient().setPassiveMode(false);
+                initializeDataChannel();
                 MlsxEntry me = this.getGridFTPClient().mlst(dirName);
                 return me.get("type").endsWith("dir");
             }

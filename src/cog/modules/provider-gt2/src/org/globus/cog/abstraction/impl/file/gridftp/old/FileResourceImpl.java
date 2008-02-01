@@ -125,7 +125,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
     }
 
-    private void initializeDataChannel() throws ClientException,
+    protected void initializeDataChannel() throws ClientException,
             ServerException, IOException {
         if (!dataChannelInitialized || !dataChannelReuse) {
             gridFTPClient.setPassiveMode(true);

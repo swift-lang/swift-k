@@ -1,3 +1,7 @@
+(02/01/2008)
+
+*** Missed some spots on the data channel reuse.
+
 (12/03/2007)
 
 *** Added data channel reuse mode for GridFTP if the server
