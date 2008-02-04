@@ -39,8 +39,8 @@ namespace("vdl"
 				service(type="execution", provider=provider, url=url)
 			)
 			
-			element(execution, [provider, url]
-				service(type="execution", provider=provider, url=url)
+			element(execution, [provider, url, optional(jobManager)]
+				service(type="execution", provider=provider, url=url, maybe(jobManager=jobManager))
 			)
 			
 			element(filesystem, [provider, url, optional(storage)]
