@@ -2179,12 +2179,13 @@ site-specific.
 			</para>
 		</section>
 	</section>
-	<section id="providers"><title>Alternative providers</title>
+	<section id="providers"><title>Execution providers</title>
 		<para>
 Some of the actions Swift takes - executing jobs and transferring files - 
 take place through <firstterm>cog providers</firstterm>. Swift comes with
 some default providers, but others can be used (both as supplied with Swift
-and of your own making).
+and of your own making). The example site catalog shows the use of
+the local execution provider and the gram2 execution provider.
 		</para>
 		<section id="provider.pbs"><title>PBS execution provider</title>
 			<para>
@@ -2208,6 +2209,16 @@ the PBS submit node.
 The PBS provider can submit to a non-default queue, using the
 <link linkend="profile.globus.queue">queue</link> profile
 key.
+			</para>
+		</section>
+		<section id="provider.gram4"><title>GRAM4</title>
+			<para>
+The GRAM4 provider allows execution of jobs through GRAM4.
+It can be used by specifying an execution element like this in the sites
+catalog:
+<screen>
+&lt;execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" /&gt;
+</screen>
 			</para>
 		</section>
 	</section>
