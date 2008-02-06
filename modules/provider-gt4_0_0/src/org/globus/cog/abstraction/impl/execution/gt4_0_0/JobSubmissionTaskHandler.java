@@ -179,10 +179,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             setMiscJobParams(spec, this.gramJob);
 
             try {
+            	if (logger.isDebugEnabled()) {
+            		logger.debug("Submitting task: " + task);
+            	}
                 this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
                         .getDelegation() == Delegation.LIMITED_DELEGATION,
                         "uuid:" + UUIDGenFactory.getUUIDGen().nextUUID());
-                logger.info("Job submitted");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Task submitted: " + task);
+                }
                 if (spec.isBatchJob()) {
                     this.task.setStatus(Status.COMPLETED);
                 }
