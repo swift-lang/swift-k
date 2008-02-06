@@ -1,3 +1,10 @@
+(02/06/2008)
+
+*** Slightly better (I believe) error message propagation from
+    GRAM. Unfortunately the exact inner workings of the WS-GRAM
+    fault types don't seem to match any existing model I know of, 
+    so the whole thing is a bit of a guess.
+
 (08/20/2007)
 
 *** Updated to use new redirection stuff
