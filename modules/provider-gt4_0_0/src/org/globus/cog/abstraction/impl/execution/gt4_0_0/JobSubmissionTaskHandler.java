@@ -33,6 +33,7 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.exec.client.GramJob;
 import org.globus.exec.client.GramJobListener;
+import org.globus.exec.generated.FaultType;
 import org.globus.exec.generated.JobDescriptionType;
 import org.globus.exec.generated.JobTypeEnumeration;
 import org.globus.exec.generated.NameValuePairType;
@@ -179,14 +180,17 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             setMiscJobParams(spec, this.gramJob);
 
             try {
-            	if (logger.isDebugEnabled()) {
-            		logger.debug("Submitting task: " + task);
-            	}
+                if (logger.isInfoEnabled()) {
+                    logger.info("Submitting task: " + task);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Rsl is " + this.gramJob.toString());
+                    }
+                }
                 this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
                         .getDelegation() == Delegation.LIMITED_DELEGATION,
                         "uuid:" + UUIDGenFactory.getUUIDGen().nextUUID());
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Task submitted: " + task);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Task submitted: " + task);
                 }
                 if (spec.isBatchJob()) {
                     this.task.setStatus(Status.COMPLETED);
@@ -357,13 +361,12 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 this.gramJob.removeListener(this);
             }
             else {
-                int errorCode = job.getError();
                 if (job.getFault() != null) {
-                    failTask("#" + errorCode + " "
-                            + job.getFault().getDescription()[0],
-                            (Exception) job.getFault().getCause());
+                    failTask(job.getFault().getDescription()[0] + ", "
+                            + getCauses(job.getFault()), null);
                 }
                 else {
+                    int errorCode = job.getError();
                     failTask("#" + errorCode, null);
                 }
                 cleanup = true;
@@ -398,6 +401,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         + this.task.getIdentity().toString(), e);
             }
         }
+    }
+
+    private String getCauses(FaultType f) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 1; i < f.getFaultCause().length; i++) {
+            sb.append(f.getFaultCause(i).getDescription()[0]);
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     private void failTask(String message, Exception exception) {
