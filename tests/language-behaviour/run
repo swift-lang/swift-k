@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# make up a tc.data file
+
+cp $(dirname $(which swift))/../etc/tc.data ./tc.data
+
+for cmd in touch; do
+  echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
+done
+
+
 if [ "X$1" == "X" ]; then
   TESTS=*.swift
 elif [ "$1" == "-r" ]; then
@@ -31,7 +40,7 @@ for testfn in $TESTS; do
   	echo Skipping test $t
   else
 	echo Running test $t
-	swift ${t}.swift
+	swift -tc.file ./tc.data ${t}.swift
 	if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO"; exit 1; fi
 	echo expecting $EXPECTEDS
   fi
