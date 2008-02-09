@@ -13,8 +13,8 @@ else
   echo Resuming previous test run
 fi
 
-for a in *.dtm; do 
-  b=$(basename $a .dtm).xml
+for a in *.swift; do 
+  b=$(basename $a .swift).xml
   if [ ! -f $b ]; then
     echo Attempting vdlc known-good $a
     vdlc $a
@@ -38,7 +38,7 @@ popd
 
 pushd not-working
 rm -v *.?ml
-for a in *.dtm; do
+for a in *.swift; do
 
   echo Attempting vdlc known-bad $a
   vdlc $a
