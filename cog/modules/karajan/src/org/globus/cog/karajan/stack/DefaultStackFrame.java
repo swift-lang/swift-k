@@ -33,9 +33,14 @@ public final class DefaultStackFrame implements StackFrame {
 
 	public void setVar(final String name, final Object value) {
 		if (map.size() == 0) {
-			map = new HashMap(4, 1f);
+			map = new ListMap();
 		}
-		map.put(name, value);
+		int osz = map.size();
+		Object old = map.put(name, value);
+		if (osz == 4 && old == null) {
+			map = new HashMap(map);
+			map.put(name, value);
+		}
 	}
 
 	public void rename(final String oldName, final String newName) {
