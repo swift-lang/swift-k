@@ -9,6 +9,8 @@ package org.globus.cog.karajan.stack;
 import java.util.EmptyStackException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.util.TypeUtil;
