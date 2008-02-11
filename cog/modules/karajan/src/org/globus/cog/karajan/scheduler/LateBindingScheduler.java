@@ -471,7 +471,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		for (int i = 0; i < contacts.length; i++) {
 			if (!(contacts[i] instanceof BoundContact)) {
 				throw new TaskSubmissionException(
-						"submitBoundToServices called but at least a contact is not bound");
+						"submitBoundToServices called but at least a contact is not bound (" + contacts[i] + ")");
 			}
 			BoundContact c = (BoundContact) contacts[i];
 			c.setActiveTasks(c.getActiveTasks() + 1);
@@ -596,7 +596,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					synchronized (taskContacts) {
 						taskContacts.remove(task);
 					}
-					removeConstraints(task);
 
 					for (int i = 0; i < contacts.length; i++) {
 						BoundContact c = (BoundContact) contacts[i];
@@ -639,6 +638,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 						return;
 					}
 				}
+				removeConstraints(task);
 			}
 		}
 		catch (Exception ee) {
