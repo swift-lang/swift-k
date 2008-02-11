@@ -1,3 +1,8 @@
+(02/11/2008)
+
+*** Added some code to store stack frames of less than 5 elements
+    in a less memory consuming structure that HashMap.
+
 (10/03/2007)
 
 *** Converted more things to use the CWD below
