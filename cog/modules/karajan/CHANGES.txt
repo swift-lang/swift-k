@@ -1,3 +1,14 @@
+(02/12/2008)
+
+*** Added the maxSubmissionTime parameter to the score scheduler.
+    It's not strictly enforced, but the submission time of a job
+    submission task is now part of the feedback loop. The submission
+    time contributes to the score linearly and in addition to the other
+    things (such as successFactor). If the submission time
+    is 0.5s, the contribution is 0. If the submission time of a job
+    is exactly maxSubmissionTime, then the contribution is 
+    -successFactor.
+
 (02/11/2008)
 
 *** Added some code to store stack frames of less than 5 elements
