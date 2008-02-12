@@ -82,11 +82,11 @@ public class TaskMarshaller {
         setSpecification(task, xmlTask);
 
         // set the task attributes
-        Enumeration en = task.getAllAttributes();
+        Iterator en = task.getAttributeNames().iterator();
         AttributeList list = new AttributeList();
-        while (en.hasMoreElements()) {
+        while (en.hasNext()) {
             Attribute attribute = new Attribute();
-            String attrName = (String) en.nextElement();
+            String attrName = (String) en.next();
             attribute.setName(attrName);
             attribute.setValue((String) task.getAttribute(attrName));
             list.addAttribute(attribute);
