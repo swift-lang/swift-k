@@ -6,8 +6,7 @@
 
 package org.globus.cog.abstraction.impl.common;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.Date;
 
 import org.globus.cog.abstraction.interfaces.Status;
 
@@ -16,23 +15,22 @@ public class StatusImpl implements Status {
     private int prevStatus;
     private Exception exception = null;
     private String message = null;
-    private Calendar time = null;
+    private Date time;
 
     public StatusImpl() {
         this.curStatus = Status.UNSUBMITTED;
         this.prevStatus = Status.UNSUBMITTED;
-        this.time = new GregorianCalendar();
+        this.time = new Date();
     }
 
     public StatusImpl(int curStatus) {
+        this();
         this.curStatus = curStatus;
-        this.prevStatus = Status.UNSUBMITTED;
-        this.time = new GregorianCalendar();
     }
 
     public void setStatusCode(int status) {
         this.curStatus = status;
-        this.time = new GregorianCalendar();
+        this.time = new Date();
     }
 
     public int getStatusCode() {
@@ -63,17 +61,21 @@ public class StatusImpl implements Status {
         return this.message;
     }
 
-    public void setTime(Calendar time) {
+    public void setTime(Date time) {
         this.time = time;
     }
 
-    public Calendar getTime() {
+    public Date getTime() {
         return this.time;
     }
 
     public boolean isTerminal() {
-        return curStatus == COMPLETED || curStatus == FAILED
-                || curStatus == CANCELED;
+        return isTerminal(curStatus);
+    }
+    
+    public static boolean isTerminal(int status) {
+        return status == COMPLETED || status == FAILED
+                || status == CANCELED;
     }
 
     public String getStatusString() {
@@ -104,6 +106,9 @@ public class StatusImpl implements Status {
             case Status.SUBMITTED:
                 return "Submitted";
 
+            case Status.SUBMITTING:
+                return "Submitting";
+                
             case Status.SUSPENDED:
                 return "Suspended";
 
