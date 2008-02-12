@@ -38,9 +38,11 @@ public class SSHThrottlingFailureHandler implements FailureHandler {
 		}
 		else {
 			Status status = new StatusImpl();
+			//TODO this will, of course, break now that there's
+			//logic to handle out-of-order status events
 			status.setStatusCode(Status.UNSUBMITTED);
 			t.setStatus(status);
-			s.enqueue(t, null);
+			s.enqueue(t, s.getConstraints(t));
 			return true;
 		}
 	}
