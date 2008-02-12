@@ -133,12 +133,6 @@ public class TaskGraphImpl implements TaskGraph {
     public void setStatus(Status status) {
         this.status = status;
 
-        if (this.status.getStatusCode() == Status.SUBMITTED) {
-            this.submittedTime = this.status.getTime();
-        } else if (this.status.getStatusCode() == Status.COMPLETED) {
-            this.completedTime = this.status.getTime();
-        }
-
         if (this.statusListeners == null) {
             return;
         }
