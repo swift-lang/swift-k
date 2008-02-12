@@ -75,7 +75,7 @@ public interface ExecutableObject {
     /**
      * Sets the current status of this <code>ExecutableObject</code>.
      * Supported status are:
-     * {@link Status#UNSUBMITTED}, {@link Status#SUBMITTED}, {@link Status#ACTIVE},
+     * {@link Status#UNSUBMITTED}, {@link Status#SUBMITTING}, {@link Status#SUBMITTED}, {@link Status#ACTIVE},
      * {@link Status#SUSPENDED},{@link Status#RESUMED},{@link Status#FAILED},
      * {@link Status#CANCELED},{@link Status#COMPLETED},
      * {@link Status#UNKNOWN}

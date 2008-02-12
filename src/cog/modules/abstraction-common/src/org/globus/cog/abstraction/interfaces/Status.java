@@ -6,7 +6,7 @@
 
 package org.globus.cog.abstraction.interfaces;
 
-import java.util.Calendar;
+import java.util.Date;
 
 /**
  * An execution status associated with an <code>ExecutableObject</code>.
@@ -18,6 +18,11 @@ public interface Status {
      * service.
      */
     public static final int UNSUBMITTED = 0;
+    
+    /**
+     * This is set right before submission.
+     */
+    public static final int SUBMITTING = 8;
 
     /**
      * The <code>ExecutableObject</code> is submitted to the remote service
@@ -116,12 +121,12 @@ public interface Status {
     /**
      * Sets the time when the current status changed
      */
-    public void setTime(Calendar time);
+    public void setTime(Date time);
 
     /**
      * Returns the time when the current status changed.
      */
-    public Calendar getTime();
+    public Date getTime();
     
     /**
      * Returns <code>true</code> if this status is a terminal
