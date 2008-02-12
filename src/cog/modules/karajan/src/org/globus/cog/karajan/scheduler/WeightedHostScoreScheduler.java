@@ -10,6 +10,7 @@
 package org.globus.cog.karajan.scheduler;
 
 import java.lang.reflect.Field;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -41,6 +42,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	public static final String SCORE_HIGH_CAP = "scoreHighCap";
 	public static final String POLICY = "policy";
 	public static final String JOB_THROTTLE = "jobThrottle";
+	public static final String MAX_SUBMISSION_TIME = "maxSubmissionTime";
 
 	private WeightedHostSet sorted;
 	private int policy;
@@ -50,9 +52,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	 */
 	private double connectionRefusedFactor, connectionTimeoutFactor, jobSubmissionTaskLoadFactor,
 			transferTaskLoadFactor, fileOperationTaskLoadFactor, successFactor, failureFactor,
-			scoreHighCap;
+			scoreHighCap, maxSubmissionTime;
 
-	private int jobThrottle;
+	private float jobThrottle;
+
+	private double submissionTimeBias, submissionTimeFactor;
 
 	private boolean change;
 	private TaskConstraints cachedConstraints;
@@ -74,6 +78,22 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		failureFactor = -0.5;
 		scoreHighCap = 100;
 		jobThrottle = 2;
+		maxSubmissionTime = 20;
+		updateInternal();
+	}
+
+	// This isn't very accurate since it varies by provider
+	// and with submission parallelism
+	// What it means is that if submission time is exactly this much
+	// then a success should increase the score by successFactor
+	public final double BASE_SUBMISSION_TIME = 0.5;
+
+	protected void updateInternal() {
+		if (maxSubmissionTime < BASE_SUBMISSION_TIME) {
+			throw new IllegalArgumentException("maxSubmissionTime must be > " + BASE_SUBMISSION_TIME);
+		}
+		submissionTimeFactor = -successFactor / (maxSubmissionTime - BASE_SUBMISSION_TIME);
+		submissionTimeBias = -BASE_SUBMISSION_TIME * submissionTimeFactor;
 	}
 
 	public void setResources(ContactSet grid) {
@@ -92,7 +112,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		sorted.add(wh);
 	}
 
-	protected synchronized void multiplyScore(WeightedHost wh, double factor) {
+	protected synchronized void factorScore(WeightedHost wh, double factor) {
 		double score = wh.getScore();
 		if (logger.isDebugEnabled()) {
 			logger.debug("multiplyScore(" + wh + ", " + factor + ")");
@@ -105,7 +125,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 	}
 
-	protected synchronized void multiplyScoreLater(WeightedHost wh, double factor) {
+	protected synchronized void factorScoreLater(WeightedHost wh, double factor) {
 		wh.setDelayedDelta(wh.getDelayedDelta() + factor);
 	}
 
@@ -186,13 +206,11 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Next contact: " + selected);
 		}
-		
+
 		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
 		return selected.getHost();
 	}
-	
-	
 
 	public synchronized void releaseContact(Contact contact) {
 		if (logger.isDebugEnabled()) {
@@ -263,7 +281,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	private static final String[] myPropertyNames = new String[] { POLICY,
 			FACTOR_CONNECTION_REFUSED, FACTOR_CONNECTION_TIMEOUT, FACTOR_SUBMISSION_TASK_LOAD,
 			FACTOR_TRANSFER_TASK_LOAD, FACTOR_FILEOP_TASK_LOAD, FACTOR_FAILURE, FACTOR_SUCCESS,
-			SCORE_HIGH_CAP, JOB_THROTTLE };
+			SCORE_HIGH_CAP, JOB_THROTTLE, MAX_SUBMISSION_TIME };
 	private static Set propertyNamesSet;
 
 	static {
@@ -298,7 +316,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				}
 			}
 			else if (JOB_THROTTLE.equals(name)) {
-				jobThrottle = throttleValue(value);
+				jobThrottle = floatThrottleValue(value);
 			}
 			else {
 				double val = TypeUtil.toDouble(value);
@@ -315,6 +333,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 					throw new KarajanRuntimeException("Failed to set property '" + name + "'", e);
 				}
 			}
+			updateInternal();
 		}
 		else {
 			super.setProperty(name, value);
@@ -336,6 +355,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			if (contacts == null) {
 				return;
 			}
+
+			checkSubmissionTime(code, e.getStatus(), t, contacts);
 
 			if (code == Status.SUBMITTED) {
 				// this isn't reliable
@@ -365,6 +386,33 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 		finally {
 			super.statusChanged(e);
+		}
+	}
+
+	public static final String TASK_ATTR_SUBMISSION_TIME = "scheduler:submissionTime";
+
+	private void checkSubmissionTime(int code, Status s, Task t, Contact[] contacts) {
+		synchronized (t) {
+			if (t.getType() == Task.JOB_SUBMISSION) {
+				if (code == Status.SUBMITTING) {
+					t.setAttribute(TASK_ATTR_SUBMISSION_TIME, s.getTime());
+				}
+				else {
+					Date st = (Date) t.getAttribute(TASK_ATTR_SUBMISSION_TIME);
+					if (st != null) {
+						Date st2 = s.getTime();
+						long submissionTime = st2.getTime() - st.getTime();
+						t.setAttribute(TASK_ATTR_SUBMISSION_TIME, null);
+						double delta = submissionTimeBias + submissionTimeFactor * submissionTime
+								/ 1000;
+						if (logger.isDebugEnabled()) {
+							logger.debug("Submission time for " + t + ": " + submissionTime
+									+ "ms. Score delta: " + delta);
+						}
+						factorMultiple(contacts, delta);
+					}
+				}
+			}
 		}
 	}
 
@@ -398,7 +446,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			BoundContact bc = (BoundContact) contacts[i];
 			WeightedHost wh = sorted.findHost(bc);
 			if (wh != null) {
-				multiplyScore(wh, factor);
+				factorScore(wh, factor);
 			}
 		}
 	}
@@ -408,7 +456,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			BoundContact bc = (BoundContact) contacts[i];
 			WeightedHost wh = sorted.findHost(bc);
 			if (wh != null) {
-				multiplyScoreLater(wh, factor);
+				factorScoreLater(wh, factor);
 			}
 		}
 	}

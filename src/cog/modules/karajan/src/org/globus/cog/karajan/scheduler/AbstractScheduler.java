@@ -197,10 +197,19 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	
 	protected int throttleValue(Object value) {
 	    if ("off".equalsIgnoreCase(value.toString())) {
-	        return THROTTLE_OFF; 
+	        return THROTTLE_OFF;
 	    }
 	    else {
 	        return TypeUtil.toInt(value);
+	    }
+	}
+	
+	protected float floatThrottleValue(Object value) {
+	    if ("off".equalsIgnoreCase(value.toString())) {
+	        return THROTTLE_OFF;
+	    }
+	    else {
+	        return (float) TypeUtil.toDouble(value);
 	    }
 	}
 
