@@ -80,12 +80,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
             SSHRunner r = new SSHRunner(s, exec);
             r.addListener(this);
-            // check if the task has not been canceled after it was submitted
-            // for execution
-            if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
-                this.task.setStatus(Status.SUBMITTED);
-                r.startRun(exec);
-                this.task.setStatus(Status.ACTIVE);
+            synchronized(this) {
+                if (this.task.getStatus().getStatusCode() != Status.CANCELED) {
+                    r.startRun(exec);
+                    this.task.setStatus(Status.ACTIVE);
+                }
             }
         }
     }
@@ -100,8 +99,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         // not implemented yet
     }
 
-    public void cancel() throws InvalidSecurityContextException,
+    public synchronized void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException {
+        //TODO implement me
     }
 
     private String prepareSpecification(JobSpecification spec)
