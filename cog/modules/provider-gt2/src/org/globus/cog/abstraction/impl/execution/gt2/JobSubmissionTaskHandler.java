@@ -67,7 +67,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             throw new TaskSubmissionException(
                     "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
         }
+        if (this.task.getStatus().getStatusCode() != Status.UNSUBMITTED) {
+            throw new TaskSubmissionException("This task is already submitted");
+        }
         this.task = task;
+        this.task.setStatus(Status.SUBMITTING);
         this.securityContext = getSecurityContext(task);
         this.credential = (GSSCredential) securityContext.getCredentials();
         String rsl;
@@ -137,16 +141,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         try {
             // check if the task has not been canceled after it was
             // submitted for execution
-            if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
-                this.gramJob.request(server, spec.isBatchJob(), limitedDeleg);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Submitted job with Globus ID: "
-                            + this.gramJob.getIDAsString());
-                }
-                this.task.setStatus(Status.SUBMITTED);
-                if (spec.isBatchJob()) {
-                    this.task.setStatus(Status.COMPLETED);
-                }
+
+            this.gramJob.request(server, spec.isBatchJob(), limitedDeleg);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Submitted job with Globus ID: "
+                        + this.gramJob.getIDAsString());
+            }
+            this.task.setStatus(Status.SUBMITTED);
+            if (spec.isBatchJob()) {
+                this.task.setStatus(Status.COMPLETED);
             }
         }
         catch (GramException ge) {
@@ -159,10 +162,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     gsse);
         }
     }
-    
+
     private boolean isLimitedDelegation(SecurityContext sc) {
         if (sc instanceof GlobusSecurityContextImpl) {
-            return ((GlobusSecurityContextImpl) securityContext).getDelegation() != Delegation.FULL_DELEGATION; 
+            return ((GlobusSecurityContextImpl) securityContext)
+                    .getDelegation() != Delegation.FULL_DELEGATION;
         }
         else {
             return true;
@@ -432,8 +436,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         String gassURL = null;
 
         try {
-            this.gassServer = GassServerFactory
-                    .getGassServer(this.credential);
+            this.gassServer = GassServerFactory.getGassServer(this.credential);
             this.gassServer.registerDefaultDeactivator();
         }
         catch (Exception e) {
@@ -513,14 +516,16 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void outputClosed() {
     }
 
-    private SecurityContext getSecurityContext(Task task) throws InvalidSecurityContextException {
+    private SecurityContext getSecurityContext(Task task)
+            throws InvalidSecurityContextException {
         SecurityContext sc = task.getService(0).getSecurityContext();
         if (sc == null) {
             // create default credentials
             sc = new GlobusSecurityContextImpl();
             GSSManager manager = ExtendedGSSManager.getInstance();
             try {
-                sc.setCredentials(manager.createCredential(GSSCredential.INITIATE_AND_ACCEPT));
+                sc.setCredentials(manager
+                        .createCredential(GSSCredential.INITIATE_AND_ACCEPT));
             }
             catch (GSSException e) {
                 throw new InvalidSecurityContextException(e);

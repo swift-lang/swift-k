@@ -24,7 +24,6 @@ import org.globus.cog.abstraction.impl.file.UnixPermissionsImpl;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
-import org.globus.ftp.GridFTPSession;
 import org.globus.ftp.MlsxEntry;
 import org.globus.ftp.exception.ClientException;
 import org.globus.ftp.exception.ServerException;
