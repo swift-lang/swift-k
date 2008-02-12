@@ -30,6 +30,7 @@ public class CachingDelegatedFileOperationHandler extends TaskHandlerImpl {
     public synchronized void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
+        task.setStatus(Status.SUBMITTING);
         Service service = task.getService(0);
         if (service == null) {
             throw new IllegalSpecException("Service is not set");

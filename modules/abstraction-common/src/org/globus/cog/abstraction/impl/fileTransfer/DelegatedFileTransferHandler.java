@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Enumeration;
-import java.util.GregorianCalendar;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -467,6 +466,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
     }
 
     public void run() {
+        this.task.setStatus(Status.ACTIVE);
         // todo retreive progress markers
         if (this.thirdparty) {
             doThirdPartyTransfer();
@@ -583,7 +583,6 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
         status.setPrevStatusCode(this.task.getStatus().getStatusCode());
         status.setStatusCode(Status.FAILED);
         status.setException(e);
-        status.setTime(new GregorianCalendar());
         this.task.setStatus(status);
         stopResources();
         if (logger.isDebugEnabled()) {
