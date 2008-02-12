@@ -143,9 +143,6 @@ public class PBSExecutor implements ProcessListener {
         writeAttr("count", "-l nodes=", wr);
         writeAttr("maxwalltime", "-l walltime=", wr);
         writeAttr("queue", "-q ", wr);
-        if (spec.getDirectory() != null) {
-            wr.write("#PBS -d " + quote(spec.getDirectory()) + '\n');
-        }
         if (spec.getStdInput() != null) {
             throw new IOException("The PBSlocal provider cannot redirect STDIN");
         }
@@ -177,6 +174,9 @@ public class PBSExecutor implements ProcessListener {
             if (logger.isDebugEnabled()) {
                 logger.debug("Wrapper after variable substitution: " + wrapper);
             }
+        }
+        if (spec.getDirectory() != null) {
+            wr.write("cd " + quote(spec.getDirectory()) + " && ");
         }
         wr.write(quote(spec.getExecutable()));
         List args = spec.getArgumentsAsList();
