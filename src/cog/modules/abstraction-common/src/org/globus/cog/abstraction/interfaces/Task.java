@@ -7,9 +7,7 @@
 package org.globus.cog.abstraction.interfaces;
 
 import java.io.File;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Enumeration;
 
 import org.globus.cog.abstraction.xml.MarshalException;
 
@@ -232,7 +230,7 @@ public interface Task extends ExecutableObject {
      * @return an enumeration of all the attribute names. null if no attribute
      *         available
      */
-    public Enumeration getAllAttributes();
+    public Collection getAttributeNames();
 
     /**
      * Adds a listener to recieve the output events associated with this
@@ -292,23 +290,6 @@ public interface Task extends ExecutableObject {
      * Returns a boolean indicating if the task is canceled.
      */
     public boolean isCanceled();
-
-    /**
-     * Returns the time when this <code>Task</code> was submitted to the
-     * remote service.
-     * 
-     * @return the <code>Task</code> submission time. null, if this
-     *         <code>Task</code> is not yet submitted
-     */
-    public Calendar getSubmittedTime();
-
-    /**
-     * Returns the time when this <code>Task</code> was completed.
-     * 
-     * @return the <code>Task</code> completion time. null, if this
-     *         <code>Task</code> is not yet complete.
-     */
-    public Calendar getCompletedTime();
     
     /**
      * Blocks until the task reaches one of the terminal states (completed, failed or canceled)
