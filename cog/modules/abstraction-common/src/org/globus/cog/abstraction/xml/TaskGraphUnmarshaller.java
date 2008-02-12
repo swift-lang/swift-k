@@ -167,6 +167,8 @@ public class TaskGraphUnmarshaller {
             return Status.FAILED;
         } else if (statusString.equalsIgnoreCase("Resumed")) {
             return Status.RESUMED;
+        } else if (statusString.equalsIgnoreCase("Submitting")) {
+            return Status.SUBMITTING;
         } else if (statusString.equalsIgnoreCase("Submitted")) {
             return Status.SUBMITTED;
         } else if (statusString.equalsIgnoreCase("Suspended")) {
