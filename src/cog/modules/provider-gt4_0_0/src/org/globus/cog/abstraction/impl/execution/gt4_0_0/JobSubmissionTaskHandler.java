@@ -79,6 +79,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         else {
             this.task = task;
+            task.setStatus(Status.SUBMITTING);
 
             JobDescriptionType rsl;
             JobSpecification spec;
