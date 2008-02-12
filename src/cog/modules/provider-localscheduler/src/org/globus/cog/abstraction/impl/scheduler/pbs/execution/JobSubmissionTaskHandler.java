@@ -41,6 +41,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         else {
             this.task = task;
+            task.setStatus(Status.SUBMITTING);
             try {
                 spec = (JobSpecification) this.task.getSpecification();
             }
@@ -57,13 +58,13 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
 
             try {
-                new PBSExecutor(task, this).start();
-                // check if the task has not been canceled after it was
-                // submitted for execution
-                if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
-                    this.task.setStatus(Status.SUBMITTED);
-                    if (spec.isBatchJob()) {
-                        this.task.setStatus(Status.COMPLETED);
+                synchronized(this) {
+                    if (this.task.getStatus().getStatusCode() != Status.CANCELED) {
+                        new PBSExecutor(task, this).start();
+                        this.task.setStatus(Status.SUBMITTED);
+                        if (spec.isBatchJob()) {
+                            this.task.setStatus(Status.COMPLETED);
+                        }
                     }
                 }
             }
@@ -87,8 +88,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             TaskSubmissionException {
     }
 
-    public void cancel() throws InvalidSecurityContextException,
+    public synchronized void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException {
+        //TODO actually cancel the job
         this.task.setStatus(Status.CANCELED);
     }
 
