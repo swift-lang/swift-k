@@ -55,7 +55,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             throw new TaskSubmissionException(
                     "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
         }
-        else if (this.task.getStatus().getStatusCode() != Status.UNSUBMITTED) {
+        else if (task.getStatus().getStatusCode() != Status.UNSUBMITTED) {
             throw new TaskSubmissionException("Task is not in unsubmitted state");
         }
         else {
