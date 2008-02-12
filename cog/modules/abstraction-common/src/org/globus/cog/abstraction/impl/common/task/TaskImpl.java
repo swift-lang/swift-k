@@ -8,11 +8,10 @@ package org.globus.cog.abstraction.impl.common.task;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
@@ -46,17 +45,16 @@ public class TaskImpl implements Task {
 
     private CopyOnWriteHashSet statusListeners, outputListeners;
 
-    private Hashtable attributes = null;
-    private Calendar submittedTime = null;
-    private Calendar completedTime = null;
-    private ArrayList serviceList = null;
+    private Map attributes;
+
+    private ArrayList serviceList;
     private int requiredServices = 0;
 
     private boolean anythingWaiting;
 
     public TaskImpl() {
         this.id = new IdentityImpl();
-        this.attributes = new Hashtable();
+        this.attributes = new HashMap();
         this.serviceList = new ArrayList();
         this.status = new StatusImpl();
         statusListeners = new CopyOnWriteHashSet();
@@ -196,19 +194,39 @@ public class TaskImpl implements Task {
     }
 
     public void setStatus(Status status) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(this + " setting status to " + status);
+        int next = status.getStatusCode();
+        int pred = StatusOrder.pred(next);
+        boolean missing = false;
+        boolean discard = false;
+        synchronized (this) {
+            int crt = this.status.getStatusCode();
+            if (StatusOrder.greaterThan(crt, next) || crt == next) {
+                // discard late arrivals
+                discard = true;
+            }
+            else if (pred != crt && pred != -1) {
+                missing = true;
+            }
         }
-        this.status = status;
+        if (missing) {
+            setStatus(pred);
+        }
+        if (!discard) {
+            // not much choice left
+            if (logger.isDebugEnabled()) {
+                logger.debug(this + " setting status to " + status);
+            }
+            synchronized(this) {
+                this.status = status;
+            }
+            notifyListeners(status);
+        }
+        // Now prove that this works correctly with concurrent updates.
+        // I will pay $20 for the first one.
+    }
 
-        if (this.status.getStatusCode() == Status.SUBMITTED) {
-            this.submittedTime = this.status.getTime();
-        }
-        else if (this.status.getStatusCode() == Status.COMPLETED) {
-            this.completedTime = this.status.getTime();
-        }
-
-        StatusEvent event = new StatusEvent(this, this.status);
+    protected void notifyListeners(Status status) {
+        StatusEvent event = new StatusEvent(this, status);
         Iterator i = statusListeners.iterator();
         try {
             while (i.hasNext()) {
@@ -245,8 +263,8 @@ public class TaskImpl implements Task {
         return this.attributes.get(name.toLowerCase());
     }
 
-    public Enumeration getAllAttributes() {
-        return this.attributes.keys();
+    public Collection getAttributeNames() {
+        return this.attributes.keySet();
     }
 
     public void addStatusListener(StatusListener listener) {
@@ -272,14 +290,19 @@ public class TaskImpl implements Task {
     public String toString() {
         return "Task(type=" + typeString(type) + ", identity=" + id + ")";
     }
-    
+
     public static String typeString(int type) {
         switch (type) {
-        	case JOB_SUBMISSION: return "JOB_SUBMISSION";
-        	case FILE_TRANSFER: return "FILE_TRANSFER";
-        	case FILE_OPERATION: return "FILE_OPERATION";
-        	case INFORMATION_QUERY: return "INFORMATION_QUERY";
-        	default: return "UNKNOWN";
+            case JOB_SUBMISSION:
+                return "JOB_SUBMISSION";
+            case FILE_TRANSFER:
+                return "FILE_TRANSFER";
+            case FILE_OPERATION:
+                return "FILE_OPERATION";
+            case INFORMATION_QUERY:
+                return "INFORMATION_QUERY";
+            default:
+                return "UNKNOWN";
         }
     }
 
@@ -305,14 +328,6 @@ public class TaskImpl implements Task {
 
     public boolean isCanceled() {
         return (this.status.getStatusCode() == Status.CANCELED);
-    }
-
-    public Calendar getSubmittedTime() {
-        return this.submittedTime;
-    }
-
-    public Calendar getCompletedTime() {
-        return this.completedTime;
     }
 
     public boolean equals(Object object) {
