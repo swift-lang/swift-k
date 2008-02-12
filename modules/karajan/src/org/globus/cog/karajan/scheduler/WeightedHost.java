@@ -20,17 +20,17 @@ public class WeightedHost implements Comparable {
 	private double tscore;
 	private int load;
 	private double delayedDelta;
-	private int jobThrottle;
+	private float jobThrottle;
 
-	public WeightedHost(BoundContact contact, int jobThrottle) {
+	public WeightedHost(BoundContact contact, float jobThrottle) {
 		this(contact, 0.0, jobThrottle);
 	}
 
-	public WeightedHost(BoundContact contact, double score, int jobThrottle) {
+	public WeightedHost(BoundContact contact, double score, float jobThrottle) {
 		this(contact, score, 0, jobThrottle);
 	}
 
-	public WeightedHost(BoundContact contact, double score, int load, int jobThrottle) {
+	public WeightedHost(BoundContact contact, double score, int load, float jobThrottle) {
 		this.host = contact;
 		setScore(score);
 		this.load = load;
@@ -129,7 +129,7 @@ public class WeightedHost implements Comparable {
 		return !(load < jobThrottle * tscore + 2);
 	}
 
-	public int getJobThrottle() {
+	public float getJobThrottle() {
 		return jobThrottle;
 	}
 }
