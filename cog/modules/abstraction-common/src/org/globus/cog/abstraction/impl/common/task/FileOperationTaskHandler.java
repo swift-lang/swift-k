@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
@@ -73,6 +74,7 @@ public class FileOperationTaskHandler implements TaskHandler {
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
         TaskHandler taskHandler;
+        task.setStatus(Status.SUBMITTING);
         try {
             taskHandler = getOrCreateHandler(task);
         }
