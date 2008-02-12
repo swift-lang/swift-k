@@ -12,23 +12,30 @@ package org.globus.cog.karajan.scheduler.submitQueue;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
+import org.globus.cog.karajan.util.BoundContact;
 
 public class RateLimiterQueue extends AbstractSubmitQueue implements StatusListener {
+	public static final Logger logger = Logger.getLogger(RateLimiterQueue.class);
+
 	public static final int DEFAULT_MAX_RETRIES = 2;
 
 	private long lastSubmit, delay;
 	private static Timer timer;
 	private String errorRegexp;
 	private int maxRetries = DEFAULT_MAX_RETRIES;
+	private BoundContact contact;
 
-	public RateLimiterQueue(int initialRate, int maxRetries, String errorRegexp) {
+	public RateLimiterQueue(int initialRate, int maxRetries, String errorRegexp,
+			BoundContact contact) {
 		super(initialRate);
 		setRate(initialRate);
 		this.errorRegexp = errorRegexp;
 		this.maxRetries = maxRetries;
+		this.contact = contact;
 	}
 
 	public void setRate(int rate) {
@@ -96,7 +103,9 @@ public class RateLimiterQueue extends AbstractSubmitQueue implements StatusListe
 			if (getThrottle() > 2) {
 				setRate(getThrottle() - 1);
 			}
-			System.err.println("New rate: " + getThrottle() + " S/s");
+			if (logger.isDebugEnabled()) {
+				logger.debug("New rate for \"" + contact + "\": " + getThrottle() + " S/s");
+			}
 		}
 	}
 }

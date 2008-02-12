@@ -35,7 +35,7 @@ public class HostSubmitQueue extends AbstractSubmitQueue {
 		if ("ssh".equalsIgnoreCase(provider)) {
 			sq = (SubmitQueue) providerQueues.get(provider.toLowerCase());
 			if (sq == null) {
-				sq = new RateLimiterQueue(initialRate, maxRetries, errorRegexp);
+				sq = new RateLimiterQueue(initialRate, maxRetries, errorRegexp, contact);
 				providerQueues.put(provider, sq);
 			}
 		}
