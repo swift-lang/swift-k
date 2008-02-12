@@ -102,4 +102,6 @@ public interface Scheduler {
 	 * Allows handling task failures at the scheduler level
 	 */
 	void addFailureHandler(FailureHandler handler);
+	
+	Object getConstraints(Task task);
 }
