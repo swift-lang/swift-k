@@ -221,13 +221,13 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		return combined;
 	}
 
-	protected void setConstraints(Task task, Object constraint) {
+	public void setConstraints(Task task, Object constraint) {
 		synchronized (constraints) {
 			constraints.put(task, constraint);
 		}
 	}
 
-	protected Object getConstraints(Task task) {
+	public Object getConstraints(Task task) {
 		synchronized (constraints) {
 			return constraints.get(task);
 		}
