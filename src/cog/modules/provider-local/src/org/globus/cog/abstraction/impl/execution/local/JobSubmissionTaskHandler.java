@@ -54,8 +54,13 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         if (this.task != null) {
             throw new TaskSubmissionException(
                     "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
-        } else {
+        }
+        else if (this.task.getStatus().getStatusCode() != Status.UNSUBMITTED) {
+            throw new TaskSubmissionException("Task is not in unsubmitted state");
+        }
+        else {
             this.task = task;
+            task.setStatus(Status.SUBMITTING);
             JobSpecification spec;
             try {
                 spec = (JobSpecification) this.task.getSpecification();
@@ -72,14 +77,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 if (logger.isInfoEnabled()) {
                     logger.info("Submitting task " + task);
                 }
-                this.thread = new Thread(this);
-                // check if the task has not been canceled after it was
-                // submitted for execution
-                if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
-                    this.task.setStatus(Status.SUBMITTED);
-                    this.thread.start();
-                    if (spec.isBatchJob()) {
-                        this.task.setStatus(Status.COMPLETED);
+                synchronized(this) {
+                    this.thread = new Thread(this);
+                    if (this.task.getStatus().getStatusCode() != Status.CANCELED) {
+                        this.task.setStatus(Status.SUBMITTED);
+                        this.thread.start();
+                        if (spec.isBatchJob()) {
+                            this.task.setStatus(Status.COMPLETED);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -98,9 +103,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     public void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException {
-        killed = true;
-        process.destroy();
-        this.task.setStatus(Status.CANCELED);
+        synchronized(this) {
+            killed = true;
+            process.destroy();
+            this.task.setStatus(Status.CANCELED);
+        }
     }
 
     private static final FileLocation REDIRECT_LOCATION = FileLocation.MEMORY
