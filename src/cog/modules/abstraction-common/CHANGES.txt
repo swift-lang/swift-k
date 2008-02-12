@@ -1,3 +1,10 @@
+(02/12/2008)
+
+*** Finally fixed the notification order. A task is now 
+    guaranteed to go through the complete status lifecycle
+    and that no out-of-order status events will occur (e.g.
+    no Active after Completed). 
+
 (11/23/2007)
 
 *** Fixed broken isDirectory file operation
