@@ -97,16 +97,6 @@ public class TaskMarshaller {
 
         // set the task status
         xmlTask.setStatus(task.getStatus().getStatusString());
-
-        // set the task submitted and completed time
-        Calendar submittedTime = task.getSubmittedTime();
-        Calendar completedTime = task.getCompletedTime();
-        if (submittedTime != null) {
-            xmlTask.setSubmittedTime(submittedTime.getTime());
-        }
-        if (completedTime != null) {
-            xmlTask.setCompletedTime(completedTime.getTime());
-        }
     }
 
     private static void setServices(

@@ -118,6 +118,9 @@ public class TaskGraphMarshaller {
 
             case Status.SUBMITTED :
                 return "Submitted";
+                
+            case Status.SUBMITTING :
+                return "Submitting";
 
             case Status.SUSPENDED :
                 return "Suspended";
