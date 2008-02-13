@@ -1965,7 +1965,7 @@ to change how Swift decides where to run each job, and job submission
 interfaces to submit jobs through different mechanisms.
 </para>
 <para>A number of mappers are provided as part of the Swift release and
-documented in the <link ref="mappers">mappers</link> section.
+documented in the <link linkend="mappers">mappers</link> section.
 New mappers can be implemented
 in Java by implementing the org.griphyn.vdl.mapping.Mapper interface. The
 <ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift
