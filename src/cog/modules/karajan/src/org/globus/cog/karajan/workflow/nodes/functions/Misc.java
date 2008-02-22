@@ -18,8 +18,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -104,6 +106,15 @@ public class Misc extends FunctionsCollection {
 		DecimalFormat df = new DecimalFormat(TypeUtil.toString(PA_PATTERN.getValue(stack)));
 		return df.format(TypeUtil.toDouble(PA_VALUE.getValue(stack)));
 	}
+	
+	static {
+        setArguments("sys_dateformat", new Arg[] { PA_PATTERN, PA_VALUE });
+    }
+
+    public Object sys_dateformat(VariableStack stack) throws ExecutionException {
+        DateFormat df = new SimpleDateFormat(TypeUtil.toString(PA_PATTERN.getValue(stack)));
+        return df.format(PA_VALUE.getValue(stack));
+    }
 
 	static {
 		setArguments("sys_readfile", new Arg[] { PA_FILE });
