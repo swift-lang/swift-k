@@ -8,7 +8,7 @@ pushd working
 
 if [ "X$1" != "X-resume" ]; then
   echo Cleaning previous test results
-  rm -v *.?ml
+  rm *.?ml
 else
   echo Resuming previous test run
 fi
@@ -37,7 +37,7 @@ done
 popd
 
 pushd not-working
-rm -v *.?ml
+rm *.?ml
 for a in *.swift; do
 
   echo Attempting vdlc known-bad $a
