@@ -75,7 +75,7 @@ element(module:file, [module, file]
 				if(file:exists("{file}.png")
 					img(src="{file}.png")
 				)
-				a(href="http://www.cogkit.org/viewcvs/viewcvs.cgi/src/cog/modules/{module}/{file}?rev=cog_{cog:version}&content-type=text/vnd.viewcvs-markup", file)
+				a(href="http://cogkit.svn.sourceforge.net/viewvc/cogkit/tags/{cog:version}/src/cog/modules/{module}/{file}", file)
 			)
 		)
 	)
