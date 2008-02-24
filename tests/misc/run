@@ -1,0 +1,9 @@
+#!/bin/sh
+for a in clusters no-retries ; do
+ ./${a}.sh
+ R=$?
+ echo test $a ended with return value $R
+ if [ "$R" != "0" ] ; then
+   exit $R
+ fi
+done
