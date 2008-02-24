@@ -12,7 +12,6 @@
 localhost 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
 localhost 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
 localhost 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
-localhost 	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
 localhost 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
 localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
 localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
