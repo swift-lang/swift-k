@@ -64,7 +64,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static void main(String[] argv) {
 		logger.debug("Loader started");
 		ArgumentParser ap = buildArgumentParser();
-		long start = System.currentTimeMillis();
 		String project = null;
 		try {
 			ap.parse(argv);
