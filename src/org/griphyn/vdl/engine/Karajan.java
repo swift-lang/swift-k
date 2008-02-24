@@ -30,7 +30,6 @@ import org.globus.swift.language.Assign;
 import org.globus.swift.language.BinaryOperator;
 import org.globus.swift.language.Binding;
 import org.globus.swift.language.Call;
-import org.globus.swift.language.Continue;
 import org.globus.swift.language.Dataset;
 import org.globus.swift.language.Foreach;
 import org.globus.swift.language.FormalParameter;
@@ -293,7 +292,6 @@ public class Karajan {
 			switchStat((Switch) child, scope);
 		} else if (child instanceof Procedure
 			|| child instanceof Types
-			|| child instanceof Continue
 			|| child instanceof FormalParameter) {
 			// ignore these - they're expected but we don't need to
 			// do anything for them here

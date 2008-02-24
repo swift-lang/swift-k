@@ -253,10 +253,6 @@ iterate(cond,body,var) ::= <<
 </iterate>
 >>
 
-continue() ::= <<
-<continue/>
->>
-
 assign(lhs,rhs) ::= <<
 <assign>
  $lhs$

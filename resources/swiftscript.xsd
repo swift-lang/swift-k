@@ -540,13 +540,9 @@
 
       <xs:element name="switch" type="Switch"/>
 
-      <xs:element name="continue" type="Continue"/>
-
       <xs:element name="iterate" type="Iterate"/>
     </xs:choice>
   </xs:group>
-
-  <xs:complexType name="Continue"/>
 
 <!-- this is the base expression that means nothing and should never
 be used directly... but other things should substitute for it.
