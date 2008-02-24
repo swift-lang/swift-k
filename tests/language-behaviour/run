@@ -4,9 +4,13 @@
 
 cp $(dirname $(which swift))/../etc/tc.data ./tc.data
 
-for cmd in touch; do
-  echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
-done
+if [ "X$SWIFT_TEST_PARAMS" = "X" ] ; then
+  SWIFT_TEST_PARAMS="-tc.file ./tc.data"
+  for cmd in touch; do
+    echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
+  done
+fi
+
 
 
 if [ "X$1" == "X" ]; then
@@ -40,7 +44,7 @@ for testfn in $TESTS; do
   	echo Skipping test $t
   else
 	echo Running test $t
-	swift -tc.file ./tc.data ${t}.swift
+	swift ${SWIFT_TEST_PARAMS} ${t}.swift
 	if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO"; exit 1; fi
 	echo expecting $EXPECTEDS
   fi
