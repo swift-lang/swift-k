@@ -6,11 +6,11 @@ cp $(dirname $(which swift))/../etc/tc.data ./tc.data
 
 if [ "X$SWIFT_TEST_PARAMS" = "X" ] ; then
   SWIFT_TEST_PARAMS="-tc.file ./tc.data"
-  for cmd in touch; do
-    echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
-  done
 fi
 
+for cmd in touch; do
+  echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
+done
 
 
 if [ "X$1" == "X" ]; then
