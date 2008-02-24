@@ -7,6 +7,8 @@
 
 export CF=swift.properties.no-retries
 
+cat ../language-behaviour/tc.data | sed 's/null$/GLOBUS::maxwalltime="0:1"/' > clusters.tc.data
+
 cd ../language-behaviour
 
 cat $(dirname $(which swift))/../etc/swift.properties | grep --invert-match -E '^clustering.enabled=' > $CF
