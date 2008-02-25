@@ -30,7 +30,7 @@ fi
 			svn export --force $CVSROOT/trunk/current/src/cog/VERSION src/cog/VERSION 2>>$LOG
 		else
 			#cvs -d $CVSROOT export $TAG src/cog/VERSION 2>>$LOG
-			svn export --force $CVSROOT/tags/$TAG/src/cog/VERSION src/cog/VERSION 2>>$LOG
+			svn export --force $CVSROOT/$TAG/src/cog/VERSION src/cog/VERSION 2>>$LOG
 		fi
 	fi
 
@@ -71,7 +71,7 @@ TAG=$3
 			svn export --force $CVSROOT/trunk/current/src/cog/modules/provider-$PROVIDER/project.properties src/cog/modules/provider-$PROVIDER 2>>$LOG
 		else
 			#cvs -d $CVSROOT export $TAG src/cog/modules/provider-$PROVIDER/project.properties 2>>$LOG
-			svn export --force $CVSROOT/tags/$TAG/src/cog/modules/provider-$PROVIDER/project.properties src/cog/modules/provider-$PROVIDER 2>>$LOG
+			svn export --force $CVSROOT/$TAG/src/cog/modules/provider-$PROVIDER/project.properties src/cog/modules/provider-$PROVIDER 2>>$LOG
 		fi
 	fi
 
