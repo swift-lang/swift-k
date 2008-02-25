@@ -52,7 +52,7 @@ TAG=$2
 	else
 		echo "Checking out $TAG tag of $CVSMODULE"
 		#cvs -q -d $CVSROOT export $TAG $CVSMODULE >>$LOG
-		svn export --force $CVSROOT/tags/$TAG/$CVSMODULE src/cog >>$LOG
+		svn export --force $CVSROOT/$TAG/$CVSMODULE src/cog >>$LOG
 	fi
 }
 
