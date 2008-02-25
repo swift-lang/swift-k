@@ -5,7 +5,7 @@ package org.globus.cog.gridshell.commands;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -200,10 +200,10 @@ public abstract  class AbstractCommand implements Command, PropertyChangeListene
 			public String getMessage() {
 				return status.getMessage();
 			}
-			public void setTime(Calendar time) {
+			public void setTime(Date time) {
 				status.setTime(time);
 			}
-			public Calendar getTime() {
+			public Date getTime() {
 				return status.getTime();
 			}
 			public boolean isTerminal() {
