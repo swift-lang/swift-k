@@ -127,7 +127,7 @@ PUBLISHDIR=$2
 OP=$1
 
 if [ "$CVSROOT" == "" ]; then
-	CVSROOT="https://svn.sourceforge.net/svnroot/cogkit"
+	CVSROOT="https://cogkit.svn.sourceforge.net/svnroot/cogkit"
 fi
 
 case $OP in

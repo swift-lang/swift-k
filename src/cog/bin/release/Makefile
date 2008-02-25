@@ -1,5 +1,5 @@
 #CVSROOT=:pserver:anonymous@cvs.cogkit.org:/cvs/cogkit
-CVSROOT=https://svn.sourceforge.net/svnroot/cogkit
+CVSROOT=https://cogkit.svn.sourceforge.net/svnroot/cogkit
 # for example TAG=-r 4_0_alpha1
 TAG=now
 CRTDIR=$(shell pwd)
