@@ -18,6 +18,15 @@ import java.util.Set;
 
 public class VariableScope {
 
+	/** permit array up-assignment, but not entire variables */
+	final static int ENCLOSURE_LOOP = 301923;
+
+	/** permit all upwards assignments */
+	public static final int ENCLOSURE_ALL = 301924;
+
+	/** permit no upwards assignments */
+	public static final int ENCLOSURE_NONE = 301925;
+
 	public static final Logger logger = Logger.getLogger(VariableScope.class);
 
 	/** need this for the program as a whole. probably should factor
@@ -26,11 +35,28 @@ public class VariableScope {
 
 	VariableScope parentScope;
 
+	int enclosureType;
+
 	/** The string template in which we will store statements
 	    outputted into this scope. */
 	public StringTemplate bodyTemplate;
 
 	public VariableScope(Karajan c, VariableScope parent) {
+		this(c,parent,true);
+	}
+
+
+	/** Creates a new variable scope.
+		@param c the compiler scope in which this variable lives
+		@param parent the enclosing scope, or null if this is a
+			top level scope
+		@param a if true, assignments made in this scope
+			to variables in an enclosing scope will be permitted. if false,
+			this will be prohibited, which is desirable in loops to prohibit
+			multiple assignment
+		@deprecated use explicit upwards parameter rather than boolean
+	*/
+	public VariableScope(Karajan c, VariableScope parent, boolean a) {
 		if(parentScope!=null) {
 			logger.info("New scope "+hashCode()+" with parent scope "+parentScope.hashCode());
 		} else {
@@ -38,7 +64,31 @@ public class VariableScope {
 		}
 		compiler = c;
 		parentScope = parent;
+		if(a) {
+			enclosureType = ENCLOSURE_ALL;
+		} else {
+			enclosureType = ENCLOSURE_NONE;
+		}
 	}
+
+	/** Creates a new variable scope.
+		@param c the compiler scope in which this variable lives
+		@param parent the enclosing scope, or null if this is a
+			top level scope
+		@param a specifies how assignments to variables made in enclosing
+			scopes will be handled.
+	*/
+	public VariableScope(Karajan c, VariableScope parent, int a) {
+		if(parentScope!=null) {
+			logger.info("New scope "+hashCode()+" with parent scope "+parentScope.hashCode());
+		} else {
+			logger.info("New scope "+hashCode()+" with no parent.");
+		}
+		compiler = c;
+		parentScope = parent;
+		enclosureType = a;
+	}
+
 
 	/** Set of variables (String token names) that are declared in
 	    this scope - not variables in parent scopes, though. */
@@ -73,6 +123,16 @@ public class VariableScope {
 		return false;
 	}
 
+// TODO could also mark variable as written and catch duplicate assignments
+// in the same scope here
+	public boolean isVariableWriteable(String name, boolean partialWriter) {
+		if(isVariableLocallyDefined(name)) return true;
+		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_ALL) return true;
+		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_LOOP && partialWriter) return true;
+		return false;
+	}
+
+
 	public boolean isVariableLocallyDefined(String name) {
 		return variables.contains(name);
 	}
@@ -88,7 +148,7 @@ public class VariableScope {
 	    register a closing statement; otherwise, record that this scope
 	    writes to the variable so that the scope-embedding code (such as
 	    the foreach compiler) can handle appropriately. */
-	public void addWriter(String variableName, Object closeID) throws CompilationException
+	public void addWriter(String variableName, Object closeID, boolean partialWriter) throws CompilationException
 	{
 		if(!isVariableDefined(variableName)) {
 			throw new CompilationException("Variable "+variableName+" is not defined");
@@ -106,17 +166,30 @@ public class VariableScope {
 			postST.setAttribute("closeID", closeID);
 			presentStatementPostStatements.add(postST);
 		} else {
-			Variable variable = (Variable) variableUsage.get(variableName);
-			if(variable == null) {
-				variable = new Variable();
-				variableUsage.put(variableName, variable);
-			}
 
-			List statementList = variable.writingStatements;
-			if(!statementList.contains(closeID)) {
-				statementList.add(closeID);
+// TODO now we have to walk up the scopes until either we find the
+// variable or we find an upwards assignment prohibition or we run
+// out of scopes
+
+// TODO so far this should find undelcared variables at compile time
+// so perhaps worth making this into a separate patch if it actually
+// works
+
+			if(isVariableWriteable(variableName, partialWriter)) {
+				Variable variable = (Variable) variableUsage.get(variableName);
+				if(variable == null) {
+					variable = new Variable();
+					variableUsage.put(variableName, variable);
+				}
+
+				List statementList = variable.writingStatements;
+				if(!statementList.contains(closeID)) {
+					statementList.add(closeID);
+				}
+				logger.info("added "+closeID+" to variable "+variableName+" in scope "+hashCode());
+			} else {
+				throw new CompilationException("variable "+variableName+" is not writeable in this scope");
 			}
-			logger.info("added "+closeID+" to variable "+variableName+" in scope "+hashCode());
 		}
 	}
 

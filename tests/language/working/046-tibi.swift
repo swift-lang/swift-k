@@ -19,7 +19,7 @@ file="scripts/runTrialSubjectWavelet.R">;
     foreach s,i in trialTypes {
         //file output<simple_mapper;prefix=s,suffix="101.tgz">;
         file dataFiles<simple_mapper; prefix="101_", suffix=s>;
-        outputs = waveletTransf(waveletScript,101,s,dataFiles);
+        outputs[i] = waveletTransf(waveletScript,101,s,dataFiles);
     }
 }
 

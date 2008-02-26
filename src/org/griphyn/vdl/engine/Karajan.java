@@ -162,7 +162,7 @@ public class Karajan {
 
 	public void procedure(Procedure proc, VariableScope containingScope) throws CompilationException {
 		VariableScope outerScope = new VariableScope(this, null);
-		VariableScope innerScope = new VariableScope(this, outerScope);
+		VariableScope innerScope = new VariableScope(this, outerScope, false);
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("name", proc.getName());
@@ -271,7 +271,7 @@ public class Karajan {
 		assignST.setAttribute("var", expressionToKarajan(assign.getAbstractExpressionArray(0),scope));
 		assignST.setAttribute("value", expressionToKarajan(assign.getAbstractExpressionArray(1),scope));
 		String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
-		scope.addWriter(rootvar, new Integer(callID++));
+		scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(assign.getAbstractExpressionArray(0)));
 		scope.appendStatement(assignST);
 	}
 
@@ -331,14 +331,14 @@ public class Karajan {
 			StringTemplate argST = actualParameter(output, scope);
 			callST.setAttribute("outputs", argST);
 			String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
-			scope.addWriter(rootvar, new Integer(callID++));
+			scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
 		}
 
 		scope.appendStatement(callST);
 	}
 
 	public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
-		VariableScope innerScope = new VariableScope(this, scope);
+		VariableScope innerScope = new VariableScope(this, scope, false);
 		StringTemplate iterateST = template("iterate");
 
 		XmlObject cond = iterate.getAbstractExpression();
@@ -354,13 +354,13 @@ public class Karajan {
 		Iterator scopeIterator = innerScope.getVariableIterator();
 		while(scopeIterator.hasNext()) {
 			String v=(String) scopeIterator.next();
-			scope.addWriter(v, statementID);
+			scope.addWriter(v, statementID, false);
 		}
 		scope.appendStatement(iterateST);
 	}
 
 	public void foreachStat(Foreach foreach, VariableScope scope) throws CompilationException {
-		VariableScope innerScope = new VariableScope(this, scope);
+		VariableScope innerScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
 
 		StringTemplate foreachST = template("foreach");
 		foreachST.setAttribute("var", foreach.getVar());
@@ -381,7 +381,8 @@ public class Karajan {
 		Iterator scopeIterator = innerScope.getVariableIterator();
 		while(scopeIterator.hasNext()) {
 			String v=(String) scopeIterator.next();
-			scope.addWriter(v, statementID);
+			scope.addWriter(v, statementID, true);
+// TODO this is sometimes a partial write, I think...
 		}
 		scope.appendStatement(foreachST);
 
@@ -406,7 +407,7 @@ public class Karajan {
 		Iterator thenScopeIterator = innerThenScope.getVariableIterator();
 		while(thenScopeIterator.hasNext()) {
 			String v=(String) thenScopeIterator.next();
-			scope.addWriter(v, statementID);
+			scope.addWriter(v, statementID, false);
 		}
 
 		if (elsestat != null) {
@@ -420,7 +421,7 @@ public class Karajan {
 			Iterator elseScopeIterator = innerElseScope.getVariableIterator();
 			while(elseScopeIterator.hasNext()) {
 				String v=(String) elseScopeIterator.next();
-				scope.addWriter(v, statementID);
+				scope.addWriter(v, statementID, false);
 			}
 		}
 		scope.appendStatement(ifST);
@@ -444,7 +445,7 @@ public class Karajan {
 			Iterator caseScopeIterator = caseScope.getVariableIterator();
 			while(caseScopeIterator.hasNext()) {
 				String v=(String) caseScopeIterator.next();
-				scope.addWriter(v, statementID);
+				scope.addWriter(v, statementID, false);
 			}
 
 		}
@@ -457,7 +458,7 @@ public class Karajan {
 			Iterator defaultScopeIterator = defaultScope.getVariableIterator();
 			while(defaultScopeIterator.hasNext()) {
 				String v=(String) defaultScopeIterator.next();
-				scope.addWriter(v, statementID);
+				scope.addWriter(v, statementID, false);
 			}
 		}
 	}
@@ -683,6 +684,23 @@ public class Karajan {
 			throw new CompilationException("Could not find root for abstract expression.");
 		}
 	}
+
+	public boolean rootVariableIsPartial(XmlObject expression) {
+		Node expressionDOM = expression.getDomNode();
+		String namespaceURI = expressionDOM.getNamespaceURI();
+		String localName = expressionDOM.getLocalName();
+		QName expressionQName = new QName(namespaceURI, localName);
+		if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
+			return false;
+		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
+			return true;
+		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
+			return false;
+		} else {
+			throw new RuntimeException("Could not find root for abstract expression.");
+		}
+	}
+
 
 
 }

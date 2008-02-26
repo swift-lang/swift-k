@@ -66,7 +66,10 @@
         </mapping>
       </dataset>
       <call proc="waveletTransf">
-        <output><variableReference>outputs</variableReference></output>
+        <output><arraySubscript>
+         <variableReference>outputs</variableReference>
+         <variableReference>i</variableReference>
+        </arraySubscript></output>
         <input><variableReference>waveletScript</variableReference></input>
         <input><integerConstant>101</integerConstant></input>
         <input><variableReference>s</variableReference></input>
