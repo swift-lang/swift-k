@@ -1,1 +1,2 @@
-a=echo(s);
+int s;
+int a=echo(s);

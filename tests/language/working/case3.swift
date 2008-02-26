@@ -1,3 +1,8 @@
+int d=99;
+int g;
+int j;
+int t,uuu,e;
+string s;
 
 switch(d)
 {

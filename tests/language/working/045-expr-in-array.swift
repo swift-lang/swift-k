@@ -3,6 +3,8 @@
 // it's unclear whether this should work or not, from that thread
 // (at least as much had progressed at time of writing)
 
+int subjectNo[], trialTypes[], outputs[];
+
 foreach t,j in subjectNo {                                       
      foreach s,i in trialTypes {                                      
        outputs[i*j]=3;                                                     

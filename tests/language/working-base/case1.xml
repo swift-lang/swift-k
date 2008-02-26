@@ -1,6 +1,13 @@
 <program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="d" type="int"><integerConstant>5</integerConstant></variable>
+  <variable name="j" type="int" xsi:nil="true"/>
+  <variable name="uuu" type="int" xsi:nil="true"/>
+  <variable name="s" type="string" xsi:nil="true"/>
+  <variable name="g" type="int" xsi:nil="true"/>
+  <variable name="t" type="int" xsi:nil="true"/>
+  <variable name="e" type="int" xsi:nil="true"/>
   <switch>
     <variableReference>d</variableReference>
     <case>
@@ -18,22 +25,23 @@
        <variableReference>j</variableReference>
        <integerConstant>7</integerConstant>
       </assign>
-      <call proc="fn">
-        <output><variableReference>uuu</variableReference></output>
-        <input><arith op="+">
-          <arith op="+">
-            <arith op="+">
-              <variableReference>t</variableReference>
-              <integerConstant>7</integerConstant>
-            </arith>
-            <variableReference>e</variableReference>
-          </arith>
-          <arith op="*">
-            <integerConstant>3</integerConstant>
-            <integerConstant>2</integerConstant>
-          </arith>
-        </arith></input>
-      </call>
+      <assign>
+       <variableReference>uuu</variableReference>
+       <function name="fn">
+         <arith op="+">
+           <arith op="+">
+             <arith op="+">
+               <variableReference>t</variableReference>
+               <integerConstant>7</integerConstant>
+             </arith>
+             <variableReference>e</variableReference>
+           </arith>
+           <arith op="*">
+             <integerConstant>3</integerConstant>
+             <integerConstant>2</integerConstant>
+           </arith>
+         </arith></function>
+      </assign>
       </statements>
     </case>
     <default>

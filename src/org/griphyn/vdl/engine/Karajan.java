@@ -160,42 +160,45 @@ public class Karajan {
 		return scope.bodyTemplate;
 	}
 
-	public void procedure(Procedure proc, VariableScope outerScope) throws CompilationException {
+	public void procedure(Procedure proc, VariableScope containingScope) throws CompilationException {
+		VariableScope outerScope = new VariableScope(this, null);
+		VariableScope innerScope = new VariableScope(this, outerScope);
 		StringTemplate procST = template("procedure");
-		outerScope.bodyTemplate.setAttribute("procedures", procST);
+		containingScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("name", proc.getName());
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
-			StringTemplate paramST = parameter(param);
+			StringTemplate paramST = parameter(param, innerScope);
 			procST.setAttribute("outputs", paramST);
 			if (!param.isNil())
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
+			innerScope.addVariable(param.getName());
 		}
 		for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 			FormalParameter param = proc.getInputArray(i);
-			StringTemplate paramST = parameter(param);
+			StringTemplate paramST = parameter(param, outerScope);
 			procST.setAttribute("inputs", paramST);
 			if (!param.isNil())
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
+			outerScope.addVariable(param.getName());
 		}
 
 		Binding bind;
 		if ((bind = proc.getBinding()) != null) {
-			binding(bind, procST);
+			binding(bind, procST, innerScope);
 		}
 		else {
-			VariableScope scope = new VariableScope(this, null);
-			scope.bodyTemplate = procST;
-			statements(proc, scope);
+			innerScope.bodyTemplate = procST;
+			statements(proc, innerScope);
 		}
 
 	}
 
-	public StringTemplate parameter(FormalParameter param) throws CompilationException {
+	public StringTemplate parameter(FormalParameter param, VariableScope scope) throws CompilationException {
 		StringTemplate paramST = new StringTemplate("parameter");
 		StringTemplate typeST = new StringTemplate("type");
 		paramST.setAttribute("name", param.getName());
@@ -204,7 +207,7 @@ public class Karajan {
 		paramST.setAttribute("type", typeST);
 		paramST.setAttribute("isArray", new Boolean(param.getIsArray1()));
 		if(!param.isNil())
-			paramST.setAttribute("default",expressionToKarajan(param.getAbstractExpression()));
+			paramST.setAttribute("default",expressionToKarajan(param.getAbstractExpression(), scope));
 		return paramST;
 	}
 
@@ -216,7 +219,7 @@ public class Karajan {
 		variableST.setAttribute("isArray", Boolean.valueOf(var.getIsArray1()));
 
 		if(!var.isNil()) {
-			variableST.setAttribute("expr",expressionToKarajan(var.getAbstractExpression()));
+			variableST.setAttribute("expr",expressionToKarajan(var.getAbstractExpression(),scope));
 		} else {
 			// add temporary mapping info
 			StringTemplate mappingST = new StringTemplate("mapping");
@@ -255,7 +258,7 @@ public class Karajan {
 				Param param = mapping.getParamArray(i);
 				StringTemplate paramST = template("vdl_parameter");
 				paramST.setAttribute("name", param.getName());
-				paramST.setAttribute("expr",expressionToKarajan(param.getAbstractExpression()));
+				paramST.setAttribute("expr",expressionToKarajan(param.getAbstractExpression(),scope));
 				mappingST.setAttribute("params", paramST);
 			}
 			datasetST.setAttribute("mapping", mappingST);
@@ -265,8 +268,8 @@ public class Karajan {
 
 	public void assign(Assign assign, VariableScope scope) throws CompilationException {
 		StringTemplate assignST = template("assign");
-		assignST.setAttribute("var", expressionToKarajan(assign.getAbstractExpressionArray(0)));
-		assignST.setAttribute("value", expressionToKarajan(assign.getAbstractExpressionArray(1)));
+		assignST.setAttribute("var", expressionToKarajan(assign.getAbstractExpressionArray(0),scope));
+		assignST.setAttribute("value", expressionToKarajan(assign.getAbstractExpressionArray(1),scope));
 		String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
 		scope.addWriter(rootvar, new Integer(callID++));
 		scope.appendStatement(assignST);
@@ -320,12 +323,12 @@ public class Karajan {
 		StringTemplate parentST = callST.getEnclosingInstance();
 		for (int i = 0; i < call.sizeOfInputArray(); i++) {
 			ActualParameter input = call.getInputArray(i);
-			StringTemplate argST = actualParameter(input);
+			StringTemplate argST = actualParameter(input, scope);
 			callST.setAttribute("inputs", argST);
 		}
 		for (int i = 0; i < call.sizeOfOutputArray(); i++) {
 			ActualParameter output = call.getOutputArray(i);
-			StringTemplate argST = actualParameter(output);
+			StringTemplate argST = actualParameter(output, scope);
 			callST.setAttribute("outputs", argST);
 			String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
 			scope.addWriter(rootvar, new Integer(callID++));
@@ -339,7 +342,7 @@ public class Karajan {
 		StringTemplate iterateST = template("iterate");
 
 		XmlObject cond = iterate.getAbstractExpression();
-		StringTemplate condST = expressionToKarajan(cond);
+		StringTemplate condST = expressionToKarajan(cond, scope);
 		iterateST.setAttribute("cond", condST);
 		iterateST.setAttribute("var", iterate.getVar());
 		innerScope.addVariable(iterate.getVar());
@@ -367,7 +370,7 @@ public class Karajan {
 			innerScope.addVariable(foreach.getIndexVar());
 		}
 		XmlObject in = foreach.getIn().getAbstractExpression();
-		StringTemplate inST = expressionToKarajan(in);
+		StringTemplate inST = expressionToKarajan(in, scope);
 		foreachST.setAttribute("in", inST);
 
 		innerScope.bodyTemplate = foreachST;
@@ -386,7 +389,7 @@ public class Karajan {
 
 	public void ifStat(If ifstat, VariableScope scope) throws CompilationException {
 		StringTemplate ifST = template("if");
-		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression());
+		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression(), scope);
 		ifST.setAttribute("condition", conditionST.toString());
 
 		Then thenstat = ifstat.getThen();
@@ -427,7 +430,7 @@ public class Karajan {
 		StringTemplate switchST = template("switch");
 		Object statementID = new Integer(callID++);
 		scope.bodyTemplate.setAttribute("statements", switchST);
-		StringTemplate conditionST = expressionToKarajan(switchstat.getAbstractExpression());
+		StringTemplate conditionST = expressionToKarajan(switchstat.getAbstractExpression(), scope);
 		switchST.setAttribute("condition", conditionST.toString());
 
 		for (int i=0; i< switchstat.sizeOfCaseArray(); i++) {
@@ -460,41 +463,41 @@ public class Karajan {
 	}
 
 	public void caseStat(Case casestat, VariableScope scope) throws CompilationException {
-		StringTemplate valueST = expressionToKarajan(casestat.getAbstractExpression());
+		StringTemplate valueST = expressionToKarajan(casestat.getAbstractExpression(), scope);
 		scope.bodyTemplate.setAttribute("value", valueST.toString());
 		statements(casestat.getStatements(), scope);
 	}
 
-	public StringTemplate actualParameter(ActualParameter arg) throws CompilationException {
+	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope) throws CompilationException {
 		StringTemplate argST = template("call_arg");
 		argST.setAttribute("bind", arg.getBind());
-		argST.setAttribute("expr", expressionToKarajan(arg.getAbstractExpression()));
+		argST.setAttribute("expr", expressionToKarajan(arg.getAbstractExpression(), scope));
 		return argST;
 	}
 
-	public void binding(Binding bind, StringTemplate procST) throws CompilationException {
+	public void binding(Binding bind, StringTemplate procST, VariableScope scope) throws CompilationException {
 		StringTemplate bindST = new StringTemplate("binding");
 		ApplicationBinding app;
 		if ((app = bind.getApplication()) != null) {
-			bindST.setAttribute("application", application(app));
+			bindST.setAttribute("application", application(app, scope));
 			procST.setAttribute("binding", bindST);
 		} else throw new CompilationException("Unknown binding: "+bind);
 	}
 
-	public StringTemplate application(ApplicationBinding app) throws CompilationException {
+	public StringTemplate application(ApplicationBinding app, VariableScope scope) throws CompilationException {
 		StringTemplate appST = new StringTemplate("application");
 		appST.setAttribute("exec", app.getExecutable());
 		for (int i = 0; i < app.sizeOfAbstractExpressionArray(); i++) {
 			XmlObject argument = app.getAbstractExpressionArray(i);
-			StringTemplate argumentST = expressionToKarajan(argument);
+			StringTemplate argumentST = expressionToKarajan(argument, scope);
 			appST.setAttribute("arguments", argumentST);
 		}
 		if(app.getStdin()!=null)
-			appST.setAttribute("stdin", expressionToKarajan(app.getStdin().getAbstractExpression()));
+			appST.setAttribute("stdin", expressionToKarajan(app.getStdin().getAbstractExpression(), scope));
 		if(app.getStdout()!=null)
-			appST.setAttribute("stdout", expressionToKarajan(app.getStdout().getAbstractExpression()));
+			appST.setAttribute("stdout", expressionToKarajan(app.getStdout().getAbstractExpression(), scope));
 		if(app.getStderr()!=null)
-			appST.setAttribute("stderr", expressionToKarajan(app.getStderr().getAbstractExpression()));
+			appST.setAttribute("stderr", expressionToKarajan(app.getStderr().getAbstractExpression(), scope));
 		return appST;
 	}
 
@@ -506,12 +509,12 @@ public class Karajan {
 	  * that happens.
 	  */
 
-	public StringTemplate function(Function func) throws CompilationException {
+	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", func.getName());
 		XmlObject[] arguments = func.getAbstractExpressionArray();
 		for(int i = 0; i < arguments.length; i++ ) {
-			funcST.setAttribute("args",expressionToKarajan(arguments[i]));
+			funcST.setAttribute("args",expressionToKarajan(arguments[i], scope));
 		}
 
 		return funcST;
@@ -539,7 +542,7 @@ public class Karajan {
 	/** converts an XML intermediate form expression into a
 	 *  Karajan expression.
 	 */
-	public StringTemplate expressionToKarajan(XmlObject expression) throws CompilationException
+	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope) throws CompilationException
 	{
 		Node expressionDOM = expression.getDomNode();
 		String namespaceURI = expressionDOM.getNamespaceURI();
@@ -550,14 +553,14 @@ public class Karajan {
 		{
 			StringTemplate st = template("or");
 			BinaryOperator o = (BinaryOperator)expression;
-			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
-			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0), scope));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1), scope));
 			return st;
 		} else if (expressionQName.equals(AND_EXPR)) {
 			StringTemplate st = template("and");
 			BinaryOperator o = (BinaryOperator)expression;
-			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
-			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0), scope));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1), scope));
 			return st;
 		} else if (expressionQName.equals(BOOL_EXPR)) {
 			XmlBoolean xmlBoolean = (XmlBoolean) expression;
@@ -587,30 +590,33 @@ public class Karajan {
 			StringTemplate st = template("binaryop");
 			LabelledBinaryOperator o = (LabelledBinaryOperator) expression;
 			st.setAttribute("op", o.getOp());
-			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
-			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0), scope));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1), scope));
 			return st;
 		} else if (expressionQName.equals(ARITH_EXPR)) {
 			LabelledBinaryOperator o = (LabelledBinaryOperator) expression;
 			StringTemplate st = template("binaryop");
 			st.setAttribute("op", o.getOp());
-			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0)));
-			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1)));
+			st.setAttribute("left", expressionToKarajan(o.getAbstractExpressionArray(0), scope));
+			st.setAttribute("right", expressionToKarajan(o.getAbstractExpressionArray(1), scope));
 			return st;
 		} else if (expressionQName.equals(UNARY_NEGATION_EXPR)) {
 			UnlabelledUnaryOperator e = (UnlabelledUnaryOperator) expression;
 			StringTemplate st = template("unaryNegation");
-			st.setAttribute("exp",expressionToKarajan(e.getAbstractExpression()));
+			st.setAttribute("exp",expressionToKarajan(e.getAbstractExpression(), scope));
 			return st;
 		} else if (expressionQName.equals(NOT_EXPR)) {
 // TODO not can probably merge with 'unary'
 			UnlabelledUnaryOperator e = (UnlabelledUnaryOperator)expression;
 			StringTemplate st = template("not");
-			st.setAttribute("exp",expressionToKarajan(e.getAbstractExpression()));
+			st.setAttribute("exp",expressionToKarajan(e.getAbstractExpression(), scope));
 			return st;
 		} else if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
 			XmlString xmlString = (XmlString) expression;
 			String s = xmlString.getStringValue();
+			if(!scope.isVariableDefined(s)) {
+				throw new CompilationException("Variable "+s+" is undefined.");
+			}
 			StringTemplate st = template("id");
 			st.setAttribute("var",s);
 			return st;
@@ -618,14 +624,14 @@ public class Karajan {
 		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
 			BinaryOperator op = (BinaryOperator) expression;
 			StringTemplate newst = template("extractarrayelement");
-			newst.setAttribute("arraychild",expressionToKarajan(op.getAbstractExpressionArray(1)));
-			newst.setAttribute("parent",expressionToKarajan(op.getAbstractExpressionArray(0)));
+			newst.setAttribute("arraychild",expressionToKarajan(op.getAbstractExpressionArray(1), scope));
+			newst.setAttribute("parent",expressionToKarajan(op.getAbstractExpressionArray(0), scope));
 			return newst;
 		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
 			StructureMember sm = (StructureMember) expression;
 			StringTemplate newst = template("extractarrayelement");
 			newst.setAttribute("memberchild", sm.getMemberName());
-			newst.setAttribute("parent",expressionToKarajan(sm.getAbstractExpression()));
+			newst.setAttribute("parent",expressionToKarajan(sm.getAbstractExpression(), scope));
 			return newst;
 			// TODO the template layout for this and ARRAY_SUBSCRIPT are
 			// both a bit convoluted for historical reasons.
@@ -635,23 +641,23 @@ public class Karajan {
 			StringTemplate st = template("array");
 			for (int i = 0; i < array.sizeOfAbstractExpressionArray(); i++) {
 				XmlObject expr = array.getAbstractExpressionArray(i);
-				st.setAttribute("elements", expressionToKarajan(expr));
+				st.setAttribute("elements", expressionToKarajan(expr, scope));
 			}
 			return st;
 		} else if (expressionQName.equals(RANGE_EXPR)) {
 			Range range = (Range)expression;
 			StringTemplate st = template("range");
 			st.setAttribute("from", expressionToKarajan(
-				range.getAbstractExpressionArray(0)));
+				range.getAbstractExpressionArray(0), scope));
 			st.setAttribute("to", expressionToKarajan(
-				range.getAbstractExpressionArray(1)));
+				range.getAbstractExpressionArray(1), scope));
 			if(range.sizeOfAbstractExpressionArray()==3) // step is optional
 				st.setAttribute("step", expressionToKarajan(
-				 range.getAbstractExpressionArray(2)));
+				 range.getAbstractExpressionArray(2), scope));
 			return st;
 		} else if (expressionQName.equals(FUNCTION_EXPR)) {
 			Function f = (Function) expression;
-			StringTemplate st = function(f);
+			StringTemplate st = function(f, scope);
 			return st;
 		} else {
 			throw new CompilationException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);

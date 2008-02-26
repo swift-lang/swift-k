@@ -1,1 +1,2 @@
-foreach s in sa { a = echo(s); }
+int sa[];
+foreach s in sa { int a = echo(s); }

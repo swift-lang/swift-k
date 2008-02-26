@@ -1,1 +1,2 @@
+int greetings;
 echo(greetings);

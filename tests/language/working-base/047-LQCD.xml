@@ -259,6 +259,7 @@
       <stringConstant>m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000102</stringConstant><stringConstant>m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108</stringConstant><stringConstant>m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114</stringConstant>
     </array>
   </variable>
+  <variable name="conflist" type="int[]" xsi:nil="true"/>
   <foreach var="config"  indexVar="i">
   <in><variableReference>conflist</variableReference></in>
   <body><variable name="source" type="string"><stringConstant>local,0,0,0,0</stringConstant></variable>

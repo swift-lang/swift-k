@@ -1,1 +1,1 @@
-hw1 = echo();
+int hw1 = echo();

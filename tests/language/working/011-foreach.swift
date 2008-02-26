@@ -1,1 +1,2 @@
-foreach s in zdata { a = echo(s); }
+int zdata[];
+foreach s in zdata { int a = echo(s); }

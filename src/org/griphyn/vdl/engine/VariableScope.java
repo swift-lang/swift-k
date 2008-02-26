@@ -4,6 +4,8 @@ import org.antlr.stringtemplate.StringTemplate;
 
 import org.apache.log4j.Logger;
 
+import org.griphyn.vdl.karajan.CompilationException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,9 +49,12 @@ public class VariableScope {
 	    variable. Need to define behaviour here when the
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
-	public void addVariable(String name) {
+	public void addVariable(String name) throws CompilationException {
 		logger.info("Adding variable "+name+" to scope "+hashCode());
-// TODO check parent scopes for this...
+
+		if(isVariableDefined(name)) {
+			throw new CompilationException("Variable "+name+" is already defined.");
+		}
 
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
 			logger.warn("Variable "+name+" defined in scope "+hashCode()
@@ -58,7 +63,7 @@ public class VariableScope {
 		}
 
 		boolean added = variables.add(name);
-		if(!added) throw new RuntimeException("Could not add variable "+name+" to scope.");
+		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
 	}
 
 
@@ -83,8 +88,12 @@ public class VariableScope {
 	    register a closing statement; otherwise, record that this scope
 	    writes to the variable so that the scope-embedding code (such as
 	    the foreach compiler) can handle appropriately. */
-	public void addWriter(String variableName, Object closeID)
+	public void addWriter(String variableName, Object closeID) throws CompilationException
 	{
+		if(!isVariableDefined(variableName)) {
+			throw new CompilationException("Variable "+variableName+" is not defined");
+		}
+
 		if(isVariableLocallyDefined(variableName)) {
 			StringTemplate ld = getLocalDeclaration(variableName);
 			if(ld != null) {

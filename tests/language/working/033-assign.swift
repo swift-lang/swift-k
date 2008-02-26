@@ -1,1 +1,2 @@
-i=(a + b) * 5;
+int a,b;
+int i=(a + b) * 5;

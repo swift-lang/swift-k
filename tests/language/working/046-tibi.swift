@@ -33,7 +33,7 @@ files="101-FBchannel10_cwt-results.Rdata, 101-FBchannel11_cwt-results.Rdata, 101
 
 //the MAIN program
 //file waveletScript<single_file_mapper;
-file="scripts/runTrialSubjectWavelet.R";
+string file="scripts/runTrialSubjectWavelet.R";
 //namedOutputs = waveletTransf(waveletScript, 101, "FB");
 namedOutputs = batchTrials(trialTypes);
 

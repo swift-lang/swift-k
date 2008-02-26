@@ -1,3 +1,7 @@
+int d = 5;
+int j,uuu;
+string s;
+int g, t, e;
 
 switch(d)
 {
@@ -5,7 +9,7 @@ switch(d)
      f(g);
     case 5:
      j=7;
-     uuu=fn(t+7+e+3*2);
+     uuu=@fn(t+7+e+3*2);
     default:
      s="the default";
 }
