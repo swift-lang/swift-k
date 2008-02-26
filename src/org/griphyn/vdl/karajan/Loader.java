@@ -195,7 +195,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
 	public static String compile(String project) 
 		throws FileNotFoundException, ParsingException,
-		IncorrectInvocationException {
+		IncorrectInvocationException, CompilationException {
 		File dtm = new File(project);
 		File dir = dtm.getParentFile();
 		String projectBase = project.substring(0, project.lastIndexOf('.'));
@@ -215,12 +215,19 @@ public class Loader extends org.globus.cog.karajan.Loader {
 				kml.delete();
 				throw e;
 			}
+			catch(CompilationException e) {
+				// if we leave a kml file around, then a subsequent
+				// re-run will skip recompiling and cause a different
+				// error message for the user
+				kml.delete();
+				throw e;
+			}
 			catch(Exception e) {
 				// if we leave a kml file around, then a subsequent
 				// re-run will skip recompiling and cause a different
 				// error message for the user
 				kml.delete();
-				throw new RuntimeException("Failed to convert .xml to .kml for "+project,e);
+				throw new CompilationException("Failed to convert .xml to .kml for "+project,e);
 			}
 		} 
 		else {
