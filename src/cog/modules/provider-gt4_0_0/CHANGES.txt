@@ -1,3 +1,8 @@
+(02/27/2008)
+
+*** Updated WS-GRAM jars again due to a mishap with the
+    first update.
+
 (02/25/2008)
 
 *** Updated axis and wsrf jars to fix a scalability problem
