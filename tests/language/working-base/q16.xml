@@ -41,7 +41,7 @@
       <param name="transform"><stringConstant>\1count</stringConstant></param>
     </mapping>
   </dataset>
-  <call proc="countwords">
+  <call proc="countwords" src="line 14">
     <output><variableReference>c</variableReference></output>
     <input><variableReference>inputfile</variableReference></input>
   </call>

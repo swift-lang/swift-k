@@ -42,7 +42,7 @@
       <param name="files"><variableReference>outputNames</variableReference></param>
     </mapping>
   </dataset>
-  <call proc="countwords">
+  <call proc="countwords" src="line 16">
     <output><arraySubscript>
      <variableReference>outputfiles</variableReference>
      <integerConstant>0</integerConstant>
@@ -52,7 +52,7 @@
      <integerConstant>0</integerConstant>
     </arraySubscript></input>
   </call>
-  <call proc="countwords">
+  <call proc="countwords" src="line 17">
     <output><arraySubscript>
      <variableReference>outputfiles</variableReference>
      <integerConstant>1</integerConstant>
@@ -62,7 +62,7 @@
      <integerConstant>1</integerConstant>
     </arraySubscript></input>
   </call>
-  <call proc="countwords">
+  <call proc="countwords" src="line 18">
     <output><arraySubscript>
      <variableReference>outputfiles</variableReference>
      <integerConstant>2</integerConstant>

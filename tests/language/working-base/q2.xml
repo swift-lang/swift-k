@@ -29,7 +29,7 @@
   <dataset name="outfile" type="messagefile">
     <file name="hello2.txt"/>
   </dataset>
-  <call proc="greeting">
+  <call proc="greeting" src="line 11">
     <output><variableReference>outfile</variableReference></output>
     <input><stringConstant>hello world</stringConstant></input>
   </call>

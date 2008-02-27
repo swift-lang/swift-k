@@ -13,9 +13,9 @@
       <param name="pattern"><stringConstant>*</stringConstant></param>
     </mapping>
   </dataset>
-  <foreach var="f" >
+  <foreach var="f"  src="line 5">
   <in><variableReference>files</variableReference></in>
-  <body><call proc="print">
+  <body><call proc="print" src="line 6">
       <input><variableReference>f</variableReference></input>
     </call></body>
   </foreach>

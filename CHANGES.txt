@@ -1,3 +1,8 @@
+(02/27/08)
+*** SwiftScript source file line numbers are now passed deeper into the
+    compiler in order to give location information in more error messages.
+    This has resulted in a schema change for the XML intermediate form.
+
 (02/26/08)
 *** Better compile-time checking of variable usage. Use of undeclared
     variables and multiple assignments to the same variable will now result

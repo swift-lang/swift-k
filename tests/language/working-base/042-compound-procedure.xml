@@ -7,7 +7,7 @@
     name="bar" type="int"
 
      xsi:nil="true" />
-    <call proc="j">
+    <call proc="j" src="line 1">
       <input><variableReference>bar</variableReference></input>
     </call>
   </procedure>

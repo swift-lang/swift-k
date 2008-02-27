@@ -20,13 +20,22 @@ options {
 {
 protected StringTemplateGroup m_templates=null;
 protected String currentFunctionName=null;
+protected SwiftScriptLexer swiftLexer=null;
 
 public void setTemplateGroup(StringTemplateGroup tempGroup) {
     m_templates = tempGroup;
 }
 
+/** TODO this can perhaps be extracted from the superclass, but I don't
+    have javadocs available at the time of writing. */
+public void setSwiftLexer(SwiftScriptLexer sl) {
+	swiftLexer = sl;
+}
+
 StringTemplate template(String name) {
-    return m_templates.getInstanceOf(name);
+	StringTemplate t = m_templates.getInstanceOf(name);
+	t.setAttribute("sourcelocation","line "+swiftLexer.getLine());
+    return t;
 }
 
 StringTemplate text(String t) {
@@ -128,8 +137,7 @@ structdecl [StringTemplate code]
     ;
 
 topLevelStatement[StringTemplate code]
-{StringTemplate d=null;}
-
+{StringTemplate d=null; }
    :
 
 // these are ll(1) and easy to predict

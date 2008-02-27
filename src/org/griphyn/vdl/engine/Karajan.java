@@ -267,12 +267,16 @@ public class Karajan {
 	}
 
 	public void assign(Assign assign, VariableScope scope) throws CompilationException {
-		StringTemplate assignST = template("assign");
-		assignST.setAttribute("var", expressionToKarajan(assign.getAbstractExpressionArray(0),scope));
-		assignST.setAttribute("value", expressionToKarajan(assign.getAbstractExpressionArray(1),scope));
-		String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
-		scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(assign.getAbstractExpressionArray(0)));
-		scope.appendStatement(assignST);
+		try {
+			StringTemplate assignST = template("assign");
+			assignST.setAttribute("var", expressionToKarajan(assign.getAbstractExpressionArray(0),scope));
+			assignST.setAttribute("value", expressionToKarajan(assign.getAbstractExpressionArray(1),scope));
+			String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
+			scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(assign.getAbstractExpressionArray(0)));
+			scope.appendStatement(assignST);
+		} catch(CompilationException re) {
+			throw new CompilationException("Compile error in assigment at "+assign.getSrc()+": "+re.getMessage(),re);
+		}
 	}
 
 	public void statements(XmlObject prog, VariableScope scope) throws CompilationException {
@@ -318,23 +322,26 @@ public class Karajan {
 	}
 
 	public void call(Call call, VariableScope scope) throws CompilationException {
-		StringTemplate callST = template("call");
-		callST.setAttribute("func", call.getProc().getLocalPart());
-		StringTemplate parentST = callST.getEnclosingInstance();
-		for (int i = 0; i < call.sizeOfInputArray(); i++) {
-			ActualParameter input = call.getInputArray(i);
-			StringTemplate argST = actualParameter(input, scope);
-			callST.setAttribute("inputs", argST);
+		try {
+			StringTemplate callST = template("call");
+			callST.setAttribute("func", call.getProc().getLocalPart());
+			StringTemplate parentST = callST.getEnclosingInstance();
+			for (int i = 0; i < call.sizeOfInputArray(); i++) {
+				ActualParameter input = call.getInputArray(i);
+				StringTemplate argST = actualParameter(input, scope);
+				callST.setAttribute("inputs", argST);
+			}
+			for (int i = 0; i < call.sizeOfOutputArray(); i++) {
+				ActualParameter output = call.getOutputArray(i);
+				StringTemplate argST = actualParameter(output, scope);
+				callST.setAttribute("outputs", argST);
+				String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
+					scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
+			}
+			scope.appendStatement(callST);
+		} catch(CompilationException ce) {
+			throw new CompilationException("Compile error in procedure invocation at "+call.getSrc()+": "+ce.getMessage(),ce);
 		}
-		for (int i = 0; i < call.sizeOfOutputArray(); i++) {
-			ActualParameter output = call.getOutputArray(i);
-			StringTemplate argST = actualParameter(output, scope);
-			callST.setAttribute("outputs", argST);
-			String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
-			scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
-		}
-
-		scope.appendStatement(callST);
 	}
 
 	public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
@@ -360,31 +367,34 @@ public class Karajan {
 	}
 
 	public void foreachStat(Foreach foreach, VariableScope scope) throws CompilationException {
-		VariableScope innerScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
+		try {
+			VariableScope innerScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
 
-		StringTemplate foreachST = template("foreach");
-		foreachST.setAttribute("var", foreach.getVar());
-		innerScope.addVariable(foreach.getVar());
-		foreachST.setAttribute("indexVar", foreach.getIndexVar());
-		if(foreach.getIndexVar() !=null) {
-			innerScope.addVariable(foreach.getIndexVar());
+			StringTemplate foreachST = template("foreach");
+			foreachST.setAttribute("var", foreach.getVar());
+			innerScope.addVariable(foreach.getVar());
+			foreachST.setAttribute("indexVar", foreach.getIndexVar());
+			if(foreach.getIndexVar() !=null) {
+				innerScope.addVariable(foreach.getIndexVar());
+			}
+			XmlObject in = foreach.getIn().getAbstractExpression();
+			StringTemplate inST = expressionToKarajan(in, scope);
+			foreachST.setAttribute("in", inST);
+
+			innerScope.bodyTemplate = foreachST;
+
+			statements(foreach.getBody(), innerScope);
+
+			Object statementID = new Integer(callID++);
+			Iterator scopeIterator = innerScope.getVariableIterator();
+			while(scopeIterator.hasNext()) {
+				String v=(String) scopeIterator.next();
+				scope.addWriter(v, statementID, true);
+			}
+			scope.appendStatement(foreachST);
+		} catch(CompilationException re) {
+			throw new CompilationException("Compile error in foreach statement at "+foreach.getSrc()+": "+re.getMessage(),re);
 		}
-		XmlObject in = foreach.getIn().getAbstractExpression();
-		StringTemplate inST = expressionToKarajan(in, scope);
-		foreachST.setAttribute("in", inST);
-
-		innerScope.bodyTemplate = foreachST;
-
-		statements(foreach.getBody(), innerScope);
-
-		Object statementID = new Integer(callID++);
-		Iterator scopeIterator = innerScope.getVariableIterator();
-		while(scopeIterator.hasNext()) {
-			String v=(String) scopeIterator.next();
-			scope.addWriter(v, statementID, true);
-// TODO this is sometimes a partial write, I think...
-		}
-		scope.appendStatement(foreachST);
 
 	}
 

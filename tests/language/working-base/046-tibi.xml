@@ -57,7 +57,7 @@
         <param name="file"><stringConstant>scripts/runTrialSubjectWavelet.R</stringConstant></param>
       </mapping>
     </dataset>
-    <foreach var="s"  indexVar="i">
+    <foreach var="s"  indexVar="i" src="line 19">
     <in><variableReference>trialTypes</variableReference></in>
     <body><dataset name="dataFiles" type="file">
         <mapping descriptor="simple_mapper">
@@ -65,7 +65,7 @@
           <param name="suffix"><variableReference>s</variableReference></param>
         </mapping>
       </dataset>
-      <call proc="waveletTransf">
+      <call proc="waveletTransf" src="line 22">
         <output><arraySubscript>
          <variableReference>outputs</variableReference>
          <variableReference>i</variableReference>
@@ -89,7 +89,7 @@
     </mapping>
   </dataset>
   <variable name="file" type="string"><stringConstant>scripts/runTrialSubjectWavelet.R</stringConstant></variable>
-  <call proc="batchTrials">
+  <call proc="batchTrials" src="line 38">
     <output><variableReference>namedOutputs</variableReference></output>
     <input><variableReference>trialTypes</variableReference></input>
   </call>

@@ -33,13 +33,13 @@
   <if>
     <variableReference>morning</variableReference>
     <then>
-      <call proc="greeting">
+      <call proc="greeting" src="line 14">
         <output><variableReference>outfile</variableReference></output>
         <input><stringConstant>good morning</stringConstant></input>
       </call>
     </then>
     <else>
-      <call proc="greeting">
+      <call proc="greeting" src="line 16">
         <output><variableReference>outfile</variableReference></output>
         <input><stringConstant>good afternoon</stringConstant></input>
       </call>

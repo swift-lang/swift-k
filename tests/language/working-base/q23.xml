@@ -31,7 +31,7 @@
   </dataset>
   <variable name="message" type="string"><function name="arg">
     <stringConstant>text</stringConstant></function></variable>
-  <call proc="greeting">
+  <call proc="greeting" src="line 13">
     <output><variableReference>outfile</variableReference></output>
     <input><variableReference>message</variableReference></input>
   </call>

@@ -39,14 +39,14 @@
     </binding>
   </procedure>
   <variable name="person" type="details" xsi:nil="true"/>
-  <assign>
+  <assign src="line 17">
    <structureMember>
      <variableReference>person</variableReference>
      <memberName>name</memberName>
    </structureMember>
    <stringConstant>John</stringConstant>
   </assign>
-  <assign>
+  <assign src="line 19">
    <structureMember>
      <variableReference>person</variableReference>
      <memberName>pies</memberName>
@@ -56,7 +56,7 @@
   <dataset name="outfile" type="messagefile">
     <file name="q15.txt"/>
   </dataset>
-  <call proc="greeting">
+  <call proc="greeting" src="line 21">
     <output><variableReference>outfile</variableReference></output>
     <input><variableReference>person</variableReference></input>
   </call>

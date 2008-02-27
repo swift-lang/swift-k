@@ -43,7 +43,7 @@
       <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
     </array>
   </variable>
-  <call proc="greeting">
+  <call proc="greeting" src="line 13">
     <output><variableReference>outfile</variableReference></output>
     <input><variableReference>words</variableReference></input>
   </call>

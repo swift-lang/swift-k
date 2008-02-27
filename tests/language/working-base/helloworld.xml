@@ -27,7 +27,7 @@
     </binding>
   </procedure>
   <variable name="hw" type="file" xsi:nil="true"/>
-  <call proc="echo">
+  <call proc="echo" src="line 8">
     <output><variableReference>hw</variableReference></output>
     <input><stringConstant>hello world</stringConstant></input>
   </call>

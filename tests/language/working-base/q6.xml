@@ -31,10 +31,10 @@
       <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
     </array>
   </variable>
-  <foreach var="g" >
+  <foreach var="g"  src="line 11">
   <in><variableReference>greetings</variableReference></in>
   <body><variable name="hw" type="file" xsi:nil="true"/>
-    <call proc="echo">
+    <call proc="echo" src="line 12">
       <output><variableReference>hw</variableReference></output>
       <input><variableReference>g</variableReference></input>
     </call></body>

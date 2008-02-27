@@ -260,14 +260,14 @@
     </array>
   </variable>
   <variable name="conflist" type="int[]" xsi:nil="true"/>
-  <foreach var="config"  indexVar="i">
+  <foreach var="config"  indexVar="i" src="line 64">
   <in><variableReference>conflist</variableReference></in>
   <body><variable name="source" type="string"><stringConstant>local,0,0,0,0</stringConstant></variable>
     <dataset name="template" type="file">
       <file name="foo"/>
     </dataset>
     <variable name="gauge" type="file" xsi:nil="true"/>
-    <call proc="stageIn">
+    <call proc="stageIn" src="line 70">
       <output><variableReference>gauge</variableReference></output>
       <input><variableReference>template</variableReference></input>
       <input><variableReference>config</variableReference></input>
@@ -280,7 +280,7 @@
         </arraySubscript></param>
       </mapping>
     </dataset>
-    <call proc="stagSolve">
+    <call proc="stagSolve" src="line 76">
       <output><variableReference>stags</variableReference></output>
       <input><variableReference>gauge</variableReference></input>
       <input><variableReference>mass</variableReference></input>
@@ -291,13 +291,13 @@
         <param name="suffix"><stringConstant>.tar</stringConstant></param>
       </mapping>
     </dataset>
-    <call proc="archiveStag">
+    <call proc="archiveStag" src="line 79">
       <output><variableReference>stagTar</variableReference></output>
       <input><variableReference>mass</variableReference></input>
       <input><variableReference>stags</variableReference></input>
     </call>
     <variable name="clover0" type="file" xsi:nil="true"/>
-    <call proc="cloverSolve">
+    <call proc="cloverSolve" src="line 81">
       <output><variableReference>clover0</variableReference></output>
       <input><variableReference>kappaQ</variableReference></input>
       <input><variableReference>cSW</variableReference></input>
@@ -305,18 +305,18 @@
       <input><variableReference>source</variableReference></input>
     </call>
     <variable name="q0" type="file" xsi:nil="true"/>
-    <call proc="cvt12x12">
+    <call proc="cvt12x12" src="line 82">
       <output><variableReference>q0</variableReference></output>
       <input><variableReference>clover0</variableReference></input>
     </call>
     <variable name="cvtArch0" type="file" xsi:nil="true"/>
-    <call proc="archive">
+    <call proc="archive" src="line 83">
       <output><variableReference>cvtArch0</variableReference></output>
       <input><variableReference>q0</variableReference></input>
     </call>
     <variable name="source1" type="string"><stringConstant>wavefunction,0,1S</stringConstant></variable>
     <variable name="clover1" type="file" xsi:nil="true"/>
-    <call proc="cloverSolve">
+    <call proc="cloverSolve" src="line 86">
       <output><variableReference>clover1</variableReference></output>
       <input><variableReference>kappaQ</variableReference></input>
       <input><variableReference>cSW</variableReference></input>
@@ -324,18 +324,18 @@
       <input><variableReference>source1</variableReference></input>
     </call>
     <variable name="q1" type="file" xsi:nil="true"/>
-    <call proc="cvt12x12">
+    <call proc="cvt12x12" src="line 87">
       <output><variableReference>q1</variableReference></output>
       <input><variableReference>clover1</variableReference></input>
     </call>
     <variable name="cvtArch1" type="file" xsi:nil="true"/>
-    <call proc="archive">
+    <call proc="archive" src="line 88">
       <output><variableReference>cvtArch1</variableReference></output>
       <input><variableReference>q1</variableReference></input>
     </call>
     <variable name="source2" type="string"><stringConstant>wavefunction,0,2S</stringConstant></variable>
     <variable name="clover2" type="file" xsi:nil="true"/>
-    <call proc="cloverSolve">
+    <call proc="cloverSolve" src="line 91">
       <output><variableReference>clover2</variableReference></output>
       <input><variableReference>kappaQ</variableReference></input>
       <input><variableReference>cSW</variableReference></input>
@@ -343,18 +343,18 @@
       <input><variableReference>source2</variableReference></input>
     </call>
     <variable name="q2" type="file" xsi:nil="true"/>
-    <call proc="cvt12x12">
+    <call proc="cvt12x12" src="line 92">
       <output><variableReference>q2</variableReference></output>
       <input><variableReference>clover2</variableReference></input>
     </call>
     <variable name="cvtArch2" type="file" xsi:nil="true"/>
-    <call proc="archive">
+    <call proc="archive" src="line 93">
       <output><variableReference>cvtArch2</variableReference></output>
       <input><variableReference>q2</variableReference></input>
     </call>
     <variable name="antiQ" type="file"><variableReference>q0</variableReference></variable>
     <variable name="pStdout" type="file" xsi:nil="true"/>
-    <call proc="twoPtHH">
+    <call proc="twoPtHH" src="line 96">
       <output><variableReference>pStdout</variableReference></output>
       <input><variableReference>gauge</variableReference></input>
       <input><variableReference>antiQ</variableReference></input>
@@ -362,10 +362,10 @@
       <input><variableReference>q1</variableReference></input>
       <input><variableReference>q2</variableReference></input>
     </call>
-    <foreach var="stag" >
+    <foreach var="stag"  src="line 97">
     <in><variableReference>stags</variableReference></in>
     <body><variable name="sStdout" type="file" xsi:nil="true"/>
-      <call proc="twoPtSH">
+      <call proc="twoPtSH" src="line 98">
         <output><variableReference>sStdout</variableReference></output>
         <input><variableReference>gauge</variableReference></input>
         <input><variableReference>stag</variableReference></input>

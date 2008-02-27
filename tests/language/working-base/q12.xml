@@ -32,18 +32,18 @@
   <dataset name="french" type="messagefile">
     <file name="francais.txt"/>
   </dataset>
-  <call proc="greeting">
+  <call proc="greeting" src="line 11">
     <output><variableReference>english</variableReference></output>
     <input><stringConstant>hello</stringConstant></input>
   </call>
-  <call proc="greeting">
+  <call proc="greeting" src="line 12">
     <output><variableReference>french</variableReference></output>
     <input><stringConstant>bonjour</stringConstant></input>
   </call>
   <dataset name="japanese" type="messagefile">
     <file name="nihongo.txt"/>
   </dataset>
-  <call proc="greeting">
+  <call proc="greeting" src="line 15">
     <output><variableReference>japanese</variableReference></output>
     <input><stringConstant>konnichiwa</stringConstant></input>
   </call>

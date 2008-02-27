@@ -23,7 +23,7 @@
     <case>
       <integerConstant>3</integerConstant>
       <statements>
-      <call proc="f">
+      <call proc="f" src="line 10">
         <input><variableReference>g</variableReference></input>
       </call>
       </statements>
@@ -31,11 +31,11 @@
     <case>
       <integerConstant>5</integerConstant>
       <statements>
-      <assign>
+      <assign src="line 13">
        <variableReference>j</variableReference>
        <integerConstant>7</integerConstant>
       </assign>
-      <call proc="fn">
+      <call proc="fn" src="line 13">
         <output><variableReference>uuu</variableReference></output>
         <input><arith op="+">
           <arith op="+">
@@ -54,7 +54,7 @@
       </statements>
     </case>
     <default>
-      <assign>
+      <assign src="line 16">
        <variableReference>s</variableReference>
        <stringConstant>the default</stringConstant>
       </assign>

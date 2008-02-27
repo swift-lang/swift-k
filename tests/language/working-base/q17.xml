@@ -36,7 +36,7 @@
       <param name="files"><variableReference>inputNames</variableReference></param>
     </mapping>
   </dataset>
-  <foreach var="f" >
+  <foreach var="f"  src="line 15">
   <in><variableReference>inputfiles</variableReference></in>
   <body><dataset name="c" type="countfile">
       <mapping descriptor="regexp_mapper">
@@ -46,7 +46,7 @@
         <param name="transform"><stringConstant>\1count</stringConstant></param>
       </mapping>
     </dataset>
-    <call proc="countwords">
+    <call proc="countwords" src="line 17">
       <output><variableReference>c</variableReference></output>
       <input><variableReference>f</variableReference></input>
     </call></body>

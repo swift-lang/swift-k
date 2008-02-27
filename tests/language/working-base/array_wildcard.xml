@@ -35,7 +35,7 @@
     </array>
   </variable>
   <variable name="hw" type="file" xsi:nil="true"/>
-  <call proc="echo">
+  <call proc="echo" src="line 11">
     <output><variableReference>hw</variableReference></output>
     <input><variableReference>greetings</variableReference></input>
   </call>

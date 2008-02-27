@@ -335,6 +335,9 @@
     <xs:sequence>
       <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
     </xs:sequence>
+<!-- TODO can this move to a top level element? -->
+    <xs:attribute name="src" type="xs:string" />
+
   </xs:complexType>
 
   <xs:complexType name="Call">
@@ -374,6 +377,8 @@
         call</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+
+    <xs:attribute name="src" type="xs:string" />
   </xs:complexType>
 
   <xs:group name="ComponentGroup">
@@ -435,6 +440,8 @@
         value</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+
+    <xs:attribute name="src" type="xs:string" />
 
   </xs:complexType>
 

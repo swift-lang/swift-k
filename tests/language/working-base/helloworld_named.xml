@@ -29,7 +29,7 @@
   <dataset name="hw" type="file">
     <file name="helloworld.txt"/>
   </dataset>
-  <call proc="echo">
+  <call proc="echo" src="line 9">
     <output><variableReference>hw</variableReference></output>
     <input><stringConstant>hello world</stringConstant></input>
   </call>

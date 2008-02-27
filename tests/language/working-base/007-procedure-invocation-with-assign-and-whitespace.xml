@@ -3,7 +3,7 @@
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="greetings" type="int" xsi:nil="true"/>
   <variable name="hw" type="file" xsi:nil="true"/>
-  <call proc="echo">
+  <call proc="echo" src="line 2">
     <output><variableReference>hw</variableReference></output>
     <input><variableReference>greetings</variableReference></input>
   </call>

@@ -37,9 +37,9 @@
     name="sa" type="string[]"
 
      xsi:nil="true" />
-    <foreach var="s"  indexVar="i">
+    <foreach var="s"  indexVar="i" src="line 10">
     <in><variableReference>sa</variableReference></in>
-    <body><call proc="echo">
+    <body><call proc="echo" src="line 11">
         <output><arraySubscript>
          <variableReference>fa</variableReference>
          <variableReference>i</variableReference>
@@ -54,7 +54,7 @@
     </array>
   </variable>
   <variable name="fa" type="file[]" xsi:nil="true"/>
-  <call proc="echo_batch">
+  <call proc="echo_batch" src="line 17">
     <output><variableReference>fa</variableReference></output>
     <input><variableReference>sa</variableReference></input>
   </call>

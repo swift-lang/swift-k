@@ -59,6 +59,7 @@ public class VDLt2VDLx {
 			SwiftScriptLexer lexer = new SwiftScriptLexer(in);
 			SwiftScriptParser parser = new SwiftScriptParser(lexer);
 			parser.setTemplateGroup(templates);
+			parser.setSwiftLexer(lexer);
 			StringTemplate code = parser.program();
 			out.println(code.toString());
 		} catch(Exception e) {

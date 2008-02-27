@@ -48,11 +48,11 @@
   </procedure>
   <variable name="list" type="file" xsi:nil="true"/>
   <variable name="count" type="file" xsi:nil="true"/>
-  <call proc="ls">
+  <call proc="ls" src="line 19">
     <output><variableReference>list</variableReference></output>
     <input><stringConstant>*.txt</stringConstant></input>
   </call>
-  <call proc="wc">
+  <call proc="wc" src="line 20">
     <output><variableReference>count</variableReference></output>
     <input><variableReference>list</variableReference></input>
   </call>

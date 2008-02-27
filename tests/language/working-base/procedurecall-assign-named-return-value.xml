@@ -3,7 +3,7 @@
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="i" type="int" xsi:nil="true"/>
   <variable name="q" type="int" xsi:nil="true"/>
-  <call proc="f">
+  <call proc="f" src="line 3">
     <output bind="q"><variableReference>i</variableReference></output>
     <input><integerConstant>7</integerConstant></input>
   </call>

@@ -5,7 +5,7 @@
   <variable name="j" type="int" xsi:nil="true"/>
   <variable name="q" type="int" xsi:nil="true"/>
   <variable name="r" type="int" xsi:nil="true"/>
-  <call proc="f">
+  <call proc="f" src="line 3">
     <output bind="q"><variableReference>i</variableReference></output>
     <output bind="r"><variableReference>j</variableReference></output>
     <input><integerConstant>7</integerConstant></input>

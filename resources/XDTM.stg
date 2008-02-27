@@ -1,6 +1,6 @@
 group XDTM;
 
-program(namespaces,targetNS,functions,types,statements) ::= <<
+program(namespaces,targetNS,functions,types,statements,sourcelocation) ::= <<
 <program xmlns=$defaultNS()$
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema"$if(!namespaces)$>
@@ -19,17 +19,17 @@ program(namespaces,targetNS,functions,types,statements) ::= <<
 </program>
 >>
 
-defaultNS(ns) ::= <<
+defaultNS(ns,sourcelocation) ::= <<
 $if(ns)$"$ns$"$else$
 "http://ci.uchicago.edu/swift/2007/07/swiftscript"
 $endif$
 >>
 
-nsDef(prefix,uri) ::= <<
+nsDef(prefix,uri,sourcelocation) ::= <<
 $if(prefix)$xmlns:$prefix$="$uri$"$else$targetNamespace="$uri$"$endif$
 >>
 
-typeDef(name,type,members) ::= <<
+typeDef(name,type,members,sourcelocation) ::= <<
 $if(type)$
 $if(type.name)$
 <xs:element name="$name$" type="$type$"/>
@@ -53,16 +53,16 @@ $endif$
 $endif$
 >>
 
-memberdefinition(type,name) ::= <<
+memberdefinition(type,name,sourcelocation) ::= <<
   <xs:element name="$name$" type="$type$"/>
 >>
 
-variable(type,name, value) ::= <<
+variable(type,name, value,sourcelocation) ::= <<
 <variable name="$name$" type="$type$"$if(!value)$ xsi:nil="true"/>$else$>$value$</variable>
 $endif$
 >>
 
-dataset(name,type,mapping, lfn) ::= <<
+dataset(name,type,mapping, lfn,sourcelocation) ::= <<
 <dataset name="$name$" type="$type$">
 $if(lfn)$
   <file name="$lfn$"/>
@@ -74,18 +74,18 @@ $endif$
 </dataset>
 >>
 
-mapping(descriptor,params) ::= <<
+mapping(descriptor,params,sourcelocation) ::= <<
 <mapping descriptor="$descriptor$"$if(params)$>
   $params;separator="\n"$
 </mapping>
 $else$/>$endif$
 >>
 
-mapParam(name,value) ::= <<
+mapParam(name,value,sourcelocation) ::= <<
 <param name="$name$">$value$</param>
 >>
 
-arrayInit(elements,range) ::= <<
+arrayInit(elements,range,sourcelocation) ::= <<
 $if(range)$
 
   $range$
@@ -99,7 +99,7 @@ $else$
 $endif$
 >>
 
-range(from, to, step) ::= <<
+range(from, to, step, sourcelocation) ::= <<
 <range>
   $from$
   $to$
@@ -107,7 +107,7 @@ range(from, to, step) ::= <<
 </range>
 >>
 
-function(name,outputs,inputs,statements,config) ::= <<
+function(name,outputs,inputs,statements,config,sourcelocation) ::= <<
 <procedure name="$name$">
   $outputs;separator="\n"$
   $inputs;separator="\n"$
@@ -116,28 +116,28 @@ function(name,outputs,inputs,statements,config) ::= <<
 </procedure>
 >>
 
-call(func,outputs,inputs) ::= <<
-<call proc="$func$">
+call(func,outputs,inputs,sourcelocation) ::= <<
+<call proc="$func$" src="$sourcelocation$">
   $outputs;separator="\n"$
   $inputs;separator="\n"$
 </call>
 >>
 
-vardecl() ::= <<
+vardecl(sourcelocation) ::= <<
 $if (it.type)$
 <variable name="$it.name$" type="$it.type$"/>$\n$
 $endif$
 >>
 
-returnParam(type,name,bind) ::= <<
+returnParam(type,name,bind,sourcelocation) ::= <<
 <output$if (bind)$ bind="$bind$"$endif$>$name$</output>
 >>
 
-actualParam(value,bind) ::= <<
+actualParam(value,bind,sourcelocation) ::= <<
 <input$if (bind)$ bind="$bind$"$endif$>$value$</input>
 >>
 
-parameter(type,name,outlink,defaultv) ::= <<
+parameter(type,name,outlink,defaultv,sourcelocation) ::= <<
 
 $if(outlink)$
   <output 
@@ -161,7 +161,7 @@ $else$
 $endif$
 >>
 
-app(exec,arguments,stdio) ::= <<
+app(exec,arguments,stdio,sourcelocation) ::= <<
 <binding>
   <application>
     <executable>$exec$</executable>
@@ -175,7 +175,7 @@ $endif$
 </binding>
 >>
 
-functionInvocation(name,args) ::= <<
+functionInvocation(name,args,sourcelocation) ::= <<
 <function name="$name$">
 $if(args)$
   $args$
@@ -183,25 +183,25 @@ $endif$
 </function>
 >>
 
-mappingExpr(expr) ::= "$expr$"
+mappingExpr(expr,sourcelocation) ::= "$expr$"
 
-stdin(content) ::= <<
+stdin(content,sourcelocation) ::= <<
 <stdin>$content$</stdin>
 >>
 
-stdout(content) ::= <<
+stdout(content,sourcelocation) ::= <<
 <stdout>$content$</stdout>
 >>
 
-stderr(content) ::= <<
+stderr(content,sourcelocation) ::= <<
 <stderr>$content$</stderr>
 >>
 
-statementList(statements) ::= <<
+statementList(statements,sourcelocation) ::= <<
   $statements;separator="\n"$
 >>
 
-if(cond,body,els) ::= <<
+if(cond,body,els,sourcelocation) ::= <<
 <if>
   $cond$
   <then>
@@ -215,21 +215,21 @@ $endif$
 </if>
 >>
 
-foreach(var,in,index,body) ::= <<
-<foreach var="$var$" $if(index)$ indexVar="$index$"$endif$>
+foreach(var,in,index,body,sourcelocation) ::= <<
+<foreach var="$var$" $if(index)$ indexVar="$index$"$endif$ src="$sourcelocation$">
 <in>$in$</in>
 <body>$body$</body>
 </foreach>
 >>
 
-switch(cond,cases) ::= <<
+switch(cond,cases,sourcelocation) ::= <<
 <switch>
   $cond$
   $cases;separator="\n"$
 </switch>
 >>
 
-case(value, statements) ::= <<
+case(value, statements,sourcelocation) ::= <<
 $if(value)$
 <case>
   $value$
@@ -244,7 +244,7 @@ $else$
 $endif$
 >>
 
-iterate(cond,body,var) ::= <<
+iterate(cond,body,var,sourcelocation) ::= <<
 <iterate var="$var$">
   <body>
     $body$
@@ -253,66 +253,66 @@ iterate(cond,body,var) ::= <<
 </iterate>
 >>
 
-assign(lhs,rhs) ::= <<
-<assign>
+assign(lhs,rhs,sourcelocation) ::= <<
+<assign src="$sourcelocation$">
  $lhs$
  $rhs$
 </assign>
 >>
 
-arraySubscript(array, subscript) ::= <<
+arraySubscript(array, subscript, sourcelocation) ::= <<
 <arraySubscript>
  $array$
  $subscript$
 </arraySubscript>
 >>
 
-memberAccess(structure,name) ::= <<
+memberAccess(structure,name,sourcelocation) ::= <<
 <structureMember>
   $structure$
   <memberName>$name$</memberName>
 </structureMember>
 >>
 
-unaryNegation(exp) ::= <<
+unaryNegation(exp,sourcelocation) ::= <<
 <unaryNegation>
   $exp$
 </unaryNegation>
 >>
 
-cond(op,left,right) ::= <<
+cond(op,left,right,sourcelocation) ::= <<
 <cond op="$op$">
   $left$
   $right$
 </cond>
 >>
 
-and(left,right) ::= "<and><left>$left$</left><right>$right$</right></and>"
+and(left,right,sourcelocation) ::= "<and><left>$left$</left><right>$right$</right></and>"
 
-or(left, right) ::= "<or><left>$left$</left><right>$right$</right></or>"
+or(left, right,sourcelocation) ::= "<or><left>$left$</left><right>$right$</right></or>"
 
-not(exp) ::= "<not>$exp$</not>"
+not(exp,sourcelocation) ::= "<not>$exp$</not>"
 
-arith(op, left,right) ::= <<
+arith(op, left,right, sourcelocation) ::= <<
 <arith op="$op$">
   $left$
   $right$
 </arith>
 >>
 
-paren(exp) ::= "$exp$"
+paren(exp,sourcelocation) ::= "$exp$"
 
-type(name) ::= "$name$"
+type(name,sourcelocation) ::= "$name$"
 
-variableReference(name) ::= "<variableReference>$name$</variableReference>"
+variableReference(name,sourcelocation) ::= "<variableReference>$name$</variableReference>"
 
-iConst(value) ::= "<integerConstant>$value$</integerConstant>"
+iConst(value,sourcelocation) ::= "<integerConstant>$value$</integerConstant>"
 
-fConst(value) ::= "<floatConstant>$value$</floatConstant>"
+fConst(value,sourcelocation) ::= "<floatConstant>$value$</floatConstant>"
 
-bConst(value) ::= "<booleanConstant>$value$</booleanConstant>"
+bConst(value,sourcelocation) ::= "<booleanConstant>$value$</booleanConstant>"
 
-sConst(value) ::= "<stringConstant>$value$</stringConstant>"
+sConst(value,sourcelocation) ::= "<stringConstant>$value$</stringConstant>"
 
-blank() ::= ""
+blank(sourcelocation) ::= ""
 

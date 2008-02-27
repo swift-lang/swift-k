@@ -99,23 +99,23 @@
     <variable name="fa" type="file" xsi:nil="true"/>
     <variable name="fb" type="file" xsi:nil="true"/>
     <variable name="fc" type="file" xsi:nil="true"/>
-    <call proc="generate">
+    <call proc="generate" src="line 26">
       <output><variableReference>fa</variableReference></output>
       <input><variableReference>p1</variableReference></input>
     </call>
-    <call proc="process">
+    <call proc="process" src="line 27">
       <output><variableReference>fb</variableReference></output>
       <input><variableReference>fa</variableReference></input>
       <input><stringConstant>LEFT</stringConstant></input>
       <input><variableReference>p2</variableReference></input>
     </call>
-    <call proc="process">
+    <call proc="process" src="line 28">
       <output><variableReference>fc</variableReference></output>
       <input><variableReference>fa</variableReference></input>
       <input><stringConstant>RIGHT</stringConstant></input>
       <input><variableReference>p2</variableReference></input>
     </call>
-    <call proc="combine">
+    <call proc="combine" src="line 29">
       <output><variableReference>fd</variableReference></output>
       <input><variableReference>fb</variableReference></input>
       <input><variableReference>fc</variableReference></input>
@@ -124,7 +124,7 @@
   <dataset name="final" type="file">
     <file name="FINAL"/>
   </dataset>
-  <call proc="diamond">
+  <call proc="diamond" src="line 33">
     <output><variableReference>final</variableReference></output>
     <input><integerConstant>1</integerConstant></input>
     <input><integerConstant>100</integerConstant></input>

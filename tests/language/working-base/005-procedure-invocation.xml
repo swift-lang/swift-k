@@ -2,7 +2,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="greetings" type="int" xsi:nil="true"/>
-  <call proc="echo">
+  <call proc="echo" src="line 2">
     <input><variableReference>greetings</variableReference></input>
   </call>
 </program>

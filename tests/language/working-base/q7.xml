@@ -32,9 +32,9 @@
       <param name="files"><variableReference>outputNames</variableReference></param>
     </mapping>
   </dataset>
-  <foreach var="f" >
+  <foreach var="f"  src="line 13">
   <in><variableReference>outputFiles</variableReference></in>
-  <body><call proc="echo">
+  <body><call proc="echo" src="line 14">
       <output><variableReference>f</variableReference></output>
       <input><stringConstant>hello</stringConstant></input>
     </call></body>

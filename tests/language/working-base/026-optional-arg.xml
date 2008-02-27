@@ -2,7 +2,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="out" type="File" xsi:nil="true"/>
-  <call proc="myproc1">
+  <call proc="myproc1" src="line 1">
     <output><variableReference>out</variableReference></output>
     <input><integerConstant>100</integerConstant></input>
     <input bind="optional_arg"><stringConstant>foo</stringConstant></input>

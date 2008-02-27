@@ -12,9 +12,9 @@
     name="sa" type="string[]"
 
      xsi:nil="true" />
-    <foreach var="s"  indexVar="i">
+    <foreach var="s"  indexVar="i" src="line 2">
     <in><variableReference>sa</variableReference></in>
-    <body><call proc="echo">
+    <body><call proc="echo" src="line 3">
         <output><arraySubscript>
          <variableReference>fa</variableReference>
          <variableReference>i</variableReference>

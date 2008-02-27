@@ -8,7 +8,7 @@
     <case>
       <integerConstant>3</integerConstant>
       <statements>
-      <call proc="f">
+      <call proc="f" src="line 5">
         <output><variableReference>j</variableReference></output>
         <input><integerConstant>9</integerConstant></input>
       </call>

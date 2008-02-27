@@ -54,11 +54,11 @@
   <dataset name="c" type="countfile">
     <file name="count.txt"/>
   </dataset>
-  <call proc="greeting">
+  <call proc="greeting" src="line 19">
     <output><variableReference>outfile</variableReference></output>
     <input><stringConstant>hello from Swift</stringConstant></input>
   </call>
-  <call proc="countwords">
+  <call proc="countwords" src="line 20">
     <output><variableReference>c</variableReference></output>
     <input><variableReference>outfile</variableReference></input>
   </call>

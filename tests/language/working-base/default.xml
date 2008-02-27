@@ -31,10 +31,10 @@
   </procedure>
   <variable name="hw1" type="file" xsi:nil="true"/>
   <variable name="hw2" type="file" xsi:nil="true"/>
-  <call proc="echo">
+  <call proc="echo" src="line 10">
     <output><variableReference>hw1</variableReference></output>
   </call>
-  <call proc="echo">
+  <call proc="echo" src="line 11">
     <output><variableReference>hw2</variableReference></output>
     <input bind="s"><stringConstant>hello again</stringConstant></input>
   </call>
