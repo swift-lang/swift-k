@@ -364,13 +364,6 @@
       </xs:element>
     </xs:sequence>
 
-    <xs:attribute name="id" type="xs:ID" use="optional">
-      <xs:annotation>
-        <xs:documentation>a unique id of the call, the call id is referenced
-        in transition</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-
     <xs:attribute name="proc" type="xs:QName" use="required">
       <xs:annotation>
         <xs:documentation>specifies the name of the procedure to
