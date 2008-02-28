@@ -71,10 +71,6 @@ public interface GridCommand extends StatusListener, ExecutableObject {
 
     /** validate the given command and return true or false */
     public boolean validate();
-
-    public Calendar getSubmittedTime();
-
-    public Calendar getCompletedTime();
     
     /** Get output of the given command when status changes to COMPLETED */
     public Object getOutput();
