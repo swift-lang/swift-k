@@ -1,3 +1,7 @@
+(02/28/08)
+*** Store kickstart records in a subdirectory with the same base name as
+    is used for log files.
+
 (02/27/08)
 *** SwiftScript source file line numbers are now passed deeper into the
     compiler in order to give location information in more error messages.

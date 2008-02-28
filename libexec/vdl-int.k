@@ -316,10 +316,13 @@ namespace("vdl"
 		)
 		
 		element(transferKickstartRec, [rhost, wfdir, jobid, jobdir]
+			if(not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
+				task:dir:make("{VDL:SCRIPTNAME}-{VDL:RUNID}.d")
+			)
 			recfile := "{jobid}-kickstart.xml"
 			srcdir := dircat(concat(wfdir, "/kickstart/"), jobdir)
 			try(
-				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile)
+				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
 					maybe(file:remove(recfile))
 					log(LOG:WARN, "Failed to transfer kickstart records from {srcdir}/{rhost}", exception)
