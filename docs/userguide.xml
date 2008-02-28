@@ -76,7 +76,7 @@ executable as a data file using the <link linkend="function.filename">@filename<
 <section><title>Mappers</title>
 		<para>
 When a DSHandle represents a data file (or container of datafiles), it is
-associated with  a mapper. The mapper is used to
+associated with a mapper. The mapper is used to
 identify which files belong to that DSHandle.
 		</para>
 		<para>
@@ -1045,12 +1045,10 @@ then some of the mappings produced by this example would be:
 						
 							<para>
 							
-								Points to the location of the pool file (site
-								catalog) which contains a list of all sites that
-								Swift should use, together with information about
-								the installed services. Details about the format
-								of the pool file can be found <ulink
-								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html">here</ulink>.
+								Points to the location of the site
+								catalog, which contains a list of all sites that
+								Swift should use.
+
 								
 							</para>
 						</listitem>
@@ -1820,7 +1818,7 @@ catalog:
 
 		<para>
 There are various kickstat.* properties, which have sensible default
-values. These are documented in <link linkend="properties">the
+values. These are documented in <link linkend="engineconfiguration">the
 properties section</link>.
 		</para>
 
@@ -2003,16 +2001,16 @@ and need to be positioned after the script name.
 
 			<para>For example:</para>
 			<programlisting>
-print(@arg("myparam"));
-print(@arg("optionalparam", "defaultvalue"));
+trace(@arg("myparam"));
+trace(@arg("optionalparam", "defaultvalue"));
 			</programlisting>
 			<screen>
-$ swift arg.swift -myparam=hello 
-Swift v0.2-dev
+$ <userinput>swift arg.swift -myparam=hello</userinput>
+Swift v0.3-dev r1674 (modified locally)
 
-RunID: p08an4d5yr6g2
-hello
-defaultvalue
+RunID: 20080220-1548-ylc4pmda
+SwiftScript trace: defaultvalue
+SwiftScript trace: hello
 			</screen>
 
 		</section>
@@ -2173,52 +2171,9 @@ The following formats are recognized:
 				</itemizedlist>
 			</para>
 			<para id="profile.globus.queue"><property>queue</property> 
-is used by the PBS provider. This profile entry
-specifies which queue jobs will be submitted to. The queue name is
-site-specific.
-			</para>
-		</section>
-	</section>
-	<section id="providers"><title>Execution providers</title>
-		<para>
-Some of the actions Swift takes - executing jobs and transferring files - 
-take place through <firstterm>cog providers</firstterm>. Swift comes with
-some default providers, but others can be used (both as supplied with Swift
-and of your own making). The example site catalog shows the use of
-the local execution provider and the gram2 execution provider.
-		</para>
-		<section id="provider.pbs"><title>PBS execution provider</title>
-			<para>
-The PBS execution provider allows jobs to be executed through a local
-PBS installation.
-			</para>
-			<para>
-To use, edit the localhost specification in sites.xml
-to specify provider="pbs" instead of provider="local". Then set the
-site shared directory to a directory that is shared between the
-worker notes and the submit node. Often, the localhost default
-of <filename>/var/tmp</filename> is not shared between nodes; and often
-your home directory is.
-			</para>
-			<para>
-Execution jobs from Swift will then be submitted to the PBS queue
-instead of forked locally.  When using PBS, you must run Swift on
-the PBS submit node.
-			</para>
-			<para>
-The PBS provider can submit to a non-default queue, using the
-<link linkend="profile.globus.queue">queue</link> profile
-key.
-			</para>
-		</section>
-		<section id="provider.gram4"><title>GRAM4</title>
-			<para>
-The GRAM4 provider allows execution of jobs through GRAM4.
-It can be used by specifying an execution element like this in the sites
-catalog:
-<screen>
-&lt;execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" /&gt;
-</screen>
+is used by the PBS provider and the GRAM2 and GRAM4 providers. This profile
+entry specifies which queue jobs will be submitted to. The valid queue names
+are site-specific.
 			</para>
 		</section>
 	</section>
@@ -2227,7 +2182,7 @@ catalog:
 		<para>
 Swift can group a number of short job submissions into a single larger
 job submission to minimize overhead involved in launching jobs (for example,
-caused by security negotiation and remote queuing delay).
+caused by security negotiation and queuing delay).
 		</para>
 
 		<para>
@@ -2277,6 +2232,183 @@ records into a directory at the CI for reporting, usage tracking, support and de
 rsync --ignore-existing *.log *-kickstart.xml login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
 			</para>
 		</section>
+		<section><title>Specifying TeraGrid allocations</title>
+<para>TeraGrid users with no default project or with several project
+allocations can specify a project allocation using a profile key in
+the site catalog entry for a TeraGrid site:
+<screen>
+&lt;profile namespace="globus" key="project"&gt;TG-CCR080002N&lt;/profile&gt;
+</screen>
+</para>
+
+<para>
+More information on the TeraGrid allocations process can
+be found <ulink url="http://www.teragrid.org/userinfo/access/allocations.php">here</ulink>.
+</para>
+
+		</section>
+	</section>
+
+	<section><title>The Site Catalog - sites.xml</title>
+		<para>
+The site catalog lists details of each site that Swift can use. The default
+file contains one entry for local execution, and a large number of
+commented-out example entries for other sites.
+		</para>
+
+		<para>
+By default, the site catalog is stored in <filename>etc/sites.xml</filename>.
+This path can be overridden with the sites.file configuration property,
+either in the Swift configuration file or on the command line.
+		</para>
+
+		<para>
+The sites file is formatted as XML. It consists of &lt;pool&gt; elements,
+one for each site that Swift will use.
+		</para>
+
+		<para>
+Each pool element must have a handle attribute, giving a symbolic name
+for the site. This can be any name, but must correspond to entries for
+that site in the transformation catalog.
+		</para>
+
+		<para>
+Optionally, the gridlaunch attribute can be used to specify the path to
+<link linkend="kickstart">kickstart</link> on the site.
+		</para>
+
+		<para>
+Each pool must specify a file transfer method, an execution method
+and a remote working directory. Optionally, <link linkend="profiles">profile settings</link> can be specified.
+		</para>
+
+		<para>
+Transfer methods are specified with the &lt;gridftp&gt; element. For example,
+<screen>
+&lt;gridftp  url="gsiftp://evitable.ci.uchicago.edu" /&gt;
+</screen>
+The URL attribute may specify a GridFTP server, using the gsiftp URI scheme;
+or it may specify that filesystem copying will be used (which assumes that
+the site has access to the same filesystem as the submitting machine) using
+the URI local://localhost.
+		</para>
+
+		<para>
+Execution methods may be specified either with a &lt;jobmanager&gt; or
+&lt;execution&gt; element.
+		</para>
+
+		<para>
+The &lt;jobmanager&gt; element can be used to specify execution through
+GRAM2. For example,
+<screen>
+    &lt;jobmanager universe="vanilla" url="evitable.ci.uchicago.edu/jobmanager-fork" major="2" /&gt;
+</screen>
+The universe attribute should always be set to vanilla. The url attribute
+should specify the name of the GRAM2 gatekeeper host, and the name of the
+jobmanager to use. The major attribute should always be set to 2.
+		</para>
+
+		<para>
+The &lt;execution&gt; element can be used to specify execution through
+other execution providers:
+		</para>
+		<para>
+To use GRAM4, specify the gt4 provider. For example:
+<screen>
+&lt;execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" /&gt;
+</screen>
+The url attribute should specify the GRAM4 submission site. The jobmanager
+attribute should specify which GRAM4 jobmanager will be used.
+		</para>
+
+		<para>
+For local execution, the local provider should be used, like this:
+<screen>
+&lt;execution provider="local" url="none" /&gt;
+</screen>
+		</para>
+
+		<para>
+For PBS execution, the pbs provider should be used:
+<screen>
+&lt;execution provider="pbs" url="none" /&gt;
+</screen>
+The <link linkend="profile.globus.queue">GLOBUS::queue</link> profile key
+can be used to specify which PBS queue jobs will be submitted to.
+		</para>
+
+		<para>
+The workdirectory element specifies where on the site files can be
+stored.
+<screen>
+&lt;workdirectory&gt;/home/benc&lt;/workdirectory&gt;
+</screen>
+This file must be accessible through the transfer mechanism specified
+in the &lt;gridftp&gt; element and also mounted on all worker nodes that
+will be used for execution. A shared cluster scratch filesystem is
+appropriate for this. 
+		</para>
+
+		<para>
+<link linkend="profiles">Profile keys</link> can be specified using
+the &lt;profile&gt; element. For example:
+<screen>
+&lt;profile namespace="globus" key="queue"&gt;fast&lt;/profile&gt;
+</screen>
+		</para>
+
+		<para>
+The site catalog is an evolution of the VDS site catalog which is documented
+<ulink url="http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html">here</ulink>.
+		</para>
+
+	</section>
+
+	<section><title>The Transformation Catalog - tc.data</title>
+		<para>
+The transformation catalog lists where application executables are located
+on remote sites.
+		</para>
+		<para>
+By default, the site catalog is stored in <filename>etc/tc.data</filename>.
+This path can be overridden with the tc.file configuration property,
+either in the Swift configuration file or on the command line.
+		</para>
+		<para>
+The format is one line per executable per site, with fields separated by
+tabs. Spaces cannot be used as a field separator.
+		</para>
+		<para>Some example entries:
+<screen>
+localhost  echo    /bin/echo       INSTALLED       INTEL32::LINUX  null
+TGUC       touch   /usr/bin/touch  INSTALLED       INTEL32::LINUX  GLOBUS::maxwalltime="0:1"
+</screen>
+		</para>
+		<para>
+The fields are: site, transformation name, executable path, installation
+status, platform, and profile entrys.
+		</para>
+		<para>
+The site field should correspond to a site name listed in the sites
+catalog.</para>
+		<para>
+The transformation name should correspond to the transformation name
+used in a SwiftScript app {} block.
+		</para>
+		<para>
+The executable path should specify where the particular executable is
+located on that site.
+		</para>
+		<para>
+The installation status and platform fields are not used. Set them to
+INSTALLED and INTEL32::LINUX respectively.
+		</para>
+		<para>
+The profiles field should be set to 'null' if no profile entries are to be
+specified, or should contain the profile entries separated by semicolons.
+		</para>
 	</section>
 
 </article>
