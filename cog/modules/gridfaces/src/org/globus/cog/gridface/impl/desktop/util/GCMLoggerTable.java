@@ -503,21 +503,22 @@ public class GCMLoggerTable extends JTable implements MouseListener,AccessPopup,
 				case DIRECTORY_COL:
 					return (String)command.getAttribute("directory");
 				case SUBMITTIME_COL :
-					if (command.getSubmittedTime() != null) {
-						String submitTime = sdf.format(command
-							.getSubmittedTime().getTime());
-						return submitTime;
-					} else {
+					//TODO who is supposed to maintain this?
+					//if (command.getSubmittedTime() != null) {
+					//	String submitTime = sdf.format(command
+					//		.getSubmittedTime().getTime());
+					//	return submitTime;
+					//} else {
 						return "Not available";
-					}
+					//}
 				case COMPLETETIME_COL :
-					if (command.getCompletedTime() != null) {
-						String submitTime = sdf.format(command
-							.getCompletedTime().getTime());
-						return submitTime;
-					} else {
+					//if (command.getCompletedTime() != null) {
+					//	String submitTime = sdf.format(command
+					//		.getCompletedTime().getTime());
+					//	return submitTime;
+					//} else {
 						return "Not available";
-					}
+					//}
 				case PROVIDER_COL :
 					return command.getAttribute("provider");
 				case SERVICE_COL :
