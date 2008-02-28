@@ -541,15 +541,10 @@ end added */
         return attributes;
     }
     
-	public Calendar getCompletedTime() {
-		return this.task.getCompletedTime();
-	}
 	public Integer getId() {
 		return this.id;
 	}
-	public Calendar getSubmittedTime() {
-		return this.task.getSubmittedTime();
-	}
+	
 	public Task getTask() {
 		return this.task;
 	}
