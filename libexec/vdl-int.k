@@ -28,6 +28,7 @@ namespace("vdl"
 		element(createdirs, [path, dir, host]
 			dc := dircat(dir, path)
 			log(LOG:INFO, "START path={path} dir={dir} - Creating directory structure")
+
 			dir:make(dc, host=host)
 		)
 							
@@ -334,6 +335,7 @@ namespace("vdl"
 		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
+			vdl:setprogress("Selecting site")
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
 				
 				[wfdir, sharedDir] := try(
@@ -346,6 +348,7 @@ namespace("vdl"
 				jobid := concat(tr, "-", uid)
 				
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost}")
+				vdl:setprogress("Stage in")
 				tmpdir := dircat(concat(wfdir, "/jobs/", jobdir), jobid)
 				
 				stdout := try(stdout, "stdout.txt")
@@ -362,6 +365,7 @@ namespace("vdl"
 
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
 				
+						vdl:setprogress("Executing")
 						task:execute("/bin/bash",
 							list("shared/wrapper.sh", jobid,
 								"-jobdir", jobdir,
@@ -389,6 +393,7 @@ namespace("vdl"
 						   before all the files get cleaned out */
 					
 						
+						vdl:setprogress("Stage out")
 						doStageout(jobid, stageout, sharedDir, rhost)
 						if(
 							kickstart != "" & vdl:configProperty("kickstart.always.transfer") == "true"
@@ -397,6 +402,7 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
 					catch(".*"
+						vdl:setprogress("Failed")
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
 							cleanupFiles(cacheFilesToRemove, rhost)

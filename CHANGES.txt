@@ -1,4 +1,6 @@
 (02/28/08)
+*** Progress ticker on stderr every 10..60 seconds
+
 *** Store kickstart records in a subdirectory with the same base name as
     is used for log files.
 

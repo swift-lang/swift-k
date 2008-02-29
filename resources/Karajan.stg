@@ -16,9 +16,12 @@ program(types,procedures,declarations,statements) ::= <<
   $if(statements)$
   <restartLog>
   	<vdl:mains>
+<!-- TODO can move into vdl:mains so karajan files are smaller -->
+		<vdl:startprogressticker />
 		<vdl:mainp>
 		    $parallel(statements=statements)$
 		</vdl:mainp>
+		<vdl:stopprogressticker />
 	</vdl:mains>
   </restartLog>  
   $endif$
@@ -78,12 +81,15 @@ vdl_execute(outputs,inputs,application,name) ::= <<
 </log>
 $inputs:vdl_log_input();separator="\n"$
 $outputs:vdl_log_output();separator="\n"$
+<vdl:initprogressstate/>
+<vdl:setprogress><string>Starting</string></vdl:setprogress>
 <vdl:execute>
   <vdl:tr>$application.exec$</vdl:tr>
   $inputs:vdl_stagein();separator="\n"$
   $outputs:vdl_stageout();separator="\n"$
   $vdl_arguments(arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 </vdl:execute>
+<vdl:setprogress><string>Finished</string></vdl:setprogress>
 $outputs:vdl_closedataset();separator="\n"$
 >>
 
