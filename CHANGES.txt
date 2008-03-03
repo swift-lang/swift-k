@@ -1,3 +1,6 @@
+(03/03/08)
+*** Stage out wrapper log files in a similar fashion to kickstart records.
+
 (02/28/08)
 *** Progress ticker on stderr every 10..60 seconds
 

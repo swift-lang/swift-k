@@ -1445,6 +1445,35 @@ then some of the mappings produced by this example would be:
 							</para>
 						</listitem>
 					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<property>wrapperlog.always.transfer</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+							
+							<para>
+							
+								This property controls when output from
+								the Swift remote wrapper is transfered
+								back to the submit site. When set to
+								<literal>false</literal>, wrapper logs are 
+								only transfered for jobs that fail. If set to
+								<literal>true</literal>, wrapper logs are
+								transfered after every job is completed or
+								failed.
+								
+							</para>
+						</listitem>
+					</varlistentry>
 					
 					<varlistentry>
 						<term>

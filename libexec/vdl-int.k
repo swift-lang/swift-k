@@ -331,7 +331,24 @@ namespace("vdl"
 			)
 			recfile
 		)
-	
+
+		element(transferWrapperLog, [rhost, wfdir, jobid, jobdir]
+			if(not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
+				task:dir:make("{VDL:SCRIPTNAME}-{VDL:RUNID}.d")
+			)
+			recfile := "{jobid}-info"
+			srcdir := dircat(concat(wfdir, "/info/"), jobdir)
+			try(
+				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
+				(
+					maybe(file:remove(recfile))
+					log(LOG:WARN, "Failed to transfer wrapper log from {srcdir}/{rhost}")
+					log(LOG:DEBUG, "Exception for wrapper log failure from {srcdir}/{rhost}: ", exception)
+				)
+			)
+			recfile
+		)
+
 		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
@@ -399,6 +416,10 @@ namespace("vdl"
 							kickstart != "" & vdl:configProperty("kickstart.always.transfer") == "true"
 							discard(transferKickstartRec(rhost, wfdir, jobid, jobdir))
 						)
+						if(
+							vdl:configProperty("wrapperlog.always.transfer") == "true"
+							discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))
+						)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
 					catch(".*"
@@ -410,6 +431,7 @@ namespace("vdl"
 						
 						outs := transferSTDs(rhost, tmpdir, jobid, stdout, stderr)
 						
+						discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))
 						kickstartRec := if(
 							kickstart == "" ""
 							else(

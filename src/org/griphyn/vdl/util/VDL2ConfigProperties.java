@@ -21,6 +21,7 @@ public class VDL2ConfigProperties {
 	public static final String CLUSTERING_MIN_TIME = "clustering.min.time";
 	public static final String KICKSTART_ENABLED = "kickstart.enabled";
 	public static final String KICKSTART_ALWAYS_TRANSFER = "kickstart.always.transfer";
+	public static final String WRAPPERLOG_ALWAYS_TRANSFER = "wrapperlog.always.transfer";
 	public static final String SITEDIR_KEEP = "sitedir.keep";
 	public static final Map PROPERTIES;
 
@@ -85,6 +86,15 @@ public class VDL2ConfigProperties {
 								+ "Kickstart records are transfered back to the submit host. If set to \"false\" "
 								+ "Swift will only transfer a Kicstart record for a job when the job fails. "
 								+ "If set to \"true\", Swift will transfer Kickstart records whether a job "
+								+ "fails or not."));
+		PROPERTIES.put(
+				WRAPPERLOG_ALWAYS_TRANSFER,
+				new PropInfo(
+						"<true|false>",
+								"Controls when "
+								+ "wrapper logs are transfered back to the submit host. If set to \"false\" "
+								+ "Swift will only transfer a wrapper log for a job when the job fails. "
+								+ "If set to \"true\", Swift will transfer wrapper logs whether a job "
 								+ "fails or not."));
 		PROPERTIES.put(
 				SITEDIR_KEEP,
