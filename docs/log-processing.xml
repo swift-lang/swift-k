@@ -11,10 +11,16 @@
 	<section>
 		<title>Overview</title>
 		<para>
-There is an under-development package of Swift log processing utilties. This
-code is not distributed in the main Swift release. Instead, it must be
+There is an under-development package of Swift log processing utilties. 
+		</para>
+
+		<para>
+This code is not distributed in the main Swift release. Instead, it must be
 obtained from the Swift SVN repository, in the directory
-<filename>log-processing/</filename>.
+<filename>log-processing/</filename>:
+<screen>
+svn co https://svn.ci.uchicago.edu/svn/vdl2/log-processing
+</screen>
 		</para>
 	</section>
 	<section><title>Web page about a run</title>
