@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<article>
+	<articleinfo revision="0.1">
+		<title>Swift log processing tools</title>
+		<subtitle>Source control $LastChangedRevision$</subtitle>
+	</articleinfo>
+
+	<section>
+		<title>Overview</title>
+		<para>
+There is an under-development package of Swift log processing utilties. This
+code is not distributed in the main Swift release. Instead, it must be
+obtained from the Swift SVN repository, in the directory
+<filename>log-processing/</filename>.
+		</para>
+	</section>
+	<section><title>Web page about a run</title>
+		<para>
+			<screen>
+make LOG=/path/to/readData-20080304-0903-xgqf5nhe.log clean webpage
+			</screen>
+This will create a web page in the log-processing directory giving
+information about the run that is extracted from the log file. If the
+above command is used before a run is completed, the web page will report
+information about the workflow progress so far.
+		</para>
+
+		<para>
+Additional more expensive to compute information can added to this using
+the following makefile targets, which should be added to the command line
+between the clean and makefile targets.
+		</para>
+		<para>
+webpage.kara - more detailed information about internal Karajan-level
+execution
+		</para>
+		<para>
+webpage.clusters - details of job clustering. This will fail if no job
+clustering occurred.
+		</para>
+		<para>
+webpage.falkon - details of falkon workers. This will fail if no Falkon
+log file is present.
+		</para>
+		<para>
+webpage.weights - details of site scoring
+		</para>
+		<para>
+webpage.info - details of execute-site wrapper logs. For versions of Swift
+prior to r1700, you will need to stage the *-info logs back to the
+same place as the Swift log manually. AFter r1700, they are staged back
+automatically under the control of the wrapperlog.always.transfer property.
+The IDIR variable must be set to point to the directory containg the logs:
+<screen>
+make LOG=/path/fmri-20080304-0901-h8h78lnf.log \
+     IDIR=/path/130-fmri-20080304-0901-h8h78lnf.d/ clean webpage.info webpage 
+</screen>
+		</para>
+		<para>
+webpage.kickstart - similar to the webpage.info target, this gives execute-site
+kickstart record information.
+		</para>
+
+	</section>
+	<section><title>CEDPS logs</title>
+		<para>
+The log processing tools can output transition streams in
+CEDPS logging format:
+			<screen>
+make LOG=/path/to/readData-20080304-0903-xgqf5nhe.log clean execute.cedps
+			</screen>
+		</para>
+	</section>
+	<section><title>Event/transition channels</title>
+		<para>
+Various event channels are extracted from the log files and made available
+as <filename>.event</filename> and <filename>.transition</filename> files.
+These roughly correspond to processes within the Swift runtime environment.
+		</para>
+		<para>These streams are then used to provide the data for the various
+output formats, such as graphs, web pages and CEDPS log format.</para>
+<para>The available basic stream names are: execute, execute2, kickstart,
+info, karajan, clusters, stageout,
+stagein, workflow
+</para>
+	</section>
+</article>
+
+
