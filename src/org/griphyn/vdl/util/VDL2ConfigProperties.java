@@ -84,7 +84,7 @@ public class VDL2ConfigProperties {
 								+ KICKSTART_ENABLED
 								+ "\"), it controls when "
 								+ "Kickstart records are transfered back to the submit host. If set to \"false\" "
-								+ "Swift will only transfer a Kicstart record for a job when the job fails. "
+								+ "Swift will only transfer a Kickstart record for a job when the job fails. "
 								+ "If set to \"true\", Swift will transfer Kickstart records whether a job "
 								+ "fails or not."));
 		PROPERTIES.put(
