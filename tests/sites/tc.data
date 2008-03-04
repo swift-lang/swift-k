@@ -1,0 +1,58 @@
+#This is the transformation catalog.
+#
+#It comes pre-configured with a number of simple transformations with
+#paths that are likely to work on a linux box. However, on some systems,
+#the paths to these executables will be different (for example, sometimes
+#some of these programs are found in /usr/bin rather than in /bin)
+#
+#NOTE WELL: fields in this file must be separated by tabs, not spaces; and
+#there must be no trailing whitespace at the end of each line.
+#
+# sitename  transformation  path   INSTALLED  platform  profiles
+localhost 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+localhost 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+localhost 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+localhost 	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
+localhost 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+teraport 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+teraport 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+teraport 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+teraport 	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
+teraport 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+teraport 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+teraport 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+teraport 	touch 		/bin/touch	INSTALLED	INTEL32::LINUX	null
+tguc	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+tguc	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+tguc	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+tguc	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
+tguc	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+tguc	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+tguc	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+tguc	touch 		/bin/touch	INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+osg-edu.cs.wisc.edu	touch 		/bin/touch	INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+UCLA_Saxon_Tier3	touch 		/bin/touch	INSTALLED	INTEL32::LINUX	null
+tgtacc	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+tgtacc	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+tgtacc	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+tgtacc	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
+tgtacc	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+tgtacc	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+tgtacc	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+tgtacc	touch 		/bin/touch	INSTALLED	INTEL32::LINUX	null

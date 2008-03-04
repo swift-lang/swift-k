@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd ../language-behaviour
+
+SITE=$1
+
+echo testing on site $SITE
+
+export SWIFT_TEST_PARAMS="-sites.file ../sites/${SITE}.xml -tc.file ../sites/tc.data"
+
+./run 061-cattwo 130-fmri
+

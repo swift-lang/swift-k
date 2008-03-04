@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="tgtacc" >
+    <gridftp  url="gsiftp://tg-login.tacc.teragrid.org" /> 
+    <jobmanager universe="vanilla" url="tg-login.tacc.teragrid.org:2119/jobmanager-lsf" major="2" />
+    <workdirectory >/home/teragrid/tg458015</workdirectory>
+  </pool>
+
+</config>

@@ -1,0 +1,10 @@
+<config>
+
+  <pool handle="teraport" >
+    <gridftp  url="gsiftp://tp-osg.ci.uchicago.edu" /> 
+    <jobmanager universe="vanilla" url="tp-osg.ci.uchicago.edu/jobmanager-pbs" major="2" />
+    <profile namespace="globus" key="queue">test</profile>
+    <workdirectory >/home/benc</workdirectory>
+  </pool>
+
+</config>

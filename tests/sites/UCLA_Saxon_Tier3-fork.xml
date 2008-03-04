@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="UCLA_Saxon_Tier3" >
+    <gridftp  url="gsiftp://saxon.hosted.ats.ucla.edu" /> 
+    <jobmanager universe="vanilla" url="saxon.hosted.ats.ucla.edu:2119/jobmanager-fork" major="2" />
+    <workdirectory >/u/osgdata</workdirectory>
+  </pool>
+
+</config>

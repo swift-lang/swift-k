@@ -1,0 +1,10 @@
+<config>
+
+  <pool handle="tguc" >
+    <gridftp  url="gsiftp://tg-grid.uc.teragrid.org" /> 
+<execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" />
+    <workdirectory >/home/benc</workdirectory>
+    <profile namespace="globus" key="project">TG-CCR080002N</profile>
+  </pool>
+
+</config>

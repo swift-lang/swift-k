@@ -1,0 +1,12 @@
+#!/bin/bash
+
+for a in *.xml; do
+  BASE=$(basename $a .xml)
+  ./run-site $BASE
+  EC=$?
+  if [ "$EC" != "0" ]; then
+    echo SITE FAIL! Exit code $EC
+    exit 1
+  fi
+done
+
