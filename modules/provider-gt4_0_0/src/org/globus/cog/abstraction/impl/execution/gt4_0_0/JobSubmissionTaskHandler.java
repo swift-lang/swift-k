@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.axis.components.uuid.UUIDGenFactory;
+import org.apache.axis.message.MessageElement;
 import org.apache.axis.message.addressing.EndpointReferenceType;
 import org.apache.axis.types.NonNegativeInteger;
 import org.apache.axis.types.PositiveInteger;
@@ -33,6 +34,7 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.exec.client.GramJob;
 import org.globus.exec.client.GramJobListener;
+import org.globus.exec.generated.ExtensionsType;
 import org.globus.exec.generated.FaultType;
 import org.globus.exec.generated.JobDescriptionType;
 import org.globus.exec.generated.JobTypeEnumeration;
@@ -298,6 +300,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         if (spec.getAttribute("queue") != null) {
             desc.setQueue((String) spec.getAttribute("queue"));
+        }
+
+        if (spec.getAttribute("host_types") != null) {
+            MessageElement nodesMessageElement = new MessageElement("",
+                    "nodes", spec.getAttribute("host_types"));
+            MessageElement[] messageElements = new MessageElement[] { nodesMessageElement };
+            ExtensionsType extensions = new ExtensionsType();
+            extensions.set_any(messageElements);
+            desc.setExtensions(extensions);
         }
 
         desc.setArgument((String[]) spec.getArgumentsAsList().toArray(

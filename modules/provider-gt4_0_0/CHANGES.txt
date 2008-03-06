@@ -1,3 +1,7 @@
+(03/06/2008)
+
+*** Added support for host_types attribute (patch from benc)
+
 (02/28/2008)
 
 *** The previous axis update had a bug with the UUID generator.
