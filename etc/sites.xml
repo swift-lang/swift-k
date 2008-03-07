@@ -92,7 +92,7 @@ customize the storage and workdirectory to use your personal working directories
 <!-- 
 <pool handle="UC" >
     <gridftp url="gsiftp://tg-gridftp.uc.teragrid.org" />
-    <jobmanager universe="vanilla" url="tg-grid.uc.teragrid.org/jobmanager-pbs" major="2" />
+    <execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" />
     <workdirectory >/disks/scratchgpfs1/tstef</workdirectory>
 </pool>
  -->
