@@ -1,5 +1,8 @@
 #!/bin/bash
-R=$(svn info | grep '^Revision' | sed 's/Revision: /r/')
-M=$(svn status | grep --invert-match '^\?' > /dev/null && echo '(modified locally)')
-echo $R $M
+R=$(svn info | grep '^Revision' | sed 's/Revision: / swift-r/')
+M=$(svn status | grep --invert-match '^\?' > /dev/null && echo '(Swift modified locally)')
+cd ../..
+CR=$(svn info | grep '^Revision' | sed 's/Revision: / cog-r/')
+CM=$(svn status | grep --invert-match '^\?' > /dev/null && echo '(CoG modified locally)')
+echo $R $M $CR $CM
 
