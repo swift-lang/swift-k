@@ -4,9 +4,9 @@ cd ../language-behaviour
 
 SITE=$1
 
-echo testing on site $SITE
+echo testing site configuration: $SITE
 
-export SWIFT_TEST_PARAMS="-sites.file ../sites/${SITE}.xml -tc.file ../sites/tc.data"
+export SWIFT_TEST_PARAMS="-sites.file ../sites/${SITE} -tc.file ../sites/tc.data"
 
 ./run 061-cattwo 130-fmri
 
