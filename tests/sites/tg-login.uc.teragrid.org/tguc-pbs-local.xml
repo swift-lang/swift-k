@@ -1,0 +1,12 @@
+<config>
+
+  <pool handle="tguc" >
+<gridftp  url="local://localhost" />
+<execution provider="pbs" url="none" />
+
+    <workdirectory >/home/benc</workdirectory>
+    <profile namespace="globus" key="project">TG-CCR080002N</profile>
+  </pool>
+
+</config>
+

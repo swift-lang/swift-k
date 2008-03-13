@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="tguc" >
+<gridftp  url="local://localhost" />
+    <jobmanager universe="vanilla" url="tg-grid.uc.teragrid.org/jobmanager-fork" major="2" />
+    <workdirectory >/home/benc</workdirectory>
+  </pool>
+
+</config>
