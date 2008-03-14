@@ -4,6 +4,8 @@
     <gridftp  url="gsiftp://tg-login.tacc.teragrid.org" /> 
     <jobmanager universe="vanilla" url="tg-login.tacc.teragrid.org:2119/jobmanager-lsf" major="2" />
     <workdirectory >/home/teragrid/tg458015</workdirectory>
+    <profile namespace="globus" key="queue">development</profile> 
+    <profile namespace="globus" key="maxwalltime">1</profile> 
   </pool>
 
 </config>
