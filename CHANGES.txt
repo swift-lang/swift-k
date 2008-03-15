@@ -1,3 +1,6 @@
+(03/03/15)
+*** Unused lrc field in site catalog removed.
+
 (03/03/08)
 *** Stage out wrapper log files in a similar fashion to kickstart records.
 

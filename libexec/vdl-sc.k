@@ -16,10 +16,6 @@ namespace("vdl"
 				)
 			)
 				
-			element(lrc, [url]
-				//not handled yet
-			)
-				
 			element(gridftp, [url, optional(storage), optional(major), optional(minor), optional(patch)]
 				if(
 					url == "local://localhost" 
