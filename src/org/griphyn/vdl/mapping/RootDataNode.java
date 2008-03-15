@@ -75,7 +75,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 					}
 				}
 				catch (InvalidPathException e) {
-					// it's ok.
+					throw new IllegalStateException("mapper.existing() returned a path "+p+" that it cannot subsequently map");
 				}
 			}
 			root.closeDeep();
@@ -92,7 +92,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 					}
 				}
 				catch (InvalidPathException e) {
-					// it's ok.
+					throw new IllegalStateException("mapper.existing() returned a path "+p+" that it cannot subsequently map");
 				}
 			}
 			if (root.isArray()) {
