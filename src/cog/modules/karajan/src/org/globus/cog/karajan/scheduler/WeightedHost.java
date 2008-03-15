@@ -15,6 +15,9 @@ import java.text.NumberFormat;
 import org.globus.cog.karajan.util.BoundContact;
 
 public class WeightedHost implements Comparable {
+
+	static final int MINWEIGHT = -10;
+
 	private BoundContact host;
 	private Double score;
 	private double tscore;
@@ -38,6 +41,7 @@ public class WeightedHost implements Comparable {
 	}
 
 	protected void setScore(double score) {
+		if(score<MINWEIGHT) score=MINWEIGHT;
 		this.score = new Double(score);
 		this.tscore = smooth(score);
 	}
