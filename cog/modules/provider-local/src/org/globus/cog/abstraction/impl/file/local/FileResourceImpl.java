@@ -43,6 +43,9 @@ public class FileResourceImpl extends AbstractFileResource {
     
     private File cwd;
 
+    /** This object is used to prevent non-threadsafe use of File.mkdirs. */
+    private static Object mkdirsLock = new Object();
+
     public FileResourceImpl() {
         super();
     }
@@ -152,8 +155,10 @@ public class FileResourceImpl extends AbstractFileResource {
             return;
         }
         File f = resolve(directory);
-        if (!f.mkdirs() && !f.exists()) {
-            throw new FileResourceException("Failed to create directory: " + directory);
+        synchronized(mkdirsLock) {
+            if (!f.mkdirs() && !f.exists()) {
+                throw new FileResourceException("Failed to create directory: " + directory);
+            }
         }
     }
 
