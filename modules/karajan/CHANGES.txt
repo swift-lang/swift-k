@@ -1,3 +1,11 @@
+(03/15/2008)
+
+*** The WeightedHost scheduler now has a lower bound (of -10)
+    on scoring to reduce the effect of penalising a host in the case of a
+    large number of transient errors. Previously, a large number of
+    transient errors would push the score so low that the score would
+    take far too long to return to a more appropriate value.
+
 (02/22/2008)
 
 *** Added sys:dateFormat(pattern, value)
