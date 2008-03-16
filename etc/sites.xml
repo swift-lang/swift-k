@@ -13,7 +13,7 @@ working directory.
 
   <pool handle="localhost">
     <gridftp  url="local://localhost" />
-    <execution provider="local" url="none" />
+    <execution provider="local" />
     <workdirectory >/var/tmp</workdirectory>
   </pool>
 
