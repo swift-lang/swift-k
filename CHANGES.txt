@@ -3,6 +3,10 @@
 
 *** url field in site catalog execute element is now optional.
 
+(03/13/08)
+
+*** Swift v0.4 built from Swift SVN r1718 and cog SVN r1934.
+
 (03/03/08)
 *** Stage out wrapper log files in a similar fashion to kickstart records.
 
