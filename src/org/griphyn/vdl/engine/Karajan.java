@@ -420,7 +420,7 @@ public class Karajan {
 		Iterator thenScopeIterator = innerThenScope.getVariableIterator();
 		while(thenScopeIterator.hasNext()) {
 			String v=(String) thenScopeIterator.next();
-			scope.addWriter(v, statementID, false);
+			scope.addWriter(v, statementID, true);
 		}
 
 		if (elsestat != null) {
@@ -434,7 +434,7 @@ public class Karajan {
 			Iterator elseScopeIterator = innerElseScope.getVariableIterator();
 			while(elseScopeIterator.hasNext()) {
 				String v=(String) elseScopeIterator.next();
-				scope.addWriter(v, statementID, false);
+				scope.addWriter(v, statementID, true);
 			}
 		}
 		scope.appendStatement(ifST);
