@@ -2296,6 +2296,7 @@ The sites file is formatted as XML. It consists of &lt;pool&gt; elements,
 one for each site that Swift will use.
 		</para>
 
+		<section><title>Pool element</title>
 		<para>
 Each pool element must have a handle attribute, giving a symbolic name
 for the site. This can be any name, but must correspond to entries for
@@ -2312,6 +2313,9 @@ Each pool must specify a file transfer method, an execution method
 and a remote working directory. Optionally, <link linkend="profiles">profile settings</link> can be specified.
 		</para>
 
+</section>
+<section><title>File transfer method specification</title>
+
 		<para>
 Transfer methods are specified with the &lt;gridftp&gt; element. For example,
 <screen>
@@ -2322,6 +2326,10 @@ or it may specify that filesystem copying will be used (which assumes that
 the site has access to the same filesystem as the submitting machine) using
 the URI local://localhost.
 		</para>
+
+</section>
+
+<section><title>Execution method specification</title>
 
 		<para>
 Execution methods may be specified either with a &lt;jobmanager&gt; or
@@ -2368,6 +2376,9 @@ The <link linkend="profile.globus.queue">GLOBUS::queue</link> profile key
 can be used to specify which PBS queue jobs will be submitted to.
 		</para>
 
+</section>
+<section><title>Other site catalog parameters</title>
+
 		<para>
 The workdirectory element specifies where on the site files can be
 stored.
@@ -2387,12 +2398,12 @@ the &lt;profile&gt; element. For example:
 &lt;profile namespace="globus" key="queue"&gt;fast&lt;/profile&gt;
 </screen>
 		</para>
+		</section>
 
 		<para>
 The site catalog is an evolution of the VDS site catalog which is documented
 <ulink url="http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html">here</ulink>.
 		</para>
-
 	</section>
 
 	<section><title>The Transformation Catalog - tc.data</title>
