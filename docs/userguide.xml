@@ -2317,7 +2317,12 @@ and a remote working directory. Optionally, <link linkend="profiles">profile set
 <section><title>File transfer method specification</title>
 
 		<para>
-Transfer methods are specified with the &lt;gridftp&gt; element. For example,
+Transfer methods are specified with the &lt;gridftp&gt; element or
+with the &lt;filesystem&gt; method.
+		</para>
+		<para>
+To use gridftp or local filesystem copy, use the &lt;gridftp&gt;
+element:
 <screen>
 &lt;gridftp  url="gsiftp://evitable.ci.uchicago.edu" /&gt;
 </screen>
@@ -2325,6 +2330,15 @@ The URL attribute may specify a GridFTP server, using the gsiftp URI scheme;
 or it may specify that filesystem copying will be used (which assumes that
 the site has access to the same filesystem as the submitting machine) using
 the URI local://localhost.
+		</para>
+		<para>
+Filesystem access using scp (the SSH copy protocol) can be specified using the
+&lt;execution&gt; element:
+<screen>
+&lt;filesystem url="www11.i2u2.org" provider="ssh"/&gt;
+</screen>
+For additional ssh configuration information, see the ssh execution
+provider documentation below.
 		</para>
 
 </section>
@@ -2374,6 +2388,21 @@ For PBS execution, the pbs provider should be used:
 </screen>
 The <link linkend="profile.globus.queue">GLOBUS::queue</link> profile key
 can be used to specify which PBS queue jobs will be submitted to.
+		</para>
+
+		<para>
+For execution through SSH, the ssh provider should be used:
+<screen>
+&lt;execution url="www11.i2u2.org" provider="ssh"/&gt;
+</screen>
+with configuration made in <filename>~/.ssh/auth.defaults</filename> with
+the string 'www11.i2u2.org' changed to the appropriate host name:
+<screen>
+www11.i2u2.org.type=key
+www11.i2u2.org.username=hategan
+www11.i2u2.org.key=/home/mike/.ssh/i2u2portal
+www11.i2u2.org.passphrase=XXXX
+</screen>
 		</para>
 
 </section>
