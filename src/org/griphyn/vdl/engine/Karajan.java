@@ -345,14 +345,17 @@ public class Karajan {
 	}
 
 	public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
-		VariableScope innerScope = new VariableScope(this, scope, false);
+		VariableScope loopScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
+		VariableScope innerScope = new VariableScope(this, loopScope, VariableScope.ENCLOSURE_LOOP);
+
+		loopScope.addVariable(iterate.getVar());
+
 		StringTemplate iterateST = template("iterate");
 
 		XmlObject cond = iterate.getAbstractExpression();
-		StringTemplate condST = expressionToKarajan(cond, scope);
+		StringTemplate condST = expressionToKarajan(cond, loopScope);
 		iterateST.setAttribute("cond", condST);
 		iterateST.setAttribute("var", iterate.getVar());
-		innerScope.addVariable(iterate.getVar());
 		innerScope.bodyTemplate = iterateST;
 
 		statements(iterate.getBody(), innerScope);
