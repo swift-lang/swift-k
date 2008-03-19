@@ -192,8 +192,9 @@ public class Karajan {
 			binding(bind, procST, innerScope);
 		}
 		else {
-			innerScope.bodyTemplate = procST;
-			statements(proc, innerScope);
+			VariableScope compoundScope = new VariableScope(this, innerScope);
+			compoundScope.bodyTemplate = procST;
+			statements(proc, compoundScope);
 		}
 
 	}
