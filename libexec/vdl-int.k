@@ -42,7 +42,7 @@ namespace("vdl"
 			)
 		)
 			
-		element(mark, [stageout, optional(err, mapping)]
+		element(mark, [stageout, err, optional(mapping)]
 			if(
 				err for(pv, stageout
 					[path, var] := each(pv)
