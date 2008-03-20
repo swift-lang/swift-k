@@ -942,6 +942,57 @@ then some of the mappings produced by this example would be:
     </listitem>
 	</itemizedlist>
 	</section>
+
+	<section id="mapper.ext_mapper"><title>external mapper</title>
+	<itemizedlist>
+	<listitem>Name: ext</listitem>
+	<listitem>Description:
+This mapper maps based on the output of a supplied Unix executable.
+	</listitem>
+	<listitem>Parameters:
+		<itemizedlist>
+		<listitem>exec:
+The name of the executable (relative to the current directory, if an
+absolute path is not specified)
+		</listitem>
+		<listitem>Other parameters are passed to the executable prefixed
+by a - symbol.
+		</listitem>
+		</itemizedlist>
+	</listitem>
+
+	<listitem> Example:
+With the following in mapper.sh,
+			<programlisting>
+#!/bin/bash
+echo "[2] qux"
+echo "[0] foo"
+echo "[1] bar"
+			</programlisting>
+
+then a mapping statement:
+
+			<programlisting>
+	student stus[] &lt;ext;exec="mapper.sh"&gt;;
+			</programlisting>
+
+would map
+
+		<screen>
+
+    Swift variable -------------------&gt;  Filename
+
+       stus[0]                              foo
+       stus[1]                              bar
+       stus[2]                              qux
+
+		</screen>
+
+    </listitem>
+	</itemizedlist>
+
+	</section>
+
 	</section>
 	<section id="engineconfiguration">	
 	
