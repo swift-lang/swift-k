@@ -2251,9 +2251,14 @@ The following formats are recognized:
 				</itemizedlist>
 			</para>
 			<para id="profile.globus.queue"><property>queue</property> 
-is used by the PBS provider and the GRAM2 and GRAM4 providers. This profile
+is used by the PBS, GRAM2 and GRAM4 providers. This profile
 entry specifies which queue jobs will be submitted to. The valid queue names
 are site-specific.
+			</para>
+			<para id="profile.globus.host_types"><property>host_types</property>
+specifies the types of host that are permissible for a job to run on.
+The valid values are site-specific. This profile entry is used by the
+GRAM2 and GRAM4 providers.
 			</para>
 		</section>
 	</section>
