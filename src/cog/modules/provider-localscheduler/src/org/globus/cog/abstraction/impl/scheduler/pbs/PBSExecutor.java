@@ -95,6 +95,7 @@ public class PBSExecutor implements ProcessListener {
 
         try {
             int code = process.waitFor();
+            process.getErrorStream().close();
             if (code != 0) {
                 throw new ProcessException(
                         "Could not submit job (qsub reported an exit code of "
@@ -116,6 +117,7 @@ public class PBSExecutor implements ProcessListener {
         }
 
         String jobid = getOutput(process.getInputStream());
+        process.getInputStream().close();
 
         getProcessPoller().addJob(
                 new Job(jobid, stdout, spec.getStdOutputLocation(), stderr,
