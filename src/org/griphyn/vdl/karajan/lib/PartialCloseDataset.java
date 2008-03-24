@@ -28,7 +28,8 @@ public class PartialCloseDataset extends VDLFunction {
 // this is memory leak. better dshandle impl to hold this data, perhaps?
 
 	/** Map from DSHandles (as keys) to lists of what we have seen
-	    already */
+	    already. TODO this may end up growing too much when a program
+	    has lots of objects. consider alternative ways of doing this. */
 	static Map cache = new HashMap();
 
 
@@ -49,14 +50,8 @@ public class PartialCloseDataset extends VDLFunction {
 
 			logger.info("dump of what's in cache: ");
 			synchronized(cache) {
-// TODO this locks the whole cache - probably don't actually need to 
-// do this (nor do we necessarily even need to iterate over the cache
-// to give that debugging info - perhaps the debugging info isn't
-// actually necessary)
-				Iterator cit = cache.keySet().iterator();
-				while(cit.hasNext()) {
-					logger.info(cit.next());
-				}
+// TODO this locks the whole cache - perhaps don't actually need to 
+// do this; could use a synchronised cache implementation...
 
 				List c = (List) cache.get(var);
 				if(c==null) {
