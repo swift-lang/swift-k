@@ -1,4 +1,8 @@
-(03/03/15)
+(03/25/08)
+
+*** Logging performance improvement in wrapper.sh
+
+(03/15/08)
 *** Unused lrc field in site catalog removed.
 
 *** url field in site catalog execute element is now optional.
