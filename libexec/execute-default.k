@@ -1,5 +1,8 @@
 element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), channel(stagein), channel(stageout)]
 
+	vdl:initprogressstate()
+	vdl:setprogress("Initializing")
+
 	done := isDone(stageout)
 	derr := try(deperror, false)
 	merr := try(mdeperror, false)
@@ -22,10 +25,12 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
 						echo("{tr} completed")
 						log(LOG:INFO, "END_SUCCESS thread={#thread} tr={tr}")
+						vdl:setprogress("Finished successfully")
 					)
 					catch(".*"
 						echo("{tr} failed")
 						log(LOG:INFO, "END_FAILURE thread={#thread} tr={tr}")
+						vdl:setprogress("Failed")
 						if(
 							vdl:configProperty("lazy.errors") == "false" then(
 								throw(exception)
