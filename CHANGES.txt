@@ -1,3 +1,8 @@
+(03/26/08)
+*** String literals now use \ as escape character - for example, use \"
+    to insert a quote into a string literal. Where \ was previously used
+    in a string literal, it is now necessary to escape it as \\
+
 (03/25/08)
 
 *** Logging performance improvement in wrapper.sh

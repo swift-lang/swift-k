@@ -43,7 +43,7 @@
         <param name="source"><function name="filename">
           <variableReference>f</variableReference></function></param>
         <param name="match"><stringConstant>(.*)txt</stringConstant></param>
-        <param name="transform"><stringConstant>\1count</stringConstant></param>
+        <param name="transform"><stringConstant>\\1count</stringConstant></param>
       </mapping>
     </dataset>
     <call proc="countwords" src="line 17">

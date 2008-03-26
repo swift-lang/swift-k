@@ -22,8 +22,8 @@ type JPEG {};
 
 ( Image projectedImages[], Image projectedAreas[] ) mProjectPPBatch ( Image rawImages[], Header template ) {
 	foreach img, i in rawImages {
-		Image projImg<regexp_mapper;source=@img,match=".*\/(.*)",transform="proj_\1">;
-		Image areaImg<regexp_mapper;source=@projImg,match="(.*)\.(.*)",transform="\1_area.\2">;
+		Image projImg<regexp_mapper;source=@img,match=".*\\/(.*)",transform="proj_\\1">;
+		Image areaImg<regexp_mapper;source=@projImg,match="(.*)\\.(.*)",transform="\\1_area.\\2">;
 		( projImg, areaImg ) = mProjectPP ( img, template );
 		projectedImages[i] = projImg;
 		projectedAreas[i] = areaImg;
@@ -50,11 +50,11 @@ type JPEG {};
 
 	foreach d, i in diffs {
 		Image image1 = d.plus;
-		Image area1<regexp_mapper;source=@image1,match="(.*)\.(.*)",transform="\1_area.\2">;
+		Image area1<regexp_mapper;source=@image1,match="(.*)\\.(.*)",transform="\\1_area.\\2">;
 		Image image2 = d.minus;
-		Image area2<regexp_mapper;source=@image2,match="(.*)\.(.*)",transform="\1_area.\2">;
+		Image area2<regexp_mapper;source=@image2,match="(.*)\\.(.*)",transform="\\1_area.\\2">;
 		Image diffImg<fixed_mapper;file=@(d.diff)>;
-		TxtFile statusFile<regexp_mapper;source=@diffImg,match="diff(.*)fits",transform="fit\1txt">;
+		TxtFile statusFile<regexp_mapper;source=@diffImg,match="diff(.*)fits",transform="fit\\1txt">;
 
 		( diffImg, statusFile ) = mDiffFit ( image1, area1, image2, area2, template );
 		diffImages[i] = diffImg;
@@ -89,8 +89,8 @@ type JPEG {};
 ( Image correctedImages[], Image correctedAreas[] ) mBackgroundBatch ( Image projectedImages[], Image projectedAreas[], Table projectedImagesTbl, Table correctionsTbl ) {
 	foreach projImg, i in projectedImages {
 		Image projArea = projectedAreas[i];
-		Image corrImg<regexp_mapper;source=@projImg,match="proj_(.*)",transform="corr_\1">;
-		Image corrArea<regexp_mapper;source=@corrImg,match="(.*)\.(.*)",transform="\1_area.\2">;
+		Image corrImg<regexp_mapper;source=@projImg,match="proj_(.*)",transform="corr_\\1">;
+		Image corrArea<regexp_mapper;source=@corrImg,match="(.*)\\.(.*)",transform="\\1_area.\\2">;
 		( corrImg, corrArea ) = mBackground ( projImg, projArea, projectedImagesTbl, correctionsTbl );
 		correctedImages[i] = corrImg;
 		correctedAreas[i] = corrArea;

@@ -13,7 +13,7 @@ messagefile inputfiles[] <array_mapper;files=inputNames>;
 
 
 foreach f in inputfiles {
-  countfile c<regexp_mapper;source=@f,match="(.*)txt",transform="\1count">;
+  countfile c<regexp_mapper;source=@f,match="(.*)txt",transform="\\1count">;
   c = countwords(f);
 }
 

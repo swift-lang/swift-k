@@ -9,7 +9,7 @@ type countfile {}
 
 messagefile inputfile <"q16.txt">;
 
-countfile c<regexp_mapper;source=@inputfile,match="(.*)txt",transform="\1count">;
+countfile c<regexp_mapper;source=@inputfile,match="(.*)txt",transform="\\1count">;
 
 c = countwords(inputfile);
 
