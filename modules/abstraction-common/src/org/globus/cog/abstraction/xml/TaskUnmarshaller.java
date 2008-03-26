@@ -52,7 +52,7 @@ public class TaskUnmarshaller {
         String xmlIdentity = xmlTask.getIdentity();
         if (xmlIdentity != null && xmlIdentity.length() > 0) {
             Identity identity = new IdentityImpl();
-            identity.setValue(Long.parseLong(xmlIdentity.trim()));
+            identity.setValue(xmlIdentity.trim());
             task.setIdentity(identity);
         }
 
@@ -119,7 +119,7 @@ public class TaskUnmarshaller {
             org.globus.cog.abstraction.interfaces.Service service = new ServiceImpl();
 
             Identity identity = new IdentityImpl();
-            identity.setValue(Long.parseLong(xmlService.getIdentity()));
+            identity.setValue(xmlService.getIdentity());
             service.setIdentity(identity);
 
             service.setName(xmlService.getName());

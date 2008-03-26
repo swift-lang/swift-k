@@ -330,6 +330,6 @@ public class TaskGraphImpl implements TaskGraph {
     }
 
     public int hashCode() {
-        return (int) this.id.getValue();
+        return this.id.hashCode();
     }
 }

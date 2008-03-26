@@ -43,8 +43,7 @@ public class TaskGraphMarshaller {
         TaskGraph xmlTaskGraph)
         throws MarshalException {
         // set identity
-        xmlTaskGraph.setIdentity(
-            Long.toString(taskGraph.getIdentity().getValue()));
+        xmlTaskGraph.setIdentity(taskGraph.getIdentity().getValue());
 
         //set name
         String name = taskGraph.getName();
@@ -194,8 +193,8 @@ public class TaskGraphMarshaller {
                 ExecutableObject from = pair.getFrom();
                 ExecutableObject to = pair.getTo();
                 Dependency xmlDependency = new Dependency();
-                xmlDependency.setFrom(Long.toString(from.getIdentity().getValue()));
-                xmlDependency.setTo(Long.toString(to.getIdentity().getValue()));
+                xmlDependency.setFrom(from.getIdentity().getValue());
+                xmlDependency.setTo(to.getIdentity().getValue());
                 xmlDependencyList.addDependency(xmlDependency);
             }
 
