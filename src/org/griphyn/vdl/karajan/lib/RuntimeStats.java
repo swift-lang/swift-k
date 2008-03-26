@@ -21,6 +21,16 @@ public class RuntimeStats extends FunctionsCollection {
 	public static final int MIN_PERIOD_MS=5000;
 	public static final int MAX_PERIOD_MS=60000;
 
+	public static final String[] preferredOutputOrder = {
+		"Initializing",
+		"Selecting site",
+		"Stage in",
+		"Executing",
+		"Stage out",
+		"Failed",
+		"Finished successfully"
+	};
+
 	static {
 		setArguments("vdl_startprogressticker", new Arg[0]);
 		setArguments("vdl_stopprogressticker", new Arg[0]);
@@ -114,8 +124,18 @@ public class RuntimeStats extends FunctionsCollection {
 			}
 
 			// output the results of summarization, in a relatively
-			// pretty form
+			// pretty form - first the preferred order listed elements,
+			// and then anything remaining
 			System.err.print(header);
+
+			for(int pos = 0; pos < preferredOutputOrder.length; pos++) {
+				String key = preferredOutputOrder[pos];
+				Object value = summary.get(key);
+				if(value != null)
+					System.err.print(" "+key+":"+value);
+				summary.remove(key);
+			}
+
 			Iterator summaryIterator = summary.keySet().iterator();
 			while(summaryIterator.hasNext()) {
 				Object o = summaryIterator.next();
@@ -123,7 +143,6 @@ public class RuntimeStats extends FunctionsCollection {
 			}
 			System.err.println("");
 		}
-
 
 	}
 
