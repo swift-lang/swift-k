@@ -13,6 +13,7 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 public class ExecutionServiceImpl extends ServiceImpl implements
         ExecutionService {
+    private String jobManager;
 
     public ExecutionServiceImpl() {
         super(Service.JOB_SUBMISSION);
@@ -26,20 +27,14 @@ public class ExecutionServiceImpl extends ServiceImpl implements
     public ExecutionServiceImpl(String provider, ServiceContact serviceContact,
             SecurityContext securityContext, String jobManager) {
         super(provider, Service.JOB_SUBMISSION, serviceContact, securityContext);
-        if (jobManager != null) {
-            setAttribute("jobmanager", jobManager);
-        }
+        this.jobManager = jobManager;
     }
 
     public void setJobManager(String jobManager) {
-        if (jobManager != null) {
-            setAttribute("jobmanager", jobManager);
-        }
+        this.jobManager = jobManager;
     }
 
     public String getJobManager() {
-
-        return (String) getAttribute("jobmanager");
+        return jobManager;
     }
-
 }
