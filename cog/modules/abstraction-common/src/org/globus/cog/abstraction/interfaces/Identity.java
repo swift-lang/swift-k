@@ -36,20 +36,15 @@ public interface Identity {
      * Sets the value for this <code>Identity</code>.
      * 
      * @param value
-     *            a numeric value representing the namespace for this
+     *            a String value representing the value for this
      *            <code>Identity</code>.
      */
-    public void setValue(long value);
+    public void setValue(String value);
 
     /**
      * Returns the value for this <code>Identity</code>.
      * 
      * @return the value for this <code>Identity</code>
      */
-    public long getValue();
-
-    /**
-     * Compares this <Identity></code> with any other <code>Identity</code>.
-     */
-    public boolean equals(Identity id);
+    public String getValue(); 
 }
