@@ -25,12 +25,10 @@ public class PartialCloseDataset extends VDLFunction {
 	}
 
 
-// this is memory leak. better dshandle impl to hold this data, perhaps?
-
 	/** Map from DSHandles (as keys) to lists of what we have seen
 	    already. TODO this may end up growing too much when a program
 	    has lots of objects. consider alternative ways of doing this. */
-	static Map cache = new HashMap();
+	static Map pendingDatasets = new HashMap();
 
 
 	// TODO path is not used!
@@ -53,12 +51,12 @@ public class PartialCloseDataset extends VDLFunction {
 				return null;
 			}
 
-			synchronized(cache) {
+			synchronized(pendingDatasets) {
 
-				List c = (List) cache.get(var);
+				List c = (List) pendingDatasets.get(var);
 				if(c==null) {
 					c=new ArrayList();
-					cache.put(var,c);
+					pendingDatasets.put(var,c);
 				}
 
 				c.add(statementID);
@@ -88,7 +86,7 @@ public class PartialCloseDataset extends VDLFunction {
 					logger.info("All partial closes for " + var + " have happened. Closing fully.");
 				}
 				var.closeDeep();
-				cache.remove(var);
+				pendingDatasets.remove(var);
 			}
 		}
 		catch (InvalidPathException e) {
