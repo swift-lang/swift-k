@@ -6,6 +6,7 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.util.Collection;
 import java.util.Enumeration;
 
 /**
@@ -154,5 +155,10 @@ public interface Service {
 
     public Object getAttribute(String name);
 
+    /**
+     * @deprecated Use {@link getAttributeNames} 
+     */
     public Enumeration getAllAttributes();
+    
+    public Collection getAttributeNames();
 }
