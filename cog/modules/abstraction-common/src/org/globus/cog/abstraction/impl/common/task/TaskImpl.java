@@ -9,6 +9,7 @@ package org.globus.cog.abstraction.impl.common.task;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -54,8 +55,7 @@ public class TaskImpl implements Task {
 
     public TaskImpl() {
         this.id = new IdentityImpl();
-        this.attributes = new HashMap();
-        this.serviceList = new ArrayList();
+        this.serviceList = new ArrayList(2);
         this.status = new StatusImpl();
         statusListeners = new CopyOnWriteHashSet();
         outputListeners = new CopyOnWriteHashSet();
@@ -106,8 +106,10 @@ public class TaskImpl implements Task {
     }
 
     public void setService(int index, Service service) {
-        this.serviceList.ensureCapacity(index + 1);
-        int sz = this.serviceList.size();
+    	while (serviceList.size() < index) {
+    		serviceList.add(null);
+    	}
+        int sz = serviceList.size();
         if (sz == index) {
             this.serviceList.add(index, service);
         }
@@ -121,11 +123,11 @@ public class TaskImpl implements Task {
     }
 
     public void addService(Service service) {
-        this.serviceList.add(service);
+        serviceList.add(service);
     }
 
     public Service removeService(int index) {
-        return (Service) this.serviceList.remove(index);
+        return (Service) serviceList.remove(index);
     }
 
     public Service getService(int index) {
@@ -137,7 +139,7 @@ public class TaskImpl implements Task {
 
     public Collection removeAllServices() {
         Collection services = this.serviceList;
-        this.serviceList = new ArrayList();
+        this.serviceList = new ArrayList(2);
         return services;
     }
 
@@ -146,12 +148,11 @@ public class TaskImpl implements Task {
     }
 
     public Collection getAllServices() {
-        return this.serviceList;
+        return serviceList;
     }
 
     public void setRequiredService(int value) {
         this.requiredServices = value;
-        this.serviceList.ensureCapacity(value);
     }
 
     public int getRequiredServices() {
@@ -222,7 +223,7 @@ public class TaskImpl implements Task {
             notifyListeners(status);
         }
         // Now prove that this works correctly with concurrent updates.
-        // I will pay $20 for the first one.
+        // I will pay $20 for the first such proof that I receive.
     }
 
     protected void notifyListeners(Status status) {
@@ -256,15 +257,28 @@ public class TaskImpl implements Task {
     }
 
     public void setAttribute(String name, Object value) {
-        this.attributes.put(name.toLowerCase(), value);
+        if (attributes == null) {
+            attributes = new HashMap();
+        }
+        attributes.put(name.toLowerCase(), value);
     }
 
     public Object getAttribute(String name) {
-        return this.attributes.get(name.toLowerCase());
+        if (attributes != null) {
+            return attributes.get(name.toLowerCase());
+        }
+        else {
+            return null;
+        }
     }
 
     public Collection getAttributeNames() {
-        return this.attributes.keySet();
+        if (attributes != null) {
+            return attributes.keySet();
+        }
+        else {
+            return Collections.EMPTY_MAP.keySet();
+        }
     }
 
     public void addStatusListener(StatusListener listener) {
@@ -335,7 +349,7 @@ public class TaskImpl implements Task {
     }
 
     public int hashCode() {
-        return (int) this.id.getValue();
+        return this.id.hashCode();
     }
 
     public synchronized void waitFor() throws InterruptedException {
