@@ -9,7 +9,9 @@
  */
 package org.globus.cog.abstraction.interfaces;
 
-public interface FileLocation {
+import java.io.Serializable;
+
+public interface FileLocation extends Serializable {
 
     /**
      * Specifies that nothing should be done with a job output stream or that
@@ -62,7 +64,7 @@ public interface FileLocation {
 
     int getCode();
 
-    public static class Impl implements FileLocation {
+    public static class Impl implements FileLocation, Serializable {
         private int code;
 
         public Impl(int code) {
