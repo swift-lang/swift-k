@@ -6,12 +6,13 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * An execution status associated with an <code>ExecutableObject</code>.
  */
-public interface Status {
+public interface Status extends Serializable {
 
     /**
      * The <code>ExecutableObject</code> is not submitted to the remote
