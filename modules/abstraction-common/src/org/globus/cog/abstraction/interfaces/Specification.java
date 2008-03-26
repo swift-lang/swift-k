@@ -6,6 +6,8 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.io.Serializable;
+
 /**
  * Every Grid Task has an associated <code>Specification</code> that dictates
  * the objective of the task and the environment required to achieve the
@@ -14,7 +16,7 @@ package org.globus.cog.abstraction.interfaces;
  * specification is handler specific.
  */
 
-public interface Specification {
+public interface Specification extends Serializable {
     public static final int JOB_SUBMISSION = 1;
     public static final int FILE_TRANSFER = 2;
     public static final int FILE_OPERATION = 3;
@@ -27,5 +29,4 @@ public interface Specification {
     public void setSpecification(String specification);
 
     public String getSpecification();
-
 }
