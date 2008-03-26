@@ -1,7 +1,3 @@
-(03/25/2005)
-
-*** Fixed use of abstraction identities
-
 (04/18/2005)
 
 *** renamed this module from "core-provider-condor" to 
