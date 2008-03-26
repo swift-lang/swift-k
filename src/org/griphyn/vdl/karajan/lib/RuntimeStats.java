@@ -138,8 +138,8 @@ public class RuntimeStats extends FunctionsCollection {
 
 			Iterator summaryIterator = summary.keySet().iterator();
 			while(summaryIterator.hasNext()) {
-				Object o = summaryIterator.next();
-				System.err.print(" "+o+":"+summary.get(o));
+				Object key = summaryIterator.next();
+				System.err.print(" "+key+":"+summary.get(key));
 			}
 			System.err.println("");
 		}
