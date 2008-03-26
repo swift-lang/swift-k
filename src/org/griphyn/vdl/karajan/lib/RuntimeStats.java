@@ -62,68 +62,73 @@ public class RuntimeStats extends FunctionsCollection {
 	}
 
 
-static public class ProgressTicker extends Thread {
+	static public class ProgressTicker extends Thread {
 
-	List states = new ArrayList();
+		List states = new ArrayList();
 
-	long lastDumpTime = 0;
+		long lastDumpTime = 0;
 
-	public ProgressTicker() {
-		super("Progress ticker");
-	}
-
-	public void run() {
-		while(true) {
-			dumpState();
-
-			try {
-				Thread.sleep(MAX_PERIOD_MS);
-			} catch(InterruptedException e) {
-
-				System.err.println("Runtime ticker interrupted. Looping immediately.");
-			}
+		public ProgressTicker() {
+			super("Progress ticker");
 		}
-	}
 
-	void dumpState() {
-		long now = System.currentTimeMillis();
-		if(lastDumpTime + MIN_PERIOD_MS > now) return;
-		lastDumpTime = now;
-		printStates("Progress: ");
-	}
+		public void run() {
+			while(true) {
+				dumpState();
 
-	void finalDumpState() {
-		printStates("Final status: ");
-	}
+				try {
+					Thread.sleep(MAX_PERIOD_MS);
+				} catch(InterruptedException e) {
 
-	void printStates(String header) {
-		Map summary = new HashMap();
-		Iterator stateIterator = states.iterator();
-		while(stateIterator.hasNext()) {
-			String key = ((RuntimeProgress)stateIterator.next()).status;
-			Integer count = (Integer) summary.get(key);
-			if(count == null) {
-				summary.put(key,new Integer(1));
-			} else {
-				summary.put(key,new Integer(count.intValue()+1));
+					System.err.println("Runtime ticker interrupted. Looping immediately.");
+				}
 			}
 		}
 
-
-		System.err.print(header);
-		Iterator summaryIterator = summary.keySet().iterator();
-		while(summaryIterator.hasNext()) {
-			Object o = summaryIterator.next();
-			System.err.print(" "+o+":"+summary.get(o));
+		void dumpState() {
+			long now = System.currentTimeMillis();
+			if(lastDumpTime + MIN_PERIOD_MS > now) return;
+			lastDumpTime = now;
+			printStates("Progress: ");
 		}
-		System.err.println("");
+
+		void finalDumpState() {
+			printStates("Final status: ");
+		}
+
+		void printStates(String header) {
+			Map summary = new HashMap();
+			Iterator stateIterator = states.iterator();
+
+			// summarize details of known states into summary, with
+			// one entry per state type, storing the number of
+			// jobs in that state.
+			while(stateIterator.hasNext()) {
+				String key = ((RuntimeProgress)stateIterator.next()).status;
+				Integer count = (Integer) summary.get(key);
+				if(count == null) {
+					summary.put(key,new Integer(1));
+				} else {
+					summary.put(key,new Integer(count.intValue()+1));
+				}
+			}
+
+			// output the results of summarization, in a relatively
+			// pretty form
+			System.err.print(header);
+			Iterator summaryIterator = summary.keySet().iterator();
+			while(summaryIterator.hasNext()) {
+				Object o = summaryIterator.next();
+				System.err.print(" "+o+":"+summary.get(o));
+			}
+			System.err.println("");
+		}
+
+
 	}
 
-
-}
-
-class RuntimeProgress {
-	String status = "uninitialized";
-}
+	class RuntimeProgress {
+		String status = "uninitialized";
+	}
 
 }
