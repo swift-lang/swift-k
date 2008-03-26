@@ -48,10 +48,12 @@ public class PartialCloseDataset extends VDLFunction {
 			logger.info("var is "+var);
 			logger.info("var hash is "+var.hashCode());
 
-			logger.info("dump of what's in cache: ");
+			if(var.isClosed()) {
+				logger.info("variable already closed - skipping partial close processing");
+				return null;
+			}
+
 			synchronized(cache) {
-// TODO this locks the whole cache - perhaps don't actually need to 
-// do this; could use a synchronised cache implementation...
 
 				List c = (List) cache.get(var);
 				if(c==null) {
@@ -60,27 +62,25 @@ public class PartialCloseDataset extends VDLFunction {
 				}
 
 				c.add(statementID);
-			logger.info("Adding token "+statementID+" with hash "+statementID.hashCode());
+				logger.info("Adding token "+statementID+" with hash "+statementID.hashCode());
 
-			// TODO so remove the statement ID from the list of statements we
-			// are waiting for. hmm. no way to write parameters in there.
-			String needToWaitFor = (String) var.getParam("waitfor");
-			logger.info("need to wait for "+needToWaitFor);
-			StringTokenizer stok = new StringTokenizer(needToWaitFor, " ");
-			while(stok.hasMoreTokens()) {
-				String s = stok.nextToken();
-				// do we have this token in our list of already seen
-				// statement IDs?
-				if(! c.contains(s)) {
-					// then we have a required element that we have not
-					// seen yet, so...
-					hasUnseenToken = true;
-					logger.info("Container does not contain token "+s);
-				} else {
+				String needToWaitFor = (String) var.getParam("waitfor");
+				logger.info("need to wait for "+needToWaitFor);
+				StringTokenizer stok = new StringTokenizer(needToWaitFor, " ");
+				while(stok.hasMoreTokens()) {
+					String s = stok.nextToken();
+					// do we have this token in our list of already seen
+					// statement IDs?
+					if(! c.contains(s)) {
+						// then we have a required element that we have not
+						// seen yet, so...
+						hasUnseenToken = true;
+						logger.info("Container does not contain token "+s);
+					} else {
 
-					logger.info("Container does contain token "+s);
+						logger.info("Container does contain token "+s);
+					}
 				}
-			}
 			}
 			logger.info("hasUnseenToken = "+hasUnseenToken);
 			if(!hasUnseenToken) {
@@ -88,6 +88,7 @@ public class PartialCloseDataset extends VDLFunction {
 					logger.info("All partial closes for " + var + " have happened. Closing fully.");
 				}
 				var.closeDeep();
+				cache.remove(var);
 			}
 		}
 		catch (InvalidPathException e) {
