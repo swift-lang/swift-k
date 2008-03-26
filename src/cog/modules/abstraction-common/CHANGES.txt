@@ -1,3 +1,13 @@
+(03/26/2008)
+
+*** Made a few objects serializable.
+
+*** Removed heavy use of hashtables for things where fields
+    work much better.
+    
+*** Changed implementation of Identity to be more conservative
+    towards memory usage (i.e. removed the silly URI)
+
 (02/12/2008)
 
 *** Finally fixed the notification order. A task is now 
