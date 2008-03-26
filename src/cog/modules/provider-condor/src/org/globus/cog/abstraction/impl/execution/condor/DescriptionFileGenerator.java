@@ -21,7 +21,8 @@ public class DescriptionFileGenerator {
             descriptionFile = new File(descriptionFileName);
             return descriptionFile;
         } else {
-            descriptionFile = File.createTempFile(task.getIdentity().getValue(), ".desc");
+            descriptionFile = File.createTempFile(Long.toString(task
+                    .getIdentity().getValue()), ".desc");
 
             constructDescriptionFile(descriptionFile, task);
             return descriptionFile;
@@ -77,7 +78,8 @@ public class DescriptionFileGenerator {
         // set the default log (if not specified)
         String log = (String) specification.getAttribute("log");
         if (log == null) {
-            File logFile = File.createTempFile(task.getIdentity().getValue(), ".log");
+            File logFile = File.createTempFile(Long.toString(task.getIdentity()
+                    .getValue()), ".log");
             log = logFile.getAbsolutePath();
             specification.setAttribute("log", log);
         }
