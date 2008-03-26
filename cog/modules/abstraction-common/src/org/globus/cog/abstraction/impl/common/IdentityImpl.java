@@ -7,8 +7,6 @@
 
 package org.globus.cog.abstraction.impl.common;
 
-import java.net.URI;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.interfaces.Identity;
 
@@ -20,33 +18,29 @@ import org.globus.cog.abstraction.interfaces.Identity;
  */
 public class IdentityImpl implements Identity {
     static Logger logger = Logger.getLogger(IdentityImpl.class.getName());
-    private URI uri = null;
-    private final String scheme = "urn";
+    
     private String nameSpace = "cog";
-    private long value;
-    private String schemeSpecific = null;
+    private String value;
     private static long count = System.currentTimeMillis();
+    
+    protected static synchronized String nextId() {
+    	return String.valueOf(count++);
+    }
 
     /**
      * The default constructor. Assigns a default namespace to this
      * identity as <code>cog</code>.
      */
     public IdentityImpl() {
-        synchronized (this) {
-            this.value = count++;
-        }
-        createURI();
+        this.value = nextId();
     }
 
     /**
     * Instantiates an <code>Identity</code> with the given namespace.
      */
     public IdentityImpl(String namespace) {
-        synchronized (this) {
-            this.value = count++;
-        }
+        this.value = nextId();
         this.nameSpace = namespace;
-        createURI();
     }
 
     /**
@@ -58,24 +52,25 @@ public class IdentityImpl implements Identity {
     public IdentityImpl(Identity identity) {
         this.nameSpace = identity.getNameSpace();
         this.value = identity.getValue();
-        createURI();
     }
 
     public void setNameSpace(String namespace) {
         this.nameSpace = namespace;
-        createURI();
     }
 
     public String getNameSpace() {
         return this.nameSpace;
     }
-
+    
     public void setValue(long value) {
-        this.value = value;
-        createURI();
+        setValue(String.valueOf(value));
     }
 
-    public long getValue() {
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
         return this.value;
     }
 
@@ -88,20 +83,13 @@ public class IdentityImpl implements Identity {
     }
 
     public int hashCode() {
-        return (int) this.value;
+        int hc = 0;
+        hc += nameSpace == null ? 0 : nameSpace.hashCode();
+        hc += value == null ? 0 : value.hashCode();
+        return hc;
     }
 
     public String toString() {
-        return this.uri.toString();
+        return "urn:" + nameSpace + "-" + value;
     }
-
-    private void createURI() {
-        this.schemeSpecific = this.nameSpace + "-" + this.value;
-        try {
-            this.uri = new URI(this.scheme + ":" + this.schemeSpecific);
-        } catch (Exception e) {
-            logger.error("Error while creating identity", e);
-        }
-    }
-
 }
