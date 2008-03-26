@@ -16,6 +16,13 @@ public class StatusImpl implements Status {
     private Exception exception = null;
     private String message = null;
     private Date time;
+    
+    public StatusImpl(int status, String message, Exception exception) {
+        this.curStatus = status;
+        this.message = message;
+        this.exception = exception;
+        this.time = new Date();
+    }
 
     public StatusImpl() {
         this.curStatus = Status.UNSUBMITTED;
