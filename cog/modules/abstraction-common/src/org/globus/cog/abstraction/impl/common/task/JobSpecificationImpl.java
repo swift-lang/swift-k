@@ -8,6 +8,7 @@ package org.globus.cog.abstraction.impl.common.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,26 +18,24 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.globus.cog.abstraction.interfaces.Delegation;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
-import org.globus.cog.abstraction.interfaces.FileLocation;
 
 public class JobSpecificationImpl implements JobSpecification {
-    public static final String ATTR_DELEGATION_ENABLED = "delegationEnabled";
-    public static final String ATTR_DELEGATION = "delegation";
-    // "rsl" is for backwards compatibility purposes
-    public static final String ATTR_NATIVE_SPECIFICATION = "rsl";
-    public static final String ATTR_STDOUT = "stdout";
-    public static final String ATTR_STDERR = "stderror";// ??
-    public static final String ATTR_STDIN = "stdin";
-    public static final String ATTR_BATCH_JOB = "batchJob";
-    public static final String ATTR_REDIRECTED = "redirected";
-    public static final String ATTR_LOCAL_EXECUTABLE = "localExecutable";
-    public static final String ATTR_LOCAL_INPUT = "localInput";
-
+    private Boolean delegationEnabled;
+    private int delegation;
+    private String nativeSpecification;
+    private String stdout;
+    private String stderr;
+    private String stdin;
+    private boolean batchJob;
+    private boolean redirected;
+    private boolean localExecutable;
+    private boolean localInput;
+    
     private int type;
     private Map attributes;
-    private Map additionalAttributes;
     private List arguments;
     private Map environment;
     private String directory;
@@ -46,14 +45,12 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public JobSpecificationImpl() {
         this.type = Specification.JOB_SUBMISSION;
-        this.attributes = new HashMap();
-        this.additionalAttributes = new HashMap();
-        this.arguments = new ArrayList();
-        this.environment = new HashMap();
+        this.arguments = new ArrayList(4);
         this.stdinLocation = FileLocation.REMOTE;
         this.stdoutLocation = FileLocation.REMOTE;
         this.stderrLocation = FileLocation.REMOTE;
         this.executableLocation = FileLocation.REMOTE;
+        this.delegation = Delegation.NO_DELEGATION;
     }
 
     public void setType(int type) {
@@ -65,11 +62,11 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public void setSpecification(String specification) {
-        this.attributes.put(ATTR_NATIVE_SPECIFICATION, specification);
+        this.nativeSpecification = specification;
     }
 
     public String getSpecification() {
-        return (String) this.attributes.get(ATTR_NATIVE_SPECIFICATION);
+        return this.nativeSpecification;
     }
 
     public void setExecutable(String executable) {
@@ -158,69 +155,88 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public void addEnvironmentVariable(String name, String value) {
-        this.environment.put(name, value);
+        if (environment == null) {
+            environment = new HashMap();
+        }
+        environment.put(name, value);
     }
 
     public String removeEnvironmentVariable(String name) {
-        return (String) this.environment.remove(name);
+        if (environment != null) {
+            return (String) environment.remove(name);
+        }
+        else {
+            return null;
+        }
     }
 
     public String getEnvironmentVariable(String name) {
-        return (String) this.environment.get(name);
+        if (environment != null) {
+            return (String) environment.get(name);
+        }
+        else {
+            return null;
+        }
     }
 
     public Collection getEnvironment() {
-        return this.environment.keySet();
+        if (environment != null) {
+            return environment.keySet();
+        }
+        else {
+            return Collections.EMPTY_MAP.keySet();
+        }
     }
 
     public Collection getEnvironmentVariableNames() {
-        return this.environment.keySet();
+        if (environment != null) {
+            return environment.keySet();
+        }
+        else {
+            return Collections.EMPTY_MAP.keySet();
+        }
     }
 
     public void setStdOutput(String output) {
-        this.attributes.put(ATTR_STDOUT, output);
-        this.stdoutLocation = inferStreamType(isRedirected(), output != null,
+        this.stdout = output;
+        this.stdoutLocation = inferStreamType(redirected, output != null,
                 true);
     }
 
     public String getStdOutput() {
-        return (String) this.attributes.get(ATTR_STDOUT);
+        return this.stdout;
     }
 
     public void setStdInput(String input) {
-        this.attributes.put(ATTR_STDIN, input);
-        if (this.attributes.containsKey(ATTR_REDIRECTED)) {
-            this.stdinLocation = inferStreamType(isLocalExecutable(),
-                    input != null, false);
-        }
+        this.stdin = input;
+        this.stdinLocation = inferStreamType(localExecutable, input != null,
+                false);
     }
 
     public String getStdInput() {
-        return (String) this.attributes.get(ATTR_STDIN);
+        return this.stdin;
     }
 
     public void setStdError(String error) {
-        this.attributes.put(ATTR_STDERR, error);
-        if (this.attributes.containsKey(ATTR_REDIRECTED)) {
-            this.stderrLocation = inferStreamType(isRedirected(),
-                    error != null, true);
-        }
+        this.stderr = error;
+        this.stderrLocation = inferStreamType(redirected, error != null,
+                true);
     }
 
     public String getStdError() {
-        return (String) this.attributes.get(ATTR_STDERR);
+        return this.stderr;
     }
 
     public void setBatchJob(boolean bool) {
-        this.attributes.put(ATTR_BATCH_JOB, Boolean.valueOf(bool));
+        this.batchJob = bool;
     }
 
     public boolean isBatchJob() {
-        return getBooleanAttribute(ATTR_BATCH_JOB, false);
+        return this.batchJob;
     }
 
     public void setRedirected(boolean bool) {
-        this.attributes.put(ATTR_REDIRECTED, Boolean.valueOf(bool));
+        this.redirected = bool;
         this.stdoutLocation = inferStreamType(isRedirected(),
                 getStdOutput() != null, true);
         this.stderrLocation = inferStreamType(isRedirected(),
@@ -247,7 +263,7 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public boolean isRedirected() {
-        return getBooleanAttribute(ATTR_REDIRECTED, false);
+        return this.redirected;
     }
 
     public void setLocalInput(boolean bool) {
@@ -267,60 +283,59 @@ public class JobSpecificationImpl implements JobSpecification {
         return FileLocation.LOCAL.equals(this.executableLocation);
     }
 
-    private boolean getBooleanAttribute(final String name, boolean def) {
-        Boolean bool = ((Boolean) this.attributes.get(name));
-        if (bool == null) {
-            return def;
-        }
-        else {
-            return bool.booleanValue();
-        }
-    }
-
-    private int getIntAttribute(final String name, int def) {
-        Integer val = ((Integer) this.attributes.get(name));
-        if (val == null) {
-            return def;
-        }
-        else {
-            return val.intValue();
-        }
-    }
-
     public void setAttribute(String name, Object value) {
-        this.additionalAttributes.put(name.toLowerCase(), value);
+        if (attributes == null) {
+            attributes = new HashMap();
+        }
+        attributes.put(name.toLowerCase(), value);
     }
 
     public Object getAttribute(String name) {
-        return this.additionalAttributes.get(name.toLowerCase());
+        if (attributes != null) {
+            return attributes.get(name.toLowerCase());
+        }
+        else {
+            return null;
+        }
     }
 
     public Enumeration getAllAttributes() {
-        return new Vector(additionalAttributes.keySet()).elements();
+        if (attributes != null) {
+            return new Vector(attributes.keySet()).elements();
+        }
+        else {
+            return new Vector().elements();
+        }
     }
 
     public Collection getAttributeNames() {
-        return additionalAttributes.keySet();
+        if (attributes != null) {
+            return attributes.keySet();
+        }
+        else {
+            return Collections.EMPTY_MAP.keySet();
+        }
     }
 
     public boolean isDelegationEnabled() {
-        return getBooleanAttribute(
-                ATTR_DELEGATION_ENABLED,
-                getIntAttribute(ATTR_DELEGATION, Delegation.NO_DELEGATION) != Delegation.NO_DELEGATION);
+        if (delegationEnabled != null) {
+            return delegationEnabled.booleanValue(); 
+        }
+        else {
+            return delegation != Delegation.NO_DELEGATION;
+        }
     }
 
     public void setDelegationEnabled(boolean delegation) {
-        this.attributes.put(ATTR_DELEGATION, new Integer(
-                delegation ? Delegation.LIMITED_DELEGATION
-                        : Delegation.FULL_DELEGATION));
+        this.delegation = delegation ? Delegation.LIMITED_DELEGATION : Delegation.FULL_DELEGATION;
     }
 
     public int getDelegation() {
-        return getIntAttribute(ATTR_DELEGATION, Delegation.NO_DELEGATION);
+        return this.delegation;
     }
 
     public void setDelegation(int delegation) {
-        this.attributes.put(ATTR_DELEGATION, new Integer(delegation));
+        this.delegation = delegation;
     }
 
     public String toString() {
