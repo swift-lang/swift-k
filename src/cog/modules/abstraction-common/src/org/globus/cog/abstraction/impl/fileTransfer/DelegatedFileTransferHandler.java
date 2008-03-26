@@ -241,8 +241,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             if (this.sourceResource != null) {
                 if (this.sourceResource.isDirectory(spec.getSource())) {
                     if (localDestination == null) {
-                        localDestination = File.createTempFile(Long
-                                .toString(this.task.getIdentity().getValue()),
+                        localDestination = File.createTempFile(this.task.getIdentity().getValue(),
                                 null);
                         localDestination.delete();
                         localDestination.mkdir();
@@ -264,8 +263,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                 }
                 else {
                     if (localDestination == null) {
-                        localDestination = File.createTempFile(Long
-                                .toString(this.task.getIdentity().getValue()),
+                        localDestination = File.createTempFile(this.task.getIdentity().getValue(),
                                 null);
                     }
                     if (logger.isDebugEnabled()) {
@@ -284,8 +282,8 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             else {
                 if (localDestination == null) {
                     localDestination = File
-                            .createTempFile(Long.toString(this.task
-                                    .getIdentity().getValue()), null);
+                            .createTempFile(this.task
+                                    .getIdentity().getValue(), null);
                 }
                 transferWithHandler(service.getProvider(), service,
                         LOCAL_SERVICE, spec.getSource(), localDestination);

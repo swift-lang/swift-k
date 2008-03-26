@@ -45,7 +45,7 @@ public class TaskGraphUnmarshaller {
         String xmlIdentity = xmlTaskGraph.getIdentity();
         if (xmlIdentity != null && xmlIdentity.length() > 0) {
             Identity identity = new IdentityImpl();
-            identity.setValue(Long.parseLong(xmlIdentity.trim()));
+            identity.setValue(xmlIdentity.trim());
             taskGraph.setIdentity(identity);
         }
 
@@ -144,10 +144,11 @@ public class TaskGraphUnmarshaller {
             Dependency xmlDependency = (Dependency) en.nextElement();
 
             Identity from = new IdentityImpl();
-            from.setValue(Long.parseLong(xmlDependency.getFrom().trim()));
+            //this obviously ignores the namespace
+            from.setValue(xmlDependency.getFrom().trim());
 
             Identity to = new IdentityImpl();
-            to.setValue(Long.parseLong(xmlDependency.getTo().trim()));
+            to.setValue(xmlDependency.getTo().trim());
 
             dependency.add(taskGraph.get(from), taskGraph.get(to));
         }

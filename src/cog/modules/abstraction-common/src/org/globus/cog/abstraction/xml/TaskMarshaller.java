@@ -40,7 +40,7 @@ public class TaskMarshaller {
             org.globus.cog.abstraction.interfaces.Task task, Task xmlTask)
             throws MarshalException {
         //	set the task identity
-        xmlTask.setIdentity(Long.toString(task.getIdentity().getValue()));
+        xmlTask.setIdentity(task.getIdentity().getValue());
 
         // set the task name
         String name = task.getName();
@@ -108,8 +108,8 @@ public class TaskMarshaller {
             org.globus.cog.abstraction.interfaces.Service service = (org.globus.cog.abstraction.interfaces.Service) iterator
                     .next();
             Service xmlService = new Service();
-            xmlService.setIdentity(Long.toString(service.getIdentity()
-                    .getValue()));
+            xmlService.setIdentity(service.getIdentity()
+                    .getValue());
 
             String sname = service.getName();
             if (sname != null && sname.length() > 0) {
