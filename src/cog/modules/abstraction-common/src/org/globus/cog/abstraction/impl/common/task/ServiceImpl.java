@@ -6,10 +6,13 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
-import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
@@ -20,26 +23,21 @@ public class ServiceImpl implements Service {
     private String name = "";
     private ServiceContact serviceContact = null;
     private SecurityContext securityContext = null;
-    private Hashtable attributes;
+    private Map attributes;
     private String provider = null;
     private int type = 0;
     private int totalCount = 0, failedCount = 0, activeCount = 0;
 
     public ServiceImpl() {
-        this.attributes = new Hashtable();
-        this.identity = new IdentityImpl();
     }
 
     public ServiceImpl(int type) {
-        this.attributes = new Hashtable();
-        this.identity = new IdentityImpl();
         this.type = type;
     }
 
     public ServiceImpl(String provider, ServiceContact serviceContact,
             SecurityContext securityContext) {
-        this.attributes = new Hashtable();
-        this.identity = new IdentityImpl();
+        this();
         this.provider = provider;
         this.serviceContact = serviceContact;
         this.securityContext = securityContext;
@@ -47,10 +45,8 @@ public class ServiceImpl implements Service {
 
     public ServiceImpl(String provider, int type,
             ServiceContact serviceContact, SecurityContext securityContext) {
-        this.attributes = new Hashtable();
-        this.identity = new IdentityImpl();
+        this(type);
         this.provider = provider;
-        this.type = type;
         this.serviceContact = serviceContact;
         this.securityContext = securityContext;
     }
@@ -128,15 +124,32 @@ public class ServiceImpl implements Service {
     }
 
     public void setAttribute(String name, Object value) {
-        this.attributes.put(name, value);
+        if (attributes == null) {
+            attributes = new HashMap();
+        }
+        attributes.put(name, value);
     }
 
     public Object getAttribute(String name) {
-        return this.attributes.get(name);
+        if (attributes != null) {
+            return attributes.get(name);
+        }
+        else {
+            return null;
+        }
     }
 
     public Enumeration getAllAttributes() {
-        return this.attributes.keys();
+        return new Vector(getAttributeNames()).elements();
+    }
+    
+    public Collection getAttributeNames() {
+        if (attributes != null) {
+            return attributes.keySet();
+        }
+        else {
+            return Collections.EMPTY_MAP.keySet();
+        }
     }
 
     public String toString() {
