@@ -6,11 +6,13 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.io.Serializable;
+
 /**
  * This interfaces abstracts the endpoint service handle of remote Grid
  * services.
  */
-public interface ServiceContact {
+public interface ServiceContact extends Serializable {
     /**
      * Sets the host element of this <code>ServiceContact</code>
      */
