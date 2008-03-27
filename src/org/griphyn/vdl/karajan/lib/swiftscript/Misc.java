@@ -29,6 +29,7 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
+		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
 	}
 
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
@@ -115,6 +116,15 @@ public class Misc extends FunctionsCollection {
 		}
 		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(group);
+		handle.closeShallow();
+		return handle;
+	}
+
+	public DSHandle swiftscript_toint(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+			InvalidPathException {
+		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+		DSHandle handle = new RootDataNode(Types.INT);
+		handle.setValue(new Double(Integer.parseInt(inputString)));
 		handle.closeShallow();
 		return handle;
 	}

@@ -2157,6 +2157,13 @@ print(out);
 will output the message 'Your name is John'.
 			</para>
 		</section>
+		<section id="function.toint"><title>@toint</title>
+			<para>
+@toint(input) will parse its input string into an integer. This can be
+used with @arg to pass input parameters to a SwiftScript program as
+integers.
+			</para>
+		</section>
 	</section>
 
 	<section><title>Built-in procedure reference</title>
