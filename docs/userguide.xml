@@ -1192,7 +1192,7 @@ would map
 								stopping execution and reporting all errors
 								encountered.
 							</para>
-							<para>When deveoping workflows, using the
+							<para>When developing workflows, using the
 								default value of <constant>false</constant> can
 								make the workflow easier to debug. However
 								in production runs, using <constant>true</constant>
