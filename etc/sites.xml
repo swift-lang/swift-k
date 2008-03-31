@@ -54,14 +54,6 @@ customize the storage and workdirectory to use your personal working directories
   </pool>
 -->
 <!--
-  <pool handle="evitable" >
-    <gridftp  url="gsiftp://evitable.ci.uchicago.edu" /> 
-    </gridftp>
-    <jobmanager universe="vanilla" url="evitable.ci.uchicago.edu/jobmanager-fork" major="2" />
-    <workdirectory >/home/tiberius/SWIFT-WORK</workdirectory>
-  </pool>
--->
-<!--
   <pool handle="teraport" >
     <gridftp  url="gsiftp://tp-grid1.uchicago.edu" /> 
     <jobmanager universe="vanilla" url="tp-grid1.uchicago.edu/jobmanager-pbs" major="2" />
