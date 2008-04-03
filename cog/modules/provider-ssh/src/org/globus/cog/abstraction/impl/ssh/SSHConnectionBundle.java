@@ -157,18 +157,22 @@ public class SSHConnectionBundle {
         }
     }
 
-    public boolean shutdownIdleConnections() {
+    public boolean shutdownIdleConnections(List tasks) {
         long crt = System.currentTimeMillis();
         boolean anyActive = false;
         synchronized (connections) {
             Iterator i = connections.iterator();
             while (i.hasNext()) {
-                Connection c = (Connection) i.next();
+                final Connection c = (Connection) i.next();
                 if (c.sessionCount == 0 && crt - c.idleTime > MAX_IDLE_TIME) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Shutting down idle connection for " + id);
-                    }
-                    c.ssh.disconnect();
+                    tasks.add(new Runnable() {
+                        public void run() {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Shutting down idle connection for " + id);
+                            }
+                            c.ssh.disconnect();
+                        }
+                    });
                 }
                 else {
                     anyActive = true;
