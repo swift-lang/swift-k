@@ -35,10 +35,8 @@ procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,
   $inputs:typecheck();separator="\n"$
 $if(binding)$
   $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name)$
-
 $else$
   $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements,name=name)$
-
 $endif$
 </element>
 
@@ -154,9 +152,7 @@ $endif$
 
 function(name, args) ::= <<
 <swiftscript:$name$>
-  $if(args)$
-    $args$
-  $endif$
+  $if(args)$ $args$ $endif$
 </swiftscript:$name$>
 >>
 

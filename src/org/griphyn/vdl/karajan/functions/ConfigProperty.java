@@ -13,28 +13,28 @@ import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class ConfigProperty extends AbstractFunction {
-	public static final Arg NAME = new Arg.Positional("name");
-	public static final Arg INSTANCE = new Arg.Optional("instance", Boolean.TRUE);
+    public static final Arg NAME = new Arg.Positional("name");
+    public static final Arg INSTANCE = new Arg.Optional("instance", Boolean.TRUE);
 
-	static {
-		setArguments(ConfigProperty.class, new Arg[] { NAME, INSTANCE });
-	}
-
-	public static final String INSTANCE_CONFIG_FILE = "vdl:instanceconfigfile";
-	public static final String INSTANCE_CONFIG = "vdl:instanceconfig";
-
-	public Object function(VariableStack stack) throws ExecutionException {
-		String name = TypeUtil.toString(NAME.getValue(stack));
-		boolean instance = TypeUtil.toBoolean(INSTANCE.getValue(stack));
-		return getProperty(name, instance, stack);
-	}
-    
-    public static String getProperty(String name, VariableStack stack) throws ExecutionException {
-    	return getProperty(name, true, stack);
+    static {
+        setArguments(ConfigProperty.class, new Arg[] { NAME, INSTANCE });
     }
-    
+
+    public static final String INSTANCE_CONFIG_FILE = "vdl:instanceconfigfile";
+    public static final String INSTANCE_CONFIG = "vdl:instanceconfig";
+
+    public Object function(VariableStack stack) throws ExecutionException {
+        String name = TypeUtil.toString(NAME.getValue(stack));
+        boolean instance = TypeUtil.toBoolean(INSTANCE.getValue(stack));
+        return getProperty(name, instance, stack);
+    }
+
+    public static String getProperty(String name, VariableStack stack) throws ExecutionException {
+        return getProperty(name, true, stack);
+    }
+
     public static String getProperty(String name, boolean instance, VariableStack stack) throws ExecutionException {
-    	try {
+        try {
             VDL2Config conf;
             String prop;
             if (!instance) {
