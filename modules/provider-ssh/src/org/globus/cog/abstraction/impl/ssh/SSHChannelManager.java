@@ -179,9 +179,8 @@ public class SSHChannelManager {
 
         public void run() {
             try {
-                List shutdown = new ArrayList();
+                List shutdownList = new ArrayList();
                 while (true) {
-                    shutdown.clear();
                     Thread.sleep(REAP_INTERVAL);
                     synchronized (bundles) {
                         Iterator i = bundles.entrySet().iterator();
@@ -189,11 +188,21 @@ public class SSHChannelManager {
                             Map.Entry e = (Entry) i.next();
                             ConnectionID ix = (ConnectionID) e.getKey();
                             SSHConnectionBundle bundle = (SSHConnectionBundle) e.getValue();
-                            if (!bundle.shutdownIdleConnections()) {
+                            if (!bundle.shutdownIdleConnections(shutdownList)) {
                                 i.remove();
                             }
                         }
                     }
+                    Iterator i = shutdownList.iterator();
+                    while (i.hasNext()) {
+                        try {
+                            ((Runnable) i.next()).run();
+                        }
+                        catch (Exception e) {
+                            logger.warn("Failed to shut down SSH connection", e);
+                        }
+                    }
+                    shutdownList.clear();
                 }
             }
             catch (InterruptedException e) {
