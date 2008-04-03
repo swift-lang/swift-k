@@ -97,6 +97,8 @@ namespace("vdl"
 		
 		element(initSharedDir, [rhost]
 			once(list(rhost, "shared")
+				vdl:setprogress("Initializing site shared directory")
+
 				log(LOG:INFO, "START host={rhost} - Initializing shared directory")
 
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
