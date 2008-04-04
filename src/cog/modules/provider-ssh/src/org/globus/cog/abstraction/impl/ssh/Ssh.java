@@ -50,7 +50,9 @@ import com.sshtools.j2ssh.transport.publickey.SshPrivateKey;
 import com.sshtools.j2ssh.transport.publickey.SshPrivateKeyFile;
 
 public class Ssh {
-    static Logger logger = Logger.getLogger(Ssh.class.getName());
+    public static final Logger logger = Logger.getLogger(Ssh.class);
+    
+    public static final int DEFAULT_SOCKET_TIMEOUT = 120 * 1000;
     protected String host;
     protected int port = 22;
     protected String username;
@@ -199,6 +201,7 @@ public class Ssh {
                     logger.debug("Connecting....");
                 }
 
+                client.setSocketTimeout(DEFAULT_SOCKET_TIMEOUT);
                 client.connect(properties, new AbstractHostKeyVerification() {
                     public void onUnknownHost(String hostname,
                             String fingerprint) throws InvalidHostFileException {
