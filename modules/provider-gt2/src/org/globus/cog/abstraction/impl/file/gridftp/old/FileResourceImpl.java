@@ -61,6 +61,9 @@ import org.ietf.jgss.GSSCredential;
 public class FileResourceImpl extends AbstractFTPFileResource {
     public static final Logger logger = Logger
             .getLogger(FileResourceImpl.class);
+    
+    protected static final boolean STORE = true;
+    protected static final boolean RETRIEVE = false;
 
     /**
      * By default JGlobus sets this to 6000 ms. Experience has proved that it
@@ -71,6 +74,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     private GridFTPClient gridFTPClient;
     private boolean dataChannelReuse;
     private boolean dataChannelInitialized;
+    private boolean dataChannelDirection;
 
     /** throws InvalidProviderException */
     public FileResourceImpl() throws Exception {
@@ -102,9 +106,17 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             gridFTPClient = new GridFTPClient(host, port);
             Reply r = gridFTPClient.getLastReply();
 
-            if (r != null && r.getMessage().indexOf("GridFTP Server 2.3") != -1) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Initial reply: " + r.getMessage());
+            }
+            if (r != null && r.getMessage().indexOf("Virtual Broken GridFTP Server") != -1) {
+                dataChannelReuse = false;
+            }
+            else {
                 dataChannelReuse = true;
-                logger.debug("GridFTP version is 2.3. Enabling data channel reuse.");
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Data channel reuse: " + dataChannelReuse);
             }
             gridFTPClient.setClientWaitParams(MAX_REPLY_WAIT_TIME,
                     Session.DEFAULT_WAIT_DELAY);
@@ -124,13 +136,27 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                     "Error communicating with the GridFTP server", e);
         }
     }
+    
+    public boolean getDataChannelReuse() {
+        return dataChannelReuse;
+    }
+    
+    public void setDataChannelReuse(boolean dataChannelReuse) {
+        this.dataChannelReuse = dataChannelReuse;
+        this.dataChannelInitialized = false;
+    }
 
-    protected void initializeDataChannel() throws ClientException,
+    protected void initializeDataChannel(boolean mode) throws ClientException,
             ServerException, IOException {
-        if (!dataChannelInitialized || !dataChannelReuse) {
-            gridFTPClient.setPassiveMode(true);
+        if (!dataChannelInitialized || !dataChannelReuse || dataChannelDirection != mode) {
+            gridFTPClient.setPassiveMode(mode);
             dataChannelInitialized = true;
+            dataChannelDirection = mode;
         }
+    }
+    
+    protected void resetDataChannel() {
+        dataChannelInitialized = false;
     }
 
     protected void setSecurityOptions(GridFTPClient client)
@@ -214,7 +240,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         Vector gridFileList = new Vector();
         try {
-            this.initializeDataChannel();
+            this.initializeDataChannel(RETRIEVE);
             Enumeration list = gridFTPClient.list().elements();
             while (list.hasMoreElements()) {
                 gridFileList.add(createGridFile((FileInfo) list.nextElement()));
@@ -309,7 +335,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void get(String remoteFileName, DataSink sink,
             MarkerListener mListener) throws FileResourceException {
         try {
-            initializeDataChannel();
+            initializeDataChannel(RETRIEVE);
             gridFTPClient.get(remoteFileName, sink, mListener);
         }
         catch (Exception e) {
@@ -321,7 +347,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void get(String remoteFileName, File localFile)
             throws FileResourceException {
         try {
-            initializeDataChannel();
+            initializeDataChannel(RETRIEVE);
             gridFTPClient.get(remoteFileName, localFile);
         }
         catch (Exception e) {
@@ -341,7 +367,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             final ProgressMonitor progressMonitor) throws FileResourceException {
         File localFile = new File(localFileName);
         try {
-            initializeDataChannel();
+            initializeDataChannel(RETRIEVE);
             final long size = localFile.length();
             DataSink sink;
             if (progressMonitor != null) {
@@ -374,7 +400,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         final File localFile = new File(localFileName);
         try {
-            initializeDataChannel();
+            initializeDataChannel(STORE);
             final long size = localFile.length();
             DataSource source;
             if (progressMonitor != null) {
@@ -408,7 +434,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             throws FileResourceException {
 
         try {
-            initializeDataChannel();
+            initializeDataChannel(STORE);
             gridFTPClient.put(localFile, remoteFileName, append);
         }
         catch (Exception e) {
@@ -424,7 +450,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void put(DataSource source, String remoteFileName,
             MarkerListener mListener) throws FileResourceException {
         try {
-            initializeDataChannel();
+            initializeDataChannel(STORE);
             gridFTPClient.put(remoteFileName, source, mListener);
         }
         catch (Exception e) {
@@ -495,7 +521,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                 setCurrentDirectory(currentDirectory);
             }
             catch (Exception e) {
-                // do nothihng
+                // do nothing
             }
         }
         return isDir;

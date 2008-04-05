@@ -69,7 +69,7 @@ public class FileResourceImpl extends
         }
         else {
             try {
-                initializeDataChannel();
+                initializeDataChannel(RETRIEVE);
                 Vector v = this.getGridFTPClient().mlsd();
                 ArrayList list = new ArrayList();
                 Iterator i = v.iterator();
@@ -126,7 +126,7 @@ public class FileResourceImpl extends
         }
         else {
             try {
-                initializeDataChannel();
+                initializeDataChannel(RETRIEVE);
                 Vector v = this.getGridFTPClient().mlsd(directory);
                 ArrayList list = new ArrayList();
                 Iterator i = v.iterator();
