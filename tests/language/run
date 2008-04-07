@@ -42,7 +42,7 @@ for a in *.swift; do
 
   echo Attempting vdlc known-bad $a
   vdlc $a
-  if [ "$?" -eq "0" ]; then echo "TEST FAILED - COMPILE SUCCEEDED"; exit; fi
+  if [ "$?" -eq "0" ]; then echo "TEST FAILED - COMPILE SUCCEEDED"; exit 2; fi
   echo ----------===========================----------
 done
 echo Finished all syntax tests
