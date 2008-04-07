@@ -10,7 +10,6 @@ import java.net.PasswordAuthentication;
 import java.util.Hashtable;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 
 public class WebDAVSecurityContextImpl implements SecurityContext {
@@ -41,11 +40,7 @@ public class WebDAVSecurityContextImpl implements SecurityContext {
         }
     }
 
-    public Object getCredentials() throws InvalidSecurityContextException {
-        if (credentials == null) {
-            throw new InvalidSecurityContextException(
-                    "WebDAV provider cannot handle default credentials. Please provide a valid WebDAV credential");
-        }
+    public Object getCredentials() {
         return this.credentials;
     }
 
