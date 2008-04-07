@@ -38,7 +38,6 @@ public class SecurityContextImpl implements SecurityContext {
     }
 
     public String getAlias() {
-
         return this.alias;
     }
 
@@ -53,5 +52,30 @@ public class SecurityContextImpl implements SecurityContext {
 
     public Object getAttribute(String name) {
         return this.attributes.get(name);
+    }
+    
+    public int hashCode() {
+        return (credentials == null ? 0 : credentials.hashCode()) + attributes.hashCode();
+    }
+    
+    public boolean equals(Object o) {
+        if (o instanceof SecurityContext) {
+            SecurityContext sc = (SecurityContext) o;
+            if ((credentials == null && sc.getCredentials() == null) || credentials.equals(sc.getCredentials())) {
+                if (o instanceof SecurityContextImpl) {
+                    SecurityContextImpl sci = (SecurityContextImpl) o;
+                    return attributes.equals(sci.attributes);
+                }
+                else {
+                    return true;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
     }
 }
