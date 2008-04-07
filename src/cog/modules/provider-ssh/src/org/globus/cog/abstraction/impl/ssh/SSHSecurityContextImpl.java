@@ -9,7 +9,6 @@ package org.globus.cog.abstraction.impl.ssh;
 import java.util.Hashtable;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 
 public class SSHSecurityContextImpl implements SecurityContext {
@@ -36,7 +35,7 @@ public class SSHSecurityContextImpl implements SecurityContext {
         this.credentials = credentials;
     }
 
-    public Object getCredentials() throws InvalidSecurityContextException {
+    public Object getCredentials() {
         return this.credentials;
     }
 
