@@ -1,3 +1,8 @@
+(04/07/2008)
+
+*** SecurityContextImpl, ServiceImpl, and ServiceContactImpl now
+    properly implement equals() and hashCode()
+
 (03/26/2008)
 
 *** Made a few objects serializable.
