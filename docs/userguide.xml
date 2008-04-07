@@ -2321,7 +2321,7 @@ submit directory after each run. It will copy all your logs and kickstart
 records into a directory at the CI for reporting, usage tracking, support and debugging.
 			</para>
 			<para>
-rsync --ignore-existing *.log *-kickstart.xml login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
+rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
 			</para>
 		</section>
 		<section><title>Specifying TeraGrid allocations</title>
