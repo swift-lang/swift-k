@@ -42,10 +42,4 @@ public interface ServiceContact extends Serializable {
      * Returns the entire contact string of this <code>ServiceContact</code>
      */
     public String getContact();
-
-    /**
-     * Checks if the given <code>ServiceContact</code> is equal to this
-     * <code>ServiceContact</code>.
-     */
-    public boolean equals(ServiceContact serviceContact);
 }

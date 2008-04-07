@@ -142,7 +142,7 @@ public class ServiceImpl implements Service {
     public Enumeration getAllAttributes() {
         return new Vector(getAttributeNames()).elements();
     }
-    
+
     public Collection getAttributeNames() {
         if (attributes != null) {
             return attributes.keySet();
@@ -154,5 +154,24 @@ public class ServiceImpl implements Service {
 
     public String toString() {
         return this.serviceContact.toString() + "(" + this.provider + ")";
+    }
+
+    public int hashCode() {
+        return serviceContact.hashCode() + provider.hashCode()
+                + (securityContext == null ? 0 : securityContext.hashCode());
+    }
+
+    public boolean equals(Object o) {
+        if (o instanceof Service) {
+            Service s = (Service) o;
+            return serviceContact.equals(s.getServiceContact())
+                    && provider.equals(s.getProvider())
+                    && equals(securityContext, s.getSecurityContext());
+        }
+        return false;
+    }
+
+    private boolean equals(Object o1, Object o2) {
+        return o1 == null ? o2 == null : o1.equals(o2);
     }
 }
