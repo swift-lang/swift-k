@@ -6,7 +6,6 @@
 
 package org.globus.cog.abstraction.interfaces;
 
-import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.ietf.jgss.GSSCredential;
 
 /**
@@ -24,7 +23,7 @@ public interface SecurityContext {
     /**
      * Returns the credentials for this <code>SecurityContext</code>
      */
-    public Object getCredentials() throws InvalidSecurityContextException;
+    public Object getCredentials();
 
     public void setAlias(String alias);
 

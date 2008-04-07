@@ -6,10 +6,6 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.StringTokenizer;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
@@ -17,26 +13,17 @@ public class ServiceContactImpl implements ServiceContact {
 
     static Logger logger = Logger.getLogger(ServiceContactImpl.class.getName());
 
-    private static final byte HOST = 1;
-
-    private static final byte PORT = 2;
-
-    private static final byte CONTACT = 3;
-
     public static final ServiceContact LOCALHOST = new ServiceContactImpl(
             "localhost");
 
-    private String host = null;
-
-    private int port = -1;
-
-    private String contact = null;
+    private String host, path;
+    private int port;
 
     public ServiceContactImpl() {
     }
 
     public ServiceContactImpl(String contact) {
-        this.contact = contact;
+        parse(contact);
     }
 
     public ServiceContactImpl(String host, int port) {
@@ -46,10 +33,11 @@ public class ServiceContactImpl implements ServiceContact {
 
     public void setHost(String host) {
         this.host = host;
+        port = -1;
     }
 
     public String getHost() {
-        return get(HOST);
+        return host;
     }
 
     public void setPort(int port) {
@@ -57,117 +45,53 @@ public class ServiceContactImpl implements ServiceContact {
     }
 
     public int getPort() {
-        String p = get(PORT);
-        if (p == null) {
-            return -1;
-        }
-        return Integer.parseInt(p);
-
+        return port;
     }
 
     public void setContact(String contact) {
-        this.contact = contact;
+        parse(contact);
     }
 
     public String getContact() {
-        return get(CONTACT);
+        return host + (port == -1 ? "" : ":" + port) + (path == null ? "" : path);
     }
 
-    public boolean equals(ServiceContact serviceContact) {
-        return this.getContact().equalsIgnoreCase(serviceContact.getContact());
-    }
-
-    public boolean equals(Object object) {
-    	if (!(object instanceof ServiceContact)) {
-    		return false;
+    public boolean equals(Object o) {
+    	if (o instanceof ServiceContact) {
+    		ServiceContact sc = (ServiceContact) o;
+    		return getContact().equals(sc.getContact());
     	}
-        return this.toString().equalsIgnoreCase(
-                ((ServiceContact) object).toString());
+        return false;
     }
 
     public int hashCode() {
-        return this.getContact().toLowerCase().hashCode();
+        return this.getContact().hashCode();
     }
 
-    private String get(byte element) {
-        switch (element) {
-        case CONTACT:
-            // if the service contact url is already set
-            if (this.contact != null) {
-                return this.contact;
+    private void parse(String contact) {
+        int portsep = contact.indexOf(':');
+        int pathsep = contact.indexOf('/');
+        if (portsep != -1 && (pathsep == -1 || portsep < pathsep)) {
+            host = contact.substring(0, portsep);
+            if (pathsep == -1) {
+                port = Integer.parseInt(contact.substring(portsep + 1));
+                path = null;
             }
-            // if not try to generate one
-            else if (this.host != null) {
-                if (this.port != -1) {
-                    return this.host + ":" + Integer.toString(this.port);
-                } else {
-                    return this.host;
-                }
+            else {
+                port = Integer.parseInt(contact.substring(portsep + 1, pathsep));
+                path = contact.substring(pathsep);
             }
-            return null;
-        case HOST:
-            if (this.host == null && this.contact != null) {
-                // try to cast the contact into a URI and then get the
-                // host and port from it
-                if (this.contact.indexOf("://") != -1) {
-                    try {
-                        URI uri = new URI(this.contact);
-                        logger.debug("Host from URI: " + uri.getHost());
-                        return uri.getHost();
-                    } catch (URISyntaxException e) {
-                        logger
-                                .debug("Cannot retreive host information from the URI");
-                        return null;
-                    }
-                } else {
-                    String c = this.contact;
-                    StringTokenizer st = new StringTokenizer(c, ":");
-                    try {
-                        String h = st.nextToken();
-                        logger.debug("Host from contact: " + h);
-                        return h;
-                    } catch (Exception ex) {
-                        logger
-                                .debug("Cannot retreive port information from the contact");
-                        return null;
-                    }
-                }
-            }
-            return this.host;
-        case PORT:
-            if (this.port == -1 && this.contact != null) {
-                // try to cast the contact into a URI and then get the
-                // port from it
-                if (this.contact.indexOf("://") != -1) {
-                    try {
-                        URI uri = new URI(this.contact);
-                        logger.debug("Port from URI: " + uri.getPort());
-                        return Integer.toString(uri.getPort());
-                    } catch (URISyntaxException e) {
-                        logger
-                                .debug("Cannot retreive port information from the URI");
-                        return null;
-                    }
-                } else {
-                    String c = this.contact;
-                    StringTokenizer st = new StringTokenizer(c, ":");
-                    try {
-                        st.nextToken();
-                        String p = st.nextToken();
-                        logger.debug("Port from contact: " + p);
-                        return p;
-                    } catch (Exception ex) {
-                        logger
-                                .debug("Cannot retreive port information from the contact");
-                        return null;
-                    }
-                }
-            }
-            return Integer.toString(this.port);
-        default:
-            break;
         }
-        return null;
+        else if (pathsep != -1) {
+            host = contact.substring(0, pathsep);
+            port = -1;
+            path = contact.substring(pathsep);
+        }
+        else {
+            host = contact;
+            port = -1;
+            path = null;
+        }
     }
 
     public String toString() {
