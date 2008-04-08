@@ -16,25 +16,29 @@ public class ServiceContactImpl implements ServiceContact {
     public static final ServiceContact LOCALHOST = new ServiceContactImpl(
             "localhost");
 
-    private String host, path;
+    private String host, path, contact;
     private int port;
 
     public ServiceContactImpl() {
     }
 
     public ServiceContactImpl(String contact) {
+        this.contact = contact;
         parse(contact);
     }
 
     public ServiceContactImpl(String host, int port) {
         this.host = host;
         this.port = port;
+        buildContact();
     }
 
     public void setHost(String host) {
         this.host = host;
         port = -1;
+        buildContact();
     }
+    
 
     public String getHost() {
         return host;
@@ -42,6 +46,7 @@ public class ServiceContactImpl implements ServiceContact {
 
     public void setPort(int port) {
         this.port = port;
+        buildContact();
     }
 
     public int getPort() {
@@ -49,11 +54,12 @@ public class ServiceContactImpl implements ServiceContact {
     }
 
     public void setContact(String contact) {
+        this.contact = contact;
         parse(contact);
     }
 
     public String getContact() {
-        return host + (port == -1 ? "" : ":" + port) + (path == null ? "" : path);
+        return contact;
     }
 
     public boolean equals(Object o) {
@@ -69,10 +75,17 @@ public class ServiceContactImpl implements ServiceContact {
     }
 
     private void parse(String contact) {
-        int portsep = contact.indexOf(':');
-        int pathsep = contact.indexOf('/');
+        int schemesep = contact.indexOf("://");
+        if (schemesep == -1) {
+            schemesep = 0;
+        }
+        else {
+            schemesep += 3;
+        }
+        int portsep = contact.indexOf(':', schemesep);
+        int pathsep = contact.indexOf('/', schemesep);
         if (portsep != -1 && (pathsep == -1 || portsep < pathsep)) {
-            host = contact.substring(0, portsep);
+            host = contact.substring(schemesep, portsep);
             if (pathsep == -1) {
                 port = Integer.parseInt(contact.substring(portsep + 1));
                 path = null;
@@ -83,15 +96,19 @@ public class ServiceContactImpl implements ServiceContact {
             }
         }
         else if (pathsep != -1) {
-            host = contact.substring(0, pathsep);
+            host = contact.substring(schemesep, pathsep);
             port = -1;
             path = contact.substring(pathsep);
         }
         else {
-            host = contact;
+            host = contact.substring(schemesep);
             port = -1;
             path = null;
         }
+    }
+    
+    private void buildContact() {
+        this.contact = host + (port == -1 ? "" : (":" + port));
     }
 
     public String toString() {

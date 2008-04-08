@@ -21,7 +21,7 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
 public class ServiceImpl implements Service {
     private Identity identity = null;
     private String name = "";
-    private ServiceContact serviceContact = null;
+    private ServiceContact serviceContact;
     private SecurityContext securityContext = null;
     private Map attributes;
     private String provider = null;
@@ -88,7 +88,7 @@ public class ServiceImpl implements Service {
     }
 
     public ServiceContact getServiceContact() {
-        return this.serviceContact;
+        return serviceContact;
     }
 
     public void setSecurityContext(SecurityContext securityContext) {
@@ -153,7 +153,7 @@ public class ServiceImpl implements Service {
     }
 
     public String toString() {
-        return this.serviceContact.toString() + "(" + this.provider + ")";
+        return serviceContact.toString() + "(" + this.provider + ")";
     }
 
     public int hashCode() {
