@@ -1,0 +1,50 @@
+<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
+     <xs:simpleType name="messagefile">
+       <xs:restriction base="string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="greeting">
+
+      <output 
+    name="e" type="messagefile"
+
+     xsi:nil="true" />
+
+      <output 
+    name="t" type="messagefile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="i" type="messagefile"
+
+     xsi:nil="true" />
+    <binding>
+      <application>
+        <executable>echo</executable>
+        <stdin><function name="filename">
+          <variableReference>i</variableReference></function></stdin><stdout><function name="filename">
+          <variableReference>t</variableReference></function></stdout><stderr><function name="filename">
+          <variableReference>e</variableReference></function></stderr><stringConstant>hello</stringConstant>  </application>
+    </binding>
+  </procedure>
+  <dataset name="infile" type="messagefile">
+    <file name="test.in"/>
+  </dataset>
+  <dataset name="outfile" type="messagefile">
+    <file name="test.out"/>
+  </dataset>
+  <dataset name="errfile" type="messagefile">
+    <file name="test.err"/>
+  </dataset>
+  <call proc="greeting" src="line 13">
+    <output><variableReference>errfile</variableReference></output>
+    <output><variableReference>outfile</variableReference></output>
+    <input><variableReference>infile</variableReference></input>
+  </call>
+</program>

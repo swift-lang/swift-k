@@ -161,12 +161,18 @@ $else$
 $endif$
 >>
 
-app(exec,arguments,stdio,sourcelocation) ::= <<
+app(exec,arguments,stdin,stdout,stderr,sourcelocation) ::= <<
 <binding>
   <application>
     <executable>$exec$</executable>
-$if(stdio)$
-    $stdio;separator="\n"$
+$if(stdin)$
+    $stdin$
+$endif$
+$if(stdout)$
+    $stdout$
+$endif$
+$if(stderr)$
+    $stderr$
 $endif$
 $if(arguments)$
     $arguments$

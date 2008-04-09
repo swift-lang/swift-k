@@ -770,18 +770,18 @@ functionInvocationArgument [StringTemplate code]
      ;
 
 stdioArg [StringTemplate code]
-{StringTemplate t=null,m=null;}
-    :    ("stdin" {t=template("stdin");}
+{StringTemplate t=null,m=null; String name=null;}
+    :    ("stdin" {t=template("stdin"); name="stdin";}
     |
-    "stdout" {t=template("stdout");}
+    "stdout" {t=template("stdout"); name="stdout";}
     |
-    "stderr" {t=template("stderr");}
+    "stderr" {t=template("stderr"); name="stderr";}
     )
     ASSIGN
     m=mappingExpr
     {
         t.setAttribute("content", m);
-        code.setAttribute("stdio", t);
+        code.setAttribute(name, t);
     }
     ;
 

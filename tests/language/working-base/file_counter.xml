@@ -41,8 +41,7 @@
       <application>
         <executable>wc</executable>
         <stdin><function name="filename">
-          <variableReference>f</variableReference></function></stdin>
-        <stdout><function name="filename">
+          <variableReference>f</variableReference></function></stdin><stdout><function name="filename">
           <variableReference>c</variableReference></function></stdout>  </application>
     </binding>
   </procedure>
