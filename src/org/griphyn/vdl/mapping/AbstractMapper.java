@@ -16,7 +16,7 @@ import org.griphyn.vdl.mapping.Mapper;
 public abstract class AbstractMapper implements Mapper {
 
 	public static final Logger logger = Logger.getLogger(AbstractMapper.class);
-
+	public static final MappingParam PARAM_INPUT = new MappingParam("input", Boolean.FALSE);
 	protected Map params;
 
 	public synchronized void setParam(String name, Object value) {
