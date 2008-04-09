@@ -459,7 +459,7 @@ public class Karajan {
 			Iterator caseScopeIterator = caseScope.getVariableIterator();
 			while(caseScopeIterator.hasNext()) {
 				String v=(String) caseScopeIterator.next();
-				scope.addWriter(v, statementID, false);
+				scope.addWriter(v, statementID, true);
 			}
 
 		}
@@ -472,7 +472,7 @@ public class Karajan {
 			Iterator defaultScopeIterator = defaultScope.getVariableIterator();
 			while(defaultScopeIterator.hasNext()) {
 				String v=(String) defaultScopeIterator.next();
-				scope.addWriter(v, statementID, false);
+				scope.addWriter(v, statementID, true);
 			}
 		}
 	}
@@ -709,7 +709,7 @@ public class Karajan {
 		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
 			return true;
 		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
-			return false;
+			return true;
 		} else {
 			throw new RuntimeException("Could not find root for abstract expression.");
 		}

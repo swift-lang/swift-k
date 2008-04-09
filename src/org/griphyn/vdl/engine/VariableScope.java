@@ -157,6 +157,9 @@ public class VariableScope {
 		if(isVariableLocallyDefined(variableName)) {
 			StringTemplate ld = getLocalDeclaration(variableName);
 			if(ld != null) {
+				if(!partialWriter && ld.getAttribute("waitfor")!=null) {
+					throw new CompilationException("variable "+variableName+" has multiple writers.");
+				}
 				ld.setAttribute("waitfor", closeID);
 			} else {
 				logger.info("Variable "+variableName+" is local but has no template.");
