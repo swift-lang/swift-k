@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,12 @@ public class Karajan {
 	public static final Logger logger = Logger.getLogger(Karajan.class);
 	
 	public static final String TEMPLATE_FILE_NAME = "Karajan.stg"; 
+
+	Map stringInternMap = new HashMap();
+	Map intInternMap = new HashMap();
+	Map floatInternMap = new HashMap();
+
+	int internedIDCounter=17000;
 
 	/** an arbitrary statement identifier. Start at some high number to
 	    aid visual distinction in logs, but the actual value doesn't
@@ -157,6 +164,9 @@ public class Karajan {
 		}
 
 		statements(prog, scope);
+
+		generateInternedConstants(scope.bodyTemplate);
+
 		return scope.bodyTemplate;
 	}
 
@@ -586,20 +596,43 @@ public class Karajan {
 		} else if (expressionQName.equals(INT_EXPR)) {
 			XmlInt xmlInt = (XmlInt) expression;
 			int i = xmlInt.getIntValue();
-			StringTemplate st = template("iConst");
-			st.setAttribute("value",""+i);
+			Integer iobj = new Integer(i);
+			String internedID;
+			if(intInternMap.get(iobj) == null) {
+				internedID = "swift#int#" + i;
+				intInternMap.put(iobj, internedID);
+			} else {
+				internedID = (String)intInternMap.get(iobj);
+			}
+			StringTemplate st = template("id");
+			st.setAttribute("var", internedID);
 			return st;
 		} else if (expressionQName.equals(FLOAT_EXPR)) {
 			XmlFloat xmlFloat = (XmlFloat) expression;
 			float f = xmlFloat.getFloatValue();
-			StringTemplate st = template("fConst");
-			st.setAttribute("value",""+f);
+			Float fobj = new Float(f);
+			String internedID;
+			if(floatInternMap.get(fobj) == null) {
+				internedID = "swift#float#" + (internedIDCounter++);
+				floatInternMap.put(fobj, internedID);
+			} else {
+				internedID = (String)floatInternMap.get(fobj);
+			}
+			StringTemplate st = template("id");
+			st.setAttribute("var",internedID);
 			return st;
 		} else if (expressionQName.equals(STRING_EXPR)) {
 			XmlString xmlString = (XmlString) expression;
 			String s = xmlString.getStringValue();
-			StringTemplate st = template("sConst");
-			st.setAttribute("innervalue",s);
+			String internedID;
+			if(stringInternMap.get(s) == null) {
+				internedID = "swift#string#" + (internedIDCounter++);
+				stringInternMap.put(s,internedID);
+			} else {
+				internedID = (String)stringInternMap.get(s);
+			}
+			StringTemplate st = template("id");
+			st.setAttribute("var",internedID);
 			return st;
 		} else if (expressionQName.equals(COND_EXPR)) {
 			StringTemplate st = template("binaryop");
@@ -715,6 +748,46 @@ public class Karajan {
 		}
 	}
 
+	public void generateInternedConstants(StringTemplate programTemplate) {
 
+		Iterator i;
+		i = stringInternMap.keySet().iterator();
+		while(i.hasNext()) {
+			String str = (String)i.next();
+			String variableName = (String)stringInternMap.get(str);
+			StringTemplate st = template("sConst");
+			st.setAttribute("innervalue",str);
+			StringTemplate vt = template("globalConstant");
+			vt.setAttribute("name",variableName);
+			vt.setAttribute("expr",st);
+			programTemplate.setAttribute("constants",vt);
+		}
+
+		i = intInternMap.keySet().iterator();
+		while(i.hasNext()) {
+			Integer key = (Integer)i.next();
+			String variableName = (String)intInternMap.get(key);
+			StringTemplate st = template("iConst");
+			st.setAttribute("value",key);
+			StringTemplate vt = template("globalConstant");
+			vt.setAttribute("name",variableName);
+			vt.setAttribute("expr",st);
+			programTemplate.setAttribute("constants",vt);
+		}
+
+		i = floatInternMap.keySet().iterator();
+		while(i.hasNext()) {
+			Float key = (Float)i.next();
+			String variableName = (String)floatInternMap.get(key);
+			StringTemplate st = template("fConst");
+			st.setAttribute("value",key);
+			StringTemplate vt = template("globalConstant");
+			vt.setAttribute("name",variableName);
+			vt.setAttribute("expr",st);
+			programTemplate.setAttribute("constants",vt);
+		}
+
+
+	}
 
 }

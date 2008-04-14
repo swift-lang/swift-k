@@ -1,6 +1,6 @@
 group Karajan;
 
-program(types,procedures,declarations,statements) ::= <<
+program(types,procedures,declarations,statements,constants) ::= <<
 <project>
   <import file="sys.xml"/>
   <import file="scheduler.xml"/>
@@ -11,6 +11,7 @@ program(types,procedures,declarations,statements) ::= <<
     $types$
   </types>
   $endif$
+  $constants;separator="\n"$
   $procedures;separator="\n"$
   $declarations;separator="\n"$
   $if(statements)$
@@ -206,6 +207,12 @@ $if(bind)$
 $else$
 $expr$
 $endif$
+>>
+
+globalConstant(name,expr) ::= <<
+<global name="$name$">
+  $expr$
+</global>
 >>
 
 variable(name,type,isArray,expr,mapping,nil,file,waitfor) ::= <<
