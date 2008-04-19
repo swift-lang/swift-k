@@ -55,10 +55,6 @@ namespace("vdl"
 				property(name="workdir", value = dir)
 			)
 			
-			element(lrc, [url]
-				//nothing really, but Swift migh otherwise complain about some old (VDS) sites.xml
-			)
-			
 			resources(
 				executeFile(file)
 			)
