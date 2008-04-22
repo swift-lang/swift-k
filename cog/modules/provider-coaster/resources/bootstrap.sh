@@ -27,10 +27,11 @@ if [ "${AMD5:0:32}" != "$EMD5" ]; then
 	error "Bootstrap jar checksum failed: $EMD5 != ${AMD5:0:32}"
 fi
 
-if [ "$JAVA_HOME" != "" ]; then
+if [ "X$JAVA_HOME" != "X" ]; then
 	JAVA=$JAVA_HOME/bin/java
 else
 	JAVA=`which java`
+	JAVA_HOME=$(dirname $JAVA)/..
 fi
 echo "JAVA=$JAVA" >>$L
 if [ -x $JAVA ]; then 
