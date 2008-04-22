@@ -1,11 +1,24 @@
 #!/bin/bash
 
+export WORKED=""
+export FAILED=""
+
 for BASE in $1*.xml; do
   ./run-site $BASE
   EC=$?
   if [ "$EC" != "0" ]; then
     echo SITE FAIL! Exit code $EC for site definition $BASE
-    exit 1
+    FAILED="$FAILED $BASE"
+  else
+    WORKED="WORKED $BASE"
   fi
 done
+
+if [ "X$FAILED" = "" ]; then
+  echo No tests failed
+  exit 0
+else
+  echo These sites failed: $FAILED
+  exit 1
+fi
 
