@@ -18,26 +18,26 @@ import org.globus.net.PortRange;
 
 public class PortManager {
     private static PortManager portManager;
-    
+
     public synchronized static PortManager getDefault() {
         if (portManager == null) {
             portManager = new PortManager();
         }
         return portManager;
     }
-    
+
     private PortRange portRange;
-    
+
     protected PortManager() {
         portRange = PortRange.getTcpInstance();
     }
-    
+
     public ServerSocketChannel openServerSocketChannel() throws IOException {
         ServerSocketChannel s = ServerSocketChannel.open();
         bind(s.socket());
         return s;
     }
-    
+
     public void close(ServerSocketChannel s) throws IOException {
         s.close();
         portRange.free(s.socket().getLocalPort());
@@ -45,16 +45,23 @@ public class PortManager {
 
     private void bind(ServerSocket socket) throws IOException {
         int crt = 0;
-        while(true) {
-            crt = portRange.getFreePort(crt);
-            try {
-                socket.bind(new InetSocketAddress(crt));
-                portRange.setUsed(crt);
-                return;
+        if (portRange.isEnabled()) {
+            while (true) {
+                crt = portRange.getFreePort(crt);
+
+                try {
+                    socket.bind(new InetSocketAddress(crt));
+
+                    portRange.setUsed(crt);
+                    return;
+                }
+                catch (IOException e) {
+                    crt++;
+                }
             }
-            catch (IOException e) {
-                crt++;
-            }
+        }
+        else {
+            socket.bind(null);
         }
     }
 }
