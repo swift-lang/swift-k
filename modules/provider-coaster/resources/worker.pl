@@ -368,7 +368,7 @@ sub forkjob {
 		else {
 			wlog "Forked process $pid. Waiting for its completion\n";
 			waitpid($pid, 0);
-			$status = $?;
+			$status = $? & 0xff;
 			wlog "Child process $pid terminated. Status is $status. $!\n";
 			queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$COMPLETED", "$status", "");
 		}
