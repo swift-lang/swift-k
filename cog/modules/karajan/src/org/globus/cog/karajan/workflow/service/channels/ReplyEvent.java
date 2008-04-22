@@ -41,6 +41,4 @@ public class ReplyEvent extends Event {
 	public int getTag() {
 		return tag;
 	}
-
-		
 }

@@ -33,4 +33,7 @@ public class NullChannel extends AbstractKarajanChannel {
 		return "NullChannel";
 	}
 
+	public void start() throws ChannelException {
+	}
+
 }

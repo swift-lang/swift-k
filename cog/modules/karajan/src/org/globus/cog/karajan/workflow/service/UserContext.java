@@ -75,6 +75,9 @@ public class UserContext {
 		}
 	}
 
+	/**
+	 * Returns the channel context of the channel that created this user context
+	 */
 	public ChannelContext getChannelContext() {
 		return channelContext;
 	}

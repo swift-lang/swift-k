@@ -80,6 +80,10 @@ public class TagTable {
 		public int hashCode() {
 			return value;
 		}
+		
+		public String toString() {
+		    return String.valueOf(value);
+		}
 	}
 
 }

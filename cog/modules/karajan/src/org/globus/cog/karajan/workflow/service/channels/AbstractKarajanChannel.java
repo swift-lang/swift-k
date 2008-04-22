@@ -12,13 +12,15 @@ package org.globus.cog.karajan.workflow.service.channels;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
+import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.service.NoSuchHandlerException;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestManager;
+import org.globus.cog.karajan.workflow.service.Service;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
@@ -30,6 +32,8 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private final RequestManager requestManager;
 	private final List registeredMaps;
 	private boolean localShutdown, closed;
+	private String name;
+	private Service callbackService;
 
 	protected AbstractKarajanChannel(RequestManager requestManager, ChannelContext channelContext) {
 		if (channelContext != null) {
@@ -66,7 +70,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public void sendTaggedData(int tag, boolean fin, byte[] data) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(this + "REQ>: tag = " + tag + ", fin = " + fin + ", datalen = "
+			logger.debug(this + " REQ>: tag = " + tag + ", fin = " + fin + ", datalen = "
 					+ data.length + ", data = " + ppByteBuf(data));
 		}
 		sendTaggedData(tag, fin ? FINAL_FLAG : 0, data);
@@ -74,7 +78,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(this + "REPL>: tag = " + tag + ", fin = " + fin + ", datalen = "
+			logger.debug(this + " REPL>: tag = " + tag + ", fin = " + fin + ", datalen = "
 					+ data.length + ", data = " + ppByteBuf(data));
 		}
 		int flags = REPLY_FLAG;
@@ -90,17 +94,9 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public ChannelContext getChannelContext() {
 		return context;
 	}
-	
+
 	public void setChannelContext(ChannelContext context) {
 		this.context = context;
-	}
-	
-	protected void readFromStream(InputStream stream, ByteBuffer buf) throws IOException {
-		int count = stream.read(buf.array());
-		if (count == -1) {
-			throw new EOFException("Connection closed");
-		}
-		buf.position(buf.position() + count);
 	}
 
 	protected int readFromStream(InputStream stream, byte[] buf, int crt) throws IOException {
@@ -111,6 +107,22 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		return crt + count;
 	}
 	
+	public static void pack(byte[] buf, int offset, int value) {
+		buf[offset] = (byte) (value & 0xff);
+		buf[offset + 1] = (byte) ((value >> 8) & 0xff);
+		buf[offset + 2] = (byte) ((value >> 16) & 0xff);
+		buf[offset + 3] = (byte) ((value >> 24) & 0xff);
+	}
+
+	public static int unpack(byte[] buf, int offset) {
+		int i = 0;
+		i += (buf[offset] & 0xff);
+		i += (buf[offset + 1] & 0xff) << 8;
+		i += (buf[offset + 2] & 0xff) << 16;
+		i += (buf[offset + 3] & 0xff) << 24;
+		return i;
+	}
+
 	public static String ppByteBuf(byte[] data) {
 		byte[] buf = new byte[Math.min(data.length, 256)];
 		for (int i = 0; i < buf.length; i++) {
@@ -156,7 +168,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public void close() {
 		closed = true;
 	}
-	
+
 	public boolean isClosed() {
 		return closed;
 	}
@@ -171,5 +183,126 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public boolean isClient() {
 		return false;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String toString() {
+		return getName();
+	}
+
+	public synchronized URI getCallbackURI() throws Exception {
+		ensureCallbackServiceStarted();
+		return getCallbackService().getContact();
+	}
+
+	public Service getCallbackService() {
+		return callbackService;
+	}
+
+	public void setCallbackService(Service callbackService) {
+		this.callbackService = callbackService;
+	}
+
+	protected void ensureCallbackServiceStarted() throws Exception {
+
+	}
+
+	protected void handleReply(int tag, boolean fin, boolean error, int len, byte[] data) {
+		if (logger.isDebugEnabled()) {
+			logger.debug(this + " REPL<: tag = " + tag + ", fin = " + fin
+					+ ", err = " + error + ", datalen = " + len + ", data = " + ppByteBuf(data));
+		}
+		Command cmd = getChannelContext().getRegisteredCommand(tag);
+		if (cmd != null) {
+			try {
+				cmd.replyReceived(data);
+				if (fin) {
+					if (error) {
+						cmd.errorReceived();
+					}
+					else {
+						cmd.receiveCompleted();
+					}
+					unregisterCommand(cmd);
+				}
+			}
+			catch (ProtocolException e) {
+				logger.warn("Exception caught while processing reply", e);
+				cmd.errorReceived(e.getMessage(), e);
+			}
+		}
+		else {
+			unregisteredSender(tag);
+		}
+	}
+	
+	protected void unregisteredSender(int tag) {
+		logger.warn(getName() + " Recieved reply to unregistered sender. Tag: " + tag);
+	}
+
+	protected void handleRequest(int tag, boolean fin, boolean error, int len, byte[] data) {
+		if (logger.isDebugEnabled()) {
+			logger.debug(this + " REQ<: tag = " + tag + ", fin = " + fin
+					+ ", err = " + error + ", datalen = " + len + ", data = " + ppByteBuf(data));
+		}
+		RequestHandler handler = getChannelContext().getRegisteredHandler(tag);
+		try {
+			if (handler != null) {
+				handler.register(this);
+				handler.dataReceived(data);
+			}
+			else {
+				try {
+					handler = getRequestManager().handleInitialRequest(data);
+					handler.setId(tag);
+					registerHandler(handler, tag);
+				}
+				catch (NoSuchHandlerException e) {
+					logger.warn(getName() + "Could not handle request", e);
+				}
+
+			}
+			if (fin) {
+				try {
+					if (error) {
+						// TODO
+					}
+					else {
+						handler.receiveCompleted();
+					}
+				}
+				catch (ChannelIOException e) {
+					throw e;
+				}
+				catch (Exception e) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Failed to process request", e);
+					}
+					if (!handler.isReplySent()) {
+						handler.sendError(e.toString(), e);
+					}
+				}
+				catch (Error e) {
+					if (!handler.isReplySent()) {
+						handler.sendError(e.toString(), e);
+					}
+					throw e;
+				}
+				finally {
+					unregisterHandler(tag);
+				}
+			}
+		}
+		catch (ProtocolException e) {
+			unregisterHandler(tag);
+			logger.warn(e);
+		}
 	}
 }

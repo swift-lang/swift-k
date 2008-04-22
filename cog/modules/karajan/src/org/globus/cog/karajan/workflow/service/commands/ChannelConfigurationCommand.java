@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.service.commands;
 
+import java.net.URI;
 import java.rmi.server.UID;
 
 import org.globus.cog.karajan.workflow.service.ProtocolException;
@@ -19,21 +20,21 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelID;
 
 public class ChannelConfigurationCommand extends Command {
 	private final RemoteConfiguration.Entry config;
-	private final String callbackURL;
+	private final URI callbackURI;
 	
-	public ChannelConfigurationCommand(RemoteConfiguration.Entry config, String callbackURL) {
+	public ChannelConfigurationCommand(RemoteConfiguration.Entry config, URI callbackURI) {
 		super("CHANNELCONFIG");
 		this.config = config;
-		this.callbackURL = callbackURL;
+		this.callbackURI = callbackURI;
 	}
 
 	public void send() throws ProtocolException {
 		addOutData(config.getUnparsed());
-		if (callbackURL == null) {
+		if (callbackURI == null) {
 			addOutData(new byte[0]);
 		}
 		else {
-			addOutData(callbackURL.getBytes());
+			addOutData(callbackURI.toString().getBytes());
 		}
 		ChannelContext cc = getChannel().getChannelContext();
 		ChannelID cid = cc.getChannelID();

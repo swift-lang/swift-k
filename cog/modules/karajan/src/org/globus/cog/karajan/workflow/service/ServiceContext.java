@@ -38,6 +38,7 @@ public class ServiceContext {
 	}
 	
 	public UserContext getUserContext(String name, ChannelContext channelContext) {
+		//TODO this doesn't make much sense
 		synchronized(users) {
 			String sname = String.valueOf(name);
 			UserContext uc = (UserContext) users.get(sname);
