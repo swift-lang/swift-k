@@ -20,9 +20,11 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Delegation;
+import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -126,8 +128,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         String server = serviceContact.getContact();
 
         // if the jobmanager attribute is specified, handle it
-        String jobmanager = (String) this.task.getService(0).getAttribute(
-                "jobmanager");
+        Service service = this.task.getService(0);
+        String jobmanager = null;
+        if (service instanceof ExecutionService) {
+            jobmanager = ((ExecutionService) service).getJobManager();
+        }
         if (jobmanager != null) {
             server = handleJobManager(server, jobmanager);
         }
