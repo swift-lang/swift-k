@@ -287,5 +287,4 @@ public class Bootstrap {
         System.err.println(message);
         System.exit(1);
     }
-
 }

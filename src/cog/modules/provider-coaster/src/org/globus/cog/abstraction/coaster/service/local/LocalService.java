@@ -34,6 +34,9 @@ public class LocalService extends GSSService implements Registering {
     }
 
     public void start() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Starting local service");
+        }
         setAuthorization(new SelfAuthorization());
         services = new HashMap();
         this.accept = true;
@@ -63,6 +66,9 @@ public class LocalService extends GSSService implements Registering {
 
     public String waitForRegistration(Task t, String id, long timeout)
             throws InterruptedException, IOException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Waiting for registration from service " + id);
+        }
         long start = System.currentTimeMillis();
         synchronized (services) {
             while (!services.containsKey(id)) {
@@ -83,6 +89,9 @@ public class LocalService extends GSSService implements Registering {
     }
 
     public void registrationReceived(String id, String url, KarajanChannel channel) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Received registration from service " + id + ": " + url);
+        }
         synchronized (services) {
             if (services.containsKey(id)) {
                 throw new IllegalArgumentException(
