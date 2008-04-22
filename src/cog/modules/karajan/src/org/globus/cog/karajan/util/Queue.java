@@ -22,13 +22,22 @@ public final class Queue {
 		head.prev.next = e;
 		head.prev = e;
 		size++;
+		notifyAll();
 	}
 	
 	public synchronized Object dequeue() { 
 		Object o = head.next.obj;
 		head.next.next.prev = head;
 		head.next = head.next.next;
+		size--;
 		return o;
+	}
+	
+	public synchronized Object take() throws InterruptedException {
+		while (size == 0) {
+			wait();
+		}	
+		return dequeue();
 	}
 
 	public boolean isEmpty() {
