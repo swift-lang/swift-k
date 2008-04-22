@@ -216,7 +216,7 @@ public class Bootstrap {
     
     private void addProperty(List args, String name) {
         String value = System.getProperty(name);
-        if (value != null) {
+        if (value != null && !value.equals("")) {
             args.add("-D" + name + "=" + value);
         }
     }

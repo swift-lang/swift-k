@@ -161,8 +161,13 @@ public class BootstrapService implements Runnable {
         }
         else {
             ServerSocket socket = channel.socket();
-            return "http://" + CoGProperties.getDefault().getIPAddress()
+            if (CoGProperties.getDefault().getIPAddress() != null) {
+                return "http://" + CoGProperties.getDefault().getIPAddress()
                     + ":" + socket.getLocalPort();
+            }
+            else {
+            	return "http://localhost:" + socket.getLocalPort();
+            }
         }
     }
 
