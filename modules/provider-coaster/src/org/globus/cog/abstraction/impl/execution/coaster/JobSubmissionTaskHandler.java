@@ -54,7 +54,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private boolean autostart;
 
     public JobSubmissionTaskHandler() {
-        this.autostart = false;
+        this.autostart = true;
         bootHandlers = new HashMap();
     }
 
@@ -214,18 +214,18 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         js.addArgument("0");
         t.setSpecification(js);
         ExecutionService s = new ExecutionServiceImpl();
-        // s.setServiceContact(new ServiceContactImpl("localhost"));
-        s.setServiceContact(new ServiceContactImpl("tp-grid1.ci.uchicago.edu"));
+         s.setServiceContact(new ServiceContactImpl("localhost"));
+        //s.setServiceContact(new ServiceContactImpl("tp-grid1.ci.uchicago.edu"));
         // s.setServiceContact(new ServiceContactImpl("localhost:50013"));
         s.setProvider("coaster");
-        //s.setJobManager("local:local");
-        s.setJobManager("gt2:pbs");
+        s.setJobManager("local:local");
+        //s.setJobManager("gt2:pbs");
         s.setSecurityContext(new SecurityContextImpl());
         t.setService(0, s);
         // JobSubmissionTaskHandler th = new JobSubmissionTaskHandler(
         // AbstractionFactory.newExecutionTaskHandler("local"));
         JobSubmissionTaskHandler th = new JobSubmissionTaskHandler();
-        th.setAutostart(true);
+        //th.setAutostart(true);
         th.submit(t);
         return t;
     }
