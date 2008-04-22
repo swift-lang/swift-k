@@ -1,0 +1,20 @@
+<config>
+
+<!-- sites.xml specifies details of the sites that Swift can run on.
+
+The first entry entry, for localhost, should work on most linux-like systems
+without any change.
+
+It may be necessary to change the two occurences of /var/tmp to a different
+working directory.
+
+-->
+
+
+  <pool handle="localhost">
+    <gridftp  url="local://localhost" />
+    <execution provider="coaster" jobmanager="local:local" url="localhost" />
+    <workdirectory >/var/tmp</workdirectory>
+  </pool>
+
+</config>
