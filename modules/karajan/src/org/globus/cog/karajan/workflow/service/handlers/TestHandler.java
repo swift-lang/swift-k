@@ -37,7 +37,7 @@ public class TestHandler extends RequestHandler {
 	public static void setCallback(TestCallback callback) {
 		TestHandler.callback = callback;
 	}
-
+	
 	public void requestComplete() throws ProtocolException {
 		String mode = new String(getInData(0));
 		if ("INITIAL".equals(mode)) {

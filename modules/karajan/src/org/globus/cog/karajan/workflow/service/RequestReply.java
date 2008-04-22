@@ -72,6 +72,15 @@ public abstract class RequestReply {
 		this.addOutData(str.getBytes());
 	}
 
+	protected void addOutData(int value) {
+		byte[] b = new byte[4];
+		b[0] = (byte) (value & 0xff);
+		b[1] = (byte) ((value >> 8) & 0xff);
+		b[2] = (byte) ((value >> 16) & 0xff);
+		b[3] = (byte) ((value >> 24) & 0xff);
+		addOutData(b);
+	}
+
 	protected void sendError(String error) throws ProtocolException {
 		sendError(error, null);
 	}
@@ -98,7 +107,9 @@ public abstract class RequestReply {
 
 	public abstract void send() throws ProtocolException;
 
-	protected abstract void dataReceived(byte[] data) throws ProtocolException;
+	protected void dataReceived(byte[] data) throws ProtocolException {
+	}
+
 
 	protected synchronized void addInData(byte[] data) {
 		synchronized (this) {
@@ -146,7 +157,16 @@ public abstract class RequestReply {
 		if (inData == null) {
 			return null;
 		}
-		return (byte[]) inData.get(index);
+		try {
+			return (byte[]) inData.get(index);
+		}
+		catch (IndexOutOfBoundsException e) {
+			throw new IllegalArgumentException("Missing command argument #" + (index + 1));
+		}
+	}
+
+	public String getInDataAsString(int index) {
+		return new String(getInData(index));
 	}
 
 	public synchronized void setInData(int index, byte[] data) {

@@ -9,7 +9,6 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,8 +17,8 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.Client;
 import org.globus.cog.karajan.workflow.service.ClientRequestManager;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
+import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.Service;
-import org.globus.gsi.GlobusCredentialException;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
@@ -30,6 +29,7 @@ public class ChannelManager {
 	private HashMap channels, hosts, rchannels;
 	private RemoteConfiguration config;
 	private Service localService;
+	private RequestManager clientRequestManager;
 
 	public synchronized static ChannelManager getManager() {
 		if (manager == null) {
@@ -43,17 +43,25 @@ public class ChannelManager {
 		hosts = new HashMap();
 		rchannels = new HashMap();
 		config = RemoteConfiguration.getDefault();
+		clientRequestManager = new ClientRequestManager();
+	}
+
+	protected void setClientRequestManager(RequestManager crm) {
+		this.clientRequestManager = crm;
 	}
 
 	private MetaChannel getClientChannel(String host, GSSCredential cred) throws ChannelException {
 		try {
 			MetaChannel channel;
+			if (host == null) {
+				throw new NullPointerException("Host is null");
+			}
 			host = normalize(host);
 			synchronized (channels) {
 				HostCredentialPair hcp = new HostCredentialPair(host, cred);
 				channel = (MetaChannel) channels.get(hcp);
 				if (channel == null) {
-					channel = new MetaChannel(new ClientRequestManager(), new ChannelContext());
+					channel = new MetaChannel(clientRequestManager, new ChannelContext());
 					channel.getChannelContext().setConfiguration(
 							RemoteConfiguration.getDefault().find(host));
 					channel.getChannelContext().setRemoteContact(host);
@@ -86,18 +94,13 @@ public class ChannelManager {
 		return sb.toString();
 	}
 
-	public synchronized String getCallbackURL() throws IOException, GlobusCredentialException,
-			GSSException {
-		return getLocalService().getContactString();
-	}
-
-	public synchronized Service getLocalService() throws IOException, GlobusCredentialException,
-			GSSException {
-		if (localService == null) {
-			localService = new Service(Service.initializeCredentials(true, null, null));
+	public void registerChannel(String url, GSSCredential cred, KarajanChannel channel)
+			throws ChannelException {
+		synchronized (channels) {
+			MetaChannel previous = new MetaChannel(channel.getChannelContext());
+			previous.bind(channel);
+			channels.put(new HostCredentialPair(url, cred), previous);
 		}
-		logger.info("Started local service: " + localService.getContactString());
-		return localService;
 	}
 
 	public void registerChannel(ChannelID id, KarajanChannel channel) throws ChannelException {
@@ -172,12 +175,14 @@ public class ChannelManager {
 				try {
 					String contact = meta.getChannelContext().getRemoteContact();
 					if (contact == null) {
-						//Should buffer things for a certain period of time
+						// Should buffer things for a certain period of time
 						throw new ChannelException("Channel died and no contact available");
 					}
-					Client client = Client.newClient(contact, meta.getChannelContext());
+					Client client = Client.newClient(contact, meta.getChannelContext(),
+							clientRequestManager);
 					channels.put(client.getChannel().getChannelContext().getChannelID(), meta);
 					meta.bind(client.getChannel());
+
 				}
 				catch (ChannelException e) {
 					throw e;
@@ -332,6 +337,10 @@ public class ChannelManager {
 
 		public int hashCode() {
 			return host.hashCode() + ((DN == null) ? 0 : DN.hashCode());
+		}
+		
+		public String toString() {
+			return DN + "@" + host;
 		}
 
 	}

@@ -5,17 +5,10 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Jul 21, 2005
+ * Created on Feb 23, 2008
  */
-package org.globus.cog.karajan.workflow.service.handlers;
+package org.globus.cog.karajan.workflow.service.channels;
 
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-
-
-public class EchoHandler extends RequestHandler {
-	
-	
-	public void requestComplete() throws ProtocolException {
-		sendReply(getInData(0));
-	}
+public interface ChannelAttributes {
+	public Object getValue(String name);
 }

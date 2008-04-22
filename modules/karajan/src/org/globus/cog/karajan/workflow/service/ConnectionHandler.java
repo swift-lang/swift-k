@@ -12,29 +12,32 @@ package org.globus.cog.karajan.workflow.service;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.AbstractSocketChannel;
+import org.globus.cog.karajan.workflow.service.channels.AbstractTCPChannel;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.GSSSocketChannel;
-import org.globus.cog.karajan.workflow.service.channels.PlainSocketChannel;
+import org.globus.cog.karajan.workflow.service.channels.GSSChannel;
+import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
 import org.globus.gsi.gssapi.net.GssSocket;
 
 public class ConnectionHandler {
 	private static final Logger logger = Logger.getLogger(ConnectionHandler.class);
 
 	private final Socket socket;
-	private final AbstractSocketChannel channel;
+	private final AbstractTCPChannel channel;
 	private final RequestManager requestManager;
 
 	public ConnectionHandler(Service service, Socket socket) {
+		this(service, socket, null);
+	}
+
+	public ConnectionHandler(Service service, Socket socket, RequestManager requestManager) {
 		this.socket = socket;
-		requestManager = new ServiceRequestManager();
+		this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
 		if (socket instanceof GssSocket) {
-			channel = new GSSSocketChannel((GssSocket) socket, requestManager, new ChannelContext(
-					service), false);
+			channel = new GSSChannel((GssSocket) socket, this.requestManager, new ChannelContext(
+					service));
 		}
 		else {
-			channel = new PlainSocketChannel(socket, requestManager, new ChannelContext(service),
-					false);
+			channel = new TCPChannel(socket, this.requestManager, new ChannelContext(service));
 		}
 	}
 

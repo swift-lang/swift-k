@@ -9,6 +9,8 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.net.URI;
+
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
@@ -39,6 +41,8 @@ public interface KarajanChannel {
 	int incUsageCount();
 
 	int decUsageCount();
+	
+	void start() throws ChannelException;
 
 	void shutdown();
 
@@ -63,4 +67,6 @@ public interface KarajanChannel {
 	 * priority for things that are otherwise symmetrical.
 	 */
 	boolean isClient();
+	
+	URI getCallbackURI() throws Exception;
 }

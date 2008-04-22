@@ -156,4 +156,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 		}
 		return false;
 	}
+
+	public void start() throws ChannelException {
+	}
 }

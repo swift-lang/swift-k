@@ -24,7 +24,7 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 
 public class ChannelConfigurationHandler extends RequestHandler {
 	private static final Logger logger = Logger.getLogger(ChannelConfigurationHandler.class);
-	
+
 	public void requestComplete() throws ProtocolException {
 		RemoteConfiguration.Entry conf = new RemoteConfiguration.Entry(null, new String(
 				getInData(0)));
@@ -41,11 +41,10 @@ public class ChannelConfigurationHandler extends RequestHandler {
 		}
 		cid.setLocalID(localID);
 		cid.setRemoteID(remoteID);
-		logger.info("Channel id: "+cid.getUniqueID());
+		logger.info("Channel id: " + cid.getUniqueID());
 		RemoteConfiguration.Entry sconf = new RemoteConfiguration.Entry(null, translate(conf), null);
 		cc.setConfiguration(sconf);
 		cc.setRemoteContact(callbackURL);
-		cid.setRemoteID(remoteID);
 		try {
 			ChannelManager.getManager().registerChannel(cid, getChannel());
 			sendReply(remoteID.getBytes());

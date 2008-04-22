@@ -10,7 +10,6 @@
 package org.globus.cog.karajan.workflow.service;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -18,30 +17,16 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.GSSSocketChannel;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.VersionCommand;
-import org.globus.gsi.GSIConstants;
-import org.globus.gsi.gssapi.GSSConstants;
-import org.globus.gsi.gssapi.GlobusGSSManagerImpl;
-import org.globus.gsi.gssapi.auth.Authorization;
-import org.globus.gsi.gssapi.auth.HostAuthorization;
-import org.globus.gsi.gssapi.auth.SelfAuthorization;
-import org.globus.gsi.gssapi.net.GssSocket;
-import org.globus.gsi.gssapi.net.GssSocketFactory;
-import org.gridforum.jgss.ExtendedGSSContext;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSManager;
 
 public class Client {
 	private static final Logger logger = Logger.getLogger(Client.class);
 
 	private final URI contact;
-	private Socket socket;
-	private GSSSocketChannel channel;
+	private KarajanChannel channel;
 	private RequestManager requestManager;
 	private ChannelContext sc;
 	private static Service callback;
@@ -75,7 +60,12 @@ public class Client {
 	}
 
 	public static Client newClient(String contact, ChannelContext context) throws Exception {
-		Client client = new Client(contact);
+		return newClient(contact, context, new ClientRequestManager());
+	}
+
+	public static Client newClient(String contact, ChannelContext context,
+			RequestManager requestManager) throws Exception {
+		Client client = new Client(contact, requestManager);
 		client.setChannelContext(context);
 		context.getChannelID().setClient(true);
 		synchronized (client) {
@@ -89,7 +79,12 @@ public class Client {
 	}
 
 	public Client(String contact) throws URISyntaxException {
+		this(contact, new ClientRequestManager());
+	}
+
+	public Client(String contact, RequestManager requestManager) throws URISyntaxException {
 		this.contact = new URI(contact);
+		this.requestManager = requestManager;
 	}
 
 	public void connect() throws Exception {
@@ -117,44 +112,15 @@ public class Client {
 			if (port == -1) {
 				port = 1984;
 			}
-			HostAuthorization hostAuthz = new HostAuthorization("host");
-
-			Authorization authz = new FallbackAuthorization(new Authorization[] { hostAuthz,
-					SelfAuthorization.getInstance() });
-
-
-			GSSCredential cred = sc.getCredential();
-
-			GSSManager manager = new GlobusGSSManagerImpl();
-			ExtendedGSSContext context = (ExtendedGSSContext) manager.createContext(null,
-					GSSConstants.MECH_OID, cred, 2 * 3600);
-
-			context.requestAnonymity(false);
-			context.requestCredDeleg(false);
-			context.setOption(GSSConstants.GSS_MODE, GSIConstants.MODE_SSL);
-			context.setOption(GSSConstants.DELEGATION_TYPE, GSIConstants.DELEGATION_TYPE_LIMITED);
-
-			socket = GssSocketFactory.getDefault().createSocket(host, port, context);
-			socket.setKeepAlive(true);
-			socket.setSoTimeout(0);
-			((GssSocket) socket).setWrapMode(GSIConstants.MODE_SSL.intValue());
-			((GssSocket) socket).setAuthorization(authz);
-			requestManager = new ClientRequestManager();
-			logger.info("Connected to " + host + ":" + port);
-
-			sc.setRemoteContact(contact.toString());
-			channel = new GSSSocketChannel((GssSocket) socket, requestManager, sc, true,
-					contact.toString());
-			channel.start();
-
-			String callbackURL = null;
+			channel = ChannelFactory.newChannel(contact, sc, requestManager);
+			URI callbackURI = null;
 			if (sc.getConfiguration().hasOption(RemoteConfiguration.CALLBACK)) {
-				callbackURL = ChannelManager.getManager().getCallbackURL();
+				callbackURI = channel.getCallbackURI();
 			}
 			String remoteID = getChannel().getChannelContext().getChannelID().getRemoteID();
 
 			ChannelConfigurationCommand ccc = new ChannelConfigurationCommand(
-					sc.getConfiguration(), callbackURL);
+					sc.getConfiguration(), callbackURI);
 			ccc.execute(this.getChannel());
 			connected = true;
 		}

@@ -11,6 +11,7 @@ package org.globus.cog.karajan.workflow.service.test;
 
 import java.io.IOException;
 
+import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.Service;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
@@ -29,7 +30,7 @@ public class Services {
 	}
 	
 	private static Service newService(int port) throws IOException {
-		Service service = new Service(port);
+		GSSService service = new GSSService(port);
 		service.setAuthorization(new SelfAuthorization());
 		service.initialize();
 		System.out.println("port: " + service.getPort());

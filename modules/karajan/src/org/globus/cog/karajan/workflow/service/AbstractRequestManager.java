@@ -22,7 +22,7 @@ public abstract class AbstractRequestManager implements RequestManager {
 		handlers = new Hashtable();
 	}
 
-	protected void addHandler(String cmd, Class cls) {
+	public void addHandler(String cmd, Class cls) {
 		handlers.put(cmd, cls);
 	}
 

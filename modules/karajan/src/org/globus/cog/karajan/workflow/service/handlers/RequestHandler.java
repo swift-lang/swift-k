@@ -30,6 +30,10 @@ public abstract class RequestHandler extends RequestReply {
 		replySent = true;
 	}
 	
+	protected void sendReply(String reply) throws ProtocolException {
+	    sendReply(reply.getBytes());
+	}
+	
 	protected void sendReply() throws ProtocolException {
 		send();
 		replySent = true;
@@ -44,6 +48,7 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	public void dataReceived(byte[] data) throws ProtocolException {
+		super.dataReceived(data);
 		if (getInCmd() == null) {
 			setInCmd(new String(data));
 		}
@@ -99,5 +104,9 @@ public abstract class RequestHandler extends RequestReply {
 	
 	protected String ppInData(String prefix) {
 		return ppData(prefix+"< ", getInCmd(), getInDataChuncks());
+	}
+	
+	public String toString() {
+		return "Handler(" + getInCmd() + ")";
 	}
 }

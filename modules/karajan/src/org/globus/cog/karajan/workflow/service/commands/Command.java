@@ -12,6 +12,8 @@ package org.globus.cog.karajan.workflow.service.commands;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
@@ -22,13 +24,22 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public abstract class Command extends RequestReply {
 	private static final Logger logger = Logger.getLogger(Command.class);
+	
+	private static final Timer timer;
+	
+	static {
+		timer = new Timer();
+	}
 
 	public static final int DEFAULT_REPLY_TIMEOUT = 1000 * 60;
+	public static final int MAX_RETRIES = 2;
 	private int replyTimeout = DEFAULT_REPLY_TIMEOUT;
 
 	private Callback cb;
 	private String errorMsg;
 	private Exception exception;
+	private Timeout timeout;
+	private int retries;
 
 	public Command() {
 		setId(NOID);
@@ -64,12 +75,12 @@ public abstract class Command extends RequestReply {
 		}
 	}
 
-	public void dataReceived(byte[] data) {
+	public void dataReceived(byte[] data) throws ProtocolException {
+		super.dataReceived(data);
 		this.addInData(data);
-
 	}
 
-	public void replyReceived(byte[] data) {
+	public void replyReceived(byte[] data) throws ProtocolException {
 		this.dataReceived(data);
 	}
 
@@ -84,7 +95,6 @@ public abstract class Command extends RequestReply {
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppOutData("CMD"));
 		}
-
 		try {
 			channel.sendTaggedData(getId(), fin, getOutCmd().getBytes());
 			if (!fin) {
@@ -94,6 +104,7 @@ public abstract class Command extends RequestReply {
 					channel.sendTaggedData(getId(), !i.hasNext(), buf);
 				}
 			}
+			timer.schedule(timeout = new Timeout(), replyTimeout);
 		}
 		catch (ChannelIOException e) {
 			reexecute();
@@ -112,6 +123,12 @@ public abstract class Command extends RequestReply {
 		return getInData();
 	}
 
+	public void executeAsync(KarajanChannel channel, Callback cb) throws ProtocolException {
+		this.cb = cb;
+		channel.registerCommand(this);
+		send();
+	}
+
 	public void executeAsync(KarajanChannel channel) throws ProtocolException {
 		channel.registerCommand(this);
 		send();
@@ -126,6 +143,13 @@ public abstract class Command extends RequestReply {
 	}
 
 	public void receiveCompleted() {
+		if (timeout == null) {
+			return;
+		}
+		else {
+			timeout.cancel();
+			timeout = null;
+		}
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppInData("CMD"));
 		}
@@ -163,6 +187,27 @@ public abstract class Command extends RequestReply {
 
 	protected void reexecute() {
 		getChannel().getChannelContext().reexecute(this);
+	}
+	
+	protected void handleReplyTimeout() {
+		timeout = null;
+		if (++retries > MAX_RETRIES) {
+			errorReceived("Reply timeout", new ReplyTimeoutException());
+		}
+		else {
+			try {
+				send();
+			}
+			catch (ProtocolException e) {
+				errorReceived(e.getMessage(), e);
+			}
+		}
+	}
+	
+	private class Timeout extends TimerTask {
+		public void run() {
+			handleReplyTimeout();
+		}
 	}
 
 	public static interface Callback {
