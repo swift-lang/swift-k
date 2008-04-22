@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
@@ -34,6 +35,9 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 public class ServiceManager {
+    public static final Logger logger = Logger
+            .getLogger(ServiceManager.class);
+
     public static final String BOOTSTRAP_SCRIPT = "bootstrap.sh";
     public static final String BOOTSTRAP_JAR = "coaster-bootstrap.jar";
     public static final String BOOTSTRAP_LIST = "coaster-bootstrap.list";
@@ -65,6 +69,9 @@ public class ServiceManager {
 
     public String reserveService(Task task, TaskHandler bootHandler)
             throws TaskSubmissionException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Reserving service for " + task);
+        }
         try {
             Object service = getService(task);
             // beah. it's impossible to nicely abstract both concurrency
@@ -100,6 +107,10 @@ public class ServiceManager {
         try {
             startLocalService();
             Task t = buildTask(task);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Starting coaster service on "
+                        + task.getService(0) + ". Task is " + t);
+            }
             bootHandler.submit(t);
             String url = localService.waitForRegistration(t, (String) t
                     .getAttribute(TASK_ATTR_ID));
