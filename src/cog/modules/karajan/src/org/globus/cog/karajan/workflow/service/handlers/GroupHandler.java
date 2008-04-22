@@ -21,6 +21,7 @@ public abstract class GroupHandler extends RequestHandler {
 	private int[] membertags;
 	private int index;
 	private RequestHandler crtHandler;
+	
 
 	public void requestComplete() throws ProtocolException {
 		if (crtHandler == null) {

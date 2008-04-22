@@ -9,36 +9,35 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
-import java.io.EOFException;
 import java.net.Socket;
 
 import org.globus.cog.karajan.workflow.service.RequestManager;
 
-public abstract class AbstractSocketChannel extends AbstractStreamKarajanChannel implements Runnable {
+public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel implements Runnable {
 	private Socket socket;
 	private boolean started;
 	private Exception startException;
 	private final boolean client;
 	private boolean closing;
 
-	public AbstractSocketChannel(RequestManager requestManager, ChannelContext channelContext,
-			Socket socket, boolean client) {
+	public AbstractTCPChannel(RequestManager requestManager, ChannelContext channelContext,
+			boolean client) {
 		super(requestManager, channelContext);
-		this.socket = socket;
 		this.client = client;
+	}
+
+	protected void setSocket(Socket socket) {
+		this.socket = socket;
+	}
+
+	public synchronized void start() throws ChannelException {
 		if (client) {
-			setEndpoint("C(" + socket.getLocalAddress() + ")");
+			setName("C(" + socket.getLocalAddress() + ")");
 		}
 		else {
-			setEndpoint("S(" + socket.getLocalAddress() + ")");
+			setName("S(" + socket.getLocalAddress() + ")");
 		}
-	}
-	
-	public synchronized void start() throws Exception {
-		Thread thread = new Thread(this);
-		thread.setDaemon(true);
-		thread.setName("Chanel: " + getEndpoint());
-		thread.start();
+		new Thread(this).start();
 		while (!isStarted() && !isClosed() && startException == null) {
 			try {
 				wait();
@@ -48,9 +47,9 @@ public abstract class AbstractSocketChannel extends AbstractStreamKarajanChannel
 		}
 		if (startException != null) {
 			logger.debug("Exception while starting channel", startException);
-			throw startException;
+			throw new ChannelException(startException);
 		}
-		logger.info(getEndpoint() + "Channel started");
+		logger.info(getContact() + "Channel started");
 	}
 
 	public void run() {
@@ -72,13 +71,7 @@ public abstract class AbstractSocketChannel extends AbstractStreamKarajanChannel
 				}
 			}
 			initializeConnection();
-			mainLoop();
-		}
-		catch (EOFException e) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Channel terminated", e);
-			}
-			context.notifyRegisteredListeners(e);
+			register();
 		}
 		catch (Exception e) {
 			if (!closing) {
@@ -86,27 +79,28 @@ public abstract class AbstractSocketChannel extends AbstractStreamKarajanChannel
 				context.notifyRegisteredListeners(e);
 			}
 		}
-		finally {
-			try {
-				setLocalShutdown();
-				ChannelManager.getManager().shutdownChannel(this);
-			}
-			catch (ShuttingDownException e) {
-				logger.debug("Channel already shutting down");
-			}
-			catch (Exception e) {
-				logger.warn(getEndpoint() + "Could not shutdown channel", e);
-			}
-			super.close();
-			synchronized (this) {
-				notify();
-			}
-			logger.info(getEndpoint() + "Channel terminated");
-		}
 	}
 
 	protected void initializeConnection() {
 
+	}
+
+	public void shutdown() {
+		try {
+			setLocalShutdown();
+			ChannelManager.getManager().shutdownChannel(this);
+		}
+		catch (ShuttingDownException e) {
+			logger.debug("Channel already shutting down");
+		}
+		catch (Exception e) {
+			logger.warn(getContact() + "Could not shutdown channel", e);
+		}
+		super.close();
+		synchronized (this) {
+			notify();
+		}
+		logger.info(getContact() + "Channel terminated");
 	}
 
 	public void close() {
@@ -114,11 +108,11 @@ public abstract class AbstractSocketChannel extends AbstractStreamKarajanChannel
 		try {
 			if (!socket.isClosed()) {
 				socket.close();
-				logger.info(getEndpoint() + "Channel shut down");
+				logger.info(getContact() + "Channel shut down");
 			}
 		}
 		catch (Exception e) {
-			logger.warn(getEndpoint() + "Failed to close socket", e);
+			logger.warn(getContact() + "Failed to close socket", e);
 		}
 		super.close();
 	}

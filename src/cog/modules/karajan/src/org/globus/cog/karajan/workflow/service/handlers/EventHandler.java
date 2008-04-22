@@ -28,6 +28,7 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 public class EventHandler extends RequestHandler {
 	private final static Logger logger = Logger.getLogger(EventHandler.class);
 	private InstanceContext ic;
+	
 
 	public void requestComplete() throws ProtocolException {
 		List data = this.getInDataChuncks();

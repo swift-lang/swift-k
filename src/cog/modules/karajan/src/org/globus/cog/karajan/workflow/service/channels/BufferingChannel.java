@@ -57,7 +57,7 @@ public class BufferingChannel extends AbstractKarajanChannel implements Purgeabl
 
 		public int getTag() {
 			return tag;
-		}
+		}		
 	}
 	
 	public void purge(KarajanChannel channel) throws IOException {
@@ -75,5 +75,8 @@ public class BufferingChannel extends AbstractKarajanChannel implements Purgeabl
 	
 	public String toString() {
 		return "BufferingChannel";
+	}
+
+	public void start() throws ChannelException {
 	}
 }

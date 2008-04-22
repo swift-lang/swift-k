@@ -12,31 +12,39 @@ package org.globus.cog.karajan.workflow.service.channels;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.NoSuchHandlerException;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChannel {
-	public static final Logger logger = Logger.getLogger(AbstractStreamKarajanChannel.class); 
-	
+	public static final Logger logger = Logger.getLogger(AbstractStreamKarajanChannel.class);
+
+	public static final int STATE_IDLE = 0;
+	public static final int STATE_RECEIVING_DATA = 1;
+
+	public static final int HEADER_LEN = 12;
+
 	private InputStream inputStream;
 	private OutputStream outputStream;
-	private String endpoint;
-	private final ByteBuffer header;
-	private final byte[] bheader;
-	
-	protected AbstractStreamKarajanChannel(RequestManager requestManager, ChannelContext channelContext) {
+	private URI contact;
+	private final byte[] rhdr;
+	private byte[] data;
+	private int dataPointer;
+	private int state, tag, flags, len;
+
+	protected AbstractStreamKarajanChannel(RequestManager requestManager,
+			ChannelContext channelContext) {
 		super(requestManager, channelContext);
-		bheader = new byte[12];
-		header = ByteBuffer.wrap(bheader);
+		rhdr = new byte[HEADER_LEN];
 	}
-		
+
 	protected InputStream getInputStream() {
 		return inputStream;
 	}
@@ -53,146 +61,227 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		this.outputStream = outputStream;
 	}
 
-	public String getEndpoint() {
-		return endpoint;
+	public URI getContact() {
+		return contact;
 	}
 
-	public void setEndpoint(String endpoint) {
-		this.endpoint = endpoint;
+	public void setContact(URI contact) {
+		this.contact = contact;
 	}
 
 	public synchronized void sendTaggedData(int tag, int flags, byte[] data) {
-		header.clear();
-		header.putInt(tag);
-		header.putInt(flags);
-		header.putInt(data.length);
-		try {
-			outputStream.write(bheader);
-			outputStream.write(data);
-			outputStream.flush();
-		}
-		catch (IOException e) {
-			throw new ChannelIOException(e);
-		}
+		getSender().enqueue(tag, flags, data, this);
 	}
 
-
-	protected void mainLoop() throws IOException {
-		ChannelContext context = getChannelContext();
-		ByteBuffer header = ByteBuffer.allocate(12);
-		while (!isClosed()) {
-				header.clear();
-				while (header.remaining() > 0) {
-					readFromStream(inputStream, header);
-				}
-				header.rewind();
-				IntBuffer iheader = header.asIntBuffer();
-				int tag = iheader.get();
-				int flags = iheader.get();
-				int len = iheader.get();
-				byte[] data = new byte[len];
-				int crt = 0;
-				while (crt < len) {
-					crt = readFromStream(inputStream, data, crt);
-				}
+	protected boolean step() throws IOException {
+		int avail = inputStream.available();
+		if (avail == 0) {
+			return false;
+		}
+		if (state == STATE_IDLE && avail >= HEADER_LEN) {
+			readFromStream(inputStream, rhdr, 0);
+			tag = unpack(rhdr, 0);
+			flags = unpack(rhdr, 4);
+			len = unpack(rhdr, 8);
+			if (len > 20000) {
+				System.out.println("Big len: " + len);
+			}
+			data = new byte[len];
+			dataPointer = 0;
+			state = STATE_RECEIVING_DATA;
+		}
+		if (state == STATE_RECEIVING_DATA) {
+			while (avail > 0 && dataPointer < len) {
+				dataPointer += inputStream.read(data, dataPointer, Math.min(avail, len
+						- dataPointer));
+				avail = inputStream.available();
+			}
+			if (dataPointer == len) {
+				state = STATE_IDLE;
 				boolean fin = (flags & FINAL_FLAG) != 0;
 				boolean error = (flags & ERROR_FLAG) != 0;
 				if ((flags & REPLY_FLAG) != 0) {
 					// reply
-					if (logger.isDebugEnabled()) {
-						logger.debug(this + "REPL<: tag = " + tag + ", fin = " + fin + ", err = "
-								+ error + ", datalen = " + len + ", data = " + ppByteBuf(data));
-					}
-					Command cmd = context.getRegisteredCommand(tag);
-	
-					if (cmd != null) {
-						cmd.replyReceived(data);
-						if (fin) {
-							if (error) {
-								cmd.errorReceived();
-							}
-							else {
-								cmd.receiveCompleted();
-							}
-							unregisterCommand(cmd);
-						}
-					}
-					else {
-						logger.warn(endpoint + "Recieved reply to unregistered sender. Tag: " + tag);
-					}
+					handleReply(tag, fin, error, len, data);
 				}
 				else {
 					// request
-					if (logger.isDebugEnabled()) {
-						logger.debug(this + "REQ<: tag = " + tag + ", fin = " + fin + ", err = "
-								+ error + ", datalen = " + len + ", data = " + ppByteBuf(data));
+					handleRequest(tag, fin, error, len, data);
+				}
+			}
+		}
+		return true;
+	}
+
+	protected void register() {
+		getMultiplexer(FAST).register(this);
+	}
+
+	private static final int SENDER_COUNT = 1;
+	private static Sender[] sender;
+	private static int crtSender; 
+
+	private static synchronized Sender getSender() {
+        if (sender == null) {
+            sender = new Sender[SENDER_COUNT];
+            for (int i = 0; i < SENDER_COUNT; i++) {
+                sender[i] = new Sender();
+                sender[i].start();
+            }
+        }
+        try {
+            return sender[crtSender++];
+        }
+        finally {
+            if (crtSender == SENDER_COUNT) {
+                crtSender = 0;
+            }
+        }
+    }
+
+	private static class SendEntry {
+		public final int tag, flags;
+		public final byte[] data;
+		public final AbstractStreamKarajanChannel channel;
+
+		public SendEntry(int tag, int flags, byte[] data, AbstractStreamKarajanChannel channel) {
+			this.tag = tag;
+			this.flags = flags;
+			this.data = data;
+			this.channel = channel;
+		}
+	}
+
+	private static class Sender extends Thread {
+		private final LinkedList queue;
+		private final byte[] shdr;
+
+		public Sender() {
+			super("Sender");
+			queue = new LinkedList();
+			setDaemon(true);
+			shdr = new byte[HEADER_LEN];
+		}
+
+		public synchronized void enqueue(int tag, int flags, byte[] data, AbstractStreamKarajanChannel channel) {
+			queue.addLast(new SendEntry(tag, flags, data, channel));
+			notify();
+		}
+
+		public void run() {
+			try {
+			    SendEntry e;
+				while (true) {
+					synchronized (this) {
+						while (queue.isEmpty()) {
+							wait();
+						}
+						e = (SendEntry) queue.removeFirst();
 					}
-					RequestHandler handler = context.getRegisteredHandler(tag);
 					try {
-						if (handler != null) {
-							handler.register(this);
-							handler.dataReceived(data);
-							if (fin) {
-								try {
-									handler.receiveCompleted();
-								}
-								catch (ChannelIOException e) {
-									throw e;
-								}
-								catch (Exception e) {
-									if (!handler.isReplySent()) {
-										handler.sendError(e.toString(), e);
-									}
-								}
-								catch (Error e) {
-									if (!handler.isReplySent()) {
-										handler.sendError(e.toString(), e);
-									}
-									throw e;
-								}
-								finally {
-									unregisterHandler(tag);
-								}
-							}
-						}
-						else {
-							try {
-								handler = getRequestManager().handleInitialRequest(data);
-								handler.setId(tag);
-								registerHandler(handler, tag);
-								if (fin) {
-									try {
-										if (error) {
-											// TODO
-										}
-										else {
-											handler.receiveCompleted();
-										}
-									}
-									catch (ChannelIOException e) {
-										throw e;
-									}
-									catch (Exception e) {
-										if (!handler.isReplySent()) {
-											handler.sendError(e.toString(), e);
-										}
-									}
-									finally {
-										unregisterHandler(tag);
-									}
-								}
-							}
-							catch (NoSuchHandlerException e) {
-								logger.warn(endpoint + "Could not handle request", e);
-							}
-						}
+						send(e.tag, e.flags, e.data, e.channel.getOutputStream());
 					}
-					catch (ProtocolException e) {
-						unregisterHandler(tag);
-						logger.warn(e);
+					catch (Exception ex) {
+					    ex.printStackTrace();
+					    try {
+					    	e.channel.getChannelContext().getRegisteredCommand(e.tag).errorReceived(null, ex);
+					    }
+					    catch (Exception exx) {
+					        logger.warn(exx);
+					    }
 					}
 				}
 			}
+			catch (InterruptedException e) {
+				// exit
+			}
+		}
+
+		private void send(int tag, int flags, byte[] data, OutputStream os) throws IOException {
+			pack(shdr, 0, tag);
+			pack(shdr, 4, flags);
+			pack(shdr, 8, data.length);
+			synchronized(os) {
+				os.write(shdr);
+				os.write(data);
+				os.flush();
+			}
+		}
 	}
 
+	private static final int MUX_COUNT = 2;
+	private static Multiplexer[] multiplexer;
+	public static final int FAST = 0;
+	public static final int SLOW = 1;
+
+	public static synchronized Multiplexer getMultiplexer(int n) {
+		if (multiplexer == null) {
+			multiplexer = new Multiplexer[MUX_COUNT];
+			for (int i = 0; i < MUX_COUNT; i++) {
+				multiplexer[i] = new Multiplexer();
+				multiplexer[i].start();
+			}
+		}
+		return multiplexer[n];
+	}
+
+	protected static class Multiplexer extends Thread {
+		private Set channels;
+		private List remove, add;
+
+		public Multiplexer() {
+			super("Channel multiplexer");
+			setDaemon(true);
+			channels = new HashSet();
+			remove = new ArrayList();
+			add = new ArrayList();
+		}
+
+		public synchronized void register(AbstractStreamKarajanChannel channel) {
+			add.add(channel);
+		}
+
+		public void run() {
+			boolean any;
+			try {
+				while (true) {
+					any = false;
+					Iterator i = channels.iterator();
+					while (i.hasNext()) {
+						AbstractStreamKarajanChannel channel = (AbstractStreamKarajanChannel) i.next();
+						try {
+							any |= channel.step();
+						}
+						catch (Exception e) {
+							shutdown(channel, e);
+						}
+					}
+					synchronized (this) {
+						i = remove.iterator();
+						while (i.hasNext()) {
+							channels.remove(i.next());
+						}
+						i = add.iterator();
+						while (i.hasNext()) {
+							channels.add(i.next());
+						}
+					}
+					if (!any) {
+						Thread.sleep(10);
+					}
+				}
+			}
+			catch (Exception e) {
+				logger.warn("Exception in channel multiplexer", e);
+			}
+		}
+
+		private void shutdown(AbstractStreamKarajanChannel channel, Exception e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Channel exception caught", e);
+			}
+			channel.shutdown();
+			remove.add(channel);
+		}
+	}
 }

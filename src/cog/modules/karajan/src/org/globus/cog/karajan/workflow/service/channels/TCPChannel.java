@@ -9,25 +9,38 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
-import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 
-import org.globus.cog.karajan.workflow.service.ClientRequestManager;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
 
-public class PlainSocketChannel extends AbstractSocketChannel {
+public class TCPChannel extends AbstractTCPChannel {
 	private UserContext uc;
+	private URI contact;
 
-	public PlainSocketChannel(String host, int port) throws IOException {
-		this(new Socket(host, port), new ClientRequestManager(), new ChannelContext(), true);
-		setEndpoint(host + ":" + port);
+	public TCPChannel(URI contact, ChannelContext context, RequestManager rm) {
+		super(rm, context, true);
+		this.contact = contact;
+		setName(contact.toString());
 	}
 
-	public PlainSocketChannel(Socket socket, RequestManager requestManager,
-			ChannelContext channelContext, boolean client) {
-		super(requestManager, channelContext, socket, client);
+	public TCPChannel(Socket socket, RequestManager requestManager, ChannelContext channelContext) {
+		super(requestManager, channelContext, false);
+		setSocket(socket);
 		uc = new UserContext(null, channelContext);
+	}
+
+	public void start() throws ChannelException {
+		try {
+			if (contact != null) {
+				setSocket(new Socket(contact.getHost(), contact.getPort()));
+			}
+		}
+		catch (Exception e) {
+			throw new ChannelException("Failed to create socket", e);
+		}
+		super.start();
 	}
 
 	public UserContext getUserContext() {
@@ -35,6 +48,6 @@ public class PlainSocketChannel extends AbstractSocketChannel {
 	}
 
 	public String toString() {
-		return "SC-" + getEndpoint();
+		return "SC-" + getContact();
 	}
 }

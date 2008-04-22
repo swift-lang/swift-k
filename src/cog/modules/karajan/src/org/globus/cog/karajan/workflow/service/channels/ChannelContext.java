@@ -44,6 +44,7 @@ public class ChannelContext {
 	private static Timer timer;
 	private ServiceContext serviceContext;
 	private GSSCredential cred;
+	private ChannelAttributes attr;
 
 	public ChannelContext() {
 		this(new ServiceContext(null));
@@ -183,7 +184,7 @@ public class ChannelContext {
 	}
 
 	public void reexecute(final Command command) {
-		//todo
+		//TODO
 	}
 	
 	public Service getService() {

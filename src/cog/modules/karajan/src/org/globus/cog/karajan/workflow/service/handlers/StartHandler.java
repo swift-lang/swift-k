@@ -51,6 +51,7 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 public class StartHandler extends RequestHandler {
 	private static final Logger logger = Logger.getLogger(StartHandler.class);
 	private InstanceContext ic;
+	
 
 	public void requestComplete() throws ProtocolException {
 		List data = this.getInDataChuncks();
