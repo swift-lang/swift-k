@@ -397,7 +397,11 @@ sub runjob {
 		close STDERR;
 		open STDERR, $stderr;
 	}
-	exec { $executable } @JOBARGS or queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$FAILED", "513", "Could not execute $executable: $!");		
+	if (defined $JOB{directory}) {
+	    chdir $JOB{directory};
+	}
+	wlog "Command: @JOBARGS\n";
+	exec { $executable } @JOBARGS or queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$FAILED", "513", "Could not execute $executable: $!");
 	die "Could not execute $executable: $!";
 }
 
