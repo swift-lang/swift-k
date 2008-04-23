@@ -1,0 +1,29 @@
+//----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
+/*
+ * Created on Jul 21, 2005
+ */
+package org.globus.cog.abstraction.coaster.service;
+
+import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+
+
+public class ServiceShutdownHandler extends RequestHandler {
+    public static final String NAME = "SHUTDOWNSERVICE";
+	
+	public void requestComplete() throws ProtocolException {
+	    try {
+	        CoasterService cs = (CoasterService) getChannel().getChannelContext().getService();
+	        cs.shutdown();
+	        sendReply("OK");
+	    }
+	    catch (Exception e) {
+	        throw new ProtocolException("Failed to shut down service", e);
+	    }
+	}
+}
