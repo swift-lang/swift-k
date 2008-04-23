@@ -210,8 +210,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
         JobSpecification js = new JobSpecificationImpl();
-        js.setExecutable("/bin/sleep");
-        js.addArgument("0");
+        js.setExecutable("/bin/echo");
+        //js.addArgument("0");
         t.setSpecification(js);
         ExecutionService s = new ExecutionServiceImpl();
          s.setServiceContact(new ServiceContactImpl("localhost"));
@@ -256,9 +256,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             System.err.println("All " + ts.length + " jobs done");
             System.err.println("Total time: "
                     + (System.currentTimeMillis() - s));
+            System.exit(0);
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }

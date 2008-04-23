@@ -357,4 +357,7 @@ public class WorkerManager extends Thread {
             this.prototype = prototype;
         }
     }
+
+    public void shutdown() {
+    }
 }

@@ -18,6 +18,12 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
+/**
+ * This class is used to keep track of tasks sent
+ * to workers, since the worker is only aware of the
+ * task ID. A notification from a worker needs to
+ * be coupled with a Task object based on the ID.
+ */
 public class NotificationManager {
     public static final Logger logger = Logger
             .getLogger(NotificationManager.class);
@@ -33,6 +39,7 @@ public class NotificationManager {
 
     private Map tasks;
     private Map pending;
+    private long lastNotificationTime;
 
     public NotificationManager() {
         tasks = new HashMap();
@@ -52,7 +59,7 @@ public class NotificationManager {
             }
         }
     }
-
+    
     public void notificationReceived(String id, Status s) {
         Task task;
         synchronized (tasks) {
@@ -72,8 +79,28 @@ public class NotificationManager {
             }
         }
     }
+    
+    public long getIdleTime() {
+        synchronized(tasks) {
+            if (tasks.size() == 0) {
+                return System.currentTimeMillis() - lastNotificationTime;
+            }
+            else {
+                return 0;
+            }
+        }
+    }
+    
+    public int getActiveTaskCount() {
+        synchronized(tasks) {
+            return tasks.size();
+        }
+    }
 
     private void setStatus(Task t, Status s) {
+        synchronized(tasks) {
+            lastNotificationTime = System.currentTimeMillis();
+        }
         try {
             t.setStatus(s);
         }
@@ -90,5 +117,4 @@ public class NotificationManager {
         }
         p.addLast(status);
     }
-
 }
