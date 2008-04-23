@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.abstraction.coaster.service.local.JobStatusHandler;
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
+import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.RequestManager;
@@ -28,11 +29,14 @@ public class CoasterService extends GSSService {
     public static final Logger logger = Logger
             .getLogger(CoasterService.class);
 
+    public static final int IDLE_TIMEOUT = 600 * 1000;
+
     private String registrationURL, id;
     private JobQueue jobQueue;
     private LocalTCPService localService;
     private Exception e;
     private boolean done;
+    private boolean suspended;
 
     public CoasterService() throws IOException {
         this(null, null);
@@ -52,13 +56,23 @@ public class CoasterService extends GSSService {
 
     protected void handleConnection(Socket sock) {
         logger.debug("Got connection");
-        try {
-            ConnectionHandler handler = new ConnectionHandler(this, sock,
-                    new CoasterRequestManager());
-            handler.start();
+        if (isSuspended()) {
+            try {
+                sock.close();
+            }
+            catch (IOException e) {
+                logger.warn("Failed to close new connection", e);
+            }
         }
-        catch (Exception e) {
-            logger.warn("Could not start connection handler", e);
+        else {
+            try {
+                ConnectionHandler handler = new ConnectionHandler(this, sock,
+                        new CoasterRequestManager());
+                handler.start();
+            }
+            catch (Exception e) {
+                logger.warn("Could not start connection handler", e);
+            }
         }
     }
 
@@ -69,7 +83,9 @@ public class CoasterService extends GSSService {
             jobQueue = new JobQueue(localService);
             jobQueue.start();
             localService.setWorkerManager(jobQueue.getWorkerManager());
-            logger.info("Started local service: " + localService.getContact());
+            logger
+                    .info("Started local service: "
+                            + localService.getContact());
             if (id != null) {
                 try {
                     logger.info("Reserving channel for registration");
@@ -93,9 +109,9 @@ public class CoasterService extends GSSService {
             stop(e);
         }
     }
-    
+
     private void stop(Exception e) {
-        synchronized(this) {
+        synchronized (this) {
             this.e = e;
             done = true;
             notifyAll();
@@ -103,14 +119,48 @@ public class CoasterService extends GSSService {
     }
 
     public void waitFor() throws Exception {
-        synchronized(this) {
+        synchronized (this) {
             while (!done) {
-                wait();
+                wait(1000);
+                checkIdleTime();
             }
             if (e != null) {
                 throw e;
             }
         }
+    }
+
+    private synchronized void checkIdleTime() {
+        // the notification manager should probably not be a singleton
+        long idleTime = NotificationManager.getDefault().getIdleTime();
+        if (idleTime > IDLE_TIMEOUT) {
+            suspend();
+            if (NotificationManager.getDefault().getIdleTime() < IDLE_TIMEOUT) {
+                resume();
+            }
+            else {
+                logger.info("Idle time exceeded. Shutting down service.");
+                shutdown();
+            }
+        }
+    }
+
+    public synchronized void suspend() {
+        this.suspended = true;
+    }
+    
+    public synchronized boolean isSuspended() {
+        return suspended;
+    }
+    
+    public synchronized void resume() {
+        this.suspended = false;
+    }
+    
+    public void shutdown() {
+        super.shutdown();
+        //jobQueue.getWorkerManager().shutdown();
+        done = true;
     }
 
     public JobQueue getJobQueue() {
@@ -127,7 +177,6 @@ public class CoasterService extends GSSService {
                 s = new CoasterService(args[0], args[1]);
             }
             s.start();
-            //JobSubmissionTaskHandler.main(new String[0]);
             s.waitFor();
             System.exit(0);
         }
