@@ -2568,7 +2568,12 @@ configuration of your local firewall. More information can be found in
 How-to</ulink>.
 		</para>
 		<para>
-
+COG_OPTS - set in the environment before running Swift. Options set in this
+variable will be passed as parameters to the Java Virtual Machine which
+will run Swift. The parameters vary between virtual machine imlementations,
+but can usually be used to alter settings such as maximum heap size.
+Typing 'java -help' will sometimes give a list of commands. The Sun Java
+1.4.2 command line options are <ulink url="http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html">documented here</ulink>.
 		</para>
 	</section>
 
