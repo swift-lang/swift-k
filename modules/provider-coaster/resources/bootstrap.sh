@@ -14,13 +14,17 @@ error() {
 if [ "$L" == "" ]; then 
 	L=~/coaster-boot-$ID.log 
 fi
-DJ=`mktemp bootstrap.XXXXXX`
+DJ=`mktemp -t bootstrap.XXXXXX`
 echo "BS: $BS" >>$L
 wget -c -q $BS/coaster-bootstrap.jar -O $DJ >>$L 2>&1
 if [ "$?" != "0" ]; then
 	error "Failed to download bootstrap jar from $BS"
 fi
-AMD5=`/usr/bin/md5sum $DJ`
+MD5SUM=`which gmd5sum`
+if [ "X$MD5SUM" == "X" ]; then
+	MD5SUM=`which md5sum`
+fi
+AMD5=`$MD5SUM $DJ`
 echo "Expected checksum: $EMD5" >>$L
 echo "Computed checksum: ${AMD5:0:32}" >>$L
 if [ "${AMD5:0:32}" != "$EMD5" ]; then
@@ -36,7 +40,7 @@ fi
 echo "JAVA=$JAVA" >>$L
 if [ -x $JAVA ]; then 
 	echo "$JAVA -Djava.home="$JAVA_HOME" -DX509_USER_PROXY="$X509_USER_PROXY" -DGLOBUS_HOSTNAME="$H" -jar $DJ $BS $LMD5 $LS $ID" >>$L
-	$JAVA -Djava.home="$JAVA_HOME" -DX509_USER_PROXY="$X509_USER_PROXY" -DGLOBUS_HOSTNAME="$H" -jar $DJ $BS $LMD5 $LS $ID >>$L 2>&1
+	$JAVA -Djava.home="$JAVA_HOME" -DGLOBUS_TCP_PORT_RANGE="$GLOBUS_TCP_PORT_RANGE" -DX509_USER_PROXY="$X509_USER_PROXY" -DGLOBUS_HOSTNAME="$H" -jar $DJ $BS $LMD5 $LS $ID >>$L 2>&1
 	EC=$?
 	echo "Exit code: $EC" >>$L
 	rm -f $DJ
