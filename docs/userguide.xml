@@ -2268,6 +2268,12 @@ The valid values are site-specific. This profile entry is used by the
 GRAM2 and GRAM4 providers.
 			</para>
 		</section>
+		<section id="profile.env"><title>env namespace</title>
+			<para>
+Profile keys set in the env namespace will be set in the unix environment of the
+executed job.
+			</para>
+		</section>
 	</section>
 
 	<section id="clustering"><title>Clustering</title>
@@ -2540,6 +2546,29 @@ INSTALLED and INTEL32::LINUX respectively.
 		<para>
 The profiles field should be set to 'null' if no profile entries are to be
 specified, or should contain the profile entries separated by semicolons.
+		</para>
+	</section>
+
+	<section><title>Environment variables</title>
+		<para>
+There are a number of environment variables used by Swift. Some of them are
+documented in this section:
+		</para>
+		<para>
+PATHPREFIX - set in env namespace profiles. This path is prefixed onto the start
+of the PATH when jobs are
+executed. It can be more useful than setting the PATH environment variable directly,
+because setting PATH will cause the execution site's default path to be lost.
+		</para>
+		<para>
+GLOBUS_HOSTNAME, GLOBUS_TCP_PORT_RANGE - set in the environment before running
+Swift. These can be set to inform Swift of the
+configuration of your local firewall. More information can be found in
+<ulink url="http://dev.globus.org/wiki/FirewallHowTo">the Globus firewall
+How-to</ulink>.
+		</para>
+		<para>
+
 		</para>
 	</section>
 
