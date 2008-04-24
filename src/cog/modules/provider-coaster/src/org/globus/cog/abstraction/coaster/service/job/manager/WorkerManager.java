@@ -57,7 +57,8 @@ public class WorkerManager extends Thread {
 
     public static final int OVERALLOCATION_FACTOR = 10;
 
-    public static final int MAX_WORKERS = 100;
+    public static final int MAX_WORKERS = 256;
+    public static final int MAX_STARTING_WORKERS = 32;
 
     private SortedMap ready;
     private Map ids;
@@ -264,9 +265,17 @@ public class WorkerManager extends Thread {
                             .info("No suitable worker found. Attempting to start a new one.");
                 }
                 synchronized (allocationRequests) {
-                    allocationRequests.add(new AllocationRequest(maxWallTime,
-                            prototype));
-                    allocationRequests.notify();
+                    if (allocationRequests.size() < MAX_STARTING_WORKERS) {
+                        allocationRequests.add(new AllocationRequest(maxWallTime,
+                                prototype));
+                        allocationRequests.notify();
+                    }
+                    else {
+                        synchronized (this) {
+                            this.wait(250);
+                        }
+                        return null;
+                    }
                 }
             }
 
