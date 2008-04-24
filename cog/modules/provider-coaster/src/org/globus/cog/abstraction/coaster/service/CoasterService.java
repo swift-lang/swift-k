@@ -159,7 +159,7 @@ public class CoasterService extends GSSService {
     
     public void shutdown() {
         super.shutdown();
-        //jobQueue.getWorkerManager().shutdown();
+        jobQueue.getWorkerManager().shutdown();
         done = true;
     }
 

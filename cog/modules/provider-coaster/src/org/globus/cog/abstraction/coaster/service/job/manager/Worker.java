@@ -9,14 +9,20 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 
 public class Worker implements StatusListener {
+	public static final Logger logger = Logger.getLogger(Worker.class);
+	
     private Task task, running;
     private String id;
     private WorkerManager manager;
@@ -25,7 +31,7 @@ public class Worker implements StatusListener {
     private int maxWallTime;
     private Status error;
     private ChannelContext channelContext;
-    
+
     private static final Long NEVER = new Long(Long.MAX_VALUE);
 
     public Worker(WorkerManager manager, String id, int maxWallTime, Task w,
@@ -101,11 +107,11 @@ public class Worker implements StatusListener {
     public void setScheduledTerminationTime(long l) {
         this.scheduledTerminationTime = new Long(l);
     }
-    
+
     public Status getStatus() {
-    	return error;
+        return error;
     }
-    
+
     public String toString() {
         return "Worker[" + id + "]";
     }
@@ -113,8 +119,20 @@ public class Worker implements StatusListener {
     public void setChannelContext(ChannelContext cc) {
         this.channelContext = cc;
     }
-    
+
     public ChannelContext getChannelContext() {
         return this.channelContext;
+    }
+
+    public void shutdown() {
+        try {
+            KarajanChannel channel = ChannelManager.getManager()
+                    .reserveChannel(channelContext);
+            ShutdownCommand sc = new ShutdownCommand();
+            sc.execute(channel);
+        }
+        catch (Exception e) {
+            logger.warn("Failed to shut down worker", e);
+        }
     }
 }
