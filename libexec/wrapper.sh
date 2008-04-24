@@ -148,6 +148,10 @@ DIR=jobs/$JOBDIR/$ID
 
 PATH=$PATH:/bin:/usr/bin
 
+if [ "$PATHPREFIX" != "" ]; then
+PATH=$PATHPREFIX:$PATH
+fi
+
 log "DIR=$DIR"
 log "EXEC=$EXEC"
 log "STDIN=$STDIN"
