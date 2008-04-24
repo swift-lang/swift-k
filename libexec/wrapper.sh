@@ -149,7 +149,7 @@ DIR=jobs/$JOBDIR/$ID
 PATH=$PATH:/bin:/usr/bin
 
 if [ "$PATHPREFIX" != "" ]; then
-PATH=$PATHPREFIX:$PATH
+export PATH=$PATHPREFIX:$PATH
 fi
 
 log "DIR=$DIR"
@@ -186,6 +186,8 @@ done
 
 logstate "EXECUTE"
 cd $DIR
+
+
 #ls >>$WRAPPERLOG
 if [ ! -f "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not exist"

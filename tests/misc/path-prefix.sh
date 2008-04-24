@@ -6,7 +6,7 @@
 
 # export CF=swift.properties.no-retries
 
-echo "localhost	helper	$(pwd)/path-prefix-helper	INSTALLED	INTEL32::LINUX	null" > tmp.path-prefix.tc.data
+echo "localhost	helper	$(pwd)/path-prefix-helper	INSTALLED	INTEL32::LINUX	env::PATHPREFIX=$(pwd)" > tmp.path-prefix.tc.data
 
 swift -tc.file tmp.path-prefix.tc.data path-prefix.swift
 
