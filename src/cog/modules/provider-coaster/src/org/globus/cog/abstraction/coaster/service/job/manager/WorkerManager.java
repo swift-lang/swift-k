@@ -359,5 +359,10 @@ public class WorkerManager extends Thread {
     }
 
     public void shutdown() {
+        Iterator i = ready.values().iterator();
+        while (i.hasNext()) {
+            Worker wr = (Worker) i.next();
+            wr.shutdown();
+        }
     }
 }

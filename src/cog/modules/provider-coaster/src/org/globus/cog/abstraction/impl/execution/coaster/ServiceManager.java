@@ -272,6 +272,7 @@ public class ServiceManager {
                         .reserveChannel(url, (GSSCredential) cred);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();
                     ssc.execute(channel);
+                    CoasterChannelManager.getManager().releaseChannel(channel);
                 }
                 catch (Exception e) {
                     logger.warn("Failed to shut down service " + url, e);

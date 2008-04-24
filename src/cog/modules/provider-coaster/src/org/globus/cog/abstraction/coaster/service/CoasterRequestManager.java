@@ -21,5 +21,6 @@ public class CoasterRequestManager extends AbstractRequestManager {
         addHandler("CHANNELCONFIG", ChannelConfigurationHandler.class);
         addHandler("SHUTDOWN", ShutdownHandler.class);
         addHandler(SubmitJobCommand.NAME, SubmitJobHandler.class);
+        addHandler(ServiceShutdownHandler.NAME, ServiceShutdownHandler.class);
     }
 }

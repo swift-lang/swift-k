@@ -19,8 +19,8 @@ public class ServiceShutdownHandler extends RequestHandler {
 	public void requestComplete() throws ProtocolException {
 	    try {
 	        CoasterService cs = (CoasterService) getChannel().getChannelContext().getService();
-	        cs.shutdown();
 	        sendReply("OK");
+	        cs.shutdown();
 	    }
 	    catch (Exception e) {
 	        throw new ProtocolException("Failed to shut down service", e);
