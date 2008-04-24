@@ -25,12 +25,15 @@ import org.globus.cog.abstraction.impl.scheduler.common.Job;
 
 public class QueuePoller extends Thread {
     public static final Logger logger = Logger.getLogger(QueuePoller.class);
+    
+    public static final int MAX_CONSECUTIVE_FAILURES = 3;
 
     private LinkedList newjobs, donejobs;
     private Set processed;
     private Map jobs;
     boolean any = false;
     private int sleepTime;
+    private int failures;
 
     public QueuePoller() {
         setName("PBS-Local provider stream poller");
@@ -140,7 +143,13 @@ public class QueuePoller extends Thread {
             processStderr(pqstat.getErrorStream());
             int ec = pqstat.waitFor();
             if (ec != 0) {
-                failAll("QStat failed (exit code " + ec + ")");
+                failures++;
+                if (failures >= MAX_CONSECUTIVE_FAILURES) {
+                    failAll("QStat failed (exit code " + ec + ")");
+                }
+            }
+            else {
+                failures = 0;
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("QStat done");
