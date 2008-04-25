@@ -31,6 +31,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private Task task;
     private JobSpecification spec;
     private Thread thread;
+    private PBSExecutor executor;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
@@ -60,7 +61,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             try {
                 synchronized(this) {
                     if (this.task.getStatus().getStatusCode() != Status.CANCELED) {
-                        new PBSExecutor(task, this).start();
+                        executor = new PBSExecutor(task, this);
+                        executor.start();
                         this.task.setStatus(Status.SUBMITTED);
                         if (spec.isBatchJob()) {
                             this.task.setStatus(Status.COMPLETED);
@@ -90,7 +92,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     public synchronized void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException {
-        //TODO actually cancel the job
+        executor.cancel();
         this.task.setStatus(Status.CANCELED);
     }
 
