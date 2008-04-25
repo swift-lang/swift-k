@@ -21,7 +21,8 @@ public class Properties extends java.util.Properties {
 	
 	public static final String POLL_INTERVAL = "poll.interval";
 	public static final String QSUB = "qsub";
-	public static final String QSTAT = "qstat";	
+	public static final String QSTAT = "qstat";
+	public static final String QDEL = "qdel";
 
 	private static Properties properties;
 
@@ -52,6 +53,7 @@ public class Properties extends java.util.Properties {
 		setPollInterval(5);
 		setQSub("qsub");
 		setQStat("qstat");
+		setQDel("qdel");
 	}
 
 	public void setPollInterval(int value) {
@@ -76,5 +78,13 @@ public class Properties extends java.util.Properties {
 	
 	public String getQStat() {
 	    return getProperty(QSTAT);
+	}
+	
+	public String getQDel() {
+	    return getProperty(QDEL);
+	}
+	
+	public void setQDel(String qdel) {
+	    setProperty(QDEL, qdel);
 	}
 }
