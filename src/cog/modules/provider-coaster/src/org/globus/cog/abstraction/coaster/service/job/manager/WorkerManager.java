@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -147,7 +148,9 @@ public class WorkerManager extends Thread {
     private void startWorker(int maxWallTime, Task prototype)
             throws InvalidServiceContactException {
         int id = sr.nextInt();
-        System.err.println("Starting worker with id=" + id);
+        if (logger.isInfoEnabled()) {
+            logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime + "s");
+        }
         String sid = String.valueOf(id);
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
@@ -177,7 +180,8 @@ public class WorkerManager extends Thread {
         js.addArgument(callbackURI.toString());
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
-        js.setAttribute("maxwalltime", new WallTime(maxWallTime).getSpecInMinutes());
+        js.setAttribute("maxwalltime", new WallTime(maxWallTime)
+                .getSpecInMinutes());
         return js;
     }
 
@@ -188,7 +192,7 @@ public class WorkerManager extends Thread {
         ExecutionService p = (ExecutionService) prototype.getService(0);
         String jm = p.getJobManager();
         int colon = jm.indexOf(':');
-        //remove provider used to bootstrap coasters
+        // remove provider used to bootstrap coasters
         jm = jm.substring(colon + 1);
         colon = jm.indexOf(':');
         if (colon == -1) {
@@ -266,8 +270,8 @@ public class WorkerManager extends Thread {
                 }
                 synchronized (allocationRequests) {
                     if (allocationRequests.size() < MAX_STARTING_WORKERS) {
-                        allocationRequests.add(new AllocationRequest(maxWallTime,
-                                prototype));
+                        allocationRequests.add(new AllocationRequest(
+                                maxWallTime, prototype));
                         allocationRequests.notify();
                     }
                     else {
@@ -368,10 +372,24 @@ public class WorkerManager extends Thread {
     }
 
     public void shutdown() {
-        Iterator i = ready.values().iterator();
-        while (i.hasNext()) {
-            Worker wr = (Worker) i.next();
-            wr.shutdown();
+        synchronized (this) {
+            Iterator i;
+            i = ready.values().iterator();
+            while (i.hasNext()) {
+                Worker wr = (Worker) i.next();
+                wr.shutdown();
+            }
+            i = new ArrayList(requested.values()).iterator();
+            while (i.hasNext()) {
+                Worker wr = (Worker) i.next();
+                try {
+                    handler.cancel(wr.getWorkerTask());
+                }
+                catch (Exception e) {
+                    logger.warn("Failed to cancel queued worker task "
+                            + wr.getWorkerTask(), e);
+                }
+            }
         }
     }
 }
