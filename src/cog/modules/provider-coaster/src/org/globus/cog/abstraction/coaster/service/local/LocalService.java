@@ -25,7 +25,7 @@ import org.globus.gsi.gssapi.auth.SelfAuthorization;
 public class LocalService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalService.class);
 
-    public static final long DEFAULT_REGISTRATION_TIMEOUT = 120 * 1000;
+    public static final long DEFAULT_REGISTRATION_TIMEOUT = 300 * 1000;
 
     private Map services;
 
