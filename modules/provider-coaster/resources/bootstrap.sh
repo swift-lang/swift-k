@@ -14,7 +14,7 @@ error() {
 if [ "$L" == "" ]; then 
 	L=~/coaster-boot-$ID.log 
 fi
-DJ=`mktemp -t bootstrap.XXXXXX`
+DJ=`mktemp /tmp/bootstrap.XXXXXX`
 echo "BS: $BS" >>$L
 wget -c -q $BS/coaster-bootstrap.jar -O $DJ >>$L 2>&1
 if [ "$?" != "0" ]; then
