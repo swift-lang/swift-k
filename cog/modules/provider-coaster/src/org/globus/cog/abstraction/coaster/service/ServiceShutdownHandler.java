@@ -9,21 +9,26 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
-
 public class ServiceShutdownHandler extends RequestHandler {
+    public static final Logger logger = Logger
+            .getLogger(ServiceShutdownHandler.class);
+
     public static final String NAME = "SHUTDOWNSERVICE";
-	
-	public void requestComplete() throws ProtocolException {
-	    try {
-	        CoasterService cs = (CoasterService) getChannel().getChannelContext().getService();
-	        sendReply("OK");
-	        cs.shutdown();
-	    }
-	    catch (Exception e) {
-	        throw new ProtocolException("Failed to shut down service", e);
-	    }
-	}
+
+    public void requestComplete() throws ProtocolException {
+        try {
+            CoasterService cs = (CoasterService) getChannel()
+                    .getChannelContext().getService();
+            sendReply("OK");
+            cs.shutdown();
+        }
+        catch (Exception e) {
+            logger.warn("Failed to shut down service", e);
+            throw new ProtocolException("Failed to shut down service", e);
+        }
+    }
 }

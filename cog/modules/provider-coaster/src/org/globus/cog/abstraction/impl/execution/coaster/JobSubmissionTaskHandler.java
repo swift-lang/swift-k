@@ -234,7 +234,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public static void main(String[] args) {
         try {
             long s = System.currentTimeMillis();
-            Task[] ts = new Task[2];
+            Task[] ts = new Task[512];
             for (int i = 0; i < ts.length; i++) {
                 ts[i] = submitTask();
                 if (i % 100 == 0) {
