@@ -103,9 +103,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             throw new InvalidServiceContactException("Missing job manager");
         }
         String[] jmp = jm.split(":");
-        if (jmp.length != 2) {
+        if (jmp.length < 2) {
             throw new InvalidServiceContactException("Invalid job manager: "
-                    + jm + ". Use <provider>:<remote-job-manager>.");
+                    + jm + ". Use <provider>:<remote-provider>[:<remote-job-manager>].");
         }
         return jmp[0];
     }
@@ -214,12 +214,13 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         //js.addArgument("0");
         t.setSpecification(js);
         ExecutionService s = new ExecutionServiceImpl();
-         s.setServiceContact(new ServiceContactImpl("localhost"));
+        // s.setServiceContact(new ServiceContactImpl("localhost"));
         //s.setServiceContact(new ServiceContactImpl("tp-grid1.ci.uchicago.edu"));
+        s.setServiceContact(new ServiceContactImpl("tg-grid1.uc.teragrid.org"));
         // s.setServiceContact(new ServiceContactImpl("localhost:50013"));
         s.setProvider("coaster");
-        s.setJobManager("local:local");
-        //s.setJobManager("gt2:pbs");
+        //s.setJobManager("local:local");
+        s.setJobManager("gt2:pbs");
         s.setSecurityContext(new SecurityContextImpl());
         t.setService(0, s);
         // JobSubmissionTaskHandler th = new JobSubmissionTaskHandler(
