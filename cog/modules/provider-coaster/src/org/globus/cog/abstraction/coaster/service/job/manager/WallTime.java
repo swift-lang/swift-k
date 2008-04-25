@@ -27,6 +27,10 @@ public class WallTime {
         return spec;
     }
     
+    public String getSpecInMinutes() {
+        return spec.substring(spec.length() - 4);
+    }
+    
     public int getSeconds() {
         return seconds;
     }
