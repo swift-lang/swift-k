@@ -72,6 +72,10 @@ public class Worker implements StatusListener {
             manager.workerTerminated(this);
         }
     }
+    
+    public Task getWorkerTask() {
+        return task;
+    }
 
     public Task getRunning() {
         return running;

@@ -69,6 +69,7 @@ public class NotificationManager {
             else {
                 task = (Task) tasks.get(id);
             }
+            lastNotificationTime = System.currentTimeMillis();
         }
         if (task != null) {
             setStatus(task, s);
@@ -82,7 +83,7 @@ public class NotificationManager {
     
     public long getIdleTime() {
         synchronized(tasks) {
-            if (tasks.size() == 0) {
+            if (tasks.size() == 0 && lastNotificationTime != 0) {
                 return System.currentTimeMillis() - lastNotificationTime;
             }
             else {
@@ -98,9 +99,6 @@ public class NotificationManager {
     }
 
     private void setStatus(Task t, Status s) {
-        synchronized(tasks) {
-            lastNotificationTime = System.currentTimeMillis();
-        }
         try {
             t.setStatus(s);
         }
