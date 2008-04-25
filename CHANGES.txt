@@ -7,6 +7,9 @@
 *** Constant interning - this reduces the number of datasets for local values
     created, especially when constants are used in loops.
 
+(04/09/08)
+*** Swift 0.5 built from Swift SVN r1783 and CoG SVN r1962
+
 (03/26/08)
 *** String literals now use \ as escape character - for example, use \"
     to insert a quote into a string literal. Where \ was previously used
