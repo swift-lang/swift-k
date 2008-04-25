@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
@@ -36,10 +37,10 @@ public class PBSExecutor implements ProcessListener {
     private Task task;
     private static QueuePoller poller;
     private ProcessListener listener;
-    private String stdout, stderr, exitcode;
+    private String stdout, stderr, exitcode, jobid;
     private File script;
     private static boolean debug;
-    
+
     static {
         debug = "true".equals(Properties.getProperties().getProperty("debug"));
     }
@@ -116,12 +117,37 @@ public class PBSExecutor implements ProcessListener {
             }
         }
 
-        String jobid = getOutput(process.getInputStream());
+        jobid = getOutput(process.getInputStream());
         process.getInputStream().close();
 
         getProcessPoller().addJob(
                 new Job(jobid, stdout, spec.getStdOutputLocation(), stderr,
                         spec.getStdErrorLocation(), exitcode, this));
+    }
+
+    public void cancel() throws TaskSubmissionException {
+        if (jobid == null) {
+            throw new TaskSubmissionException("Can only cancel an active task");
+        }
+        String[] cmdline = new String[] { Properties.getProperties().getQDel(),
+                jobid };
+        try {
+            System.out.println("Canceling job " + jobid);
+            Process process = Runtime.getRuntime().exec(cmdline, null, null);
+            int ec = process.waitFor();
+            if (ec != 0) {
+                throw new TaskSubmissionException(
+                        "Failed to cancel task. qdel returned with an exit code of "
+                                + ec);
+            }
+        }
+        catch (InterruptedException e) {
+            throw new TaskSubmissionException(
+                    "Thread interrupted while waiting for qdel to finish");
+        }
+        catch (IOException e) {
+            throw new TaskSubmissionException("Failed to cancel task", e);
+        }
     }
 
     private void error(String message) {
@@ -197,9 +223,9 @@ public class PBSExecutor implements ProcessListener {
         wr.write("/bin/echo $? >" + exitcodefile + '\n');
         wr.close();
     }
-    
+
     private static final boolean[] TRIGGERS;
-    
+
     static {
         TRIGGERS = new boolean[128];
         TRIGGERS[' '] = true;

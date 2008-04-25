@@ -1,3 +1,7 @@
+(04/24/08)
+
+*** Added job canceling to PBS
+
 (09/19/07)
 
 *** Cobalt: 'count' attribute mapped to '-c'. The default should
