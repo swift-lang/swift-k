@@ -177,7 +177,7 @@ public class WorkerManager extends Thread {
         js.addArgument(callbackURI.toString());
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
-        js.setAttribute("maxwalltime", new WallTime(maxWallTime).getSpec());
+        js.setAttribute("maxwalltime", new WallTime(maxWallTime).getSpecInMinutes());
         return js;
     }
 
