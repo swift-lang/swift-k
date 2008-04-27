@@ -1,0 +1,10 @@
+<config>
+
+  <pool handle="tgncsa-hg" >
+    <gridftp  url="gsiftp://gt2-gridftp-hg.ncsa.teragrid.org" /> 
+    <execution provider="gt4" url="grid-hg.ncsa.teragrid.org" jobManager="PBS" />
+    <workdirectory >/home/ac/benc</workdirectory>
+    <profile namespace="globus" key="project">TG-CCR080002N</profile>
+  </pool>
+
+</config>

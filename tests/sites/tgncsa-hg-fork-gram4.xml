@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="tgncsa-hg" >
+    <gridftp  url="gsiftp://gt2-gridftp-hg.ncsa.teragrid.org" /> 
+    <execution provider="gt4" url="grid-hg.ncsa.teragrid.org" jobManager="Fork" />
+    <workdirectory >/home/ac/benc</workdirectory>
+  </pool>
+
+</config>
