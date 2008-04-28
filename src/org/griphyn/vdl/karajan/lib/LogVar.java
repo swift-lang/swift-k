@@ -5,6 +5,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -21,7 +22,14 @@ public class LogVar extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
-		Path path = Path.parse((String) PA_PATH.getValue(stack));
+		Path path;
+        Object p = PA_PATH.getValue(stack);
+        if (p instanceof Path) {
+            path = (Path) p;
+        }
+        else {
+            path = Path.parse(TypeUtil.toString(p));
+        }
 		path = var.getPathFromRoot().append(path);
 		RestartLog.LOG_CHANNEL.ret(stack, var.getRoot().getParam("dbgname")
 				+ "." + path.stringForm() + "!" + var.getMapper().map(path));
