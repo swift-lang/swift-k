@@ -311,4 +311,10 @@ public class Path {
 		return hash;
 	}
 
+	public Path append(Path path) {
+		Path p = new Path(this);
+		p.elements.addAll(path.elements);
+		return p;
+	}
+
 }
