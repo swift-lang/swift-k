@@ -1,5 +1,5 @@
 #!/bin/sh
-for a in clusters no-retries dryrun typecheck path-prefix; do
+for a in clusters no-retries dryrun typecheck path-prefix restart; do
  ./${a}.sh
  R=$?
  echo test $a ended with return value $R
