@@ -35,7 +35,7 @@ public class LogEntry {
 
 	public static LogEntry build(VariableStack stack, FlowElement fe) throws ExecutionException {
 		LogEntry entry = new LogEntry();
-		entry.key = ThreadingContext.get(stack) + ":" + (Integer) fe.getProperty(FlowElement.UID);
+		entry.key = ThreadingContext.get(stack) + ":" + fe.getProperty(FlowElement.UID);
 		return entry;
 	}
 
