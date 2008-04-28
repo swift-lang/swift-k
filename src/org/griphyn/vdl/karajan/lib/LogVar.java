@@ -7,6 +7,8 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
+import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.Path;
 
 public class LogVar extends VDLFunction {
 	public static final Arg PA_HOST = new Arg.Positional("host");
@@ -18,8 +20,11 @@ public class LogVar extends VDLFunction {
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
-		RestartLog.LOG_CHANNEL.ret(stack, getFileName(stack) + "/" + PA_HOST.getValue(stack) + "/"
-				+ PA_DIR.getValue(stack) + "/" + PA_NAME.getValue(stack));
+		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+		Path path = Path.parse((String) PA_PATH.getValue(stack));
+		path = var.getPathFromRoot().append(path);
+		RestartLog.LOG_CHANNEL.ret(stack, var.getRoot().getParam("dbgname")
+				+ "." + path.stringForm() + "!" + var.getMapper().map(path));
 		return null;
 	}
 }
