@@ -1,3 +1,11 @@
+(04/29/2008)
+
+*** WeightHostScheduler initial score and load factor can now be set
+    per host, by setting properties in the BoundHost object for each
+    host: initialScore for the initial score (defaults to 0), and
+    jobThrottle (defaults to the system-wide default value, set through
+    other properties)
+
 (03/15/2008)
 
 *** The WeightedHost scheduler now has a lower bound (of -10)
