@@ -39,6 +39,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	public static final String FACTOR_FILEOP_TASK_LOAD = "fileOperationTaskLoadFactor";
 	public static final String FACTOR_SUCCESS = "successFactor";
 	public static final String FACTOR_FAILURE = "failureFactor";
+	public static final String INITIAL_SCORE = "initialScore";
 	public static final String SCORE_HIGH_CAP = "scoreHighCap";
 	public static final String POLICY = "policy";
 	public static final String JOB_THROTTLE = "jobThrottle";
@@ -54,7 +55,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			transferTaskLoadFactor, fileOperationTaskLoadFactor, successFactor, failureFactor,
 			scoreHighCap, maxSubmissionTime;
 
-	private float jobThrottle;
+	private float defaultJobThrottle;
 
 	private double submissionTimeBias, submissionTimeFactor;
 
@@ -77,7 +78,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		successFactor = 0.1;
 		failureFactor = -0.5;
 		scoreHighCap = 100;
-		jobThrottle = 2;
+		defaultJobThrottle = 2;
 		maxSubmissionTime = 20;
 		updateInternal();
 	}
@@ -104,7 +105,20 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		sorted = new WeightedHostSet(scoreHighCap);
 		Iterator i = grid.getContacts().iterator();
 		while (i.hasNext()) {
-			addToSorted(new WeightedHost((BoundContact) i.next(), jobThrottle));
+			BoundContact contact = (BoundContact) i.next();
+			float thisJobThrottle = defaultJobThrottle;
+			// TODO constants instead of these literals
+			if(contact.hasProperty(JOB_THROTTLE)) {
+				thisJobThrottle = floatThrottleValue(contact.getProperty(JOB_THROTTLE));
+			}
+			WeightedHost wh;
+			if(contact.hasProperty(INITIAL_SCORE)) {
+				double thisInitialScore = Double.parseDouble((String)contact.getProperty(INITIAL_SCORE));
+				wh = new WeightedHost(contact, thisInitialScore, thisJobThrottle);
+			} else {
+				wh = new WeightedHost(contact, thisJobThrottle);
+			}
+			addToSorted(wh);
 		}
 	}
 
@@ -316,7 +330,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				}
 			}
 			else if (JOB_THROTTLE.equals(name)) {
-				jobThrottle = floatThrottleValue(value);
+				defaultJobThrottle = floatThrottleValue(value);
 			}
 			else {
 				double val = TypeUtil.toDouble(value);
