@@ -18,8 +18,10 @@ import org.apache.axis.message.addressing.EndpointReferenceType;
 import org.apache.axis.types.NonNegativeInteger;
 import org.apache.axis.types.PositiveInteger;
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractionProperties;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
+import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
@@ -317,8 +319,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         boolean batchJob = spec.isBatchJob();
         if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdOutputLocation()
                 .and(spec.getStdErrorLocation()))) {
-            throw new IllegalSpecException(
-                    "The gt4.0.0 provider does not support redirection");
+            complainAboutRedirection();
         }
         else {
             if (spec.getStdInput() != null) {
@@ -353,6 +354,33 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
 
         return desc;
+    }
+
+    private static boolean redirectionWarning;
+
+    private static void complainAboutRedirection() throws IllegalSpecException,
+            TaskSubmissionException {
+        try {
+            if ("true".equals(AbstractionProperties.getProperties("gt4")
+                    .getProperty("fail.on.redirect"))) {
+                throw new IllegalSpecException(
+                        "The gt4.0.0 provider does not support redirection");
+            }
+            else {
+                synchronized (JobSubmissionTaskHandler.class) {
+                    if (!redirectionWarning) {
+                        redirectionWarning = true;
+                        logger
+                                .warn("The GT4 provider does not support redirection. "
+                                        + "Redirection requests will be ignored without further warnings.");
+                    }
+                }
+            }
+        }
+        catch (InvalidProviderException e) {
+            throw new TaskSubmissionException("Cannot get provider properties",
+                    e);
+        }
     }
 
     public void stateChanged(GramJob job) {
