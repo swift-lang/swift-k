@@ -1,3 +1,10 @@
+(04/30/2008)
+
+*** Print a warning instead of failing when redirection is
+    requested. Redirection requests will be silently ignored.
+    This can be overriden by saying "fail.on.redirect=true"
+    in the provider properties file.
+
 (03/06/2008)
 
 *** Added support for host_types attribute (patch from benc)
