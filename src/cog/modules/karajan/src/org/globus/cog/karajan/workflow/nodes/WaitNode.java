@@ -43,6 +43,7 @@ public class WaitNode extends SequentialWithArguments {
 		if (stack.isDefined("#abort")) {
 			logger.debug("Aborting wait");
 			abort(stack);
+			return;
 		}
 		logger.debug("Stateful element count: "
 				+ stack.getExecutionContext().getStateManager().getExecuting().size());
@@ -54,12 +55,12 @@ public class WaitNode extends SequentialWithArguments {
 			}
 		}
 		if (A_DELAY.isPresent(stack)) {
-			timer.schedule(new Task(this, stack), TypeUtil.toInt(A_DELAY.getValue(stack)));
+			timer.schedule(newTask(stack), TypeUtil.toInt(A_DELAY.getValue(stack)));
 		}
 		else if (A_UNTIL.isPresent(stack)) {
 			String until = TypeUtil.toString(A_UNTIL.getValue(stack));
 			try {
-				timer.schedule(new Task(this, stack), DateFormat.getDateTimeInstance().parse(until));
+				timer.schedule(newTask(stack), DateFormat.getDateTimeInstance().parse(until));
 			}
 			catch (ParseException e) {
 				try {
