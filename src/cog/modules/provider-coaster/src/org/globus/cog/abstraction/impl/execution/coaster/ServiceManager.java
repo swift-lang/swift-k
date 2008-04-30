@@ -201,8 +201,6 @@ public class ServiceManager implements StatusListener {
             s.setServiceContact(orig.getService(0).getServiceContact());
             s.setJobManager("fork");
             t.setService(0, s);
-            js.setStdOutputLocation(FileLocation.MEMORY);
-            js.setStdErrorLocation(FileLocation.MEMORY);
             return t;
         }
         catch (Exception e) {
