@@ -8,10 +8,7 @@ if [ "X$SWIFT_TEST_PARAMS" = "X" ] ; then
   SWIFT_TEST_PARAMS="-tc.file ./tc.data"
 fi
 
-for cmd in wc touch; do
-  echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
-done
-
+./generate-tc.data
 
 if [ "X$1" == "X" ]; then
   TESTS=*.swift
