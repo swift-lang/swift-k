@@ -21,6 +21,7 @@
     <export name="for"><elementDef classname="org.globus.cog.karajan.workflow.nodes.For"/></export>
     <export name="parallelFor"><elementDef classname="org.globus.cog.karajan.workflow.nodes.ParallelFor"/></export>
 	<export name="uParallelFor"><elementDef classname="org.globus.cog.karajan.workflow.nodes.UParallelFor"/></export>
+	<export name="raceFor"><elementDef classname="org.globus.cog.karajan.workflow.nodes.RaceFor"/></export>
 	<export name="each"><elementDef classname="org.globus.cog.karajan.workflow.nodes.Each"/></export>
     
     <export name="default"><elementDef classname="org.globus.cog.karajan.workflow.nodes.DefaultParameterNode"/></export>
