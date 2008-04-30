@@ -1,3 +1,8 @@
+(04/30/2008)
+
+*** Added raceFor. It's a blend between race() and for(). It will 
+    iterate in parallel until the first iteration completes.
+
 (04/29/2008)
 
 *** WeightHostScheduler initial score and load factor can now be set
