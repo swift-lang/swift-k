@@ -11,6 +11,7 @@ package org.globus.cog.karajan.workflow.nodes;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Identifier;
 import org.globus.cog.karajan.util.KarajanIterator;
@@ -43,6 +44,18 @@ public abstract class AbstractIterator extends PartialArgumentsContainer {
 	protected final synchronized int preIncRunning(VariableStack stack) {
 		return stack.getRegs().preIncIB();
 	}
+	
+	protected final int getRunning(VariableStack stack) {
+		return stack.getRegs().getIB();
+	}
+	
+	protected final void setRunning(StackFrame frame, int running) {
+        frame.getRegs().setIB(running);
+    }
+    
+    protected final int getRunning(StackFrame frame) {
+        return frame.getRegs().getIB();
+    }
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
 		Identifier var = TypeUtil.toIdentifier(A_NAME.getValue(stack));
