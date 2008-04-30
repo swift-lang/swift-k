@@ -24,6 +24,7 @@ public class RemoteException extends Exception {
 		s.println("Remote exception:");
 		s.println(remote);
 	}
+	
 	public void printStackTrace(PrintWriter s) {
 		super.printStackTrace(s);
 		s.println("Remote exception:");

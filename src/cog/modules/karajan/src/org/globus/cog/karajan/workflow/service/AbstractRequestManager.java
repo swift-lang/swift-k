@@ -38,7 +38,6 @@ public abstract class AbstractRequestManager implements RequestManager {
 				handler = (RequestHandler) handlerClass.newInstance();
 			}
 			catch (Exception e) {
-
 				throw new NoSuchHandlerException("Could not instantiate handler for " + cmd, e);
 			}
 		}
