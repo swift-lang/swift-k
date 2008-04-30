@@ -267,7 +267,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 						}
 					}
 					if (!any) {
-						Thread.sleep(10);
+						Thread.sleep(20);
 					}
 				}
 			}
