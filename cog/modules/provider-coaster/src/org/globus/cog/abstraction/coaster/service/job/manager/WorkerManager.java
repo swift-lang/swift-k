@@ -34,7 +34,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
-import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -178,8 +177,6 @@ public class WorkerManager extends Thread {
         js.addArgument(script.getAbsolutePath());
         js.addArgument(id);
         js.addArgument(callbackURI.toString());
-        js.setStdOutputLocation(FileLocation.MEMORY);
-        js.setStdErrorLocation(FileLocation.MEMORY);
         js.setAttribute("maxwalltime", new WallTime(maxWallTime)
                 .getSpecInMinutes());
         return js;
