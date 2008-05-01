@@ -1647,7 +1647,7 @@ would map
 					</varlistentry>
 	
 				
-					<varlistentry>
+					<varlistentry id="property.throttle.score.job.factor">
 						<term>
 							<property>throttle.score.job.factor</property>
 						</term>
@@ -1682,6 +1682,11 @@ would map
 								2 + 100*throttle.score.job.factor. With a
 								default of 4 this means at least 2 jobs and
 								at most 402. 
+							</para>
+							<para>
+								This parameter can also be set per site
+								using the jobThrottle profile key in a site
+								catalog entry.
 							</para>
 						</listitem>
 					</varlistentry>
@@ -2235,6 +2240,13 @@ For example:
 </screen>
 will limit job submission to 0.2 jobs per second (or equivalently,
 one job every five seconds).
+			</para>
+			<para id="profile.karajan.jobThrottle">jobThrottle -
+allows the job throttle factor (see Swift property <link linkend="property.throttle.score.job.factor">throttle.score.job.factor</link>) to be set per site.
+			</para>
+			<para id="profile.karajan.initialScore">initialScore -
+allows the initial score for rate limiting and site selection to be set to
+a value other than 0.
 			</para>
 		</section>
 		<section id="profile.swift"><title>swift namespace</title>
