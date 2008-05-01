@@ -50,7 +50,7 @@ String escape(String s) {
 }
 
 String quote(String s) {
-    return s.replaceAll("\"", "&quot;");
+    return s.replaceAll("\\\\\"", "&quot;");
 }
 
 }

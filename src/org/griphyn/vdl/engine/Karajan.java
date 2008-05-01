@@ -756,7 +756,7 @@ public class Karajan {
 			String str = (String)i.next();
 			String variableName = (String)stringInternMap.get(str);
 			StringTemplate st = template("sConst");
-			st.setAttribute("innervalue",str);
+			st.setAttribute("innervalue",escapeQuotes(str));
 			StringTemplate vt = template("globalConstant");
 			vt.setAttribute("name",variableName);
 			vt.setAttribute("expr",st);
@@ -788,6 +788,10 @@ public class Karajan {
 		}
 
 
+	}
+
+	String escapeQuotes(String in) {
+		return in.replaceAll("\"", "&quot;");
 	}
 
 }
