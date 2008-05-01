@@ -5,6 +5,7 @@
 <execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" />
     <workdirectory >/home/benc</workdirectory>
     <profile namespace="globus" key="project">TG-CCR080002N</profile>
+    <profile namespace="karajan" key="jobThrottle">4</profile>
   </pool>
 
 </config>
