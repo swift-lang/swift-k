@@ -15,6 +15,7 @@ working directory.
     <gridftp  url="local://localhost" />
     <execution provider="local" />
     <workdirectory >/var/tmp</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
   </pool>
 
 
