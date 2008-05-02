@@ -148,6 +148,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 
 	public static final Arg A_SECURITY_CONTEXT = new Arg.TypedPositional("securityContext",
 			SecurityContext.class, "Security Context");
+
 	public void setSecurityContext(VariableStack stack, Service service) throws ExecutionException {
 		if (A_SECURITY_CONTEXT.isPresent(stack)) {
 			SecurityContext sc = (SecurityContext) A_SECURITY_CONTEXT.getValue(stack);
@@ -188,7 +189,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			}
 		}
 	}
-	
+
 	public void submitUnscheduled(TaskHandler handler, Task task, VariableStack stack)
 			throws ExecutionException {
 		setTaskIdentity(stack, task);
@@ -213,7 +214,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			}
 		}
 	}
-	
+
 	public void submitScheduled(Scheduler scheduler, Task task, VariableStack stack,
 			Object constraints) {
 		setTaskIdentity(stack, task);
@@ -227,13 +228,19 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 		scheduler.enqueue(task, constraints);
 	}
-	
+
 	protected void setTaskIdentity(VariableStack stack, Task task) {
 		try {
 			task.setIdentity(new IdentityImpl(ThreadingContext.get(stack).toString()));
 		}
 		catch (VariableNotFoundException e) {
 			// such is life
+		}
+	}
+
+	protected VariableStack getStack(Task t) {
+		synchronized (tasks) {
+			return (VariableStack) tasks.get(t);
 		}
 	}
 
@@ -247,10 +254,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 				return;
 			}
 			Task task = (Task) e.getSource();
-			VariableStack stack;
-			synchronized (tasks) {
-				stack = (VariableStack) tasks.get(task);
-			}
+			VariableStack stack = getStack(task);
 			if (stack == null) {
 				logger.warn("Received status event from unknown task " + e.getSource());
 				return;
