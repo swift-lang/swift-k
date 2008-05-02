@@ -96,13 +96,17 @@ public class ReplicationManager {
 			Map.Entry e = (Map.Entry) i.next();
 			Task t = (Task) e.getKey();
 			Date d = (Date) e.getValue();
-			if (shouldBeReplicated(d)) {
+			if (shouldBeReplicated(t, d)) {
 				t.setStatus(new StatusImpl(STATUS_NEEDS_REPLICATION));
 			}
 		}
 	}
 
-	private boolean shouldBeReplicated(Date d) {
+	private boolean shouldBeReplicated(Task t, Date d) {
+		if (t.getStatus().getStatusCode() == STATUS_NEEDS_REPLICATION) {
+			//don't keep replicating the same job
+			return false;
+		}
 		long inTheQueue = (System.currentTimeMillis() - d.getTime()) / 1000;
 		if (n > 0 && inTheQueue > minQueueTime && inTheQueue > 3 * getMean()) {
 			return true;
