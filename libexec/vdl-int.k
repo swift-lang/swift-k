@@ -352,7 +352,8 @@ namespace("vdl"
 			recfile
 		)
 
-		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout]
+		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout, 
+			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
 			vdl:setprogress("Selecting site")
@@ -367,7 +368,7 @@ namespace("vdl"
 				jobdir := substring(uid, from=0, to=1)
 				jobid := concat(tr, "-", uid)
 				
-				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost}")
+				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
 				vdl:setprogress("Stage in")
 				tmpdir := dircat(concat(wfdir, "/jobs/", jobdir), jobid)
 				
@@ -386,7 +387,7 @@ namespace("vdl"
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
 				
 						vdl:setprogress("Executing")
-						task:execute("/bin/bash",
+						vdl:execute("/bin/bash",
 							list("shared/wrapper.sh", jobid,
 								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 
@@ -402,6 +403,8 @@ namespace("vdl"
 							redirect=false
 							host=rhost
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
+							replicationGroup=replicationGroup
+							replicationChannel=replicationChannel
 						)
 							
 						checkJobStatus(rhost, wfdir, jobid, tr, jobdir)
@@ -424,6 +427,12 @@ namespace("vdl"
 							discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))
 						)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
+					)
+					catch(".*Replica cleanup.*"
+						log(LOG:DEBUG, "APPLICATION_REPLICA_KILLED jobid={jobid}")
+						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
+							cleanupFiles(cacheFilesToRemove, rhost)
+						)
 					)
 					catch(".*"
 						vdl:setprogress("Failed but can retry")

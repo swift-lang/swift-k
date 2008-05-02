@@ -15,10 +15,15 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 						echo("{tr} started")
 						log(LOG:INFO, "START thread={#thread} tr={tr}") 
 						restartOnError(".*", vdl:configProperty("execution.retries"),
-							execute2(
-								tr, maybe(arguments=arguments), 
-								maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
-								stagein, stageout
+							replicationChannel := channel()
+							discard(append(replicationChannel, true)) //trigger the first job
+							replicationGroup := uid()
+							parallelFor(i, replicationChannel
+								execute2(
+									tr, maybe(arguments=arguments), 
+									maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
+									stagein, stageout, replicationGroup, replicationChannel
+								)
 							)
 						)
 						mark(stageout, err=false, mapping=false)
