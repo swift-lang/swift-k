@@ -276,7 +276,7 @@ datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d]
        if (m!=null)
            dataset.setAttribute("mapping", m);
        else
-           dataset.setAttribute("lfn", f.getText());
+           dataset.setAttribute("lfn", quote(f.getText()));
        dataset.setAttribute("type", t);
        code.setAttribute("statements", dataset);
     }

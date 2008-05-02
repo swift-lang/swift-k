@@ -256,7 +256,7 @@ public class Karajan {
 		}
 		if (dataset.getFile() != null) {
 			StringTemplate fileST = new StringTemplate("file");
-			fileST.setAttribute("name", dataset.getFile().getName());
+			fileST.setAttribute("name", escapeQuotes(dataset.getFile().getName()));
 			fileST.defineFormalArgument("params");
 			datasetST.setAttribute("file", fileST);
 		}
