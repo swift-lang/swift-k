@@ -75,6 +75,9 @@ public class VDL2Config extends Properties {
 		put("throttle.file.operations", "8");
 		put("throttle.score.job.factor", "4");
 		put(VDL2ConfigProperties.SITEDIR_KEEP, "false");
+		
+		put("replication.enabled", "false");
+		put("replication.min.queue.time", "60");
 	}
 
 	private VDL2Config(VDL2Config other) {
