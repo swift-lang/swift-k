@@ -48,14 +48,14 @@ for testfn in $TESTS; do
 
   for e in $EXPECTEDS; do
 
-    if [ -f $e ]; then
+    if [ -f "$e" ]; then
 
 	  if [ "$RESUME" != "y" ]; then
 	      echo checking $e
 	  fi
-      out=$(basename $e .expected)
+      out=$(basename "$e" .expected)
 
-      diff -q ${out} ${e}
+      diff -q "${out}" "${e}"
       if [ "$?" -ne "0" ]; then 
       	if [ "$RESUME" == "y" ]; then
       		RESUME="n"
