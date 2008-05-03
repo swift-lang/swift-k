@@ -61,7 +61,6 @@
 
 	<export name="executable"><elementDef classname="org.griphyn.vdl.karajan.lib.Executable"/></export>
 	<export name="TCProfile"><elementDef classname="org.griphyn.vdl.karajan.lib.TCProfile"/></export>
-	<export name="hostProperty"><elementDef classname="org.griphyn.vdl.karajan.lib.HostProperty"/></export>
 
 	<export name="setFutureFault"><elementDef classname="org.griphyn.vdl.karajan.lib.SetFutureFault"/></export>
 
