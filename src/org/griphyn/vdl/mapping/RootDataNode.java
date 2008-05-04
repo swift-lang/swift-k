@@ -14,7 +14,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
 	private Mapper mapper;
 	private Map params;
-	
+
 	public static DSHandle newNode(Type type, Object value) {
 		DSHandle handle = new RootDataNode(type);
 		handle.setValue(value);
@@ -75,7 +75,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 					}
 				}
 				catch (InvalidPathException e) {
-					throw new IllegalStateException("mapper.existing() returned a path "+p+" that it cannot subsequently map");
+					throw new IllegalStateException("mapper.existing() returned a path " + p
+							+ " that it cannot subsequently map");
 				}
 			}
 			root.closeDeep();
@@ -92,7 +93,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 					}
 				}
 				catch (InvalidPathException e) {
-					throw new IllegalStateException("mapper.existing() returned a path "+p+" that it cannot subsequently map");
+					throw new IllegalStateException("mapper.existing() returned a path " + p
+							+ " that it cannot subsequently map");
 				}
 			}
 			if (root.isArray()) {
@@ -110,11 +112,13 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 				while (i.hasNext()) {
 					DSHandle dh = (DSHandle) i.next();
 					Path path = dh.getPathFromRoot();
-					String index = path.getElement(path.size()-1);
+					String index = path.getElement(path.size() - 1);
 					try {
 						Integer.parseInt(index);
-					} catch(NumberFormatException nfe) {
-						throw new RuntimeException("Array element has index '"+index+"' that does not parse as an integer.");
+					}
+					catch (NumberFormatException nfe) {
+						throw new RuntimeException("Array element has index '" + index
+								+ "' that does not parse as an integer.");
 					}
 					checkConsistency(dh);
 				}
@@ -140,12 +144,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 				}
 				catch (InvalidPathException e) {
 					throw new RuntimeException("Data set initialization failed for " + handle
-							+ ". Missing required field: " + fieldName/*
-																		 * + "
-																		 * mapped
-																		 * to " +
-																		 * handle.getFilename()
-																		 */);
+							+ ". Missing required field: " + fieldName + " mapped to "
+							+ handle.getMapper().map(fieldPath));
 				}
 			}
 
