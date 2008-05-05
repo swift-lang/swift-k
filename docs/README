@@ -21,6 +21,10 @@ directory. This can be done with a symlink if docbook is installed elsewhere.
 
 For example, on benc's os x machine:
 
+# install docbook from DarwinPorts
+$ sudo port install docbook-xsl
+
+# setup links
 $ cd formatting
 $ ln -s /opt/local/share/xsl/docbook-xsl/ docbook
 
