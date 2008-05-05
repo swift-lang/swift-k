@@ -123,7 +123,7 @@ public class StatusImpl implements Status {
                 return "Unsubmitted";
 
             default:
-                return "Unknown";
+                return "Unknown (" + statusCode + ")";
         }
     }
 
