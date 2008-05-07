@@ -355,7 +355,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 while (iterator.hasNext()) {
                     String name = (String) iterator.next();
                     String value = spec.getEnvironmentVariable(name);
-                    System.err.println(value);
                     List l = new LinkedList();
                     l.add(new Value(name));
                     l.add(new Value(value));
