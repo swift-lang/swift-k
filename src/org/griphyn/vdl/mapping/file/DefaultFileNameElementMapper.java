@@ -15,7 +15,17 @@ package org.griphyn.vdl.mapping.file;
 
 public class DefaultFileNameElementMapper implements FileNameElementMapper {
 
-	public static final int INDEX_WIDTH = 4;
+	public static final int DEFAULT_INDEX_WIDTH = 4;
+
+	public int indexWidth;
+
+	public DefaultFileNameElementMapper() {
+		this(DEFAULT_INDEX_WIDTH);
+	}
+
+	public DefaultFileNameElementMapper(int indexWidth) {
+		this.indexWidth = indexWidth;
+	}
 
 	public String mapField(String fieldName) {
 		return fieldName;
@@ -28,7 +38,7 @@ public class DefaultFileNameElementMapper implements FileNameElementMapper {
 	public String mapIndex(int index) {
 		StringBuffer sb = new StringBuffer();
 		String num = String.valueOf(index);
-		for (int i = 0; i < INDEX_WIDTH - num.length(); i++) {
+		for (int i = 0; i < indexWidth - num.length(); i++) {
 			sb.append('0');
 		}
 		sb.append(num);
