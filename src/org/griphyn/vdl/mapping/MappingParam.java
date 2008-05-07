@@ -118,8 +118,8 @@ public class MappingParam {
 	}
 
 	/** Returns the parameter value as an int. If the SwiftScript value 
-	  * is a string, * then the string will be parsed to an int. If the
-	  * value is an int,  then this will be passed through. Otherwise,
+	  * is a string, then the string will be parsed to an int. If the
+	  * value is an int, then this will be passed through. Otherwise,
 	  * a NumberFormatException will be thrown. */
 	public int getIntValue(Mapper mapper) {
 		Object value = getValue(mapper);
