@@ -84,4 +84,8 @@ public class Property implements Map.Entry {
 		this.value = value;
 		return old;
 	}
+	
+	public String toString() {
+		return name + "=" + value;
+	}
 }
