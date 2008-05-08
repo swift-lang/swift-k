@@ -3,7 +3,7 @@
   <pool handle="teraport" >
     <gridftp  url="gsiftp://fletch.bsd.uchicago.edu" /> 
     <jobmanager universe="vanilla" url="fletch.bsd.uchicago.edu/jobmanager-fork" major="2" />
-    <workdirectory >/disks/gpfs/swift/benc</workdirectory>
+    <workdirectory >/disks/gpfs/swift/site-test</workdirectory>
   </pool>
 
 </config>

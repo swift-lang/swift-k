@@ -3,8 +3,8 @@
   <pool handle="tguc" >
     <gridftp  url="gsiftp://tg-grid.uc.teragrid.org" /> 
     <jobmanager universe="vanilla" url="tg-grid.uc.teragrid.org/jobmanager-pbs" major="2" />
-    <workdirectory >/home/benc</workdirectory>
     <profile namespace="globus" key="project">TG-CCR080002N</profile>
+    <workdirectory >/home/benc/swifttest</workdirectory>
   </pool>
 
 </config>

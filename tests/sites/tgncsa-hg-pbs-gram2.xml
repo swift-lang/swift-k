@@ -3,7 +3,7 @@
   <pool handle="tgncsa-hg" >
     <gridftp  url="gsiftp://gt2-gridftp-hg.ncsa.teragrid.org" /> 
     <jobmanager universe="vanilla" url="grid-hg.ncsa.teragrid.org/jobmanager-pbs" major="2" />
-    <workdirectory >/home/ac/benc</workdirectory>
+    <workdirectory >/home/ac/benc/swifttest</workdirectory>
     <profile namespace="globus" key="project">TG-CCR080002N</profile>
   </pool>
 

@@ -3,7 +3,7 @@
   <pool handle="tguc" >
     <gridftp  url="gsiftp://tg-grid.uc.teragrid.org" /> 
 <execution provider="gt4" jobmanager="Fork" url="tg-grid.uc.teragrid.org" />
-    <workdirectory >/home/benc</workdirectory>
+    <workdirectory >/home/benc/swifttest</workdirectory>
   </pool>
 
 </config>

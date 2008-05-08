@@ -3,7 +3,7 @@
   <pool handle="tgtacc" >
     <gridftp  url="gsiftp://tg-viz-login.tacc.teragrid.org" /> 
     <jobmanager universe="vanilla" url="tg-viz-login.tacc.teragrid.org/jobmanager-fork" major="2" />
-    <workdirectory >/home/teragrid/tg458015</workdirectory>
+    <workdirectory >/home/teragrid/tg458015/swifttest</workdirectory>
   </pool>
 
 </config>
