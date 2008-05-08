@@ -34,6 +34,7 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.scheduler.submitQueue.GlobalSubmitQueue;
 import org.globus.cog.karajan.scheduler.submitQueue.HostSubmitQueue;
 import org.globus.cog.karajan.scheduler.submitQueue.InstanceSubmitQueue;
+import org.globus.cog.karajan.scheduler.submitQueue.NonBlockingCancel;
 import org.globus.cog.karajan.scheduler.submitQueue.NonBlockingSubmit;
 import org.globus.cog.karajan.scheduler.submitQueue.SubmitQueue;
 import org.globus.cog.karajan.util.BoundContact;
@@ -650,13 +651,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public void cancelTask(Task task) {
 		TaskHandler handler = getHandler(task);
 		if (handler != null) {
-			try {
-				handler.cancel(task);
-			}
-			catch (Exception e) {
-				// force it
-				task.setStatus(Status.CANCELED);
-			}
+			new NonBlockingCancel(handler, task).go();
 		}
 	}
 
