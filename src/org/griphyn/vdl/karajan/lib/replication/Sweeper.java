@@ -7,10 +7,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.griphyn.vdl.karajan.lib.Execute;
+import org.apache.log4j.Logger;
 
 
 public class Sweeper extends Thread {
+	public static final Logger logger = Logger.getLogger(Sweeper.class);
+	
 	public static final int SWEEP_INTERVAL = 10000;
 	private static Sweeper sweeper;
 
@@ -50,7 +52,7 @@ public class Sweeper extends Thread {
 						((ReplicationManager) i.next()).checkTasks();
 					}
 					catch (Exception e) {
-						Execute.logger.warn(e);
+						logger.warn("Failed to check queued tasks", e);
 					}
 				}
 			}

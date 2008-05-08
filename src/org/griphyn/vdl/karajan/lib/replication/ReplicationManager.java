@@ -15,7 +15,7 @@ import org.griphyn.vdl.util.VDL2Config;
 
 public class ReplicationManager {
 	public static final Logger logger = Logger.getLogger(ReplicationManager.class);
-	
+
 	// maybe a silly question, but how does one safely extends enums?
 	public static final int STATUS_NEEDS_REPLICATION = 100;
 
@@ -23,20 +23,22 @@ public class ReplicationManager {
 	private long s;
 	private long s2;
 	private Map queued;
-	private int minQueueTime;
+	private int minQueueTime, limit;
 	private boolean enabled;
+	private ReplicationGroups replicationGroups;
 
-	public ReplicationManager() {
+	public ReplicationManager(ReplicationGroups replicationGroups) {
+		this.replicationGroups = replicationGroups;
 		queued = new HashMap();
 		try {
 			minQueueTime = Integer.parseInt(VDL2Config.getConfig().getProperty(
 					"replication.min.queue.time"));
-			enabled = Boolean.valueOf(VDL2Config.getConfig().getProperty(
-					"replication.enabled")).booleanValue();
+			enabled = Boolean.valueOf(VDL2Config.getConfig().getProperty("replication.enabled")).booleanValue();
+			limit = Integer.parseInt(VDL2Config.getConfig().getProperty("replication.limit"));
 		}
 		catch (Exception e) {
-			logger.warn("Failed to get value of replication.min.queue.time property " +
-					"from Swift configuration. Using default (60s).", e);
+			logger.warn("Failed to get value of replication.min.queue.time property "
+					+ "from Swift configuration. Using default (60s).", e);
 			minQueueTime = 60;
 		}
 		if (enabled) {
@@ -49,7 +51,7 @@ public class ReplicationManager {
 			return;
 		}
 		synchronized (queued) {
-			queued.put(task.getIdentity(), time);
+			queued.put(task, time);
 		}
 	}
 
@@ -59,7 +61,7 @@ public class ReplicationManager {
 		}
 		Date submitted;
 		synchronized (queued) {
-			submitted = (Date) queued.remove(task.getIdentity());
+			submitted = (Date) queued.remove(task);
 		}
 		if (submitted != null) {
 			long delta = (time.getTime() - submitted.getTime()) / 1000;
@@ -104,11 +106,12 @@ public class ReplicationManager {
 
 	private boolean shouldBeReplicated(Task t, Date d) {
 		if (t.getStatus().getStatusCode() == STATUS_NEEDS_REPLICATION) {
-			//don't keep replicating the same job
+			// don't keep replicating the same job
 			return false;
 		}
 		long inTheQueue = (System.currentTimeMillis() - d.getTime()) / 1000;
-		if (n > 0 && inTheQueue > minQueueTime && inTheQueue > 3 * getMean()) {
+		if (n > 0 && inTheQueue > minQueueTime && inTheQueue > 3 * getMean()
+				&& replicationGroups.getGroupCount(t) < limit) {
 			return true;
 		}
 		else {

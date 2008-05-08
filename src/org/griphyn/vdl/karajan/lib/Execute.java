@@ -41,15 +41,14 @@ public class Execute extends GridExec {
 	public Execute() {
 		replicationGroups = new ReplicationGroups();
 	}
-
-	public void submitScheduled(Scheduler scheduler, Task task, VariableStack stack,
-			Object constraints) {
+	
+	protected void setTaskIdentity(VariableStack stack, Task task) {
+		super.setTaskIdentity(stack, task);
 		try {
 			String rg = TypeUtil.toString(A_REPLICATION_GROUP.getValue(stack, null));
 			if (rg != null) {
-				replicationGroups.add(rg, task);
+				replicationGroups.add(rg, task, getScheduler(stack));
 			}
-			super.submitScheduled(scheduler, task, stack, constraints);
 		}
 		catch (ExecutionException e) {
 			throw new KarajanRuntimeException(e);
@@ -86,7 +85,7 @@ public class Execute extends GridExec {
 			ReplicationManager rm = (ReplicationManager) stack.firstFrame().getVar(
 					REPLICATION_MANAGER);
 			if (rm == null) {
-				rm = new ReplicationManager();
+				rm = new ReplicationManager(replicationGroups);
 				stack.firstFrame().setVar(REPLICATION_MANAGER, rm);
 			}
 			return rm;
