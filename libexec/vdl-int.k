@@ -428,13 +428,14 @@ namespace("vdl"
 						)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
 					)
-					catch(".*Replica cleanup.*"
-						log(LOG:DEBUG, "APPLICATION_REPLICA_KILLED jobid={jobid}")
+					catch("^Abort$"
+						log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
 							cleanupFiles(cacheFilesToRemove, rhost)
 						)
+						throw(exception)
 					)
-					catch(".*"
+					catch("^(?!Abort)$"
 						vdl:setprogress("Failed but can retry")
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false

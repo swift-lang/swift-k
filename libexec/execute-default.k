@@ -19,10 +19,13 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 							discard(append(replicationChannel, true)) //trigger the first job
 							replicationGroup := uid()
 							parallelFor(i, replicationChannel
-								execute2(
-									tr, maybe(arguments=arguments), 
-									maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
-									stagein, stageout, replicationGroup, replicationChannel
+								try(
+									execute2(
+										tr, maybe(arguments=arguments), 
+										maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
+										stagein, stageout, replicationGroup, replicationChannel
+									)
+									catch("^Abort$")
 								)
 							)
 						)
