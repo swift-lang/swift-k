@@ -162,6 +162,7 @@ log "INF=$INF"
 log "OUTF=$OUTF"
 log "KICKSTART=$KICKSTART"
 log "ARGS=$@"
+log "ARGC=$#"
 
 IFS="|"
 
