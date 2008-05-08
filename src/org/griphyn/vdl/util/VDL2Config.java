@@ -78,6 +78,7 @@ public class VDL2Config extends Properties {
 		
 		put("replication.enabled", "false");
 		put("replication.min.queue.time", "60");
+		put("replication.limit", "3");
 	}
 
 	private VDL2Config(VDL2Config other) {
