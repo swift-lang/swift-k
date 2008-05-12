@@ -1,3 +1,9 @@
+(05/12/2008)
+
+*** Updated settings such that callback servers (and who knows
+    what else) are reported to the services using their host
+    names instead of a resolved IP address.
+
 (04/30/2008)
 
 *** Print a warning instead of failing when redirection is
