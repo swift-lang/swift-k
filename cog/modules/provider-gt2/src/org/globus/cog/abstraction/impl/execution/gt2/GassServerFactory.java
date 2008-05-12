@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.globus.common.CoGProperties;
 import org.globus.io.gass.server.GassServer;
+import org.globus.util.Util;
 import org.ietf.jgss.GSSCredential;
 
 public class GassServerFactory {
@@ -22,15 +23,14 @@ public class GassServerFactory {
     public synchronized static GassServer getGassServer(GSSCredential credential)
             throws GassServerException {
         if (cogIP == null) {
-            if (CoGProperties.getDefault().getIPAddress() == null) {
+            cogIP = Util.getLocalHostAddress();
+            if (cogIP == null) {
                 throw new GassServerException(
                         "Could not determine this host's IP address. Please set an IP address in cog.properties");
-            } else {
-                cogIP = CoGProperties.getDefault().getIPAddress();
             }
         } else if (!cogIP.equalsIgnoreCase(CoGProperties.getDefault()
                 .getIPAddress())) {
-            cogIP = CoGProperties.getDefault().getIPAddress();
+            cogIP = Util.getLocalHostAddress();
             shutdownGassServers();
         }
         GassServer server;
