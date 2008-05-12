@@ -103,8 +103,8 @@
 			<replacevalue>SWIFT_HOME</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift">
-			<replacetoken>LOCALCLASSPATH=$CLASSPATH$CPDELIM$SWIFT_HOME/etc</replacetoken>
-			<replacevalue>LOCALCLASSPATH=$CLASSPATH$CPDELIM$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec</replacevalue>
+			<replacetoken>LOCALCLASSPATH=$SWIFT_HOME/etc</replacetoken>
+			<replacevalue>LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift">
 			<replacetoken>updateOptions "$SWIFT_HOME" "SWIFT_HOME"
@@ -126,8 +126,8 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 			<replacevalue>SWIFT_HOME</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift.bat">
-			<replacetoken>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc</replacetoken>
-			<replacevalue>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec</replacevalue>
+			<replacetoken>set LOCALCLASSPATH=%SWIFT_HOME%\etc</replacetoken>
+			<replacevalue>set LOCALCLASSPATH=%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift.bat">
 			<replacetoken>set COG_OPTS=</replacetoken>
