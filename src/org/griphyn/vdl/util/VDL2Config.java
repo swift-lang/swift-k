@@ -93,6 +93,10 @@ public class VDL2Config extends Properties {
 			files.add(file);
 			super.load(new FileInputStream(f));
 		}
+		String hostname = getHostName();
+		if (hostname != null) {
+		    CoGProperties.getDefault().setHostName(hostname);
+		}
 		String ip = getIP();
 		if (ip != null) {
 			CoGProperties.getDefault().setIPAddress(ip);
@@ -166,6 +170,10 @@ public class VDL2Config extends Properties {
 
 	public String getIP() {
 		return getProperty(VDL2ConfigProperties.IP_ADDRESS);
+	}
+	
+	public String getHostName() {
+	    return getProperty(VDL2ConfigProperties.HOST_NAME);
 	}
 
 	public String getTCPPortRange() {

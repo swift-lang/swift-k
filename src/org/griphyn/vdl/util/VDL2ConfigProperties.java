@@ -10,6 +10,7 @@ public class VDL2ConfigProperties {
 	public static final String POOL_FILE = "sites.file";
 	public static final String TC_FILE = "tc.file";
 	public static final String IP_ADDRESS = "ip.address";
+	public static final String HOST_NAME = "hostname";
 	public static final String TCP_PORT_RANGE = "tcp.port.range";
 	public static final String LAZY_ERRORS = "lazy.errors";
 	public static final String PGRAPH = "pgraph";
@@ -35,6 +36,11 @@ public class VDL2ConfigProperties {
 						+ "this machine which is generally used for Globus callbacks. "
 						+ "Normally this should be auto-detected, but if you have "
 						+ "multiple network cards or NAT then you may need to set this"));
+		PROPERTIES.put(HOST_NAME, new PropInfo("string", 
+		        "Can be used to specify a publicly reacheable DNS name or IP address for "
+                        + "this machine which is generally used for Globus callbacks. "
+                        + "Normally this should be auto-detected, but if you do "
+                        + "not have a public DNS name, you may want to set this."));
 		PROPERTIES.put(TCP_PORT_RANGE, new PropInfo("start,end",
 				"A TCP port range can be specified to "
 						+ "restrict the ports on which GRAM callback services are started. "
