@@ -88,7 +88,7 @@ config/gt4_0_0/share/schema/wsrf/servicegroup/WS-ServiceGroup.wsdl share/schema/
 config/gt4_0_0/share/schema/wsrf/servicegroup/WS-ServiceGroup.xsd share/schema/wsrf/servicegroup/WS-ServiceGroup.xsd
 config/gt4_0_0/share/schema/wsrf/servicegroup/WS-ServiceGroup_bindings.wsdl share/schema/wsrf/servicegroup/WS-ServiceGroup_bindings.wsdl
 config/gt4_0_0/share/schema/wsrf/servicegroup/WS-ServiceGroup_service.wsdl share/schema/wsrf/servicegroup/WS-ServiceGroup_service.wsdl
-config/gt4_0_0/client-config.wsdd client-config.wsdd
+config/gt4_0_0/etc/client-config.wsdd etc/client-config.wsdd
 config/gt4_0_0/etc/globus_cas_service/registration.xml etc/globus_cas_service/registration.xml
 config/gt4_0_0/etc/globus_cas_service/casDbSchema/cas_pgsql_database_schema.sql etc/globus_cas_service/casDbSchema/cas_pgsql_database_schema.sql
 config/gt4_0_0/etc/globus_cas_service/casDbSchema/cas_mysql_database_schema.sql etc/globus_cas_service/casDbSchema/cas_mysql_database_schema.sql
