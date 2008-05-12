@@ -12,6 +12,7 @@
 
     <globalConfiguration>
         <parameter name="sendXsiTypes" value="true"/>
+        <parameter name="disableDNS" value="true"/>
 
 	<!-- Authentication service -->
 	<parameter name="authenticationService" 
