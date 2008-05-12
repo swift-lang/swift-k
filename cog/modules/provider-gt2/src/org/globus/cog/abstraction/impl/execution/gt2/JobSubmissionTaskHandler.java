@@ -426,7 +426,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 }
                 catch (Exception e) {
                     throw new IllegalSpecException(
-                            "Cannot parse the user defined attributes");
+                            "Cannot parse the user defined attributes", e);
                 }
             }
 
