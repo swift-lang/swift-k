@@ -74,129 +74,79 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	static {
 		setArguments(GridExec.class, new Arg[] { A_EXECUTABLE, A_ARGS, A_ARGUMENTS, A_HOST,
 				A_STDOUT, A_STDERR, A_STDOUTLOCATION, A_STDERRLOCATION, A_STDIN, A_PROVIDER,
-				A_COUNT, A_HOST_COUNT, A_JOBTYPE, A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME, A_ENVIRONMENT, A_QUEUE,
-				A_PROJECT, A_MINMEMORY, A_MAXMEMORY, A_REDIRECT, A_SECURITY_CONTEXT, A_DIRECTORY,
-				A_NATIVESPEC, A_DELEGATION, A_ATTRIBUTES, C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH });
+				A_COUNT, A_HOST_COUNT, A_JOBTYPE, A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME,
+				A_ENVIRONMENT, A_QUEUE, A_PROJECT, A_MINMEMORY, A_MAXMEMORY, A_REDIRECT,
+				A_SECURITY_CONTEXT, A_DIRECTORY, A_NATIVESPEC, A_DELEGATION, A_ATTRIBUTES,
+				C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH });
 	}
 
 	public void submitTask(VariableStack stack) throws ExecutionException {
 		try {
 			JobSpecificationImpl js = new JobSpecificationImpl();
 			Task task = new TaskImpl();
-			NamedArguments named = ArgUtil.getNamedArguments(stack);
-			Iterator i = named.getNames();
-			Object host = null;
-			String provider = null;
-			boolean redirect = false;
-			while (i.hasNext()) {
-				String name = (String) i.next();
 
-				Object value = named.getArgument(name);
-				if (name.equals(A_EXECUTABLE.getName())) {
-					js.setExecutable(TypeUtil.toString(value));
-				}
-				else if (name.equals(A_ARGS.getName()) || name.equals(A_ARGUMENTS.getName())) {
-					if (value instanceof List) {
-						js.setArguments(stringify((List) value));
-					}
-					else if (value instanceof VariableArguments) {
-						js.setArguments(stringify(((VariableArguments) value).getAll()));
-					}
-					else {
-						js.setArguments(TypeUtil.toString(value));
-					}
-				}
-				else if (name.equals(A_REDIRECT.getName())) {
-					redirect = TypeUtil.toBoolean(value);
-				}
-				else if (name.equals(A_STDIN.getName())) {
-					js.setStdInput(TypeUtil.toString(value));
-				}
-				else if (name.equals(A_STDOUT.getName())) {
-					js.setStdOutput(TypeUtil.toString(value));
-				}
-                else if (name.equals(A_STDOUTLOCATION.getName())) {
-                    js.setStdOutputLocation(new FileLocation.Impl(TypeUtil.toInt(value)));
-                }
-				else if (name.equals(A_STDERR.getName())) {
-					js.setStdError(TypeUtil.toString(value));
-				}
-                else if (name.equals(A_STDERRLOCATION.getName())) {
-                    js.setStdErrorLocation(new FileLocation.Impl(TypeUtil.toInt(value)));
-                }
-				else if (name.equals(A_DIRECTORY.getName())) {
-					js.setDirectory(TypeUtil.toString(value));
-				}
-				else if (name.equals(A_JOBTYPE.getName())) {
-					js.setAttribute("jobType", value);
-				}
-				else if (name.equals(A_NATIVESPEC.getName())) {
-					js.setSpecification(TypeUtil.toString(value));
-				}
-				else if (name.equals(A_PROVIDER.getName())) {
-					provider = TypeUtil.toString(value);
-				}
-				else if (name.equals(A_SECURITY_CONTEXT.getName())) {
-					// set later
-				}
-				else if (name.equals(A_DELEGATION.getName())) {
-					js.setDelegationEnabled(TypeUtil.toBoolean(value));
-				}
-				else if (name.equals(A_HOST.getName())) {
-					host = value;
-				}
-				else if (name.equals(A_ENVIRONMENT.getName())) {
-					if (value instanceof Map) {
-						Iterator j = ((Map) value).entrySet().iterator();
-						while (j.hasNext()) {
-							Map.Entry e = (Map.Entry) j.next();
-							js.addEnvironmentVariable((String) e.getKey(), (String) e.getValue());
-						}
-					}
-					else if (value instanceof String) {
-						StringTokenizer st = new StringTokenizer((String) value, ",");
-						while (st.hasMoreTokens()) {
-							String el = st.nextToken().trim();
-							String[] nv = el.split("=");
-							if (nv.length > 2 || el.length() == 0) {
-								throw new ExecutionException("Invalid environment entry: '" + el
-										+ "'");
-							}
-							else if (nv.length == 1) {
-								js.addEnvironmentVariable(nv[0].trim(), "");
-							}
-							else {
-								js.addEnvironmentVariable(nv[0].trim(), nv[1].trim());
-							}
-						}
-					}
-				}
-				else if (name.equals(A_ATTRIBUTES.getName())) {
-					Map m = (Map) checkClass(A_ATTRIBUTES.getValue(stack), Map.class, "map");
-					Iterator ai = m.entrySet().iterator();
-					while (ai.hasNext()) {
-						Map.Entry e = (Map.Entry) ai.next();
-						try {
-							js.setAttribute((String) e.getKey(), e.getValue());
-						}
-						catch (ClassCastException ex) {
-							throw new ExecutionException("Invalid attribute name (" + e.getKey()
-									+ ")", ex);
-						}
-					}
-				}
-				else if (name.equals(A_BATCH.getName())) {
-					js.setBatchJob(TypeUtil.toBoolean(value));
-				}
-				else {
-					js.setAttribute(name, value);
-				}
+			js.setExecutable(TypeUtil.toString(A_EXECUTABLE.getValue(stack)));
+			if (A_ARGUMENTS.isPresent(stack)) {
+				setArguments(js, A_ARGUMENTS.getValue(stack));
 			}
-
-			if (redirect) {
+			else if (A_ARGS.isPresent(stack)) {
+				setArguments(js, A_ARGS.getValue(stack));
+			}
+			
+			if (TypeUtil.toBoolean(A_REDIRECT.getValue(stack))) {
 				js.setStdOutputLocation(FileLocation.MEMORY);
 				js.setStdErrorLocation(FileLocation.MEMORY);
 			}
+
+			String stmp;
+			int itmp;
+			stmp = TypeUtil.toString(A_STDIN.getValue(stack, null));
+			if (stmp != null) {
+				js.setStdInput(stmp);
+			}
+			stmp = TypeUtil.toString(A_STDOUT.getValue(stack, null));
+			if (stmp != null) {
+				js.setStdOutput(stmp);
+			}
+			stmp = TypeUtil.toString(A_STDERR.getValue(stack, null));
+			if (stmp != null) {
+				js.setStdError(stmp);
+			}
+			if (A_STDOUTLOCATION.isPresent(stack)) {
+				js.setStdOutputLocation(new FileLocation.Impl(
+						TypeUtil.toInt(A_STDOUTLOCATION.getValue(stack))));
+			}
+			if (A_STDERRLOCATION.isPresent(stack)) {
+				js.setStdErrorLocation(new FileLocation.Impl(
+						TypeUtil.toInt(A_STDERRLOCATION.getValue(stack))));
+			}
+			stmp = TypeUtil.toString(A_DIRECTORY.getValue(stack, null));
+			if (stmp != null) {
+				js.setDirectory(stmp);
+			}
+			stmp = TypeUtil.toString(A_JOBTYPE.getValue(stack, null));
+			if (stmp != null) {
+				js.setAttribute("jobType", stmp);
+			}
+			stmp = TypeUtil.toString(A_NATIVESPEC.getValue(stack, null));
+			if (stmp != null) {
+				js.setSpecification(stmp);
+			}
+			js.setDelegationEnabled(TypeUtil.toBoolean(A_DELEGATION.getValue(stack)));
+			if (A_ENVIRONMENT.isPresent(stack)) {
+				setEnvironment(js, A_ENVIRONMENT.getValue(stack));
+			}
+			if (A_ATTRIBUTES.isPresent(stack)) {
+				setAttributes(js, A_ATTRIBUTES.getValue(stack));
+			}
+			if (A_ATTRIBUTES.isPresent(stack)) {
+				setAttributes(js, A_ATTRIBUTES.getValue(stack));
+			}
+			js.setBatchJob(TypeUtil.toBoolean(A_BATCH.getValue(stack)));
+			setMiscAttributes(js, stack);
+
+			Object host = A_HOST.getValue(stack, null);
+			String provider = TypeUtil.toString(A_PROVIDER.getValue(stack, null));
 
 			VariableArguments env = C_ENVIRONMENT.get(stack);
 			Iterator j = env.iterator();
@@ -278,6 +228,71 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 		}
 	}
 
+	protected void setArguments(JobSpecification js, Object value) {
+		if (value instanceof List) {
+			js.setArguments(stringify((List) value));
+		}
+		else if (value instanceof VariableArguments) {
+			js.setArguments(stringify(((VariableArguments) value).getAll()));
+		}
+		else {
+			js.setArguments(TypeUtil.toString(value));
+		}
+	}
+
+	protected void setEnvironment(JobSpecification js, Object value) throws ExecutionException {
+		if (value instanceof Map) {
+			Iterator j = ((Map) value).entrySet().iterator();
+			while (j.hasNext()) {
+				Map.Entry e = (Map.Entry) j.next();
+				js.addEnvironmentVariable((String) e.getKey(), (String) e.getValue());
+			}
+		}
+		else if (value instanceof String) {
+			StringTokenizer st = new StringTokenizer((String) value, ",");
+			while (st.hasMoreTokens()) {
+				String el = st.nextToken().trim();
+				String[] nv = el.split("=");
+				if (nv.length > 2 || el.length() == 0) {
+					throw new ExecutionException("Invalid environment entry: '" + el + "'");
+				}
+				else if (nv.length == 1) {
+					js.addEnvironmentVariable(nv[0].trim(), "");
+				}
+				else {
+					js.addEnvironmentVariable(nv[0].trim(), nv[1].trim());
+				}
+			}
+		}
+	}
+
+	protected void setAttributes(JobSpecification js, Object value) throws ExecutionException {
+		Map m = (Map) checkClass(value, Map.class, "map");
+		Iterator ai = m.entrySet().iterator();
+		while (ai.hasNext()) {
+			Map.Entry e = (Map.Entry) ai.next();
+			try {
+				js.setAttribute((String) e.getKey(), e.getValue());
+			}
+			catch (ClassCastException ex) {
+				throw new ExecutionException("Invalid attribute name (" + e.getKey() + ")", ex);
+			}
+		}
+	}
+
+	protected final static Arg[] MISC_ATTRS = new Arg[] { A_COUNT, A_HOST_COUNT, A_JOBTYPE,
+			A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME, A_QUEUE, A_PROJECT, A_MINMEMORY, A_MAXMEMORY };
+
+	protected void setMiscAttributes(JobSpecification js, VariableStack stack) {
+		for (int i = 0; i < MISC_ATTRS.length; i++) {
+			setAttributeIfPresent(MISC_ATTRS[i], js, stack);
+		}
+	}
+	
+	protected void setAttributeIfPresent(Arg arg, JobSpecification js, VariableStack stack) {
+		
+	}
+
 	private List stringify(List l) {
 		ArrayList sl = new ArrayList(l.size());
 		Iterator i = l.iterator();
@@ -311,14 +326,14 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	protected void taskCompleted(StatusEvent e, VariableStack stack) throws ExecutionException {
 		Task t = (Task) e.getSource();
 		returnOutputs(t, stack);
-        if (!TypeUtil.toBoolean(A_FAIL_ON_JOB_ERROR.getValue(stack))) {
-            Arg.VARGS.ret(stack, new Integer(0));
-        }
+		if (!TypeUtil.toBoolean(A_FAIL_ON_JOB_ERROR.getValue(stack))) {
+			Arg.VARGS.ret(stack, new Integer(0));
+		}
 		super.taskCompleted(e, stack);
 	}
 
 	protected void returnOutputs(Task t, VariableStack stack) throws ExecutionException {
-        JobSpecification spec = (JobSpecification) t.getSpecification();
+		JobSpecification spec = (JobSpecification) t.getSpecification();
 		if (t.getStdOutput() != null && FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
 			STDOUT.ret(stack, t.getStdOutput());
 		}
