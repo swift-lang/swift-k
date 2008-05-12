@@ -26,8 +26,6 @@ import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.scheduler.Scheduler;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
@@ -99,7 +97,6 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 			}
 
 			String stmp;
-			int itmp;
 			stmp = TypeUtil.toString(A_STDIN.getValue(stack, null));
 			if (stmp != null) {
 				js.setStdInput(stmp);
