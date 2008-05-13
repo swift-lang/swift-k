@@ -335,7 +335,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
         if (FileLocation.LOCAL.overlaps(spec.getExecutableLocation())) {
             throw new IllegalSpecException(
-                    "The gt4.0.0 provider does not support local executables");
+                    "The GT4.0.x provider does not support local executables");
         }
         desc.setExecutable(spec.getExecutable());
 
@@ -364,7 +364,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             if ("true".equals(AbstractionProperties.getProperties("gt4")
                     .getProperty("fail.on.redirect"))) {
                 throw new IllegalSpecException(
-                        "The gt4.0.0 provider does not support redirection");
+                        "The GT4.0.x provider does not support redirection");
             }
             else {
                 synchronized (JobSubmissionTaskHandler.class) {
