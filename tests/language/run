@@ -4,7 +4,7 @@
 # in which you found this script, so that it can find the working/ etc
 # subdirectories.
 
-pushd working
+pushd working > /dev/null
 
 if [ "X$1" != "X-resume" ]; then
   echo Cleaning previous test results
@@ -16,10 +16,10 @@ fi
 for a in *.swift; do 
   b=$(basename $a .swift).xml
   if [ ! -f $b ]; then
-    echo Attempting vdlc known-good $a
+    echo -n "known-good $a: "
     vdlc $a
   else
-    echo Skipping $a
+    echo Skipping known-good $a
   fi
   VDLCRETURN=$?
   if [ "$VDLCRETURN" -ne "0" ]; then 
@@ -32,18 +32,18 @@ for a in *.swift; do
     diff -u ../working-base/$b $b
     exit 1
   fi
-  echo ----------===========================----------
+  echo PASS
 done
-popd
+popd > /dev/null
 
-pushd not-working
-rm *.?ml
+pushd not-working > /dev/null
+rm *.?ml *.test-output
 for a in *.swift; do
 
-  echo Attempting vdlc known-bad $a
-  vdlc $a
+  echo -n "known-bad $a: "
+  vdlc $a > $a.test-output 2>&1
   if [ "$?" -eq "0" ]; then echo "TEST FAILED - COMPILE SUCCEEDED"; exit 2; fi
-  echo ----------===========================----------
+  echo PASS
 done
 echo Finished all syntax tests
 exit 0
