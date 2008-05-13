@@ -12,6 +12,7 @@
 		</ant>
 		<antcall target="provider-deef"/>
 		<antcall target="provider-coaster"/>
+		<antcall target="provider-condor"/>
 	</target>
 	
 	<target name="provider-deef" if="with-provider-deef">
@@ -22,6 +23,11 @@
 	<target name="provider-coaster" if="with-provider-coaster">
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="provider-coaster"/>
+		</ant>
+	</target>
+	<target name="provider-condor" if="with-provider-condor">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-condor"/>
 		</ant>
 	</target>
 </project>
