@@ -27,23 +27,21 @@ public class Boot {
 			System.setProperty("GLOBUS_LOCATION", globusLocation);
 			System.setProperty("org.globus.wsrf.container.webroot", configPath);
 			ContainerConfig.getConfig().setOption(ContainerConfig.WSRF_LOCATION, globusLocation);
-			String ip = CoGProperties.getDefault().getIPAddress();
-			if (ip != null) {
-				ContainerConfig.getConfig().setOption(ContainerConfig.LOGICAL_HOST, ip);
-				// ??
-				CoGProperties.getDefault().setHostName(ip);
-			}
+			String hostname = CoGProperties.getDefault().getHostName();
+            if (hostname != null) {
+                ContainerConfig.getConfig().setOption(ContainerConfig.LOGICAL_HOST, hostname);
+            }
 			ContainerConfig.getConfig().setOption(ContainerConfig.INTERNAL_WEB_ROOT_PROPERTY,
 					AbstractionProperties.getProperties("gt4.0.0").getProperty("server.webroot"));
 			AxisProperties.setProperty(EngineConfigurationFactoryDefault.OPTION_CLIENT_CONFIG_FILE,
-					configPath + File.separator + "client-config.wsdd");
+					configPath + File.separator + "etc" + File.separator + "client-config.wsdd");
 			BootUtil.checkConfigDir(configPath, "config-gt4_0_0.index", Boot.class.getClassLoader());
 		}
 		catch (Exception e) {
-			logger.error("Error booting gt4.0.0", e);
+			logger.error("Error booting the GT4.0.x provider", e);
 		}
 		catch (Error e) {
-			logger.fatal("Java Error caught; this is bad", e);
+			logger.fatal("Java Error caught; this may indicate a problem with the class loading mechanism.", e);
 			throw e;
 		}
 	}
