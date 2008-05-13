@@ -90,7 +90,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 			else if (A_ARGS.isPresent(stack)) {
 				setArguments(js, A_ARGS.getValue(stack));
 			}
-			
+
 			if (TypeUtil.toBoolean(A_REDIRECT.getValue(stack))) {
 				js.setStdOutputLocation(FileLocation.MEMORY);
 				js.setStdErrorLocation(FileLocation.MEMORY);
@@ -280,14 +280,19 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	protected final static Arg[] MISC_ATTRS = new Arg[] { A_COUNT, A_HOST_COUNT, A_JOBTYPE,
 			A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME, A_QUEUE, A_PROJECT, A_MINMEMORY, A_MAXMEMORY };
 
-	protected void setMiscAttributes(JobSpecification js, VariableStack stack) {
+	protected void setMiscAttributes(JobSpecification js, VariableStack stack)
+			throws ExecutionException {
 		for (int i = 0; i < MISC_ATTRS.length; i++) {
 			setAttributeIfPresent(MISC_ATTRS[i], js, stack);
 		}
 	}
-	
-	protected void setAttributeIfPresent(Arg arg, JobSpecification js, VariableStack stack) {
-		
+
+	protected void setAttributeIfPresent(Arg arg, JobSpecification js, VariableStack stack)
+			throws ExecutionException {
+		Object value = arg.getValue(stack, null);
+		if (value != null) {
+			js.setAttribute(arg.getName(), value);
+		}
 	}
 
 	private List stringify(List l) {
