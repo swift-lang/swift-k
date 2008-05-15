@@ -159,18 +159,6 @@ procedure and output parameters specify outputs. Our helloworld greeting
 procedure already uses an output parameter, t, which indicates where the
 greeting output will go. In this section, we will add an input parameter
 to the greeting function.</para>
-<para>
-We will also encounter a new built-in data type, 'string'.
-</para>
-<para>The code for this section can be found in 
-<filename>parameter.swift</filename>. It can be
-invoked using the swift command, with output appearing in 
-<filename>hello2.txt</filename>:</para>
-
-<screen>
-$ <userinput>swift parameter.swift</userinput>
-</screen>
-
 <para>The code changes from <filename>first.swift</filename>
 are highlighted below.</para>
 
@@ -198,9 +186,15 @@ file on disk.</para>
 <para>We have modified the invocation of greeting so that a greeting
 string is supplied.</para>
 
-</section>
+<para>The code for this section can be found in 
+<filename>parameter.swift</filename>. It can be
+invoked using the swift command, with output appearing in 
+<filename>hello2.txt</filename>:</para>
 
-<section><title>Calling the same function with different parameters</title>
+<screen>
+$ <userinput>swift parameter.swift</userinput>
+</screen>
+
 <para>Now that we can choose our greeting text, we can call the same
 procedure with different parameters to generate several output files with
 different greetings. The code is in manyparam.swift and can be run as before
@@ -232,37 +226,12 @@ of procedures.</para>
 working directory (english.txt, francais.txt and nihongo.txt) each containing
 a greeting in a different language.</para>
 
-</section>
-
-<section><title>Named and optional parameters</title>
 <para>In addition to specifying parameters positionally, parameters can
-be named, and if desired a default value can be specified:
-
-<programlisting>
-(messagefile t) greeting (string s="hello") {
-    app {
-        echo s stdout=@filename(t);
-    }
-}
-</programlisting>
-
-When we invoke the procedure, we can specify values for the parameters
-by name:
-
-<programlisting>
-french = greeting(s="bonjour");
-</programlisting>
-
-or we can let the default value apply:
-
-<programlisting>
-english = greeting();
-</programlisting>
-
-</para>
+be named, and if desired a default value can be specified - see 
+<link linkend="tutorial.named-parameters">Named and optional
+parameters</link>.</para>
 </section>
-
-<section><title>Another procedure</title>
+<section><title>Adding another application</title>
 <para>
 Now we'll define a new application procedure. The procedure we define
 will capitalise all the words in the input file.
@@ -270,13 +239,21 @@ will capitalise all the words in the input file.
 
 <para>To do this, we'll use the unix 'tr' (translate) utility.
 
-Here is an example of <command>tr</command> at the unix
-command line, not using swift:</para>
+Here is an example of using <command>tr</command> on the unix
+command line, not using Swift:</para>
 
 <screen>
 $ <userinput>echo hello | tr '[a-z]' '[A-Z]'</userinput>
 HELLO
 </screen>
+
+<para>
+There are several steps:
+<itemizedlist>
+<listitem><para>transformation catalog</para></listitem>
+<listitem><para>application block</para></listitem>
+</itemizedlist>
+</para>
 
 <para>First we need to modify the
 <firstterm>transformation catalog</firstterm> to define
@@ -286,125 +263,138 @@ There is already one entry specifying where <command>echo</command> can
 be found. Add a new line to the file, specifying where 
 <command>tr</command> can be found
 (usually in <filename>/usr/bin/tr</filename>
- but it may vary depending on your system), like this:
+but it may differ on your system), like this:
 </para>
 
 <programlisting>
-local      tr  /usr/bin/tr  INSTALLED INTEL32::LINUX null
+local      translate  /usr/bin/tr  INSTALLED INTEL32::LINUX null
 </programlisting>
 
 <para>For now, ignore all of the fields except the second and the third.
-The second field 'tr' specifies a logical application name and the
-third specifies the location of the executable for that application.
+The second field 'translate' specifies a logical application name and the
+third specifies the location of the application executable.
 </para>
 
 <para>Now that we have defined where to find <command>tr</command>, we can
-use it in SwiftScript:
+use it in SwiftScript.
 </para>
 
+<para>
+We can define a new procedure, <command>capitalise</command> which calls
+transform.
 <programlisting>
-type messagefile;
-type countfile;
-
-(messagefile t) greeting (string s) {
-    app {
-        echo s stdout=@filename(t);
-    }
-}
-
-(countfile t) countwords (messagefile f) {
-    app {
-        tc &quot;-w&quot; @filename(f) stdout=@filename(t);
-    }
-}
-
-messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
-countfile c &lt;&quot;count.txt&quot;&gt;;
-
-outfile = greeting(&quot;hello from Swift&quot;);
-c = countwords(outfile);
+(messagefile t) capitalise (messagefile f) {  
+    app {  
+        translate "[a-z]" "[A-Z]" stdin=@filename(f) stdout=@filename(t);  
+    }  
+}  
 </programlisting>
+</para>
 
-<para>We define a new data type for files containing counts (although
-like messagefile, we don't specify any internal structure for that
-file). Then we define a 'countwords' procedure which invokes the
-tr utility with appropriate parameters. Finally, we define a variable,
-c, which we map to count.txt and to which we assign the count of words
-in a greeting message.</para>
 
-<para>We can use the swift command to run 
-<filename>q13.swift</filename>:</para>
+<para>
+We can call capitalise like this:
+<programlisting>
+cfile = capitalise(outfile); 
+</programlisting>
+</para>
+
+<para>
+So a full program based on the first exercise might look like this:
+
+<programlisting>
+type messagefile;  
+  
+(messagefile t) greeting (string s) {  
+    app {  
+        echo s stdout=@filename(t);  
+    }  
+}  
+  
+(messagefile t) capitalise (messagefile f) {  
+    app {  
+        translate "[a-z]" "[A-Z]" stdin=@filename(f) stdout=@filename(t);  
+    }  
+}  
+  
+messagefile outfile &lt;"greeting.txt"&gt;;  
+messagefile cfile &lt;"capitalised.txt"&gt;;  
+  
+outfile = greeting("hello from Swift");  
+cfile = capitalise(outfile); 
+</programlisting>
+</para>
+
+<para>We can use the swift command to run this:
 
 <screen>
-$ <userinput>swift q13.swift</userinput>
+$ <userinput>swift t.swift</userinput>
 [...]
-$ <userinput>cat count.txt</userinput>
-  3 q13greeting.txt
+$ <userinput>cat capitalised.txt</userinput>
+HELLO FROM SWIFT
 </screen>
-
-<para>and thus we discover that the phrase &quot;hello from Swift&quot; contains
-precisely three words.</para>
+</para>
 
 </section>
 
 <section><title>Anonymous files</title>
 
 <para>In the previous section, the file 
-<filename>q13greeting.txt</filename> is used only to
+<filename>greeting.txt</filename> is used only to
 store an intermediate result. We don't really care about which name is used
-for the file, as no matter which intermediate name is used we will still
-get the same word count.</para>
+for the file, and we can let Swift choose the name.</para>
 
-<para>In this case, we can omit the filename mapping part of the variable
-declaration. Instead of:</para>
-
-<programlisting>
-messagefile outfile &lt;&quot;q13greeting.txt&quot;&gt;;
-</programlisting>
-
-<para>we can instead write:</para>
-
+<para>To do that, omit the mapping entirely when declaring outfile:
 <programlisting>
 messagefile outfile;
 </programlisting>
+</para>
 
-<para><filename>anonymous.swift</filename> contains the code and can be
-run in the usual way. After
-execution, the results can be found in
-<filename>count14.txt</filename>.</para>
-
-<screen>
-$ <userinput>cat count14.txt</userinput>
-     3 outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60
-</screen>
-
-<para>Observe that a generated name was automatically mapped
-to outfile. Here, Swift chose
-<filename>outfile-7ad257c2-c792-4f61-a0eb-96667c62ad60</filename>.
-but it will be differente each time.</para>
+<para>
+Swift will choose a filename, which in the present version will be
+in a subdirectory called <filename>_concurrent</filename>.
+</para>
 
 </section>
 
-<section><title>More on datatypes</title>
+<section><title>Datatypes</title>
 
 <para>
-As mentioned earlier, all data in variables and files has a datatype.  So
-far, we've seen the built-in 'string' data type and a simple user-defined
-datatype 'messagefile'.</para>
+All data in variables and files has a data type.  So
+far, we've seen two types:
 
-<para>
-SwiftScript has the additional built-in types, based on XML types:
-<firstterm>boolean</firstterm>, <firstterm>integer</firstterm> and
-<firstterm>float</firstterm>.
+<itemizedlist>
+<listitem>string - this is a built-in type for storing strings of text in
+memory, much like in other programming languages</listitem>
+<listitem>messagefile - this is a user-defined type used to mark
+files as containing messages</listitem>
+</itemizedlist>
 </para>
 
-<para>We've seen empty user-defined types already, which are used as
-markers on files that we don't need to look at the content of in SwiftScript.
-It is also possible to create types with structure, as in other
-programming languages.</para>
+<para>
+SwiftScript has the additional built-in types:
+<firstterm>boolean</firstterm>, <firstterm>integer</firstterm> and
+<firstterm>float</firstterm> that function much like their counterparts
+in other programming languages.
+</para>
 
-<para><filename>types.swift</filename> contains the code for this 
-exercise, based on the parameter.swift code.</para>
+<para>It is also possible to create user defined types with more
+structure, for example:
+<programlisting>
+type details {
+    string name;
+    string place;
+}
+</programlisting>
+Each element of the structured type can be accessed using a . like this:
+<programlisting>
+person.name = "john";
+</programlisting>
+</para>
+
+<para>
+The following complete program outputs a greeting using a user-defined
+structure type to hold parameters for the message:
 
 <programlisting>
 type messagefile;
@@ -429,16 +419,22 @@ messagefile outfile &lt;&quot;types.txt&quot;&gt;;
 
 outfile = greeting(person);
 </programlisting>
+</para>
 
-<para>We define a new type, details, with two members: a string and an integer.
+<para>
+Structured types can comprised marker types for files. See the later
+section on mappers for more information about this.
 </para>
 
 </section>
 
 <section><title>Arrays</title>
-<para>We can define arrays of values. For example, we could specify each
-word in a greeting as a separate element of a string array, as seen in
-<filename>q5.swift</filename>:</para>
+<para>We can define arrays using the [] suffix in a variable declaration:
+<programlisting>
+messagefile m[];
+</programlisting>
+This will declare an array of message files.
+</para>
 
 <programlisting>
 type messagefile;
@@ -1306,5 +1302,34 @@ nothing had ever gone wrong.
 </section>
 </section>
 
+<section><title>bits</title>
+<section id="tutorial.named-parameters"><title>Named and optional parameters</title>
+<para>In addition to specifying parameters positionally, parameters can
+be named, and if desired a default value can be specified:
+
+<programlisting>
+(messagefile t) greeting (string s="hello") {
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+</programlisting>
+
+When we invoke the procedure, we can specify values for the parameters
+by name:
+
+<programlisting>
+french = greeting(s="bonjour");
+</programlisting>
+
+or we can let the default value apply:
+
+<programlisting>
+english = greeting();
+</programlisting>
+
+</para>
+</section>
+</section>
 </article>
 
