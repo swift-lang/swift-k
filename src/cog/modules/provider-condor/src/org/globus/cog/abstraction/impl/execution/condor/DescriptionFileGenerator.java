@@ -44,6 +44,7 @@ public class DescriptionFileGenerator {
         }
 
         String argumentString = specification.getArgumentsAsString();
+        argumentString = argumentString.replace("\"", "\\\"");
         if (argumentString != null) {
             fileWriter.write("Arguments = " + argumentString + "\n");
         }
