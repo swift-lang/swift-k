@@ -2414,7 +2414,7 @@ the URI local://localhost.
 		</para>
 		<para>
 Filesystem access using scp (the SSH copy protocol) can be specified using the
-&lt;execution&gt; element:
+&lt;filesystem&gt; element:
 <screen>
 &lt;filesystem url="www11.i2u2.org" provider="ssh"/&gt;
 </screen>
