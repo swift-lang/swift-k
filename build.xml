@@ -118,6 +118,11 @@ updateOptions "$SWIFT_HOME" "swift.home"
 #large delays if /dev/random does not have enough entropy collected
 updateOptions "file:///dev/urandom" "java.security.egd"
 
+if [ "X$GLOBUS_HOSTNAME" == "X" ] &amp;&amp; [ "X$HOSTNAME" != "X" ]; then
+ GLOBUS_HOSTNAME=$HOSTNAME
+ export HOSTNAME
+fi
+
 </replacevalue>
 		</replace>
 
