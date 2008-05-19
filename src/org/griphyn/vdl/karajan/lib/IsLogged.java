@@ -29,6 +29,7 @@ public class IsLogged extends VDLFunction {
 		else {
 			path = Path.parse(TypeUtil.toString(p));
 		}
+		path = var.getPathFromRoot().append(path);
 		String file = var.getMapper().map(path).toString();
 		LogEntry entry = LogEntry.build(file);
 		Map map = getLogData(stack);
