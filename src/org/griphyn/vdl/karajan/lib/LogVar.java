@@ -31,8 +31,7 @@ public class LogVar extends VDLFunction {
             path = Path.parse(TypeUtil.toString(p));
         }
 		path = var.getPathFromRoot().append(path);
-		RestartLog.LOG_CHANNEL.ret(stack, var.getRoot().getParam("dbgname")
-				+ "." + path.stringForm() + "!" + var.getMapper().map(path));
+		RestartLog.LOG_CHANNEL.ret(stack, var.getMapper().map(path).toString());
 		return null;
 	}
 }

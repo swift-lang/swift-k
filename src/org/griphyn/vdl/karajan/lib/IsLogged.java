@@ -3,7 +3,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.List;
 import java.util.Map;
 
 import org.globus.cog.karajan.arguments.Arg;
@@ -11,6 +10,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.restartLog.LogEntry;
+import org.globus.cog.karajan.workflow.nodes.restartLog.MutableInteger;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
@@ -29,13 +29,13 @@ public class IsLogged extends VDLFunction {
 		else {
 			path = Path.parse(TypeUtil.toString(p));
 		}
-		path = var.getPathFromRoot().append(path);
-		LogEntry entry = LogEntry.build(var.getRoot().getParam("dbgname") + "." + path.stringForm());
+		String file = var.getMapper().map(path).toString();
+		LogEntry entry = LogEntry.build(file);
 		Map map = getLogData(stack);
 		boolean found = false;
 		synchronized (map) {
-			List files = (List) map.get(entry);
-			if (files != null && !files.isEmpty()) {
+			MutableInteger count = (MutableInteger) map.get(entry);
+			if (count != null && count.getValue() > 0) {
 				found = true;
 			}
 		}
