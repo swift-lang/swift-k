@@ -113,15 +113,11 @@
 			<replacevalue>updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
 updateOptions "$SWIFT_HOME" "vds.home"
 updateOptions "$SWIFT_HOME" "swift.home"
+updateOptions "$HOSTNAME" "hostname"
 #Use /dev/urandom instead of /dev/random for seeding RNGs
 #This will lower the randomness of the seed, but avoid
 #large delays if /dev/random does not have enough entropy collected
 updateOptions "file:///dev/urandom" "java.security.egd"
-
-if [ "X$GLOBUS_HOSTNAME" == "X" ] &amp;&amp; [ "X$HOSTNAME" != "X" ]; then
- GLOBUS_HOSTNAME=$HOSTNAME
- export HOSTNAME
-fi
 
 </replacevalue>
 		</replace>
