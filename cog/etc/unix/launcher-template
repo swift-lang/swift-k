@@ -61,6 +61,10 @@ CMDLINE=`fixCommandLine "$@"`
 
 USERID=`id | awk '{printf("%s\n", substr($1, 5, index($1, "(")-5 ) ) }'`
 
+if [ "X$GLOBUS_HOSTNAME" == "X" ] && [ "X$HOSTNAME" != "X" ]; then 
+	GLOBUS_HOSTNAME=$HOSTNAME  
+fi
+
 updateOptions "$USERID" "UID"
 updateOptions "$GLOBUS_INSTALL_PATH" "GLOBUS_INSTALL_PATH"
 updateOptions "$GLOBUS_DEPLOY_PATH" "GLOBUS_DEPLOY_PATH"
@@ -68,7 +72,6 @@ updateOptions "$GLOBUS_TCP_PORT_RANGE" "GLOBUS_TCP_PORT_RANGE"
 updateOptions "$GLOBUS_TCP_SOURCE_PORT_RANGE" "GLOBUS_TCP_SOURCE_PORT_RANGE"
 updateOptions "$GLOBUS_UDP_SOURCE_PORT_RANGE" "GLOBUS_UDP_SOURCE_PORT_RANGE"
 updateOptions "$GLOBUS_HOSTNAME" "GLOBUS_HOSTNAME"
-updateOptions "$HOSTNAME" "hostname"
 updateOptions "$X509_USER_CERT" "X509_USER_CERT"
 updateOptions "$X509_USER_KEY" "X509_USER_KEY"
 updateOptions "$X509_CERT_DIR" "X509_CERT_DIR"
