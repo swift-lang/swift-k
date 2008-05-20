@@ -196,15 +196,15 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static String compile(String project) 
 		throws FileNotFoundException, ParsingException,
 		IncorrectInvocationException, CompilationException {
-		File dtm = new File(project);
-		File dir = dtm.getParentFile();
+		File swiftscript = new File(project);
+		File dir = swiftscript.getParentFile();
 		String projectBase = project.substring(0, project.lastIndexOf('.'));
 		File xml = new File(projectBase + ".xml");
 		File kml = new File(projectBase + ".kml");
 
-		if (dtm.lastModified() > kml.lastModified()) {
+		if (swiftscript.lastModified() > kml.lastModified()) {
 			logger.info(project + ": source file is new. Recompiling.");
-			VDLt2VDLx.compile(new FileInputStream(dtm), new PrintStream(new FileOutputStream(xml)));
+			VDLt2VDLx.compile(new FileInputStream(swiftscript), new PrintStream(new FileOutputStream(xml)));
 
 			try {
 				FileOutputStream f = new FileOutputStream(kml);
