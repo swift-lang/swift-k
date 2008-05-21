@@ -1,0 +1,11 @@
+<config>
+
+  <pool handle="tgpurdue" >
+    <gridftp  url="gsiftp://tg-data.purdue.teragrid.org" /> 
+    <jobmanager universe="vanilla" url="tg-condor.purdue.teragrid.org/jobmanager-condor" major="2" />
+    <workdirectory >/autohome/u102/benc/swifttest</workdirectory>
+ <profile namespace="globus" key="project">TG-CCR080002N</profile>
+
+  </pool>
+
+</config>
