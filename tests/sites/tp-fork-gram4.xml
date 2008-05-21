@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="teraport" >
+    <gridftp  url="gsiftp://tp-osg.ci.uchicago.edu" /> 
+    <execution provider="gt4" url="tp-grid1.ci.uchicago.edu:9443" jobmanager="Fork" />
+    <workdirectory >/home/benc/swifttest</workdirectory>
+  </pool>
+
+</config>
