@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="tgpurdue" >
+    <gridftp  url="gsiftp://tg-data.purdue.teragrid.org" /> 
+    <jobmanager universe="vanilla" url="tg-steele.purdue.teragrid.org/jobmanager-fork" major="2" />
+    <workdirectory >/autohome/u102/benc/swifttest</workdirectory>
+  </pool>
+
+</config>

@@ -19,6 +19,7 @@ if [ "X$FAILED" = "" ]; then
   exit 0
 else
   echo These sites failed: $FAILED
+  echo These sites worked: $WORKED
   exit 1
 fi
 

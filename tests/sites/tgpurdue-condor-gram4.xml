@@ -1,0 +1,11 @@
+<config>
+
+  <pool handle="tgpurdue" >
+    <gridftp  url="gsiftp://tg-data.purdue.teragrid.org" /> 
+    <execution url="https://tg-condor.purdue.teragrid.org:8443/wsrf/services/ManagedJobFactoryService" jobManager="Condor" provider="gt4" />
+    <workdirectory >/autohome/u102/benc/swifttest</workdirectory>
+ <profile namespace="globus" key="project">TG-CCR080002N</profile>
+
+  </pool>
+
+</config>

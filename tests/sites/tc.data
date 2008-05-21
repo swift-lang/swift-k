@@ -57,3 +57,11 @@ tgncsa-hg	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
 tgncsa-hg	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
 tgncsa-hg	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
 tgncsa-hg	touch 		/bin/touch	INSTALLED	INTEL32::LINUX	null
+tgpurdue	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+tgpurdue	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+tgpurdue	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+tgpurdue	wc 		/bin/wc		INSTALLED	INTEL32::LINUX	null
+tgpurdue	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+tgpurdue	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+tgpurdue	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+tgpurdue	touch 		/bin/touch	INSTALLED	INTEL32::LINUX	null

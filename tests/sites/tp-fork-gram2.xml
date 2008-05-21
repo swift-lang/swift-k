@@ -4,6 +4,7 @@
     <gridftp  url="gsiftp://tp-osg.ci.uchicago.edu" /> 
     <jobmanager universe="vanilla" url="tp-osg.ci.uchicago.edu/jobmanager-fork" major="2" />
     <workdirectory >/home/benc/swifttest</workdirectory>
+<profile namespace="env" key="fang">YES</profile>
   </pool>
 
 </config>
