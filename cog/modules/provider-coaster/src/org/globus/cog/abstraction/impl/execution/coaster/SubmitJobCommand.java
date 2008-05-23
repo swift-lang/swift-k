@@ -94,16 +94,9 @@ public class SubmitJobCommand extends Command {
             for (int i = 0; i < value.length(); i++) {
                 char c = value.charAt(i);
                 switch (c) {
-                    case '\n': {
+                    case '\n':
+                    case '\\':
                         baos.write('\\');
-                        baos.write('\n');
-                        break;
-                    }
-                    case '\\': {
-                        baos.write('\\');
-                        baos.write('\\');
-                        break;
-                    }
                     default:
                         baos.write(c);
                 }
