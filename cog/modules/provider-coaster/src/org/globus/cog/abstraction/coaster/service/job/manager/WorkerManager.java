@@ -153,8 +153,8 @@ public class WorkerManager extends Thread {
         String sid = String.valueOf(id);
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
-        t.setSpecification(buildSpecification(sid, maxWallTime, prototype));
-        copyAttributes(t, prototype);
+        t.setSpecification(buildSpecification(sid, prototype));
+        copyAttributes(t, prototype, maxWallTime);
         t.setRequiredService(1);
         t.setService(0, buildService(prototype));
         try {
@@ -170,7 +170,7 @@ public class WorkerManager extends Thread {
         }
     }
 
-    private JobSpecification buildSpecification(String id, int maxWallTime,
+    private JobSpecification buildSpecification(String id,
             Task prototype) {
         JobSpecification ps = (JobSpecification) prototype.getSpecification();
         JobSpecification js = new JobSpecificationImpl();
@@ -178,17 +178,7 @@ public class WorkerManager extends Thread {
         js.addArgument(script.getAbsolutePath());
         js.addArgument(id);
         js.addArgument(callbackURI.toString());
-        Iterator i = ps.getAttributeNames().iterator();
-        while (i.hasNext()) {
-            String name = (String) i.next();
-            if(name == "maxwalltime") {
-                logger.warn("Ignoring maxwalltime attribute when submitting worker");
-            } else {
-                js.setAttribute(name, ps.getAttribute(name));
-            }
-        }
-        js.setAttribute("maxwalltime", new WallTime(maxWallTime)
-                .getSpecInMinutes());
+       
         return js;
     }
 
@@ -214,12 +204,16 @@ public class WorkerManager extends Thread {
         return s;
     }
 
-    private void copyAttributes(Task t, Task prototype) {
-        Iterator i = prototype.getAttributeNames().iterator();
+    private void copyAttributes(Task t, Task prototype, int maxWallTime) {
+        JobSpecification pspec = (JobSpecification) prototype.getSpecification();
+        JobSpecification tspec = (JobSpecification) prototype.getSpecification();
+        Iterator i = pspec.getAttributeNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            t.setAttribute(name, prototype.getAttribute(name));
+            tspec.setAttribute(name, pspec.getAttribute(name));
         }
+        tspec.setAttribute("maxwalltime", new WallTime(maxWallTime)
+                .getSpecInMinutes());
     }
 
     private int k;
