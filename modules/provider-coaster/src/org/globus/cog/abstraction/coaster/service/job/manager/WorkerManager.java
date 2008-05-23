@@ -172,11 +172,21 @@ public class WorkerManager extends Thread {
 
     private JobSpecification buildSpecification(String id, int maxWallTime,
             Task prototype) {
+        JobSpecification ps = (JobSpecification) prototype.getSpecification();
         JobSpecification js = new JobSpecificationImpl();
         js.setExecutable("/usr/bin/perl");
         js.addArgument(script.getAbsolutePath());
         js.addArgument(id);
         js.addArgument(callbackURI.toString());
+        Iterator i = ps.getAttributeNames().iterator();
+        while (i.hasNext()) {
+            String name = (String) i.next();
+            if(name == "maxwalltime") {
+                logger.warn("Ignoring maxwalltime attribute when submitting worker");
+            } else {
+                js.setAttribute(name, ps.getAttribute(name));
+            }
+        }
         js.setAttribute("maxwalltime", new WallTime(maxWallTime)
                 .getSpecInMinutes());
         return js;
