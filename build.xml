@@ -108,7 +108,6 @@
 		</replace>
 		<replace file="${dist.dir}/bin/swift">
 			<replacetoken>updateOptions "$SWIFT_HOME" "SWIFT_HOME"
-
 </replacetoken>
 			<replacevalue>updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
 updateOptions "$SWIFT_HOME" "vds.home"
