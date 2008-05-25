@@ -432,8 +432,14 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			InvalidPathException {
 		WrapperMap hash = getFutureWrapperMap(stack);
 		// Close the future
-		handle.closeShallow();
-		hash.close(handle);
+		boolean closed;
+		synchronized(handle) {
+			closed = handle.isClosed();
+			if (!closed) {
+				handle.closeShallow();
+				hash.close(handle);
+			}
+		}
 		try {
 			// Mark all leaves
 			Iterator it = handle.getFields(Path.CHILDREN).iterator();
@@ -446,8 +452,10 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		catch (HandleOpenException e) {
 			throw new ExecutionException(e);
 		}
-
-		markToRoot(stack, handle);
+		
+		if (!closed) {
+			markToRoot(stack, handle);
+		}
 	}
 
 	private void markToRoot(VariableStack stack, DSHandle handle) throws ExecutionException {
