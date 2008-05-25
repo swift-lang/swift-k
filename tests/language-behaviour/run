@@ -70,10 +70,11 @@ for testfn in $TESTS; do
       fi
 
     else
-      echo "$e does not exist"
+      echo "No expected output files specified for this test case - not checking output."
     fi
 
   done
+  echo "Test passed"
   if [ "$SUB" == "" ]; then
   	echo ----------===========================----------
   fi
