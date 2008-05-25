@@ -2,19 +2,19 @@ type file;
 
 (file t) a(file i) {
     app {
-        helperA @filename(t);
+        helperA @t @i "IN A";
     }
 }
 
 (file t) b(file i) {
     app {
-        helperB @filename(t);
+        helperB @t @i "IN B";
     }
 }
 
 (file t) c(file i) {
     app {
-        helperC @filename(t);
+        helperC @t @i "IN C";
     }
 }
 
@@ -31,7 +31,7 @@ file J <"restart.in">;
 
 file X[];
 
-file Y[];
+file Y[] <simple_mapper;prefix="restart5.",suffix=".out">;
 
 foreach i in [1:3] {
   X[i] = q(J,i);
