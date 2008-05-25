@@ -1,5 +1,10 @@
 #!/bin/bash
 
+export CF=swift.properties.restart5
+
+cat $(dirname $(which swift))/../etc/swift.properties | grep --invert-match -E '^lazy.errors=' > $CF
+echo lazy.errors=true >> $CF
+
 rm -f *.rlog restart-*.out restart5.kml restart5.xml
 rm -rf _concurrent
 
@@ -7,7 +12,7 @@ echo "localhost	helperA	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	n
 echo "localhost	helperB	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	null" >> tmp.restartOK.tc.data
 echo "localhost	helperC	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	null" >> tmp.restartOK.tc.data
 
-swift -tc.file tmp.restartOK.tc.data restart5.swift
+swift -config $CF -tc.file tmp.restartOK.tc.data restart5.swift
 
 PRECHECKEXIT=$?
 
@@ -24,7 +29,7 @@ echo "localhost	helperA	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	n
 echo "localhost	helperB	$(pwd)/restart-helper-fail	INSTALLED	INTEL32::LINUX	null" >> tmp.restartA.tc.data
 echo "localhost	helperC	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	null" >> tmp.restartA.tc.data
 
-swift -tc.file tmp.restartA.tc.data restart5.swift
+swift -config $CF -tc.file tmp.restartA.tc.data restart5.swift
 
 FIRSTEXIT=$?
 
@@ -45,7 +50,7 @@ echo "localhost	helperC	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	n
 
 # there should be only a single rlog here, because we deleted them all
 # at the start of this script.
-swift -resume *.rlog -tc.file tmp.restartB.tc.data restart5.swift
+swift -config $CF -resume *.rlog -tc.file tmp.restartB.tc.data restart5.swift
 
 SECONDEXIT=$?
 
