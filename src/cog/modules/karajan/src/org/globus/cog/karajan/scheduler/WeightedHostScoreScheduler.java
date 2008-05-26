@@ -335,7 +335,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			else {
 				double val = TypeUtil.toDouble(value);
 				try {
-					Field f = this.getClass().getField(name);
+					Field f = WeightedHostScoreScheduler.class.getDeclaredField(name);
 					if (f.getClass().equals(int.class)) {
 						f.setInt(this, (int) val);
 					}
