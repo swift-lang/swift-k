@@ -213,6 +213,7 @@ public class Bootstrap {
         addProperty(args, "X509_USER_PROXY");
         addProperty(args, "GLOBUS_HOSTNAME");
         addProperty(args, "GLOBUS_TCP_PORT_RANGE");
+        addProperty(args, "X509_CERT_DIR");
     }
     
     private void addProperty(List args, String name) {
