@@ -63,7 +63,7 @@ public class Types {
 		INT = addPrimitiveType("int");
 		FLOAT = addPrimitiveType("float");
 		BOOLEAN = addPrimitiveType("boolean");
-        ANY = addPrimitiveType("any");
+		ANY = addPrimitiveType("any");
 	}
 
 	public synchronized static void resolveTypes() throws NoSuchTypeException {
