@@ -16,6 +16,8 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
@@ -60,12 +62,12 @@ public class LocalService extends GSSService implements Registering {
     }
 
     public String waitForRegistration(Task t, String id)
-            throws InterruptedException, IOException {
+            throws InterruptedException, TaskSubmissionException {
         return waitForRegistration(t, id, DEFAULT_REGISTRATION_TIMEOUT);
     }
 
     public String waitForRegistration(Task t, String id, long timeout)
-            throws InterruptedException, IOException {
+            throws InterruptedException, TaskSubmissionException {
         if (logger.isDebugEnabled()) {
             logger.debug("Waiting for registration from service " + id);
         }
@@ -74,14 +76,16 @@ public class LocalService extends GSSService implements Registering {
             while (!services.containsKey(id)) {
                 services.wait(1000);
                 if (timeout < System.currentTimeMillis() - start) {
-                    throw new IOException(
+                    throw new TaskSubmissionException(
                             "Timed out waiting for registration for " + id);
                 }
-                if (t.getStatus().isTerminal()) {
-                    throw new IOException(
-                            "Task ended before registration was received."
+                Status s = t.getStatus();
+                if (s.isTerminal()) {
+                    throw new TaskSubmissionException(
+                            "Task ended before registration was received"
+                                    + (s.getMessage() == null ? ". " : ": " + s.getMessage())
                                     + "\nSTDOUT: " + t.getStdOutput()
-                                    + "\nSTDERR: " + t.getStdError());
+                                    + "\nSTDERR: " + t.getStdError(), s.getException());
                 }
             }
             return (String) services.get(id);
