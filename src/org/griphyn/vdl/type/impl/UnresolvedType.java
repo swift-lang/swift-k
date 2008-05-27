@@ -131,10 +131,10 @@ public class UnresolvedType implements Type {
 	public boolean equals(Object other) {
 		if (other instanceof Type) {
 			Type ot = (Type) other;
-            URI ons = ot.getNamespaceURI();
-            if ((namespaceURI == null || ons == null) && namespaceURI != ons) {
-            	return false;   
-            }
+			URI ons = ot.getNamespaceURI();
+			if ((namespaceURI == null || ons == null) && namespaceURI != ons) {
+				return false;   
+			}
 			return ot.getName().equals(name);
 		}
 		else {

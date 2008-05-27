@@ -347,7 +347,7 @@ public class Karajan {
 				StringTemplate argST = actualParameter(output, scope);
 				callST.setAttribute("outputs", argST);
 				String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
-					scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
+				scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
 			}
 			scope.appendStatement(callST);
 		} catch(CompilationException ce) {

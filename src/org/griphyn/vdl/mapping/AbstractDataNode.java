@@ -49,8 +49,6 @@ public abstract class AbstractDataNode implements DSHandle {
 	final String identifierURI = makeIdentifierURIString();
 
 	protected AbstractDataNode(Field field) {
-//try { Thread.sleep(1000); } catch(Exception e) {throw new RuntimeException(e);}
-
 		this.field = field;
 		handles = new HashMap();
 	}
