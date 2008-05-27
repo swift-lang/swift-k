@@ -196,6 +196,8 @@ public class ServiceManager implements StatusListener {
             t.setAttribute(TASK_ATTR_ID, id);
             js.addArgument(id);
             js.addArgument(orig.getService(0).getServiceContact().getHost());
+            js.setStdOutputLocation(FileLocation.MEMORY);
+            js.setStdErrorLocation(FileLocation.MEMORY);
             t.setSpecification(js);
             ExecutionService s = new ExecutionServiceImpl();
             s.setServiceContact(orig.getService(0).getServiceContact());
