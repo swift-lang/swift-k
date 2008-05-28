@@ -1,12 +1,16 @@
 #!/bin/bash
 
+export CF=`pwd`/swift.properties.restart4
+cat $(dirname $(which swift))/../etc/swift.properties | grep --invert-match -E '^lazy.errors=' > $CF
+echo lazy.errors=true >> $CF
+
 rm -f *.rlog restart-*.out
 
 echo "localhost	helperA	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	null" > tmp.restart.tc.data
 echo "localhost	helperB	$(pwd)/restart-helper-fail	INSTALLED	INTEL32::LINUX	null" >> tmp.restart.tc.data
 echo "localhost	helperC	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	null" >> tmp.restart.tc.data
 
-swift -tc.file tmp.restart.tc.data restart4.swift
+swift -config $CF  -tc.file tmp.restart.tc.data restart4.swift
 
 FIRSTEXIT=$?
 
@@ -27,7 +31,7 @@ echo "localhost	helperC	$(pwd)/restart-helper-success	INSTALLED	INTEL32::LINUX	n
 
 # there should be only a single rlog here, because we deleted them all
 # at the start of this script.
-swift -resume *.rlog -tc.file tmp.restart.tc.data restart4.swift
+swift -config $CF  -resume *.rlog -tc.file tmp.restart.tc.data restart4.swift
 
 SECONDEXIT=$?
 
