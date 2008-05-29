@@ -1,1 +1,4 @@
+
+echo() { app { echo; }}
+
 echo();

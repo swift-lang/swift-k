@@ -1,1 +1,4 @@
-int hw1 = echo();
+
+(int o)num() { o=7; }
+
+int hw1 = num();

@@ -1,3 +1,8 @@
+
+(int f)fn(int i) { f=i;}
+
+f(int i) { int f=i;}
+
 int d=99;
 int g;
 int j;

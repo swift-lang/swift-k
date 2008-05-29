@@ -1,6 +1,23 @@
 <program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="echo">
+
+      <output 
+    name="f" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="s" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application>
+        <executable>echo</executable>
+        <stdout><variableReference>f</variableReference></stdout><variableReference>s</variableReference>  </application>
+    </binding>
+  </procedure>
   <procedure name="echo_batch">
 
       <output 
@@ -12,9 +29,9 @@
     name="sa" type="string[]"
 
      xsi:nil="true" />
-    <foreach var="s"  indexVar="i" src="line 2">
+    <foreach var="s"  indexVar="i" src="line 10">
     <in><variableReference>sa</variableReference></in>
-    <body><call proc="echo" src="line 3">
+    <body><call proc="echo" src="line 11">
         <output><arraySubscript>
          <variableReference>fa</variableReference>
          <variableReference>i</variableReference>
