@@ -10,7 +10,7 @@ for BASE in $1*.xml; do
     echo SITE FAIL! Exit code $EC for site definition $BASE
     FAILED="$FAILED $BASE"
   else
-    WORKED="WORKED $BASE"
+    WORKED="$WORKED $BASE"
   fi
 done
 
