@@ -9,14 +9,13 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.karajan.scheduler.Scheduler;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class ReplicationManager {
 	public static final Logger logger = Logger.getLogger(ReplicationManager.class);
 
-	// maybe a silly question, but how does one safely extends enums?
 	public static final int STATUS_NEEDS_REPLICATION = 100;
 
 	private int n;
@@ -26,9 +25,10 @@ public class ReplicationManager {
 	private int minQueueTime, limit;
 	private boolean enabled;
 	private ReplicationGroups replicationGroups;
+	private Scheduler scheduler;
 
-	public ReplicationManager(ReplicationGroups replicationGroups) {
-		this.replicationGroups = replicationGroups;
+	public ReplicationManager(Scheduler scheduler) {
+		this.replicationGroups = new ReplicationGroups(scheduler);
 		queued = new HashMap();
 		try {
 			minQueueTime = Integer.parseInt(VDL2Config.getConfig().getProperty(
@@ -46,30 +46,35 @@ public class ReplicationManager {
 		}
 	}
 
-	public void submitted(Task task, Date time) {
-		if (!enabled) {
-			return;
+	public void register(String rg, Task task) throws CanceledReplicaException {
+		if (enabled) {
+			replicationGroups.add(rg, task);
 		}
-		synchronized (queued) {
-			queued.put(task, time);
+	}
+
+	public void submitted(Task task, Date time) {
+		if (enabled) {
+			synchronized (queued) {
+				queued.put(task, time);
+			}
 		}
 	}
 
 	public void active(Task task, Date time) {
-		if (!enabled) {
-			return;
-		}
-		Date submitted;
-		synchronized (queued) {
-			submitted = (Date) queued.remove(task);
-		}
-		if (submitted != null) {
-			long delta = (time.getTime() - submitted.getTime()) / 1000;
-			synchronized (this) {
-				n++;
-				s += delta;
-				s2 += delta * delta;
+		if (enabled) {
+			Date submitted;
+			synchronized (queued) {
+				submitted = (Date) queued.remove(task);
 			}
+			if (submitted != null) {
+				long delta = (time.getTime() - submitted.getTime()) / 1000;
+				synchronized (this) {
+					n++;
+					s += delta;
+					s2 += delta * delta;
+				}
+			}
+			replicationGroups.active(task);
 		}
 	}
 
@@ -99,7 +104,7 @@ public class ReplicationManager {
 			Task t = (Task) e.getKey();
 			Date d = (Date) e.getValue();
 			if (shouldBeReplicated(t, d)) {
-				t.setStatus(new StatusImpl(STATUS_NEEDS_REPLICATION));
+				replicationGroups.requestReplica(t);
 			}
 		}
 	}
@@ -111,7 +116,7 @@ public class ReplicationManager {
 		}
 		long inTheQueue = (System.currentTimeMillis() - d.getTime()) / 1000;
 		if (n > 0 && inTheQueue > minQueueTime && inTheQueue > 3 * getMean()
-				&& replicationGroups.getGroupCount(t) < limit) {
+				&& replicationGroups.getRequestedCount(t) < limit) {
 			return true;
 		}
 		else {

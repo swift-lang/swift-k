@@ -15,7 +15,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
 import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
-import org.griphyn.vdl.karajan.lib.replication.ReplicationGroups;
+import org.griphyn.vdl.karajan.lib.replication.CanceledReplicaException;
 import org.griphyn.vdl.karajan.lib.replication.ReplicationManager;
 
 public class Execute extends GridExec {
@@ -36,18 +36,37 @@ public class Execute extends GridExec {
 				A_REPLICATION_CHANNEL });
 	}
 
-	private ReplicationGroups replicationGroups;
-
 	public Execute() {
-		replicationGroups = new ReplicationGroups();
 	}
-	
-	protected void setTaskIdentity(VariableStack stack, Task task) {
-		super.setTaskIdentity(stack, task);
+
+	public void submitScheduled(Scheduler scheduler, Task task, VariableStack stack,
+			Object constraints) throws ExecutionException {
+		try {
+			registerReplica(stack, task);
+			if (logger.isDebugEnabled()) {
+				logger.debug(task);
+				logger.debug("Submitting task " + task);
+			}
+			scheduler.addJobStatusListener(this, task);
+			synchronized (tasks) {
+				tasks.put(task, stack);
+			}
+			scheduler.enqueue(task, constraints);
+		}
+		catch (CanceledReplicaException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Early abort on replicated task " + task);
+			}
+			abort(stack);
+		}
+	}
+
+	protected void registerReplica(VariableStack stack, Task task) throws CanceledReplicaException {
+		setTaskIdentity(stack, task);
 		try {
 			String rg = TypeUtil.toString(A_REPLICATION_GROUP.getValue(stack, null));
 			if (rg != null) {
-				replicationGroups.add(rg, task, getScheduler(stack));
+				getReplicationManager(stack).register(rg, task);
 			}
 		}
 		catch (ExecutionException e) {
@@ -66,7 +85,6 @@ public class Execute extends GridExec {
 				}
 				else if (c == Status.ACTIVE) {
 					getReplicationManager(stack).active(task, e.getStatus().getTime());
-					replicationGroups.cancelReplicas(task);
 					((FutureVariableArguments) A_REPLICATION_CHANNEL.getValue(stack)).close();
 				}
 				else if (c == ReplicationManager.STATUS_NEEDS_REPLICATION) {
@@ -80,12 +98,12 @@ public class Execute extends GridExec {
 		super.statusChanged(e);
 	}
 
-	protected ReplicationManager getReplicationManager(VariableStack stack) {
+	protected ReplicationManager getReplicationManager(VariableStack stack) throws ExecutionException {
 		synchronized (stack.firstFrame()) {
 			ReplicationManager rm = (ReplicationManager) stack.firstFrame().getVar(
 					REPLICATION_MANAGER);
 			if (rm == null) {
-				rm = new ReplicationManager(replicationGroups);
+				rm = new ReplicationManager(getScheduler(stack));
 				stack.firstFrame().setVar(REPLICATION_MANAGER, rm);
 			}
 			return rm;
