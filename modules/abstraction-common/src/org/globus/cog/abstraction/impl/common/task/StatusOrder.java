@@ -20,6 +20,7 @@ public class StatusOrder {
     public static int pred(int code) {
         switch (code) {
             case Status.CANCELED:
+            	return -1;
             case Status.FAILED:
             case Status.COMPLETED:
                 return Status.ACTIVE;
