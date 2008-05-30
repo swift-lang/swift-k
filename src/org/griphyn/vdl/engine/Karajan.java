@@ -66,6 +66,7 @@ public class Karajan {
 	Map stringInternMap = new HashMap();
 	Map intInternMap = new HashMap();
 	Map floatInternMap = new HashMap();
+	Map proceduresMap = new HashMap();
 
 	int internedIDCounter=17000;
 
@@ -142,6 +143,10 @@ public class Karajan {
 	}
 
 	public Karajan() {
+		// Built-in procedures
+		proceduresMap.put("readData", "");
+		proceduresMap.put("print", "");
+		proceduresMap.put("trace", "");
 	}
 
 	void setTemplateGroup(StringTemplateGroup tempGroup) throws IOException {
@@ -158,6 +163,12 @@ public class Karajan {
 
 		scope.bodyTemplate.setAttribute("types", prog.getTypes());
 
+		// Keep track of declared procedures
+		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
+			Procedure proc = prog.getProcedureArray(i);
+			proceduresMap.put(proc.getName(), proc);
+		}
+		
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
 			Procedure proc = prog.getProcedureArray(i);
 			procedure(proc, scope);
@@ -336,6 +347,12 @@ public class Karajan {
 		try {
 			StringTemplate callST = template("call");
 			callST.setAttribute("func", call.getProc().getLocalPart());
+			
+			// Check is called procedure declared previously 
+			String procName = call.getProc().getLocalPart();
+			if (proceduresMap.get(procName) == null)
+				throw new CompilationException("Procedure " + procName + " is not declared.");
+						
 			StringTemplate parentST = callST.getEnclosingInstance();
 			for (int i = 0; i < call.sizeOfInputArray(); i++) {
 				ActualParameter input = call.getInputArray(i);
