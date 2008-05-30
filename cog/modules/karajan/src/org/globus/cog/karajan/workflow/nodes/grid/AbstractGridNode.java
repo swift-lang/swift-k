@@ -216,7 +216,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 	}
 
 	public void submitScheduled(Scheduler scheduler, Task task, VariableStack stack,
-			Object constraints) {
+			Object constraints) throws ExecutionException {
 		setTaskIdentity(stack, task);
 		if (logger.isDebugEnabled()) {
 			logger.debug(task);
