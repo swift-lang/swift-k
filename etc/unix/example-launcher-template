@@ -59,7 +59,7 @@ CMDLINE=`fixCommandLine "$@"`
 
 USERID=`id | awk '{printf("%s\n", substr($1, 5, index($1, "(")-5 ) ) }'`
 
-if [ "X$GLOBUS_HOSTNAME" == "X" ] && [ "X$HOSTNAME" != "X" ]; then 
+if [ "X$GLOBUS_HOSTNAME" = "X" ] && [ "X$HOSTNAME" != "X" ]; then 
 	GLOBUS_HOSTNAME=$HOSTNAME  
 fi
 
