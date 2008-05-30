@@ -435,7 +435,7 @@ namespace("vdl"
 						)
 						throw(exception)
 					)
-					catch("^(?!Abort)$"
+					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
