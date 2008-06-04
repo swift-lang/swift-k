@@ -1,4 +1,3 @@
-
 (04/24/08)
 *** PATHPREFIX environment variable is prefixed to the path before execution
     in wrapper.sh; this variable can be set in profile entries using the usual
