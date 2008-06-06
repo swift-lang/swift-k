@@ -1,3 +1,9 @@
+(06/06/08)
+*** SWIFT_JOBDIR_PATH environment variable can be use in profiles (or
+    anywhere else that will get it to the worker script) to cause the
+    worker to copy input files to a possibly-worker-node-local working
+    directory.
+
 (04/24/08)
 *** PATHPREFIX environment variable is prefixed to the path before execution
     in wrapper.sh; this variable can be set in profile entries using the usual

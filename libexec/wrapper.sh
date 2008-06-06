@@ -144,7 +144,15 @@ else
 	fail 254 "Missing arguments (-a option)"
 fi
 
-DIR=jobs/$JOBDIR/$ID
+if [ "X$SWIFT_JOBDIR_PATH" != "X" ]; then
+  log "Job directory mode is: local copy"
+  DIR=${SWIFT_JOBDIR_PATH}/$JOBDIR/$ID
+  COPYNOTLINK=1
+else
+  log "Job directory mode is: link on shared filesystem"
+  DIR=jobs/$JOBDIR/$ID
+  COPYNOTLINK=0
+fi
 
 PATH=$PATH:/bin:/usr/bin
 
@@ -180,9 +188,15 @@ done
 
 logstate "LINK_INPUTS"
 for L in $INF ; do
-	ln -s "$PWD/shared/$L" "$DIR/$L" 2>&1 >& $INFO
-	checkError 254 "Failed to link input file $L"
-	log "Linked input: $PWD/shared/$L to $DIR/$L"
+	if [ $COPYNOTLINK = 1 ]; then
+		cp "$PWD/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+		checkError 254 "Failed to copy input file $L"
+		log "Copied input: $PWD/shared/$L to $DIR/$L"
+	else
+		ln -s "$PWD/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+		checkError 254 "Failed to link input file $L"
+		log "Linked input: $PWD/shared/$L to $DIR/$L"
+	fi
 done
 
 logstate "EXECUTE"

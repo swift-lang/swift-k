@@ -2587,6 +2587,14 @@ but can usually be used to alter settings such as maximum heap size.
 Typing 'java -help' will sometimes give a list of commands. The Sun Java
 1.4.2 command line options are <ulink url="http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html">documented here</ulink>.
 		</para>
+		<para>
+SWIFT_JOBDIR_PATH - set in env namespace profiles. If set, then Swift will
+use the path specified here as a worker-node local temporary directory to
+copy input files to before running a job. If unset, Swift will keep input
+files on the site-shared filesystem. In some cases, copying to a worker-node
+local directory can be much faster than having applications access the
+site-shared filesystem directly.
+		</para>
 	</section>
 
 </article>
