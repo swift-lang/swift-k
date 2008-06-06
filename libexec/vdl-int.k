@@ -32,12 +32,12 @@ namespace("vdl"
 		)
 							
 		element(isDone, [stageout]
-			and(
+			sys:and(
 				for(pv, stageout
 					[path, var] := each(pv)
 					vdl:isLogged(var, path)
 				)
-				not(isEmpty(stageout))
+				sys:not(isEmpty(stageout))
 			)
 		)
 			
@@ -320,7 +320,7 @@ namespace("vdl"
 		)
 		
 		element(transferKickstartRec, [rhost, wfdir, jobid, jobdir]
-			if(not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
+			if(sys:not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
 				task:dir:make("{VDL:SCRIPTNAME}-{VDL:RUNID}.d")
 			)
 			recfile := "{jobid}-kickstart.xml"
@@ -336,7 +336,7 @@ namespace("vdl"
 		)
 
 		element(transferWrapperLog, [rhost, wfdir, jobid, jobdir]
-			if(not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
+			if(sys:not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
 				task:dir:make("{VDL:SCRIPTNAME}-{VDL:RUNID}.d")
 			)
 			recfile := "{jobid}-info"

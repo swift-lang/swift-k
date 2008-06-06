@@ -293,9 +293,19 @@ cond(op,left,right,sourcelocation) ::= <<
 </cond>
 >>
 
-and(left,right,sourcelocation) ::= "<and><left>$left$</left><right>$right$</right></and>"
+and(left,right,sourcelocation) ::= <<
+<and>
+  $left$
+  $right$
+</and>
+>>
 
-or(left, right,sourcelocation) ::= "<or><left>$left$</left><right>$right$</right></or>"
+or(left, right,sourcelocation) ::= <<
+<or>
+  $left$
+  $right$
+</or>
+>>
 
 not(exp,sourcelocation) ::= "<not>$exp$</not>"
 

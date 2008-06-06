@@ -160,6 +160,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		else if (Types.INT.equals(type)) {
 			return new Double(TypeUtil.toInt(value));
 		}
+		else if (Types.BOOLEAN.equals(type)) {
+			return new Boolean(TypeUtil.toBoolean(value));
+		}
 		else if (value instanceof String) {
 			return (String) value;
 		}

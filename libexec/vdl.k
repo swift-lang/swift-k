@@ -131,7 +131,7 @@ namespace("vdl"
 
 			//this should be reached after everything is done
 			if(
-				not(anyerrors) then(
+				sys:not(anyerrors) then(
 					//hmm, you can append to channels!
 					append(warnings, from(warnings, cleanups(cleanup)))
 				)

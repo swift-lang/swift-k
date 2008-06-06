@@ -15,6 +15,7 @@ public class Operators extends FunctionsCollection {
 
 	public static final SwiftArg L = new SwiftArg.Positional("left");
 	public static final SwiftArg R = new SwiftArg.Positional("right");
+	public static final SwiftArg U = new SwiftArg.Positional("unaryArg");
 
 	private DSHandle newNum(Type type, double value) throws ExecutionException {
 		try {
@@ -61,15 +62,20 @@ public class Operators extends FunctionsCollection {
 		}
 	}
 
-	private static final String[] OPERATORS = new String[] { "vdlop_sum", "vdlop_subtraction",
+	private static final String[] BINARY_OPERATORS = new String[] { "vdlop_sum", "vdlop_subtraction",
 			"vdlop_product", "vdlop_quotient", "vdlop_fquotient", "vdlop_iquotient",
-			"vdlop_remainder", "vdlop_le", "vdlop_ge", "vdlop_lt", "vdlop_gt", "vdlop_eq" };
+			"vdlop_remainder", "vdlop_le", "vdlop_ge", "vdlop_lt", "vdlop_gt", "vdlop_eq", "vdlop_and", "vdlop_or" };
+	private static final String[] UNARY_OPERATORS = new String[] { "vdlop_not" };
 
-	private static final Arg[] OPARGS = new Arg[] { L, R };
+	private static final Arg[] BINARY_ARGS = new Arg[] { L, R };
+	private static final Arg[] UNARY_ARGS = new Arg[] { U };
 
 	static {
-		for (int i = 0; i < OPERATORS.length; i++) {
-			setArguments(OPERATORS[i], OPARGS);
+		for (int i = 0; i < BINARY_OPERATORS.length; i++) {
+			setArguments(BINARY_OPERATORS[i], BINARY_ARGS);
+		}
+		for (int i = 0; i < UNARY_OPERATORS.length; i++) {
+			setArguments(UNARY_OPERATORS[i], UNARY_ARGS);
 		}
 	}
 
@@ -153,5 +159,22 @@ public class Operators extends FunctionsCollection {
 			throw new ExecutionException("Second operand is null");
 		}
 		return newBool(l.equals(r));
+	}
+
+	public Object vdlop_and(VariableStack stack) throws ExecutionException {
+		boolean l = ((Boolean)L.getValue(stack)).booleanValue();
+		boolean r = ((Boolean)R.getValue(stack)).booleanValue();
+		return newBool(l && r);
+	}
+
+	public Object vdlop_or(VariableStack stack) throws ExecutionException {
+		boolean l = ((Boolean)L.getValue(stack)).booleanValue();
+		boolean r = ((Boolean)R.getValue(stack)).booleanValue();
+		return newBool(l || r);
+	}
+
+	public Object vdlop_not(VariableStack stack) throws ExecutionException {
+		boolean u = ((Boolean)U.getValue(stack)).booleanValue();
+		return newBool(!u);
 	}
 }

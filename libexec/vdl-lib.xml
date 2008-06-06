@@ -14,10 +14,10 @@
 	<export name="arg">
 		<import file="sys.xml"/>
 		<if>
-			<or>
+			<sys:or>
 				<equals value1="${vdl:operation}" value2="typecheck"/>
 				<equals value1="${vdl:operation}" value2="graph"/>
-			</or>
+			</sys:or>
 			<element arguments="name"><string></string></element>
 			<elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FnArg"/>
 		</if>

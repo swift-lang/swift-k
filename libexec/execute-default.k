@@ -10,7 +10,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 	if(
 		derr == false then(
 			if(
-				not(done) try(
+				sys:not(done) try(
 					sequential(
 						echo("{tr} started")
 						log(LOG:INFO, "START thread={#thread} tr={tr}") 
