@@ -1000,10 +1000,6 @@ constant returns [StringTemplate code=null]
         code=template("bConst");
         code.setAttribute("value", f.getText());
       }
-    | n:"null"
-      {
-        code=template("null");
-      }
     | code=arrayInitializer
     ;
 
