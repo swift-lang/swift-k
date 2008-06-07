@@ -409,7 +409,7 @@ namespace("vdl"
 							
 						checkJobStatus(rhost, wfdir, jobid, tr, jobdir)
 		
-						log(LOG:DEBUG, "JOB_END jobid={jobid}")
+						log(LOG:DEBUG, "STAGING_OUT jobid={jobid}")
 
 									
 						/* need to stage the files to upper scratch area in case they are not transfered to another site
@@ -427,6 +427,7 @@ namespace("vdl"
 							discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))
 						)
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, cleanupFiles(cacheFilesToRemove, rhost))
+						log(LOG:DEBUG, "JOB_END jobid={jobid}")
 					)
 					catch("^Abort$"
 						log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
