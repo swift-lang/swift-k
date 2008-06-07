@@ -1,0 +1,10 @@
+<config>
+
+ <pool handle="osg-edu.cs.wisc.edu" >
+
+  <gridftp  url="gsiftp://osg-gw-2.t2.ucsd.edu" />
+  <jobmanager universe="vanilla" url="osg-gw-2.t2.ucsd.edu/jobmanager-fork" major="2" />
+  <workdirectory>/osgfs/data</workdirectory>
+ </pool>
+
+</config>
