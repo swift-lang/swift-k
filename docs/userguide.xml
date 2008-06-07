@@ -2066,7 +2066,7 @@ implemented as Java CoG kit providers.
 </para>
 	</section>
 
-	<section><title>Function reference</title>
+	<section id="functions"><title>Function reference</title>
 		<para>
 This section details functions that are available for use in the SwiftScript
 language.
