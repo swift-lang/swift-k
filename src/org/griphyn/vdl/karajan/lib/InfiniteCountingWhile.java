@@ -6,6 +6,9 @@
 
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.workflow.nodes.*;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -26,7 +29,7 @@ public class InfiniteCountingWhile extends Sequential {
 		stack.setVar("#condition", new Condition());
 		stack.setVar(VAR, "$");
 		String counterName = (String)stack.getVar(VAR);
-		stack.setVar(counterName, new Integer(0)); // should be DSHandle-wrapped
+		stack.setVar(counterName, Arrays.asList(new Integer[] {new Integer(0)}));
 		super.pre(stack);
 	}
 
@@ -56,9 +59,11 @@ public class InfiniteCountingWhile extends Sequential {
 			fn = (FlowElement) getElement(0);
 
 			String counterName = (String) stack.getVar(VAR);
-			int i = ((Integer)stack.getVar(counterName)).intValue();
+			List l = (List)stack.getVar(counterName);
+			Integer wrappedi = (Integer)l.get(0);
+			int i = wrappedi.intValue();
 			i++;
-			stack.setVar(counterName, new Integer(i)); // should be DSHandle-wrapped
+			stack.setVar(counterName, Arrays.asList(new Integer[] {new Integer(i)}));
 		}
 		else {
 			fn = (FlowElement) getElement(index++);

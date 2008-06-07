@@ -160,8 +160,11 @@ function(name, args) ::= <<
 iterate(declarations,statements,cond,var) ::= <<
 
 <vdl:infinitecountingwhile>
+  <set names="\$\$">
+    <each items="{\$}"/>
+  </set>
   <set name="$var$">
-    <vdl:new type="int" value="{\$}" />
+    <vdl:new type="int" value="{\$\$}" />
   </set>
   $sub_comp(declarations=declarations, statements=statements)$
   <sys:if>
