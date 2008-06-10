@@ -206,7 +206,7 @@ public class WorkerManager extends Thread {
 
     private void copyAttributes(Task t, Task prototype, int maxWallTime) {
         JobSpecification pspec = (JobSpecification) prototype.getSpecification();
-        JobSpecification tspec = (JobSpecification) prototype.getSpecification();
+        JobSpecification tspec = (JobSpecification) t.getSpecification();
         Iterator i = pspec.getAttributeNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
