@@ -42,33 +42,7 @@ public class VariableScope {
 	public StringTemplate bodyTemplate;
 
 	public VariableScope(Karajan c, VariableScope parent) {
-		this(c,parent,true);
-	}
-
-
-	/** Creates a new variable scope.
-		@param c the compiler scope in which this variable lives
-		@param parent the enclosing scope, or null if this is a
-			top level scope
-		@param a if true, assignments made in this scope
-			to variables in an enclosing scope will be permitted. if false,
-			this will be prohibited, which is desirable in loops to prohibit
-			multiple assignment
-		@deprecated use explicit upwards parameter rather than boolean
-	*/
-	public VariableScope(Karajan c, VariableScope parent, boolean a) {
-		if(parentScope!=null) {
-			logger.info("New scope "+hashCode()+" with parent scope "+parentScope.hashCode());
-		} else {
-			logger.info("New scope "+hashCode()+" with no parent.");
-		}
-		compiler = c;
-		parentScope = parent;
-		if(a) {
-			enclosureType = ENCLOSURE_ALL;
-		} else {
-			enclosureType = ENCLOSURE_NONE;
-		}
+		this(c,parent,ENCLOSURE_ALL);
 	}
 
 	/** Creates a new variable scope.

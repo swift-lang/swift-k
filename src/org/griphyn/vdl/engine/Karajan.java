@@ -183,7 +183,7 @@ public class Karajan {
 
 	public void procedure(Procedure proc, VariableScope containingScope) throws CompilationException {
 		VariableScope outerScope = new VariableScope(this, null);
-		VariableScope innerScope = new VariableScope(this, outerScope, false);
+		VariableScope innerScope = new VariableScope(this, outerScope, VariableScope.ENCLOSURE_NONE);
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("name", proc.getName());
