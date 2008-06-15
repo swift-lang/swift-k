@@ -22,6 +22,8 @@ info() {
 	cat /proc/cpuinfo 2>&1 >& "$INFO"
 	infosection "/proc/meminfo"
 	cat /proc/meminfo 2>&1 >& "$INFO"
+	infosection "command line"
+	echo $COMMANDLINE 2>&1 >& "$INFO"
 }
 
 logstate() {
@@ -84,6 +86,7 @@ closeinfo() {
 	exec 3>&-
 }
 
+COMMANDLINE=$@
 WFDIR=$PWD
 openinfo "wrapper.log"
 ID=$1
