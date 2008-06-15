@@ -246,9 +246,9 @@ namespace("vdl"
 					    task:transfer(srchost=host, srcfile=bname,
 					        srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)
 					)
-			        vdl:logvar(var, path, host, dir, bname)
-			        log(LOG:DEBUG, "FILE_STAGE_OUT_END srcname={bname} srcdir={rdir} srchost={host} ",
-							"destdir={ldir} desthost={dhost} provider={provider}")
+					vdl:logvar(var, path, host, dir, bname)
+					log(LOG:DEBUG, "FILE_STAGE_OUT_END srcname={bname} srcdir={rdir} srchost={host} ",
+						"destdir={ldir} desthost={dhost} provider={provider}")
 	
 					list(bname, rdir, host, file:size(fullLocal))
 				)

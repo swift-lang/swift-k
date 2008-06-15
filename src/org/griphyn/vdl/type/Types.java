@@ -52,10 +52,10 @@ public class Types {
 	private static Type addPrimitiveType(String name) {
 		Type type = Type.Factory.createType(name, true);
 		addType(type);
-        return type;
+		return type;
 	}
-    
-    public static final Type INT, STRING, FLOAT, BOOLEAN, ANY;
+
+	public static final Type INT, STRING, FLOAT, BOOLEAN, ANY;
 
 	// add built-in primitive types
 	static {
