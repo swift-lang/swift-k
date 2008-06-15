@@ -298,7 +298,7 @@ namespace("vdl"
 			)
 		)
 		
-		element(transferSTDs, [rhost, tmpdir, jobid, stdout, stderr]
+		element(transferStandardFiles, [rhost, tmpdir, jobid, stdout, stderr]
 			concat(
 				for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))	
 					[name, file] := each(f)
@@ -443,7 +443,7 @@ namespace("vdl"
 							cleanupFiles(cacheFilesToRemove, rhost)
 						)
 						
-						outs := transferSTDs(rhost, tmpdir, jobid, stdout, stderr)
+						outs := transferStandardFiles(rhost, tmpdir, jobid, stdout, stderr)
 						
 						discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))
 						kickstartRec := if(
