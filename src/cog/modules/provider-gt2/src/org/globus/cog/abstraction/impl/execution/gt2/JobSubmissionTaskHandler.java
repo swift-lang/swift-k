@@ -417,10 +417,21 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         .getStdError()));
             }
 
+            if (spec.getAttribute("condor_requirements") != null) {
+                String requirementString = (String) spec.getAttribute("condor_requirements");
+                NameOpValue req = new NameOpValue("condorsubmit", NameOpValue.EQ);
+                List l = new LinkedList();
+                l.add(new Value("Requirements"));
+                l.add(new Value(requirementString));
+                req.add(l);
+                rsl.add(req);
+            }
+
             Iterator i = spec.getAttributeNames().iterator();
             while (i.hasNext()) {
                 try {
                     String key = (String) i.next();
+                    if(key.equals("condor_requirements")) continue;
                     rsl.add(new NameOpValue(key, NameOpValue.EQ, (String) spec
                             .getAttribute(key)));
                 }
