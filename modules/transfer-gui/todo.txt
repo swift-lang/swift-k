@@ -1,0 +1,9 @@
+Todo list:
+1. The GUI is based on OGCE now, we need to transfer it to Cog4 first. This task involves some interface changes.
+2. merge "Generate Credential" button and "Myproxy" button into one "authentication" button. When users click it, a dialog will popup and 
+   provide two options for users:
+   		1) generate a proxy from local certificate;
+   		2) get a short-term proxy from a Myproxy server;
+   Some explanation text will help users to make a decision and prevent confusion. 
+3. Add a "Advanced options" button to replace "RFT" button. Clicking that button will also popup a dialog to set parallel streams, 
+   TCP buffer, concurrency and whether reliable transfer is enforced or not. 
