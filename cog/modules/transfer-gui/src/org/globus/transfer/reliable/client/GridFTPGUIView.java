@@ -539,7 +539,7 @@ public class GridFTPGUIView extends FrameView {
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
     	JFileChooser chooser = new JFileChooser();
     	chooser.setDialogTitle("Choose Log File");
-    	int flag = chooser.showOpenDialog(null);
+    	int flag = chooser.showSaveDialog(null);
     	if (flag == JFileChooser.APPROVE_OPTION) {
     		File f = chooser.getSelectedFile();
     		try {
