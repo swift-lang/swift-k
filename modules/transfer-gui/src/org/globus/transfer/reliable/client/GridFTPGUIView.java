@@ -12,11 +12,17 @@ import org.jdesktop.application.FrameView;
 import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import javax.swing.Timer;
 import javax.swing.Icon;
 import javax.swing.JDialog;
@@ -24,6 +30,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
+
+import org.apache.axis.utils.JWSClassLoader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.globus.common.CoGProperties;
@@ -155,9 +163,12 @@ public class GridFTPGUIView extends FrameView {
         jMenuItem10 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
+        jMenu3 = new javax.swing.JMenu();
         jMenuItem3 = new javax.swing.JMenuItem();
         jMenuItem4 = new javax.swing.JMenuItem();
         jMenuItem5 = new javax.swing.JMenuItem();
+        jMenuItem11 = new javax.swing.JMenuItem();
+        jMenuItem12 = new javax.swing.JMenuItem();
         javax.swing.JMenu helpMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem aboutMenuItem = new javax.swing.JMenuItem();
         statusPanel = new javax.swing.JPanel();
@@ -262,7 +273,7 @@ public class GridFTPGUIView extends FrameView {
                 jButton8ActionPerformed(evt);
             }
         });
-        jToolBar1.add(jButton8);
+        //jToolBar1.add(jButton8);
 
         statusPanelSeparator.setName("statusPanelSeparator"); // NOI18N
 
@@ -412,7 +423,33 @@ public class GridFTPGUIView extends FrameView {
         jMenu2.add(jMenuItem5);
 
         menuBar.add(jMenu2);
-
+        
+        jMenu3.setText(resourceMap.getString("jMenu3.text")); // NOI18N
+        jMenu3.setName("jMenu3"); // NOI18N
+        jMenu3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenu3ActionPerformed(evt);
+            }
+        });
+        
+        jMenuItem11.setText(resourceMap.getString("jMenuItem11.text")); // NOI18N
+        jMenuItem11.setName("jMenuItem11"); // NOI18N
+        jMenuItem11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem11ActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jMenuItem11);
+        
+        jMenuItem12.setText(resourceMap.getString("jMenuItem12.text")); // NOI18N
+        jMenuItem12.setName("jMenuItem12"); // NOI18N
+        jMenuItem12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem12ActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jMenuItem12);
+        menuBar.add(jMenu3);
         helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
         helpMenu.setName("helpMenu"); // NOI18N
 
@@ -472,6 +509,10 @@ public class GridFTPGUIView extends FrameView {
     private void jMenu2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu2ActionPerformed
                 
     }//GEN-LAST:event_jMenu2ActionPerformed
+    
+    private void jMenu3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu2ActionPerformed
+        
+    }//GEN-LAST:event_jMenu2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
         createProxy();
@@ -522,6 +563,53 @@ public class GridFTPGUIView extends FrameView {
 
     private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
         saveFile();
+    }//GEN-LAST:event_jMenuItem7ActionPerformed
+    
+    private void jMenuItem11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+        File logConfigFile = new File(UIConstants.LOG_CONFIG);
+        String logLocation = null;
+        if (!logConfigFile.exists()) {
+        	String JWSCacheDir = System.getProperty("deployment.user.cachedir");	
+        	logLocation = JWSCacheDir + File.separator + "logoutput";
+        } else {
+        	InputStream is = null;
+        	try {
+				is = new BufferedInputStream(new FileInputStream(logConfigFile));
+				Properties prop = new Properties();
+	        	prop.load(is);
+	        	logLocation = prop.getProperty("log4j.appender.A1.file");
+			} catch (Exception e) {
+				logLocation="can not get log file location";
+			} finally {
+				try {
+					is.close();
+				} catch (IOException e) {
+					
+				}
+			}        	
+        }
+        
+        JOptionPane.showMessageDialog(null, logLocation, "Log Location", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jMenuItem7ActionPerformed
+    
+    private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+    	JFileChooser chooser = new JFileChooser();
+    	chooser.setDialogTitle("Choose Log File");
+    	int flag = chooser.showSaveDialog(null);
+    	if (flag == JFileChooser.APPROVE_OPTION) {
+    		File f = chooser.getSelectedFile();
+    		try {
+    			logFileName = f.getCanonicalPath();
+    			File logConfigFile = new File(UIConstants.LOG_CONFIG);
+    			if (!logConfigFile.exists() || !logConfigFile.isFile()) {
+    				LogFileUtils.createNewLogConfigFile(logFileName);
+    			} else {
+    				LogFileUtils.updateLogConfigFile(logFileName);
+    			}
+			} catch (IOException e) {
+				logFileName = "error_log";
+			}
+    	}
     }//GEN-LAST:event_jMenuItem7ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -814,6 +902,7 @@ public class GridFTPGUIView extends FrameView {
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
@@ -824,6 +913,8 @@ public class GridFTPGUIView extends FrameView {
     private javax.swing.JMenuItem jMenuItem8;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JMenuItem jMenuItem10;
+    private javax.swing.JMenuItem jMenuItem11;
+    private javax.swing.JMenuItem jMenuItem12;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
