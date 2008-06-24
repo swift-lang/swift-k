@@ -569,8 +569,14 @@ public class GridFTPGUIView extends FrameView {
         File logConfigFile = new File(UIConstants.LOG_CONFIG);
         String logLocation = null;
         if (!logConfigFile.exists()) {
-        	String JWSCacheDir = System.getProperty("deployment.user.cachedir");	
-        	logLocation = JWSCacheDir + File.separator + "logoutput";
+        	String dir;
+			try {
+				dir = new File(".").getCanonicalPath();
+				logLocation = dir + File.separator + "logoutput";
+			} catch (IOException e) {
+
+			}
+        	
         } else {
         	InputStream is = null;
         	try {
