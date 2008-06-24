@@ -157,7 +157,7 @@ public class ProgramStarter {
 	private void invokeAnt() {		
 		try {			
 			URL url = Thread.currentThread().getContextClassLoader().getResource("scripts/build.xml");		
-			System.out.println(url);
+			//System.out.println(new File(".").getCanonicalPath());
 			logger.debug(url);
 			Project p = new Project();			
 			p.init();
