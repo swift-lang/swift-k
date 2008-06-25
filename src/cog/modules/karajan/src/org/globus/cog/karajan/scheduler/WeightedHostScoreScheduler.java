@@ -223,6 +223,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 
 		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
+		selected.notifyUsed();
 		return selected.getHost();
 	}
 

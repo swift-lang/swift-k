@@ -11,6 +11,7 @@ package org.globus.cog.karajan.scheduler;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import org.apache.log4j.Logger;
 
 import org.globus.cog.karajan.util.BoundContact;
 
@@ -18,12 +19,15 @@ public class WeightedHost implements Comparable {
 
 	static final int MINWEIGHT = -10;
 
+	private static final Logger logger = Logger.getLogger(WeightedHost.class);
+
 	private BoundContact host;
 	private Double score;
 	private double tscore;
 	private int load;
 	private double delayedDelta;
 	private float jobThrottle;
+	private long lastUsed;
 
 	public WeightedHost(BoundContact contact, float jobThrottle) {
 		this(contact, 0.0, jobThrottle);
@@ -63,7 +67,8 @@ public class WeightedHost implements Comparable {
 	}
 
 	public final double getTScore() {
-		return tscore;
+		if(tscore >= 1) return tscore;
+		if(isOverloaded()) return 0; else return 1;
 	}
 
 	public final BoundContact getHost() {
@@ -130,7 +135,25 @@ public class WeightedHost implements Comparable {
 	}
 
 	public boolean isOverloaded() {
-		return !(load < maxLoad());
+		double ml = maxLoad();
+		if(tscore >= 1) {
+			// the site is mostly good. permit 1 or more jobs
+			// always.
+			logger.info("In load mode. score = "+score+" tscore = "+tscore+", maxload="+ml);
+			return !(load <= ml);
+		} else {
+			// the site is mostly bad. allow either 1 or 0 jobs
+			// based on time.
+			long now = System.currentTimeMillis();
+			long delay = now - lastUsed;
+			long permittedDelay = (long)(Math.exp(-(score.doubleValue()))*100.0);
+			boolean overloaded=(delay<permittedDelay);
+			// tscore of -1 will give delay of around 
+			// 200ms, and will double every time tscore goes
+			// down by one (which is once per failed job? roughly?)
+			logger.info("In delay mode. score = "+score+" tscore = "+tscore+", maxload="+ml+" delay since last used="+delay+"ms"+" permitted delay="+permittedDelay+"ms overloaded="+overloaded);
+			return overloaded;
+		}
 	}
 
 	public float getJobThrottle() {
@@ -138,6 +161,10 @@ public class WeightedHost implements Comparable {
 	}
 
 	public double maxLoad() {
-		return jobThrottle * tscore + 2;
+		return jobThrottle * tscore + 1;
+	}
+
+	public void notifyUsed() {
+		lastUsed = System.currentTimeMillis();
 	}
 }
