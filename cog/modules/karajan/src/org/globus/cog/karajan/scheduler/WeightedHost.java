@@ -45,7 +45,8 @@ public class WeightedHost implements Comparable {
 	}
 
 	protected void setScore(double score) {
-		if(score<MINWEIGHT) score=MINWEIGHT;
+		if (score < MINWEIGHT)
+			score = MINWEIGHT;
 		this.score = new Double(score);
 		this.tscore = smooth(score);
 	}
@@ -67,8 +68,12 @@ public class WeightedHost implements Comparable {
 	}
 
 	public final double getTScore() {
-		if(tscore >= 1) return tscore;
-		if(isOverloaded()) return 0; else return 1;
+		if (tscore >= 1)
+			return tscore;
+		if (isOverloaded())
+			return 0;
+		else
+			return 1;
 	}
 
 	public final BoundContact getHost() {
@@ -111,7 +116,7 @@ public class WeightedHost implements Comparable {
 
 	public String toString() {
 		return host.toString() + ":" + D4.format(score) + "(" + D4.format(tscore) + "):" + load
-				+ "/" + (int)(maxLoad()) + (isOverloaded() ? " overloaded" : "");
+				+ "/" + (int) (maxLoad()) + (isOverloaded() ? " overloaded" : "");
 	}
 
 	public int compareTo(Object o) {
@@ -136,22 +141,30 @@ public class WeightedHost implements Comparable {
 
 	public boolean isOverloaded() {
 		double ml = maxLoad();
-		if(tscore >= 1) {
+		if (tscore >= 1) {
 			// the site is mostly good. permit 1 or more jobs
 			// always.
-			logger.info("In load mode. score = "+score+" tscore = "+tscore+", maxload="+ml);
+			if (logger.isInfoEnabled()) {
+				logger.info("In load mode. score = " + score + " tscore = " + tscore + ", maxload="
+						+ ml);
+			}
 			return !(load <= ml);
-		} else {
+		}
+		else {
 			// the site is mostly bad. allow either 1 or 0 jobs
 			// based on time.
 			long now = System.currentTimeMillis();
 			long delay = now - lastUsed;
-			long permittedDelay = (long)(Math.exp(-(score.doubleValue()))*100.0);
-			boolean overloaded=(delay<permittedDelay);
-			// tscore of -1 will give delay of around 
+			long permittedDelay = (long) (Math.exp(-(score.doubleValue())) * 100.0);
+			boolean overloaded = (delay < permittedDelay);
+			// tscore of -1 will give delay of around
 			// 200ms, and will double every time tscore goes
 			// down by one (which is once per failed job? roughly?)
-			logger.info("In delay mode. score = "+score+" tscore = "+tscore+", maxload="+ml+" delay since last used="+delay+"ms"+" permitted delay="+permittedDelay+"ms overloaded="+overloaded);
+			if (logger.isInfoEnabled()) {
+				logger.info("In delay mode. score = " + score + " tscore = " + tscore
+						+ ", maxload=" + ml + " delay since last used=" + delay + "ms"
+						+ " permitted delay=" + permittedDelay + "ms overloaded=" + overloaded);
+			}
 			return overloaded;
 		}
 	}
