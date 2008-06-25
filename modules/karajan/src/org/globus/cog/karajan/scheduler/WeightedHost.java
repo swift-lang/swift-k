@@ -106,7 +106,7 @@ public class WeightedHost implements Comparable {
 
 	public String toString() {
 		return host.toString() + ":" + D4.format(score) + "(" + D4.format(tscore) + "):" + load
-				+ "/" + (int)(jobThrottle * tscore + 2) + (isOverloaded() ? " overloaded" : "");
+				+ "/" + (int)(maxLoad()) + (isOverloaded() ? " overloaded" : "");
 	}
 
 	public int compareTo(Object o) {
@@ -130,10 +130,14 @@ public class WeightedHost implements Comparable {
 	}
 
 	public boolean isOverloaded() {
-		return !(load < jobThrottle * tscore + 2);
+		return !(load < maxLoad());
 	}
 
 	public float getJobThrottle() {
 		return jobThrottle;
+	}
+
+	public double maxLoad() {
+		return jobThrottle * tscore + 2;
 	}
 }
