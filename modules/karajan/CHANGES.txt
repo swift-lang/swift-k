@@ -1,3 +1,9 @@
+(06/26/2008)
+
+*** WeightedHostScoreScheduler behaviour changed for low scoring sites;
+    low scoring sites have a delay between submissions, rather than the
+    previous behaviour of always taking a load of at least 2.
+
 (04/30/2008)
 
 *** Added raceFor. It's a blend between race() and for(). It will 
