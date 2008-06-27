@@ -34,6 +34,7 @@ import javax.swing.JOptionPane;
 import org.apache.axis.utils.JWSClassLoader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.PropertyConfigurator;
 import org.globus.common.CoGProperties;
 import org.globus.gsi.CertUtil;
 import org.globus.gsi.GlobusCredential;
@@ -612,6 +613,7 @@ public class GridFTPGUIView extends FrameView {
     			} else {
     				LogFileUtils.updateLogConfigFile(logFileName);
     			}
+    			PropertyConfigurator.configure(UIConstants.LOG_CONFIG);
 			} catch (IOException e) {
 				logFileName = "error_log";
 			}
