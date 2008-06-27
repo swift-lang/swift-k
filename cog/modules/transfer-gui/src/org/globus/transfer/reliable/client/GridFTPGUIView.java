@@ -4,7 +4,6 @@
 
 package org.globus.transfer.reliable.client;
 
-import java.awt.GridLayout;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.ResourceMap;
 import org.jdesktop.application.SingleFrameApplication;
@@ -16,7 +15,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,7 +29,6 @@ import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 
-import org.apache.axis.utils.JWSClassLoader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
@@ -40,7 +37,6 @@ import org.globus.gsi.CertUtil;
 import org.globus.gsi.GlobusCredential;
 import org.globus.ogce.beans.filetransfer.FtpProperties;
 import org.globus.ogce.beans.filetransfer.gui.FileTransferMainPanel;
-import org.globus.ogce.beans.filetransfer.gui.monitor.OptionsPanel;
 import org.globus.ogce.beans.filetransfer.gui.remote.common.DisplayInterface;
 import org.globus.ogce.beans.filetransfer.gui.remote.ftp.FtpClient;
 import org.globus.ogce.beans.filetransfer.gui.remote.gridftp.GridClient;
