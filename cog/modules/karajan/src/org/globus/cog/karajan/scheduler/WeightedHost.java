@@ -144,8 +144,8 @@ public class WeightedHost implements Comparable {
 		if (tscore >= 1) {
 			// the site is mostly good. permit 1 or more jobs
 			// always.
-			if (logger.isInfoEnabled()) {
-				logger.info("In load mode. score = " + score + " tscore = " + tscore + ", maxload="
+			if (logger.isDebugEnabled()) {
+				logger.debug("In load mode. score = " + score + " tscore = " + tscore + ", maxload="
 						+ ml);
 			}
 			return !(load <= ml);
@@ -160,8 +160,8 @@ public class WeightedHost implements Comparable {
 			// tscore of -1 will give delay of around
 			// 200ms, and will double every time tscore goes
 			// down by one (which is once per failed job? roughly?)
-			if (logger.isInfoEnabled()) {
-				logger.info("In delay mode. score = " + score + " tscore = " + tscore
+			if (logger.isDebugEnabled()) {
+				logger.debug("In delay mode. score = " + score + " tscore = " + tscore
 						+ ", maxload=" + ml + " delay since last used=" + delay + "ms"
 						+ " permitted delay=" + permittedDelay + "ms overloaded=" + overloaded);
 			}
