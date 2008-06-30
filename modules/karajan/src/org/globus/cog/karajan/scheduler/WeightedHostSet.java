@@ -12,6 +12,8 @@ package org.globus.cog.karajan.scheduler;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.TreeSet;
 
 import org.globus.cog.karajan.util.BoundContact;
@@ -21,7 +23,9 @@ public class WeightedHostSet {
 	private Map weightedHosts;
 	private double sum;
 	private double scoreHighCap;
-	private int overloadedCount;
+	private volatile int overloadedCount;
+
+	private static final Timer timer = new Timer();
 
 	public WeightedHostSet(double scoreHighCap) {
 		init();
@@ -38,32 +42,52 @@ public class WeightedHostSet {
 		scores.add(wh);
 		weightedHosts.put(wh.getHost(), wh);
 		sum += wh.getTScore();
-		overloadedCount += wh.isOverloaded() ? 1 : 0;
+		overloadedCount += checkOverloaded(wh, 1);
 	}
 
 	public void changeScore(WeightedHost wh, double newScore) {
 		scores.remove(wh);
 		sum -= wh.getTScore();
-		overloadedCount -= wh.isOverloaded() ? 1 : 0;
+		overloadedCount += checkOverloaded(wh, -1);
 		wh.setScore(newScore);
 		weightedHosts.put(wh.getHost(), wh);
 		scores.add(wh);
 		sum += wh.getTScore();
-		overloadedCount += wh.isOverloaded() ? 1 : 0;
+		overloadedCount += checkOverloaded(wh, 1);
 	}
 
 	public void changeLoad(WeightedHost wh, int dl) {
-		overloadedCount -= wh.isOverloaded() ? 1 : 0;
+		overloadedCount -= checkOverloaded(wh, -1);
 		wh.changeLoad(dl);
-		overloadedCount += wh.isOverloaded() ? 1 : 0;
+		overloadedCount += checkOverloaded(wh, 1);
 	}
 
 	public double remove(WeightedHost wh) {
 		scores.remove(wh);
 		weightedHosts.remove(wh.getHost());
 		sum -= wh.getScore();
-		overloadedCount -= wh.isOverloaded() ? 1 : 0;
+		overloadedCount += checkOverloaded(wh, -1);
 		return wh.getScore();
+	}
+
+	private int checkOverloaded(WeightedHost wh, final int dir) {
+		int v = wh.isOverloaded();
+		if (v >= 0) {
+		    if (dir > 0) {
+		    	return v;
+		    }
+		    else {
+		        return -v;
+		    }
+		}
+		else {
+			timer.schedule(new TimerTask() {
+				public void run() {
+				    overloadedCount -= dir;
+				}
+			}, -v);
+			return dir;
+		}
 	}
 
 	public WeightedHost findHost(BoundContact bc) {
