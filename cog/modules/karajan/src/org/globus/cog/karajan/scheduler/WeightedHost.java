@@ -11,8 +11,9 @@ package org.globus.cog.karajan.scheduler;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import org.apache.log4j.Logger;
+import java.util.Timer;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.util.BoundContact;
 
 public class WeightedHost implements Comparable {
@@ -70,7 +71,7 @@ public class WeightedHost implements Comparable {
 	public final double getTScore() {
 		if (tscore >= 1)
 			return tscore;
-		if (isOverloaded())
+		if (isOverloaded() != 0)
 			return 0;
 		else
 			return 1;
@@ -116,7 +117,7 @@ public class WeightedHost implements Comparable {
 
 	public String toString() {
 		return host.toString() + ":" + D4.format(score) + "(" + D4.format(tscore) + "):" + load
-				+ "/" + (int) (maxLoad()) + (isOverloaded() ? " overloaded" : "");
+				+ "/" + (int) (maxLoad()) + " overload: " + isOverloaded();
 	}
 
 	public int compareTo(Object o) {
@@ -139,7 +140,7 @@ public class WeightedHost implements Comparable {
 		this.delayedDelta = delayedDelta;
 	}
 
-	public boolean isOverloaded() {
+	public int isOverloaded() {
 		double ml = maxLoad();
 		if (tscore >= 1) {
 			// the site is mostly good. permit 1 or more jobs
@@ -148,7 +149,7 @@ public class WeightedHost implements Comparable {
 				logger.debug("In load mode. score = " + score + " tscore = " + tscore + ", maxload="
 						+ ml);
 			}
-			return !(load <= ml);
+			return load <= ml ? 0 : 1;
 		}
 		else {
 			// the site is mostly bad. allow either 1 or 0 jobs
@@ -165,7 +166,7 @@ public class WeightedHost implements Comparable {
 						+ ", maxload=" + ml + " delay since last used=" + delay + "ms"
 						+ " permitted delay=" + permittedDelay + "ms overloaded=" + overloaded);
 			}
-			return overloaded;
+			return (int) (delay - permittedDelay);
 		}
 	}
 

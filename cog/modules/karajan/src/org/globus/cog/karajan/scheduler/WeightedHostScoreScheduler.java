@@ -274,7 +274,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			Iterator i = s.iterator();
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
-				if (!wh.isOverloaded()) {
+				if (wh.isOverloaded() == 0) {
 					ns.add(wh);
 				}
 			}
@@ -284,7 +284,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			Iterator i = s.iterator();
 			while (i.hasNext()) {
 				WeightedHost wh = (WeightedHost) i.next();
-				if (wh.isOverloaded()) {
+				if (wh.isOverloaded() != 0) {
 					i.remove();
 				}
 			}
