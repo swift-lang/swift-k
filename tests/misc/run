@@ -7,3 +7,4 @@ for a in clusters no-retries dryrun typecheck path-prefix restart restart2 resta
    exit $R
  fi
 done
+echo All misc. tests passed ok
