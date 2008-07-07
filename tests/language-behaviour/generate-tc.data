@@ -1,5 +1,5 @@
 #!/bin/bash
 
-for cmd in wc touch; do
+for cmd in wc touch sleep; do
   echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
 done
