@@ -59,7 +59,7 @@ namespace("vdl"
 						fp := vdl:fringePaths(var)
 						try (
 							for(path, fp
-								discard(vdl:getFieldValue(path=path, var))
+								vdl:waitFieldValue(path=path, var)
 							)
 							catch(".*errors in data dependencies.*"
 								log(LOG:DEBUG, exception)
@@ -80,7 +80,7 @@ namespace("vdl"
 				)
 				else(
 					//we still wait until the primitive value is there
-					discard(vdl:getFieldValue(var))
+					vdl:waitFieldValue(var)
 				)
 			)
 		)
