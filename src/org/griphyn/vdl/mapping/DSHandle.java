@@ -82,4 +82,6 @@ public interface DSHandle {
     Mapper getMapper();
 
     public String getIdentifier();
+
+    public boolean isRestartable();
 }

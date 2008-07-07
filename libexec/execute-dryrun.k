@@ -1,4 +1,4 @@
-element([tr, optional(arguments, stdin, stdout, stderr, deperror), channel(stagein), channel(stageout)]
+element([tr, optional(arguments, stdin, stdout, stderr, deperror), channel(stagein), channel(stageout), channel(restartout)]
 
 	done := isDone(stageout)
 				

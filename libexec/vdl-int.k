@@ -41,9 +41,9 @@ namespace("vdl"
 			)
 		)
 			
-		element(mark, [stageout, err, optional(mapping)]
+		element(mark, [restarts, err, optional(mapping)]
 			if(
-				err for(pv, stageout
+				err for(pv, restarts
 					[path, var] := each(pv)
 					vdl:setFutureFault(var, path=path, mapping=mapping)
 				)
@@ -246,7 +246,6 @@ namespace("vdl"
 					    task:transfer(srchost=host, srcfile=bname,
 					        srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)
 					)
-					vdl:logvar(var, path)
 					log(LOG:DEBUG, "FILE_STAGE_OUT_END srcname={bname} srcdir={rdir} srchost={host} ",
 						"destdir={ldir} desthost={dhost} provider={provider}")
 	
@@ -260,6 +259,13 @@ namespace("vdl"
 				)
 			)
 			log(LOG:INFO, "END jobid={jobid} - Staging out finished")
+		)
+
+		element(doRestartlog, [restartouts]
+			uParallelFor(f, restartouts,
+				[path, var] := each(f)
+				vdl:logvar(var, path)
+			)
 		)
 		
 		element(graphStuff, [tr, stagein, stageout, err, optional(args)]
@@ -352,7 +358,7 @@ namespace("vdl"
 			recfile
 		)
 
-		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout, 
+		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout,  restartout,
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
@@ -418,6 +424,7 @@ namespace("vdl"
 						
 						vdl:setprogress("Stage out")
 						doStageout(jobid, stageout, sharedDir, rhost)
+						doRestartlog(restartout)
 						if(
 							kickstart != "" & vdl:configProperty("kickstart.always.transfer") == "true"
 							discard(transferKickstartRec(rhost, wfdir, jobid, jobdir))

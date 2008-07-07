@@ -100,6 +100,20 @@ namespace("vdl"
 					deperror = true
 				)
 			)
+			try(
+				if(vdl:isRestartable(var) 
+					channel:to(restartout,
+						for(path, vdl:fringePaths(var)
+							list(path, var)
+						)
+					)
+				)
+				catch(".*not mapped.*"
+					log(LOG:DEBUG, exception)
+					mdeperror = true
+					deperror = true
+				)
+			)
 		)
 
 		element(mapping, [descriptor, ...]

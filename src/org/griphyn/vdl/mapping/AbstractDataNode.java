@@ -65,6 +65,10 @@ public abstract class AbstractDataNode implements DSHandle {
 		return field.getType().isPrimitive();
 	}
 
+	public boolean isRestartable() {
+		return !isPrimitive();
+	}
+
 	protected Field getField() {
 		return field;
 	}

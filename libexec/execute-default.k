@@ -1,9 +1,9 @@
-element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), channel(stagein), channel(stageout)]
+element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), channel(stagein), channel(stageout), channel(restartout)]
 
 	vdl:initprogressstate()
 	vdl:setprogress("Initializing")
 
-	done := isDone(stageout)
+	done := isDone(restartout)
 	derr := try(deperror, false)
 	merr := try(mdeperror, false)
 
@@ -23,13 +23,13 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 									execute2(
 										tr, maybe(arguments=arguments), 
 										maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
-										stagein, stageout, replicationGroup, replicationChannel
+										stagein, stageout, restartout, replicationGroup, replicationChannel
 									)
 									catch("^Abort$")
 								)
 							)
 						)
-						mark(stageout, err=false, mapping=false)
+						mark(restartout, err=false, mapping=false)
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
 						echo("{tr} completed")
 						log(LOG:INFO, "END_SUCCESS thread={#thread} tr={tr}")
@@ -46,7 +46,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 							else (
 								to(errors, exception)
 								log(LOG:INFO, exception)
-								mark(stageout, err=true, mapping=false)
+								mark(restartout, err=true, mapping=false)
 								graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
 							)
 						)
@@ -68,7 +68,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 					log(LOG:INFO, exception)
 				)
 			)
-			mark(stageout, err=true, mapping=merr)
+			mark(restartout, err=true, mapping=merr)
 			graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
 		)
 	)
