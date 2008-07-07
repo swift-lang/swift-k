@@ -31,7 +31,14 @@ public class LogVar extends VDLFunction {
             path = Path.parse(TypeUtil.toString(p));
         }
 		path = var.getPathFromRoot().append(path);
-		RestartLog.LOG_CHANNEL.ret(stack, var.getMapper().map(path).toString());
+		String annotation;
+		if(var.getMapper() != null) {
+			annotation = "" + var.getMapper().map(path);
+		} else {
+			annotation = "unmapped";
+		}
+		RestartLog.LOG_CHANNEL.ret(stack, var.getRoot().getParam("swift#restartid")
+				+ "." + path.stringForm() + "!" + annotation);
 		return null;
 	}
 }

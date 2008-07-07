@@ -52,6 +52,8 @@ public class New extends VDLFunction {
 			mapping.put("dbgname", dbgname);
 		}
 
+		mapping.put("swift#restartid", getThreadPrefix(stack) + ":" + dbgname);
+
 		if(waitfor != null) {
 			mapping.put("waitfor", waitfor);
 		}
