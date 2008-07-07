@@ -12,12 +12,9 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
 public class LogVar extends VDLFunction {
-	public static final Arg PA_HOST = new Arg.Positional("host");
-	public static final Arg PA_DIR = new Arg.Positional("dir");
-	public static final Arg PA_NAME = new Arg.Positional("name");
 
 	static {
-		setArguments(LogVar.class, new Arg[] { PA_VAR, PA_PATH, PA_HOST, PA_DIR, PA_NAME });
+		setArguments(LogVar.class, new Arg[] { PA_VAR, PA_PATH });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
