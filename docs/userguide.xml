@@ -2360,6 +2360,49 @@ be found <ulink url="http://www.teragrid.org/userinfo/access/allocations.php">he
 </para>
 
 		</section>
+		<section><title>Launching MPI jobs from Swift</title>
+<para>
+Here is an example of running a simple MPI program.
+</para>
+<para>
+In SwiftScript, we make an invocation that does not look any different
+from any other invocation. In the below code, we do not have any input
+files, and have two output files on stdout and stderr:
+<programlisting>
+type file;
+
+(file o, file e) p() { 
+    app {
+        mpi stdout=@filename(o) stderr=@filename(e);
+    }
+}
+
+file mpiout &lt;"mpi.out">;
+file mpierr &lt;"mpi.err">;
+
+(mpiout, mpierr) = p();
+</programlisting>
+</para>
+<para>
+Now we define how 'mpi' will run in tc.data:
+<programlisting>
+tguc    mpi             /home/benc/mpi/mpi.sh   INSTALLED       INTEL32::LINUX GLOBUS::host_xcount=3
+</programlisting>
+</para>
+<para>
+mpi.sh is a wrapper script that launches the MPI program. It must be installed
+on the remote site:
+<programlisting>
+#!/bin/bash
+mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
+</programlisting>
+</para>
+<para>
+Because of the way that Swift runs its server side code, provider-specific
+MPI modes (such as GRAM jobType=mpi) should not be used. Instead, the
+mpirun command should be explicitly invoked.
+</para>
+		</section>
 	</section>
 
 	<section><title>The Site Catalog - sites.xml</title>
