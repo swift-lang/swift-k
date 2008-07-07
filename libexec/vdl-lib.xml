@@ -45,7 +45,7 @@
 	<export name="getFieldSubscript"><elementDef classname="org.griphyn.vdl.karajan.lib.GetFieldSubscript"/></export>
 	<export name="setFieldValue"><elementDef classname="org.griphyn.vdl.karajan.lib.SetFieldValue"/></export>
 	<export name="getFieldValue"><elementDef classname="org.griphyn.vdl.karajan.lib.GetFieldValue"/></export>
-	<export name="isDatasetBound"><elementDef classname="org.griphyn.vdl.karajan.lib.IsDatasetBound"/></export>
+	<export name="isFileBound"><elementDef classname="org.griphyn.vdl.karajan.lib.IsFileBound"/></export>
 	<export name="fileSet"><elementDef classname="org.griphyn.vdl.karajan.lib.FileSet"/></export>
 	<export name="fringePaths"><elementDef classname="org.griphyn.vdl.karajan.lib.FringePaths"/></export>
 	<export name="assign"><elementDef classname="org.griphyn.vdl.karajan.lib.Assign"/></export>

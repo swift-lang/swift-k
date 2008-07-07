@@ -54,7 +54,7 @@ namespace("vdl"
 
 		element(stagein, [var]
 			if(
-				vdl:isDatasetBound(var) try(
+				vdl:isFileBound(var) try(
 					sequential(
 						fp := vdl:fringePaths(var)
 						try (
@@ -87,7 +87,7 @@ namespace("vdl"
 
 		element(stageout, [var]
 			try(
-				if(vdl:isDatasetBound(var) 
+				if(vdl:isFileBound(var) 
 					channel:to(stageout,
 						for(path, vdl:fringePaths(var)
 							list(path, var)

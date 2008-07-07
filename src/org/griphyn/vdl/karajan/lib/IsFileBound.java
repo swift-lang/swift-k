@@ -9,9 +9,9 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class IsDatasetBound extends VDLFunction {
+public class IsFileBound extends VDLFunction {
 	static {
-		setArguments(IsDatasetBound.class, new Arg[] { PA_VAR });
+		setArguments(IsFileBound.class, new Arg[] { PA_VAR });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
