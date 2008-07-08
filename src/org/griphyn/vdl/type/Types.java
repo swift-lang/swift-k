@@ -55,7 +55,7 @@ public class Types {
 		return type;
 	}
 
-	public static final Type INT, STRING, FLOAT, BOOLEAN, ANY;
+	public static final Type INT, STRING, FLOAT, BOOLEAN, ANY, EXTERNAL;
 
 	// add built-in primitive types
 	static {
@@ -64,6 +64,7 @@ public class Types {
 		FLOAT = addPrimitiveType("float");
 		BOOLEAN = addPrimitiveType("boolean");
 		ANY = addPrimitiveType("any");
+		EXTERNAL = addPrimitiveType("external");
 	}
 
 	public synchronized static void resolveTypes() throws NoSuchTypeException {

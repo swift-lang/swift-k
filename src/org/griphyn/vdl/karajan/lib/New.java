@@ -18,6 +18,7 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.ExternalDataNode;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -79,7 +80,9 @@ public class New extends VDLFunction {
 				type = Types.getType(typename);
 			}
 			DSHandle handle;
-			if (type.isArray()) {
+			if(typename.equals("external")) {
+				handle = new ExternalDataNode();
+			} else if (type.isArray()) {
 				// dealing with array variable
 				handle = new RootArrayDataNode(type);
 				if (value != null) {
