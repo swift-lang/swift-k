@@ -4,6 +4,7 @@
 package org.griphyn.vdl.karajan.lib.cache;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -156,5 +157,13 @@ public class Site {
 		}
 		usage = targetUsage;
 		return l;
+	}
+	
+	public synchronized Collection getFiles() {
+		return new ArrayList(files.entrySet());
+	}
+	
+	public synchronized Collection getPaths() {
+		return new ArrayList(files.keySet());
 	}
 }
