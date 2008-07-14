@@ -161,10 +161,14 @@ public class ReadData extends VDLFunction {
 			String[] header = line.split("\\s+");
 			Set t = new HashSet(type.getFieldNames());
 			Set h = new HashSet(Arrays.asList(header));
+			if (t.size() != h.size()) {
+				throw new ExecutionException("File header does not match type. " + "Expected "
+						+ t.size() + " whitespace separated items. Got " + h.size() + " instead.");
+			}
 			if (!t.equals(h)) {
 				throw new ExecutionException("File header does not match type. "
-						+ "Expected the following header items (in no particular order): " + t
-						+ ". Instead, the header was (again, in no particular order): " + h);
+						+ "Expected the following whitespace separated header items: " + t
+						+ ". Instead, the header was: " + h);
 			}
 			return header;
 		}
