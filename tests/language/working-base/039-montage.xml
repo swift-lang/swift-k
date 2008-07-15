@@ -86,16 +86,16 @@
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>img</variableReference></function></param>
-          <param name="match"><stringConstant>.*\\/(.*)</stringConstant></param>
-          <param name="transform"><stringConstant>proj_\\1</stringConstant></param>
+          <param name="match"><stringConstant>.*\/(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>proj_\1</stringConstant></param>
         </mapping>
       </dataset>
       <dataset name="areaImg" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>projImg</variableReference></function></param>
-          <param name="match"><stringConstant>(.*)\\.(.*)</stringConstant></param>
-          <param name="transform"><stringConstant>\\1_area.\\2</stringConstant></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
       </dataset>
       <call proc="mProjectPP" src="line 27">
@@ -225,8 +225,8 @@
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>image1</variableReference></function></param>
-          <param name="match"><stringConstant>(.*)\\.(.*)</stringConstant></param>
-          <param name="transform"><stringConstant>\\1_area.\\2</stringConstant></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
       </dataset>
       <variable name="image2" type="Image"><structureMember>
@@ -237,8 +237,8 @@
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>image2</variableReference></function></param>
-          <param name="match"><stringConstant>(.*)\\.(.*)</stringConstant></param>
-          <param name="transform"><stringConstant>\\1_area.\\2</stringConstant></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
       </dataset>
       <dataset name="diffImg" type="Image">
@@ -255,7 +255,7 @@
           <param name="source"><function name="filename">
             <variableReference>diffImg</variableReference></function></param>
           <param name="match"><stringConstant>diff(.*)fits</stringConstant></param>
-          <param name="transform"><stringConstant>fit\\1txt</stringConstant></param>
+          <param name="transform"><stringConstant>fit\1txt</stringConstant></param>
         </mapping>
       </dataset>
       <call proc="mDiffFit" src="line 59">
@@ -439,15 +439,15 @@
           <param name="source"><function name="filename">
             <variableReference>projImg</variableReference></function></param>
           <param name="match"><stringConstant>proj_(.*)</stringConstant></param>
-          <param name="transform"><stringConstant>corr_\\1</stringConstant></param>
+          <param name="transform"><stringConstant>corr_\1</stringConstant></param>
         </mapping>
       </dataset>
       <dataset name="corrArea" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>corrImg</variableReference></function></param>
-          <param name="match"><stringConstant>(.*)\\.(.*)</stringConstant></param>
-          <param name="transform"><stringConstant>\\1_area.\\2</stringConstant></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
       </dataset>
       <call proc="mBackground" src="line 94">
