@@ -290,8 +290,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             desc.setMaxTime(new Long(spec.getAttribute("maxTime").toString()));
         }
         if (spec.getAttribute("maxWallTime") != null) {
-            desc.setMaxWallTime(new Long(spec.getAttribute("maxWallTime")
-                    .toString()));
+            desc.setMaxWallTime(wallTimeToMinutes(spec.getAttribute("maxWallTime")));
         }
         if (spec.getAttribute("minMemory") != null) {
             desc.setMinMemory(new NonNegativeInteger(spec.getAttribute(
@@ -486,4 +485,27 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         return authorization;
     }
+
+    /** Takes walltime of the form mm or hh:mm or hh:mm:ss and returns the
+        number of minutes, discarding the seconds. */
+    public static Long wallTimeToMinutes(Object time) {
+	long n;
+        String[] s = time.toString().split(":");
+        try {
+            if (s.length == 1) {
+                n = Integer.parseInt(s[0]);
+            }
+            else if (s.length == 2 || s.length == 3) {
+                n = Integer.parseInt(s[1]) + 60 * Integer.parseInt(s[0]);     
+            }
+            else {
+                throw new IllegalArgumentException("Invalid time specification: " + time);
+            }
+        }
+        catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid time specification: " + time);
+        }
+        return new Long(n);
+    }
+
 }
