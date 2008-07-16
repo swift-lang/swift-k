@@ -14,6 +14,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 					sequential(
 						echo("{tr} started")
 						log(LOG:INFO, "START thread={#thread} tr={tr}") 
+						vdl:setprogress("Selecting site")
 						restartOnError(".*", vdl:configProperty("execution.retries"),
 							replicationChannel := channel()
 							discard(append(replicationChannel, true)) //trigger the first job

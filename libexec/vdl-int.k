@@ -362,7 +362,6 @@ namespace("vdl"
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
-			vdl:setprogress("Selecting site")
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
 				
 				[wfdir, sharedDir] := try(
