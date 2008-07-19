@@ -158,15 +158,21 @@ public class WeightedHost implements Comparable {
 			long delay = now - lastUsed;
 			long permittedDelay = (long) (Math.exp(-(score.doubleValue())) * 100.0);
 			boolean overloaded = (delay < permittedDelay);
+			int d = (int) (delay - permittedDelay);
 			// tscore of -1 will give delay of around
 			// 200ms, and will double every time tscore goes
 			// down by one (which is once per failed job? roughly?)
 			if (logger.isDebugEnabled()) {
 				logger.debug("In delay mode. score = " + score + " tscore = " + tscore
 						+ ", maxload=" + ml + " delay since last used=" + delay + "ms"
-						+ " permitted delay=" + permittedDelay + "ms overloaded=" + overloaded);
+						+ " permitted delay=" + permittedDelay + "ms overloaded=" + overloaded+ " delay-permitted delay="+d);
 			}
-			return (int) (delay - permittedDelay);
+
+			if(d>0) {
+				return 0; // not overloaded
+			} else {
+				return d; // overloaded, with negative value being the delay
+			}
 		}
 	}
 
