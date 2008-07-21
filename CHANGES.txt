@@ -1,4 +1,3 @@
-
 (06/06/08)
 *** SWIFT_JOBDIR_PATH environment variable can be use in profiles (or
     anywhere else that will get it to the worker script) to cause the
