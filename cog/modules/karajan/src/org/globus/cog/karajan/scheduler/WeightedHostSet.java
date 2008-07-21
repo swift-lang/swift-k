@@ -57,7 +57,7 @@ public class WeightedHostSet {
 	}
 
 	public void changeLoad(WeightedHost wh, int dl) {
-		overloadedCount -= checkOverloaded(wh, -1);
+		overloadedCount += checkOverloaded(wh, -1);
 		wh.changeLoad(dl);
 		overloadedCount += checkOverloaded(wh, 1);
 	}
