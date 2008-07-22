@@ -197,6 +197,9 @@ public class RemoteTreeFrame extends JPanel implements ActionListener {
     }
 
     public void addPropertyChangeListener(PropertyChangeListener l) {
+    	if (pceListeners == null) {
+    		pceListeners = new PropertyChangeSupport(this);
+    	}
         pceListeners.addPropertyChangeListener(l);
     }
 
@@ -949,7 +952,7 @@ public class RemoteTreeFrame extends JPanel implements ActionListener {
     private String user;
     private String file;
     private String pwd;
-    private PropertyChangeSupport pceListeners = new PropertyChangeSupport(this);
+    private PropertyChangeSupport pceListeners;
 
     protected String rootRemote = null;
     private String userHomeDir = null;

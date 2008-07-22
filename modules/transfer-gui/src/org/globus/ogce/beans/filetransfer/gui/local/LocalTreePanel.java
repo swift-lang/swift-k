@@ -75,8 +75,7 @@ public class LocalTreePanel extends JPanel
     public String LclFile_Sep = new String(System.getProperty("file.separator"));
     String userHome = System.getProperty("user.home") + LclFile_Sep;
     boolean home = true;
-    private PropertyChangeSupport pceListeners =
-            new PropertyChangeSupport(this);;
+    private PropertyChangeSupport pceListeners;
 
 
 
@@ -129,7 +128,6 @@ public class LocalTreePanel extends JPanel
     }
 
     public void init() {
-
         seekNode = null;
         lastExp = null;
         toolkit = Toolkit.getDefaultToolkit();
@@ -294,6 +292,9 @@ public class LocalTreePanel extends JPanel
     }
 
     public void addPropertyChangeListener(PropertyChangeListener l) {
+    	if (pceListeners == null) {
+    		pceListeners = new PropertyChangeSupport(this);
+		}
         pceListeners.addPropertyChangeListener(l);
     }
 
