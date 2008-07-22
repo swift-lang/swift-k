@@ -11,6 +11,7 @@
 	<property name="main.buildfile"	value="${cog.dir}/mbuild.xml"/>
 	<property name="dist.dir" 		value="${cog.dir}/modules/${module.name}/dist/${module.name}-${version}"/>
 	<property name="build.dir" 		value="${cog.dir}/modules/${module.name}/build"/>
+	<property name="force.java.version"   value="1.5"/>
 
     <!-- ================================================ -->
     <!-- Help                                             -->
