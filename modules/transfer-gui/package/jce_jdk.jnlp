@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="https://jaxb-workshop.dev.java.net/webstart/" href="jce_jdk.jnlp">
+   <information>
+      <title>JCE_JDK</title>
+      <vendor>Sun Microsystems, Inc.</vendor>
+      <offline-allowed/>
+   </information>
+   <offline-allowed/>
+   <resources>
+      <jar href="jce-jdk13-120.jar"/>
+   </resources>
+   <component-desc/>
+</jnlp>
