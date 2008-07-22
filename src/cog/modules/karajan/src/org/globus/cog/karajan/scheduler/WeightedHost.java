@@ -11,7 +11,6 @@ package org.globus.cog.karajan.scheduler;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Timer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.util.BoundContact;
@@ -167,11 +166,11 @@ public class WeightedHost implements Comparable {
 						+ ", maxload=" + ml + " delay since last used=" + delay + "ms"
 						+ " permitted delay=" + permittedDelay + "ms overloaded=" + overloaded+ " delay-permitted delay="+d);
 			}
-
-			if(d>0) {
-				return 0; // not overloaded
-			} else {
-				return d; // overloaded, with negative value being the delay
+			if (overloaded) {
+				return (int) (delay - permittedDelay);
+			}
+			else {
+				return load < ml ? 0 : 1;
 			}
 		}
 	}
