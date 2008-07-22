@@ -65,17 +65,17 @@ public class RFTTransferFileParser {
         int i = 0;
         RFTOptions options = new RFTOptions();
         
-        options.setBinary(Boolean.valueOf((String) requestData.elementAt(i++)));
-        options.setBlockSize(Integer.valueOf((String) requestData.elementAt(i++)));
+//        options.setBinary(Boolean.valueOf((String) requestData.elementAt(i++)));
+//        options.setBlockSize(Integer.valueOf((String) requestData.elementAt(i++)));
         options.setTcpBufferSize(Integer.valueOf((String) requestData.elementAt(i++)));
-        options.setNotpt(Boolean.valueOf((String) requestData.elementAt(i++)));
+        //options.setNotpt(Boolean.valueOf((String) requestData.elementAt(i++)));
         options.setParallelStream(Integer.valueOf((String) requestData.elementAt(i++)));
-        options.setDcau(Boolean.valueOf((String) requestData.elementAt(i++)));
+        //options.setDcau(Boolean.valueOf((String) requestData.elementAt(i++)));
         options.setConcurrent(Integer.valueOf((String) requestData.elementAt(i++)).intValue());
         options.setSourceDN((String) requestData.elementAt(i++));
         options.setDestDN((String) requestData.elementAt(i++));   
-        options.setAllOrNone(Boolean.valueOf((String) requestData.elementAt(i++)).booleanValue());
-        options.setMaxAttampts(Integer.valueOf((String) requestData.elementAt(i++)).intValue());
+//        options.setAllOrNone(Boolean.valueOf((String) requestData.elementAt(i++)).booleanValue());
+//        options.setMaxAttampts(Integer.valueOf((String) requestData.elementAt(i++)).intValue());
         
         return options;        
 	}

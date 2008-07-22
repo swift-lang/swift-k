@@ -12,28 +12,27 @@ public class RFTTransferParam {
 	private TransferType[] transfers1 = null;
 	private String serverHost = null;
 	private String serverPort = null;
-	private String authType = null;
-	private String authzType = null;
+//	private String authType = null;
+//	private String authzType = null;
 
 	public RFTTransferParam(String from, String to, String serverHost,
-			String serverPort, String authType, String authzType) {
+			String serverPort) {
 		transfers1 = new TransferType[1];
 		transfers1[0] = new TransferType();
 		transfers1[0].setSourceUrl(from);
 		transfers1[0].setDestinationUrl(to);
 		this.serverHost = serverHost;
 		this.serverPort = serverPort;
-		this.authType = authType;
-		this.authzType = authzType;
+//		this.authType = authType;
+//		this.authzType = authzType;
 	}
 
 	public RFTTransferParam(TransferType[] transferTypes, String serverHost,
-			String serverPort, String authType, String authzType) throws Exception {
+			String serverPort) throws Exception {
 		transfers1 = transferTypes;
 		this.serverHost = serverHost;
 		this.serverPort = serverPort;
-		this.authType = authType;
-		this.authzType = authzType;
+
 	}
 	
 	
@@ -62,19 +61,19 @@ public class RFTTransferParam {
 		this.serverPort = serverPort;
 	}
 
-	public String getAuthType() {
-		return authType;
-	}
-
-	public void setAuthType(String authType) {
-		this.authType = authType;
-	}
-
-	public String getAuthzType() {
-		return authzType;
-	}
-
-	public void setAuthzType(String authzType) {
-		this.authzType = authzType;
-	}	
+//	public String getAuthType() {
+//		return authType;
+//	}
+//
+//	public void setAuthType(String authType) {
+//		this.authType = authType;
+//	}
+//
+//	public String getAuthzType() {
+//		return authzType;
+//	}
+//
+//	public void setAuthzType(String authzType) {
+//		this.authzType = authzType;
+//	}	
 }

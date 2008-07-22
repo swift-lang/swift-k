@@ -15,8 +15,7 @@ import org.globus.rft.generated.TransferType;
 public class RFTButtonActionListener {
 	private QueuePanel queuePanel = null;
 	private RFTClient rftClient = null;
-	private RFTPanel panel = null;
-	private static int transferID = 1;
+	private RFTPanel panel = null;	
 	
 	public RFTButtonActionListener(RFTPanel panel) {
 		this.panel = panel;
@@ -35,9 +34,8 @@ public class RFTButtonActionListener {
         RFTTransferParam param = job.getParam();
         
         TransferType transfer = param.getTransfers1()[0];
-        String[] cols = {Integer.toString(job.getJobID()), Integer.toString(transferID++), 
-        		Integer.toString(1), transfer.getSourceUrl(), transfer.getDestinationUrl(), 
-        		"started", "0", "No errors"};        
+        String[] cols = {Integer.toString(job.getJobID()), transfer.getSourceUrl(), 
+        		transfer.getDestinationUrl(), "started", "0", "No errors"};        
        	queuePanel.addTransfer(cols);        	
 		rftClient.startTransfer(job);		
     }
@@ -48,12 +46,12 @@ public class RFTButtonActionListener {
      */
     public void stopButtonAction(String jobID) throws Exception {
 
-		int selectedRowIndex = queuePanel.getRowIndex(jobID, 1);
+		int selectedRowIndex = queuePanel.getRowIndex(jobID, 0);
 		String id = queuePanel.getColumnValue(selectedRowIndex, 0);
 		rftClient.stopTransfer(id);
-		queuePanel.setColumnValue(selectedRowIndex, 5, "Cancelled");
-		queuePanel.setColumnValue(selectedRowIndex, 6, "0");
-		queuePanel.setColumnValue(selectedRowIndex, 7, "No errors");
+		queuePanel.setColumnValue(selectedRowIndex, 3, "Cancelled");
+		queuePanel.setColumnValue(selectedRowIndex, 4, "0");
+		queuePanel.setColumnValue(selectedRowIndex, 5, "No errors");
 	}
     
     public void loadFileButtonAction(RFTJob job, QueuePanel queuePanel) throws Exception {
@@ -61,8 +59,8 @@ public class RFTButtonActionListener {
         TransferType[] transfers = param.getTransfers1();
         
         for (int i = 0; i < transfers.length; i++) {
-        	String[] cols = {Integer.toString(job.getJobID()), Integer.toString(transferID++), 
-        			Integer.toString(i+1), transfers[i].getSourceUrl(), 
+        	String[] cols = {Integer.toString(job.getJobID()),  
+        			transfers[i].getSourceUrl(), 
         			transfers[i].getDestinationUrl(), "started", "0", "No errors"};        
            	queuePanel.addTransfer(cols); 
         }      
@@ -81,8 +79,8 @@ public class RFTButtonActionListener {
 	 * @param Pending
 	 * @param cancelled
 	 */
-    public void updateOverallStatus(int finished, int active, int failed, 
-    		int retrying, int pending, int cancelled) {    	
-    	panel.updateOverallStatus(finished, active, failed, retrying, pending, cancelled);
-    }
+//    public void updateOverallStatus(int finished, int active, int failed, 
+//    		int retrying, int pending, int cancelled) {    	
+//    	panel.updateOverallStatus(finished, active, failed, retrying, pending, cancelled);
+//    }
 }
