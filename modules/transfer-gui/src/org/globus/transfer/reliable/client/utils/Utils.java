@@ -6,6 +6,10 @@
 package org.globus.transfer.reliable.client.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * Some utility functions
@@ -22,5 +26,25 @@ public class Utils {
         File[] roots = File.listRoots();
         
         return roots;  
+    }
+    
+    public static String getProperty(String propertyName, String propertyFileName) {
+    	File propFile = new File(propertyFileName);
+    	String ret = null;
+    	if (!propFile.exists()) {
+    		return null;
+    	}
+    	
+    	Properties prop = new Properties();
+    	try {
+			prop.load(new FileInputStream(propFile));
+			ret = prop.getProperty(propertyName);
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		return ret;
     }
 }
