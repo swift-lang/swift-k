@@ -7,8 +7,8 @@
 <project name="Launchers" default="create" basedir=".">
 	<target name="create">
 		<ant antfile="${main.buildfile}" target="launcher">
-			<property name="launcher-name" value="sample-launcher"/>
-			<property name="class-name" value="org.globus.cog.example.Class"/>
+			<property name="launcher-name" value="cog-transfer-gui"/>
+			<property name="class-name" value="org.globus.ogce.beans.filetransfer.gui.MyGridSpaceFTP"/>
 		</ant>
 	</target>
 	<target name="webstart">
