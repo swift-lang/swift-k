@@ -40,7 +40,7 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
         this.theApp = theApp;
         urlcopyQueuePanel = new QueuePanel();
         urlcopyQueuePanel.createHeader(new String[]{"Jobid", "From", "To",
-                                                    "Status", "Current", "%", "Errors"});
+                                                    "Status", "Current", "%", "Errors", "RFT"});
         add(urlcopyQueuePanel, BorderLayout.CENTER);
         urlcopyOptions = new UrlCopyOptions();
         //	add(urlcopyOptions.getPanel(), BorderLayout.SOUTH);
@@ -56,6 +56,13 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
 
         urlcopyQueuePanel.addTransfer(new String[]{jobid, from, to, "Submitted",
                                                    "0", "0", "N/A"});
+
+    }
+    
+    public void addTransfer(String jobid, String from, String to, String rft) {
+
+        urlcopyQueuePanel.addTransfer(new String[]{jobid, from, to, "Submitted",
+                                                   "0", "0", "N/A", rft});
 
     }
 
@@ -431,7 +438,8 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
                 controlThread.start();
             } else if (actionCommand.equals("Info")) {
                 String job = urlcopyQueuePanel.getSelectedJob();
-                int row = urlcopyQueuePanel.getRowIndex(job);
+                
+                int row = urlcopyQueuePanel.getRowIndex(job);                
                 String msg = "   Job ID : " +
                         urlcopyQueuePanel.getColumnValue(row, 0)
                         + "\n   From : "
@@ -482,7 +490,8 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
             } else if (actionCommand.equals("Delete")) {
                 String job = urlcopyQueuePanel.getSelectedJob();
                 int row = urlcopyQueuePanel.getRowIndex(job);
-                if (!urlcopyQueuePanel.getColumnValue(row, 3).equals("Finished")) {
+                if (!urlcopyQueuePanel.getColumnValue(row, 3).equals("Finished")
+                		&& !urlcopyQueuePanel.getColumnValue(row, 3).equals("Expanding_Done")) {
                     Object aobj[] = {"Yes", "No"};
                     int k = JOptionPane.showOptionDialog(null, " This job is not Finished yet. Do you wish to cancel the job and delete it?", "Deletion Alert", -1, 2, null, aobj, aobj[0]);
                     if (k == 1) {
