@@ -289,7 +289,10 @@ public class BaseRFTClient extends BaseClient implements NotifyCallback {
         ClientSecurityDescriptor desc = getClientSecDesc();
         // Credential to sign with, assuming default credential
         GlobusCredential credential = GlobusCredential.getDefaultCredential();
-
+        //desc.setGSITransport(Constants.GSI_TRANSPORT);
+        //desc.setAuthz(AuthUtil.getClientAuthorization("self"));
+        
+        
         String factoryUrl = PROTOCOL + "://" + host + ":" 
                         + port + SERVICE_URL_ROOT
                         + DelegationConstants.FACTORY_PATH;

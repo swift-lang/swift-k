@@ -1,16 +1,19 @@
 /*
  * RFTTransferParam.java
  *
- * Created on 2008年2月18日, 上午11:15
+ * 
  */
 
 package org.globus.transfer.reliable.client;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
 
@@ -52,15 +55,40 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
         return toField.getText();
     }
     
-    public String getAuthType() {
-    	String key = (String)authTypeComboBox.getSelectedItem();
-        return (String) authTypeMap.get(key);
+    public void setServerHost(String t) {
+        serverHostField.setText(t);
+    }
+
+    public void setServerPort(String t) {
+        serverPortField.setText(t);
+    }
+
+    public int getConcurrent() {
+        String value = concurrencyField.getText();
+        int con = 1;
+        if (null != value) {
+            try {
+                con = Integer.valueOf(value);
+            } catch (NumberFormatException e) {
+                con = 1;
+            }            
+        }
+        
+        return con;
     }
     
-    public String getAuthzType() {
-    	String key = (String)authzTypeComboBox.getSelectedItem();
-        return (String) authTypeMap.get(key);
+    public void setConcurrent(String c) {
+    	concurrencyField.setText(c);
     }
+//    public String getAuthType() {
+//    	String key = (String)authTypeComboBox.getSelectedItem();
+//        return (String) authTypeMap.get(key);
+//    }
+//    
+//    public String getAuthzType() {
+//    	String key = (String)authzTypeComboBox.getSelectedItem();
+//        return (String) authTypeMap.get(key);
+//    }
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -80,10 +108,13 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
         fromField = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         toField = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        authTypeComboBox = new javax.swing.JComboBox();
-        authzTypeComboBox = new javax.swing.JComboBox();
+        concurrencyLabel = new javax.swing.JLabel();
+        concurrencyField = new javax.swing.JTextField();
+        rftHelpButton = new javax.swing.JButton("what is RFT?");
+//        jLabel5 = new javax.swing.JLabel();
+//        jLabel6 = new javax.swing.JLabel();
+//        authTypeComboBox = new javax.swing.JComboBox();
+//        authzTypeComboBox = new javax.swing.JComboBox();
 //        loadFileButton = new javax.swing.JButton();
         
         jScrollPane1.setName("jScrollPane1"); // NOI18N
@@ -101,8 +132,14 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
         setName("Form"); // NOI18N
 
         jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
-        jLabel1.setName("jLabel1"); // NOI18N
-
+        jLabel1.setName("jLabel1"); // NOI18N        
+        
+        concurrencyLabel.setText(resourceMap.getString("concurrencyLabel.text"));
+        concurrencyLabel.setName("concurrencyLabel");
+        
+        concurrencyField.setText(resourceMap.getString("concurrencyField.text")); // NOI18N
+        concurrencyField.setName("concurrencyField"); // NOI18N
+        
         serverHostField.setText(resourceMap.getString("serverHostField.text")); // NOI18N
         serverHostField.setName("serverHostField"); // NOI18N
 
@@ -111,6 +148,8 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
 
         serverPortField.setText(resourceMap.getString("serverPortField.text")); // NOI18N
         serverPortField.setName("serverPortField"); // NOI18N
+
+        
 
         jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
         jLabel3.setName("jLabel3"); // NOI18N
@@ -124,85 +163,155 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
         toField.setText(resourceMap.getString("toField.text")); // NOI18N
         toField.setName("toField"); // NOI18N
 
-        jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
-        jLabel5.setName("jLabel5"); // NOI18N
+        enable_rft = new javax.swing.JLabel();
+        enable_rft.setText("Enable RFT");
+        enable_rft_checkbox = new javax.swing.JCheckBox();
+        enable_rft_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                enable_rft_checkboxActionPerformed(evt);
+            }
+        });
         
-        jLabel6.setText(resourceMap.getString("jLabel6.text")); // NOI18N
-        jLabel6.setName("jLabel6"); // NOI18N
+        rftHelpButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rftHelpButtonActionPerformed(evt);
+            }
+        });
+        Properties prop = new Properties();
+        File propFile = new File("rft.properties");
+        if (propFile.exists()) {
+        	try {    		
+    			prop.load(new FileInputStream(propFile));
+    			setEnableRFT((new Boolean((String)prop.get("rft_enabled"))).booleanValue());
+    			setServerHost((String)prop.getProperty("host"));
+    			setServerPort((String)prop.getProperty("port"));
+    			setConcurrent((String)prop.getProperty("concurrent"));
+    		} catch (Exception e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		} 
+        }
         
-        authTypeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "GSI_TRANSPORT", "GSI_SEC_MSG", "GSI_SEC_CONV" }));
-        authTypeComboBox.setName("authTypeComboBox"); // NOI18N
-        
-        authzTypeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SELF", "HOST" }));
-        authzTypeComboBox.setName("authzTypeComboBox"); // NOI18N
+        if (enable_rft_checkbox.isSelected()) {
+        	System.out.println("checkbox selected");
+            jLabel1.setEnabled(true);
+            serverHostField.setEditable(true);
+            jLabel2.setEnabled(true);
+            serverPortField.setEditable(true);
+            concurrencyLabel.setEnabled(true);
+            concurrencyField.setEditable(true);
+            rftHelpButton.setEnabled(true);
+        } else {
+            jLabel1.setEnabled(false);
+            serverHostField.setEditable(false);
+            jLabel2.setEnabled(false);
+            serverPortField.setEditable(false);
+            concurrencyLabel.setEnabled(false);
+            concurrencyField.setEditable(false);
+            rftHelpButton.setEnabled(false);
+        }
+//        jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
+//        jLabel5.setName("jLabel5"); // NOI18N
+//        
+//        jLabel6.setText(resourceMap.getString("jLabel6.text")); // NOI18N
+//        jLabel6.setName("jLabel6"); // NOI18N
+//        
+//        authTypeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "GSI_TRANSPORT", "GSI_SEC_MSG", "GSI_SEC_CONV" }));
+//        authTypeComboBox.setName("authTypeComboBox"); // NOI18N
+//        
+//        authzTypeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SELF", "HOST" }));
+//        authzTypeComboBox.setName("authzTypeComboBox"); // NOI18N
         
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(layout.createSequentialGroup()
-                            .add(jLabel1)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED))
-                        .add(layout.createSequentialGroup()
-                            .add(jLabel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(52, 52, 52)))
-                    .add(layout.createSequentialGroup()
-                        .add(jLabel5)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(authTypeComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)                    
-                    .add(fromField)
-                    .add(serverHostField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 166, Short.MAX_VALUE))
-                .add(18, 18, 18)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createSequentialGroup()
-                        .add(jLabel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(18, 18, 18))
-                    .add(layout.createSequentialGroup()
-                        .add(jLabel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 36, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(48, 48, 48)
-                        .add(jLabel6)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(toField)
-                    .add(authzTypeComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(serverPortField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE))
-                .add(112, 112, 112))
+//        layout.setHorizontalGroup(
+//        		layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
 //                .add(layout.createSequentialGroup()
-//                        .add(loadFileButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 122, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-//                        .addContainerGap())
-                
-        );
+//                    .add(64, 64, 64)
+//                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+//                            .add(layout.createSequentialGroup()
+//                            		.add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+//                                    .add(concurrencyLabel)                                    
+//                                    .add(concurrencyField, 10, 20, 200))
+//                        
+//                            .add(jLabel2)
+//                            
+//                            .add(serverPortField, 10, 20, 200))
+//                        
+//                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+//                                .add(jLabel1)
+//                                .add(enable_rft, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+//                            //.addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+//                            
+//                                .add(serverHostField, 10, 20, 200)
+//                                .add(enable_rft_checkbox))))
+//                    .add(164, 164, 164))
+//            );
+            
+            
+            layout.setHorizontalGroup(
+            		layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()                		
+                        .addContainerGap()
+                        .add(64, 64, 64)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(layout.createSequentialGroup()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(enable_rft)
+                                    .add(jLabel1)
+                                    .add(jLabel2)
+                                    .add(concurrencyLabel)
+                                    .add(100, 100, 100)
+                                    )
+                                //.addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                    .add(enable_rft_checkbox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE)
+                                    .add(serverHostField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE)
+                                    .add(serverPortField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 76, Short.MAX_VALUE)
+                                    .add(concurrencyField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 76, Short.MAX_VALUE)
+                                    //.add(new javax.swing.JLabel(), 100, 100, 100)
+                                    .add(rftHelpButton)
+                                    )                           
+                               
+                            )
+
+                                ))
+                );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .add(19, 19, 19)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel1)
-                    .add(serverHostField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel2)
-                    .add(serverPortField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(18, 18, 18)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jLabel3)
+        		layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(layout.createSequentialGroup()
+                		.add(26, 26, 26)
                     .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                        .add(fromField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(jLabel4)
-                        .add(toField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .add(18, 18, 18)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(authTypeComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel5)
-                    .add(authzTypeComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel6))
-//                    .add(loadFileButton)
-//                .addContainerGap())
-        ));
+                        .add(enable_rft)
+                        .add(enable_rft_checkbox))
+                    .add(11, 11, 11)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(jLabel1)
+                        .add(serverHostField, 1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 30))
+                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(jLabel2)
+                        .add(serverPortField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(concurrencyLabel)
+                        .add(concurrencyField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    	//.add(100, 100, 100)
+                        .add(rftHelpButton))                        
+                    .addContainerGap(18, Short.MAX_VALUE))
+            );
+
     }// </editor-fold>//GEN-END:initComponents
+    
+    public boolean isRFTEnabled() {
+    	return enable_rft_checkbox.isSelected();
+    }
+    
+    public void setEnableRFT(boolean enabled) {
+    	enable_rft_checkbox.setSelected(enabled);
+    }
     
     private void loadFileButtonActionPerformed(java.awt.event.ActionEvent evt) {
         JFileChooser fileChooser = new JFileChooser(".");
@@ -213,22 +322,59 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
         }
     }
     
+
+    
+    private void enable_rft_checkboxActionPerformed(java.awt.event.ActionEvent evt) {
+        if (enable_rft_checkbox.isSelected()) {
+                	       jLabel1.setEnabled(true);
+                           jLabel2.setEnabled(true);
+                	       serverHostField.setEditable(true);
+                           serverPortField.setEditable(true);
+                           concurrencyLabel.setEnabled(true);
+                           concurrencyField.setEditable(true);
+                           rftHelpButton.setEnabled(true);
+                   } else {
+                	   jLabel1.setEnabled(false);
+                       jLabel2.setEnabled(false);
+                	   serverHostField.setEditable(false);
+                       serverPortField.setEditable(false);
+                       concurrencyField.setEditable(false);
+                       concurrencyLabel.setEnabled(false);
+                       rftHelpButton.setEnabled(false);
+                   }
+    }
+    
+    private void rftHelpButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    	String msg = "RFT is a GridFTP client that handles failures more reliably. It is a \n" + 
+    		         "Web Services Resource Framework (WSRF) compliant web service \n" + 
+    		         "that provides job scheduler-like functionality for data movement.\n" + 
+    		         "It can recover from source and/or destination server crashes during\n"+ 
+    		         "a transfer, network failures, RFT service failures, file system failures\n" +
+    		         "etc. More information on RFT is available at\n" + 
+    		         "http://www.globus.org/toolkit/docs/4.2/4.2.0/data/rft/index.html";
+    	JOptionPane.showMessageDialog(null, msg, "What is RFT", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JComboBox authTypeComboBox;
-    private javax.swing.JComboBox authzTypeComboBox;
+//    private javax.swing.JComboBox authTypeComboBox;
+//    private javax.swing.JComboBox authzTypeComboBox;
     private javax.swing.JTextField fromField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
+//    private javax.swing.JLabel jLabel5;
+//    private javax.swing.JLabel jLabel6;
     private javax.swing.JList jList1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField serverHostField;
     private javax.swing.JTextField serverPortField;
     private javax.swing.JTextField toField;
-    
+    private javax.swing.JLabel enable_rft;
+    private javax.swing.JCheckBox enable_rft_checkbox;
+    private javax.swing.JLabel concurrencyLabel;
+    private javax.swing.JTextField concurrencyField;
+    private javax.swing.JButton rftHelpButton;
     // End of variables declaration//GEN-END:variables
     
     public class MyFilter extends FileFilter {

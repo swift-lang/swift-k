@@ -44,9 +44,11 @@ import org.globus.ogce.util.StringUtil;
 import org.globus.tools.proxy.GridProxyInit;
 import org.globus.tools.ui.util.CustomFileFilter;
 import org.globus.tools.ui.util.UITools;
-import org.globus.transfer.reliable.client.myproxy.MyProxyLogonGUI;
+import org.globus.transfer.reliable.client.credential.CredentialDialog;
+import org.globus.transfer.reliable.client.credential.myproxy.MyProxyLogonGUI;
 import org.globus.transfer.reliable.client.utils.LogFileUtils;
 import org.globus.transfer.reliable.client.utils.UIConstants;
+import org.globus.transfer.reliable.client.utils.Utils;
 import org.globus.util.ConfigUtil;
 import org.globus.util.Util;
 
@@ -139,10 +141,11 @@ public class GridFTPGUIView extends FrameView {
 
         mainPanel = new javax.swing.JPanel();
         jToolBar1 = new javax.swing.JToolBar();
+        credential_button = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        gridftp_button = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        local_button = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
         jButton7 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
@@ -179,6 +182,22 @@ public class GridFTPGUIView extends FrameView {
         jToolBar1.setName("jToolBar1"); // NOI18N
 
         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(org.globus.transfer.reliable.client.GridFTPGUIApp.class).getContext().getResourceMap(GridFTPGUIView.class);
+        
+        credential_button.setIcon(resourceMap.getIcon("jButton1.icon")); // NOI18N
+        credential_button.setText(resourceMap.getString("credential_button.text")); // NOI18N
+        credential_button.setToolTipText(resourceMap.getString("credential_button.toolTipText")); // NOI18N
+        credential_button.setFocusable(false);
+        credential_button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        credential_button.setName("credential_button"); // NOI18N
+        credential_button.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        credential_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	credential_buttonActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(credential_button);
+        
+        
         jButton1.setIcon(resourceMap.getIcon("jButton1.icon")); // NOI18N
         jButton1.setText(resourceMap.getString("jButton1.text")); // NOI18N
         jButton1.setToolTipText(resourceMap.getString("jButton1.toolTipText")); // NOI18N
@@ -191,21 +210,21 @@ public class GridFTPGUIView extends FrameView {
                 jButton1ActionPerformed(evt);
             }
         });
-        jToolBar1.add(jButton1);
+        //jToolBar1.add(jButton1);
 
-        jButton2.setIcon(resourceMap.getIcon("jButton2.icon")); // NOI18N
-        jButton2.setText(resourceMap.getString("jButton2.text")); // NOI18N
-        jButton2.setToolTipText(resourceMap.getString("jButton2.toolTipText")); // NOI18N
-        jButton2.setFocusable(false);
-        jButton2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jButton2.setName("jButton2"); // NOI18N
-        jButton2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        gridftp_button.setIcon(resourceMap.getIcon("gridftp_button.icon")); // NOI18N
+        gridftp_button.setText(resourceMap.getString("gridftp_button.text")); // NOI18N
+        gridftp_button.setToolTipText(resourceMap.getString("gridftp_button.toolTipText")); // NOI18N
+        gridftp_button.setFocusable(false);
+        gridftp_button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        gridftp_button.setName("gridftp_button"); // NOI18N
+        gridftp_button.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        gridftp_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+            	gridftp_buttonActionPerformed(evt);
             }
         });
-        jToolBar1.add(jButton2);
+        jToolBar1.add(gridftp_button);
 
         jButton4.setIcon(resourceMap.getIcon("jButton4.icon")); // NOI18N
         jButton4.setText(resourceMap.getString("jButton4.text")); // NOI18N
@@ -220,18 +239,18 @@ public class GridFTPGUIView extends FrameView {
         });
         //jToolBar1.add(jButton4);
 
-        jButton3.setIcon(resourceMap.getIcon("jButton3.icon")); // NOI18N
-        jButton3.setText(resourceMap.getString("jButton3.text")); // NOI18N
-        jButton3.setFocusable(false);
-        jButton3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jButton3.setName("jButton3"); // NOI18N
-        jButton3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
+        local_button.setIcon(resourceMap.getIcon("local_button.icon")); // NOI18N
+        local_button.setText(resourceMap.getString("local_button.text")); // NOI18N
+        local_button.setFocusable(false);
+        local_button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        local_button.setName("local_button"); // NOI18N
+        local_button.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        local_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
+                local_buttonActionPerformed(evt);
             }
         });
-        jToolBar1.add(jButton3);
+        jToolBar1.add(local_button);
         
         jButton5.setIcon(resourceMap.getIcon("jButton5.icon")); // NOI18N
         jButton5.setText(resourceMap.getString("jButton5.text")); // NOI18N
@@ -257,7 +276,7 @@ public class GridFTPGUIView extends FrameView {
                 jButton7ActionPerformed(evt);
             }
         });
-        jToolBar1.add(jButton7);
+        //jToolBar1.add(jButton7);
         
         jButton8.setIcon(resourceMap.getIcon("jButton8.icon")); // NOI18N
         jButton8.setText(resourceMap.getString("jButton8.text")); // NOI18N
@@ -346,32 +365,32 @@ public class GridFTPGUIView extends FrameView {
         });
         jMenu1.add(jMenuItem1);
 
-        jMenuItem8.setText(resourceMap.getString("jMenuItem8.text")); // NOI18N
-        jMenuItem8.setName("jMenuItem8"); // NOI18N
-        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem8ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem8);
+//        jMenuItem8.setText(resourceMap.getString("jMenuItem8.text")); // NOI18N
+//        jMenuItem8.setName("jMenuItem8"); // NOI18N
+//        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
+//            public void actionPerformed(java.awt.event.ActionEvent evt) {
+//                jMenuItem8ActionPerformed(evt);
+//            }
+//        });
+//        jMenu1.add(jMenuItem8);
 
-        jMenuItem9.setText(resourceMap.getString("jMenuItem9.text")); // NOI18N
-        jMenuItem9.setName("jMenuItem9"); // NOI18N
-        jMenuItem9.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem9ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem9);
-        
-        jMenuItem10.setText(resourceMap.getString("jMenuItem10.text")); // NOI18N
-        jMenuItem10.setName("jMenuItem10"); // NOI18N
-        jMenuItem10.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem10ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem10);
+//        jMenuItem9.setText(resourceMap.getString("jMenuItem9.text")); // NOI18N
+//        jMenuItem9.setName("jMenuItem9"); // NOI18N
+//        jMenuItem9.addActionListener(new java.awt.event.ActionListener() {
+//            public void actionPerformed(java.awt.event.ActionEvent evt) {
+//                jMenuItem9ActionPerformed(evt);
+//            }
+//        });
+//        jMenu1.add(jMenuItem9);
+//        
+//        jMenuItem10.setText(resourceMap.getString("jMenuItem10.text")); // NOI18N
+//        jMenuItem10.setName("jMenuItem10"); // NOI18N
+//        jMenuItem10.addActionListener(new java.awt.event.ActionListener() {
+//            public void actionPerformed(java.awt.event.ActionEvent evt) {
+//                jMenuItem10ActionPerformed(evt);
+//            }
+//        });
+//        jMenu1.add(jMenuItem10);
 
         jMenuItem2.setText(resourceMap.getString("jMenuItem2.text")); // NOI18N
         jMenuItem2.setName("jMenuItem2"); // NOI18N
@@ -494,9 +513,15 @@ public class GridFTPGUIView extends FrameView {
         setStatusBar(statusPanel);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        System.out.println("aaaaaaa");
-        fileTransferMainPanel1.createNewLocalFrame();        
+    protected void credential_buttonActionPerformed(ActionEvent evt) {
+		CredentialDialog d = new CredentialDialog(null, false);
+		d.setLocation(100, 100);
+		d.setVisible(true);
+		
+	}
+
+	private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        localFrameHandle();        
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenu1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu1ActionPerformed
@@ -616,8 +641,18 @@ public class GridFTPGUIView extends FrameView {
     	}
     }//GEN-LAST:event_jMenuItem7ActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        fileTransferMainPanel1.createNewLocalFrame();
+    private void localFrameHandle() {
+    	boolean isRFTEnabled = (new Boolean((String)Utils.getProperty("rft_enabled", "rft.properties"))).booleanValue();
+        if (isRFTEnabled) {
+        	JOptionPane.showMessageDialog(null, "RFT is enabled, you can not use local dialog",
+        			"Message", JOptionPane.ERROR_MESSAGE);
+        } else {
+        	fileTransferMainPanel1.createNewLocalFrame();
+        }
+    }
+    private void local_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        localFrameHandle();
+    	
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -649,7 +684,7 @@ public class GridFTPGUIView extends FrameView {
     	
     }//GEN-LAST:event_jButton3ActionPerformed
     
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void gridftp_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         fileTransferMainPanel1.createRemoteFrame(1, null, 2811);
     }//GEN-LAST:event_jButton2ActionPerformed
 
@@ -667,10 +702,13 @@ public class GridFTPGUIView extends FrameView {
     }//GEN-LAST:event_jMenuItem9ActionPerformed
 
     private void jMenuItem10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem9ActionPerformed
-    	JFrame frame = new JFrame("RFT GUI Client");
+    	JFrame frame = new JFrame("Advanced Options");
     	RFTPanel rftPanel = new RFTPanel();
+    	rftPanel.setFrame(frame);
     	frame.getContentPane().add(rftPanel);
-    	frame.pack();
+    	frame.setSize(500, 500);
+    	frame.setLocation(100, 100);
+    	//frame.pack();
     	frame.setVisible(true);
     }//GEN-LAST:event_jMenuItem9ActionPerformed
     
@@ -896,13 +934,14 @@ public class GridFTPGUIView extends FrameView {
   private FileTransferMainPanel fileTransferMainPanel1 = new FileTransferMainPanel();
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
+    private javax.swing.JButton gridftp_button;
+    private javax.swing.JButton local_button;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
+    private javax.swing.JButton credential_button;
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
