@@ -23,7 +23,7 @@ public class WeightedHostSet {
 	private double scoreHighCap;
 	private volatile int overloadedCount;
 	private OverloadedHostMonitor monitor;
-	
+
 	public WeightedHostSet(double scoreHighCap) {
 		this(scoreHighCap, null);
 	}
@@ -44,52 +44,59 @@ public class WeightedHostSet {
 		scores.add(wh);
 		weightedHosts.put(wh.getHost(), wh);
 		sum += wh.getTScore();
-		overloadedCount += checkOverloaded(wh, 1);
+		checkOverloaded(wh, 1);
 	}
 
 	public void changeScore(WeightedHost wh, double newScore) {
 		scores.remove(wh);
 		sum -= wh.getTScore();
-		overloadedCount += checkOverloaded(wh, -1);
+		checkOverloaded(wh, -1);
 		wh.setScore(newScore);
 		weightedHosts.put(wh.getHost(), wh);
 		scores.add(wh);
 		sum += wh.getTScore();
-		overloadedCount += checkOverloaded(wh, 1);
+		checkOverloaded(wh, 1);
 	}
 
 	public void changeLoad(WeightedHost wh, int dl) {
-		overloadedCount += checkOverloaded(wh, -1);
+		checkOverloaded(wh, -1);
 		wh.changeLoad(dl);
-		overloadedCount += checkOverloaded(wh, 1);
+		checkOverloaded(wh, 1);
 	}
 
 	public double remove(WeightedHost wh) {
 		scores.remove(wh);
 		weightedHosts.remove(wh.getHost());
 		sum -= wh.getScore();
-		overloadedCount += checkOverloaded(wh, -1);
+		checkOverloaded(wh, -1);
 		return wh.getScore();
 	}
 
-	private int checkOverloaded(WeightedHost wh, final int dir) {
+	private void checkOverloaded(WeightedHost wh, final int dir) {
 		int v = wh.isOverloaded();
-		if (v >= 0) {
-		    if (dir > 0) {
-		    	return v;
-		    }
-		    else {
-		        return -v;
-		    }
+		int countDelta;
+		if (v == 0) {
+			// not overloaded
+			countDelta = 0;
+		}
+		else if (v > 0) {
+			// overloaded either too many tasks (v == 1) or delay already expired (v > 0)
+			// there's a bit of ambiguity there, but it does not make a difference
+			if (dir > 0) {
+				countDelta = v;
+			}
+			else {
+				countDelta = -v;
+			}
 		}
 		else {
 			if (monitor != null) {
 				monitor.add(wh, -dir);
 			}
-			return dir;
+			countDelta = dir;
 		}
+		updateOverloadedCount(countDelta);
 	}
-
 
 	public WeightedHost findHost(BoundContact bc) {
 		return (WeightedHost) weightedHosts.get(bc);
@@ -139,8 +146,10 @@ public class WeightedHostSet {
 	public boolean allOverloaded() {
 		return overloadedCount == weightedHosts.size();
 	}
-	
+
 	protected void updateOverloadedCount(int dif) {
-		this.overloadedCount += dif;
+		if (dif != 0) {
+			this.overloadedCount += dif;
+		}
 	}
 }
