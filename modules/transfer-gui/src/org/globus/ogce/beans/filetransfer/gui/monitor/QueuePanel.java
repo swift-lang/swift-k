@@ -133,6 +133,22 @@ public class QueuePanel extends JPanel implements MouseListener {
         }
         return selectedRow;
     }
+    
+    public int getRowIndex(java.lang.String value, int col)
+    {
+        javax.swing.table.DefaultTableModel tableModel = getModel();
+        int noRows = tableModel.getRowCount();
+        int selectedRow = 0;
+        for(int j = 0; j < noRows; j++)
+        {
+            if(!value.equals(getColumnValue(j, col)))
+                continue;
+            selectedRow = j;
+            break;
+        }
+
+        return selectedRow;
+    }
 
     public void clear() {
         DefaultTableModel tableModel
