@@ -98,10 +98,10 @@ public class FileTransferMainPanel extends MainInterface
 
 
     //RFT transfer
-    int jobID = 0;
+    public static int jobID = 0;
     private QueuePanel queuePanel = null;
 	private RFTClient rftClient = null;
-	private static int transferID = 1;
+	public static int transferID = 1;
 	
     
     /*In general for a bean default constructor*/
@@ -609,39 +609,16 @@ public class FileTransferMainPanel extends MainInterface
         
         //using RFT
         if ("true".equals(rftEnabled)) {
-            String rftFrom = "gsiftp://" + fromRemote.getHost() + ":" + fromRemote.getPort() + from;
-            String rftTo = "gsiftp://" + toRemote.getHost() + ":" + toRemote.getPort() + to;
-            String destSN = toRemote.getSubject();
+        	String fromHost = fromRemote.getHost();
+        	String fromPort = Integer.toString(fromRemote.getPort());
+        	String toHost = toRemote.getHost();
+        	String toPort = Integer.toString(toRemote.getPort());
+        	String destSN = toRemote.getSubject();
             String sourceSN = ((GridClient)fromRemote).getSubject();
-            
-            RFTTransferParam param = new RFTTransferParam(rftFrom, rftTo, 
-            		prop.getProperty("host"), prop.getProperty("port"));
-            int concurrent = Integer.parseInt(prop.getProperty("concurrent"));
-            int parallelStream = Integer.parseInt(prop.getProperty("parallelstream"));
-            int bufferSize = Integer.parseInt(prop.getProperty("tcpbuffersize"));
-    		RFTOptions options = new RFTOptions(concurrent, parallelStream, bufferSize, 
-    				destSN, sourceSN);
-            RFTJob job = new RFTJob(++jobID, options, param);
-            TransferType transfer = param.getTransfers1()[0];
-            String[] cols = {Integer.toString(job.getJobID()), Integer.toString(transferID++), 
-            		Integer.toString(1), transfer.getSourceUrl(), transfer.getDestinationUrl(), 
-            		"started", "0", "No errors"};   
-            monitorPanel.setFocusTab(0);
-            monitorPanel.getUrlCopyPanel().addTransfer(Integer.toString(job.getJobID()), 
-            		transfer.getSourceUrl(), transfer.getDestinationUrl());
-            
-            try {
-            	//queuePanel.addTransfer(cols);        	
-        		rftClient.startTransfer(job);        		
-            } catch (Exception e1) {
-            	e1.printStackTrace();
-            	JOptionPane.showMessageDialog(null,e1.getMessage(), "Error",
-                        JOptionPane.WARNING_MESSAGE);
-                int index = queuePanel.getRowIndex(Integer.toString(jobID));
-                queuePanel.setColumnValue(index, 5, "Failed");
-                queuePanel.setColumnValue(index, 7, e1.getMessage());
-            }
-        } else { // third party transfer
+        	RFTWorker worker = new RFTWorker(prop, from, fromHost, fromPort, 
+        			to, toHost, toPort, sourceSN, destSN);
+            worker.start();
+        } else { 
         	new AlertThread(this).start();
         }
         
@@ -735,7 +712,59 @@ public class FileTransferMainPanel extends MainInterface
         this();
     }
 
-    public static void main(String args[]) {
-
+    class RFTWorker extends Thread {
+    	Properties prop = null;
+    	String from;
+    	String fromHost; 
+    	String fromPort;
+    	String to;
+    	String toHost;
+		String toPort; 
+		String sourceSN; 
+		String destSN;
+		
+    	public RFTWorker(Properties prop, String from, String fromHost, String fromPort, 
+    			String to, String toHost, String toPort, String sourceSN, String destSN) {
+    		this.prop = prop;
+    		this.from = from;
+    		this.fromHost = fromHost;
+    		this.fromPort = fromPort;
+    		this.to = to;
+    		this.toHost = toHost;
+    		this.toPort = toPort;
+    		this.sourceSN = sourceSN;
+    		this.destSN = destSN;
+    	}
+    	
+    	public void run() {
+    		String rftFrom = "gsiftp://" + fromHost + ":" + fromPort + from;
+            String rftTo = "gsiftp://" + toHost + ":" + toPort + to;         
+            
+            RFTTransferParam param = new RFTTransferParam(rftFrom, rftTo, 
+            		prop.getProperty("host"), prop.getProperty("port"));
+            int concurrent = Integer.parseInt(prop.getProperty("concurrent"));
+            int parallelStream = Integer.parseInt(prop.getProperty("parallelstream"));
+            int bufferSize = Integer.parseInt(prop.getProperty("tcpbuffersize"));
+    		RFTOptions options = new RFTOptions(concurrent, parallelStream, bufferSize, 
+    				destSN, sourceSN);
+            RFTJob job = new RFTJob(++FileTransferMainPanel.jobID, options, param);
+            TransferType transfer = param.getTransfers1()[0]; 
+            monitorPanel.setFocusTab(0);
+            monitorPanel.getUrlCopyPanel().addTransfer(Integer.toString(FileTransferMainPanel.jobID), 
+            		rftFrom, rftTo, "true");            
+            
+            try {
+            	//queuePanel.addTransfer(cols);        	
+        		rftClient.startTransfer(job);        		
+            } catch (Exception e1) {
+            	e1.printStackTrace();
+            	JOptionPane.showMessageDialog(null,e1.getMessage(), "Error",
+                        JOptionPane.WARNING_MESSAGE);
+            	monitorPanel.getUrlCopyPanel().updateTransfer(Integer.toString(FileTransferMainPanel.jobID), 
+            			"Failed", "N/A", "N/A", e1.getMessage());
+               
+            }
+    	}
     }
+    
 }
