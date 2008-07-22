@@ -2360,7 +2360,7 @@ be found <ulink url="http://www.teragrid.org/userinfo/access/allocations.php">he
 </para>
 
 		</section>
-		<section><title>Launching MPI jobs from Swift</title>
+		<section id="tips.mpi"><title>Launching MPI jobs from Swift</title>
 <para>
 Here is an example of running a simple MPI program.
 </para>
