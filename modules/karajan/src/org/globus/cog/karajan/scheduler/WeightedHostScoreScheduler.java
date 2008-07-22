@@ -63,10 +63,12 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	private TaskConstraints cachedConstraints;
 	private boolean cachedLoadState;
 	private int hits;
+	private OverloadedHostMonitor monitor;
 
 	public WeightedHostScoreScheduler() {
 		policy = POLICY_WEIGHTED_RANDOM;
 		setDefaultFactors();
+		monitor = new OverloadedHostMonitor(this);
 	}
 
 	protected final void setDefaultFactors() {
@@ -102,7 +104,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (grid.getContacts() == null) {
 			return;
 		}
-		sorted = new WeightedHostSet(scoreHighCap);
+		sorted = new WeightedHostSet(scoreHighCap, monitor);
 		Iterator i = grid.getContacts().iterator();
 		while (i.hasNext()) {
 			BoundContact contact = (BoundContact) i.next();
@@ -474,5 +476,10 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				factorScoreLater(wh, factor);
 			}
 		}
+	}
+
+	protected void updateOverloadedCount(int v) {
+		sorted.updateOverloadedCount(v);
+		raiseTasksFinished();
 	}
 }
