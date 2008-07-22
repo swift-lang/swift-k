@@ -6,6 +6,7 @@
 package org.globus.transfer.reliable.client;
 
 
+import java.io.FileWriter;
 import java.rmi.RemoteException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ import org.globus.wsrf.NotificationConsumerManager;
 import org.globus.wsrf.WSNConstants;
 import org.globus.wsrf.container.ServiceContainer;
 import org.globus.wsrf.core.notification.ResourcePropertyValueChangeNotificationElementType;
+import org.globus.wsrf.encoding.ObjectSerializer;
 import org.globus.wsrf.impl.security.authorization.Authorization;
 import org.globus.wsrf.impl.security.authorization.HostAuthorization;
 import org.globus.wsrf.impl.security.authorization.ResourcePDPConfig;
@@ -69,6 +71,11 @@ public class RFTClient extends BaseRFTClient {
 	private QueuePanel queuePanel = null;
 	private RFTButtonActionListener listener = null;
 	private TransferStatusReporter reporter = null;
+	
+	public RFTClient() {
+		super();
+	}
+	
     public RFTClient(RFTButtonActionListener listener, QueuePanel queuePanel) {    	
     	super();
     	this.listener = listener;
@@ -76,6 +83,7 @@ public class RFTClient extends BaseRFTClient {
     	
     	new TransferStatusReporter().start();
     }
+    
     
     /**
      * Generate RFT transfer request
@@ -88,10 +96,10 @@ public class RFTClient extends BaseRFTClient {
                
         //set RFT options
         RFTOptionsType rftOptions = new RFTOptionsType();
-        rftOptions.setBinary(options.isBinary());
-        rftOptions.setBlockSize(options.getBlockSize());
-        rftOptions.setDcau(options.isDcau());        
-        rftOptions.setNotpt(options.isNotpt());
+//        rftOptions.setBinary(options.isBinary());
+//        rftOptions.setBlockSize(options.getBlockSize());
+//        rftOptions.setDcau(options.isDcau());        
+//        rftOptions.setNotpt(options.isNotpt());
         rftOptions.setParallelStreams(options.getParallelStream());        
         rftOptions.setTcpBufferSize(options.getTcpBufferSize());
         
@@ -107,9 +115,9 @@ public class RFTClient extends BaseRFTClient {
         TransferRequestType request = new TransferRequestType();
         request.setRftOptions(rftOptions);
         request.setTransfer(rftParam.getTransfers1());
-        request.setAllOrNone(options.isAllOrNone());
+        //request.setAllOrNone(options.isAllOrNone());
         request.setConcurrency(options.getConcurrent());
-        request.setMaxAttempts(options.getMaxAttampts());
+        //request.setMaxAttempts(options.getMaxAttampts());
         request.setTransferCredentialEndpoint(epr);
         
         return request;
@@ -130,8 +138,8 @@ public class RFTClient extends BaseRFTClient {
             throw new IllegalArgumentException(UIConstants.ILLEGAL_HOST);
         }
         String port = rftParam.getServerPort();
-        String authType = rftParam.getAuthType();
-        String authzType = rftParam.getAuthzType();
+//        String authType = rftParam.getAuthType();
+//        String authzType = rftParam.getAuthzType();
         if (null == port) {
             if (authType.equals(GSIConstants.GSI_TRANSPORT)) {
                 port = "8443";
@@ -152,11 +160,25 @@ public class RFTClient extends BaseRFTClient {
         EndpointReferenceType credEPR = delegateCredential(host, port);
         TransferRequestType transferType = getTransferRequestType(options, rftParam, credEPR);                
         EndpointReferenceType rftepr = createRFT(rftFactoryAddress, transferType);
+        
         rftepr.setAddress(new Address(rftServiceAddress));
         ReliableFileTransferPortType rft = rftLocator
                 .getReliableFileTransferPortTypePort(rftepr);
-        setAuthzValue(authzType);
+        //setAuthzValue(authzType);
         setSecurity((Stub)rft);
+        
+        //write epr to a file
+        QName qname = new QName("http://www.globus.org/namespaces/2004/10/rft", "TransferKey");
+		String resourceKey = rftepr.getProperties().get(qname).getValue();
+		FileWriter writer = new FileWriter(resourceKey);
+		try {
+			QName qName1 = new QName("", "RFT_EPR");
+	        writer.write(ObjectSerializer.toString(rftepr, qName1));
+		} finally {
+			if(null != writer) {
+				writer.close();
+			}
+		}		
         
         //For secure notifications
         epr2ID.put(createMapKey(rftepr), Integer.toString(jobID));
@@ -272,25 +294,25 @@ public class RFTClient extends BaseRFTClient {
 								.getDescription(0).get_value());
 					}
 				} else if (RFTConstants.OVERALL_STATUS_RESOURCE.equals(topicQName)) {
-					OverallStatus overallStatus = (OverallStatus) changeMessage
-							.getNewValue().get_any()[0].getValueAsType(
-							RFTConstants.OVERALL_STATUS_RESOURCE,
-							OverallStatus.class);
-					int finished = overallStatus.getTransfersFinished();
-					int active = overallStatus.getTransfersActive();
-					int failed = overallStatus.getTransfersFailed();
-					int retrying = overallStatus.getTransfersRestarted();
-					int pending = overallStatus.getTransfersPending();
-					int cancelled = overallStatus.getTransfersCancelled();
-					System.out.println("\n Overall status of transfer:");
-	                System.out.println("Finished/Active/Failed/Retrying/Pending/Cancelled");
-	                System.out.print(overallStatus.getTransfersFinished() + "/");
-	                System.out.print(overallStatus.getTransfersActive() + "/");
-	                System.out.print(overallStatus.getTransfersFailed() + "/");
-	                System.out.print(overallStatus.getTransfersRestarted() + "/");
-	                System.out.print(overallStatus.getTransfersPending() + "/");
-	                System.out.print(overallStatus.getTransfersCancelled());                
-	                listener.updateOverallStatus(finished, active, failed, retrying, pending, cancelled);
+//					OverallStatus overallStatus = (OverallStatus) changeMessage
+//							.getNewValue().get_any()[0].getValueAsType(
+//							RFTConstants.OVERALL_STATUS_RESOURCE,
+//							OverallStatus.class);
+//					int finished = overallStatus.getTransfersFinished();
+//					int active = overallStatus.getTransfersActive();
+//					int failed = overallStatus.getTransfersFailed();
+//					int retrying = overallStatus.getTransfersRestarted();
+//					int pending = overallStatus.getTransfersPending();
+//					int cancelled = overallStatus.getTransfersCancelled();
+//					System.out.println("\n Overall status of transfer:");
+//	                System.out.println("Finished/Active/Failed/Retrying/Pending/Cancelled");
+//	                System.out.print(overallStatus.getTransfersFinished() + "/");
+//	                System.out.print(overallStatus.getTransfersActive() + "/");
+//	                System.out.print(overallStatus.getTransfersFailed() + "/");
+//	                System.out.print(overallStatus.getTransfersRestarted() + "/");
+//	                System.out.print(overallStatus.getTransfersPending() + "/");
+//	                System.out.print(overallStatus.getTransfersCancelled());                
+	                //listener.updateOverallStatus(finished, active, failed, retrying, pending, cancelled);
 				}
 
 
@@ -337,36 +359,55 @@ public class RFTClient extends BaseRFTClient {
     			//int length = queuePanel.tableSize();
         		int i = 0;
         		while (i < queuePanel.tableSize()) {
-        			int jobID = Integer.parseInt(queuePanel.getColumnValue(i, 0));
-        			int j = 1;
-        			while (j + i < queuePanel.tableSize()) {
-        				int nextJobID = Integer.parseInt(queuePanel.getColumnValue(j + i, 0));
-        				if (jobID == nextJobID) {
-        					//System.out.println("jobid=" + jobID + ", nextjobid=" + nextJobID + ", j=" + j);
-        					j++;
-        				} else {
-        					break;
-        				}
-        			}
-        			
-        			ReliableFileTransferPortType rft = (ReliableFileTransferPortType)ID2Stub.get(Integer.toString(jobID));
-        			if (null != rft) {
-            			try {
-        					GetStatusSetResponse response = rft.getStatusSet(new GetStatusSet(1, j));        					
-        					for (int k = 0; k < j; k++) {
-        						TransferStatusType statusType = response.getTransferStatusSet(k);
-        						String status = statusType.getStatus().getValue();
-        						if (i + k < queuePanel.tableSize()) {
-        							queuePanel.setColumnValue(i + k, 5, status);
-        						}        						
-        					}
+        			String isRFT = queuePanel.getColumnValue(i, 7);
+        			String status = queuePanel.getColumnValue(i, 3);
+        			if ("true".equals(isRFT) && 
+        					!("Finished".equals(status)) && !"Expanding_Done".equals(status)) {
+        				int jobID = Integer.parseInt(queuePanel.getColumnValue(i, 0));
+        				ReliableFileTransferPortType rft = (ReliableFileTransferPortType)ID2Stub.get(Integer.toString(jobID));
+        				if (null != rft) {
+                			try {
+        					GetStatusSetResponse response = rft.getStatusSet(new GetStatusSet(1, 1));        					
+        					TransferStatusType statusType = response.getTransferStatusSet(0);
+        					String jobStatus = statusType.getStatus().getValue();
+        					queuePanel.setColumnValue(i , 3, jobStatus);            					
         				} catch (Exception e) {
         					// TODO Auto-generated catch block
         					e.printStackTrace();
         				} 
-        				
-        				i+=j;
+        				}
         			}
+        			i++;
+//        			int jobID = Integer.parseInt(queuePanel.getColumnValue(i, 0));
+//        			int j = 1;
+//        			while (j + i < queuePanel.tableSize()) {
+//        				int nextJobID = Integer.parseInt(queuePanel.getColumnValue(j + i, 0));
+//        				if (jobID == nextJobID) {
+//        					//System.out.println("jobid=" + jobID + ", nextjobid=" + nextJobID + ", j=" + j);
+//        					j++;
+//        				} else {
+//        					break;
+//        				}
+//        			}
+//        			
+//        			ReliableFileTransferPortType rft = (ReliableFileTransferPortType)ID2Stub.get(Integer.toString(jobID));
+//        			if (null != rft) {
+//            			try {
+//        					GetStatusSetResponse response = rft.getStatusSet(new GetStatusSet(1, j));        					
+//        					for (int k = 0; k < j; k++) {
+//        						TransferStatusType statusType = response.getTransferStatusSet(k);
+//        						String status = statusType.getStatus().getValue();
+//        						if (i + k < queuePanel.tableSize()) {
+//        							queuePanel.setColumnValue(i + k, 3, status);
+//        						}        						
+//        					}
+//        				} catch (Exception e) {
+//        					// TODO Auto-generated catch block
+//        					e.printStackTrace();
+//        				} 
+//        				
+//        				i+=j;
+//        			}
 
         		}
         		

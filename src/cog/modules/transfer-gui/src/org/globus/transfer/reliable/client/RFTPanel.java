@@ -1,34 +1,29 @@
 /*
  * RFTPanel.java
  *
- * Created on 2008骞�鏈�7鏃� 涓嬪崍6:21
+ * 
  */
 
 package org.globus.transfer.reliable.client;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
 
-import javax.swing.JFileChooser;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.Properties;
+
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.globus.ogce.beans.filetransfer.gui.monitor.QueuePanel;
 
-import org.globus.transfer.reliable.client.RFTTransferParamPanel.MyFilter;
 
-
-
-/**
- *
- * @author  vic
- */
 public class RFTPanel extends javax.swing.JPanel {
     private int jobID = 0;
-    
+    private JFrame frame = null;
     /** Creates new form RFTPanel */
     public RFTPanel() {
         initComponents();
@@ -44,27 +39,26 @@ public class RFTPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         rftQueuePanel = new org.globus.ogce.beans.filetransfer.gui.monitor.QueuePanel();
-        rftQueuePanel.createHeader(new String[]{"Jobid", "TransferID", "Offset", "From", 
-        		"To", "Status", "%", "Errors"});
+        rftQueuePanel.createHeader(new String[]{"Jobid",  "From", "To", "Status", "%", "Errors"});
         rftQueuePanel.addPopupItems(new String[]{"Info", "Cancel", "Delete"}, new ButtonActionListener());
     rFTOptions1 = new RFTOptionsPanel();
     rFTTransferParam1 = new RFTTransferParamPanel();
     startButton = new javax.swing.JButton();
     stopButton = new javax.swing.JButton();
-    loadFileButton = new javax.swing.JButton();
-    jPanel1 = new javax.swing.JPanel();
-    jLabel1 = new javax.swing.JLabel();
-    finishedField = new javax.swing.JLabel();
-    jLabel3 = new javax.swing.JLabel();
-    activeField = new javax.swing.JLabel();
-    jLabel5 = new javax.swing.JLabel();
-    failedField = new javax.swing.JLabel();
-    jLabel7 = new javax.swing.JLabel();
-    restartedField = new javax.swing.JLabel();
-    jLabel9 = new javax.swing.JLabel();
-    pendingField = new javax.swing.JLabel();
-    jLabel11 = new javax.swing.JLabel();
-    cancelledField = new javax.swing.JLabel();
+    okButton = new javax.swing.JButton();
+    //jPanel1 = new javax.swing.JPanel();
+    //jLabel1 = new javax.swing.JLabel();
+    //finishedField = new javax.swing.JLabel();
+    //jLabel3 = new javax.swing.JLabel();
+    //activeField = new javax.swing.JLabel();
+    //jLabel5 = new javax.swing.JLabel();
+    //failedField = new javax.swing.JLabel();
+    //jLabel7 = new javax.swing.JLabel();
+    //restartedField = new javax.swing.JLabel();
+    //jLabel9 = new javax.swing.JLabel();
+    //pendingField = new javax.swing.JLabel();
+    //jLabel11 = new javax.swing.JLabel();
+    //cancelledField = new javax.swing.JLabel();
 
     setAutoscrolls(true);
     setName("Form"); // NOI18N
@@ -92,157 +86,162 @@ public class RFTPanel extends javax.swing.JPanel {
         }
     });
 
-    loadFileButton.setText(resourceMap.getString("restartButton.text")); // NOI18N
-    loadFileButton.setName("restartButton"); // NOI18N
-    loadFileButton.addActionListener(new java.awt.event.ActionListener() {
+    okButton.setText(resourceMap.getString("restartButton.text")); // NOI18N
+    okButton.setName("restartButton"); // NOI18N
+    okButton.addActionListener(new java.awt.event.ActionListener() {
         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            loadFileButtonActionPerformed(evt);
+            okButtonActionPerformed(evt);
         }
     });
     
-    jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel1.border.title"))); // NOI18N
-    jPanel1.setName("jPanel1"); // NOI18N
+//    jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel1.border.title"))); // NOI18N
+//    jPanel1.setName("jPanel1"); // NOI18N
+//
+//    jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
+//    jLabel1.setName("jLabel1"); // NOI18N
 
-    jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
-    jLabel1.setName("jLabel1"); // NOI18N
+//    finishedField.setText(resourceMap.getString("finishedField.text")); // NOI18N
+//    finishedField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+//    finishedField.setName("finishedField"); // NOI18N
 
-    finishedField.setText(resourceMap.getString("finishedField.text")); // NOI18N
-    finishedField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-    finishedField.setName("finishedField"); // NOI18N
+//    jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
+//    jLabel3.setName("jLabel3"); // NOI18N
 
-    jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
-    jLabel3.setName("jLabel3"); // NOI18N
+//    activeField.setText(resourceMap.getString("activeField.text")); // NOI18N
+//    activeField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+//    activeField.setName("activeField"); // NOI18N
 
-    activeField.setText(resourceMap.getString("activeField.text")); // NOI18N
-    activeField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-    activeField.setName("activeField"); // NOI18N
+//    jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
+//    jLabel5.setName("jLabel5"); // NOI18N
 
-    jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
-    jLabel5.setName("jLabel5"); // NOI18N
+//    failedField.setText(resourceMap.getString("failedField.text")); // NOI18N
+//    failedField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+//    failedField.setName("failedField"); // NOI18N
 
-    failedField.setText(resourceMap.getString("failedField.text")); // NOI18N
-    failedField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-    failedField.setName("failedField"); // NOI18N
+//    jLabel7.setText(resourceMap.getString("jLabel7.text")); // NOI18N
+//    jLabel7.setName("jLabel7"); // NOI18N
 
-    jLabel7.setText(resourceMap.getString("jLabel7.text")); // NOI18N
-    jLabel7.setName("jLabel7"); // NOI18N
+//    restartedField.setText(resourceMap.getString("restartedField.text")); // NOI18N
+//    restartedField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+//    restartedField.setName("restartedField"); // NOI18N
 
-    restartedField.setText(resourceMap.getString("restartedField.text")); // NOI18N
-    restartedField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-    restartedField.setName("restartedField"); // NOI18N
+//    jLabel9.setText(resourceMap.getString("jLabel9.text")); // NOI18N
+//    jLabel9.setName("jLabel9"); // NOI18N
 
-    jLabel9.setText(resourceMap.getString("jLabel9.text")); // NOI18N
-    jLabel9.setName("jLabel9"); // NOI18N
+//    pendingField.setText(resourceMap.getString("pendingField.text")); // NOI18N
+//    pendingField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+//    pendingField.setName("pendingField"); // NOI18N
 
-    pendingField.setText(resourceMap.getString("pendingField.text")); // NOI18N
-    pendingField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-    pendingField.setName("pendingField"); // NOI18N
+//    jLabel11.setText(resourceMap.getString("jLabel11.text")); // NOI18N
+//    jLabel11.setName("jLabel11"); // NOI18N
 
-    jLabel11.setText(resourceMap.getString("jLabel11.text")); // NOI18N
-    jLabel11.setName("jLabel11"); // NOI18N
+//    cancelledField.setText(resourceMap.getString("cancelledField.text")); // NOI18N
+//    cancelledField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+//    cancelledField.setName("cancelledField"); // NOI18N
 
-    cancelledField.setText(resourceMap.getString("cancelledField.text")); // NOI18N
-    cancelledField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-    cancelledField.setName("cancelledField"); // NOI18N
-
-    org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
-    jPanel1.setLayout(jPanel1Layout);
-    jPanel1Layout.setHorizontalGroup(
-        jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-        .add(jPanel1Layout.createSequentialGroup()
-            .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-            .add(finishedField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 39, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(48, 48, 48)
-            .add(jLabel3)
-            .add(18, 18, 18)
-            .add(activeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 40, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(60, 60, 60)
-            .add(jLabel5)
-            .add(45, 45, 45)
-            .add(failedField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 48, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(40, 40, 40)
-            .add(jLabel7)
-            .add(28, 28, 28)
-            .add(restartedField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 42, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(38, 38, 38)
-            .add(jLabel9)
-            .add(18, 18, 18)
-            .add(pendingField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 43, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(42, 42, 42)
-            .add(jLabel11)
-            .add(18, 18, 18)
-            .add(cancelledField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 38, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .addContainerGap(317, Short.MAX_VALUE))
-    );
-    jPanel1Layout.setVerticalGroup(
-        jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-        .add(jPanel1Layout.createSequentialGroup()
-            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 26, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(jLabel3)
-                .add(finishedField)
-                .add(activeField)
-                .add(jLabel5)
-                .add(failedField)
-                .add(jLabel7)
-                .add(restartedField)
-                .add(jLabel9)
-                .add(pendingField)
-                .add(jLabel11)
-                .add(cancelledField))
-            .addContainerGap(21, Short.MAX_VALUE))
-    );
+    //org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+   // jPanel1.setLayout(jPanel1Layout);
+//    jPanel1Layout.setHorizontalGroup(
+//        jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+//        .add(jPanel1Layout.createSequentialGroup()
+//            .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+//            .add(finishedField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 39, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .add(48, 48, 48)
+//            .add(jLabel3)
+//            .add(18, 18, 18)
+//            .add(activeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 40, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .add(60, 60, 60)
+//            .add(jLabel5)
+//            .add(45, 45, 45)
+//            .add(failedField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 48, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .add(40, 40, 40)
+//            .add(jLabel7)
+//            .add(28, 28, 28)
+//            .add(restartedField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 42, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .add(38, 38, 38)
+//            .add(jLabel9)
+//            .add(18, 18, 18)
+//            .add(pendingField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 43, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .add(42, 42, 42)
+//            .add(jLabel11)
+//            .add(18, 18, 18)
+//            .add(cancelledField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 38, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .addContainerGap(317, Short.MAX_VALUE))
+//    );
+//    jPanel1Layout.setVerticalGroup(
+//        jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+//        .add(jPanel1Layout.createSequentialGroup()
+//            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+//                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 26, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//                .add(jLabel3)
+//                .add(finishedField)
+//                .add(activeField)
+//                .add(jLabel5)
+//                .add(failedField)
+//                .add(jLabel7)
+//                .add(restartedField)
+//                .add(jLabel9)
+//                .add(pendingField)
+//                .add(jLabel11)
+//                .add(cancelledField))
+//            .addContainerGap(21, Short.MAX_VALUE))
+//    );
 
     org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
     this.setLayout(layout);
     layout.setHorizontalGroup(
         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-        .add(layout.createSequentialGroup()
-            .addContainerGap()
-            .add(rftQueuePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1230, Short.MAX_VALUE))
-        .add(layout.createSequentialGroup()
-            .addContainerGap()
-            .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addContainerGap())
+//        .add(layout.createSequentialGroup()
+//            //.addContainerGap()
+//            //.add(rftQueuePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1230, Short.MAX_VALUE)
+//            )
+//        .add(layout.createSequentialGroup()
+//            .addContainerGap()
+//            .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+//            .addContainerGap())
         .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-            .addContainerGap()
-            .add(rFTOptions1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1220, Short.MAX_VALUE)
+           // .addContainerGap()
+            .add(rFTOptions1, 100, 300, 400)
             .addContainerGap())
+        //.add(layout.createSequentialGroup()
+        //    .addContainerGap()
+            .add(rFTTransferParam1, 100, 300, 400)
+          //  .addContainerGap()
+            //)
         .add(layout.createSequentialGroup()
-            .addContainerGap()
-            .add(rFTTransferParam1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1220, Short.MAX_VALUE)
-            .addContainerGap())
-        .add(layout.createSequentialGroup()
-            .add(299, 299, 299)
-            .add(startButton)
-            .add(58, 58, 58)
-            .add(stopButton)
-            .add(42, 42, 42)
-            .add(loadFileButton)
-            .addContainerGap(616, Short.MAX_VALUE))
+            //.add(299, 299, 299)
+            //.add(startButton)
+            //.add(58, 58, 58)
+            //.add(stopButton)
+            .add(200, 200, 200)
+            .add(okButton)
+           // .addContainerGap(616, Short.MAX_VALUE)
+            )
     );
 
-    layout.linkSize(new java.awt.Component[] {loadFileButton, startButton, stopButton}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
+    layout.linkSize(new java.awt.Component[] {okButton}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
 
     layout.setVerticalGroup(
         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
         .add(layout.createSequentialGroup()
-            .addContainerGap()
-            .add(rftQueuePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 215, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-            .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-            .add(rFTOptions1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-            .add(rFTTransferParam1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            //.addContainerGap()
+            //.add(rftQueuePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 215, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+         //   .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+//            .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//            .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+            .add(rFTOptions1, 80, 100, 130)
+            //.addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+            .add(rFTTransferParam1, 100, 150, 200)
             .add(18, 18, 18)
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                .add(startButton)
-                .add(stopButton)
-                .add(loadFileButton))
+//                .add(startButton)
+//                .add(stopButton)
+                .add(okButton))
             .add(92, 92, 92))
     );
+    
+
     }// </editor-fold>//GEN-END:initComponents
 
     
@@ -251,11 +250,10 @@ public class RFTPanel extends javax.swing.JPanel {
     		public void run() {
     			RFTTransferParam param = new RFTTransferParam(rFTTransferParam1.getFrom(),
     					rFTTransferParam1.getTo(), rFTTransferParam1.getServerHost(),
-    					rFTTransferParam1.getServerPort(), rFTTransferParam1.getAuthType(), rFTTransferParam1.getAuthzType());
-    			RFTOptions options = new RFTOptions(rFTOptions1.getBlockSize(), rFTOptions1.getConcurrent(),
-    					rFTOptions1.getParallelStream(), rFTOptions1.getTcpBufferSize(), rFTOptions1.getMaxAttempts(),
-    					rFTOptions1.getDCAU(), rFTOptions1.getNoTpt(), rFTOptions1.getBinary(),
-    					rFTOptions1.getAllOrNone(), rFTOptions1.getDestSN(), rFTOptions1.getSourceSN());
+    					rFTTransferParam1.getServerPort());
+    			RFTOptions options = new RFTOptions(rFTTransferParam1.getConcurrent(),
+    					rFTOptions1.getParallelStream(), rFTOptions1.getTcpBufferSize(),
+    					rFTOptions1.getDestSN(), rFTOptions1.getSourceSN());
     	        RFTJob job = new RFTJob(++jobID, options, param);
     	        try {
 					actionListener.startButtonAction(job, rftQueuePanel);
@@ -263,8 +261,8 @@ public class RFTPanel extends javax.swing.JPanel {
                     JOptionPane.showMessageDialog(null,e.getMessage(), "Error",
                             JOptionPane.WARNING_MESSAGE);
                     int index = rftQueuePanel.getRowIndex(Integer.toString(jobID));
-                    rftQueuePanel.setColumnValue(index, 5, "Failed");
-                    rftQueuePanel.setColumnValue(index, 7, e.getMessage());
+                    rftQueuePanel.setColumnValue(index, 3, "Failed");
+                    rftQueuePanel.setColumnValue(index, 5, e.getMessage());
 					e.printStackTrace();
 				}
     		}
@@ -280,43 +278,40 @@ public class RFTPanel extends javax.swing.JPanel {
 				} catch (Exception e) {
                     JOptionPane.showMessageDialog(null,e.getMessage(), "Error",
                             JOptionPane.WARNING_MESSAGE);
-                    int index = rftQueuePanel.getRowIndex(jobID, 1);
-                    rftQueuePanel.setColumnValue(index, 5, "Failed");
-                    rftQueuePanel.setColumnValue(index, 7, e.getMessage());
+                    int index = rftQueuePanel.getRowIndex(jobID, 0);
+                    rftQueuePanel.setColumnValue(index, 4, "Failed");
+                    rftQueuePanel.setColumnValue(index, 6, e.getMessage());
 					e.printStackTrace();
 				}
     		}
     	}).start();
     }//GEN-LAST:event_stopButtonActionPerformed
     
-    private void loadFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
-    	new Thread(new Runnable() {
-    		public void run() {
-    	        JFileChooser fileChooser = new JFileChooser(".");
-    	        fileChooser.addChoosableFileFilter(new MyFilter());
-    	        int status = fileChooser.showDialog(null, "load");
-    	        if (status == JFileChooser.APPROVE_OPTION) {
-    	        	File transferFile = fileChooser.getSelectedFile();
-        			RFTTransferParam param;
-        			RFTOptions options;
-        			RFTTransferFileParser parser = new RFTTransferFileParser();
-					try {
-						parser.loadTransferFile(transferFile.getCanonicalPath());
-						param = new RFTTransferParam(parser.getTransferType(),
-								rFTTransferParam1.getServerHost(),
-								rFTTransferParam1.getServerPort(), rFTTransferParam1.getAuthType(), rFTTransferParam1.getAuthzType());
-						options = parser.getRFTOptions();
-						RFTJob job = new RFTJob(++jobID, options, param);
-						actionListener.loadFileButtonAction(job, rftQueuePanel);
-					} catch (Exception e) {
-						e.printStackTrace();
-	                    JOptionPane.showMessageDialog(null,e.getMessage(), "Error",
-	                            JOptionPane.WARNING_MESSAGE);
-					}        	        
-    	        }  
-    	        }
-    	}).start();
+    private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
+    	Properties prop = new Properties();
+    	try {
+    		File prop_file = new File("rft.properties");
+//    		if (!prop_file.exists()) {
+//    			prop_file.createNewFile();
+//    		}
+			//prop.load(new FileInputStream(prop_file));
+			prop.setProperty("rft_enabled", String.valueOf(rFTTransferParam1.isRFTEnabled()));
+			prop.setProperty("host", rFTTransferParam1.getServerHost());
+			prop.setProperty("port", rFTTransferParam1.getServerPort());
+			prop.setProperty("concurrent", Integer.toString(rFTTransferParam1.getConcurrent()));
+			prop.setProperty("parallelstream", Integer.toString(rFTOptions1.getParallelStream()));
+			prop.setProperty("tcpbuffersize", Integer.toString(rFTOptions1.getTcpBufferSize()));
+			prop.store(new FileOutputStream(prop_file), null);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.frame.setVisible(false);
     }//GEN-LAST:event_stopButtonActionPerformed
+    
+    public void setFrame(JFrame f) {
+    	this.frame = f;
+    }
     
     /**
      * delete a transfer from queue panel and cancel actually transfer
@@ -326,9 +321,9 @@ public class RFTPanel extends javax.swing.JPanel {
     	try {
 			actionListener.stopButtonAction(jobid);
 		} catch (Exception e) {
-			int index = rftQueuePanel.getRowIndex(jobid, 1);
-            rftQueuePanel.setColumnValue(index, 5, "Failed");
-            rftQueuePanel.setColumnValue(index, 7, e.getMessage());
+			int index = rftQueuePanel.getRowIndex(jobid, 0);
+            rftQueuePanel.setColumnValue(index, 3, "Failed");
+            rftQueuePanel.setColumnValue(index, 5, e.getMessage());
 			e.printStackTrace();
 		}
         rftQueuePanel.deleteTransfer(jobid);
@@ -353,8 +348,8 @@ public class RFTPanel extends javax.swing.JPanel {
 						actionListener.stopButtonAction(jobID);
 					} catch (Exception e) {
 						int index = rftQueuePanel.getRowIndex(jobID);
-	                    rftQueuePanel.setColumnValue(index, 5, "Failed");
-	                    rftQueuePanel.setColumnValue(index, 7, e.getMessage());
+	                    rftQueuePanel.setColumnValue(index, 3, "Failed");
+	                    rftQueuePanel.setColumnValue(index, 5, e.getMessage());
 						e.printStackTrace();
 					}
             	}
@@ -375,23 +370,23 @@ public class RFTPanel extends javax.swing.JPanel {
      * @param pending
      * @param cancelled
      */
-    public void updateOverallStatus(int finished, int active, int failed, 
-    		int retrying, int pending, int cancelled) {
-//    	int oldFinished = Integer.valueOf(finishedField.getText());
-//    	int oldActive = Integer.valueOf(activeField.getText());
-//    	int oldFailed = Integer.valueOf(failedField.getText());
-//    	int oldRetrying = Integer.valueOf(restartedField.getText());
-//    	int oldPending = Integer.valueOf(pendingField.getText());
-//    	int oldCancelled = Integer.valueOf(cancelledField.getText());
-    	finishedField.setText(Integer.toString(finished));
-    	//activeField.setText(Integer.toString(active + oldActive));
-    	activeField.setText(Integer.toString(active));
-    	failedField.setText(Integer.toString(failed));
-    	restartedField.setText(Integer.toString(retrying));
-    	//pendingField.setText(Integer.toString(pending + oldPending));
-    	pendingField.setText(Integer.toString(pending));
-    	cancelledField.setText(Integer.toString(cancelled));
-    }
+//    public void updateOverallStatus(int finished, int active, int failed, 
+//    		int retrying, int pending, int cancelled) {
+////    	int oldFinished = Integer.valueOf(finishedField.getText());
+////    	int oldActive = Integer.valueOf(activeField.getText());
+////    	int oldFailed = Integer.valueOf(failedField.getText());
+////    	int oldRetrying = Integer.valueOf(restartedField.getText());
+////    	int oldPending = Integer.valueOf(pendingField.getText());
+////    	int oldCancelled = Integer.valueOf(cancelledField.getText());
+//    	finishedField.setText(Integer.toString(finished));
+//    	//activeField.setText(Integer.toString(active + oldActive));
+//    	activeField.setText(Integer.toString(active));
+//    	failedField.setText(Integer.toString(failed));
+//    	restartedField.setText(Integer.toString(retrying));
+//    	//pendingField.setText(Integer.toString(pending + oldPending));
+//    	pendingField.setText(Integer.toString(pending));
+//    	cancelledField.setText(Integer.toString(cancelled));
+//    }
     
     public QueuePanel getQueuePanel() {
     	return rftQueuePanel;
@@ -410,22 +405,22 @@ public class RFTPanel extends javax.swing.JPanel {
     
     private RFTButtonActionListener actionListener;
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel activeField;
-    private javax.swing.JLabel cancelledField;
-    private javax.swing.JLabel failedField;
-    private javax.swing.JLabel finishedField;
-    private javax.swing.JLabel jLabel1;
+//    private javax.swing.JLabel activeField;
+//    private javax.swing.JLabel cancelledField;
+//    private javax.swing.JLabel failedField;
+//    private javax.swing.JLabel finishedField;
+    //private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JLabel pendingField;
+    //private javax.swing.JLabel jLabel3;
+    //private javax.swing.JLabel jLabel5;
+    //private javax.swing.JLabel jLabel7;
+    //private javax.swing.JLabel jLabel9;
+    //private javax.swing.JPanel jPanel1;
+    //private javax.swing.JLabel pendingField;
     private RFTOptionsPanel rFTOptions1;
     private RFTTransferParamPanel rFTTransferParam1;
-    private javax.swing.JButton loadFileButton;
-    private javax.swing.JLabel restartedField;
+    private javax.swing.JButton okButton;
+    //private javax.swing.JLabel restartedField;
     private org.globus.ogce.beans.filetransfer.gui.monitor.QueuePanel rftQueuePanel;
     private javax.swing.JButton startButton;
     private javax.swing.JButton stopButton;
@@ -479,17 +474,17 @@ public class RFTPanel extends javax.swing.JPanel {
                 controlThread.start();
             } else if (actionCommand.equals("Info")) {
                 String job = rftQueuePanel.getSelectedJob();
-                int row = rftQueuePanel.getRowIndex(job, 1);
+                int row = rftQueuePanel.getRowIndex(job, 0);
                 String msg = "   Job ID : " +
                         rftQueuePanel.getColumnValue(row, 0)
                         + "\n   From : "
-                        + rftQueuePanel.getColumnValue(row, 3) +
+                        + rftQueuePanel.getColumnValue(row, 1) +
                         "\n   To : " +
-                        rftQueuePanel.getColumnValue(row, 4) +
+                        rftQueuePanel.getColumnValue(row, 2) +
                         "\n   Status : " +
-                        rftQueuePanel.getColumnValue(row, 5)
+                        rftQueuePanel.getColumnValue(row, 3)
                         + "\n   Errors : " +
-                        rftQueuePanel.getColumnValue(row, 7) +
+                        rftQueuePanel.getColumnValue(row, 5) +
                         "\n";
 
                 JOptionPane.showMessageDialog(null,
@@ -507,8 +502,8 @@ public class RFTPanel extends javax.swing.JPanel {
 							JOptionPane.showMessageDialog(null,e.getMessage(), "Error",
 		                            JOptionPane.WARNING_MESSAGE);
 							int index = rftQueuePanel.getRowIndex(jobID);
-		                    rftQueuePanel.setColumnValue(index, 5, "Failed");
-		                    rftQueuePanel.setColumnValue(index, 7, e.getMessage());
+		                    rftQueuePanel.setColumnValue(index, 3, "Failed");
+		                    rftQueuePanel.setColumnValue(index, 5, e.getMessage());
 							e.printStackTrace();
 						}
                     }
@@ -516,18 +511,18 @@ public class RFTPanel extends javax.swing.JPanel {
                 controlThread.start();
                 
             }  else if (actionCommand.equals("Delete")) {
-                String transferID = rftQueuePanel.getSelectedJob();
-                int row = rftQueuePanel.getRowIndex(transferID, 1);
-                if (!rftQueuePanel.getColumnValue(row, 5).equals("Finished")) {
+                String jobID = rftQueuePanel.getSelectedJob();
+                int row = rftQueuePanel.getRowIndex(jobID, 0);
+                if (!rftQueuePanel.getColumnValue(row, 3).equals("Finished")) {
                     Object aobj[] = {"Yes", "No"};
                     int k = JOptionPane.showOptionDialog(null, " This job is not Finished yet. Do you wish to cancel the job and delete it?", "Deletion Alert", -1, 2, null, aobj, aobj[0]);
                     if (k == 1) {
                         return;
                     } else {
-                    	deleteTransfer(transferID);
+                    	deleteTransfer(jobID);
                     }
                 } else {
-                	deleteTransfer(transferID);
+                	deleteTransfer(jobID);
                 }
 
             }
