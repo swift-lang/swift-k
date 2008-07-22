@@ -2,6 +2,7 @@ package org.globus.ogce.beans.filetransfer.transfer;
 
 
 import org.apache.log4j.Logger;
+import org.globus.ogce.beans.filetransfer.gui.FileTransferMainPanel;
 import org.globus.ogce.beans.filetransfer.gui.monitor.MonitorPanel;
 import org.globus.ogce.beans.filetransfer.gui.monitor.RequestPanel;
 import org.globus.ogce.beans.filetransfer.util.GridBrokerQueue;
@@ -43,7 +44,7 @@ public class FileRequest extends Thread {
 
     public void updateQueue(DirTransferRequest request) {
 
-        dirJobID++;
+    	dirJobID++;
         DirRequestJob job = new DirRequestJob(dirJobID + "", request);
         setControl(false);
         requestQueue.put(job);
