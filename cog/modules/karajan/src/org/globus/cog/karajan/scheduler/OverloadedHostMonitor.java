@@ -35,7 +35,9 @@ public class OverloadedHostMonitor extends Thread {
 
 	public void add(WeightedHost wh, int dir) {
 		synchronized (hosts) {
-			hosts.put(wh, DIRS[dir + 1]);
+			if (!hosts.containsKey(wh)) {
+				hosts.put(wh, DIRS[dir + 1]);
+			}
 		}
 	}
 

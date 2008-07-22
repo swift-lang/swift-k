@@ -78,7 +78,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	private InstanceSubmitQueue submitQueue;
 
-	private volatile boolean tasksFinished;
+	private boolean tasksFinished;
 
 	public LateBindingScheduler() {
 		virtualContacts = new HashMap();
@@ -678,7 +678,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return (Contact[]) taskContacts.get(t);
 	}
 	
-	protected void raiseTasksFinished() {
+	protected synchronized void raiseTasksFinished() {
 		this.tasksFinished = true;
 	}
 }

@@ -139,7 +139,7 @@ public class WeightedHost implements Comparable {
 		this.delayedDelta = delayedDelta;
 	}
 
-	public int isOverloaded() {
+	public synchronized int isOverloaded() {
 		double ml = maxLoad();
 		if (tscore >= 1) {
 			// the site is mostly good. permit 1 or more jobs
