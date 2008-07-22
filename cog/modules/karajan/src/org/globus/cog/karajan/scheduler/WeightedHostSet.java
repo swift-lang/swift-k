@@ -12,8 +12,6 @@ package org.globus.cog.karajan.scheduler;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeSet;
 
 import org.globus.cog.karajan.util.BoundContact;
@@ -24,12 +22,16 @@ public class WeightedHostSet {
 	private double sum;
 	private double scoreHighCap;
 	private volatile int overloadedCount;
-
-	private static final Timer timer = new Timer();
-
+	private OverloadedHostMonitor monitor;
+	
 	public WeightedHostSet(double scoreHighCap) {
+		this(scoreHighCap, null);
+	}
+
+	public WeightedHostSet(double scoreHighCap, OverloadedHostMonitor monitor) {
 		init();
 		this.scoreHighCap = scoreHighCap;
+		this.monitor = monitor;
 	}
 
 	protected void init() {
@@ -81,14 +83,13 @@ public class WeightedHostSet {
 		    }
 		}
 		else {
-			timer.schedule(new TimerTask() {
-				public void run() {
-				    overloadedCount -= dir;
-				}
-			}, -v);
+			if (monitor != null) {
+				monitor.add(wh, -dir);
+			}
 			return dir;
 		}
 	}
+
 
 	public WeightedHost findHost(BoundContact bc) {
 		return (WeightedHost) weightedHosts.get(bc);
@@ -137,5 +138,9 @@ public class WeightedHostSet {
 
 	public boolean allOverloaded() {
 		return overloadedCount == weightedHosts.size();
+	}
+	
+	protected void updateOverloadedCount(int dif) {
+		this.overloadedCount += dif;
 	}
 }
