@@ -38,6 +38,8 @@ public class ExternalMapper extends AbstractMapper {
 		ignored.add("dbgname");
 		ignored.add("descriptor");
 		ignored.add("#basedir");
+		ignored.add("waitfor");
+		ignored.add("swift#restartid");
 	}
 
 	private static final String[] STRING_ARRAY = new String[0];
