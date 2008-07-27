@@ -146,38 +146,60 @@ public class WorkerManager extends Thread {
 
     private void startWorker(int maxWallTime, Task prototype)
             throws InvalidServiceContactException {
-        int id = sr.nextInt();
-        if (logger.isInfoEnabled()) {
-            logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime + "s");
+        String numWorkersString = (String)((JobSpecification) prototype.getSpecification()).getAttribute("coastersPerNode");
+        int numWorkers;
+        if(numWorkersString==null) {
+            numWorkers = 1;
+        } else {
+            numWorkers = Integer.parseInt(numWorkersString);
         }
-        String sid = String.valueOf(id);
+
+        logger.info("Starting new worker set with "+numWorkers+" workers");
+
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
-        t.setSpecification(buildSpecification(sid, prototype));
+        t.setSpecification(buildSpecification(prototype));
         copyAttributes(t, prototype, maxWallTime);
         t.setRequiredService(1);
         t.setService(0, buildService(prototype));
-        try {
-            Worker wr = new Worker(this, sid, maxWallTime, t, prototype);
-            handler.submit(t);
-            synchronized (requested) {
-                requested.put(sid, wr);
+
+        Map newlyRequested = new HashMap();
+        for(int n = 0; n<numWorkers; n++) {
+
+            int id = sr.nextInt();
+            if (logger.isInfoEnabled()) {
+                logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime + "s");
+            }    
+            String sid = String.valueOf(id);
+
+            ((JobSpecification)t.getSpecification()).addArgument(sid);
+
+            try {
+                Worker wr = new Worker(this, sid, maxWallTime, t, prototype);
+                newlyRequested.put(sid, wr);
+            }
+       	    catch (Exception e) {
+                prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(),
+                    e));
             }
         }
-        catch (Exception e) {
-            prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(),
-                    e));
+        try {
+            handler.submit(t);
+        } catch(Exception e) {
+            prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(), e));
+        }
+        synchronized(requested) {
+            requested.putAll(newlyRequested);
         }
     }
 
-    private JobSpecification buildSpecification(String id,
-            Task prototype) {
+    private JobSpecification buildSpecification(Task prototype) {
         JobSpecification ps = (JobSpecification) prototype.getSpecification();
         JobSpecification js = new JobSpecificationImpl();
         js.setExecutable("/usr/bin/perl");
         js.addArgument(script.getAbsolutePath());
-        js.addArgument(id);
         js.addArgument(callbackURI.toString());
+        // js.addArgument(id);
        
         return js;
     }
