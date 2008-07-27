@@ -25,7 +25,7 @@ my $BUFSZ = 2048;
 my %REQUESTS = ();
 my %REPLIES  = ();
 
-my $LOG = "$ENV{HOME}/worker$ARGV[0].log";
+my $LOG = "$ENV{HOME}/worker$ARGV[1].log";
 
 
 my %HANDLERS = (
@@ -36,8 +36,8 @@ my %HANDLERS = (
 
 my @CMDQ = ();
 
-my $ID=$ARGV[0];
-my $URI=$ARGV[1];
+my $ID;
+my $URI=$ARGV[0];
 my $SCHEME;
 my $HOSTNAME;
 my $PORT;
@@ -405,12 +405,32 @@ sub runjob {
 	die "Could not execute $executable: $!";
 }
 
-my $MSG="0";
+my @wp;
 
-my $myhost=`hostname -i`;
-$myhost =~ s/\s+$//;
-init();
+my $i;
 
-queueCmd(\&registerCB, "REGISTER", $ID, "wid://$ID");
+for($i=1; $i<=$#ARGV ; $i++) {
+	my $waitpid;
+	if(($waitpid=fork())==0) {
+		$ID =$ARGV[$i];
+		my $MSG="0";
 
-mainloop();
+		my $myhost=`hostname -i`;
+		$myhost =~ s/\s+$//;
+		init();
+
+		print LOG time(), " Initialized coaster worker $i\n";
+		queueCmd(\&registerCB, "REGISTER", $ID, "wid://$ID");
+
+		mainloop();
+		exit(0);
+	} else {
+		$wp[$i]=$waitpid;
+	}
+}
+
+for($i=1; $i<=$#ARGV ; $i++) {
+	waitpid($wp[$i],0);
+}
+
+
