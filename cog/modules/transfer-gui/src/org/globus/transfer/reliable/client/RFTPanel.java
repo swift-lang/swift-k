@@ -10,7 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
 
@@ -46,19 +45,6 @@ public class RFTPanel extends javax.swing.JPanel {
     startButton = new javax.swing.JButton();
     stopButton = new javax.swing.JButton();
     okButton = new javax.swing.JButton();
-    //jPanel1 = new javax.swing.JPanel();
-    //jLabel1 = new javax.swing.JLabel();
-    //finishedField = new javax.swing.JLabel();
-    //jLabel3 = new javax.swing.JLabel();
-    //activeField = new javax.swing.JLabel();
-    //jLabel5 = new javax.swing.JLabel();
-    //failedField = new javax.swing.JLabel();
-    //jLabel7 = new javax.swing.JLabel();
-    //restartedField = new javax.swing.JLabel();
-    //jLabel9 = new javax.swing.JLabel();
-    //pendingField = new javax.swing.JLabel();
-    //jLabel11 = new javax.swing.JLabel();
-    //cancelledField = new javax.swing.JLabel();
 
     setAutoscrolls(true);
     setName("Form"); // NOI18N
