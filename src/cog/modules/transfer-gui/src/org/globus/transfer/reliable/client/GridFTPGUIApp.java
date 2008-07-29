@@ -4,8 +4,6 @@
 
 package org.globus.transfer.reliable.client;
 
-import org.apache.log4j.PropertyConfigurator;
-import org.globus.axis.util.Util;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.SingleFrameApplication;
 
