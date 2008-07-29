@@ -378,37 +378,6 @@ public class RFTClient extends BaseRFTClient {
         				}
         			}
         			i++;
-//        			int jobID = Integer.parseInt(queuePanel.getColumnValue(i, 0));
-//        			int j = 1;
-//        			while (j + i < queuePanel.tableSize()) {
-//        				int nextJobID = Integer.parseInt(queuePanel.getColumnValue(j + i, 0));
-//        				if (jobID == nextJobID) {
-//        					//System.out.println("jobid=" + jobID + ", nextjobid=" + nextJobID + ", j=" + j);
-//        					j++;
-//        				} else {
-//        					break;
-//        				}
-//        			}
-//        			
-//        			ReliableFileTransferPortType rft = (ReliableFileTransferPortType)ID2Stub.get(Integer.toString(jobID));
-//        			if (null != rft) {
-//            			try {
-//        					GetStatusSetResponse response = rft.getStatusSet(new GetStatusSet(1, j));        					
-//        					for (int k = 0; k < j; k++) {
-//        						TransferStatusType statusType = response.getTransferStatusSet(k);
-//        						String status = statusType.getStatus().getValue();
-//        						if (i + k < queuePanel.tableSize()) {
-//        							queuePanel.setColumnValue(i + k, 3, status);
-//        						}        						
-//        					}
-//        				} catch (Exception e) {
-//        					// TODO Auto-generated catch block
-//        					e.printStackTrace();
-//        				} 
-//        				
-//        				i+=j;
-//        			}
-
         		}
         		
         		try {
