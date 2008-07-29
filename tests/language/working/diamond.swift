@@ -30,4 +30,4 @@ type file {};
 }
 
 file final<"FINAL">;
-final = diamond(1, 100);
+final = diamond(1.0, 100.0);

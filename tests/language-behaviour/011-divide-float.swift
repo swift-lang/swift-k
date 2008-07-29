@@ -8,7 +8,7 @@ type messagefile {}
 
 messagefile outfile <"011-divide-float.out">;
 
-float i = 1/3;
+float i = 1.0/3.0;
 
 outfile = greeting(i);
 

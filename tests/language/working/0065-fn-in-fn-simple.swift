@@ -1,1 +1,1 @@
-int i=@foo(@baz(2));
+int i=@toint(@strcat("2","1"));

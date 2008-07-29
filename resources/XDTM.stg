@@ -7,12 +7,10 @@ program(namespaces,targetNS,functions,types,statements,sourcelocation) ::= <<
      $else$
 
      $namespaces;separator="\n"$>$endif$
-  $if(types)$
+  $if(types)$  
   <types>
-    <xs:schema targetNamespace=$defaultNS(targetNS)$>
-     $types;separator="\n"$
-    </xs:schema>
-  </types>
+     $types;separator="\n"$   
+  </types>  
   $endif$
   $functions;separator="\n"$
   $statements;separator="\n"$
@@ -31,30 +29,35 @@ $if(prefix)$xmlns:$prefix$="$uri$"$else$targetNamespace="$uri$"$endif$
 
 typeDef(name,type,members,sourcelocation) ::= <<
 $if(type)$
-$if(type.name)$
-<xs:element name="$name$" type="$type$"/>
-$else$
-<xs:simpleType name="$name$">
-  <xs:restriction base="$type$"/>
-</xs:simpleType>
-$endif$
+   	<type>
+		<typename>$name$</typename>
+		<typealias>$type$</typealias>
+		<typestructure></typestructure>
+	</type>   
 $else$
 $if(!members)$
-<xs:simpleType name="$name$">
-  <xs:restriction base="string"/>
-</xs:simpleType>
+	<type>
+		<typename>$name$</typename>
+		<typealias>string</typealias>
+		<typestructure></typestructure>
+	</type>
 $else$
-<xs:complexType name="$name$">
-  <xs:sequence>
-    $members;separator="\n"$
-  </xs:sequence>
-</xs:complexType>
+	<type>
+		<typename>$name$</typename>
+		<typealias></typealias>
+		<typestructure>
+			$members;separator="\n"$
+		</typestructure>
+	</type>
 $endif$
 $endif$
 >>
 
 memberdefinition(type,name,sourcelocation) ::= <<
-  <xs:element name="$name$" type="$type$"/>
+    <member>
+		<membername>$name$</membername>
+		<membertype>$type$</membertype>
+	</member>
 >>
 
 variable(type,name, value,sourcelocation) ::= <<

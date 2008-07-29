@@ -1,6 +1,6 @@
 type file {};
 
-(file gauge) stageIn (file input, string config) {
+(file gauge) stageIn (file input, int config) {
 	app {
 		stageIn "-v" "-i" @input "-c" config "-o" @gauge;
 	}

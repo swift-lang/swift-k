@@ -12,8 +12,7 @@ switch(d)
      f(g);
     case 5:
      j=7;
-     uuu=@filename(t+7+e+3*2);
+     uuu=@toint("5" + "2");
     default:
      s="the default";
 }
-

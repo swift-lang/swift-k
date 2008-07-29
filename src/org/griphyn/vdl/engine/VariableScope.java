@@ -67,15 +67,16 @@ public class VariableScope {
 	/** Set of variables (String token names) that are declared in
 	    this scope - not variables in parent scopes, though. */
 	Set variables = new HashSet();
+	Map varTypes = new HashMap();
 
 	/** Asserts that a named variable is declared in this scope.
 	    Might also eventually contain more information about the
 	    variable. Need to define behaviour here when the
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
-	public void addVariable(String name) throws CompilationException {
-		logger.info("Adding variable "+name+" to scope "+hashCode());
-
+	public void addVariable(String name, String type) throws CompilationException {
+		logger.info("Adding variable "+name+" of type "+type+" to scope "+hashCode());
+		
 		if(isVariableDefined(name)) {
 			throw new CompilationException("Variable "+name+" is already defined.");
 		}
@@ -87,6 +88,7 @@ public class VariableScope {
 		}
 
 		boolean added = variables.add(name);
+		varTypes.put(name, type);
 		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
 	}
 
@@ -95,6 +97,14 @@ public class VariableScope {
 		if(isVariableLocallyDefined(name)) return true;
 		if(parentScope != null && parentScope.isVariableDefined(name)) return true;
 		return false;
+	}
+	
+	public String getVariableType(String name) {
+		if(isVariableLocallyDefined(name)) 
+			return varTypes.get(name).toString();
+		if(parentScope != null && parentScope.isVariableDefined(name)) 
+			return parentScope.getVariableType(name);
+		return null;
 	}
 
 // TODO could also mark variable as written and catch duplicate assignments

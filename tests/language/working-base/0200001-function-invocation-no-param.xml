@@ -4,7 +4,7 @@
   <variable name="i" type="int" xsi:nil="true"/>
   <assign src="line 3">
    <variableReference>i</variableReference>
-   <function name="myfunction">
-   </function>
+   <function name="toint">
+     <stringConstant>3</stringConstant></function>
   </assign>
 </program>

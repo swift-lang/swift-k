@@ -4,7 +4,7 @@
 type file {}
 
 //define the wavelet procedure
-(file wavelets[]) waveletTransf (file waveletScript, int subjNo,
+(file wavelets) waveletTransf (file waveletScript, int subjNo,
 string trialType, file dataFiles) {
     app {
         cwtsmall @filename(waveletScript) subjNo trialType;

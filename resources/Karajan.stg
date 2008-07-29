@@ -8,7 +8,9 @@ program(types,procedures,declarations,statements,constants) ::= <<
   <import file="vdl.k"/>
   $if(types)$
   <types>
-    $types$
+     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript" xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+     $types;separator="\n"$  
+     </xs:schema>	 
   </types>
   $endif$
   $constants;separator="\n"$
@@ -27,6 +29,28 @@ program(types,procedures,declarations,statements,constants) ::= <<
   </restartLog>  
   $endif$
 </project>
+>>
+
+typeDef(name,type,members,sourcelocation) ::= <<
+ $if(type)$
+   	 <xs:element name="$name$" type="$type$"/>      
+ $else$
+   $if(!members)$
+ 	   <xs:simpleType name="$name$">
+ 	   <xs:restriction base="string"/>
+ 	   </xs:simpleType>
+   $else$
+ 	   <xs:complexType name="$name$">
+ 	   <xs:sequence>
+ 	     $members;separator="\n"$
+ 	   </xs:sequence>
+ 	   </xs:complexType>
+   $endif$
+ $endif$
+>>
+ 	
+memberdefinition(type,name,sourcelocation) ::= <<
+   <xs:element name="$name$" type="$type$"/>
 >>
 
 procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config) ::= <<
@@ -151,7 +175,7 @@ $endif$
 // the 'function' template outputs a karajan code fragment
 // that calls a function in the 'swiftscript' namespace.
 
-function(name, args) ::= <<
+function(name, args, datatype) ::= <<
 <swiftscript:$name$>
   $if(args)$ $args$ $endif$
 </swiftscript:$name$>
@@ -202,7 +226,7 @@ call(func, outputs, inputs) ::= <<
 </$func$>
 >>
 
-call_arg(bind, expr) ::= <<
+call_arg(bind, expr, datatype) ::= <<
 $if(bind)$
 <argument name="$bind$">
   $expr$
@@ -212,13 +236,13 @@ $expr$
 $endif$
 >>
 
-globalConstant(name,expr) ::= <<
+globalConstant(name, expr, datatype) ::= <<
 <global name="$name$">
   $expr$
 </global>
 >>
 
-variable(name,type,isArray,expr,mapping,nil,file,waitfor) ::= <<
+variable(name,type,isArray,expr,mapping,nil,file,waitfor,datatype) ::= <<
 <set name="$name$">
   $if(mapping)$
   <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
@@ -274,7 +298,7 @@ java implementation of setfieldvalue itself -->
    </vdl:setfieldvalue>
 >>
 
-array(elements) ::= <<
+array(elements, datatype) ::= <<
 <vdl:createarray>
   <list>
     $elements;separator="\n"$
@@ -282,7 +306,7 @@ array(elements) ::= <<
 </vdl:createarray>
 >>
 
-range(from,to,step) ::= <<
+range(from,to,step,datatype) ::= <<
 <vdl:range>
   <argument name="from">
     $from$
@@ -380,14 +404,14 @@ operator ::= [
   "==":"vdlop:eq"
 ]
 
-unaryNegation(exp) ::= <<
+unaryNegation(exp, datatype) ::= <<
 <vdlop:product>
   <vdl:new type="int" value="-1" />
   $exp$
 </vdlop:product>
 >>
 
-binaryop(op,left,right) ::= <<
+binaryop(op,left,right,datatype) ::= <<
 <$operator.(op)$>
   $left$
   $right$
@@ -395,27 +419,27 @@ binaryop(op,left,right) ::= <<
 >>
 
 
-and(left,right) ::= <<
+and(left,right,datatype) ::= <<
 <vdlop:and>
   $left$
   $right$
 </vdlop:and>
 >>
 
-or(left, right) ::= <<
+or(left, right, datatype) ::= <<
 <vdlop:or>
   $left$
   $right$
 </vdlop:or>
 >>
 
-not(exp) ::= <<
+not(exp, datatype) ::= <<
 <vdlop:not>
   $exp$
 </vdlop:not>
 >>
 
-id(var) ::= <<
+id(var, datatype) ::= <<
 <variable>$var$</variable>
 >>
 
@@ -424,7 +448,7 @@ id(var) ::= <<
 // doesn't need this strcat.
 // or make a varargs karajan level accessor?
 
-extractarrayelement(parent, arraychild, memberchild) ::= <<
+extractarrayelement(parent, arraychild, memberchild, datatype) ::= <<
 
 $if(arraychild)$
 <vdl:getfieldsubscript>
@@ -442,19 +466,19 @@ $endif$
 
 >>
 
-iConst(value) ::= <<
+iConst(value, datatype) ::= <<
 <vdl:new type="int" value="$value$" />
 >>
 
-fConst(value) ::= <<
+fConst(value, datatype) ::= <<
 <vdl:new type="float" value="$value$" />
 >>
 
-bConst(value) ::= <<
+bConst(value, datatype) ::= <<
 <vdl:new type="boolean" value="$value$" />
 >>
 
-sConst(value,innervalue) ::= <<
+sConst(value,innervalue,datatype) ::= <<
 <vdl:new type="string" value="$innervalue$" />
 >>
 

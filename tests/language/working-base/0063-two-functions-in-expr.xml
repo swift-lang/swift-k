@@ -2,9 +2,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="i" type="int"><arith op="+">
-    <function name="foo">
-      <integerConstant>1</integerConstant></function>
-    <function name="baz">
-      <integerConstant>2</integerConstant></function>
+    <function name="toint">
+      <stringConstant>1</stringConstant></function>
+    <function name="toint">
+      <stringConstant>2</stringConstant></function>
   </arith></variable>
 </program>

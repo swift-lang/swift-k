@@ -16,7 +16,7 @@
   <procedure name="foo">
 
       <input 
-    name="bar" type="fizz"
+    name="bar" type="int"
 
      xsi:nil="true" />
     <call proc="j" src="line 4">

@@ -1,1 +1,1 @@
-int i=@foo(1+2);
+int i=@toint("1"+"2");

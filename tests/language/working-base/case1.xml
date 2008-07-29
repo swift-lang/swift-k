@@ -39,19 +39,10 @@
       </assign>
       <assign src="line 16">
        <variableReference>uuu</variableReference>
-       <function name="filename">
+       <function name="toint">
          <arith op="+">
-           <arith op="+">
-             <arith op="+">
-               <variableReference>t</variableReference>
-               <integerConstant>7</integerConstant>
-             </arith>
-             <variableReference>e</variableReference>
-           </arith>
-           <arith op="*">
-             <integerConstant>3</integerConstant>
-             <integerConstant>2</integerConstant>
-           </arith>
+           <stringConstant>5</stringConstant>
+           <stringConstant>2</stringConstant>
          </arith></function>
       </assign>
       </statements>

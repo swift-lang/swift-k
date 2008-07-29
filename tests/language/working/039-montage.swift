@@ -178,7 +178,7 @@ Image mosaicArea<"mosaic_area.fits">;
 
 // shrink the image
 Image smallMosaic<"smallMosaic.fits">;
-smallMosaic = mShrink ( mosaic, 3 );
+smallMosaic = mShrink ( mosaic, 3.0 );
 
 // convert to jpeg
 JPEG jpeg<"mosaic.jpg">;

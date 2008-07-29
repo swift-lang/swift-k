@@ -41,17 +41,21 @@
     <xs:complexType>
       <xs:sequence>
         <xs:annotation>
-          <xs:documentation>XML Schema definitions for
-          types</xs:documentation>
+          <xs:documentation>XML Schema definitions for types</xs:documentation>
         </xs:annotation>
-
-        <xs:any maxOccurs="unbounded" minOccurs="0"
-                namespace="http://www.w3.org/2001/XMLSchema"
-                processContents="lax"/>
+        <xs:element name="type" maxOccurs="unbounded" minOccurs="0">
+         <xs:complexType>
+          <xs:sequence>
+	        <xs:element name="typename" type="xs:string" />
+			<xs:element name="typealias" type="xs:string" />			
+	        <xs:element name="typestructure" type="TypeStructure" />
+	      </xs:sequence>
+         </xs:complexType>
+        </xs:element>        
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-
+  
   <xs:complexType name="Procedure">
     <xs:annotation>
       <xs:documentation>a procedure defines the logical interface of a
@@ -597,6 +601,20 @@ and it will absorb 'not' -->
       <xs:element ref="abstractExpression" />
       <xs:element name="memberName" type="xs:string" />
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TypeStructure">
+	<xs:sequence>
+		<xs:element maxOccurs="unbounded" minOccurs="0"
+		             type="TypeRow" name="member" />
+	</xs:sequence>
+  </xs:complexType>
+	
+  <xs:complexType name="TypeRow">
+	<xs:sequence>
+		<xs:element name="membername" type="xs:string"/>
+		<xs:element name="membertype" type="xs:string"/>
+	</xs:sequence>
   </xs:complexType>
 
 </xs:schema>

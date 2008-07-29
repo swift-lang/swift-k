@@ -1,2 +1,2 @@
 int i;
-i = @myfunction();
+i = @toint("3");

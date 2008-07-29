@@ -1,16 +1,29 @@
 <program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
   <types>
-    <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
-     <xs:complexType name="foo">
-       <xs:sequence>
-           <xs:element name="a" type="int"/>
-           <xs:element name="b" type="int[]"/>
-           <xs:element name="c" type="int"/>
-           <xs:element name="d" type="int"/>
-       </xs:sequence>
-     </xs:complexType>
-    </xs:schema>
-  </types>
+     	<type>
+     		<typename>foo</typename>
+     		<typealias></typealias>
+     		<typestructure>
+     			    <member>
+     					<membername>a</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>b</membername>
+     					<membertype>int[]</membertype>
+     				</member>
+     			    <member>
+     					<membername>c</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>d</membername>
+     					<membertype>int</membertype>
+     				</member>
+     		</typestructure>
+     	</type>   
+  </types>  
 </program>

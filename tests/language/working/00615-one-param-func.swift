@@ -1,1 +1,1 @@
-int i=@foo(1);
+int i=@toint("1");

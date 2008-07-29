@@ -3,7 +3,7 @@
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="i" type="int"><arith op="+">
     <integerConstant>1</integerConstant>
-    <function name="foo">
-      <integerConstant>1</integerConstant></function>
+    <function name="toint">
+      <stringConstant>1</stringConstant></function>
   </arith></variable>
 </program>

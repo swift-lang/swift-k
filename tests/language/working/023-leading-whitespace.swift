@@ -1,3 +1,3 @@
 
 
-file z;
+int z;

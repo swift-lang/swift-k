@@ -1,19 +1,28 @@
 <program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
   <types>
-    <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript">
-     <xs:simpleType name="messagefile">
-       <xs:restriction base="string"/>
-     </xs:simpleType>
-     <xs:complexType name="details">
-       <xs:sequence>
-           <xs:element name="name" type="string"/>
-           <xs:element name="pies" type="int"/>
-       </xs:sequence>
-     </xs:complexType>
-    </xs:schema>
-  </types>
+     	<type>
+     		<typename>messagefile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>details</typename>
+     		<typealias></typealias>
+     		<typestructure>
+     			    <member>
+     					<membername>name</membername>
+     					<membertype>string</membertype>
+     				</member>
+     			    <member>
+     					<membername>pies</membername>
+     					<membertype>int</membertype>
+     				</member>
+     		</typestructure>
+     	</type>   
+  </types>  
   <procedure name="greeting">
 
       <output 

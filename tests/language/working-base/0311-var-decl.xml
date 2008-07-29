@@ -3,7 +3,7 @@
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="x" type="int" xsi:nil="true"/>
   <variable name="y" type="int"><integerConstant>2</integerConstant></variable>
-  <variable name="s" type="String"><stringConstant>hello</stringConstant></variable>
+  <variable name="s" type="string"><stringConstant>hello</stringConstant></variable>
   <variable name="f" type="float[]">
     <array>
       <floatConstant>1.0</floatConstant><floatConstant>2.0</floatConstant><floatConstant>3.0</floatConstant>

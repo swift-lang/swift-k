@@ -8,7 +8,7 @@ type messagefile {}
 
 messagefile outfile <"030-mix-float-int.out">;
 
-float f = 42 + 12.3;
+float f = 42.0 + 12.3;
 
 outfile = greeting(f);
 
