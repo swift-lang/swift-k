@@ -24,7 +24,7 @@ import org.apache.axis.message.addressing.Address;
 import org.apache.axis.message.addressing.EndpointReferenceType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.globus.axis.util.Util;
+
 import org.globus.gsi.GSIConstants;
 import org.globus.rft.generated.RFTOptionsType;
 import org.globus.rft.generated.ReliableFileTransferPortType;
@@ -32,7 +32,7 @@ import org.globus.rft.generated.TransferRequestType;
 import org.globus.rft.generated.TransferType;
 import org.globus.rft.generated.Start;
 import org.globus.rft.generated.StartOutputType;
-import org.globus.transfer.reliable.client.utils.LogFileUtils;
+
 import org.oasis.wsrf.lifetime.SetTerminationTime;
 import org.oasis.wsrf.lifetime.SetTerminationTimeResponse;
 
