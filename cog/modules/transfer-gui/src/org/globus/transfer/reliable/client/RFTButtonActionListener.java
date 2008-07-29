@@ -67,20 +67,5 @@ public class RFTButtonActionListener {
           	
 		rftClient.startTransfer(job);	
     }
-    
-    /**
-	 * update Overall status panel of the GUI, this method delegate the task to
-	 * RFTPanel
-	 * 
-	 * @param finished
-	 * @param Active
-	 * @param failed
-	 * @param retrying
-	 * @param Pending
-	 * @param cancelled
-	 */
-//    public void updateOverallStatus(int finished, int active, int failed, 
-//    		int retrying, int pending, int cancelled) {    	
-//    	panel.updateOverallStatus(finished, active, failed, retrying, pending, cancelled);
-//    }
+
 }
