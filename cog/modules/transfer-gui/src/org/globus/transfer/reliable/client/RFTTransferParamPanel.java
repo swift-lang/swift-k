@@ -14,7 +14,6 @@ import java.util.Properties;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
 
 import org.globus.wsrf.impl.security.authorization.HostAuthorization;
@@ -80,15 +79,6 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
     public void setConcurrent(String c) {
     	concurrencyField.setText(c);
     }
-//    public String getAuthType() {
-//    	String key = (String)authTypeComboBox.getSelectedItem();
-//        return (String) authTypeMap.get(key);
-//    }
-//    
-//    public String getAuthzType() {
-//    	String key = (String)authzTypeComboBox.getSelectedItem();
-//        return (String) authTypeMap.get(key);
-//    }
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -111,11 +101,6 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
         concurrencyLabel = new javax.swing.JLabel();
         concurrencyField = new javax.swing.JTextField();
         rftHelpButton = new javax.swing.JButton("what is RFT?");
-//        jLabel5 = new javax.swing.JLabel();
-//        jLabel6 = new javax.swing.JLabel();
-//        authTypeComboBox = new javax.swing.JComboBox();
-//        authzTypeComboBox = new javax.swing.JComboBox();
-//        loadFileButton = new javax.swing.JButton();
         
         jScrollPane1.setName("jScrollPane1"); // NOI18N
 
@@ -209,45 +194,9 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
             concurrencyLabel.setEnabled(false);
             concurrencyField.setEditable(false);
             rftHelpButton.setEnabled(false);
-        }
-//        jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
-//        jLabel5.setName("jLabel5"); // NOI18N
-//        
-//        jLabel6.setText(resourceMap.getString("jLabel6.text")); // NOI18N
-//        jLabel6.setName("jLabel6"); // NOI18N
-//        
-//        authTypeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "GSI_TRANSPORT", "GSI_SEC_MSG", "GSI_SEC_CONV" }));
-//        authTypeComboBox.setName("authTypeComboBox"); // NOI18N
-//        
-//        authzTypeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SELF", "HOST" }));
-//        authzTypeComboBox.setName("authzTypeComboBox"); // NOI18N
-        
+        }        
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
-        this.setLayout(layout);
-//        layout.setHorizontalGroup(
-//        		layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-//                .add(layout.createSequentialGroup()
-//                    .add(64, 64, 64)
-//                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-//                            .add(layout.createSequentialGroup()
-//                            		.add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-//                                    .add(concurrencyLabel)                                    
-//                                    .add(concurrencyField, 10, 20, 200))
-//                        
-//                            .add(jLabel2)
-//                            
-//                            .add(serverPortField, 10, 20, 200))
-//                        
-//                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-//                                .add(jLabel1)
-//                                .add(enable_rft, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-//                            //.addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-//                            
-//                                .add(serverHostField, 10, 20, 200)
-//                                .add(enable_rft_checkbox))))
-//                    .add(164, 164, 164))
-//            );
-            
+        this.setLayout(layout);            
             
             layout.setHorizontalGroup(
             		layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
