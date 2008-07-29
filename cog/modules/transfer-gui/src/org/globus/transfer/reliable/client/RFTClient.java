@@ -7,7 +7,6 @@ package org.globus.transfer.reliable.client;
 
 
 import java.io.FileWriter;
-import java.rmi.RemoteException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -20,12 +19,9 @@ import org.apache.axis.message.addressing.Address;
 import org.apache.axis.message.addressing.EndpointReferenceType;
 import org.globus.gsi.GSIConstants;
 import org.globus.ogce.beans.filetransfer.gui.monitor.QueuePanel;
-import org.globus.rft.generated.BaseRequestType;
 import org.globus.rft.generated.Cancel;
 import org.globus.rft.generated.GetStatusSet;
 import org.globus.rft.generated.GetStatusSetResponse;
-import org.globus.rft.generated.OverallStatus;
-import org.globus.rft.generated.RFTDatabaseFaultType;
 import org.globus.rft.generated.RFTFaultResourcePropertyType;
 import org.globus.rft.generated.RFTOptionsType;
 import org.globus.rft.generated.ReliableFileTransferPortType;
@@ -34,8 +30,6 @@ import org.globus.rft.generated.Start;
 import org.globus.rft.generated.StartOutputType;
 import org.globus.rft.generated.TransferRequestType;
 import org.globus.rft.generated.TransferStatusType;
-import org.globus.rft.generated.TransferStatusTypeEnumeration;
-import org.globus.rft.generated.TransferType;
 import org.globus.transfer.reliable.client.BaseRFTClient;
 import org.globus.transfer.reliable.client.utils.UIConstants;
 import org.globus.transfer.reliable.service.RFTConstants;
@@ -96,10 +90,7 @@ public class RFTClient extends BaseRFTClient {
                
         //set RFT options
         RFTOptionsType rftOptions = new RFTOptionsType();
-//        rftOptions.setBinary(options.isBinary());
-//        rftOptions.setBlockSize(options.getBlockSize());
-//        rftOptions.setDcau(options.isDcau());        
-//        rftOptions.setNotpt(options.isNotpt());
+
         rftOptions.setParallelStreams(options.getParallelStream());        
         rftOptions.setTcpBufferSize(options.getTcpBufferSize());
         
@@ -114,10 +105,8 @@ public class RFTClient extends BaseRFTClient {
         
         TransferRequestType request = new TransferRequestType();
         request.setRftOptions(rftOptions);
-        request.setTransfer(rftParam.getTransfers1());
-        //request.setAllOrNone(options.isAllOrNone());
-        request.setConcurrency(options.getConcurrent());
-        //request.setMaxAttempts(options.getMaxAttampts());
+        request.setTransfer(rftParam.getTransfers1());        
+        request.setConcurrency(options.getConcurrent());        
         request.setTransferCredentialEndpoint(epr);
         
         return request;
@@ -138,8 +127,6 @@ public class RFTClient extends BaseRFTClient {
             throw new IllegalArgumentException(UIConstants.ILLEGAL_HOST);
         }
         String port = rftParam.getServerPort();
-//        String authType = rftParam.getAuthType();
-//        String authzType = rftParam.getAuthzType();
         if (null == port) {
             if (authType.equals(GSIConstants.GSI_TRANSPORT)) {
                 port = "8443";
