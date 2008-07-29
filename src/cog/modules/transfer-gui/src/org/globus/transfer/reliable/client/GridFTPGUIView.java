@@ -365,33 +365,6 @@ public class GridFTPGUIView extends FrameView {
         });
         jMenu1.add(jMenuItem1);
 
-//        jMenuItem8.setText(resourceMap.getString("jMenuItem8.text")); // NOI18N
-//        jMenuItem8.setName("jMenuItem8"); // NOI18N
-//        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
-//            public void actionPerformed(java.awt.event.ActionEvent evt) {
-//                jMenuItem8ActionPerformed(evt);
-//            }
-//        });
-//        jMenu1.add(jMenuItem8);
-
-//        jMenuItem9.setText(resourceMap.getString("jMenuItem9.text")); // NOI18N
-//        jMenuItem9.setName("jMenuItem9"); // NOI18N
-//        jMenuItem9.addActionListener(new java.awt.event.ActionListener() {
-//            public void actionPerformed(java.awt.event.ActionEvent evt) {
-//                jMenuItem9ActionPerformed(evt);
-//            }
-//        });
-//        jMenu1.add(jMenuItem9);
-//        
-//        jMenuItem10.setText(resourceMap.getString("jMenuItem10.text")); // NOI18N
-//        jMenuItem10.setName("jMenuItem10"); // NOI18N
-//        jMenuItem10.addActionListener(new java.awt.event.ActionListener() {
-//            public void actionPerformed(java.awt.event.ActionEvent evt) {
-//                jMenuItem10ActionPerformed(evt);
-//            }
-//        });
-//        jMenu1.add(jMenuItem10);
-
         jMenuItem2.setText(resourceMap.getString("jMenuItem2.text")); // NOI18N
         jMenuItem2.setName("jMenuItem2"); // NOI18N
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
@@ -715,17 +688,7 @@ public class GridFTPGUIView extends FrameView {
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         fileTransferMainPanel1.createRemoteFrame(3, null, 21);
     }//GEN-LAST:event_jButton4ActionPerformed
-    
-//    private void options() {
-//        JDialog optionDialog = new JDialog(this.getFrame(), true);
-//        OptionsPanel panel = new OptionsPanel(fileTransferMainPanel1.getMonitorFrame());
-//        optionDialog.add(panel);
-//        optionDialog.setTitle("Options");
-//        optionDialog.setSize(400, 300);
-//        optionDialog.setLocation(400, 140);
-//        optionDialog.setVisible(true);
-//    }
-    
+        
     private void createProxy() {
         GridProxyInit proxyInitFrame = new GridProxyInit(null, true);
         proxyInitFrame.setRunAsApplication(false);
