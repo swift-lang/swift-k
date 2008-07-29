@@ -139,6 +139,6 @@ public class ExternalMapper extends AbstractMapper {
 	}
 
 	public boolean isStatic() {
-		return false;
+		return true;
 	}
 }

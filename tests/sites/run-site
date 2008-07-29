@@ -12,5 +12,5 @@ echo testing site configuration: $SITE
 
 export SWIFT_TEST_PARAMS="-sites.file ../sites/${SITE} -tc.file tmp.tc.data.sites"
 
-./run 061-cattwo 130-fmri 103-quote.swift 1032-singlequote.swift 1031-quote.swift 1033-singlequote.swift 141-space-in-filename 142-space-and-quotes
+./run 061-cattwo 0651-several-delay.swift 130-fmri 103-quote.swift 1032-singlequote.swift 1031-quote.swift 1033-singlequote.swift 141-space-in-filename 142-space-and-quotes
 #./run 061-cattwo

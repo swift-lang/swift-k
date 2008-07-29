@@ -15,6 +15,7 @@ working directory.
     <gridftp  url="local://localhost" />
     <execution provider="coaster" jobmanager="local:local" url="localhost" />
     <workdirectory >/var/tmp</workdirectory>
+    <profile namespace="globus" key="coastersPerNode">5</profile>
   </pool>
 
 </config>
