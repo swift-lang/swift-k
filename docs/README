@@ -19,7 +19,16 @@ The first time guides are built in a particular checkout, it is necessary
 to place the docbook formatting stylesheets under the formatting/docbook/
 directory. This can be done with a symlink if docbook is installed elsewhere.
 
-For example, on benc's os x machine:
+For example:
+
+A) On the CI network, /home/hategan/docbook contains a docbook installation that
+can be linked like this:
+
+$ cd formatting
+$ ln -s /home/hategan/docbook/ docbook
+
+
+B) on benc's os x machine:
 
 # install docbook from DarwinPorts
 $ sudo port install docbook-xsl
@@ -29,10 +38,12 @@ $ cd formatting
 $ ln -s /opt/local/share/xsl/docbook-xsl/ docbook
 
 
-The buildguides.sh script will build all guides. Run it with no parameters,
-like this:
+Once the links are set up, the buildguides.sh script will build all guides
+as php.  Run it with no parameters, like this:
 
 $ ./buildguides.sh
 
-This will produced a .php file for each document. These files are
-sufficiently HTML-like that they can be opened in a local web browser.
+or use make to get HTML documents like this:
+
+$ make userguide.html
+
