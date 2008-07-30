@@ -142,6 +142,9 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	}
 
 	protected synchronized void factorScoreLater(WeightedHost wh, double factor) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("factorLater(" + wh + ", " + factor + ")");
+		}
 		wh.setDelayedDelta(wh.getDelayedDelta() + factor);
 	}
 
@@ -242,6 +245,9 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			if (wh != null) {
 				change = true;
 				sorted.changeLoad(wh, -1);
+				if (logger.isDebugEnabled()) {
+					logger.debug("commitDelayedScore(" + wh + ", " + wh.getDelayedDelta());
+				}
 				sorted.changeScore(wh, wh.getScore() + wh.getDelayedDelta());
 			}
 			else {
@@ -474,7 +480,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			BoundContact bc = (BoundContact) contacts[i];
 			WeightedHost wh = sorted.findHost(bc);
 			if (wh != null) {
-				factorScoreLater(wh, factor);
+				//factorScoreLater(wh, factor);
+				factorScore(wh, factor);
 			}
 		}
 	}

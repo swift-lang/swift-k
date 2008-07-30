@@ -51,7 +51,6 @@ public class OverloadedHostMonitor extends Thread {
 						while (i.hasNext()) {
 							WeightedHost wh = (WeightedHost) i.next();
 							if (wh.isOverloaded() == 0) {
-								System.err.println("Removing " + wh.getHost());
 								whss.removeOverloaded(wh);
 								i.remove();
 							}
