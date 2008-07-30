@@ -10,8 +10,10 @@
 package org.globus.cog.karajan.scheduler;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.globus.cog.karajan.util.BoundContact;
@@ -21,7 +23,7 @@ public class WeightedHostSet {
 	private Map weightedHosts;
 	private double sum;
 	private double scoreHighCap;
-	private volatile int overloadedCount;
+	private Set overloaded;
 	private OverloadedHostMonitor monitor;
 
 	public WeightedHostSet(double scoreHighCap) {
@@ -37,6 +39,7 @@ public class WeightedHostSet {
 	protected void init() {
 		scores = new TreeSet();
 		weightedHosts = new HashMap();
+		overloaded = new HashSet();
 		sum = 0;
 	}
 
@@ -44,58 +47,49 @@ public class WeightedHostSet {
 		scores.add(wh);
 		weightedHosts.put(wh.getHost(), wh);
 		sum += wh.getTScore();
-		checkOverloaded(wh, 1);
+		checkOverloaded(wh);
 	}
 
 	public void changeScore(WeightedHost wh, double newScore) {
 		scores.remove(wh);
 		sum -= wh.getTScore();
-		checkOverloaded(wh, -1);
 		wh.setScore(newScore);
 		weightedHosts.put(wh.getHost(), wh);
 		scores.add(wh);
 		sum += wh.getTScore();
-		checkOverloaded(wh, 1);
+		checkOverloaded(wh);
 	}
 
 	public void changeLoad(WeightedHost wh, int dl) {
-		checkOverloaded(wh, -1);
 		wh.changeLoad(dl);
-		checkOverloaded(wh, 1);
+		checkOverloaded(wh);
 	}
 
 	public double remove(WeightedHost wh) {
 		scores.remove(wh);
 		weightedHosts.remove(wh.getHost());
 		sum -= wh.getScore();
-		checkOverloaded(wh, -1);
+		removeOverloaded(wh);
 		return wh.getScore();
 	}
 
-	private void checkOverloaded(WeightedHost wh, final int dir) {
+	private void checkOverloaded(WeightedHost wh) {
 		int v = wh.isOverloaded();
-		int countDelta;
-		if (v == 0) {
-			// not overloaded
-			countDelta = 0;
-		}
-		else if (v > 0) {
+		if (v > 0) {
 			// overloaded either too many tasks (v == 1) or delay already expired (v > 0)
 			// there's a bit of ambiguity there, but it does not make a difference
-			if (dir > 0) {
-				countDelta = v;
+			addOverloaded(wh);
+		}
+		else if (v < 0) {
+			System.err.println(wh.getHost() + " : " + v);
+			if (monitor != null) {
+				monitor.add(wh);
 			}
-			else {
-				countDelta = -v;
-			}
+			addOverloaded(wh);
 		}
 		else {
-			if (monitor != null) {
-				monitor.add(wh, -dir);
-			}
-			countDelta = dir;
+			removeOverloaded(wh);
 		}
-		updateOverloadedCount(countDelta);
 	}
 
 	public WeightedHost findHost(BoundContact bc) {
@@ -144,12 +138,20 @@ public class WeightedHostSet {
 	}
 
 	public boolean allOverloaded() {
-		return overloadedCount == weightedHosts.size();
+		synchronized(overloaded) {
+			return overloaded.size() == weightedHosts.size();
+		}
 	}
 
-	protected void updateOverloadedCount(int dif) {
-		if (dif != 0) {
-			this.overloadedCount += dif;
+	protected void addOverloaded(WeightedHost wh) {
+		synchronized(overloaded) {
+			overloaded.add(wh);
+		}
+	}
+	
+	protected void removeOverloaded(WeightedHost wh) {
+		synchronized(overloaded) {
+			overloaded.remove(wh);
 		}
 	}
 }
