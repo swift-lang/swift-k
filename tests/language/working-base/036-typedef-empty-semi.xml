@@ -3,6 +3,11 @@
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   
   <types>
+     	<type>
+     		<typename>bar</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
         	<type>
      		<typename>foo</typename>
      		<typealias>bar</typealias>

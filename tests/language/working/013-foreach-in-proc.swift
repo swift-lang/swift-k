@@ -1,3 +1,4 @@
+type file;
 
 (file f) echo (string s) {
   app {
