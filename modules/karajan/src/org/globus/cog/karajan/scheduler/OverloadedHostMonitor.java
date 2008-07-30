@@ -9,9 +9,9 @@
  */
 package org.globus.cog.karajan.scheduler;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -19,7 +19,7 @@ public class OverloadedHostMonitor extends Thread {
 	public static final Logger logger = Logger.getLogger(OverloadedHostMonitor.class);
 
 	public static final int POLL_INTERVAL = 1000;
-	private Map hosts;
+	private Set hosts;
 	private WeightedHostScoreScheduler whss;
 
 	private static final Integer[] DIRS = new Integer[] { new Integer(-1), new Integer(0),
@@ -28,15 +28,15 @@ public class OverloadedHostMonitor extends Thread {
 	public OverloadedHostMonitor(WeightedHostScoreScheduler whss) {
 		super("Overloaded Host Monitor");
 		setDaemon(true);
-		hosts = new HashMap();
+		hosts = new HashSet();
 		this.whss = whss;
 		start();
 	}
 
-	public void add(WeightedHost wh, int dir) {
+	public void add(WeightedHost wh) {
 		synchronized (hosts) {
-			if (!hosts.containsKey(wh)) {
-				hosts.put(wh, DIRS[dir + 1]);
+			if (!hosts.contains(wh)) {
+				hosts.add(wh);
 			}
 		}
 	}
@@ -47,13 +47,12 @@ public class OverloadedHostMonitor extends Thread {
 				Thread.sleep(POLL_INTERVAL);
 				try {
 					synchronized (hosts) {
-						Iterator i = hosts.entrySet().iterator();
+						Iterator i = hosts.iterator();
 						while (i.hasNext()) {
-							Map.Entry e = (Map.Entry) i.next();
-							WeightedHost wh = (WeightedHost) e.getKey();
+							WeightedHost wh = (WeightedHost) i.next();
 							if (wh.isOverloaded() == 0) {
-								Integer dir = (Integer) e.getValue();
-								whss.updateOverloadedCount(dir.intValue());
+								System.err.println("Removing " + wh.getHost());
+								whss.removeOverloaded(wh);
 								i.remove();
 							}
 						}
