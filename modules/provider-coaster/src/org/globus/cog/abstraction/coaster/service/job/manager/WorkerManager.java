@@ -15,11 +15,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -59,6 +61,10 @@ public class WorkerManager extends Thread {
 
     public static final int MAX_WORKERS = 256;
     public static final int MAX_STARTING_WORKERS = 32;
+
+    public static final List coasterAttributes = Arrays.asList(new String[]{
+        "coastersPerNode"
+        });
 
     private SortedMap ready;
     private Map ids;
@@ -232,7 +238,9 @@ public class WorkerManager extends Thread {
         Iterator i = pspec.getAttributeNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            tspec.setAttribute(name, pspec.getAttribute(name));
+            if(!coasterAttributes.contains(name)) {
+                tspec.setAttribute(name, pspec.getAttribute(name));
+            }
         }
         tspec.setAttribute("maxwalltime", new WallTime(maxWallTime)
                 .getSpecInMinutes());
