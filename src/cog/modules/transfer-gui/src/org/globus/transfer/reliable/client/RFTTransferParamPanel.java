@@ -100,7 +100,7 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
         toField = new javax.swing.JTextField();
         concurrencyLabel = new javax.swing.JLabel();
         concurrencyField = new javax.swing.JTextField();
-        rftHelpButton = new javax.swing.JButton("what is RFT?");
+        rftHelpButton = new javax.swing.JButton("RFT?");
         
         jScrollPane1.setName("jScrollPane1"); // NOI18N
 
@@ -184,20 +184,18 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
             jLabel2.setEnabled(true);
             serverPortField.setEditable(true);
             concurrencyLabel.setEnabled(true);
-            concurrencyField.setEditable(true);
-            rftHelpButton.setEnabled(true);
+            concurrencyField.setEditable(true);            
         } else {
             jLabel1.setEnabled(false);
             serverHostField.setEditable(false);
             jLabel2.setEnabled(false);
             serverPortField.setEditable(false);
             concurrencyLabel.setEnabled(false);
-            concurrencyField.setEditable(false);
-            rftHelpButton.setEnabled(false);
+            concurrencyField.setEditable(false);            
         }        
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
-        this.setLayout(layout);            
-            
+        this.setLayout(layout); 
+        
             layout.setHorizontalGroup(
             		layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()                		
@@ -209,46 +207,57 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
                                     .add(enable_rft)
                                     .add(jLabel1)
                                     .add(jLabel2)
-                                    .add(concurrencyLabel)
-                                    .add(100, 100, 100)
+                                    .add(concurrencyLabel)                                    
                                     )
-                                //.addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                   .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                	.add(rftHelpButton)
+                                    .add(50, 50, 50)
+                                    .add(50, 50, 50)
+                                    .add(50, 50, 50)
+                                    .add(50, 50, 50)                                    
+                                    )                                 
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)                               	
                                     .add(enable_rft_checkbox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE)
                                     .add(serverHostField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE)
                                     .add(serverPortField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 76, Short.MAX_VALUE)
-                                    .add(concurrencyField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 76, Short.MAX_VALUE)
-                                    //.add(new javax.swing.JLabel(), 100, 100, 100)
-                                    .add(rftHelpButton)
+                                    .add(concurrencyField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 76, Short.MAX_VALUE)                                  
+                                    
                                     )                           
                                
                             )
 
                                 ))
                 );
+
         layout.setVerticalGroup(
         		layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                 .add(layout.createSequentialGroup()
-                		.add(26, 26, 26)
+                		//.add(26, 26, 26)
+                	.add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    	//.add(100, 100, 100)
+                    .add(rftHelpButton))
+                    .add(11, 11, 11)
                     .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(enable_rft)
+                        .add(10, 10, 10)
                         .add(enable_rft_checkbox))
                     .add(11, 11, 11)
                     .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(jLabel1)
+                        .add(10, 10, 10)
                         .add(serverHostField, 1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 30))
                     .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                     .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(jLabel2)
+                        .add(10, 10, 10)
                         .add(serverPortField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                     .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(concurrencyLabel)
+                        .add(10, 10, 10)
                         .add(concurrencyField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    	//.add(100, 100, 100)
-                        .add(rftHelpButton))                        
+                        
                     .addContainerGap(18, Short.MAX_VALUE))
             );
 
@@ -280,16 +289,14 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
                 	       serverHostField.setEditable(true);
                            serverPortField.setEditable(true);
                            concurrencyLabel.setEnabled(true);
-                           concurrencyField.setEditable(true);
-                           rftHelpButton.setEnabled(true);
+                           concurrencyField.setEditable(true);                           
                    } else {
                 	   jLabel1.setEnabled(false);
                        jLabel2.setEnabled(false);
                 	   serverHostField.setEditable(false);
                        serverPortField.setEditable(false);
                        concurrencyField.setEditable(false);
-                       concurrencyLabel.setEnabled(false);
-                       rftHelpButton.setEnabled(false);
+                       concurrencyLabel.setEnabled(false);                       
                    }
     }
     
@@ -305,15 +312,11 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-//    private javax.swing.JComboBox authTypeComboBox;
-//    private javax.swing.JComboBox authzTypeComboBox;
     private javax.swing.JTextField fromField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-//    private javax.swing.JLabel jLabel5;
-//    private javax.swing.JLabel jLabel6;
     private javax.swing.JList jList1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField serverHostField;
