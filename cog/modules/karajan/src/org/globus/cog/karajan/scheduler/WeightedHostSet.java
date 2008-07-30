@@ -81,7 +81,6 @@ public class WeightedHostSet {
 			addOverloaded(wh);
 		}
 		else if (v < 0) {
-			System.err.println(wh.getHost() + " : " + v);
 			if (monitor != null) {
 				monitor.add(wh);
 			}
