@@ -487,7 +487,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     /** Takes walltime of the form mm or hh:mm or hh:mm:ss and returns the
-        number of minutes, discarding the seconds. */
+        number of minutes, rounding up the seconds. */
     public static Long wallTimeToMinutes(Object time) {
 	long n;
         String[] s = time.toString().split(":");
@@ -495,8 +495,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             if (s.length == 1) {
                 n = Integer.parseInt(s[0]);
             }
-            else if (s.length == 2 || s.length == 3) {
+            else if (s.length == 2) {
                 n = Integer.parseInt(s[1]) + 60 * Integer.parseInt(s[0]);     
+            } else if (s.length == 3) {
+                n = Integer.parseInt(s[1]) + 60 * Integer.parseInt(s[0]) + 1;
             }
             else {
                 throw new IllegalArgumentException("Invalid time specification: " + time);
