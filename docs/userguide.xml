@@ -2248,6 +2248,9 @@ allows the job throttle factor (see Swift property <link linkend="property.throt
 allows the initial score for rate limiting and site selection to be set to
 a value other than 0.
 			</para>
+			<para id="profile.karajan.delayBase">delayBase - controls how much a site will be delayed when it performs poorly. With each reduction
+in a sites score by 1, the delay between execution attempts will increase by
+a factor of delayBase.</para>
 		</section>
 		<section id="profile.swift"><title>swift namespace</title>
 			<para id="profile.swift.storagesize">storagesize limits the
@@ -2281,6 +2284,10 @@ GRAM2 and GRAM4 providers.
 			</para>
 			<para id="profile.globus.condor_requirements"><property>condor_requirements</property> allows a requirements string to be specified
 when Condor is used as an LRM behind GRAM2. Example: &lt;profile namespace="globus" key="condor_requirements">Arch == &quot;X86_64&quot; || Arch=&quot;INTEL&quot;&lt;/profile>
+			</para>
+			<para id="profile.globus.coastersPerNode">Specifies
+the number of coaster workers to be run on each node. This profile entry
+is used by the coaster provider.
 			</para>
 		</section>
 		<section id="profile.env"><title>env namespace</title>
@@ -2531,7 +2538,18 @@ www11.i2u2.org.key=/home/mike/.ssh/i2u2portal
 www11.i2u2.org.passphrase=XXXX
 </screen>
 		</para>
-
+		<para>
+For execution using the CoG Coaster mechanism, the coaster provider
+should be used:
+<screen>
+&lt;execution provider="coaster" url="tg-grid.uc.teragrid.org"
+    jobmanager="gt2:gt2:pbs" />
+</screen>
+with the jobmanager parameter specifying: the cog provider to use to
+submit the coaster head job; the cog provider to use to submit
+coaster worker jobs; and optionally the jobmanager to be used by
+worker submission.
+		</para>
 </section>
 <section><title>Other site catalog parameters</title>
 
