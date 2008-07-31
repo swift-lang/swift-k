@@ -176,8 +176,10 @@ public class Karajan {
 											
 				StringTemplate st = template("typeDef");
 				st.setAttribute("name", typeName);
-				if (typeAlias != null && !typeAlias.equals("") && !typeAlias.equals("string"))
-					 st.setAttribute("type", typeAlias);
+				if (typeAlias != null && !typeAlias.equals("") && !typeAlias.equals("string")) {
+					checkIsTypeDefined(typeAlias);
+					st.setAttribute("type", typeAlias);
+				}
 										
 				TypeStructure ts = theType.getTypestructure();
 				for (int j = 0; j < ts.sizeOfMemberArray(); j++) {				
@@ -228,6 +230,7 @@ public class Karajan {
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
+			checkIsTypeDefined(param.getType().getLocalPart());
 			innerScope.addVariable(param.getName(), param.getType().getLocalPart());
 		}
 		for (int i = 0; i < proc.sizeOfInputArray(); i++) {
@@ -238,6 +241,7 @@ public class Karajan {
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
+			checkIsTypeDefined(param.getType().getLocalPart());
 			outerScope.addVariable(param.getName(), param.getType().getLocalPart());
 		}
 
@@ -272,23 +276,7 @@ public class Karajan {
 		variableST.setAttribute("type", var.getType().getLocalPart());
 		variableST.setAttribute("isArray", Boolean.valueOf(var.getIsArray1()));
 
-		/* Checking if variable type is defined */
-		String type = var.getType().getLocalPart();
-		while (type.substring(type.length() - 2).equals("[]"))
-			type = type.substring(0, type.length() - 2);		
-		if (!type.equals("int") && !type.equals("float") && !type.equals("string") 
-				&& !type.equals("boolean") && !type.equals("external")) {
-			boolean typeDefined = false;
-			if (types != null) {
-				for (int i = 0; i < types.sizeOfTypeArray(); i++)
-					if (types.getTypeArray(i).getTypename().equals(type)) {
-						typeDefined = true;
-						break;
-					}
-			}
-			if (!typeDefined)
-				throw new CompilationException("Type " + type + " is not defined.");
-		}
+		checkIsTypeDefined(var.getType().getLocalPart());
 		
 		if(!var.isNil()) {
 			StringTemplate exprST = expressionToKarajan(var.getAbstractExpression(),scope);
@@ -319,6 +307,9 @@ public class Karajan {
 		if (dataset.isSetIsArray1()) {
 			datasetST.setAttribute("isArray", Boolean.valueOf(dataset.getIsArray1()));
 		}
+		
+		checkIsTypeDefined(dataset.getType().getLocalPart());
+		
 		if (dataset.getFile() != null) {
 			StringTemplate fileST = new StringTemplate("file");
 			fileST.setAttribute("name", escapeQuotes(dataset.getFile().getName()));
@@ -340,6 +331,24 @@ public class Karajan {
 			datasetST.setAttribute("mapping", mappingST);
 		}
 		scope.addVariable(dataset.getName(), dataset.getType().getLocalPart());
+	}
+	
+	void checkIsTypeDefined(String type) throws CompilationException {		
+		while (type.substring(type.length() - 2).equals("[]"))
+			type = type.substring(0, type.length() - 2);		
+		if (!type.equals("int") && !type.equals("float") && !type.equals("string") 
+				&& !type.equals("boolean") && !type.equals("external")) {
+			boolean typeDefined = false;
+			if (types != null) {
+				for (int i = 0; i < types.sizeOfTypeArray(); i++)
+					if (types.getTypeArray(i).getTypename().equals(type)) {
+						typeDefined = true;
+						break;
+					}
+			}
+			if (!typeDefined)
+				throw new CompilationException("Type " + type + " is not defined.");
+		}
 	}
 
 	public void assign(Assign assign, VariableScope scope) throws CompilationException {
