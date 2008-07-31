@@ -28,6 +28,7 @@ public class WeightedHost implements Comparable {
 	private double delayedDelta;
 	private float jobThrottle;
 	private long lastUsed;
+	private double delayBase;
 
 	public WeightedHost(BoundContact contact, float jobThrottle) {
 		this(contact, 0.0, jobThrottle);
@@ -38,10 +39,15 @@ public class WeightedHost implements Comparable {
 	}
 
 	public WeightedHost(BoundContact contact, double score, int load, float jobThrottle) {
+		this(contact, score, load, jobThrottle, 2);
+	}
+
+	public WeightedHost(BoundContact contact, double score, int load, float jobThrottle, double delayBase) {
 		this.host = contact;
 		setScore(score);
 		this.load = load;
 		this.jobThrottle = jobThrottle;
+		this.delayBase = delayBase;
 	}
 
 	protected void setScore(double score) {
@@ -155,7 +161,7 @@ public class WeightedHost implements Comparable {
 			// based on time.
 			long now = System.currentTimeMillis();
 			long delay = now - lastUsed;
-			long permittedDelay = (long) (Math.exp(-(score.doubleValue())) * 100.0);
+			long permittedDelay = (long) (Math.pow(delayBase, -(score.doubleValue())) * 100.0);
 			boolean overloaded = (delay < permittedDelay);
 			int d = (int) (delay - permittedDelay);
 			// tscore of -1 will give delay of around
