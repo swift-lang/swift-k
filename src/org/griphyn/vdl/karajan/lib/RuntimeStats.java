@@ -58,7 +58,9 @@ public class RuntimeStats extends FunctionsCollection {
 	public Object vdl_initprogressstate(VariableStack stack) throws ExecutionException {
 		RuntimeProgress rp = new RuntimeProgress();
 		ProgressTicker p = (ProgressTicker)stack.getVar("#swift-runtime-progress-ticker");
-		p.states.add(rp);
+		synchronized (p.states) {
+			p.states.add(rp);
+		}
 		stack.parentFrame().setVar("#swift-runtime-progress",rp);
 		p.dumpState();
 		return null;
@@ -108,18 +110,20 @@ public class RuntimeStats extends FunctionsCollection {
 
 		void printStates(String header) {
 			Map summary = new HashMap();
-			Iterator stateIterator = states.iterator();
+			synchronized(states) {
+				Iterator stateIterator = states.iterator();
 
-			// summarize details of known states into summary, with
-			// one entry per state type, storing the number of
-			// jobs in that state.
-			while(stateIterator.hasNext()) {
-				String key = ((RuntimeProgress)stateIterator.next()).status;
-				Integer count = (Integer) summary.get(key);
-				if(count == null) {
-					summary.put(key,new Integer(1));
-				} else {
-					summary.put(key,new Integer(count.intValue()+1));
+				// summarize details of known states into summary, with
+				// one entry per state type, storing the number of
+				// jobs in that state.
+				while(stateIterator.hasNext()) {
+					String key = ((RuntimeProgress)stateIterator.next()).status;
+					Integer count = (Integer) summary.get(key);
+					if(count == null) {
+						summary.put(key,new Integer(1));
+					} else {
+						summary.put(key,new Integer(count.intValue()+1));
+					}
 				}
 			}
 

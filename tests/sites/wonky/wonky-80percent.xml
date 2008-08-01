@@ -5,6 +5,7 @@
     <execution provider="wonky" url="good/activefail=0.2/activedelay=0" />
     <workdirectory >/var/tmp</workdirectory>
     <profile namespace="karajan" key="jobThrottle">0</profile>
+    <profile namespace="karajan" key="delayBase">0</profile>
   </pool>
 
 </config>
