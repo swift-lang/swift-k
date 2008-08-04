@@ -66,7 +66,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 spec = (JobSpecification) this.task.getSpecification();
             } catch (Exception e) {
                 throw new IllegalSpecException(
-                        "Exception while retreiving Job Specification", e);
+                        "Exception while retrieving Job Specification", e);
             }
 
             if (logger.isDebugEnabled()) {
