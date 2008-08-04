@@ -63,7 +63,7 @@ public class WorkerManager extends Thread {
     public static final int MAX_STARTING_WORKERS = 32;
 
     public static final List coasterAttributes = Arrays.asList(new String[]{
-        "coastersPerNode"
+        "coasterspernode"
         });
 
     private SortedMap ready;
