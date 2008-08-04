@@ -960,6 +960,12 @@ by a - symbol.
 		</listitem>
 		</itemizedlist>
 	</listitem>
+	<listitem>
+The output of the executable should consist of two columns of data, separated
+by a space. The first column should be the path of the mapped variable,
+in SwiftScript syntax (for example [2] means the 2nd element of an
+array) or the symbol $ to represent the root of the mapped variable.
+	</listitem>
 
 	<listitem> Example:
 With the following in mapper.sh,
