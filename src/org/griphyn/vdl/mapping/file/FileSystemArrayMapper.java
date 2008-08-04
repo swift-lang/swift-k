@@ -24,7 +24,7 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 	}
 	
 	public PhysicalFormat map(Path path) {
-		if (path.size()> 1) {
+		if (path.size()!=1) {
 			return null;
 		}
 		if (!path.isArrayIndex(0)) {
