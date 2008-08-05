@@ -44,7 +44,7 @@ public class MappingParam {
 		if (value instanceof DSHandle) {
 			DSHandle handle = (DSHandle) value;
 			checkHandle(handle);
-			return handle.getValue();
+			return handle.toString();
 		}
 		else if (value == null) {
 			if (!defSet) {
