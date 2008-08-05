@@ -13,6 +13,13 @@ type circle {
 	}
 }
 
+(file f) createFloat() {
+	app{
+		echo "3.1400001" stdout=@filename(f);
+	}
+}
+
+
 (file f) write(string data) {
 	app{
 		echo data stdout=@filename(f);
@@ -20,6 +27,7 @@ type circle {
 }
 
 int i;
+float fl;
 
 int ia[];
 
@@ -35,9 +43,14 @@ file f <"readData.int.in">;
 //input file. assumed on disk
 file g <"readData.intArray.in">;
 
+// will be generated
+file h <"readData.float.in">;
+
 f = createInt();
+h = createFloat();
 
 i = readData(f);
+fl = readData(h);
 
 file o1 <"readData.int.out">;
 o1 = write(@strcat(i));
@@ -61,3 +74,7 @@ ca = readData("readData.circleArray.in");
 
 file o5 <"readData.circleArray.out">;
 o5 = write(@strcat(ca[0].x, " ", ca[1].y, " ", ca[0].r, " ", ca[1].name));
+
+file o6 <"readData.float.out">;
+o6 = write(@strcat(fl));
+
