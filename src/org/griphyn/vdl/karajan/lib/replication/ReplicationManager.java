@@ -17,6 +17,8 @@ public class ReplicationManager {
 	public static final Logger logger = Logger.getLogger(ReplicationManager.class);
 
 	public static final int STATUS_NEEDS_REPLICATION = 100;
+	
+	public static final int INITIAL_QUEUE_TIME_ESTIMATE = 30; //seconds
 
 	private int n;
 	private long s;
@@ -83,17 +85,24 @@ public class ReplicationManager {
 	}
 
 	public synchronized double getMean() {
-		return s / n;
+		if (n == 0) {
+			return INITIAL_QUEUE_TIME_ESTIMATE; 
+		}
+		else {
+			return s / n;
+		}
 	}
 
 	public synchronized double getStandardDeviation() {
-		return Math.sqrt((s2 - s * s / n) / n);
+		if (n == 0) {
+			return 0;
+		}
+		else {
+			return Math.sqrt((s2 - s * s / n) / n);
+		}
 	}
 
 	public void checkTasks() {
-		if (n == 0) {
-			return;
-		}
 		Map m;
 		synchronized (queued) {
 			m = new HashMap(queued);
@@ -115,7 +124,7 @@ public class ReplicationManager {
 			return false;
 		}
 		long inTheQueue = (System.currentTimeMillis() - d.getTime()) / 1000;
-		if (n > 0 && inTheQueue > minQueueTime && inTheQueue > 3 * getMean()
+		if (inTheQueue > minQueueTime && inTheQueue > 3 * getMean()
 				&& replicationGroups.getRequestedCount(t) < limit) {
 			return true;
 		}
