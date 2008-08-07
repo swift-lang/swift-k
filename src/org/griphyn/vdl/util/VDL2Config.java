@@ -24,8 +24,10 @@ public class VDL2Config extends Properties {
 	private static VDL2Config config;
 
 	public static VDL2Config getConfig() throws IOException {
-		VDL2Config conf = getDefaultConfig();
-		return conf.check();
+		if(config == null) {
+			config = getDefaultConfig();
+		}
+		return config.check();
 	}
 
 	private static synchronized VDL2Config getDefaultConfig() throws IOException {
@@ -42,14 +44,15 @@ public class VDL2Config extends Properties {
 	public static VDL2Config getConfig(String file) throws IOException {
 		VDL2Config c;
 		try {
-			VDL2Config config = getConfig();
-			c = new VDL2Config(config);
+			VDL2Config d = getConfig();
+			c = new VDL2Config(d);
 		}
 		catch (Exception e) {
 			c = new VDL2Config();
 		}
 		c.load(file);
-		return c.check();
+		config = c;
+		return config.check();
 	}
 
 	private List files, tried;
