@@ -9,7 +9,7 @@
 
   <pool handle="wonkyB">
     <gridftp  url="local://localhost" />
-    <execution provider="wonky" url="bad/activefail=0/activedelay=0/submitteddelay=120" />
+    <execution provider="wonky" url="bad/activefail=0/activedelay=0/qmean=600/qstddev=60" />
     <workdirectory >/var/tmp</workdirectory>
     <profile namespace="karajan" key="jobThrottle">4</profile>
   </pool>
