@@ -21,7 +21,6 @@ import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.catalog.transformation.Mapper;
 import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.util.FQN;
 
@@ -31,10 +30,6 @@ public class VDSTaskTransformer implements TaskTransformer {
 	private TaskTransformer impl;
 	private Scheduler scheduler;
 	private Set checkedTRs;
-
-	public VDSTaskTransformer(Mapper tcmapper) {
-		this.impl = new MapperTransformer(tcmapper);
-	}
 
 	public VDSTaskTransformer(TCCache tc) {
 		this.impl = new TCTransformer(tc);
@@ -128,37 +123,6 @@ public class VDSTaskTransformer implements TaskTransformer {
 		}
 
 		protected abstract void applyTCEntry(Task task, Contact[] contacts);
-	}
-
-	public static class MapperTransformer extends AbstractTransformer {
-		private Mapper tcmapper;
-
-		public MapperTransformer(Mapper tcmapper) {
-			this.tcmapper = tcmapper;
-		}
-
-		protected void applyTCEntry(Task task, Contact[] contacts) {
-			JobSpecification spec = (JobSpecification) task.getSpecification();
-			BoundContact bc = (BoundContact) contacts[0];
-			List l = new LinkedList();
-			l.add(bc.getHost());
-			TransformationCatalogEntry tce;
-			Map siteMap = tcmapper.getSiteMap(null, spec.getExecutable(), null, l);
-			if (siteMap == null) {
-				return;
-			}
-			Object e = siteMap.get(bc.getHost());
-			if (e instanceof List) {
-				tce = (TransformationCatalogEntry) ((List) e).get(0);
-			}
-			else if (e instanceof TransformationCatalogEntry) {
-				tce = (TransformationCatalogEntry) e;
-			}
-			else {
-				throw new KarajanRuntimeException("Invalid object in transformation catalog: " + e);
-			}
-			spec.setExecutable(tce.getPhysicalTransformation());
-		}
 	}
 
 	public static class TCTransformer extends AbstractTransformer {
