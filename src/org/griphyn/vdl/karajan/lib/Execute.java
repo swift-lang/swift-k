@@ -81,13 +81,16 @@ public class Execute extends GridExec {
 			if (stack != null) {
 				int c = e.getStatus().getStatusCode();
 				if (c == Status.SUBMITTED) {
+					RuntimeStats.setProgress(stack, "Submitted");
 					getReplicationManager(stack).submitted(task, e.getStatus().getTime());
 				}
 				else if (c == Status.ACTIVE) {
+					RuntimeStats.setProgress(stack, "Active");
 					getReplicationManager(stack).active(task, e.getStatus().getTime());
 					((FutureVariableArguments) A_REPLICATION_CHANNEL.getValue(stack)).close();
 				}
 				else if (c == ReplicationManager.STATUS_NEEDS_REPLICATION) {
+					RuntimeStats.setProgress(stack, "Replicating");
 					((FutureVariableArguments) A_REPLICATION_CHANNEL.getValue(stack)).append(Boolean.TRUE);
 				}
 			}

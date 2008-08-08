@@ -391,7 +391,7 @@ namespace("vdl"
 
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
 				
-						vdl:setprogress("Executing")
+						vdl:setprogress("Submitting")
 						vdl:execute("/bin/bash",
 							list("shared/wrapper.sh", jobid,
 								"-jobdir", jobdir,

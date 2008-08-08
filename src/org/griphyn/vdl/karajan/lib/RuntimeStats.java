@@ -25,9 +25,12 @@ public class RuntimeStats extends FunctionsCollection {
 		"Initializing",
 		"Selecting site",
 		"Stage in",
-		"Executing",
+		"Submitting",
+		"Submitted",
+		"Active",
 		"Stage out",
 		"Failed",
+		"Replicating",
 		"Finished successfully"
 	};
 
@@ -48,11 +51,15 @@ public class RuntimeStats extends FunctionsCollection {
 
 
 	public Object vdl_setprogress(VariableStack stack) throws ExecutionException {
+		setProgress(stack, TypeUtil.toString(PA_STATE.getValue(stack)));
+		return null;
+	}
+
+	static public void setProgress(VariableStack stack, String newState) throws ExecutionException {
 		RuntimeProgress rp = (RuntimeProgress)stack.getVar("#swift-runtime-progress");
-		rp.status = TypeUtil.toString(PA_STATE.getValue(stack));
+		rp.status = newState;
 		ProgressTicker p = (ProgressTicker)stack.getVar("#swift-runtime-progress-ticker");
 		p.dumpState();
-		return null;
 	}
 
 	public Object vdl_initprogressstate(VariableStack stack) throws ExecutionException {
