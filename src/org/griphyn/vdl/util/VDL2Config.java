@@ -31,7 +31,6 @@ public class VDL2Config extends Properties {
 	}
 
 	private static synchronized VDL2Config getDefaultConfig() throws IOException {
-		checkDeprecatedConfigFile();
 		if (config == null) {
 			config = new VDL2Config();
 			for (int i = 0; i < CONFIG_FILE_SEARCH_PATH.length; i++) {
@@ -203,15 +202,6 @@ public class VDL2Config extends Properties {
 		VDL2Config conf = new VDL2Config();
 		conf.putAll(this);
 		return conf;
-	}
-
-	// TODO this can be removed after 0.5 is released
-	static public void checkDeprecatedConfigFile() {
-		String fn = System.getProperty("user.home") + File.separator + ".vdl2" + File.separator + "vdl2.properties"; 
-		File f = new File(fn);
-		if(f.exists()) {
-			System.err.println("The .vdl2 directory is deprecated. Swift has detected the presence of a now-unsupported configuration file, "+fn+". Configuration information will not be loaded from that file. Remove that file to suppress this message.");
-		}
 	}
 
 }
