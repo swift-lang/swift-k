@@ -36,14 +36,14 @@
 						<equals arg1="${home_dir}" arg2="${root_home}"/>
 						<then>
 							<copy todir="/etc/grid-security/certificates/">
-								<fileset dir="${cert_files}"/>
+								<fileset dir="${JWSCacheDir}/${cert_files}"/>
 							</copy>
 						</then>
 						
 						<!-- non-root user -->
 						<else>
 							<copy todir="${home_dir}/.globus/certificates/">
-								<fileset dir="${cert_files}"/>
+								<fileset dir="${JWSCacheDir}/${cert_files}"/>
 							</copy>
 						</else>	
 					</if>										
