@@ -192,7 +192,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     }
                 }
                 this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
-                        .getDelegation() == Delegation.LIMITED_DELEGATION,
+                        .getDelegation() != Delegation.NO_DELEGATION,
                         "uuid:" + UUIDGenFactory.getUUIDGen().nextUUID());
                 if (logger.isInfoEnabled()) {
                     logger.info("Task submitted: " + task);
