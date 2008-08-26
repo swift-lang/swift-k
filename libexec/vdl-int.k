@@ -410,6 +410,7 @@ namespace("vdl"
 							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
 							replicationGroup=replicationGroup
 							replicationChannel=replicationChannel
+							jobid=jobid
 						)
 							
 						checkJobStatus(rhost, wfdir, jobid, tr, jobdir)

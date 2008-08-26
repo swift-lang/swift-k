@@ -25,6 +25,7 @@ public class Execute extends GridExec {
 
 	public static final Arg A_REPLICATION_GROUP = new Arg.Optional("replicationGroup");
 	public static final Arg A_REPLICATION_CHANNEL = new Arg.Optional("replicationChannel");
+	public static final Arg A_JOBID = new Arg.Optional("jobid");
 
 	static {
 		setArguments(Execute.class, new Arg[] { A_EXECUTABLE, A_ARGS, A_ARGUMENTS, A_HOST,
@@ -33,7 +34,7 @@ public class Execute extends GridExec {
 				A_ENVIRONMENT, A_QUEUE, A_PROJECT, A_MINMEMORY, A_MAXMEMORY, A_REDIRECT,
 				A_SECURITY_CONTEXT, A_DIRECTORY, A_NATIVESPEC, A_DELEGATION, A_ATTRIBUTES,
 				C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH, A_REPLICATION_GROUP,
-				A_REPLICATION_CHANNEL });
+				A_REPLICATION_CHANNEL, A_JOBID });
 	}
 
 	public Execute() {
@@ -47,6 +48,8 @@ public class Execute extends GridExec {
 				logger.debug(task);
 				logger.debug("Submitting task " + task);
 			}
+			String jobid = (String)A_JOBID.getValue(stack,null);
+			logger.info("jobid="+jobid+" task=" + task);
 			scheduler.addJobStatusListener(this, task);
 			synchronized (tasks) {
 				tasks.put(task, stack);
