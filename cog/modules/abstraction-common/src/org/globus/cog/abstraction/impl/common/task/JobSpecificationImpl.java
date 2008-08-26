@@ -327,7 +327,7 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public void setDelegationEnabled(boolean delegation) {
-        this.delegation = delegation ? Delegation.LIMITED_DELEGATION : Delegation.FULL_DELEGATION;
+        this.delegation = delegation ? Delegation.FULL_DELEGATION : Delegation.NO_DELEGATION;
     }
 
     public int getDelegation() {
