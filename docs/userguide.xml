@@ -2666,6 +2666,59 @@ local directory can be much faster than having applications access the
 site-shared filesystem directly.
 		</para>
 	</section>
+	<section><title>Build options</title>
+		<para>
+See <ulink url="http://www.ci.uchicago.edu/swift/downloads/">the
+Swift download page</ulink> for instructions on downloading and
+building Swift from source. When building, various build options can
+be supplied on the ant commandline. These are summarised here:
+		</para>
+		<para>
+with-provider-condor - build with CoG condor provider
+		</para>
+		<para>
+with-provider-coaster - build with CoG coaster provider
+		</para>
+		<para>
+with-provider-deef - build with Falkon provider deef. In order for this
+option to work, it is necessary to check out the provider-deef code in
+the cog/modules directory alongside vdsk:
 
+			<screen>
+$ <userinput>cd cog/modules</userinput>
+$ <userinput>svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-deef</userinput>
+$ <userinput>cd ../vdsk</userinput>
+$ <userinput>ant -Dwith-provider-deef=true redist</userinput>
+			</screen>
+
+		</para>
+		<para>
+with-provider-wonky - build with provider-wonky, an execution provider
+that provides delays and unreliability for the purposes of testing Swift's
+fault tolerance mechanisms. In order for this option to work, it is
+necessary to check out the provider-wonky code in the cog/modules
+directory alongside vdsk:
+
+			<screen>
+$ <userinput>cd cog/modules</userinput>
+$ <userinput>svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-wonky</userinput>
+$ <userinput>cd ../vdsk</userinput>
+$ <userinput>ant -Dwith-provider-wonky=true redist</userinput>
+			</screen>
+		</para>
+		<para>
+no-supporting - produces a distribution without supporting commands such
+as grid-proxy-init. This is intended for when the Swift distribution will be
+used in an environment where those commands are already provided by other
+packages, where the Swift package should be providing only Swift
+commands, and where the presence of commands such as grid-proxy-init from
+the Swift distribution in the path will mask the presence of those
+commands from their true distribution package such as a Globus Toolkit
+package.
+<screen>
+$ <userinput>ant -Dno-supporting=true redist</userinput>
+</screen>
+		</para>
+	</section>
 </article>
 
