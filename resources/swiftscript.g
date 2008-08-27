@@ -458,7 +458,6 @@ ll1statement returns [StringTemplate code=null]
     | code=foreachStat
     | code=switchStat
     | code=iterateStat
-    | SEMI {code=template("blank");}
     ;
 
 ifStat returns [StringTemplate code=template("if")]
