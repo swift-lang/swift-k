@@ -92,6 +92,7 @@
 			<fileset dir="${dist.dir}/bin" 
 				includes="globus2jks*, grid-info-search*, cogrun*, globus-gass-server-shutdown*"/>
 		</delete>
+		<antcall target="remove-supporting" />
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/karajan.properties" 
 			overwrite="true"/>
@@ -275,6 +276,13 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 	
 	<target name="redist" depends="distclean, dist">
 	</target>
+
+       <target name="remove-supporting" if="no-supporting">
+ 		<delete>
+			<fileset dir="${dist.dir}/bin" 
+				includes="cog*, globus*, grid*"/>
+		</delete>
+        </target>
 
 </project>
 
