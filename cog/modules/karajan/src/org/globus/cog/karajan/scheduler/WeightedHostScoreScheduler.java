@@ -339,7 +339,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				if ("random".equals(value)) {
 					policy = POLICY_WEIGHTED_RANDOM;
 				}
-				else if ("best".equals("value")) {
+				else if ("best".equals(value)) {
 					policy = POLICY_BEST_SCORE;
 				}
 				else {
