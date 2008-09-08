@@ -79,6 +79,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 			current.shutdown();
 		}
 		current = channel;
+		current.setRequestManager(getRequestManager());
 	}
 
 	public boolean isShuttingDown() {
