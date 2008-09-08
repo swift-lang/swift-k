@@ -29,14 +29,17 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionTaskHandler;
+import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
-import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -139,6 +142,10 @@ public class WorkerManager extends Thread {
                             * OVERALLOCATION_FACTOR + TIME_RESERVE,
                             req.prototype);
                 }
+                catch (NoClassDefFoundError e) {
+                    req.prototype.setStatus(new StatusImpl(Status.FAILED, e
+                            .getMessage(), new TaskSubmissionException(e)));
+                }
                 catch (Exception e) {
                     req.prototype.setStatus(new StatusImpl(Status.FAILED, e
                             .getMessage(), e));
@@ -155,7 +162,8 @@ public class WorkerManager extends Thread {
     }
 
     private void startWorker(int maxWallTime, Task prototype)
-            throws InvalidServiceContactException {
+            throws InvalidServiceContactException, InvalidProviderException,
+            ProviderMethodException {
         String numWorkersString = (String) ((JobSpecification) prototype
                 .getSpecification()).getAttribute("coastersPerNode");
         int numWorkers;
@@ -222,7 +230,8 @@ public class WorkerManager extends Thread {
     }
 
     private ExecutionService buildService(Task prototype)
-            throws InvalidServiceContactException {
+            throws InvalidServiceContactException, InvalidProviderException,
+            ProviderMethodException {
         ExecutionService s = new ExecutionServiceImpl();
         s.setServiceContact(prototype.getService(0).getServiceContact());
         ExecutionService p = (ExecutionService) prototype.getService(0);
@@ -237,6 +246,13 @@ public class WorkerManager extends Thread {
         else {
             s.setJobManager(jm.substring(colon + 1));
             s.setProvider(jm.substring(0, colon));
+        }
+        if (p.getSecurityContext() != null) {
+            s.setSecurityContext(p.getSecurityContext());
+        }
+        else {
+            s.setSecurityContext(AbstractionFactory.newSecurityContext(s
+                    .getProvider()));
         }
         System.out.println("Worker start provider: " + s.getProvider());
         System.out.println("Worker start JM: " + s.getJobManager());
