@@ -44,6 +44,7 @@ public class NotificationManager {
     public NotificationManager() {
         tasks = new HashMap();
         pending = new HashMap();
+        lastNotificationTime = System.currentTimeMillis();
     }
 
     public void registerTask(String id, Task task) {
