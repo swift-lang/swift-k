@@ -50,7 +50,21 @@ public class ChannelManager {
 		this.clientRequestManager = crm;
 	}
 
-	private MetaChannel getClientChannel(String host, GSSCredential cred, RequestManager rm) throws ChannelException {
+	public KarajanChannel getExistingChannel(String host, GSSCredential cred) {
+		MetaChannel channel;
+		if (host == null) {
+			throw new NullPointerException("Host is null");
+		}
+		host = normalize(host);
+		synchronized (channels) {
+			HostCredentialPair hcp = new HostCredentialPair(host, cred);
+			channel = (MetaChannel) channels.get(hcp);
+		}
+		return channel;
+	}
+
+	private MetaChannel getClientChannel(String host, GSSCredential cred, RequestManager rm)
+			throws ChannelException {
 		try {
 			MetaChannel channel;
 			if (host == null) {
@@ -61,9 +75,11 @@ public class ChannelManager {
 				HostCredentialPair hcp = new HostCredentialPair(host, cred);
 				channel = (MetaChannel) channels.get(hcp);
 				if (channel == null) {
-					channel = new MetaChannel(rm == null ? clientRequestManager : rm, new ChannelContext());
+					channel = new MetaChannel(rm == null ? clientRequestManager : rm,
+							new ChannelContext());
 					new Throwable().printStackTrace();
-					System.err.println("Creating new meta channel with rm: " + channel.getRequestManager());
+					System.err.println("Creating new meta channel with rm: "
+							+ channel.getRequestManager());
 					channel.getChannelContext().setConfiguration(
 							RemoteConfiguration.getDefault().find(host));
 					channel.getChannelContext().setRemoteContact(host);
@@ -99,7 +115,8 @@ public class ChannelManager {
 	public void registerChannel(String url, GSSCredential cred, KarajanChannel channel)
 			throws ChannelException {
 		synchronized (channels) {
-			MetaChannel previous = new MetaChannel(channel.getRequestManager(), channel.getChannelContext());
+			MetaChannel previous = new MetaChannel(channel.getRequestManager(),
+					channel.getChannelContext());
 			previous.bind(channel);
 			channels.put(new HostCredentialPair(url, cred), previous);
 		}
@@ -147,15 +164,17 @@ public class ChannelManager {
 					channels.put(id, channel);
 				}
 				else {
-					previous = new MetaChannel(channel.getRequestManager(), channel.getChannelContext());
+					previous = new MetaChannel(channel.getRequestManager(),
+							channel.getChannelContext());
 					previous.bind(channel);
 					channels.put(id, previous);
 				}
 			}
 		}
 	}
-	
-	public KarajanChannel reserveChannel(String host, GSSCredential cred, RequestManager rm) throws ChannelException {
+
+	public KarajanChannel reserveChannel(String host, GSSCredential cred, RequestManager rm)
+			throws ChannelException {
 		MetaChannel channel = getClientChannel(host, cred, rm);
 		reserveChannel(channel);
 		return channel;
@@ -346,7 +365,7 @@ public class ChannelManager {
 		public int hashCode() {
 			return host.hashCode() + ((DN == null) ? 0 : DN.hashCode());
 		}
-		
+
 		public String toString() {
 			return DN + "@" + host;
 		}
