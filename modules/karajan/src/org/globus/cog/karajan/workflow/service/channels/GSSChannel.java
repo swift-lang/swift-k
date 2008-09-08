@@ -28,6 +28,7 @@ import org.globus.gsi.gssapi.auth.SelfAuthorization;
 import org.globus.gsi.gssapi.net.GssSocket;
 import org.globus.gsi.gssapi.net.GssSocketFactory;
 import org.gridforum.jgss.ExtendedGSSContext;
+import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSManager;
 
@@ -75,7 +76,7 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 
 				GSSManager manager = new GlobusGSSManagerImpl();
 				ExtendedGSSContext gssContext = (ExtendedGSSContext) manager.createContext(null,
-						GSSConstants.MECH_OID, cred, 2 * 3600);
+						GSSConstants.MECH_OID, cred, GSSContext.INDEFINITE_LIFETIME);
 
 				gssContext.requestAnonymity(false);
 				gssContext.requestCredDeleg(false);
@@ -90,6 +91,7 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 				socket.setSoTimeout(0);
 				socket.setWrapMode(GSIConstants.MODE_SSL.intValue());
 				socket.setAuthorization(authz);
+
 				logger.info("Connected to " + contact);
 
 				this.getChannelContext().setRemoteContact(contact.toString());
@@ -149,8 +151,6 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 			}
 		}
 	}
-	
-	
 
 	protected void register() {
 		getMultiplexer(SLOW).register(this);
@@ -170,8 +170,7 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 
 	protected synchronized void ensureCallbackServiceStarted() throws Exception {
 		if (getCallbackService() == null) {
-			setCallbackService(new GSSService(GSSService.initializeCredentials(true,
-					null, null)));
+			setCallbackService(new GSSService(GSSService.initializeCredentials(true, null, null)));
 		}
 		logger.info("Started local service: " + getCallbackService().getContact());
 	}
