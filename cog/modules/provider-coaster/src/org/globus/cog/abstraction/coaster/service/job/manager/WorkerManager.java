@@ -36,6 +36,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -62,9 +63,8 @@ public class WorkerManager extends Thread {
     public static final int MAX_WORKERS = 256;
     public static final int MAX_STARTING_WORKERS = 32;
 
-    public static final List coasterAttributes = Arrays.asList(new String[]{
-        "coasterspernode"
-        });
+    public static final List coasterAttributes = Arrays
+            .asList(new String[] { "coasterspernode" });
 
     private SortedMap ready;
     private Map ids;
@@ -148,19 +148,27 @@ public class WorkerManager extends Thread {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
+        catch (Error e) {
+            e.printStackTrace();
+            System.exit(126);
+        }
     }
 
     private void startWorker(int maxWallTime, Task prototype)
             throws InvalidServiceContactException {
-        String numWorkersString = (String)((JobSpecification) prototype.getSpecification()).getAttribute("coastersPerNode");
+        String numWorkersString = (String) ((JobSpecification) prototype
+                .getSpecification()).getAttribute("coastersPerNode");
         int numWorkers;
-        if(numWorkersString==null) {
+        if (numWorkersString == null) {
             numWorkers = 1;
-        } else {
+        }
+        else {
             numWorkers = Integer.parseInt(numWorkersString);
         }
 
-        logger.info("Starting new worker set with "+numWorkers+" workers");
+        logger
+                .info("Starting new worker set with " + numWorkers
+                        + " workers");
 
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
@@ -170,31 +178,35 @@ public class WorkerManager extends Thread {
         t.setService(0, buildService(prototype));
 
         Map newlyRequested = new HashMap();
-        for(int n = 0; n<numWorkers; n++) {
+        for (int n = 0; n < numWorkers; n++) {
 
             int id = sr.nextInt();
             if (logger.isInfoEnabled()) {
-                logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime + "s");
-            }    
+                logger.info("Starting worker with id=" + id
+                        + " and maxwalltime=" + maxWallTime + "s");
+            }
             String sid = String.valueOf(id);
 
-            ((JobSpecification)t.getSpecification()).addArgument(sid);
+            ((JobSpecification) t.getSpecification()).addArgument(sid);
 
             try {
                 Worker wr = new Worker(this, sid, maxWallTime, t, prototype);
                 newlyRequested.put(sid, wr);
             }
-       	    catch (Exception e) {
-                prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(),
-                    e));
+            catch (Exception e) {
+                prototype.setStatus(new StatusImpl(Status.FAILED, e
+                        .getMessage(), e));
             }
         }
+        System.err.println(t.getSpecification());
         try {
             handler.submit(t);
-        } catch(Exception e) {
-            prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(), e));
         }
-        synchronized(requested) {
+        catch (Exception e) {
+            prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(),
+                    e));
+        }
+        synchronized (requested) {
             requested.putAll(newlyRequested);
         }
     }
@@ -206,7 +218,6 @@ public class WorkerManager extends Thread {
         js.addArgument(script.getAbsolutePath());
         js.addArgument(callbackURI.toString());
         // js.addArgument(id);
-       
         return js;
     }
 
@@ -233,12 +244,13 @@ public class WorkerManager extends Thread {
     }
 
     private void copyAttributes(Task t, Task prototype, int maxWallTime) {
-        JobSpecification pspec = (JobSpecification) prototype.getSpecification();
+        JobSpecification pspec = (JobSpecification) prototype
+                .getSpecification();
         JobSpecification tspec = (JobSpecification) t.getSpecification();
         Iterator i = pspec.getAttributeNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            if(!coasterAttributes.contains(name)) {
+            if (!coasterAttributes.contains(name)) {
                 tspec.setAttribute(name, pspec.getAttribute(name));
             }
         }
