@@ -29,7 +29,9 @@ public class CoasterService extends GSSService {
     public static final Logger logger = Logger
             .getLogger(CoasterService.class);
 
-    public static final int IDLE_TIMEOUT = 600 * 1000;
+    public static final int IDLE_TIMEOUT = 120 * 1000;
+    
+    public static final RequestManager COASTER_REQUEST_MANAGER = new CoasterRequestManager();
 
     private String registrationURL, id;
     private JobQueue jobQueue;
@@ -67,7 +69,7 @@ public class CoasterService extends GSSService {
         else {
             try {
                 ConnectionHandler handler = new ConnectionHandler(this, sock,
-                        new CoasterRequestManager());
+                        COASTER_REQUEST_MANAGER);
                 handler.start();
             }
             catch (Exception e) {
@@ -90,7 +92,8 @@ public class CoasterService extends GSSService {
                 try {
                     logger.info("Reserving channel for registration");
                     KarajanChannel channel = ChannelManager.getManager()
-                            .reserveChannel(registrationURL, null);
+                            .reserveChannel(registrationURL, null, COASTER_REQUEST_MANAGER);
+                    channel.getChannelContext().setService(this);
                     logger.info("Sending registration");
                     RegistrationCommand reg = new RegistrationCommand(id,
                             "https://" + getHost() + ":" + getPort());
@@ -121,7 +124,7 @@ public class CoasterService extends GSSService {
     public void waitFor() throws Exception {
         synchronized (this) {
             while (!done) {
-                wait(1000);
+                wait(10000);
                 checkIdleTime();
             }
             if (e != null) {
@@ -133,6 +136,7 @@ public class CoasterService extends GSSService {
     private synchronized void checkIdleTime() {
         // the notification manager should probably not be a singleton
         long idleTime = NotificationManager.getDefault().getIdleTime();
+        logger.info("Idle time: " + idleTime);
         if (idleTime > IDLE_TIMEOUT) {
             suspend();
             if (NotificationManager.getDefault().getIdleTime() < IDLE_TIMEOUT) {
