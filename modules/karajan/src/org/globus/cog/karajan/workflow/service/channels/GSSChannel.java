@@ -73,10 +73,13 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 						SelfAuthorization.getInstance() });
 
 				GSSCredential cred = this.getChannelContext().getCredential();
+				if (cred == null) {
+					cred = GSSService.initializeCredentials(true, null, null);
+				}
 
 				GSSManager manager = new GlobusGSSManagerImpl();
 				ExtendedGSSContext gssContext = (ExtendedGSSContext) manager.createContext(null,
-						GSSConstants.MECH_OID, cred, GSSContext.INDEFINITE_LIFETIME);
+					GSSConstants.MECH_OID, cred, cred.getRemainingLifetime());
 
 				gssContext.requestAnonymity(false);
 				gssContext.requestCredDeleg(false);
