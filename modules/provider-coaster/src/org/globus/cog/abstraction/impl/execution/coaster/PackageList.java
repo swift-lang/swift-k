@@ -43,6 +43,23 @@ public class PackageList {
         add("jgss.jar");
         add("log4j*.jar");
         add("puretls.jar");
+        add("addressing*.jar");
+        add("commonj*.jar");
+        add("axis*.jar");
+        add("globus_delegation*.jar");
+        add("globus_wsrf*.jar");
+        add("gram*.jar");
+        add("naming*.jar");
+        add("saaj*.jar");
+        add("wss4j*.jar");
+        add("commons-collections*.jar");
+        add("commons-digester*.jar");
+        add("commons-discovery*.jar");
+        add("wsrf*.jar");
+        add("xalan*.jar");
+        add("xercesImpl*.jar");
+        add("xml-apis*.jar");
+        add("xmlsec*.jar");
     }
 
     private void add(String name) {
