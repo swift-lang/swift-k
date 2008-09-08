@@ -49,6 +49,7 @@ public class ChannelContext {
 	public ChannelContext() {
 		this(new ServiceContext(null));
 	}
+	
 	public ChannelContext(ServiceContext sc) {
 	    data = new HashMap();
 		activeSenders = new TagTable();
@@ -189,6 +190,10 @@ public class ChannelContext {
 	
 	public Service getService() {
 		return serviceContext.getService();
+	}
+	
+	public void setService(Service service) {
+		serviceContext.setService(service);
 	}
 	
 	public ServiceContext getServiceContext() {

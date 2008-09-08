@@ -29,7 +29,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
-	private final RequestManager requestManager;
+	private RequestManager requestManager;
 	private final List registeredMaps;
 	private boolean localShutdown, closed;
 	private String name;
@@ -140,6 +140,13 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public RequestManager getRequestManager() {
 		return requestManager;
+	}
+	
+	public void setRequestManager(RequestManager rm) {
+		if (rm == null) {
+			throw new IllegalArgumentException("The request manager cannot be null");
+		}
+		this.requestManager = rm;
 	}
 
 	public int decUsageCount() {
