@@ -38,10 +38,11 @@ if [ "X$MD5SUM" == "X" ]; then
 	fi
 fi
 AMD5=`$MD5SUM $DJ`
+AAMD5=`eval echo \$\{AMD5:0:32\}`
 echo "Expected checksum: $EMD5" >>$L
-echo "Computed checksum: ${AMD5:0:32}" >>$L
-if [ "${AMD5:0:32}" != "$EMD5" ]; then
-	error "Bootstrap jar checksum failed: $EMD5 != ${AMD5:0:32}"
+echo "Computed checksum: $AAMD5" >>$L
+if [ "$AAMD5" != "$EMD5" ]; then
+	error "Bootstrap jar checksum failed: $EMD5 != $AAMD5"
 fi
 if [ "X$JAVA_HOME" != "X" ]; then
 	JAVA=$JAVA_HOME/bin/java
