@@ -81,7 +81,6 @@ public class BootstrapService implements Runnable {
     private void loadList() {
         URL url = BootstrapService.class.getClassLoader().getResource(
                 ServiceManager.BOOTSTRAP_LIST);
-        System.err.println(url);
         if (url == null) {
             throw new RuntimeException(ServiceManager.BOOTSTRAP_LIST
                     + " not found in classpath");
@@ -102,7 +101,6 @@ public class BootstrapService implements Runnable {
                                     + d[0]);
                 }
                 valid.add("/" + d[0]);
-                System.err.println(d[0]);
                 checksums.put("/" + d[0], d[1]);
                 line = br.readLine();
             }
