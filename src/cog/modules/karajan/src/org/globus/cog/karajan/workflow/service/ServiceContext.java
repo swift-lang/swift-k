@@ -69,6 +69,10 @@ public class ServiceContext {
 	public Service getService() {
 		return service;
 	}
+	
+	public void setService(Service service) {
+	    this.service = service;
+	}
 
 	public boolean isLocal() {
 		return local;
