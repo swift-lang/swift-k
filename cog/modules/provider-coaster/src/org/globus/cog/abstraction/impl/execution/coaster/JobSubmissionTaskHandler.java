@@ -66,7 +66,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         try {
             if (autostart) {
                 url = ServiceManager.getDefault().reserveService(task,
-                        getBootHandler(task));
+                        getBootHandler(task), getBootHandlerProvider(task));
                 cred = getCredentials(task);
             }
             else {
