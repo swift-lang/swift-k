@@ -31,6 +31,7 @@ public abstract class AbstractRequestManager implements RequestManager {
 		Class handlerClass = (Class) handlers.get(cmd);
 		RequestHandler handler;
 		if (handlerClass == null) {
+			System.err.println("Mee: " + this);
 			handler = new UnknownCommandHandler();
 		}
 		else {
@@ -43,5 +44,9 @@ public abstract class AbstractRequestManager implements RequestManager {
 		}
 		handler.setInCmd(cmd);
 		return handler;
+	}
+	
+	public String toString() {
+		return handlers.toString();
 	}
 }
