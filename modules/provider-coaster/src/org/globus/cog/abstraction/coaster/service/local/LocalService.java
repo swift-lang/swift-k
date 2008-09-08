@@ -17,6 +17,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.execution.coaster.CoasterChannelManager;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
@@ -30,6 +31,7 @@ public class LocalService extends GSSService implements Registering {
     public static final long DEFAULT_REGISTRATION_TIMEOUT = 300 * 1000;
 
     private Map services;
+    private Map lastHeardOf;
 
     public LocalService() throws IOException {
         super();
@@ -41,6 +43,7 @@ public class LocalService extends GSSService implements Registering {
         }
         setAuthorization(new SelfAuthorization());
         services = new HashMap();
+        lastHeardOf = new HashMap();
         this.accept = true;
         Thread t = new Thread(this);
         t.setName("Local service");
@@ -71,11 +74,11 @@ public class LocalService extends GSSService implements Registering {
         if (logger.isDebugEnabled()) {
             logger.debug("Waiting for registration from service " + id);
         }
-        long start = System.currentTimeMillis();
+        heardOf(id);
         synchronized (services) {
             while (!services.containsKey(id)) {
                 services.wait(1000);
-                if (timeout < System.currentTimeMillis() - start) {
+                if (timeout < System.currentTimeMillis() - lastHeardOf(id)) {
                     throw new TaskSubmissionException(
                             "Timed out waiting for registration for " + id);
                 }
@@ -83,18 +86,33 @@ public class LocalService extends GSSService implements Registering {
                 if (s.isTerminal()) {
                     throw new TaskSubmissionException(
                             "Task ended before registration was received"
-                                    + (s.getMessage() == null ? ". " : ": " + s.getMessage())
-                                    + "\nSTDOUT: " + t.getStdOutput()
-                                    + "\nSTDERR: " + t.getStdError(), s.getException());
+                                    + (s.getMessage() == null ? ". " : ": "
+                                            + s.getMessage()) + "\nSTDOUT: "
+                                    + t.getStdOutput() + "\nSTDERR: "
+                                    + t.getStdError(), s.getException());
                 }
             }
             return (String) services.get(id);
         }
     }
 
-    public void registrationReceived(String id, String url, KarajanChannel channel) {
+    public void heardOf(String id) {
+        synchronized (lastHeardOf) {
+            lastHeardOf.put(id, new Long(System.currentTimeMillis()));
+        }
+    }
+
+    protected long lastHeardOf(String id) {
+        synchronized (lastHeardOf) {
+            return ((Long) lastHeardOf.get(id)).longValue();
+        }
+    }
+
+    public void registrationReceived(String id, String url,
+            KarajanChannel channel) {
         if (logger.isDebugEnabled()) {
-            logger.debug("Received registration from service " + id + ": " + url);
+            logger.debug("Received registration from service " + id + ": "
+                    + url);
         }
         synchronized (services) {
             if (services.containsKey(id)) {
@@ -103,6 +121,16 @@ public class LocalService extends GSSService implements Registering {
                                 + ") already exists");
             }
             else {
+                try {
+                    CoasterChannelManager.getManager()
+                            .registerChannel(url,
+                                    channel.getUserContext().getCredential(),
+                                    channel);
+                }
+                catch (Exception e) {
+                    throw new RuntimeException("Failed to register channel "
+                            + url);
+                }
                 services.put(id, url);
                 services.notifyAll();
             }
