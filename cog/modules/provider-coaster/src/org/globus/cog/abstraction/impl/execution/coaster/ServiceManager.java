@@ -25,8 +25,11 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.ServiceShutdownCommand;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
+import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
@@ -78,8 +81,8 @@ public class ServiceManager implements StatusListener {
         Runtime.getRuntime().addShutdownHook(serviceReaper);
     }
 
-    public String reserveService(Task task, TaskHandler bootHandler)
-            throws TaskSubmissionException {
+    public String reserveService(Task task, TaskHandler bootHandler,
+            String bootHandlerProvider) throws TaskSubmissionException {
         if (logger.isDebugEnabled()) {
             logger.debug("Reserving service for " + task);
         }
@@ -89,7 +92,8 @@ public class ServiceManager implements StatusListener {
             // and normal program semantics
             String url = waitForStart(service);
             if (url == null) {
-                url = startService(task, bootHandler, service);
+                url = startService(task, bootHandler, bootHandlerProvider,
+                        service);
             }
             increaseUsageCount(service);
             return url;
@@ -113,11 +117,16 @@ public class ServiceManager implements StatusListener {
         }
     }
 
+    public void serviceIsActive(String id) {
+        localService.heardOf(id);
+    }
+
     protected String startService(Task task, TaskHandler bootHandler,
-            Object service) throws Exception {
+            String bootHandlerProvider, Object service) throws Exception {
         try {
             startLocalService();
             Task t = buildTask(task);
+            setSecurityContext(t, task, bootHandlerProvider);
             t.addStatusListener(this);
             if (logger.isDebugEnabled()) {
                 logger.debug("Starting coaster service on "
@@ -141,6 +150,12 @@ public class ServiceManager implements StatusListener {
         }
     }
 
+    private void setSecurityContext(Task t, Task orig, String provider)
+            throws InvalidProviderException, ProviderMethodException {
+        t.getService(0).setSecurityContext(
+                AbstractionFactory.newSecurityContext(provider));
+    }
+
     public void statusChanged(StatusEvent event) {
         Task t = (Task) event.getSource();
         Status s = event.getStatus();
@@ -153,7 +168,8 @@ public class ServiceManager implements StatusListener {
                 Object service = getService(t);
                 String url = (String) services.remove(service);
                 if (url == null) {
-                    logger.info("Service does not appear to be registered with this manager");
+                    logger
+                            .info("Service does not appear to be registered with this manager");
                 }
                 else {
                     credentials.remove(url);
