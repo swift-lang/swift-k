@@ -164,9 +164,10 @@ public class ServiceManager implements StatusListener {
                 logger.info("Service task " + t
                         + " terminated. Removing service.");
             }
+            String url;
             synchronized (services) {
                 Object service = getService(t);
-                String url = (String) services.remove(service);
+                url = (String) services.remove(service);
                 if (url == null) {
                     logger
                             .info("Service does not appear to be registered with this manager");
@@ -175,9 +176,20 @@ public class ServiceManager implements StatusListener {
                     credentials.remove(url);
                 }
             }
+            try {
+                GSSCredential cred = (GSSCredential) t.getService(0)
+                        .getSecurityContext().getCredentials();
+                KarajanChannel channel = CoasterChannelManager.getManager()
+                        .getExistingChannel(url, cred);
+                if (channel != null) {
+                    channel.close();
+                }
+            }
+            catch (Exception e) {
+                logger.info("Failed to close channel", e);
+            }
         }
     }
-
     private static final Integer ZERO = new Integer(0);
 
     protected void increaseUsageCount(Object service) {
