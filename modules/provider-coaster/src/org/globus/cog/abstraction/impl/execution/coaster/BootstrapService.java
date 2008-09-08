@@ -28,6 +28,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,6 +81,7 @@ public class BootstrapService implements Runnable {
     private void loadList() {
         URL url = BootstrapService.class.getClassLoader().getResource(
                 ServiceManager.BOOTSTRAP_LIST);
+        System.err.println(url);
         if (url == null) {
             throw new RuntimeException(ServiceManager.BOOTSTRAP_LIST
                     + " not found in classpath");
@@ -100,6 +102,7 @@ public class BootstrapService implements Runnable {
                                     + d[0]);
                 }
                 valid.add("/" + d[0]);
+                System.err.println(d[0]);
                 checksums.put("/" + d[0], d[1]);
                 line = br.readLine();
             }
@@ -161,8 +164,8 @@ public class BootstrapService implements Runnable {
         }
         else {
             ServerSocket socket = channel.socket();
-            if (CoGProperties.getDefault().getIPAddress() != null) {
-                return "http://" + CoGProperties.getDefault().getIPAddress()
+            if (CoGProperties.getDefault().getHostName() != null) {
+                return "http://" + CoGProperties.getDefault().getHostName()
                     + ":" + socket.getLocalPort();
             }
             else {
@@ -271,6 +274,8 @@ public class BootstrapService implements Runnable {
                 + "<h1>Error: Your are not authorized to access this resource</h1></body></html>\n";
         public static final String ERROR_NOTFOUND = "<html><head><title>Error</title></head><body>"
                 + "<h1>Error: The requested resource is not available</h1></body></html>\n";
+        public static final String ERROR_BAD_REQUEST = "<html><head><title>Error</title></head><body>"
+                + "<h1>Error: The request could not be understood by this server</h1></body></html>\n";
 
         private SocketChannel channel;
         private int state;
@@ -369,10 +374,14 @@ public class BootstrapService implements Runnable {
             if (logger.isDebugEnabled()) {
                 logger.debug("Headers: " + headers);
             }
-            cmd = cmd.toLowerCase();
             String[] tokens = cmd.split("\\s+");
-            if (tokens[0].equals("get")) {
-                String page = tokens[1];
+            if (tokens[0].equals("GET")) {
+                String page = getPage(tokens[1]);
+                Map cgiParams = getCGIParams(tokens[1]);
+                String coasterId = (String) cgiParams.get("serviceId");
+                if (coasterId != null) {
+                    ServiceManager.getDefault().serviceIsActive(coasterId);
+                }
                 if (page.equals("/")) {
                     page = "/index.html";
                 }
@@ -386,6 +395,9 @@ public class BootstrapService implements Runnable {
                     sendError("401 Unauthorized", ERROR_NOT_AUTHORIZED);
                 }
                 key.interestOps(SelectionKey.OP_WRITE);
+            }
+            else {
+                sendError("400 Bad Request", ERROR_BAD_REQUEST);
             }
         }
 
@@ -443,6 +455,37 @@ public class BootstrapService implements Runnable {
         private void close() throws IOException {
             channel.close();
             processor.removeChannel(channel);
+        }
+        
+        private String getPage(String local) {
+            int i = local.indexOf('?');
+            if (i == -1) {
+                return local;
+            }
+            else {
+                return local.substring(0, i);
+            }
+        }
+        
+        private Map getCGIParams(String local) {
+            int i = local.indexOf('?');
+            if (i == -1) {
+                return Collections.EMPTY_MAP;
+            }
+            else {
+                Map m = new HashMap();
+                String[] params = local.substring(i).split("&");
+                for (int j = 0; j < params.length; j++) {
+                    int k = params[j].indexOf('=');
+                    if (k == -1) {
+                        //not valid, discard parameter
+                    }
+                    else {
+                        m.put(params[j].substring(0, k), params[j].substring(k + 1));
+                    }
+                }
+                return m;
+            }
         }
     }
 
