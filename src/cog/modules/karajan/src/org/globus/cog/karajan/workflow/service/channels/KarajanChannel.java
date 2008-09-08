@@ -69,4 +69,6 @@ public interface KarajanChannel {
 	boolean isClient();
 	
 	URI getCallbackURI() throws Exception;
+
+	void setRequestManager(RequestManager requestManager);
 }
