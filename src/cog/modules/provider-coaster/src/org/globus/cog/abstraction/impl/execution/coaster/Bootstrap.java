@@ -58,7 +58,7 @@ public class Bootstrap {
     private void getList() throws Exception {
         System.out.println("Fetching file list");
         StringBuffer line = new StringBuffer();
-        URL url = new URL(serviceURL + "/list");
+        URL url = new URL(serviceURL + "/list?serviceId=" + serviceId);
         InputStream is = url.openStream();
         MessageDigest md = MessageDigest.getInstance("MD5");
         int c = is.read();
@@ -107,7 +107,7 @@ public class Bootstrap {
         try {
             System.out.println("Downloading " + name);
             File dest = File.createTempFile("download-", ".jar", dir);
-            URL url = new URL(serviceURL + "/" + name);
+            URL url = new URL(serviceURL + "/" + name + "?serviceId=" + serviceId);
             InputStream is = url.openStream();
             FileOutputStream fos = new FileOutputStream(dest);
             byte[] buf = new byte[16384];
@@ -214,6 +214,7 @@ public class Bootstrap {
         addProperty(args, "GLOBUS_HOSTNAME");
         addProperty(args, "GLOBUS_TCP_PORT_RANGE");
         addProperty(args, "X509_CERT_DIR");
+        args.add("-Djava.security.egd=file:///dev/urandom");
     }
     
     private void addProperty(List args, String name) {
