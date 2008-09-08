@@ -367,7 +367,7 @@ public class BootstrapService implements Runnable {
         }
 
         private void processCommand(String cmd, Map headers, SelectionKey key) {
-            logger.info("[" + channel.socket().getRemoteSocketAddress() + "]"
+            logger.info("[" + channel.socket().getRemoteSocketAddress() + "] "
                     + cmd);
             if (logger.isDebugEnabled()) {
                 logger.debug("Headers: " + headers);
