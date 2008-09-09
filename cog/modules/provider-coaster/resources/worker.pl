@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 use IO::Socket;
+use Cwd;
 use strict;
 use warnings;
 
@@ -383,22 +384,27 @@ sub runjob {
 	my $stdout = $JOB{"stdout"};
 	my $stderr = $JOB{"stderr"};
 
+	my $cwd = getcwd();
+	wlog "CWD: $cwd\n";
 	wlog "Running $executable\n";
+	wlog "Directory: $JOB{directory}\n";
 	my $ename;
 	foreach $ename (keys %JOBENV) {
 		$ENV{$ename} = $JOBENV{$ename};
 	}
 	unshift @JOBARGS, $executable;
-	if (defined $stdout) {
-		close STDOUT;
-		open STDOUT, $stdout;
-	}
-	if (defined $stderr) {
-		close STDERR;
-		open STDERR, $stderr;
-	}
 	if (defined $JOB{directory}) {
 	    chdir $JOB{directory};
+	}
+	if (defined $stdout) {
+		wlog "STDOUT: $stdout\n";
+		close STDOUT;
+		open STDOUT, ">$stdout" or die "Cannot redirect STDOUT";
+	}
+	if (defined $stderr) {
+		wlog "STDERR: $stderr\n";
+		close STDERR;
+		open STDERR, ">$stderr" or die "Cannot redirect STDERR";
 	}
 	wlog "Command: @JOBARGS\n";
 	exec { $executable } @JOBARGS or queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$FAILED", "513", "Could not execute $executable: $!");
