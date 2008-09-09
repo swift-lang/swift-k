@@ -472,7 +472,7 @@ public class BootstrapService implements Runnable {
             }
             else {
                 Map m = new HashMap();
-                String[] params = local.substring(i).split("&");
+                String[] params = local.substring(i + 1).split("&");
                 for (int j = 0; j < params.length; j++) {
                     int k = params[j].indexOf('=');
                     if (k == -1) {
