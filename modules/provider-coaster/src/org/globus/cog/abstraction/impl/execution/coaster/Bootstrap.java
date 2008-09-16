@@ -13,18 +13,22 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.MessageDigest;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
 public class Bootstrap {
 
     public static final boolean fork = true;
-    private static final File cacheDir = new File(System
+    private static final File CACHE_DIR = new File(System
             .getProperty("user.home")
             + File.separator
             + ".globus"
@@ -32,7 +36,13 @@ public class Bootstrap {
             + "coasters"
             + File.separator + "cache");
 
+    private static final File LOG_DIR = new File(System
+            .getProperty("user.home")
+            + File.separator + ".globus" + File.separator + "coasters");
+
     public static final String SERVICE_CLASS = "org.globus.cog.abstraction.coaster.service.CoasterService";
+    
+    private static Logger logger;
 
     private String serviceURL;
     private String listChecksum;
@@ -47,6 +57,7 @@ public class Bootstrap {
         this.registrationURL = registrationURL;
         this.serviceId = serviceId;
         list = new ArrayList();
+        logger = new Logger(serviceId);
     }
 
     public void run() throws Exception {
@@ -56,7 +67,7 @@ public class Bootstrap {
     }
 
     private void getList() throws Exception {
-        System.out.println("Fetching file list");
+        logger.log("Fetching file list");
         StringBuffer line = new StringBuffer();
         URL url = new URL(serviceURL + "/list?serviceId=" + serviceId);
         InputStream is = url.openStream();
@@ -90,14 +101,16 @@ public class Bootstrap {
     }
 
     private void updateJars() throws Exception {
-        System.out.println("Updating jars");
-        cacheDir.mkdirs();
+        logger.log("Updating jars");
+        if (!CACHE_DIR.mkdirs() && !CACHE_DIR.exists()) {
+            error("Could not create jar cache directory");
+        }
         Iterator i = list.iterator();
         while (i.hasNext()) {
             String[] jar = (String[]) i.next();
-            File f = new File(cacheDir, buildName(jar));
+            File f = new File(CACHE_DIR, buildName(jar));
             if (!f.exists()) {
-                download(cacheDir, jar[0], jar[1]);
+                download(CACHE_DIR, jar[0], jar[1]);
             }
         }
     }
@@ -105,9 +118,10 @@ public class Bootstrap {
     private void download(File dir, String name, String checksum)
             throws Exception {
         try {
-            System.out.println("Downloading " + name);
+            logger.log("Downloading " + name);
             File dest = File.createTempFile("download-", ".jar", dir);
-            URL url = new URL(serviceURL + "/" + name + "?serviceId=" + serviceId);
+            URL url = new URL(serviceURL + "/" + name + "?serviceId="
+                    + serviceId);
             InputStream is = url.openStream();
             FileOutputStream fos = new FileOutputStream(dest);
             byte[] buf = new byte[16384];
@@ -138,7 +152,7 @@ public class Bootstrap {
             clStart();
         }
     }
-    
+
     private void arrangeJars() {
         String[] coasterJar = null;
         Iterator i = list.iterator();
@@ -150,18 +164,18 @@ public class Bootstrap {
             }
         }
         if (coasterJar != null) {
-            System.out.println("Moved coaster jar to head of classpath");
+            logger.log("Moved coaster jar to head of classpath");
             list.add(0, coasterJar);
         }
     }
 
     private void forkStart() throws Exception {
-        System.out.println("Forking service");
+        logger.log("Forking service");
         StringBuffer sb = new StringBuffer();
         arrangeJars();
         Iterator i = list.iterator();
         while (i.hasNext()) {
-            sb.append(cacheDir.getAbsolutePath());
+            sb.append(CACHE_DIR.getAbsolutePath());
             sb.append('/');
             sb.append(buildName((String[]) i.next()));
             if (i.hasNext()) {
@@ -179,12 +193,13 @@ public class Bootstrap {
         args.add(SERVICE_CLASS);
         args.add(registrationURL);
         args.add(serviceId);
-        System.out.println("Args: " + args);
-        Process p = Runtime.getRuntime().exec((String[]) args.toArray(new String[0]));
+        logger.log("Args: " + args);
+        Process p = Runtime.getRuntime().exec(
+                (String[]) args.toArray(new String[0]));
         StringBuffer out = new StringBuffer(), err = new StringBuffer();
-        System.out.println("Starting stdout consumer");
+        logger.log("Starting stdout consumer");
         consumeOutput(p.getInputStream(), out);
-        System.out.println("Starting stderr consumer");
+        logger.log("Starting stderr consumer");
         consumeOutput(p.getErrorStream(), err);
         int ec;
         while (true) {
@@ -196,19 +211,20 @@ public class Bootstrap {
                 Thread.sleep(250);
             }
         }
-        System.out.println("Exit code: " + ec);
+        logger.log("Exit code: " + ec);
         System.out.println(out.toString());
         System.err.println(err.toString());
         if (ec != 0) {
             System.exit(ec);
         }
     }
-    
+
     private void addDebuggingOptions(List args) {
         //args.add("-Xdebug");
         //args.add("-Xrunjdwp:transport=dt_socket,address=8788,server=y,suspend=y");
+        //args.add("-Xrunjdwp:transport=dt_socket,address=8788,server=y,suspend=n");
     }
-    
+
     private void addProperties(List args) {
         addProperty(args, "X509_USER_PROXY");
         addProperty(args, "GLOBUS_HOSTNAME");
@@ -216,7 +232,7 @@ public class Bootstrap {
         addProperty(args, "X509_CERT_DIR");
         args.add("-Djava.security.egd=file:///dev/urandom");
     }
-    
+
     private void addProperty(List args, String name) {
         String value = System.getProperty(name);
         if (value != null && !value.equals("")) {
@@ -249,7 +265,7 @@ public class Bootstrap {
     private void clStart() throws Exception {
         URL[] urls = new URL[list.size()];
         for (int i = 0; i < list.size(); i++) {
-            urls[i] = new URL("file://" + cacheDir.getAbsolutePath() + "/"
+            urls[i] = new URL("file://" + CACHE_DIR.getAbsolutePath() + "/"
                     + buildName((String[]) list.get(i)));
             System.err.println(urls[i]);
         }
@@ -258,7 +274,8 @@ public class Bootstrap {
         Class cls = cl.loadClass(SERVICE_CLASS);
 
         Method m = cls.getMethod("main", new Class[] { String[].class });
-        m.invoke(null, new Object[] { new String[] { registrationURL, serviceId } });
+        m.invoke(null, new Object[] { new String[] { registrationURL,
+                serviceId } });
     }
 
     private String buildName(String[] n) {
@@ -276,7 +293,6 @@ public class Bootstrap {
         if (args.length != 4) {
             error("Wrong number of arguments. Expected <serviceURL>, <package list checksum>, <registration service URL>, and <id>");
         }
-        System.out.println("Starting service...");
         try {
             Bootstrap b = new Bootstrap(args[0], args[1], args[2], args[3]);
             b.run();
@@ -287,7 +303,50 @@ public class Bootstrap {
     }
 
     private static void error(String message) {
+        if (logger != null) {
+            logger.log(message);
+        }
         System.err.println(message);
         System.exit(1);
+    }
+
+    private static class Logger {
+        private PrintStream ps;
+        private String id;
+        private static final DateFormat DF = new SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss,SSS");
+
+        public Logger(String id) {
+            this.id = " " + id + " ";
+            if (!LOG_DIR.mkdirs() && !LOG_DIR.exists()) {
+                error("Cannot create coaster directory (" + LOG_DIR + ")");
+            }
+            try {
+                ps = new PrintStream(new FileOutputStream(LOG_DIR
+                        .getAbsolutePath()
+                        + File.separator + "coasters.log", true));
+            }
+            catch (IOException e) {
+                error("Cannot create coaster log file: " + e.getMessage());
+            }
+        }
+
+        public void log(String message) {
+            header();
+            ps.println(message);
+            ps.flush();
+        }
+
+        public void log(String message, Throwable t) {
+            header();
+            ps.println(message);
+            t.printStackTrace(ps);
+            ps.flush();
+        }
+
+        private void header() {
+            ps.print(DF.format(new Date()));
+            ps.print(id);
+        }
     }
 }
