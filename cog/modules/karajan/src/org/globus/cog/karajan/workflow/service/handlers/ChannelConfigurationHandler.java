@@ -60,7 +60,7 @@ public class ChannelConfigurationHandler extends RequestHandler {
 		Iterator i = conf.getOptions().iterator();
 		while (i.hasNext()) {
 			String opt = (String) i.next();
-			if (opt.equals(RemoteConfiguration.POLL)) {
+			if (opt.equals(RemoteConfiguration.POLL) || opt.equals(RemoteConfiguration.RECONNECT)) {
 				newopts.put(RemoteConfiguration.BUFFER, null);
 			}
 			else if (opt.equals(RemoteConfiguration.CALLBACK)) {

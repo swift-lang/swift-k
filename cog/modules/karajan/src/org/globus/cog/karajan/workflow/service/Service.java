@@ -11,6 +11,8 @@ package org.globus.cog.karajan.workflow.service;
 
 import java.net.URI;
 
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+
 public interface Service {
 
 	boolean isRestricted();
@@ -19,4 +21,5 @@ public interface Service {
 
 	ServiceContext getContext();
 
+	void irrecoverableChannelError(KarajanChannel channel, Exception e);
 }
