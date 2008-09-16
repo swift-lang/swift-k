@@ -40,10 +40,11 @@ public class UDPChannel extends AbstractKarajanChannel {
 	private ServiceContext sc;
 	private UDPService service;
 	private Map tagSeq;
+	private boolean started;
 
 	public UDPChannel(DatagramSocket ds, ChannelContext context, RequestManager rm,
 			UDPService service, InetSocketAddress addr) {
-		super(rm, context);
+		super(rm, context, false);
 		this.ds = ds;
 		this.service = service;
 		this.addr = addr.getAddress();
@@ -53,7 +54,7 @@ public class UDPChannel extends AbstractKarajanChannel {
 	}
 
 	public UDPChannel(URI contact, ChannelContext context, RequestManager rm) {
-		super(rm, context);
+		super(rm, context, true);
 		this.contact = contact;
 	}
 
@@ -80,6 +81,7 @@ public class UDPChannel extends AbstractKarajanChannel {
 				addr = InetAddress.getByName(contact.getHost());
 				port = contact.getPort();
 			}
+			started = true;
 		}
 		catch (Exception e) {
 			throw new ChannelException("Failed to start UDP channel", e);
@@ -203,5 +205,9 @@ public class UDPChannel extends AbstractKarajanChannel {
 
 	public InetSocketAddress getRemoteAddress() {
 		return new InetSocketAddress(addr, port);
+	}
+
+	public boolean isStarted() {
+		return started;
 	}
 }

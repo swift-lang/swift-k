@@ -45,6 +45,8 @@ public class ChannelContext {
 	private ServiceContext serviceContext;
 	private GSSCredential cred;
 	private ChannelAttributes attr;
+	private int reconnectionAttempts;
+	private long lastHeartBeat;
 
 	public ChannelContext() {
 		this(new ServiceContext(null));
@@ -218,5 +220,25 @@ public class ChannelContext {
 	    synchronized(data) {
 	        data.put(name, o);
 	    }
+	}
+
+	public int getReconnectionAttempts() {
+		return reconnectionAttempts;
+	}
+
+	public void setReconnectionAttempts(int reconnectionAttempts) {
+		this.reconnectionAttempts = reconnectionAttempts;
+	}
+
+	public long getLastHeartBeat() {
+		return lastHeartBeat;
+	}
+
+	public void setLastHeartBeat(long lastHeartBeat) {
+		this.lastHeartBeat = lastHeartBeat;
+	}
+	
+	public String toString() {
+		return data.toString();
 	}
 }

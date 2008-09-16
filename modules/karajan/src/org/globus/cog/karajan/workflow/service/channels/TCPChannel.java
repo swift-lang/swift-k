@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 
@@ -25,13 +26,19 @@ public class TCPChannel extends AbstractTCPChannel {
 		setName(contact.toString());
 	}
 
-	public TCPChannel(Socket socket, RequestManager requestManager, ChannelContext channelContext) {
+	public TCPChannel(Socket socket, RequestManager requestManager, ChannelContext channelContext)
+			throws IOException {
 		super(requestManager, channelContext, false);
 		setSocket(socket);
 		uc = new UserContext(null, channelContext);
 	}
 
 	public void start() throws ChannelException {
+		reconnect();
+		super.start();
+	}
+
+	protected void reconnect() throws ChannelException {
 		try {
 			if (contact != null) {
 				setSocket(new Socket(contact.getHost(), contact.getPort()));
@@ -40,7 +47,6 @@ public class TCPChannel extends AbstractTCPChannel {
 		catch (Exception e) {
 			throw new ChannelException("Failed to create socket", e);
 		}
-		super.start();
 	}
 
 	public UserContext getUserContext() {

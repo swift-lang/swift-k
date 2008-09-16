@@ -19,6 +19,7 @@ import org.globus.cog.karajan.workflow.service.ClientRequestManager;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.Service;
+import org.globus.cog.karajan.workflow.service.UserContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
@@ -38,7 +39,7 @@ public class ChannelManager {
 		return manager;
 	}
 
-	public ChannelManager() {
+	private ChannelManager() {
 		channels = new HashMap();
 		hosts = new HashMap();
 		rchannels = new HashMap();
@@ -75,15 +76,11 @@ public class ChannelManager {
 				HostCredentialPair hcp = new HostCredentialPair(host, cred);
 				channel = (MetaChannel) channels.get(hcp);
 				if (channel == null) {
-					channel = new MetaChannel(rm == null ? clientRequestManager : rm,
-							new ChannelContext());
-					new Throwable().printStackTrace();
-					System.err.println("Creating new meta channel with rm: "
-							+ channel.getRequestManager());
-					channel.getChannelContext().setConfiguration(
-							RemoteConfiguration.getDefault().find(host));
-					channel.getChannelContext().setRemoteContact(host);
-					channel.getChannelContext().setCredential(cred);
+					ChannelContext context = new ChannelContext();
+					context.setConfiguration(RemoteConfiguration.getDefault().find(host));
+					context.setRemoteContact(host);
+					context.setCredential(cred);
+					channel = new MetaChannel(rm == null ? clientRequestManager : rm, context);
 					registerChannel(hcp, channel);
 				}
 			}
@@ -115,10 +112,13 @@ public class ChannelManager {
 	public void registerChannel(String url, GSSCredential cred, KarajanChannel channel)
 			throws ChannelException {
 		synchronized (channels) {
-			MetaChannel previous = new MetaChannel(channel.getRequestManager(),
-					channel.getChannelContext());
+			HostCredentialPair hcp = new HostCredentialPair(url, cred);
+			MetaChannel previous = getMetaChannel(channel);
+			if (previous == null) {
+				previous = new MetaChannel(channel.getRequestManager(), channel.getChannelContext());
+			}
+			channels.put(hcp, previous);
 			previous.bind(channel);
-			channels.put(new HostCredentialPair(url, cred), previous);
 		}
 	}
 
@@ -129,20 +129,18 @@ public class ChannelManager {
 		synchronized (channels) {
 			MetaChannel previous = (MetaChannel) channels.get(id);
 			if (previous != null) {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Re-registering " + id + " = " + channel);
+				if (logger.isInfoEnabled()) {
+					logger.info("Re-registering " + id + " = " + channel);
 				}
 				try {
 					/*
 					 * Check to see if a rogue user is not trying to "steal" a
 					 * channel
 					 */
-					if (!previous.getChannelContext().getUserContext().getName().equals(
-							channel.getChannelContext().getUserContext().getName())) {
+
+					if (!equals(getName(previous), getName(channel))) {
 						throw new ChannelException("Channel registration denied. Expected name: "
-								+ previous.getChannelContext().getUserContext().getName()
-								+ "; actual name: "
-								+ channel.getChannelContext().getUserContext().getName());
+								+ getName(previous) + "; actual name: " + getName(channel));
 					}
 				}
 				catch (Exception e) {
@@ -173,6 +171,15 @@ public class ChannelManager {
 		}
 	}
 
+	private boolean equals(Object o1, Object o2) {
+		return o1 == null ? o2 == null : o1.equals(o2);
+	}
+
+	private String getName(KarajanChannel channel) {
+		UserContext uc = channel.getChannelContext().getUserContext();
+		return uc == null ? null : uc.getName();
+	}
+
 	public KarajanChannel reserveChannel(String host, GSSCredential cred, RequestManager rm)
 			throws ChannelException {
 		MetaChannel channel = getClientChannel(host, cred, rm);
@@ -187,11 +194,32 @@ public class ChannelManager {
 	}
 
 	public KarajanChannel reserveChannel(KarajanChannel channel) throws ChannelException {
-		return reserveChannel(getChannel(channel));
+		return reserveChannel(getMetaChannel(channel));
 	}
 
 	public KarajanChannel reserveChannel(ChannelContext context) throws ChannelException {
-		return reserveChannel(getChannel(context));
+		return reserveChannel(getMetaChannel(context));
+	}
+
+	private void connect(MetaChannel meta) throws ChannelException {
+		try {
+			String contact = meta.getChannelContext().getRemoteContact();
+			if (contact == null) {
+				// Should buffer things for a certain period of time
+				throw new ChannelException("Channel died and no contact available");
+			}
+			Client client = Client.newClient(contact, meta.getChannelContext(),
+					clientRequestManager);
+			channels.put(client.getChannel().getChannelContext().getChannelID(), meta);
+			meta.bind(client.getChannel());
+
+		}
+		catch (ChannelException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new ChannelException(e);
+		}
 	}
 
 	public KarajanChannel reserveChannel(MetaChannel meta) throws ChannelException {
@@ -199,27 +227,76 @@ public class ChannelManager {
 			meta.incUsageCount();
 			RemoteConfiguration.Entry config = meta.getChannelContext().getConfiguration();
 			if (meta.isOffline()) {
-				try {
-					String contact = meta.getChannelContext().getRemoteContact();
-					if (contact == null) {
-						// Should buffer things for a certain period of time
-						throw new ChannelException("Channel died and no contact available");
-					}
-					Client client = Client.newClient(contact, meta.getChannelContext(),
-							clientRequestManager);
-					channels.put(client.getChannel().getChannelContext().getChannelID(), meta);
-					meta.bind(client.getChannel());
-
-				}
-				catch (ChannelException e) {
-					throw e;
-				}
-				catch (Exception e) {
-					throw new ChannelException(e);
-				}
+				connect(meta);
 			}
 		}
 		return meta;
+	}
+
+	public void handleChannelException(KarajanChannel channel, Exception e) {
+		logger.info("Handling channel exception");
+		if (channel.isOffline()) {
+			logger.info("Channel already shut down");
+			return;
+		}
+		channel.setLocalShutdown();
+		ChannelContext ctx = channel.getChannelContext();
+		RemoteConfiguration.Entry config = ctx.getConfiguration();
+		try {
+			if (config != null) {
+				if (config.hasOption(RemoteConfiguration.RECONNECT)) {
+					buffer(channel);
+					channel.close();
+					asyncReconnect(channel, e);
+				}
+				else {
+					shutdownChannel(channel);
+				}
+			}
+			else {
+				shutdownChannel(channel);
+			}
+		}
+		catch (Exception e2) {
+			logger.warn("Failed to shut down channel", e2);
+		}
+		logger.info("Channel exception handled");
+	}
+
+	private void asyncReconnect(final KarajanChannel channel, final Exception e) {
+		final ChannelContext ctx = channel.getChannelContext();
+		final RemoteConfiguration.Entry config = ctx.getConfiguration();
+		Thread t = new Thread() {
+			public void run() {
+				Exception ex = e;
+				int limit = Integer.MAX_VALUE;
+				if (config.hasArg(RemoteConfiguration.RECONNECT)) {
+					limit = Integer.parseInt(config.getArg(RemoteConfiguration.RECONNECT));
+				}
+				while (ctx.getReconnectionAttempts() < limit) {
+
+					try {
+						connect(getMetaChannel(channel));
+						ctx.setReconnectionAttempts(0);
+						return;
+					}
+					catch (ChannelException e2) {
+						ctx.setReconnectionAttempts(ctx.getReconnectionAttempts() + 1);
+						ex = e2;
+					}
+					try {
+						Thread.sleep((long) (1000 * Math.pow(2, ctx.getReconnectionAttempts())));
+					}
+					catch (InterruptedException e2) {
+						channel.getChannelContext().getService().irrecoverableChannelError(channel,
+								e2);
+					}
+				}
+				channel.getChannelContext().getService().irrecoverableChannelError(channel, ex);
+			}
+		};
+		t.setName("Reconnector");
+		t.start();
 	}
 
 	public void releaseChannel(KarajanChannel channel) {
@@ -238,18 +315,13 @@ public class ChannelManager {
 					}
 				}
 				else {
-					try {
-						unregisterChannel((MetaChannel) channel);
-					}
-					catch (ChannelException e) {
-						logger.warn("Exception caught while unregistering channel", e);
-					}
+					unregisterChannel((MetaChannel) channel);
 				}
 			}
 		}
 	}
 
-	private void registerChannel(Object key, KarajanChannel channel) {
+	private void registerChannel(Object key, MetaChannel channel) {
 		synchronized (channels) {
 			channels.put(key, channel);
 			List l = (List) rchannels.get(channel);
@@ -261,41 +333,55 @@ public class ChannelManager {
 		}
 	}
 
-	protected void unregisterChannel(MetaChannel channel) throws ChannelException {
-		synchronized (channel) {
-			RemoteConfiguration.Entry config = channel.getChannelContext().getConfiguration();
-			if (config.hasOption(RemoteConfiguration.BUFFER)) {
-				channel.bind(new BufferingChannel(channel.getChannelContext()));
-			}
-			else if (config.hasOption(RemoteConfiguration.POLL)) {
-				if (config.hasArg(RemoteConfiguration.POLL)) {
-					String time = config.getArg(RemoteConfiguration.POLL);
-					int itime = Integer.parseInt(time);
-					channel.poll(itime);
+	public void unregisterChannel(KarajanChannel channel) throws ChannelException {
+		unregisterChannel(getMetaChannel(channel));
+	}
+
+	protected void unregisterChannel(MetaChannel channel) {
+		try {
+			synchronized (channel) {
+				RemoteConfiguration.Entry config = channel.getChannelContext().getConfiguration();
+				if (config != null) {
+					if (config.hasOption(RemoteConfiguration.BUFFER)) {
+						channel.bind(new BufferingChannel(channel.getChannelContext()));
+					}
+					else if (config.hasOption(RemoteConfiguration.POLL)) {
+						if (config.hasArg(RemoteConfiguration.POLL)) {
+							String time = config.getArg(RemoteConfiguration.POLL);
+							int itime = Integer.parseInt(time);
+							channel.poll(itime);
+						}
+						else {
+							channel.poll(300);
+						}
+						channel.bind(new NullChannel());
+					}
+					else {
+						channel.bind(new NullChannel());
+					}
 				}
 				else {
-					channel.poll(300);
+					channel.bind(new NullChannel());
 				}
-				channel.bind(new NullChannel());
 			}
-			else {
-				channel.bind(new NullChannel());
-			}
+		}
+		catch (ChannelException e) {
+			logger.error("Exception caught while unregistering channel", e);
 		}
 	}
 
 	public void shutdownChannel(KarajanChannel channel) throws ChannelException {
-		unregisterChannel(getChannel(channel));
+		unregisterChannel(getMetaChannel(channel));
 	}
 
-	private MetaChannel getChannel(KarajanChannel channel) throws ChannelException {
+	private MetaChannel getMetaChannel(KarajanChannel channel) throws ChannelException {
 		if (channel instanceof MetaChannel) {
 			return (MetaChannel) channel;
 		}
-		return getChannel(channel.getChannelContext());
+		return getMetaChannel(channel.getChannelContext());
 	}
 
-	private MetaChannel getChannel(ChannelContext context) throws ChannelException {
+	private MetaChannel getMetaChannel(ChannelContext context) throws ChannelException {
 		synchronized (channels) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("\nLooking up " + context.getChannelID());
@@ -324,11 +410,11 @@ public class ChannelManager {
 	}
 
 	public void reserveLongTerm(KarajanChannel channel) throws ChannelException {
-		getChannel(channel).incLongTermUsageCount();
+		getMetaChannel(channel).incLongTermUsageCount();
 	}
 
 	public void releaseLongTerm(KarajanChannel channel) throws ChannelException {
-		getChannel(channel).decLongTermUsageCount();
+		getMetaChannel(channel).decLongTermUsageCount();
 	}
 
 	private static class HostCredentialPair {
@@ -370,5 +456,10 @@ public class ChannelManager {
 			return DN + "@" + host;
 		}
 
+	}
+
+	private void buffer(KarajanChannel channel) throws ChannelException {
+		MetaChannel meta = getMetaChannel(channel);
+		meta.bind(new BufferingChannel(channel.getChannelContext()));
 	}
 }
