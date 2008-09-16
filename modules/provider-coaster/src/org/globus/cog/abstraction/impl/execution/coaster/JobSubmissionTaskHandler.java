@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -31,6 +32,7 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
@@ -72,8 +74,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             else {
                 url = task.getService(0).getServiceContact().getContact();
             }
-            KarajanChannel channel = CoasterChannelManager.getManager()
-                    .reserveChannel(url, cred);
+            KarajanChannel channel = ChannelManager.getManager()
+                    .reserveChannel(url, cred, LocalRequestManager.INSTANCE);
             jsc = new SubmitJobCommand(task);
             jsc.executeAsync(channel, this);
         }
@@ -104,8 +106,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         String[] jmp = jm.split(":");
         if (jmp.length < 2) {
-            throw new InvalidServiceContactException("Invalid job manager: "
-                    + jm + ". Use <provider>:<remote-provider>[:<remote-job-manager>].");
+            throw new InvalidServiceContactException(
+                    "Invalid job manager: "
+                            + jm
+                            + ". Use <provider>:<remote-provider>[:<remote-job-manager>].");
         }
         return jmp[0];
     }
@@ -119,7 +123,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             return ((ExecutionService) s).getJobManager();
         }
         else {
-            throw new IllegalSpecException("Service must be an ExecutionService");
+            throw new IllegalSpecException(
+                    "Service must be an ExecutionService");
         }
     }
 
@@ -135,8 +140,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             TaskSubmissionException {
         try {
             if (jobid != null) {
-                KarajanChannel channel = CoasterChannelManager.getManager()
-                        .reserveChannel(url, cred);
+                KarajanChannel channel = ChannelManager.getManager()
+                        .reserveChannel(url, cred, LocalRequestManager.INSTANCE);
                 CancelJobCommand cc = new CancelJobCommand(jobid);
                 cc.execute(channel);
                 cancel = false;
@@ -211,22 +216,25 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         t.setType(Task.JOB_SUBMISSION);
         JobSpecification js = new JobSpecificationImpl();
         js.setExecutable("/bin/echo");
-        //js.addArgument("0");
+        // js.addArgument("0");
         t.setSpecification(js);
         ExecutionService s = new ExecutionServiceImpl();
         // s.setServiceContact(new ServiceContactImpl("localhost"));
-        //s.setServiceContact(new ServiceContactImpl("tp-grid1.ci.uchicago.edu"));
-        s.setServiceContact(new ServiceContactImpl("tg-grid1.uc.teragrid.org"));
+        // s.setServiceContact(new
+        // ServiceContactImpl("tp-grid1.ci.uchicago.edu"));
+        s
+                .setServiceContact(new ServiceContactImpl(
+                        "tg-grid1.uc.teragrid.org"));
         // s.setServiceContact(new ServiceContactImpl("localhost:50013"));
         s.setProvider("coaster");
-        //s.setJobManager("local:local");
+        // s.setJobManager("local:local");
         s.setJobManager("gt2:pbs");
         s.setSecurityContext(new SecurityContextImpl());
         t.setService(0, s);
         // JobSubmissionTaskHandler th = new JobSubmissionTaskHandler(
         // AbstractionFactory.newExecutionTaskHandler("local"));
         JobSubmissionTaskHandler th = new JobSubmissionTaskHandler();
-        //th.setAutostart(true);
+        // th.setAutostart(true);
         th.submit(t);
         return t;
     }
