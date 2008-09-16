@@ -12,13 +12,21 @@ package org.globus.cog.karajan.workflow.service.channels;
 import org.globus.cog.karajan.workflow.service.UserContext;
 
 public class NullChannel extends AbstractKarajanChannel {
+	private boolean sink;
 
 	protected NullChannel() {
-		super(null, null);	
+		super(null, null, false);
 	}
+	
+	protected NullChannel(boolean sink) {
+        super(null, null, false);
+        this.sink = sink;
+    }
 
 	public void sendTaggedData(int i, int flags, byte[] bytes) {
-		throw new ChannelIOException("Null channel");
+		if (!sink) {
+			throw new ChannelIOException("Null channel");
+		}
 	}
 
 	public UserContext getUserContext() {
@@ -36,4 +44,7 @@ public class NullChannel extends AbstractKarajanChannel {
 	public void start() throws ChannelException {
 	}
 
+	public boolean isStarted() {
+		return true;
+	}
 }

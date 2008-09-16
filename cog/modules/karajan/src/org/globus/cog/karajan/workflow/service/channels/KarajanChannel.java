@@ -55,6 +55,8 @@ public interface KarajanChannel {
 	void setChannelContext(ChannelContext context);
 
 	boolean isOffline();
+	
+	boolean isStarted();
 
 	void unregisterCommand(Command cmd);
 

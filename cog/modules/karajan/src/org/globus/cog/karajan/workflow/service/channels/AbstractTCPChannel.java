@@ -9,29 +9,34 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 
+import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
+import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
 
 public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel implements Runnable {
 	private Socket socket;
 	private boolean started;
 	private Exception startException;
-	private final boolean client;
 	private boolean closing;
 
 	public AbstractTCPChannel(RequestManager requestManager, ChannelContext channelContext,
 			boolean client) {
-		super(requestManager, channelContext);
-		this.client = client;
+		super(requestManager, channelContext, client);
 	}
 
-	protected void setSocket(Socket socket) {
+	protected void setSocket(Socket socket) throws IOException {
 		this.socket = socket;
+		setInputStream(socket.getInputStream());
+		setOutputStream(socket.getOutputStream());
 	}
 
 	public synchronized void start() throws ChannelException {
-		if (client) {
+		if (isClient()) {
 			setName("C(" + socket.getLocalAddress() + ")");
 		}
 		else {
@@ -50,14 +55,20 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel im
 			throw new ChannelException(startException);
 		}
 		logger.info(getContact() + "Channel started");
+		if (isClient()) {
+			try {
+				configure();
+			}
+			catch (Exception e) {
+				throw new ChannelException("Failed to configure channel", e);
+			}
+		}
 	}
 
 	public void run() {
 		ChannelContext context = getChannelContext();
 		try {
 			try {
-				setInputStream(socket.getInputStream());
-				setOutputStream(socket.getOutputStream());
 				started = true;
 			}
 			catch (Exception e) {
@@ -85,7 +96,11 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel im
 
 	}
 
+
 	public void shutdown() {
+		if (isLocalShutdown()) {
+			return;
+		}
 		try {
 			setLocalShutdown();
 			ChannelManager.getManager().shutdownChannel(this);
@@ -94,13 +109,13 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel im
 			logger.debug("Channel already shutting down");
 		}
 		catch (Exception e) {
-			logger.warn(getContact() + "Could not shutdown channel", e);
+			logger.warn(getContact() + ": Could not shutdown channel", e);
 		}
 		super.close();
 		synchronized (this) {
 			notify();
 		}
-		logger.info(getContact() + "Channel terminated");
+		logger.info(getContact() + ": Channel terminated");
 	}
 
 	public void close() {
@@ -108,17 +123,13 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel im
 		try {
 			if (!socket.isClosed()) {
 				socket.close();
-				logger.info(getContact() + "Channel shut down");
+				logger.info(getContact() + ": Channel shut down");
 			}
 		}
 		catch (Exception e) {
-			logger.warn(getContact() + "Failed to close socket", e);
+			logger.warn(getContact() + ": Failed to close socket", e);
 		}
 		super.close();
-	}
-
-	public boolean isClient() {
-		return client;
 	}
 
 	public boolean isStarted() {
