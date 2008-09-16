@@ -119,6 +119,9 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	}
 
 	public void setResources(ContactSet grid) {
+		if (logger.isInfoEnabled()) {
+			logger.info("Setting resources to: " + grid);
+		}
 		this.grid = grid;
 	}
 
