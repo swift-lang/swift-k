@@ -19,8 +19,10 @@ import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.ServiceRequestManager;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
@@ -30,7 +32,7 @@ public class CoasterService extends GSSService {
             .getLogger(CoasterService.class);
 
     public static final int IDLE_TIMEOUT = 120 * 1000;
-    
+
     public static final RequestManager COASTER_REQUEST_MANAGER = new CoasterRequestManager();
 
     private String registrationURL, id;
@@ -91,8 +93,11 @@ public class CoasterService extends GSSService {
             if (id != null) {
                 try {
                     logger.info("Reserving channel for registration");
+                    RemoteConfiguration.getDefault().prepend(
+                            getChannelConfiguration(registrationURL));
                     KarajanChannel channel = ChannelManager.getManager()
-                            .reserveChannel(registrationURL, null, COASTER_REQUEST_MANAGER);
+                            .reserveChannel(registrationURL, null,
+                                    COASTER_REQUEST_MANAGER);
                     channel.getChannelContext().setService(this);
                     logger.info("Sending registration");
                     RegistrationCommand reg = new RegistrationCommand(id,
@@ -133,6 +138,10 @@ public class CoasterService extends GSSService {
         }
     }
 
+    public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+        stop(e);
+    }
+
     private synchronized void checkIdleTime() {
         // the notification manager should probably not be a singleton
         long idleTime = NotificationManager.getDefault().getIdleTime();
@@ -152,15 +161,15 @@ public class CoasterService extends GSSService {
     public synchronized void suspend() {
         this.suspended = true;
     }
-    
+
     public synchronized boolean isSuspended() {
         return suspended;
     }
-    
+
     public synchronized void resume() {
         this.suspended = false;
     }
-    
+
     public void shutdown() {
         super.shutdown();
         jobQueue.getWorkerManager().shutdown();
@@ -169,6 +178,12 @@ public class CoasterService extends GSSService {
 
     public JobQueue getJobQueue() {
         return jobQueue;
+    }
+
+    protected RemoteConfiguration.Entry getChannelConfiguration(String contact) {
+        return new RemoteConfiguration.Entry(
+                contact.replaceAll("\\.", "\\."),
+                "KEEPALIVE, RECONNECT(8), HEARTBEAT(300)");
     }
 
     public static void main(String[] args) {
@@ -187,6 +202,10 @@ public class CoasterService extends GSSService {
         catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
+        }
+        catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(2);
         }
     }
 }
