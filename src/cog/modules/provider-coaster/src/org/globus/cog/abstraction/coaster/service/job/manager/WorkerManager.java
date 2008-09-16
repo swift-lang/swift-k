@@ -351,6 +351,7 @@ public class WorkerManager extends Thread {
     }
 
     public void workerTerminated(Worker worker) {
+        logger.warn("Worker terminated: " + worker);
         Status s = worker.getStatus();
         if (s.getStatusCode() == Status.FAILED) {
             synchronized (this) {
