@@ -62,6 +62,4 @@ public class LocalTCPService extends GSSService implements Registering {
         }
         super.handleConnection(socket);
     }
-    
-    
 }
