@@ -12,16 +12,18 @@ package org.globus.cog.abstraction.coaster.service.local;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
-import org.globus.cog.abstraction.impl.execution.coaster.CoasterChannelManager;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
@@ -56,8 +58,10 @@ public class LocalService extends GSSService implements Registering {
         logger.debug("Got connection");
         try {
             ConnectionHandler handler = new ConnectionHandler(this, sock,
-                    new LocalRequestManager());
+                    LocalRequestManager.INSTANCE);
+            logger.info("Initialized connection handler");
             handler.start();
+            logger.info("Connection handler started");
         }
         catch (Exception e) {
             logger.warn("Could not start connection handler", e);
@@ -77,7 +81,7 @@ public class LocalService extends GSSService implements Registering {
         heardOf(id);
         synchronized (services) {
             while (!services.containsKey(id)) {
-                services.wait(1000);
+                services.wait(250);
                 if (timeout < System.currentTimeMillis() - lastHeardOf(id)) {
                     throw new TaskSubmissionException(
                             "Timed out waiting for registration for " + id);
@@ -116,24 +120,19 @@ public class LocalService extends GSSService implements Registering {
         }
         synchronized (services) {
             if (services.containsKey(id)) {
-                throw new IllegalArgumentException(
-                        "Another registration with the same id (" + id
-                                + ") already exists");
+                logger.info("Replacing channel for service with id=" + id
+                        + ".");
             }
-            else {
-                try {
-                    CoasterChannelManager.getManager()
-                            .registerChannel(url,
-                                    channel.getUserContext().getCredential(),
-                                    channel);
-                }
-                catch (Exception e) {
-                    throw new RuntimeException("Failed to register channel "
-                            + url);
-                }
-                services.put(id, url);
-                services.notifyAll();
+            try {
+                ChannelManager.getManager().registerChannel(url,
+                        channel.getUserContext().getCredential(), channel);
             }
+            catch (Exception e) {
+                throw new RuntimeException("Failed to register channel "
+                        + url);
+            }
+            services.put(id, url);
+            services.notifyAll();
         }
     }
 
