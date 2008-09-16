@@ -29,6 +29,7 @@ public class RemoteConfiguration {
 	public static final String RECONNECT = "reconnect";
 	public static final String POLL = "poll";
 	public static final String BUFFER = "buffer";
+	public static final String HEARTBEAT = "heartbeat";
 
 	private List entries;
 	private static final Entry DEFAULT;
@@ -75,9 +76,11 @@ public class RemoteConfiguration {
 	}
 
 	public Entry find(String host) {
+		logger.warn("Find: " + host);
 		Iterator i = entries.iterator();
 		while (i.hasNext()) {
 			Entry e = (Entry) i.next();
+			logger.warn("Find: " + e.getUnparsed() + " - " + host);
 			if (e.compiled.matcher(host).matches()) {
 				return e;
 			}

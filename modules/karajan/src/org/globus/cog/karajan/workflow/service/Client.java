@@ -113,15 +113,6 @@ public class Client {
 				port = 1984;
 			}
 			channel = ChannelFactory.newChannel(contact, sc, requestManager);
-			URI callbackURI = null;
-			if (sc.getConfiguration().hasOption(RemoteConfiguration.CALLBACK)) {
-				callbackURI = channel.getCallbackURI();
-			}
-			String remoteID = getChannel().getChannelContext().getChannelID().getRemoteID();
-
-			ChannelConfigurationCommand ccc = new ChannelConfigurationCommand(
-					sc.getConfiguration(), callbackURI);
-			ccc.execute(this.getChannel());
 			connected = true;
 		}
 		catch (Exception e) {

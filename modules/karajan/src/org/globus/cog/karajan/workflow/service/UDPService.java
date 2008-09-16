@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.UDPChannel;
 
 public class UDPService implements Service, Runnable {
@@ -120,6 +121,10 @@ public class UDPService implements Service, Runnable {
 		synchronized (channels) {
 			channels.remove(channel.getRemoteAddress());
 		}
+	}
+
+	public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+		e.printStackTrace();
 	}
 
 	public static void main(String[] args) {
