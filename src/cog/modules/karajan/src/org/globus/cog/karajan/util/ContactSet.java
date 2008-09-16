@@ -66,4 +66,8 @@ public class ContactSet {
 			contacts.put(contact.getHost(), contact);
 		}
 	}
+	
+	public String toString() {
+		return contacts.toString();
+	}
 }
