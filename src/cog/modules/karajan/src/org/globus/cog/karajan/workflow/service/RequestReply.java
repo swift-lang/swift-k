@@ -191,6 +191,10 @@ public abstract class RequestReply {
 	public KarajanChannel getChannel() {
 		return channel;
 	}
+	
+	protected void setChannel(KarajanChannel channel) {
+		this.channel = channel;
+	}
 
 	public List getOutData() {
 		return outData;

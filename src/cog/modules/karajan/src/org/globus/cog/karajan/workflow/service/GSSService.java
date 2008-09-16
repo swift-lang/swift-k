@@ -22,6 +22,9 @@ import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 import org.globus.cog.util.GridMap;
@@ -41,7 +44,7 @@ public class GSSService extends BaseServer implements Service {
 	private boolean restricted;
 	private URI contact;
 	private RequestManager requestManager;
-	
+
 	public GSSService() throws IOException {
 		super();
 	}
@@ -76,11 +79,11 @@ public class GSSService extends BaseServer implements Service {
 			this._server = ServerSocketFactory.getDefault().createServerSocket(port, 50, bindTo);
 		}
 	}
-	
+
 	protected void setRequestManager(RequestManager requestManager) {
 		this.requestManager = requestManager;
 	}
-	
+
 	public void initialize() {
 		// prevent the server from being started by BaseServer constructors
 	}
@@ -123,11 +126,12 @@ public class GSSService extends BaseServer implements Service {
 		if (serverThread == null) {
 			accept = true;
 			serverThread = new Thread(this);
+			serverThread.setDaemon(true);
 			serverThread.setName("Server: " + getContact());
 			serverThread.start();
 		}
 	}
-	
+
 	public String toString() {
 		return String.valueOf(contact);
 	}
@@ -269,5 +273,10 @@ public class GSSService extends BaseServer implements Service {
 			System.err.println("Could not start service:\n\t" + e.getMessage());
 			System.exit(1);
 		}
+	}
+
+	public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+		System.err.println("Irrecoverable channel exception: " + e.getMessage());
+		System.exit(2);
 	}
 }

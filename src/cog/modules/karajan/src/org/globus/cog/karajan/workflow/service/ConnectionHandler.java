@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.service;
 
+import java.io.IOException;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
@@ -25,11 +26,11 @@ public class ConnectionHandler {
 	private final AbstractTCPChannel channel;
 	private final RequestManager requestManager;
 
-	public ConnectionHandler(Service service, Socket socket) {
+	public ConnectionHandler(Service service, Socket socket) throws IOException {
 		this(service, socket, null);
 	}
 
-	public ConnectionHandler(Service service, Socket socket, RequestManager requestManager) {
+	public ConnectionHandler(Service service, Socket socket, RequestManager requestManager) throws IOException {
 		this.socket = socket;
 		this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
 		if (socket instanceof GssSocket) {
@@ -45,5 +46,5 @@ public class ConnectionHandler {
 		socket.setKeepAlive(true);
 		socket.setSoTimeout(0);
 		channel.start();
-	}
+    }
 }
