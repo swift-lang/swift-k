@@ -41,7 +41,10 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 import org.ietf.jgss.GSSCredential;
 
 public class ServiceManager implements StatusListener {
@@ -177,12 +180,14 @@ public class ServiceManager implements StatusListener {
                 }
             }
             try {
-                GSSCredential cred = (GSSCredential) t.getService(0)
-                        .getSecurityContext().getCredentials();
-                KarajanChannel channel = CoasterChannelManager.getManager()
-                        .getExistingChannel(url, cred);
-                if (channel != null) {
-                    channel.close();
+                if (url != null) {
+                    GSSCredential cred = (GSSCredential) t.getService(0)
+                            .getSecurityContext().getCredentials();
+                    KarajanChannel channel = ChannelManager.getManager()
+                            .getExistingChannel(url, cred);
+                    if (channel != null) {
+                        channel.close();
+                    }
                 }
             }
             catch (Exception e) {
@@ -307,34 +312,67 @@ public class ServiceManager implements StatusListener {
         catch (NoSuchAlgorithmException e) {
             r = (int) Math.random() * Integer.MAX_VALUE;
         }
-        return String.valueOf(r);
+        if (r < 0) {
+            return '0' + String.valueOf(-r);
+        }
+        else {
+            return '1' + String.valueOf(r);
+        }
     }
 
-    private class ServiceReaper extends Thread {
+    private class ServiceReaper extends Thread implements Callback {
+        private int count;
 
         public ServiceReaper() {
             setName("Coaster service reaper");
         }
 
         public void run() {
+            System.out.println("Cleaning up...");
             Iterator i = services.values().iterator();
+            count = services.size();
             while (i.hasNext()) {
                 String url = (String) i.next();
                 Object cred = credentials.get(url);
                 try {
-                    KarajanChannel channel = CoasterChannelManager
-                            .getManager().reserveChannel(url,
-                                    (GSSCredential) cred);
+                    System.out.println("Shutting down service at " + url);
+                    KarajanChannel channel = ChannelManager.getManager()
+                            .reserveChannel(url, (GSSCredential) cred);
+                    System.out.println("Got channel " + channel);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();
-                    ssc.execute(channel);
-                    CoasterChannelManager.getManager()
-                            .releaseChannel(channel);
+                    ssc.setReplyTimeout(10);
+                    ssc.setMaxRetries(0);
+                    ssc.executeAsync(channel, this);
+                    ChannelManager.getManager().releaseChannel(channel);
                 }
                 catch (Exception e) {
                     logger.warn("Failed to shut down service " + url, e);
                 }
             }
+            synchronized (this) {
+                while (count > 0) {
+                    try {
+                        wait(100);
+                    }
+                    catch (InterruptedException e) {
+                        return;
+                    }
+                }
+            }
+            System.out.println(" Done");
         }
 
+        public synchronized void errorReceived(Command cmd, String msg,
+                Exception t) {
+            System.out.print("-");
+            count--;
+            notifyAll();
+        }
+
+        public synchronized void replyReceived(Command cmd) {
+            System.out.print("+");
+            count--;
+            notifyAll();
+        }
     }
 }
