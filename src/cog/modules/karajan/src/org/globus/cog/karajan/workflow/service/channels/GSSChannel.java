@@ -16,8 +16,10 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.service.FallbackAuthorization;
 import org.globus.cog.karajan.workflow.service.GSSService;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
 import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 import org.globus.gsi.GSIConstants;
 import org.globus.gsi.gssapi.GSSConstants;
@@ -28,7 +30,6 @@ import org.globus.gsi.gssapi.auth.SelfAuthorization;
 import org.globus.gsi.gssapi.net.GssSocket;
 import org.globus.gsi.gssapi.net.GssSocketFactory;
 import org.gridforum.jgss.ExtendedGSSContext;
-import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSManager;
 
@@ -41,8 +42,11 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 	private boolean shuttingDown;
 	private Exception startException;
 	private Replier replier;
+	private int id;
+	private static int sid = 1;
 
-	public GSSChannel(GssSocket socket, RequestManager requestManager, ChannelContext sc) {
+	public GSSChannel(GssSocket socket, RequestManager requestManager, ChannelContext sc)
+			throws IOException {
 		super(requestManager, sc, false);
 		setSocket(socket);
 		this.socket = socket;
@@ -56,6 +60,7 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 	}
 
 	private void init() {
+		id = sid++;
 		replier = new Replier(this);
 		EventBus.initialize();
 	}
@@ -65,8 +70,13 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 	}
 
 	public void start() throws ChannelException {
+		reconnect();
+		super.start();
+	}
+
+	protected void reconnect() throws ChannelException {
 		try {
-			if (socket == null) {
+			if (getContact() != null) {
 				HostAuthorization hostAuthz = new HostAuthorization("host");
 
 				Authorization authz = new FallbackAuthorization(new Authorization[] { hostAuthz,
@@ -79,7 +89,7 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 
 				GSSManager manager = new GlobusGSSManagerImpl();
 				ExtendedGSSContext gssContext = (ExtendedGSSContext) manager.createContext(null,
-					GSSConstants.MECH_OID, cred, cred.getRemainingLifetime());
+						GSSConstants.MECH_OID, cred, cred.getRemainingLifetime());
 
 				gssContext.requestAnonymity(false);
 				gssContext.requestCredDeleg(false);
@@ -89,21 +99,20 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 				URI contact = getContact();
 				socket = (GssSocket) GssSocketFactory.getDefault().createSocket(contact.getHost(),
 						contact.getPort(), gssContext);
-				setSocket(socket);
 				socket.setKeepAlive(true);
 				socket.setSoTimeout(0);
 				socket.setWrapMode(GSIConstants.MODE_SSL.intValue());
 				socket.setAuthorization(authz);
+				setSocket(socket);
 
 				logger.info("Connected to " + contact);
 
-				this.getChannelContext().setRemoteContact(contact.toString());
+				getChannelContext().setRemoteContact(contact.toString());
 			}
 		}
 		catch (Exception e) {
 			throw new ChannelException("Failed to start channel " + this, e);
 		}
-		super.start();
 	}
 
 	protected void initializeConnection() {
@@ -168,7 +177,7 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 	}
 
 	public String toString() {
-		return "GSSC-" + getContact();
+		return "GSS" + (isClient() ? "C" : "S") + "Channel-" + getContact() + "(" + id + ")";
 	}
 
 	protected synchronized void ensureCallbackServiceStarted() throws Exception {

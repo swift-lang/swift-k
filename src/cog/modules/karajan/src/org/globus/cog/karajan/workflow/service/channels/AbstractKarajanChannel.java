@@ -15,17 +15,21 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.NoSuchHandlerException;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.Service;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private static final Logger logger = Logger.getLogger(AbstractKarajanChannel.class);
+	public static final int DEFAULT_HEARTBEAT_INTERVAL = 5 * 60; //seconds
 
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
@@ -34,8 +38,10 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private boolean localShutdown, closed;
 	private String name;
 	private Service callbackService;
+	private final boolean client;
 
-	protected AbstractKarajanChannel(RequestManager requestManager, ChannelContext channelContext) {
+	protected AbstractKarajanChannel(RequestManager requestManager, ChannelContext channelContext,
+			boolean client) {
 		if (channelContext != null) {
 			this.context = channelContext;
 		}
@@ -44,6 +50,45 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		}
 		this.requestManager = requestManager;
 		registeredMaps = new LinkedList();
+		this.client = client;
+		configureHeartBeat();
+	}
+
+	protected void configureHeartBeat() {
+	    TimerTask heartBeatTask;
+		Entry config = context.getConfiguration();
+		int heartBeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
+		if (config != null && config.hasOption(RemoteConfiguration.HEARTBEAT)) {
+			if (config.hasArg(RemoteConfiguration.HEARTBEAT)) {
+				heartBeatInterval = Integer.parseInt(config.getArg(RemoteConfiguration.HEARTBEAT));
+			}
+			heartBeatInterval *= 1000;
+		}
+		if (!isOffline() && isClient()) {
+		    heartBeatTask = new HeartBeatTask(this);
+			context.getTimer().schedule(heartBeatTask, heartBeatInterval, heartBeatInterval);
+		}
+		else {
+			if (logger.isInfoEnabled()) {
+				if (config == null) {
+					logger.info(this + ": Disabling heartbeats (config is null)");
+				}
+				else if (!config.hasOption(RemoteConfiguration.HEARTBEAT)) {
+					logger.info(this + ": Disabling heartbeats (disabled in config)");
+				}
+				else if (isOffline()) {
+					logger.info(this + ": Disabling heartbeats (offline channel)");
+				}
+				else if (!isClient()) {
+					logger.info(this + ": Disabling heartbeats (not a client)");
+				}
+			}
+		}
+		if (!isOffline() && !isClient()) {
+		    int mult = 2;
+		    heartBeatTask = new HeartBeatCheckTask(this, heartBeatInterval, mult);
+			context.getTimer().schedule(heartBeatTask, mult * heartBeatInterval, mult * heartBeatInterval);
+		}
 	}
 
 	public void registerCommand(Command cmd) throws ProtocolException {
@@ -106,7 +151,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		}
 		return crt + count;
 	}
-	
+
 	public static void pack(byte[] buf, int offset, int value) {
 		buf[offset] = (byte) (value & 0xff);
 		buf[offset + 1] = (byte) ((value >> 8) & 0xff);
@@ -141,7 +186,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public RequestManager getRequestManager() {
 		return requestManager;
 	}
-	
+
 	public void setRequestManager(RequestManager rm) {
 		if (rm == null) {
 			throw new IllegalArgumentException("The request manager cannot be null");
@@ -189,7 +234,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	public boolean isClient() {
-		return false;
+		return client;
 	}
 
 	public String getName() {
@@ -223,14 +268,17 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	protected void handleReply(int tag, boolean fin, boolean error, int len, byte[] data) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(this + " REPL<: tag = " + tag + ", fin = " + fin
-					+ ", err = " + error + ", datalen = " + len + ", data = " + ppByteBuf(data));
+			logger.debug(this + " REPL<: tag = " + tag + ", fin = " + fin + ", err = " + error
+					+ ", datalen = " + len + ", data = " + ppByteBuf(data));
 		}
 		Command cmd = getChannelContext().getRegisteredCommand(tag);
 		if (cmd != null) {
 			try {
 				cmd.replyReceived(data);
 				if (fin) {
+					if (logger.isInfoEnabled()) {
+						logger.info(this + " REPL: " + cmd);
+					}
 					if (error) {
 						cmd.errorReceived();
 					}
@@ -249,15 +297,15 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			unregisteredSender(tag);
 		}
 	}
-	
+
 	protected void unregisteredSender(int tag) {
 		logger.warn(getName() + " Recieved reply to unregistered sender. Tag: " + tag);
 	}
 
 	protected void handleRequest(int tag, boolean fin, boolean error, int len, byte[] data) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(this + " REQ<: tag = " + tag + ", fin = " + fin
-					+ ", err = " + error + ", datalen = " + len + ", data = " + ppByteBuf(data));
+			logger.debug(this + " REQ<: tag = " + tag + ", fin = " + fin + ", err = " + error
+					+ ", datalen = " + len + ", data = " + ppByteBuf(data));
 		}
 		RequestHandler handler = getChannelContext().getRegisteredHandler(tag);
 		try {
@@ -278,8 +326,11 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			}
 			if (fin) {
 				try {
+					if (logger.isInfoEnabled()) {
+						logger.info(this + " REQ: " + handler);
+					}
 					if (error) {
-						// TODO
+						handler.errorReceived();
 					}
 					else {
 						handler.receiveCompleted();

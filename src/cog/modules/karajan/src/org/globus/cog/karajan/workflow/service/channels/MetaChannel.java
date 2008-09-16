@@ -30,11 +30,11 @@ public class MetaChannel extends AbstractKarajanChannel {
 	private boolean shuttingDown;
 
 	public MetaChannel(ChannelContext channelContext) {
-		super(null, channelContext);
+		super(null, channelContext, false);
 	}
 
 	public MetaChannel(RequestManager requestManager, ChannelContext channelContext) {
-		super(requestManager, channelContext);
+		super(requestManager, channelContext, false);
 	}
 
 	public synchronized void sendTaggedData(int tag, int flags, byte[] data) {
@@ -102,12 +102,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 		}
 		deactivator = new TimerTask() {
 			public void run() {
-				try {
-					ChannelManager.getManager().unregisterChannel(MetaChannel.this);
-				}
-				catch (ChannelException e) {
-					logger.warn("Exception caught while unregistering channel", e);
-				}
+				ChannelManager.getManager().unregisterChannel(MetaChannel.this);
 			}
 		};
 		getTimer().schedule(deactivator, (long) seconds * 1000);
@@ -162,6 +157,16 @@ public class MetaChannel extends AbstractKarajanChannel {
 			return current.isClient();
 		}
 		return false;
+	}
+
+	public boolean isStarted() {
+		KarajanChannel crt = current;
+		if (crt != null) {
+			return crt.isStarted();
+		}
+		else {
+			return false;
+		}
 	}
 
 	public void start() throws ChannelException {

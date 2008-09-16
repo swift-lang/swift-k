@@ -25,7 +25,7 @@ public class BufferingChannel extends AbstractKarajanChannel implements Purgeabl
 	private List buffer;
 
 	public BufferingChannel(ChannelContext channelContext) {
-		super(null, channelContext);
+		super(null, channelContext, false);
 		buffer = new ArrayList();
 	}
 
@@ -70,9 +70,13 @@ public class BufferingChannel extends AbstractKarajanChannel implements Purgeabl
 	}
 
 	public boolean isOffline() {
-		return false;
+		return true;
 	}
 	
+	public boolean isStarted() {
+		return true;
+	}
+
 	public String toString() {
 		return "BufferingChannel";
 	}
