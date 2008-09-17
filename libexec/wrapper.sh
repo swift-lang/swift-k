@@ -163,6 +163,10 @@ if [ "$PATHPREFIX" != "" ]; then
 export PATH=$PATHPREFIX:$PATH
 fi
 
+if [ "X${EXEC:1:1}" != "X/" ] ; then
+export EXEC=$(which $EXEC)
+fi
+
 log "DIR=$DIR"
 log "EXEC=$EXEC"
 log "STDIN=$STDIN"
