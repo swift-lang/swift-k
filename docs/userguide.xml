@@ -2291,7 +2291,7 @@ GRAM2 and GRAM4 providers.
 			<para id="profile.globus.condor_requirements"><property>condor_requirements</property> allows a requirements string to be specified
 when Condor is used as an LRM behind GRAM2. Example: &lt;profile namespace="globus" key="condor_requirements">Arch == &quot;X86_64&quot; || Arch=&quot;INTEL&quot;&lt;/profile>
 			</para>
-			<para id="profile.globus.coastersPerNode">Specifies
+			<para id="profile.globus.coastersPerNode">coastersPerNode specifies
 the number of coaster workers to be run on each node. This profile entry
 is used by the coaster provider.
 			</para>
