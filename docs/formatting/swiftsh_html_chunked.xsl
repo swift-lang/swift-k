@@ -179,12 +179,23 @@
 				<xsl:call-template name="body.attributes"/>
 
 				<xsl:call-template name="user.header.navigation"/>
+      <xsl:call-template name="header.navigation">
+        <xsl:with-param name="prev" select="$prev"/>
+        <xsl:with-param name="next" select="$next"/>
+        <xsl:with-param name="nav.context" select="$nav.context"/>
+      </xsl:call-template>
 
 				<xsl:call-template name="user.header.content"/>
-			
+				<xsl:call-template name="breadcrumbs" />	
 				<xsl:copy-of select="$content"/>
 			
 				<xsl:call-template name="user.footer.content"/>
+
+      <xsl:call-template name="footer.navigation">
+        <xsl:with-param name="prev" select="$prev"/>
+        <xsl:with-param name="next" select="$next"/>
+        <xsl:with-param name="nav.context" select="$nav.context"/>
+      </xsl:call-template>
 
 				<xsl:call-template name="user.footer.navigation"/>
 
@@ -216,7 +227,7 @@
 		</xsl:element>
 	</xsl:template>
 	
-	<xsl:template name="user.header.content">
+	<xsl:template name="user.header.navigation">
 		<xsl:text disable-output-escaping="yes"><![CDATA[
 		
 		<!-- entire page container -->
@@ -251,4 +262,28 @@
 		]]>
 		</xsl:text>
 	</xsl:template>
+
+<xsl:template name="breadcrumbs">
+  <xsl:param name="this.node" select="."/>
+  <div class="breadcrumbs">
+    <xsl:for-each select="$this.node/ancestor::*">
+      <span class="breadcrumb-link">
+        <a>
+          <xsl:attribute name="href">
+            <xsl:call-template name="href.target">
+              <xsl:with-param name="object" select="."/>
+              <xsl:with-param name="context" select="$this.node"/>
+            </xsl:call-template>
+          </xsl:attribute>
+          <xsl:apply-templates select="." mode="title.markup"/>
+        </a>
+      </span>
+      <xsl:text> &gt; </xsl:text>
+    </xsl:for-each>
+    <!-- And display the current node, but not as a link -->
+    <span class="breadcrumb-node">
+      <xsl:apply-templates select="$this.node" mode="title.markup"/>
+    </span>
+  </div>
+</xsl:template>
 </xsl:stylesheet>
