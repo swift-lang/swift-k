@@ -20,6 +20,7 @@ import org.apache.axis.types.PositiveInteger;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionProperties;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
@@ -62,6 +63,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private Task task = null;
     private GramJob gramJob;
     private boolean canceling;
+    private String jobManager;
 
     private static Map jmMappings;
 
@@ -72,6 +74,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         jmMappings.put("lsf", "LSF");
         jmMappings.put("condor", "Condor");
         jmMappings.put("sge", "SGE");
+        jmMappings.put("loadleveler", "Loadleveler");
     }
 
     public void submit(Task task) throws IllegalSpecException,
@@ -101,7 +104,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
             String factoryType = ManagedJobFactoryConstants.DEFAULT_FACTORY_TYPE;
             if (service instanceof ExecutionService) {
-                String jobManager = ((ExecutionService) service)
+                jobManager = ((ExecutionService) service)
                         .getJobManager();
                 if (logger.isDebugEnabled()) {
                     logger.debug("Requested job manager: " + jobManager);
@@ -158,8 +161,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     .getService(0).getSecurityContext();
 
             try {
-                this.gramJob.setCredentials((GSSCredential) securityContext
-                        .getCredentials());
+           	    this.gramJob.setCredentials((GSSCredential) securityContext
+            	            .getCredentials());
             }
             catch (IllegalArgumentException iae) {
                 throw new InvalidSecurityContextException(
@@ -194,8 +197,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
                         .getDelegation() != Delegation.NO_DELEGATION,
                         "uuid:" + UUIDGenFactory.getUUIDGen().nextUUID());
+                logger.info("Task submitted: " + task);
                 if (logger.isInfoEnabled()) {
-                    logger.info("Task submitted: " + task);
                 }
                 if (spec.isBatchJob()) {
                     this.task.setStatus(Status.COMPLETED);
@@ -486,28 +489,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         return authorization;
     }
 
-    /** Takes walltime of the form mm or hh:mm or hh:mm:ss and returns the
-        number of minutes, rounding up the seconds. */
-    public static Long wallTimeToMinutes(Object time) {
-	long n;
-        String[] s = time.toString().split(":");
-        try {
-            if (s.length == 1) {
-                n = Integer.parseInt(s[0]);
-            }
-            else if (s.length == 2) {
-                n = Integer.parseInt(s[1]) + 60 * Integer.parseInt(s[0]);     
-            } else if (s.length == 3) {
-                n = Integer.parseInt(s[1]) + 60 * Integer.parseInt(s[0]) + 1;
-            }
-            else {
-                throw new IllegalArgumentException("Invalid time specification: " + time);
-            }
-        }
-        catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid time specification: " + time);
-        }
-        return new Long(n);
+    private static Long wallTimeToMinutes(Object time) {
+        int seconds = WallTime.timeToSeconds(time.toString());
+        return new Long(seconds / 60 + 1);
     }
-
 }
