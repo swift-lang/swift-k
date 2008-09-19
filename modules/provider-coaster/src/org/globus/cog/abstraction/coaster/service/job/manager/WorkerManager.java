@@ -32,6 +32,7 @@ import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
@@ -125,6 +126,35 @@ public class WorkerManager extends Thread {
 
     public void run() {
         try {
+            new Thread() {
+                {
+                    setDaemon(true);
+                }
+
+                public void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(20000);
+                            synchronized (WorkerManager.this) {
+                                logger.info("Current workers: "
+                                        + currentWorkers);
+                                logger.info("Ready: " + ready);
+                                logger.info("Busy: " + busy);
+                                logger.info("Requested: " + requested);
+                                logger.info("Starting: " + startingTasks);
+                                logger.info("Ids: " + ids);
+                            }
+                            synchronized (allocationRequests) {
+                                logger.info("AllocationR: "
+                                        + allocationRequests);
+                            }
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }.start();
             AllocationRequest req;
             while (!shutdownFlag) {
                 synchronized (allocationRequests) {
@@ -270,8 +300,7 @@ public class WorkerManager extends Thread {
                 tspec.setAttribute(name, pspec.getAttribute(name));
             }
         }
-        tspec.setAttribute("maxwalltime", new WallTime(maxWallTime)
-                .getSpecInMinutes());
+        tspec.setAttribute("maxwalltime", new WallTime(maxWallTime).format());
     }
 
     private int k;
@@ -308,6 +337,7 @@ public class WorkerManager extends Thread {
                 last = crt;
                 System.err.println(" " + k / 80 + "; " + js + " J/s");
             }
+            logger.info("Using worker " + w + " for task " + prototype);
             return w;
         }
         else {
@@ -357,8 +387,14 @@ public class WorkerManager extends Thread {
             synchronized (this) {
                 requested.remove(worker.getId());
                 startingTasks.remove(worker.getRunning());
+                //this will cause all the jobs associated with the worker to fail
                 ready.put(new WorkerKey(worker), worker);
             }
+        }
+        synchronized (this) {
+            currentWorkers--;
+            ready.remove(new WorkerKey(worker));
+            ids.remove(worker.getId());
         }
     }
 
