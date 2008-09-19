@@ -32,3 +32,5 @@ process "reallyquickstartguide.xml" "swift_html.xsl"
 process "languagespec.xml" "swift_html.xsl"
 process "languagespec-0.6.xml" "swift_html.xsl"
 process "log-processing.xml" "swift_html.xsl"
+./build-chunked-userguide
+

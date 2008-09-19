@@ -6,6 +6,9 @@ phps: userguide.php tutorial.php tutorial-live.php quickstartguide.php reallyqui
 
 pdfs: userguide.pdf tutorial.pdf tutorial-live.pdf quickstartguide.pdf reallyquickstartguide.pdf languagespec.pdf languagespec-0.6.pdf log-processing.pdf
 
+chunked-userguide: userguide.xml
+	./build-chunked-userguide.sh
+
 %.php: %.xml
 	xsltproc --nonet formatting/swiftsh_html.xsl $<
 	sed -e "s/index.html#/#/g" index.html >$@
