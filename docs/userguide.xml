@@ -8,7 +8,7 @@
 		<subtitle>Source control $LastChangedRevision$</subtitle>
 	</articleinfo>
 
-	<section>
+	<section id="overview">
 		<title>Overview</title>
 		<para>
 This manual provides reference material for Swift: the SwiftScript language
@@ -33,7 +33,7 @@ on remote sites by choosing sites, handling the staging of input and output
 files to and from the chosen sites and remote execution of program code.
 	</para>
 	</section>
-	<section>
+	<section id="language">
 		<title>The SwiftScript Language</title>
 <section><title>Data model</title>
 <para>Data processed by Swift is strongly typed. It may be take the form
@@ -1953,7 +1953,7 @@ class="file">example.swift</filename></option>.
 		</para>
 	</section> 
 
-	<section> <title>Invoking an application from Swift</title>
+	<section id="appmodel"> <title>Invoking an application from Swift</title>
 	<para>
 There are certain requirements on the behaviour of application programs
 used in SwiftScript programs. These requirements are primarily to ensure
@@ -1996,7 +1996,8 @@ differ if they are run more than once.
 </para>
 	</section>
 
-	<section> <title>Technical overview of the Swift architecture</title>
+	<section id="techoverview">
+	<title>Technical overview of the Swift architecture</title>
 	<para>
 This section attempts to provide a technical overview of the Swift
 architecture.
@@ -2177,7 +2178,7 @@ integers.
 		</section>
 	</section>
 
-	<section><title>Built-in procedure reference</title>
+	<section id="procedures"><title>Built-in procedure reference</title>
 		<para>
 This section details built-in procedures that are available for use in
 the SwiftScript language.
@@ -2418,7 +2419,7 @@ mpirun command should be explicitly invoked.
 		</section>
 	</section>
 
-	<section><title>The Site Catalog - sites.xml</title>
+	<section id="sitecatalog"><title>The Site Catalog - sites.xml</title>
 		<para>
 The site catalog lists details of each site that Swift can use. The default
 file contains one entry for local execution, and a large number of
@@ -2586,7 +2587,7 @@ The site catalog is an evolution of the VDS site catalog which is documented
 		</para>
 	</section>
 
-	<section><title>The Transformation Catalog - tc.data</title>
+	<section id="transformationcatalog"><title>The Transformation Catalog - tc.data</title>
 		<para>
 The transformation catalog lists where application executables are located
 on remote sites.
@@ -2631,7 +2632,7 @@ specified, or should contain the profile entries separated by semicolons.
 		</para>
 	</section>
 
-	<section><title>Environment variables</title>
+	<section id="envvars"><title>Environment variables</title>
 		<para>
 There are a number of environment variables used by Swift. Some of them are
 documented in this section:
@@ -2666,7 +2667,7 @@ local directory can be much faster than having applications access the
 site-shared filesystem directly.
 		</para>
 	</section>
-	<section><title>Build options</title>
+	<section id="buildoptions"><title>Build options</title>
 		<para>
 See <ulink url="http://www.ci.uchicago.edu/swift/downloads/">the
 Swift download page</ulink> for instructions on downloading and
