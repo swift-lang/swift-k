@@ -5,6 +5,7 @@
 	<xsl:import href="docbook/html/chunk.xsl"/>
 	<xsl:param name="chunk.section.depth" select="1"></xsl:param>
 	<xsl:param name="use.id.as.filename" select="1"/>
+	<xsl:param name="html.ext">.php</xsl:param>
 
 
 	<!--<xsl:import href="http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl"/>-->
