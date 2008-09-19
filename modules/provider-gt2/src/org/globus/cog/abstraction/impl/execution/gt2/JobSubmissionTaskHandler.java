@@ -14,6 +14,7 @@ import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
@@ -52,15 +53,16 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         GramJobListener, JobOutputListener {
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class
             .getName());
-    private Task task = null;
+    private Task task;
     private GramJob gramJob;
-    private Vector jobList = null;
-    private boolean startGassServer = false;
-    private GassServer gassServer = null;
+    private Vector jobList;
+    private boolean startGassServer;
+    private GassServer gassServer;
     private SecurityContext securityContext;
     private JobOutputStream stdoutStream;
     private JobOutputStream stderrStream;
     private GSSCredential credential;
+    private String jobManager;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
@@ -74,9 +76,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         this.task = task;
         this.task.setStatus(Status.SUBMITTING);
+        String server = getServer();
         this.securityContext = getSecurityContext(task);
         this.credential = (GSSCredential) securityContext.getCredentials();
-        String rsl;
         JobSpecification spec;
         try {
             spec = (JobSpecification) this.task.getSpecification();
@@ -102,14 +104,16 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         else {
             this.task.setAttribute("jobCount", "single");
-            submitSingleJob(rslTree.toString(), spec);
+            submitSingleJob(rslTree, spec, server);
         }
     }
 
-    private void submitSingleJob(String rsl, JobSpecification spec)
-            throws IllegalSpecException, InvalidSecurityContextException,
-            InvalidServiceContactException, TaskSubmissionException {
-        this.gramJob = new GramJob(rsl);
+    private void submitSingleJob(RslNode rsl, JobSpecification spec,
+            String server) throws IllegalSpecException,
+            InvalidSecurityContextException, InvalidServiceContactException,
+            TaskSubmissionException {
+
+        this.gramJob = new GramJob(rsl.toString());
         try {
             this.gramJob.setCredentials(this.credential);
         }
@@ -123,19 +127,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             this.gramJob.addListener(this);
         }
 
-        ServiceContact serviceContact = this.task.getService(0)
-                .getServiceContact();
-        String server = serviceContact.getContact();
-
-        // if the jobmanager attribute is specified, handle it
-        Service service = this.task.getService(0);
-        String jobmanager = null;
-        if (service instanceof ExecutionService) {
-            jobmanager = ((ExecutionService) service).getJobManager();
-        }
-        if (jobmanager != null) {
-            server = handleJobManager(server, jobmanager);
-        }
         if (logger.isDebugEnabled()) {
             logger.debug("Execution server: " + server);
         }
@@ -166,6 +157,26 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
                     gsse);
         }
+    }
+
+    private String getServer() throws InvalidServiceContactException {
+        ServiceContact serviceContact = this.task.getService(0)
+                .getServiceContact();
+        String server = serviceContact.getContact();
+
+        // if the jobmanager attribute is specified, handle it
+        Service service = this.task.getService(0);
+        if (service instanceof ExecutionService) {
+            jobManager = ((ExecutionService) service).getJobManager();
+        }
+        else {
+            jobManager = extractJobManager(server);
+        }
+        if (jobManager != null) {
+            jobManager = jobManager.toLowerCase();
+            server = substituteJobManager(server, jobManager);
+        }
+        return server;
     }
 
     private boolean isLimitedDelegation(SecurityContext sc) {
@@ -338,7 +349,12 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             if (!spec.getArgumentsAsList().isEmpty()) {
                 Iterator i = spec.getArgumentsAsList().iterator();
                 while (i.hasNext()) {
-                    args.add((String) i.next());
+                    if ("condor".equals(jobManager)) {
+                        args.add(condorify((String) i.next()));
+                    }
+                    else {
+                        args.add((String) i.next());
+                    }
                 }
                 rsl.add(args);
             }
@@ -418,8 +434,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
 
             if (spec.getAttribute("condor_requirements") != null) {
-                String requirementString = (String) spec.getAttribute("condor_requirements");
-                NameOpValue req = new NameOpValue("condorsubmit", NameOpValue.EQ);
+                String requirementString = (String) spec
+                        .getAttribute("condor_requirements");
+                NameOpValue req = new NameOpValue("condorsubmit",
+                        NameOpValue.EQ);
                 List l = new LinkedList();
                 l.add(new Value("Requirements"));
                 l.add(new Value(requirementString));
@@ -431,9 +449,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             while (i.hasNext()) {
                 try {
                     String key = (String) i.next();
-                    if(key.equals("condor_requirements")) continue;
-                    rsl.add(new NameOpValue(key, NameOpValue.EQ, (String) spec
-                            .getAttribute(key)));
+                    String value = (String) spec.getAttribute(key);
+                    if (key.equals("condor_requirements")) {
+                        continue;
+                    }
+                    if (key.toLowerCase().equals("maxwalltime")) {
+                        value = WallTime.normalize(value, jobManager);
+                    }
+                    rsl.add(new NameOpValue(key, NameOpValue.EQ, value));
                 }
                 catch (Exception e) {
                     throw new IllegalSpecException(
@@ -442,6 +465,27 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
 
             return rsl;
+        }
+    }
+
+    public static final char QUOTE = '\'';
+
+    private String condorify(String s) {
+        if (s.indexOf(' ') != -1) {
+            StringBuffer sb = new StringBuffer();
+            sb.append(QUOTE);
+            for (int i = 0; i < s.length(); i++) {
+                char c = s.charAt(i);
+                if (c == QUOTE) {
+                    sb.append(QUOTE);
+                }
+                sb.append(c);
+            }
+            sb.append(QUOTE);
+            return sb.toString();
+        }
+        else {
+            return s;
         }
     }
 
@@ -549,7 +593,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         return sc;
     }
 
-    private String handleJobManager(String server, String jobmanager)
+    private String substituteJobManager(String server, String jobmanager)
             throws InvalidServiceContactException {
         if (server.indexOf("/jobmanager-") != -1) {
             // the jobmanager attribute takes precedence
@@ -558,6 +602,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         String lcjm = jobmanager.toLowerCase();
         server = server + "/jobmanager-" + lcjm;
         return server;
+    }
+
+    private String extractJobManager(String server) {
+        if (server.indexOf("/jobmanager-") != -1) {
+            return server.substring(server.lastIndexOf("/jobmanager-") + 1);
+        }
+        else {
+            return null;
+        }
     }
 
     private String fixAbsPath(String path) {
