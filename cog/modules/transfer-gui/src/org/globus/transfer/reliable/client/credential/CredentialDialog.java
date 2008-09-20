@@ -83,11 +83,14 @@ public class CredentialDialog extends javax.swing.JDialog {
         proxyInitFrame.setLocation(50, 50);
         proxyInitFrame.pack();
         //UITools.center(mainPanel, proxyInitFrame);
+        this.setVisible(false);
         proxyInitFrame.setVisible(true); 
+        
     }
 
     private void MyproxyActionPerformed(java.awt.event.ActionEvent evt) {
         MyProxyLogonGUI.main(null);
+        this.setVisible(false);
     }
     
     /**
