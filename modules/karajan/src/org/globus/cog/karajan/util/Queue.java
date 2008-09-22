@@ -51,6 +51,20 @@ public final class Queue {
 	public Cursor cursor() {
 		return new C();
 	}
+	
+	public String toString() {
+	    StringBuffer sb = new StringBuffer();
+	    sb.append('[');
+	    Cursor c = cursor();
+	    while (c.hasNext()) {
+	        sb.append(c.next());
+	        if (c.hasNext()) {
+	            sb.append(", ");
+	        }
+	    }
+	    sb.append(']');
+	    return sb.toString();
+	}
 
 	private class Entry {
 		private final Object obj;
