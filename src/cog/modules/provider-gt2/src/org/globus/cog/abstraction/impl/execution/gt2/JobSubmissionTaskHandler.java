@@ -309,6 +309,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         else {
             boolean batchJob = spec.isBatchJob();
+            if ("sge".equals(jobManager) && !batchJob) {
+                logger.info("Forcing redirection because the SGE JM is broken.");
+                spec.setStdOutputLocation(FileLocation.MEMORY);
+                spec.setStdErrorLocation(FileLocation.MEMORY);
+            }
             boolean redirected = spec.getStdOutputLocation().overlaps(
                     FileLocation.MEMORY_AND_LOCAL)
                     || spec.getStdErrorLocation().overlaps(
@@ -463,7 +468,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                             "Cannot parse the user defined attributes", e);
                 }
             }
-
             return rsl;
         }
     }
