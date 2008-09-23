@@ -22,6 +22,7 @@ public class RuntimeStats extends FunctionsCollection {
 	public static final int MAX_PERIOD_MS=60000;
 
 	public static final String[] preferredOutputOrder = {
+                "uninitialized",
 		"Initializing",
 		"Selecting site",
 		"Stage in",
