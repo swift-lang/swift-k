@@ -11,13 +11,13 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 public class WorkerKey implements Comparable {
     private Worker worker;
-    private long time;
-    
+    private Seconds time;
+
     public WorkerKey(Worker worker) {
         this.worker = worker;
     }
-    
-    public WorkerKey(long time) {
+
+    public WorkerKey(Seconds time) {
         this.time = time;
     }
 
@@ -26,27 +26,26 @@ public class WorkerKey implements Comparable {
 
         if (worker == null) {
             if (wk.worker == null) {
-                return sgn(time - wk.time);
+                return sgn(time.subtract(wk.time));
             }
             else {
-                return sgn(time
-                        - wk.worker.getScheduledTerminationTime().longValue());
+                return sgn(time.subtract(wk.worker
+                        .getScheduledTerminationTime()));
             }
         }
         else {
             if (wk.worker == null) {
-                return sgn(worker.getScheduledTerminationTime().longValue()
-                        - wk.time);
+                return sgn(worker.getScheduledTerminationTime().subtract(
+                        wk.time));
             }
             else {
                 if (worker == wk.worker) {
                     return 0;
                 }
                 else {
-                    int dif = sgn(worker.getScheduledTerminationTime()
-                            .longValue()
-                            - wk.worker.getScheduledTerminationTime()
-                                    .longValue());
+                    int dif = sgn(worker
+                            .getScheduledTerminationTime()
+                            .subtract(wk.worker.getScheduledTerminationTime()));
                     if (dif != 0) {
                         return dif;
                     }
@@ -59,7 +58,8 @@ public class WorkerKey implements Comparable {
         }
     }
 
-    private int sgn(long val) {
+    private int sgn(Seconds s) {
+        long val = s.getSeconds();
         if (val < 0) {
             return -1;
         }
@@ -71,4 +71,13 @@ public class WorkerKey implements Comparable {
         }
     }
 
+    public String toString() {
+        if (worker == null) {
+            return "/" + time;
+        }
+        else {
+            return worker.getId() + "/"
+                    + worker.getScheduledTerminationTime();
+        }
+    }
 }

@@ -9,6 +9,9 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -21,33 +24,40 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 
 public class Worker implements StatusListener {
-	public static final Logger logger = Logger.getLogger(Worker.class);
-	
+    public static final Logger logger = Logger.getLogger(Worker.class);
+
+    private static final Timer timer;
+
+    static {
+        timer = new Timer();
+    }
+
+    private static final Seconds SHUTDOWN_RESERVE = new Seconds(10);
+
     private Task task, running;
     private String id;
     private WorkerManager manager;
     private boolean starting;
-    private Long scheduledTerminationTime;
-    private int maxWallTime;
+    private Seconds scheduledTerminationTime;
+    private Seconds maxWallTime;
     private Status error;
     private ChannelContext channelContext;
 
-    private static final Long NEVER = new Long(Long.MAX_VALUE);
-
-    public Worker(WorkerManager manager, String id, int maxWallTime, Task w,
-            Task p) {
+    public Worker(WorkerManager manager, String id, Seconds maxWallTime,
+            Task w, Task p) {
         this.manager = manager;
         this.id = id;
         this.maxWallTime = maxWallTime;
         this.task = w;
         this.running = p;
         this.starting = true;
-        this.scheduledTerminationTime = NEVER;
+        this.scheduledTerminationTime = Seconds.NEVER;
         w.addStatusListener(this);
     }
 
     public void statusChanged(StatusEvent event) {
         Status s = event.getStatus();
+        logger.warn("Worker " + id + " status change: " + s);
         int code = s.getStatusCode();
         Task src = (Task) event.getSource();
         if (code == Status.FAILED) {
@@ -72,12 +82,12 @@ public class Worker implements StatusListener {
             manager.workerTerminated(this);
         }
     }
-    
+
     public Task getWorkerTask() {
         return task;
     }
 
-    public Task getRunning() {
+    public synchronized Task getRunning() {
         return running;
     }
 
@@ -96,20 +106,36 @@ public class Worker implements StatusListener {
         return id;
     }
 
-    public Long getScheduledTerminationTime() {
+    public Seconds getScheduledTerminationTime() {
         return scheduledTerminationTime;
     }
 
-    public int getMaxWallTime() {
+    public Seconds getMaxWallTime() {
         return maxWallTime;
     }
 
-    public void setScheduledTerminationTime(Long l) {
-        this.scheduledTerminationTime = l;
+    public void setScheduledTerminationTime(Seconds s) {
+        this.scheduledTerminationTime = s;
+        shutdownAfter(s.add(SHUTDOWN_RESERVE).subtract(
+                WorkerManager.TIME_RESERVE).toMilliseconds()
+                - System.currentTimeMillis());
     }
 
-    public void setScheduledTerminationTime(long l) {
-        this.scheduledTerminationTime = new Long(l);
+    private void shutdownAfter(long ms) {
+        timer.schedule(new TimerTask() {
+            public void run() {
+                if (running == null) {
+                    shutdown();
+                }
+                else {
+                    // what this really means is that a walltime spec was wrong
+                    // and that the queuing system will likely kill the worker
+                    // anyway
+                    logger
+                            .info("Worker still has a running task. Shutdown canceled.");
+                }
+            }
+        }, ms);
     }
 
     public Status getStatus() {
@@ -130,13 +156,39 @@ public class Worker implements StatusListener {
 
     public void shutdown() {
         try {
+            logger.info("Shutting down worker: " + this);
             KarajanChannel channel = ChannelManager.getManager()
                     .reserveChannel(channelContext);
             ShutdownCommand sc = new ShutdownCommand();
             sc.execute(channel);
+            logger.info("Worker shut down: " + this);
         }
         catch (Exception e) {
-            logger.warn("Failed to shut down worker", e);
+            logger
+                    .warn(
+                            "Failed to shut down worker nicely. Trying to cancel task.",
+                            e);
+            try {
+                manager.getTaskHandler().cancel(task);
+                logger.info("Worker task canceled");
+            }
+            catch (Exception ee) {
+                logger.info("Failed to cancel worker task", ee);
+            }
+        }
+    }
+
+    public boolean isPastScheduledTerminationTime() {
+        return scheduledTerminationTime.toMilliseconds()
+                - System.currentTimeMillis() < 0;
+    }
+
+    public synchronized void setRunning(Task task) {
+        this.running = task;
+        if (task == null && isPastScheduledTerminationTime()) {
+            // that's to avoid running the shutdown in some strange thread it
+            // shouldn't be running in
+            shutdownAfter(1);
         }
     }
 }

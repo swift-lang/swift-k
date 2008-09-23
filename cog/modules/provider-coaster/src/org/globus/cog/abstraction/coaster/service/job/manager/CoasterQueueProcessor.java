@@ -11,12 +11,16 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.karajan.util.Queue;
 
 public class CoasterQueueProcessor extends QueueProcessor {
+    public static final Logger logger = Logger
+            .getLogger(CoasterQueueProcessor.class);
     private TaskHandler taskHandler;
     private WorkerManager workerManager;
     private String workdir;
@@ -30,6 +34,25 @@ public class CoasterQueueProcessor extends QueueProcessor {
 
     public void run() {
         try {
+            new Thread() {
+                {
+                    setDaemon(true);
+                }
+
+                public void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(20000);
+                            Queue q = getQueue();
+                            logger.info("Coaster queue: " + q);
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }.start();
+
             workerManager.start();
             AssociatedTask at;
             while (!this.getShutdownFlag()) {
@@ -54,7 +77,7 @@ public class CoasterQueueProcessor extends QueueProcessor {
                     }
                 }
                 if (hasWrapped()) {
-                    synchronized(workerManager) {
+                    synchronized (workerManager) {
                         workerManager.wait(1000);
                     }
                 }
