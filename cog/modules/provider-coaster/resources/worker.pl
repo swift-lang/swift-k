@@ -38,7 +38,7 @@ my $LOG = "$ENV{HOME}/.globus/coasters/worker$ARGV[1].log";
 
 
 my %HANDLERS = (
-	"SHUTDOWN" 	=> \&shutdown,
+	"SHUTDOWN" 	=> \&shutdownw,
 	"SUBMITJOB" => \&submitjob,
 	"REGISTER"  => \&register,
 	"HEARTBEAT" => \&heartbeat,
@@ -85,7 +85,7 @@ sub reconnect() {
 			last;
 		}
 		else {
-			wlog "Connection failed\n";
+			wlog "Connection failed: $!\n";
 			select(undef, undef, undef, 2 ** $i);
 		}
 	}
@@ -263,7 +263,7 @@ sub recvOne {
 	$SOCK->recv($data, 12);
 	if (length($data) > 0) {
 		wlog "Received $data\n";
-		eval { process(unpackData($data)); } || wlog "$@\n";
+		eval { process(unpackData($data)); } || wlog "Failed to process data: $@\n";
 	}
 	else {
 		#sleep 250ms
@@ -351,11 +351,11 @@ sub register {
 }
 
 
-sub shutdown {
+sub shutdownw {
 	my ($tag, $timeout, $msgs) = @_;
-	
+	wlog "Shutdown command received\n";
 	sendReply($tag, ("OK"));
-	wlog "Shutdown command received. Exiting\n";
+	wlog "Acknowledged shutdown. Exiting\n";
 	exit 0;
 }
 
@@ -401,11 +401,11 @@ sub checkJob() {
 	my $tag = shift;
 	my $executable = $JOB{"executable"};
 	if (!(defined $JOBID)) {
-		sendReply($tag, ("Missing job identity"));
+		sendError($tag, ("Missing job identity"));
 		return 0;
 	}
 	elsif (!(defined $executable)) {
-		sendReply($tag, ("Missing executable"));
+		sendError($tag, ("Missing executable"));
 		return 0;
 	}
 	else {
@@ -492,10 +492,11 @@ for($i=1; $i<=$#ARGV ; $i++) {
 
 		my $myhost=`hostname`;
 		$myhost =~ s/\s+$//;
-		init();
-
+		
 		wlog("Initialized coaster worker $i\n");
 		wlog("Running on node $myhost\n");
+		
+		init();
 
 		mainloop();
 		exit(0);
