@@ -261,7 +261,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 			synchronized (os) {
 				os.write(shdr);
 				os.write(data);
-				os.flush();
+				if ((flags & FINAL_FLAG) != 0) {
+					os.flush();
+				}
 			}
 		}
 	}
