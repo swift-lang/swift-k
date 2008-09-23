@@ -38,7 +38,6 @@ public class JobStatusHandler extends RequestHandler {
             if (message != null && !message.equals("")) {
                 s.setMessage(message);
             }
-            logger.error("Job " + jobId + " is " + status);
             NotificationManager.getDefault().notificationReceived(jobId, s);
             sendReply("OK");
         }
