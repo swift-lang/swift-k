@@ -9,10 +9,9 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
-
-import org.globus.cog.abstraction.impl.common.execution.WallTime;
 
 public class AssociatedTask {
     public final Task task;
