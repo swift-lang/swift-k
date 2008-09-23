@@ -54,7 +54,7 @@ public class WorkerManager extends Thread {
      * We allow for at least one minute of extra time compared to the requested
      * walltime
      */
-    public static final int TIME_RESERVE = 60;
+    public static final Seconds TIME_RESERVE = new Seconds(60);
 
     public static final File scriptDir = new File(System
             .getProperty("user.home")
@@ -126,35 +126,9 @@ public class WorkerManager extends Thread {
 
     public void run() {
         try {
-            new Thread() {
-                {
-                    setDaemon(true);
-                }
-
-                public void run() {
-                    while (true) {
-                        try {
-                            Thread.sleep(20000);
-                            synchronized (WorkerManager.this) {
-                                logger.info("Current workers: "
-                                        + currentWorkers);
-                                logger.info("Ready: " + ready);
-                                logger.info("Busy: " + busy);
-                                logger.info("Requested: " + requested);
-                                logger.info("Starting: " + startingTasks);
-                                logger.info("Ids: " + ids);
-                            }
-                            synchronized (allocationRequests) {
-                                logger.info("AllocationR: "
-                                        + allocationRequests);
-                            }
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }.start();
+            if (logger.isInfoEnabled()) {
+                startInfoThread();
+            }
             AllocationRequest req;
             while (!shutdownFlag) {
                 synchronized (allocationRequests) {
@@ -168,9 +142,9 @@ public class WorkerManager extends Thread {
                     }
                 }
                 try {
-                    startWorker(req.maxWallTime.getSeconds()
-                            * OVERALLOCATION_FACTOR + TIME_RESERVE,
-                            req.prototype);
+                    startWorker(new Seconds(req.maxWallTime.getSeconds())
+                            .multiply(OVERALLOCATION_FACTOR)
+                            .add(TIME_RESERVE), req.prototype);
                 }
                 catch (NoClassDefFoundError e) {
                     req.prototype.setStatus(new StatusImpl(Status.FAILED, e
@@ -191,7 +165,7 @@ public class WorkerManager extends Thread {
         }
     }
 
-    private void startWorker(int maxWallTime, Task prototype)
+    private void startWorker(Seconds maxWallTime, Task prototype)
             throws InvalidServiceContactException, InvalidProviderException,
             ProviderMethodException {
         String numWorkersString = (String) ((JobSpecification) prototype
@@ -289,7 +263,7 @@ public class WorkerManager extends Thread {
         return s;
     }
 
-    private void copyAttributes(Task t, Task prototype, int maxWallTime) {
+    private void copyAttributes(Task t, Task prototype, Seconds maxWallTime) {
         JobSpecification pspec = (JobSpecification) prototype
                 .getSpecification();
         JobSpecification tspec = (JobSpecification) t.getSpecification();
@@ -300,7 +274,8 @@ public class WorkerManager extends Thread {
                 tspec.setAttribute(name, pspec.getAttribute(name));
             }
         }
-        tspec.setAttribute("maxwalltime", new WallTime(maxWallTime).format());
+        tspec.setAttribute("maxwalltime", new WallTime((int) maxWallTime
+                .getSeconds()).format());
     }
 
     private int k;
@@ -308,9 +283,13 @@ public class WorkerManager extends Thread {
 
     public Worker request(WallTime maxWallTime, Task prototype)
             throws InterruptedException {
-        WorkerKey key = new WorkerKey(maxWallTime.getSeconds() + TIME_RESERVE
-                + now());
+        WorkerKey key = new WorkerKey(new Seconds(maxWallTime.getSeconds())
+                .add(TIME_RESERVE).add(Seconds.now()));
         Worker w = null;
+        if (logger.isDebugEnabled()) {
+            logger.debug("Looking for worker for key " + key);
+            logger.debug("Ready: " + ready);
+        }
         synchronized (this) {
             Collection tm = ready.tailMap(key).values();
             Iterator i = tm.iterator();
@@ -324,7 +303,6 @@ public class WorkerManager extends Thread {
         }
 
         if (w != null) {
-            System.err.print(".");
             if (k == 0) {
                 last = System.currentTimeMillis();
             }
@@ -338,6 +316,7 @@ public class WorkerManager extends Thread {
                 System.err.println(" " + k / 80 + "; " + js + " J/s");
             }
             logger.info("Using worker " + w + " for task " + prototype);
+            w.setRunning(prototype);
             return w;
         }
         else {
@@ -376,10 +355,6 @@ public class WorkerManager extends Thread {
         }
     }
 
-    private long now() {
-        return System.currentTimeMillis() / 1000;
-    }
-
     public void workerTerminated(Worker worker) {
         logger.warn("Worker terminated: " + worker);
         Status s = worker.getStatus();
@@ -387,7 +362,8 @@ public class WorkerManager extends Thread {
             synchronized (this) {
                 requested.remove(worker.getId());
                 startingTasks.remove(worker.getRunning());
-                //this will cause all the jobs associated with the worker to fail
+                // this will cause all the jobs associated with the worker to
+                // fail
                 ready.put(new WorkerKey(worker), worker);
             }
         }
@@ -410,17 +386,17 @@ public class WorkerManager extends Thread {
                     + "). This worker manager instance does not "
                     + "recall requesting a worker with such an id.");
         }
-        wr.workerRegistered();
-        wr.setScheduledTerminationTime(now() + wr.getMaxWallTime()
-                - TIME_RESERVE);
+        wr.setScheduledTerminationTime(Seconds.now().add(wr.getMaxWallTime()));
         wr.setChannelContext(cc);
+        if (logger.isInfoEnabled()) {
+            logger.info("Worker registration received: " + wr);
+        }
         synchronized (this) {
             startingTasks.remove(wr.getRunning());
             ready.put(new WorkerKey(wr), wr);
             ids.put(id, wr);
+            wr.workerRegistered();
         }
-        System.err.println("RR. ready: " + ready.size() + ", busy: "
-                + busy.size());
     }
 
     public void removeWorker(Worker worker) {
@@ -438,6 +414,7 @@ public class WorkerManager extends Thread {
             busy.remove(wr);
             ready.put(new WorkerKey(wr), wr);
             notifyAll();
+            wr.setRunning(null);
         }
     }
 
@@ -455,6 +432,10 @@ public class WorkerManager extends Thread {
         else {
             return wr.getChannelContext();
         }
+    }
+
+    protected TaskHandler getTaskHandler() {
+        return handler;
     }
 
     private static class AllocationRequest {
@@ -487,5 +468,36 @@ public class WorkerManager extends Thread {
                 }
             }
         }
+    }
+
+    private void startInfoThread() {
+        new Thread() {
+            {
+                setDaemon(true);
+            }
+
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(20000);
+
+                        synchronized (WorkerManager.this) {
+                            logger.info("Current workers: " + currentWorkers);
+                            logger.info("Ready: " + ready);
+                            logger.info("Busy: " + busy);
+                            logger.info("Requested: " + requested);
+                            logger.info("Starting: " + startingTasks);
+                            logger.info("Ids: " + ids);
+                        }
+                        synchronized (allocationRequests) {
+                            logger.info("AllocationR: " + allocationRequests);
+                        }
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
     }
 }
