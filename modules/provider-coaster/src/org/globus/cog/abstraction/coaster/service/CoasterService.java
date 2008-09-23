@@ -119,6 +119,7 @@ public class CoasterService extends GSSService {
     }
 
     private void stop(Exception e) {
+        jobQueue.getWorkerManager().shutdown();
         synchronized (this) {
             this.e = e;
             done = true;
@@ -174,6 +175,7 @@ public class CoasterService extends GSSService {
         super.shutdown();
         jobQueue.getWorkerManager().shutdown();
         done = true;
+        logger.info("Shutdown sequence completed");
     }
 
     public JobQueue getJobQueue() {
