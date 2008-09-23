@@ -22,7 +22,6 @@ import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.ServiceRequestManager;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
@@ -172,10 +171,33 @@ public class CoasterService extends GSSService {
     }
 
     public void shutdown() {
+        startShutdownWatchdog();
         super.shutdown();
         jobQueue.getWorkerManager().shutdown();
         done = true;
         logger.info("Shutdown sequence completed");
+    }
+
+    private void startShutdownWatchdog() {
+        new Thread() {
+            {
+                setName("Shutdown watchdog");
+                setDaemon(true);
+            }
+
+            public void run() {
+                try {
+                    Thread.sleep(5 * 60 * 1000);
+                    logger
+                            .info("Shutdown failed after 5 minutes. Forcefully shutting down");
+                    System.exit(3);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }.start();
     }
 
     public JobQueue getJobQueue() {
