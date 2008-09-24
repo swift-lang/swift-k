@@ -2,9 +2,12 @@ package org.globus.ogce.beans.filetransfer.gui.monitor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.globus.gsi.gssapi.auth.Authorization;
+import org.globus.gsi.gssapi.auth.IdentityAuthorization;
 import org.globus.io.urlcopy.UrlCopy;
 import org.globus.io.urlcopy.UrlCopyListener;
 import org.globus.ogce.beans.filetransfer.gui.MainInterface;
+import org.globus.ogce.beans.filetransfer.gui.remote.gridftp.GridClient;
 import org.globus.ogce.beans.filetransfer.transfer.TransferInterface;
 import org.globus.tools.ui.util.UITools;
 import org.globus.transfer.reliable.client.utils.Utils;
@@ -125,19 +128,26 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
             c = new UrlCopy();
             c.setSourceUrl(froms);
             c.setDestinationUrl(tos);
-
+            Authorization auth = new IdentityAuthorization(GridClient.subject1);
+            c.setSourceAuthorization(auth);
+            c.setDestinationAuthorization(auth);
             if (from.startsWith("gsiftp") && to.startsWith("gsiftp")) {
                 c.setUseThirdPartyCopy(true);                
             } else {
                 c.setUseThirdPartyCopy(false);
             }   
-            
-            int bufferSize = Integer.parseInt(Utils.getProperty("tcpbuffersize", "rft.properties"));
+            int bufferSize;
+            try {
+            	bufferSize = Integer.parseInt(Utils.getProperty("tcpbuffersize", "rft.properties"));
+            } catch (Exception e) {
+            	bufferSize = 16000;
+            }
              c.setBufferSize(bufferSize);             
              c.setAppendMode(urlcopyOptions.getAppendMode());
             c.setDCAU(urlcopyOptions.getDCAU());
             c.addUrlCopyListener(this);
             jobs.put(jobid, c);
+            
             long st = System.currentTimeMillis();
             if (!(c.isCanceled())) {
                 printOutput("\n\n------------------------------\n");
@@ -145,7 +155,7 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
                 printOutput("\n------------------------------\n");
                 updateTransfer(currentJob, "Active",
                         null, null, "No errors");
-
+                
                 c.copy();
                 finalStatus = "Finished";
                 updateTransfer(currentJob, "Finished",
