@@ -4,6 +4,7 @@ package org.globus.ogce.beans.filetransfer.gui.remote.common;
 
 import org.apache.log4j.Logger;
 import org.globus.ftp.FileInfo;
+import org.globus.ftp.MlsxEntry;
 import org.globus.ogce.beans.filetransfer.util.DirInfo;
 import org.globus.ogce.beans.filetransfer.util.DirQueue;
 import org.globus.ogce.beans.filetransfer.util.GridTransferable;
@@ -557,15 +558,20 @@ public class RemoteTree extends JTree implements TreeExpansionListener, TreeWill
                 }*/
 
         }
-        FileInfo temp[] = new FileInfo[vector.size()];
+        //FileInfo temp[] = new FileInfo[vector.size()];
+        MlsxEntry temp[] = new MlsxEntry[vector.size()];
         String as[] = new String[vector.size()];
         int p = 0;
         Enumeration enum1 = vector.elements();
         while (enum1.hasMoreElements()) {
-            FileInfo file = (FileInfo) enum1.nextElement();
-            as[p] = file.getName();
-            temp[p] = file;
-            p++;
+        	MlsxEntry entry = (MlsxEntry) enum1.nextElement();        	
+        	if (null != entry) {        		
+                as[p] = entry.getFileName();
+                temp[p] = entry;
+                p++;
+        	}
+        	//System.out.println(entry);
+            
         }
 
         if (as == null) {
@@ -578,36 +584,39 @@ public class RemoteTree extends JTree implements TreeExpansionListener, TreeWill
             return;
         }
         statusOut("Listing the directories...");
+        String fullName = null;
         for (int j = 0; j < i; j++) {
             if (s.endsWith("/")) {
-                temp[j].setName(s + as[j]);
+            	fullName = s + as[j];
+                //temp[j].setName(s + as[j]);
             } else {
-                temp[j].setName(s + "/" + as[j]);
+            	fullName = s + "/" + as[j];
+                //temp[j].setName(s + "/" + as[j]);
             }
-            file1 = (FileInfo) temp[j];
+            //file1 = (FileInfo) temp[j];
+            
+            if ("dir".equals(temp[j].get("type"))) {
 
-            if (file1.isDirectory()) {
-
-                if (file1.isSoftLink()) {
+                if (temp[j].get("unix.slink") != null) {
                     ;
                 } else {
 
-                    if ((file1.getName().equals("//dev")) ||
-                            (file1.isDevice())) {
-                        logger.info("\nIt is a device directory");
-                        addObject(defaultmutabletreenode, as[j], flag);
-                        statusOut("Disabled the device directory" + file1.getName());
-
-                    } else if ((file1.getName().equals("?"))) {
-                        logger.info("\nDir name could not be parsed");
-                        statusOut("The Parser could not parse filename");
-
-                    } else {
-
+//                    if ((file1.getName().equals("//dev")) ||
+//                            (file1.isDevice())) {
+//                        logger.info("\nIt is a device directory");
+//                        addObject(defaultmutabletreenode, as[j], flag);
+//                        statusOut("Disabled the device directory" + file1.getName());
+//
+//                    } else if ((file1.getName().equals("?"))) {
+//                        logger.info("\nDir name could not be parsed");
+//                        statusOut("The Parser could not parse filename");
+//
+//                    } else {
+            		    //System.out.println(as[j]);
                         DefaultMutableTreeNode defaultmutabletreenode1
                                 = addObject(defaultmutabletreenode, as[j] + "/", flag);
                         addObject(defaultmutabletreenode1, "", false);
-                    }
+                    //}
                 }
             }
         }
@@ -615,19 +624,21 @@ public class RemoteTree extends JTree implements TreeExpansionListener, TreeWill
 
         for (int k = 0; k < i; k++) {
             if (s.endsWith("/")) {
-                temp[k].setName(s + as[k]);
+            	fullName = s + as[k];
+                //temp[k].setName(s + as[k]);
             } else {
-                temp[k].setName(s + "/" + as[k]);
+            	fullName = s + "/" + as[k];
+                //temp[k].setName(s + "/" + as[k]);
             }
-            file2 = temp[k];
+            //file2 = temp[k];
 
-            if (file2.isFile()) {
-                if (file2.isSoftLink()) {
+            if ("file".equals(temp[k].get("type"))) {
+                if (temp[k].get("unix.slink") != null) {
                     logger.info("\nThis is a softlink.");
-                } else if ((file2.getName().equals("?"))) {
-                    logger.info("\nFile name could not be parsed");
-                    statusOut("The Parser could not parse file");
-
+//                } else if ((file2.getName().equals("?"))) {
+//                    logger.info("\nFile name could not be parsed");
+//                    statusOut("The Parser could not parse file");
+//
                 } else {
                     addObject(defaultmutabletreenode, as[k], flag);
                     statusOut("Done. Status: Ready");
