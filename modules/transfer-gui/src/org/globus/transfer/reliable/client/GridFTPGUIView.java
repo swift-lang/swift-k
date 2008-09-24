@@ -615,7 +615,12 @@ public class GridFTPGUIView extends FrameView {
     }//GEN-LAST:event_jMenuItem7ActionPerformed
 
     private void localFrameHandle() {
-    	boolean isRFTEnabled = (new Boolean((String)Utils.getProperty("rft_enabled", "rft.properties"))).booleanValue();
+    	boolean isRFTEnabled;
+    	try {
+    		isRFTEnabled = (new Boolean((String)Utils.getProperty("rft_enabled", "rft.properties"))).booleanValue();
+    	} catch (Exception e) {
+    		isRFTEnabled = false;
+    	}
         if (isRFTEnabled) {
         	JOptionPane.showMessageDialog(null, "RFT is enabled, you can not use local dialog",
         			"Message", JOptionPane.ERROR_MESSAGE);
