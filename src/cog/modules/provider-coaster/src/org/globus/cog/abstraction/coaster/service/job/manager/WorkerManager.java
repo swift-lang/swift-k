@@ -218,7 +218,7 @@ public class WorkerManager extends Thread {
             prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(),
                     e));
         }
-        synchronized (requested) {
+        synchronized (this) {
             requested.putAll(newlyRequested);
         }
     }
