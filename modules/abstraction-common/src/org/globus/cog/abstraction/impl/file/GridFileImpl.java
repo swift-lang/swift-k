@@ -24,12 +24,12 @@ public class GridFileImpl implements GridFile {
 
     private Permissions userPermissions = null;
     private Permissions groupPermissions = null;
-    private Permissions allPermissions = null;
+    private Permissions worldPermissions = null;
 
     public GridFileImpl() {
         userPermissions = new PermissionsImpl();
         groupPermissions = new PermissionsImpl();
-        allPermissions = new PermissionsImpl();
+        worldPermissions = new PermissionsImpl();
     }
 
     /** set name for the file */
@@ -133,13 +133,21 @@ public class GridFileImpl implements GridFile {
     }
 
     /** set permissions for all users */
-    public void setAllPermissions(Permissions allPermissions) {
-        this.allPermissions = allPermissions;
+    public void setWorldPermissions(Permissions worldPermissions) {
+        this.worldPermissions = worldPermissions;
     }
 
     /** return permissions for all users */
+    public Permissions getWorldPermissions() {
+        return worldPermissions;
+    }
+    
     public Permissions getAllPermissions() {
-        return allPermissions;
+        return getWorldPermissions();
+    }
+
+    public void setAllPermissions(Permissions worldPermissions) {
+        setWorldPermissions(worldPermissions);
     }
 
     /** return true if the user can read from this file */
@@ -174,17 +182,17 @@ public class GridFileImpl implements GridFile {
 
     /** return true if all users can read from this file */
     public boolean allCanRead() {
-        return allPermissions.getRead();
+        return worldPermissions.getRead();
     }
 
     /** return true if all users can write into this file */
     public boolean allCanWrite() {
-        return allPermissions.getWrite();
+        return worldPermissions.getWrite();
     }
 
     /** return true of all users can execute the current file */
     public boolean allCanExecute() {
-        return allPermissions.getExecute();
+        return worldPermissions.getExecute();
     }
 
     /** represents the entire grid file properties as a string */
