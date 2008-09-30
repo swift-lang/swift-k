@@ -63,7 +63,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 
 	public synchronized void bind(KarajanChannel channel) throws ChannelException {
 		if (channel == current) {
-			logger.warn("Trying to re-bind current channel");
+			logger.info("Trying to re-bind current channel");
 			return;
 		}
 		logger.info(this + ".bind -> " + channel);
