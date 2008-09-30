@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.globus.cog.karajan.workflow.service.ProtocolException;
@@ -73,4 +74,6 @@ public interface KarajanChannel {
 	URI getCallbackURI() throws Exception;
 
 	void setRequestManager(RequestManager requestManager);
+
+	void flush() throws IOException;
 }
