@@ -29,7 +29,9 @@ import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
+import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
+import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
@@ -37,6 +39,8 @@ import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -71,6 +75,7 @@ public class ServiceManager implements StatusListener {
     private LocalService localService;
     private Map services;
     private Map credentials;
+    private Map bootHandlers;
     private Set starting;
     private Map usageCount;
     private ServiceReaper serviceReaper;
@@ -80,31 +85,50 @@ public class ServiceManager implements StatusListener {
         credentials = new HashMap();
         starting = new HashSet();
         usageCount = new HashMap();
+        bootHandlers = new HashMap();
         serviceReaper = new ServiceReaper();
         Runtime.getRuntime().addShutdownHook(serviceReaper);
     }
 
-    public String reserveService(Task task, TaskHandler bootHandler,
+    private TaskHandler getBootHandler(String provider)
+            throws InvalidServiceContactException, InvalidProviderException,
+            ProviderMethodException, IllegalSpecException {
+        synchronized (bootHandlers) {
+            TaskHandler th = (TaskHandler) bootHandlers.get(provider);
+            if (th == null) {
+                th = AbstractionFactory.newExecutionTaskHandler(provider);
+                bootHandlers.put(provider, th);
+            }
+            return th;
+        }
+    }
+
+    public String reserveService(ServiceContact contact, SecurityContext sc,
             String bootHandlerProvider) throws TaskSubmissionException {
         if (logger.isDebugEnabled()) {
-            logger.debug("Reserving service for " + task);
+            logger.debug("Reserving service " + contact);
         }
         try {
-            Object service = getService(task);
             // beah. it's impossible to nicely abstract both concurrency
             // and normal program semantics
-            String url = waitForStart(service);
+            String url = waitForStart(contact);
             if (url == null) {
-                url = startService(task, bootHandler, bootHandlerProvider,
-                        service);
+                url = startService(contact, sc,
+                        getBootHandler(bootHandlerProvider),
+                        bootHandlerProvider);
             }
-            increaseUsageCount(service);
+            increaseUsageCount(contact);
             return url;
         }
         catch (Exception e) {
             throw new TaskSubmissionException(
                     "Could not start coaster service", e);
         }
+    }
+
+    public String reserveService(Task task, String bootHandlerProvider)
+            throws TaskSubmissionException {
+        return reserveService(getContact(task), getSecurityContext(task) ,bootHandlerProvider);
     }
 
     protected String waitForStart(Object service) throws InterruptedException {
@@ -124,37 +148,38 @@ public class ServiceManager implements StatusListener {
         localService.heardOf(id);
     }
 
-    protected String startService(Task task, TaskHandler bootHandler,
-            String bootHandlerProvider, Object service) throws Exception {
+    protected String startService(ServiceContact contact, SecurityContext sc,
+            TaskHandler bootHandler, String bootHandlerProvider)
+            throws Exception {
         try {
             startLocalService();
-            Task t = buildTask(task);
-            setSecurityContext(t, task, bootHandlerProvider);
+            Task t = buildTask(contact);
+            setSecurityContext(t, sc, bootHandlerProvider);
             t.addStatusListener(this);
             if (logger.isDebugEnabled()) {
-                logger.debug("Starting coaster service on "
-                        + task.getService(0) + ". Task is " + t);
+                logger.debug("Starting coaster service on " + contact
+                        + ". Task is " + t);
             }
             bootHandler.submit(t);
             String url = localService.waitForRegistration(t, (String) t
                     .getAttribute(TASK_ATTR_ID));
             synchronized (services) {
-                services.put(service, url);
-                credentials.put(url, task.getService(0).getSecurityContext()
-                        .getCredentials());
+                services.put(contact, url);
+                credentials.put(url, sc.getCredentials());
             }
             return url;
         }
         finally {
             synchronized (services) {
-                starting.remove(service);
+                starting.remove(contact);
                 services.notifyAll();
             }
         }
     }
 
-    private void setSecurityContext(Task t, Task orig, String provider)
-            throws InvalidProviderException, ProviderMethodException {
+    private void setSecurityContext(Task t, SecurityContext sc,
+            String provider) throws InvalidProviderException,
+            ProviderMethodException {
         t.getService(0).setSecurityContext(
                 AbstractionFactory.newSecurityContext(provider));
     }
@@ -169,8 +194,8 @@ public class ServiceManager implements StatusListener {
             }
             String url;
             synchronized (services) {
-                Object service = getService(t);
-                url = (String) services.remove(service);
+                ServiceContact contact = getContact(t);
+                url = (String) services.remove(contact);
                 if (url == null) {
                     logger
                             .info("Service does not appear to be registered with this manager");
@@ -207,11 +232,15 @@ public class ServiceManager implements StatusListener {
         }
     }
 
-    protected Object getService(Task task) {
-        return task.getService(0).getServiceContact().toString();
+    protected ServiceContact getContact(Task task) {
+        return task.getService(0).getServiceContact();
+    }
+   
+    protected SecurityContext getSecurityContext(Task task) {
+    	return task.getService(0).getSecurityContext();
     }
 
-    private Task buildTask(Task orig) throws TaskSubmissionException {
+    private Task buildTask(ServiceContact sc) throws TaskSubmissionException {
         try {
             Task t = new TaskImpl();
             t.setType(Task.JOB_SUBMISSION);
@@ -228,12 +257,12 @@ public class ServiceManager implements StatusListener {
             String id = getRandomID();
             t.setAttribute(TASK_ATTR_ID, id);
             js.addArgument(id);
-            js.addArgument(orig.getService(0).getServiceContact().getHost());
+            js.addArgument(sc.getHost());
             js.setStdOutputLocation(FileLocation.MEMORY);
             js.setStdErrorLocation(FileLocation.MEMORY);
             t.setSpecification(js);
             ExecutionService s = new ExecutionServiceImpl();
-            s.setServiceContact(orig.getService(0).getServiceContact());
+            s.setServiceContact(sc);
             s.setJobManager("fork");
             t.setService(0, s);
             return t;
