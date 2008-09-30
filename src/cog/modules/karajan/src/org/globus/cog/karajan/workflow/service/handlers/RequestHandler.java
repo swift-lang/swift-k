@@ -9,8 +9,8 @@
  */
 package org.globus.cog.karajan.workflow.service.handlers;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
@@ -26,8 +26,7 @@ public abstract class RequestHandler extends RequestReply {
 	
 	protected void sendReply(byte[] data) throws ProtocolException {
 		addOutData(data);
-		send();
-		replySent = true;
+		sendReply();
 	}
 	
 	protected void sendReply(String reply) throws ProtocolException {
@@ -59,7 +58,7 @@ public abstract class RequestHandler extends RequestReply {
 	
 	public void send() throws ProtocolException {
 		KarajanChannel channel = getChannel();
-		List outData = getOutData();
+		Collection outData = getOutData();
 		if (channel == null) {
 			throw new ProtocolException("Unregistered command");
 		}
