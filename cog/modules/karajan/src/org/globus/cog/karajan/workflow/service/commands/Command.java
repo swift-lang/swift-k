@@ -10,8 +10,8 @@
 package org.globus.cog.karajan.workflow.service.commands;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -88,8 +88,10 @@ public abstract class Command extends RequestReply {
 
 	public void send() throws ProtocolException {
 		KarajanChannel channel = getChannel();
-		logger.info("Sending " + this + " on " + channel);
-		List outData = getOutData();
+		if (logger.isInfoEnabled()) {
+			logger.info("Sending " + this + " on " + channel);
+		}
+		Collection outData = getOutData();
 		if (channel == null) {
 			throw new ProtocolException("Unregistered command");
 		}
@@ -110,11 +112,15 @@ public abstract class Command extends RequestReply {
 					channel.sendTaggedData(getId(), !i.hasNext(), buf);
 				}
 			}
-			timer.schedule(timeout = new Timeout(), replyTimeout);
+			setupReplyTimeoutChecker();
 		}
 		catch (ChannelIOException e) {
 			reexecute(e.getMessage(), e);
 		}
+	}
+	
+	protected void setupReplyTimeoutChecker() {
+	    timer.schedule(timeout = new Timeout(), replyTimeout);
 	}
 
 	public byte[] execute(KarajanChannel channel) throws ProtocolException, IOException {
