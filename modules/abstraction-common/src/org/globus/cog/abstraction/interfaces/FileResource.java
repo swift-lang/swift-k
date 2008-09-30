@@ -107,14 +107,16 @@ public interface FileResource extends GridResource {
     public String getCurrentDirectory() throws FileResourceException;
 
     /**
-     * Returns the list of files in the current working directory
+     * Returns the list of files in the current working directory as a
+     * collection of GridFile objects
      * 
      * @throws FileResourceException
      */
     public Collection list() throws FileResourceException;
 
     /**
-     * Returns the list of files in the given directory
+     * Returns the list of files in the given directory as a
+     * collection of GridFile objects
      * 
      * @throws FileResourceException
      */
