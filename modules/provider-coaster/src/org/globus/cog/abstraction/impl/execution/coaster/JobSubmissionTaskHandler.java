@@ -6,17 +6,11 @@
 
 package org.globus.cog.abstraction.impl.execution.coaster;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
-import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
-import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
@@ -31,7 +25,6 @@ import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
@@ -47,7 +40,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             .getLogger(JobSubmissionTaskHandler.class);
 
     private Task task, startServiceTask;
-    private Map bootHandlers;
     private SubmitJobCommand jsc;
     private GSSCredential cred;
     private String jobid;
@@ -57,7 +49,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     public JobSubmissionTaskHandler() {
         this.autostart = true;
-        bootHandlers = new HashMap();
     }
 
     public void submit(Task task) throws IllegalSpecException,
@@ -67,8 +58,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         task.setStatus(Status.SUBMITTING);
         try {
             if (autostart) {
-                url = ServiceManager.getDefault().reserveService(task,
-                        getBootHandler(task), getBootHandlerProvider(task));
+            	String provider = getBootHandlerProvider(task);
+                url = ServiceManager.getDefault().reserveService(task, provider);
                 cred = getCredentials(task);
             }
             else {
@@ -81,20 +72,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
         catch (Exception e) {
             throw new TaskSubmissionException("Could not submit job", e);
-        }
-    }
-
-    private TaskHandler getBootHandler(Task t)
-            throws InvalidServiceContactException, InvalidProviderException,
-            ProviderMethodException, IllegalSpecException {
-        String provider = getBootHandlerProvider(t);
-        synchronized (bootHandlers) {
-            TaskHandler th = (TaskHandler) bootHandlers.get(provider);
-            if (th == null) {
-                th = AbstractionFactory.newExecutionTaskHandler(provider);
-                bootHandlers.put(provider, th);
-            }
-            return th;
         }
     }
 
