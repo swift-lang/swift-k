@@ -20,6 +20,12 @@ public class PermissionsImpl implements Permissions {
     public PermissionsImpl() {
     }
 
+    public PermissionsImpl(int digit) {
+        readable = (digit & 4) != 0;
+        writable = (digit & 2) != 0;
+        executable = (digit & 1) != 0;
+    }
+
     /** set/unset readable */
     public void setRead(boolean canRead) {
         this.readable = canRead;
@@ -50,20 +56,14 @@ public class PermissionsImpl implements Permissions {
         return this.executable;
     }
 
-    /** return a string representation of the mode. Pattern 777 */
+    /**
+     * Returns a string representing the octal digit of this permission
+     */
     public String toString() {
-        String mode = getVal(getRead()) + getVal(getWrite())
-                + getVal(getExecute());
-        return String.valueOf((Integer.parseInt(mode, 2)));
+        return String.valueOf(toDigit());
     }
 
-    /** return 1 if value = true, else return 0 */
-    private String getVal(boolean value) {
-        if (value == true) {
-            return "1";
-        }
-        else {
-            return "0";
-        }
+    public int toDigit() {
+        return (readable ? 4 : 0) + (writable ? 2 : 0) + (executable ? 1 : 0);
     }
 }
