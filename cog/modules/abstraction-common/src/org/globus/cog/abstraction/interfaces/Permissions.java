@@ -33,4 +33,6 @@ public interface Permissions {
 
     /** return permissions as a string. pattern 777 */
     public String toString();
+    
+    public int toDigit();
 }
