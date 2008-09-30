@@ -93,6 +93,12 @@ public class NotificationManager {
         }
     }
     
+    public void notIdle() {
+    	synchronized(tasks) {
+    		lastNotificationTime = System.currentTimeMillis();
+    	}
+    }
+    
     public int getActiveTaskCount() {
         synchronized(tasks) {
             return tasks.size();
