@@ -77,11 +77,19 @@ public interface GridFile {
     /** get permissions of the group users */
     public Permissions getGroupPermissions();
 
-    /** set permissions for all users */
+    /** set permissions for all users
+     * @deprecated The name is ambiguous. Use setWorldPermissions()
+     */
     public void setAllPermissions(Permissions allPermissions);
+    
+    public void setWorldPermissions(Permissions worldPermissions);
 
-    /** get permissions of all users */
+    /** get permissions of all users
+     * @deprecated The name is ambiguous. Use getWorldPermissions()
+     */
     public Permissions getAllPermissions();
+    
+    public Permissions getWorldPermissions();
 
     /** return true if the user can read the file */
     public boolean userCanRead();
