@@ -60,4 +60,8 @@ public class UnixPermissionsImpl implements Permissions {
     public boolean getExecute() {
         return (value & 1) != 0;
     }
+
+    public int toDigit() {
+        return value;
+    }   
 }
