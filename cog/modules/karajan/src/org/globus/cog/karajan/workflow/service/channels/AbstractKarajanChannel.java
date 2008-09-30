@@ -363,4 +363,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			logger.warn(e);
 		}
 	}
+
+	public void flush() throws IOException {
+	}
 }

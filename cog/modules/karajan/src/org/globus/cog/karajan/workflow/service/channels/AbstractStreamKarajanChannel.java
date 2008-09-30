@@ -150,6 +150,12 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	protected void register() {
 		getMultiplexer(FAST).register(this);
 	}
+	
+	public void flush() throws IOException {
+		outputStream.flush();
+	}
+
+
 
 	private static final int SENDER_COUNT = 1;
 	private static Sender[] sender;
