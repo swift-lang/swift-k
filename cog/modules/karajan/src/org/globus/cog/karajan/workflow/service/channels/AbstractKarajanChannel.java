@@ -97,6 +97,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	public void unregisterCommand(Command cmd) {
+		logger.info("Unregistering " + cmd);
 		context.unregisterCommand(cmd);
 	}
 
@@ -274,6 +275,9 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		Command cmd = getChannelContext().getRegisteredCommand(tag);
 		if (cmd != null) {
 			try {
+			    if (error) {
+			        cmd.raiseErrorFlag();
+			    }
 				cmd.replyReceived(data);
 				if (fin) {
 					if (logger.isInfoEnabled()) {
