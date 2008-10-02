@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -84,18 +85,18 @@ public abstract class RequestReply {
 	protected void addOutData(long value) {
 		addOutData(pack(value));
 	}
-	
+
 	protected byte[] pack(long value) {
-	    byte[] b = new byte[8];
-        b[0] = (byte) (value & 0xff);
-        b[1] = (byte) ((value >> 8) & 0xff);
-        b[2] = (byte) ((value >> 16) & 0xff);
-        b[3] = (byte) ((value >> 24) & 0xff);
-        b[4] = (byte) ((value >> 32) & 0xff);
-        b[5] = (byte) ((value >> 40) & 0xff);
-        b[6] = (byte) ((value >> 48) & 0xff);
-        b[7] = (byte) ((value >> 56) & 0xff);
-        return b;
+		byte[] b = new byte[8];
+		b[0] = (byte) (value & 0xff);
+		b[1] = (byte) ((value >> 8) & 0xff);
+		b[2] = (byte) ((value >> 16) & 0xff);
+		b[3] = (byte) ((value >> 24) & 0xff);
+		b[4] = (byte) ((value >> 32) & 0xff);
+		b[5] = (byte) ((value >> 40) & 0xff);
+		b[6] = (byte) ((value >> 48) & 0xff);
+		b[7] = (byte) ((value >> 56) & 0xff);
+		return b;
 	}
 
 	protected void addOutData(boolean value) {
@@ -132,10 +133,8 @@ public abstract class RequestReply {
 	}
 
 	protected synchronized void addInData(byte[] data) {
-		synchronized (this) {
-			if (inData == null) {
-				inData = new LinkedList();
-			}
+		if (inData == null) {
+			inData = new ArrayList(4);
 		}
 		inData.add(data);
 	}
@@ -173,7 +172,7 @@ public abstract class RequestReply {
 		return data;
 	}
 
-	public byte[] getInData(int index) {
+	public synchronized byte[] getInData(int index) {
 		if (inData == null) {
 			return null;
 		}
@@ -184,8 +183,8 @@ public abstract class RequestReply {
 			throw new IllegalArgumentException("Missing command argument #" + (index + 1));
 		}
 	}
-	
-	public int getInDataSize() {
+
+	public synchronized int getInDataSize() {
 		return inData.size();
 	}
 
@@ -196,22 +195,24 @@ public abstract class RequestReply {
 	public int getInDataAsInt(int index) {
 		byte[] b = getInData(index);
 		if (b.length != 4) {
-			throw new IllegalArgumentException("Wrong data size: " + b.length);
+			throw new IllegalArgumentException("Wrong data size: " + b.length + ". Data was "
+					+ AbstractKarajanChannel.ppByteBuf(b));
 		}
 		return b[0] + (b[1] << 8) + (b[2] << 16) + (b[3] << 24);
 	}
 
 	public long getInDataAsLong(int index) {
 		return unpackLong(getInData(index));
-		
+
 	}
-	
+
 	protected long unpackLong(byte[] b) {
-	    if (b.length != 8) {
-            throw new IllegalArgumentException("Wrong data size: " + b.length);
-        }
-        return b[0] + (b[1] << 8) + (b[2] << 16) + (b[3] << 24) + (b[2] << 32) + (b[3] << 40)
-                + (b[2] << 48) + (b[3] << 56);
+		if (b.length != 8) {
+			throw new IllegalArgumentException("Wrong data size: " + b.length + ". Data was "
+					+ AbstractKarajanChannel.ppByteBuf(b));
+		}
+		return b[0] + (b[1] << 8) + (b[2] << 16) + (b[3] << 24) + (b[2] << 32) + (b[3] << 40)
+				+ (b[2] << 48) + (b[3] << 56);
 	}
 
 	public boolean getInDataAsBoolean(int index) {
