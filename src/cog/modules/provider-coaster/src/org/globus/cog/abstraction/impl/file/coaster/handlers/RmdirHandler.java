@@ -21,7 +21,7 @@ public class RmdirHandler extends CoasterFileRequestHandler {
     	if (!f.isDirectory()) {
     	    sendError("Not a directory: " + f);
     	}
-    	if (!f.delete() && f.exists()) {
+    	else if (!f.delete() && f.exists()) {
     		sendError("Failed to delete directory " + f);
     	}
     	else {
