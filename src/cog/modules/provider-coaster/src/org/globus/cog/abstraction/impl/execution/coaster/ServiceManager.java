@@ -128,7 +128,7 @@ public class ServiceManager implements StatusListener {
 
     public String reserveService(Task task, String bootHandlerProvider)
             throws TaskSubmissionException {
-        return reserveService(getContact(task), getSecurityContext(task) ,bootHandlerProvider);
+        return reserveService(getContact(task), getSecurityContext(task), bootHandlerProvider);
     }
 
     protected String waitForStart(Object service) throws InterruptedException {
