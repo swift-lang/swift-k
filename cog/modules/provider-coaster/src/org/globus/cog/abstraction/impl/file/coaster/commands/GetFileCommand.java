@@ -23,7 +23,8 @@ public class GetFileCommand extends Command {
     private String local;
     private ProgressMonitor pm;
 
-    public GetFileCommand(String remote, String local, ProgressMonitor pm) throws FileNotFoundException {
+    public GetFileCommand(String remote, String local, ProgressMonitor pm)
+            throws FileNotFoundException {
         super(NAME);
         addOutData(remote);
         this.local = local;
@@ -32,15 +33,20 @@ public class GetFileCommand extends Command {
     }
 
     protected void addInData(byte[] data) {
-        if (len == -1) {
-            len = unpackLong(data);
+        if (this.getErrorFlag()) {
+            super.addInData(data);
         }
         else {
-            try {
-                fos.write(data);
+            if (len == -1) {
+                len = unpackLong(data);
             }
-            catch (IOException e) {
-                errorReceived(e.getMessage(), e);
+            else {
+                try {
+                    fos.write(data);
+                }
+                catch (IOException e) {
+                    errorReceived(e.getMessage(), e);
+                }
             }
         }
     }
