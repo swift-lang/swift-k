@@ -13,13 +13,10 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.service.FallbackAuthorization;
 import org.globus.cog.karajan.workflow.service.GSSService;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
-import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
 import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 import org.globus.gsi.GSIConstants;
 import org.globus.gsi.gssapi.GSSConstants;
@@ -41,7 +38,6 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 	private UserContext uc;
 	private boolean shuttingDown;
 	private Exception startException;
-	private Replier replier;
 	private int id;
 	private static int sid = 1;
 
@@ -61,12 +57,6 @@ public class GSSChannel extends AbstractTCPChannel implements Runnable {
 
 	private void init() {
 		id = sid++;
-		replier = new Replier(this);
-		EventBus.initialize();
-	}
-
-	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err) {
-		EventBus.post(replier, new ReplyEvent(tag, data, fin, err));
 	}
 
 	public void start() throws ChannelException {
