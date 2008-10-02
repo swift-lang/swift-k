@@ -17,6 +17,7 @@ import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public class GetFileHandler extends CoasterFileRequestHandler {
     public static final Logger logger = Logger
@@ -50,12 +51,13 @@ public class GetFileHandler extends CoasterFileRequestHandler {
                             is = new FileInputStream(f);
                         }
                         catch (Exception e) {
+                            logger.info("Could not open file", e);
                             ex = e;
                         }
                     }
 
                     public boolean hasNext() {
-                        return first || crt < size && ex == null;
+                        return (first || crt < size) && ex == null;
                     }
 
                     public Object next() {
@@ -93,15 +95,31 @@ public class GetFileHandler extends CoasterFileRequestHandler {
             }
 
             public int size() {
-                return chunks + 1;
+                return ex == null ? chunks + 1 : 0;
             }
         };
     }
-
+    
     public void send() throws ProtocolException {
-        super.send();
+        KarajanChannel channel = getChannel();
+        Collection outData = getOutData();
+        if (channel == null) {
+            throw new ProtocolException("Unregistered command");
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug(ppOutData("HND"));
+        }
+        boolean fin = (outData == null) || (outData.size() == 0);
+        if (!fin) {
+            Iterator i = outData.iterator();
+            while (i.hasNext()) {
+                byte[] buf = (byte[]) i.next();
+                channel.sendTaggedReply(getId(), buf, !i.hasNext(), getErrorFlag());
+            }
+        }
         if (ex != null) {
-            sendError(ex.getMessage(), ex);
+            logger.info("Transfer exception", ex);
+            channel.sendTaggedReply(getId(), ex.getMessage().getBytes(), true, true);
         }
     }
 }

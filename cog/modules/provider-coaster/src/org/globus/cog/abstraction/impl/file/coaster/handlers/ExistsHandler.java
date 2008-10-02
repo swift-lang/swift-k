@@ -11,13 +11,17 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
 import java.io.File;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 
 public class ExistsHandler extends CoasterFileRequestHandler {
+	public static final Logger logger = Logger.getLogger(ExistsHandler.class);
 
     public void requestComplete() throws ProtocolException {
     	File f = normalize(getInDataAsString(0));
-    	
+    	if (logger.isInfoEnabled()) {
+    		logger.info("Checking if " + f.getAbsolutePath() + " exists");
+    	}
     	if (f.exists()) {
     	    addOutData(true);
     	}
