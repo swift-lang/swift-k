@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.coaster.service;
 
 import org.globus.cog.abstraction.impl.execution.coaster.SubmitJobCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.ChmodCommand;
+import org.globus.cog.abstraction.impl.file.coaster.commands.DeleteCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.ExistsCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.FileInfoCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.GetFileCommand;
@@ -21,6 +22,7 @@ import org.globus.cog.abstraction.impl.file.coaster.commands.PutFileCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.RenameCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.RmdirCommand;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.ChmodHandler;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.DeleteHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.ExistsHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.FileInfoHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
@@ -44,6 +46,7 @@ public class CoasterRequestManager extends AbstractRequestManager {
         addHandler(ServiceShutdownHandler.NAME, ServiceShutdownHandler.class);
         
         addHandler(ExistsCommand.NAME, ExistsHandler.class);
+        addHandler(DeleteCommand.NAME, DeleteHandler.class);
         addHandler(MkdirCommand.NAME, MkdirHandler.class);
         addHandler(ListCommand.NAME, ListHandler.class);
         addHandler(RmdirCommand.NAME, RmdirHandler.class);
