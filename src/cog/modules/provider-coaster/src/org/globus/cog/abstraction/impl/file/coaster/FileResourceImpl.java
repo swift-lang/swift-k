@@ -150,7 +150,12 @@ public class FileResourceImpl extends AbstractFileResource {
             throws DirectoryNotFoundException, FileResourceException {
         ListCommand lc = new ListCommand(directoryName);
         run(lc);
-        return lc.getResult();
+        try {
+            return lc.getResult();
+        }
+        catch (ProtocolException e) {
+            throw new FileResourceException(e);
+        }
     }
 
     public void putFile(String localFileName, String remoteFileName)
