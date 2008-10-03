@@ -11,6 +11,8 @@ package org.globus.cog.abstraction.coaster.service;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
@@ -40,6 +42,7 @@ public class CoasterService extends GSSService {
     private Exception e;
     private boolean done;
     private boolean suspended;
+    private static Timer watchdogs = new Timer();
 
     public CoasterService() throws IOException {
         this(null, null);
@@ -179,25 +182,25 @@ public class CoasterService extends GSSService {
     }
 
     private void startShutdownWatchdog() {
-        new Thread() {
-            {
-                setName("Shutdown watchdog");
-                setDaemon(true);
-            }
-
+        watchdogs.schedule(new TimerTask() {
             public void run() {
-                try {
-                    Thread.sleep(5 * 60 * 1000);
-                    logger
-                            .info("Shutdown failed after 5 minutes. Forcefully shutting down");
-                    System.exit(3);
-                }
-                catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                logger
+                        .warn("Shutdown failed after 5 minutes. Forcefully shutting down");
+                System.exit(3);
             }
 
-        }.start();
+        }, 5 * 60 * 1000);
+    }
+
+    private static TimerTask startConnectWatchdog() {
+        TimerTask tt = new TimerTask() {
+            public void run() {
+                logger.warn("Failed to connect after 2 minutes. Shutting down");
+                System.exit(4);
+            }
+        };
+        watchdogs.schedule(tt, 2 * 60 * 1000);
+        return tt;
     }
 
     public JobQueue getJobQueue() {
@@ -219,7 +222,9 @@ public class CoasterService extends GSSService {
             else {
                 s = new CoasterService(args[0], args[1]);
             }
+            TimerTask t = startConnectWatchdog();
             s.start();
+            t.cancel();
             s.waitFor();
             System.exit(0);
         }
