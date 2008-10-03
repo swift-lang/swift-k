@@ -241,7 +241,7 @@ namespace("vdl"
 					log(LOG:DEBUG, "FILE_STAGE_OUT_START srcname={bname} srcdir={rdir} srchost={host} ",
 							"destdir={ldir} desthost={dhost} provider={provider}")
 					//make sure we do have the directory on the client side
-					dir:make(ldir)
+					dir:make(ldir, host=dhost, provider=provider)
 					restartOnError(".*", 2
 					    task:transfer(srchost=host, srcfile=bname,
 					        srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)
