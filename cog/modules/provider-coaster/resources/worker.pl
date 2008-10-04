@@ -94,14 +94,16 @@ sub reconnect() {
 	}
 }
 
-
-sub init() {
+sub initlog() {
 	open(LOG, ">$LOG") or die "Failed to open log file: $!";
 	my $b = select(LOG);
 	$| = 1;
 	select($b);
 	print LOG time(), " Logging started\n";
+}
 
+
+sub init() {
 	wlog "uri=$URI, scheme=$SCHEME, host=$HOSTNAME, port=$PORT, id=$ID\n";
 	reconnect();
 }
@@ -492,6 +494,8 @@ for($i=1; $i<=$#ARGV ; $i++) {
 
 		my $myhost=`hostname`;
 		$myhost =~ s/\s+$//;
+		
+		initlog();
 		
 		wlog("Initialized coaster worker $i\n");
 		wlog("Running on node $myhost\n");
