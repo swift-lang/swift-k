@@ -78,10 +78,8 @@
 				build instructions are available on the <ulink
 				url="http://www.ci.uchicago.edu/swift/downloads/index.php#nightly">Swift
 				downloads page</ulink>. Once built, the <filename
-				class="directory">dist/vdsk-&lt;version&gt;</filename> directory
-				will contain a self-contained build which can be moved to a
-				desired location. For simplicity this directory will be called
-				<filename class="directory"><envar>$SWIFT_HOME</envar></filename>.
+				class="directory">dist/vdsk-svn</filename> directory
+				will contain a self-contained build which can be used in place or moved to a different location.
 				You should then proceed to the <link
 				linkend="configure">configuration section</link>.
 			
@@ -105,9 +103,7 @@ class="file">vdsk-&lt;version&gt;.tar.gz</filename>
 			
 			This will create a <filename
 			class="directory">vdsk-&lt;version&gt;</filename> directory
-			containing the build. For simplicity this directory will be refered
-			to as <filename
-			class="directory"><envar>$SWIFT_HOME</envar></filename>.
+			containing the build.
 		
 		</para>
 	</sect1>
@@ -120,13 +116,13 @@ class="file">vdsk-&lt;version&gt;.tar.gz</filename>
 			This section describes configuration steps that need to be taken in
 			order to get Swift running. Since all command line tools provided
 			with Swift can be found in the <filename
-			class="directory"><envar>$SWIFT_HOME</envar>/bin</filename> directory, it may
+			class="directory">bin/</filename> directory of the Swift distribution, it may
 			be a good idea to add this directory to your <envar>PATH</envar>
 			environment variable:
 			
 <programlisting>
 <prompt>&gt;</prompt> <command>export</command> <envar>PATH</envar>=<filename
-class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
+class="directory">/path/to/swift/bin</filename>:<envar>$PATH</envar>
 </programlisting>
 			
 			If you are installing Swift on a machine with access to a graphical
@@ -202,7 +198,8 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 				class="file">swift.properties</filename>) can be used to
 				customize certain configuration aspects of Swift. A shared
 				version of this file, <filename
-				class="file"><envar>$SWIFT_HOME</envar>/etc/swift.properties</filename>
+				class="file">etc/swift.properties</filename>
+				in the installation directory
 				can be used to provide installation-wide defaults. A per-user
 				properties file, <filename
 				class="file">~/.swift/swift.properties</filename> can be used for
@@ -235,7 +232,7 @@ class="directory"><envar>$SWIFT_HOME</envar>/bin</filename>:<envar>$PATH</envar>
 		<para>
 		
 			The Swift examples can be found in the <filename
-			class="directory">&lt;SWIFT_HOME&gt;/examples</filename> directory.
+			class="directory">examples</filename> directory in the Swift distribution.
 			The examples are written in the <ulink
 			url="http://www.ci.uchicago.edu/swift/guides/languagespec.php">SwiftScript
 			Language</ulink>, and have <filename class="file">.swift</filename> as

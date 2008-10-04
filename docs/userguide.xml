@@ -1009,7 +1009,7 @@ would map
 			Various aspects of the behavior of the Swift Engine can be
 			configured through properties. The Swift Engine recognizes a global,
 			per installation properties file which can found in <filename
-			class="file">$SWIFT_HOME/etc/swift.properties</filename> and a user
+			class="file">etc/swift.properties</filename> in the Swift installation directory and a user
 			properties file which can be created by each user in <filename
 			class="file">~/.swift/swift.properties</filename>. The Swift Engine
 			will first load the global properties file. It will then try to load
@@ -1048,7 +1048,9 @@ would map
 							
 								Points to the Swift installation directory
 								(<filename
-								class="directory"><envar>$SWIFT_HOME</envar></filename>).
+								class="directory"><envar>$SWIFT_HOME</envar></filename>). In general, this should not be set
+as Swift can find its own installation directory, and incorrectly setting it
+may impair the correct functionality of Swift.
 							
 							</para>
 						</listitem>
