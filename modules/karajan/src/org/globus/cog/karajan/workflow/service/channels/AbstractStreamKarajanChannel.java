@@ -156,7 +156,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 
-
 	private static final int SENDER_COUNT = 1;
 	private static Sender[] sender;
 	private static int crtSender;
@@ -283,7 +282,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		if (multiplexer == null) {
 			multiplexer = new Multiplexer[MUX_COUNT];
 			for (int i = 0; i < MUX_COUNT; i++) {
-				multiplexer[i] = new Multiplexer();
+				multiplexer[i] = new Multiplexer(i);
 				multiplexer[i].start();
 			}
 		}
@@ -291,11 +290,16 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	protected static class Multiplexer extends Thread {
+		public static final Logger logger = Logger.getLogger(Multiplexer.class);
+		
 		private Set channels;
 		private List remove, add;
+		private boolean terminated;
+		private int id;
 
-		public Multiplexer() {
-			super("Channel multiplexer");
+		public Multiplexer(int id) {
+			super("Channel multiplexer " + id);
+			this.id = id;
 			setDaemon(true);
 			channels = new HashSet();
 			remove = new ArrayList();
@@ -304,9 +308,16 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 
 		public synchronized void register(AbstractStreamKarajanChannel channel) {
 			add.add(channel);
+			if (logger.isInfoEnabled()) {
+				logger.info("(" + id + ") Scheduling " + channel + " for addition");
+			}
+			if (terminated) {
+				logger.warn("Trying to add a channel to a stopped multiplexer");
+			}
 		}
 
 		public void run() {
+			logger.info("Multiplexer " + id + " started");
 			boolean any;
 			try {
 				while (true) {
@@ -321,17 +332,24 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 							any |= channel.step();
 						}
 						catch (Exception e) {
-							shutdown(channel, e);
+							try {
+								shutdown(channel, e);
+							}
+							catch (Exception ee) {
+								logger.warn("Failed to shut down channel", e);
+							}
 						}
 					}
 					synchronized (this) {
 						i = remove.iterator();
 						while (i.hasNext()) {
-							channels.remove(i.next());
+							Object r = i.next();
+							channels.remove(r);
 						}
 						i = add.iterator();
 						while (i.hasNext()) {
-							channels.add(i.next());
+							Object a = i.next();
+							channels.add(a);
 						}
 						remove.clear();
 						add.clear();
@@ -343,6 +361,15 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 			}
 			catch (Exception e) {
 				logger.warn("Exception in channel multiplexer", e);
+			}
+			catch (Error e) {
+				logger.error("Error in multiplexer", e);
+				e.printStackTrace();
+				System.exit(10);
+			}
+			finally {
+				logger.info("Multiplexer finished");
+				terminated = true;
 			}
 		}
 

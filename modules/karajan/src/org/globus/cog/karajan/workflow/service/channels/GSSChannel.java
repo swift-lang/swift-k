@@ -30,7 +30,7 @@ import org.gridforum.jgss.ExtendedGSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSManager;
 
-public class GSSChannel extends AbstractTCPChannel implements Runnable {
+public class GSSChannel extends AbstractTCPChannel {
 	private static final Logger logger = Logger.getLogger(GSSChannel.class);
 
 	private GssSocket socket;
