@@ -187,6 +187,7 @@ public class Bootstrap {
         List args = new ArrayList();
         args.add(java);
         addDebuggingOptions(args);
+        args.add("-Xmx128M");
         addProperties(args);
         args.add("-cp");
         args.add(sb.toString());
