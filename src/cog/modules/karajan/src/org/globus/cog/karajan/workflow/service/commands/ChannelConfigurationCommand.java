@@ -12,6 +12,7 @@ package org.globus.cog.karajan.workflow.service.commands;
 import java.net.URI;
 import java.rmi.server.UID;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
@@ -19,6 +20,8 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelID;
 
 
 public class ChannelConfigurationCommand extends Command {
+	public static final Logger logger = Logger.getLogger(ChannelConfigurationCommand.class);
+	
 	private final RemoteConfiguration.Entry config;
 	private final URI callbackURI;
 	
@@ -58,6 +61,9 @@ public class ChannelConfigurationCommand extends Command {
 	}
 
 	public void receiveCompleted() {
+		if (logger.isInfoEnabled()) {
+			logger.info("Got reply");
+		}
 		ChannelID cid = getChannel().getChannelContext().getChannelID();
 		if (cid.getRemoteID() == null) {
 			cid.setRemoteID(new String(getInData(0)));
