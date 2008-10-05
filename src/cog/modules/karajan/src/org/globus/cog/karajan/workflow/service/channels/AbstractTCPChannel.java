@@ -11,14 +11,10 @@ package org.globus.cog.karajan.workflow.service.channels;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.net.URI;
 
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
 
-public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel implements Runnable {
+public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 	private Socket socket;
 	private boolean started;
 	private Exception startException;
@@ -42,18 +38,7 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel im
 		else {
 			setName("S(" + socket.getLocalAddress() + ")");
 		}
-		new Thread(this).start();
-		while (!isStarted() && !isClosed() && startException == null) {
-			try {
-				wait();
-			}
-			catch (InterruptedException e) {
-			}
-		}
-		if (startException != null) {
-			logger.debug("Exception while starting channel", startException);
-			throw new ChannelException(startException);
-		}
+		initialize();
 		logger.info(getContact() + "Channel started");
 		if (isClient()) {
 			try {
@@ -65,37 +50,22 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel im
 		}
 	}
 
-	public void run() {
+	private void initialize() throws ChannelException {
 		ChannelContext context = getChannelContext();
 		try {
-			try {
-				started = true;
-			}
-			catch (Exception e) {
-				startException = e;
-				e.printStackTrace();
-				return;
-			}
-			finally {
-				synchronized (this) {
-					notifyAll();
-				}
-			}
 			initializeConnection();
 			register();
+			started = true;
 		}
 		catch (Exception e) {
-			if (!closing) {
-				logger.warn("Exception in channel", e);
-				context.notifyRegisteredListeners(e);
-			}
+			logger.debug("Exception while starting channel", e);
+			throw new ChannelException(e);
 		}
 	}
 
 	protected void initializeConnection() {
 
 	}
-
 
 	public void shutdown() {
 		if (isLocalShutdown()) {
