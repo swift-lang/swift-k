@@ -141,6 +141,7 @@ public class WorkerManager extends Thread {
                         logger.info("Got allocation request: " + req);
                     }
                 }
+                
                 try {
                     startWorker(new Seconds(req.maxWallTime.getSeconds())
                             .multiply(OVERALLOCATION_FACTOR)
@@ -188,6 +189,11 @@ public class WorkerManager extends Thread {
         copyAttributes(t, prototype, maxWallTime);
         t.setRequiredService(1);
         t.setService(0, buildService(prototype));
+        synchronized(this) {
+            if (!startingTasks.contains(prototype)) {
+                return;
+            }
+        }
 
         Map newlyRequested = new HashMap();
         for (int n = 0; n < numWorkers; n++) {
@@ -210,7 +216,6 @@ public class WorkerManager extends Thread {
                         .getMessage(), e));
             }
         }
-        System.err.println(t.getSpecification());
         try {
             handler.submit(t);
         }
@@ -258,8 +263,6 @@ public class WorkerManager extends Thread {
             s.setSecurityContext(AbstractionFactory.newSecurityContext(s
                     .getProvider()));
         }
-        System.out.println("Worker start provider: " + s.getProvider());
-        System.out.println("Worker start JM: " + s.getJobManager());
         return s;
     }
 
@@ -386,7 +389,9 @@ public class WorkerManager extends Thread {
                     + "). This worker manager instance does not "
                     + "recall requesting a worker with such an id.");
         }
-        wr.setScheduledTerminationTime(Seconds.now().add(wr.getMaxWallTime()));
+        wr
+                .setScheduledTerminationTime(Seconds.now().add(
+                        wr.getMaxWallTime()));
         wr.setChannelContext(cc);
         if (logger.isInfoEnabled()) {
             logger.info("Worker registration received: " + wr);
