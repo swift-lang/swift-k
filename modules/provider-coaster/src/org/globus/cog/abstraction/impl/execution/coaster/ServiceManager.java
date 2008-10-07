@@ -260,6 +260,7 @@ public class ServiceManager implements StatusListener {
             js.addArgument(sc.getHost());
             js.setStdOutputLocation(FileLocation.MEMORY);
             js.setStdErrorLocation(FileLocation.MEMORY);
+            js.setDelegation(Delegation.FULL_DELEGATION);
             t.setSpecification(js);
             ExecutionService s = new ExecutionServiceImpl();
             s.setServiceContact(sc);
