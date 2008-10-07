@@ -69,7 +69,7 @@ public class GetFileHandler extends CoasterFileRequestHandler {
                             else {
                                 int l = is.read(buf);
                                 crt += l;
-                                if (crt == l) {
+                                if (crt == size) {
                                     is.close();
                                 }
                                 if (l == buf.length) {
