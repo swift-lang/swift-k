@@ -163,7 +163,7 @@ if [ "$PATHPREFIX" != "" ]; then
 export PATH=$PATHPREFIX:$PATH
 fi
 
-if [ "X${EXEC:1:1}" != "X/" ] ; then
+if [ "X${EXEC:0:1}" != "X/" ] ; then
 export EXEC=$(which $EXEC)
 fi
 
