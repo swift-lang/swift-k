@@ -145,4 +145,12 @@ public interface FileTransferSpecification extends Specification {
      * be written.
      */
     public long getDestinationOffset();
+    
+    /**
+     * If set to true, recursive transfer of directories is requested. If set
+     * to false, a single file transfer is requested.
+     */
+    public void setRecursive(boolean recursive);
+    
+    public boolean isRecursive();
 }
