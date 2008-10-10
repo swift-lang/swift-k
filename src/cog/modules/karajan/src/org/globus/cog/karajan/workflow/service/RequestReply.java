@@ -140,8 +140,8 @@ public abstract class RequestReply {
 	}
 
 	public void receiveCompleted() {
-		inDataReceived = true;
 		synchronized (this) {
+			inDataReceived = true;
 			notify();
 		}
 	}
