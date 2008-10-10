@@ -20,7 +20,7 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	private String destinationFile;
 	private String source;
 	private String destination;
-	private boolean thirdparty;
+	private boolean thirdparty, recursive;
     private boolean thirdPartyIfPossible;
 	private long sourceFileOffset, destinationFileOffset, sourceFileLength;
 	private Hashtable attributes;
@@ -204,5 +204,13 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 
     public void setSourceOffset(long sourceFileOffset) {
         this.sourceFileOffset = sourceFileOffset;
+    }
+
+    public boolean isRecursive() {
+        return recursive;
+    }
+
+    public void setRecursive(boolean recursive) {
+        this.recursive = recursive;
     }
 }
