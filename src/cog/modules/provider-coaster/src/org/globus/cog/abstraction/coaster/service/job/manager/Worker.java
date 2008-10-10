@@ -66,6 +66,10 @@ public class Worker implements StatusListener {
             error = s;
         }
         else if (code == Status.COMPLETED) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Worker stdout: " + src.getStdOutput());
+                logger.info("Worker stderr: " + src.getStdError());
+            }
             if (starting) {
                 error = new StatusImpl(Status.FAILED,
                         "Worker ended prematurely", null);
