@@ -65,7 +65,7 @@ my $LAST_HEARTBEAT = 0;
 sub wlog {
 	my $msg;
 	foreach $msg (@_) {
-		print LOG time(), " ", $msg;
+		print LOG time(), " $ID $msg";
 		#print $msg;
 	}
 }
@@ -95,11 +95,11 @@ sub reconnect() {
 }
 
 sub initlog() {
-	open(LOG, ">$LOG") or die "Failed to open log file: $!";
+	open(LOG, ">>$LOG") or die "Failed to open log file: $!";
 	my $b = select(LOG);
 	$| = 1;
 	select($b);
-	print LOG time(), " Logging started\n";
+	print LOG time(), " $ID Logging started\n";
 }
 
 
@@ -113,7 +113,7 @@ sub sendm {
 	my $len = length($msg);
 	my $buf = pack("VVV", $tag, $flags, $len);
 	$buf = $buf.$msg;
-	wlog("> len=$len, tag=$tag, flags=$flags, $msg\n");
+	#wlog("> len=$len, tag=$tag, flags=$flags, $msg\n");
 
 	#($SOCK->send($buf) == length($buf)) || reconnect();
 	eval {defined($SOCK->send($buf))} or wlog("Send failed: $!\n");
@@ -144,7 +144,6 @@ sub sendReply {
 
 sub sendError {
 	my ($tag, @msgs) = @_;
-	
 	sendFrags($tag, $REPLY_FLAG | $ERROR_FLAG, @msgs);
 }
 
@@ -161,7 +160,7 @@ sub unpackData {
 	my $msg;
 	$SOCK->recv($msg, $len);
 	
-	wlog("< len=$len, tag=$tag, flags=$flg, $data\n");
+	#wlog("< len=$len, tag=$tag, flags=$flg, $data\n");
 	return ($tag, $flg, $msg);
 }
 
@@ -225,6 +224,8 @@ sub process {
 		}
 		$cont->($tag, 0, $err, $frags);
 	}
+	
+	return 1;
 }
 
 sub checkTimeouts2 {
@@ -265,7 +266,7 @@ sub recvOne {
 	$SOCK->recv($data, 12);
 	if (length($data) > 0) {
 		wlog "Received $data\n";
-		eval { process(unpackData($data)); } || wlog "Failed to process data: $@\n";
+		eval { process(unpackData($data)); } || (die "Failed to process data: $@" && wlog "Failed to process data: $@\n");
 	}
 	else {
 		#sleep 250ms
@@ -403,6 +404,11 @@ sub checkJob() {
 	my $tag = shift;
 	my $executable = $JOB{"executable"};
 	if (!(defined $JOBID)) {
+		wlog "Job details\n";
+		my $name;
+		foreach $name (keys %JOB) {
+			wlog "key: $name, value: $JOB{$name}\n";
+		}
 		sendError($tag, ("Missing job identity"));
 		return 0;
 	}
