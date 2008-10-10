@@ -116,7 +116,7 @@ public class ChannelContext {
 		return channelID;
 	}
 	
-	public synchronized int nextCmdSeq() {
+	public int nextCmdSeq() {
 		cmdseq = cmdseq + 1;
 		while (activeSenders.containsKey(cmdseq) || activeReceivers.containsKey(cmdseq)) {
 			cmdseq = cmdseq + 1;
@@ -124,7 +124,7 @@ public class ChannelContext {
 		return cmdseq;
 	}
 
-	public void registerCommand(Command cmd) throws ProtocolException {
+	public synchronized void registerCommand(Command cmd) throws ProtocolException {
 		if (cmd.getId() == RequestReply.NOID) {
 			cmd.setId(nextCmdSeq());
 			activeSenders.put(cmd.getId(), cmd);
