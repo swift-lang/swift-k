@@ -239,7 +239,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
         }
         else {
             if (this.sourceResource != null) {
-                if (this.sourceResource.isDirectory(spec.getSource())) {
+                if (spec.isRecursive() && this.sourceResource.isDirectory(spec.getSource())) {
                     if (localDestination == null) {
                         localDestination = File.createTempFile(this.task.getIdentity().getValue(),
                                 null);
@@ -338,7 +338,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
         }
         else {
             if (this.destinationResource != null) {
-                if (localSource.isDirectory()) {
+                if (spec.isRecursive() && localSource.isDirectory()) {
                     if (logger.isDebugEnabled()) {
                         logger
                                 .debug("Directory transfer with resource local->remote");
