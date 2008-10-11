@@ -19,7 +19,7 @@ tutorial</ulink>.
 	<para>
 Swift is a data-oriented coarse grained scripting language that
 supports dataset typing and mapping, dataset iteration,
-conditional branching, and sub-workflow composition.
+conditional branching, and procedural composition.
 	</para>
 	<para>
 Swift programs (or <firstterm>workflows</firstterm>) are written in
@@ -1196,15 +1196,15 @@ may impair the correct functionality of Swift.
 								report the first error encountered and
 								immediately stop execution. If set to
 								<constant>true</constant>, Swift will attempt to
-								run as much as possible from a workflow before
+								run as much as possible from a SwiftScript program before
 								stopping execution and reporting all errors
 								encountered.
 							</para>
-							<para>When developing workflows, using the
+							<para>When developing SwiftScript programs, using the
 								default value of <constant>false</constant> can
-								make the workflow easier to debug. However
+								make the program easier to debug. However
 								in production runs, using <constant>true</constant>
-								will allow more of a workflow to be run before
+								will allow more of a SwiftScript program to be run before
 								Swift aborts execution.
 							</para>
 						</listitem>
@@ -1296,10 +1296,10 @@ may impair the correct functionality of Swift.
 							
 								Swift can generate a 
 <ulink url="http://www.graphviz.org/">Graphviz</ulink> file representing 
-								the structure of the workflow it runs. If this
+								the structure of the SwiftScript program it has run. If this
 								property is set to <literal>true</literal>,
 								Swift will save the provenance graph in a file
-								named by concatenating the workflow name and the
+								named by concatenating the program name and the
 								instance ID (e.g. <filename
 								class="file">helloworld-ht0adgi315l61.dot</filename>). 
 							</para>
@@ -1551,7 +1551,7 @@ may impair the correct functionality of Swift.
 							<para>
 							
 								Limits the number of concurrent submissions for
-								a workflow instance. This throttle only limits
+								a run. This throttle only limits
 								the number of concurrent tasks (jobs) that are
 								being sent to sites, not the total number of
 								concurrent jobs that can be run. The submission
@@ -1714,7 +1714,7 @@ may impair the correct functionality of Swift.
 
 							<para>
 Indicates whether the working directory on the remote site should be
-left intact even when the workflow completes successfully. This can be
+left intact even when a run completes successfully. This can be
 used to inspect the site working directory for debugging purposes.
 							</para>
 						</listitem>
@@ -1755,12 +1755,12 @@ made available to the SwiftScript program through the
   </varlistentry>
   <varlistentry><term>-typecheck</term>
     <listitem><para>
-      Does a typecheck instead of executing the workflow </para></listitem>
+      Does a typecheck of a SwiftScript program, instead of executing it.</para></listitem>
   </varlistentry>
 
   <varlistentry><term>-dryrun</term>
     <listitem><para>
-      Runs the workflow without submitting any jobs (can be used to get
+      Runs the SwiftScript program without submitting any jobs (can be used to get
       a graph)
     </para></listitem>
   </varlistentry>
@@ -1803,16 +1803,16 @@ made available to the SwiftScript program through the
   <varlistentry><term>-logfile <literal>file</literal></term>
     <listitem><para>
       Specifies a file where log messages should go to. By default 
-      Swift uses the name of the workflow being run and a numeric index
+      Swift uses the name of the program being run and a numeric index
       (e.g. myworkflow.1.log) 
     </para></listitem>
   </varlistentry>
 
   <varlistentry><term>-runid <literal>identifier</literal></term>
     <listitem><para>
-Specifies the run identifier. This must be unique for every invocation of a workflow and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier. When using this parameter, care should be taken to ensure
+Specifies the run identifier. This must be unique for every invocation and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier. When using this parameter, care should be taken to ensure
 that the run ID remains unique with respect to all other run IDs that might
-be used, irrespective of (at least) expected run location, workflow or user.
+be used, irrespective of (at least) expected execution sites, program or user.
     </para></listitem>
   </varlistentry>
 
@@ -1857,7 +1857,7 @@ The swift command may exit with the following return codes:
 <itemizedlist>
 <listitem>0 - success</listitem>
 <listitem>1 - command line syntax error or missing project name</listitem>
-<listitem>2 - error during workflow execution</listitem>
+<listitem>2 - error during execution</listitem>
 <listitem>3 - error during compilation of SwiftScript program</listitem>
 <listitem>4 - input file does not exist</listitem>
 </itemizedlist>
@@ -1921,30 +1921,30 @@ properties section</link>.
 
 	<section id="restart"> <title>Workflow restart/recovery</title>
 		<para>
-If a workflow fails, Swift can resume that workflow from the point of
-failure. If a Swift workflow fails, a restart log file will be generated
-using the unique job ID, with a .rlog extension. This restart log
+If a run fails, Swift can resume the program from the point of
+failure. When a run fails, a restart log file will be left behind in
+a file named using the unique job ID and a .rlog extension. This restart log
 can then be passed to a subsequent Swift invocation using the -resume
-parameter. Swift will resume executing the workflow. Previously executed
-tasks will not be run a second time. The SwiftScript source file should
-not be modified between invocations.
+parameter. Swift will resume execution, avoiding execution of invocations
+that have previously completed successfully. The SwiftScript source file
+and input data files should not be modified between runs.
 		</para>
 		<para>
-Every execution of a workflow creates a restart
+Every run creates a restart
 log file with a named composed of the file name of the workflow
 being executed, an invocation ID, a numeric ID, and the <filename
 class="file">.rlog</filename> extension. For example, <filename
 class="file">example.swift</filename>, when executed, could produce
 the following restart log file: <filename
 class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
-the workflow completes successfully, the restart log file is
+the run completes successfully, the restart log file is
 deleted. If however the workflow fails, <command>swift</command>
-can use the restart log file to continue the
-execution of the workflow from a point before the
-failure occurred. In order to restart a workflow from a restart log
+can use the restart log file to continue
+execution from a point before the
+failure occurred. In order to restart from a restart log
 file, the <option>-resume <parameter><filename
 class="file">logfile</filename></parameter></option> argument can be
-used after the compiled workflow file name. Example:
+used after the SwiftScript program file name. Example:
 
 <screen>
 <prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
@@ -2069,9 +2069,9 @@ org.globus.cog.karajan.scheduler.Scheduler interface and modifying
 libexec/scheduler.xml and etc/karajan.properties to refer to the new
 scheduler.
 </para>
-<para>Execution providers, which allow to Swift to execute jobs through
-specific mechanisms (such as local fork or through GRAM) can be
-implemented as Java CoG kit providers.
+<para>Execution providers and filesystem providers, which allow to Swift
+to execute jobs and to stage files in and out through mechanisms such
+as GRAM and GridFTP can be implemented as Java CoG kit providers.
 </para>
 	</section>
 
@@ -2296,7 +2296,7 @@ when Condor is used as an LRM behind GRAM2. Example: &lt;profile namespace="glob
 			</para>
 			<para id="profile.globus.coastersPerNode">coastersPerNode specifies
 the number of coaster workers to be run on each node. This profile entry
-is used by the coaster provider.
+is used by the <link linkend="coasters">coaster execution provider</link>.
 			</para>
 		</section>
 		<section id="profile.env"><title>env namespace</title>
@@ -2311,7 +2311,9 @@ executed job.
 		<para>
 Swift can group a number of short job submissions into a single larger
 job submission to minimize overhead involved in launching jobs (for example,
-caused by security negotiation and queuing delay).
+caused by security negotiation and queuing delay). In general,
+<link linkend="coasters">CoG coasters</link> should be used in preference
+to the clustering mechanism documented in this section.
 		</para>
 
 		<para>
@@ -2358,7 +2360,9 @@ submit directory after each run. It will copy all your logs and kickstart
 records into a directory at the CI for reporting, usage tracking, support and debugging.
 			</para>
 			<para>
+<screen>
 rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
+</screen>
 			</para>
 		</section>
 		<section><title>Specifying TeraGrid allocations</title>
@@ -2461,7 +2465,7 @@ and a remote working directory. Optionally, <link linkend="profiles">profile set
 
 		<para>
 Transfer methods are specified with the &lt;gridftp&gt; element or
-with the &lt;filesystem&gt; method.
+with the &lt;filesystem&gt; element.
 		</para>
 		<para>
 To use gridftp or local filesystem copy, use the &lt;gridftp&gt;
@@ -2483,7 +2487,10 @@ Filesystem access using scp (the SSH copy protocol) can be specified using the
 For additional ssh configuration information, see the ssh execution
 provider documentation below.
 		</para>
-
+Filesystem access using <link linkend="coasters">CoG coasters</link> can be
+also be specified using the &lt;filesystem&gt; element. More detail about
+configuring that can be found in the <link linkend="coasters">CoG
+coasters</link> section.
 </section>
 
 <section><title>Execution method specification</title>
@@ -2548,16 +2555,15 @@ www11.i2u2.org.passphrase=XXXX
 </screen>
 		</para>
 		<para>
-For execution using the CoG Coaster mechanism, the coaster provider
+For execution using the 
+<link linkend="coasters">CoG Coaster mechanism</link>, the coaster provider
 should be used:
 <screen>
 &lt;execution provider="coaster" url="tg-grid.uc.teragrid.org"
     jobmanager="gt2:gt2:pbs" />
 </screen>
-with the jobmanager parameter specifying: the cog provider to use to
-submit the coaster head job; the cog provider to use to submit
-coaster worker jobs; and optionally the jobmanager to be used by
-worker submission.
+More details about configuration of coasters can be found in the
+<link linkend="coasters">section on coasters</link>.
 		</para>
 </section>
 <section><title>Other site catalog parameters</title>
@@ -2584,7 +2590,8 @@ the &lt;profile&gt; element. For example:
 		</section>
 
 		<para>
-The site catalog is an evolution of the VDS site catalog which is documented
+The site catalog format is an evolution of the VDS site catalog format which
+is documented
 <ulink url="http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html">here</ulink>.
 		</para>
 	</section>
@@ -2601,7 +2608,7 @@ either in the Swift configuration file or on the command line.
 		</para>
 		<para>
 The format is one line per executable per site, with fields separated by
-tabs. Spaces cannot be used as a field separator.
+tabs. Spaces cannot be used to separate fields.
 		</para>
 		<para>Some example entries:
 <screen>
@@ -2680,7 +2687,8 @@ be supplied on the ant commandline. These are summarised here:
 with-provider-condor - build with CoG condor provider
 		</para>
 		<para>
-with-provider-coaster - build with CoG coaster provider
+with-provider-coaster - build with CoG coaster provider (see
+<link linkend="coasters">the section on coasters</link>)
 		</para>
 		<para>
 with-provider-deef - build with Falkon provider deef. In order for this
@@ -2723,5 +2731,66 @@ $ <userinput>ant -Dno-supporting=true redist</userinput>
 </screen>
 		</para>
 	</section>
+	<section id="coasters"><title>Coasters</title>
+<para>Coasters were introduced in Swift v0.6 as an experimental feature.
+</para>
+<para>
+In many applications, Swift performance can be greatly enhanced by the
+use of CoG coasters. CoG coasters provide a low-overhead job submission
+and file transfer mechanism suited for the execution of short jobs
+(on the order of a few seconds) and the transfer of small files (on the
+order of a few kilobytes) for which other grid protocols such as GRAM
+and GridFTP are poorly suited.
+</para>
+<para>
+The coaster mechanism submits a head job using some other execution
+mechanism such as GRAM, and for each worker node that will be used in
+a remote cluster, it submits a worker job, again using some other
+execution mechanism such as GRAM.
+</para>
+<para>
+The head job manages file transfers and the dispatch of execution jobs
+to workers. Much of the overhead associated with other grid protocols
+(such as authentication and authorization, and allocation of worker nodes
+by the site's local resource manager) is reduced, because that overhead
+is associated with the allocation of a coaster head or coaster worker,
+rather than with every Swift-level procedure invocation; potentially hundreds
+or thousands of Swift-level procedure invocations can be run through a single
+worker.
+</para>
+<para>
+Coasters can be configured for use in two situations: job execution and
+file transfer.
+</para>
+<para>
+To use for job execution, specify a sites.xml execution element like this:
+<screen>
+&lt;execution provider="coaster" jobmanager="gt2:gt2:pbs" url="grid.myhost.org"&gt;
+</screen>
+The jobmanager string contains more detail than with other providers. It
+contains either two or three colon separated fields:
+1:the provider to be use to execute the coaster head job - this provider
+will submit from the Swift client side environment. Commonly this will be
+one of the GRAM providers; 2: the provider
+to be used to execute coaster worker jobs. This provider will be used
+to submit from the coaster head job environment, so a local scheduler
+provider can sometimes be used instead of GRAM. 3: optionally, the
+jobmanager to be used when submitting worker job using the provider
+specified in field 2.
+</para>
+<para>
+To use for file transfer, specify a sites.xml filesystem element like this:
+<screen>
+&lt;filesystem url="gt2://grid.myhost.org" /&gt;
+</screen>
+The url parameter should be a pseudo-URI formed with the URI scheme being
+the name of the provider to use to submit the coaster head job, and the
+hostname portion being the hostname to be used to execute the coaster
+head job. Note that this provider and hostname will be used for execution
+of a coaster head job, not for file transfer; so for example, a GRAM
+endpoint should be specified here rather than a GridFTP endpoint.
+</para>
+	</section>
+
 </article>
 
