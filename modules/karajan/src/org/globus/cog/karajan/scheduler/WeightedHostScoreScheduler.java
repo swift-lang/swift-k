@@ -202,7 +202,6 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		double sum = s.getSum();
 		if (policy == POLICY_WEIGHTED_RANDOM) {
 			double rand = Math.random() * sum;
-			System.err.println("Sorted: " + s);
 			if (logger.isInfoEnabled() && !s.isEmpty()) {
 				logger.info("Sorted: " + s);
 			}
