@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<article>
+	<articleinfo revision="$LastChangedRevision$">
+		<title>Swift log plotting and the some internal mechanics of Swift</title>
+	</articleinfo>
+
+	<section id="overview">
+		<title>Overview</title>
+<para>
+This document attempts to explain some of the meaning of the Swift
+log-processing plots, giving an explanation of how some of Swift's
+execution mechanism works and of some of the terminology used.
+</para>
+	</section>
+
+<section id="execute"><title>'execute' - SwiftScript app {} block invocations</title>
+
+<para>
+When a SwiftScript program invokes a application procedure (one with an
+app {} block), an 'execute' appears in the log file in START state. When
+all attempts at execution have finished (either successfully or unsuccessfully)
+then the execute will go into END_SUCCESS or END_FAILURE state. A workflow
+is successful if and only if all invocations end in END_SUCCESS.
+</para>
+
+<para>
+The execute states represent progress
+through the karajan procedure defined in
+<filename>libexec/execute-default.k</filename>.
+</para>
+<para>State changes for execute logs are defined by karajan log calls throughout
+this file.
+</para>
+<inlinemediaobject><imageobject><imagedata fileref="execute.png"></imagedata></imageobject></inlinemediaobject>
+
+<para>An execute consists of multiple attempts to perform
+<link linkend="execute2">execute2</link>s, with retries and replication
+as appropriate. Retries and replication are not exposed through the states
+of 'execute's.
+</para>
+<para>
+Executes are uniquely identified within a run by their karajan thread ID,
+which is present in the log files as the thread= parameter on execute
+log messsages.
+</para>
+
+<para>
+Here is a simple SwiftScript program which runs a foreach loop (<filename>few.swift</filename>):
+<programlisting>
+p() { 
+    app {
+        sleep "10s";
+    }
+}
+
+foreach i in [1:8] {
+    p();
+}
+</programlisting>
+
+</para>
+
+<para>
+Using the <command>swift-plot-log</command> from the log processing module,
+this graph gets generated to summarise execute state transitions:
+</para>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="plot-tour/pregenerated/execute.png"></imagedata></imageobject></inlinemediaobject>
+</para>
+<para>
+In this graph, the forloop calls p() eight times. Because there are no
+dependencies between those eight invocations, they are all invoked at the same
+time, around 1s into the run. This is show on the graph by the JOB_START line
+going from zero up to eight at around x=1s. As time passes, the sleep jobs
+complete, and as they do so the number of jobs in END_SUCCESS state increases.
+When all eight jobs are in END_SUCCESS state, the run is over.
+</para>
+<para>Here is a program with some data dependencies between invocations (<filename>dep.swift</filename>):
+
+<programlisting>
+$ cat dep.swift 
+type file;
+
+p(file f) { 
+    app {
+        sleep "10s";
+    }
+}
+
+(file o) q() {
+    app {
+        touch @o;
+    }
+}
+
+file intermediate = q();
+p(intermediate);
+</programlisting>
+
+</para>
+
+<para>
+Here is a plot of the execute states for this program:
+</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="plot-tour/pregenerated/execute-dep.png"></imagedata></imageobject></inlinemediaobject>
+</para>
+<para>
+In this run, one invocation starts (q()) fairly quickly, 
+but the other invocation (of p()) does not - instead, it does not start until
+approximately the time that the q() invocation has reached END_SUCCESS. 
+</para>
+</section>
+<section id="execute2"><title>execute2 - one attempt at running an execute</title>
+<para>
+An execute2 is one attempt to execute an app procedure. execute2s are invoked
+by <link linkend="execute">execute</link>, once for each retry or replication
+attempt.
+</para>
+<para>The states of an execute2 represent progress through the execute2 karajan
+procedure defined in <filename>libexec/vdl-int.k</filename>
+</para>
+<inlinemediaobject><imageobject><imagedata fileref="execute2.png"></imagedata></imageobject></inlinemediaobject>
+<para>
+Before an execute2 makes its first state log entry, it chooses a site to run on.
+Then at the start of file stage-in, the execute2 goes into THREAD_ASSOCIATION
+state. Once stagein is completed, the JOB_START state is entered, indicating
+that execution of the job executable will now be attempted. Following that,
+STAGING_OUT indicates that the output files are being staged out. If everything
+is completed successfully, the job will enter JOB_END state.
+</para>
+<para>There are two exceptions to the above sequence: JOB_CANCELLED indicates that
+the replication mechanism has cancelled this job because a different execute2
+began actual execution on a site for the same execute. APPLICATION_EXCEPTION
+indicates that there was an error somewhere in the attempt to stage in,
+actually execute or stage out. If a job goes into APPLICATION_EXCEPTION state
+then it will generally be retried (up to a certain number of times defined
+by the "execution.retries" parameter) by the containing <link linkend="execute">execute</link>.
+</para>
+</section>
+
+<section id="info"><title>wrapper info logs</title>
+<para>
+When a job runs, it is wrapped by a Swift shell script on the remote site that
+prepares the job environment, creating a temporary directory and moving
+input and output files around. Each wrapper invocation corresponds to a single
+application execution. For each invocation of the wrapper, a log file is created.
+Sometimes that log file is moved back to the submission side (when there is
+an error during execution, or when the setting 
+<ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#engineconfiguration">wrapper.always.transfer</ulink>=true
+is set) and placed in a <filename>*.d/</filename> directory corresponding in
+name to the main log file.
+</para>
+
+<inlinemediaobject><imageobject><imagedata fileref="info.png"></imagedata></imageobject></inlinemediaobject>
+<para>The states of the info logs represent progress through the wrapper
+script, <filename>libexec/wrapper.sh</filename>.
+</para>
+
+</section>
+
+<section><title>Relation of logged entities to each other</title>
+<para>Here is a simple diagram of how some of the above log channels along
+with other pieces fit together:</para>
+<inlinemediaobject><imageobject><imagedata fileref="logrelations.png"></imagedata></imageobject></inlinemediaobject>
+
+</section>
+
+</article>
+
