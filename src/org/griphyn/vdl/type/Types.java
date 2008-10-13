@@ -68,7 +68,8 @@ public class Types {
 	}
 
 	public synchronized static void resolveTypes() throws NoSuchTypeException {
-		Iterator i = types.entrySet().iterator();
+		Map typesCopy = new HashMap(types);
+		Iterator i = typesCopy.entrySet().iterator();
 		while (i.hasNext()) {
 			Map.Entry e = (Map.Entry) i.next();
 			Type type = (Type) e.getValue();
