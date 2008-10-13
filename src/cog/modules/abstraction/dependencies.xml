@@ -29,9 +29,9 @@
 	  <ant antfile="${main.buildfile}" target="dep">
 		<property name="module" value="provider-localscheduler"/>
 	  </ant>
-	  <ant antfile="${main.buildfile}" target="dep">
+	  <!--<ant antfile="${main.buildfile}" target="dep">
 		<property name="module" value="provider-coaster"/>
-	  </ant>
+	  </ant>-->
 	  <!-- <ant antfile="${main.buildfile}" target="dep">
 		<property name="module" value="provider-ws"/>
 	  </ant>-->
