@@ -189,6 +189,54 @@ actually execute or stage out. If a job goes into APPLICATION_EXCEPTION state
 then it will generally be retried (up to a certain number of times defined
 by the "execution.retries" parameter) by the containing <link linkend="execute">execute</link>.
 </para>
+
+<para>
+In this example, we use a large input file to slow down file staging so that
+it is visible on an execute2 graph (<filename>big-files.swift</filename>):
+<programlisting>
+type file;  
+  
+(file o) p(file i) {   
+    app {  
+        sleepcopy @i @o;  
+    }  
+}  
+  
+file input &lt;"biginput"&gt;;  
+file output[];  
+  
+foreach i in [1:8] {  
+    output[i] = p(input);  
+}  
+</programlisting>
+</para>
+
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="plot-tour/pregenerated/execute2.png"></imagedata></imageobject></inlinemediaobject></para>
+
+<para>
+There is an initial large input file that must be staged in. This causes the first
+jobs to be in stagein state for a period of time (the space between the
+ASSOCIATED and JOB_START lines at the lower left corner of the graph). All
+invocations share a single input file, so it is only staged in once and
+shared between all subsequent invocations - once the file has staged in at the
+start, there is no space later on between the ASSOCIATED and JOB_START lines
+because of this.
+</para>
+<para>
+Conversely, each invocation generates a large output file without there being
+any sharing. Each of those output files must be staged back to the submit
+side, which in this application takes some time. This can be seen by the large
+amount of space between the STAGING_OUT and JOB_END lines.
+</para>
+<para>
+The remaining large space on the graph is between the JOB_START and STAGING_OUT
+lines. This represents the time taken to queue and execute the application
+executable (and surrounding Swift worker-side wrapper, which can sometimes
+have non-negligable execution times - this can be seen in the
+<link linkend="info">info section</link>).
+</para>
+
 </section>
 
 <section id="info"><title>wrapper info logs</title>
