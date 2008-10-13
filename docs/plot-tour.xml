@@ -112,6 +112,56 @@ In this run, one invocation starts (q()) fairly quickly,
 but the other invocation (of p()) does not - instead, it does not start until
 approximately the time that the q() invocation has reached END_SUCCESS. 
 </para>
+
+<para>
+Finally in this section on 'execute', here is a demonstration of how the above
+two patterns fit together in one program (<filename>few2.swift</filename>:
+<programlisting>
+type file;
+
+(file o) p(file i) { 
+    app {
+        sleepcopy @i @o;
+    }
+}
+
+file input &lt;"input"&gt;;
+file output[];
+
+foreach i in [1:8] {
+    file intermediate;
+    intermediate = p(input);
+    output[i] = p(intermediate);
+}
+</programlisting>
+</para>
+
+
+<para>
+In total the program has 16 invocations of p(), dependent on each other in
+pairs. The dependencies can be plotted like this:
+
+<screen>
+$ <userinput>swift -pgraph few2.dot few2.swift</userinput>
+$ dot -Tpng -o few2.png few2.dot 
+</screen>
+
+yielding this graph:
+</para>
+
+<para><inlinemediaobject><imageobject><imagedata fileref="plot-tour/pregenerated/few2.png"></imagedata></imageobject></inlinemediaobject> </para>
+
+<para>
+When this program is run, the first row of 8 invocations can all start at the
+beginning of the program, because they have no dependencies (aside from on
+the input file). This can be seen around t=4 when the start line jumps up to 8.
+The other 8 invocations can only begin when the invocations they are dependent
+on have finished. This can be seen in the graph - every time one of the first
+invocations reaches END_SUCCESS, a new invocation enters START.
+</para>
+
+<para><inlinemediaobject><imageobject><imagedata fileref="plot-tour/pregenerated/execute-many-dep.png"></imagedata></imageobject></inlinemediaobject> </para>
+
 </section>
 <section id="execute2"><title>execute2 - one attempt at running an execute</title>
 <para>
