@@ -104,6 +104,13 @@ public class ProcedureSignature {
 		readData.addOutputArg(rdOutputArg);		
 		proceduresMap.put("readData", readData);
 		
+		ProcedureSignature readData2 = new ProcedureSignature("readData2");
+        FormalArgumentSignature rd2InputArg = new FormalArgumentSignature(true);
+        readData2.addInputArg(rd2InputArg);
+        FormalArgumentSignature rd2OutputArg = new FormalArgumentSignature(true);
+        readData2.addOutputArg(rd2OutputArg);     
+        proceduresMap.put("readData2", readData2);
+		
 		ProcedureSignature print = new ProcedureSignature("print");
 		print.setAnyNumOfInputArgs();
 		proceduresMap.put("print", print);
