@@ -257,6 +257,47 @@ name to the main log file.
 script, <filename>libexec/wrapper.sh</filename>.
 </para>
 
+<para>
+For the same run of <filename>big-files.swift</filename> as shown in the
+<link linkend="execute2">execute2 section</link>, here is a plot of states
+in wrapper info log files:
+</para>
+
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="plot-tour/pregenerated/info.png"></imagedata></imageobject></inlinemediaobject></para>
+
+<para>
+The trace lines on this graph fit entirely within the space between JOB_START 
+and STAGING_OUT on the corresponding execute2 graph, because the Swift worker node
+wrapper script does not run until the submit side of Swift has submitted a
+job for execution and that job has begun running.
+</para>
+
+<para>
+Many of the lines on this plot are very close together, because many of the
+operations take minimal time. The main space between lines is between
+EXECUTE and EXECUTE_DONE, where the actual application executable is executing;
+and between COPYING_OUTPUTS and RM_JOBDIR, where the large output files are
+copied from a job specific working directory to the site-specific shared
+directory. It is quite hard to distinguish on the graph where overlapping
+lines are plotted together.
+</para>
+
+<para>
+Note also that minimal time is spent copying input files into the job-specific
+directory in the wrapper script; that is because in this run, the wrapper
+script is using the default behaviour of making symbolic links in the job-specific
+directory; symbolic links are usually cheap to create compared to copying file
+content. However, if the <ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php#envvars">SWIFT_JOBDIR_PATH</ulink> parameter is set, then Swift will
+copy the input file to the specified job directory instead of linking. This
+will generally result in much more time being spent preparing the job directory
+in the Swift wrapper, but in certain circumstances this time is overwhelmingly
+offset by increased performance of the actual application executable (so on
+this chart, this would be seen as an increased job directory preparation time,
+but a reduced-by-more application executable time).
+</para>
+
+
 </section>
 
 <section><title>Relation of logged entities to each other</title>
