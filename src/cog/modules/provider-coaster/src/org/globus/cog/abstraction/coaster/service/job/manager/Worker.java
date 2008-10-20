@@ -21,6 +21,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 
 public class Worker implements StatusListener {
@@ -158,14 +159,15 @@ public class Worker implements StatusListener {
         return this.channelContext;
     }
 
-    public void shutdown() {
+    public ShutdownCallback shutdown() {
         try {
             logger.info("Shutting down worker: " + this);
             KarajanChannel channel = ChannelManager.getManager()
                     .reserveChannel(channelContext);
             ShutdownCommand sc = new ShutdownCommand();
-            sc.execute(channel);
-            logger.info("Worker shut down: " + this);
+            ShutdownCallback stc = new ShutdownCallback();
+            sc.executeAsync(channel, stc);
+            return stc;
         }
         catch (Exception e) {
             logger
@@ -179,6 +181,7 @@ public class Worker implements StatusListener {
             catch (Exception ee) {
                 logger.info("Failed to cancel worker task", ee);
             }
+            return null;
         }
     }
 
@@ -193,6 +196,34 @@ public class Worker implements StatusListener {
             // that's to avoid running the shutdown in some strange thread it
             // shouldn't be running in
             shutdownAfter(1);
+        }
+    }
+    
+    public static class ShutdownCallback implements Command.Callback {
+        private boolean done;
+        
+        public void errorReceived(Command cmd, String msg, Exception t) {
+            logger.info("Worker shut down failed: " + this + ". " + msg, t);
+            synchronized(this) {
+                done = true;
+                notifyAll();
+            }
+        }
+
+        public void replyReceived(Command cmd) {
+            logger.info("Worker shut down: " + this);
+            synchronized(this) {
+                done = true;
+                notifyAll();
+            }
+        }
+        
+        public void waitFor() throws InterruptedException {
+            synchronized(this) {
+                while(!done) {
+                    wait();
+                }
+            }
         }
     }
 }
