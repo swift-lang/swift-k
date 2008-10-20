@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
@@ -21,6 +22,8 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class SubmitJobCommand extends Command {
+    public static final Logger logger = Logger.getLogger(SubmitJobCommand.class);
+    
     public static final String NAME = "SUBMITJOB";
 
     private Task t;
@@ -47,7 +50,8 @@ public class SubmitJobCommand extends Command {
         //thing needs to be done to communicate with the perl client
         JobSpecification spec = (JobSpecification) t.getSpecification();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        add(baos, "identity", t.getIdentity().getValue());
+        String identity = t.getIdentity().getValue();
+        add(baos, "identity", identity);
         add(baos, "executable", spec.getExecutable());
         add(baos, "directory", spec.getDirectory());
         add(baos, "stdin", spec.getStdInput());
@@ -83,6 +87,9 @@ public class SubmitJobCommand extends Command {
             add(baos, "jm", "fork");
         }
         baos.close();
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job data: " + baos.toString());
+        }
         addOutData(baos.toByteArray());
     }
 
