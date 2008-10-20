@@ -29,6 +29,7 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
+import org.globus.cog.abstraction.coaster.service.job.manager.Worker.ShutdownCallback;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -141,7 +142,7 @@ public class WorkerManager extends Thread {
                         logger.info("Got allocation request: " + req);
                     }
                 }
-                
+
                 try {
                     startWorker(new Seconds(req.maxWallTime.getSeconds())
                             .multiply(OVERALLOCATION_FACTOR)
@@ -189,7 +190,7 @@ public class WorkerManager extends Thread {
         copyAttributes(t, prototype, maxWallTime);
         t.setRequiredService(1);
         t.setService(0, buildService(prototype));
-        synchronized(this) {
+        synchronized (this) {
             if (!startingTasks.contains(prototype)) {
                 return;
             }
@@ -454,24 +455,37 @@ public class WorkerManager extends Thread {
     }
 
     public void shutdown() {
-        synchronized (this) {
-            Iterator i;
-            i = ready.values().iterator();
-            while (i.hasNext()) {
-                Worker wr = (Worker) i.next();
-                wr.shutdown();
-            }
-            i = new ArrayList(requested.values()).iterator();
-            while (i.hasNext()) {
-                Worker wr = (Worker) i.next();
-                try {
-                    handler.cancel(wr.getWorkerTask());
+        try {
+            synchronized (this) {
+                Iterator i;
+                List callbacks = new ArrayList();
+                i = ready.values().iterator();
+                while (i.hasNext()) {
+                    Worker wr = (Worker) i.next();
+                    callbacks.add(wr.shutdown());
                 }
-                catch (Exception e) {
-                    logger.warn("Failed to cancel queued worker task "
-                            + wr.getWorkerTask(), e);
+                i = callbacks.iterator();
+                while (i.hasNext()) {
+                    ShutdownCallback cb = (ShutdownCallback) i.next();
+                    if (cb != null) {
+                        cb.waitFor();
+                    }
+                }
+                i = new ArrayList(requested.values()).iterator();
+                while (i.hasNext()) {
+                    Worker wr = (Worker) i.next();
+                    try {
+                        handler.cancel(wr.getWorkerTask());
+                    }
+                    catch (Exception e) {
+                        logger.warn("Failed to cancel queued worker task "
+                                + wr.getWorkerTask(), e);
+                    }
                 }
             }
+        }
+        catch (InterruptedException e) {
+            logger.warn("Interrupted", e);
         }
     }
 
