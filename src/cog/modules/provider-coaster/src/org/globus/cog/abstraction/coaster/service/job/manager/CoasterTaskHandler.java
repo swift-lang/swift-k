@@ -59,6 +59,14 @@ public class CoasterTaskHandler implements TaskHandler, Callback {
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
         try {
+            if (logger.isInfoEnabled()) {
+                logger
+                        .info("Submitting "
+                                + task.getIdentity()
+                                + " to "
+                                + task.getService(0).getServiceContact()
+                                        .getContact());
+            }
             task.setStatus(Status.SUBMITTING);
             String contact = task.getService(0).getServiceContact()
                     .getContact();
