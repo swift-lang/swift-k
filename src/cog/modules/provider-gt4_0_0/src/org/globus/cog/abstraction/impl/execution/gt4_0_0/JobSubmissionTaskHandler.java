@@ -388,6 +388,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void stateChanged(GramJob job) {
         boolean cleanup = false;
         StateEnumeration state = job.getState();
+        if (logger.isInfoEnabled()) {
+            logger.info("Job state changed: " + state.getValue());
+        }
         if (state.equals(StateEnumeration.Active)) {
             this.task.setStatus(Status.ACTIVE);
         }
@@ -448,8 +451,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private String getCauses(FaultType f) {
         StringBuffer sb = new StringBuffer();
         for (int i = 1; i < f.getFaultCause().length; i++) {
-            sb.append(f.getFaultCause(i).getDescription()[0]);
-            sb.append("\n");
+            if (f.getFaultCause(i) != null) {
+                sb.append(f.getFaultCause(i).getDescription()[0]);
+                sb.append("\n");
+            }
         }
         return sb.toString();
     }
