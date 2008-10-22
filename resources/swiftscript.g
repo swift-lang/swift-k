@@ -35,7 +35,7 @@ public void setSwiftLexer(SwiftScriptLexer sl) {
 StringTemplate template(String name) {
 	StringTemplate t = m_templates.getInstanceOf(name);
 	t.setAttribute("sourcelocation","line "+swiftLexer.getLine());
-    return t;
+	return t;
 }
 
 StringTemplate text(String t) {
