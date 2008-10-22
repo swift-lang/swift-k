@@ -174,6 +174,7 @@ topLevelStatement[StringTemplate code]
 
 // this is a declaration, but not sorted out the predications yet to
 // group it into a decl block
+    | ("app") => d=appproceduredecl {code.setAttribute("functions",d);}
     | (predictProceduredecl) => d=proceduredecl {code.setAttribute("functions", d);}
     ;
 
@@ -370,6 +371,49 @@ proceduredecl returns [StringTemplate code=template("function")]
         currentFunctionName=null;
         }
     ;
+
+appproceduredecl returns [StringTemplate code=template("function")]
+{StringTemplate f=null;
+ StringTemplate app=template("app");
+ StringTemplate exec=null; }
+    :   "app"
+        ( LPAREN
+        f=formalParameter
+        {
+        f.setAttribute("outlink", "true");
+        code.setAttribute("outputs", f);
+        }
+        (   COMMA f=formalParameter
+            {
+            f.setAttribute("outlink", "true");
+            code.setAttribute("outputs", f);
+            }
+        )*
+        RPAREN )?
+        id:ID {currentFunctionName=id.getText();} LPAREN
+        (   f=formalParameter
+            {
+            code.setAttribute("inputs", f);
+            }
+            (   COMMA f=formalParameter
+                {
+                code.setAttribute("inputs", f);
+                }
+            )*
+        )?
+        RPAREN
+        LCURLY
+        exec=declarator
+        {app.setAttribute("exec",exec);}
+        ( appArg[app] )* SEMI
+        {code.setAttribute("config",app);}
+        RCURLY
+        {
+        code.setAttribute("name", id.getText());
+        currentFunctionName=null;
+        }
+    ;
+
 
 // TODO in here, why do we have an | between LBRACKBRACK and ASSIGN?
 // does this mean that we don't have array initialisation in formal
