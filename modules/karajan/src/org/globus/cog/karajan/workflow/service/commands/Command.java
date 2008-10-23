@@ -140,8 +140,7 @@ public abstract class Command extends RequestReply {
 
 	public void executeAsync(KarajanChannel channel, Callback cb) throws ProtocolException {
 		this.cb = cb;
-		channel.registerCommand(this);
-		send();
+		send(channel, true);
 	}
 
 	public void executeAsync(KarajanChannel channel) throws ProtocolException {
