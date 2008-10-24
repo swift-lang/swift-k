@@ -8,6 +8,8 @@ import org.globus.ftp.*;
 import org.globus.ftp.exception.ServerException;
 import org.globus.gsi.GlobusCredential;
 import org.globus.gsi.gssapi.GlobusGSSCredentialImpl;
+import org.globus.gsi.gssapi.auth.Authorization;
+import org.globus.gsi.gssapi.auth.IdentityAuthorization;
 import org.globus.ogce.beans.filetransfer.gui.FileTransferMainPanel;
 import org.globus.ogce.beans.filetransfer.gui.monitor.WindowProgress;
 import org.globus.ogce.beans.filetransfer.gui.remote.common.DisplayInterface;
@@ -58,7 +60,7 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
     private boolean put = false;
 
 
-    protected JTextField txtHost;
+    protected JComboBox txtHost;
 
     protected JTextField txtPort;
 
@@ -80,7 +82,7 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
 
     private boolean bean = false;
     protected Vector remdirlisteners = new Vector();
-
+    public static String subject1;
     /** Register an action listener to be notified when a button is pressed */
     public void addRemDirListener(RemDirListener l) {
         remdirlisteners.addElement(l);
@@ -170,6 +172,35 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
         this.url = url;
         remoteTreeFrame.setUrl(url);
     }
+    
+    private JComboBox initComboBox() {
+    	JComboBox box = new JComboBox();
+    	FileReader reader = null;
+    	BufferedReader bufReader = null;
+    	
+    	try {    		
+    		reader = new FileReader("sitesName");
+    		bufReader = new BufferedReader(reader);
+    		String line = null;
+    		while ((line = bufReader.readLine()) != null) {
+    			box.addItem(line);
+    		}
+    	} catch (Exception e) {
+    		logger.debug(e.getMessage(), e);
+    	} finally {
+    		try {
+    			if (null != reader) { 
+    				reader.close();
+    			}
+    			if (null != bufReader) {
+    				bufReader.close();
+    			}	
+			} catch (IOException e) {				
+			}
+    	}
+    	
+    	return box;
+    }
 
     public void connectDlg(JFrame frame) {
         if (isConnected) {
@@ -189,7 +220,10 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
                 remoteTreeFrame.setConnected(false);
             }
         });
-        txtHost = new JTextField(20);
+        txtHost = initComboBox();
+        
+        txtHost.setPreferredSize(new Dimension(225, 20));
+        txtHost.setEditable(true);
         txtHost.setFont(new Font("Times New Roman", 0, 15));
         txtprofileName = new JTextField(20);
         txtprofileName.setText(GRID_FTP_PORT + "");
@@ -278,24 +312,47 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             remoteTreeFrame.setConnected(false);
         }
 
-        host = txtHost.getText();
+        host = txtHost.getSelectedItem().toString();
         subject = txtSubject.getText();
+        subject1 = subject;
         profile = host + ":" + port;//txtprofileName.getText();
         if (profile.length() <= 0) {
             profile = host;
         }
         wndPreload.setProgressValue(8);
         setConnectDetails(true);
+        
+        //save the site name to a file
+        if (-1 == txtHost.getSelectedIndex()) {
+            File sitesNameFile = new File("sitesName");
+            FileWriter writer = null;
+            try {
+            	if (!sitesNameFile.exists() || !sitesNameFile.isFile()) {
+                	sitesNameFile.createNewFile();
+                }
+            	
+            	writer = new FileWriter(sitesNameFile, true);
+            	writer.write(host);
+            	writer.write("\n");
+            } catch (Exception e) {
+            	logger.debug(e.getMessage(), e);
+            } finally {
+            	try {
+    				writer.close();
+    			} catch (IOException e) {				
+    			}
+            }
+        }        
     }
 
     public boolean setConnectDetails(boolean interactive) {
         remoteTreeFrame.setProtocol("gsiftp");
         remoteTreeFrame.setHost(host);
-        remoteTreeFrame.setPort(port);
+        remoteTreeFrame.setPort(port);        
         if (wndPreload != null) {
             wndPreload.setProgressValue(10);
         }
-                final boolean isInteractive = interactive;
+        final boolean isInteractive = interactive;
         Thread connectThread = new Thread(){
             public void run(){
                 remoteTreeFrame._actionConnect(isInteractive);
@@ -330,6 +387,13 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             client1 = new GridFTPClient(host, port);
             client2 = new GridFTPClient(host, port);
             client3 = new GridFTPClient(host, port);
+            if (null != subject && !"".equals(subject.trim())) {
+            	Authorization auth = new IdentityAuthorization(subject);
+            	client.setAuthorization(auth);
+            	client1.setAuthorization(auth);
+            	client2.setAuthorization(auth);
+            	client3.setAuthorization(auth);
+            }
         } catch (ServerException fte) {
             JOptionPane.showMessageDialog(this, "The host: " +
                     host + "\n or the port number: " +
@@ -544,6 +608,14 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             logger.debug("Client null...Trying to create a new instance");
             try {
                 client1 = new GridFTPClient(host, port);
+                System.out.println("subject:" + subject);
+                if (null != subject && !"".equals(subject.trim())) {                	
+                	Authorization auth = new IdentityAuthorization(subject);
+                	//client.setAuthorization(auth);
+                	client1.setAuthorization(auth);
+//                	client2.setAuthorization(auth);
+//                	client3.setAuthorization(auth);
+                }
                 client1.authenticate(null);
                 client1.setDataChannelAuthentication(DataChannelAuthentication.NONE);
             } catch (Exception e) {
@@ -559,7 +631,8 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             client1.setLocalActive();
             client1.setLocalNoDataChannelAuthentication();
             logger.debug("\nSET THE PARAMETERS." + client1);
-            listing = client1.list();
+            //listing = client1.list();
+            listing = client1.mlsd();
             logger.debug("Returned correctly from list.");
         } catch (ServerException fte) {
             logger.debug("ServerException listing directory." + client1);
@@ -582,7 +655,7 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
         } catch (Exception ioe) {
             logger.debug("Exception listing the remote directory.");
             logger.debug(ioe.getMessage());
-            ioe.printStackTrace(System.out);
+            ioe.printStackTrace();
             return null;
         }
 
@@ -683,7 +756,7 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             client2.setPassive();
             client2.setLocalActive();
             client2.setLocalNoDataChannelAuthentication();
-            listing = client2.list();
+            listing = client2.mlsd();
             logger.debug("Returned correctly from list.");
         } catch (ServerException fte) {
             logger.debug("ServerException listing directory.");
@@ -1148,7 +1221,7 @@ public void windowClosing(WindowEvent windowevent)
             default :
                 break;
 
-            case 10: // dialog enter the remote details ok button
+            case 10: // dialog enter the remote details ok button            	
                 Thread connect = new Thread(this);
                 connect.start();
                 remoteTreeFrame.statusOut("Connecting ... Please wait");
