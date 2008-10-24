@@ -605,24 +605,27 @@ public class FileTransferMainPanel extends MainInterface
               
         //----------------invode rft to transfer the file--------------------------------------
         Properties prop = getRFTProperties("rft.properties");
-        String rftEnabled = prop.getProperty("rft_enabled");
-        
-        //using RFT
-        if ("true".equals(rftEnabled)) {
-        	String fromHost = fromRemote.getHost();
-        	String fromPort = Integer.toString(fromRemote.getPort());
-        	String toHost = toRemote.getHost();
-        	String toPort = Integer.toString(toRemote.getPort());
-        	String destSN = toRemote.getSubject();
-            String sourceSN = ((GridClient)fromRemote).getSubject();
-        	RFTWorker worker = new RFTWorker(prop, from, fromHost, fromPort, 
-        			to, toHost, toPort, sourceSN, destSN);
-            worker.start();
+        if (null != prop) {
+        	String rftEnabled = prop.getProperty("rft_enabled");
+            
+            //using RFT
+            if ("true".equals(rftEnabled)) {
+            	String fromHost = fromRemote.getHost();
+            	String fromPort = Integer.toString(fromRemote.getPort());
+            	String toHost = toRemote.getHost();
+            	String toPort = Integer.toString(toRemote.getPort());
+            	String destSN = toRemote.getSubject();
+                String sourceSN = ((GridClient)fromRemote).getSubject();
+            	RFTWorker worker = new RFTWorker(prop, from, fromHost, fromPort, 
+            			to, toHost, toPort, sourceSN, destSN);
+                worker.start();
+            } else { 
+            	new AlertThread(this).start();
+            }
         } else { 
         	new AlertThread(this).start();
         }
         
-   		
         
         //----------------invoke rft end-------------------------------------------------------
         
