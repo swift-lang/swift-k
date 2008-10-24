@@ -44,7 +44,9 @@ import org.globus.ogce.util.StringUtil;
 import org.globus.tools.proxy.GridProxyInit;
 import org.globus.tools.ui.util.CustomFileFilter;
 import org.globus.tools.ui.util.UITools;
+import org.globus.transfer.reliable.client.credential.CredManager;
 import org.globus.transfer.reliable.client.credential.CredentialDialog;
+import org.globus.transfer.reliable.client.credential.ProxyInfo;
 import org.globus.transfer.reliable.client.credential.myproxy.MyProxyLogonGUI;
 import org.globus.transfer.reliable.client.utils.LogFileUtils;
 import org.globus.transfer.reliable.client.utils.UIConstants;
@@ -455,29 +457,52 @@ public class GridFTPGUIView extends FrameView {
         statusAnimationLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         statusAnimationLabel.setName("statusAnimationLabel"); // NOI18N
 
-        progressBar.setName("progressBar"); // NOI18N
-
+        progressBar.setName("progressBar"); // NOI18N        
         org.jdesktop.layout.GroupLayout statusPanelLayout = new org.jdesktop.layout.GroupLayout(statusPanel);
         statusPanel.setLayout(statusPanelLayout);
+        final javax.swing.JLabel proxyInfoLabel = new javax.swing.JLabel();
+        //proxyInfoLabel.setSize(3000, 20);
+        
+        Thread t = new Thread() {
+        	public void run() {
+        		try {
+            		while(true) { 
+            			ProxyInfo info = CredManager.getProxyInfo();
+            			StringBuffer buf = new StringBuffer();            			
+            			buf.append("<html>")
+            			   .append("Proxy Subject: ").append(info.getSubject())
+            			   .append("<br>")
+            			   .append("Time Left: ").append(info.getTimeLeft())            			   
+            			   .append("</html>");
+            			proxyInfoLabel.setText(buf.toString());            			
+            			Thread.sleep(60000);            			
+            		}
+        		} catch (Exception e) {        			
+        		}      		
+        	}
+        };
+        t.start();
         statusPanelLayout.setHorizontalGroup(
             statusPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .add(statusMessageLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 662, Short.MAX_VALUE)
-                .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(statusAnimationLabel)
-                .addContainerGap())
+                .add(proxyInfoLabel)                
+                //.addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 662, Short.MAX_VALUE)
+//                .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+//                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+//                .add(statusAnimationLabel)
+                //.addContainerGap()
+                )
         );
         statusPanelLayout.setVerticalGroup(
             statusPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, statusPanelLayout.createSequentialGroup()
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(statusPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(statusMessageLabel)
-                    .add(statusAnimationLabel)
-                    .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(proxyInfoLabel)                    
+//                    .add(statusAnimationLabel)
+//                    .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    )
                 .add(3, 3, 3))
         );
 
@@ -703,46 +728,25 @@ public class GridFTPGUIView extends FrameView {
         proxyInitFrame.setVisible(true);        
     }
     
+    
+    
     private void showProxyInfo() {
-        GlobusCredential proxy = null;
-        String file = null;
-
-        try {
-            if (file == null) {
-                file = CoGProperties.getDefault().getProxyFile();
-            }
-            proxy = new GlobusCredential(file);
-        } catch (Exception e) {
-            logger.debug("Unable to load the user proxy : "
-                    + e.getMessage());
-
-            JOptionPane.showMessageDialog(
+    	ProxyInfo proxyInfo = null;
+    	
+    	try {
+    		proxyInfo = CredManager.getProxyInfo();    		
+    	} catch (Exception e) {
+    		JOptionPane.showMessageDialog(
                     mainPanel,
                     "Unable to load Grid proxy certificate.\nError: "
                     + e.getMessage(),
                     "Security Message",
                     JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        StringBuffer proxyInfoBuffer = new StringBuffer();
-        proxyInfoBuffer.append("Subject: "
-                + CertUtil.toGlobusID(proxy.getSubject())
-                + "\n");
-
-        proxyInfoBuffer.append("Strength: "
-                + proxy.getStrength() + " bits"
-                + "\n");
-
-        proxyInfoBuffer.append("Time Left: "
-                + Util.formatTimeSec(proxy.getTimeLeft()));
-
-        JOptionPane.showMessageDialog(
-                mainPanel,
-                proxyInfoBuffer.toString(),
-                "Grid Proxy Certificate Information",
-                JOptionPane.INFORMATION_MESSAGE);
-        //Find out how to display proxyInfo.
-    }
+    	}
+    	
+    	JOptionPane.showMessageDialog(mainPanel, proxyInfo, 
+    			"Grid Proxy Certificate Information",JOptionPane.INFORMATION_MESSAGE);
+   	}
     
         public void saveFile() {
         //Determine the name of the file to save to
