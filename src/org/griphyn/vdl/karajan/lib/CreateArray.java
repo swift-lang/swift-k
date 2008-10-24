@@ -82,9 +82,6 @@ public class CreateArray extends VDLFunction {
 			return handle;
 		}
 		catch (Exception e) {
-System.err.println("OOK");
-e.printStackTrace();
-System.err.println("ENDOOK");
 			throw new ExecutionException(e);
 		}
 	}
