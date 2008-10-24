@@ -4,6 +4,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import org.apache.log4j.Logger;
+import org.griphyn.vdl.karajan.PairIterator;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -35,6 +36,10 @@ public class SetFieldValue extends VDLFunction {
 // for type conversion here; but would be useful to have
 // type checking.
 				// leaf.setValue(internalValue(leaf.getType(), value));
+				if( (value instanceof DSHandle && ((DSHandle)value).getType().isArray()) || (value instanceof PairIterator)) {
+					logger.warn("Warning: array assignment outside of initialisation does not work correctly.");
+				}
+
 				leaf.setValue(value);
 				closeShallow(stack, leaf);
 			}
