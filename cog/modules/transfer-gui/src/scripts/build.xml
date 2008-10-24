@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="IGTFScratcher" default="run" basedir=".">
-		<property name="dist_base_name" value="igtf-policy-installation-bundle-1.24"/>
+		<property name="dist_base_name" value="igtf-policy-installation-bundle-1.25"/>
 		<property name="dist_package_name" value="${dist_base_name}.tar.gz"/>
 		<property name="IGTFDist" value="https://dist.eugridpma.info/distribution/igtf/current/accredited/${dist_package_name}"/>		
 		<property name="tmp_file" value="tmf_file"/>	
