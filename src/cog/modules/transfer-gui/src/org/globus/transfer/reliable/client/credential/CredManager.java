@@ -14,17 +14,18 @@ public class CredManager {
 	public static ProxyInfo getProxyInfo() throws Exception {
 		GlobusCredential proxy = null;
         String file = null;
-
+        ProxyInfo ret = null;
+        
         try {            
             file = CoGProperties.getDefault().getProxyFile();            
-            proxy = new GlobusCredential(file);
+            proxy = new GlobusCredential(file);              
         } catch (Exception e) {
             logger.debug("Unable to load the user proxy : "
                     + e.getMessage());
             throw e;       
         }
         
-        ProxyInfo ret = new ProxyInfo(CertUtil.toGlobusID(proxy.getSubject()),
+        ret = new ProxyInfo(CertUtil.toGlobusID(proxy.getSubject()),
         		proxy.getStrength(),Util.formatTimeSec(proxy.getTimeLeft()));
         return ret;
 	}
