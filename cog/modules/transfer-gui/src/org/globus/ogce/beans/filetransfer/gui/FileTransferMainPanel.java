@@ -643,7 +643,9 @@ public class FileTransferMainPanel extends MainInterface
     }
 
     private Properties getRFTProperties(String fileName) {
-    	File propFile = new File(fileName);
+    	String globusDir = System.getProperty("user.home") + File.separator + ".globus";
+		File dir = new File(globusDir, "GridFTP_GUI");
+		File propFile = new File(dir, fileName);
     	if (!propFile.exists()) {
     		return null;
     	}
