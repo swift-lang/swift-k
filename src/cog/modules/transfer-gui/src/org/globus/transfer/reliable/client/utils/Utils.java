@@ -29,7 +29,9 @@ public class Utils {
     }
     
     public static String getProperty(String propertyName, String propertyFileName) {
-    	File propFile = new File(propertyFileName);
+    	String globusDir = System.getProperty("user.home") + File.separator + ".globus";
+		File dir = new File(globusDir, "GridFTP_GUI");
+    	File propFile = new File(dir, propertyFileName);
     	String ret = null;
     	if (!propFile.exists()) {
     		return null;
