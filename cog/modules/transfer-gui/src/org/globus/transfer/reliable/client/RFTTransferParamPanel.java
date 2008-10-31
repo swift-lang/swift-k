@@ -163,7 +163,10 @@ public class RFTTransferParamPanel extends javax.swing.JPanel {
             }
         });
         Properties prop = new Properties();
-        File propFile = new File("rft.properties");
+        String globusDir = System.getProperty("user.home") + File.separator + ".globus";
+		File dir = new File(globusDir, "GridFTP_GUI");
+        File propFile = new File(dir, "rft.properties");
+        
         if (propFile.exists()) {
         	try {    		
     			prop.load(new FileInputStream(propFile));

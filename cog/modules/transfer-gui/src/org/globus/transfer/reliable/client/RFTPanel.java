@@ -156,8 +156,14 @@ public class RFTPanel extends javax.swing.JPanel {
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
     	Properties prop = new Properties();
     	try {
-    		File prop_file = new File("rft.properties");
-
+    		String globusDir = System.getProperty("user.home") + File.separator + ".globus";
+    		File dir = new File(globusDir, "GridFTP_GUI");
+    		if (!dir.exists() || !dir.isDirectory()) {
+    			dir.mkdirs();
+    		}
+    		
+    		File prop_file = new File(dir, "rft.properties");
+    		
 			prop.setProperty("rft_enabled", String.valueOf(rFTTransferParam1.isRFTEnabled()));
 			prop.setProperty("host", rFTTransferParam1.getServerHost());
 			prop.setProperty("port", rFTTransferParam1.getServerPort());
