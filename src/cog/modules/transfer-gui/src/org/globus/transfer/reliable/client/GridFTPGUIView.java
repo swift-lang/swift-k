@@ -464,21 +464,31 @@ public class GridFTPGUIView extends FrameView {
         //proxyInfoLabel.setSize(3000, 20);
         
         Thread t = new Thread() {
-        	public void run() {
-        		try {
-            		while(true) { 
-            			ProxyInfo info = CredManager.getProxyInfo();
-            			StringBuffer buf = new StringBuffer();            			
+        	public void run() {        		
+        		while (true) {
+        			StringBuffer buf = new StringBuffer();        			
+            		try {              			
+               		    ProxyInfo info = CredManager.getProxyInfo();            			         			
             			buf.append("<html>")
             			   .append("Proxy Subject: ").append(info.getSubject())
             			   .append("<br>")
             			   .append("Time Left: ").append(info.getTimeLeft())            			   
-            			   .append("</html>");
-            			proxyInfoLabel.setText(buf.toString());            			
-            			Thread.sleep(60000);            			
-            		}
-        		} catch (Exception e) {        			
-        		}      		
+            			   .append("</html>");            			
+        		} catch (Exception e) {         			
+        			buf.append("<html>")
+     			   .append("Proxy Subject: ").append(e.getMessage())
+     			   .append("<br>")
+     			   .append("Time Left: ").append(0)            			   
+     			   .append("</html>");
+        		} 
+        		
+        		proxyInfoLabel.setText(buf.toString()); 
+        		try {
+					Thread.sleep(60000);
+				} catch (InterruptedException e) {					
+				}
+        		}
+        		
         	}
         };
         t.start();
