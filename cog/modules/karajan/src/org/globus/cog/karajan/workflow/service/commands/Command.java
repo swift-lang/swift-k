@@ -32,7 +32,7 @@ public abstract class Command extends RequestReply {
 		timer = new Timer();
 	}
 
-	public static final int DEFAULT_REPLY_TIMEOUT = 2 * 60 * 1000; //2 minutes
+	public static final int DEFAULT_REPLY_TIMEOUT = 30 * 1000; //30 seconds
 	public static final int DEFAULT_MAX_RETRIES = 2;
 	private int replyTimeout = DEFAULT_REPLY_TIMEOUT;
 	private int maxRetries = DEFAULT_MAX_RETRIES;
