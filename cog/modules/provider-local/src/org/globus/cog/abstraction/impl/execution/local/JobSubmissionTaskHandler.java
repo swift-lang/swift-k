@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -41,6 +42,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     private static Logger logger = Logger
             .getLogger(JobSubmissionTaskHandler.class);
 
+    private static final int STDOUT = 0;
+    private static final int STDERR = 1;
+
     public static final int BUFFER_SIZE = 1024;
 
     private Task task = null;
@@ -56,7 +60,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
         }
         else if (task.getStatus().getStatusCode() != Status.UNSUBMITTED) {
-            throw new TaskSubmissionException("Task is not in unsubmitted state");
+            throw new TaskSubmissionException(
+                    "Task is not in unsubmitted state");
         }
         else {
             this.task = task;
@@ -64,7 +69,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             JobSpecification spec;
             try {
                 spec = (JobSpecification) this.task.getSpecification();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 throw new IllegalSpecException(
                         "Exception while retrieving Job Specification", e);
             }
@@ -77,8 +83,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 if (logger.isInfoEnabled()) {
                     logger.info("Submitting task " + task);
                 }
-                synchronized(this) {
-                    this.thread = new Thread(this);
+                synchronized (this) {
+                    thread = new Thread(this);
+                    thread.setName("Local task " + task.getIdentity());
+                    thread.setDaemon(true);
                     if (this.task.getStatus().getStatusCode() != Status.CANCELED) {
                         this.task.setStatus(Status.SUBMITTED);
                         this.thread.start();
@@ -87,7 +95,8 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         }
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 throw new TaskSubmissionException("Cannot submit job", e);
             }
         }
@@ -103,7 +112,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     public void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException {
-        synchronized(this) {
+        synchronized (this) {
             killed = true;
             process.destroy();
             this.task.setStatus(Status.CANCELED);
@@ -128,44 +137,38 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                     buildEnvp(spec), dir);
             this.task.setStatus(Status.ACTIVE);
 
-            // reusable byte buffer
-            byte[] buf = new byte[BUFFER_SIZE];
-            /*
-             * This should be interleaved with stdout processing, since a
-             * process could block if its STDOUT is not consumed, thus causing a
-             * deadlock
-             */
-            processIN(spec.getStdInput(), dir, buf);
+            processIN(spec.getStdInput(), dir);
+
+            List pairs = new LinkedList();
 
             if (!FileLocation.NONE.equals(spec.getStdOutputLocation())) {
-                String out = processOUT(spec.getStdOutput(), spec
-                        .getStdOutputLocation(), dir, buf, process
-                        .getInputStream());
-                if (out != null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("STDOUT from job: " + out);
-                    }
-                    this.task.setStdOutput(out);
+                OutputStream os = prepareOutStream(spec.getStdOutput(), spec
+                        .getStdOutputLocation(), dir, task, STDOUT);
+                if (os != null) {
+                    pairs.add(new StreamPair(process.getInputStream(), os));
                 }
             }
 
             if (!FileLocation.NONE.equals(spec.getStdErrorLocation())) {
-                String err = processOUT(spec.getStdError(), spec
-                        .getStdErrorLocation(), dir, buf, process
-                        .getErrorStream());
-                if (err != null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("STDERR from job: " + err);
-                    }
-                    this.task.setStdError(err);
+                OutputStream os = prepareOutStream(spec.getStdError(), spec
+                        .getStdErrorLocation(), dir, task, STDERR);
+                if (os != null) {
+                    pairs.add(new StreamPair(process.getErrorStream(), os));
                 }
             }
 
+            Processor p = new Processor(process, pairs);
+
             if (spec.isBatchJob()) {
+                Thread t = new Thread(p);
+                t.setName("Local task");
+                t.start();
                 return;
             }
 
-            int exitCode = process.waitFor();
+            p.run();
+            int exitCode = p.getExitCode();
+
             if (logger.isDebugEnabled()) {
                 logger.debug("Exit code was " + exitCode);
             }
@@ -174,10 +177,12 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             if (exitCode == 0) {
                 this.task.setStatus(Status.COMPLETED);
-            } else {
+            }
+            else {
                 throw new JobException(exitCode);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             if (killed) {
                 return;
             }
@@ -193,15 +198,17 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
     }
 
-    protected void processIN(String in, File dir, byte[] buf)
-            throws IOException {
+    protected void processIN(String in, File dir) throws IOException {
+
+        byte[] buf = new byte[BUFFER_SIZE];
         if (in != null) {
             OutputStream out = process.getOutputStream();
 
             File stdin;
             if (dir != null) {
                 stdin = new File(dir, in);
-            } else {
+            }
+            else {
                 stdin = new File(in);
             }
 
@@ -215,20 +222,21 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         }
     }
 
-    protected String processOUT(String out, FileLocation loc, File dir,
-            byte[] buf, InputStream pin) throws IOException {
+    protected OutputStream prepareOutStream(String out, FileLocation loc,
+            File dir, Task task, int stream) throws IOException {
 
         OutputStream os = null;
-        ByteArrayOutputStream baos = null;
+        TaskOutputStream baos = null;
         if (FileLocation.MEMORY.overlaps(loc)) {
-            baos = new ByteArrayOutputStream();
+            baos = new TaskOutputStream(task, stream);
             os = baos;
         }
         if ((FileLocation.LOCAL.overlaps(loc) || FileLocation.REMOTE
                 .equals(loc))
                 && out != null) {
             if (os != null) {
-                os = new OutputStreamMultiplexer(os, new FileOutputStream(out));
+                os = new OutputStreamMultiplexer(os,
+                        new FileOutputStream(out));
             }
             else {
                 os = new FileOutputStream(out);
@@ -238,17 +246,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             os = new NullOutputStream();
         }
 
-        int len = pin.read(buf);
-        while (len != -1) {
-            os.write(buf, 0, len);
-            len = pin.read(buf);
-        }
-        os.close();
-        if (baos != null) {
-            return baos.toString();
-        } else {
-            return null;
-        }
+        return os;
     }
 
     private String[] buildCmdArray(JobSpecification spec) {
@@ -283,5 +281,113 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             envp[index++] = name + "=" + spec.getEnvironmentVariable(name);
         }
         return envp;
+    }
+
+    private static class StreamPair {
+        public InputStream is;
+        public OutputStream os;
+
+        public StreamPair(InputStream is, OutputStream os) {
+            this.is = is;
+            this.os = os;
+        }
+    }
+
+    private static class TaskOutputStream extends ByteArrayOutputStream {
+        private Task task;
+        private int stream;
+
+        public TaskOutputStream(Task task, int stream) {
+            this.task = task;
+            this.stream = stream;
+        }
+
+        public void close() throws IOException {
+            super.close();
+            String value = toString();
+            if (logger.isDebugEnabled()) {
+                logger.debug((stream == STDOUT ? "STDOUT" : "STDERR")
+                        + " from job: " + value);
+            }
+            if (stream == STDOUT) {
+                task.setStdOutput(value);
+            }
+            else {
+                task.setStdError(value);
+            }
+        }
+    }
+
+    private static class Processor implements Runnable {
+        private Process p;
+        private List streamPairs;
+        byte[] buf;
+
+        public Processor(Process p, List streamPairs) {
+            this.p = p;
+            this.streamPairs = streamPairs;
+        }
+
+        public void run() {
+            try {
+                run2();
+            }
+            catch (Exception e) {
+                logger.warn("Exception caught while running process", e);
+            }
+        }
+
+        public void run2() throws IOException, InterruptedException {
+            while (true) {
+                boolean any = processPairs();
+                if (processDone()) {
+                    closePairs();
+                }
+                else {
+                    if (!any) {
+                        Thread.sleep(20);
+                    }
+                }
+            }
+        }
+
+        private boolean processPairs() throws IOException {
+            boolean any = false;
+            Iterator i = streamPairs.iterator();
+            while (i.hasNext()) {
+                if (buf == null) {
+                    buf = new byte[BUFFER_SIZE];
+                }
+                StreamPair sp = (StreamPair) i.next();
+                int avail = sp.is.available();
+                if (avail > 0) {
+                    any = true;
+                    int len = sp.is.read();
+                    sp.os.write(buf, 0, len);
+                }
+            }
+            return any;
+        }
+       
+        private boolean processDone() {
+            try {
+                p.exitValue();
+                return true;
+            }
+            catch (IllegalThreadStateException e) {
+                return false;
+            }
+        }
+
+        private void closePairs() throws IOException {
+            Iterator i = streamPairs.iterator();
+            while (i.hasNext()) {
+                StreamPair sp = (StreamPair) i.next();
+                sp.os.close();
+            }
+        }
+        public int getExitCode() {
+            return p.exitValue();
+        }
     }
 }

@@ -1,3 +1,8 @@
+(11/04/2008)
+
+*** Fixed deadlock in job submission handler caused by stderr not 
+    being consumed properly
+
 (08/20/2007)
 
 *** Rimplemented redirection to conform to new things in the
