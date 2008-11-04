@@ -10,8 +10,13 @@
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="provider-dcache"/>
 		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-wonky"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-coaster"/>
+		</ant>
 		<antcall target="provider-deef"/>
-		<antcall target="provider-coaster"/>
 		<antcall target="provider-condor"/>
 		<antcall target="provider-wonky"/>
 	</target>
@@ -19,11 +24,6 @@
 	<target name="provider-deef" if="with-provider-deef">
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="provider-deef"/>
-		</ant>
-	</target>
-	<target name="provider-coaster" if="with-provider-coaster">
-		<ant antfile="${main.buildfile}" target="dep">
-			<property name="module" value="provider-coaster"/>
 		</ant>
 	</target>
 	<target name="provider-condor" if="with-provider-condor">
