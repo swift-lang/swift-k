@@ -11,9 +11,6 @@
 			<property name="module" value="provider-dcache"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="dep">
-			<property name="module" value="provider-wonky"/>
-		</ant>
-		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="provider-coaster"/>
 		</ant>
 		<antcall target="provider-deef"/>
