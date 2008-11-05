@@ -342,6 +342,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 boolean any = processPairs();
                 if (processDone()) {
                     closePairs();
+                    return;
                 }
                 else {
                     if (!any) {
