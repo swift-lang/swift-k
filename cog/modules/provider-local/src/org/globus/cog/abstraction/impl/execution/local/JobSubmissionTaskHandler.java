@@ -362,7 +362,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 int avail = sp.is.available();
                 if (avail > 0) {
                     any = true;
-                    int len = sp.is.read();
+                    int len = sp.is.read(buf);
                     sp.os.write(buf, 0, len);
                 }
             }
