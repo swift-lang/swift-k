@@ -42,7 +42,7 @@ for testfn in $TESTS; do
   else
 	echo Running test $t
 	swift ${SWIFT_TEST_PARAMS} ${t}.swift
-	if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO"; exit 1; fi
+	if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO - test $testfn"; exit 1; fi
 	echo expecting $EXPECTEDS
   fi
 
@@ -64,7 +64,7 @@ for testfn in $TESTS; do
       			exit $?
       		fi
       	else
-	      	echo "OUTPUT DIFFERS"
+	      	echo "OUTPUT DIFFERS - test $testfn"
 	      	exit 1
 	    fi
       fi
