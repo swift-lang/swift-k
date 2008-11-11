@@ -225,7 +225,7 @@ described in another section.
 		</section>
 
 		</section>
-		<section>
+		<section id="procedures">
 			<title>Procedures</title>
 			<para>
 Datasets are operated on by procedures, which take input in the form of 
@@ -280,7 +280,7 @@ binaryfile mybf = myproc1 (1, s="bar");
 
 			</para>
 			
-<section><title>Atomic procedures</title>
+<section id="procedures.atomic"><title>Atomic procedures</title>
 			<para>
 The body of an atomic procedure specifies how to invoke an
 external executable program or Web Service, and how logical data
@@ -302,7 +302,7 @@ we can omit the filename part and use the @ sign only.
 			</para>
 </section>
 
-<section><title>Compound procedures</title>
+<section id="procedures.compound"><title>Compound procedures</title>
 			<para>
 A compound procedure contains a set of calls to other procedures. Shared
 variables in the body of a compound procedure specify data dependencies
