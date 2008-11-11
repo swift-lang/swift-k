@@ -1,7 +1,7 @@
 (11/11/08)
 *** Swift 0.7 built from Swift SVN r2318 and cog SVN r2255
 
-(15/08/08)
+(08/15/08)
 *** Swift 0.6 built from Swift SVN r2177 and cog SVN r2127
 
 (06/06/08)
