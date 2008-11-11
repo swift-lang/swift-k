@@ -288,10 +288,8 @@ types are mapped to command line arguments. A complete specification
 for myproc1 can be:
 
 <programlisting>
-(binaryfile bf) myproc1 (int i, string s="foo") {
-	app {
-		myapp1 i s @filename(bf);
-	}
+app (binaryfile bf) myproc1 (int i, string s="foo") {
+	myapp1 i s @filename(bf);
 }			
 </programlisting>
 
