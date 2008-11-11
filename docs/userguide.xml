@@ -2522,10 +2522,12 @@ Filesystem access using scp (the SSH copy protocol) can be specified using the
 For additional ssh configuration information, see the ssh execution
 provider documentation below.
 		</para>
+		<para>
 Filesystem access using <link linkend="coasters">CoG coasters</link> can be
 also be specified using the &lt;filesystem&gt; element. More detail about
 configuring that can be found in the <link linkend="coasters">CoG
 coasters</link> section.
+		</para>
 </section>
 
 <section><title>Execution method specification</title>
