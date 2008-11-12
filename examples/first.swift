@@ -1,4 +1,4 @@
-type messagefile {}
+type messagefile;
 
 app (messagefile t) greeting() { 
     echo "Hello, world!" stdout=@filename(t);
