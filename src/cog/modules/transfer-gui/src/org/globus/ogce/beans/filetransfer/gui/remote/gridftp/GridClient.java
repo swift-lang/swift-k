@@ -179,7 +179,9 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
     	BufferedReader bufReader = null;
     	
     	try {    		
-    		reader = new FileReader("sitesName");
+    		String globusDir = System.getProperty("user.home") + File.separator + ".globus";
+    		File f = new File(globusDir, "sitesName");
+    		reader = new FileReader(f);
     		bufReader = new BufferedReader(reader);
     		String line = null;
     		while ((line = bufReader.readLine()) != null) {
@@ -324,9 +326,14 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
         
         //save the site name to a file
         if (-1 == txtHost.getSelectedIndex()) {
-            File sitesNameFile = new File("sitesName");
+        	String globusDir = System.getProperty("user.home") + File.separator + ".globus";
+            File sitesNameFile = new File(globusDir, "sitesName");
             FileWriter writer = null;
             try {
+            	File dir = new File(globusDir);
+            	if (!dir.isDirectory() || !dir.exists()) {
+            		dir.mkdirs();
+            	}
             	if (!sitesNameFile.exists() || !sitesNameFile.isFile()) {
                 	sitesNameFile.createNewFile();
                 }
@@ -629,6 +636,9 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             client1.changeDir(dirname);
             client1.setPassive();
             client1.setLocalActive();
+//            client1.setLocalPassive();
+//            client1.setActive();
+            
             client1.setLocalNoDataChannelAuthentication();
             logger.debug("\nSET THE PARAMETERS." + client1);
             //listing = client1.list();
@@ -689,6 +699,9 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
 
             client.setPassive();
             client.setLocalActive();
+//            client.setLocalPassive();
+//            client.setActive();
+            
             client.setLocalNoDataChannelAuthentication();
             client.list("*", "-d", new DataSink() {
                 public void write(Buffer buffer)
@@ -755,6 +768,9 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             client2.changeDir(dirname);
             client2.setPassive();
             client2.setLocalActive();
+//            client2.setLocalPassive();
+//            client2.setActive();
+            
             client2.setLocalNoDataChannelAuthentication();
             listing = client2.mlsd();
             logger.debug("Returned correctly from list.");
@@ -806,6 +822,9 @@ public class GridClient extends JPanel implements PropertyChangeListener, Displa
             client3.changeDir(dirname);
             client3.setPassive();
             client3.setLocalActive();
+//            client3.setLocalPassive();
+//            client3.setActive();
+            
             client3.setLocalNoDataChannelAuthentication();
             listing = client3.list();
             logger.debug("Returned correctly from list.");
