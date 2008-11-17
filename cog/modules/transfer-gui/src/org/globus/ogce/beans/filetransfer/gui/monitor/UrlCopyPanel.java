@@ -112,6 +112,9 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
     }
 
     public boolean callUrlCopyTransfer(String jobid, String from, String to) {
+    	System.out.println("from:" + from);
+    	System.out.println("to:" + to);
+    	
         GlobusURL froms = null;
         GlobusURL tos = null;
         UrlCopy c = null;
@@ -123,12 +126,17 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
         logger.info("\nFrom = " + from);
         logger.info("\nTo = " + to);
         try {
+        	
             froms = new GlobusURL(from);
             tos = new GlobusURL(to);
             c = new UrlCopy();
             c.setSourceUrl(froms);
             c.setDestinationUrl(tos);
-            Authorization auth = new IdentityAuthorization(GridClient.subject1);
+            Authorization auth = null;
+            if (null != GridClient.subject1 && !"".equals(GridClient.subject1.trim())) {
+            	auth = new IdentityAuthorization(GridClient.subject1);
+            }
+            
             c.setSourceAuthorization(auth);
             c.setDestinationAuthorization(auth);
             if (from.startsWith("gsiftp") && to.startsWith("gsiftp")) {
@@ -157,6 +165,7 @@ public class UrlCopyPanel extends JPanel implements TransferInterface, UrlCopyLi
                         null, null, "No errors");
                 
                 c.copy();
+               
                 finalStatus = "Finished";
                 updateTransfer(currentJob, "Finished",
                         null, null, "No errors");
