@@ -54,6 +54,9 @@ public class InHook extends InputStream implements Runnable {
 					Thread.sleep(250);
 				}
 			}
+			catch (IOException e) {
+				return;
+			}
 			catch (Exception e) {
 				e.printStackTrace();
 			}
