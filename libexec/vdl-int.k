@@ -452,7 +452,8 @@ namespace("vdl"
 						
 						outs := transferStandardFiles(rhost, tmpdir, jobid, stdout, stderr)
 						
-						discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))
+						discard(maybe(transferWrapperLog(rhost, wfdir, jobid, jobdir)))
+							
 						kickstartRec := if(
 							kickstart == "" ""
 							else(
