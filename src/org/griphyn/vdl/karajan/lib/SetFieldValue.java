@@ -45,7 +45,10 @@ public class SetFieldValue extends VDLFunction {
 			}
 			return null;
 		}
-		catch (Exception e) {
+		catch (FutureNotYetAvailable fnya) {
+			throw fnya;
+		}
+		catch (Exception e) { // TODO tighten this
 			throw new ExecutionException(e);
 		}
 	}
