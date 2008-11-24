@@ -8,6 +8,7 @@ import org.griphyn.vdl.karajan.PairIterator;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
