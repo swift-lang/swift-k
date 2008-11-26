@@ -36,8 +36,6 @@
 	<export name="createarray"><elementDef classname="org.griphyn.vdl.karajan.lib.CreateArray"/></export>
 	<!-- used from VDL2 for arguments to apps and returns relative paths -->
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.FileName"/></export>
-	<!-- returns multiple names instead of concatenating them -->
-	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.FileNames"/></export>
 	<!-- for internal use and does not force relative paths -->
 	<export name="absFileName"><elementDef classname="org.griphyn.vdl.karajan.lib.AbsFileName"/></export>
 
