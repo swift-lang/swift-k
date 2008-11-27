@@ -173,39 +173,15 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-	/**
-	 * Given a field (or Collection of fields) on the stack, returns the
-	 * filename(s) that are mapped that field(s).
-	 */
 	public String[] filename(VariableStack stack) throws ExecutionException {
-		Object ovar = PA_VAR.getValue(stack);
-		if (ovar instanceof DSHandle) {
-			try {
-				return filename((DSHandle) ovar);
-			}
-			catch (HandleOpenException e) {
-				throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-			}
+		DSHandle ovar = (DSHandle)PA_VAR.getValue(stack);
+		try {
+			return filename(ovar);
 		}
-		else if (ovar instanceof Collection) {
-			return filename((Collection) ovar);
+		catch (HandleOpenException e) {
+			throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
 		}
-		else {
-			return new String[0];
-		}
-	}
-
-	public String[] filename(Collection vars) throws ExecutionException {
-		// assume here that the Collection is all DSHandles
-		Iterator iterator = vars.iterator();
-		ArrayList out = new ArrayList();
-		while (iterator.hasNext()) {
-			DSHandle h = (DSHandle) iterator.next();
-			String filename = leafFileName(h);
-			out.add(filename);
-		}
-		return (String[]) out.toArray(EMPTY_STRING_ARRAY);
-	}
+	} 
 
 	public String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
 		try {
@@ -221,7 +197,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	public String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
+	private String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
 		List l = new ArrayList();
 		Iterator i;
 		try {
@@ -292,7 +268,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	public String leafFileName(DSHandle var) throws ExecutionException {
+	private String leafFileName(DSHandle var) throws ExecutionException {
 		if (Types.STRING.equals(var.getType())) {
 			return relativize(String.valueOf(var.getValue()));
 		}
@@ -391,17 +367,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 		catch (VariableNotFoundException e) {
 			throw new ExecutionException("No log data found. Missing restartLog()?");
-		}
-	}
-
-	protected String getFileName(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
-		try {
-			Path path = parsePath(PA_PATH.getValue(stack), stack);
-			return leafFileName(var.getField(path));
-		}
-		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
 		}
 	}
 
