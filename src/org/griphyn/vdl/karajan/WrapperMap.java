@@ -78,6 +78,7 @@ public class WrapperMap {
 		FutureWrappers fws = (FutureWrappers) map.get(source);
 
 		// TODO
+		throw new RuntimeException("not implemented");
 	}
 
 	public synchronized void markAsAvailable(DSHandle handle, Object key) {
