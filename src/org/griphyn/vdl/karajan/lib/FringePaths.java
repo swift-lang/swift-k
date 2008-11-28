@@ -24,16 +24,22 @@ public class FringePaths extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+		DSHandle root = var.getRoot();
 		try {
 			var = var.getField(parsePath(OA_PATH.getValue(stack), stack));
-			Collection c = var.getFringePaths();
+			Collection c;
+			synchronized(root) {
+				c = var.getFringePaths();
+			}
 			return c;
 		}
 		catch (InvalidPathException e) {
 			throw new ExecutionException(e);
 		}
 		catch (HandleOpenException e) {
-			throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
+			synchronized(root) {
+				throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
+			}
 		}
 	}
 }
