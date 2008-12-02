@@ -61,6 +61,7 @@ namespace("vdl"
 							for(path, fp
 								vdl:waitFieldValue(path=path, var)
 							)
+// NOTE this string-based catch is messy, and needs to match with the string used in DataDependentException and VDLFunction
 							catch(".*errors in data dependencies.*"
 								log(LOG:DEBUG, exception)
 								deperror = true

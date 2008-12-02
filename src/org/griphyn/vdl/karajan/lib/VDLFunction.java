@@ -74,7 +74,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		catch (DependentException e) {
 			// This would not be the primal fault so in non-lazy errors mode it
 			// should not matter
-			throw new ExecutionException(e);
+			throw new ExecutionException("Wrapping a dependent exception in VDLFunction.post() - errors in data dependencies",e);
 		}
 	}
 
