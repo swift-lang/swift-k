@@ -418,7 +418,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			}
 		}
 		catch (HandleOpenException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException("Handle open in closeChildren",e);
 		}
 		
 		if (!closed) {
@@ -463,7 +463,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			}
 		}
 		catch (HandleOpenException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException("HandleOpen during closeDeep",e);
 		}
 		markToRoot(stack, handle);
 	}
