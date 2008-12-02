@@ -64,7 +64,7 @@ public class Monitor implements ActionListener, MouseListener {
 
 	private synchronized void init() {
 		frame = new JFrame();
-		frame.setTitle("VDS Debugga'");
+		frame.setTitle("VDS Debugger");
 		buttons = new JPanel();
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().add(buttons, BorderLayout.NORTH);

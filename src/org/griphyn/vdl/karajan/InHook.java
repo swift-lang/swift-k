@@ -7,7 +7,12 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.log4j.Logger;
+
 public class InHook extends InputStream implements Runnable {
+
+	public static final Logger logger = Logger.getLogger(InHook.class);
+
 	public synchronized static void install(Monitor m) {
 		if (!(System.in instanceof InHook)) {
 			System.setIn(new InHook(System.in, m));
@@ -21,9 +26,11 @@ public class InHook extends InputStream implements Runnable {
 		if (is instanceof BufferedInputStream) {
 			this.is = (BufferedInputStream) is;
 			this.m = m;
-			Thread t = new Thread(this, "stdin debugger");
+			Thread t = new Thread(this, "Swift console debugger");
 			t.setDaemon(true);
 			t.start();
+		} else {
+			logger.error("Attempt to start console debugger with stdin not an instance of BufferedInputStream. InputStream class is "+is.getClass());
 		}
 	}
 
@@ -32,29 +39,29 @@ public class InHook extends InputStream implements Runnable {
 	}
 
 	public void run() {
+		logger.debug("Starting console debugger thread");
 		while (true) {
+			logger.debug("Console debugger outer loop");
 			try {
-				while (is.available() > 0) {
-					is.mark(1);
-					int c = is.read();
-					if (c == 'd') {
-						m.toggle();
-					}
-					else if (c == 'v') {
-						m.dumpVariables();
-					}
-					else if (c == 't') {
-						m.dumpThreads();
-					}
-					else {
-						is.reset();
-					}
+				int c = is.read();
+				logger.debug("Command: "+c); // TODO display as char?
+				if (c == 'd') {
+					m.toggle();
 				}
-				if (is.available() == 0) {
-					Thread.sleep(250);
+				else if (c == 'v') {
+					m.dumpVariables();
+				}
+				else if (c == 't') {
+					m.dumpThreads();
+				} else if (c == 10) {
+					logger.debug("Ignoring LF");
+				}
+				else {
+					logger.warn("Unknown console debugger command "+c);
 				}
 			}
 			catch (IOException e) {
+				logger.debug("Console debugger encountered IOException",e);
 				return;
 			}
 			catch (Exception e) {
