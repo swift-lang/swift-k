@@ -362,7 +362,7 @@ namespace("vdl"
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
-			allocateHost(rhost, constraints=vdl:jobConstraints(tr)
+			allocateHost(rhost, constraints=vdl:jobConstraints(tr, stagein)
 				
 				[wfdir, sharedDir] := try(
 					initSharedDir(rhost)
