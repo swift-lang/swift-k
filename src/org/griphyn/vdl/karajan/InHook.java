@@ -55,6 +55,9 @@ public class InHook extends InputStream implements Runnable {
 					m.dumpThreads();
 				} else if (c == 10) {
 					logger.debug("Ignoring LF");
+				} else if (c == -1) {
+					logger.debug("End of stdin - exiting debugger");
+					return;
 				}
 				else {
 					logger.warn("Unknown console debugger command "+c);
