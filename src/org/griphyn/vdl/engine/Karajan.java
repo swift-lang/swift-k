@@ -992,7 +992,7 @@ public class Karajan {
 			newst.setAttribute("memberchild", sm.getMemberName());
 			
 			String parentType = datatype(parentST);
-			String actualType = "";					
+			String actualType = null;					
 			for (int i = 0; i < types.sizeOfTypeArray(); i++) {
 				if (types.getTypeArray(i).getTypename().equals(parentType)) {
 					TypeStructure ts = types.getTypeArray(i).getTypestructure();
@@ -1008,7 +1008,7 @@ public class Karajan {
 					break;
 				}
 			}			
-			if ("".equals(actualType)) {
+			if (actualType == null) {
 				throw new CompilationException("Type " + parentType + " is not defined.");
 			}
 			newst.setAttribute("datatype", actualType); 
