@@ -1008,6 +1008,9 @@ public class Karajan {
 					break;
 				}
 			}			
+			if ("".equals(actualType)) {
+				throw new CompilationException("Type " + parentType + " is not defined.");
+			}
 			newst.setAttribute("datatype", actualType); 
 			return newst;
 			// TODO the template layout for this and ARRAY_SUBSCRIPT are
