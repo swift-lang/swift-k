@@ -540,7 +540,7 @@ messagefile inputfile &lt;"q16.txt"&gt;;
 countfile c &lt;regexp_mapper;
              source=@inputfile,
              match="(.*)txt",
-             transform="\1count"
+             transform="\\1count"
             &gt;;
 </programlisting>
 </para>
@@ -591,7 +591,7 @@ foreach f in inputfiles {
   countfile c &lt;regexp_mapper;
                source=@f,
                match="(.*)txt",
-               transform="\1count"&gt;;
+               transform="\\1count"&gt;;
   c = countwords(f);
 }
 </programlisting>
