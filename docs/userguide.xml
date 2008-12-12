@@ -2276,7 +2276,7 @@ The particular output format should not be relied upon. (new in 0.4)
 	</section>
 
 	<section id="profiles"><title>Profiles</title>
-		<section id="porfile.karajan"><title>Karajan namespace</title>
+		<section id="profile.karajan"><title>Karajan namespace</title>
 			<para id="profile.karajan.maxsubmitrate">maxSubmitRate - limits the maximum rate of job submission, in jobs per second.
 For example:
 <screen>
