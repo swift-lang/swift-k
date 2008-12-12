@@ -164,7 +164,11 @@ export PATH=$PATHPREFIX:$PATH
 fi
 
 if [ "X${EXEC:0:1}" != "X/" ] ; then
+export ORIGEXEC=$EXEC
 export EXEC=$(which $EXEC)
+if [ "X$EXEC" = "X" ] ; then
+fail 254 "Cannot find executable $ORIGEXEC on site system path"
+fi
 fi
 
 log "DIR=$DIR"
