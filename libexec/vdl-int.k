@@ -335,7 +335,7 @@ namespace("vdl"
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
 					maybe(file:remove(recfile))
-					log(LOG:WARN, "Failed to transfer kickstart records from {srcdir}/{rhost}", exception)
+					log(LOG:WARN, "Failed to transfer kickstart records from {srcdir} on {rhost}", exception)
 				)
 			)
 			recfile
@@ -351,8 +351,8 @@ namespace("vdl"
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
 					maybe(file:remove(recfile))
-					log(LOG:WARN, "Failed to transfer wrapper log from {srcdir}/{rhost}")
-					log(LOG:DEBUG, "Exception for wrapper log failure from {srcdir}/{rhost}: ", exception)
+					log(LOG:WARN, "Failed to transfer wrapper log from {srcdir} on {rhost}")
+					log(LOG:DEBUG, "Exception for wrapper log failure from {srcdir} on {rhost}: ", exception)
 				)
 			)
 			recfile
