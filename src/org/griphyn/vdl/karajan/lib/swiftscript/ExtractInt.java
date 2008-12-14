@@ -8,11 +8,13 @@ import java.io.Reader;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Types;
+
 
 public class ExtractInt extends VDLFunction {
 	static {
@@ -24,6 +26,9 @@ public class ExtractInt extends VDLFunction {
 		try {
 			handle = (DSHandle) PA_VAR.getValue(stack);
 			synchronized(handle.getRoot()) {
+				if (!handle.isClosed()) {
+					throw new FutureNotYetAvailable(addFutureListener(stack, handle));
+				}
 				String fn = argList(filename(handle), true);
 				Reader freader = new FileReader(fn);
 				BufferedReader breader = new BufferedReader(freader);
