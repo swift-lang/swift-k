@@ -175,14 +175,17 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public String[] filename(VariableStack stack) throws ExecutionException {
 		DSHandle ovar = (DSHandle)PA_VAR.getValue(stack);
-		try {
-			return filename(ovar);
-		}
-		catch (HandleOpenException e) {
-			throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
+		synchronized(ovar.getRoot()) {
+			try {
+				return filename(ovar);
+			}
+			catch (HandleOpenException e) {
+				throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
+			}
 		}
 	} 
 
+	/** The caller is expected to have synchronized on the root of var. */
 	public String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
 		try {
 			if (var.getType().isArray()) {

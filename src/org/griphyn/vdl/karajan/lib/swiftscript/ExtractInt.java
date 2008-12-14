@@ -23,13 +23,15 @@ public class ExtractInt extends VDLFunction {
 		DSHandle handle = null;
 		try {
 			handle = (DSHandle) PA_VAR.getValue(stack);
-			String fn = argList(filename(handle), true);
-			Reader freader = new FileReader(fn);
-			BufferedReader breader = new BufferedReader(freader);
-			String str = breader.readLine();
-			freader.close();
-			Double i = new Double(str);
-			return RootDataNode.newNode(Types.FLOAT, i);
+			synchronized(handle.getRoot()) {
+				String fn = argList(filename(handle), true);
+				Reader freader = new FileReader(fn);
+				BufferedReader breader = new BufferedReader(freader);
+				String str = breader.readLine();
+				freader.close();
+				Double i = new Double(str);
+				return RootDataNode.newNode(Types.FLOAT, i);
+			}
 		}
 		catch (IOException ioe) {
 			throw new ExecutionException("Reading integer content of file", ioe);
