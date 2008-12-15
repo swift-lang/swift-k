@@ -201,7 +201,7 @@ iterate(declarations,statements,cond,var) ::= <<
 
 foreach(var,in,indexVar,declarations,statements) ::= <<
 <parallelFor name="\$">
-  <getfieldvalue>$in$</getfieldvalue>
+  <getarrayiterator>$in$</getarrayiterator>
   <set names="\$\$, $var$">
     <each items="{\$}"/>
   </set>

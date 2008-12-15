@@ -1,6 +1,3 @@
-/*
- * Created on Dec 26, 2006
- */
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.Map;
@@ -10,21 +7,21 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.griphyn.vdl.karajan.PairIterator;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
-public class GetFieldValue extends VDLFunction {
-	public static final Logger logger = Logger.getLogger(GetFieldValue.class);
+public class GetArrayIterator extends VDLFunction {
+	public static final Logger logger = Logger.getLogger(GetArrayIterator.class);
 
 	static {
-		setArguments(GetFieldValue.class, new Arg[] { PA_VAR, OA_PATH });
+		setArguments(GetArrayIterator.class, new Arg[] { PA_VAR, OA_PATH });
 	}
 
 	/**
-	 * Takes a supplied variable and path, and returns the unique value at that
-	 * path. Path can contain wildcards, in which case an array is returned.
+	 * Takes a supplied variable and path, and returns an array iterator.
 	 */
 	public Object function(VariableStack stack) throws ExecutionException {
 		Object var1 = PA_VAR.getValue(stack);
@@ -35,31 +32,20 @@ public class GetFieldValue extends VDLFunction {
 		try {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
 			if (path.hasWildcards()) {
-				try {
-					return var.getFields(path).toArray();
-				}
-				catch (HandleOpenException e) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Waiting for var=" + var + " path=" + path);
-					}
-					throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-				}
+				throw new RuntimeException("Wildcards not supported");
 			}
 			else {
 				var = var.getField(path);
 				if (var.getType().isArray()) {
-					throw new RuntimeException("Getting value for array "+var+" which is not permitted.");
-				}
-				synchronized (var) {
-					if (!var.isClosed()) {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Waiting for " + var);
-						}
-						throw new FutureNotYetAvailable(addFutureListener(stack, var));
+					Map value = var.getArrayValue();
+					if (var.isClosed()) {
+						return new PairIterator(value);
 					}
 					else {
-						return var.getValue();
+						return addFutureListListener(stack, var, value);
 					}
+				} else {
+					throw new RuntimeException("Cannot get array iterator for non-array");
 				}
 			}
 		}
