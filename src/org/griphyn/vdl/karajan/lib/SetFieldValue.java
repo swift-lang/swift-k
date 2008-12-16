@@ -4,12 +4,16 @@
 package org.griphyn.vdl.karajan.lib;
 
 import org.apache.log4j.Logger;
+import org.griphyn.vdl.karajan.Pair;
+import org.griphyn.vdl.karajan.FuturePairIterator;
 import org.griphyn.vdl.karajan.PairIterator;
+import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
 public class SetFieldValue extends VDLFunction {
@@ -30,24 +34,17 @@ public class SetFieldValue extends VDLFunction {
 			if (logger.isInfoEnabled()) {
 				logger.info("Setting " + leaf + " to " + value);
 			}
-			synchronized (leaf) {
+			synchronized (var.getRoot()) {
 // TODO want to do a type check here, for runtime type checking
 // and pull out the appropriate internal value from value if it
 // is a DSHandle. There is no need (I think? maybe numerical casting?)
 // for type conversion here; but would be useful to have
 // type checking.
-				// leaf.setValue(internalValue(leaf.getType(), value));
-				if( (value instanceof DSHandle && ((DSHandle)value).getType().isArray()) || (value instanceof PairIterator)) {
-					logger.warn("Warning: array assignment outside of initialisation does not work correctly.");
-				} else {
-					synchronized(value.getRoot()) {
-						if (!value.isClosed()) {
-							throw new FutureNotYetAvailable(addFutureListener(stack,value));
-						} else {
-							leaf.setValue(value.getValue());
-							closeShallow(stack, leaf);
-						}
+				synchronized(value.getRoot()) {
+					if(!value.isClosed()) {
+						throw new FutureNotYetAvailable(addFutureListener(stack, value));
 					}
+					deepCopy(leaf,value,stack);
 				}
 			}
 			return null;
@@ -57,6 +54,33 @@ public class SetFieldValue extends VDLFunction {
 		}
 		catch (Exception e) { // TODO tighten this
 			throw new ExecutionException(e);
+		}
+	}
+
+	/** make dest look like source - if its a simple value, copy that
+	    and if its an array then recursively copy */
+	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack) throws ExecutionException {
+		if(source.getType().isPrimitive()) {
+			dest.setValue(source.getValue());
+		} else if(source.getType().isArray()) {
+			PairIterator it = new PairIterator(source.getArrayValue());
+			while(it.hasNext()) {
+				Pair pair = (Pair) it.next();
+				Object lhs = pair.get(0);
+				DSHandle rhs = (DSHandle) pair.get(1);
+				Path memberPath = Path.EMPTY_PATH.addLast(String.valueOf(lhs),true);
+				DSHandle field;
+				try {
+					field = dest.getField(memberPath);
+				} catch(InvalidPathException ipe) {
+					throw new ExecutionException("Could not get destination field",ipe);
+				}
+				deepCopy(field,rhs,stack);
+			}
+			closeShallow(stack, dest);
+		} else {
+			// TODO implement this
+			throw new RuntimeException("Deep non-array structure copying not implemented");
 		}
 	}
 

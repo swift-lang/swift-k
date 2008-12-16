@@ -303,6 +303,7 @@ public abstract class AbstractDataNode implements DSHandle {
 					+ " is already assigned with a value of " + this.value);
 		}
 		this.value = value;
+		closeShallow();
 	}
 
 	public Collection getFringePaths() throws HandleOpenException {
