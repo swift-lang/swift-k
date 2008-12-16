@@ -26,7 +26,7 @@ public class SetFieldValue extends VDLFunction {
 		try {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
 			DSHandle leaf = var.getField(path);
-			Object value = PA_VALUE.getValue(stack);
+			DSHandle value = (DSHandle)PA_VALUE.getValue(stack);
 			if (logger.isInfoEnabled()) {
 				logger.info("Setting " + leaf + " to " + value);
 			}
@@ -39,10 +39,16 @@ public class SetFieldValue extends VDLFunction {
 				// leaf.setValue(internalValue(leaf.getType(), value));
 				if( (value instanceof DSHandle && ((DSHandle)value).getType().isArray()) || (value instanceof PairIterator)) {
 					logger.warn("Warning: array assignment outside of initialisation does not work correctly.");
+				} else {
+					synchronized(value.getRoot()) {
+						if (!value.isClosed()) {
+							throw new FutureNotYetAvailable(addFutureListener(stack,value));
+						} else {
+							leaf.setValue(value.getValue());
+							closeShallow(stack, leaf);
+						}
+					}
 				}
-
-				leaf.setValue(value);
-				closeShallow(stack, leaf);
 			}
 			return null;
 		}

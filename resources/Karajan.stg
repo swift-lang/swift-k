@@ -289,11 +289,7 @@ assign(var,value) ::= <<
        $var$
      </argument>
      <argument name="value">
-<!-- TODO this should be removed and the equivalent code put in the
-java implementation of setfieldvalue itself -->
-<getfieldvalue>
        $value$
-</getfieldvalue>
      </argument>
    </vdl:setfieldvalue>
 >>
