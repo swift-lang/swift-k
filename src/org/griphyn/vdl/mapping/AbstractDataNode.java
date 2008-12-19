@@ -18,6 +18,8 @@ import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
+import org.griphyn.vdl.karajan.VDL2FutureException;
+
 public abstract class AbstractDataNode implements DSHandle {
 
 	static final String DATASET_URI_PREFIX = "tag:benc@ci.uchicago.edu,2008:swift:dataset:";
@@ -348,7 +350,11 @@ public abstract class AbstractDataNode implements DSHandle {
 		notifyListeners();
 		logger.info("closed "+this.getIdentifier());
 // so because its closed, we can dump the contents
-		logContent();
+		try {
+			logContent();
+		} catch(Exception e) {
+			logger.warn("Exception whilst logging dataset content for "+this,e);
+		}
 // TODO record retrospective provenance information for this dataset here
 // we should do it at closing time because that's the point at which we
 // know the dataset has its values (all the way down the tree) assigned.
@@ -368,15 +374,23 @@ public abstract class AbstractDataNode implements DSHandle {
 			if(this.getType().isPrimitive()) {
 				logger.info("VALUE dataset="+this.getIdentifier()+" VALUE="+this.toString());
 			}
-			if(this.getMapper() != null) {
+
+			Mapper m;
+
+			try {
+				m = this.getMapper();
+			} catch(VDL2FutureException fe) {
+				m = null; // no mapping info if mapper isn't initialised yet
+			}
+			if(m != null) {
 // TODO proper type here
 // Not sure catching exception here is really the right thing to do here
 // anyway - should perhaps only be trying to map leafnodes? Mapping
 // non-leaf stuff is giving wierd paths anyway
 				try {
-					Object path=this.getMapper().map(this.getPathFromRoot());
+					Object path=m.map(this.getPathFromRoot());
 					logger.info("FILENAME dataset="+this.getIdentifier()+" filename="+
-						this.getMapper().map(this.getPathFromRoot()));
+						m.map(this.getPathFromRoot()));
 				} catch(Exception e) {
 					logger.info("dataset "+this.getIdentifier()+" exception while mapping path from root",e);
 				}
@@ -435,7 +449,8 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public synchronized void addListener(DSHandleListener listener) {
 		if (logger.isInfoEnabled()) {
-			logger.info("Adding handle listener \"" + listener + "\" to \"" + this + "\"");
+Exception e = new Exception("To get stack trace");
+			logger.info("Adding handle listener \"" + listener + "\" to \"" + this + "\"", e);
 		}
 		if (listeners == null) {
 			listeners = new LinkedList();

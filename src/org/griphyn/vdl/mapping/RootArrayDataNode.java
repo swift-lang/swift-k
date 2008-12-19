@@ -1,6 +1,7 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.Map;
+import java.util.Iterator;
 
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
@@ -8,6 +9,7 @@ import org.griphyn.vdl.type.Type;
 
 public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener {
 
+	private boolean initialized=false;
 	private Mapper mapper;
 	private Map params;
 
@@ -21,18 +23,40 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 
 	public void init(Map params) {
 		this.params = params;
+		if(this.params == null) {
+			initialized();
+		} else {
+			innerInit();
+		}
+	}
+
+	private void innerInit() {
+		Iterator i = params.entrySet().iterator();
+		while(i.hasNext()) {
+			Map.Entry entry = (Map.Entry) i.next();
+			Object k = entry.getKey();
+			Object v = entry.getValue();
+			if(v instanceof DSHandle && !( (DSHandle)v).isClosed()) {
+				DSHandle dh = (DSHandle)v;
+				dh.addListener(this);
+				return;
+			}
+		}
 		String desc = (String) params.get("descriptor");
 		if (desc == null) {
+			initialized();
 			return;
 		}
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
 			checkInputs();
 			getField().setName(PARAM_PREFIX.getStringValue(mapper));
+			initialized();
 		}
 		catch (InvalidMapperException e) {
 			throw new RuntimeException(e);
 		}
+		notifyListeners();
 	}
 
 	private void checkInputs() {
@@ -46,10 +70,11 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 			setValue(new MappingDependentException(this, e));
 			closeShallow();
 		}
+		initialized();
 	}
 
 	public void handleClosed(DSHandle handle) {
-		checkInputs();
+		innerInit();
 	}
 
 	public String getParam(String name) {
@@ -68,11 +93,24 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 	}
 
 	public Mapper getMapper() {
-		return mapper;
+		if(initialized) {
+			return mapper;
+		} else {
+			throw new VDL2FutureException(this);
+		}
 	}
 
 	public boolean isArray() {
 		return true;
 	}
+
+        public void setValue(Object value) {
+                super.setValue(value);
+                initialized();
+        }
+
+        private void initialized() {
+                initialized=true;
+        }
 
 }

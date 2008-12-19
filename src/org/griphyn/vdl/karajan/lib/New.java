@@ -123,9 +123,7 @@ public class New extends VDLFunction {
 			}
 			else if (type != null) {
 				handle = new RootDataNode(type);
-				if (mapping != null) {
-					handle.init(mapping);
-				}
+				handle.init(mapping);
 				if (value != null) {
 					handle.setValue(internalValue(type, value));
 					closeShallow(stack, handle);

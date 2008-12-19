@@ -12,6 +12,7 @@ import org.griphyn.vdl.type.Type;
 
 public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
+	private boolean initialized=false;
 	private Mapper mapper;
 	private Map params;
 
@@ -29,18 +30,43 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
 	public void init(Map params) {
 		this.params = params;
+		if(this.params == null) { 
+			initialized();
+		} else {
+			innerInit();
+		}
+	}
 
+	/** must have this.params set to the appropriate parameters before
+	    being called. */
+	private void innerInit() {
+
+		Iterator i = params.entrySet().iterator();
+		while(i.hasNext()) {
+			Map.Entry entry = (Map.Entry) i.next();
+			Object k = entry.getKey();
+			Object v = entry.getValue();
+			if(v instanceof DSHandle && !( (DSHandle)v).isClosed()) {
+				DSHandle dh = (DSHandle)v;
+				dh.addListener(this);
+				return;
+			}
+		}
 		String desc = (String) params.get("descriptor");
-		if (desc == null)
+		if (desc == null) {
+			initialized();
 			return;
+		}
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
 			checkInputs();
 			getField().setName(PARAM_PREFIX.getStringValue(mapper));
+			initialized();
 		}
 		catch (InvalidMapperException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("InvalidMapperException caught in mapper initialization", e);
 		}
+		notifyListeners();
 	}
 
 	private void checkInputs() {
@@ -48,20 +74,23 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			checkInputs(params, mapper, this);
 		}
 		catch (VDL2FutureException e) {
-			e.printStackTrace();
-			e.getHandle().addListener(this);
+			logger.warn("Unexpected VDL2FutureException checking inputs");
+			throw new RuntimeException("Got a VDL2FutureException but all parameters should have their values",e);
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
 			closeShallow();
+			return;
 		}
+		initialized();
 	}
 
 	public void handleClosed(DSHandle handle) {
-		checkInputs();
+		innerInit();
 	}
 
-	public static void checkInputs(Map params, Mapper mapper, AbstractDataNode root) {
+
+	static protected void checkInputs(Map params, Mapper mapper, AbstractDataNode root) {
 		String input = (String) params.get("input");
 		if (input != null && Boolean.valueOf(input.trim()).booleanValue()) {
 			Iterator i = mapper.existing().iterator();
@@ -167,11 +196,26 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		return null;
 	}
 
+
+
 	public Mapper getMapper() {
-		return mapper;
+		if(initialized) {
+			return mapper;
+		} else {
+			throw new VDL2FutureException(this);
+		}
 	}
 
 	public boolean isArray() {
 		return false;
+	}
+
+	public void setValue(Object value) {
+		super.setValue(value);
+		initialized();
+	}
+
+	private void initialized() {
+		initialized=true;
 	}
 }
