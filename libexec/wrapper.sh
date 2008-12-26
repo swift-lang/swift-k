@@ -87,7 +87,15 @@ closeinfo() {
 }
 
 COMMANDLINE=$@
-WFDIR=$PWD
+
+# get the parent directory of the directory containing wrapper.sh, to use
+# as the run directory
+# this assumes that wrapper.sh is being executed from the top level of
+# the shared directory, and that shared directory is in the top level
+# of the workflow run directory
+WFDIR=$(dirname $(dirname $0))
+
+cd $WFDIR
 openinfo "wrapper.log"
 ID=$1
 checkEmpty "$ID" "Missing job ID"

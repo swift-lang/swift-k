@@ -108,9 +108,9 @@ public class VDSTaskTransformer implements TaskTransformer {
 		private void applyJobWorkDirectory(Task task, Contact[] contacts) {
 			JobSpecification spec = (JobSpecification) task.getSpecification();
 			String dir = spec.getDirectory();
+			BoundContact bc = (BoundContact) contacts[0];
+			String workdir = (String) bc.getProperty("workdir");
 			if (dir == null || !dir.startsWith("/")) {
-				BoundContact bc = (BoundContact) contacts[0];
-				String workdir = (String) bc.getProperty("workdir");
 				if (workdir != null) {
 					if (dir == null) {
 						spec.setDirectory(workdir);
@@ -120,6 +120,13 @@ public class VDSTaskTransformer implements TaskTransformer {
 					}
 				}
 			}
+			List l =   spec.getArgumentsAsList();
+			// perhaps should check for /bin/bash in the executable, or some other way of detecting we need to do a substitution here... or equally could assume that the second parameter always needs to undergo this substitution...
+			if(((String)l.get(0)).endsWith("shared/wrapper.sh")) {
+				String s  = workdir+"/"+l.get(0);
+				l.set(0,s);
+			}
+
 		}
 
 		protected abstract void applyTCEntry(Task task, Contact[] contacts);

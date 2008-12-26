@@ -393,7 +393,7 @@ namespace("vdl"
 				
 						vdl:setprogress("Submitting")
 						vdl:execute("/bin/bash",
-							list("shared/wrapper.sh", jobid,
+							list("{sharedDir}/wrapper.sh", jobid,
 								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 
 								"-out", stdout, 
