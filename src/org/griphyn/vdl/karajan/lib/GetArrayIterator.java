@@ -42,7 +42,9 @@ public class GetArrayIterator extends VDLFunction {
 						return new PairIterator(value);
 					}
 					else {
-						return addFutureListListener(stack, var, value);
+						synchronized(var.getRoot()) {
+							return addFutureListListener(stack, var, value);
+						}
 					}
 				} else {
 					throw new RuntimeException("Cannot get array iterator for non-array");
