@@ -187,6 +187,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	/** The caller is expected to have synchronized on the root of var. */
 	public String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
+		assert Thread.holdsLock(var.getRoot());
 		try {
 			if (var.getType().isArray()) {
 				return leavesFileNames(var);

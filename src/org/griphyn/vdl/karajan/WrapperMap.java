@@ -57,6 +57,7 @@ public class WrapperMap {
 			map.put(handle, fw = new FutureWrappers());
 		}
 		if (fw.nodeWrapper == null) {
+			assert Thread.holdsLock(handle.getRoot()); // TODO should be on root or on handle?
 			fw.nodeWrapper = new DSHandleFutureWrapper(handle);
 		}
 		return fw.nodeWrapper;
@@ -68,6 +69,7 @@ public class WrapperMap {
 			map.put(handle, fw = new FutureWrappers());
 		}
 		if (fw.arrayWrapper == null) {
+			assert Thread.holdsLock(handle.getRoot()); // TODO should be on root or on handle?
 			fw.arrayWrapper = new ArrayIndexFutureList(handle, value);
 		}
 		return fw.arrayWrapper;
