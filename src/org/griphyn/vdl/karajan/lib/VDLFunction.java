@@ -405,7 +405,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		WrapperMap hash = getFutureWrapperMap(stack);
 		// Close the future
 		boolean closed;
-		synchronized(handle) {
+		synchronized(handle.getRoot()) {
 			closed = handle.isClosed();
 			if (!closed) {
 				handle.closeShallow();
@@ -434,28 +434,33 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		// Also mark all arrays from root
 		Path fullPath = handle.getPathFromRoot();
 		DSHandle root = handle.getRoot();
-		for (int i = 0; i < fullPath.size(); i++) {
-			if (fullPath.isArrayIndex(i)) {
-				try {
-					markAsAvailable(stack, root.getField(fullPath.subPath(0, i)),
-							fullPath.getElement(i));
-				}
-				catch (InvalidPathException e) {
-					e.printStackTrace();
+		synchronized(root) {
+			for (int i = 0; i < fullPath.size(); i++) {
+				if (fullPath.isArrayIndex(i)) {
+					try {
+						markAsAvailable(stack, root.getField(fullPath.subPath(0, i)),
+								fullPath.getElement(i));
+					}
+					catch (InvalidPathException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
 	}
 
 	protected void waitFor(VariableStack stack, DSHandle handle) throws ExecutionException {
-		if (!handle.isClosed()) {
-			throw new FutureNotYetAvailable(addFutureListener(stack, handle));
+		synchronized(handle.getRoot()) {
+			if (!handle.isClosed()) {
+				throw new FutureNotYetAvailable(addFutureListener(stack, handle));
+			}
 		}
 	}
 
 	private void closeDeep(VariableStack stack, DSHandle handle) throws ExecutionException,
 			InvalidPathException {
 		// Close the future
+		synchronized(handle.getRoot()) {
 		handle.closeShallow();
 		getFutureWrapperMap(stack).close(handle);
 		try {
@@ -470,14 +475,18 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			throw new ExecutionException("HandleOpen during closeDeep",e);
 		}
 		markToRoot(stack, handle);
+		}
 	}
 
 	protected void closeShallow(VariableStack stack, DSHandle handle) throws ExecutionException {
-		handle.closeShallow();
-		getFutureWrapperMap(stack).close(handle);
+		synchronized(handle.getRoot()) {
+			handle.closeShallow();
+			getFutureWrapperMap(stack).close(handle);
+		}
 	}
 
 	private boolean isClosed(VariableStack stack, DSHandle handle) throws ExecutionException {
+		assert Thread.holdsLock(handle.getRoot());
 		return getFutureWrapperMap(stack).isClosed(handle);
 	}
 
