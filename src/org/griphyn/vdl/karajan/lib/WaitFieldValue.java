@@ -33,7 +33,7 @@ public class WaitFieldValue extends VDLFunction {
 		try {
 			Path path = parsePath(OA_PATH.getValue(stack), stack);
 			var = var.getField(path);
-			synchronized (var) {
+			synchronized (var.getRoot()) {
 				if (!var.isClosed()) {
 					logger.debug("Waiting for " + var);
 					throw new FutureNotYetAvailable(addFutureListener(stack, var));
