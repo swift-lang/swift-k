@@ -32,25 +32,26 @@ public class GetFieldValue extends VDLFunction {
 			return var1;
 		}
 		DSHandle var = (DSHandle) var1;
-		try {
-			Path path = parsePath(OA_PATH.getValue(stack), stack);
-			if (path.hasWildcards()) {
-				try {
-					return var.getFields(path).toArray();
-				}
-				catch (HandleOpenException e) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Waiting for var=" + var + " path=" + path);
+		DSHandle root = var.getRoot();
+		synchronized(root) {
+			try {
+				Path path = parsePath(OA_PATH.getValue(stack), stack);
+				if (path.hasWildcards()) {
+					try {
+						return var.getFields(path).toArray();
 					}
-					throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
+					catch (HandleOpenException e) {
+						if (logger.isDebugEnabled()) {
+							logger.debug("Waiting for var=" + var + " path=" + path);
+						}
+						throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
+					}
 				}
-			}
-			else {
-				var = var.getField(path);
-				if (var.getType().isArray()) {
-					throw new RuntimeException("Getting value for array "+var+" which is not permitted.");
-				}
-				synchronized (var) {
+				else {
+					var = var.getField(path);
+					if (var.getType().isArray()) {
+						throw new RuntimeException("Getting value for array "+var+" which is not permitted.");
+					}
 					if (!var.isClosed()) {
 						if (logger.isDebugEnabled()) {
 							logger.debug("Waiting for " + var);
@@ -62,10 +63,9 @@ public class GetFieldValue extends VDLFunction {
 					}
 				}
 			}
-		}
-		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			catch (InvalidPathException e) {
+				throw new ExecutionException(e);
+			}
 		}
 	}
-
 }
