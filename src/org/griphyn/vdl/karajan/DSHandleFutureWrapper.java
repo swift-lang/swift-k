@@ -16,7 +16,7 @@ import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DSHandleListener;
 
-public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListener {
+public class DSHandleFutureWrapper implements Future, DSHandleListener {
 	private DSHandle handle;
 	private LinkedList listeners;
 
@@ -70,16 +70,6 @@ public class DSHandleFutureWrapper implements Future, Mergeable, DSHandleListene
 			EventTargetPair etp = (EventTargetPair) listeners.removeFirst();
 			WaitingThreadsMonitor.removeThread(etp.getEvent().getStack());
 			EventBus.post(etp.getTarget(), etp.getEvent());
-		}
-		listeners = null;
-	}
-
-	public void mergeListeners(Future f) {
-		Iterator i = listeners.iterator();
-		while (i.hasNext()) {
-			EventTargetPair etp = (EventTargetPair) i.next();
-			f.addModificationAction(etp.getTarget(), etp.getEvent());
-			i.remove();
 		}
 		listeners = null;
 	}
