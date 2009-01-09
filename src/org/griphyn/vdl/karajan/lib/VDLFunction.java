@@ -492,11 +492,13 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	protected static Future addFutureListener(VariableStack stack, DSHandle handle)
 			throws ExecutionException {
+		assert Thread.holdsLock(handle.getRoot());
 		return getFutureWrapperMap(stack).addNodeListener(handle);
 	}
 
 	protected static FutureIterator addFutureListListener(VariableStack stack, DSHandle handle,
 			Map value) throws ExecutionException {
+		assert Thread.holdsLock(handle.getRoot());
 		return getFutureWrapperMap(stack).addFutureListListener(handle, value).futureIterator(stack);
 	}
 
