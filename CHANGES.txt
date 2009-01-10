@@ -3,6 +3,13 @@
     is no longer shown. The progress ticker now appears more often.
     This should give a better overview of run progress.
 
+*** More parallelisation of execution, so that some constructs which should
+    have always work now actually work. For example, mappers can take
+    values as parameters which are not known "early" in a run, and will
+    have their initialisation deferred until those parameters are ready.
+    SwiftScript programs which previously worked should still work; and
+    some programs which did not previously work should now work.
+
 (11/11/08)
 *** Swift 0.7 built from Swift SVN r2318 and cog SVN r2255
 
