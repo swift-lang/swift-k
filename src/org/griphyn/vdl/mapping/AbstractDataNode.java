@@ -97,12 +97,25 @@ public abstract class AbstractDataNode implements DSHandle {
 				return this.value.toString();
 			}
 		}
+		return getIdentifyingString();
+	}
+
+
+	public String getIdentifyingString() {
 
 		String prefix = this.getClass().getName();
 
 		prefix = prefix + " identifier "+this.getIdentifier(); 
 
- 		prefix = prefix + " with no value at dataset=";
+		prefix = prefix + " type "+getType();
+
+		if(value == null) {
+ 			prefix = prefix + " with no value at dataset=";
+		} else if (value instanceof Throwable) {
+			prefix = prefix + " containing throwable "+value.getClass();
+		} else {
+ 			prefix = prefix + " value="+this.value.toString()+" dataset=";
+		}
 
 		prefix = prefix + getDisplayableName();
 
@@ -118,6 +131,7 @@ public abstract class AbstractDataNode implements DSHandle {
 		}
 
 		return prefix;
+
 	}
 
 	protected String getDisplayableName() {
@@ -348,7 +362,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	public synchronized void closeShallow() {
 		this.closed = true;
 		notifyListeners();
-		logger.info("closed "+this.getIdentifier());
+		logger.info("closed "+this.getIdentifyingString());
 // so because its closed, we can dump the contents
 		try {
 			logContent();
@@ -450,7 +464,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	public synchronized void addListener(DSHandleListener listener) {
 		if (logger.isInfoEnabled()) {
 Exception e = new Exception("To get stack trace");
-			logger.info("Adding handle listener \"" + listener + "\" to \"" + this + "\"", e);
+			logger.info("Adding handle listener \"" + listener + "\" to \"" + getIdentifyingString() + "\"", e);
 		}
 		if (listeners == null) {
 			listeners = new LinkedList();
@@ -468,7 +482,7 @@ Exception e = new Exception("To get stack trace");
 				DSHandleListener listener = (DSHandleListener) i.next();
 				i.remove();
 				if (logger.isInfoEnabled()) {
-					logger.info("Notifying listener \"" + listener + "\" about \"" + this + "\"");
+					logger.info("Notifying listener \"" + listener + "\" about \"" + getIdentifyingString() + "\"");
 				}
 				listener.handleClosed(this);
 			}

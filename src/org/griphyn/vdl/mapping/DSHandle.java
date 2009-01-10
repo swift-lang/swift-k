@@ -83,5 +83,7 @@ public interface DSHandle {
 
     public String getIdentifier();
 
+    public String getIdentifyingString();
+
     public boolean isRestartable();
 }

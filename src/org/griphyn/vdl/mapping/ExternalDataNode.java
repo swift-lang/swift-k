@@ -115,6 +115,10 @@ public class ExternalDataNode implements DSHandle {
 		return prefix;
 	}
 
+	public String getIdentifyingString() {
+		return toString();
+	}
+
 	public DSHandle getRoot() {
 		return this;
 	}
