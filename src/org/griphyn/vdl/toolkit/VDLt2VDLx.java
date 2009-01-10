@@ -22,7 +22,7 @@ import org.globus.swift.parser.SwiftScriptParser;
 public class VDLt2VDLx {
 	private static final Logger logger = Logger.getLogger(VDLt2VDLx.class);
 	
-	public static final String DEFAULT_TEMPLATE_FILE_NAME = "XDTM.stg";
+	public static final String DEFAULT_TEMPLATE_FILE_NAME = "swiftscript.stg";
 
 	public static void main(String[] args) throws Exception {
 		try {
