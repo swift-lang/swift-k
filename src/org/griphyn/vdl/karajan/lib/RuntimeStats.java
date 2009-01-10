@@ -18,8 +18,8 @@ proof of concept. */
 public class RuntimeStats extends FunctionsCollection {
 
 	public static final Arg PA_STATE = new Arg.Positional("state");
-	public static final int MIN_PERIOD_MS=5000;
-	public static final int MAX_PERIOD_MS=60000;
+	public static final int MIN_PERIOD_MS=1000;
+	public static final int MAX_PERIOD_MS=30000;
 
 	public static final String[] preferredOutputOrder = {
                 "uninitialized",

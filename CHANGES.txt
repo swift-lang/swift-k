@@ -1,3 +1,8 @@
+(01/10/09)
+*** Console output for individual application invocation start and finish
+    is no longer shown. The progress ticker now appears more often.
+    This should give a better overview of run progress.
+
 (11/11/08)
 *** Swift 0.7 built from Swift SVN r2318 and cog SVN r2255
 

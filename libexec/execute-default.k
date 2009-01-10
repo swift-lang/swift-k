@@ -12,7 +12,6 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 			if(
 				sys:not(done) try(
 					sequential(
-						echo("{tr} started")
 						log(LOG:INFO, "START thread={#thread} tr={tr}") 
 						vdl:setprogress("Selecting site")
 						restartOnError(".*", vdl:configProperty("execution.retries"),
@@ -32,12 +31,10 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 						)
 						mark(restartout, err=false, mapping=false)
 						graphStuff(tr, stagein, stageout, err=false, maybe(args=arguments))
-						echo("{tr} completed")
 						log(LOG:INFO, "END_SUCCESS thread={#thread} tr={tr}")
 						vdl:setprogress("Finished successfully")
 					)
 					catch(".*"
-						echo("{tr} failed")
 						log(LOG:INFO, "END_FAILURE thread={#thread} tr={tr}")
 						vdl:setprogress("Failed")
 						if(
