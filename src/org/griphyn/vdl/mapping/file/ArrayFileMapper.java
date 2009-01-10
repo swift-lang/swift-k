@@ -42,11 +42,13 @@ public class ArrayFileMapper extends AbstractMapper {
 			// we could typecheck more elegantly here to make sure that
 			// we really do have an array of strings as parameter.
 			DSHandle dn = (DSHandle) PARAM_FILES.getRawValue(this);
+			assert(dn.isClosed());
 
 			DSHandle srcNode = null;
 			try {
 				srcNode = dn.getField(path);
 			} catch(InvalidPathException e) {
+				logger.error("Invalid path exception "+e+" for path "+path,e);
 				return null;
 			}
 			String returnValue = srcNode.getValue().toString();
