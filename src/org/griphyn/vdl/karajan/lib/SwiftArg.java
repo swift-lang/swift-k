@@ -36,17 +36,19 @@ public abstract class SwiftArg extends Arg {
 			DSHandle handle = (DSHandle) val;
 			if (handle.getType().isArray()) {
 				Map value = handle.getArrayValue();
-				if (handle.isClosed()) {
-					return new PairIterator(value);
-				}
-				else {
-					return VDLFunction.addFutureListListener(stack, handle, value);
+				synchronized(handle.getRoot()) {
+					if (handle.isClosed()) {
+						return new PairIterator(value);
+					}
+					else {
+						return VDLFunction.addFutureListListener(stack, handle, value);
+					}
 				}
 			}
 			if (logger.isDebugEnabled()) {
 				logger.debug("SwiftArg.getValue(" + handle + ")");
 			}
-			synchronized (handle) {
+			synchronized (handle.getRoot()) {
 				if (!handle.isClosed()) {
 					if (logger.isDebugEnabled()) {
 						logger.debug("Waiting for " + handle);

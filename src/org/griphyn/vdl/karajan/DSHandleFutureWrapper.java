@@ -74,7 +74,7 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		listeners = null;
 	}
 
-	public int listenerCount() {
+	public synchronized int listenerCount() {
 		if (listeners == null) {
 			return 0;
 		}
@@ -83,7 +83,7 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		}
 	}
 
-	public EventTargetPair[] getListenerEvents() {
+	public synchronized EventTargetPair[] getListenerEvents() {
 		if (listeners != null) {
 			return (EventTargetPair[]) listeners.toArray(new EventTargetPair[0]);
 		}
