@@ -247,23 +247,47 @@
           <variableReference>gauge</variableReference></function><stringConstant>-s</stringConstant><variableReference>stag</variableReference><stringConstant>-a</stringConstant><variableReference>antiQ</variableReference><stringConstant>-0</stringConstant><variableReference>Q0</variableReference><stringConstant>-1</stringConstant><variableReference>Q1</variableReference><stringConstant>-2</stringConstant><variableReference>Q2</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="confList" type="string[]">
-    <array>
-      <stringConstant>000102</stringConstant><stringConstant>000108</stringConstant><stringConstant>000114</stringConstant>
-    </array>
-  </variable>
-  <variable name="kappaQ" type="float"><floatConstant>0.127</floatConstant></variable>
-  <variable name="cSW" type="float"><floatConstant>1.75</floatConstant></variable>
-  <variable name="mass" type="string"><stringConstant>0.005,0.007,0.01,0.02,0.03</stringConstant></variable>
-  <variable name="fn" type="string[]">
-    <array>
-      <stringConstant>m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000102</stringConstant><stringConstant>m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108</stringConstant><stringConstant>m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114</stringConstant>
-    </array>
-  </variable>
+  <variable name="confList" type="string[]" xsi:nil="true"/>
+  <assign src="line 54">
+   <variableReference>confList</variableReference>
+
+     <array>
+       <stringConstant>000102</stringConstant><stringConstant>000108</stringConstant><stringConstant>000114</stringConstant>
+     </array>
+
+  </assign>
+  <variable name="kappaQ" type="float" xsi:nil="true"/>
+  <assign src="line 55">
+   <variableReference>kappaQ</variableReference>
+   <floatConstant>0.127</floatConstant>
+  </assign>
+  <variable name="cSW" type="float" xsi:nil="true"/>
+  <assign src="line 57">
+   <variableReference>cSW</variableReference>
+   <floatConstant>1.75</floatConstant>
+  </assign>
+  <variable name="mass" type="string" xsi:nil="true"/>
+  <assign src="line 58">
+   <variableReference>mass</variableReference>
+   <stringConstant>0.005,0.007,0.01,0.02,0.03</stringConstant>
+  </assign>
+  <variable name="fn" type="string[]" xsi:nil="true"/>
+  <assign src="line 62">
+   <variableReference>fn</variableReference>
+
+     <array>
+       <stringConstant>m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000102</stringConstant><stringConstant>m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108</stringConstant><stringConstant>m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114</stringConstant>
+     </array>
+
+  </assign>
   <variable name="conflist" type="int[]" xsi:nil="true"/>
   <foreach var="config"  indexVar="i" src="line 64">
   <in><variableReference>conflist</variableReference></in>
-  <body><variable name="source" type="string"><stringConstant>local,0,0,0,0</stringConstant></variable>
+  <body><variable name="source" type="string" xsi:nil="true"/>
+    <assign src="line 68">
+     <variableReference>source</variableReference>
+     <stringConstant>local,0,0,0,0</stringConstant>
+    </assign>
     <dataset name="template" type="file">
       <file name="foo"/>
     </dataset>
@@ -315,7 +339,11 @@
       <output><variableReference>cvtArch0</variableReference></output>
       <input><variableReference>q0</variableReference></input>
     </call>
-    <variable name="source1" type="string"><stringConstant>wavefunction,0,1S</stringConstant></variable>
+    <variable name="source1" type="string" xsi:nil="true"/>
+    <assign src="line 86">
+     <variableReference>source1</variableReference>
+     <stringConstant>wavefunction,0,1S</stringConstant>
+    </assign>
     <variable name="clover1" type="file" xsi:nil="true"/>
     <call proc="cloverSolve" src="line 86">
       <output><variableReference>clover1</variableReference></output>
@@ -334,7 +362,11 @@
       <output><variableReference>cvtArch1</variableReference></output>
       <input><variableReference>q1</variableReference></input>
     </call>
-    <variable name="source2" type="string"><stringConstant>wavefunction,0,2S</stringConstant></variable>
+    <variable name="source2" type="string" xsi:nil="true"/>
+    <assign src="line 91">
+     <variableReference>source2</variableReference>
+     <stringConstant>wavefunction,0,2S</stringConstant>
+    </assign>
     <variable name="clover2" type="file" xsi:nil="true"/>
     <call proc="cloverSolve" src="line 91">
       <output><variableReference>clover2</variableReference></output>
@@ -353,7 +385,11 @@
       <output><variableReference>cvtArch2</variableReference></output>
       <input><variableReference>q2</variableReference></input>
     </call>
-    <variable name="antiQ" type="file"><variableReference>q0</variableReference></variable>
+    <variable name="antiQ" type="file" xsi:nil="true"/>
+    <assign src="line 96">
+     <variableReference>antiQ</variableReference>
+     <variableReference>q0</variableReference>
+    </assign>
     <variable name="pStdout" type="file" xsi:nil="true"/>
     <call proc="twoPtHH" src="line 96">
       <output><variableReference>pStdout</variableReference></output>

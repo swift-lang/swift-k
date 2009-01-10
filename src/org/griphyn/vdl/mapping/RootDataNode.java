@@ -39,7 +39,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
 	/** must have this.params set to the appropriate parameters before
 	    being called. */
-	private void innerInit() {
+	private synchronized void innerInit() {
 
 		Iterator i = params.entrySet().iterator();
 		while(i.hasNext()) {

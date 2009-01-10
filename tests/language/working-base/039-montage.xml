@@ -243,10 +243,14 @@
     </dataset>
     <foreach var="d"  indexVar="i" src="line 51">
     <in><variableReference>diffs</variableReference></in>
-    <body><variable name="image1" type="Image"><structureMember>
-        <variableReference>d</variableReference>
-        <memberName>plus</memberName>
-      </structureMember></variable>
+    <body><variable name="image1" type="Image" xsi:nil="true"/>
+      <assign src="line 53">
+       <variableReference>image1</variableReference>
+       <structureMember>
+         <variableReference>d</variableReference>
+         <memberName>plus</memberName>
+       </structureMember>
+      </assign>
       <dataset name="area1" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
@@ -255,10 +259,14 @@
           <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
       </dataset>
-      <variable name="image2" type="Image"><structureMember>
-        <variableReference>d</variableReference>
-        <memberName>minus</memberName>
-      </structureMember></variable>
+      <variable name="image2" type="Image" xsi:nil="true"/>
+      <assign src="line 55">
+       <variableReference>image2</variableReference>
+       <structureMember>
+         <variableReference>d</variableReference>
+         <memberName>minus</memberName>
+       </structureMember>
+      </assign>
       <dataset name="area2" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
@@ -456,10 +464,14 @@
      xsi:nil="true" />
     <foreach var="projImg"  indexVar="i" src="line 90">
     <in><variableReference>projectedImages</variableReference></in>
-    <body><variable name="projArea" type="Image"><arraySubscript>
-       <variableReference>projectedAreas</variableReference>
-       <variableReference>i</variableReference>
-      </arraySubscript></variable>
+    <body><variable name="projArea" type="Image" xsi:nil="true"/>
+      <assign src="line 92">
+       <variableReference>projArea</variableReference>
+       <arraySubscript>
+        <variableReference>projectedAreas</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+      </assign>
       <dataset name="corrImg" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">

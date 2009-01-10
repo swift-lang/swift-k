@@ -23,9 +23,17 @@
     name="i" type="int"
 
      xsi:nil="true" />
-    <variable name="f" type="int"><variableReference>i</variableReference></variable>
+    <variable name="f" type="int" xsi:nil="true"/>
+    <assign src="line 4">
+     <variableReference>f</variableReference>
+     <variableReference>i</variableReference>
+    </assign>
   </procedure>
-  <variable name="d" type="int"><integerConstant>99</integerConstant></variable>
+  <variable name="d" type="int" xsi:nil="true"/>
+  <assign src="line 7">
+   <variableReference>d</variableReference>
+   <integerConstant>99</integerConstant>
+  </assign>
   <variable name="g" type="int" xsi:nil="true"/>
   <variable name="j" type="int" xsi:nil="true"/>
   <variable name="t" type="int" xsi:nil="true"/>

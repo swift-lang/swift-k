@@ -30,7 +30,11 @@
   <dataset name="outfile" type="messagefile">
     <file name="hello20.txt"/>
   </dataset>
-  <variable name="morning" type="boolean"><booleanConstant>true</booleanConstant></variable>
+  <variable name="morning" type="boolean" xsi:nil="true"/>
+  <assign src="line 13">
+   <variableReference>morning</variableReference>
+   <booleanConstant>true</booleanConstant>
+  </assign>
   <if>
     <variableReference>morning</variableReference>
     <then>

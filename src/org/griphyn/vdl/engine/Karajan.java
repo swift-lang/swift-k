@@ -301,7 +301,6 @@ public class Karajan {
 
 	public void dataset(Dataset dataset, VariableScope scope) throws CompilationException {
 		StringTemplate datasetST = template("variable");
-		scope.bodyTemplate.setAttribute("declarations", datasetST);
 		datasetST.setAttribute("name", dataset.getName());
 		datasetST.setAttribute("type", dataset.getType().getLocalPart());
 		if (dataset.isSetIsArray1()) {
@@ -325,11 +324,45 @@ public class Karajan {
 				Param param = mapping.getParamArray(i);
 				StringTemplate paramST = template("vdl_parameter");
 				paramST.setAttribute("name", param.getName());
-				paramST.setAttribute("expr",expressionToKarajan(param.getAbstractExpression(),scope));
+				Node expressionDOM = param.getAbstractExpression().getDomNode();
+				String namespaceURI = expressionDOM.getNamespaceURI();
+				String localName = expressionDOM.getLocalName();
+				QName expressionQName = new QName(namespaceURI, localName);
+				if(expressionQName.equals(VARIABLE_REFERENCE_EXPR))     {
+					paramST.setAttribute("expr",expressionToKarajan(param.getAbstractExpression(),scope));
+				} else {
+					String parameterVariableName="swift#mapper#"+(internedIDCounter++);
+					// make template for variable declaration (need to compute type of this variable too?)
+					StringTemplate variableDeclarationST = template("variable");
+					variableDeclarationST.setAttribute("waitfor","");
+					// TODO factorise this and other code in variable()?
+					StringTemplate pmappingST = new StringTemplate("mapping");
+					pmappingST.setAttribute("descriptor", "concurrent_mapper");
+					StringTemplate pparamST = template("vdl_parameter");
+					pparamST.setAttribute("name", "prefix");
+					pparamST.setAttribute("expr", parameterVariableName + "-" + UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+					pmappingST.setAttribute("params", pparamST);
+					variableDeclarationST.setAttribute("mapping", pmappingST);
+					variableDeclarationST.setAttribute("nil", Boolean.TRUE);
+					variableDeclarationST.setAttribute("name", parameterVariableName);
+					scope.bodyTemplate.setAttribute("declarations",variableDeclarationST);
+					StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
+					String paramValueType = datatype(paramValueST);
+					scope.addVariable(parameterVariableName, paramValueType);
+					variableDeclarationST.setAttribute("type", paramValueType);
+					StringTemplate variableReferenceST = template("id");
+					variableReferenceST.setAttribute("var",parameterVariableName);
+					StringTemplate variableAssignmentST = template("assign");
+					variableAssignmentST.setAttribute("var",variableReferenceST);
+					variableAssignmentST.setAttribute("value",paramValueST);
+					scope.appendStatement(variableAssignmentST);
+					paramST.setAttribute("expr",variableReferenceST);
+				}
 				mappingST.setAttribute("params", paramST);
 			}
 			datasetST.setAttribute("mapping", mappingST);
 		}
+		scope.bodyTemplate.setAttribute("declarations", datasetST);
 		scope.addVariable(dataset.getName(), dataset.getType().getLocalPart());
 	}
 	

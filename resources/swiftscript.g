@@ -217,9 +217,16 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
         v1 = template("variable");
         v1.setAttribute("name", d);
         v1.setAttribute("type", t);
-        if (i1 != null)
-            v1.setAttribute("value", i1);
+
         code.setAttribute("statements", v1);
+        if (i1 != null) {
+          StringTemplate valueAssignment = template("assign");
+          StringTemplate vr = template("variableReference");
+          vr.setAttribute("name",d);
+          valueAssignment.setAttribute("lhs",vr);
+          valueAssignment.setAttribute("rhs",i1);
+          code.setAttribute("statements", valueAssignment);
+        }
     }
     ;
 

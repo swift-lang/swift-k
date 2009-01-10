@@ -27,7 +27,11 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="outputNames" type="string"><stringConstant>one two three</stringConstant></variable>
+  <variable name="outputNames" type="string" xsi:nil="true"/>
+  <assign src="line 11">
+   <variableReference>outputNames</variableReference>
+   <stringConstant>one two three</stringConstant>
+  </assign>
   <dataset name="outputFiles" type="file[]">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>outputNames</variableReference></param>

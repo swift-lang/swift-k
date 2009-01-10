@@ -49,11 +49,15 @@
       </call></body>
     </foreach>
   </procedure>
-  <variable name="sa" type="string[]">
-    <array>
-      <stringConstant>hello</stringConstant><stringConstant>hi there</stringConstant><stringConstant>how are you</stringConstant>
-    </array>
-  </variable>
+  <variable name="sa" type="string[]" xsi:nil="true"/>
+  <assign src="line 16">
+   <variableReference>sa</variableReference>
+
+     <array>
+       <stringConstant>hello</stringConstant><stringConstant>hi there</stringConstant><stringConstant>how are you</stringConstant>
+     </array>
+
+  </assign>
   <variable name="fa" type="file[]" xsi:nil="true"/>
   <call proc="echo_batch" src="line 17">
     <output><variableReference>fa</variableReference></output>

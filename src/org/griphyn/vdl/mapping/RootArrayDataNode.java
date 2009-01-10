@@ -30,7 +30,7 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		}
 	}
 
-	private void innerInit() {
+	private synchronized void innerInit() {
 		Iterator i = params.entrySet().iterator();
 		while(i.hasNext()) {
 			Map.Entry entry = (Map.Entry) i.next();

@@ -35,6 +35,7 @@ import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.karajan.InHook;
 import org.griphyn.vdl.karajan.Monitor;
 import org.griphyn.vdl.karajan.TCCache;
+import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.karajan.WrapperMap;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbsFile;
@@ -49,6 +50,7 @@ import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
+
 
 public abstract class VDLFunction extends SequentialWithArguments {
 	public static final Logger logger = Logger.getLogger(VDLFunction.class);
@@ -179,6 +181,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			try {
 				return filename(ovar);
 			}
+                	catch(VDL2FutureException ve) {
+				throw new FutureNotYetAvailable(addFutureListener(stack, ve.getHandle()));
+                	}
 			catch (HandleOpenException e) {
 				throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
 			}

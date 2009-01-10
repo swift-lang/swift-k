@@ -27,11 +27,15 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="string[]">
-    <array>
-      <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
-    </array>
-  </variable>
+  <variable name="greetings" type="string[]" xsi:nil="true"/>
+  <assign src="line 11">
+   <variableReference>greetings</variableReference>
+
+     <array>
+       <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
+     </array>
+
+  </assign>
   <foreach var="g"  src="line 11">
   <in><variableReference>greetings</variableReference></in>
   <body><variable name="hw" type="file" xsi:nil="true"/>

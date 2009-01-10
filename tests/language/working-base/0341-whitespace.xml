@@ -3,11 +3,15 @@
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <variable name="a" type="int" xsi:nil="true"/>
   <variable name="b" type="int" xsi:nil="true"/>
-  <variable name="i" type="int"><arith op="*">
-    <arith op="+">
-      <variableReference>a</variableReference>
-      <variableReference>b</variableReference>
-    </arith>
-    <integerConstant>5</integerConstant>
-  </arith></variable>
+  <variable name="i" type="int" xsi:nil="true"/>
+  <assign src="line 26">
+   <variableReference>i</variableReference>
+   <arith op="*">
+     <arith op="+">
+       <variableReference>a</variableReference>
+       <variableReference>b</variableReference>
+     </arith>
+     <integerConstant>5</integerConstant>
+   </arith>
+  </assign>
 </program>

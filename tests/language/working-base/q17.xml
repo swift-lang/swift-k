@@ -33,7 +33,11 @@
           <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
-  <variable name="inputNames" type="string"><stringConstant>one.txt two.txt three.txt</stringConstant></variable>
+  <variable name="inputNames" type="string" xsi:nil="true"/>
+  <assign src="line 12">
+   <variableReference>inputNames</variableReference>
+   <stringConstant>one.txt two.txt three.txt</stringConstant>
+  </assign>
   <dataset name="inputfiles" type="messagefile[]">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>inputNames</variableReference></param>

@@ -39,11 +39,15 @@
   <dataset name="outfile" type="messagefile">
     <file name="q5out.txt"/>
   </dataset>
-  <variable name="words" type="string[]">
-    <array>
-      <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
-    </array>
-  </variable>
+  <variable name="words" type="string[]" xsi:nil="true"/>
+  <assign src="line 13">
+   <variableReference>words</variableReference>
+
+     <array>
+       <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
+     </array>
+
+  </assign>
   <call proc="greeting" src="line 13">
     <output><variableReference>outfile</variableReference></output>
     <input><variableReference>words</variableReference></input>

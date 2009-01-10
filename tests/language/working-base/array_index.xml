@@ -36,11 +36,15 @@
         </arraySubscript>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="string[]">
-    <array>
-      <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
-    </array>
-  </variable>
+  <variable name="greetings" type="string[]" xsi:nil="true"/>
+  <assign src="line 11">
+   <variableReference>greetings</variableReference>
+
+     <array>
+       <stringConstant>how</stringConstant><stringConstant>are</stringConstant><stringConstant>you</stringConstant>
+     </array>
+
+  </assign>
   <variable name="hw" type="file" xsi:nil="true"/>
   <call proc="echo_array" src="line 11">
     <output><variableReference>hw</variableReference></output>
