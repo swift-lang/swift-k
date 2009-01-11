@@ -11,21 +11,41 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
 import org.griphyn.vdl.util.VDL2Config;
+import org.globus.cog.karajan.util.BoundContact;
+import org.apache.log4j.Logger;
 
 public class ConfigProperty extends AbstractFunction {
     public static final Arg NAME = new Arg.Positional("name");
     public static final Arg INSTANCE = new Arg.Optional("instance", Boolean.TRUE);
+    public static final Arg HOST = new Arg.Optional("host",null);
 
     static {
-        setArguments(ConfigProperty.class, new Arg[] { NAME, INSTANCE });
+        setArguments(ConfigProperty.class, new Arg[] { NAME, INSTANCE, HOST });
     }
 
     public static final String INSTANCE_CONFIG_FILE = "vdl:instanceconfigfile";
     public static final String INSTANCE_CONFIG = "vdl:instanceconfig";
 
+    public static final Logger logger = Logger.getLogger(ConfigProperty.class);
+
     public Object function(VariableStack stack) throws ExecutionException {
         String name = TypeUtil.toString(NAME.getValue(stack));
         boolean instance = TypeUtil.toBoolean(INSTANCE.getValue(stack));
+        Object host = HOST.getValue(stack);
+        if(logger.isDebugEnabled()) {
+		logger.debug("Getting property "+name+" with host "+host);
+	}
+	if(host!= null) {
+		// see if the host has this property defined, and if so
+		// get its value
+		BoundContact h = (BoundContact)host;
+		String prop = (String) h.getProperty(name);
+		if(prop != null) {
+			logger.debug("Found property "+name+" in BoundContact");
+			return prop;
+		}
+			logger.debug("Could not find property "+name+" in BoundContact");
+	}
         return getProperty(name, instance, stack);
     }
 
