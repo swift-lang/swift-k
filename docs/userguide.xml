@@ -2730,12 +2730,12 @@ with-provider-coaster - build with CoG coaster provider (see
 		<para>
 with-provider-deef - build with Falkon provider deef. In order for this
 option to work, it is necessary to check out the provider-deef code in
-the cog/modules directory alongside vdsk:
+the cog/modules directory alongside swift:
 
 			<screen>
 $ <userinput>cd cog/modules</userinput>
 $ <userinput>svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-deef</userinput>
-$ <userinput>cd ../vdsk</userinput>
+$ <userinput>cd ../swift</userinput>
 $ <userinput>ant -Dwith-provider-deef=true redist</userinput>
 			</screen>
 
@@ -2745,12 +2745,12 @@ with-provider-wonky - build with provider-wonky, an execution provider
 that provides delays and unreliability for the purposes of testing Swift's
 fault tolerance mechanisms. In order for this option to work, it is
 necessary to check out the provider-wonky code in the cog/modules
-directory alongside vdsk:
+directory alongside swift:
 
 			<screen>
 $ <userinput>cd cog/modules</userinput>
 $ <userinput>svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-wonky</userinput>
-$ <userinput>cd ../vdsk</userinput>
+$ <userinput>cd ../swift</userinput>
 $ <userinput>ant -Dwith-provider-wonky=true redist</userinput>
 			</screen>
 		</para>

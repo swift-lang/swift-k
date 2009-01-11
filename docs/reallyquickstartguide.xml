@@ -40,7 +40,7 @@
 				<para>
 				
 					Unpack it and add the <filename
-					class="directory">vdsk-xyz/bin</filename> directory to your
+					class="directory">swift-xyz/bin</filename> directory to your
 					<envar>PATH</envar>.
 				
 				</para>
@@ -63,7 +63,7 @@
 				<para>
 				
 					Edit <filename
-					class="file">vdsk-xyz/etc/swift.properties</filename>. You
+					class="file">swift-xyz/etc/swift.properties</filename>. You
 					should add your numeric IP address there
 					(<property>ip.address</property>=<literal>x.y.z.w</literal>).
 				
@@ -77,7 +77,7 @@
 					are configured for local submission):
 					
 <programlisting>
-<command>cd</command> vdsk-xyz/etc
+<command>cd</command> swift-xyz/etc
 <command>cp</command> sites.xml.example sites.xml
 <command>cp</command> tc.data.example tc.data
 </programlisting>

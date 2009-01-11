@@ -78,7 +78,7 @@
 				build instructions are available on the <ulink
 				url="http://www.ci.uchicago.edu/swift/downloads/index.php#nightly">Swift
 				downloads page</ulink>. Once built, the <filename
-				class="directory">dist/vdsk-svn</filename> directory
+				class="directory">dist/swift-svn</filename> directory
 				will contain a self-contained build which can be used in place or moved to a different location.
 				You should then proceed to the <link
 				linkend="configure">configuration section</link>.
@@ -93,16 +93,16 @@
 		<para>
 		
 			Simply unpack the downloaded package (<filename
-			class="file">vdsk-&lt;version&gt;.tar.gz</filename>) into a
+			class="file">swift-&lt;version&gt;.tar.gz</filename>) into a
 			directory of your choice:
 			
 <programlisting>
 <prompt>&gt;</prompt> <command>tar</command> <option>-xzvf</option> <filename
-class="file">vdsk-&lt;version&gt;.tar.gz</filename>
+class="file">swift-&lt;version&gt;.tar.gz</filename>
 </programlisting>
 			
 			This will create a <filename
-			class="directory">vdsk-&lt;version&gt;</filename> directory
+			class="directory">swift-&lt;version&gt;</filename> directory
 			containing the build.
 		
 		</para>
