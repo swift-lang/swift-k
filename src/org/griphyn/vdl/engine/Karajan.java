@@ -367,7 +367,7 @@ public class Karajan {
 	}
 	
 	void checkIsTypeDefined(String type) throws CompilationException {		
-		while (type.substring(type.length() - 2).equals("[]"))
+		while (type.length() > 2 && type.substring(type.length() - 2).equals("[]"))
 			type = type.substring(0, type.length() - 2);		
 		if (!type.equals("int") && !type.equals("float") && !type.equals("string") 
 				&& !type.equals("boolean") && !type.equals("external")) {
@@ -648,7 +648,7 @@ public class Karajan {
 			foreachST.setAttribute("in", inST);
 			
 			String inType = datatype(inST);
-			if (!inType.substring(inType.length() - 2).equals("[]"))
+			if (inType.length() < 2 || !inType.substring(inType.length() - 2).equals("[]"))
 				throw new CompilationException("You can iterate through an array structure only");
 			String varType = inType.substring(0, inType.length() - 2);			
 			innerScope.addVariable(foreach.getVar(), varType);
