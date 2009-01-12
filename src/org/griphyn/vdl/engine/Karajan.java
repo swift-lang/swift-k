@@ -649,7 +649,7 @@ public class Karajan {
 			
 			String inType = datatype(inST);
 			if (!inType.substring(inType.length() - 2).equals("[]"))
-				throw new CompilationException("You can iterate through array atructure only");
+				throw new CompilationException("You can iterate through an array structure only");
 			String varType = inType.substring(0, inType.length() - 2);			
 			innerScope.addVariable(foreach.getVar(), varType);
 			foreachST.setAttribute("indexVar", foreach.getIndexVar());
