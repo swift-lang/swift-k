@@ -463,8 +463,7 @@ public abstract class AbstractDataNode implements DSHandle {
 
 	public synchronized void addListener(DSHandleListener listener) {
 		if (logger.isInfoEnabled()) {
-Exception e = new Exception("To get stack trace");
-			logger.info("Adding handle listener \"" + listener + "\" to \"" + getIdentifyingString() + "\"", e);
+			logger.info("Adding handle listener \"" + listener + "\" to \"" + getIdentifyingString() + "\"");
 		}
 		if (listeners == null) {
 			listeners = new LinkedList();
