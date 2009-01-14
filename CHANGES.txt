@@ -1,3 +1,11 @@
+(01/14/09)
+*** Application success/failure status reporting can now be done using
+    CoG provider status, rather than the previous only choice of
+    using status files on the shared file system. A status.mode parameter
+    has been added to set this. It can be configured either in the
+    swift.properties file, to have effect for all sites, or can be set
+    per-site.
+
 (01/10/09)
 *** Console output for individual application invocation start and finish
     is no longer shown. The progress ticker now appears more often.

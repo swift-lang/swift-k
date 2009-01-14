@@ -37,12 +37,16 @@ log() {
 fail() {
 	EC=$1
 	shift
-	echo $@ >"$WFDIR/status/$JOBDIR/${ID}-error"
+	if [ "$STATUSMODE" = "files" ]; then
+		echo $@ >"$WFDIR/status/$JOBDIR/${ID}-error"
+	fi
 	log $@
 	info
-	#exit $EC
-	#let vdl-int.k handle the issues
-	exit 0
+	if [ "$STATUSMODE" = "files" ]; then
+		exit 0
+	else
+		exit $EC
+	fi
 }
 
 checkError() {
@@ -115,7 +119,6 @@ openinfo "$WFDIR/info/$JOBDIR/${ID}-info"
 logstate "LOG_START"
 infosection "Wrapper"
 
-mkdir -p $WFDIR/status/$JOBDIR
 
 getarg "-e" "$@"
 EXEC=$VALUE
@@ -149,10 +152,18 @@ getarg "-k" "$@"
 KICKSTART=$VALUE
 shift $SHIFTCOUNT
 
+getarg "-status" "$@"
+STATUSMODE=$VALUE
+shift $SHIFTCOUNT
+
 if [ "$1" == "-a" ]; then
 	shift
 else
 	fail 254 "Missing arguments (-a option)"
+fi
+
+if [ "$STATUSMODE" = "files" ]; then
+	mkdir -p $WFDIR/status/$JOBDIR
 fi
 
 if [ "X$SWIFT_JOBDIR_PATH" != "X" ]; then
@@ -289,8 +300,15 @@ logstate "RM_JOBDIR"
 rm -rf "$DIR" 2>&1 >& "$INFO"
 checkError 254 "Failed to remove job directory $DIR" 
 
-logstate "TOUCH_SUCCESS"
-touch status/${JOBDIR}/${ID}-success
+if [ "$STATUSMODE" = "files" ]; then
+	logstate "TOUCH_SUCCESS"
+	touch status/${JOBDIR}/${ID}-success
+fi
+
 logstate "END"
 
 closeinfo
+
+# ensure we exit with a 0 after a successful exection
+exit 0
+

@@ -107,7 +107,12 @@ namespace("vdl"
 				transfer(srcdir="{vds.home}/libexec/", srcfile="wrapper.sh", destdir=sharedDir, desthost=rhost)
 				transfer(srcdir="{vds.home}/libexec/", srcfile="seq.sh", destdir=sharedDir, desthost=rhost)
 				dir:make(dircat(wfdir, "kickstart"), host=rhost)
-				dir:make(dircat(wfdir, "status"), host=rhost)
+
+				statusMode := configProperty("status.mode",host=rhost)
+				if(statusMode == "files"
+					dir:make(dircat(wfdir, "status"), host=rhost)
+				)
+
 				dir:make(dircat(wfdir, "info"), host=rhost)
 				wfdir, sharedDir
 				//we send the cleanup data to vdl:main()
@@ -374,6 +379,9 @@ namespace("vdl"
 				jobid := concat(tr, "-", uid)
 				
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
+
+				statusMode := configProperty("status.mode",host=rhost)
+
 				vdl:setprogress("Stage in")
 				tmpdir := dircat(concat(wfdir, "/jobs/", jobdir), jobid)
 				
@@ -403,6 +411,7 @@ namespace("vdl"
 								"-if", flatten(infiles(stagein)), 
 								"-of", flatten(outfiles(stageout)),
 								"-k", kickstart,
+								"-status", statusMode
 								"-a", maybe(each(arguments)))
 							directory=wfdir
 							redirect=false
@@ -412,8 +421,10 @@ namespace("vdl"
 							replicationChannel=replicationChannel
 							jobid=jobid
 						)
-							
-						checkJobStatus(rhost, wfdir, jobid, tr, jobdir)
+						
+						if(statusMode == "files"
+							checkJobStatus(rhost, wfdir, jobid, tr, jobdir)
+						)
 		
 						log(LOG:DEBUG, "STAGING_OUT jobid={jobid}")
 
