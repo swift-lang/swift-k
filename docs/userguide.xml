@@ -1717,6 +1717,31 @@ used to inspect the site working directory for debugging purposes.
 							</para>
 						</listitem>
 					</varlistentry>
+					<varlistentry>
+						<term>
+							<property>status.mode</property>
+						</term>
+						<listitem>
+							<para>
+								Valid values: <parameter>files</parameter>, <parameter>provider</parameter>
+							</para>
+
+							<para>
+								Default value: <literal>files</literal>
+							</para>
+
+							<para>
+Controls how Swift will communicate the result code of running user programs
+from workers to the submit side. In <literal>files</literal> mode, a file
+indicating success or failure will be created on the site shared filesystem.
+In <literal>provider</literal> mode, the execution provider job status will
+be used. Notably, GRAM2 does not return job statuses correctly, and so
+<literal>provider</literal> mode will not work with GRAM2. With other
+providers, it can be used to reduce the amount of filesystem access compared
+to <literal>files</literal> mode.
+							</para>
+						</listitem>
+					</varlistentry>
 
 										
 				</variablelist>
