@@ -1738,7 +1738,7 @@ In <literal>provider</literal> mode, the execution provider job status will
 be used. Notably, GRAM2 does not return job statuses correctly, and so
 <literal>provider</literal> mode will not work with GRAM2. With other
 providers, it can be used to reduce the amount of filesystem access compared
-to <literal>files</literal> mode.
+to <literal>files</literal> mode. (since Swift 0.8)
 							</para>
 						</listitem>
 					</varlistentry>
@@ -2320,6 +2320,9 @@ a value other than 0.
 			<para id="profile.karajan.delayBase">delayBase - controls how much a site will be delayed when it performs poorly. With each reduction
 in a sites score by 1, the delay between execution attempts will increase by
 a factor of delayBase.</para>
+			<para id="profile.karajan.status.mode">status.mode - allows the status.mode property to be set per-site instead of for an entire run.
+See the Swift configuration properties section for more information.
+(since Swift 0.8)</para>
 		</section>
 		<section id="profile.swift"><title>swift namespace</title>
 			<para id="profile.swift.storagesize">storagesize limits the
