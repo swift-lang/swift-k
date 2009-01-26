@@ -2846,7 +2846,7 @@ specified in field 2.
 <para>
 To use for file transfer, specify a sites.xml filesystem element like this:
 <screen>
-&lt;filesystem url="gt2://grid.myhost.org" /&gt;
+&lt;filesystem provider="coaster" url="gt2://grid.myhost.org" /&gt;
 </screen>
 The url parameter should be a pseudo-URI formed with the URI scheme being
 the name of the provider to use to submit the coaster head job, and the
