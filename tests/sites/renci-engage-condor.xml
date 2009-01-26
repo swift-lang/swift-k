@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="renci-engage" >
+    <gridftp  url="gsiftp://belhaven-1.renci.org/" /> 
+    <jobmanager universe="vanilla" url="belhaven-1.renci.org:2119/jobmanager-condor" major="2" />
+    <workdirectory >/nfs/osg-data/osgedu/benc/swift</workdirectory>
+  </pool>
+
+</config>
