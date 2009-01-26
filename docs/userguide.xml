@@ -2019,6 +2019,7 @@ order to deal with error conditions. For example, applications should not
 make modifications to external databases that causes their output to
 differ if they are run more than once.
 </para>
+<imagedata fileref="swift-site-model.png" />
 	</section>
 
 	<section id="techoverview">
