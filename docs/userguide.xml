@@ -1876,14 +1876,24 @@ command line:
 	</section>
 	<section><title>Return codes</title>
 	<para>
-The swift command may exit with the following return codes:
-<itemizedlist>
-<listitem>0 - success</listitem>
-<listitem>1 - command line syntax error or missing project name</listitem>
-<listitem>2 - error during execution</listitem>
-<listitem>3 - error during compilation of SwiftScript program</listitem>
-<listitem>4 - input file does not exist</listitem>
-</itemizedlist>
+The <command>swift</command> command may exit with the following return codes:
+<table frame="all">
+<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+ <thead>
+  <row>
+   <entry>value</entry>
+   <entry>meaning</entry>
+  </row>
+ </thead>
+ <tbody>
+  <row><entry>0</entry><entry>success</entry></row>
+  <row><entry>1</entry><entry>command line syntax error or missing project name</entry></row>
+  <row><entry>2</entry><entry>error during execution</entry></row>
+  <row><entry>3</entry><entry>error during compilation</entry></row>
+  <row><entry>4</entry><entry>input file does not exist</entry></row>
+ </tbody>
+ </tgroup>
+</table>
 	</para>
 	</section>
 	</section>
