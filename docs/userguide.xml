@@ -2362,7 +2362,21 @@ when Condor is used as an LRM behind GRAM2. Example: &lt;profile namespace="glob
 the number of coaster workers to be run on each node. This profile entry
 is used by the <link linkend="coasters">coaster execution provider</link>.
 			</para>
+			<para id="profile.globus.coasterWorkerMaxWalltime">coasterWorkerMaxwalltime
+specifies the maxwalltime to be used when submitting coaster workers. This
+profile entry is used by the <link linkend="coasters">coaster execution
+provider</link>. If this entry is not specified, the coaster provider
+will compute a maxwalltime based on the maxwalltime of jobs submitted. (since 0.9)
+			</para>
+			<para id="profile.globus.coasterInternalIP">coasterInternalIP
+specifies the internal address of the coaster head node, to be used by
+coaster workers to communicate with the coaster head node. This can be used
+when the address determined automatically by the coaster provider
+is inaccessible from coaster workers (for example, when the workers
+reside on an unrouted internal network). (since 0.9)
+			</para>
 		</section>
+
 		<section id="profile.env"><title>env namespace</title>
 			<para>
 Profile keys set in the env namespace will be set in the unix environment of the
