@@ -541,19 +541,6 @@ of this guide.
 
 </section>
 
-<section><title>Execution order based on data dependencies</title>
-<para>
-Procedures in swift are by default executed in parallel. If five separate
-procedures are invoked, Swift will attempt to run them all at once.
-</para>
-<para>
-The main exception to this is when one procedure produces a dataset as an
-output and another procedure uses that dataset as an input. In that case,
-the second procedure will be executed after the first procedure has
-produced the intermediate dataset.
-</para>
-</section>
-
 		<section>
 			<title>Type System</title>
 			<para>
