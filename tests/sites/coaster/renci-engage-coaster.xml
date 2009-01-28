@@ -1,0 +1,11 @@
+<config>
+
+  <pool handle="renci-engage" >
+    <gridftp  url="gsiftp://belhaven-1.renci.org/" /> 
+<!-- <filesystem provider="coaster" url="gt2://belhaven-1.renci.org" /> -->
+ <execution provider="coaster" url="belhaven-1.renci.org" jobManager="gt2:gt2:condor" />
+    <workdirectory >/nfs/osg-data/osgedu/benc/swift</workdirectory>
+<profile namespace="globus" key="coasterInternalIP">192.168.1.11</profile>
+  </pool>
+
+</config>
