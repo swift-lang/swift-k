@@ -61,7 +61,7 @@ any type, including other array types, but all elements in an array must be
 of the same type.  We often refer to instances of composites of mapped types
 as <firstterm>datasets</firstterm>.
 </para>
-
+<imagedata fileref="type-hierarchy.png" />
 <para>
 Mapped type and composite type variable declarations can be annotated with a
 <firstterm>mapping descriptor</firstterm> indicating the file(s) that make up
