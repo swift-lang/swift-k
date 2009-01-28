@@ -457,39 +457,6 @@ The single assignment and execution ordering rules will still apply though;
 <para>Data processed by Swift is strongly typed. It may be take the form
 of values in memory or as out-of-core files on disk. Language constructs
 called mappers specify how each piece of data is stored.</para>
-		<section>
-			<title>Data</title>
-<para>
-Data is represented in Swift by
-<firstterm>DSHandles</firstterm> (<firstterm>Dataset handles</firstterm>).
-</para>
-
-<para>
-In Swift, a DSHandle can represent data in one of three forms:
-</para>
-<orderedlist>
-<listitem> <para>
-an in-memory value, such as a string or integer.
-</para> </listitem>
-<listitem> <para>
-a data file (on local disk or stored elsewhere on the internet). When a
-DSHandle represents an on-disk data file, the name of that file is
-provided by a <firstterm>mapper</firstterm>.
-</para> </listitem>
-<listitem> <para>
-a container of other DSHandles - either an array or a defined type.
-Such a DSHandles contains subordinate DSHandles; these may be nested
-to arbitrary depth.
-</para> </listitem>
-</orderedlist>
-<para>
-The above three are mutually exclusive - for example, a data set
-that is mapped to a file cannot have a value that can be used in a
-SwiftScript expression; and a data item that is a
-value cannot be passed into an application
-executable as a data file using the <link linkend="function.filename">@filename</link> function.
-</para>
-</section>
 
 <section><title>Mappers</title>
 		<para>
