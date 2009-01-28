@@ -70,7 +70,8 @@ public class WorkerManager extends Thread {
     public static final int MAX_STARTING_WORKERS = 32;
 
     public static final List coasterAttributes = Arrays
-            .asList(new String[] { "coasterspernode", "coasterinternalip" });
+            .asList(new String[] { "coasterspernode", "coasterinternalip",
+                                   "coasterworkermaxwalltime" });
 
     private SortedMap ready;
     private Map ids;
@@ -173,6 +174,7 @@ public class WorkerManager extends Thread {
             ProviderMethodException {
         String numWorkersString = (String) ((JobSpecification) prototype
                 .getSpecification()).getAttribute("coastersPerNode");
+
         int numWorkers;
         if (numWorkersString == null) {
             numWorkers = 1;
@@ -180,6 +182,15 @@ public class WorkerManager extends Thread {
         else {
             numWorkers = Integer.parseInt(numWorkersString);
         }
+
+        String workerMaxwalltimeString = (String) ((JobSpecification) prototype
+                .getSpecification()).getAttribute("coasterWorkerMaxwalltime");
+
+	if (workerMaxwalltimeString != null) {
+		// override the computed maxwalltime
+		maxWallTime = new Seconds(WallTime.timeToSeconds(workerMaxwalltimeString));
+		logger.debug("Overridden worker maxwalltime is "+maxWallTime);
+	}
 
         logger
                 .info("Starting new worker set with " + numWorkers
