@@ -180,8 +180,8 @@ will be discussed in a later section.
 Arrays of values can be delcared using the <literal>[]</literal> suffix. An
 array be mapped to a collection of files, one element per file, by using
 a different form of mapping expression.  For example, the
-<literal>filesys_mapper</literal> maps all files matching a particular
-unix glob pattern into an array:
+<link linkend="mapper.filesys_mapper"><literal>filesys_mapper</literal></link>
+maps all files matching a particular unix glob pattern into an array:
 </para>
 
 <programlisting>
