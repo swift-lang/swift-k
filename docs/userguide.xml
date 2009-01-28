@@ -35,6 +35,424 @@ files to and from the chosen sites and remote execution of program code.
 	</section>
 	<section id="language">
 		<title>The SwiftScript Language</title>
+<section><title>Language basics</title>
+<para>
+A Swift script describes data, application components, invocations
+of applications components, and the inter-relations (data flow) 
+between those invocations.
+</para>
+<para>
+Data is represented in a script by strongly-typed single-assignment
+variables, using a C-like syntax.
+</para>
+<para>
+Types in Swift can be <firstterm>atomic</firstterm> or
+<firstterm>composite</firstterm>. An atomic type can be either a
+<firstterm>primitive type</firstterm> or a <firstterm>mapped type</firstterm>.
+Swift provides a fixed set of primitive types, such as
+<firstterm>integer</firstterm> and <firstterm>string</firstterm>. A mapped
+type indicates that the actual data does not reside in CPU addressable
+memory (as it would in conventional programming languages), but in
+POSIX-like files. Composite types are further subdivided into
+<firstterm>structures</firstterm> and <firstterm>arrays</firstterm>.
+Structures are similar in most respects to structure types in other languages.
+Arrays use numeric indices, but are sparse. They can contain elements of
+any type, including other array types, but all elements in an array must be
+of the same type.  We often refer to instances of composites of mapped types
+as <firstterm>datasets</firstterm>.
+</para>
+
+<para>
+Mapped type and composite type variable declarations can be annotated with a
+<firstterm>mapping descriptor</firstterm> indicating the file(s) that make up
+that dataset.  For example, the following line declares a variable named
+<literal>photo</literal> with type <literal>image</literal>. It additionally
+declares that the data for this variable is stored in a single file named
+<filename>shane.jpeg</filename>.
+</para>
+
+<programlisting>
+  image photo &lt;"shane.jpeg"&gt;;
+</programlisting>
+
+<para>
+Conceptually, a parallel can be drawn between Swift mapped variables
+and Java reference types. In both cases there is no syntactic distinction
+between primitive types and mapped types or reference types respectively.
+Additionally, the semantic distinction is also kept to a minimum.
+</para>
+
+<para>
+Component programs of scripts are declared in an <firstterm>app
+declaration</firstterm>, with the description of the command line syntax
+for that program and a list of input and output data. An <literal>app</literal>
+block describes a functional/dataflow style interface to imperative
+components.
+</para>
+
+<para>
+For example, the following example lists a procedure which makes use  of
+the <ulink url="http://www.imagemagick.org/"> ImageMagick</ulink>
+<command>convert</command> command to rotate a supplied
+image by a specified angle:
+</para>
+
+<programlisting>
+  app (image output) rotate(image input) {
+    convert "-rotate" angle @input @output;
+  }
+</programlisting>
+
+<para>
+A procedure is invoked using the familiar syntax:
+</para>
+
+<programlisting>
+  rotated = rotate(photo, 180);
+</programlisting>
+
+<para>
+While this looks like an assignment, the actual unix level execution
+consists of invoking the command line specified in the <literal>app</literal>
+declaration, with variables on the left of the assignment bound to the
+output parameters, and variables to the right of the procedure
+invocation passed as inputs.
+</para>
+
+<para>
+The examples above have used the type \verb|image| with out any
+definition of that type. We can declare it as a \emph{marker type}
+which has no structure exposed to SwiftScript:
+</para>
+
+<programlisting>
+  type image;
+</programlisting>
+
+<para>
+This does not indicate that the data is unstructured; but it indicates
+that the structure of the data is not exposed to SwiftScript. Instead,
+SwiftScript will treat variables of this type as individual opaque
+files.
+</para>
+
+<para>
+With mechanisms to declare types, map variables to data files, and
+declare and invoke procedures, we can build a complete (albeit simple)
+script:
+</para>
+
+<programlisting>
+ type image;
+ image photo &lt;"shane.jpeg"&gt;;
+ image rotated &lt;"rotated.jpeg"&gt;;
+
+ app (image output) rotate(image input, int angle) {
+    convert "-rotate" angle @input @output;
+ }
+
+ rotated = rotate(photo, 180);
+</programlisting>
+
+<para>
+This script can be invoked from the command line:
+</para>
+
+<screen>
+  $ <userinput>ls *.jpeg</userinput>
+  shane.jpeg
+  $ <userinput>swift example.swift</userinput>
+  ...
+  $ <userinput>ls *.jpeg</userinput>
+  shane.jpeg rotated.jpeg
+</screen>
+
+<para>
+This executes a single <literal>convert</literal> command, hiding from the
+user features such as remote multisite execution and fault tolerance that
+will be discussed in a later section.
+</para>
+
+</section>
+
+<section><title>Arrays and Parallel Execution</title>
+<para>
+Arrays of values can be delcared using the <literal>[]</literal> suffix. An
+array be mapped to a collection of files, one element per file, by using
+a different form of mapping expression.  For example, the
+<literal>filesys_mapper</literal> maps all files matching a particular
+unix glob pattern into an array:
+</para>
+
+<programlisting>
+  file frames[] &lt;filesys_mapper; pattern="*.jpeg"&gt;;
+</programlisting>
+
+<para>
+The <firstterm><literal>foreach</literal></firstterm> construct can be used
+to apply the same block of code to each element of an array:
+</para>
+
+<programlisting>
+   foreach f,ix in frames {
+     output[ix] = rotate(frames, 180);
+   }
+</programlisting>
+
+<para>
+Sequential iteration can be expressed using the <literal>iterate</literal>
+construct:
+</para>
+
+<programlisting>
+   step[0] = initialCondition();
+   iterate ix {
+     step[ix] = simulate(step[ix-1]);
+   }
+</programlisting>
+
+<para>
+This fragment will initialise the 0-th element of the <literal>step</literal>
+array to some initial condition, and then repeatedly run the 
+<literal>simulate</literal> procedure, using each execution's outputs as
+input to the next step.
+</para>
+
+</section>
+
+<section><title>Ordering of execution</title>
+
+<para>
+Non-array variables are <firstterm>single-assignment</firstterm>, which
+means that they must be assigned to exactly one value during execution.
+A procedure or expression will be executed when all of its input parameters
+have been assigned values. As a result of such execution, more variables may
+become assigned, possibly allowing further parts of the script to
+execute.
+</para>
+
+<para>
+In this way, scripts are implicitly parallel. Aside from serialisation
+implied by these dataflow dependencies, execution of component programs
+can proceed in parallel.
+</para>
+
+<para>
+In this fragment, execution of procedures <literal>p</literal> and
+<literal>q</literal> can happen in parallel:
+</para>
+
+<programlisting>
+  y=p(x);
+  z=q(x);
+</programlisting>
+
+<para>while in this fragment, execution is serialised by the variable
+<literal>y</literal>, with procedure <literal>p</literal> executing
+before <literal>q</literal>:</para>
+
+<programlisting>
+ y=p(x);
+ z=q(y);
+</programlisting>
+
+<para>
+Arrays in SwiftScript are more generally
+<firstterm>monotonic</firstterm>; that is, knowledge about the
+content of an array increases during execution, but cannot otherwise
+change. Each element of the array is single assignment.
+Eventually, all values for an array are known, and that array
+is regarded as <firstterm>closed</firstterm>.
+</para>
+
+<para>
+Statements which deal with the array as a whole will often wait for the array
+to be closed before executing (thus, a closed array is the equivalent
+of a non-array type being assigned). However, a <literal>foreach</literal>
+statement will apply its body to elements of an array as they become
+known. It will not wait until the array is closed.
+</para>
+
+<para>
+Consider this script:
+</para>
+
+<programlisting>
+ file a[];
+ file b[];
+ foreach v,i in a {
+   b[i] = p(v);
+ }
+ a[0] = r();
+ a[1] = s();
+</programlisting>
+
+<para>
+Initially, the <literal>foreach</literal> statement will have nothing to
+execute, as the array <literal>a</literal> has not been assigned any values.
+The procedures <literal>r</literal> and <literal>s</literal> will execute.
+As soon as either of them is finished, the corresponding invocation of
+procedure <literal>p</literal> will occur. After both <literal>r</literal>
+and <literal>s</literal> have completed, the array <literal>a</literal> will
+be closed since no other statements in the script make an assignment to
+<literal>a</literal>.
+</para>
+
+</section>
+
+<section><title>Compound procedures</title>
+<para>
+As with many other programming languages, procedures consisting of SwiftScript
+code can be defined. These differ from the previously mentioned procedures
+declared with the <literal>app</literal> keyword, as they invoke other
+SwiftScript procedures rather than a component program.
+</para>
+
+<para>
+ (file output) process (file input) {
+   file intermediate;
+   intermediate = first(input);
+   output = second(intermediate);
+ }
+
+ file x &lt;"x.txt"&gt;;
+ file y &lt;"y.txt"&gt;;
+ y = process(x);
+</para>
+
+<para>
+This will invoke two procedures, with an intermediate data file named
+anonymously connecting the <literal>first</literal> and
+<literal>second</literal> procedures.
+</para>
+
+<para>
+Ordering of execution is generally determined by execution of
+<literal>app</literal> procedures, not by any containing compound procedures.
+In this code block:
+</para>
+
+<programlisting>
+ (file a, file b) A() {
+   a = A1();
+   b = A2();
+ }
+ file x, y, s, t;
+ (x,y) = A();
+ s = S(x);
+ t = S(y);
+</programlisting>
+
+<para>
+then a valid execution order is: <literal>A1 S(x) A2 S(y)</literal>. The
+compound procedure <literal>A</literal> does not have to have fully completed
+for its return values to be used by subsequent statements.
+</para>
+
+</section>
+
+<section><title>More about types</title>
+<para>
+Each variable and procedure parameter in SwiftScript is strongly typed.
+Types are used to structure data, to aid in debugging and checking program
+correctness and to influence how Swift interacts with data.
+</para>
+
+<para>
+The <literal>image</literal> type declared in previous examples is a
+<firstterm>marker type</firstterm>. Marker types indicate that data for a
+variable is stored in a single file with no further structure exposed at
+the SwiftScript level.
+</para>
+
+<para>
+Arrays have been mentioned above, in the arrays section. A code block
+may be applied to each element of an array using <literal>foreach</literal>;
+or individual elements may be references using <literal>[]</literal> notation.
+</para>
+
+<para>There are a number of primitive types:</para>
+
+<table frame="all">
+ <tgroup cols="2" align="left" colsep="1" rowsep="1">
+  <thead><row><entry>type</entry><entry>contains</entry></row></thead>
+  <tbody>
+   <row><entry>int</entry><entry>integers</entry></row>
+   <row><entry>string</entry><entry>strings of text</entry></row>
+   <row><entry>float</entry><entry>floating point numbers</entry></row>
+   <row><entry>boolean</entry><entry>true/false</entry></row>
+  </tbody>
+ </tgroup>
+</table>
+
+<para>
+Complex types may be defined using the <literal>type</literal>keyword:
+</para>
+<programlisting>
+  type headerfile;
+  type voxelfile;
+  type volume {
+    headerfile h;
+    voxelfile v;
+  }
+</programlisting>
+
+<para>
+Members of a complex type can be accessed using the <literal>.</literal>
+operator:
+</para>
+
+<programlisting>
+  volume brain;
+  o = p(brain.h);
+</programlisting>
+
+<para>
+Sometimes data may be stored in a form that does not fit with Swift's
+file-and-site model; for example, data might be stored in an RDBMS on some
+database server. In that case, a variable can be declared to have
+<firstterm><literal>extern</literal></firstterm> type. This indicates that
+Swift should use the variable to determine execution dependency, but should
+not attempt other data management; for example, it will not perform any form
+of data stage-in or stage-out it will not manage local data caches on sites;
+and it will not enforce component program atomicity on data output. This can
+add substantial responsibility to component programs, in exchange for allowing
+arbitrary data storage and access methods to be plugged in to scripts.
+</para>
+
+<programlisting>
+  type file;
+
+  app (extern o) populateDatabase() {
+    populationProgram;
+  }
+
+  app (file o) analyseDatabase(extern i) {
+    analysisProgram @o;
+  }
+
+  extern database;
+  file result &lt;"results.txt"&gt;;
+
+  database = populateDatabase();
+  result = analyseDatabase(database);
+</programlisting>
+
+<para>
+Some external database is represented by the <literal>database</literal>
+variable. The <literal>populateDatabase</literal> procedure populates the
+database with some data, and the <literal>analyseDatabase</literal> procedure
+performs some subsequent analysis on that database. The declaration of
+<literal>database</literal> contains no mapping; and the procedures which
+use <literal>database</literal> do not reference them in any way; the
+description of <literal>database</literal> is entirely outside of the script.
+The single assignment and execution ordering rules will still apply though;
+<literal>populateDatabase</literal> will always be run before
+<literal>analyseDatabase</literal>.
+</para>
+
+</section>
+
 <section><title>Data model</title>
 <para>Data processed by Swift is strongly typed. It may be take the form
 of values in memory or as out-of-core files on disk. Language constructs
