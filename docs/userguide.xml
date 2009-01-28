@@ -2764,14 +2764,15 @@ building Swift from source. When building, various build options can
 be supplied on the ant commandline. These are summarised here:
 		</para>
 		<para>
-with-provider-condor - build with CoG condor provider
+<literal>with-provider-condor</literal> - build with CoG condor provider
 		</para>
 		<para>
-with-provider-coaster - build with CoG coaster provider (see
-<link linkend="coasters">the section on coasters</link>)
+<literal>with-provider-coaster</literal> - build with CoG coaster provider (see
+<link linkend="coasters">the section on coasters</link>). Since 0.8,
+coasters are always built, and this option has no effect.
 		</para>
 		<para>
-with-provider-deef - build with Falkon provider deef. In order for this
+<literal>with-provider-deef</literal> - build with Falkon provider deef. In order for this
 option to work, it is necessary to check out the provider-deef code in
 the cog/modules directory alongside swift:
 
@@ -2784,10 +2785,10 @@ $ <userinput>ant -Dwith-provider-deef=true redist</userinput>
 
 		</para>
 		<para>
-with-provider-wonky - build with provider-wonky, an execution provider
+<literal>with-provider-wonky</literal> - build with provider-wonky, an execution provider
 that provides delays and unreliability for the purposes of testing Swift's
 fault tolerance mechanisms. In order for this option to work, it is
-necessary to check out the provider-wonky code in the cog/modules
+necessary to check out the provider-wonky code in the <filename>cog/modules</filename>
 directory alongside swift:
 
 			<screen>
@@ -2798,8 +2799,8 @@ $ <userinput>ant -Dwith-provider-wonky=true redist</userinput>
 			</screen>
 		</para>
 		<para>
-no-supporting - produces a distribution without supporting commands such
-as grid-proxy-init. This is intended for when the Swift distribution will be
+<literal>no-supporting</literal> - produces a distribution without supporting commands such
+as <command>grid-proxy-init</command>. This is intended for when the Swift distribution will be
 used in an environment where those commands are already provided by other
 packages, where the Swift package should be providing only Swift
 commands, and where the presence of commands such as grid-proxy-init from
