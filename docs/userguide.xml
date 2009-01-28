@@ -177,7 +177,7 @@ will be discussed in a later section.
 
 <section><title>Arrays and Parallel Execution</title>
 <para>
-Arrays of values can be delcared using the <literal>[]</literal> suffix. An
+Arrays of values can be declared using the <literal>[]</literal> suffix. An
 array be mapped to a collection of files, one element per file, by using
 a different form of mapping expression.  For example, the
 <link linkend="mapper.filesys_mapper"><literal>filesys_mapper</literal></link>
