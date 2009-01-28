@@ -120,8 +120,8 @@ invocation passed as inputs.
 </para>
 
 <para>
-The examples above have used the type \verb|image| with out any
-definition of that type. We can declare it as a \emph{marker type}
+The examples above have used the type <literal>image</literal> with out any
+definition of that type. We can declare it as a <firstterm>marker type</firstterm>
 which has no structure exposed to SwiftScript:
 </para>
 
