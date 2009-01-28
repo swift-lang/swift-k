@@ -2303,7 +2303,7 @@ The particular output format should not be relied upon. (new in 0.4)
 
 	<section id="profiles"><title>Profiles</title>
 		<section id="profile.karajan"><title>Karajan namespace</title>
-			<para id="profile.karajan.maxsubmitrate">maxSubmitRate - limits the maximum rate of job submission, in jobs per second.
+			<para id="profile.karajan.maxsubmitrate"><literal>maxSubmitRate</literal> limits the maximum rate of job submission, in jobs per second.
 For example:
 <screen>
 &lt;profile namespace="karajan" key="maxSubmitRate"&gt;0.2&lt;/profile&gt;
@@ -2311,30 +2311,30 @@ For example:
 will limit job submission to 0.2 jobs per second (or equivalently,
 one job every five seconds).
 			</para>
-			<para id="profile.karajan.jobThrottle">jobThrottle -
+			<para id="profile.karajan.jobThrottle"><literal>jobThrottle</literal>
 allows the job throttle factor (see Swift property <link linkend="property.throttle.score.job.factor">throttle.score.job.factor</link>) to be set per site.
 			</para>
-			<para id="profile.karajan.initialScore">initialScore -
+			<para id="profile.karajan.initialScore"><literal>initialScore</literal>
 allows the initial score for rate limiting and site selection to be set to
 a value other than 0.
 			</para>
-			<para id="profile.karajan.delayBase">delayBase - controls how much a site will be delayed when it performs poorly. With each reduction
+			<para id="profile.karajan.delayBase"><literal>delayBase</literal> controls how much a site will be delayed when it performs poorly. With each reduction
 in a sites score by 1, the delay between execution attempts will increase by
 a factor of delayBase.</para>
-			<para id="profile.karajan.status.mode">status.mode - allows the status.mode property to be set per-site instead of for an entire run.
+			<para id="profile.karajan.status.mode"><literal>status.mode</literal> allows the status.mode property to be set per-site instead of for an entire run.
 See the Swift configuration properties section for more information.
 (since Swift 0.8)</para>
 		</section>
 		<section id="profile.swift"><title>swift namespace</title>
-			<para id="profile.swift.storagesize">storagesize limits the
+			<para id="profile.swift.storagesize"><literal>storagesize</literal> limits the
 amount of space that will be used on the remote site for temporary files.
 When more than that amount of space is used, the remote temporary file
 cache will be cleared using the algorithm specified in the
-<link linkend="property.caching.algorithm"><property>caching.algorithm</property></link> property.
+<link linkend="property.caching.algorithm"><literal>caching.algorithm</literal></link> property.
 			</para>
 		</section>
 		<section id="profile.globus"><title>Globus namespace</title>
-			<para id="profile.globus.maxwalltime"><property>maxwalltime</property> specifies a walltime limit for each job, in minutes. This profile setting also interacts
+			<para id="profile.globus.maxwalltime"><literal>maxwalltime</literal> specifies a walltime limit for each job, in minutes. This profile setting also interacts
 with the <link linkend="clustering">clustering mechanism</link>.
 			</para>
 			<para>
@@ -2345,30 +2345,30 @@ The following formats are recognized:
 					<listitem>Hours:Minutes:Seconds</listitem>
 				</itemizedlist>
 			</para>
-			<para id="profile.globus.queue"><property>queue</property> 
+			<para id="profile.globus.queue"><literal>queue</literal> 
 is used by the PBS, GRAM2 and GRAM4 providers. This profile
 entry specifies which queue jobs will be submitted to. The valid queue names
 are site-specific.
 			</para>
-			<para id="profile.globus.host_types"><property>host_types</property>
+			<para id="profile.globus.host_types"><literal>host_types</literal>
 specifies the types of host that are permissible for a job to run on.
 The valid values are site-specific. This profile entry is used by the
 GRAM2 and GRAM4 providers.
 			</para>
-			<para id="profile.globus.condor_requirements"><property>condor_requirements</property> allows a requirements string to be specified
+			<para id="profile.globus.condor_requirements"><literal>condor_requirements</literal> allows a requirements string to be specified
 when Condor is used as an LRM behind GRAM2. Example: &lt;profile namespace="globus" key="condor_requirements">Arch == &quot;X86_64&quot; || Arch=&quot;INTEL&quot;&lt;/profile>
 			</para>
-			<para id="profile.globus.coastersPerNode">coastersPerNode specifies
+			<para id="profile.globus.coastersPerNode"><literal>coastersPerNode</literal> specifies
 the number of coaster workers to be run on each node. This profile entry
 is used by the <link linkend="coasters">coaster execution provider</link>.
 			</para>
-			<para id="profile.globus.coasterWorkerMaxWalltime">coasterWorkerMaxwalltime
+			<para id="profile.globus.coasterWorkerMaxWalltime"><literal>coasterWorkerMaxwalltime</literal>
 specifies the maxwalltime to be used when submitting coaster workers. This
 profile entry is used by the <link linkend="coasters">coaster execution
 provider</link>. If this entry is not specified, the coaster provider
 will compute a maxwalltime based on the maxwalltime of jobs submitted. (since 0.9)
 			</para>
-			<para id="profile.globus.coasterInternalIP">coasterInternalIP
+			<para id="profile.globus.coasterInternalIP"><literal>coasterInternalIP</literal>
 specifies the internal address of the coaster head node, to be used by
 coaster workers to communicate with the coaster head node. This can be used
 when the address determined automatically by the coaster provider
