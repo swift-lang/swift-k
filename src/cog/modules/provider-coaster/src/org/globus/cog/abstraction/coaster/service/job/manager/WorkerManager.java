@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,7 +70,7 @@ public class WorkerManager extends Thread {
     public static final int MAX_STARTING_WORKERS = 32;
 
     public static final List coasterAttributes = Arrays
-            .asList(new String[] { "coasterspernode" });
+            .asList(new String[] { "coasterspernode", "coasterinternalip" });
 
     private SortedMap ready;
     private Map ids;
@@ -234,7 +235,27 @@ public class WorkerManager extends Thread {
         JobSpecification js = new JobSpecificationImpl();
         js.setExecutable("/usr/bin/perl");
         js.addArgument(script.getAbsolutePath());
+
+        String internalHostname = (String)ps.getAttribute("coasterInternalIP");
+
+        if(internalHostname!=null) { // override automatically determined hostname
+            // TODO detect if we've done this already for a different
+            // value? (same non-determinism as for coastersPerWorker and
+            // walltime handling that jobs may come in with different
+            // values and we can only use one)
+            try {
+                logger.warn("original callback URI is "+callbackURI.toString());
+                callbackURI=new URI(callbackURI.getScheme(),
+                callbackURI.getUserInfo(),
+                internalHostname,
+                callbackURI.getPort(), callbackURI.getPath(),
+                callbackURI.getQuery(), callbackURI.getFragment());
+                logger.warn("callback URI has been overridden to "+callbackURI.toString());
+            } catch(URISyntaxException use) { throw new RuntimeException(use); }
+// TODO nasty exception in the line above
+        }
         js.addArgument(callbackURI.toString());
+
         // js.addArgument(id);
         return js;
     }
