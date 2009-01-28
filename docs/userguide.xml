@@ -225,7 +225,7 @@ described in another section.
 		</section>
 
 		</section>
-		<section id="procedures">
+		<section id="lang.procedures">
 			<title>Procedures</title>
 			<para>
 Datasets are operated on by procedures, which take input in the form of 
