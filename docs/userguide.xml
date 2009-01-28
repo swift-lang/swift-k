@@ -172,7 +172,12 @@ This executes a single <literal>convert</literal> command, hiding from the
 user features such as remote multisite execution and fault tolerance that
 will be discussed in a later section.
 </para>
-
+<figure> <title>shane.jpeg</title>
+<imagedata fileref="userguide-shane.jpeg" />
+</figure>
+<figure> <title>rotated.jpeg</title>
+<imagedata fileref="userguide-rotated.jpeg" />
+</figure>
 </section>
 
 <section><title>Arrays and Parallel Execution</title>
