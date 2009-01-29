@@ -2852,7 +2852,7 @@ on remote sites.
 		</para>
 		<para>
 By default, the site catalog is stored in <filename>etc/tc.data</filename>.
-This path can be overridden with the tc.file configuration property,
+This path can be overridden with the <literal>tc.file</literal> configuration property,
 either in the Swift configuration file or on the command line.
 		</para>
 		<para>
@@ -2874,7 +2874,7 @@ The site field should correspond to a site name listed in the sites
 catalog.</para>
 		<para>
 The transformation name should correspond to the transformation name
-used in a SwiftScript app {} block.
+used in a SwiftScript <literal>app</literal> procedure.
 		</para>
 		<para>
 The executable path should specify where the particular executable is
@@ -2882,10 +2882,10 @@ located on that site.
 		</para>
 		<para>
 The installation status and platform fields are not used. Set them to
-INSTALLED and INTEL32::LINUX respectively.
+<literal>INSTALLED</literal> and <literal>INTEL32::LINUX</literal> respectively.
 		</para>
 		<para>
-The profiles field should be set to 'null' if no profile entries are to be
+The profiles field should be set to <literal>null</literal> if no profile entries are to be
 specified, or should contain the profile entries separated by semicolons.
 		</para>
 	</section>
