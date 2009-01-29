@@ -809,7 +809,7 @@ public class Karajan {
 		funcST.setAttribute("name", func.getName());
 		ProcedureSignature funcSignature =  (ProcedureSignature) functionsMap.get(func.getName()); 
 		if(funcSignature == null) {
-			throw new CompilationException("Unknown function "+func.getName());
+			throw new CompilationException("Unknown function: @"+func.getName());
 		}
 		XmlObject[] arguments = func.getAbstractExpressionArray();
 		int noOfOptInArgs = 0;
