@@ -391,7 +391,7 @@ or individual elements may be references using <literal>[]</literal> notation.
 </table>
 
 <para>
-Complex types may be defined using the <literal>type</literal>keyword:
+Complex types may be defined using the <literal>type</literal> keyword:
 </para>
 <programlisting>
   type headerfile;
