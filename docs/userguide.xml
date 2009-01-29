@@ -1289,18 +1289,18 @@ by a - symbol.
 	<listitem>
 The output of the executable should consist of two columns of data, separated
 by a space. The first column should be the path of the mapped variable,
-in SwiftScript syntax (for example [2] means the 2nd element of an
-array) or the symbol $ to represent the root of the mapped variable.
+in SwiftScript syntax (for example <literal>[2]</literal> means the 2nd element of an
+array) or the symbol <literal>$</literal> to represent the root of the mapped variable.
 	</listitem>
 
 	<listitem> Example:
-With the following in mapper.sh,
-			<programlisting>
+With the following in <filename>mapper.sh</filename>,
+			<screen>
 #!/bin/bash
 echo "[2] qux"
 echo "[0] foo"
 echo "[1] bar"
-			</programlisting>
+			</screen>
 
 then a mapping statement:
 
@@ -1814,14 +1814,14 @@ The particular output format should not be relied upon. (new in 0.4)
 			
 				Swift properties are specified in the following format:
 				
-<programlisting>
+<screen>
 &lt;name&gt;=&lt;value&gt;
-</programlisting>
+</screen>
 			
 				The value can contain variables which will be expanded when the
 				properties file is read. Expansion is performed when the name of
-				the variable is used inside the "standard" shell dereference
-				construct: ${<varname>name</varname>}. The following variables
+				the variable is used inside the standard shell dereference
+				construct: <literal>${<varname>name</varname>}</literal>. The following variables
 				can be used in the Swift configuration file:
 				
 				<variablelist>
@@ -2023,7 +2023,7 @@ may impair the correct functionality of Swift.
 								<link linkend="profile.swift.storagesize"><property>swift:storagesize</property></link> profile
 								entry in the sites.xml file. Example:
 								
-<programlisting>
+<screen>
 
 &lt;pool handle="example" sysinfo="INTEL32::LINUX"&gt;
 	&lt;gridftp url="gsiftp://example.org" storage="/scratch/swift" major="2" minor="4" patch="3"/&gt;
@@ -2032,7 +2032,7 @@ may impair the correct functionality of Swift.
 	&lt;profile namespace="SWIFT" key="storagesize"&gt;20000000&lt;/profile&gt;
 &lt;/pool&gt;
 
-</programlisting>
+</screen>
 								
 								
 								The decision of which files to keep in the cache
@@ -2104,10 +2104,10 @@ may impair the correct functionality of Swift.
 								url="http://www.graphviz.org">Graphviz</ulink>,
 								for example with a command-line such as:
 							</para>
-							<programlisting>
-								swift -pgraph graph1.dot q1.swift
-								dot -ograph.png -Tpng graph1.dot
-							</programlisting>
+							<screen>
+$ <userinput>swift -pgraph graph1.dot q1.swift</userinput>
+$ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
+							</screen>
 						</listitem>
 					</varlistentry>
 					
@@ -2538,11 +2538,11 @@ to <literal>files</literal> mode. (since Swift 0.8)
 				
 				Example:
 				
-<programlisting>
+<screen>
 sites.file=${vds.home}/etc/sites.xml
 tc.file=${vds.home}/etc/tc.data
 ip.address=192.168.0.1
-</programlisting>
+</screen>
 			
 			</para>
 		
@@ -2604,7 +2604,7 @@ The valid values are site-specific. This profile entry is used by the
 GRAM2 and GRAM4 providers.
 			</para>
 			<para id="profile.globus.condor_requirements"><literal>condor_requirements</literal> allows a requirements string to be specified
-when Condor is used as an LRM behind GRAM2. Example: &lt;profile namespace="globus" key="condor_requirements">Arch == &quot;X86_64&quot; || Arch=&quot;INTEL&quot;&lt;/profile>
+when Condor is used as an LRM behind GRAM2. Example: <literal>&lt;profile namespace="globus" key="condor_requirements">Arch == &quot;X86_64&quot; || Arch=&quot;INTEL&quot;&lt;/profile></literal>
 			</para>
 			<para id="profile.globus.coastersPerNode"><literal>coastersPerNode</literal> specifies
 the number of coaster workers to be run on each node. This profile entry
@@ -2980,13 +2980,13 @@ to point to that path, by adding a <parameter>gridlaunch</parameter>
 attribute to the <function>pool</function> element in the site
 catalog:
 
-<programlisting>
+<screen>
 
 &lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
 [...]
 &lt;/pool&gt;
 
-</programlisting>
+</screen>
 
 		</para>
 
@@ -3197,17 +3197,17 @@ file mpierr &lt;"mpi.err">;
 </para>
 <para>
 Now we define how 'mpi' will run in tc.data:
-<programlisting>
+<screen>
 tguc    mpi             /home/benc/mpi/mpi.sh   INSTALLED       INTEL32::LINUX GLOBUS::host_xcount=3
-</programlisting>
+</screen>
 </para>
 <para>
 mpi.sh is a wrapper script that launches the MPI program. It must be installed
 on the remote site:
-<programlisting>
+<screen>
 #!/bin/bash
 mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
-</programlisting>
+</screen>
 </para>
 <para>
 Because of the way that Swift runs its server side code, provider-specific
