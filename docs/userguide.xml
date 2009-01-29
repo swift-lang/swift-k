@@ -799,17 +799,23 @@ termination expression.
 <para>The following infix operators are available for use in
 SwiftScript expressions.
 </para>
-<para> + numeric addition; string concatenation </para>
-<para> - numeric subtraction </para>
-<para> * numeric multiplication</para>
-<para> / floating point division </para>
-<para> %/ integer division </para>
-<para> %% integer remainder-of-division</para>
-<para> == != comparison and not-comparison</para>
-<para> &lt; &gt; &lt;= &gt;= </para>
-<para> &amp;&amp; || boolean and, or</para>
-<para> ! boolean not </para>
-
+<table frame="all">
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
+ <thead><row><entry>operator</entry><entry>purpose</entry></row></thead>
+ <tbody>
+  <row><entry>+</entry><entry>numeric addition; string concatenation</entry></row>
+  <row><entry>-</entry><entry>numeric subtraction</entry></row>
+  <row><entry>*</entry><entry>numeric multiplication</entry></row>
+  <row><entry>/</entry><entry>floating point division</entry></row>
+  <row><entry>%/</entry><entry>integer division</entry></row>
+  <row><entry>%%</entry><entry>integer remainder of division</entry></row>
+  <row><entry>== !=</entry><entry>comparison and not-equal-to</entry></row>
+  <row><entry> &lt; &gt; &lt;= &gt;=</entry><entry>numerical ordering</entry></row>
+  <row><entry>&amp;&amp; ||</entry><entry>boolean and, or</entry></row>
+  <row><entry>!</entry><entry>boolean not</entry></row>
+ </tbody>
+</tgroup>
+</table>
 	</section>
 
 	</section>
