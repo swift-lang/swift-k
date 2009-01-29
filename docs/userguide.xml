@@ -313,7 +313,7 @@ declared with the <literal>app</literal> keyword, as they invoke other
 SwiftScript procedures rather than a component program.
 </para>
 
-<para>
+<programlisting>
  (file output) process (file input) {
    file intermediate;
    intermediate = first(input);
@@ -323,7 +323,7 @@ SwiftScript procedures rather than a component program.
  file x &lt;"x.txt"&gt;;
  file y &lt;"y.txt"&gt;;
  y = process(x);
-</para>
+</programlisting>
 
 <para>
 This will invoke two procedures, with an intermediate data file named
