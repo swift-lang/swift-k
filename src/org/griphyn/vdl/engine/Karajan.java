@@ -808,7 +808,9 @@ public class Karajan {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", func.getName());
 		ProcedureSignature funcSignature =  (ProcedureSignature) functionsMap.get(func.getName()); 
-		
+		if(funcSignature == null) {
+			throw new CompilationException("Unknown function "+func.getName());
+		}
 		XmlObject[] arguments = func.getAbstractExpressionArray();
 		int noOfOptInArgs = 0;
 		for (int i = 0; i < funcSignature.sizeOfInputArray(); i++) {
