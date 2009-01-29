@@ -672,13 +672,14 @@ A compound procedure contains a set of SwiftScript statements:
 		<section>
 			<title>Control Constructs</title>
 			<para>
-SwiftScript provides if, switch, foreach, and while constructs,
+SwiftScript provides <literal>if</literal>, <literal>switch</literal>,
+<literal>foreach</literal>, and <literal>iterate</literal> constructs,
 with syntax and semantics similar to comparable constructs in
 other high-level languages.
 			</para>
 			<section><title>foreach</title>
 			<para>
-The foreach construct is used to apply a block of statements to
+The <literal>foreach</literal> construct is used to apply a block of statements to
 each element in an array. For example:
 
 <programlisting>
@@ -690,7 +691,7 @@ check_order (file a[]) {
 </programlisting>
 </para>
 <para>
-foreach statements have the general form:
+<literal>foreach</literal> statements have the general form:
 
 <programlisting>
 foreach controlvariable (,index) in expression {
@@ -698,8 +699,10 @@ foreach controlvariable (,index) in expression {
 }
 </programlisting>
 
-The block of statements is evaluated once for each element in 'expression',
-with controlvariable set to the corresponding element and index set to the
+The block of statements is evaluated once for each element in
+<literal>expression</literal> which must be an array,
+with <literal>controlvariable</literal> set to the corresponding element
+and <literal>index</literal> (if specified) set to the
 integer position in the array that is being iterated over.
 
 			</para>
@@ -707,8 +710,8 @@ integer position in the array that is being iterated over.
 
 			<section><title>if</title>
 			<para>
-The 'if' statement allows one of two blocks of statements to be
-executed, based on a boolean predicate. 'if' statements generally
+The <literal>if</literal> statement allows one of two blocks of statements to be
+executed, based on a boolean predicate. <literal>if</literal> statements generally
 have the form:
 <programlisting>
 if(predicate) {
@@ -718,14 +721,14 @@ if(predicate) {
 }
 </programlisting>
 
-where predicate is a boolean expression.
+where <literal>predicate</literal> is a boolean expression.
 			</para>
 			</section>
 
 			<section><title>switch</title>
 			<para>
-Switch expressions allow one of a selection of blocks to be chosen based on
-the value of a numerical control expression. Switch statements take the
+<literal>switch</literal> expressions allow one of a selection of blocks to be chosen based on
+the value of a numerical control expression. <literal>switch</literal> statements take the
 general form:
 <programlisting>
 switch(controlExpression) {
@@ -738,20 +741,21 @@ switch(controlExpression) {
         statements
 }
 </programlisting>
-The control expression is evaluated and the resulting numerical value used to
-select a corresponding case, and the statements belonging to that case
+The control expression is evaluated, the resulting numerical value used to
+select a corresponding <literal>case</literal>, and the statements belonging to that
+<literal>case</literal> block
 are evaluated. If no case corresponds, then the statements belonging to
-the default block are evaluated.
+the <literal>default</literal> block are evaluated.
 			</para>
 <para>Unlike C or Java switch statements, execution does not fall through to
-subsequent case blocks, and no break statement is necessary at the end
-of each block.
+subsequent <literal>case</literal> blocks, and no <literal>break</literal>
+statement is necessary at the end of each block.
 </para>
 			</section>
 
 			<section id="construct.iterate"><title>iterate</title>
 				<para>
-Iterate expressions allow a block of code to be evaluated repeatedly, with an
+<literal>iterate</literal> expressions allow a block of code to be evaluated repeatedly, with an
 integer parameter sweeping upwards from 0 until a termination condition
 holds.
 				</para>
@@ -762,7 +766,8 @@ iterate var {
 	statements;
 } until (terminationExpression);
 </programlisting>
-with the variable var starting at 0 and increasing each iteration. That
+with the variable <literal>var</literal> starting at 0 and increasing
+by one in each iteration. That
 variable is in scope in the statements block and when evaluating the
 termination expression.
 				</para>
