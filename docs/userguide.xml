@@ -1326,6 +1326,559 @@ would map
 	</section>
 
 	</section>
+	<section id="swiftcommand">
+	<title>The swift command</title>
+	<para>
+The <command>swift</command> command is the main command line tool
+for executing SwiftScript programs.
+	</para>
+	<section><title>Command-line Syntax</title>
+<para>The <command>swift</command> command is invoked as follows:
+<command>swift [options] SwiftScript-program [SwiftScript-arguments]</command>
+with options taken from the following list, and SwiftScript-arguments
+made available to the SwiftScript program through the
+<link linkend="function.arg">@arg</link> function.
+</para>
+  <variablelist><title>Swift command-line options</title>
+  <varlistentry><term>-help or -h</term>
+    <listitem><para>
+      Display usage information </para></listitem>
+  </varlistentry>
+  <varlistentry><term>-typecheck</term>
+    <listitem><para>
+      Does a typecheck of a SwiftScript program, instead of executing it.</para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-dryrun</term>
+    <listitem><para>
+      Runs the SwiftScript program without submitting any jobs (can be used to get
+      a graph)
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-monitor</term>
+    <listitem><para>
+      Shows a graphical resource monitor 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-resume <literal>file</literal></term>
+    <listitem><para>
+      Resumes the execution using a log file 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-config <literal>file</literal></term>
+    <listitem><para>
+      Indicates the Swift configuration file to be used for this run. 
+      Properties in this configuration file will override the default 
+      properties. If individual command line arguments are used for 
+      properties, they will override the contents of this file. 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-verbose | -v</term>
+    <listitem><para>
+      Increases the level of output that Swift produces on the console 
+      to include more detail about the execution 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-debug | -d</term>
+    <listitem><para>
+      Increases the level of output that Swift produces on the console 
+      to include lots of detail about the execution 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-logfile <literal>file</literal></term>
+    <listitem><para>
+      Specifies a file where log messages should go to. By default 
+      Swift uses the name of the program being run and a numeric index
+      (e.g. myworkflow.1.log) 
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-runid <literal>identifier</literal></term>
+    <listitem><para>
+Specifies the run identifier. This must be unique for every invocation and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier. When using this parameter, care should be taken to ensure
+that the run ID remains unique with respect to all other run IDs that might
+be used, irrespective of (at least) expected execution sites, program or user.
+    </para></listitem>
+  </varlistentry>
+
+  <varlistentry><term>-tcp.port.range <literal>start,end</literal></term>
+    <listitem><para>
+      A TCP port range can be specified to restrict the ports on which 
+      GRAM callback services are started. This is likely needed if your
+      submit host is behind a firewall, in which case the firewall 
+      should be configured to allow incoming connections on ports in 
+      the range. 
+    </para></listitem>
+  </varlistentry>
+
+</variablelist>
+
+<para>In addition, the following Swift properties can be set on the
+command line:
+
+<itemizedlist>
+<listitem>caching.algorithm</listitem>
+<listitem>clustering.enabled</listitem>
+<listitem>clustering.enabled</listitem>
+<listitem>clustering.min.time</listitem>
+<listitem>clustering.queue.delay</listitem>
+<listitem>ip.address</listitem>
+<listitem>kickstart.always.transfer</listitem>
+<listitem>kickstart.enabled</listitem>
+<listitem>lazy.errors</listitem>
+<listitem>pgraph</listitem>
+<listitem>pgraph.graph.options</listitem>
+<listitem>pgraph.node.options</listitem>
+<listitem>sitedir.keep</listitem>
+<listitem>sites.file</listitem>
+<listitem>tc.file</listitem>
+</itemizedlist>
+</para>
+
+	</section>
+	<section><title>Return codes</title>
+	<para>
+The <command>swift</command> command may exit with the following return codes:
+<table frame="all">
+<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+ <thead>
+  <row>
+   <entry>value</entry>
+   <entry>meaning</entry>
+  </row>
+ </thead>
+ <tbody>
+  <row><entry>0</entry><entry>success</entry></row>
+  <row><entry>1</entry><entry>command line syntax error or missing project name</entry></row>
+  <row><entry>2</entry><entry>error during execution</entry></row>
+  <row><entry>3</entry><entry>error during compilation</entry></row>
+  <row><entry>4</entry><entry>input file does not exist</entry></row>
+ </tbody>
+ </tgroup>
+</table>
+	</para>
+	</section>
+	</section>
+
+	<section id="kickstart"> <title>Kickstart</title>
+		<para>
+
+Kickstart is a tool that can be used to gather various information 
+about the remote execution environment for each job that Swift tries
+to run.
+		</para>
+
+		<para>
+For each job, Kickstart generates an XML <firstterm>invocation
+record</firstterm>. By default this record is staged back to the submit
+host if the job fails.
+		</para>
+
+		<para>
+Before it can be used it must be installed on the remote site and
+the sites file must be configured to point to kickstart.
+		</para>
+
+		<para>
+Kickstart can be downloaded as part of the Pegasus 'worker package' available
+from the worker packages section of <ulink url="http://pegasus.isi.edu/code.php">the Pegasus download page</ulink>.
+		</para>
+		<para>
+Untar the relevant worker package somewhere where it is visible to all of the
+worker nodes on the remote execution machine (such as in a shared application
+filesystem).
+		</para>
+
+<para>Now configure the gridlaunch attribute of the sites catalog
+to point to that path, by adding a <parameter>gridlaunch</parameter>
+attribute to the <function>pool</function> element in the site
+catalog:
+
+<programlisting>
+
+&lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
+[...]
+&lt;/pool&gt;
+
+</programlisting>
+
+		</para>
+
+		<para>
+There are various kickstat.* properties, which have sensible default
+values. These are documented in <link linkend="engineconfiguration">the
+properties section</link>.
+		</para>
+
+
+
+	</section>
+
+	<section id="restart"> <title>Workflow restart/recovery</title>
+		<para>
+If a run fails, Swift can resume the program from the point of
+failure. When a run fails, a restart log file will be left behind in
+a file named using the unique job ID and a .rlog extension. This restart log
+can then be passed to a subsequent Swift invocation using the -resume
+parameter. Swift will resume execution, avoiding execution of invocations
+that have previously completed successfully. The SwiftScript source file
+and input data files should not be modified between runs.
+		</para>
+		<para>
+Every run creates a restart
+log file with a named composed of the file name of the workflow
+being executed, an invocation ID, a numeric ID, and the <filename
+class="file">.rlog</filename> extension. For example, <filename
+class="file">example.swift</filename>, when executed, could produce
+the following restart log file: <filename
+class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
+the run completes successfully, the restart log file is
+deleted. If however the workflow fails, <command>swift</command>
+can use the restart log file to continue
+execution from a point before the
+failure occurred. In order to restart from a restart log
+file, the <option>-resume <parameter><filename
+class="file">logfile</filename></parameter></option> argument can be
+used after the SwiftScript program file name. Example:
+
+<screen>
+<prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
+class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
+class="file">example.swift</filename></option>.
+</screen>
+
+		</para>
+	</section> 
+
+	<section id="appmodel"> <title>Invoking an application from Swift</title>
+	<para>
+There are certain requirements on the behaviour of application programs
+used in SwiftScript programs. These requirements are primarily to ensure
+that the Swift can run your application in different places.
+	</para>
+<para>
+Swift must know about all of your data files - when Swift has decided where
+to run your application, it will transfer the necessary input files there
+before execution and transfer the output files back to the submitting
+system afterwards. If Swift does not know about your files, then it cannot
+do this. The way to tell Swift about files is by mapping them to variables
+and using those variables as parameters to your application.
+</para>
+<para>
+Applications should take the name of input and output files on the
+command line - Sometimes Swift will decide on the name of your input
+and output files automatically (for example, if you do not specify a mapping
+explicitly for an input or output variable). Swift must be able to
+tell your application which filename it has chosen, and the commandline
+is the way it does that. Use the
+<link linkend="function.filename">@filename</link> function to determine
+the filename of a variable.
+</para>
+<para>
+Applications should not assume that they are running in a particular
+location or on a particular host - Swift will decide which site to run
+a job on automatically (based on the sites that it knows have the
+application installed, by looking at the transformation catalog). On that
+site, it will create a unique working directory every time that it runs
+your jobs. Your job should expect to be run in an arbitrary working directory
+on any of the available hosts.
+</para>
+<para>
+Running your application on the same input files multiple times should
+always give equivalent output files. Swift expects to be able to run a job
+multiple times, perhaps on the same site, perhaps on different sites, in
+order to deal with error conditions. For example, applications should not
+make modifications to external databases that causes their output to
+differ if they are run more than once.
+</para>
+<imagedata fileref="swift-site-model.png" />
+	</section>
+
+	<section id="techoverview">
+	<title>Technical overview of the Swift architecture</title>
+	<para>
+This section attempts to provide a technical overview of the Swift
+architecture.
+	</para>
+
+	<section><title>karajan - the core execution engine</title>
+	</section>
+
+	<section><title>Execution layer</title>
+	<para>
+The execution layer causes an application program (in the form of a unix
+executable) to be executed either locally or remotely.
+	</para>
+	<para>
+The two main choices are local unix execution and execution through GRAM.
+Other options are available, and user provided code can also be plugged in.
+	</para>
+	<para>
+The <link linkend="kickstart">kickstart</link> utility can
+be used to capture environmental information at execution time
+to aid in debugging and provenance capture. 
+	</para>
+	</section>
+
+	<section><title>SwiftScript language compilation layer</title>
+	<para>
+Step i: text to XML intermediate form parser/processor. parser written in
+ANTLR - see resources/VDL.g. The XML Schema Definition (XSD) for the
+intermediate language is in resources/XDTM.xsd.
+	</para>
+	<para>
+Step ii: XML intermediate form to Karajan workflow. Karajan.java - reads
+the XML intermediate form. compiles to karajan workflow language - for
+example, expressions are converted from SwiftScript syntax into Karajan
+syntax, and function invocations become karajan function invocations
+with various modifications to parameters to accomodate return parameters
+and dataset handling.
+	</para>
+	</section>
+
+	<section><title>Swift/karajan library layer</title>
+	<para>
+Some Swift functionality is provided in the form of Karajan libraries
+that are used at runtime by the Karajan workflows that the Swift
+compiler generates.
+	</para>
+	</section>
+
+	</section>
+
+	<section id="extending"><title>Ways in which Swift can be extended</title>
+<para>Swift is extensible in a number of ways. It is possible to add
+mappers to accomodate different filesystem arrangements, site selectors
+to change how Swift decides where to run each job, and job submission
+interfaces to submit jobs through different mechanisms.
+</para>
+<para>A number of mappers are provided as part of the Swift release and
+documented in the <link linkend="mappers">mappers</link> section.
+New mappers can be implemented
+in Java by implementing the org.griphyn.vdl.mapping.Mapper interface. The
+<ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift
+tutorial</ulink> contains a simple example of this.
+</para>
+<para>Swift provides a default site selector, the Adaptive Scheduler.
+New site selectors can be plugged in by implementing the
+org.globus.cog.karajan.scheduler.Scheduler interface and modifying
+libexec/scheduler.xml and etc/karajan.properties to refer to the new
+scheduler.
+</para>
+<para>Execution providers and filesystem providers, which allow to Swift
+to execute jobs and to stage files in and out through mechanisms such
+as GRAM and GridFTP can be implemented as Java CoG kit providers.
+</para>
+	</section>
+
+	<section id="functions"><title>Function reference</title>
+		<para>
+This section details functions that are available for use in the SwiftScript
+language.
+		</para>
+		<section id="function.arg"><title>@arg</title>
+			<para>
+Takes a command line parameter name as a string parameter and an optional 
+default value and returns the value of that string parameter from the 
+command line. If no default value is specified and the command line parameter
+is missing, an error is generated. If a default value is specified and the
+command line parameter is missing, @arg will return the default value.
+			</para>
+			<para>
+Command line parameters recognized by @arg begin with exactly one hyphen
+and need to be positioned after the script name.
+			</para>
+
+			<para>For example:</para>
+			<programlisting>
+trace(@arg("myparam"));
+trace(@arg("optionalparam", "defaultvalue"));
+			</programlisting>
+			<screen>
+$ <userinput>swift arg.swift -myparam=hello</userinput>
+Swift v0.3-dev r1674 (modified locally)
+
+RunID: 20080220-1548-ylc4pmda
+SwiftScript trace: defaultvalue
+SwiftScript trace: hello
+			</screen>
+
+		</section>
+
+		<section id="function.extractint"><title>@extractint</title>
+			<para>
+@extractint(file) will read the specified file, parse an integer from the
+file contents and return that integer.
+			</para>
+		</section>
+
+		<section id="function.filename"><title>@filename</title>
+			<para>
+@filename(v) will return a string containing the filename(s) for the file(s)
+mapped to the variable v. When more than one filename is returned, the
+filenames will be space separated inside a single string return value.
+			</para>
+		</section>
+		<section id="function.filenames"><title>@filenames</title>
+			<para>
+@filenames(v) will return multiple values (!) containing the filename(s) for
+the file(s) mapped to the variable v. (compare to
+<link linkend="function.filename">@filename</link>)
+			</para>
+		</section>
+		<section id="function.regexp"><title>@regexp</title>
+			<para>
+@regexp(input,pattern,replacement) will apply regular expression
+substitution using the Java java.util.regexp API. For example:
+<programlisting>
+string v =  @regexp("abcdefghi", "c(def)g","monkey");
+</programlisting>
+will assing the value "abmonkeyhi" to the variable v.
+			</para>
+		</section>
+		<section id="function.strcat"><title>@strcat</title>
+			<para>
+@strcat(a,b,c,d,...) will return a string containing all of the strings
+passed as parameters joined into a single string. There may be any number
+of parameters.
+			</para>
+			<para>
+The + operator concatenates two strings: @strcat(a,b) is the same as a + b
+			</para>
+		</section>
+		<section id="function.strcut"><title>@strcut</title>
+			<para>
+@strcut(input,pattern) will match the regular expression in the pattern
+parameter against the supplied input string and return the section that
+matches the first matching parenthesised group.
+			</para>
+			<para>
+For example:
+			</para>
+
+			<programlisting>
+string t = "my name is John and i like puppies.";
+string name = @strcut(t, "my name is ([^ ]*) ");
+string out = @strcat("Your name is ",name);
+print(out);
+			</programlisting>
+
+			<para>
+will output the message 'Your name is John'.
+			</para>
+		</section>
+		<section id="function.toint"><title>@toint</title>
+			<para>
+@toint(input) will parse its input string into an integer. This can be
+used with @arg to pass input parameters to a SwiftScript program as
+integers.
+			</para>
+		</section>
+	</section>
+
+	<section id="procedures"><title>Built-in procedure reference</title>
+		<para>
+This section details built-in procedures that are available for use in
+the SwiftScript language.
+		</para>
+
+		<section id="procedure.readdata"><title>readData</title>
+			<para>
+readData will read data from a specified file.
+			</para>
+			<para>
+The format of the input file is controlled by the type of the return
+value.
+			</para>
+
+			<para>
+For scalar return types, such as int, the specified file should contain
+a single value of that type.
+			</para>
+			<para>
+For arrays of scalars, the specified file should contain one value
+per line.
+			</para>
+			<para>
+For structs of scalars, the file should contain two rows.
+The first row should be structure member names separated by whitespace.
+The second row should be the corresponding values for each structure
+member, separated by whitespace, in the same order as the header row.
+			</para>
+			<para>
+For arrays of structs, the file should contain a heading row listing
+structure member names separated by whitespace. There should be one row
+for each element of the array, with structure member elements listed in
+the same order as the header row and separated by whitespace.
+			</para>
+
+			<para>
+This procedure is new in 0.4.
+			</para>
+		</section>
+		<section id="procedure.readdata2"><title>readdata2</title>
+			<para>
+readdata2 will read data from a specified file, like readdata, but using
+a different file format more closely related to that used by the
+ext mapper.
+			</para>
+			<para>
+Input files should list, one per line, a path into a Swift structure, and
+the value for that position in the structure:
+				<screen>
+rows[0].columns[0] = 0                                                          
+rows[0].columns[1] = 2                                                          
+rows[0].columns[2] = 4                                                          
+rows[1].columns[0] = 1                                                          
+rows[1].columns[1] = 3                                                          
+rows[1].columns[2] = 5 
+				</screen>
+which can be read into a structure defined like this:
+				<programlisting>
+type vector {                                                                   
+        int columns[];                                                          
+}                                                                               
+                                                                                
+type matrix {                                                                   
+        vector rows[];                                                          
+}                                                                               
+                                                                                
+matrix m;                                                                       
+                                                                                
+m = readData2("readData2.in");    
+				</programlisting>
+			</para>
+			
+			<para>
+This procedure is new in 0.7.
+			</para>
+		</section>
+		<section id="procedure.print"><title>print</title>
+			<para>
+Deprecated - use <link linkend="procedure.trace">trace</link> instead.
+			</para>
+			<para>
+print will print its parameters to stdout; but will do this at a point
+in execution that is undefined. Specifically, it will not necessarily
+wait for its parameters to be properly set.
+			</para>
+		</section>
+		<section id="procedure.trace"><title>trace</title>
+			<para>
+Trace will log its parameters. By default these will appear on both stdout
+and in the run log file. Some formatting occurs to produce the log message.
+The particular output format should not be relied upon. (new in 0.4)
+			</para>
+		</section>
+
+	</section>
+
 	<section id="engineconfiguration">	
 	
 		<title>Swift configuration properties</title>
@@ -2086,558 +2639,6 @@ ip.address=192.168.0.1
 		
 	</section>
 
-	<section id="swiftcommand">
-	<title>The swift command</title>
-	<para>
-The <command>swift</command> command is the main command line tool
-for executing SwiftScript programs.
-	</para>
-	<section><title>Command-line Syntax</title>
-<para>The <command>swift</command> command is invoked as follows:
-<command>swift [options] SwiftScript-program [SwiftScript-arguments]</command>
-with options taken from the following list, and SwiftScript-arguments
-made available to the SwiftScript program through the
-<link linkend="function.arg">@arg</link> function.
-</para>
-  <variablelist><title>Swift command-line options</title>
-  <varlistentry><term>-help or -h</term>
-    <listitem><para>
-      Display usage information </para></listitem>
-  </varlistentry>
-  <varlistentry><term>-typecheck</term>
-    <listitem><para>
-      Does a typecheck of a SwiftScript program, instead of executing it.</para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-dryrun</term>
-    <listitem><para>
-      Runs the SwiftScript program without submitting any jobs (can be used to get
-      a graph)
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-monitor</term>
-    <listitem><para>
-      Shows a graphical resource monitor 
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-resume <literal>file</literal></term>
-    <listitem><para>
-      Resumes the execution using a log file 
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-config <literal>file</literal></term>
-    <listitem><para>
-      Indicates the Swift configuration file to be used for this run. 
-      Properties in this configuration file will override the default 
-      properties. If individual command line arguments are used for 
-      properties, they will override the contents of this file. 
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-verbose | -v</term>
-    <listitem><para>
-      Increases the level of output that Swift produces on the console 
-      to include more detail about the execution 
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-debug | -d</term>
-    <listitem><para>
-      Increases the level of output that Swift produces on the console 
-      to include lots of detail about the execution 
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-logfile <literal>file</literal></term>
-    <listitem><para>
-      Specifies a file where log messages should go to. By default 
-      Swift uses the name of the program being run and a numeric index
-      (e.g. myworkflow.1.log) 
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-runid <literal>identifier</literal></term>
-    <listitem><para>
-Specifies the run identifier. This must be unique for every invocation and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier. When using this parameter, care should be taken to ensure
-that the run ID remains unique with respect to all other run IDs that might
-be used, irrespective of (at least) expected execution sites, program or user.
-    </para></listitem>
-  </varlistentry>
-
-  <varlistentry><term>-tcp.port.range <literal>start,end</literal></term>
-    <listitem><para>
-      A TCP port range can be specified to restrict the ports on which 
-      GRAM callback services are started. This is likely needed if your
-      submit host is behind a firewall, in which case the firewall 
-      should be configured to allow incoming connections on ports in 
-      the range. 
-    </para></listitem>
-  </varlistentry>
-
-</variablelist>
-
-<para>In addition, the following Swift properties can be set on the
-command line:
-
-<itemizedlist>
-<listitem>caching.algorithm</listitem>
-<listitem>clustering.enabled</listitem>
-<listitem>clustering.enabled</listitem>
-<listitem>clustering.min.time</listitem>
-<listitem>clustering.queue.delay</listitem>
-<listitem>ip.address</listitem>
-<listitem>kickstart.always.transfer</listitem>
-<listitem>kickstart.enabled</listitem>
-<listitem>lazy.errors</listitem>
-<listitem>pgraph</listitem>
-<listitem>pgraph.graph.options</listitem>
-<listitem>pgraph.node.options</listitem>
-<listitem>sitedir.keep</listitem>
-<listitem>sites.file</listitem>
-<listitem>tc.file</listitem>
-</itemizedlist>
-</para>
-
-	</section>
-	<section><title>Return codes</title>
-	<para>
-The <command>swift</command> command may exit with the following return codes:
-<table frame="all">
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
- <thead>
-  <row>
-   <entry>value</entry>
-   <entry>meaning</entry>
-  </row>
- </thead>
- <tbody>
-  <row><entry>0</entry><entry>success</entry></row>
-  <row><entry>1</entry><entry>command line syntax error or missing project name</entry></row>
-  <row><entry>2</entry><entry>error during execution</entry></row>
-  <row><entry>3</entry><entry>error during compilation</entry></row>
-  <row><entry>4</entry><entry>input file does not exist</entry></row>
- </tbody>
- </tgroup>
-</table>
-	</para>
-	</section>
-	</section>
-
-	<section id="kickstart"> <title>Kickstart</title>
-		<para>
-
-Kickstart is a tool that can be used to gather various information 
-about the remote execution environment for each job that Swift tries
-to run.
-		</para>
-
-		<para>
-For each job, Kickstart generates an XML <firstterm>invocation
-record</firstterm>. By default this record is staged back to the submit
-host if the job fails.
-		</para>
-
-		<para>
-Before it can be used it must be installed on the remote site and
-the sites file must be configured to point to kickstart.
-		</para>
-
-		<para>
-Kickstart can be downloaded as part of the Pegasus 'worker package' available
-from the worker packages section of <ulink url="http://pegasus.isi.edu/code.php">the Pegasus download page</ulink>.
-		</para>
-		<para>
-Untar the relevant worker package somewhere where it is visible to all of the
-worker nodes on the remote execution machine (such as in a shared application
-filesystem).
-		</para>
-
-<para>Now configure the gridlaunch attribute of the sites catalog
-to point to that path, by adding a <parameter>gridlaunch</parameter>
-attribute to the <function>pool</function> element in the site
-catalog:
-
-<programlisting>
-
-&lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
-[...]
-&lt;/pool&gt;
-
-</programlisting>
-
-		</para>
-
-		<para>
-There are various kickstat.* properties, which have sensible default
-values. These are documented in <link linkend="engineconfiguration">the
-properties section</link>.
-		</para>
-
-
-
-	</section>
-
-	<section id="restart"> <title>Workflow restart/recovery</title>
-		<para>
-If a run fails, Swift can resume the program from the point of
-failure. When a run fails, a restart log file will be left behind in
-a file named using the unique job ID and a .rlog extension. This restart log
-can then be passed to a subsequent Swift invocation using the -resume
-parameter. Swift will resume execution, avoiding execution of invocations
-that have previously completed successfully. The SwiftScript source file
-and input data files should not be modified between runs.
-		</para>
-		<para>
-Every run creates a restart
-log file with a named composed of the file name of the workflow
-being executed, an invocation ID, a numeric ID, and the <filename
-class="file">.rlog</filename> extension. For example, <filename
-class="file">example.swift</filename>, when executed, could produce
-the following restart log file: <filename
-class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
-the run completes successfully, the restart log file is
-deleted. If however the workflow fails, <command>swift</command>
-can use the restart log file to continue
-execution from a point before the
-failure occurred. In order to restart from a restart log
-file, the <option>-resume <parameter><filename
-class="file">logfile</filename></parameter></option> argument can be
-used after the SwiftScript program file name. Example:
-
-<screen>
-<prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
-class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
-class="file">example.swift</filename></option>.
-</screen>
-
-		</para>
-	</section> 
-
-	<section id="appmodel"> <title>Invoking an application from Swift</title>
-	<para>
-There are certain requirements on the behaviour of application programs
-used in SwiftScript programs. These requirements are primarily to ensure
-that the Swift can run your application in different places.
-	</para>
-<para>
-Swift must know about all of your data files - when Swift has decided where
-to run your application, it will transfer the necessary input files there
-before execution and transfer the output files back to the submitting
-system afterwards. If Swift does not know about your files, then it cannot
-do this. The way to tell Swift about files is by mapping them to variables
-and using those variables as parameters to your application.
-</para>
-<para>
-Applications should take the name of input and output files on the
-command line - Sometimes Swift will decide on the name of your input
-and output files automatically (for example, if you do not specify a mapping
-explicitly for an input or output variable). Swift must be able to
-tell your application which filename it has chosen, and the commandline
-is the way it does that. Use the
-<link linkend="function.filename">@filename</link> function to determine
-the filename of a variable.
-</para>
-<para>
-Applications should not assume that they are running in a particular
-location or on a particular host - Swift will decide which site to run
-a job on automatically (based on the sites that it knows have the
-application installed, by looking at the transformation catalog). On that
-site, it will create a unique working directory every time that it runs
-your jobs. Your job should expect to be run in an arbitrary working directory
-on any of the available hosts.
-</para>
-<para>
-Running your application on the same input files multiple times should
-always give equivalent output files. Swift expects to be able to run a job
-multiple times, perhaps on the same site, perhaps on different sites, in
-order to deal with error conditions. For example, applications should not
-make modifications to external databases that causes their output to
-differ if they are run more than once.
-</para>
-<imagedata fileref="swift-site-model.png" />
-	</section>
-
-	<section id="techoverview">
-	<title>Technical overview of the Swift architecture</title>
-	<para>
-This section attempts to provide a technical overview of the Swift
-architecture.
-	</para>
-
-	<section><title>karajan - the core execution engine</title>
-	</section>
-
-	<section><title>Execution layer</title>
-	<para>
-The execution layer causes an application program (in the form of a unix
-executable) to be executed either locally or remotely.
-	</para>
-	<para>
-The two main choices are local unix execution and execution through GRAM.
-Other options are available, and user provided code can also be plugged in.
-	</para>
-	<para>
-The <link linkend="kickstart">kickstart</link> utility can
-be used to capture environmental information at execution time
-to aid in debugging and provenance capture. 
-	</para>
-	</section>
-
-	<section><title>SwiftScript language compilation layer</title>
-	<para>
-Step i: text to XML intermediate form parser/processor. parser written in
-ANTLR - see resources/VDL.g. The XML Schema Definition (XSD) for the
-intermediate language is in resources/XDTM.xsd.
-	</para>
-	<para>
-Step ii: XML intermediate form to Karajan workflow. Karajan.java - reads
-the XML intermediate form. compiles to karajan workflow language - for
-example, expressions are converted from SwiftScript syntax into Karajan
-syntax, and function invocations become karajan function invocations
-with various modifications to parameters to accomodate return parameters
-and dataset handling.
-	</para>
-	</section>
-
-	<section><title>Swift/karajan library layer</title>
-	<para>
-Some Swift functionality is provided in the form of Karajan libraries
-that are used at runtime by the Karajan workflows that the Swift
-compiler generates.
-	</para>
-	</section>
-
-	</section>
-
-	<section id="extending"><title>Ways in which Swift can be extended</title>
-<para>Swift is extensible in a number of ways. It is possible to add
-mappers to accomodate different filesystem arrangements, site selectors
-to change how Swift decides where to run each job, and job submission
-interfaces to submit jobs through different mechanisms.
-</para>
-<para>A number of mappers are provided as part of the Swift release and
-documented in the <link linkend="mappers">mappers</link> section.
-New mappers can be implemented
-in Java by implementing the org.griphyn.vdl.mapping.Mapper interface. The
-<ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift
-tutorial</ulink> contains a simple example of this.
-</para>
-<para>Swift provides a default site selector, the Adaptive Scheduler.
-New site selectors can be plugged in by implementing the
-org.globus.cog.karajan.scheduler.Scheduler interface and modifying
-libexec/scheduler.xml and etc/karajan.properties to refer to the new
-scheduler.
-</para>
-<para>Execution providers and filesystem providers, which allow to Swift
-to execute jobs and to stage files in and out through mechanisms such
-as GRAM and GridFTP can be implemented as Java CoG kit providers.
-</para>
-	</section>
-
-	<section id="functions"><title>Function reference</title>
-		<para>
-This section details functions that are available for use in the SwiftScript
-language.
-		</para>
-		<section id="function.arg"><title>@arg</title>
-			<para>
-Takes a command line parameter name as a string parameter and an optional 
-default value and returns the value of that string parameter from the 
-command line. If no default value is specified and the command line parameter
-is missing, an error is generated. If a default value is specified and the
-command line parameter is missing, @arg will return the default value.
-			</para>
-			<para>
-Command line parameters recognized by @arg begin with exactly one hyphen
-and need to be positioned after the script name.
-			</para>
-
-			<para>For example:</para>
-			<programlisting>
-trace(@arg("myparam"));
-trace(@arg("optionalparam", "defaultvalue"));
-			</programlisting>
-			<screen>
-$ <userinput>swift arg.swift -myparam=hello</userinput>
-Swift v0.3-dev r1674 (modified locally)
-
-RunID: 20080220-1548-ylc4pmda
-SwiftScript trace: defaultvalue
-SwiftScript trace: hello
-			</screen>
-
-		</section>
-
-		<section id="function.extractint"><title>@extractint</title>
-			<para>
-@extractint(file) will read the specified file, parse an integer from the
-file contents and return that integer.
-			</para>
-		</section>
-
-		<section id="function.filename"><title>@filename</title>
-			<para>
-@filename(v) will return a string containing the filename(s) for the file(s)
-mapped to the variable v. When more than one filename is returned, the
-filenames will be space separated inside a single string return value.
-			</para>
-		</section>
-		<section id="function.filenames"><title>@filenames</title>
-			<para>
-@filenames(v) will return multiple values (!) containing the filename(s) for
-the file(s) mapped to the variable v. (compare to
-<link linkend="function.filename">@filename</link>)
-			</para>
-		</section>
-		<section id="function.regexp"><title>@regexp</title>
-			<para>
-@regexp(input,pattern,replacement) will apply regular expression
-substitution using the Java java.util.regexp API. For example:
-<programlisting>
-string v =  @regexp("abcdefghi", "c(def)g","monkey");
-</programlisting>
-will assing the value "abmonkeyhi" to the variable v.
-			</para>
-		</section>
-		<section id="function.strcat"><title>@strcat</title>
-			<para>
-@strcat(a,b,c,d,...) will return a string containing all of the strings
-passed as parameters joined into a single string. There may be any number
-of parameters.
-			</para>
-			<para>
-The + operator concatenates two strings: @strcat(a,b) is the same as a + b
-			</para>
-		</section>
-		<section id="function.strcut"><title>@strcut</title>
-			<para>
-@strcut(input,pattern) will match the regular expression in the pattern
-parameter against the supplied input string and return the section that
-matches the first matching parenthesised group.
-			</para>
-			<para>
-For example:
-			</para>
-
-			<programlisting>
-string t = "my name is John and i like puppies.";
-string name = @strcut(t, "my name is ([^ ]*) ");
-string out = @strcat("Your name is ",name);
-print(out);
-			</programlisting>
-
-			<para>
-will output the message 'Your name is John'.
-			</para>
-		</section>
-		<section id="function.toint"><title>@toint</title>
-			<para>
-@toint(input) will parse its input string into an integer. This can be
-used with @arg to pass input parameters to a SwiftScript program as
-integers.
-			</para>
-		</section>
-	</section>
-
-	<section id="procedures"><title>Built-in procedure reference</title>
-		<para>
-This section details built-in procedures that are available for use in
-the SwiftScript language.
-		</para>
-
-		<section id="procedure.readdata"><title>readData</title>
-			<para>
-readData will read data from a specified file.
-			</para>
-			<para>
-The format of the input file is controlled by the type of the return
-value.
-			</para>
-
-			<para>
-For scalar return types, such as int, the specified file should contain
-a single value of that type.
-			</para>
-			<para>
-For arrays of scalars, the specified file should contain one value
-per line.
-			</para>
-			<para>
-For structs of scalars, the file should contain two rows.
-The first row should be structure member names separated by whitespace.
-The second row should be the corresponding values for each structure
-member, separated by whitespace, in the same order as the header row.
-			</para>
-			<para>
-For arrays of structs, the file should contain a heading row listing
-structure member names separated by whitespace. There should be one row
-for each element of the array, with structure member elements listed in
-the same order as the header row and separated by whitespace.
-			</para>
-
-			<para>
-This procedure is new in 0.4.
-			</para>
-		</section>
-		<section id="procedure.readdata2"><title>readdata2</title>
-			<para>
-readdata2 will read data from a specified file, like readdata, but using
-a different file format more closely related to that used by the
-ext mapper.
-			</para>
-			<para>
-Input files should list, one per line, a path into a Swift structure, and
-the value for that position in the structure:
-				<screen>
-rows[0].columns[0] = 0                                                          
-rows[0].columns[1] = 2                                                          
-rows[0].columns[2] = 4                                                          
-rows[1].columns[0] = 1                                                          
-rows[1].columns[1] = 3                                                          
-rows[1].columns[2] = 5 
-				</screen>
-which can be read into a structure defined like this:
-				<programlisting>
-type vector {                                                                   
-        int columns[];                                                          
-}                                                                               
-                                                                                
-type matrix {                                                                   
-        vector rows[];                                                          
-}                                                                               
-                                                                                
-matrix m;                                                                       
-                                                                                
-m = readData2("readData2.in");    
-				</programlisting>
-			</para>
-			
-			<para>
-This procedure is new in 0.7.
-			</para>
-		</section>
-		<section id="procedure.print"><title>print</title>
-			<para>
-Deprecated - use <link linkend="procedure.trace">trace</link> instead.
-			</para>
-			<para>
-print will print its parameters to stdout; but will do this at a point
-in execution that is undefined. Specifically, it will not necessarily
-wait for its parameters to be properly set.
-			</para>
-		</section>
-		<section id="procedure.trace"><title>trace</title>
-			<para>
-Trace will log its parameters. By default these will appear on both stdout
-and in the run log file. Some formatting occurs to produce the log message.
-The particular output format should not be relied upon. (new in 0.4)
-			</para>
-		</section>
-
-	</section>
 
 	<section id="profiles"><title>Profiles</title>
 		<section id="profile.karajan"><title>Karajan namespace</title>
@@ -2721,6 +2722,42 @@ Profile keys set in the env namespace will be set in the unix environment of the
 executed job.
 			</para>
 		</section>
+	</section>
+
+	<section id="envvars"><title>Environment variables</title>
+		<para>
+There are a number of environment variables used by Swift. Some of them are
+documented in this section:
+		</para>
+		<para>
+<literal>PATHPREFIX</literal> - set in env namespace profiles. This path is prefixed onto the start
+of the <literal>PATH</literal> when jobs are
+executed. It can be more useful than setting the <literal>PATH</literal> environment variable directly,
+because setting <literal>PATH</literal> will cause the execution site's default path to be lost.
+		</para>
+		<para>
+<literal>GLOBUS_HOSTNAME</literal>, <literal>GLOBUS_TCP_PORT_RANGE</literal> - set in the environment before running
+Swift. These can be set to inform Swift of the
+configuration of your local firewall. More information can be found in
+<ulink url="http://dev.globus.org/wiki/FirewallHowTo">the Globus firewall
+How-to</ulink>.
+		</para>
+		<para>
+<literal>COG_OPTS</literal> - set in the environment before running Swift. Options set in this
+variable will be passed as parameters to the Java Virtual Machine which
+will run Swift. The parameters vary between virtual machine imlementations,
+but can usually be used to alter settings such as maximum heap size.
+Typing 'java -help' will sometimes give a list of commands. The Sun Java
+1.4.2 command line options are <ulink url="http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html">documented here</ulink>.
+		</para>
+		<para>
+<literal>SWIFT_JOBDIR_PATH</literal> - set in env namespace profiles. If set, then Swift will
+use the path specified here as a worker-node local temporary directory to
+copy input files to before running a job. If unset, Swift will keep input
+files on the site-shared filesystem. In some cases, copying to a worker-node
+local directory can be much faster than having applications access the
+site-shared filesystem directly.
+		</para>
 	</section>
 
 	<section id="clustering"><title>Clustering</title>
@@ -3056,42 +3093,6 @@ INSTALLED and INTEL32::LINUX respectively.
 		<para>
 The profiles field should be set to 'null' if no profile entries are to be
 specified, or should contain the profile entries separated by semicolons.
-		</para>
-	</section>
-
-	<section id="envvars"><title>Environment variables</title>
-		<para>
-There are a number of environment variables used by Swift. Some of them are
-documented in this section:
-		</para>
-		<para>
-<literal>PATHPREFIX</literal> - set in env namespace profiles. This path is prefixed onto the start
-of the <literal>PATH</literal> when jobs are
-executed. It can be more useful than setting the <literal>PATH</literal> environment variable directly,
-because setting <literal>PATH</literal> will cause the execution site's default path to be lost.
-		</para>
-		<para>
-<literal>GLOBUS_HOSTNAME</literal>, <literal>GLOBUS_TCP_PORT_RANGE</literal> - set in the environment before running
-Swift. These can be set to inform Swift of the
-configuration of your local firewall. More information can be found in
-<ulink url="http://dev.globus.org/wiki/FirewallHowTo">the Globus firewall
-How-to</ulink>.
-		</para>
-		<para>
-<literal>COG_OPTS</literal> - set in the environment before running Swift. Options set in this
-variable will be passed as parameters to the Java Virtual Machine which
-will run Swift. The parameters vary between virtual machine imlementations,
-but can usually be used to alter settings such as maximum heap size.
-Typing 'java -help' will sometimes give a list of commands. The Sun Java
-1.4.2 command line options are <ulink url="http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html">documented here</ulink>.
-		</para>
-		<para>
-<literal>SWIFT_JOBDIR_PATH</literal> - set in env namespace profiles. If set, then Swift will
-use the path specified here as a worker-node local temporary directory to
-copy input files to before running a job. If unset, Swift will keep input
-files on the site-shared filesystem. In some cases, copying to a worker-node
-local directory can be much faster than having applications access the
-site-shared filesystem directly.
 		</para>
 	</section>
 	<section id="buildoptions"><title>Build options</title>
