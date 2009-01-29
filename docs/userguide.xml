@@ -514,6 +514,18 @@ of this guide.
 </section>
 
 		</section>
+		<section>
+			<title>Syntax</title>
+<para>The syntax of SwiftScript has a superficial resemblance to C and
+Java. For example, { and } characters are used to enclose blocks of
+statements.
+</para>
+			<para>
+A SwiftScript program consists of a number of statements.
+Statements may declare types, procedures and variables, assign values to
+variables, and express operations over arrays.
+			</para>
+
 
 		<section><title>Variables</title>
 <para>Variables in SwiftScript are declared to be of a specific type.
@@ -565,14 +577,10 @@ Variables can also be assigned in a multivalued-procedure statement,
 described in another section.
 			</para>
 		</section>
+</section>
 
-		</section>
-		<section id="lang.procedures">
-			<title>Procedures</title>
-			<para>
-Datasets are operated on by procedures, which take input in the form of 
-mapped variables, perform computations, and produce typed data as output
-that is again mapped to variables.</para>
+<section><title>Procedures</title>
+
 <para>There are two kinds of procedure: An atomic procedure, which
 describes how an external program can be executed; and compound
 procedures which consist of a sequence of SwiftScript statements.
@@ -581,40 +589,42 @@ procedures which consist of a sequence of SwiftScript statements.
 			<para>
 A procedure declaration defines the name of a procedure and its
 input and output parameters. SwiftScript procedures can take multiple
-inputs and produce multiple outputs.
-Inputs are specified to the right of the function name where 
-outputs to the left. For instance:
+inputs and produce multiple outputs.  Inputs are specified to the right
+of the function name, and outputs are specified to the left. For example:
 
 <programlisting>
 (type3 out1, type4 out2) myproc (type1 in1, type2 in2)
 </programlisting>
 
-The above example declares a procedure called myproc, which 
-has two inputs in1 (of type type1) and in2 (of type type2) 
-and two outputs out1 (of type type3) and out2 (of type type4).
+The above example declares a procedure called <literal>myproc</literal>, which 
+has two inputs <literal>in1</literal> (of type <literal>type1</literal>)
+and <literal>in2</literal> (of type <literal>type2</literal>) 
+and two outputs <literal>out1</literal> (of type <literal>type3</literal>)
+and <literal>out2</literal> (of type <literal>type4</literal>).
 			</para>
 	
 			<para>
 A procedure input parameter can be an <firstterm>optional
 parameter</firstterm> in which case it must be declared with a default
-value.  When we call a
-procedure, passing in the actual parameters, we allow both positional
-parameter and named parameter passing, provided that all optional
-parameters have to be declared after the required parameters and any
-optional parameter has to be bound using keyword parameter passing.
-So for instance if we declare a procedure myproc1:
+value.  When calling a procedure, both positional parameter and named
+parameter passings can be passed, provided that all optional
+parameters are declared after the required parameters and any
+optional parameter is bound using keyword parameter passing.
+For example, if <literal>myproc1</literal> is defined as:
 
 <programlisting>
 (binaryfile bf) myproc1 (int i, string s="foo")
 </programlisting>
 
-Then the procedure can be called like this
+Then that procedure can be called like this, omitting the optional
+parameter <literal>s</literal>:
 
 <programlisting>
 binaryfile mybf = myproc1(1);
 </programlisting>
 
-or like this supplying the value for the optional parameter s:
+or like this supplying a value for the optional parameter
+<literal>s</literal>:
 
 <programlisting>
 binaryfile mybf = myproc1 (1, s="bar");
@@ -624,32 +634,29 @@ binaryfile mybf = myproc1 (1, s="bar");
 			
 <section id="procedures.atomic"><title>Atomic procedures</title>
 			<para>
-The body of an atomic procedure specifies how to invoke an
-external executable program or Web Service, and how logical data
-types are mapped to command line arguments. A complete specification
-for myproc1 can be:
+An atomic procedure specifies how to invoke an
+external executable program, and how logical data
+types are mapped to command line arguments.
+			</para>
 
+			<para>
+Atomic procedures are defined with the <literal>app</literal> keyword:
 <programlisting>
-app (binaryfile bf) myproc1 (int i, string s="foo") {
-	myapp1 i s @filename(bf);
+app (binaryfile bf) myproc (int i, string s="foo") {
+	myapp i s @filename(bf);
 }			
 </programlisting>
 
-which specifies that myproc1 invokes an executable called myapp1,
-passing the values of i, s and the file name of bf as command line arguments.
-The <link linkend="function.filename">@filename</link> notation serves as a function denoting that the
-argument should be mapped as a file name, and since the notation is
-often required in invoking applications, a shorter syntax is defined where
-we can omit the filename part and use the @ sign only.
+which specifies that <literal>myproc</literal> invokes an executable
+called <literal>myapp</literal>,
+passing the values of <literal>i</literal>, <literal>s</literal>
+and the filename of <literal>bf</literal> as command line arguments.
 			</para>
 </section>
 
 <section id="procedures.compound"><title>Compound procedures</title>
 			<para>
-A compound procedure contains a set of calls to other procedures. Shared
-variables in the body of a compound procedure specify data dependencies
-and thus the execution sequence of the procedure calls. For simple 
-illustration, we define a compound procedure in below:
+A compound procedure contains a set of SwiftScript statements:
 
 <programlisting>
 (type2 b) foo_bar (type1 a) {
@@ -659,41 +666,9 @@ illustration, we define a compound procedure in below:
 }
 </programlisting>
 		</para>
-		</section>
-	</section>
-		<section>
-			<title>Syntax, Statements</title>
-<para>The syntax of SwiftScript has a superficial resemblance to C and
-Java. For example, { and } characters are used to enclose blocks of
-statements.
-</para>
-			<para>
-A SwiftScript program consists of a number of statements.
-Statements may declare types, procedures and variables, assign values to
-variables, and express operations over arrays.
-			</para>
-		</section>
-		<section>
-			<title>Multivalued procedure invocation statements</title>
-<para>
-Procedures can return more than one value. In such case, the previously
-mentioned declaration and assignment statements are insufficient. A
-multi-valued procedure invocation can be used. This has the general
-form:
-
-<programlisting>
-'(' ((type)? variableName ( '=' binding ))+ ')' = procedureinvocation
-</programlisting>
-
-Variables can be either declared (if a type is included) or assigned (if
-a type is not included). If no bindings are specified, then variables
-are assigned in the same order that they are specified in the
-procedure declaration. If bindings are specified, then variables are
-assigned to the named return parameter.
-</para>
 
 		</section>
-	
+</section>	
 		<section>
 			<title>Control Constructs</title>
 			<para>
@@ -793,6 +768,7 @@ termination expression.
 				</para>
 			</section>
 		</section>
+	</section>
 
 	<section><title>Operators</title>
 
@@ -818,8 +794,7 @@ SwiftScript expressions.
 </table>
 	</section>
 
-	</section>
-
+</section>
 		<section id="mappers">
 		<title>Mappers</title>
 		<para>
