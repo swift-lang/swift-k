@@ -2668,79 +2668,6 @@ local directory can be much faster than having applications access the
 site-shared filesystem directly.
 		</para>
 	</section>
-	<section id="localhowtos"><title>How-To Tips for Specific User Communities</title>
-		<section id="savinglogs"><title>Saving Logs - for UChicago CI Users</title>
-			<para>
-If you have a UChicago Computation Institute account, run this command in your 
-submit directory after each run. It will copy all your logs and kickstart 
-records into a directory at the CI for reporting, usage tracking, support and debugging.
-			</para>
-			<para>
-<screen>
-rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
-</screen>
-			</para>
-		</section>
-		<section><title>Specifying TeraGrid allocations</title>
-<para>TeraGrid users with no default project or with several project
-allocations can specify a project allocation using a profile key in
-the site catalog entry for a TeraGrid site:
-<screen>
-&lt;profile namespace="globus" key="project"&gt;TG-CCR080002N&lt;/profile&gt;
-</screen>
-</para>
-
-<para>
-More information on the TeraGrid allocations process can
-be found <ulink url="http://www.teragrid.org/userinfo/access/allocations.php">here</ulink>.
-</para>
-
-		</section>
-		<section id="tips.mpi"><title>Launching MPI jobs from Swift</title>
-<para>
-Here is an example of running a simple MPI program.
-</para>
-<para>
-In SwiftScript, we make an invocation that does not look any different
-from any other invocation. In the below code, we do not have any input
-files, and have two output files on stdout and stderr:
-<programlisting>
-type file;
-
-(file o, file e) p() { 
-    app {
-        mpi stdout=@filename(o) stderr=@filename(e);
-    }
-}
-
-file mpiout &lt;"mpi.out">;
-file mpierr &lt;"mpi.err">;
-
-(mpiout, mpierr) = p();
-</programlisting>
-</para>
-<para>
-Now we define how 'mpi' will run in tc.data:
-<programlisting>
-tguc    mpi             /home/benc/mpi/mpi.sh   INSTALLED       INTEL32::LINUX GLOBUS::host_xcount=3
-</programlisting>
-</para>
-<para>
-mpi.sh is a wrapper script that launches the MPI program. It must be installed
-on the remote site:
-<programlisting>
-#!/bin/bash
-mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
-</programlisting>
-</para>
-<para>
-Because of the way that Swift runs its server side code, provider-specific
-MPI modes (such as GRAM jobType=mpi) should not be used. Instead, the
-mpirun command should be explicitly invoked.
-</para>
-		</section>
-	</section>
-
 	<section id="sitecatalog"><title>The Site Catalog - sites.xml</title>
 		<para>
 The site catalog lists details of each site that Swift can use. The default
@@ -3213,6 +3140,79 @@ of a coaster head job, not for file transfer; so for example, a GRAM
 endpoint should be specified here rather than a GridFTP endpoint.
 </para>
 	</section>
+	<section id="localhowtos"><title>How-To Tips for Specific User Communities</title>
+		<section id="savinglogs"><title>Saving Logs - for UChicago CI Users</title>
+			<para>
+If you have a UChicago Computation Institute account, run this command in your 
+submit directory after each run. It will copy all your logs and kickstart 
+records into a directory at the CI for reporting, usage tracking, support and debugging.
+			</para>
+			<para>
+<screen>
+rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
+</screen>
+			</para>
+		</section>
+		<section><title>Specifying TeraGrid allocations</title>
+<para>TeraGrid users with no default project or with several project
+allocations can specify a project allocation using a profile key in
+the site catalog entry for a TeraGrid site:
+<screen>
+&lt;profile namespace="globus" key="project"&gt;TG-CCR080002N&lt;/profile&gt;
+</screen>
+</para>
+
+<para>
+More information on the TeraGrid allocations process can
+be found <ulink url="http://www.teragrid.org/userinfo/access/allocations.php">here</ulink>.
+</para>
+
+		</section>
+		<section id="tips.mpi"><title>Launching MPI jobs from Swift</title>
+<para>
+Here is an example of running a simple MPI program.
+</para>
+<para>
+In SwiftScript, we make an invocation that does not look any different
+from any other invocation. In the below code, we do not have any input
+files, and have two output files on stdout and stderr:
+<programlisting>
+type file;
+
+(file o, file e) p() { 
+    app {
+        mpi stdout=@filename(o) stderr=@filename(e);
+    }
+}
+
+file mpiout &lt;"mpi.out">;
+file mpierr &lt;"mpi.err">;
+
+(mpiout, mpierr) = p();
+</programlisting>
+</para>
+<para>
+Now we define how 'mpi' will run in tc.data:
+<programlisting>
+tguc    mpi             /home/benc/mpi/mpi.sh   INSTALLED       INTEL32::LINUX GLOBUS::host_xcount=3
+</programlisting>
+</para>
+<para>
+mpi.sh is a wrapper script that launches the MPI program. It must be installed
+on the remote site:
+<programlisting>
+#!/bin/bash
+mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
+</programlisting>
+</para>
+<para>
+Because of the way that Swift runs its server side code, provider-specific
+MPI modes (such as GRAM jobType=mpi) should not be used. Instead, the
+mpirun command should be explicitly invoked.
+</para>
+		</section>
+	</section>
+
 
 </article>
 
