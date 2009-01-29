@@ -1682,6 +1682,32 @@ print(out);
 will output the message 'Your name is John'.
 			</para>
 		</section>
+		
+		<section id="function.strsplit"><title>@strsplit</title>
+			<para>
+@strsplit(input,pattern) will split the input string based on separators
+that match the given pattern and return a string array.
+			</para>
+			<para>
+Example:
+			</para>
+
+			<programlisting>
+string t = "my name is John and i like puppies.";
+string words[] = @strsplit(t, "\\s");
+foreach word in words {
+	print(word);
+}
+			</programlisting>
+
+			<para>
+will output one word of the sentence on each line (though
+not necessarily in order, due to the fact that foreach 
+iterations execute in parallel).
+			</para>
+		</section>
+
+		
 		<section id="function.toint"><title>@toint</title>
 			<para>
 @toint(input) will parse its input string into an integer. This can be

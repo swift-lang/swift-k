@@ -182,6 +182,15 @@ public class ProcedureSignature {
 		strcut.addOutputArg(strcutOut1);
 		functionsMap.put(strcut.getName(), strcut);
 		
+		ProcedureSignature strsplit = new ProcedureSignature("strsplit");
+        FormalArgumentSignature strsplitIn1 = new FormalArgumentSignature("string");
+        strsplit.addInputArg(strsplitIn1);
+        FormalArgumentSignature strsplitIn2 = new FormalArgumentSignature("string");
+        strsplit.addInputArg(strsplitIn2);
+        FormalArgumentSignature strsplitOut1 = new FormalArgumentSignature("string[]");
+        strsplit.addOutputArg(strsplitOut1);
+        functionsMap.put(strsplit.getName(), strsplit);
+		
 		ProcedureSignature toint = new ProcedureSignature("toint");
 		FormalArgumentSignature tointIn1 = new FormalArgumentSignature("string");
 		toint.addInputArg(tointIn1);

@@ -12,6 +12,8 @@ import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Types;
@@ -28,6 +30,7 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
+		setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
 	}
@@ -88,6 +91,22 @@ public class Misc extends FunctionsCollection {
 		handle.closeShallow();
 		return handle;
 	}
+	
+	public DSHandle swiftscript_strsplit(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+            InvalidPathException {
+        String str = TypeUtil.toString(PA_INPUT.getValue(stack));
+        String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
+        
+        String[] split = str.split(pattern);
+        
+        DSHandle handle = new RootArrayDataNode(Types.STRING.arrayType());
+        for (int i = 0; i < split.length; i++) {
+            DSHandle el = handle.getField(Path.EMPTY_PATH.addFirst(String.valueOf(i), true));
+            el.setValue(split[i]);
+        }
+        handle.closeDeep();
+        return handle;
+    }
 
 	public DSHandle swiftscript_regexp(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
