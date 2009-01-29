@@ -2677,29 +2677,29 @@ commented-out example entries for other sites.
 
 		<para>
 By default, the site catalog is stored in <filename>etc/sites.xml</filename>.
-This path can be overridden with the sites.file configuration property,
+This path can be overridden with the <literal>sites.file</literal> configuration property,
 either in the Swift configuration file or on the command line.
 		</para>
 
 		<para>
-The sites file is formatted as XML. It consists of &lt;pool&gt; elements,
+The sites file is formatted as XML. It consists of <literal>&lt;pool&gt;</literal> elements,
 one for each site that Swift will use.
 		</para>
 
 		<section><title>Pool element</title>
 		<para>
-Each pool element must have a handle attribute, giving a symbolic name
+Each <literal>pool</literal> element must have a <literal>handle</literal> attribute, giving a symbolic name
 for the site. This can be any name, but must correspond to entries for
 that site in the transformation catalog.
 		</para>
 
 		<para>
-Optionally, the gridlaunch attribute can be used to specify the path to
+Optionally, the <literal>gridlaunch</literal> attribute can be used to specify the path to
 <link linkend="kickstart">kickstart</link> on the site.
 		</para>
 
 		<para>
-Each pool must specify a file transfer method, an execution method
+Each <literal>pool</literal> must specify a file transfer method, an execution method
 and a remote working directory. Optionally, <link linkend="profiles">profile settings</link> can be specified.
 		</para>
 
@@ -2707,23 +2707,24 @@ and a remote working directory. Optionally, <link linkend="profiles">profile set
 <section><title>File transfer method specification</title>
 
 		<para>
-Transfer methods are specified with the &lt;gridftp&gt; element or
-with the &lt;filesystem&gt; element.
+Transfer methods are specified with either 
+the <literal>&lt;gridftp&gt;</literal> element or the 
+<literal>&lt;filesystem&gt;</literal> element.
 		</para>
 		<para>
-To use gridftp or local filesystem copy, use the &lt;gridftp&gt;
+To use gridftp or local filesystem copy, use the <literal>&lt;gridftp&gt;</literal>
 element:
 <screen>
 &lt;gridftp  url="gsiftp://evitable.ci.uchicago.edu" /&gt;
 </screen>
-The URL attribute may specify a GridFTP server, using the gsiftp URI scheme;
+The <literal>url</literal> attribute may specify a GridFTP server, using the gsiftp URI scheme;
 or it may specify that filesystem copying will be used (which assumes that
 the site has access to the same filesystem as the submitting machine) using
-the URI local://localhost.
+the URI <literal>local://localhost</literal>.
 		</para>
 		<para>
 Filesystem access using scp (the SSH copy protocol) can be specified using the
-&lt;filesystem&gt; element:
+<literal>&lt;filesystem&gt;</literal> element:
 <screen>
 &lt;filesystem url="www11.i2u2.org" provider="ssh"/&gt;
 </screen>
@@ -2732,7 +2733,7 @@ provider documentation below.
 		</para>
 		<para>
 Filesystem access using <link linkend="coasters">CoG coasters</link> can be
-also be specified using the &lt;filesystem&gt; element. More detail about
+also be specified using the <literal>&lt;filesystem&gt;</literal> element. More detail about
 configuring that can be found in the <link linkend="coasters">CoG
 coasters</link> section.
 		</para>
@@ -2741,52 +2742,55 @@ coasters</link> section.
 <section><title>Execution method specification</title>
 
 		<para>
-Execution methods may be specified either with a &lt;jobmanager&gt; or
-&lt;execution&gt; element.
+Execution methods may be specified either with the <literal>&lt;jobmanager&gt;</literal>
+or <literal>&lt;execution&gt;</literal> element.
 		</para>
 
 		<para>
-The &lt;jobmanager&gt; element can be used to specify execution through
-GRAM2. For example,
+The <literal>&lt;jobmanager&gt;</literal> element can be used to specify
+execution through GRAM2. For example,
 <screen>
     &lt;jobmanager universe="vanilla" url="evitable.ci.uchicago.edu/jobmanager-fork" major="2" /&gt;
 </screen>
-The universe attribute should always be set to vanilla. The url attribute
+The <literal>universe</literal> attribute should always be set to vanilla. The
+<literal>url</literal> attribute
 should specify the name of the GRAM2 gatekeeper host, and the name of the
 jobmanager to use. The major attribute should always be set to 2.
 		</para>
 
 		<para>
-The &lt;execution&gt; element can be used to specify execution through
-other execution providers:
+The <literal>&lt;execution&gt;</literal> element can be used to specify
+execution through other execution providers:
 		</para>
 		<para>
-To use GRAM4, specify the gt4 provider. For example:
+To use GRAM4, specify the <literal>gt4</literal> provider. For example:
 <screen>
 &lt;execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" /&gt;
 </screen>
-The url attribute should specify the GRAM4 submission site. The jobmanager
+The <literal>url</literal> attribute should specify the GRAM4 submission site.
+The <literal>jobmanager</literal>
 attribute should specify which GRAM4 jobmanager will be used.
 		</para>
 
 		<para>
-For local execution, the local provider should be used, like this:
+For local execution, the <literal>local</literal> provider should be used,
+like this:
 <screen>
 &lt;execution provider="local" url="none" /&gt;
 </screen>
 		</para>
 
 		<para>
-For PBS execution, the pbs provider should be used:
+For PBS execution, the <literal>pbs</literal> provider should be used:
 <screen>
 &lt;execution provider="pbs" url="none" /&gt;
 </screen>
-The <link linkend="profile.globus.queue">GLOBUS::queue</link> profile key
+The <literal><link linkend="profile.globus.queue">GLOBUS::queue</link></literal> profile key
 can be used to specify which PBS queue jobs will be submitted to.
 		</para>
 
 		<para>
-For execution through SSH, the ssh provider should be used:
+For execution through SSH, the <literal>ssh</literal> provider should be used:
 <screen>
 &lt;execution url="www11.i2u2.org" provider="ssh"/&gt;
 </screen>
@@ -2801,7 +2805,7 @@ www11.i2u2.org.passphrase=XXXX
 		</para>
 		<para>
 For execution using the 
-<link linkend="coasters">CoG Coaster mechanism</link>, the coaster provider
+<link linkend="coasters">CoG Coaster mechanism</link>, the <literal>coaster</literal> provider
 should be used:
 <screen>
 &lt;execution provider="coaster" url="tg-grid.uc.teragrid.org"
@@ -2814,13 +2818,13 @@ More details about configuration of coasters can be found in the
 <section><title>Other site catalog parameters</title>
 
 		<para>
-The workdirectory element specifies where on the site files can be
+The <literal>workdirectory</literal> element specifies where on the site files can be
 stored.
 <screen>
 &lt;workdirectory&gt;/home/benc&lt;/workdirectory&gt;
 </screen>
 This file must be accessible through the transfer mechanism specified
-in the &lt;gridftp&gt; element and also mounted on all worker nodes that
+in the <literal>&lt;gridftp&gt;</literal> element and also mounted on all worker nodes that
 will be used for execution. A shared cluster scratch filesystem is
 appropriate for this. 
 		</para>
