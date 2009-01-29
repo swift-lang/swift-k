@@ -513,41 +513,6 @@ of this guide.
 
 </section>
 
-		<section>
-			<title>Type System</title>
-			<para>
-The SwiftScript type system consists of a number of <firstterm>simple
-types</firstterm>, <firstterm>marker types</firstterm> for files,
-arrays, and <firstterm>complex types</firstterm> composed of these types.
-			</para>
-			<para>
-The simple types are: string, float, int and boolean.
-			</para>
-
-			<para>
-Complex types are specified using the <firstterm>type</firstterm>
-keyword. The syntax is similar to struct in C or class in Java.
-For example, the below example declares a complex type with two
-members, a string called name and an integer called age.
-<programlisting>
-type person {
-	string name;
-	int age;
-}
-</programlisting>
-		</para>
-		
-		<para>
-When referring to files on disk, the internal structure of the
-file is irrelevant; but it is still useful to declare types for those
-files so that Swift can perform type-checking on SwiftScript programs.
-In this case, a marker type can be declared, like this:
-
-<programlisting>
-type binaryfile;
-</programlisting>
-		</para>
-		</section>
 		</section>
 
 		<section><title>Variables</title>
