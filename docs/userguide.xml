@@ -1465,97 +1465,6 @@ The <command>swift</command> command may exit with the following return codes:
 	</para>
 	</section>
 	</section>
-
-	<section id="kickstart"> <title>Kickstart</title>
-		<para>
-
-Kickstart is a tool that can be used to gather various information 
-about the remote execution environment for each job that Swift tries
-to run.
-		</para>
-
-		<para>
-For each job, Kickstart generates an XML <firstterm>invocation
-record</firstterm>. By default this record is staged back to the submit
-host if the job fails.
-		</para>
-
-		<para>
-Before it can be used it must be installed on the remote site and
-the sites file must be configured to point to kickstart.
-		</para>
-
-		<para>
-Kickstart can be downloaded as part of the Pegasus 'worker package' available
-from the worker packages section of <ulink url="http://pegasus.isi.edu/code.php">the Pegasus download page</ulink>.
-		</para>
-		<para>
-Untar the relevant worker package somewhere where it is visible to all of the
-worker nodes on the remote execution machine (such as in a shared application
-filesystem).
-		</para>
-
-<para>Now configure the gridlaunch attribute of the sites catalog
-to point to that path, by adding a <parameter>gridlaunch</parameter>
-attribute to the <function>pool</function> element in the site
-catalog:
-
-<programlisting>
-
-&lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
-[...]
-&lt;/pool&gt;
-
-</programlisting>
-
-		</para>
-
-		<para>
-There are various kickstat.* properties, which have sensible default
-values. These are documented in <link linkend="engineconfiguration">the
-properties section</link>.
-		</para>
-
-
-
-	</section>
-
-	<section id="restart"> <title>Workflow restart/recovery</title>
-		<para>
-If a run fails, Swift can resume the program from the point of
-failure. When a run fails, a restart log file will be left behind in
-a file named using the unique job ID and a .rlog extension. This restart log
-can then be passed to a subsequent Swift invocation using the -resume
-parameter. Swift will resume execution, avoiding execution of invocations
-that have previously completed successfully. The SwiftScript source file
-and input data files should not be modified between runs.
-		</para>
-		<para>
-Every run creates a restart
-log file with a named composed of the file name of the workflow
-being executed, an invocation ID, a numeric ID, and the <filename
-class="file">.rlog</filename> extension. For example, <filename
-class="file">example.swift</filename>, when executed, could produce
-the following restart log file: <filename
-class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
-the run completes successfully, the restart log file is
-deleted. If however the workflow fails, <command>swift</command>
-can use the restart log file to continue
-execution from a point before the
-failure occurred. In order to restart from a restart log
-file, the <option>-resume <parameter><filename
-class="file">logfile</filename></parameter></option> argument can be
-used after the SwiftScript program file name. Example:
-
-<screen>
-<prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
-class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
-class="file">example.swift</filename></option>.
-</screen>
-
-		</para>
-	</section> 
-
 	<section id="appmodel"> <title>Invoking an application from Swift</title>
 	<para>
 There are certain requirements on the behaviour of application programs
@@ -3105,6 +3014,97 @@ $ <userinput>ant -Dno-supporting=true redist</userinput>
 </screen>
 		</para>
 	</section>
+
+	<section id="kickstart"> <title>Kickstart</title>
+		<para>
+
+Kickstart is a tool that can be used to gather various information 
+about the remote execution environment for each job that Swift tries
+to run.
+		</para>
+
+		<para>
+For each job, Kickstart generates an XML <firstterm>invocation
+record</firstterm>. By default this record is staged back to the submit
+host if the job fails.
+		</para>
+
+		<para>
+Before it can be used it must be installed on the remote site and
+the sites file must be configured to point to kickstart.
+		</para>
+
+		<para>
+Kickstart can be downloaded as part of the Pegasus 'worker package' available
+from the worker packages section of <ulink url="http://pegasus.isi.edu/code.php">the Pegasus download page</ulink>.
+		</para>
+		<para>
+Untar the relevant worker package somewhere where it is visible to all of the
+worker nodes on the remote execution machine (such as in a shared application
+filesystem).
+		</para>
+
+<para>Now configure the gridlaunch attribute of the sites catalog
+to point to that path, by adding a <parameter>gridlaunch</parameter>
+attribute to the <function>pool</function> element in the site
+catalog:
+
+<programlisting>
+
+&lt;pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX"&gt;
+[...]
+&lt;/pool&gt;
+
+</programlisting>
+
+		</para>
+
+		<para>
+There are various kickstat.* properties, which have sensible default
+values. These are documented in <link linkend="engineconfiguration">the
+properties section</link>.
+		</para>
+
+
+
+	</section>
+
+	<section id="restart"> <title>Workflow restart/recovery</title>
+		<para>
+If a run fails, Swift can resume the program from the point of
+failure. When a run fails, a restart log file will be left behind in
+a file named using the unique job ID and a .rlog extension. This restart log
+can then be passed to a subsequent Swift invocation using the -resume
+parameter. Swift will resume execution, avoiding execution of invocations
+that have previously completed successfully. The SwiftScript source file
+and input data files should not be modified between runs.
+		</para>
+		<para>
+Every run creates a restart
+log file with a named composed of the file name of the workflow
+being executed, an invocation ID, a numeric ID, and the <filename
+class="file">.rlog</filename> extension. For example, <filename
+class="file">example.swift</filename>, when executed, could produce
+the following restart log file: <filename
+class="file">example-ht0adgi315l61.0.rlog</filename>. Normally, if
+the run completes successfully, the restart log file is
+deleted. If however the workflow fails, <command>swift</command>
+can use the restart log file to continue
+execution from a point before the
+failure occurred. In order to restart from a restart log
+file, the <option>-resume <parameter><filename
+class="file">logfile</filename></parameter></option> argument can be
+used after the SwiftScript program file name. Example:
+
+<screen>
+<prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
+class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
+class="file">example.swift</filename></option>.
+</screen>
+
+		</para>
+	</section> 
+
 
 	<section id="clustering"><title>Clustering</title>
 		<para>
