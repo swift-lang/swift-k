@@ -5,6 +5,7 @@ LMD5=$3
 ID=$4
 H=$5
 L=$6
+
 error() {
 	echo $1
 	echo $1 >>$L
@@ -44,11 +45,19 @@ echo "Computed checksum: $AAMD5" >>$L
 if [ "$AAMD5" != "$EMD5" ]; then
 	error "Bootstrap jar checksum failed: $EMD5 != $AAMD5"
 fi
-if [ "X$JAVA_HOME" != "X" ]; then
-	JAVA=$JAVA_HOME/bin/java
-else
+
+if [ "X$JAVA_HOME" == "X" ]; then
+	JAVA_HOME=`/bin/bash -l -c 'echo $JAVA_HOME'`
+fi
+
+if [ "X$JAVA_HOME" == "X" ]; then
 	JAVA=`which java`
+	if [ "$?" != "0" ]; then
+		JAVA=`/bin/bash -l -c 'which java'`
+	fi
 	JAVA_HOME=$(dirname $JAVA)/..
+else 
+	JAVA=$JAVA_HOME/bin/java
 fi
 echo "JAVA=$JAVA" >>$L
 if [ -x $JAVA ]; then 
