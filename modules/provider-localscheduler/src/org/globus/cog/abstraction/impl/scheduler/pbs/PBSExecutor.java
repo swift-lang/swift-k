@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
@@ -161,6 +162,13 @@ public class PBSExecutor implements ProcessListener {
             wr.write("#PBS " + arg + String.valueOf(value) + '\n');
         }
     }
+    
+    protected void writeWallTime(Writer wr) throws IOException {
+        Object walltime = spec.getAttribute("maxwalltime");
+        if (walltime != null) {
+            wr.write("#PBS -l walltime=" + WallTime.normalize(walltime.toString(), "pbs-native"));
+        }
+    }
 
     protected void writePBSScript(Writer wr, String exitcodefile,
             String stdout, String stderr) throws IOException {
@@ -169,7 +177,7 @@ public class PBSExecutor implements ProcessListener {
         wr.write("#PBS -m n\n");
         writeAttr("project", "-A ", wr);
         writeAttr("count", "-l nodes=", wr);
-        writeAttr("maxwalltime", "-l walltime=", wr);
+        writeWallTime(wr);
         writeAttr("queue", "-q ", wr);
         if (spec.getStdInput() != null) {
             throw new IOException("The PBSlocal provider cannot redirect STDIN");
