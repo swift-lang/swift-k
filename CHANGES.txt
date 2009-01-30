@@ -1,3 +1,6 @@
+(01/23/09)
+*** Swift 0.8 built from Swift SVN r2448 and cog SVN r2261
+
 (01/14/09)
 *** Application success/failure status reporting can now be done using
     CoG provider status, rather than the previous only choice of
