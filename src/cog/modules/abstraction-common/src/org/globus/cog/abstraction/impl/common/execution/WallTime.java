@@ -21,6 +21,8 @@ public class WallTime {
         FORMATTERS.put(null, DEFAULT_FORMATTER);
         FORMATTERS.put("default", DEFAULT_FORMATTER);
         FORMATTERS.put("pbs", new PBSFormatter());
+        FORMATTERS.put("globus-jobmanager-pbs", new PBSFormatter());
+        FORMATTERS.put("pbs-native", new NativePBSFormatter());
     }
 
     public static Formatter getFormatter(String type) {
@@ -104,6 +106,10 @@ public class WallTime {
         System.out.println(format(timeToSeconds("10:00")));
         System.out.println(format(timeToSeconds("1:10:01")));
         System.out.println(format(timeToSeconds("10")));
+        System.out.println(normalize("10:00", "pbs-native"));
+        System.out.println(normalize("1:10:01", "pbs-native"));
+        System.out.println(normalize("10", "pbs-native"));
+        System.out.println(normalize("2:35:50", "pbs-native"));
     }
 
     public static interface Formatter {
@@ -116,6 +122,40 @@ public class WallTime {
         }
     }
 
+    private static class HHMMSSFormatter implements Formatter {
+    	
+        private static int seconds(int secondsInterval) {
+            return secondsInterval % 60;
+        }
+
+        private static int minutes(int secondsInterval) {
+            return (secondsInterval / 60) % 60;
+        }
+
+        private static int hours(int secondsInterval) {
+            return secondsInterval / 3600;
+        }
+
+        public String format(int seconds) {
+            StringBuffer sb = new StringBuffer();
+            pad(sb, hours(seconds));
+            sb.append(':');
+            pad(sb, minutes(seconds));
+            sb.append(':');
+            pad(sb, seconds(seconds));
+            return sb.toString();
+        }
+    }
+
     private static class PBSFormatter extends DefaultFormatter {
+    }
+
+    /**
+     * http://www.clusterresources.com/wiki/doku.php?id=torque:2.1_job_submission
+     * 
+     * Seconds or [[HH:]MM:]SS
+     * 
+     */
+    private static class NativePBSFormatter extends HHMMSSFormatter {
     }
 }
