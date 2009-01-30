@@ -246,7 +246,6 @@ public class ServiceManager implements StatusListener {
             t.setType(Task.JOB_SUBMISSION);
             JobSpecification js = new JobSpecificationImpl();
             js.setExecutable("/bin/bash");
-            js.addArgument("-l");
             js.addArgument("-c");
             js.addArgument(loadBootstrapScript());
             js.addArgument(getBootstrapServiceURL());
