@@ -1686,7 +1686,7 @@ will output the message 'Your name is John'.
 		<section id="function.strsplit"><title>@strsplit</title>
 			<para>
 @strsplit(input,pattern) will split the input string based on separators
-that match the given pattern and return a string array.
+that match the given pattern and return a string array. (since Swift 0.9)
 			</para>
 			<para>
 Example:
@@ -2640,14 +2640,14 @@ is used by the <link linkend="coasters">coaster execution provider</link>.
 specifies the maxwalltime to be used when submitting coaster workers. This
 profile entry is used by the <link linkend="coasters">coaster execution
 provider</link>. If this entry is not specified, the coaster provider
-will compute a maxwalltime based on the maxwalltime of jobs submitted. (since 0.9)
+will compute a maxwalltime based on the maxwalltime of jobs submitted. (since Swift 0.9)
 			</para>
 			<para id="profile.globus.coasterInternalIP"><literal>coasterInternalIP</literal>
 specifies the internal address of the coaster head node, to be used by
 coaster workers to communicate with the coaster head node. This can be used
 when the address determined automatically by the coaster provider
 is inaccessible from coaster workers (for example, when the workers
-reside on an unrouted internal network). (since 0.9)
+reside on an unrouted internal network). (since Swift 0.9)
 			</para>
 		</section>
 
