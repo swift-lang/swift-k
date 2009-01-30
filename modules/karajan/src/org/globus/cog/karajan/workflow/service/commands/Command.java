@@ -29,7 +29,7 @@ public abstract class Command extends RequestReply {
 	private static final Timer timer;
 
 	static {
-		timer = new Timer();
+		timer = new Timer(true);
 	}
 
 	public static final int DEFAULT_REPLY_TIMEOUT = 30 * 1000; //30 seconds
