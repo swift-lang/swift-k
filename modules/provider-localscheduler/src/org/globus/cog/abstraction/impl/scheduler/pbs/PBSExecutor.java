@@ -99,10 +99,16 @@ public class PBSExecutor implements ProcessListener {
             int code = process.waitFor();
             process.getErrorStream().close();
             if (code != 0) {
+		String errorText = "no error output";
+		try {
+			errorText = getOutput(process.getErrorStream());
+		} catch(Exception e) {
+			logger.debug("Ignoring exception whilst getting qsub error text",e);
+		}
                 throw new ProcessException(
                         "Could not submit job (qsub reported an exit code of "
                                 + code + "). "
-                                + getOutput(process.getErrorStream()));
+                                + errorText);
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("QSub done (exit code " + code + ")");
