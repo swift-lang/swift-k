@@ -71,6 +71,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 }
             }
             catch (Exception e) {
+e.printStackTrace();
                 if (e.getMessage() != null) {
                     throw new TaskSubmissionException("Cannot submit job: "
                             + e.getMessage(), e);
