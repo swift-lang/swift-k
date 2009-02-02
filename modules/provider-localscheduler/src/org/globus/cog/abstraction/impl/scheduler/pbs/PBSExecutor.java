@@ -172,7 +172,7 @@ public class PBSExecutor implements ProcessListener {
     protected void writeWallTime(Writer wr) throws IOException {
         Object walltime = spec.getAttribute("maxwalltime");
         if (walltime != null) {
-            wr.write("#PBS -l walltime=" + WallTime.normalize(walltime.toString(), "pbs-native"));
+            wr.write("#PBS -l walltime=" + WallTime.normalize(walltime.toString(), "pbs-native") + '\n');
         }
     }
 
