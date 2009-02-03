@@ -1465,47 +1465,306 @@ The <command>swift</command> command may exit with the following return codes:
 	</para>
 	</section>
 	</section>
-	<section id="appmodel"> <title>Invoking an application from Swift</title>
+	<section id="appmodel"> <title>Executing <literal>app</literal> procedures</title>
 	<para>
-There are certain requirements on the behaviour of application programs
-used in SwiftScript programs. These requirements are primarily to ensure
-that the Swift can run your application in different places.
+This section describes how Swift executes <literal>app</literal> procedures,
+and requirements on the behaviour of application programs used in
+<literal>app</literal> procedures.
+These requirements are primarily to ensure
+that the Swift can run your application in different places and with the
+various fault tolerance mechanisms in place.
 	</para>
+
+<section><title>Mapping of <literal>app</literal> semantics into unix
+process execution semantics</title>
+
+<para>This section describes how an <literal>app</literal> procedure
+invocation is translated into a (remote) unix process execution. It does not
+describe the mechanisms by which Swift performs that translation; that
+is described in the next section.</para>
+
+<para>In this section, this example SwiftScript program is used
+for reference:</para>
+
+<programlisting>
+ type file;
+
+ app (file o) count(file i) {
+   wc @i stdout=@o;
+ }
+
+ file q &lt;"input.txt">;
+ file r &lt;"output.txt">;
+</programlisting>
+
 <para>
-Swift must know about all of your data files - when Swift has decided where
-to run your application, it will transfer the necessary input files there
-before execution and transfer the output files back to the submitting
-system afterwards. If Swift does not know about your files, then it cannot
-do this. The way to tell Swift about files is by mapping them to variables
-and using those variables as parameters to your application.
+The executable for wc will be looked up in tc.data.
+</para>
+
+<para>
+This unix executable will then be executed in some <firstterm>application
+procedure workspace</firstterm>. This means:
+</para>
+
+<para>
+Each application procedure workspace will have an application workspace 
+directory.  (TODO: can collapse terms //application procedure workspace// 
+and //application workspace directory// ?
+</para>
+
+<para>
+This application workspace directory will not be shared with any other 
+<firstterm>application procedure execution attempt</firstterm>; all
+application procedure 
+execution attempts will run with distinct application procedure 
+workspaces. (for the avoidance of doubt:
+ If a <firstterm>SwiftScript procedure invocation</firstterm> is subject
+to multiple application procedure execution attempts (due to Swift-level
+restarts, retries or replication) then each of those application procedure
+execution attempts will be made in a different application procedure workspace.
+)</para>
+
+<para>
+The application workspace directory will be a directory on a POSIX 
+filesystem accessible throughout the application execution by the 
+application executable.
+</para>
+
+<para>
+Before the <firstterm>application executable</firstterm> is executed:
+</para>
+
+<itemizedlist>
+
+<listitem><para>
+The application workspace directory will exist.
+</para></listitem>
+
+<listitem><para>
+The <firstterm>input files</firstterm> will exist inside the application workspace 
+directory (but not necessarily as direct children; there may be 
+subdirectories within the application workspace directory).
+</para></listitem>
+
+<listitem><para>
+The input files will be those files <firstterm>mapped</firstterm>
+to <firstterm>input parameters</firstterm> of the application procedure
+invocation. (In the example, this means that the file
+<filename>input.txt</filename> will exist in the application workspace
+directory)
+</para></listitem>
+
+<listitem><para>
+For each input file dataset, it will be the case that
+<literal>@filename</literal> or 
+<literal>@filenames</literal> invoked with that dataset as a parameter
+will return the path 
+relative to the application workspace directory for the file(s) that are 
+associated with that dataset. (In the example, that means that <literal>@i</literal> will 
+evaluate to the path <filename>input.txt</filename>)
+</para></listitem>
+
+<listitem><para>
+For each <firstterm>file-bound</firstterm> parameter of the Swift procedure invocation, the 
+associated files (determined by data type?) will always exist.
+</para></listitem>
+
+<listitem><para>
+The input files must be treated as read only files. This may or may not 
+be enforced by unix file system permissions. They may or may not be copies
+of the source file (conversely, they may be links to the actual source file).
+</para></listitem>
+
+</itemizedlist>
+
+<para>
+During/after the <firstterm>application executable execution</firstterm>,
+the following must be true:
+</para>
+
+<itemizedlist>
+<listitem><para>
+If the application executable execution was successful (in the opinion 
+of the application executable), then the application executable should 
+exit with <firstterm>unix return code</firstterm> <literal>0</literal>;
+if the application executable execution 
+was unsuccessful (in the opinion of the application executable), then the 
+application executable should exit with unix return code not equal to 
+<literal>0</literal>.
+</para></listitem>
+
+<listitem><para>
+Each file mapped from an output parameter of the SwiftScript procedure 
+call must exist. Files will be mapped in the same way as for input files.
 </para>
 <para>
-Applications should take the name of input and output files on the
-command line - Sometimes Swift will decide on the name of your input
-and output files automatically (for example, if you do not specify a mapping
-explicitly for an input or output variable). Swift must be able to
-tell your application which filename it has chosen, and the commandline
-is the way it does that. Use the
-<link linkend="function.filename">@filename</link> function to determine
-the filename of a variable.
-</para>
+(? Is it defined that output subdirectories will be precreated before 
+execution or should app executables expect to make them? That's probably 
+determined by the present behaviour of wrapper.sh)
+</para></listitem>
+
+<listitem><para>
+Output produced by running the application executable on some inputs should
+be the same no matter how many times, when or where that application
+executable is run. 'The same' can vary depending on application (for example,
+in an application it might be acceptable for a PNG->JPEG conversion to
+produce different, similar looking, output jpegs depending on the
+environment)
+</para></listitem>
+
+</itemizedlist>
+
 <para>
-Applications should not assume that they are running in a particular
-location or on a particular host - Swift will decide which site to run
-a job on automatically (based on the sites that it knows have the
-application installed, by looking at the transformation catalog). On that
-site, it will create a unique working directory every time that it runs
-your jobs. Your job should expect to be run in an arbitrary working directory
-on any of the available hosts.
+Things to not assume:
 </para>
+
+<itemizedlist>
+
+<listitem><para>
+anything about the path of the application workspace directory
+</para></listitem>
+
+<listitem><para>
+that either the application workspace directory will be deleted or will 
+continue to exist or will remain unmodified after execution has finished
+</para></listitem>
+
+<listitem><para>
+that files can be passed(?def) between application procedure invocations 
+through any mechanism except through files known to Swift through the 
+mapping mechanism (there is some exception here for <literal>extern</literal>
+datasets - there are a separate set of assertions that hold for 
+<literal>extern</literal> datasets)
+</para></listitem>
+
+<listitem><para>
+that application executables will run on any particular site of those
+available, or than any combination of applications will run on the same or
+different sites.
+</para></listitem>
+
+</itemizedlist>
+
+</section>
+
+<section><title>
+notes on how swift implements file input and output
+</title>
+
 <para>
-Running your application on the same input files multiple times should
-always give equivalent output files. Swift expects to be able to run a job
-multiple times, perhaps on the same site, perhaps on different sites, in
-order to deal with error conditions. For example, applications should not
-make modifications to external databases that causes their output to
-differ if they are run more than once.
+This section describes the implementation of the semantics described
+in the previous section.
 </para>
+
+<para>
+Swift executes application procedures on one or more <firstterm>sites</firstterm>.
+</para>
+
+<para>
+Each site consists of:
+</para>
+
+<itemizedlist>
+<listitem><para>
+worker nodes. There is some <firstterm>execution mechanism</firstterm>
+through which the Swift client side executable can execute its
+<firstterm>wrapper script</firstterm> on those 
+worker nodes. This is commonly GRAM or Falkon or coasters.
+</para></listitem>
+
+<listitem><para>
+a site-shared file system. This site shared filesystem is accessible 
+through some <firstterm>file transfer mechanism</firstterm> from the
+Swift client side 
+executable. This is commonly GridFTP or coasters. This site shared 
+filesystem is also accessible through the posix file system on all worker 
+nodes, mounted at the same location as seen through the file transfer 
+mechanism. Swift is configured with the location of some <firstterm>site working 
+directory</firstterm> on that site-shared file system.
+</para></listitem>
+</itemizedlist>
+
+<para>
+There is no assumption that the site shared file system for one site is 
+accessible from another site.
+</para>
+
+<para>
+For each workflow run, on each site that is used by that run, a <firstterm>run 
+directory</firstterm> is created in the site working directory, by the Swift client 
+side.
+</para>
+
+<para>
+In that run directory are placed several subdirectories:
+</para>
+
+<itemizedlist>
+<listitem><para>
+<filename>shared/</filename> - site shared files cache
+</para></listitem>
+
+<listitem><para>
+<filename>kickstart/</filename> - when kickstart is used, kickstart record files 
+for each job that has generated a kickstart record.
+</para></listitem>
+
+
+<listitem><para>
+<filename>info/</filename> - wrapper script log files
+</para></listitem>
+
+<listitem><para>
+<filename>status/</filename> - job status files
+</para></listitem>
+
+<listitem><para>
+<filename>jobs/</filename>  //application workspace directories// (optionally placed here - 
+see below)
+</para></listitem>
+</itemizedlist>
+
+<para>
+Application execution looks like this:
+</para>
+
+<para>
+For each application procedure call:
+</para>
+
+<para>
+The Swift client side selects a site; copies the input files for that 
+procedure call to the site shared file cache if they are not already in 
+the cache, using the file transfer mechanism; and then invokes the wrapper 
+script on that site using the execution mechanism.
+</para>
+
+<para>
+The wrapper script creates the application workspace directory; places the 
+input files for that job into the application workspace directory using 
+either <literal>cp</literal> or <literal>ln -s</literal> (depending on a configuration option); executes the 
+application unix executable; copies output files from the application 
+workspace directory to the site shared directory using <literal>cp</literal>; creates a 
+status file under the <filename>status/</filename> directory; and exits, returning control to
+the Swift client side. Logs created during the execution of the wrapper 
+script are stored under the <filename>info/</filename> directory.
+</para>
+
+<para>
+The Swift client side then checks for the presence of and deletes a status 
+file indicating success; copies files from the site shared directory to 
+the appropriate client side location.
+</para>
+
+<para>
+The job directory is created (in the default mode) under the <filename>jobs/</filename> 
+directory. However, it can be created under an arbitrary other path, which 
+allows it to be created on a different file system (such as a worker node 
+local file system in the case that the worker node has a local file 
+system).
+</para>
+
+</section>
 <imagedata fileref="swift-site-model.png" />
 	</section>
 
