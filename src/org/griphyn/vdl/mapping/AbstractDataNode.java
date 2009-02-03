@@ -331,7 +331,7 @@ public abstract class AbstractDataNode implements DSHandle {
 	public void getFringePaths(List list, Path parentPath) throws HandleOpenException {
 		checkMappingException();
 		if (getField().getType().getBaseType() != null) {
-			list.add(Path.EMPTY_PATH.toString());
+			list.add(Path.EMPTY_PATH);
 		}
 		else {
 			Iterator i = getField().getType().getFields().iterator();
