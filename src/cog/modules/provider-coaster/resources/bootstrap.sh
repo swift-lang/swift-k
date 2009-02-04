@@ -12,28 +12,35 @@ error() {
 	rm -f $DJ
 	exit 1
 }
+find() {
+	R=`eval $1 2>/dev/null`
+	if [ "X$R" == "X" ]; then
+		R=`/bin/bash -l -c "$1"`
+	fi
+	echo $R
+}
 if [ "$L" == "" ]; then
 	L=~/coaster-boot-$ID.log 
 fi
 DJ=`mktemp /tmp/bootstrap.XXXXXX`
 echo "BS: $BS" >>$L
-WGET=`which wget 2>/dev/null`
+WGET=`find 'which wget'`
 if [ "X$WGET" == "X" ]; then
-	WGET=`which curl 2>/dev/null`
+	WGET=`find 'which curl'`
 	if [ "X$WGET" == "X" ]; then
 		error "No wget or curl available"
 	fi
-	WGET="curl -O $DJ $BS/coaster-bootstrap.jar >>$L 2>&1"
+	WGET="$WGET -O $DJ $BS/coaster-bootstrap.jar >>$L 2>&1"
 else
-	WGET="wget -c -q $BS/coaster-bootstrap.jar -O $DJ >>$L 2>&1"
+	WGET="$WGET -c -q $BS/coaster-bootstrap.jar -O $DJ >>$L 2>&1"
 fi
 eval $WGET
 if [ "$?" != "0" ]; then
 	error "Failed to download bootstrap jar from $BS"
 fi
-MD5SUM=`which gmd5sum 2>/dev/null`
+MD5SUM=`find 'which gmd5sum'`
 if [ "X$MD5SUM" == "X" ]; then
-	MD5SUM=`which md5sum 2>/dev/null`
+	MD5SUM=`find 'which md5sum'`
 	if [ "X$MD5SUM" == "X" ]; then
 		error "No md5sum or gmd5sum found"
 	fi
@@ -46,15 +53,10 @@ if [ "$AAMD5" != "$EMD5" ]; then
 	error "Bootstrap jar checksum failed: $EMD5 != $AAMD5"
 fi
 
-if [ "X$JAVA_HOME" == "X" ]; then
-	JAVA_HOME=`/bin/bash -l -c 'echo $JAVA_HOME'`
-fi
+JAVA_HOME=`find 'echo $JAVA_HOME'`
 
 if [ "X$JAVA_HOME" == "X" ]; then
-	JAVA=`which java`
-	if [ "$?" != "0" ]; then
-		JAVA=`/bin/bash -l -c 'which java'`
-	fi
+	JAVA=`find 'which java'`
 	JAVA_HOME=$(dirname $JAVA)/..
 else 
 	JAVA=$JAVA_HOME/bin/java
