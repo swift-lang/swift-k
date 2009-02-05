@@ -73,9 +73,12 @@ public class FileResourceImpl extends
                 Vector v = this.getGridFTPClient().mlsd();
                 ArrayList list = new ArrayList();
                 Iterator i = v.iterator();
+                String cwd = getCurrentDirectory() + "/";
                 while (i.hasNext()) {
-                    GridFile entry = convertEntry((MlsxEntry) i.next());
+                    GridFile entry = convertEntry((MlsxEntry) i.next(), cwd);
                     if (entry != null) {
+                        assert entry.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
+                        assert entry.getName() != null : "convertEntry returned an entry with null name";
                         list.add(entry);
                     }
                 }
@@ -88,9 +91,10 @@ public class FileResourceImpl extends
         }
     }
 
-    private GridFile convertEntry(MlsxEntry entry) {
+    private GridFile convertEntry(MlsxEntry entry, String apn) {
         GridFileImpl gfi = new GridFileImpl();
         gfi.setName(entry.getFileName());
+        gfi.setAbsolutePathName(apn+"/"+entry.getFileName());
         String perm = entry.get("unix.mode");
         if (perm != null) {
             gfi.setUserPermissions(new UnixPermissionsImpl(perm.charAt(1)));
@@ -131,8 +135,12 @@ public class FileResourceImpl extends
                 ArrayList list = new ArrayList();
                 Iterator i = v.iterator();
                 while (i.hasNext()) {
-                    GridFile gf = convertEntry((MlsxEntry) i.next());
+                    String absPath = directory;
+                    assert absPath.startsWith("/") : "absPath does not start with / - absPath = "+absPath;
+                    GridFile gf = convertEntry((MlsxEntry) i.next(), absPath);
                     if (gf != null) {
+                        assert gf.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
+                        assert gf.getName() != null : "convertEntry returned an entry with null name";
                         list.add(gf);
                     }
                 }
