@@ -1929,7 +1929,7 @@ substitution using the Java java.util.regexp API. For example:
 <programlisting>
 string v =  @regexp("abcdefghi", "c(def)g","monkey");
 </programlisting>
-will assing the value "abmonkeyhi" to the variable v.
+will assign the value "abmonkeyhi" to the variable v.
 			</para>
 		</section>
 		<section id="function.strcat"><title>@strcat</title>
