@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
            version="1.0"
-           targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript" 
-           xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
+           targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript" 
+           xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns:ns="http://ci.uchicago.edu/swift/2007/07/swiftscript">
+           xmlns:ns="http://ci.uchicago.edu/swift/2009/02/swiftscript">
   <xs:annotation>
     <xs:documentation>The XML form of SwiftScript</xs:documentation>
   </xs:annotation>
@@ -187,6 +187,9 @@
 
       </xs:sequence>
     </xs:sequence>
+
+    <xs:attribute name="src" type="xs:string" />
+
   </xs:complexType>
 
   <xs:group name="ArgumentGroup">

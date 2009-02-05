@@ -19,7 +19,7 @@ program(namespaces,targetNS,functions,types,statements,sourcelocation) ::= <<
 
 defaultNS(ns,sourcelocation) ::= <<
 $if(ns)$"$ns$"$else$
-"http://ci.uchicago.edu/swift/2007/07/swiftscript"
+"http://ci.uchicago.edu/swift/2009/02/swiftscript"
 $endif$
 >>
 
@@ -166,7 +166,7 @@ $endif$
 
 app(exec,arguments,stdin,stdout,stderr,sourcelocation) ::= <<
 <binding>
-  <application>
+  <application src="$sourcelocation$">
     <executable>$exec$</executable>
 $if(stdin)$
     $stdin$

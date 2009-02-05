@@ -1,4 +1,4 @@
-<program xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript"
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema">
   
@@ -77,7 +77,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 18">
         <executable>mProjectPP</executable>
         <stringConstant>-X</stringConstant><function name="filename">
           <variableReference>rawImage</variableReference></function><function name="filename">
@@ -158,7 +158,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 35">
         <executable>mOverlaps</executable>
         <function name="filename">
           <variableReference>imagesTbl</variableReference></function><function name="filename">
@@ -202,7 +202,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 42">
         <executable>mDiffFit</executable>
         <stringConstant>-s</stringConstant><function name="filename">
           <variableReference>statusFile</variableReference></function><function name="filename">
@@ -329,7 +329,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 66">
         <executable>mStatTbl</executable>
         <function name="filename">
           <variableReference>diffsTbl</variableReference></function><function name="filename">
@@ -358,7 +358,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 72">
         <executable>mConcatFit</executable>
         <function name="filename">
           <variableReference>statusFilesTbl</variableReference></function><function name="filename">
@@ -382,7 +382,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 78">
         <executable>mBgModel</executable>
         <function name="filename">
           <variableReference>projectedImagesTbl</variableReference></function><function name="filename">
@@ -422,7 +422,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 84">
         <executable>mBackground</executable>
         <stringConstant>-t</stringConstant><function name="filename">
           <variableReference>projectedImage</variableReference></function><function name="filename">
@@ -529,7 +529,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 101">
         <executable>mImgtbl</executable>
         <variableReference>imageDir</variableReference><function name="filename">
           <variableReference>imagesTbl</variableReference></function>  </application>
@@ -557,7 +557,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 107">
         <executable>mImgtbl</executable>
         <variableReference>imageDir</variableReference><stringConstant>-t</stringConstant><function name="filename">
           <variableReference>oldImagesTbl</variableReference></function><function name="filename">
@@ -596,7 +596,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 113">
         <executable>mAdd</executable>
         <stringConstant>-e</stringConstant><function name="filename">
           <variableReference>imagesTbl</variableReference></function><function name="filename">
@@ -621,7 +621,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 119">
         <executable>mShrink</executable>
         <function name="filename">
           <variableReference>image</variableReference></function><function name="filename">
@@ -640,7 +640,7 @@
 
      xsi:nil="true" />
     <binding>
-      <application>
+      <application src="line 125">
         <executable>mJPEG</executable>
         <stringConstant>-ct</stringConstant><integerConstant>1</integerConstant><stringConstant>-gray</stringConstant><function name="filename">
           <variableReference>image</variableReference></function><stringConstant>-1.5s</stringConstant><stringConstant>60s</stringConstant><stringConstant>gaussian</stringConstant><stringConstant>-out</stringConstant><function name="filename">

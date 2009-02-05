@@ -8,7 +8,7 @@ program(types,procedures,declarations,statements,constants) ::= <<
   <import file="vdl.k"/>
   $if(types)$
   <types>
-     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2007/07/swiftscript" xmlns="http://ci.uchicago.edu/swift/2007/07/swiftscript" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
      $types;separator="\n"$  
      </xs:schema>	 
   </types>

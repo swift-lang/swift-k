@@ -1,3 +1,11 @@
+(02/05/09)
+*** TIghter type checking on app blocks. Primitive types and arrays of
+    primitive types are permitted. Other types are prohibited.
+
+*** Arrays of primitive types can be passed to app blocks, and will be
+    expanded into multiple command-line parameters, one parameter per
+    array element.
+
 (01/23/09)
 *** Swift 0.8 built from Swift SVN r2448 and cog SVN r2261
 

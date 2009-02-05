@@ -89,5 +89,6 @@
 	<export name="pathnames"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
 	
 	<export name="execute"><elementDef classname="org.griphyn.vdl.karajan.lib.Execute"/></export>
+	<export name="expandArguments"><elementDef classname="org.griphyn.vdl.karajan.lib.ExpandArguments"/></export>
   </namespace>
 </karajan>

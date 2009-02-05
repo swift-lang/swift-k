@@ -38,13 +38,13 @@ type file {};
 
 (file sdo) twoPtHH (file gauge, file antiQ, file Q0, file Q1, file Q2) {
 	app {
-		TwoPtHH "-v" "-g" @gauge "-a" antiQ "-0" Q0 "-1" Q1 "-2" Q2 stdout=@sdo;
+		TwoPtHH "-v" "-g" @gauge "-a" @antiQ "-0" @Q0 "-1" @Q1 "-2" @Q2 stdout=@sdo;
 	}
 }
 
 (file sdo) twoPtSH (file gauge, file stag, file antiQ, file Q0, file Q1, file Q2) {
 	app {
-		TwoPtSH "-v" "-g" @gauge "-s" stag "-a" antiQ "-0" Q0 "-1" Q1 "-2" Q2 stdout=@sdo;
+		TwoPtSH "-v" "-g" @gauge "-s" @stag "-a" @antiQ "-0" @Q0 "-1" @Q1 "-2" @Q2 stdout=@sdo;
 	}
 }
 

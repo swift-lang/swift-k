@@ -785,7 +785,15 @@ public class Karajan {
 		for (int i = 0; i < app.sizeOfAbstractExpressionArray(); i++) {
 			XmlObject argument = app.getAbstractExpressionArray(i);
 			StringTemplate argumentST = expressionToKarajan(argument, scope);
-			appST.setAttribute("arguments", argumentST);
+			String type = datatype(argumentST);
+			if(type.equals("string") || type.equals("string[]")
+			 || type.equals("int") || type.equals("float") 
+			 || type.equals("int[]") || type.equals("float[]") 
+			 || type.equals("boolean") || type.equals("boolean[]")) {
+				appST.setAttribute("arguments", argumentST);
+			} else {
+				throw new CompilationException("Cannot pass type '"+type+"' as a parameter to application '"+app.getExecutable()+"' at "+app.getSrc());
+			}
 		}
 		if(app.getStdin()!=null)
 			appST.setAttribute("stdin", expressionToKarajan(app.getStdin().getAbstractExpression(), scope));
@@ -840,7 +848,7 @@ public class Karajan {
 		return funcST;
 	}
 
-	static final String SWIFTSCRIPT_NS = "http://ci.uchicago.edu/swift/2007/07/swiftscript";
+	static final String SWIFTSCRIPT_NS = "http://ci.uchicago.edu/swift/2009/02/swiftscript";
 
 	static final QName OR_EXPR = new QName(SWIFTSCRIPT_NS, "or");
 	static final QName AND_EXPR = new QName(SWIFTSCRIPT_NS, "and");

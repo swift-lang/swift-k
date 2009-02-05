@@ -36,7 +36,7 @@ namespace("vdl"
 		element(types, [])
 
 		element(arguments, [...]
-			arguments=list(each(...))
+			arguments=expandArguments(each(...))
 		)
 
 		export(execute
