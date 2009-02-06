@@ -1878,10 +1878,10 @@ Takes a command line parameter name as a string parameter and an optional
 default value and returns the value of that string parameter from the 
 command line. If no default value is specified and the command line parameter
 is missing, an error is generated. If a default value is specified and the
-command line parameter is missing, @arg will return the default value.
+command line parameter is missing, <literal>@arg</literal> will return the default value.
 			</para>
 			<para>
-Command line parameters recognized by @arg begin with exactly one hyphen
+Command line parameters recognized by <literal>@arg</literal> begin with exactly one hyphen
 and need to be positioned after the script name.
 			</para>
 
@@ -1903,48 +1903,48 @@ SwiftScript trace: hello
 
 		<section id="function.extractint"><title>@extractint</title>
 			<para>
-@extractint(file) will read the specified file, parse an integer from the
+<literal>@extractint(file)</literal> will read the specified file, parse an integer from the
 file contents and return that integer.
 			</para>
 		</section>
 
 		<section id="function.filename"><title>@filename</title>
 			<para>
-@filename(v) will return a string containing the filename(s) for the file(s)
-mapped to the variable v. When more than one filename is returned, the
+<literal>@filename(v)</literal> will return a string containing the filename(s) for the file(s)
+mapped to the variable <literal>v</literal>. When more than one filename is returned, the
 filenames will be space separated inside a single string return value.
 			</para>
 		</section>
 		<section id="function.filenames"><title>@filenames</title>
 			<para>
-@filenames(v) will return multiple values (!) containing the filename(s) for
-the file(s) mapped to the variable v. (compare to
+<literal>@filenames(v)</literal> will return multiple values (!) containing the filename(s) for
+the file(s) mapped to the variable <literal>v</literal>. (compare to
 <link linkend="function.filename">@filename</link>)
 			</para>
 		</section>
 		<section id="function.regexp"><title>@regexp</title>
 			<para>
-@regexp(input,pattern,replacement) will apply regular expression
-substitution using the Java java.util.regexp API. For example:
+<literal>@regexp(input,pattern,replacement)</literal> will apply regular expression
+substitution using the <ulink url="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">Java java.util.regexp API</ulink>. For example:
 <programlisting>
 string v =  @regexp("abcdefghi", "c(def)g","monkey");
 </programlisting>
-will assign the value "abmonkeyhi" to the variable v.
+will assign the value <literal>"abmonkeyhi"</literal> to the variable <literal>v</literal>.
 			</para>
 		</section>
 		<section id="function.strcat"><title>@strcat</title>
 			<para>
-@strcat(a,b,c,d,...) will return a string containing all of the strings
+<literal>@strcat(a,b,c,d,...)</literal> will return a string containing all of the strings
 passed as parameters joined into a single string. There may be any number
 of parameters.
 			</para>
 			<para>
-The + operator concatenates two strings: @strcat(a,b) is the same as a + b
+The <literal>+</literal> operator concatenates two strings: <literal>@strcat(a,b)</literal> is the same as <literal>a + b</literal>
 			</para>
 		</section>
 		<section id="function.strcut"><title>@strcut</title>
 			<para>
-@strcut(input,pattern) will match the regular expression in the pattern
+<literal>@strcut(input,pattern)</literal> will match the regular expression in the pattern
 parameter against the supplied input string and return the section that
 matches the first matching parenthesised group.
 			</para>
@@ -1960,13 +1960,13 @@ print(out);
 			</programlisting>
 
 			<para>
-will output the message 'Your name is John'.
+will output the message: <literal>Your name is John</literal>.
 			</para>
 		</section>
 		
 		<section id="function.strsplit"><title>@strsplit</title>
 			<para>
-@strsplit(input,pattern) will split the input string based on separators
+<literal>@strsplit(input,pattern)</literal> will split the input string based on separators
 that match the given pattern and return a string array. (since Swift 0.9)
 			</para>
 			<para>
@@ -1991,8 +1991,8 @@ iterations execute in parallel).
 		
 		<section id="function.toint"><title>@toint</title>
 			<para>
-@toint(input) will parse its input string into an integer. This can be
-used with @arg to pass input parameters to a SwiftScript program as
+<literal>@toint(input)</literal> will parse its input string into an integer. This can be
+used with <literal>@arg</literal> to pass input parameters to a SwiftScript program as
 integers.
 			</para>
 		</section>
@@ -2006,7 +2006,7 @@ the SwiftScript language.
 
 		<section id="procedure.readdata"><title>readData</title>
 			<para>
-readData will read data from a specified file.
+<literal>readData</literal> will read data from a specified file.
 			</para>
 			<para>
 The format of the input file is controlled by the type of the return
@@ -2040,7 +2040,7 @@ This procedure is new in 0.4.
 		</section>
 		<section id="procedure.readdata2"><title>readdata2</title>
 			<para>
-readdata2 will read data from a specified file, like readdata, but using
+<literal>readdata2</literal> will read data from a specified file, like <literal>readdata</literal>, but using
 a different file format more closely related to that used by the
 ext mapper.
 			</para>
@@ -2077,7 +2077,7 @@ This procedure is new in 0.7.
 		</section>
 		<section id="procedure.print"><title>print</title>
 			<para>
-Deprecated - use <link linkend="procedure.trace">trace</link> instead.
+Deprecated - use <literal><link linkend="procedure.trace">trace</link></literal> instead.
 			</para>
 			<para>
 print will print its parameters to stdout; but will do this at a point
@@ -2087,7 +2087,7 @@ wait for its parameters to be properly set.
 		</section>
 		<section id="procedure.trace"><title>trace</title>
 			<para>
-Trace will log its parameters. By default these will appear on both stdout
+<literal>trace</literal> will log its parameters. By default these will appear on both stdout
 and in the run log file. Some formatting occurs to produce the log message.
 The particular output format should not be relied upon. (new in 0.4)
 			</para>
