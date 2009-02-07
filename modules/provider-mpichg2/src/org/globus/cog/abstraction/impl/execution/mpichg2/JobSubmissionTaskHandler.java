@@ -12,12 +12,12 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -31,11 +31,11 @@ import org.globus.io.gass.server.JobOutputStream;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
-public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
         GramJobListener, JobOutputListener {
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class
             .getName());
-    private Task task = null;
+    
     private GramJob gramJob;
     private Vector jobList = null;
     private boolean startGassServer = false;
@@ -46,15 +46,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        if (this.task != null) {
-            throw new TaskSubmissionException(
-                    "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
-        }
-        this.task = task;
+        checkAndSetTask(task);
         String rsl;
         JobSpecification spec;
         try {
-            spec = (JobSpecification) this.task.getSpecification();
+            spec = (JobSpecification) task.getSpecification();
         } catch (Exception e) {
             throw new IllegalSpecException(
                     "Exception while retreiving Job Specification", e);
@@ -75,7 +71,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             this.gramJob.addListener(this);
         }
 
-        ServiceContact serviceContact = this.task.getService(0)
+        ServiceContact serviceContact = task.getService(0)
                 .getServiceContact();
         String server = serviceContact.getContact();
 
@@ -84,31 +80,31 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         try {
             // check if the task has not been canceled after it was
             // submitted for execution
-            if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
+            if (task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
                 this.gramJob.request(server, spec.isBatchJob(), true);
                 logger.debug("Submitted job with Globus ID: "
                         + this.gramJob.getIDAsString());
-                this.task.setStatus(Status.SUBMITTED);
+                task.setStatus(Status.SUBMITTED);
                 if (spec.isBatchJob()) {
-                    this.task.setStatus(Status.COMPLETED);
+                    task.setStatus(Status.COMPLETED);
                 }
             }
         } catch (GramException ge) {
             Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
+            Status oldStatus = task.getStatus();
             newStatus.setPrevStatusCode(oldStatus.getStatusCode());
             newStatus.setStatusCode(Status.FAILED);
             newStatus.setException(ge);
-            this.task.setStatus(newStatus);
+            task.setStatus(newStatus);
             cleanup();
             throw new TaskSubmissionException("Cannot submit job", ge);
         } catch (GSSException gsse) {
             Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
+            Status oldStatus = task.getStatus();
             newStatus.setPrevStatusCode(oldStatus.getStatusCode());
             newStatus.setStatusCode(Status.FAILED);
             newStatus.setException(gsse);
-            this.task.setStatus(newStatus);
+            task.setStatus(newStatus);
             cleanup();
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
                     gsse);
@@ -125,14 +121,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         // not implemented yet
     }
 
-    public void cancel() throws InvalidSecurityContextException,
+    public void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
         try {
-            if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
-                this.task.setStatus(Status.CANCELED);
+            if (getTask().getStatus().getStatusCode() == Status.UNSUBMITTED) {
+                getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));
                 return;
             }
-            String jobCount = (String) this.task.getAttribute("jobCount");
+            String jobCount = (String) getTask().getAttribute("jobCount");
             if (jobCount.equalsIgnoreCase("multiple")) {
                 Iterator iterator = this.jobList.iterator();
                 while (iterator.hasNext()) {
@@ -142,7 +138,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             } else {
                 this.gramJob.cancel();
             }
-            this.task.setStatus(Status.CANCELED);
+            getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));
         } catch (GramException ge) {
             cleanup();
             throw new TaskSubmissionException("Cannot cancel job", ge);
@@ -213,7 +209,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         || (spec.getStdOutput().equals(""))) {
                     appendRSL(buf, "stdout",
                             "$(GLOBUSRUN_GASS_URL)/dev/stdout-"
-                                    + this.task.getIdentity().toString());
+                                    + getTask().getIdentity().toString());
                 } else {
                     appendRSL(buf, "stdout", "$(GLOBUSRUN_GASS_URL)/"
                             + spec.getStdOutput());
@@ -229,7 +225,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         || (spec.getStdError().equals(""))) {
                     appendRSL(buf, "stderr",
                             "$(GLOBUSRUN_GASS_URL)/dev/stderr-"
-                                    + this.task.getIdentity().toString());
+                                    + getTask().getIdentity().toString());
                 } else {
                     appendRSL(buf, "stderr", "$(GLOBUSRUN_GASS_URL)/"
                             + spec.getStdError());
@@ -254,7 +250,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     private String startGassServer() throws TaskSubmissionException {
-        GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) this.task
+        GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) getTask()
                 .getService(0).getSecurityContext();
         String gassURL = null;
         if (this.gassServer == null) {
@@ -273,9 +269,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         this.stderrStream = new JobOutputStream(this);
 
         gassServer.registerJobOutputStream("err-"
-                + this.task.getIdentity().toString(), this.stderrStream);
+                + getTask().getIdentity().toString(), this.stderrStream);
         gassServer.registerJobOutputStream("out-"
-                + this.task.getIdentity().toString(), this.stdoutStream);
+                + getTask().getIdentity().toString(), this.stdoutStream);
         logger.debug("Started the GASS server");
         return gassURL;
     }
@@ -284,26 +280,21 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         int status = job.getStatus();
         switch (status) {
         case 2:
-            this.task.setStatus(Status.ACTIVE);
+            getTask().setStatus(Status.ACTIVE);
             break;
         case 4:
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
             int errorCode = job.getError();
             Exception e = new Exception("Error code: " + errorCode);
-            newStatus.setException(e);
-            this.task.setStatus(newStatus);
+            failTask(null, e);
             break;
         case 8:
-            this.task.setStatus(Status.COMPLETED);
+            getTask().setStatus(Status.COMPLETED);
             break;
         case 16:
-            this.task.setStatus(Status.SUSPENDED);
+            getTask().setStatus(Status.SUSPENDED);
             break;
         case 32:
-            this.task.setStatus(Status.UNSUBMITTED);
+            getTask().setStatus(Status.UNSUBMITTED);
             break;
         default:
             break;
@@ -323,20 +314,20 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     public void outputChanged(String s) {
-        String output = this.task.getStdOutput();
+        String output = getTask().getStdOutput();
         if (output == null) {
             output = s;
         } else {
             output += s;
         }
-        this.task.setStdOutput(output);
+        getTask().setStdOutput(output);
     }
 
     public void outputClosed() {
     }
 
     private GlobusSecurityContextImpl getSecurityContext() {
-        GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) this.task
+        GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) getTask()
                 .getService(0).getSecurityContext();
         if (securityContext == null) {
             // create default credentials
