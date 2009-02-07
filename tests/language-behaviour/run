@@ -20,6 +20,10 @@ elif [ "$1" == "-s" ]; then
   SUB="y"
   shift
   TESTS="$@"
+elif [ "$1" == "-d" ]; then
+	export COG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,address=9999,server=y,suspend=y"
+	shift
+	TESTS="$@"
 else
   TESTS="$@"
 fi
