@@ -14,14 +14,16 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 public class NonBlockingCancel extends NonBlockingSubmit {
+	private String message;
 
-	public NonBlockingCancel(TaskHandler th, Task task) {
+	public NonBlockingCancel(TaskHandler th, Task task, String message) {
 		super(th, task, null);
+		this.message = message;
 	}
 	
 	public void run() {
 		try {
-			getTaskHandler().cancel(getTask());
+			getTaskHandler().cancel(getTask(), message);
 			notifyPreviousQueue(null);
 		}
 		catch (Exception e) {
