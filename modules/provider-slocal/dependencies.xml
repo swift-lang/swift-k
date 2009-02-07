@@ -5,6 +5,9 @@
 			<property name="module" value="abstraction-common"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-local"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="jglobus"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="dep">
