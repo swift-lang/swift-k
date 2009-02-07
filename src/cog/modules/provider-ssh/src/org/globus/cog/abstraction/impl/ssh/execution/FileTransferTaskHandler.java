@@ -6,7 +6,7 @@ package org.globus.cog.abstraction.impl.ssh.execution;
 import java.io.File;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
@@ -15,66 +15,59 @@ import org.globus.cog.abstraction.impl.ssh.SSHChannel;
 import org.globus.cog.abstraction.impl.ssh.SSHChannelManager;
 import org.globus.cog.abstraction.impl.ssh.SSHRunner;
 import org.globus.cog.abstraction.impl.ssh.SSHTaskStatusListener;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
-public class FileTransferTaskHandler implements DelegatedTaskHandler, SSHTaskStatusListener {
+public class FileTransferTaskHandler extends AbstractDelegatedTaskHandler implements SSHTaskStatusListener {
 	static Logger logger = Logger.getLogger(FileTransferTaskHandler.class.getName());
 	private Task task = null;
 	private Sftp sftp;
 
 	public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
 			InvalidServiceContactException, TaskSubmissionException {
-		if (this.task != null) {
+		checkAndSetTask(task);
+		FileTransferSpecification spec;
+		try {
+			spec = (FileTransferSpecification) this.task.getSpecification();
+		}
+		catch (Exception e) {
+			throw new IllegalSpecException("Exception while retreiving File Specification", e);
+		}
+		sftp = new Sftp();
+		Service sourceService = task.getService(Service.FILE_TRANSFER_SOURCE_SERVICE);
+		Service destinationService = task.getService(Service.FILE_TRANSFER_DESTINATION_SERVICE);
+		ServiceContact source = sourceService.getServiceContact();
+		ServiceContact destination = destinationService.getServiceContact();
+		if (!source.getHost().equals("localhost") && !destination.getHost().equals("localhost")) {
 			throw new TaskSubmissionException(
-					"FileTransferTaskHandler cannot handle two active transfers simultaneously");
+					"The SSH handler does not support 3rd party transfers yet");
+		}
+		ServiceContact contact;
+		Service service;
+		if (destination.getHost().equals("localhost")) {
+			sftp.setGet(makeURL(spec.getSourceDirectory(), spec.getSourceFile()));
+			sftp.setDest(makeLocalURL(spec.getDestinationDirectory(), spec.getDestinationFile()));
+			contact = source;
+			service = sourceService;
 		}
 		else {
-			this.task = task;
-			FileTransferSpecification spec;
-			try {
-				spec = (FileTransferSpecification) this.task.getSpecification();
-			}
-			catch (Exception e) {
-				throw new IllegalSpecException("Exception while retreiving File Specification", e);
-			}
-			sftp = new Sftp();
-			Service sourceService = task.getService(Service.FILE_TRANSFER_SOURCE_SERVICE);
-			Service destinationService = task.getService(Service.FILE_TRANSFER_DESTINATION_SERVICE);
-			ServiceContact source = sourceService.getServiceContact();
-			ServiceContact destination = destinationService.getServiceContact();
-			if (!source.getHost().equals("localhost") && !destination.getHost().equals("localhost")) {
-				throw new TaskSubmissionException(
-						"The SSH handler does not support 3rd party transfers yet");
-			}
-			ServiceContact contact;
-			Service service;
-			if (destination.getHost().equals("localhost")) {
-				sftp.setGet(makeURL(spec.getSourceDirectory(), spec.getSourceFile()));
-				sftp.setDest(makeLocalURL(spec.getDestinationDirectory(), spec.getDestinationFile()));
-				contact = source;
-				service = sourceService;
-			}
-			else {
-				sftp.setPut(makeLocalURL(spec.getSourceDirectory(), spec.getSourceFile()));
-				sftp.setDest(makeURL(spec.getDestinationDirectory(), spec.getDestinationFile()));
-				contact = destination;
-				service = destinationService;
-			}
-
-			SSHChannel s = SSHChannelManager.getDefault().getChannel(contact.getHost(),
-                    contact.getPort(), service.getSecurityContext().getCredentials());
-			
-			
-			SSHRunner r = new SSHRunner(s, sftp);
-			r.addListener(this);
-			r.startRun(sftp);
-			task.setStatus(Status.ACTIVE);
+			sftp.setPut(makeLocalURL(spec.getSourceDirectory(), spec.getSourceFile()));
+			sftp.setDest(makeURL(spec.getDestinationDirectory(), spec.getDestinationFile()));
+			contact = destination;
+			service = destinationService;
 		}
+
+		SSHChannel s = SSHChannelManager.getDefault().getChannel(contact.getHost(),
+                contact.getPort(), service.getSecurityContext().getCredentials());
+		
+		
+		SSHRunner r = new SSHRunner(s, sftp);
+		r.addListener(this);
+		r.startRun(sftp);
+		task.setStatus(Status.ACTIVE);
 	}
 
 	public void suspend() throws InvalidSecurityContextException, TaskSubmissionException {
@@ -83,7 +76,8 @@ public class FileTransferTaskHandler implements DelegatedTaskHandler, SSHTaskSta
 	public void resume() throws InvalidSecurityContextException, TaskSubmissionException {
 	}
 
-	public void cancel() throws InvalidSecurityContextException, TaskSubmissionException {
+	public void cancel(String message) throws InvalidSecurityContextException, TaskSubmissionException {
+	    //TODO This gets the prize for inventively useless
 		try {
 		}
 		catch (Exception e) {
@@ -116,12 +110,7 @@ public class FileTransferTaskHandler implements DelegatedTaskHandler, SSHTaskSta
 			this.task.setStatus(Status.COMPLETED);
 		}
 		else if (status == SSHTaskStatusListener.FAILED) {
-			Status newStatus = new StatusImpl();
-			Status oldStatus = this.task.getStatus();
-			newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-			newStatus.setStatusCode(Status.FAILED);
-			newStatus.setException(e);
-			this.task.setStatus(newStatus);
+		    failTask(null, e);
 		}
 		else {
 			logger.warn("Unknown status code: " + status);
