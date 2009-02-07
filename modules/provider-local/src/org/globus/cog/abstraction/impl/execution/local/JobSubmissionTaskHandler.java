@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -27,7 +28,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.common.util.NullOutputStream;
 import org.globus.cog.abstraction.impl.common.util.OutputStreamMultiplexer;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -37,7 +37,7 @@ import org.globus.cog.abstraction.interfaces.Task;
  * @author Kaizar Amin (amin@mcs.anl.gov)
  * 
  */
-public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
         Runnable {
     private static Logger logger = Logger
             .getLogger(JobSubmissionTaskHandler.class);
@@ -47,7 +47,6 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     public static final int BUFFER_SIZE = 1024;
 
-    private Task task = null;
     private Thread thread = null;
     private Process process;
     private volatile boolean killed;
@@ -55,50 +54,40 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        if (this.task != null) {
-            throw new TaskSubmissionException(
-                    "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
+        checkAndSetTask(task);
+        task.setStatus(Status.SUBMITTING);
+        JobSpecification spec;
+        try {
+            spec = (JobSpecification) task.getSpecification();
         }
-        else if (task.getStatus().getStatusCode() != Status.UNSUBMITTED) {
-            throw new TaskSubmissionException(
-                    "Task is not in unsubmitted state");
+        catch (Exception e) {
+            throw new IllegalSpecException(
+                    "Exception while retrieving Job Specification", e);
         }
-        else {
-            this.task = task;
-            task.setStatus(Status.SUBMITTING);
-            JobSpecification spec;
-            try {
-                spec = (JobSpecification) this.task.getSpecification();
-            }
-            catch (Exception e) {
-                throw new IllegalSpecException(
-                        "Exception while retrieving Job Specification", e);
-            }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug(spec.toString());
-            }
+        if (logger.isDebugEnabled()) {
+            logger.debug(spec.toString());
+        }
 
-            try {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Submitting task " + task);
-                }
-                synchronized (this) {
-                    thread = new Thread(this);
-                    thread.setName("Local task " + task.getIdentity());
-                    thread.setDaemon(true);
-                    if (this.task.getStatus().getStatusCode() != Status.CANCELED) {
-                        this.task.setStatus(Status.SUBMITTED);
-                        this.thread.start();
-                        if (spec.isBatchJob()) {
-                            this.task.setStatus(Status.COMPLETED);
-                        }
+        try {
+            if (logger.isInfoEnabled()) {
+                logger.info("Submitting task " + task);
+            }
+            synchronized (this) {
+                thread = new Thread(this);
+                thread.setName("Local task " + task.getIdentity());
+                thread.setDaemon(true);
+                if (task.getStatus().getStatusCode() != Status.CANCELED) {
+                    task.setStatus(Status.SUBMITTED);
+                    this.thread.start();
+                    if (spec.isBatchJob()) {
+                        task.setStatus(Status.COMPLETED);
                     }
                 }
             }
-            catch (Exception e) {
-                throw new TaskSubmissionException("Cannot submit job", e);
-            }
+        }
+        catch (Exception e) {
+            throw new TaskSubmissionException("Cannot submit job", e);
         }
     }
 
@@ -110,12 +99,12 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             TaskSubmissionException {
     }
 
-    public void cancel() throws InvalidSecurityContextException,
+    public void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
         synchronized (this) {
             killed = true;
             process.destroy();
-            this.task.setStatus(Status.CANCELED);
+            getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));
         }
     }
 
@@ -125,7 +114,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void run() {
         try {
             // TODO move away from the multi-threaded approach
-            JobSpecification spec = (JobSpecification) this.task
+            JobSpecification spec = (JobSpecification) getTask()
                     .getSpecification();
 
             File dir = null;
@@ -135,7 +124,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
             process = Runtime.getRuntime().exec(buildCmdArray(spec),
                     buildEnvp(spec), dir);
-            this.task.setStatus(Status.ACTIVE);
+            getTask().setStatus(Status.ACTIVE);
 
             processIN(spec.getStdInput(), dir);
 
@@ -143,7 +132,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
             if (!FileLocation.NONE.equals(spec.getStdOutputLocation())) {
                 OutputStream os = prepareOutStream(spec.getStdOutput(), spec
-                        .getStdOutputLocation(), dir, task, STDOUT);
+                        .getStdOutputLocation(), dir, getTask(), STDOUT);
                 if (os != null) {
                     pairs.add(new StreamPair(process.getInputStream(), os));
                 }
@@ -151,7 +140,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
             if (!FileLocation.NONE.equals(spec.getStdErrorLocation())) {
                 OutputStream os = prepareOutStream(spec.getStdError(), spec
-                        .getStdErrorLocation(), dir, task, STDERR);
+                        .getStdErrorLocation(), dir, getTask(), STDERR);
                 if (os != null) {
                     pairs.add(new StreamPair(process.getErrorStream(), os));
                 }
@@ -176,7 +165,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 return;
             }
             if (exitCode == 0) {
-                this.task.setStatus(Status.COMPLETED);
+                getTask().setStatus(Status.COMPLETED);
             }
             else {
                 throw new JobException(exitCode);
@@ -189,12 +178,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             if (logger.isDebugEnabled()) {
                 logger.debug("Exception while running local executable", e);
             }
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
-            newStatus.setException(e);
-            this.task.setStatus(newStatus);
+            failTask(null, e);
         }
     }
 
