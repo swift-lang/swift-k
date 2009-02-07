@@ -20,6 +20,8 @@ import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
+import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.TaskHandlerSkeleton;
 import org.globus.cog.abstraction.impl.common.task.ActiveTaskException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
@@ -39,7 +41,7 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 /**
  * The base class for task handlers in all file providers
  */
-public class TaskHandlerImpl implements TaskHandler, StatusListener {
+public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListener {
     private Set tasks;
     private Map handleMap = null;
     private Map activeFileResources;
@@ -412,16 +414,16 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
     public void resume(Task task) throws InvalidSecurityContextException,
             TaskSubmissionException {
     }
-
+    
     /** cancel a task */
-    public void cancel(Task task) throws InvalidSecurityContextException,
+    public void cancel(Task task, String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
         if (task.getStatus().getStatusCode() >= Status.FAILED) {
             throw new TaskSubmissionException(
                     "Cancel cannot be performed on tasks that are not active");
         }
         if (task.getStatus().getStatusCode() <= Status.SUBMITTED) {
-            task.setStatus(Status.CANCELED);
+            task.setStatus(new StatusImpl(Status.CANCELED, message, null));
         }
         else {
             try {
@@ -429,7 +431,7 @@ public class TaskHandlerImpl implements TaskHandler, StatusListener {
                 fileResource.stop();
                 fileResource.start();
                 fileResource.setCurrentDirectory(currentDirectory);
-                task.setStatus(Status.CANCELED);
+                task.setStatus(new StatusImpl(Status.CANCELED, message, null));
             }
             catch (Exception e) {
                 throw new TaskSubmissionException(
