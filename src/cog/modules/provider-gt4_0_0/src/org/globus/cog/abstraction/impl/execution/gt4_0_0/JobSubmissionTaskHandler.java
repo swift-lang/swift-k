@@ -18,15 +18,14 @@ import org.apache.axis.message.addressing.EndpointReferenceType;
 import org.apache.axis.types.NonNegativeInteger;
 import org.apache.axis.types.PositiveInteger;
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.AbstractionProperties;
-import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
@@ -56,11 +55,10 @@ import org.ietf.jgss.GSSCredential;
  * @author CoG Team
  * @author David Del Vecchio
  */
-public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
         GramJobListener {
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
-
-    private Task task = null;
+    
     private GramJob gramJob;
     private boolean canceling;
     private String jobManager;
@@ -77,140 +75,135 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         jmMappings.put("loadleveler", "Loadleveler");
     }
 
-    public void submit(Task task) throws IllegalSpecException,
+    public void submit(final Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        if (this.task != null) {
-            throw new TaskSubmissionException(
-                    "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
+        
+        checkAndSetTask(task);
+        task.setStatus(Status.SUBMITTING);
+
+        JobDescriptionType rsl;
+        JobSpecification spec;
+        try {
+            spec = (JobSpecification) task.getSpecification();
+        }
+        catch (Exception e) {
+            throw new IllegalSpecException(
+                    "Exception while retreiving Job Specification", e);
+        }
+
+        Service service = task.getService(0);
+        ServiceContact serviceContact = service.getServiceContact();
+        String server = serviceContact.getContact();
+
+        String factoryType = ManagedJobFactoryConstants.DEFAULT_FACTORY_TYPE;
+        if (service instanceof ExecutionService) {
+            jobManager = ((ExecutionService) service)
+                    .getJobManager();
+            if (logger.isDebugEnabled()) {
+                logger.debug("Requested job manager: " + jobManager);
+            }
+            if (jobManager != null) {
+                String lc = jobManager.toLowerCase();
+                if (lc.startsWith("jobmanager-")) {
+                    lc = lc.substring(11);
+                }
+                if (jmMappings.containsKey(lc)) {
+                    jobManager = (String) jmMappings.get(lc);
+                }
+                factoryType = jobManager;
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Actual job manager: " + factoryType);
+            }
+        }
+
+        EndpointReferenceType factoryEndpoint;
+        URL factoryURL;
+
+        try {
+            factoryURL = ManagedJobFactoryClientHelper
+                    .getServiceURL(server).getURL();
+
+            // Fix (hack) for the above returning the wrong default port
+            if (server.indexOf(':') == -1) {
+                factoryURL = new URL(factoryURL.getProtocol(), factoryURL
+                        .getHost(), 8443, factoryURL.getFile());
+            }
+
+            factoryEndpoint = ManagedJobFactoryClientHelper
+                    .getFactoryEndpoint(factoryURL, factoryType);
+        }
+        catch (Exception e) {
+            throw new IllegalSpecException("Invalid service factory", e);
+        }
+
+        if (spec.getSpecification() != null) {
+            try {
+                this.gramJob = new GramJob(spec.getSpecification());
+            }
+            catch (RSLParseException e) {
+                throw new IllegalSpecException(e.getMessage(), e);
+            }
         }
         else {
-            this.task = task;
-            task.setStatus(Status.SUBMITTING);
+            rsl = prepareSpecification(spec, server);
+            this.gramJob = new GramJob(rsl);
+        }
 
-            JobDescriptionType rsl;
-            JobSpecification spec;
-            try {
-                spec = (JobSpecification) this.task.getSpecification();
-            }
-            catch (Exception e) {
-                throw new IllegalSpecException(
-                        "Exception while retreiving Job Specification", e);
-            }
+        GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) task
+                .getService(0).getSecurityContext();
 
-            Service service = this.task.getService(0);
-            ServiceContact serviceContact = service.getServiceContact();
-            String server = serviceContact.getContact();
+        try {
+       	    this.gramJob.setCredentials((GSSCredential) securityContext
+        	            .getCredentials());
+        }
+        catch (IllegalArgumentException iae) {
+            throw new InvalidSecurityContextException(
+                    "Cannot set the SecurityContext twice", iae);
+        }
 
-            String factoryType = ManagedJobFactoryConstants.DEFAULT_FACTORY_TYPE;
-            if (service instanceof ExecutionService) {
-                jobManager = ((ExecutionService) service)
-                        .getJobManager();
+        Authorization authorization = getAuthorization(securityContext);
+        this.gramJob.setAuthorization(authorization);
+
+        switch (securityContext.getXMLSec()) {
+            case GlobusSecurityContextImpl.XML_ENCRYPTION:
+                this.gramJob.setMessageProtectionType(Constants.ENCRYPTION);
+                break;
+            default:
+                this.gramJob.setMessageProtectionType(Constants.SIGNATURE);
+                break;
+        }
+
+        if (!spec.isBatchJob()) {
+            this.gramJob.addListener(this);
+        }
+
+        setMiscJobParams(spec, this.gramJob);
+
+        try {
+            if (logger.isInfoEnabled()) {
+                logger.info("Submitting task: " + task);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Requested job manager: " + jobManager);
-                }
-                if (jobManager != null) {
-                    String lc = jobManager.toLowerCase();
-                    if (lc.startsWith("jobmanager-")) {
-                        lc = lc.substring(11);
-                    }
-                    if (jmMappings.containsKey(lc)) {
-                        jobManager = (String) jmMappings.get(lc);
-                    }
-                    factoryType = jobManager;
-                }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Actual job manager: " + factoryType);
+                    logger.debug("Rsl is " + this.gramJob.toString());
                 }
             }
-
-            EndpointReferenceType factoryEndpoint;
-            URL factoryURL;
-
-            try {
-                factoryURL = ManagedJobFactoryClientHelper
-                        .getServiceURL(server).getURL();
-
-                // Fix (hack) for the above returning the wrong default port
-                if (server.indexOf(':') == -1) {
-                    factoryURL = new URL(factoryURL.getProtocol(), factoryURL
-                            .getHost(), 8443, factoryURL.getFile());
-                }
-
-                factoryEndpoint = ManagedJobFactoryClientHelper
-                        .getFactoryEndpoint(factoryURL, factoryType);
+            this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
+                    .getDelegation() != Delegation.NO_DELEGATION,
+                    "uuid:" + UUIDGenFactory.getUUIDGen().nextUUID());
+            logger.info("Task submitted: " + task);
+            if (logger.isInfoEnabled()) {
             }
-            catch (Exception e) {
-                throw new IllegalSpecException("Invalid service factory", e);
+            if (spec.isBatchJob()) {
+                task.setStatus(Status.COMPLETED);
             }
-
-            if (spec.getSpecification() != null) {
-                try {
-                    this.gramJob = new GramJob(spec.getSpecification());
-                }
-                catch (RSLParseException e) {
-                    throw new IllegalSpecException(e.getMessage(), e);
-                }
-            }
-            else {
-                rsl = prepareSpecification(spec, server);
-                this.gramJob = new GramJob(rsl);
-            }
-
-            GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) this.task
-                    .getService(0).getSecurityContext();
-
-            try {
-           	    this.gramJob.setCredentials((GSSCredential) securityContext
-            	            .getCredentials());
-            }
-            catch (IllegalArgumentException iae) {
-                throw new InvalidSecurityContextException(
-                        "Cannot set the SecurityContext twice", iae);
-            }
-
-            Authorization authorization = getAuthorization(securityContext);
-            this.gramJob.setAuthorization(authorization);
-
-            switch (securityContext.getXMLSec()) {
-                case GlobusSecurityContextImpl.XML_ENCRYPTION:
-                    this.gramJob.setMessageProtectionType(Constants.ENCRYPTION);
-                    break;
-                default:
-                    this.gramJob.setMessageProtectionType(Constants.SIGNATURE);
-                    break;
-            }
-
-            if (!spec.isBatchJob()) {
-                this.gramJob.addListener(this);
-            }
-
-            setMiscJobParams(spec, this.gramJob);
-
-            try {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Submitting task: " + task);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Rsl is " + this.gramJob.toString());
-                    }
-                }
-                this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
-                        .getDelegation() != Delegation.NO_DELEGATION,
-                        "uuid:" + UUIDGenFactory.getUUIDGen().nextUUID());
-                logger.info("Task submitted: " + task);
-                if (logger.isInfoEnabled()) {
-                }
-                if (spec.isBatchJob()) {
-                    this.task.setStatus(Status.COMPLETED);
-                }
-            }
-            catch (Exception e) {
-                // No need for cleanup. Reportedly no resource has been created
-                // if an exception is thrown
-                gramJob.removeListener(this);
-                throw new TaskSubmissionException("Cannot submit job: "
-                        + e.getMessage(), e);
-            }
+        }
+        catch (Exception e) {
+            // No need for cleanup. Reportedly no resource has been created
+            // if an exception is thrown
+            gramJob.removeListener(this);
+            throw new TaskSubmissionException("Cannot submit job: "
+                    + e.getMessage(), e);
         }
     }
 
@@ -240,11 +233,16 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             TaskSubmissionException {
         throw new UnsupportedOperationException("resume");
     }
-
+    
     public void cancel() throws InvalidSecurityContextException,
+        TaskSubmissionException {
+        cancel("Canceled");
+    }
+
+    public void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
         try {
-            synchronized (task) {
+            synchronized (getTask()) {
                 canceling = true;
             }
             this.gramJob.cancel();
@@ -392,17 +390,17 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             logger.info("Job state changed: " + state.getValue());
         }
         if (state.equals(StateEnumeration.Active)) {
-            this.task.setStatus(Status.ACTIVE);
+            getTask().setStatus(Status.ACTIVE);
         }
         else if (state.equals(StateEnumeration.Failed)) {
             boolean canceled = false;
-            synchronized (task) {
+            synchronized (getTask()) {
                 if (canceling) {
                     canceled = true;
                 }
             }
             if (canceled) {
-                this.task.setStatus(Status.CANCELED);
+                getTask().setStatus(Status.CANCELED);
                 this.gramJob.removeListener(this);
             }
             else {
@@ -424,15 +422,15 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                         null);
             }
             else {
-                this.task.setStatus(Status.COMPLETED);
+                getTask().setStatus(Status.COMPLETED);
             }
             cleanup = true;
         }
         else if (state.equals(StateEnumeration.Suspended)) {
-            this.task.setStatus(Status.SUSPENDED);
+            getTask().setStatus(Status.SUSPENDED);
         }
         else if (state.equals(StateEnumeration.Pending)) {
-            this.task.setStatus(Status.SUBMITTED);
+            getTask().setStatus(Status.SUBMITTED);
         }
         else {
             logger.debug("Unknown status: " + state.getValue());
@@ -443,7 +441,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             catch (Exception e) {
                 logger.warn("Unable to destroy remote service for task "
-                        + this.task.getIdentity().toString(), e);
+                        + getTask().getIdentity().toString(), e);
             }
         }
     }
@@ -459,21 +457,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         return sb.toString();
     }
 
-    private void failTask(String message, Exception exception) {
-        Status newStatus = new StatusImpl();
-        Status oldStatus = this.task.getStatus();
-        newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-        newStatus.setStatusCode(Status.FAILED);
-        newStatus.setMessage(message);
-        newStatus.setException(exception);
-        this.task.setStatus(newStatus);
-    }
-
     private void cleanup() throws Exception {
         this.gramJob.removeListener(this);
         if (logger.isDebugEnabled()) {
             logger.debug("Destroying remote service for task "
-                    + this.task.getIdentity().toString());
+                    + getTask().getIdentity().toString());
         }
         gramJob.destroy();
     }
