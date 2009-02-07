@@ -650,9 +650,13 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	public void cancelTask(Task task) {
+		cancelTask(task, null);
+	}
+	
+	public void cancelTask(Task task, String message) {
 		TaskHandler handler = getHandler(task);
 		if (handler != null) {
-			new NonBlockingCancel(handler, task).go();
+			new NonBlockingCancel(handler, task, message).go();
 		}
 	}
 
