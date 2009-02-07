@@ -67,6 +67,7 @@ public class TCProfile extends VDLFunction {
 
 			attrs = attributesFromTC(tce, attrs);
 		}
+		attrs = addAttribute(attrs, "tr", tr);
 		addAttributes(named, attrs);
 		return null;
 	}
@@ -115,6 +116,14 @@ public class TCProfile extends VDLFunction {
 	        return;
 	    }
 	    named.add(GridExec.A_ATTRIBUTES, attrs);
+	}
+	
+	private Map addAttribute(Map attrs, String key, Object value) {
+	    if (attrs == null) {
+	        attrs = new HashMap();
+	    }
+	    attrs.put(key, value);
+	    return attrs;
 	}
 
 	private Map attributesFromTC(TransformationCatalogEntry tce, Map attrs) {
