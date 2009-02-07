@@ -9,7 +9,7 @@ package org.globus.cog.abstraction.impl.ssh.execution;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
@@ -19,72 +19,65 @@ import org.globus.cog.abstraction.impl.ssh.SSHChannelManager;
 import org.globus.cog.abstraction.impl.ssh.SSHRunner;
 import org.globus.cog.abstraction.impl.ssh.SSHSecurityContextImpl;
 import org.globus.cog.abstraction.impl.ssh.SSHTaskStatusListener;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
-public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
         SSHTaskStatusListener {
-    static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class
+    public static final Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class
             .getName());
-    private Task task = null;
+    
     private Exec exec;
     private SSHChannel s;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        if (this.task != null) {
-            throw new TaskSubmissionException(
-                    "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
+        checkAndSetTask(task);
+        JobSpecification spec;
+        try {
+            spec = (JobSpecification) task.getSpecification();
         }
-        else {
-            this.task = task;
-            JobSpecification spec;
-            try {
-                spec = (JobSpecification) this.task.getSpecification();
-            }
-            catch (Exception e) {
-                throw new IllegalSpecException(
-                        "Exception while retreiving Job Specification", e);
-            }
-            // prepare command
-            String cmd = prepareSpecification(spec);
-            String host = task.getService(0).getServiceContact().getHost();
-            int port = task.getService(0).getServiceContact().getPort();
+        catch (Exception e) {
+            throw new IllegalSpecException(
+                    "Exception while retreiving Job Specification", e);
+        }
+        // prepare command
+        String cmd = prepareSpecification(spec);
+        String host = task.getService(0).getServiceContact().getHost();
+        int port = task.getService(0).getServiceContact().getPort();
 
-            s = SSHChannelManager.getDefault().getChannel(host,
-                    port, getSecurityContext().getCredentials());
-            exec = new Exec();
-            exec.setCmd(cmd);
-            exec.setDir(spec.getDirectory());
+        s = SSHChannelManager.getDefault().getChannel(host,
+                port, getSecurityContext().getCredentials());
+        exec = new Exec();
+        exec.setCmd(cmd);
+        exec.setDir(spec.getDirectory());
 
-            if (FileLocation.LOCAL.overlaps(spec.getStdOutputLocation())
-                    && notEmpty(spec.getStdOutput())) {
-                exec.setOutFile(spec.getStdOutput());
-            }
-            if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
-                exec.setOutMem(true);
-            }
+        if (FileLocation.LOCAL.overlaps(spec.getStdOutputLocation())
+                && notEmpty(spec.getStdOutput())) {
+            exec.setOutFile(spec.getStdOutput());
+        }
+        if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
+            exec.setOutMem(true);
+        }
 
-            if (FileLocation.LOCAL.overlaps(spec.getStdErrorLocation())
-                    && notEmpty(spec.getStdError())) {
-                exec.setErrFile(spec.getStdError());
-            }
-            if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
-                exec.setErrMem(true);
-            }
+        if (FileLocation.LOCAL.overlaps(spec.getStdErrorLocation())
+                && notEmpty(spec.getStdError())) {
+            exec.setErrFile(spec.getStdError());
+        }
+        if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
+            exec.setErrMem(true);
+        }
 
-            SSHRunner r = new SSHRunner(s, exec);
-            r.addListener(this);
-            synchronized(this) {
-                if (this.task.getStatus().getStatusCode() != Status.CANCELED) {
-                    r.startRun(exec);
-                    this.task.setStatus(Status.ACTIVE);
-                }
+        SSHRunner r = new SSHRunner(s, exec);
+        r.addListener(this);
+        synchronized(this) {
+            if (task.getStatus().getStatusCode() != Status.CANCELED) {
+                r.startRun(exec);
+                task.setStatus(Status.ACTIVE);
             }
         }
     }
@@ -99,7 +92,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
         // not implemented yet
     }
 
-    public synchronized void cancel() throws InvalidSecurityContextException,
+    public synchronized void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
         //TODO implement me
     }
@@ -196,19 +189,14 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     public void SSHTaskStatusChanged(int status, Exception e) {
-        JobSpecification spec = (JobSpecification) this.task.getSpecification();
+        JobSpecification spec = (JobSpecification) getTask().getSpecification();
         if (status == SSHTaskStatusListener.COMPLETED) {
-            this.task.setStdOutput(exec.getTaskOutput());
-            this.task.setStdError(exec.getTaskError());
-            this.task.setStatus(Status.COMPLETED);
+            getTask().setStdOutput(exec.getTaskOutput());
+            getTask().setStdError(exec.getTaskError());
+            getTask().setStatus(Status.COMPLETED);
         }
         else if (status == SSHTaskStatusListener.FAILED) {
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
-            newStatus.setException(e);
-            this.task.setStatus(newStatus);
+            failTask(null, e);
         }
         else {
             logger.warn("Unknown status code: " + status);
@@ -218,7 +206,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     }
 
     private SecurityContext getSecurityContext() {
-        SecurityContext securityContext = this.task.getService(0)
+        SecurityContext securityContext = getTask().getService(0)
                 .getSecurityContext();
         if (securityContext == null) {
             // create default credentials
