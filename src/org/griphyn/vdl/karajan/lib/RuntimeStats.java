@@ -1,16 +1,18 @@
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
-import org.globus.cog.karajan.util.TypeUtil;
-
-import java.util.Map;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+
+import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.TypeUtil;
+import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.griphyn.vdl.util.VDL2Config;
 
 /** this is an icky class that does too much with globals, but is for
 proof of concept. */
@@ -87,13 +89,26 @@ public class RuntimeStats extends FunctionsCollection {
 		List states = new ArrayList();
 
 		long lastDumpTime = 0;
+		private boolean disabled;
 
 		public ProgressTicker() {
 			super("Progress ticker");
+			try {
+                if ("true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"))) {
+                    logger.info("Ticker disabled in configuration file");
+                    disabled = true;
+                }
+            }
+            catch (IOException e) {
+                logger.debug("Could not read swift properties", e);
+            }
 		}
 
 		public void run() {
-			while(true) {
+		    if (disabled) {
+		        return;
+		    }
+		    while(true) {
 				dumpState();
 
 				try {
@@ -106,6 +121,9 @@ public class RuntimeStats extends FunctionsCollection {
 		}
 
 		void dumpState() {
+		    if (disabled) {
+		        return;
+		    }
 			long now = System.currentTimeMillis();
 			if(lastDumpTime + MIN_PERIOD_MS > now) return;
 			lastDumpTime = now;
@@ -113,6 +131,9 @@ public class RuntimeStats extends FunctionsCollection {
 		}
 
 		void finalDumpState() {
+		    if (disabled) {
+                return;
+            }
 			printStates("Final status: ");
 		}
 
