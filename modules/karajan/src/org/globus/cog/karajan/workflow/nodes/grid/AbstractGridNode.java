@@ -108,7 +108,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 					}
 				}
 
-				if (!bc.hasService(Service.JOB_SUBMISSION, provider)) {
+				if (!bc.hasService(Service.EXECUTION, provider)) {
 					if (provider != null) {
 						addDefaultServices(bc, name, provider);
 					}
@@ -138,7 +138,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 						+ provider, e);
 			}
 		}
-		bc.addService(new ServiceImpl(provider, Service.JOB_SUBMISSION, new ServiceContactImpl(
+		bc.addService(new ServiceImpl(provider, Service.EXECUTION, new ServiceContactImpl(
 				contact), sc));
 		bc.addService(new ServiceImpl(provider, Service.FILE_OPERATION, new ServiceContactImpl(
 				contact), sc));
@@ -276,7 +276,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 					taskFailed(e, stack);
 				}
 				else if (e.getStatus().getStatusCode() == Status.CANCELED) {
-					abort(stack);
+					abort(stack, e.getStatus().getMessage());
 				}
 			}
 			catch (ExecutionException ex) {

@@ -14,7 +14,12 @@ import org.globus.cog.karajan.workflow.AbortException;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public class AbortNotificationEvent extends FailureNotificationEvent {
-	public AbortNotificationEvent(FlowElement source, VariableStack stack) {
-		super(source, stack, "Aborted", new AbortException(stack));
+    
+    public AbortNotificationEvent(FlowElement source, VariableStack stack) {
+        this(source, stack, null);
+    }
+    
+	public AbortNotificationEvent(FlowElement source, VariableStack stack, String message) { 
+		super(source, stack, "Aborted", new AbortException(stack, message));
 	}
 }
