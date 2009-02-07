@@ -141,6 +141,9 @@ public interface TaskHandler {
      */
     public void cancel(Task task) throws InvalidSecurityContextException,
             TaskSubmissionException;
+    
+    public void cancel(Task task, String message) throws InvalidSecurityContextException,
+            TaskSubmissionException;
 
     /**
      * Removes the given <code>Task</code> from the <code>TaskHandler</code>
