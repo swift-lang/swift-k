@@ -8,8 +8,9 @@ package org.globus.cog.abstraction.impl.common;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.globus.cog.abstraction.impl.common.task.ActiveTaskException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -24,21 +25,12 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 /**
  * Provides an abstract <code>TaskHandler</code>.
  */
-public abstract class AbstractTaskHandler implements TaskHandler {
-	private Hashtable handleMap = null;
-	private int type;
+public abstract class AbstractTaskHandler extends TaskHandlerSkeleton {
+	private Map handleMap;
 
 	public AbstractTaskHandler() {
-		this.handleMap = new Hashtable();
-		this.type = TaskHandler.GENERIC;
-	}
-
-	public void setType(int type) {
-		this.type = type;
-	}
-
-	public int getType() {
-		return this.type;
+		this.handleMap = new HashMap();
+		setType(TaskHandler.GENERIC);
 	}
 
 	public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
@@ -71,14 +63,14 @@ public abstract class AbstractTaskHandler implements TaskHandler {
 			dth.resume();
 		}
 	}
-
-	public void cancel(Task task) throws InvalidSecurityContextException, TaskSubmissionException {
+	
+	public void cancel(Task task, String message) throws InvalidSecurityContextException, TaskSubmissionException {
 		DelegatedTaskHandler dth = (DelegatedTaskHandler) this.handleMap.get(task);
 		if (dth != null) {
-			dth.cancel();
+			dth.cancel(message);
 		}
 		else {
-			task.setStatus(Status.CANCELED);
+			task.setStatus(new StatusImpl(Status.CANCELED, message, null));
 		}
 	}
 

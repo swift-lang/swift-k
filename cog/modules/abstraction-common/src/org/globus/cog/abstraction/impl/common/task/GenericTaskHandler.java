@@ -8,30 +8,22 @@ package org.globus.cog.abstraction.impl.common.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
+import org.globus.cog.abstraction.impl.common.MultiplexingTaskHandler;
+import org.globus.cog.abstraction.impl.common.TaskCollector;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
-public class GenericTaskHandler implements TaskHandler {
-    private int type;
-    private TaskHandler execHandler = null;
-    private TaskHandler transferHandler = null;
-    private TaskHandler fileHandler = null;
+public class GenericTaskHandler extends MultiplexingTaskHandler {
+    private TaskHandler execHandler;
+    private TaskHandler transferHandler;
+    private TaskHandler fileHandler;
 
     public GenericTaskHandler() {
-        this.type = TaskHandler.GENERIC;
+        setType(TaskHandler.GENERIC);
         this.execHandler = new ExecutionTaskHandler();
         this.transferHandler = new FileTransferTaskHandler();
         this.fileHandler = new FileOperationTaskHandler();
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public int getType() {
-        return this.type;
     }
 
     public void submit(Task task)
@@ -88,18 +80,18 @@ public class GenericTaskHandler implements TaskHandler {
                 break;
         }
     }
-
-    public void cancel(Task task)
+    
+    public void cancel(Task task, String message)
         throws InvalidSecurityContextException, TaskSubmissionException {
         switch (task.getType()) {
             case Task.JOB_SUBMISSION :
-                this.execHandler.cancel(task);
+                this.execHandler.cancel(task, message);
                 break;
             case Task.FILE_TRANSFER :
-                this.transferHandler.cancel(task);
+                this.transferHandler.cancel(task, message);
                 break;
             case Task.FILE_OPERATION :
-                this.fileHandler.cancel(task);
+                this.fileHandler.cancel(task, message);
                 break;
             default :
                 break;
@@ -121,66 +113,13 @@ public class GenericTaskHandler implements TaskHandler {
                 break;
         }
     }
-
-    public Collection getAllTasks() {
-        //		extract all the tasks from various TaskHandlers
-        List list = new ArrayList();
-        list.addAll(this.execHandler.getAllTasks());
-        list.addAll(this.transferHandler.getAllTasks());
-        list.addAll(this.fileHandler.getAllTasks());
-        return list;
-    }
-
-    public Collection getActiveTasks() {
-        // extract all the active tasks from various TaskHandlers
-        List list = new ArrayList();
-        list.addAll(this.execHandler.getActiveTasks());
-        list.addAll(this.transferHandler.getActiveTasks());
-        list.addAll(this.fileHandler.getActiveTasks());
-        return list;
-    }
-
-    public Collection getFailedTasks() {
-        // extract all the failed tasks from various TaskHandlers
-        List list = new ArrayList();
-        list.addAll(this.execHandler.getFailedTasks());
-        list.addAll(this.transferHandler.getFailedTasks());
-        list.addAll(this.fileHandler.getFailedTasks());
-        return list;
-    }
-
-    public Collection getCompletedTasks() {
-        // extract all the completed tasks from various TaskHandlers
-        List list = new ArrayList();
-        list.addAll(this.execHandler.getCompletedTasks());
-        list.addAll(this.transferHandler.getCompletedTasks());
-        list.addAll(this.fileHandler.getCompletedTasks());
-        return list;
-    }
-
-    public Collection getSuspendedTasks() {
-        List list = new ArrayList();
-        list.addAll(this.execHandler.getSuspendedTasks());
-        list.addAll(this.transferHandler.getSuspendedTasks());
-        list.addAll(this.fileHandler.getSuspendedTasks());
-        return list;
-    }
-
-    public Collection getResumedTasks() {
-        // extract all the resumed tasks from various TaskHandlers
-        List list = new ArrayList();
-        list.addAll(this.execHandler.getResumedTasks());
-        list.addAll(this.transferHandler.getResumedTasks());
-        list.addAll(this.fileHandler.getResumedTasks());
-        return list;
-    }
-
-    public Collection getCanceledTasks() {
-        // extract all the canceled tasks from various TaskHandlers
-        List list = new ArrayList();
-        list.addAll(this.execHandler.getCanceledTasks());
-        list.addAll(this.transferHandler.getCanceledTasks());
-        list.addAll(this.fileHandler.getCanceledTasks());
+    
+    protected Collection getTasks(final TaskCollector collector) {
+        // extract tasks from various TaskHandlers
+        ArrayList list = new ArrayList();
+        list.addAll(collector.collect(execHandler));
+        list.addAll(collector.collect(transferHandler));
+        list.addAll(collector.collect(fileHandler));
         return list;
     }
 }

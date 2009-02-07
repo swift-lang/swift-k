@@ -10,28 +10,12 @@
 package org.globus.cog.abstraction.impl.common.task;
 
 import org.globus.cog.abstraction.impl.fileTransfer.CachingDelegatedFileTransferHandler;
-import org.globus.cog.abstraction.interfaces.Status;
-import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 
 public class CachingFileTransferTaskHandler extends FileTransferTaskHandler {
-    public void submit(Task task) throws IllegalSpecException,
-            InvalidSecurityContextException, InvalidServiceContactException,
-            TaskSubmissionException {
-        if (task.getStatus().getStatusCode() != Status.UNSUBMITTED) {
-            throw new TaskSubmissionException(
-                    "TaskHandler can only handle unsubmitted tasks");
-        }
-        if (task.getType() != Task.FILE_TRANSFER) {
-            throw new TaskSubmissionException(
-                    "File transfer handler can only handle file transfer tasks");
-        }
-
-        CachingDelegatedFileTransferHandler dth = new CachingDelegatedFileTransferHandler();
-        task.addStatusListener(this);
-
-        registerTaskHandler(task, dth);
-
-        dth.submit(task);
+    
+    protected DelegatedTaskHandler newDelegatedTaskHandler(int type)
+            throws TaskSubmissionException {
+        return new CachingDelegatedFileTransferHandler();
     }
-
 }

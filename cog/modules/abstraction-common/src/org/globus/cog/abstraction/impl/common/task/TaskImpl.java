@@ -30,6 +30,7 @@ import org.globus.cog.abstraction.xml.MarshalException;
 import org.globus.cog.abstraction.xml.TaskMarshaller;
 import org.globus.cog.util.CopyOnWriteHashSet;
 
+
 public class TaskImpl implements Task {
     public static final Logger logger = Logger.getLogger(TaskImpl.class);
 

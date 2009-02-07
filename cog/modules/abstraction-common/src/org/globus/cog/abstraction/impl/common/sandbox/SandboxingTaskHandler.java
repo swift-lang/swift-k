@@ -9,6 +9,7 @@ package org.globus.cog.abstraction.impl.common.sandbox;
 import java.util.Collection;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.TaskHandlerSkeleton;
 import org.globus.cog.abstraction.impl.common.task.ActiveTaskException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
@@ -17,25 +18,17 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
-public class SandboxingTaskHandler implements TaskHandler {
+public class SandboxingTaskHandler extends TaskHandlerSkeleton {
 	private static Logger logger = Logger.getLogger(SandboxingTaskHandler.class);
 	private static Class[] taskArg = { Task.class };
+	private static Class[] taskAndMsgArg = { Task.class, String.class };
 
-	private int type;
 	private TaskHandler handler;
 	private Sandbox sandbox;
 
 	public SandboxingTaskHandler(Sandbox sandbox, TaskHandler handler) {
 		this.handler = handler;
 		this.sandbox = sandbox;
-	}
-
-	public void setType(int type) {
-		this.type = type;
-	}
-
-	public int getType() {
-		return type;
 	}
 
 	public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
@@ -90,10 +83,10 @@ public class SandboxingTaskHandler implements TaskHandler {
 			throw new SandboxException("Unexpected exception", e);
 		}
 	}
-
-	public void cancel(Task task) throws InvalidSecurityContextException, TaskSubmissionException {
+	
+	public void cancel(Task task, String message) throws InvalidSecurityContextException, TaskSubmissionException {
 		try {
-			sandbox.invoke(handler, "cancel", taskArg, new Object[] { task });
+			sandbox.invoke(handler, "cancel", taskAndMsgArg, new Object[] { task, message });
 		}
 		catch (InvalidSecurityContextException e) {
 			throw e;

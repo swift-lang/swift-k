@@ -14,26 +14,18 @@ import java.util.List;
 
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.common.TaskHandlerSkeleton;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
-public class ExecutionTaskHandler implements TaskHandler {
+public class ExecutionTaskHandler extends TaskHandlerSkeleton {
     private Hashtable mapping;
-    private int type;
-
     public ExecutionTaskHandler() {
         this.mapping = new Hashtable();
-        this.type = TaskHandler.EXECUTION;
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public int getType() {
-        return this.type;
+        setType(TaskHandler.EXECUTION);
     }
 
     public void submit(Task task)
@@ -88,8 +80,12 @@ public class ExecutionTaskHandler implements TaskHandler {
                 "Provider " + provider + " unknown");
         }
     }
+    
+    public void cancel(Task task) throws InvalidSecurityContextException, TaskSubmissionException {
+        cancel(task, null);
+    }
 
-    public void cancel(Task task)
+    public void cancel(Task task, String message)
         throws InvalidSecurityContextException, TaskSubmissionException {
         if (task.getType() != Task.JOB_SUBMISSION) {
             throw new TaskSubmissionException("Execution handler can only handle job submission tasks");
@@ -97,9 +93,9 @@ public class ExecutionTaskHandler implements TaskHandler {
         String provider = task.getService(Service.DEFAULT_SERVICE).getProvider().toLowerCase();
         TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
         if (taskHandler != null) {
-            taskHandler.cancel(task);
+            taskHandler.cancel(task, message);
         } else {
-            task.setStatus(Status.CANCELED);
+            task.setStatus(new StatusImpl(Status.CANCELED, message, null));
         }
     }
 
