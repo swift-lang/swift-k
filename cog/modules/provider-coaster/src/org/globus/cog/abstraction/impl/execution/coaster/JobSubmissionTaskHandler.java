@@ -8,6 +8,7 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -18,7 +19,6 @@ import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
@@ -34,16 +34,17 @@ import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 
-public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements
         Callback {
     private static Logger logger = Logger
             .getLogger(JobSubmissionTaskHandler.class);
 
-    private Task task, startServiceTask;
+    private Task startServiceTask;
     private SubmitJobCommand jsc;
     private GSSCredential cred;
     private String jobid;
     private String url;
+    private String cancelMessage;
     private boolean cancel;
     private boolean autostart;
 
@@ -54,7 +55,7 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        this.task = task;
+        setTask(task);
         task.setStatus(Status.SUBMITTING);
         try {
             if (autostart) {
@@ -113,8 +114,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             TaskSubmissionException {
     }
 
-    public synchronized void cancel() throws InvalidSecurityContextException,
+    public synchronized void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
+        //TODO shouldn't this be setting the task status?
         try {
             if (jobid != null) {
                 KarajanChannel channel = ChannelManager.getManager()
@@ -122,9 +124,11 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
                 CancelJobCommand cc = new CancelJobCommand(jobid);
                 cc.execute(channel);
                 cancel = false;
+                getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));
             }
             else {
                 cancel = true;
+                cancelMessage = message;
             }
         }
         catch (Exception e) {
@@ -157,16 +161,16 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
 
     public void errorReceived(Command cmd, String msg, Exception t) {
         Status s = new StatusImpl(Status.FAILED, msg, t);
-        task.setStatus(s);
+        getTask().setStatus(s);
     }
 
     public void replyReceived(Command cmd) {
         if (cmd == jsc) {
             jobid = cmd.getInDataAsString(0);
-            task.setStatus(Status.SUBMITTED);
+            getTask().setStatus(Status.SUBMITTED);
             if (cancel) {
                 try {
-                    cancel();
+                    cancel(cancelMessage);
                 }
                 catch (Exception e) {
                     logger.warn("Failed to cancel job " + jobid, e);
@@ -174,9 +178,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler,
             }
             jsc = null;
             if (logger.isInfoEnabled()) {
-                logger.info("Submitted task " + task + ". Job id: " + jobid);
+                logger.info("Submitted task " + getTask() + ". Job id: " + jobid);
             }
-            NotificationManager.getDefault().registerTask(jobid, task);
+            NotificationManager.getDefault().registerTask(jobid, getTask());
         }
     }
 
