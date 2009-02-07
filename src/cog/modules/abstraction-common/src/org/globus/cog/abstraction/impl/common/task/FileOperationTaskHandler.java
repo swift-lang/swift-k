@@ -13,26 +13,19 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.MultiplexingTaskHandler;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.impl.common.TaskCollector;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
-public class FileOperationTaskHandler implements TaskHandler {
+public class FileOperationTaskHandler extends MultiplexingTaskHandler {
     private Map mapping;
-    private int type;
 
     public FileOperationTaskHandler() {
         this.mapping = new HashMap();
-        this.type = TaskHandler.FILE_OPERATION;
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public int getType() {
-        return this.type;
+        setType(TaskHandler.FILE_OPERATION);
     }
 
     protected TaskHandler getHandler(Task task) throws TaskSubmissionException {
@@ -93,10 +86,15 @@ public class FileOperationTaskHandler implements TaskHandler {
             TaskSubmissionException {
         getHandler(task).suspend(task);
     }
-
-    public void cancel(Task task) throws InvalidSecurityContextException,
+    
+    public void cancel(Task task) throws InvalidSecurityContextException, 
             TaskSubmissionException {
-        getHandler(task).cancel(task);
+    	cancel(task, null);
+    }
+
+    public void cancel(Task task, String message) throws InvalidSecurityContextException,
+            TaskSubmissionException {
+        getHandler(task).cancel(task, message);
     }
 
     public void remove(Task task) throws ActiveTaskException {
@@ -106,58 +104,8 @@ public class FileOperationTaskHandler implements TaskHandler {
             taskHandler.remove(task);
         }
     }
-
-    private static interface Collector {
-        Collection collect(TaskHandler th);
-    }
-
-    public static final Collector COLLECTOR_ALL = new Collector() {
-        public Collection collect(TaskHandler th) {
-            return th.getAllTasks();
-        }
-    };
-
-    public static final Collector COLLECTOR_ACTIVE = new Collector() {
-        public Collection collect(TaskHandler th) {
-            return th.getActiveTasks();
-        }
-    };
-
-    public static final Collector COLLECTOR_SUSPENDED = new Collector() {
-        public Collection collect(TaskHandler th) {
-            return th.getSuspendedTasks();
-        }
-    };
-
-    public static final Collector COLLECTOR_RESUMED = new Collector() {
-        public Collection collect(TaskHandler th) {
-            return th.getResumedTasks();
-        }
-    };
-
-    public static final Collector COLLECTOR_COMPLETED = new Collector() {
-        public Collection collect(TaskHandler th) {
-            return th.getCompletedTasks();
-        }
-    };
-
-    public static final Collector COLLECTOR_FAILED = new Collector() {
-        public Collection collect(TaskHandler th) {
-            return th.getFailedTasks();
-        }
-    };
-
-    public static final Collector COLLECTOR_CANCELED = new Collector() {
-        public Collection collect(TaskHandler th) {
-            return th.getCanceledTasks();
-        }
-    };
-
-    public Collection getAllTasks() {
-        return getTasks(COLLECTOR_ALL);
-    }
-
-    private Collection getTasks(final Collector collector) {
+    
+    protected Collection getTasks(final TaskCollector collector) {
         // extract tasks from various TaskHandlers
         ArrayList list = new ArrayList();
         Iterator i = this.mapping.values().iterator();
@@ -166,36 +114,6 @@ public class FileOperationTaskHandler implements TaskHandler {
             list.addAll(collector.collect(handler));
         }
         return list;
-    }
-
-    public Collection getActiveTasks() {
-        // extract all the active tasks from various TaskHandlers
-        return getTasks(COLLECTOR_ACTIVE);
-    }
-
-    public Collection getFailedTasks() {
-        // extract all the failed tasks from various TaskHandlers
-        return getTasks(COLLECTOR_FAILED);
-    }
-
-    public Collection getCompletedTasks() {
-        // extract all the tasks from various TaskHandlers
-        return getTasks(COLLECTOR_COMPLETED);
-    }
-
-    public Collection getSuspendedTasks() {
-        // extract all the tasks from various TaskHandlers
-        return getTasks(COLLECTOR_SUSPENDED);
-    }
-
-    public Collection getResumedTasks() {
-        // extract all the tasks from various TaskHandlers
-        return getTasks(COLLECTOR_RESUMED);
-    }
-
-    public Collection getCanceledTasks() {
-        // extract all the tasks from various TaskHandlers
-        return getTasks(COLLECTOR_CANCELED);
     }
 
     private TaskHandler createTaskHandler(Task task)

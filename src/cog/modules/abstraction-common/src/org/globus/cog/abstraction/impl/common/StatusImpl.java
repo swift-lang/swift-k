@@ -17,11 +17,16 @@ public class StatusImpl implements Status {
     private String message = null;
     private Date time;
     
-    public StatusImpl(int status, String message, Exception exception) {
+    public StatusImpl(int status, String message, Exception exception, int prev) {
         this.curStatus = status;
+        this.prevStatus = prev;
         this.message = message;
         this.exception = exception;
         this.time = new Date();
+    }
+    
+    public StatusImpl(int status, String message, Exception exception) {
+        this(status, message, exception, Status.UNKNOWN);
     }
 
     public StatusImpl() {

@@ -348,6 +348,8 @@ public class JobSpecificationImpl implements JobSpecification {
         sb.append("\n\tdirectory:  " + getDirectory());
         sb.append("\n\tbatch:      " + isBatchJob());
         sb.append("\n\tredirected: " + isRedirected());
+        sb.append("\n\t");
+        sb.append(attributes);
         sb.append('\n');
         return sb.toString();
     }
