@@ -91,6 +91,8 @@ public interface Scheduler {
 	 */
 	void cancelTask(Task task);
 	
+	void cancelTask(Task t, String message);
+	
 	/**
 	 * Adds a task transformer to this scheduler. A task transformer
 	 * allows modifying of various task parameters after the task
