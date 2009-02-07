@@ -15,8 +15,12 @@ public class AbortException extends ExecutionException {
 	public AbortException() {
 		super();
 	}
-
+	
 	public AbortException(VariableStack stack) {
-		super(stack, "Abort");
+		this(stack, null);
+	}
+
+	public AbortException(VariableStack stack, String message) {
+		super(stack, message == null ? "Abort" : message);
 	}
 }

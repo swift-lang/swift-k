@@ -18,7 +18,6 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.LoadListener;
@@ -256,17 +255,22 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			failImmediately(stack, e);
 		}
 	}
-
+	
 	protected void abort(final VariableStack stack) throws ExecutionException {
+	    abort(stack, null);
+	}
+
+	protected void abort(final VariableStack stack, String message) throws ExecutionException {
 		_finally(stack);
 		if (frame) {
 			stack.leave();
 		}
-		fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack, "Aborted");
+		fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, 
+		        stack, message);
 		if (FlowNode.debug) {
 			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 		}
-		fireNotificationEvent(new AbortNotificationEvent(this, stack), stack);
+		fireNotificationEvent(new AbortNotificationEvent(this, stack, message), stack);
 	}
 
 	public final void start(final VariableStack stack) throws ExecutionException {

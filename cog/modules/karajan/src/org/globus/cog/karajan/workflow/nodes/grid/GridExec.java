@@ -179,7 +179,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 								"The host argument cannot be a virtual contact");
 					}
 					BoundContact bc = (BoundContact) contact;
-					Service service = bc.getService(Service.JOB_SUBMISSION, provider);
+					Service service = bc.getService(Service.EXECUTION, provider);
 					if (service == null) {
 						throw new ExecutionException("Invalid provider: the host " + contact
 								+ " does not have a " + provider + " service");
@@ -192,7 +192,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 					task.setService(0, service);
 				}
 				else if ("local".equals(provider)) {
-					Service service = BoundContact.LOCALHOST.getService(Service.JOB_SUBMISSION,
+					Service service = BoundContact.LOCALHOST.getService(Service.EXECUTION,
 							"local");
 					setSecurityContext(stack, service);
 					task.setService(0, service);
