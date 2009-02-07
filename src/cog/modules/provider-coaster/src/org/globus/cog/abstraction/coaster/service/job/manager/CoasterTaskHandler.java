@@ -39,6 +39,11 @@ public class CoasterTaskHandler implements TaskHandler, Callback {
 
     public void cancel(Task task) throws InvalidSecurityContextException,
             TaskSubmissionException {
+        cancel(task, null);
+    }
+    
+    public void cancel(Task task, String message) throws InvalidSecurityContextException,
+            TaskSubmissionException {
     }
 
     public int getType() {
