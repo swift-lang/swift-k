@@ -12,6 +12,7 @@ import java.net.MalformedURLException;
 import java.util.Enumeration;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -28,7 +29,6 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
@@ -45,7 +45,7 @@ import org.globus.io.urlcopy.UrlCopyListener;
 import org.globus.util.GlobusURL;
 import org.ietf.jgss.GSSCredential;
 
-public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
+public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler implements 
         Runnable, UrlCopyListener {
     static Logger logger = Logger.getLogger(DelegatedFileTransferHandler.class
             .getName());
@@ -58,7 +58,6 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
         LOCAL_SERVICE = s;
     }
 
-    protected Task task;
     private FileTransferSpecification spec;
     private FileResource sourceResource;
     private FileResource destinationResource;
@@ -70,22 +69,17 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        if (this.task != null) {
-            throw new TaskSubmissionException(
-                    "DelegatedFileTransferHandler cannot handle two active transfers simultaneously");
+        checkAndSetTask(task);
+        
+        this.spec = (FileTransferSpecification) task.getSpecification();
+        prepareTransfer();
+        if (oldStyle) {
+            oldStyleHandler.submit(task);
         }
         else {
-            this.task = task;
-            this.spec = (FileTransferSpecification) task.getSpecification();
-            prepareTransfer();
-            if (oldStyle) {
-                oldStyleHandler.submit(task);
-            }
-            else {
-                Thread thread = new Thread(this);
-                this.task.setStatus(Status.SUBMITTED);
-                thread.start();
-            }
+            Thread thread = new Thread(this);
+            task.setStatus(Status.SUBMITTED);
+            thread.start();
         }
     }
 
@@ -96,16 +90,21 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
     public void resume() throws InvalidSecurityContextException,
             TaskSubmissionException {
     }
-
-    public void cancel() throws InvalidSecurityContextException,
+    
+    public void cancel() throws InvalidSecurityContextException, 
             TaskSubmissionException {
-        if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
-            this.task.setStatus(Status.CANCELED);
+        cancel("Canceled");
+    }
+
+    public void cancel(String message) throws InvalidSecurityContextException,
+            TaskSubmissionException {
+        if (getTask().getStatus().getStatusCode() == Status.UNSUBMITTED) {
+            getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));
         }
         else {
             try {
                 stopResources();
-                this.task.setStatus(Status.CANCELED);
+                getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));
             }
             catch (Exception e) {
                 throw new TaskSubmissionException("Cannot cancel task", e);
@@ -118,7 +117,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             TaskSubmissionException {
 
         try {
-            this.spec = (FileTransferSpecification) this.task
+            this.spec = (FileTransferSpecification) getTask()
                     .getSpecification();
         }
         catch (Exception e) {
@@ -126,9 +125,9 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                     "Exception while retreiving FileTransferSpecification", e);
         }
 
-        Service sourceService = this.task
+        Service sourceService = getTask()
                 .getService(Service.FILE_TRANSFER_SOURCE_SERVICE);
-        Service destinationService = this.task
+        Service destinationService = getTask()
                 .getService(Service.FILE_TRANSFER_DESTINATION_SERVICE);
         if (sourceService == null || destinationService == null) {
             throw new TaskSubmissionException(
@@ -241,7 +240,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             if (this.sourceResource != null) {
                 if (spec.isRecursive() && this.sourceResource.isDirectory(spec.getSource())) {
                     if (localDestination == null) {
-                        localDestination = File.createTempFile(this.task.getIdentity().getValue(),
+                        localDestination = File.createTempFile(getTask().getIdentity().getValue(),
                                 null);
                         localDestination.delete();
                         localDestination.mkdir();
@@ -263,7 +262,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                 }
                 else {
                     if (localDestination == null) {
-                        localDestination = File.createTempFile(this.task.getIdentity().getValue(),
+                        localDestination = File.createTempFile(getTask().getIdentity().getValue(),
                                 null);
                     }
                     if (logger.isDebugEnabled()) {
@@ -273,7 +272,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                             localDestination.getAbsolutePath(),
                             new ProgressMonitor() {
                                 public void progress(long current, long total) {
-                                    task.setStdOutput(current + "/" + total);
+                                    getTask().setStdOutput(current + "/" + total);
                                 }
                             });
                 }
@@ -282,7 +281,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             else {
                 if (localDestination == null) {
                     localDestination = File
-                            .createTempFile(this.task
+                            .createTempFile(getTask()
                                     .getIdentity().getValue(), null);
                 }
                 transferWithHandler(service.getProvider(), service,
@@ -355,7 +354,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                             .getAbsolutePath(), spec.getDestination(),
                             new ProgressMonitor() {
                                 public void progress(long current, long total) {
-                                    task.setStdOutput(current + "/" + total);
+                                    getTask().setStdOutput(current + "/" + total);
                                 }
                             });
                 }
@@ -464,7 +463,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
     }
 
     public void run() {
-        this.task.setStatus(Status.ACTIVE);
+        getTask().setStatus(Status.ACTIVE);
         // todo retreive progress markers
         if (this.thirdparty) {
             doThirdPartyTransfer();
@@ -477,9 +476,9 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                  * point in transfering source->local if the destination service
                  * has issues
                  */
-                Service sourceService = this.task
+                Service sourceService = getTask()
                         .getService(Service.FILE_TRANSFER_SOURCE_SERVICE);
-                Service destinationService = this.task
+                Service destinationService = getTask()
                         .getService(Service.FILE_TRANSFER_DESTINATION_SERVICE);
                 this.sourceResource = prepareService(sourceService);
                 this.destinationResource = prepareService(destinationService);
@@ -513,7 +512,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
 
         logger.debug("Performing third party transfer");
         try {
-            String url = this.task.getService(
+            String url = getTask().getService(
                     Service.FILE_TRANSFER_SOURCE_SERVICE).getServiceContact()
                     .getContact()
                     + "/" + spec.getSource();
@@ -523,7 +522,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             logger.debug("Source URL: " + url);
             sourceURL = new GlobusURL(url);
 
-            url = this.task.getService(
+            url = getTask().getService(
                     Service.FILE_TRANSFER_DESTINATION_SERVICE)
                     .getServiceContact().getContact()
                     + "/" + spec.getDestination();
@@ -545,7 +544,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             transferFailed(uce);
             return;
         }
-        SecurityContext securityContext = this.task.getService(
+        SecurityContext securityContext = getTask().getService(
                 Service.FILE_TRANSFER_SOURCE_SERVICE).getSecurityContext();
         try {
             urlCopy.setCredentials((GSSCredential) securityContext
@@ -577,11 +576,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
     }
 
     private void transferFailed(Exception e) {
-        Status status = new StatusImpl();
-        status.setPrevStatusCode(this.task.getStatus().getStatusCode());
-        status.setStatusCode(Status.FAILED);
-        status.setException(e);
-        this.task.setStatus(status);
+        failTask(null, e);
         stopResources();
         if (logger.isDebugEnabled()) {
             logger.debug("File transfer failed", e);
@@ -624,14 +619,14 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
             if (current == -1) {
                 logger
                         .debug("<third party file transfers: progress not available>");
-                this.task
+                getTask()
                         .setStdOutput("<third party file transfers: progress not available>");
             }
             else {
                 if (logger.isDebugEnabled()) {
                     logger.debug(current + " bytes transfered");
                 }
-                this.task.setStdOutput(Long.toString(current)
+                getTask().setStdOutput(Long.toString(current)
                         + " bytes transferred");
             }
         }
@@ -640,7 +635,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
                 logger.debug(current + " out of " + total
                         + " bytes transferred");
             }
-            this.task.setStdOutput(current + " out of " + total
+            getTask().setStdOutput(current + " out of " + total
                     + " bytes transfered");
         }
     }
@@ -651,7 +646,7 @@ public class DelegatedFileTransferHandler implements DelegatedTaskHandler,
 
     public void transferCompleted() {
         if (!this.failed) {
-            this.task.setStatus(Status.COMPLETED);
+            getTask().setStatus(Status.COMPLETED);
         }
     }
 
