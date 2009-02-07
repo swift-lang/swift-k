@@ -11,17 +11,18 @@ import java.io.File;
 import java.io.InputStreamReader;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
-import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
-public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable {
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
+        implements Runnable {
     private static Logger logger = Logger
             .getLogger(JobSubmissionTaskHandler.class);
 
@@ -31,46 +32,36 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        if (this.task != null) {
-            throw new TaskSubmissionException(
-                    "JobSubmissionTaskHandler cannot handle two active jobs simultaneously");
-        } else {
-            this.task = task;
-            JobSpecification spec;
-            try {
-                spec = (JobSpecification) this.task.getSpecification();
-            } catch (Exception e) {
-                throw new IllegalSpecException(
-                        "Exception while retreiving Job Specification", e);
-            }
+        checkAndSetTask(task);
+        JobSpecification spec;
+        try {
+            spec = (JobSpecification) this.task.getSpecification();
+        }
+        catch (Exception e) {
+            throw new IllegalSpecException(
+                    "Exception while retreiving Job Specification", e);
+        }
 
-            try {
-                this.thread = new Thread(this);
-                // check if the task has not been canceled after it was
-                // submitted for execution
-                if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
-                    this.thread.start();
+        try {
+            this.thread = new Thread(this);
+            // check if the task has not been canceled after it was
+            // submitted for execution
+            if (this.task.getStatus().getStatusCode() == Status.UNSUBMITTED) {
+                this.thread.start();
 
-                    /*
-                     * if the job is batch job or the description file is
-                     * specified, and the condor_submit was successful, then the
-                     * task is completed
-                     */
-                    if ((spec.isBatchJob() || spec
-                            .getAttribute("descriptionFile") != null)
-                            && this.task.getStatus().getStatusCode() != Status.FAILED) {
-                        this.task.setStatus(Status.COMPLETED);
-                    }
+                /*
+                 * if the job is batch job or the description file is specified,
+                 * and the condor_submit was successful, then the task is
+                 * completed
+                 */
+                if ((spec.isBatchJob() || spec.getAttribute("descriptionFile") != null)
+                        && this.task.getStatus().getStatusCode() != Status.FAILED) {
+                    this.task.setStatus(Status.COMPLETED);
                 }
-            } catch (Exception e) {
-                Status newStatus = new StatusImpl();
-                Status oldStatus = this.task.getStatus();
-                newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-                newStatus.setStatusCode(Status.FAILED);
-                newStatus.setException(e);
-                this.task.setStatus(newStatus);
-                throw new TaskSubmissionException("Cannot submit job", e);
             }
+        }
+        catch (Exception e) {
+            throw new TaskSubmissionException("Cannot submit job", e);
         }
     }
 
@@ -82,10 +73,9 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
             TaskSubmissionException {
     }
 
-    public void cancel() throws InvalidSecurityContextException,
+    public void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
-
-        this.task.setStatus(Status.CANCELED);
+        this.task.setStatus(new StatusImpl(Status.CANCELED, message, null));
     }
 
     public void run() {
@@ -148,14 +138,10 @@ public class JobSubmissionTaskHandler implements DelegatedTaskHandler, Runnable 
             Thread thread = new Thread(logReader);
             thread.start();
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             logger.debug("Exception while submitting the condor job", e);
-            Status newStatus = new StatusImpl();
-            Status oldStatus = this.task.getStatus();
-            newStatus.setPrevStatusCode(oldStatus.getStatusCode());
-            newStatus.setStatusCode(Status.FAILED);
-            newStatus.setException(e);
-            this.task.setStatus(newStatus);
+            failTask(null, e);
         }
     }
 }
