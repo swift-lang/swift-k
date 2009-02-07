@@ -88,4 +88,7 @@ public interface DelegatedTaskHandler {
      */
     public void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException;
+    
+    public void cancel(String message) throws InvalidSecurityContextException,
+            TaskSubmissionException;
 }
