@@ -37,6 +37,7 @@ for a in $LIST; do
   if [ "$?" -ne "0" ]; then
     echo "OUTPUT DIFFERS"
     diff -u ../working-base/$b $b
+    exit 1
 # echo press enter to accept this as valid or press ctrl-c to die
 # read
 # pushd ..
