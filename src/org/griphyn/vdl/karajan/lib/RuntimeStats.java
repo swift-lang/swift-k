@@ -24,7 +24,7 @@ public class RuntimeStats extends FunctionsCollection {
 	public static final int MAX_PERIOD_MS=30000;
 
 	public static final String[] preferredOutputOrder = {
-                "uninitialized",
+		"uninitialized",
 		"Initializing",
 		"Selecting site",
 		"Stage in",
@@ -94,21 +94,21 @@ public class RuntimeStats extends FunctionsCollection {
 		public ProgressTicker() {
 			super("Progress ticker");
 			try {
-                if ("true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"))) {
-                    logger.info("Ticker disabled in configuration file");
-                    disabled = true;
-                }
-            }
-            catch (IOException e) {
-                logger.debug("Could not read swift properties", e);
-            }
+				if ("true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"))) {
+					logger.info("Ticker disabled in configuration file");
+					disabled = true;
+				}
+			}
+			catch (IOException e) {
+				logger.debug("Could not read swift properties", e);
+			}
 		}
 
 		public void run() {
-		    if (disabled) {
-		        return;
-		    }
-		    while(true) {
+			if (disabled) {
+				return;
+			}
+			while(true) {
 				dumpState();
 
 				try {
@@ -121,9 +121,9 @@ public class RuntimeStats extends FunctionsCollection {
 		}
 
 		void dumpState() {
-		    if (disabled) {
-		        return;
-		    }
+			if (disabled) {
+				return;
+			}
 			long now = System.currentTimeMillis();
 			if(lastDumpTime + MIN_PERIOD_MS > now) return;
 			lastDumpTime = now;
@@ -131,9 +131,9 @@ public class RuntimeStats extends FunctionsCollection {
 		}
 
 		void finalDumpState() {
-		    if (disabled) {
-                return;
-            }
+			if (disabled) {
+				return;
+			}
 			printStates("Final status: ");
 		}
 
