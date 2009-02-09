@@ -1,4 +1,7 @@
 (02/09/09)
+*** Procedure invocations can be made in any expression context now, rather
+    than only directly in an assignment.
+
 *** Mappings can now be made in any declaration, whether it has an assignment
     or not. Previous a procedure call assignment and a mapping could not be
     made in the same statement.
