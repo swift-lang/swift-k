@@ -2832,13 +2832,38 @@ Controls how Swift will communicate the result code of running user programs
 from workers to the submit side. In <literal>files</literal> mode, a file
 indicating success or failure will be created on the site shared filesystem.
 In <literal>provider</literal> mode, the execution provider job status will
-be used. Notably, GRAM2 does not return job statuses correctly, and so
-<literal>provider</literal> mode will not work with GRAM2. With other
-providers, it can be used to reduce the amount of filesystem access compared
-to <literal>files</literal> mode. (since Swift 0.8)
+be used.
+							</para>
+							<para>
+<literal>provider</literal> mode requires the underlying job execution system
+to correctly return exit codes. In at least the cases of GRAM2, and clusters
+used with any provider, exit codes are not returned, and so
+<literal>files</literal> mode must be used in those cases.  Otherwise,
+<literal>provider</literal> mode can be used to reduce the amount of
+filesystem access. (since Swift 0.8)
 							</para>
 						</listitem>
 					</varlistentry>
+					<varlistentry>
+						<term>
+							<property>ticker.disable</property>
+						</term>
+						<listitem>
+							<para>
+								Valid values: <parameter>true</parameter>, <parameter>false</parameter>
+							</para>
+
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+
+							<para>
+When set to true, suppresses the output progress ticker that Swift sends
+to the console every few seconds during a run (since Swift 0.9)
+							</para>
+						</listitem>
+					</varlistentry>
+
 
 										
 				</variablelist>
