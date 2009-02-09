@@ -135,13 +135,11 @@ public class Karajan {
 			logger.info("Validation of XML intermediate file was successful");
 		} else {
 			logger.warn("Validation of XML intermediate file failed.");
-				// these errors look rather scary, so output them at
-				// debug level
-			logger.debug("Validation errors:");
+			logger.warn("Validation errors:");
 			Iterator i = errors.iterator();
 			while(i.hasNext()) {
 				XmlError error = (XmlError) i.next();
-				logger.debug(error.toString());
+				logger.warn(error.toString());
 			}
 			System.exit(3);
 		}
