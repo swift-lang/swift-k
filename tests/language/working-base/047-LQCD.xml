@@ -297,34 +297,32 @@
      <variableReference>source</variableReference>
      <stringConstant>local,0,0,0,0</stringConstant>
     </assign>
-    <dataset name="template" type="file">
-      <file name="foo"/>
-    </dataset>
+    <variable name="template" type="file"><file name="foo"/></variable>
     <variable name="gauge" type="file" xsi:nil="true"/>
     <call proc="stageIn" src="line 70">
       <output><variableReference>gauge</variableReference></output>
       <input><variableReference>template</variableReference></input>
       <input><variableReference>config</variableReference></input>
     </call>
-    <dataset name="stags" type="file[]">
+    <variable name="stags" type="file[]">
       <mapping descriptor="fixed_array_mapper">
         <param name="files"><arraySubscript>
          <variableReference>fn</variableReference>
          <variableReference>i</variableReference>
         </arraySubscript></param>
       </mapping>
-    </dataset>
+    </variable>
     <call proc="stagSolve" src="line 76">
       <output><variableReference>stags</variableReference></output>
       <input><variableReference>gauge</variableReference></input>
       <input><variableReference>mass</variableReference></input>
       <input><variableReference>source</variableReference></input>
     </call>
-    <dataset name="stagTar" type="file">
+    <variable name="stagTar" type="file">
       <mapping descriptor="simple_mapper">
         <param name="suffix"><stringConstant>.tar</stringConstant></param>
       </mapping>
-    </dataset>
+    </variable>
     <call proc="archiveStag" src="line 79">
       <output><variableReference>stagTar</variableReference></output>
       <input><variableReference>mass</variableReference></input>

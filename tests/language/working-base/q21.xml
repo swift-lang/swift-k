@@ -30,12 +30,8 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <dataset name="english" type="messagefile">
-    <file name="english2.txt"/>
-  </dataset>
-  <dataset name="french" type="messagefile">
-    <file name="francais2.txt"/>
-  </dataset>
+  <variable name="english" type="messagefile"><file name="english2.txt"/></variable>
+  <variable name="french" type="messagefile"><file name="francais2.txt"/></variable>
   <call proc="greeting" src="line 12">
     <output><variableReference>english</variableReference></output>
   </call>

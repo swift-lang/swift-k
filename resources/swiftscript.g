@@ -193,6 +193,8 @@ declpart [StringTemplate code, StringTemplate t]
         StringTemplate n=null;
         StringTemplate thisTypeTemplate=null;
         String thisType = (String) t.getAttribute("name");
+	StringTemplate variable=null;
+	StringTemplate m = null;
     }
     :
      n=declarator
@@ -200,25 +202,43 @@ declpart [StringTemplate code, StringTemplate t]
      {
          thisTypeTemplate=template("type");
          thisTypeTemplate.setAttribute("name", thisType);
-     }
+        variable = template("variable");
+        variable.setAttribute("name", n);
+        variable.setAttribute("type", thisTypeTemplate);
+        code.setAttribute("statements", variable);
+    }
+
+    (LT (m=mappingdecl | f:STRING_LITERAL) GT
+    {
+       if (m!=null)
+           variable.setAttribute("mapping", m);
+       else
+           variable.setAttribute("lfn", quote(f.getText()));
+    })?
+
+// TODO: mapping does here...
+// which means construction of the variable template goes here, rather than
+// in procedurecallDecl/variableDecl
+
     (
-      (predictProcedurecallDecl) => procedurecallDecl[code, thisTypeTemplate, n]
-    | (variableDecl[code,null,null]) => variableDecl[code, thisTypeTemplate, n]
-    | (predictDatasetdecl) => datasetdecl[code, thisTypeTemplate, n]
+      (predictProcedurecallDecl) => procedurecallDecl[code, thisTypeTemplate, n, variable]
+    | variableDecl[code, thisTypeTemplate, n, variable]
+// nice to lose this distinction entirely...
+//    | (predictDatasetdecl) => datasetdecl[code, thisTypeTemplate, n]
+// TODO can shorten variableDecl predictor now we dont' need to
+//  distinguish it from datasetdecl?
     )
     ;
 
-variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
-{StringTemplate v1=null, v2=null, i1=null, i2=null;}
-    :  i1=varInitializer
+variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, StringTemplate v1]
+{StringTemplate i1=null, m=null;
 
+}
+    :
+
+    (i1=varInitializer
     {
-        String thisType = (String) t.getAttribute("name");
-        v1 = template("variable");
-        v1.setAttribute("name", d);
-        v1.setAttribute("type", t);
 
-        code.setAttribute("statements", v1);
         if (i1 != null) {
           StringTemplate valueAssignment = template("assign");
           StringTemplate vr = template("variableReference");
@@ -227,7 +247,7 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d]
           valueAssignment.setAttribute("rhs",i1);
           code.setAttribute("statements", valueAssignment);
         }
-    }
+    })?
     ;
 
 declarator returns [StringTemplate code=null]
@@ -235,7 +255,7 @@ declarator returns [StringTemplate code=null]
     ;
 
 varInitializer returns [StringTemplate code=null]
-    :    ( ASSIGN code=expression )?
+    :   ASSIGN code=expression
     ;
 
 // This is an initializer used to set up an array.
@@ -272,24 +292,6 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
      )
     )?
     RBRACK
-    ;
-
-predictDatasetdecl: LT;
-
-datasetdecl [StringTemplate code, StringTemplate t, StringTemplate d]
-{StringTemplate dataset=null, m=null;}
-    :  LT (m=mappingdecl | f:STRING_LITERAL) GT
-    {
-       String thisType = (String) t.getAttribute("name");
-       dataset=template("dataset");
-       dataset.setAttribute("name", d);
-       if (m!=null)
-           dataset.setAttribute("mapping", m);
-       else
-           dataset.setAttribute("lfn", quote(f.getText()));
-       dataset.setAttribute("type", t);
-       code.setAttribute("statements", dataset);
-    }
     ;
 
 mappingdecl returns [StringTemplate code=template("mapping")]
@@ -669,15 +671,10 @@ procedureInvocationWithoutSemi [StringTemplate code]
 
 predictProcedurecallDecl : ASSIGN ID LPAREN ;
 
-procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl]
+procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl, StringTemplate var]
 {
 StringTemplate code=template("call");
 StringTemplate f=template("returnParam");
-StringTemplate var = template("variable");
-var.setAttribute("name", decl);
-var.setAttribute("type", type);
-
-container.setAttribute("statements", var);
 
 StringTemplate declref=template("variableReference");
 declref.setAttribute("name",decl);

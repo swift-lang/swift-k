@@ -33,17 +33,15 @@
           <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
-  <dataset name="inputfile" type="messagefile">
-    <file name="q16.txt"/>
-  </dataset>
-  <dataset name="c" type="countfile">
+  <variable name="inputfile" type="messagefile"><file name="q16.txt"/></variable>
+  <variable name="c" type="countfile">
     <mapping descriptor="regexp_mapper">
       <param name="source"><function name="filename">
         <variableReference>inputfile</variableReference></function></param>
       <param name="match"><stringConstant>(.*)txt</stringConstant></param>
       <param name="transform"><stringConstant>\1count</stringConstant></param>
     </mapping>
-  </dataset>
+  </variable>
   <call proc="countwords" src="line 14">
     <output><variableReference>c</variableReference></output>
     <input><variableReference>inputfile</variableReference></input>

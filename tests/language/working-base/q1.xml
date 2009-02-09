@@ -22,9 +22,7 @@
           <variableReference>t</variableReference></function></stdout><stringConstant>Hello, world!</stringConstant>  </application>
     </binding>
   </procedure>
-  <dataset name="outfile" type="messagefile">
-    <file name="hello.txt"/>
-  </dataset>
+  <variable name="outfile" type="messagefile"><file name="hello.txt"/></variable>
   <call proc="greeting" src="line 11">
     <output><variableReference>outfile</variableReference></output>
   </call>

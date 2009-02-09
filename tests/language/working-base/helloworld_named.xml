@@ -27,9 +27,7 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <dataset name="hw" type="file">
-    <file name="helloworld.txt"/>
-  </dataset>
+  <variable name="hw" type="file"><file name="helloworld.txt"/></variable>
   <call proc="echo" src="line 9">
     <output><variableReference>hw</variableReference></output>
     <input><stringConstant>hello world</stringConstant></input>

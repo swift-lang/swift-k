@@ -27,9 +27,7 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <dataset name="outfile" type="messagefile">
-    <file name="hello20.txt"/>
-  </dataset>
+  <variable name="outfile" type="messagefile"><file name="hello20.txt"/></variable>
   <variable name="morning" type="boolean" xsi:nil="true"/>
   <assign src="line 13">
    <variableReference>morning</variableReference>

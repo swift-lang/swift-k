@@ -52,9 +52,7 @@
     </binding>
   </procedure>
   <variable name="outfile" type="messagefile" xsi:nil="true"/>
-  <dataset name="c" type="countfile">
-    <file name="count14.txt"/>
-  </dataset>
+  <variable name="c" type="countfile"><file name="count14.txt"/></variable>
   <call proc="greeting" src="line 19">
     <output><variableReference>outfile</variableReference></output>
     <input><stringConstant>hello from Swift</stringConstant></input>

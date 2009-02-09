@@ -9,11 +9,11 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <dataset name="files" type="file[]">
+  <variable name="files" type="file[]">
     <mapping descriptor="simple_mapper">
       <param name="pattern"><stringConstant>*</stringConstant></param>
     </mapping>
-  </dataset>
+  </variable>
   <foreach var="f"  src="line 5">
   <in><variableReference>files</variableReference></in>
   <body><call proc="print" src="line 6">

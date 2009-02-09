@@ -9,9 +9,9 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <dataset name="v" type="myfile">
+  <variable name="v" type="myfile">
     <mapping descriptor="simple_mapper">
       <param name="pattern"><stringConstant>*</stringConstant></param>
     </mapping>
-  </dataset>
+  </variable>
 </program>

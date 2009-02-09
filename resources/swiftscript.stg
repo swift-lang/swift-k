@@ -60,21 +60,15 @@ memberdefinition(type,name,sourcelocation) ::= <<
 	</member>
 >>
 
-variable(type,name, value,sourcelocation) ::= <<
-<variable name="$name$" type="$type$"$if(!value)$ xsi:nil="true"/>$else$>$value$</variable>
-$endif$
->>
-
-dataset(name,type,mapping, lfn,sourcelocation) ::= <<
-<dataset name="$name$" type="$type$">
+variable(type,name, sourcelocation, mapping, lfn) ::= <<
 $if(lfn)$
-  <file name="$lfn$"/>
-
-$else$
+<variable name="$name$" type="$type$"><file name="$lfn$"/></variable>
+$else$$if(mapping)$
+<variable name="$name$" type="$type$">
   $mapping$
-
-$endif$
-</dataset>
+</variable>
+$else$
+<variable name="$name$" type="$type$" xsi:nil="true"/>$endif$$endif$
 >>
 
 mapping(descriptor,params,sourcelocation) ::= <<

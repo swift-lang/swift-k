@@ -43,16 +43,16 @@
    <variableReference>outputNames</variableReference>
    <stringConstant>one.count two.count three.count</stringConstant>
   </assign>
-  <dataset name="inputfiles" type="messagefile[]">
+  <variable name="inputfiles" type="messagefile[]">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>inputNames</variableReference></param>
     </mapping>
-  </dataset>
-  <dataset name="outputfiles" type="countfile[]">
+  </variable>
+  <variable name="outputfiles" type="countfile[]">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>outputNames</variableReference></param>
     </mapping>
-  </dataset>
+  </variable>
   <call proc="countwords" src="line 16">
     <output><arraySubscript>
      <variableReference>outputfiles</variableReference>

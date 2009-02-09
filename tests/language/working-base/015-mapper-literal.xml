@@ -9,7 +9,5 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <dataset name="v" type="myfile">
-    <file name="literalfilename.txt"/>
-  </dataset>
+  <variable name="v" type="myfile"><file name="literalfilename.txt"/></variable>
 </program>

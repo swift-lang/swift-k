@@ -32,11 +32,11 @@
    <variableReference>outputNames</variableReference>
    <stringConstant>one two three</stringConstant>
   </assign>
-  <dataset name="outputFiles" type="file[]">
+  <variable name="outputFiles" type="file[]">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>outputNames</variableReference></param>
     </mapping>
-  </dataset>
+  </variable>
   <foreach var="f"  src="line 13">
   <in><variableReference>outputFiles</variableReference></in>
   <body><call proc="echo" src="line 14">

@@ -108,22 +108,22 @@
      xsi:nil="true" />
     <foreach var="img"  indexVar="i" src="line 24">
     <in><variableReference>rawImages</variableReference></in>
-    <body><dataset name="projImg" type="Image">
+    <body><variable name="projImg" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>img</variableReference></function></param>
           <param name="match"><stringConstant>.*\/(.*)</stringConstant></param>
           <param name="transform"><stringConstant>proj_\1</stringConstant></param>
         </mapping>
-      </dataset>
-      <dataset name="areaImg" type="Image">
+      </variable>
+      <variable name="areaImg" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>projImg</variableReference></function></param>
           <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
           <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
-      </dataset>
+      </variable>
       <call proc="mProjectPP" src="line 27">
         <output><variableReference>projImg</variableReference></output>
         <output><variableReference>areaImg</variableReference></output>
@@ -233,14 +233,14 @@
     name="template" type="Header"
 
      xsi:nil="true" />
-    <dataset name="diffs" type="DiffStruct[]">
+    <variable name="diffs" type="DiffStruct[]">
       <mapping descriptor="csv_mapper">
         <param name="file"><function name="filename">
           <variableReference>diffsTbl</variableReference></function></param>
         <param name="skip"><integerConstant>1</integerConstant></param>
         <param name="hdelim"><stringConstant> |</stringConstant></param>
       </mapping>
-    </dataset>
+    </variable>
     <foreach var="d"  indexVar="i" src="line 51">
     <in><variableReference>diffs</variableReference></in>
     <body><variable name="image1" type="Image" xsi:nil="true"/>
@@ -251,14 +251,14 @@
          <memberName>plus</memberName>
        </structureMember>
       </assign>
-      <dataset name="area1" type="Image">
+      <variable name="area1" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>image1</variableReference></function></param>
           <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
           <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
-      </dataset>
+      </variable>
       <variable name="image2" type="Image" xsi:nil="true"/>
       <assign src="line 55">
        <variableReference>image2</variableReference>
@@ -267,15 +267,15 @@
          <memberName>minus</memberName>
        </structureMember>
       </assign>
-      <dataset name="area2" type="Image">
+      <variable name="area2" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>image2</variableReference></function></param>
           <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
           <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
-      </dataset>
-      <dataset name="diffImg" type="Image">
+      </variable>
+      <variable name="diffImg" type="Image">
         <mapping descriptor="fixed_mapper">
           <param name="file"><function name="filename">
             <structureMember>
@@ -283,15 +283,15 @@
               <memberName>diff</memberName>
             </structureMember></function></param>
         </mapping>
-      </dataset>
-      <dataset name="statusFile" type="TxtFile">
+      </variable>
+      <variable name="statusFile" type="TxtFile">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>diffImg</variableReference></function></param>
           <param name="match"><stringConstant>diff(.*)fits</stringConstant></param>
           <param name="transform"><stringConstant>fit\1txt</stringConstant></param>
         </mapping>
-      </dataset>
+      </variable>
       <call proc="mDiffFit" src="line 59">
         <output><variableReference>diffImg</variableReference></output>
         <output><variableReference>statusFile</variableReference></output>
@@ -472,22 +472,22 @@
         <variableReference>i</variableReference>
        </arraySubscript>
       </assign>
-      <dataset name="corrImg" type="Image">
+      <variable name="corrImg" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>projImg</variableReference></function></param>
           <param name="match"><stringConstant>proj_(.*)</stringConstant></param>
           <param name="transform"><stringConstant>corr_\1</stringConstant></param>
         </mapping>
-      </dataset>
-      <dataset name="corrArea" type="Image">
+      </variable>
+      <variable name="corrArea" type="Image">
         <mapping descriptor="regexp_mapper">
           <param name="source"><function name="filename">
             <variableReference>corrImg</variableReference></function></param>
           <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
           <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
         </mapping>
-      </dataset>
+      </variable>
       <call proc="mBackground" src="line 94">
         <output><variableReference>corrImg</variableReference></output>
         <output><variableReference>corrArea</variableReference></output>
@@ -647,15 +647,13 @@
           <variableReference>jpeg</variableReference></function>  </application>
     </binding>
   </procedure>
-  <dataset name="rawImages" type="Image[]">
+  <variable name="rawImages" type="Image[]">
     <mapping descriptor="dir_mapper">
       <param name="location"><stringConstant>rawdir</stringConstant></param>
       <param name="suffix"><stringConstant>.fits</stringConstant></param>
     </mapping>
-  </dataset>
-  <dataset name="template" type="Header">
-    <file name="template.hdr"/>
-  </dataset>
+  </variable>
+  <variable name="template" type="Header"><file name="template.hdr"/></variable>
   <variable name="projectedImages" type="Image[]" xsi:nil="true"/>
   <variable name="projectedAreas" type="Image[]" xsi:nil="true"/>
   <call proc="mProjectPPBatch" src="line 141">
@@ -664,17 +662,13 @@
     <input><variableReference>rawImages</variableReference></input>
     <input><variableReference>template</variableReference></input>
   </call>
-  <dataset name="projImgTbl" type="Table">
-    <file name="projImg.tbl"/>
-  </dataset>
+  <variable name="projImgTbl" type="Table"><file name="projImg.tbl"/></variable>
   <call proc="mImgtbl" src="line 145">
     <output><variableReference>projImgTbl</variableReference></output>
     <input><stringConstant>.</stringConstant></input>
     <input><variableReference>projectedImages</variableReference></input>
   </call>
-  <dataset name="diffsTbl" type="Table">
-    <file name="diffs.tbl"/>
-  </dataset>
+  <variable name="diffsTbl" type="Table"><file name="diffs.tbl"/></variable>
   <call proc="mOverlaps" src="line 149">
     <output><variableReference>diffsTbl</variableReference></output>
     <input><variableReference>projImgTbl</variableReference></input>
@@ -687,25 +681,19 @@
     <input><variableReference>diffsTbl</variableReference></input>
     <input><variableReference>template</variableReference></input>
   </call>
-  <dataset name="statusFilesTbl" type="Table">
-    <file name="statfile.tbl"/>
-  </dataset>
+  <variable name="statusFilesTbl" type="Table"><file name="statfile.tbl"/></variable>
   <call proc="mStatTbl" src="line 156">
     <output><variableReference>statusFilesTbl</variableReference></output>
     <input><variableReference>diffsTbl</variableReference></input>
   </call>
-  <dataset name="fitsTbl" type="Table">
-    <file name="fits.tbl"/>
-  </dataset>
+  <variable name="fitsTbl" type="Table"><file name="fits.tbl"/></variable>
   <call proc="mConcatFit" src="line 160">
     <output><variableReference>fitsTbl</variableReference></output>
     <input><variableReference>statusFilesTbl</variableReference></input>
     <input><variableReference>statusFiles</variableReference></input>
     <input><stringConstant>.</stringConstant></input>
   </call>
-  <dataset name="correctionsTbl" type="Table">
-    <file name="corrections.tbl"/>
-  </dataset>
+  <variable name="correctionsTbl" type="Table"><file name="corrections.tbl"/></variable>
   <call proc="mBgModel" src="line 164">
     <output><variableReference>correctionsTbl</variableReference></output>
     <input><variableReference>projImgTbl</variableReference></input>
@@ -721,20 +709,14 @@
     <input><variableReference>projImgTbl</variableReference></input>
     <input><variableReference>correctionsTbl</variableReference></input>
   </call>
-  <dataset name="corrImgTbl" type="Table">
-    <file name="corrImg.tbl"/>
-  </dataset>
+  <variable name="corrImgTbl" type="Table"><file name="corrImg.tbl"/></variable>
   <call proc="mImgtbl" src="line 172">
     <output><variableReference>corrImgTbl</variableReference></output>
     <input><stringConstant>.</stringConstant></input>
     <input><variableReference>correctedImages</variableReference></input>
   </call>
-  <dataset name="mosaic" type="Image">
-    <file name="mosaic.fits"/>
-  </dataset>
-  <dataset name="mosaicArea" type="Image">
-    <file name="mosaic_area.fits"/>
-  </dataset>
+  <variable name="mosaic" type="Image"><file name="mosaic.fits"/></variable>
+  <variable name="mosaicArea" type="Image"><file name="mosaic_area.fits"/></variable>
   <call proc="mAdd" src="line 177">
     <output><variableReference>mosaic</variableReference></output>
     <output><variableReference>mosaicArea</variableReference></output>
@@ -743,17 +725,13 @@
     <input><variableReference>correctedImages</variableReference></input>
     <input><variableReference>correctedAreas</variableReference></input>
   </call>
-  <dataset name="smallMosaic" type="Image">
-    <file name="smallMosaic.fits"/>
-  </dataset>
+  <variable name="smallMosaic" type="Image"><file name="smallMosaic.fits"/></variable>
   <call proc="mShrink" src="line 181">
     <output><variableReference>smallMosaic</variableReference></output>
     <input><variableReference>mosaic</variableReference></input>
     <input><floatConstant>3.0</floatConstant></input>
   </call>
-  <dataset name="jpeg" type="JPEG">
-    <file name="mosaic.jpg"/>
-  </dataset>
+  <variable name="jpeg" type="JPEG"><file name="mosaic.jpg"/></variable>
   <call proc="mJPEG" src="line 185">
     <output><variableReference>jpeg</variableReference></output>
     <input><variableReference>smallMosaic</variableReference></input>

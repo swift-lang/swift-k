@@ -1,3 +1,8 @@
+(02/09/09)
+*** Mappings can now be made in any declaration, whether it has an assignment
+    or not. Previous a procedure call assignment and a mapping could not be
+    made in the same statement.
+
 (02/05/09)
 *** TIghter type checking on app blocks. Primitive types and arrays of
     primitive types are permitted. Other types are prohibited.

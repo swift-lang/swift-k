@@ -262,21 +262,7 @@
 
   <xs:complexType name="Variable">
     <xs:annotation>
-      <xs:documentation>defines a variable, which has a name, a type, and it
-      may be an array and may have an associated initial value.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-        <xs:element ref="abstractExpression" />
-    </xs:sequence>
-    <xs:attribute name="name" type="xs:NCName" use="required"/>
-    <xs:attribute name="type" type="xs:QName" use="required"/>
-    <xs:attribute name="isArray" type="xs:boolean"/>
-  </xs:complexType>
-
-  <xs:complexType name="Dataset">
-    <xs:annotation>
-      <xs:documentation>defines a dataset-bound variable, which has the
+      <xs:documentation>defines a variable, which has the
       dataset handle information, such as name, type, mapping descriptor and
       mapping parameters.</xs:documentation>
     </xs:annotation>
@@ -393,13 +379,6 @@
           <xs:documentation>defines an intermediate variable, so that it can
           link the output of one node to the input of another
           node</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-
-      <xs:element name="dataset" type="Dataset">
-        <xs:annotation>
-          <xs:documentation>defines an dataset, which can be passed to a call
-          as an actual parameter</xs:documentation>
         </xs:annotation>
       </xs:element>
 

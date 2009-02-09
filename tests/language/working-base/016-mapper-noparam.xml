@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <dataset name="v" type="myfile">
+  <variable name="v" type="myfile">
     <mapping descriptor="simple_mapper"/>
-  </dataset>
+  </variable>
 </program>

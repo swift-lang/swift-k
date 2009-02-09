@@ -62,9 +62,7 @@
    </structureMember>
    <integerConstant>3</integerConstant>
   </assign>
-  <dataset name="outfile" type="messagefile">
-    <file name="q15.txt"/>
-  </dataset>
+  <variable name="outfile" type="messagefile"><file name="q15.txt"/></variable>
   <call proc="greeting" src="line 21">
     <output><variableReference>outfile</variableReference></output>
     <input><variableReference>person</variableReference></input>

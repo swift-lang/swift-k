@@ -31,7 +31,6 @@ import org.globus.swift.language.Assign;
 import org.globus.swift.language.BinaryOperator;
 import org.globus.swift.language.Binding;
 import org.globus.swift.language.Call;
-import org.globus.swift.language.Dataset;
 import org.globus.swift.language.Foreach;
 import org.globus.swift.language.FormalParameter;
 import org.globus.swift.language.Function;
@@ -46,8 +45,8 @@ import org.globus.swift.language.TypeRow;
 import org.globus.swift.language.TypeStructure;
 import org.globus.swift.language.UnlabelledUnaryOperator;
 import org.globus.swift.language.Variable;
-import org.globus.swift.language.Dataset.Mapping;
-import org.globus.swift.language.Dataset.Mapping.Param;
+import org.globus.swift.language.Variable.Mapping;
+import org.globus.swift.language.Variable.Mapping.Param;
 import org.globus.swift.language.If.Else;
 import org.globus.swift.language.If.Then;
 import org.globus.swift.language.Procedure;
@@ -269,51 +268,33 @@ public class Karajan {
 
 	public void variable(Variable var, VariableScope scope) throws CompilationException {
 		StringTemplate variableST = template("variable");
-		scope.bodyTemplate.setAttribute("declarations", variableST);
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
 		variableST.setAttribute("isArray", Boolean.valueOf(var.getIsArray1()));
 
 		checkIsTypeDefined(var.getType().getLocalPart());
-		
 		if(!var.isNil()) {
+/* this bit is never used now... but the stuff from dataset should be
+   here, and also the behaviour if a mapping is not specified needs to
+   be retained
 			StringTemplate exprST = expressionToKarajan(var.getAbstractExpression(),scope);
 			if (!datatype(exprST).equals(var.getType().getLocalPart()))
 				throw new CompilationException("Could not assign expression of type " + datatype(exprST) +
 						" to a variable of type " + var.getType().getLocalPart());
 			variableST.setAttribute("expr", exprST);
-		} else {
-			// add temporary mapping info
-			StringTemplate mappingST = new StringTemplate("mapping");
-			mappingST.setAttribute("descriptor", "concurrent_mapper");
-			StringTemplate paramST = template("vdl_parameter");
-			paramST.setAttribute("name", "prefix");
-			paramST.setAttribute("expr", var.getName() + "-"
-					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
-			mappingST.setAttribute("params", paramST);
-			variableST.setAttribute("mapping", mappingST);
-			variableST.setAttribute("nil", Boolean.TRUE);
-		}
-		scope.addVariable(var.getName(), var.getType().getLocalPart());
-	}
+*/
 
-	public void dataset(Dataset dataset, VariableScope scope) throws CompilationException {
-		StringTemplate datasetST = template("variable");
-		datasetST.setAttribute("name", dataset.getName());
-		datasetST.setAttribute("type", dataset.getType().getLocalPart());
-		if (dataset.isSetIsArray1()) {
-			datasetST.setAttribute("isArray", Boolean.valueOf(dataset.getIsArray1()));
-		}
-		
-		checkIsTypeDefined(dataset.getType().getLocalPart());
-		
-		if (dataset.getFile() != null) {
+
+		if (var.getFile() != null) {
 			StringTemplate fileST = new StringTemplate("file");
-			fileST.setAttribute("name", escapeQuotes(dataset.getFile().getName()));
+			fileST.setAttribute("name", escapeQuotes(var.getFile().getName()));
 			fileST.defineFormalArgument("params");
-			datasetST.setAttribute("file", fileST);
+			variableST.setAttribute("file", fileST);
 		}
-		Mapping mapping = dataset.getMapping();
+
+
+
+		Mapping mapping = var.getMapping();
 
 		if (mapping != null) {
 			StringTemplate mappingST = new StringTemplate("mapping");
@@ -358,12 +339,24 @@ public class Karajan {
 				}
 				mappingST.setAttribute("params", paramST);
 			}
-			datasetST.setAttribute("mapping", mappingST);
+			variableST.setAttribute("mapping", mappingST);
 		}
-		scope.bodyTemplate.setAttribute("declarations", datasetST);
-		scope.addVariable(dataset.getName(), dataset.getType().getLocalPart());
+		} else {
+			// add temporary mapping info
+			StringTemplate mappingST = new StringTemplate("mapping");
+			mappingST.setAttribute("descriptor", "concurrent_mapper");
+			StringTemplate paramST = template("vdl_parameter");
+			paramST.setAttribute("name", "prefix");
+			paramST.setAttribute("expr", var.getName() + "-"
+					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+			mappingST.setAttribute("params", paramST);
+			variableST.setAttribute("mapping", mappingST);
+			variableST.setAttribute("nil", Boolean.TRUE);
+		}
+		scope.bodyTemplate.setAttribute("declarations", variableST);
+		scope.addVariable(var.getName(), var.getType().getLocalPart());
 	}
-	
+
 	void checkIsTypeDefined(String type) throws CompilationException {		
 		while (type.length() > 2 && type.substring(type.length() - 2).equals("[]"))
 			type = type.substring(0, type.length() - 2);		
@@ -412,9 +405,6 @@ public class Karajan {
 	public void statement(XmlObject child, VariableScope scope) throws CompilationException {
 		if (child instanceof Variable) {
 			variable((Variable) child, scope);
-		}
-		else if (child instanceof Dataset) {
-			dataset((Dataset) child, scope);
 		}
 		else if (child instanceof Assign) {
 			assign((Assign) child, scope);
