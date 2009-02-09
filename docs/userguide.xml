@@ -3475,6 +3475,22 @@ head job. Note that this provider and hostname will be used for execution
 of a coaster head job, not for file transfer; so for example, a GRAM
 endpoint should be specified here rather than a GridFTP endpoint.
 </para>
+<para>
+Coasters are affected by the following profile settings, which are
+documented in the <link linkend="profile.globus">Globus namespace profile
+section</link>:
+</para>
+
+<table frame="all">
+ <tgroup cols="2" align="left" colsep="1" rowsep="1">
+  <thead><row><entry>profile key</entry><entry>brief description</entry></row></thead>
+  <tbody>
+   <row><entry>coastersPerNode</entry><entry>How many coasters to run per execution node</entry></row>
+   <row><entry>coasterWorkerMaxwalltime</entry><entry>The maxwalltime that coaster workers should be submitted with</entry></row>
+   <row><entry>coasterInternalIP</entry><entry>The IP address of the coaster head node to be used by workers</entry></row>
+  </tbody>
+ </tgroup>
+</table> 
 	</section>
 	<section id="localhowtos"><title>How-To Tips for Specific User Communities</title>
 		<section id="savinglogs"><title>Saving Logs - for UChicago CI Users</title>
