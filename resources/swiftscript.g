@@ -669,6 +669,30 @@ procedureInvocationWithoutSemi [StringTemplate code]
         RPAREN
     ;
 
+procedureInvocationExpr [StringTemplate code]
+{StringTemplate f=null;}
+    :
+        id:ID {code.setAttribute("func", id.getText());}
+        LPAREN (
+        	f=actualParameter {
+        		code.setAttribute("inputs", f);
+        	}
+       		(
+       			COMMA f=actualParameter {
+        			code.setAttribute("inputs", f);
+            	}
+            )*
+        )?
+        RPAREN
+    ;
+    
+procedureCallExpr returns [StringTemplate code=template("call")]
+{StringTemplate f=null;}
+    :
+        procedureInvocationExpr[code]
+    ;
+
+
 predictProcedurecallDecl : ASSIGN ID LPAREN ;
 
 procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl, StringTemplate var]
@@ -968,12 +992,16 @@ unaryExpr returns [StringTemplate code=null]
 
 primExpr returns [StringTemplate code=null]
 {StringTemplate id=null, exp=null;}
-    : code=identifier
+    : (predictProcedureCallExpr) => code=procedureCallExpr                     
+    | code=identifier
     | LPAREN exp=orExpr RPAREN { code=template("paren");
         code.setAttribute("exp", exp);}
     | code=constant
     | code=functionInvocation
     ;
+
+predictProcedureCallExpr
+    : ID LPAREN ;
 
 // TODO - redo identifier parsing to fit in with the XML style
 // that this patch introduces

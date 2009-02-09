@@ -186,6 +186,9 @@ public class VariableScope {
 	    rather then walking the template.
 	*/
 	StringTemplate getLocalDeclaration(String name) {
+	    if (bodyTemplate == null) {
+	        return null;
+	    }
 		Object decls = bodyTemplate.getAttribute("declarations");
 		if(decls == null) return null;
 

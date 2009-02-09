@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+
 import javax.xml.namespace.QName;
 
 import org.antlr.stringtemplate.StringTemplate;
@@ -24,34 +24,12 @@ import org.apache.xmlbeans.XmlInt;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 import org.apache.xmlbeans.XmlString;
-import org.globus.swift.language.ActualParameter;
-import org.globus.swift.language.ApplicationBinding;
-import org.globus.swift.language.Array;
-import org.globus.swift.language.Assign;
-import org.globus.swift.language.BinaryOperator;
-import org.globus.swift.language.Binding;
-import org.globus.swift.language.Call;
-import org.globus.swift.language.Foreach;
-import org.globus.swift.language.FormalParameter;
-import org.globus.swift.language.Function;
-import org.globus.swift.language.If;
-import org.globus.swift.language.Iterate;
-import org.globus.swift.language.LabelledBinaryOperator;
-import org.globus.swift.language.Procedure;
-import org.globus.swift.language.ProgramDocument;
-import org.globus.swift.language.Range;
-import org.globus.swift.language.Switch;
-import org.globus.swift.language.TypeRow;
-import org.globus.swift.language.TypeStructure;
-import org.globus.swift.language.UnlabelledUnaryOperator;
-import org.globus.swift.language.Variable;
+import org.globus.swift.language.*;
 import org.globus.swift.language.Variable.Mapping;
 import org.globus.swift.language.Variable.Mapping.Param;
 import org.globus.swift.language.If.Else;
 import org.globus.swift.language.If.Then;
-import org.globus.swift.language.Procedure;
 import org.globus.swift.language.ProgramDocument.Program;
-import org.globus.swift.language.StructureMember;
 import org.globus.swift.language.Switch.Case;
 import org.globus.swift.language.Switch.Default;
 import org.globus.swift.language.TypesDocument.Types;
@@ -410,7 +388,7 @@ public class Karajan {
 			assign((Assign) child, scope);
 		}
 		else if (child instanceof Call) {
-			call((Call) child, scope);
+			call((Call) child, scope, false);
 		}
 		else if (child instanceof Foreach) {
 			foreachStat((Foreach)child, scope);
@@ -432,7 +410,7 @@ public class Karajan {
 		}
 	}
 
-	public void call(Call call, VariableScope scope) throws CompilationException {
+	public StringTemplate call(Call call, VariableScope scope, boolean inhibitOutput) throws CompilationException {
 		try {
 			StringTemplate callST = template("call");
 			callST.setAttribute("func", call.getProc().getLocalPart());
@@ -593,7 +571,10 @@ public class Karajan {
 				}
 			}					
 			
-			scope.appendStatement(callST);
+			if (!inhibitOutput) {
+			    scope.appendStatement(callST);
+			}
+			return callST;
 		} catch(CompilationException ce) {
 			throw new CompilationException("Compile error in procedure invocation at "+call.getSrc()+": "+ce.getMessage(),ce);
 		}
@@ -854,6 +835,7 @@ public class Karajan {
 	static final QName ARRAY_EXPR = new QName(SWIFTSCRIPT_NS, "array");
 	static final QName RANGE_EXPR = new QName(SWIFTSCRIPT_NS, "range");
 	static final QName FUNCTION_EXPR = new QName(SWIFTSCRIPT_NS, "function");
+	static final QName CALL_EXPR = new QName(SWIFTSCRIPT_NS, "call");
 
 	/** converts an XML intermediate form expression into a
 	 *  Karajan expression.
@@ -1102,6 +1084,34 @@ public class Karajan {
 			} else
 				throw new CompilationException("Function " + name + " is not defined.");
 			return st;
+		} else if (expressionQName.equals(CALL_EXPR)) {
+		    Call c = (Call) expression;
+		    c.addNewOutput(); 
+		    VariableScope subscope = new VariableScope(this, scope);
+		    VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
+		    ref.setVariableReference("swift#callintermediate");
+		    c.getOutputArray(0).set(ref);
+		    String name = c.getProc().getLocalPart();
+		    ProcedureSignature funcSignature = (ProcedureSignature) proceduresMap.get(name);
+		    
+		    if (funcSignature == null) {
+                throw new CompilationException("Procedure " + name + " is not defined.");
+            }
+		    
+		    if (funcSignature.sizeOfOutputArray() != 1) {
+		        throw new CompilationException("Procedure " + name + " must have exactly one " +
+		        		"return value to be used in an expression.");
+		    }
+		    
+		    StringTemplate call = template("callexpr");
+		    
+		    String type = funcSignature.getOutputArray(0).getType();
+		    subscope.addVariable("swift#callintermediate", type);
+
+		    call.setAttribute("datatype", type);
+		    call.setAttribute("call", call(c, subscope, true));
+		    call.setAttribute("callID", new Integer(callID++));
+		    return call;
 		} else {
 			throw new CompilationException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);
 		}

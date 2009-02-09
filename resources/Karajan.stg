@@ -294,6 +294,16 @@ assign(var,value) ::= <<
    </vdl:setfieldvalue>
 >>
 
+callexpr(call, datatype, callID) ::= <<
+<sequential>
+	<set name="swift#callintermediate">
+		<vdl:new type="$datatype$" dbgname="tmp"/>
+	</set>
+	$call$
+	<variable>swift#callintermediate</variable>
+</sequential>
+>>
+
 array(elements, datatype) ::= <<
 <vdl:createarray>
   <list>
