@@ -252,73 +252,63 @@ public class Karajan {
 
 		checkIsTypeDefined(var.getType().getLocalPart());
 		if(!var.isNil()) {
-/* this bit is never used now... but the stuff from dataset should be
-   here, and also the behaviour if a mapping is not specified needs to
-   be retained
-			StringTemplate exprST = expressionToKarajan(var.getAbstractExpression(),scope);
-			if (!datatype(exprST).equals(var.getType().getLocalPart()))
-				throw new CompilationException("Could not assign expression of type " + datatype(exprST) +
-						" to a variable of type " + var.getType().getLocalPart());
-			variableST.setAttribute("expr", exprST);
-*/
 
-
-		if (var.getFile() != null) {
-			StringTemplate fileST = new StringTemplate("file");
-			fileST.setAttribute("name", escapeQuotes(var.getFile().getName()));
-			fileST.defineFormalArgument("params");
-			variableST.setAttribute("file", fileST);
-		}
-
-
-
-		Mapping mapping = var.getMapping();
-
-		if (mapping != null) {
-			StringTemplate mappingST = new StringTemplate("mapping");
-			mappingST.setAttribute("descriptor", mapping.getDescriptor());
-			for (int i = 0; i < mapping.sizeOfParamArray(); i++) {
-				Param param = mapping.getParamArray(i);
-				StringTemplate paramST = template("vdl_parameter");
-				paramST.setAttribute("name", param.getName());
-				Node expressionDOM = param.getAbstractExpression().getDomNode();
-				String namespaceURI = expressionDOM.getNamespaceURI();
-				String localName = expressionDOM.getLocalName();
-				QName expressionQName = new QName(namespaceURI, localName);
-				if(expressionQName.equals(VARIABLE_REFERENCE_EXPR))     {
-					paramST.setAttribute("expr",expressionToKarajan(param.getAbstractExpression(),scope));
-				} else {
-					String parameterVariableName="swift#mapper#"+(internedIDCounter++);
-					// make template for variable declaration (need to compute type of this variable too?)
-					StringTemplate variableDeclarationST = template("variable");
-					variableDeclarationST.setAttribute("waitfor","");
-					// TODO factorise this and other code in variable()?
-					StringTemplate pmappingST = new StringTemplate("mapping");
-					pmappingST.setAttribute("descriptor", "concurrent_mapper");
-					StringTemplate pparamST = template("vdl_parameter");
-					pparamST.setAttribute("name", "prefix");
-					pparamST.setAttribute("expr", parameterVariableName + "-" + UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
-					pmappingST.setAttribute("params", pparamST);
-					variableDeclarationST.setAttribute("mapping", pmappingST);
-					variableDeclarationST.setAttribute("nil", Boolean.TRUE);
-					variableDeclarationST.setAttribute("name", parameterVariableName);
-					scope.bodyTemplate.setAttribute("declarations",variableDeclarationST);
-					StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
-					String paramValueType = datatype(paramValueST);
-					scope.addVariable(parameterVariableName, paramValueType);
-					variableDeclarationST.setAttribute("type", paramValueType);
-					StringTemplate variableReferenceST = template("id");
-					variableReferenceST.setAttribute("var",parameterVariableName);
-					StringTemplate variableAssignmentST = template("assign");
-					variableAssignmentST.setAttribute("var",variableReferenceST);
-					variableAssignmentST.setAttribute("value",paramValueST);
-					scope.appendStatement(variableAssignmentST);
-					paramST.setAttribute("expr",variableReferenceST);
-				}
-				mappingST.setAttribute("params", paramST);
+			if (var.getFile() != null) {
+				StringTemplate fileST = new StringTemplate("file");
+				fileST.setAttribute("name", escapeQuotes(var.getFile().getName()));
+				fileST.defineFormalArgument("params");
+				variableST.setAttribute("file", fileST);
 			}
-			variableST.setAttribute("mapping", mappingST);
-		}
+
+
+
+			Mapping mapping = var.getMapping();
+
+			if (mapping != null) {
+				StringTemplate mappingST = new StringTemplate("mapping");
+				mappingST.setAttribute("descriptor", mapping.getDescriptor());
+				for (int i = 0; i < mapping.sizeOfParamArray(); i++) {
+					Param param = mapping.getParamArray(i);
+					StringTemplate paramST = template("vdl_parameter");
+					paramST.setAttribute("name", param.getName());
+					Node expressionDOM = param.getAbstractExpression().getDomNode();
+					String namespaceURI = expressionDOM.getNamespaceURI();
+					String localName = expressionDOM.getLocalName();
+					QName expressionQName = new QName(namespaceURI, localName);
+					if(expressionQName.equals(VARIABLE_REFERENCE_EXPR))     {
+						paramST.setAttribute("expr",expressionToKarajan(param.getAbstractExpression(),scope));
+					} else {
+						String parameterVariableName="swift#mapper#"+(internedIDCounter++);
+						// make template for variable declaration (need to compute type of this variable too?)
+						StringTemplate variableDeclarationST = template("variable");
+						variableDeclarationST.setAttribute("waitfor","");
+						// TODO factorise this and other code in variable()?
+						StringTemplate pmappingST = new StringTemplate("mapping");
+						pmappingST.setAttribute("descriptor", "concurrent_mapper");
+						StringTemplate pparamST = template("vdl_parameter");
+						pparamST.setAttribute("name", "prefix");
+						pparamST.setAttribute("expr", parameterVariableName + "-" + UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+						pmappingST.setAttribute("params", pparamST);
+						variableDeclarationST.setAttribute("mapping", pmappingST);
+						variableDeclarationST.setAttribute("nil", Boolean.TRUE);
+						variableDeclarationST.setAttribute("name", parameterVariableName);
+						scope.bodyTemplate.setAttribute("declarations",variableDeclarationST);
+						StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
+						String paramValueType = datatype(paramValueST);
+						scope.addVariable(parameterVariableName, paramValueType);
+						variableDeclarationST.setAttribute("type", paramValueType);
+						StringTemplate variableReferenceST = template("id");
+						variableReferenceST.setAttribute("var",parameterVariableName);
+						StringTemplate variableAssignmentST = template("assign");
+						variableAssignmentST.setAttribute("var",variableReferenceST);
+						variableAssignmentST.setAttribute("value",paramValueST);
+						scope.appendStatement(variableAssignmentST);
+						paramST.setAttribute("expr",variableReferenceST);
+					}
+					mappingST.setAttribute("params", paramST);
+				}
+				variableST.setAttribute("mapping", mappingST);
+			}
 		} else {
 			// add temporary mapping info
 			StringTemplate mappingST = new StringTemplate("mapping");
