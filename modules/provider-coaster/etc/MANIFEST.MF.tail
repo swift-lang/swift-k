@@ -1,1 +1,1 @@
-Main-Class: org.globus.cog.abstraction.impl.execution.coaster.Bootstrap
+Main-Class: org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Bootstrap
