@@ -3,7 +3,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -71,40 +70,27 @@ public class TCProfile extends VDLFunction {
 
 			attrs = attributesFromTC(tce, attrs);
 		}
-
-		attrs = checkWalltime(tr, attrs);
-
+		checkWalltime(tr, attrs);
 		addAttributes(named, attrs);
 		return null;
 	}
 	
-	private Map checkWalltime(String tr, Map attrs) {
+	private void checkWalltime(String tr, Map attrs) {
 	    Object walltime = null;
 	    if (attrs != null) {
 	    	walltime = attrs.get("maxwalltime");
 	    }
         if (walltime == null) {
-            warn(tr, "Warning: missing walltime specification for \"" + tr
-                    + "\". Assuming 10 minutes.");
-            walltime = "10";
+            return;
         }
-        int seconds;
         try {
-            seconds = WallTime.timeToSeconds(walltime.toString());
+        	//validate walltime
+            WallTime.timeToSeconds(walltime.toString());
         }
         catch (IllegalArgumentException e) {
             warn(tr, "Warning: invalid walltime specification for \"" + tr
-                    + "\" (" + walltime + "). Assuming 10 minutes.");
-            walltime = "10";
+                    + "\" (" + walltime + ").");
         }
-        if (attrs == null) {
-            attrs = new HashMap();
-            attrs.put("maxwalltime", walltime);
-        }
-        else {
-            attrs.put("maxwalltime", walltime);
-        }
-        return attrs;
 	}
 	
 	private static final Set warnedAboutWalltime = new HashSet();

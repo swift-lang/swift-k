@@ -5,10 +5,8 @@ package org.griphyn.vdl.karajan.lib.replication;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
@@ -26,6 +24,8 @@ public class ReplicationManager {
     public static final int INITIAL_QUEUE_TIME_ESTIMATE = 30; // seconds
     
     public static final int WALLTIME_DEADLINE_MULTIPLIER = 2;
+    
+    public static final int VERY_LARGE_WALLTIME = 360 * 24 * 60 * 60; //about one year
 
     private int n;
     private long s;
@@ -96,7 +96,13 @@ public class ReplicationManager {
     protected void registerRunning(Task task, Date time) {
         JobSpecification spec = (JobSpecification) task.getSpecification();
         Object walltime = spec.getAttribute("maxwalltime");
-        int seconds = WallTime.timeToSeconds(walltime.toString());
+        int seconds;
+        if (walltime == null) {
+        	seconds = VERY_LARGE_WALLTIME;
+        }
+        else {
+       		seconds = WallTime.timeToSeconds(walltime.toString());
+        }
         Date deadline = new Date(time.getTime() + WALLTIME_DEADLINE_MULTIPLIER * seconds * 1000);
         running.put(task, deadline);
     }
