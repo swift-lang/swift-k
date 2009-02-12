@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Bootstrap;
 import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Digester;
 import org.globus.common.CoGProperties;
 
@@ -73,7 +74,7 @@ public class BootstrapService implements Runnable {
     private void initList() {
         valid = new HashSet();
         valid.add("/" + ServiceManager.BOOTSTRAP_JAR);
-        valid.add("/" + ServiceManager.BOOTSTRAP_LIST);
+        valid.add("/" + Bootstrap.BOOTSTRAP_LIST);
         valid.add("/index.html");
         checksums = new HashMap();
         loadList();
@@ -81,9 +82,9 @@ public class BootstrapService implements Runnable {
 
     private void loadList() {
         URL url = BootstrapService.class.getClassLoader().getResource(
-                ServiceManager.BOOTSTRAP_LIST);
+                Bootstrap.BOOTSTRAP_LIST);
         if (url == null) {
-            throw new RuntimeException(ServiceManager.BOOTSTRAP_LIST
+            throw new RuntimeException(Bootstrap.BOOTSTRAP_LIST
                     + " not found in classpath");
         }
         try {
@@ -385,7 +386,7 @@ public class BootstrapService implements Runnable {
                     page = "/index.html";
                 }
                 if (page.equals("/list")) {
-                    page = "/" + ServiceManager.BOOTSTRAP_LIST;
+                    page = "/" + Bootstrap.BOOTSTRAP_LIST;
                 }
                 if (valid.contains(page)) {
                     createFileBuffer(page);

@@ -35,6 +35,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Bootstrap;
 import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Digester;
 import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
@@ -58,7 +59,6 @@ public class ServiceManager implements StatusListener {
 
     public static final String BOOTSTRAP_SCRIPT = "bootstrap.sh";
     public static final String BOOTSTRAP_JAR = "coaster-bootstrap.jar";
-    public static final String BOOTSTRAP_LIST = "coaster-bootstrap.list";
 
     public static final String TASK_ATTR_ID = "coaster:serviceid";
 
@@ -254,7 +254,7 @@ public class ServiceManager implements StatusListener {
                     getBootstrapServiceURL(),
                     getLocalServiceURL(),
                     getMD5(BOOTSTRAP_JAR),
-                    getMD5(BOOTSTRAP_LIST),
+                    getMD5(Bootstrap.BOOTSTRAP_LIST),
                     id,
                     sc.getHost()
             }));
