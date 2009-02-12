@@ -35,6 +35,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Digester;
 import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
@@ -247,16 +248,17 @@ public class ServiceManager implements StatusListener {
             JobSpecification js = new JobSpecificationImpl();
             js.setExecutable("/bin/bash");
             js.addArgument("-c");
-            js.addArgument(loadBootstrapScript());
-            js.addArgument(getBootstrapServiceURL());
-            js.addArgument(getLocalServiceURL());
-            js.addArgument(getMD5(BOOTSTRAP_JAR));
-            js.addArgument(getMD5(BOOTSTRAP_LIST));
-            js.setDelegation(Delegation.FULL_DELEGATION);
             String id = getRandomID();
             t.setAttribute(TASK_ATTR_ID, id);
-            js.addArgument(id);
-            js.addArgument(sc.getHost());
+            js.addArgument(loadBootstrapScript(new String[] {
+                    getBootstrapServiceURL(),
+                    getLocalServiceURL(),
+                    getMD5(BOOTSTRAP_JAR),
+                    getMD5(BOOTSTRAP_LIST),
+                    id,
+                    sc.getHost()
+            }));
+            js.setDelegation(Delegation.FULL_DELEGATION);
             js.setStdOutputLocation(FileLocation.MEMORY);
             js.setStdErrorLocation(FileLocation.MEMORY);
             js.setDelegation(Delegation.FULL_DELEGATION);
@@ -272,7 +274,7 @@ public class ServiceManager implements StatusListener {
         }
     }
 
-    private synchronized String loadBootstrapScript()
+    private synchronized String loadBootstrapScript(String[] args)
             throws TaskSubmissionException {
         if (bootstrapScript != null) {
             return bootstrapScript;
@@ -285,20 +287,63 @@ public class ServiceManager implements StatusListener {
         }
         try {
             StringBuffer sb = new StringBuffer();
+            sb.append("echo -e \"");
             BufferedReader br = new BufferedReader(new InputStreamReader(u
                     .openStream()));
             String line = br.readLine();
             while (line != null) {
-                sb.append(line);
-                sb.append("\n");
+                escape(sb, line, args);
+                sb.append("\\x0a");
                 line = br.readLine();
             }
+            sb.append("\"|/bin/bash");
             bootstrapScript = sb.toString();
             return bootstrapScript;
         }
         catch (IOException e) {
             throw new TaskSubmissionException(
                     "Could not load bootsrap script", e);
+        }
+    }
+    
+    private void escape(StringBuffer sb, String line, String[] args) {
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            switch (c) {
+                case '\'':
+                    sb.append("\\x27");
+                    break;
+                case '`':
+                    sb.append("\\x60");
+                    break;
+                case '"':
+                    sb.append("\\x22");
+                    break;
+                case '<':
+                    sb.append("\\x3c");
+                    break;
+                case '>':
+                    sb.append("\\x3e");
+                    break;
+                case '$':
+                    if (i + 1 < line.length()) {
+                        int n = line.charAt(i + 1) - '0';
+                        if (n >= 1 && n <= 9 && n <= args.length && args[n - 1] != null) {
+                            i++;
+                            sb.append('"');
+                            sb.append(args[n - 1]);
+                            sb.append('"');
+                            // a hack to prevent blind substitution (e.g. inside
+                            // a function).
+                            args[n - 1] = null;
+                            continue;
+                        }
+                    }
+                    sb.append("\\x24");
+                    break;
+                default:
+                    sb.append(c);
+            }
         }
     }
 
