@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Digester;
 import org.globus.common.CoGProperties;
 
 public class BootstrapService implements Runnable {
