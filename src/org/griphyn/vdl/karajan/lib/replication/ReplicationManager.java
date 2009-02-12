@@ -93,36 +93,12 @@ public class ReplicationManager {
         }
     }
 
-    private static final Set warnedAboutWalltime = new HashSet();
-
     protected void registerRunning(Task task, Date time) {
         JobSpecification spec = (JobSpecification) task.getSpecification();
         Object walltime = spec.getAttribute("maxwalltime");
-        String tr = (String) spec.getAttribute("tr");
-        if (walltime == null) {
-            warn(tr, "Warning: missing walltime specification for \"" + tr
-                    + "\". Assuming 10 minutes.");
-            walltime = "10";
-        }
-        int seconds;
-        try {
-            seconds = WallTime.timeToSeconds(walltime.toString());
-        }
-        catch (IllegalArgumentException e) {
-            warn(tr, "Warning: invalid walltime specification for \"" + tr
-                    + "\" (" + walltime + "). Assuming 10 minutes.");
-            seconds = 10 * 60;
-        }
+        int seconds = WallTime.timeToSeconds(walltime.toString());
         Date deadline = new Date(time.getTime() + WALLTIME_DEADLINE_MULTIPLIER * seconds * 1000);
         running.put(task, deadline);
-    }
-
-    private void warn(String tr, String message) {
-        synchronized (warnedAboutWalltime) {
-            if (warnedAboutWalltime.add(tr)) {
-                System.out.println(message);
-            }
-        }
     }
 
     public synchronized int getN() {
