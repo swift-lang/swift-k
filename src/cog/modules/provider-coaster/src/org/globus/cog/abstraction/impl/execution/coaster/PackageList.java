@@ -12,6 +12,8 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 import java.io.File;
 import java.io.FilenameFilter;
 
+import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Digester;
+
 public class PackageList {
 
     private File dir;
