@@ -7,7 +7,7 @@
 /*
  * Created on Jan 18, 2008
  */
-package org.globus.cog.abstraction.impl.execution.coaster;
+package org.globus.cog.abstraction.impl.execution.coaster.bootstrap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
 
 public class Bootstrap {
 
@@ -182,8 +183,7 @@ public class Bootstrap {
                 sb.append(':');
             }
         }
-        String java = System.getProperty("java.home") + File.separator
-                + "bin" + File.separator + "java";
+        String java = System.getProperty("java");
         List args = new ArrayList();
         args.add(java);
         addDebuggingOptions(args);
