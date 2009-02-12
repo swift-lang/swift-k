@@ -98,7 +98,8 @@ public class TCProfile extends VDLFunction {
             walltime = "10";
         }
         if (attrs == null) {
-            attrs = Collections.singletonMap("maxwalltime", walltime);
+            attrs = new HashMap();
+            attrs.put("maxwalltime", walltime);
         }
         else {
             attrs.put("maxwalltime", walltime);
