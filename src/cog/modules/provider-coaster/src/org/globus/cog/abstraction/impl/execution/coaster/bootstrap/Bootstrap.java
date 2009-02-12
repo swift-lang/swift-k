@@ -25,6 +25,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import org.globus.cog.abstraction.impl.execution.coaster.BootstrapService;
+import org.globus.cog.abstraction.impl.execution.coaster.ServiceManager;
+
 
 public class Bootstrap {
 
@@ -40,21 +43,21 @@ public class Bootstrap {
     private static final File LOG_DIR = new File(System
             .getProperty("user.home")
             + File.separator + ".globus" + File.separator + "coasters");
+    
+    public static final String BOOTSTRAP_LIST = "coaster-bootstrap.list";
 
     public static final String SERVICE_CLASS = "org.globus.cog.abstraction.coaster.service.CoasterService";
     
     private static Logger logger;
 
     private String serviceURL;
-    private String listChecksum;
     private String registrationURL;
     private String serviceId;
     private List list;
 
-    public Bootstrap(String serviceURL, String listChecksum,
+    public Bootstrap(String serviceURL,
             String registrationURL, String serviceId) {
         this.serviceURL = serviceURL;
-        this.listChecksum = listChecksum;
         this.registrationURL = registrationURL;
         this.serviceId = serviceId;
         list = new ArrayList();
@@ -62,20 +65,21 @@ public class Bootstrap {
     }
 
     public void run() throws Exception {
-        getList();
+        processList();
         updateJars();
         start();
     }
 
-    private void getList() throws Exception {
-        logger.log("Fetching file list");
+    private void processList() throws Exception {
+        logger.log("Processing file list");
         StringBuffer line = new StringBuffer();
-        URL url = new URL(serviceURL + "/list?serviceId=" + serviceId);
+        URL url = Bootstrap.class.getClassLoader().getResource(BOOTSTRAP_LIST);
+        if (url == null) {
+            error("Bootstrap list missing from bootstrap jar.");
+        }
         InputStream is = url.openStream();
-        MessageDigest md = MessageDigest.getInstance("MD5");
         int c = is.read();
         while (c != -1) {
-            md.update((byte) c);
             if (c == '\n') {
                 processLine(line.toString());
                 line = new StringBuffer();
@@ -84,11 +88,6 @@ public class Bootstrap {
                 line.append((char) c);
             }
             c = is.read();
-        }
-        String actualChecksum = Digester.hex(md.digest());
-        if (!listChecksum.equals(actualChecksum)) {
-            throw new RuntimeException(
-                    "Computed list checksum does not match actual checksum");
         }
     }
 
@@ -292,10 +291,10 @@ public class Bootstrap {
 
     public static void main(String[] args) {
         if (args.length != 4) {
-            error("Wrong number of arguments. Expected <serviceURL>, <package list checksum>, <registration service URL>, and <id>");
+            error("Wrong number of arguments. Expected <serviceURL>, <registration service URL>, and <id>");
         }
         try {
-            Bootstrap b = new Bootstrap(args[0], args[1], args[2], args[3]);
+            Bootstrap b = new Bootstrap(args[0], args[1], args[2]);
             b.run();
         }
         catch (Exception e) {
