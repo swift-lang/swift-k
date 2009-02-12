@@ -68,6 +68,7 @@
 	
 	<target name="compile">
 		<ant antfile="${main.buildfile}" target="compile"/>
+		<ant antfile="${cog.dir}/modules/${module.name}/build.xml" target="package.list"/>
 	</target>
 
 	<!--  _________________________________________________________________  -->
@@ -148,7 +149,7 @@
 		<ant antfile="${main.buildfile}" target="fixeol"/>
 	</target>
 		
-	<target name="bootstrap.jar" depends="package.list">
+	<target name="bootstrap.jar">
 		<echo message="[${module.name}]: BOOTSTRAP JAR"/>
     	<mkdir dir="${build.dir}/etc.tmp"/>
 	    <concat destfile="${build.dir}/etc.tmp/MANIFEST.MF">
