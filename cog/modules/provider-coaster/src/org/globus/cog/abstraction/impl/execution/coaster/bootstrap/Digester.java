@@ -7,7 +7,7 @@
 /*
  * Created on Jan 18, 2008
  */
-package org.globus.cog.abstraction.impl.execution.coaster;
+package org.globus.cog.abstraction.impl.execution.coaster.bootstrap;
 
 import java.io.File;
 import java.io.FileInputStream;
