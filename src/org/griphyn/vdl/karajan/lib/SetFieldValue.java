@@ -80,7 +80,7 @@ public class SetFieldValue extends VDLFunction {
 			closeShallow(stack, dest);
 		} else {
 			// TODO implement this
-			throw new RuntimeException("Deep non-array structure copying not implemented");
+			throw new RuntimeException("Deep non-array structure copying not implemented, when trying to copy "+source);
 		}
 	}
 
