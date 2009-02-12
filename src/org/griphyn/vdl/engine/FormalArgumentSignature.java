@@ -49,4 +49,8 @@ public class FormalArgumentSignature {
 	public void setOptional(boolean optionalArg) {
 		this.optionalArg = optionalArg;
 	}
+	
+	public String toString() {
+	    return type + " " + name;
+	}
 }
