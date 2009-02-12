@@ -59,12 +59,17 @@ public class ProcedureSignature {
 		return outputArgs.size();
 	}
 	
+	private static final FormalArgumentSignature[] FORMAL_ARGUMENT_SIGNATURE_ARRAY = 
+	    new FormalArgumentSignature[0];
+	
 	public FormalArgumentSignature[] getInputArray() {
-		return (FormalArgumentSignature[]) inputArgs.toArray();
+		return (FormalArgumentSignature[]) 
+		    inputArgs.toArray(FORMAL_ARGUMENT_SIGNATURE_ARRAY);
 	}
 	
 	public FormalArgumentSignature[] getOutputArray() {
-		return (FormalArgumentSignature[]) outputArgs.toArray();
+		return (FormalArgumentSignature[]) 
+		    outputArgs.toArray(FORMAL_ARGUMENT_SIGNATURE_ARRAY);
 	}
 	
 	public FormalArgumentSignature getInputArray(int i) {
@@ -201,4 +206,7 @@ public class ProcedureSignature {
 		return functionsMap;
 	}
 	
+	public String toString() {
+	    return outputArgs + " " + name + inputArgs;
+	}
 }
