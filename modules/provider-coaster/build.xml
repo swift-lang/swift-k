@@ -68,7 +68,6 @@
 	
 	<target name="compile">
 		<ant antfile="${main.buildfile}" target="compile"/>
-		<ant antfile="${cog.dir}/modules/${module.name}/build.xml" target="package.list"/>
 	</target>
 
 	<!--  _________________________________________________________________  -->
@@ -149,14 +148,15 @@
 		<ant antfile="${main.buildfile}" target="fixeol"/>
 	</target>
 		
-	<target name="bootstrap.jar">
+	<target name="bootstrap.jar" depends="package.list">
 		<echo message="[${module.name}]: BOOTSTRAP JAR"/>
     	<mkdir dir="${build.dir}/etc.tmp"/>
 	    <concat destfile="${build.dir}/etc.tmp/MANIFEST.MF">
        		<filelist dir="etc" files="MANIFEST.MF.head,MANIFEST.MF.tail"/>
 	    </concat>
 	    <jar jarfile="${dist.dir}/lib/coaster-bootstrap.jar" manifest="${build.dir}/etc.tmp/MANIFEST.MF" index="false">
-    		<fileset dir="${build.dir}" includes="**/bootstrap/*.*" excludes="*.tmp, *.tmp/**, *.tmp/**/*.*"/>
+    		<fileset dir="${build.dir}" includes="**/bootstrap/*.*,coaster-bootstrap.list" excludes="*.tmp, *.tmp/**, *.tmp/**/*.*"/>
+    		
 	    </jar>
 	</target>
 	
