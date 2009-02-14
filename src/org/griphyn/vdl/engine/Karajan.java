@@ -739,28 +739,32 @@ public class Karajan {
 	}
 
 	public StringTemplate application(ApplicationBinding app, VariableScope scope) throws CompilationException {
-		StringTemplate appST = new StringTemplate("application");
-		appST.setAttribute("exec", app.getExecutable());
-		for (int i = 0; i < app.sizeOfAbstractExpressionArray(); i++) {
-			XmlObject argument = app.getAbstractExpressionArray(i);
-			StringTemplate argumentST = expressionToKarajan(argument, scope);
-			String type = datatype(argumentST);
-			if(type.equals("string") || type.equals("string[]")
-			 || type.equals("int") || type.equals("float") 
-			 || type.equals("int[]") || type.equals("float[]") 
-			 || type.equals("boolean") || type.equals("boolean[]")) {
-				appST.setAttribute("arguments", argumentST);
-			} else {
-				throw new CompilationException("Cannot pass type '"+type+"' as a parameter to application '"+app.getExecutable()+"' at "+app.getSrc());
+		try {
+			StringTemplate appST = new StringTemplate("application");
+			appST.setAttribute("exec", app.getExecutable());
+			for (int i = 0; i < app.sizeOfAbstractExpressionArray(); i++) {
+				XmlObject argument = app.getAbstractExpressionArray(i);
+				StringTemplate argumentST = expressionToKarajan(argument, scope);
+				String type = datatype(argumentST);
+				if(type.equals("string") || type.equals("string[]")
+				 || type.equals("int") || type.equals("float") 
+				 || type.equals("int[]") || type.equals("float[]") 
+				 || type.equals("boolean") || type.equals("boolean[]")) {
+					appST.setAttribute("arguments", argumentST);
+				} else {
+					throw new CompilationException("Cannot pass type '"+type+"' as a parameter to application '"+app.getExecutable());
+				}
 			}
+			if(app.getStdin()!=null)
+				appST.setAttribute("stdin", expressionToKarajan(app.getStdin().getAbstractExpression(), scope));
+			if(app.getStdout()!=null)
+				appST.setAttribute("stdout", expressionToKarajan(app.getStdout().getAbstractExpression(), scope));
+			if(app.getStderr()!=null)
+				appST.setAttribute("stderr", expressionToKarajan(app.getStderr().getAbstractExpression(), scope));
+			return appST;
+		} catch(CompilationException e) {
+			throw new CompilationException(e.getMessage()+" in application "+app.getExecutable()+" at "+app.getSrc(),e);
 		}
-		if(app.getStdin()!=null)
-			appST.setAttribute("stdin", expressionToKarajan(app.getStdin().getAbstractExpression(), scope));
-		if(app.getStdout()!=null)
-			appST.setAttribute("stdout", expressionToKarajan(app.getStdout().getAbstractExpression(), scope));
-		if(app.getStderr()!=null)
-			appST.setAttribute("stderr", expressionToKarajan(app.getStderr().getAbstractExpression(), scope));
-		return appST;
 	}
 
 	/** Produces a Karajan function invocation from a SwiftScript invocation.
@@ -969,33 +973,52 @@ public class Karajan {
 			return st;
 		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
 			BinaryOperator op = (BinaryOperator) expression;
-			StringTemplate newst = template("extractarrayelement");
 			StringTemplate arrayST = expressionToKarajan(op.getAbstractExpressionArray(1), scope);
 			StringTemplate parentST = expressionToKarajan(op.getAbstractExpressionArray(0), scope);
-			newst.setAttribute("arraychild", arrayST);
-			newst.setAttribute("parent", parentST);
-			
-			String arrayType = datatype(parentST); 
+
+			// handle [*] as identity/no-op
 			if (datatype(arrayST).equals("string")) {
 				XmlString var = (XmlString) op.getAbstractExpressionArray(1);
-				if (!var.getStringValue().equals("*"))
+				if (var.getStringValue().equals("*")) {
+					return parentST;
+				} else {
 				   throw new CompilationException("Array index must be of type int, or *.");
-				newst.setAttribute("datatype", arrayType);
-			} else if (datatype(arrayST).equals("int")) {
-				newst.setAttribute("datatype", arrayType.substring(0, arrayType.length()-2));
+				}
 			} else {
-				throw new CompilationException("Array index must be of type int.");
+				// the index should be numerical
+
+				StringTemplate newst = template("extractarrayelement");
+				newst.setAttribute("arraychild", arrayST);
+				newst.setAttribute("parent", parentST);
+			
+				String arrayType = datatype(parentST); 
+				if (datatype(arrayST).equals("int")) {
+					newst.setAttribute("datatype", arrayType.substring(0, arrayType.length()-2));
+				} else {
+					throw new CompilationException("Array index must be of type int, or *.");
+				}
+				return newst;
 			}
-			return newst;
 		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
 			StructureMember sm = (StructureMember) expression;
-			StringTemplate newst = template("extractarrayelement");
 			StringTemplate parentST = expressionToKarajan(sm.getAbstractExpression(), scope);
-			newst.setAttribute("parent", parentST);
-			newst.setAttribute("memberchild", sm.getMemberName());
 			
 			String parentType = datatype(parentST);
+
+
+			// if the parent is an array, then check against
+			// the base type of the array
+
+boolean arrayMode = false;
+			if(parentType.endsWith("[]")) {
+System.err.println("Strimming the end off "+parentType+" to give ...");
+arrayMode=true;
+				parentType = parentType.substring(0, parentType.length() - 2);
+System.err.println("... to give "+parentType);
+			}
+
 			String actualType = null;					
+			// TODO this should be a map lookup of some kind?
 			for (int i = 0; i < types.sizeOfTypeArray(); i++) {
 				if (types.getTypeArray(i).getTypename().equals(parentType)) {
 					TypeStructure ts = types.getTypeArray(i).getTypestructure();
@@ -1014,8 +1037,20 @@ public class Karajan {
 			if (actualType == null) {
 				throw new CompilationException("Type " + parentType + " is not defined.");
 			}
-			newst.setAttribute("datatype", actualType); 
-			return newst;
+			if(arrayMode) {
+				actualType += "[]";
+				StringTemplate newst = template("slicearray");
+				newst.setAttribute("parent", parentST);
+				newst.setAttribute("memberchild", sm.getMemberName());
+				newst.setAttribute("datatype", actualType); 
+				return newst;
+			} else {
+				StringTemplate newst = template("extractarrayelement");
+				newst.setAttribute("parent", parentST);
+				newst.setAttribute("memberchild", sm.getMemberName());
+				newst.setAttribute("datatype", actualType); 
+				return newst;
+			}
 			// TODO the template layout for this and ARRAY_SUBSCRIPT are
 			// both a bit convoluted for historical reasons.
 			// should be straightforward to tidy up.

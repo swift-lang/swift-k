@@ -470,6 +470,15 @@ $endif$
 
 >>
 
+slicearray(parent, memberchild, datatype) ::= <<
+<vdl:slicearray>
+  <argument name="var">$parent$</argument>
+  <argument name="path">$memberchild$</argument>
+  <argument name="type">$datatype$</argument>
+</vdl:slicearray>
+>>
+
+
 iConst(value, datatype) ::= <<
 <vdl:new type="int" value="$value$" />
 >>
