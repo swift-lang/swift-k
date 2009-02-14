@@ -302,7 +302,7 @@ public class ServiceManager implements StatusListener {
         }
         catch (IOException e) {
             throw new TaskSubmissionException(
-                    "Could not load bootsrap script", e);
+                    "Could not load bootstrap script", e);
         }
     }
     
