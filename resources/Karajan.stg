@@ -449,10 +449,8 @@ id(var, datatype) ::= <<
 <variable>$var$</variable>
 >>
 
-// TODO tidy the interaction with getfield (perhaps by making two new
-// elements, one for structure members, one for array access) that
-// doesn't need this strcat.
-// or make a varargs karajan level accessor?
+// TODO this would more cleanly be two templates, one for structure
+// access and one for array access.
 
 extractarrayelement(parent, arraychild, memberchild, datatype) ::= <<
 
