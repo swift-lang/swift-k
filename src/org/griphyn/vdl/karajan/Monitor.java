@@ -64,7 +64,7 @@ public class Monitor implements ActionListener, MouseListener {
 
 	private synchronized void init() {
 		frame = new JFrame();
-		frame.setTitle("VDS Debugger");
+		frame.setTitle("Swift Debugger");
 		buttons = new JPanel();
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().add(buttons, BorderLayout.NORTH);
@@ -430,7 +430,7 @@ public class Monitor implements ActionListener, MouseListener {
 						InputStream is = ins.getInputStream();
 						OutputStream os = ins.getOutputStream();
 						PrintStream ps = new PrintStream(os, true);
-						ps.println("VDS Debugger");
+						ps.println("Swift Debugger");
 						while (true) {
 							ps.print("\n> ");
 							char c = (char) is.read();
