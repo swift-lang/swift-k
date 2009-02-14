@@ -1,7 +1,6 @@
 BS=$1
 LS=$2
 EMD5=$3
-LMD5=$4
 ID=$5
 H=$6
 L=$7
@@ -14,11 +13,11 @@ error() {
 	exit 1
 }
 find() {
-	R=`eval $1 2>/dev/null`
+	R=`eval $1 2>>$L`
 	if [ "X$R" == "X" ]; then
-		R=`/bin/bash -l -c "$1"`
+		R=`/bin/bash -l -c "$1" 2>>$L`
 	elif [ -x $R ]; then
-		R=`/bin/bash -l -c "$1"`
+		R=`/bin/bash -l -c "$1" 2>>$L`
 	fi
 	echo $R
 }
@@ -62,7 +61,7 @@ if [ "X$JAVA" == "X" ]; then
 fi
 echo "JAVA=$JAVA" >>$L
 if [ -x $JAVA ]; then 
-	CMD="$JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -jar $DJ $BS $LMD5 $LS $ID"
+	CMD="$JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -jar $DJ $BS $LS $ID"
 	echo $CMD >>$L
 	eval $CMD >>$L	
 	EC=$?
