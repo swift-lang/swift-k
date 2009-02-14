@@ -290,7 +290,7 @@ public class Bootstrap {
     }
 
     public static void main(String[] args) {
-        if (args.length != 4) {
+        if (args.length != 3) {
             error("Wrong number of arguments. Expected <serviceURL>, <registration service URL>, and <id>");
         }
         try {
