@@ -1,3 +1,13 @@
+(02/09/14)
+*** Handling of [*] and . has changed. [*] has been broken for several
+    Swift releases, but now has some approximation of its former behaviour,
+    in a cleaner implementation.
+    [*] is now an identity operation, that is array[*] == array.
+    The structure access operator . can now take an array on the left
+    hand side. In situations where a[*].img was used, it is permissible
+    to continue to write a[*].img, or to write a.img - both of these will
+    return an array of img elements.
+
 (02/09/09)
 *** Procedure invocations can be made in any expression context now, rather
     than only directly in an assignment.
