@@ -65,9 +65,7 @@ public class SliceArray extends VDLFunction {
 				}
 
 				String destinationTypeName = (String) PA_TYPE.getValue(stack);
-System.err.println("Looking up destination type "+destinationTypeName);
 				Type destinationType = Types.getType(destinationTypeName);
-System.err.println("Got type object "+destinationType);
 				RootArrayDataNode destinationArray = new RootArrayDataNode(destinationType);
 
 
@@ -79,7 +77,6 @@ System.err.println("Got type object "+destinationType);
 					Pair pair = (Pair) it.next();
 					Object index = pair.get(0);
 					DSHandle sourceElement = (DSHandle) pair.get(1);
-System.err.println("Processing index: "+index+" with sourceElement="+sourceElement);
 
 
                                 	Path p = Path.EMPTY_PATH.addLast(String.valueOf(index), true);

@@ -1011,10 +1011,8 @@ public class Karajan {
 
 boolean arrayMode = false;
 			if(parentType.endsWith("[]")) {
-System.err.println("Strimming the end off "+parentType+" to give ...");
-arrayMode=true;
+				arrayMode=true;
 				parentType = parentType.substring(0, parentType.length() - 2);
-System.err.println("... to give "+parentType);
 			}
 
 			String actualType = null;					
@@ -1068,7 +1066,7 @@ System.err.println("... to give "+parentType);
 				st.setAttribute("elements", elemST);				
 			}
 			if (elemType.equals(""))
-				System.err.println("WARNING: Empty array constant");
+				logger.warn("WARNING: Empty array constant");
 			st.setAttribute("datatype", elemType + "[]");
 			return st;
 		} else if (expressionQName.equals(RANGE_EXPR)) {
