@@ -45,7 +45,7 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 
 	public synchronized void addModificationAction(EventListener target, Event event) {
 		/**
-		 * So, the strategy is the following: getValue() or something else
+		 * TODO So, the strategy is the following: getValue() or something else
 		 * throws a future exception; then some entity catches that and calls
 		 * this method. There is no way to ensure that the future was not closed
 		 * in the mean time. What has to be done is that this method should
