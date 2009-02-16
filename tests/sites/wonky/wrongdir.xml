@@ -1,0 +1,11 @@
+<config>
+
+  <pool handle="localhost">
+    <gridftp  url="local://localhost" />
+    <execution provider="wonky" url="wd/wrongdirectory" />
+    <workdirectory >/var/tmp</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
+    <profile namespace="karajan" key="delayBase">0</profile>
+  </pool>
+
+</config>
