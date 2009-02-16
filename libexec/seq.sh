@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#WFDIR=$(dirname $(dirname $0))
+#cd $WFDIR
+
 SEQID="$1"
 shift
 
@@ -11,6 +14,7 @@ mkdir -p $PWD/$LOGPATH
 WRAPPERLOG=$PWD/$LOGPATH/$SEQID.clusterlog
 
 echo `date +%s` START > $WRAPPERLOG
+echo `date +%s` WORKING DIRECTORY IS $PWD >> $WRAPPERLOG
 
 ls >>$WRAPPERLOG
 

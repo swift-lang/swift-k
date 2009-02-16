@@ -100,6 +100,10 @@ COMMANDLINE=$@
 WFDIR=$(dirname $(dirname $0))
 
 cd $WFDIR
+
+# make the WFDIR absolute
+WFDIR=$(pwd)
+
 openinfo "wrapper.log"
 ID=$1
 checkEmpty "$ID" "Missing job ID"
@@ -241,12 +245,16 @@ if [ ! -x "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not have the executable bit set"
 fi
 if [ "$KICKSTART" == "" ]; then
+log "command line is $EXEC $@"
+log "pwd is $(pwd)"
 	if [ "$STDIN" == "" ]; then
 		"$EXEC" "$@" 1>"$STDOUT" 2>"$STDERR"
 	else
 		"$EXEC" "$@" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 	fi
 	checkError $? "Exit code $?"
+find . >& "$INFO" 
+
 else
 	if [ ! -f "$KICKSTART" ]; then
 		log "Kickstart executable ($KICKSTART) not found"
@@ -273,6 +281,7 @@ fi
 
 cd $WFDIR
 
+log "Moving back to workflow directory $WFDIR"
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
 

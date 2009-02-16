@@ -122,8 +122,11 @@ public class VDSTaskTransformer implements TaskTransformer {
 			}
 			List l =   spec.getArgumentsAsList();
 			// perhaps should check for /bin/bash in the executable, or some other way of detecting we need to do a substitution here... or equally could assume that the second parameter always needs to undergo this substitution...
-			if(((String)l.get(0)).endsWith("shared/wrapper.sh")) {
-				String s  = workdir+"/"+l.get(0);
+			String executable = (String)l.get(0);
+			if(executable.endsWith("shared/wrapper.sh") || 
+			   executable.endsWith("shared/seq.sh")) {
+
+				String s  = spec.getDirectory()+"/"+executable;
 				l.set(0,s);
 			}
 
