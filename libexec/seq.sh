@@ -38,7 +38,7 @@ while [ "$EXEC" != "" ]; do
 		ARG="$1"
 		shift
 	done
-	echo `date +%s` EXECUTING $EXEC $ARG >> $WRAPPERLOG
+	echo `date +%s` EXECUTING $EXEC ${ARGS[@]} >> $WRAPPERLOG
 	"$EXEC" "${ARGS[@]}"
 	EXITCODE=$?
 	echo `date +%s` EXECUTED $EXITCODE >> $WRAPPERLOG
