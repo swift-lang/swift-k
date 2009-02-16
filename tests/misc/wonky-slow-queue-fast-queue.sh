@@ -14,7 +14,7 @@ cat tc.data ../sites/tc.data > tmp.tc.data.sites
 cat tmp.tc.data.wonky-twosite | sed 's/localhost/wonkyA/' >> tmp.tc.data.sites
 cat tmp.tc.data.wonky-twosite | sed 's/localhost/wonkyB/' >> tmp.tc.data.sites
 
-export SWIFT_TEST_PARAMS="-tc.file tmp.tc.data.sites -sites.file ../sites/wonky/slow-queue-fast-queue.xml -debug" 
+export SWIFT_TEST_PARAMS="-tc.file tmp.tc.data.sites -sites.file ../sites/wonky/slow-queue-fast-queue.xml" 
 
 ./run 066-many.swift
 
