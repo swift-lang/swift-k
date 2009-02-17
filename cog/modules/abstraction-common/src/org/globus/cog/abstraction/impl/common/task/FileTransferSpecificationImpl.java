@@ -159,14 +159,14 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	}
 
 	public boolean isThirdPartyIfPossible() {
-        return thirdPartyIfPossible;
-    }
+		return thirdPartyIfPossible;
+	}
 
-    public void setThirdPartyIfPossible(boolean thirdPartyIfPossible) {
-        this.thirdPartyIfPossible = thirdPartyIfPossible;
-    }
+	public void setThirdPartyIfPossible(boolean thirdPartyIfPossible) {
+		this.thirdPartyIfPossible = thirdPartyIfPossible;
+	}
 
-    public void setAttribute(String name, Object value) {
+	public void setAttribute(String name, Object value) {
 		this.attributes.put(name, value);
 	}
 
@@ -182,35 +182,35 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 		return "Transfer[" + this.getSource() + " -> " + this.getDestination() + "]";
 	}
 
-    public long getDestinationOffset() {
-        return destinationFileOffset;
-    }
+	public long getDestinationOffset() {
+		return destinationFileOffset;
+	}
 
-    public void setDestinationOffset(long destinationFileOffset) {
-        this.destinationFileOffset = destinationFileOffset;
-    }
+	public void setDestinationOffset(long destinationFileOffset) {
+		this.destinationFileOffset = destinationFileOffset;
+	}
 
-    public long getSourceLength() {
-        return sourceFileLength;
-    }
+	public long getSourceLength() {
+		return sourceFileLength;
+	}
 
-    public void setSourceLength(long sourceFileLength) {
-        this.sourceFileLength = sourceFileLength;
-    }
+	public void setSourceLength(long sourceFileLength) {
+		this.sourceFileLength = sourceFileLength;
+	}
 
-    public long getSourceOffset() {
-        return sourceFileOffset;
-    }
+	public long getSourceOffset() {
+		return sourceFileOffset;
+	}
 
-    public void setSourceOffset(long sourceFileOffset) {
-        this.sourceFileOffset = sourceFileOffset;
-    }
+	public void setSourceOffset(long sourceFileOffset) {
+		this.sourceFileOffset = sourceFileOffset;
+	}
 
-    public boolean isRecursive() {
-        return recursive;
-    }
+	public boolean isRecursive() {
+		return recursive;
+	}
 
-    public void setRecursive(boolean recursive) {
-        this.recursive = recursive;
-    }
+	public void setRecursive(boolean recursive) {
+		this.recursive = recursive;
+	}
 }
