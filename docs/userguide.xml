@@ -3563,6 +3563,36 @@ MPI modes (such as GRAM jobType=mpi) should not be used. Instead, the
 mpirun command should be explicitly invoked.
 </para>
 		</section>
+		<section id="tips.osg"><title>Generating a sites.xml for OSG</title>
+			<para>
+The Swift distribution contains a command
+<command>swift-osg-ress-site-catalog</command> that can generate a site
+catalog based on OSG's ReSS information system (since Swift 0.9)
+			</para>
+
+			<screen>
+Usage:
+    swift-osg-ress-site-catalog [options]
+
+Options:
+    --help  Show this help message
+
+    --vo=[name]
+            Set what VO to query ReSS for
+
+    --engage-verified
+            Only retrieve sites verified by the Engagement VO site
+            verification tests This can not be used together with --vo, as
+            the query will only work for sites advertising support for the
+            Engagement VO.
+
+            This option means information will be retrieved from the
+            Engagement collector instead of the top-level ReSS collector.
+
+    --out=[filename]
+            Write to [filename] instead of stdout
+			</screen>
+		</section>
 	</section>
 
 

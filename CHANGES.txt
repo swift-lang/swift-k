@@ -1,3 +1,9 @@
+(02/09/17)
+*** There is a new command swift-osg-ress-site-catalog which will generate
+    a site catalog based on data gathered from OSG's ReSS information
+    system. This can be used by OSG users to easily generate a large number
+    of site catalog entries for sites that are likely to work.
+
 (02/09/14)
 *** Handling of [*] and . has changed. [*] has been broken for several
     Swift releases, but now has some approximation of its former behaviour,
