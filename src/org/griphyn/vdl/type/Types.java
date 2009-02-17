@@ -4,27 +4,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class Types {
+public abstract class Types {
 
 	//TODO: check namespace references in type definitions
 	private static Map types = new HashMap();
 
 	private String namespace = null;
-
-	public Types() {
-	}
-
-	public Types(String namespace) {
-		this.namespace = namespace;
-	}
-
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public void setNamespace(String namespace) {
-		this.namespace = namespace;
-	}
 
 	public synchronized static Type getType(String name) throws NoSuchTypeException {
 		Type type = (Type) types.get(name);
