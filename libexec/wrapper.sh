@@ -24,6 +24,14 @@ info() {
 	cat /proc/meminfo 2>&1 >& "$INFO"
 	infosection "command line"
 	echo $COMMANDLINE 2>&1 >& "$INFO"
+	if [ -f "$STDOUT" ] ; then
+		infosection "stdout"
+		cat $STDOUT >& "$INFO"
+	fi
+	if [ -f "$STDERR" ] ; then
+		infosection "stderr"
+		cat $STDERR >& "$INFO"
+	fi
 }
 
 logstate() {
@@ -245,8 +253,6 @@ if [ ! -x "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not have the executable bit set"
 fi
 if [ "$KICKSTART" == "" ]; then
-log "command line is $EXEC $@"
-log "pwd is $(pwd)"
 	if [ "$STDIN" == "" ]; then
 		"$EXEC" "$@" 1>"$STDOUT" 2>"$STDERR"
 	else
