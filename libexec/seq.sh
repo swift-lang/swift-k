@@ -28,9 +28,10 @@ echo `date +%s` POST-LS >> $WRAPPERLOG
 EXEC="$1"
 shift
 
+# we go round this loop once for each clustered job
 while [ "$EXEC" != "" ]; do
 	echo `date +%s` LOOP-START >> $WRAPPERLOG
-	ARGS=
+	declare -a ARGS
 	INDEX=0
 	
 	ARG="$1"
@@ -56,7 +57,7 @@ while [ "$EXEC" != "" ]; do
 		echo `date +%s` FAILED >> $WRAPPERLOG
 		exit $EXITCODE
 	fi
-
+        unset ARGS
 	EXEC="$1"
 	shift
 done
