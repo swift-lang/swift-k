@@ -51,7 +51,6 @@
 	<export name="isFileBound"><elementDef classname="org.griphyn.vdl.karajan.lib.IsFileBound"/></export>
 	<export name="isRestartable"><elementDef classname="org.griphyn.vdl.karajan.lib.IsRestartable"/></export>
 	<export name="fringePaths"><elementDef classname="org.griphyn.vdl.karajan.lib.FringePaths"/></export>
-	<export name="assign"><elementDef classname="org.griphyn.vdl.karajan.lib.Assign"/></export>
 	<export name="closeDataset"><elementDef classname="org.griphyn.vdl.karajan.lib.CloseDataset"/></export>
 	<export name="partialCloseDataset"><elementDef classname="org.griphyn.vdl.karajan.lib.PartialCloseDataset"/></export>
 	<export name="range"><elementDef classname="org.griphyn.vdl.karajan.lib.Range"/></export>
