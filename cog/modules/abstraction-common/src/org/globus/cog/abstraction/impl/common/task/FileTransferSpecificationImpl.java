@@ -21,7 +21,7 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	private String source;
 	private String destination;
 	private boolean thirdparty, recursive;
-    private boolean thirdPartyIfPossible;
+	private boolean thirdPartyIfPossible;
 	private long sourceFileOffset, destinationFileOffset, sourceFileLength;
 	private Hashtable attributes;
 
