@@ -28,26 +28,4 @@ public abstract class CacheFunction extends PartialArgumentsContainer {
 		}
 		return cache;
 	}
-
-	public static class CacheEntry {
-		public String fullPath;
-		public Object host;
-
-		public CacheEntry(String fullPath, Object host) {
-			this.fullPath = fullPath;
-			this.host = host;
-		}
-
-		public boolean equals(Object other) {
-			if (other instanceof CacheEntry) {
-				CacheEntry ce = (CacheEntry) other;
-				return fullPath.equals(ce.fullPath) && host.equals(ce.host);
-			}
-			return false;
-		}
-
-		public int hashCode() {
-			return fullPath.hashCode() + host.hashCode();
-		}
-	}
 }
