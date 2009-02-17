@@ -134,6 +134,7 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 			<replacevalue>set COG_OPTS=-DCOG_INSTALL_PATH=%SWIFT_HOME% -Dswift.home=%SWIFT_HOME% -Dvds.home=%SWIFT_HOME% </replacevalue>
 		</replace>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
+		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
 	</target>
 
 	<target name="antlr">
