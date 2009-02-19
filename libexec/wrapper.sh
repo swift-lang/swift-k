@@ -259,8 +259,6 @@ if [ "$KICKSTART" == "" ]; then
 		"$EXEC" "$@" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 	fi
 	checkError $? "Exit code $?"
-find . >& "$INFO" 
-
 else
 	if [ ! -f "$KICKSTART" ]; then
 		log "Kickstart executable ($KICKSTART) not found"
