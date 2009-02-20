@@ -74,7 +74,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			checkInputs(params, mapper, this);
 		}
 		catch (VDL2FutureException e) {
-			logger.warn("Unexpected VDL2FutureException checking inputs");
+			logger.warn("Unexpected VDL2FutureException checking inputs for dataset "+this);
 			throw new RuntimeException("Got a VDL2FutureException but all parameters should have their values",e);
 		}
 		catch (DependentException e) {
