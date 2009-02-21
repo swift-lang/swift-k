@@ -100,7 +100,7 @@ foreach my $sitename (keys %ads) {
     else {
         print FH "    <jobmanager universe=\"vanilla\" url=\"$contact\" major=\"2\" />\n";
     }
-    print FH "    <workdirectory >$workdir/$lc_vo/tmp</workdirectory>\n";
+    print FH "    <workdirectory >$workdir/$lc_vo/tmp/$sitename</workdirectory>\n";
     print FH "  </pool>\n";
 }
 print FH "\n</config>\n";
