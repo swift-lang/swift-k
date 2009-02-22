@@ -88,7 +88,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
 		
 		if (!new File(project).exists()) {
-		    System.err.println("SwiftScript program does not exist: " + project + "\n");
+			System.err.println("SwiftScript program does not exist: " + project + "\n");
 			shortUsage();
 			System.exit(1);
 		}
@@ -165,13 +165,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			// TODO should not be referring to vds.home any more
 			stack.setGlobal("vds.home", System.getProperty("vds.home"));
 
-            List arguments = ap.getArguments();
-            if (ap.hasValue(ARG_RESUME)) {
-                arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
-            }
+			List arguments = ap.getArguments();
+			if (ap.hasValue(ARG_RESUME)) {
+				arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
+			}
 			ec.setArguments(arguments);
-            
-            ec.start(stack);
+
+			ec.start(stack);
 			ec.waitFor();
 			if (ec.isFailed()) {
 				runerror = true;
