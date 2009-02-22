@@ -453,13 +453,15 @@ formalParameter returns [StringTemplate code=template("parameter")]
         }
     ;
 
+// TODO unnecessary complexity here - this should work ok matching
+// only ID
 type returns [StringTemplate code=null]
 {String s = null;}
     :
      ( ( "int" {s="int"; } )
      | ( "float" {s="float"; } )
      | ( "string" {s="string"; } )
-     | ( "bool" {s="bool"; } )
+     | ( "boolean" {s="boolean"; } )
      | ( id:ID {s=id.getText();} )
      ) 
         {
