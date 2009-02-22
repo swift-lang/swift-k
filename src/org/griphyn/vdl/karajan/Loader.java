@@ -162,6 +162,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			else {
 				stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_RUN);
 			}
+			// TODO should not be referring to vds.home any more
 			stack.setGlobal("vds.home", System.getProperty("vds.home"));
 
             List arguments = ap.getArguments();
