@@ -1,3 +1,9 @@
+(02/09/22)
+*** Recompilation will happen if a .kml file was compiled with a different
+    version of Swift to the version being invoked. This is in addition to the
+    existing behaviour where a .swift file will be recompiled if it is newer
+    than the corresponding .kml file.
+
 (02/09/17)
 *** There is a new command swift-osg-ress-site-catalog which will generate
     a site catalog based on data gathered from OSG's ReSS information

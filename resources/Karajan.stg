@@ -1,7 +1,7 @@
 group Karajan;
 
-program(types,procedures,declarations,statements,constants) ::= <<
-<project>
+program(types,procedures,declarations,statements,constants,buildversion) ::= <<
+<project><!-- CACHE ID $buildversion$ -->
   <import file="sys.xml"/>
   <import file="scheduler.xml"/>
   <import file="rlog.xml"/>

@@ -3,12 +3,15 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DateFormat;
@@ -60,6 +63,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	public static final String VDL_OPERATION_RUN = "run";
 	public static final String VDL_OPERATION_TYPECHECK = "typecheck";
 	public static final String VDL_OPERATION_DRYRUN = "dryrun";
+
+	public static String buildVersion;
 
 	public static void main(String[] argv) {
 		logger.debug("Loader started");
@@ -194,17 +199,50 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		System.err.print("For usage information:  swift -help\n\n");
 	}
 
-	public static String compile(String project) 
+	public static String compile(String project)
 		throws FileNotFoundException, ParsingException,
-		IncorrectInvocationException, CompilationException {
+		IncorrectInvocationException, CompilationException,
+		IOException {
 		File swiftscript = new File(project);
 		File dir = swiftscript.getParentFile();
 		String projectBase = project.substring(0, project.lastIndexOf('.'));
 		File xml = new File(projectBase + ".xml");
 		File kml = new File(projectBase + ".kml");
 
+		loadBuildVersion();
+
+		boolean recompile = false;
+
 		if (swiftscript.lastModified() > kml.lastModified()) {
 			logger.info(project + ": source file is new. Recompiling.");
+			recompile = true;
+		}
+
+		if (kml.exists()) {
+			// read first line of kml
+			Reader fr = new FileReader(kml);
+			BufferedReader br = new BufferedReader(fr);
+			String firstLine = br.readLine();
+			String prefix = "<!-- CACHE ID ";
+			int offset = firstLine.indexOf(prefix);
+			if(offset < 0) {
+				// no build version in the KML
+				logger.info(project + ": has no build version. Recompiling.");
+				recompile = true;
+			} else {
+				String cut = firstLine.substring(offset+prefix.length());
+				int endOffset = cut.indexOf(" -->");
+				String kmlversion = cut.substring(0,endOffset);
+				logger.debug("kmlversion is >"+kmlversion+"<");
+				logger.debug("build version is >"+buildVersion+"<");
+				if(!(kmlversion.equals(buildVersion))) {
+					logger.info(project + ": source file was compiled with a different version of Swift. Recompiling.");
+					recompile=true;
+				}
+			}
+		}
+
+		if (recompile) {
 			VDLt2VDLx.compile(new FileInputStream(swiftscript), new PrintStream(new FileOutputStream(xml)));
 
 			try {
@@ -235,6 +273,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			logger.debug("Recompilation suppressed.");
 		}
 		return kml.getAbsolutePath();
+	}
+
+	private static void loadBuildVersion() throws IOException {
+		File f = new File(System.getProperty("swift.home")+"/libexec/buildid.txt");
+		BufferedReader br = new BufferedReader(new FileReader(f));
+		buildVersion = br.readLine();
 	}
 
 	private static VDL2Config loadConfig(ArgumentParser ap, VariableStack stack) throws IOException {

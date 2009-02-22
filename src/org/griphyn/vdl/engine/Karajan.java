@@ -34,6 +34,7 @@ import org.globus.swift.language.Switch.Case;
 import org.globus.swift.language.Switch.Default;
 import org.globus.swift.language.TypesDocument.Types;
 import org.globus.swift.language.TypesDocument.Types.Type;
+import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
@@ -141,6 +142,8 @@ public class Karajan {
 	public StringTemplate program(Program prog) throws CompilationException {
 		VariableScope scope = new VariableScope(this, null);
 		scope.bodyTemplate = template("program");
+
+		scope.bodyTemplate.setAttribute("buildversion",Loader.buildVersion);
 
 		types = prog.getTypes();
 		if (types != null) {
