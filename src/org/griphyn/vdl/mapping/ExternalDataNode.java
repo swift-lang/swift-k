@@ -76,23 +76,6 @@ public class ExternalDataNode implements DSHandle {
 	 * text description.
 	 */
 	public String toString() {
-		if (this.value != null && !(this.value instanceof Exception)) {
-			// special handling for ints...
-			if (this.getType().equals(Types.INT)) {
-				try {
-					Number n = (Number) this.getValue();
-					return String.valueOf(n.intValue());
-				}
-				catch (ClassCastException e) {
-					throw new RuntimeException("Internal type error. Value is not a Number for "
-							+ getDisplayableName() + getPathFromRoot());
-				}
-			}
-			else {
-				return this.value.toString();
-			}
-		}
-
 		String prefix = this.getClass().getName();
 
 		prefix = prefix + " identifier "+this.getIdentifier(); 
