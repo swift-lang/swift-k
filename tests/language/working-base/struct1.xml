@@ -24,6 +24,56 @@
      					<membertype>int</membertype>
      				</member>
      		</typestructure>
+     	</type>
+     	<type>
+     		<typename>bar</typename>
+     		<typealias></typealias>
+     		<typestructure>
+     			    <member>
+     					<membername>a</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>b</membername>
+     					<membertype>int[]</membertype>
+     				</member>
+     			    <member>
+     					<membername>c</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>d</membername>
+     					<membertype>int[]</membertype>
+     				</member>
+     			    <member>
+     					<membername>e</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>f</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>g</membername>
+     					<membertype>int[]</membertype>
+     				</member>
+     			    <member>
+     					<membername>h</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>i</membername>
+     					<membertype>int[]</membertype>
+     				</member>
+     			    <member>
+     					<membername>j</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>k</membername>
+     					<membertype>int</membertype>
+     				</member>
+     		</typestructure>
      	</type>   
   </types>  
 </program>
