@@ -581,13 +581,14 @@ public class Karajan {
 
 		StringTemplate iterateST = template("iterate");
 
-		XmlObject cond = iterate.getAbstractExpression();
-		StringTemplate condST = expressionToKarajan(cond, loopScope);
-		iterateST.setAttribute("cond", condST);
 		iterateST.setAttribute("var", iterate.getVar());
 		innerScope.bodyTemplate = iterateST;
 
 		statements(iterate.getBody(), innerScope);
+
+		XmlObject cond = iterate.getAbstractExpression();
+		StringTemplate condST = expressionToKarajan(cond, innerScope);
+		iterateST.setAttribute("cond", condST);
 
 		Object statementID = new Integer(callID++);
 		Iterator scopeIterator = innerScope.getVariableIterator();
