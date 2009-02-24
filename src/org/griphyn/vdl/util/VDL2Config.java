@@ -213,7 +213,6 @@ public class VDL2Config extends Properties {
 	}
 
 	public String getProperty(String name, BoundContact bc) {
-System.err.println("getProperty "+name+" with bc="+bc);
 		if(bc!=null) {
 			if(logger.isDebugEnabled()) {
 				logger.debug("Checking BoundContact "+bc+" for property "+name);
