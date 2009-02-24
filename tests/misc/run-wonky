@@ -6,6 +6,7 @@ for a in wonky-clusters-wrongdir \
          wonky-replication \
          wonky \
          wonky80 \
+	wonky-wrongdir-relative-fail \
 ; do
  ./${a}.sh
  R=$?

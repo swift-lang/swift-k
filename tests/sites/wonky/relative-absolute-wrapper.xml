@@ -1,0 +1,19 @@
+<config>
+
+  <pool handle="wonkyA">
+    <gridftp  url="local://localhost" />
+    <execution provider="local" url="none" />
+    <workdirectory >/var/tmp/swift-test/A</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
+  </pool>
+
+
+  <pool handle="wonkyB">
+    <gridftp  url="local://localhost" />
+    <execution provider="wonky" url="good/wrongdirectory" />
+    <workdirectory >/var/tmp/swift-test/B</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
+    <profile namespace="karajan" key="wrapper.invocation.mode">absolute</profile>
+  </pool>
+
+</config>

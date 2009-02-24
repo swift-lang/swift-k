@@ -3,6 +3,7 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.util.FQN;
+import org.griphyn.vdl.util.VDL2Config;
 
 public class VDSTaskTransformer implements TaskTransformer {
 	public static final Logger logger = Logger.getLogger(VDSTaskTransformer.class);
@@ -123,11 +125,19 @@ public class VDSTaskTransformer implements TaskTransformer {
 			List l =   spec.getArgumentsAsList();
 			// perhaps should check for /bin/bash in the executable, or some other way of detecting we need to do a substitution here... or equally could assume that the second parameter always needs to undergo this substitution...
 			String executable = (String)l.get(0);
-			if(executable.endsWith("shared/wrapper.sh") || 
-			   executable.endsWith("shared/seq.sh")) {
+
+			try {
+				VDL2Config config = VDL2Config.getConfig();
+
+				if(config.getProperty("wrapper.invocation.mode", bc).equals("absolute")
+			 	 &&(executable.endsWith("shared/wrapper.sh")
+			   	  || executable.endsWith("shared/seq.sh"))) {
 
 				String s  = spec.getDirectory()+"/"+executable;
 				l.set(0,s);
+				}
+			} catch(IOException ioe) {
+				throw new KarajanRuntimeException("Could not determine wrapper invocation mode", ioe);
 			}
 
 		}

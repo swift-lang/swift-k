@@ -2864,6 +2864,32 @@ to the console every few seconds during a run (since Swift 0.9)
 						</listitem>
 					</varlistentry>
 
+					<varlistentry>
+						<term>
+							<property>wrapper.invocation.mode</property>
+						</term>
+						<listitem>
+							<para>
+Valid values: <parameter>absolute</parameter>, <parameter>relative</parameter>
+							</para>
+							<para>
+Default value: <literal>absolute</literal>
+							</para>
+							<para>
+Determines if Swift remote wrappers will be executed by specifying an
+absolute path, or a path relative to the job initial working directory.
+In most cases, execution will be successful with either option. However,
+some execution sites ignore the specified initial working directory, and
+so <literal>absolute</literal> must be used. Conversely on some sites,
+job directories appear in a different place on the worker node file system
+than on the filesystem access node, with the execution system handling
+translation of the job initial working directory. In such cases,
+<literal>relative</literal> mode must be used.
+							</para>
+
+						</listitem>
+					</varlistentry>
+
 
 										
 				</variablelist>

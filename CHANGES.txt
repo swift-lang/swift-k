@@ -1,3 +1,10 @@
+(02/09/24)
+*** New configuration option wrapper.invocation.mode, specifiable either
+    globally in the configuration file or per-site as a profile key,
+    that configures whether wrapper script invocations are made with an
+    absolute path (as was the behaviour in Swift 0.8) or with a relative
+    path (as was behaviour in previous versions of Swift).
+
 (02/09/22)
 *** Recompilation will happen if a .kml file was compiled with a different
     version of Swift to the version being invoked. This is in addition to the
