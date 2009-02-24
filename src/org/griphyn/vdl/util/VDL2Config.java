@@ -11,9 +11,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
+import org.globus.cog.karajan.util.BoundContact;
 import org.globus.common.CoGProperties;
 
 public class VDL2Config extends Properties {
+
+	public static final Logger logger = Logger.getLogger(VDL2Config.class);
+
 	public static final String CONFIG_FILE_NAME = "swift.properties";
 	public static final String[] CONFIG_FILE_SEARCH_PATH = new String[] {
 			System.getProperty("vds.home") + File.separator + "etc" + File.separator
@@ -82,6 +88,7 @@ public class VDL2Config extends Properties {
 		put("replication.min.queue.time", "60");
 		put("replication.limit", "3");
 		put("status.mode", "files");
+		put("wrapper.invocation.mode", "absolute");
 	}
 
 	private VDL2Config(VDL2Config other) {
@@ -203,6 +210,23 @@ public class VDL2Config extends Properties {
 		VDL2Config conf = new VDL2Config();
 		conf.putAll(this);
 		return conf;
+	}
+
+	public String getProperty(String name, BoundContact bc) {
+System.err.println("getProperty "+name+" with bc="+bc);
+		if(bc!=null) {
+			if(logger.isDebugEnabled()) {
+				logger.debug("Checking BoundContact "+bc+" for property "+name);
+			}
+			String prop = (String) bc.getProperty(name);
+			if(prop != null) {
+				return prop;
+                	}
+		}
+		if(logger.isDebugEnabled()) {
+			logger.debug("Getting property "+name+" from global configuration");
+		}
+		return getProperty(name);
 	}
 
 }
