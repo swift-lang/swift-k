@@ -416,7 +416,7 @@ operator:
 Sometimes data may be stored in a form that does not fit with Swift's
 file-and-site model; for example, data might be stored in an RDBMS on some
 database server. In that case, a variable can be declared to have
-<firstterm><literal>extern</literal></firstterm> type. This indicates that
+<firstterm><literal>external</literal></firstterm> type. This indicates that
 Swift should use the variable to determine execution dependency, but should
 not attempt other data management; for example, it will not perform any form
 of data stage-in or stage-out it will not manage local data caches on sites;
@@ -428,15 +428,15 @@ arbitrary data storage and access methods to be plugged in to scripts.
 <programlisting>
   type file;
 
-  app (extern o) populateDatabase() {
+  app (external o) populateDatabase() {
     populationProgram;
   }
 
-  app (file o) analyseDatabase(extern i) {
+  app (file o) analyseDatabase(external i) {
     analysisProgram @o;
   }
 
-  extern database;
+  external database;
   file result &lt;"results.txt"&gt;;
 
   database = populateDatabase();
@@ -1654,9 +1654,9 @@ continue to exist or will remain unmodified after execution has finished
 <listitem><para>
 that files can be passed(?def) between application procedure invocations 
 through any mechanism except through files known to Swift through the 
-mapping mechanism (there is some exception here for <literal>extern</literal>
+mapping mechanism (there is some exception here for <literal>external</literal>
 datasets - there are a separate set of assertions that hold for 
-<literal>extern</literal> datasets)
+<literal>external</literal> datasets)
 </para></listitem>
 
 <listitem><para>
