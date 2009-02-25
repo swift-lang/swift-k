@@ -18,7 +18,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +72,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		try {
 			ap.parse(argv);
 
-			Map arguments = new Hashtable();
 			if (ap.isPresent(ARG_HELP)) {
 				ap.usage();
 				System.exit(0);
@@ -204,7 +202,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		IncorrectInvocationException, CompilationException,
 		IOException {
 		File swiftscript = new File(project);
-		File dir = swiftscript.getParentFile();
 		String projectBase = project.substring(0, project.lastIndexOf('.'));
 		File xml = new File(projectBase + ".xml");
 		File kml = new File(projectBase + ".kml");

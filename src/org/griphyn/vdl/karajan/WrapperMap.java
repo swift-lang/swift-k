@@ -76,9 +76,6 @@ public class WrapperMap {
 	}
 
 	public synchronized void mergeListeners(DSHandle destination, DSHandle source) {
-		FutureWrappers fwd = (FutureWrappers) map.get(destination);
-		FutureWrappers fws = (FutureWrappers) map.get(source);
-
 		// TODO
 		throw new RuntimeException("not implemented");
 	}

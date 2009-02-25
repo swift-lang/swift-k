@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
@@ -13,7 +12,6 @@ import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class PathUtils extends FunctionsCollection {
-	private static final Logger logger = Logger.getLogger(PathUtils.class);
 
 	public static final Arg PATH = new Arg.Positional("path");
 

@@ -1,6 +1,5 @@
 package org.griphyn.vdl.karajan.lib;
 
-import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -11,7 +10,6 @@ import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public class Operators extends FunctionsCollection {
-	private static final Logger logger = Logger.getLogger(Operators.class);
 
 	public static final SwiftArg L = new SwiftArg.Positional("left");
 	public static final SwiftArg R = new SwiftArg.Positional("right");

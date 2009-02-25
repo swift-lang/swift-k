@@ -57,7 +57,6 @@ public class TCProfile extends VDLFunction {
 		
 		attrs = attributesFromHost(bc, attrs);
 
-		FQN fqn = new FQN(tr);
 		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
 		
 		Map env = new HashMap();

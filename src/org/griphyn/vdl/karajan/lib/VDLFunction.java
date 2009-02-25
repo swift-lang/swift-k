@@ -462,37 +462,11 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	private void closeDeep(VariableStack stack, DSHandle handle) throws ExecutionException,
-			InvalidPathException {
-		// Close the future
-		synchronized(handle.getRoot()) {
-		handle.closeShallow();
-		getFutureWrapperMap(stack).close(handle);
-		try {
-			// Mark all nodes
-			Iterator it = handle.getFields(Path.CHILDREN).iterator();
-			while (it.hasNext()) {
-				DSHandle child = (DSHandle) it.next();
-				closeDeep(stack, child);
-			}
-		}
-		catch (HandleOpenException e) {
-			throw new ExecutionException("HandleOpen during closeDeep",e);
-		}
-		markToRoot(stack, handle);
-		}
-	}
-
 	protected void closeShallow(VariableStack stack, DSHandle handle) throws ExecutionException {
 		synchronized(handle.getRoot()) {
 			handle.closeShallow();
 			getFutureWrapperMap(stack).close(handle);
 		}
-	}
-
-	private boolean isClosed(VariableStack stack, DSHandle handle) throws ExecutionException {
-		assert Thread.holdsLock(handle.getRoot());
-		return getFutureWrapperMap(stack).isClosed(handle);
 	}
 
 	protected static Future addFutureListener(VariableStack stack, DSHandle handle)
@@ -505,11 +479,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			Map value) throws ExecutionException {
 		assert Thread.holdsLock(handle.getRoot());
 		return getFutureWrapperMap(stack).addFutureListListener(handle, value).futureIterator(stack);
-	}
-
-	private void mergeListeners(VariableStack stack, DSHandle destination, DSHandle source)
-			throws ExecutionException {
-		getFutureWrapperMap(stack).mergeListeners(destination, source);
 	}
 
 	private void markAsAvailable(VariableStack stack, DSHandle handle, Object key)
@@ -534,7 +503,8 @@ public abstract class VDLFunction extends SequentialWithArguments {
 				else {
 					String index = p.getElement(i);
 					try {
-						int ii = Integer.parseInt(index);
+						// check this is can parse as an integer by trying to parse and getting an exception if not
+						Integer.parseInt(index);
 						q = q.addLast(index, true);
 					}
 					catch (NumberFormatException e) {

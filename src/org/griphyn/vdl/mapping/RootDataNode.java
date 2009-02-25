@@ -44,7 +44,6 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		Iterator i = params.entrySet().iterator();
 		while(i.hasNext()) {
 			Map.Entry entry = (Map.Entry) i.next();
-			Object k = entry.getKey();
 			Object v = entry.getValue();
 			if(v instanceof DSHandle && !( (DSHandle)v).isClosed()) {
 				DSHandle dh = (DSHandle)v;
@@ -116,7 +115,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			while (i.hasNext()) {
 				Path p = (Path) i.next();
 				try {
-					DSHandle field = root.getField(p);
+					// Try to get the path in order to check that the path is valid - we'll get an exception if not
+					root.getField(p);
 					if (logger.isInfoEnabled()) {
 						logger.info("Found mapped data " + root + "." + p);
 					}

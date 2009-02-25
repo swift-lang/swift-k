@@ -3,7 +3,6 @@ package org.griphyn.vdl.karajan.lib;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
 /** Determines if a variable is 'restartable'; that is, if we restart the

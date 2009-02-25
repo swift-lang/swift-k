@@ -3,17 +3,12 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.type.Type;
 
 public class GetField extends VDLFunction {
 	static {

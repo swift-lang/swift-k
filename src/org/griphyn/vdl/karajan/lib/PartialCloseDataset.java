@@ -5,15 +5,12 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Path;
 
 import java.util.StringTokenizer;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public class PartialCloseDataset extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(CloseDataset.class);

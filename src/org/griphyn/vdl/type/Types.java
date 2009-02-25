@@ -9,8 +9,6 @@ public abstract class Types {
 	//TODO: check namespace references in type definitions
 	private static Map types = new HashMap();
 
-	private String namespace = null;
-
 	public synchronized static Type getType(String name) throws NoSuchTypeException {
 		Type type = (Type) types.get(name);
 		if (type == null) {

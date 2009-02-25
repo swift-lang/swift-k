@@ -34,7 +34,6 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		Iterator i = params.entrySet().iterator();
 		while(i.hasNext()) {
 			Map.Entry entry = (Map.Entry) i.next();
-			Object k = entry.getKey();
 			Object v = entry.getValue();
 			if(v instanceof DSHandle && !( (DSHandle)v).isClosed()) {
 				DSHandle dh = (DSHandle)v;

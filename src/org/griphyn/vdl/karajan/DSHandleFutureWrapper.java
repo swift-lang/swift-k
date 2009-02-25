@@ -3,7 +3,6 @@
  */
 package org.griphyn.vdl.karajan;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.globus.cog.karajan.stack.VariableNotFoundException;

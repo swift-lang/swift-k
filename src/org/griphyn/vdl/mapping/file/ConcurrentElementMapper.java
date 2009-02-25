@@ -31,7 +31,6 @@ public class ConcurrentElementMapper implements FileNameElementMapper {
 		sb.append("-array/");
 		sb.append(splitIndexByLoadFactor(index));
 		sb.append("/");
-		String num = String.valueOf(index);
 		sb.append("elt-"+String.valueOf(index));
 		return sb.toString();
 	}

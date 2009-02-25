@@ -3,8 +3,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;

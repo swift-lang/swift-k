@@ -4,14 +4,12 @@ import org.griphyn.vdl.karajan.Loader;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;

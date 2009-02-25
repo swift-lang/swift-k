@@ -2,7 +2,6 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeSet;
 import java.util.Set;
@@ -12,13 +11,9 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Path;
 
 public class ExpandArguments extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(ExpandArguments.class);

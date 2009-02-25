@@ -24,10 +24,6 @@ public class Range extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		// TODO: deal with expression
-		Object from = PA_FROM.getValue(stack);
-		Object to = PA_TO.getValue(stack);
-		Object step = OA_STEP.getValue(stack);
-
 		Type type = PA_FROM.getType(stack);
 		double start = PA_FROM.getDoubleValue(stack);
 		double stop = PA_TO.getDoubleValue(stack);

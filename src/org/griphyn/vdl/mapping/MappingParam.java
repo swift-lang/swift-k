@@ -73,7 +73,8 @@ public class MappingParam {
 		if (!handle.isClosed()) {
 			throw new VDL2FutureException(handle);
 		}
-		Object value = handle.getValue();
+		handle.getValue();
+		// try to get value, so that the appropriate exceptions are thrown for futures
 	}	
 
 	/** Returns the mapper parameter as a String. Other data types will be

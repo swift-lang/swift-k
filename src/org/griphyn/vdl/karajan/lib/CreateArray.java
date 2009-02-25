@@ -1,21 +1,15 @@
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
-import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.type.Type;
-import org.griphyn.vdl.type.Types;
 
 public class CreateArray extends VDLFunction {
 	public static final Arg PA_VALUE = new Arg.Positional("value");

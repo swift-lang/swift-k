@@ -78,6 +78,10 @@ public class CSVMapper extends AbstractMapper {
 				int ix = 0;
 				while (st.hasMoreTokens()) {
 					String column = st.nextToken();
+					// TODO PMD reports this for the
+					// following line:
+					// An operation on an Immutable object (String, BigDecimal or BigInteger) won't change the object itself
+					// This is likely a bug
 					column.replaceAll("\\s", "_");
 					cols.add(column);
 					colindex.put(column, new Integer(ix));

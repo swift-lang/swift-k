@@ -1,15 +1,11 @@
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.griphyn.vdl.karajan.PairIterator;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 

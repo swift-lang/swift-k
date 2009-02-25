@@ -407,8 +407,6 @@ public class Karajan {
 		try {
 			StringTemplate callST = template("call");
 			callST.setAttribute("func", call.getProc().getLocalPart());
-			StringTemplate parentST = callST.getEnclosingInstance();
-			
 			// Check is called procedure declared previously 
 			String procName = call.getProc().getLocalPart();
 			if (proceduresMap.get(procName) == null)

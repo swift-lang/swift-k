@@ -24,7 +24,6 @@ public class Executable extends VDLFunction {
 		TCCache tc = getTC(stack);
 		String tr = TypeUtil.toString(PA_TR.getValue(stack));
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
-		FQN fqn = new FQN(tr);
 		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
 		if (tce == null) {
 			return tr;

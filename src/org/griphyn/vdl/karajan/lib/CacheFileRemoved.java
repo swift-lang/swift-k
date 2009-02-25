@@ -7,7 +7,6 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.cache.CacheReturn;
 import org.griphyn.vdl.karajan.lib.cache.File;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 
@@ -24,7 +23,7 @@ public class CacheFileRemoved extends CacheFunction {
 		Object host = HOST.getValue(stack);
 		VDLFileCache cache = getCache(stack);
 		File f = new File(path, host, 0);
-		CacheReturn cr = cache.entryRemoved(f);
+		cache.entryRemoved(f);
 		complete(stack);
 	}
 

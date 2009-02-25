@@ -403,8 +403,7 @@ public abstract class AbstractDataNode implements DSHandle {
 // non-leaf stuff is giving wierd paths anyway
 				try {
 					Object path=m.map(this.getPathFromRoot());
-					logger.info("FILENAME dataset="+this.getIdentifier()+" filename="+
-						m.map(this.getPathFromRoot()));
+					logger.info("FILENAME dataset="+this.getIdentifier()+" filename="+path) ;
 				} catch(Exception e) {
 					logger.info("dataset "+this.getIdentifier()+" exception while mapping path from root",e);
 				}

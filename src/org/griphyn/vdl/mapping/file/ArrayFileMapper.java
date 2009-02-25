@@ -37,8 +37,6 @@ public class ArrayFileMapper extends AbstractMapper {
 			throw new IllegalArgumentException(path.toString());
 		}
 		else {
-			int index = Integer.parseInt(path.getFirst());
-
 			// we could typecheck more elegantly here to make sure that
 			// we really do have an array of strings as parameter.
 			DSHandle dn = (DSHandle) PARAM_FILES.getRawValue(this);

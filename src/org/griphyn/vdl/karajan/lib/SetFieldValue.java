@@ -5,9 +5,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.Pair;
-import org.griphyn.vdl.karajan.FuturePairIterator;
 import org.griphyn.vdl.karajan.PairIterator;
-import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;

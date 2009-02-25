@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -16,7 +15,6 @@ import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.scheduler.Scheduler;
 import org.globus.cog.karajan.scheduler.TaskTransformer;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
@@ -30,8 +28,6 @@ public class VDSTaskTransformer implements TaskTransformer {
 	public static final Logger logger = Logger.getLogger(VDSTaskTransformer.class);
 
 	private TaskTransformer impl;
-	private Scheduler scheduler;
-	private Set checkedTRs;
 
 	public VDSTaskTransformer(TCCache tc) {
 		this.impl = new TCTransformer(tc);
