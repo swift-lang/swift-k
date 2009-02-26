@@ -234,8 +234,8 @@ class="directory">/path/to/swift/bin</filename>:<envar>$PATH</envar>
 			The Swift examples can be found in the <filename
 			class="directory">examples</filename> directory in the Swift distribution.
 			The examples are written in the <ulink
-			url="http://www.ci.uchicago.edu/swift/guides/languagespec.php">SwiftScript
-			Language</ulink>, and have <filename class="file">.swift</filename> as
+			url="http://www.ci.uchicago.edu/swift/guides/userguide/language.php">SwiftScript
+			language</ulink>, and have <filename class="file">.swift</filename> as
 			a file extension. 
 
 		</para>
