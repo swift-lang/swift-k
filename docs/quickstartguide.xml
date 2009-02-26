@@ -64,7 +64,7 @@
 				test page. The nightly builds reflect a development version of
 				the Swift code and should not be used in production mode. After
 				downloading a nightly build package, please continue to the
-				<link linkedn="install">install section</link>.
+				<link linkend="install">install section</link>.
 			
 			</para>
 		</sect2>
