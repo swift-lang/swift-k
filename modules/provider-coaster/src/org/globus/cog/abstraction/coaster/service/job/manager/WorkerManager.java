@@ -356,37 +356,33 @@ public class WorkerManager extends Thread {
             return w;
         }
         else {
-            if (currentWorkers >= MAX_WORKERS) {
-                synchronized (this) {
-                    this.wait(250);
-                }
-                return null;
-            }
-            boolean alreadyThere;
-            synchronized (this) {
+        	synchronized (this) {
+	            if (currentWorkers >= MAX_WORKERS) {
+                    this.wait(250);            
+            	    return null;
+        	    }
+    	        boolean alreadyThere;
                 alreadyThere = !startingTasks.add(prototype);
-            }
-            if (!alreadyThere) {
-                currentWorkers++;
-                if (logger.isInfoEnabled()) {
-                    logger
+            
+	            if (!alreadyThere) {
+    	            currentWorkers++;
+        	        if (logger.isInfoEnabled()) {
+            	        logger
                             .info("No suitable worker found. Attempting to start a new one.");
-                }
-                synchronized (allocationRequests) {
-                    if (allocationRequests.size() < MAX_STARTING_WORKERS) {
-                        allocationRequests.add(new AllocationRequest(
-                                maxWallTime, prototype));
-                        allocationRequests.notify();
-                    }
-                    else {
-                        synchronized (this) {
-                            this.wait(250);
-                        }
-                        return null;
-                    }
-                }
-            }
-
+                	}
+	                synchronized (allocationRequests) {
+    	                if (allocationRequests.size() < MAX_STARTING_WORKERS) {
+        	                allocationRequests.add(new AllocationRequest(
+            	                    maxWallTime, prototype));
+                	        allocationRequests.notify();
+                    	}
+	                    else {       
+	                        this.wait(250);
+    	                    return null;
+        	            }
+            	    }
+	            }
+			}
             return null;
         }
     }
