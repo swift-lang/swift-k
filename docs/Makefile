@@ -11,11 +11,11 @@ pdfs: userguide.pdf tutorial.pdf tutorial-live.pdf quickstartguide.pdf reallyqui
 chunked-userguide: userguide.xml
 	./build-chunked-userguide.sh
 
-%.php: %.xml
+%.php: %.xml formatting/swiftsh_html.xsl
 	xsltproc --nonet formatting/swiftsh_html.xsl $<
 	sed -e "s/index.html#/#/g" index.html >$@
 
-%.pdf: %.xml
+%.pdf: %.xml formatting/vdl2_fo.xsl
 	fop/fop.sh -xsl formatting/vdl2_fo.xsl -xml $< -pdf $@
 
 %.html: %.php
