@@ -154,7 +154,7 @@ form of .event)
 
 	</section>
 
-	<section>
+	<section><title>hacky scripts</title>
 <para>There are a couple of hacky scripts that aren't made into proper
 commandline tools. These are in the libexec/log-processing/ directory:
 
