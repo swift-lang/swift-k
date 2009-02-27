@@ -23,6 +23,12 @@ svn co https://svn.ci.uchicago.edu/svn/vdl2/log-processing
 </screen>
 		</para>
 	</section>
+	<section><title>Prerequisites</title>
+<para>
+gnuplot 4.0, gnu m4, gnu textutils, perl
+</para>
+
+	</section>
 	<section><title>Web page about a run</title>
 		<para>
 			<screen>
@@ -53,9 +59,112 @@ These roughly correspond to processes within the Swift runtime environment.
 		</para>
 		<para>These streams are then used to provide the data for the various
 output formats, such as graphs, web pages and CEDPS log format.</para>
-<para>The available basic stream names are: execute, execute2, kickstart,
-info, karajan, clusters, stageout,
-stagein, workflow
+<para>The available streams are:
+
+<table>
+ <tgroup cols="2">
+  <thead><row><entry>Stream name</entry><entry>Description</entry></row></thead>
+  <tbody>
+    <row><entry>execute</entry><entry>Swift procedure invocations</entry></row>
+    <row><entry>execute2</entry><entry>individual execution attempts</entry></row>
+    <row><entry>kickstart</entry><entry>kickstart records (not available as transitions)</entry></row>
+    <row><entry>karatasks</entry><entry> karajan level tasks, available as transitions (there are also four substreams karatasks.FILE_OPERATION,  karatasks.FILE_TRANSFER and karatasks.JOB_SUBMISSION available as events but not transitions)</entry></row>
+    <row><entry>workflow</entry><entry>a single event representing the entire workflow</entry></row>
+    <row><entry>dostagein</entry><entry>stage-in operations for execute2s</entry></row>
+    <row><entry>dostageout</entry><entry>stage-out operations for execute2s</entry></row>
+  </tbody>
+ </tgroup>
+</table>
+
+</para>
+<para>
+Streams are generated from their source log files either as .transitions
+or .event files, for example by <literal>make foo.event</literal>.
+</para>
+<para>
+Various plots are available based on different streams:
+
+<table>
+ <tgroup cols="2">
+  <thead><row><entry>makefile target</entry><entry>Description</entry></row></thead>
+  <tbody>
+    <row><entry>foo.png</entry><entry>Plots the foo event stream</entry></row>
+    <row><entry>foo-total.png</entry><entry>Plots how many foo events are in progress at any time</entry></row>
+    <row><entry>foo.sorted-start.png</entry><entry>Plot like foo.png but ordered by start time</entry></row>
+  </tbody>
+ </tgroup>
+</table>
+
+</para>
+<para>
+Text-based statistics are also available with <literal>make foo.stats</literal>.
+</para>
+<para>
+Event streams are nested something like this:
+
+<screen>
+workflow
+  execute
+    execute2
+      dostagein
+        karatasks (fileops and filetrans)
+      clustering (optional)
+        karatasks (execution)
+          cluster-log (optional)
+            wrapper log (optional)
+              kickstart log
+      dostageout
+        karatasks (fileops and filetrans)
+</screen>
+
+</para>
+	</section>
+	<section><title>Internal file formats</title>
+<para>The log processing code generates a number of internal files that
+follow a standard format. These are used for communication between the
+modules that parse various log files to extract relevant information; and
+the modules that generate plots and other summary information.</para>
+<screen>
+need an event file format of one event per line, with that line
+containing start time and duration and other useful data.
+
+col1 = start, col2 = duration, col3 onwards = event specific data - for
+some utilities for now should be column based, but later will maybe
+move to attribute based.
+
+between col 1 and col 2 exactly one space
+between col 2 and col 3 exactly one space
+
+start time is in seconds since unix epoch. start time should *not* be
+normalised to start of workflow
+
+event files should not (for now) be assumed to be in order
+
+different event streams can be stored in different files. each event
+stream should use the extension  .event
+</screen>
+
+<screen>
+.coloured-event files
+=====================
+third column is a colour index
+first two columns as per .event (thus a coloured-event is a specific
+form of .event)
+</screen>
+
+	</section>
+
+	<section>
+<para>There are a couple of hacky scripts that aren't made into proper
+commandline tools. These are in the libexec/log-processing/ directory:
+
+<screen>
+  ./execute2-status-from-log [logfile]
+     lists every (execute2) job and its final status
+
+  ./execute2-summary-from-log [logfile]
+     lists the counts of each final job status in log
+</screen>
 </para>
 	</section>
 </article>
