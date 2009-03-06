@@ -96,10 +96,10 @@
 			class="file">swift-&lt;version&gt;.tar.gz</filename>) into a
 			directory of your choice:
 			
-<programlisting>
+<screen>
 <prompt>&gt;</prompt> <command>tar</command> <option>-xzvf</option> <filename
 class="file">swift-&lt;version&gt;.tar.gz</filename>
-</programlisting>
+</screen>
 			
 			This will create a <filename
 			class="directory">swift-&lt;version&gt;</filename> directory
@@ -120,10 +120,10 @@ class="file">swift-&lt;version&gt;.tar.gz</filename>
 			be a good idea to add this directory to your <envar>PATH</envar>
 			environment variable:
 			
-<programlisting>
+<screen>
 <prompt>&gt;</prompt> <command>export</command> <envar>PATH</envar>=<filename
 class="directory">/path/to/swift/bin</filename>:<envar>$PATH</envar>
-</programlisting>
+</screen>
 			
 			If you are installing Swift on a machine with access to a graphical
 			display, you can run the <command>cog-setup</command> tool to
@@ -209,9 +209,9 @@ class="directory">/path/to/swift/bin</filename>:<envar>$PATH</envar>
 				will be inherited from the shared configuration file. Properties
 				are specified in the following format:
 
-<programlisting>
+<screen>
 <property>name</property>=<parameter>value</parameter>
-</programlisting>
+</screen>
 
 				For details about the various properties Swift accepts, please
 				take a look at the <ulink
@@ -257,10 +257,10 @@ class="directory">/path/to/swift/bin</filename>:<envar>$PATH</envar>
 			<command>swift</command> command, which takes the Swift
 			workflow file name as an argument:
 			
-<programlisting>
+<screen>
 <prompt>&gt;</prompt> <command>swift</command> <option><filename
 class="file">example.swift</filename></option>
-</programlisting>
+</screen>
 
 			The <ulink 		
 			url="http://www.ci.uchicago.edu/swift/guides/userguide.php#swiftcommand">Swift
