@@ -108,6 +108,10 @@
 			<replacevalue>LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift">
+			<replacetoken>HEAPMAX=</replacetoken>
+			<replacevalue>HEAPMAX=256M</replacevalue>
+		</replace>
+		<replace file="${dist.dir}/bin/swift">
 			<replacetoken>updateOptions "$SWIFT_HOME" "SWIFT_HOME"
 </replacetoken>
 			<replacevalue>updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
