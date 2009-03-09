@@ -1131,7 +1131,7 @@ boolean arrayMode = false;
 		    StringTemplate call = template("callexpr");
 		    
 		    String type = funcSignature.getOutputArray(0).getType();
-		    subscope.addVariable("swift#callintermediate", type);
+		    subscope.addInternalVariable("swift#callintermediate", type);
 
 		    call.setAttribute("datatype", type);
 		    call.setAttribute("call", call(c, subscope, true));

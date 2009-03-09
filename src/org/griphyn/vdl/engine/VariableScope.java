@@ -91,6 +91,22 @@ public class VariableScope {
 		varTypes.put(name, type);
 		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
 	}
+	
+	/**
+	 * Does pretty much the same as addVariable() except it doesn't throw
+	 * an exception if the variable is defined in a parent scope
+	 */
+	public void addInternalVariable(String name, String type) throws CompilationException {
+		logger.info("Adding internal variable " + name + " of type " + type + " to scope " + hashCode());
+		
+		if(isVariableLocallyDefined(name)) {
+			throw new CompilationException("Variable " + name + " is already defined.");
+		}
+
+		boolean added = variables.add(name);
+		varTypes.put(name, type);
+		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
+	}
 
 
 	public boolean isVariableDefined(String name) {
