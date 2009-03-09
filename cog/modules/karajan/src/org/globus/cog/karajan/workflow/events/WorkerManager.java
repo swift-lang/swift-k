@@ -16,7 +16,7 @@ import edu.emory.mathcs.backport.java.util.Queue;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentLinkedQueue;
 
 public final class WorkerManager {
-	public static final int DEFAULT_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 2;
+	public static final int DEFAULT_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 4;
 
 	private final ConcurrentLinkedQueue idle;
 	private final WorkerSet working;
