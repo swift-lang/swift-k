@@ -462,7 +462,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected void closeShallow(VariableStack stack, DSHandle handle) throws ExecutionException {
+	protected static void closeShallow(VariableStack stack, DSHandle handle) throws ExecutionException {
 		synchronized(handle.getRoot()) {
 			handle.closeShallow();
 			getFutureWrapperMap(stack).close(handle);
