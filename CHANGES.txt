@@ -1,3 +1,9 @@
+(03/09/09)
+*** Added a throttling parallelFor and changed the swift foreach underlying
+    implementation to it. The throttling parallelFor limits the number of
+    concurrent iterations allowed, which should allow swift to scale better
+    in certain cases.
+
 (02/09/24)
 *** New configuration option wrapper.invocation.mode, specifiable either
     globally in the configuration file or per-site as a profile key,

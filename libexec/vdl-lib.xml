@@ -90,5 +90,7 @@
 	
 	<export name="execute"><elementDef classname="org.griphyn.vdl.karajan.lib.Execute"/></export>
 	<export name="expandArguments"><elementDef classname="org.griphyn.vdl.karajan.lib.ExpandArguments"/></export>
+	
+	<export name="tparallelFor"><elementDef classname="org.griphyn.vdl.karajan.lib.ThrottledParallelFor"/></export>
   </namespace>
 </karajan>
