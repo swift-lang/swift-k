@@ -59,7 +59,7 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 			}
 			stack.setVar(VAR, var);
 			setChildFailed(stack, false);
-			stack.setVar(CALLER, this);
+			stack.setCaller(this);
 			initializeChannelBuffers(stack);
 			initThreadCount(stack);
 			citerate(stack, var, i);
