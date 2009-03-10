@@ -82,8 +82,4 @@ public final class VariableUtil {
 	public static void printKarajanStackTrace(VariableStack stack) {
 
 	}
-
-	public static FlowElement getCaller(final VariableStack stack) throws VariableNotFoundException {
-		return (FlowElement) stack.getVar(FlowElement.CALLER);
-	}
 }

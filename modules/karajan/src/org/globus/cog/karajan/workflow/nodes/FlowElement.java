@@ -24,7 +24,7 @@ public interface FlowElement extends EventListener {
 
 	public static final String TEXT = "_text_";
 	
-	public static final String CALLER = "#caller";
+	//public static final String CALLER = "#caller";
 
 	
 	/**

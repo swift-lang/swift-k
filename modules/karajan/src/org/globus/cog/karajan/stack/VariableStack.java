@@ -12,6 +12,7 @@ package org.globus.cog.karajan.stack;
 import java.util.List;
 
 import org.globus.cog.karajan.workflow.ExecutionContext;
+import org.globus.cog.karajan.workflow.events.EventListener;
 
 
 public interface VariableStack {
@@ -72,4 +73,10 @@ public interface VariableStack {
 	Regs getRegs();
 	
 	ExecutionContext getExecutionContext();
+	
+	EventListener getCaller();
+	
+	void setCaller(EventListener caller);
+
+	List getAllCallers();
 }

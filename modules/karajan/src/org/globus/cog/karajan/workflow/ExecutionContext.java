@@ -137,7 +137,7 @@ public class ExecutionContext implements EventListener {
 		STDOUT.create(stack, stdout);
 		STDERR.create(stack, stderr);
 		stack.setVar("#namespaceprefix", "");
-		stack.setVar(FlowNode.CALLER, this);
+		stack.setCaller(this);
 		ThreadingContext.set(stack, new ThreadingContext());
 		stack.setVar("...", arguments);
 		EventBus.post(tree.getRoot(), new ControlEvent(null, ControlEventType.START, stack));
