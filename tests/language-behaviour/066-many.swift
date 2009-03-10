@@ -5,6 +5,6 @@ p() {
     }
 }
 
-foreach i in [1:1000] {
+foreach i in [1:3000] {
     p();
 }
