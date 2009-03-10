@@ -192,7 +192,7 @@ public class DefList {
 
 		public String getFullName() {
 			if (prefix != null && prefix.length() > 0) {
-				return prefix + ":" + name;
+				return (prefix + ":" + name).intern();
 			}
 			else {
 				return name;

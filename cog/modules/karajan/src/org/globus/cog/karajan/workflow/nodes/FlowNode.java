@@ -161,26 +161,20 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	 * (completed, failed, aborted, ...)
 	 */
 	public void fireNotificationEvent(final FlowEvent event, final VariableStack stack) {
-		try {
-			EventListener caller = (EventListener) stack.getVar(CALLER);
-			if (caller == null) {
-				logger.error("Caller is null");
-				stack.dumpAll();
-			}
-			else {
-				// optimize a little. it improves speed by about 50%
-				EventBus.sendHooked(caller, event);
-				// EventBus.post(caller, event);
-			}
-		}
-		catch (VariableNotFoundException ee) {
-			logger.debug("No #caller for: " + this, new Throwable());
+		EventListener caller = stack.getCaller();
+		if (caller == null) {
+			logger.error("Caller is null");
 			if (FlowNode.debug) {
 				stack.dumpAll();
 			}
 			EventListener parent = getParent();
 			EventBus.post(parent, new FailureNotificationEvent(this, stack,
-					"No #caller found on stack for " + this, ee));
+					"No #caller found on stack for " + this, null));
+		}
+		else {
+			// optimize a little. it improves speed by about 50%
+			EventBus.sendHooked(caller, event);
+			// EventBus.post(caller, event);
 		}
 	}
 
@@ -217,7 +211,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		FNTP fntp = new FNTP(this, ThreadingContext.get(stack));
 		if (threadTracker.containsKey(fntp)) {
 			logger.debug("Execution of element with the same context detected: " + fntp);
-			logger.debug("Probable faulty element is " + stack.getVar(CALLER));
+			logger.debug("Probable faulty element is " + stack.getCaller());
 			if (stack == threadTracker.get(fntp)) {
 				logger.debug("Even worse. The same stack object was used");
 			}
@@ -255,9 +249,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			failImmediately(stack, e);
 		}
 	}
-	
+
 	protected void abort(final VariableStack stack) throws ExecutionException {
-	    abort(stack, null);
+		abort(stack, null);
 	}
 
 	protected void abort(final VariableStack stack, String message) throws ExecutionException {
@@ -265,8 +259,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		if (frame) {
 			stack.leave();
 		}
-		fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, 
-		        stack, message);
+		fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack, message);
 		if (FlowNode.debug) {
 			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 		}
@@ -363,6 +356,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			failImmediately(e.getStack(), ex);
 		}
 		catch (RuntimeException ex) {
+			logger.warn("Ex098", ex);
 			failImmediately(e.getStack(), new ExecutionException(e.getStack().copy(),
 					ex.getMessage(), ex));
 		}
@@ -371,7 +365,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	protected void notificationEvent(final NotificationEvent e) throws ExecutionException {
 		try {
 			if (FlowNode.debug) {
-				if (!this.equals(e.getStack().getVar(CALLER))) {
+				if (!this.equals(e.getStack().getCaller())) {
 					logger.warn("stack inconsistency detected");
 				}
 			}
@@ -541,7 +535,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	public synchronized void removeElement(int index) {
 		elements.remove(index);
 	}
-	
+
 	public synchronized void removeElement(FlowElement element) {
 		elements.remove(element);
 	}

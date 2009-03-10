@@ -6,15 +6,15 @@
 
 package org.globus.cog.karajan.stack;
 
+import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionContext;
+import org.globus.cog.karajan.workflow.events.EventListener;
 
 public final class LinkedStack implements VariableStack {
 	private static final Logger logger = Logger.getLogger(LinkedStack.class);
@@ -103,7 +103,7 @@ public final class LinkedStack implements VariableStack {
 		return false;
 	}
 
-	private Object getVarFromFrame(final String name, final int index, final boolean ignoreBarrier)
+	private Object getShallowVarFromFrame(final String name, final int index)
 			throws VariableNotFoundException {
 
 		for (Entry crt = skip(frameCount - index - 1); crt != null; crt = crt.prev) {
@@ -115,7 +115,7 @@ public final class LinkedStack implements VariableStack {
 			else if (frame.isDefined(name)) {
 				return null;
 			}
-			if (!ignoreBarrier && frame.hasBarrier()) {
+			if (frame.hasBarrier()) {
 				final StackFrame first = firstFrame();
 				final Object g = first.getVar(name);
 				if (g != null) {
@@ -129,14 +129,27 @@ public final class LinkedStack implements VariableStack {
 		}
 		throw new VariableNotFoundException(name);
 	}
+	
+	private Object getDeepVarFromFrame(final String name, final int index)
+			throws VariableNotFoundException {
+
+		for (Entry crt = skip(frameCount - index - 1); crt != null; crt = crt.prev) {
+			final StackFrame frame = crt.frame;
+			if (frame.isDefined(name)) {
+				return frame.getVar(name);
+			}
+		}
+		throw new VariableNotFoundException(name);
+	}
+
 
 	private Object _getVarFromFrame(final String name, final int index)
 			throws VariableNotFoundException {
 		if (name.charAt(0) == '#') {
-			return getVarFromFrame(name, index, true);
+			return getDeepVarFromFrame(name, index);
 		}
 		else {
-			return getVarFromFrame(name, index, false);
+			return getShallowVarFromFrame(name, index);
 		}
 	}
 
@@ -157,11 +170,11 @@ public final class LinkedStack implements VariableStack {
 	}
 
 	public Object getDeepVar(final String name) throws VariableNotFoundException {
-		return getVarFromFrame(name, frameCount - 1, true);
+		return getDeepVarFromFrame(name, frameCount - 1);
 	}
 
 	public Object getShallowVar(final String name) throws VariableNotFoundException {
-		return getVarFromFrame(name, frameCount - 1, false);
+		return getShallowVarFromFrame(name, frameCount - 1);
 	}
 
 	public List getAllVars(final String name) {
@@ -281,6 +294,39 @@ public final class LinkedStack implements VariableStack {
 
 	public ExecutionContext getExecutionContext() {
 		return executionContext;
+	}
+	
+	public EventListener getCaller() {
+		Entry crt = top;
+		while (crt != null) {
+			EventListener caller = crt.frame.getRegs().getCaller();
+			if (caller != null) {
+				return caller;
+			}
+			else {
+				crt = crt.prev;
+			}
+		}
+		return null;
+	}
+
+	public void setCaller(EventListener caller) {
+		currentFrame().getRegs().setCaller(caller);
+	}
+	
+	public List getAllCallers() {
+		List l = new ArrayList();
+		Entry crt = top;
+		while (crt != null) {
+			EventListener caller = crt.frame.getRegs().getCaller();
+			if (caller != null) {
+				l.add(caller);
+			}
+			else {
+				crt = crt.prev;
+			}
+		}
+		return l;
 	}
 
 	private static final class Entry {

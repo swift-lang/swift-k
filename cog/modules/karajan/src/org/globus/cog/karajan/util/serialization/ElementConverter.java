@@ -113,7 +113,7 @@ public class ElementConverter extends AbstractKarajanConverter {
 			else {
 				try {
 					wrapper.addStaticArgument(name,
-							ElementProperty.parse(mrd.getAttributeValue(i)));
+							ElementProperty.parse(mrd.getAttributeValue(i).intern()));
 				}
 				catch (ParsingException e) {
 					throw new ConversionException("Parsing error: " + e.getMessage(), e);

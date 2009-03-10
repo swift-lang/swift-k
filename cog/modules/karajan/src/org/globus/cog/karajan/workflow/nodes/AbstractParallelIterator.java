@@ -34,7 +34,7 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 			}
 			stack.setVar(VAR, var);
 			setChildFailed(stack, false);
-			stack.setVar(CALLER, this);
+			stack.setCaller(this);
 			initializeChannelBuffers(stack);
 			setRunning(stack, 1);
 			citerate(stack, var, i);

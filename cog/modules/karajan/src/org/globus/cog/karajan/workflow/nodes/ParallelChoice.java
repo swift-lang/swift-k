@@ -50,7 +50,7 @@ public class ParallelChoice extends Parallel {
 			return;
 		}
 		stack.setVar(COMPLETED, false);
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 	}
 
 	public void executeChildren(VariableStack stack) throws ExecutionException {
@@ -93,7 +93,7 @@ public class ParallelChoice extends Parallel {
 			}
 
 			stack.leave();
-			if (this != stack.getVar(CALLER)) {
+			if (this != stack.getCaller()) {
 				logger.error("Stack inconsistency detected");
 				logger.error("Event came from " + e.getFlowElement());
 				System.err.println(this);

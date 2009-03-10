@@ -16,8 +16,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class ListMap implements Map {
-	private Map.Entry[] map;
+public final class ListMap implements Map {
+	private final Map.Entry[] map;
 	private int next;
 
 	public ListMap() {
@@ -78,7 +78,7 @@ public class ListMap implements Map {
 		};
 	}
 
-	public Object get(Object key) {
+	public synchronized Object get(Object key) {
 		int ki = keyIndex(key);
 		if (ki != -1) {
 			return map[ki].getValue();
@@ -119,7 +119,7 @@ public class ListMap implements Map {
 		};
 	}
 
-	public Object put(Object key, Object value) {
+	public synchronized Object put(Object key, Object value) {
 		int ki = keyIndex(key);
 		if (ki == -1) {
 			if (next < map.length) {
@@ -141,7 +141,7 @@ public class ListMap implements Map {
 		}
 	}
 
-	public Object remove(Object key) {
+	public synchronized Object remove(Object key) {
 		int ki = keyIndex(key);
 		if (ki == -1) {
 			return null;

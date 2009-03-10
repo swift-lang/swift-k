@@ -26,7 +26,7 @@ public class Parallel extends FlowContainer {
 		}
 		// Avoid terminating before all elements are started
 		setRunning(stack, count + 1);
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 		setChildFailed(stack, false);
 	}
 

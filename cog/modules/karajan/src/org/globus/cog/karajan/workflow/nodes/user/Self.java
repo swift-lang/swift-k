@@ -21,7 +21,7 @@ import org.globus.cog.karajan.workflow.nodes.FlowNode;
 public class Self extends UDEWrapper {
 
 	protected UDEDefinition getDefInternal(VariableStack stack) throws ExecutionException {
-		List l = stack.getAllVars(CALLER);
+		List l = stack.getAllCallers();
 		Iterator i = l.iterator();
 		while (i.hasNext()) {
 			FlowNode n = (FlowNode) i.next();

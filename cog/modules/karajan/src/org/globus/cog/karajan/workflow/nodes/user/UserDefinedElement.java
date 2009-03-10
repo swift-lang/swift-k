@@ -170,7 +170,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		prepareInstanceArguments(stack, fnargs);
 		callcount++;
 		stack.setBarrier();
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 		if (kmode) {
 			setIndex(stack, skip);
 		}

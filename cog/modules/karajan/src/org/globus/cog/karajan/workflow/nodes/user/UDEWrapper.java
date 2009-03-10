@@ -111,7 +111,7 @@ public class UDEWrapper extends AbstractSequentialWithArguments implements Event
 
 	public void executeWrapper(VariableStack stack) throws ExecutionException {
 		stack.enter();
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 		super.executeChildren(stack);
 	}
 	

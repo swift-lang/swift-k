@@ -45,7 +45,7 @@ public class ExplicitExecutionUDE extends UserDefinedElement {
 		else {
 			setIndex(stack, 0);
 		}
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 
 		startNext(stack);
 	}
