@@ -37,7 +37,7 @@ public abstract class AbstractSequentialIterator extends AbstractIterator {
 			stack.setVar(VAR, var);
 			stack.setVar(ITERATOR, l);
 			stack.setVar(var.getName(), l.next());
-			stack.setVar(CALLER, this);
+			stack.setCaller(this);
 			setIndex(stack, getArgCount() + 1);
 
 			if (stack.getExecutionContext().isMonitoringEnabled()) {

@@ -38,7 +38,7 @@ public class RemoteExecutionContext extends ExecutionContext {
 		ic.registerExecutionContext(this);
 		setGlobals(stack);
 		defineKernel(stack);
-		stack.setVar(FlowNode.CALLER, this);
+		stack.setCaller(this);
 		ThreadingContext.set(stack, new ThreadingContext());
 		EventBus.post(fe, new ControlEvent(null, ControlEventType.START, stack));
 	}

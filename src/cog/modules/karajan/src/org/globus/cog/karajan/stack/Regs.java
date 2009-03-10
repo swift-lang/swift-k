@@ -9,6 +9,8 @@
  */
 package org.globus.cog.karajan.stack;
 
+import org.globus.cog.karajan.workflow.events.EventListener;
+
 public final class Regs {
 	public static final int BA = 0x00000001;
 	public static final int BB = 0x00000002;
@@ -19,6 +21,7 @@ public final class Regs {
 	
 	private int iA, iB;
 	private int b;
+	private EventListener caller;
 
 	public boolean getBA() {
 		return (b & BA) != 0;
@@ -97,5 +100,13 @@ public final class Regs {
 	
 	public String toString() {
 		return "[iA = " + iA + ", iB = " + iB + ", bA = " + getBA() + ", bB = " + getBB() + "]";
+	}
+
+	public synchronized EventListener getCaller() {
+		return caller;
+	}
+
+	public synchronized void setCaller(EventListener caller) {
+		this.caller = caller;
 	}
 }

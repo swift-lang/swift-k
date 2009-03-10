@@ -18,7 +18,7 @@ public class Sequential extends FlowContainer {
 	private static final Logger logger = Logger.getLogger(Sequential.class);
 
 	protected void executeChildren(VariableStack stack) throws ExecutionException {
-		stack.currentFrame().setVar(CALLER, this);
+		stack.setCaller(this);
 		if (isOptimizable() && (elementCount() == 1)) {
 			executeSingle(stack);
 		}

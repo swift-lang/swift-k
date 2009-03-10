@@ -48,12 +48,12 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 		VariableStack copy = stack.copy();
 		copy.leave();
 		copy.enter();
-		copy.setVar(CALLER, this);
+		copy.setCaller(this);
 		copy.setVar(ARGUMENTS_THREAD, true);
 		prepareArguments(copy, wrapper);
 		Arguments args = getUDEArguments(copy);
 		startArguments(copy, wrapper);
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 		stack.setVar(DefUtil.ENV, env);
 		startBody(stack, args);
 	}

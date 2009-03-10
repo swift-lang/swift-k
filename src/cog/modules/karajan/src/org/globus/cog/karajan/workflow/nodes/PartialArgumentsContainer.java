@@ -91,7 +91,7 @@ public class PartialArgumentsContainer extends AbstractSequentialWithArguments {
 	}
 
 	protected void startRest(VariableStack stack) throws ExecutionException {
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 		setIndex(stack, argCount);
 		startNext(stack);
 	}

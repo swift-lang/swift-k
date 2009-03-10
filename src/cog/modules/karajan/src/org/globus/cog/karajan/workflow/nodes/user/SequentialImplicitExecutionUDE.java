@@ -32,7 +32,7 @@ public class SequentialImplicitExecutionUDE extends UserDefinedElement {
 
 	public void startInstance(VariableStack stack, UDEWrapper wrapper, DefinitionEnvironment env)
 			throws ExecutionException {
-		stack.setVar(CALLER, this);
+		stack.setCaller(this);
 		stack.setVar(ARGUMENTS_THREAD, env);
 		startArguments(stack, wrapper);
 	}

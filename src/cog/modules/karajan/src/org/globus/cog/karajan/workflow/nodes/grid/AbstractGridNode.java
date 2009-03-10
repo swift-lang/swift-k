@@ -138,8 +138,8 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 						+ provider, e);
 			}
 		}
-		bc.addService(new ServiceImpl(provider, Service.EXECUTION, new ServiceContactImpl(
-				contact), sc));
+		bc.addService(new ServiceImpl(provider, Service.EXECUTION, new ServiceContactImpl(contact),
+				sc));
 		bc.addService(new ServiceImpl(provider, Service.FILE_OPERATION, new ServiceContactImpl(
 				contact), sc));
 		bc.addService(new ServiceImpl(provider, Service.FILE_TRANSFER, new ServiceContactImpl(
@@ -346,24 +346,19 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 	 * Overriden to release the notification threads as soon as possible.
 	 */
 	public void fireNotificationEvent(final FlowEvent event, final VariableStack stack) {
-		try {
-			EventListener caller = (EventListener) stack.getVar(CALLER);
-			if (caller == null) {
-				logger.error("Caller is null");
-				stack.dumpAll();
-			}
-			else {
-				EventBus.post(caller, event);
-			}
-		}
-		catch (VariableNotFoundException ee) {
-			logger.debug("No #caller for: " + this, new Throwable());
+		EventListener caller = stack.getCaller();
+		if (caller == null) {
+			logger.error("Caller is null");
+			stack.dumpAll();
 			if (FlowNode.debug) {
 				stack.dumpAll();
 			}
 			EventListener parent = getParent();
 			EventBus.post(parent, new FailureNotificationEvent(this, stack,
-					"No #caller found on stack for " + this, ee));
+					"No #caller found on stack for " + this, null));
+		}
+		else {
+			EventBus.post(caller, event);
 		}
 	}
 }

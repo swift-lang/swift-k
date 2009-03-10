@@ -6,6 +6,7 @@
 
 package org.globus.cog.karajan.stack;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.arguments.VariableArgumentsImpl;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionContext;
+import org.globus.cog.karajan.workflow.events.EventListener;
 
 public final class FastStack implements VariableStack {
 	private static final Logger logger = Logger.getLogger(FastStack.class);
@@ -309,5 +311,32 @@ public final class FastStack implements VariableStack {
 
 	public ExecutionContext getExecutionContext() {
 		return executionContext;
+	}
+	
+	public EventListener getCaller() {
+		for (int i = frameCount - 1; i >= 0; i--) {
+			StackFrame frame = stack[i];
+			EventListener caller = frame.getRegs().getCaller();
+			if (caller != null) {
+				return caller;
+			}
+		}
+		return null;
+	}
+
+	public void setCaller(EventListener caller) {
+		currentFrame().getRegs().setCaller(caller);
+	}
+
+	public List getAllCallers() {
+		List l = new ArrayList();
+		for (int i = frameCount - 1; i >= 0; i--) {
+			StackFrame frame = stack[i];
+			EventListener caller = frame.getRegs().getCaller();
+			if (caller != null) {
+				l.add(caller);
+			}
+		}
+		return l;
 	}
 }

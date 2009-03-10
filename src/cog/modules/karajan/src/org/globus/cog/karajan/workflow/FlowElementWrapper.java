@@ -208,7 +208,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 
 	public void failImmediately(VariableStack stack, String message) throws ExecutionException {
 		if (peer == null) {
-			EventListener caller = (EventListener) stack.getVar(CALLER);
+			EventListener caller = stack.getCaller();
 			EventBus.post(caller, new FailureNotificationEvent(this, stack, message, null));
 		}
 		else {
