@@ -18,20 +18,22 @@ import java.util.Map;
 
 public final class DefaultStackFrame implements StackFrame {
 	private static final long serialVersionUID = 5576647919365350913L;
-	
+
 	private Map map = Collections.EMPTY_MAP;
-	
+
 	private final Regs regs = new Regs();
 
 	public boolean isDefined(final String varName) {
 		return map.containsKey(varName);
 	}
 
-	public Object getVar(final String name) {
-		return map.get(name);
+	public synchronized Object getVar(final String name) {
+		synchronized (map) {
+			return map.get(name);
+		}
 	}
 
-	public void setVar(final String name, final Object value) {
+	public synchronized void setVar(final String name, final Object value) {
 		if (map.size() == 0) {
 			map = new ListMap();
 		}
@@ -63,7 +65,7 @@ public final class DefaultStackFrame implements StackFrame {
 		return ((Boolean) getVar(name)).booleanValue();
 	}
 
-	public void deleteVar(final String name) {
+	public synchronized void deleteVar(final String name) {
 		map.remove(name);
 	}
 
@@ -79,7 +81,7 @@ public final class DefaultStackFrame implements StackFrame {
 		regs.setBarrier(barrier);
 	}
 
-	public Object getVarAndDelete(final String name) {
+	public synchronized Object getVarAndDelete(final String name) {
 		return map.remove(name);
 	}
 
