@@ -407,7 +407,9 @@ operator ::= [
   ">=":"vdlop:ge",
   ">":"vdlop:gt",
   "<":"vdlop:lt",
-  "==":"vdlop:eq"
+  "==":"vdlop:eq",
+  "&amp;&amp;":"vdlop:and",
+  "||":"vdlop:or"
 ]
 
 unaryNegation(exp, datatype) ::= <<
@@ -422,21 +424,6 @@ binaryop(op,left,right,datatype) ::= <<
   $left$
   $right$
 </$operator.(op)$>
->>
-
-
-and(left,right,datatype) ::= <<
-<vdlop:and>
-  $left$
-  $right$
-</vdlop:and>
->>
-
-or(left, right, datatype) ::= <<
-<vdlop:or>
-  $left$
-  $right$
-</vdlop:or>
 >>
 
 not(exp, datatype) ::= <<

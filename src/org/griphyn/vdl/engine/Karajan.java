@@ -844,10 +844,11 @@ public class Karajan {
 		QName expressionQName = new QName(namespaceURI, localName);
 
 		if(expressionQName.equals(OR_EXPR))	{
-			StringTemplate st = template("or");
+			StringTemplate st = template("binaryop");
 			BinaryOperator o = (BinaryOperator)expression;
 			StringTemplate leftST = expressionToKarajan(o.getAbstractExpressionArray(0), scope);
 			StringTemplate rightST = expressionToKarajan(o.getAbstractExpressionArray(1), scope);
+			st.setAttribute("op","||");
 			st.setAttribute("left", leftST);
 			st.setAttribute("right", rightST);
 			if (datatype(leftST).equals("boolean") && datatype(rightST).equals("boolean"))
@@ -856,10 +857,11 @@ public class Karajan {
 				throw new CompilationException("Or operation can only be applied to parameters of type boolean.");
 			return st;
 		} else if (expressionQName.equals(AND_EXPR)) {
-			StringTemplate st = template("and");
+			StringTemplate st = template("binaryop");
 			BinaryOperator o = (BinaryOperator)expression;
 			StringTemplate leftST = expressionToKarajan(o.getAbstractExpressionArray(0), scope);
 			StringTemplate rightST = expressionToKarajan(o.getAbstractExpressionArray(1), scope);
+			st.setAttribute("op","&amp;&amp;");
 			st.setAttribute("left", leftST);
 			st.setAttribute("right", rightST);
 			if (datatype(leftST).equals("boolean") && datatype(rightST).equals("boolean"))
