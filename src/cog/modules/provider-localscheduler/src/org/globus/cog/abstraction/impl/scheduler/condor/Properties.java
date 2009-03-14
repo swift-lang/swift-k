@@ -7,7 +7,7 @@
 /*
  * Created on Oct 20, 2005
  */
-package org.globus.cog.abstraction.impl.scheduler.cobalt;
+package org.globus.cog.abstraction.impl.scheduler.condor;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
@@ -15,13 +15,13 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 public class Properties extends AbstractProperties {
 	private static Logger logger = Logger.getLogger(Properties.class);
 
-	public static final String PROPERTIES = "provider-cobalt.properties";
+	public static final String PROPERTIES = "provider-condor.properties";
 	
-	
-	public static final String CQSUB = "cqsub";
-	public static final String CQSTAT = "cqstat";
-	public static final String CQDEL = "cqdel";
-	public static final String EXITCODE_REGEXP = "exitcode.regexp";
+	public static final String POLL_INTERVAL = "poll.interval";
+	public static final String CONDOR_SUBMIT = "condor_submit";
+	public static final String CONDOR_Q = "condor_q";
+	public static final String CONDOR_RM = "condor_rm";
+	public static final String CONDOR_QEDIT = "condor_qedit";
 
 	private static Properties properties;
 
@@ -35,31 +35,22 @@ public class Properties extends AbstractProperties {
 
 	protected void setDefaults() {
 		setPollInterval(5);
-		setSubmitCommand("cqsub");
-		setPollCommand("cqstat");
-		setRemoveCommand("cqdel");
-		setExitcodeRegexp("(?BG/L job exit status = ([0-9]+))|(?exit status = \\(([0-9]+)\\))");
-	}
-
-	
-	public String getExitcodeRegexp() {
-		return getProperty(EXITCODE_REGEXP);
-	}
-	
-	public void setExitcodeRegexp(String r) {
-		setProperty(EXITCODE_REGEXP, r);
+		setSubmitCommand("condor_submit");
+		setPollCommand("condor_q");
+		setRemoveCommand("condor_rm");
+		setProperty(CONDOR_QEDIT, "condor_qedit");
 	}
 
 	public String getPollCommandName() {
-		return CQSTAT;
+		return CONDOR_Q;
 	}
 
 	public String getRemoveCommandName() {
-		return CQDEL;
+		return CONDOR_RM;
 	}
 
 	public String getSubmitCommandName() {
-		return CQSUB;
+		return CONDOR_SUBMIT;
 	}
 	
 	

@@ -9,11 +9,9 @@
  */
 package org.globus.cog.abstraction.impl.scheduler.cobalt;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -21,266 +19,171 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
+import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
-import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.impl.scheduler.pbs.PBSExecutor;
+import org.globus.cog.abstraction.impl.scheduler.pbs.QueuePoller;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.gsi.gssapi.auth.AuthorizationException;
-import org.ietf.jgss.GSSException;
 
-public class CobaltExecutor implements ProcessListener {
-    public static final Logger logger = Logger.getLogger(CobaltExecutor.class);
+public class CobaltExecutor extends AbstractExecutor {
+	public static final Logger logger = Logger.getLogger(CobaltExecutor.class);
 
-    private JobSpecification spec;
-    private Task task;
-    private static QueuePoller poller;
-    private ProcessListener listener;
-    private String stdout, stderr;
-    private String cqsub;
-    private Pattern exitcodeRegexp;
+	private String cqsub;
+	private Pattern exitcodeRegexp;
 
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+	private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-    public CobaltExecutor(Task task, ProcessListener listener) {
-        this.task = task;
-        this.spec = (JobSpecification) task.getSpecification();
-        this.listener = listener;
-        this.cqsub = Properties.getProperties().getCQSub();
-        this.exitcodeRegexp = Pattern.compile(Properties.getProperties().getExitcodeRegexp());
-    }
+	public CobaltExecutor(Task task, ProcessListener listener) {
+		super(task, listener);
+		this.cqsub = Properties.getProperties().getSubmitCommand();
+		this.exitcodeRegexp = Pattern.compile(Properties.getProperties()
+				.getExitcodeRegexp());
+	}
+	
+	protected Job createJob(String jobid, String stdout,
+			FileLocation stdOutputLocation, String stderr,
+			FileLocation stdErrorLocation, String exitcode,
+			AbstractExecutor executor) {
+		return new CobaltJob(jobid, stdout, stderr, getSpec().getStdOutput(), stdOutputLocation, 
+				getSpec().getStdError(), stdErrorLocation, exitcodeRegexp, this);
+	}
 
-    private static synchronized QueuePoller getProcessPoller() {
-        if (poller == null) {
-            poller = new QueuePoller();
-            poller.start();
-        }
-        return poller;
-    }
+	protected String getName() {
+		return "Cobalt";
+	}
 
-    public void start() throws AuthorizationException, GSSException,
-            IOException, ProcessException {
-        File scriptdir = new File(System.getProperty("user.home")
-                + File.separatorChar + ".globus" + File.separatorChar
-                + "scripts");
-        scriptdir.mkdirs();
-        if (!scriptdir.exists()) {
-            throw new IOException("Failed to create script directory ("
-                    + scriptdir + ")");
-        }
-        stdout = File.createTempFile("cobalt", ".stdout", scriptdir)
-                .getAbsolutePath();
-        stderr = stdout.substring(0, stdout.length() - ".stdout".length())
-                + ".stderr";
+	protected AbstractProperties getProperties() {
+		return Properties.getProperties();
+	}
 
-        String[] cmdline = buildCMDLine(stdout, stderr);
+	protected void writeScript(Writer wr, String exitcode, String stdout,
+			String stderr) throws IOException {
+	}
 
-        Process process = Runtime.getRuntime().exec(cmdline, null, null);
+	protected void addAttr(String attrName, String option, List l) {
+		addAttr(attrName, option, l, null);
+	}
 
-        try {
-            process.getOutputStream().close();
-        }
-        catch (IOException e) {
-        }
+	protected void addAttr(String attrName, String option, List l, boolean round) {
+		addAttr(attrName, option, l, null, round);
+	}
 
-        try {
-            int code = process.waitFor();
-            if (code != 0) {
-                // grr. cqsub outputs error messages on stdout
-                throw new ProcessException(
-                        "Could not submit job (cqsub reported an exit code of "
-                                + code + "). "
-                                + getOutput(process.getErrorStream())
-                                + getOutput(process.getInputStream()));
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug("cqsub done (exit code " + code + ")");
-            }
-        }
-        catch (InterruptedException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Interrupted exception while waiting for qsub", e);
-            }
-            if (listener != null) {
-                listener
-                        .processFailed("The submission process was interrupted");
-            }
-        }
+	protected void addAttr(String attrName, String option, List l, String defval) {
+		addAttr(attrName, option, l, defval, false);
+	}
 
-        String jobid = getOutput(process.getInputStream());
-        if (jobid == null || jobid.equals("")) {
-            throw new IOException("cqsub returned empty job ID");
-        }
+	protected void addAttr(String attrName, String option, List l,
+			String defval, boolean round) {
+		Object value = getSpec().getAttribute(attrName);
+		if (value != null) {
+			if (round) {
+				value = round(value);
+			}
+			l.add(option);
+			l.add(String.valueOf(value));
+		}
+		else if (defval != null) {
+			l.add(option);
+			l.add(defval);
+		}
+	}
 
-        getProcessPoller().addJob(
-                new CobaltJob(jobid, stdout, stderr, spec.getStdOutput(), spec
-                        .getStdOutputLocation(), spec.getStdError(), spec
-                        .getStdErrorLocation(), exitcodeRegexp, this));
-    }
+	protected Object round(Object value) {
+		if (value instanceof Number) {
+			return new Integer(((Number) value).intValue());
+		}
+		else {
+			return value;
+		}
+	}
 
-    private void error(String message) {
-        listener.processFailed(message);
-    }
+	protected String[] buildCommandLine(File jobdir, File script,
+			String exitcode, String stdout, String stderr) throws IOException {
+		List l = new ArrayList();
+		l.add(cqsub);
+		Collection names = getSpec().getEnvironmentVariableNames();
+		if (names != null && names.size() > 0) {
+			l.add("-e");
+			StringBuffer sb = new StringBuffer();
+			Iterator i = names.iterator();
+			while (i.hasNext()) {
+				String name = (String) i.next();
+				sb.append(name);
+				sb.append('=');
+				sb.append(quote(getSpec().getEnvironmentVariable(name)));
+				if (i.hasNext()) {
+					sb.append(':');
+				}
+			}
+			l.add(sb.toString());
+		}
+		addAttr("mode", "-m", l);
+		// We're gonna treat this as the node count
+		addAttr("count", "-c", l, true);
+		addAttr("hostCount", "-n", l, "1", true);
+		addAttr("project", "-p", l);
+		addAttr("queue", "-q", l);
+		addAttr("kernelprofile", "-k", l);
+		// cqsub seems to require both the node count and time args
+		addAttr("maxwalltime", "-t", l, "10");
+		if (getSpec().getDirectory() != null) {
+			l.add("-C");
+			l.add(getSpec().getDirectory());
+		}
+		l.add("-o");
+		l.add(stdout);
+		l.add("-E");
+		l.add(stderr);
+		l.add(getSpec().getExecutable());
+		l.addAll(getSpec().getArgumentsAsList());
+		if (logger.isDebugEnabled()) {
+			logger.debug("Cqsub cmd line: " + l);
+		}
+		return (String[]) l.toArray(EMPTY_STRING_ARRAY);
+	}
 
-    protected void addAttr(String attrName, String option, List l) {
-        addAttr(attrName, option, l, null);
-    }
-    
-    protected void addAttr(String attrName, String option, List l, boolean round) {
-        addAttr(attrName, option, l, null, round);
-    }
-    
-    protected void addAttr(String attrName, String option, List l, String defval) {
-        addAttr(attrName, option, l, defval, false);
-    }
+	protected String quote(String s) {
+		boolean quotes = false;
+		if (s.indexOf(' ') != -1) {
+			quotes = true;
+		}
+		StringBuffer sb = new StringBuffer();
+		if (quotes) {
+			sb.append('"');
+		}
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '"' || c == '\\') {
+				sb.append('\\');
+				break;
+			}
+			sb.append(c);
+		}
+		if (quotes) {
+			sb.append('"');
+		}
+		return sb.toString();
+	}
 
-    protected void addAttr(String attrName, String option, List l, String defval, boolean round) {
-        Object value = spec.getAttribute(attrName);
-        if (value != null) {
-            if (round) {
-                value = round(value);
-            }
-            l.add(option);
-            l.add(String.valueOf(value));
-        }
-        else if (defval != null) {
-            l.add(option);
-            l.add(defval);
-        }
-    }
-    
-    protected Object round(Object value) {
-        if (value instanceof Number) {
-            return new Integer(((Number) value).intValue());
-        }
-        else {
-            return value;
-        }
-    }
+	protected void cleanup() {
+		super.cleanup();
+		new File(getStdout()).delete();
+		new File(getStderr()).delete();
+	}
+	
+	private static QueuePoller poller;
 
-    protected String[] buildCMDLine(String stdout, String stderr) {
-        List l = new ArrayList();
-        l.add(cqsub);
-        Collection names = spec.getEnvironmentVariableNames();
-        if (names != null && names.size() > 0) {
-            l.add("-e");
-            StringBuffer sb = new StringBuffer();
-            Iterator i = names.iterator();
-            while (i.hasNext()) {
-                String name = (String) i.next();
-                sb.append(name);
-                sb.append('=');
-                sb.append(quote(spec.getEnvironmentVariable(name)));
-                if (i.hasNext()) {
-                    sb.append(':');
-                }
-            }
-            l.add(sb.toString());
-        }
-        addAttr("mode", "-m", l);
-        // We're gonna treat this as the node count
-        addAttr("count", "-c", l, true);
-        addAttr("hostCount", "-n", l, "1", true);
-        addAttr("project", "-p", l);
-        addAttr("queue", "-q", l);
-        addAttr("kernelprofile", "-k", l);
-        // cqsub seems to require both the node count and time args
-        addAttr("maxwalltime", "-t", l, "10");
-        if (spec.getDirectory() != null) {
-            l.add("-C");
-            l.add(spec.getDirectory());
-        }
-        l.add("-o");
-        l.add(stdout);
-        l.add("-E");
-        l.add(stderr);
-        l.add(spec.getExecutable());
-        l.addAll(spec.getArgumentsAsList());
-        if (logger.isDebugEnabled()) {
-            logger.debug("Cqsub cmd line: " + l);
-        }
-        return (String[]) l.toArray(EMPTY_STRING_ARRAY);
-    }
-
-    protected String quote(String s) {
-        boolean quotes = false;
-        if (s.indexOf(' ') != -1) {
-            quotes = true;
-        }
-        StringBuffer sb = new StringBuffer();
-        if (quotes) {
-            sb.append('"');
-        }
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '"' || c == '\\') {
-                sb.append('\\');
-                break;
-            }
-            sb.append(c);
-        }
-        if (quotes) {
-            sb.append('"');
-        }
-        return sb.toString();
-    }
-
-    protected String getOutput(InputStream is) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Waiting for output from qsub");
-        }
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        StringBuffer sb = new StringBuffer();
-        String out = br.readLine();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Output from qsub is: \"" + out + "\"");
-        }
-        if (out == null) {
-            out = "";
-        }
-        return out;
-    }
-
-    protected void cleanup() {
-        new File(stdout).delete();
-        new File(stderr).delete();
-    }
-
-    public void processCompleted(int exitCode) {
-        cleanup();
-        if (listener != null) {
-            listener.processCompleted(exitCode);
-        }
-    }
-
-    public void processFailed(String message) {
-        cleanup();
-        if (listener != null) {
-            listener.processFailed(message);
-        }
-    }
-
-    public void statusChanged(int status) {
-        if (listener != null) {
-            listener.statusChanged(status);
-        }
-    }
-
-    public void stderrUpdated(String stderr) {
-        if (listener != null) {
-            listener.stderrUpdated(stderr);
-        }
-    }
-
-    public void stdoutUpdated(String stdout) {
-        if (listener != null) {
-            listener.stdoutUpdated(stdout);
-        }
-    }
-
-    public void processFailed(Exception e) {
-        cleanup();
-        if (listener != null) {
-            listener.processFailed(e);
-        }
-    }
+	protected AbstractQueuePoller getQueuePoller() {
+		synchronized(PBSExecutor.class) {
+			if (poller == null) {
+				poller = new QueuePoller(getProperties());
+				poller.start();
+			}
+			return poller;
+		}
+	}
 }
