@@ -7,7 +7,7 @@
 /*
  * Created on Oct 11, 2005
  */
-package org.globus.cog.abstraction.impl.scheduler.pbs;
+package org.globus.cog.abstraction.impl.scheduler.condor;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.execution.WallTime;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
@@ -25,10 +25,10 @@ import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 
-public class PBSExecutor extends AbstractExecutor {
-	public static final Logger logger = Logger.getLogger(PBSExecutor.class);
+public class CondorExecutor extends AbstractExecutor {
+	public static final Logger logger = Logger.getLogger(CondorExecutor.class);
 
-	public PBSExecutor(Task task, ProcessListener listener) {
+	public CondorExecutor(Task task, ProcessListener listener) {
 		super(task, listener);
 	}
 
@@ -36,16 +36,7 @@ public class PBSExecutor extends AbstractExecutor {
 			throws IOException {
 		Object value = getSpec().getAttribute(attrName);
 		if (value != null) {
-			wr.write("#PBS " + arg + String.valueOf(value) + '\n');
-		}
-	}
-
-	protected void writeWallTime(Writer wr) throws IOException {
-		Object walltime = getSpec().getAttribute("maxwalltime");
-		if (walltime != null) {
-			wr.write("#PBS -l walltime="
-					+ WallTime.normalize(walltime.toString(), "pbs-native")
-					+ '\n');
+			wr.write(arg + String.valueOf(value) + '\n');
 		}
 	}
 
@@ -53,52 +44,43 @@ public class PBSExecutor extends AbstractExecutor {
 			String stderr) throws IOException {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
-		wr.write("#PBS -S /bin/sh\n");
-		wr.write("#PBS -N " + task.getName() + '\n');
-		wr.write("#PBS -m n\n");
-		writeAttr("project", "-A ", wr);
-		writeAttr("count", "-l nodes=", wr);
-		writeWallTime(wr);
-		writeAttr("queue", "-q ", wr);
-		if (spec.getStdInput() != null) {
-			throw new IOException("The PBSlocal provider cannot redirect STDIN");
+		String type = (String) spec.getAttribute("jobType");
+		if (logger.isDebugEnabled()) {
+			logger.debug("Job type: " + type);
 		}
-		wr.write("#PBS -o " + quote(stdout) + '\n');
-		wr.write("#PBS -e " + quote(stderr) + '\n');
+		if ("MPI".equals(type)) {
+			wr.write("universe = MPI\n");
+		}
+		else {
+			// wr.write("universe = vanilla\n");
+			wr.write("universe = vanilla\n");
+		}
+		writeAttr("count", "machine_count = ", wr);
+		if (spec.getStdInput() != null) {
+			wr.write("input = " + quote(spec.getStdInput()) + "\n");
+		}
+		wr.write("output = " + quote(stdout) + '\n');
+		wr.write("error = " + quote(stderr) + '\n');
 		Iterator i = spec.getEnvironmentVariableNames().iterator();
+		if (i.hasNext()) {
+			wr.write("environment = ");
+		}
 		while (i.hasNext()) {
 			String name = (String) i.next();
 			wr.write(name);
 			wr.write('=');
 			wr.write(quote(spec.getEnvironmentVariable(name)));
-			wr.write('\n');
+			wr.write(';');
 		}
-		String type = (String) spec.getAttribute("jobType");
-		if (logger.isDebugEnabled()) {
-			logger.debug("Job type: " + type);
-		}
-		if (type != null) {
-			String wrapper = Properties.getProperties().getProperty(
-					"wrapper." + type);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Wrapper: " + wrapper);
-			}
-			if (wrapper != null) {
-				wrapper = replaceVars(wrapper);
-				wr.write(wrapper);
-				wr.write(' ');
-			}
-			if (logger.isDebugEnabled()) {
-				logger.debug("Wrapper after variable substitution: " + wrapper);
-			}
-		}
+		wr.write("\n");
+
 		if (spec.getDirectory() != null) {
-			wr.write("cd " + quote(spec.getDirectory()) + " && ");
+			wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
 		}
-		wr.write(quote(spec.getExecutable()));
+		wr.write("executable = " + quote(spec.getExecutable()) + "\n");
 		List args = spec.getArgumentsAsList();
 		if (args != null && args.size() > 0) {
-			wr.write(' ');
+			wr.write("arguments = ");
 			i = args.iterator();
 			while (i.hasNext()) {
 				wr.write(quote((String) i.next()));
@@ -108,8 +90,9 @@ public class PBSExecutor extends AbstractExecutor {
 			}
 		}
 		wr.write('\n');
-
-		wr.write("/bin/echo $? >" + exitcodefile + '\n');
+		wr.write("notification = Never\n");
+		wr.write("+LeaveJobInQueue = TRUE\n");
+		wr.write("queue\n");
 		wr.close();
 	}
 
@@ -203,7 +186,7 @@ public class PBSExecutor extends AbstractExecutor {
 	}
 
 	protected String getName() {
-		return "PBS";
+		return "Condor";
 	}
 
 	protected AbstractProperties getProperties() {
@@ -217,16 +200,70 @@ public class PBSExecutor extends AbstractExecutor {
 		return new Job(jobid, stdout, stdOutputLocation, stderr,
 				stdErrorLocation, exitcode, executor);
 	}
-	
+
 	private static QueuePoller poller;
 
 	protected AbstractQueuePoller getQueuePoller() {
-		synchronized(PBSExecutor.class) {
+		synchronized (CondorExecutor.class) {
 			if (poller == null) {
 				poller = new QueuePoller(getProperties());
 				poller.start();
 			}
 			return poller;
+		}
+	}
+
+	protected String parseSubmitCommandOutput(String out) throws IOException {
+		if (out.endsWith(".")) {
+			out = out.substring(0, out.length() - 1);
+		}
+		int index = out.lastIndexOf(" ");
+		return out.substring(index + 1);
+	}
+
+	public void cancel() throws TaskSubmissionException {
+		String jobid = getJobid();
+		try {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Marking job " + jobid
+						+ " as removable from queue");
+			}
+			Process p = Runtime.getRuntime().exec(
+					new String[] {
+							getProperties()
+									.getProperty(Properties.CONDOR_QEDIT),
+							jobid, "LeaveJobInQueue", "FALSE" });
+			int ec = p.waitFor();
+			if (ec == 0) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Successfully marked " + jobid
+							+ " as removable from queue");
+				}
+			}
+			else {
+				logger.warn("Failed makr job " + jobid
+						+ " as removable from queue: "
+						+ getOutput(p.getInputStream()));
+			}
+			if (logger.isDebugEnabled()) {
+				logger.debug("Cancelling job " + jobid);
+			}
+
+			p = Runtime.getRuntime().exec(
+					new String[] { getProperties().getRemoveCommand(), jobid });
+			ec = p.waitFor();
+			if (ec == 0) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Successfully cancelled job " + jobid);
+				}
+			}
+			else {
+				logger.warn("Failed to cancel job " + jobid + ": "
+						+ getOutput(p.getInputStream()));
+			}
+		}
+		catch (Exception e) {
+			logger.warn("Failed to cancel job " + jobid, e);
 		}
 	}
 }

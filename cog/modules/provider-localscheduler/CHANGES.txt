@@ -1,3 +1,9 @@
+(03/13/09)
+
+*** Refactored common portions of providers into abstract parts
+
+*** Added condor provider
+
 (04/24/08)
 
 *** Added job canceling to PBS
