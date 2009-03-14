@@ -127,6 +127,7 @@ public class QueuePoller extends AbstractQueuePoller {
 	}
 
 	protected void removeDoneJob(String jobid) {
+		super.removeDoneJob(jobid);
 		try {
 			initArgvs();
 			if (logger.isDebugEnabled()) {
@@ -166,7 +167,6 @@ public class QueuePoller extends AbstractQueuePoller {
 		catch (Exception e) {
 			logger.warn("Failed to remove job " + jobid + " from queue", e);
 		}
-		super.removeDoneJob(jobid);
 	}
 
 	protected String getOutput(InputStream is) throws IOException {
