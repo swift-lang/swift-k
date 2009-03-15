@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# given an event stream in $1, will plot an output file on $2
+
+echo starting simple event plot
+echo normalising time `date`
+normalise-event-start-time < $1 > sp.plot2.tmp
+
+echo numbering events `date`
+number-events < sp.plot2.tmp > sp.plot.tmp
+
+echo preparing plot file `date`
+tail -n 1 sp.plot.tmp > sp.plot3.tmp
+
+read t eventcount rest < sp.plot3.tmp
+
+maxtime=$(max-duration)
+cat ${SWIFT_PLOT_HOME}/sp.plot.template | sed "s/CHANNELDESC/$1/g" | sed "s/MAXTIME/${maxtime}/g" | sed "s/EVENTCOUNT/${eventcount}/" > sp.plot
+
+echo plotting `date`
+gnuplot sp.plot
+echo done `date`
+
+cp sp-tmp.png $2
+

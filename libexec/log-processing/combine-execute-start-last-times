@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# $1glgsmhi 1193148071 0-2 badmonkey
+while read dvid starttime threadid trname rest; do
+
+echo processing $dvid >&2
+
+c=$(extract-last-time-for-execute $dvid)
+
+echo last time is $c >&2
+
+if [ "X$c" == "X" ]; then
+  state=INPROGRESS
+  d=0
+else
+  state=FINISHED
+  d=$( echo $c - $starttime | bc )
+fi
+echo $starttime $d $dvid $threadid $trname $state
+
+done < execute-start-times.data
+

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cat workflow.event | sort -n | tail -n 1 > max-duration.tmp
+
+# this will give us the last known event
+
+read start duration rest < max-duration.tmp
+
+echo $duration
+

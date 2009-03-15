@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#while read start duration threadid finalstatus tasktype rest; do
+#  colour=$(lookup-colour ${SWIFT_PLOT_HOME}/karatasks-coloured.channels $tasktype)
+#  echo $start $duration $colour $threadid $finalstatus $tasktype
+#done 
+
+cat > tmp-colour-karatasks-input
+
+sort -k 5 < tmp-colour-karatasks-input > tmp-colour-karatasks-input.2
+
+join -1 5 -2 1 -o 1.1,1.2,2.2,1.3,1.4,1.5 tmp-colour-karatasks-input.2 ${SWIFT_PLOT_HOME}/karatasks-coloured.channels.nm > tmp-colour-karatasks-output
+
+sort -n tmp-colour-karatasks-output
+

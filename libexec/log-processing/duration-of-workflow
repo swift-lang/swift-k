@@ -1,0 +1,16 @@
+#!/bin/bash
+
+echo duration for $1 >&2
+
+BUCKET=$(basename $1 |sed 's/^\(.*\)-........-....-........\.log$/\1/' )
+
+START=$(head -n 1 $1 | iso-to-secs | cut -f 1 -d ' ')
+END=$(grep -E '^[0-9]' $1 | tail -n 1 | iso-to-secs | cut -f 1 -d ' ')
+
+if [ "X$END" == "X" ]; then 
+  DURATION=0
+else
+  DURATION=$( echo $END - $START | bc -l )
+fi
+
+echo $DURATION $BUCKET

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# 1190823051.917 4.141 antch-l41y7shi COMPLETED UC-64 0-1-2-0
+
+while read time duration id state site thread rest; do
+  if grep "urn:${thread}-" falkon.event > /dev/null ; then
+    falkonp=2
+  else
+    falkonp=1
+  fi
+  echo $time $duration $falkonp $id
+done < execute2.event

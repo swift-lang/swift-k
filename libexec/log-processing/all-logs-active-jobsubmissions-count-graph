@@ -1,0 +1,10 @@
+#!/bin/bash
+
+find $1 -type f -name \*.log -exec grep 'DEBUG TaskImpl Task(type=JOB_SUBMISSION, identity=' {} \; | grep 'setting status to Active' | iso-to-secs | cut -d ' ' -f 1 | sort -n | number-sites-list  > all-logs-active-tasks.data.1.tmp
+
+while read l r ; do
+  echo $(sec-to-utc-day $l) $r
+done < all-logs-active-tasks.data.1.tmp > all-logs-active-tasks.data
+
+gnuplot ${SWIFT_PLOT_HOME}/everylog-active-submissions.plot
+

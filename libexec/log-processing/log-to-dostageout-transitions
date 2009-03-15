@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# this will take a log file and produce a set of state transition
+# events for every initshareddir transition
+
+# this one pulls out START and ENDs for jobs; there's a separate set
+# of events that could be recorded for each FILE, using the file= parameter
+# for FILE_STAGE_IN_START and _END
+
+# 1193169216.993 DEBUG vdl:dostageout FILE_STAGE_IN_START file=file://localhost/pc361.pcap srchost=localhost srcdir= srcname=pc361.pcap desthost=UC destdir=awf2-20071023-1453-dtp24ho6/shared/ provider=file
+
+grep ' vdl:dostageout ' | iso-to-secs | \
+grep -E '^[^ ]+ +[^ ]+ +vdl:dostageout ' | \
+sed 's/\([^ ]*\) [^ ]* *vdl:dostageout FILE_STAGE_OUT_.*$//' | \
+sed 's/\([^ ]*\) INFO  vdl:dostageout \([^ ]*\) jobid=\([^ ]*\) -.*$/\1 \3 \2/' |\
+grep -E '^[^$]'
+
+exit 0
+

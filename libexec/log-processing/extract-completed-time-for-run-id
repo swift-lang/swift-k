@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# 59630 INFO  vdl:execute2 Completed job softmean-x7pgqhhi softmean with arguments [atlas.img, y, null, intermediate-slices0003.img, intermediate-slices0002.img, intermediate-slices0004.img, intermediate-slices0001.img] on localhost
+
+grep "vdl:execute2 Completed job $1" log  | sed 's/^\([^ ]*\) .*/\1/'

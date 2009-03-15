@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+$earliesttime = $ARGV[0];
+
+foreach $n (<STDIN>) {
+  $n =~ /^([^ ]*) (.*)$/ ;
+  $delta = $1 - $earliesttime;
+  print "$delta $2\n"; 
+}
+
+## #!/bin/bash
+## ST=$(cat start-time.tmp)
+## while read time rest; do
+##         echo $(echo $time - $ST | bc ) $rest
+## done

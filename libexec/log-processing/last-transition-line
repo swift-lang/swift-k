@@ -1,0 +1,23 @@
+#!/usr/bin/env perl
+# 2007-09-20 16:13:40,150
+
+use Time::Local;
+
+$prevjob = "last-event-line no previous event";
+
+$prevline = "";
+
+foreach $n (<STDIN>) {
+  $n =~ /^([^ ]*) (.*)$/;
+  $job = $1;
+
+  if( $job eq $prevjob ) {
+    ;
+  } else {
+    print "$prevline";
+    $prevjob = $job;
+  };
+  $prevline = $n;
+}
+
+print $prevline;

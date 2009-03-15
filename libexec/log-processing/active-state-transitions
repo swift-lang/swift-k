@@ -1,0 +1,34 @@
+#!/usr/bin/env perl
+
+# pull out transitions that go to active state and the immediately
+# following transition
+
+use Time::Local;
+
+$prevjob = "active-state-transitions no previous event";
+
+$prevline = "";
+
+$active = 0;
+
+foreach $n (<STDIN>) {
+  $n =~ /^([^ ]*) ([^ ]*) ([^ ]*) (.*)$/;
+  $ts = $1;
+  $job = $2;
+  $state = $3;
+
+  if($state eq "Active") {
+    print "$n";
+    $active = 1;
+  } elsif( ($job eq $prevjob) && ($active) ) {
+    if($active == 1) {
+      print $n;
+      $active = 0;
+    }
+  } else {
+    $prevjob = $job;
+  };
+  $prevline = $n;
+}
+
+# print $prevline;

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+while read time duration thread disposition rest; do
+
+#1191472908.437 407.397000074387 0-1-1-11 END.SUCCESS chrm_last
+
+echo $thread $(grep " $thread " execute2.event | wc -l)
+
+done < execute.event

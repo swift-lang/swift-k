@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# 1193171709.215 0-132-2-1193169220246 Active FILE_OPERATION
+
+cat karatasks.transitions | grep -E "^[^ ]* *[^ ]* *[^ ]* *$1.*"
+
+exit 0

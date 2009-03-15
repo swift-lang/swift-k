@@ -1,0 +1,13 @@
+
+set terminal png
+set output 'tmp-trail.png'
+
+set key outside below
+set ylabel 'count of events that have reached state'
+set xlabel 'realtime / s'
+
+set xrange [0:MAXTIME]
+set yrange [0:]
+
+
+plot \

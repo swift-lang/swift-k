@@ -1,0 +1,15 @@
+rm -f tmp-extract-starttime2
+
+if [ "X$LOG" != "X" ] ; then
+  head $LOG | iso-to-secs >> tmp-extract-starttime2
+fi
+
+for e in *.event ; do 
+  head -n 1 $e >> tmp-extract-starttime2
+done
+
+sort -n < tmp-extract-starttime2 >tmp-extract-starttime
+
+read st rest < tmp-extract-starttime
+
+echo $st 

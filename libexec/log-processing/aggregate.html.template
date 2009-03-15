@@ -1,0 +1,20 @@
+<html>
+
+<p>
+kickstart records over all runs - one kickstart record indicates
+application execution on one worker node.
+</p>
+<img src="all-kickstart.png"/>
+
+<p>kickstart record total - indicates how many nodes were executing
+application code at particular time.</p>
+
+<img src="all-kickstart-total.png"/>
+
+stats:
+
+<pre>
+include(`all-kickstart.stats')
+</pre>
+
+</html>

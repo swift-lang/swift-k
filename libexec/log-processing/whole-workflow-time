@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export st=$(cat start-time.tmp)
+export et=$(cat end-time.tmp)
+
+echo 0 1 $(( $et - $st )) 0 whole-workflow
+

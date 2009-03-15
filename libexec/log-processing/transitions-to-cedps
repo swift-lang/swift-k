@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# given a .transitions file on the stdin, produce a .cedps file
+# that looks something like this:
+# http://www.cedps.net/wiki/index.php/LoggingBestPracticesCheatSheet
+
+PREFIX=$(echo $1 | sed 's/\.transitions//')
+
+while read time object state rest; do
+
+echo ts=$(sec-to-utc $time) id=$object event=$PREFIX.$state comment=\"$rest\"
+
+done < $1
+

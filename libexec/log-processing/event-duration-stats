@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+open(EVENTS, $ARGV[0]);
+
+# feed in an event stream, get stats about duration
+$totalevents=0;
+
+# some approximations of +/-infinity - are there max/min int
+# constatnts to use here instead?
+$longest=-1;
+$shortest=1000000;
+
+$totallength=0;
+
+while(<EVENTS>) {
+  $n = $_;
+  $n =~ /^([^ ]*) ([^ ]*)/;
+  $l = $2;
+  if($l > $longest) { $longest = $l };
+  if($l < $shortest) { $shortest = $l };
+  $totalevents = $totalevents + 1;
+  $totallength = $totallength + $l;
+}
+
+if($totalevents == 0) { 
+ $mean=0;
+} else {
+ $mean=$totallength / $totalevents;
+}
+
+close(EVENTS);
+
+# now do it again to calculate stddev, now that we know the mean
+
+open(EVENTS, $ARGV[0]);
+$spread=0;
+
+while(<EVENTS>) {
+  $n = $_;
+  $n =~ /^([^ ]*) ([^ ]*)/;
+  $l = $2;
+  $d = $mean - $l;
+  $spread = $spread + ( $d * $d );
+}
+
+if($totalevents == 0) { 
+ $stddev=0;
+} else {
+ $variance=$spread / $totalevents;
+ $stddev = sqrt($variance);
+}
+
+close(EVENTS);
+
+$eipfn = $ARGV[0];
+$eipfn =~ s/.event$/.eip/;
+
+open(EIP, $eipfn);
+
+$maxinprogress=0;
+while(<EIP>) {
+  $n = $_;
+  $n =~ /^([^ ]*) ([^ ]*)/;
+  $l = $2;
+  if($l > $maxinprogress) { $maxinprogress = $l };
+}
+
+close(EIP);
+
+
+print("Total number of events: $totalevents\n");
+print("Shortest event (s): $shortest\n");
+print("Longest event (s): $longest\n");
+print("Total duration of all events (s): $totallength\n");
+print("Mean event duration (s): $mean\n");
+print("Standard deviation of event duration (s): $stddev\n");
+print("Maximum number of events at one time: $maxinprogress\n");

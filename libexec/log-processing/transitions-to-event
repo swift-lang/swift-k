@@ -1,0 +1,80 @@
+#!/usr/bin/env perl
+# 2007-09-20 16:13:40,150
+
+use Time::Local;
+
+$prevjob = "last-event-line no previous event";
+
+$prevline = "\n";
+$startline = "\n";
+
+$first="y";
+
+foreach $n (<STDIN>) {
+  $n =~ /^([^ ]*) (.*)$/;
+  $job = $1;
+
+  if( $job eq $prevjob ) {
+    ;
+  } else {
+    if($first eq "n") {
+      $startline =~ /^([^ ]*) ([^ ]*) ([^ \n]*)([^\n]*)/ ;
+      $starttime = $2;
+      $startrest = $4;
+      $prevline =~ /^([^ ]*) ([^ ]*) ([^ \n]*)([^\n]*)/ ;
+      $prevtime = $2;
+      $prevstate = $3;
+
+# at this point process infinity
+
+# if $prevstate is an inprogress event, then make delta be the length
+# to get to infinity, rather than to the last transition. I think
+# all other fields can stay the same.
+
+# hard code for now
+if( $prevstate eq "START" || $prevstate eq "JOB_START" || $prevstate eq "Active" || $prevstate eq "Submitted" ) {
+ # infinity processing!
+ open(TINF, "t.inf");
+ $prevtime = <TINF>;
+}
+
+      $delta = $prevtime - $starttime;
+
+      print "$starttime $delta $prevjob $prevstate$startrest\n";
+    };
+
+    $prevjob = $job;
+    $startline = $n;
+
+
+    $first="n";
+  };
+  $prevline = $n;
+}
+$startline =~ /^([^ ]*) ([^ ]*) ([^ \n]*)([^\n]*)/ ;
+$starttime = $2;
+$startrest = $4;
+$prevline =~ /^([^ ]*) ([^ ]*) ([^ \n]*)([^\n]*)/ ;
+$prevtime = $2;
+$prevstate = $3;
+
+# at this point process infinity
+
+# if $prevstate is an inprogress event, then make delta be the length
+# to get to infinity, rather than to the last transition. I think
+# all other fields can stay the same.
+
+# hard code for now
+if( $prevstate eq "START" || $prevstate eq "JOB_START" || $prevstate eq "Active" || $prevstate eq "Submitted" ) {
+ # infinity processing!
+open(TINF, "t.inf");
+$prevtime = <TINF>;
+}
+
+
+
+$delta = $prevtime - $starttime;
+
+print "$starttime $delta $prevjob $prevstate$startrest\n";
+
+ 

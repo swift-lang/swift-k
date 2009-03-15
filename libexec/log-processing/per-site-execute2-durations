@@ -1,0 +1,18 @@
+#!/bin/bash
+
+
+for site in $(cat sites-list.data); do
+
+grep $site execute2.event > pse2d-tmp.event
+
+echo "=== execute2 duration statistics for $site ==="
+
+events-in-progress < pse2d-tmp.event > pse2d-tmp.eip
+
+event-duration-stats pse2d-tmp.event
+
+echo
+echo
+
+done
+

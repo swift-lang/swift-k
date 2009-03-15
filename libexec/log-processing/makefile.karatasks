@@ -1,0 +1,41 @@
+export LOG
+
+karajan-times.data: log tasks.list start-time.tmp end-time.tmp
+	times-for-all-tasks > karajan-times.data
+
+tasks.list: log
+	list-known-tasks > tasks.list
+
+karatasks-type-counts.txt: karatasks.event
+	cat karatasks.event | cut -f 4 -d ' ' | sort  | uniq -c > karatasks-type-counts.txt
+
+karatasks.coloured-event: karatasks.event
+	colour-karatasks < karatasks.event > karatasks.coloured-event
+
+karatasks.coloured-sorted-event: karatasks.sorted-start.event
+	colour-karatasks < karatasks.sorted-start.event > karatasks.coloured-sorted-event
+
+karatasks-coloured.png: karatasks.coloured-event start-time.tmp workflow.event
+	coloured-event-plot karatasks.coloured-event karatasks-coloured.png ${SWIFT_PLOT_HOME}/karatasks-coloured.channels
+
+karatasks-coloured-sorted.png: karatasks.coloured-sorted-event start-time.tmp workflow.event
+	coloured-event-plot karatasks.coloured-sorted-event karatasks-coloured-sorted.png ${SWIFT_PLOT_HOME}/karatasks-coloured.channels
+
+karatasks.transitions: $(LOG)
+	log-to-karatasks-transitions < $(LOG) > karatasks.transitions
+
+karatasks.FILE_OPERATION.transitions: karatasks.transitions
+	karatasks-only FILE_OPERATION > $@
+
+karatasks.FILE_TRANSFER.transitions: karatasks.transitions
+	karatasks-only FILE_TRANSFER > $@
+
+karatasks.JOB_SUBMISSION.transitions: karatasks.transitions
+	karatasks-only JOB_SUBMISSION > $@
+
+karatasks.JOB_SUBMISSION.Active.transitions: karatasks.JOB_SUBMISSION.transitions
+	cat karatasks.JOB_SUBMISSION.transitions | swap-and-sort-and-swap | active-state-transitions > karatasks.JOB_SUBMISSION.Active.transitions
+
+karatasks.JOB_SUBMISSION.Queue.transitions: karatasks.JOB_SUBMISSION.transitions
+	cat karatasks.JOB_SUBMISSION.transitions | swap-and-sort-and-swap | queue-state-transitions > karatasks.JOB_SUBMISSION.Queue.transitions
+

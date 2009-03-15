@@ -1,0 +1,12 @@
+karatasks.clusters.transitions: karatasks.JOB_SUBMISSION.transitions
+	grep cluster- $< | grep --invert-match Submitted > $@
+
+cluster.report: karatasks.clusters.lastsummary karatasks.clusters.last karatasks.clusters.event
+	cluster-report
+
+clusterstats: karatasks.clusters.lastsummary karatasks.clusters.last karatasks.clusters.event
+	cluster-stats > clusterstats
+
+cluster-jobcount-histogram.png: clusterstats
+	plot-cluster-jobcount-histogram
+

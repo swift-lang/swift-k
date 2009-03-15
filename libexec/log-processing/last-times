@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cut -f 1 -d ' ' < start-times.data > job-thread-ids.tmp
+for thread in $(cat job-thread-ids.tmp); do
+ echo -n $thread
+ echo -n ' '
+ echo -n $(extract-activity-for-subthreads-of $thread | tail -n 1)
+ echo
+done

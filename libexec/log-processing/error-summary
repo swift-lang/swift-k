@@ -1,0 +1,10 @@
+#!/bin/bash
+
+TFN=$(mktemp /tmp/error-summary-XXXXXXXXX)
+
+grep APPLICATION_EXC $1 | sed 's/^.*DEBUG vdl:execute2 APPLICATION_EXCEPTION jobid=\([^ ]*\) - \(.*\)$/\1 \2/' > $TFN
+
+echo === overall summary ===
+echo count / message
+cat $TFN | cut -d ' ' -f 2- | sort | uniq -c | sort -n
+

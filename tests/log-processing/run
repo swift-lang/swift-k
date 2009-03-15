@@ -1,0 +1,14 @@
+#!/bin/bash
+
+for d in sort-preserve make-targets; do
+
+  pushd $d
+  ./run
+  if [ "$?" -ne "0" ]; then
+    echo "log-processing test $d failed"
+    exit 1
+  fi
+
+  popd
+done
+

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# sort   name timestamp rest
+#  by name, then by timestamp, then by order in file
+
+# This differs from sorting on the first two fields. In sort-preserve, where
+# two lines have the same key (the same first two fields), then those two
+# lines will always be output in the same order as they appear in the
+# input file. This is not the case for POSIX sort.
+
+# This by numbering each line as a third field and using that as a third
+# key; and then removing that field after sorting.
+
+# TODO the temporary files should be made properly unique, and removed
+# after use (or removed entirely, with this entire script made into a
+# single pipe)
+
+I=0
+
+while read name timestamp rest; do
+  echo $name $timestamp $I $rest
+  I=$(( $I + 1 ))
+done > sort-preserve.tmp
+
+sort $@ -k 1f,1f -k 2n,2n -k 3n,3n < sort-preserve.tmp > sort-preserve2.tmp
+
+sed 's/^\([^ ]*\) \([^ ]*\) \([^ ]*\)\(.*\)/\1 \2\4/' < sort-preserve2.tmp
+

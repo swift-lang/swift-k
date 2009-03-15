@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# this will take a log file and produce a set of state transition
+# events for every initshareddir transition
+
+grep ' vdl:createdirset ' | iso-to-secs | \
+grep -E '^[^ ]+ +[^ ]+ +vdl:createdirset ' | \
+sed 's/\([^ ]*\) INFO  vdl:createdirset START jobid=\([^ ]*\) host=\([^ ]*\) -.*$/\1 \2 START \3/' |\
+sed 's/\([^ ]*\) INFO  vdl:createdirset END jobid=\([^ ]*\) -.*$/\1 \2 END/' |\
+ grep -E '^[^$]'
+
+exit 0;
