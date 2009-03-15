@@ -1,3 +1,8 @@
+(03/15/09)
+*** The log-processing code, primarily exposed as the swift-plot-log command,
+    has been merged into the main Swift release, rather than being a separate
+    download.
+
 (03/09/09)
 *** Added a throttling parallelFor and changed the swift foreach underlying
     implementation to it. The throttling parallelFor limits the number of
