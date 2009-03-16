@@ -91,13 +91,21 @@ public class LocalService extends GSSService implements Registering {
                     throw new TaskSubmissionException(
                             "Task ended before registration was received"
                                     + (s.getMessage() == null ? ". " : ": "
-                                            + s.getMessage()) + "\nSTDOUT: "
-                                    + t.getStdOutput() + "\nSTDERR: "
-                                    + t.getStdError(), s.getException());
+                                            + s.getMessage()) + out("STDOUT", t.getStdOutput()) + 
+                                    out("STDERR", t.getStdError()), s.getException());
                 }
             }
             return (String) services.get(id);
         }
+    }
+    
+    private String out(String name, String value) {
+    	if (value != null) {
+    		return "\n" + name + ": " + value;
+    	}
+    	else {
+    		return "";
+    	}
     }
 
     public void heardOf(String id) {
