@@ -390,16 +390,15 @@ public class WorkerManager extends Thread {
     public void workerTerminated(Worker worker) {
         logger.warn("Worker terminated: " + worker);
         Status s = worker.getStatus();
-        if (s.getStatusCode() == Status.FAILED) {
-            synchronized (this) {
+        synchronized (this) {
+	        if (s.getStatusCode() == Status.FAILED) {
                 requested.remove(worker.getId());
                 startingTasks.remove(worker.getRunning());
                 // this will cause all the jobs associated with the worker to
                 // fail
                 ready.put(new WorkerKey(worker), worker);
             }
-        }
-        synchronized (this) {
+    
             currentWorkers--;
             ready.remove(new WorkerKey(worker));
             ids.remove(worker.getId());
