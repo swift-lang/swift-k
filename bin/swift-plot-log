@@ -43,8 +43,9 @@ fi
 if [ "X$2" = "X" ]; then
 make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean webpage.kara webpage.weights karatasks.JOB_SUBMISSION.Queue.transitions karatasks.JOB_SUBMISSION.Queue.event karatasks.JOB_SUBMISSION.eip  $MAKETARGETS webpage distribute
 else
-make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean $2
-cp $2 $ORIGDIR/
+shift
+make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean $@
+cp $@ $ORIGDIR/
 fi
 
 # mv report-$LOG_FILE_BASE $LOG_DIRECTORY/
