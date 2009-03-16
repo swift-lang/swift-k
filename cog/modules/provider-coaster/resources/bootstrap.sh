@@ -13,12 +13,14 @@ error() {
 	exit 1
 }
 find() {
-	R=`eval $1 2>>$L`
-	if [ "X$R" == "X" ]; then
-		R=`/bin/bash -l -c "$1" 2>>$L`
-	elif [ -x $R ]; then
-		R=`/bin/bash -l -c "$1" 2>>$L`
+	R=`eval which $1 2>>$L`
+	CMD="which $1 1>/tmp/$ID 2>>$L"
+	if [ "X$R" == "X" ] || [ ! -x $R ]; then
+		/bin/bash -l -c "$CMD" >>$L
+		R=`cat /tmp/$ID`
 	fi
+	echo "find $1 = $R" >>$L
+	rm -f /tmp/$ID
 	echo $R
 }
 if [ "$L" == "" ]; then
@@ -26,9 +28,9 @@ if [ "$L" == "" ]; then
 fi
 DJ=`mktemp /tmp/bootstrap.XXXXXX`
 echo "BS: $BS" >>$L
-WGET=`find 'which wget'`
+WGET=`find wget`
 if [ "X$WGET" == "X" ]; then
-	WGET=`find 'which curl'`
+	WGET=`find curl`
 	if [ "X$WGET" == "X" ]; then
 		error "No wget or curl available"
 	fi
@@ -36,13 +38,14 @@ if [ "X$WGET" == "X" ]; then
 else
 	WGET="$WGET -c -q $BS/$B.jar -O $DJ >>$L 2>&1"
 fi
+echo "-->$WGET<--" >>$L
 eval $WGET
 if [ "$?" != "0" ]; then
 	error "Failed to download bootstrap jar from $BS"
 fi
-MD5SUM=`find 'which gmd5sum'`
+MD5SUM=`find gmd5sum`
 if [ "X$MD5SUM" == "X" ]; then
-	MD5SUM=`find 'which md5sum'`
+	MD5SUM=`find md5sum`
 	if [ "X$MD5SUM" == "X" ]; then
 		error "No md5sum or gmd5sum found"
 	fi
@@ -55,7 +58,7 @@ if [ "$AAMD5" != "$EMD5" ]; then
 	error "Bootstrap jar checksum failed: $EMD5 != $AAMD5"
 fi
 
-JAVA=`find 'which java'`
+JAVA=`find java`
 if [ "X$JAVA" == "X" ]; then
 	JAVA=$JAVA_HOME/bin/java
 fi
