@@ -152,3 +152,6 @@ jobid-karajanid-bindings: $(LOG)
 
 karatasks.JOB_SUBMISSION.annotated-execute2.transitions: karatasks.JOB_SUBMISSION.transitions execute2.event
 	annotate-karatasks-with-execute2-id < karatasks.JOB_SUBMISSION.transitions > karatasks.JOB_SUBMISSION.annotated-execute2.transitions
+
+everylog-vs-versions.data:
+	create-everylog-vs-versions-data $(LOG)
