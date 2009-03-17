@@ -16,7 +16,7 @@ find() {
 	R=`eval which $1 2>>$L`
 	CMD="which $1 1>/tmp/$ID 2>>$L"
 	if [ "X$R" == "X" ] || [ ! -x $R ]; then
-		/bin/bash -l -c "$CMD" >>$L
+		/bin/bash -l -c "$CMD" >>$L 2>>$L
 		R=`cat /tmp/$ID`
 	fi
 	echo "find $1 = $R" >>$L
