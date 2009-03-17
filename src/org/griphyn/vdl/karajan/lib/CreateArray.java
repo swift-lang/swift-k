@@ -22,10 +22,6 @@ public class CreateArray extends VDLFunction {
 		Object value = PA_VALUE.getValue(stack);
 		try {
 
-//TODO  figure out the type here based on the type(s) of the array contents
-// and throw appropriate exception in the case of inconsistency
-
-
 			if (!(value instanceof List)) {
 				throw new RuntimeException(
 					"An array variable can only be initialized with a list of values");
