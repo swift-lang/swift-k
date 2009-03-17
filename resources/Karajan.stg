@@ -436,25 +436,18 @@ id(var, datatype) ::= <<
 <variable>$var$</variable>
 >>
 
-// TODO this would more cleanly be two templates, one for structure
-// access and one for array access.
-
-extractarrayelement(parent, arraychild, memberchild, datatype) ::= <<
-
-$if(arraychild)$
+extractarrayelement(parent, arraychild, datatype) ::= <<
 <vdl:getfieldsubscript>
   <argument name="var">$parent$</argument>
   <argument name="subscript">$arraychild$</argument>
 </vdl:getfieldsubscript>
-$endif$
+>>
 
-$if(memberchild)$
+extractstructelement(parent, memberchild, datatype) ::= <<
 <getfield>
   <argument name="var">$parent$</argument>
   <argument name="path">$memberchild$</argument>
 </getfield>
-$endif$
-
 >>
 
 slicearray(parent, memberchild, datatype) ::= <<

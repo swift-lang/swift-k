@@ -1047,7 +1047,7 @@ boolean arrayMode = false;
 				newst.setAttribute("datatype", actualType); 
 				return newst;
 			} else {
-				StringTemplate newst = template("extractarrayelement");
+				StringTemplate newst = template("extractstructelement");
 				newst.setAttribute("parent", parentST);
 				newst.setAttribute("memberchild", sm.getMemberName());
 				newst.setAttribute("datatype", actualType); 
