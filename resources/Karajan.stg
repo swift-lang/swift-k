@@ -294,10 +294,14 @@ assign(var,value) ::= <<
    </vdl:setfieldvalue>
 >>
 
-callexpr(call, datatype, callID) ::= <<
+callexpr(call, datatype, callID, prefix) ::= <<
 <sequential>
 	<set name="swift#callintermediate">
-		<vdl:new type="$datatype$" dbgname="tmp"/>
+		<vdl:new type="$datatype$" dbgname="swift#callintermediate">
+			<vdl:mapping descriptor="concurrent_mapper">
+				<vdl:parameter name="prefix">_callintermediate-$prefix$</vdl:parameter>
+			</vdl:mapping>
+		</vdl:new>
 	</set>
 	$call$
 	<variable>swift#callintermediate</variable>

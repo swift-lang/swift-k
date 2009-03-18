@@ -1138,6 +1138,7 @@ boolean arrayMode = false;
 		    call.setAttribute("datatype", type);
 		    call.setAttribute("call", call(c, subscope, true));
 		    call.setAttribute("callID", new Integer(callID++));
+		    call.setAttribute("prefix", UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
 		    return call;
 		} else {
 			throw new CompilationException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);
