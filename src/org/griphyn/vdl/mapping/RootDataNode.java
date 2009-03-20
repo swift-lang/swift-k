@@ -173,8 +173,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 				}
 				catch (InvalidPathException e) {
 					throw new RuntimeException("Data set initialization failed for " + handle
-							+ ". Missing required field: " + fieldName + " mapped to "
-							+ handle.getMapper().map(fieldPath));
+							+ ". Missing required field: " + fieldName);
 				}
 			}
 
