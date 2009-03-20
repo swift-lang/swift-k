@@ -127,7 +127,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 				}
 			}
 			if (root.isArray()) {
-				root.closeShallow();
+				root.closeDeepStructure();
 			}
 			checkConsistency(root);
 		}
