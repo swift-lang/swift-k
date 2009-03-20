@@ -154,8 +154,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			}
 			catch (HandleOpenException e) {
 				// TODO init() should throw some checked exception
-				throw new RuntimeException("Data set initialization failed for " + handle
-						+ ". It should have been closed.", e);
+				throw new RuntimeException("Mapper consistency check failed for " + handle
+						+ ". A HandleOpenException was thrown during consistency checking for "+e.getSource(), e);
 			}
 			catch (InvalidPathException e) {
 				e.printStackTrace();
