@@ -33,8 +33,11 @@ public class ArrayFileMapper extends AbstractMapper {
 
 	public PhysicalFormat map(Path path) {
 
+		if (path.isEmpty()) {
+			throw new IllegalArgumentException("Path cannot be empty");
+		}
 		if (!path.isArrayIndex(0)) {
-			throw new IllegalArgumentException(path.toString());
+			throw new IllegalArgumentException("First element of path "+path.toString()+" must be an array index");
 		}
 		else {
 			// we could typecheck more elegantly here to make sure that
