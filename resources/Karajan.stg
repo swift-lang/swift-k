@@ -68,13 +68,13 @@ $endif$
 >>
 
 compound(outputs,inputs,declarations,statements,config,name) ::= <<
-<log level="info">STARTCOMPOUND thread={#thread} name=$name$</log>
+<log level="info"><string>STARTCOMPOUND thread={#thread} name=$name$</string></log>
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
 $endif$
 $outputs:vdl_closedataset();separator="\n"$
-<log level="info">ENDCOMPOUND thread={#thread}</log>
+<log level="info"><string>ENDCOMPOUND thread={#thread}</string></log>
 >>
 
 proc_args(args) ::= <<
