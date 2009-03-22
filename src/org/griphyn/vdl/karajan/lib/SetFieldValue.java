@@ -60,13 +60,20 @@ public class SetFieldValue extends VDLFunction {
 	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack) throws ExecutionException {
 		if(source.getType().isPrimitive()) {
 			dest.setValue(source.getValue());
-		} else if(source.getType().isArray()) {
+		}
+		else if(source.getType().isArray()) {
 			PairIterator it = new PairIterator(source.getArrayValue());
 			while(it.hasNext()) {
 				Pair pair = (Pair) it.next();
 				Object lhs = pair.get(0);
 				DSHandle rhs = (DSHandle) pair.get(1);
-				Path memberPath = Path.EMPTY_PATH.addLast(String.valueOf(lhs),true);
+				Path memberPath;
+				if (lhs instanceof Double) {
+				    memberPath = Path.EMPTY_PATH.addLast(String.valueOf(((Double) lhs).intValue()), true);
+				}
+				else {
+				    memberPath = Path.EMPTY_PATH.addLast(String.valueOf(lhs), true);
+				}
 				DSHandle field;
 				try {
 					field = dest.getField(memberPath);
