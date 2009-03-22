@@ -683,7 +683,7 @@ public class Karajan {
 		StringTemplate conditionST = expressionToKarajan(switchstat.getAbstractExpression(), scope);
 		switchST.setAttribute("condition", conditionST.toString());
 		
-		/* Check if switch statement can be anything apart from int and float */
+		/* TODO can switch statement can be anything apart from int and float ? */
 		if (!datatype(conditionST).equals("int") && !datatype(conditionST).equals("float"))
 			throw new CompilationException("Condition in switch statements has to be of numeric type.");
 
