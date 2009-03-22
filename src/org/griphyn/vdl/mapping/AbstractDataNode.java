@@ -446,8 +446,7 @@ public abstract class AbstractDataNode implements DSHandle {
 							+ path);
 				}
 				catch (Exception e) {
-					logger.info("dataset " + identifier
-							+ " exception while mapping path from root", e);
+					logger.info("NOFILENAME dataset=" + identifier);
 				}
 			}
 		}
