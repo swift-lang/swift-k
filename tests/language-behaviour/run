@@ -77,6 +77,16 @@ for testfn in $TESTS; do
       echo "No expected output files specified for this test case - not checking output."
     fi
 
+    if [ "$SWIFT_TEST_EXCEPTIONS" == "no" ]; then
+      echo Skipping exception test due to test configuration
+    else
+      grep --quiet "	at " ${t}-*.log
+      if [ "$?" == "0" ]; then
+        echo EXCEPTIONS - stacktrace-like log lines found in output for ${t}
+        exit 2
+      fi
+    fi
+
   done
   echo "Test passed"
   if [ "$SUB" == "" ]; then
