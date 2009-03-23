@@ -499,4 +499,9 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		sorted.removeOverloaded(wh);
 		raiseTasksFinished();
 	}
+	
+	protected synchronized void raiseTasksFinished() {
+		change = true;
+		super.raiseTasksFinished();
+	}
 }
