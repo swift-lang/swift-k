@@ -95,7 +95,6 @@ public final class ArgUtil {
 		addChannelToList(stack, channel);
 	}
 
-
 	private static void createChannelNL(VariableStack stack, Arg.Channel channel,
 			VariableArguments data) {
 		stack.currentFrame().setVar(channel.getVariableName(), data);
@@ -124,12 +123,12 @@ public final class ArgUtil {
 		}
 	}
 
-	
-	
 	private static void removeChannelFromList(VariableStack stack, Arg.Channel channel) {
 		if (stack.currentFrame().isDefined(CHANNEL_LIST)) {
 			Set channels = (Set) stack.currentFrame().getVar(CHANNEL_LIST);
-			channels.remove(channel);
+			synchronized (channels) {
+				channels.remove(channel);
+			}
 		}
 	}
 
@@ -148,7 +147,7 @@ public final class ArgUtil {
 			return Collections.EMPTY_SET;
 		}
 	}
-	
+
 	public static void createChannels(VariableStack stack, Collection channels) {
 		Iterator i = channels.iterator();
 		while (i.hasNext()) {
@@ -186,12 +185,14 @@ public final class ArgUtil {
 	public static void initializeChannelBuffers(VariableStack stack) throws ExecutionException {
 		Set channels = ArgUtil.getDefinedChannels(stack);
 		ArrayList pairs = new ArrayList();
-		Iterator i = channels.iterator();
-		while (i.hasNext()) {
-			Arg.Channel channel = (Arg.Channel) i.next();
-			VariableArguments dest = ArgUtil.getChannelReturn(stack, channel);
-			if (!dest.isCommutative()) {
-				pairs.add(new NameChannelPair(channel, dest));
+		synchronized (channels) {
+			Iterator i = channels.iterator();
+			while (i.hasNext()) {
+				Arg.Channel channel = (Arg.Channel) i.next();
+				VariableArguments dest = ArgUtil.getChannelReturn(stack, channel);
+				if (!dest.isCommutative()) {
+					pairs.add(new NameChannelPair(channel, dest));
+				}
 			}
 		}
 		try {
@@ -206,18 +207,20 @@ public final class ArgUtil {
 		pairs.trimToSize();
 		stack.setVar("#chanbuf", new ParallelChannelBuffer(pairs));
 	}
-	
+
 	public static void duplicateChannels(VariableStack stack) throws ExecutionException {
 		Set channels = ArgUtil.getDefinedChannels(stack);
-		Iterator i = channels.iterator();
-		while (i.hasNext()) {
-			Arg.Channel channel = (Arg.Channel) i.next();
-			VariableArguments dest = ArgUtil.getChannelReturn(stack, channel);
-			if (dest.isCommutative()) {
-				ArgUtil.createChannelNL(stack, channel, new CommutativeVariableArguments());
-			}
-			else {
-				ArgUtil.createChannelNL(stack, channel, new VariableArgumentsImpl());
+		synchronized (channels) {
+			Iterator i = channels.iterator();
+			while (i.hasNext()) {
+				Arg.Channel channel = (Arg.Channel) i.next();
+				VariableArguments dest = ArgUtil.getChannelReturn(stack, channel);
+				if (dest.isCommutative()) {
+					ArgUtil.createChannelNL(stack, channel, new CommutativeVariableArguments());
+				}
+				else {
+					ArgUtil.createChannelNL(stack, channel, new VariableArgumentsImpl());
+				}
 			}
 		}
 	}
