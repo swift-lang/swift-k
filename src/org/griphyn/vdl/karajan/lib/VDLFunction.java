@@ -454,12 +454,17 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected void waitFor(VariableStack stack, DSHandle handle) throws ExecutionException {
+	/** Returns the DSHandle that it is passed, but ensuring that it
+	    is closed. If the handle is not closed, then execution will
+	    be deferred/retried until it is.
+	*/
+	static public DSHandle waitFor(VariableStack stack, DSHandle handle) throws ExecutionException {
 		synchronized(handle.getRoot()) {
 			if (!handle.isClosed()) {
 				throw new FutureNotYetAvailable(addFutureListener(stack, handle));
 			}
 		}
+		return handle;
 	}
 
 	protected static void closeShallow(VariableStack stack, DSHandle handle) throws ExecutionException {

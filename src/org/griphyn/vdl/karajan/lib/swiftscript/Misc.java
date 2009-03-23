@@ -10,6 +10,7 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 import org.griphyn.vdl.karajan.lib.SwiftArg;
+import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -17,6 +18,7 @@ import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Types;
+
 
 public class Misc extends FunctionsCollection {
 
@@ -38,12 +40,16 @@ public class Misc extends FunctionsCollection {
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
 	public DSHandle swiftscript_trace(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
-		Object[] args = SwiftArg.VARGS.asArray(stack);
+
+		DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
+
 		StringBuffer buf = new StringBuffer();
 		buf.append("SwiftScript trace: ");
 		for (int i = 0; i < args.length; i++) {
+			DSHandle handle = args[i];
+			VDLFunction.waitFor(stack, handle);
 			if(i!=0) buf.append(", ");
-			buf.append(TypeUtil.toString(args[i]));
+			buf.append(args[i]);
 		}
 		traceLogger.warn(buf);
 		return null;

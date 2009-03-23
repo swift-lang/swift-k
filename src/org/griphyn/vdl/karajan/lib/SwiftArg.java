@@ -168,6 +168,16 @@ public abstract class SwiftArg extends Arg {
 			return ret;
 		}
 
+		public DSHandle[] asDSHandleArray(VariableStack stack) throws ExecutionException {
+			VariableArguments args = get(stack);
+			DSHandle[] ret = new DSHandle[args.size()];
+			for (int i = 0; i < ret.length; i++) {
+				ret[i] = (DSHandle) args.get(i);
+			}
+			return ret;
+		}
+
+
 		public List asList(VariableStack stack) throws ExecutionException {
 			VariableArguments args = get(stack);
 			List ret = new ArrayList();
