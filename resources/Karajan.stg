@@ -412,6 +412,7 @@ operator ::= [
   ">":"vdlop:gt",
   "<":"vdlop:lt",
   "==":"vdlop:eq",
+  "!=":"vdlop:ne",
   "&amp;&amp;":"vdlop:and",
   "||":"vdlop:or"
 ]

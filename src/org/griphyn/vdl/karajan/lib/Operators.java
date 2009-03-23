@@ -62,7 +62,7 @@ public class Operators extends FunctionsCollection {
 
 	private static final String[] BINARY_OPERATORS = new String[] { "vdlop_sum", "vdlop_subtraction",
 			"vdlop_product", "vdlop_quotient", "vdlop_fquotient", "vdlop_iquotient",
-			"vdlop_remainder", "vdlop_le", "vdlop_ge", "vdlop_lt", "vdlop_gt", "vdlop_eq", "vdlop_and", "vdlop_or" };
+			"vdlop_remainder", "vdlop_le", "vdlop_ge", "vdlop_lt", "vdlop_gt", "vdlop_eq", "vdlop_ne", "vdlop_and", "vdlop_or" };
 	private static final String[] UNARY_OPERATORS = new String[] { "vdlop_not" };
 
 	private static final Arg[] BINARY_ARGS = new Arg[] { L, R };
@@ -157,6 +157,18 @@ public class Operators extends FunctionsCollection {
 			throw new ExecutionException("Second operand is null");
 		}
 		return newBool(l.equals(r));
+	}
+
+	public Object vdlop_ne(VariableStack stack) throws ExecutionException {
+		Object l = L.getValue(stack);
+		Object r = R.getValue(stack);
+		if (l == null) {
+			throw new ExecutionException("First operand is null");
+		}
+		if (r == null) {
+			throw new ExecutionException("Second operand is null");
+		}
+		return newBool(!(l.equals(r)));
 	}
 
 	public Object vdlop_and(VariableStack stack) throws ExecutionException {

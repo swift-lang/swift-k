@@ -11,6 +11,7 @@
 	<export name="gt"><elementDef classname="org.griphyn.vdl.karajan.lib.Operators"/></export>
 	<export name="lt"><elementDef classname="org.griphyn.vdl.karajan.lib.Operators"/></export>
 	<export name="eq"><elementDef classname="org.griphyn.vdl.karajan.lib.Operators"/></export>
+	<export name="ne"><elementDef classname="org.griphyn.vdl.karajan.lib.Operators"/></export>
 	<export name="and"><elementDef classname="org.griphyn.vdl.karajan.lib.Operators"/></export>
 	<export name="or"><elementDef classname="org.griphyn.vdl.karajan.lib.Operators"/></export>
 	<export name="not"><elementDef classname="org.griphyn.vdl.karajan.lib.Operators"/></export>
