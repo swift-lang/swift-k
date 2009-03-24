@@ -526,15 +526,21 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected TaskHandler getHandler(Task t) {
-		return (TaskHandler) handlers.get(t);
+		synchronized(handlers) {
+			return (TaskHandler) handlers.get(t);
+		}
 	}
 
 	protected void setHandler(Task t, TaskHandler th) {
-		handlers.put(t, th);
+		synchronized(handlers) {
+			handlers.put(t, th);
+		}
 	}
 
 	protected void removeHandler(Task t) {
-		handlers.remove(t);
+		synchronized(handlers) {
+			handlers.remove(t);
+		}
 	}
 
 	public void setProperty(String name, Object value) {
