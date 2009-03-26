@@ -24,7 +24,7 @@ public class DeleteHandler extends CoasterFileRequestHandler {
     	        sendError("Failed to delete " + f.getAbsolutePath());
     	    }
     	    else {
-    	        sendReply("OK");
+    	        sendReply("No such file or directory " + f.getAbsolutePath());
     	    }
     	}
     	else {
