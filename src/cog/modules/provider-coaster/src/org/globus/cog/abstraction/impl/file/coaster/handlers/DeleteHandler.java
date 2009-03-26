@@ -15,20 +15,20 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 
 public class DeleteHandler extends CoasterFileRequestHandler {
-	public static final Logger logger = Logger.getLogger(DeleteHandler.class);
+    public static final Logger logger = Logger.getLogger(DeleteHandler.class);
 
     public void requestComplete() throws ProtocolException {
-    	File f = normalize(getInDataAsString(0));
-    	if (!f.delete()) {
-    	    if (f.exists()) {
-    	        sendError("Failed to delete " + f.getAbsolutePath());
-    	    }
-    	    else {
-    	        sendReply("No such file or directory " + f.getAbsolutePath());
-    	    }
-    	}
-    	else {
-    	    sendReply("OK");
-    	}
+        File f = normalize(getInDataAsString(0));
+        if (!f.exists()) {
+            sendError("No such file or directory " + f.getAbsolutePath());
+        }
+        else {
+            if (!f.delete()) {
+                sendError("Failed to delete " + f.getAbsolutePath());
+            }
+            else {
+                sendReply("OK");
+            }
+        }
     }
 }
