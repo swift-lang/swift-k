@@ -126,8 +126,8 @@ public class VDSTaskTransformer implements TaskTransformer {
 				VDL2Config config = VDL2Config.getConfig();
 
 				if(config.getProperty("wrapper.invocation.mode", bc).equals("absolute")
-			 	 &&(executable.endsWith("shared/wrapper.sh")
-			   	  || executable.endsWith("shared/seq.sh"))) {
+			 	 &&(executable.endsWith("shared/_swiftwrap")
+			   	  || executable.endsWith("shared/_swiftseq"))) {
 
 				String s  = spec.getDirectory()+"/"+executable;
 				l.set(0,s);

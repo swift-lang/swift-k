@@ -225,7 +225,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {
 					JobSpecification js = new JobSpecificationImpl();
 					t.setSpecification(js);
 					js.setExecutable("/bin/sh");
-					js.addArgument("shared/seq.sh");
+					js.addArgument("shared/_swiftseq");
 					js.addArgument("cluster-"+thisClusterId);
 					js.addArgument("/clusters/"); // slice path more here TODO
 					js.setDirectory(dir);

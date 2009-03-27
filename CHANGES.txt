@@ -1,3 +1,9 @@
+(03/27/09)
+*** The wrapper.sh and seq.sh scripts that are deployed to remote sites to
+    help with execution have been renamed to more Swift specific names, to
+    avoid collision with user-supplied files of the same name. The new names
+    are _swiftwrap and _swiftseq
+
 (03/15/09)
 *** The log-processing code, primarily exposed as the swift-plot-log command,
     has been merged into the main Swift release, rather than being a separate

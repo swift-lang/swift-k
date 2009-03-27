@@ -104,8 +104,8 @@ namespace("vdl"
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				sharedDir := dircat(wfdir, "shared")
 				dir:make(sharedDir, host=rhost)
-				transfer(srcdir="{vds.home}/libexec/", srcfile="wrapper.sh", destdir=sharedDir, desthost=rhost)
-				transfer(srcdir="{vds.home}/libexec/", srcfile="seq.sh", destdir=sharedDir, desthost=rhost)
+				transfer(srcdir="{vds.home}/libexec/", srcfile="_swiftwrap", destdir=sharedDir, desthost=rhost)
+				transfer(srcdir="{vds.home}/libexec/", srcfile="_swiftseq", destdir=sharedDir, desthost=rhost)
 				dir:make(dircat(wfdir, "kickstart"), host=rhost)
 
 				statusMode := configProperty("status.mode",host=rhost)
@@ -401,7 +401,7 @@ namespace("vdl"
 				
 						vdl:setprogress("Submitting")
 						vdl:execute("/bin/bash",
-							list("shared/wrapper.sh", jobid,
+							list("shared/_swiftwrap", jobid,
 								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 
 								"-out", stdout, 
