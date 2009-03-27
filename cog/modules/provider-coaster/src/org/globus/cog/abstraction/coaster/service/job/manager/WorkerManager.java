@@ -58,9 +58,9 @@ public class WorkerManager extends Thread {
      */
     public static final Seconds TIME_RESERVE = new Seconds(60);
 
-    public static final File scriptDir = new File(System
-            .getProperty("user.home")
-            + File.separator + ".globus" + File.separator + "coasters");
+    public static final File scriptDir =
+            new File(System.getProperty("user.home") + File.separator + ".globus" + File.separator
+                    + "coasters");
 
     public static final String SCRIPT = "worker.pl";
 
@@ -69,9 +69,9 @@ public class WorkerManager extends Thread {
     public static final int MAX_WORKERS = 256;
     public static final int MAX_STARTING_WORKERS = 32;
 
-    public static final List coasterAttributes = Arrays
-            .asList(new String[] { "coasterspernode", "coasterinternalip",
-                                   "coasterworkermaxwalltime" });
+    public static final List coasterAttributes =
+            Arrays.asList(new String[] { "coasterspernode", "coasterinternalip",
+                    "coasterworkermaxwalltime" });
 
     private SortedMap ready;
     private Map ids;
@@ -105,16 +105,13 @@ public class WorkerManager extends Thread {
     private void writeScript() throws IOException {
         scriptDir.mkdirs();
         if (!scriptDir.exists()) {
-            throw new IOException("Failed to create script dir (" + scriptDir
-                    + ")");
+            throw new IOException("Failed to create script dir (" + scriptDir + ")");
         }
         script = File.createTempFile("cscript", ".pl", scriptDir);
         script.deleteOnExit();
-        InputStream is = WorkerManager.class.getClassLoader()
-                .getResourceAsStream(SCRIPT);
+        InputStream is = WorkerManager.class.getClassLoader().getResourceAsStream(SCRIPT);
         if (is == null) {
-            throw new IOException("Could not find resource in class path: "
-                    + SCRIPT);
+            throw new IOException("Could not find resource in class path: " + SCRIPT);
         }
         FileOutputStream fos = new FileOutputStream(script);
         byte[] buf = new byte[1024];
@@ -138,25 +135,22 @@ public class WorkerManager extends Thread {
                     while (allocationRequests.isEmpty()) {
                         allocationRequests.wait();
                     }
-                    req = (AllocationRequest) allocationRequests
-                            .removeFirst();
+                    req = (AllocationRequest) allocationRequests.removeFirst();
                     if (logger.isInfoEnabled()) {
                         logger.info("Got allocation request: " + req);
                     }
                 }
 
                 try {
-                    startWorker(new Seconds(req.maxWallTime.getSeconds())
-                            .multiply(OVERALLOCATION_FACTOR)
-                            .add(TIME_RESERVE), req.prototype);
+                    startWorker(new Seconds(req.maxWallTime.getSeconds()).multiply(
+                        OVERALLOCATION_FACTOR).add(TIME_RESERVE), req.prototype);
                 }
                 catch (NoClassDefFoundError e) {
-                    req.prototype.setStatus(new StatusImpl(Status.FAILED, e
-                            .getMessage(), new TaskSubmissionException(e)));
+                    req.prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(),
+                        new TaskSubmissionException(e)));
                 }
                 catch (Exception e) {
-                    req.prototype.setStatus(new StatusImpl(Status.FAILED, e
-                            .getMessage(), e));
+                    req.prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(), e));
                 }
             }
         }
@@ -172,29 +166,25 @@ public class WorkerManager extends Thread {
     private void startWorker(Seconds maxWallTime, Task prototype)
             throws InvalidServiceContactException, InvalidProviderException,
             ProviderMethodException {
-        String numWorkersString = (String) ((JobSpecification) prototype
-                .getSpecification()).getAttribute("coastersPerNode");
 
-        int numWorkers;
-        if (numWorkersString == null) {
-            numWorkers = 1;
+        int numWorkers = this.getCoastersPerNode(prototype);
+
+        String workerMaxwalltimeString =
+                (String) ((JobSpecification) prototype.getSpecification()).getAttribute("coasterWorkerMaxwalltime");
+
+        if (workerMaxwalltimeString != null) {
+            // override the computed maxwalltime
+            maxWallTime = new Seconds(WallTime.timeToSeconds(workerMaxwalltimeString));
+            int taskSeconds = AssociatedTask.getMaxWallTime(prototype).getSeconds();
+            if (TIME_RESERVE.add(taskSeconds).isGreaterThan(maxWallTime)) {
+                prototype.setStatus(new StatusImpl(Status.FAILED,
+                    "Job cannot be run with the given max walltime worker constraint", null));
+                return;
+            }
+            logger.debug("Overridden worker maxwalltime is " + maxWallTime);
         }
-        else {
-            numWorkers = Integer.parseInt(numWorkersString);
-        }
 
-        String workerMaxwalltimeString = (String) ((JobSpecification) prototype
-                .getSpecification()).getAttribute("coasterWorkerMaxwalltime");
-
-	if (workerMaxwalltimeString != null) {
-		// override the computed maxwalltime
-		maxWallTime = new Seconds(WallTime.timeToSeconds(workerMaxwalltimeString));
-		logger.debug("Overridden worker maxwalltime is "+maxWallTime);
-	}
-
-        logger
-                .info("Starting new worker set with " + numWorkers
-                        + " workers");
+        logger.info("Starting new worker set with " + numWorkers + " workers");
 
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
@@ -213,8 +203,8 @@ public class WorkerManager extends Thread {
 
             int id = sr.nextInt();
             if (logger.isInfoEnabled()) {
-                logger.info("Starting worker with id=" + id
-                        + " and maxwalltime=" + maxWallTime + "s");
+                logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime
+                        + "s");
             }
             String sid = String.valueOf(id);
 
@@ -225,16 +215,14 @@ public class WorkerManager extends Thread {
                 newlyRequested.put(sid, wr);
             }
             catch (Exception e) {
-                prototype.setStatus(new StatusImpl(Status.FAILED, e
-                        .getMessage(), e));
+                prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(), e));
             }
         }
         try {
             handler.submit(t);
         }
         catch (Exception e) {
-            prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(),
-                    e));
+            prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(), e));
         }
         synchronized (this) {
             requested.putAll(newlyRequested);
@@ -247,23 +235,26 @@ public class WorkerManager extends Thread {
         js.setExecutable("/usr/bin/perl");
         js.addArgument(script.getAbsolutePath());
 
-        String internalHostname = (String)ps.getAttribute("coasterInternalIP");
+        String internalHostname = (String) ps.getAttribute("coasterInternalIP");
 
-        if(internalHostname!=null) { // override automatically determined hostname
+        if (internalHostname != null) { // override automatically determined
+            // hostname
             // TODO detect if we've done this already for a different
             // value? (same non-determinism as for coastersPerWorker and
             // walltime handling that jobs may come in with different
             // values and we can only use one)
             try {
-                logger.warn("original callback URI is "+callbackURI.toString());
-                callbackURI=new URI(callbackURI.getScheme(),
-                callbackURI.getUserInfo(),
-                internalHostname,
-                callbackURI.getPort(), callbackURI.getPath(),
-                callbackURI.getQuery(), callbackURI.getFragment());
-                logger.warn("callback URI has been overridden to "+callbackURI.toString());
-            } catch(URISyntaxException use) { throw new RuntimeException(use); }
-// TODO nasty exception in the line above
+                logger.warn("original callback URI is " + callbackURI.toString());
+                callbackURI =
+                        new URI(callbackURI.getScheme(), callbackURI.getUserInfo(),
+                            internalHostname, callbackURI.getPort(), callbackURI.getPath(),
+                            callbackURI.getQuery(), callbackURI.getFragment());
+                logger.warn("callback URI has been overridden to " + callbackURI.toString());
+            }
+            catch (URISyntaxException use) {
+                throw new RuntimeException(use);
+            }
+            // TODO nasty exception in the line above
         }
         js.addArgument(callbackURI.toString());
 
@@ -271,9 +262,8 @@ public class WorkerManager extends Thread {
         return js;
     }
 
-    private ExecutionService buildService(Task prototype)
-            throws InvalidServiceContactException, InvalidProviderException,
-            ProviderMethodException {
+    private ExecutionService buildService(Task prototype) throws InvalidServiceContactException,
+            InvalidProviderException, ProviderMethodException {
         ExecutionService s = new ExecutionServiceImpl();
         s.setServiceContact(prototype.getService(0).getServiceContact());
         ExecutionService p = (ExecutionService) prototype.getService(0);
@@ -293,15 +283,13 @@ public class WorkerManager extends Thread {
             s.setSecurityContext(p.getSecurityContext());
         }
         else {
-            s.setSecurityContext(AbstractionFactory.newSecurityContext(s
-                    .getProvider()));
+            s.setSecurityContext(AbstractionFactory.newSecurityContext(s.getProvider()));
         }
         return s;
     }
 
     private void copyAttributes(Task t, Task prototype, Seconds maxWallTime) {
-        JobSpecification pspec = (JobSpecification) prototype
-                .getSpecification();
+        JobSpecification pspec = (JobSpecification) prototype.getSpecification();
         JobSpecification tspec = (JobSpecification) t.getSpecification();
         Iterator i = pspec.getAttributeNames().iterator();
         while (i.hasNext()) {
@@ -310,17 +298,16 @@ public class WorkerManager extends Thread {
                 tspec.setAttribute(name, pspec.getAttribute(name));
             }
         }
-        tspec.setAttribute("maxwalltime", new WallTime((int) maxWallTime
-                .getSeconds()).format());
+        tspec.setAttribute("maxwalltime", new WallTime((int) maxWallTime.getSeconds()).format());
     }
 
     private int k;
     private long last;
 
-    public Worker request(WallTime maxWallTime, Task prototype)
-            throws InterruptedException {
-        WorkerKey key = new WorkerKey(new Seconds(maxWallTime.getSeconds())
-                .add(TIME_RESERVE).add(Seconds.now()));
+    public Worker request(WallTime maxWallTime, Task prototype) throws InterruptedException {
+        WorkerKey key =
+                new WorkerKey(new Seconds(maxWallTime.getSeconds()).add(TIME_RESERVE).add(
+                    Seconds.now()));
         Worker w = null;
         if (logger.isDebugEnabled()) {
             logger.debug("Looking for worker for key " + key);
@@ -333,7 +320,9 @@ public class WorkerManager extends Thread {
             if (i.hasNext()) {
                 w = (Worker) i.next();
                 i.remove();
-                busy.add(w);
+                if (!w.isFailed()) {
+                    busy.add(w);
+                }
                 startingTasks.remove(prototype);
             }
         }
@@ -356,33 +345,31 @@ public class WorkerManager extends Thread {
             return w;
         }
         else {
-        	synchronized (this) {
-	            if (currentWorkers >= MAX_WORKERS) {
-                    this.wait(250);            
-            	    return null;
-        	    }
-    	        boolean alreadyThere;
+            synchronized (this) {
+                if (currentWorkers >= MAX_WORKERS) {
+                    this.wait(250);
+                    return null;
+                }
+                boolean alreadyThere;
                 alreadyThere = !startingTasks.add(prototype);
-            
-	            if (!alreadyThere) {
-    	            currentWorkers++;
-        	        if (logger.isInfoEnabled()) {
-            	        logger
-                            .info("No suitable worker found. Attempting to start a new one.");
-                	}
-	                synchronized (allocationRequests) {
-    	                if (allocationRequests.size() < MAX_STARTING_WORKERS) {
-        	                allocationRequests.add(new AllocationRequest(
-            	                    maxWallTime, prototype));
-                	        allocationRequests.notify();
-                    	}
-	                    else {       
-	                        this.wait(250);
-    	                    return null;
-        	            }
-            	    }
-	            }
-			}
+
+                if (!alreadyThere) {
+                    currentWorkers += getCoastersPerNode(prototype);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("No suitable worker found. Attempting to start a new one.");
+                    }
+                    synchronized (allocationRequests) {
+                        if (allocationRequests.size() < MAX_STARTING_WORKERS) {
+                            allocationRequests.add(new AllocationRequest(maxWallTime, prototype));
+                            allocationRequests.notify();
+                        }
+                        else {
+                            this.wait(250);
+                            return null;
+                        }
+                    }
+                }
+            }
             return null;
         }
     }
@@ -391,17 +378,19 @@ public class WorkerManager extends Thread {
         logger.warn("Worker terminated: " + worker);
         Status s = worker.getStatus();
         synchronized (this) {
-	        if (s.getStatusCode() == Status.FAILED) {
+            if (s.getStatusCode() == Status.FAILED) {
                 requested.remove(worker.getId());
                 startingTasks.remove(worker.getRunning());
                 // this will cause all the jobs associated with the worker to
                 // fail
                 ready.put(new WorkerKey(worker), worker);
+                worker.setFailed(true);
             }
-    
-            currentWorkers--;
-            ready.remove(new WorkerKey(worker));
-            ids.remove(worker.getId());
+            else {
+                currentWorkers--;
+                ready.remove(new WorkerKey(worker));
+                ids.remove(worker.getId());
+            }
         }
     }
 
@@ -411,15 +400,12 @@ public class WorkerManager extends Thread {
             wr = (Worker) requested.remove(id);
         }
         if (wr == null) {
-            logger.warn("Received unrequested registration (id = " + id
-                    + ", url = " + url);
+            logger.warn("Received unrequested registration (id = " + id + ", url = " + url);
             throw new IllegalArgumentException("Invalid worker id (" + id
                     + "). This worker manager instance does not "
                     + "recall requesting a worker with such an id.");
         }
-        wr
-                .setScheduledTerminationTime(Seconds.now().add(
-                        wr.getMaxWallTime()));
+        wr.setScheduledTerminationTime(Seconds.now().add(wr.getMaxWallTime()));
         wr.setChannelContext(cc);
         if (logger.isInfoEnabled()) {
             logger.info("Worker registration received: " + wr);
@@ -471,6 +457,19 @@ public class WorkerManager extends Thread {
         return handler;
     }
 
+    protected int getCoastersPerNode(Task t) {
+        String numWorkersString =
+                (String) ((JobSpecification) t.getSpecification()).getAttribute("coastersPerNode");
+
+        if (numWorkersString == null) {
+            return 1;
+        }
+        else {
+            return Integer.parseInt(numWorkersString);
+        }
+
+    }
+
     private static class AllocationRequest {
         public WallTime maxWallTime;
         public Task prototype;
@@ -505,8 +504,7 @@ public class WorkerManager extends Thread {
                         handler.cancel(wr.getWorkerTask());
                     }
                     catch (Exception e) {
-                        logger.warn("Failed to cancel queued worker task "
-                                + wr.getWorkerTask(), e);
+                        logger.warn("Failed to cancel queued worker task " + wr.getWorkerTask(), e);
                     }
                 }
             }
