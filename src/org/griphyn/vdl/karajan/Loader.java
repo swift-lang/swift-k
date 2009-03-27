@@ -220,21 +220,26 @@ public class Loader extends org.globus.cog.karajan.Loader {
 			Reader fr = new FileReader(kml);
 			BufferedReader br = new BufferedReader(fr);
 			String firstLine = br.readLine();
-			String prefix = "<!-- CACHE ID ";
-			int offset = firstLine.indexOf(prefix);
-			if(offset < 0) {
-				// no build version in the KML
-				logger.info(project + ": has no build version. Recompiling.");
+			if(firstLine == null) {
+				logger.debug("KML file is empty. Recompiling.");
 				recompile = true;
 			} else {
-				String cut = firstLine.substring(offset+prefix.length());
-				int endOffset = cut.indexOf(" -->");
-				String kmlversion = cut.substring(0,endOffset);
-				logger.debug("kmlversion is >"+kmlversion+"<");
-				logger.debug("build version is >"+buildVersion+"<");
-				if(!(kmlversion.equals(buildVersion))) {
-					logger.info(project + ": source file was compiled with a different version of Swift. Recompiling.");
-					recompile=true;
+				String prefix = "<!-- CACHE ID ";
+				int offset = firstLine.indexOf(prefix);
+				if(offset < 0) {
+					// no build version in the KML
+					logger.info(project + ": has no build version. Recompiling.");
+					recompile = true;
+				} else {
+					String cut = firstLine.substring(offset+prefix.length());
+					int endOffset = cut.indexOf(" -->");
+					String kmlversion = cut.substring(0,endOffset);
+					logger.debug("kmlversion is >"+kmlversion+"<");
+					logger.debug("build version is >"+buildVersion+"<");
+					if(!(kmlversion.equals(buildVersion))) {
+						logger.info(project + ": source file was compiled with a different version of Swift. Recompiling.");
+						recompile=true;
+					}
 				}
 			}
 		}
