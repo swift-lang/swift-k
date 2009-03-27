@@ -22,7 +22,7 @@ public class AssociatedTask {
         this.maxWallTime = getMaxWallTime(task);
     }
     
-    private WallTime getMaxWallTime(Task t) {
+    public static WallTime getMaxWallTime(Task t) {
         Object wt = ((JobSpecification) t.getSpecification()).getAttribute("maxwalltime");
         if (wt == null) {
             return new WallTime("10");
@@ -30,5 +30,9 @@ public class AssociatedTask {
         else {
             return new WallTime(wt.toString());
         }
+    }
+    
+    public String toString() {
+        return "AT/" + task.getIdentity();
     }
 }
