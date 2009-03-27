@@ -200,7 +200,6 @@ public class WorkerManager extends Thread {
 
         Map newlyRequested = new HashMap();
         for (int n = 0; n < numWorkers; n++) {
-
             int id = sr.nextInt();
             if (logger.isInfoEnabled()) {
                 logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime
@@ -323,6 +322,9 @@ public class WorkerManager extends Thread {
                 if (!w.isFailed()) {
                     busy.add(w);
                 }
+                else {
+                    ids.remove(w.getId());
+                }
                 startingTasks.remove(prototype);
             }
         }
@@ -379,18 +381,26 @@ public class WorkerManager extends Thread {
         Status s = worker.getStatus();
         synchronized (this) {
             if (s.getStatusCode() == Status.FAILED) {
-                requested.remove(worker.getId());
-                startingTasks.remove(worker.getRunning());
-                // this will cause all the jobs associated with the worker to
-                // fail
-                ready.put(new WorkerKey(worker), worker);
                 worker.setFailed(true);
+                if (requested.remove(worker.getId()) != null) {
+                    startingTasks.remove(worker.getRunning());
+                    // only do this for workers that haven't quite started
+                    // yet
+                    // this will cause all the jobs associated with the worker to
+                    // fail. We want at least one job to fail for each starting
+                    // failed worker in order to avoid a deadlock and notify
+                    // the user of potential problems
+                    ready.put(new WorkerKey(worker), worker);
+                    // but now that we're doing this, make sure the worker has 
+                    // a chance of being selected
+                    worker.setScheduledTerminationTime(Seconds.NEVER);
+                    return;
+                }
             }
-            else {
-                currentWorkers--;
-                ready.remove(new WorkerKey(worker));
-                ids.remove(worker.getId());
-            }
+            
+            currentWorkers--;
+            ready.remove(new WorkerKey(worker));
+            ids.remove(worker.getId());
         }
     }
 
