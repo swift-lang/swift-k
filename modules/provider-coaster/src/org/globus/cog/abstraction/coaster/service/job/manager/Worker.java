@@ -38,7 +38,7 @@ public class Worker implements StatusListener {
     private Task task, running;
     private String id;
     private WorkerManager manager;
-    private boolean starting;
+    private boolean starting, failed;
     private Seconds scheduledTerminationTime;
     private Seconds maxWallTime;
     private Status error;
@@ -105,6 +105,14 @@ public class Worker implements StatusListener {
 
     public boolean isStarting() {
         return starting;
+    }
+
+    public boolean isFailed() {
+        return failed;
+    }
+
+    public void setFailed(boolean failed) {
+        this.failed = failed;
     }
 
     public String getId() {

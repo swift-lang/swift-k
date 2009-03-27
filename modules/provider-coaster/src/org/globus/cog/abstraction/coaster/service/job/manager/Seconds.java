@@ -62,4 +62,12 @@ public final class Seconds {
     public int hashCode() {
         return (int) seconds;
     }
+
+    public Seconds add(int seconds) {
+        return new Seconds(this.seconds + seconds);
+    }
+
+    public boolean isGreaterThan(Seconds s) {
+        return seconds > s.seconds;
+    }
 }
