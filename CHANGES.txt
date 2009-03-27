@@ -1,4 +1,9 @@
 (03/27/09)
+*** Environment variable SWIFT_EXTRA_INFO, when set in an environment profile,
+    is executed with the result being recorded in wrapper logs. This allows
+    arbitrary information about the remote environment to be gathered and
+    returned to the submit side.
+
 *** The wrapper.sh and seq.sh scripts that are deployed to remote sites to
     help with execution have been renamed to more Swift specific names, to
     avoid collision with user-supplied files of the same name. The new names

@@ -3025,6 +3025,15 @@ files on the site-shared filesystem. In some cases, copying to a worker-node
 local directory can be much faster than having applications access the
 site-shared filesystem directly.
 		</para>
+		<para>
+<literal>SWIFT_EXTRA_INFO</literal> - set in env namespace profiles. If set,
+then Swift will execute the command specified in
+<literal>SWIFT_EXTRA_INFO</literal> on execution sites immediately before
+each application execution, and will record the stdout of that command in the
+wrapper info log file for that job. This is intended to allow software
+version and other arbitrary information about the remote site to be gathered
+and returned to the submit side.
+		</para>
 	</section>
 	<section id="sitecatalog"><title>The Site Catalog - sites.xml</title>
 		<para>

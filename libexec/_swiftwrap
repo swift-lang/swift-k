@@ -194,6 +194,10 @@ if [ "$PATHPREFIX" != "" ]; then
 export PATH=$PATHPREFIX:$PATH
 fi
 
+if [ "$SWIFT_EXTRA_INFO" != "" ]; then
+  log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
+fi
+
 if [ "X${EXEC:0:1}" != "X/" ] ; then
 export ORIGEXEC=$EXEC
 export EXEC=$(which $EXEC)
