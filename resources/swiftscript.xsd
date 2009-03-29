@@ -111,6 +111,8 @@
         <xs:documentation>the name of the procedure</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    
+    <xs:attribute name="src" type="xs:string" />
   </xs:complexType>
 
   <xs:complexType name="FormalParameter">

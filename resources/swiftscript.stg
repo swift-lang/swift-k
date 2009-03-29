@@ -105,7 +105,7 @@ range(from, to, step, sourcelocation) ::= <<
 >>
 
 function(name,outputs,inputs,statements,config,sourcelocation) ::= <<
-<procedure name="$name$">
+<procedure name="$name$" src="$sourcelocation$">
   $outputs;separator="\n"$
   $inputs;separator="\n"$
   $statements;separator="\n"$
