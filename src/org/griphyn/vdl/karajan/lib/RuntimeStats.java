@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -18,6 +19,9 @@ import org.griphyn.vdl.util.VDL2Config;
 proof of concept. */
 
 public class RuntimeStats extends FunctionsCollection {
+    
+    public static final String TICKER = "#swift-runtime-progress-ticker";
+    public static final String PROGRESS = "#swift-runtime-progress";
 
 	public static final Arg PA_STATE = new Arg.Positional("state");
 	public static final int MIN_PERIOD_MS=1000;
@@ -43,12 +47,28 @@ public class RuntimeStats extends FunctionsCollection {
 		setArguments("vdl_setprogress", new Arg[] { PA_STATE } );
 		setArguments("vdl_initprogressstate", new Arg[] { PA_STATE });
 	}
+	
+	public static void setTicker(VariableStack stack, ProgressTicker ticker) {
+	    stack.setGlobal(TICKER, ticker);
+	}
+	
+	public static ProgressTicker getTicker(VariableStack stack) {
+        return (ProgressTicker) stack.getGlobal(TICKER);
+    }
+	
+	public static void setProgress(VariableStack stack, RuntimeProgress p) {
+        stack.parentFrame().setVar(PROGRESS, p);
+    }
+    
+    public static RuntimeProgress getProgress(VariableStack stack) throws VariableNotFoundException {
+        return (RuntimeProgress) stack.getDeepVar(PROGRESS);
+    }
 
 	public Object vdl_startprogressticker(VariableStack stack) throws ExecutionException {
 		ProgressTicker t = new ProgressTicker();
 		t.setDaemon(true);
 		t.start();
-		stack.parentFrame().setVar("#swift-runtime-progress-ticker",t);
+		setTicker(stack, t);
 		return null;
 	}
 
@@ -59,27 +79,25 @@ public class RuntimeStats extends FunctionsCollection {
 	}
 
 	static public void setProgress(VariableStack stack, String newState) throws ExecutionException {
-		RuntimeProgress rp = (RuntimeProgress)stack.getVar("#swift-runtime-progress");
-		rp.status = newState;
-		ProgressTicker p = (ProgressTicker)stack.getVar("#swift-runtime-progress-ticker");
-		p.dumpState();
+		getProgress(stack).status = newState;
+		getTicker(stack).dumpState();
 	}
 
 	public Object vdl_initprogressstate(VariableStack stack) throws ExecutionException {
 		RuntimeProgress rp = new RuntimeProgress();
-		ProgressTicker p = (ProgressTicker)stack.getVar("#swift-runtime-progress-ticker");
+		ProgressTicker p = getTicker(stack);
 		synchronized (p.states) {
 			p.states.add(rp);
 		}
-		stack.parentFrame().setVar("#swift-runtime-progress",rp);
+		setProgress(stack, rp);
 		p.dumpState();
 		return null;
 	}
 
 	public synchronized Object vdl_stopprogressticker(VariableStack stack) throws ExecutionException {
-		ProgressTicker p = (ProgressTicker)stack.getVar("#swift-runtime-progress-ticker");
+		ProgressTicker p = getTicker(stack);
 		p.finalDumpState();
-		p.stop();
+		p.shutdown();
 		return null;
 	}
 
@@ -90,6 +108,7 @@ public class RuntimeStats extends FunctionsCollection {
 
 		long lastDumpTime = 0;
 		private boolean disabled;
+		private boolean shutdown;
 
 		public ProgressTicker() {
 			super("Progress ticker");
@@ -108,16 +127,19 @@ public class RuntimeStats extends FunctionsCollection {
 			if (disabled) {
 				return;
 			}
-			while(true) {
+			while(!shutdown) {
 				dumpState();
 
 				try {
 					Thread.sleep(MAX_PERIOD_MS);
 				} catch(InterruptedException e) {
-
 					System.err.println("Runtime ticker interrupted. Looping immediately.");
 				}
 			}
+		}
+		
+		void shutdown() {
+		    shutdown = true;
 		}
 
 		void dumpState() {
@@ -136,26 +158,30 @@ public class RuntimeStats extends FunctionsCollection {
 			}
 			printStates("Final status: ");
 		}
+		
+		public Map getSummary() {
+		    Map summary = new HashMap();
+            synchronized(states) {
+                Iterator stateIterator = states.iterator();
+
+                // summarize details of known states into summary, with
+                // one entry per state type, storing the number of
+                // jobs in that state.
+                while(stateIterator.hasNext()) {
+                    String key = ((RuntimeProgress)stateIterator.next()).status;
+                    Integer count = (Integer) summary.get(key);
+                    if(count == null) {
+                        summary.put(key,new Integer(1));
+                    } else {
+                        summary.put(key,new Integer(count.intValue()+1));
+                    }
+                }
+            }
+            return summary;
+		}
 
 		void printStates(String header) {
-			Map summary = new HashMap();
-			synchronized(states) {
-				Iterator stateIterator = states.iterator();
-
-				// summarize details of known states into summary, with
-				// one entry per state type, storing the number of
-				// jobs in that state.
-				while(stateIterator.hasNext()) {
-					String key = ((RuntimeProgress)stateIterator.next()).status;
-					Integer count = (Integer) summary.get(key);
-					if(count == null) {
-						summary.put(key,new Integer(1));
-					} else {
-						summary.put(key,new Integer(count.intValue()+1));
-					}
-				}
-			}
-
+			Map summary = getSummary();
 			// output the results of summarization, in a relatively
 			// pretty form - first the preferred order listed elements,
 			// and then anything remaining
@@ -182,5 +208,4 @@ public class RuntimeStats extends FunctionsCollection {
 	class RuntimeProgress {
 		String status = "uninitialized";
 	}
-
 }
