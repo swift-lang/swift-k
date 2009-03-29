@@ -199,6 +199,7 @@ public class Karajan {
 		VariableScope innerScope = new VariableScope(this, outerScope, VariableScope.ENCLOSURE_NONE);
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
+		procST.setAttribute("line", proc.getSrc().substring(proc.getSrc().indexOf(' ') + 1));
 		procST.setAttribute("name", proc.getName());
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
@@ -603,6 +604,7 @@ public class Karajan {
 
 			StringTemplate foreachST = template("foreach");
 			foreachST.setAttribute("var", foreach.getVar());
+			foreachST.setAttribute("line", foreach.getSrc().substring(foreach.getSrc().indexOf(' ') + 1));
 			
 			XmlObject in = foreach.getIn().getAbstractExpression();
 			StringTemplate inST = expressionToKarajan(in, scope);
