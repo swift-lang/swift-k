@@ -1,3 +1,7 @@
+(03/29/09)
+*** Added console text interface to provide live information about swift 
+    runs.
+
 (03/27/09)
 *** Environment variable SWIFT_EXTRA_INFO, when set in an environment profile,
     is executed with the result being recorded in wrapper logs. This allows
