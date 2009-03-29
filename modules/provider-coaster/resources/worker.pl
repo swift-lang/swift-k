@@ -24,6 +24,8 @@ my $IDLETIMEOUT = 10 * 60; #Seconds
 my $LASTRECV = 0;
 my $JOB_RUNNING = 0;
 
+my $JOB_COUNT = 0;
+
 my $BUFSZ = 2048;
 
 # 60 seconds by default. Note that since there is no configuration handshake
@@ -392,6 +394,7 @@ sub shutdownw {
 	wlog "Shutdown command received\n";
 	sendReply($tag, ("OK"));
 	wlog "Acknowledged shutdown. Exiting\n";
+	wlog "Ran a total for $JOB_COUNT jobs\n";
 	exit 0;
 }
 
@@ -491,6 +494,7 @@ sub forkjob {
 			else {
 				queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$FAILED", "$status", $s);
 			}
+			$JOB_COUNT++;
 		}
 	}
 	else {
@@ -527,6 +531,7 @@ sub runjob {
 		close STDERR;
 		open STDERR, ">$stderr" or die "Cannot redirect STDERR";
 	}
+	close STDIN;
 	wlog "Command: @JOBARGS\n";
 	exec { $executable } @JOBARGS;
 	print $WR "Could not execute $executable: $!\n";
