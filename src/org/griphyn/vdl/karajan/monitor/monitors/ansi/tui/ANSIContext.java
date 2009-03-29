@@ -15,7 +15,11 @@ import java.util.List;
 import jline.Terminal;
 import jline.UnixTerminal;
 
+import org.apache.log4j.Logger;
+
 public class ANSIContext {
+    public static final Logger logger = Logger.getLogger(ANSIContext.class);
+
     private OutputStreamWriter os;
     private InputStream is;
     private Screen screen;
@@ -131,24 +135,32 @@ public class ANSIContext {
         return terminal.isANSISupported();
     }
 
-	public int[] querySize() throws IOException {
-		os.write(ANSI.AESC + "18t");
-		os.flush();
-		try {
-			expect(ANSI.AESC, 250);
-			List nums = readNums();
-			if (nums.size() == 3) {
-				nums.remove(0);
-			}
-			int[] sz = new int[2];
-			sz[0] = ((Integer) nums.get(1)).intValue();
-			sz[1] = ((Integer) nums.get(0)).intValue();
-			return sz;
-		}
-		catch (UnsupportedOperationException e) {
-			return null;
-		}
-	}
+    public int[] querySize() throws IOException {
+        os.write(ANSI.AESC + "18t");
+        os.flush();
+        try {
+            expect(ANSI.AESC, 250);
+            List nums = readNums();
+            if (nums == null || nums.size() < 2) {
+                if (buf != null) {
+                    return new int[] { buf.getWidth(), buf.getHeight() };
+                }
+                else {
+                    return new int[] { 80, 24 };
+                }
+            }
+            if (nums.size() == 3) {
+                nums.remove(0);
+            }
+            int[] sz = new int[2];
+            sz[0] = ((Integer) nums.get(1)).intValue();
+            sz[1] = ((Integer) nums.get(0)).intValue();
+            return sz;
+        }
+        catch (UnsupportedOperationException e) {
+            return null;
+        }
+    }
 
     protected void expect(char c) throws IOException {
         if (is.read() != c) {
@@ -200,7 +212,12 @@ public class ANSIContext {
         do {
             c = is.read();
             if (!Character.isDigit((char) c)) {
-                nums.add(new Integer(sb.toString()));
+                try {
+                    nums.add(new Integer(sb.toString()));
+                }
+                catch (NumberFormatException e) {
+                    return null;
+                }
                 sb = new StringBuffer();
                 if (c != ';') {
                     return nums;
@@ -282,6 +299,11 @@ public class ANSIContext {
                                 key = new Key(0, Key.KEYPAD + c0);
                             }
                         }
+                        else if (c == 'O') {
+                            // OS X F1 - F4
+                            int c0 = read();
+                            key = new Key(0, Key.F1 + (c0 - 'P'));
+                        }
                         else {
                             key = new Key(Key.MOD_ALT, c);
                         }
@@ -324,6 +346,7 @@ public class ANSIContext {
             }
             catch (Exception e) {
                 if (!done) {
+                    logger.warn("Rendering exception", e);
                     moveTo(1, 1);
                     bgColor(ANSI.RED);
                     fgColor(ANSI.WHITE);
@@ -483,10 +506,10 @@ public class ANSIContext {
 
     public void echo(boolean b) throws IOException {
         if (b) {
-            //terminal.enableEcho();
+            // terminal.enableEcho();
         }
         else {
-            //terminal.disableEcho();
+            // terminal.disableEcho();
         }
     }
 
