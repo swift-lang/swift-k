@@ -14,9 +14,9 @@ public class InHook extends InputStream implements Runnable {
 	public static final Logger logger = Logger.getLogger(InHook.class);
 
 	public synchronized static void install(Monitor m) {
-		if (!(System.in instanceof InHook)) {
+		/*if (!(System.in instanceof InHook)) {
 			System.setIn(new InHook(System.in, m));
-		}
+		}*/
 	}
 
 	private BufferedInputStream is;
