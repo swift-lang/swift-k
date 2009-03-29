@@ -273,6 +273,8 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                             new ProgressMonitor() {
                                 public void progress(long current, long total) {
                                     getTask().setStdOutput(current + "/" + total);
+                                    getTask().setAttribute("transferedBytes", new Long(current));
+                                    getTask().setAttribute("totalBytes", new Long(current));
                                 }
                             });
                 }
