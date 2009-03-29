@@ -245,7 +245,7 @@ public class ANSIContext {
         if (count == 0) {
             count = 10;
             int[] size = querySize();
-            if (size[0] != buf.getWidth() || size[1] != buf.getHeight()) {
+            if (size != null && size[0] != buf.getWidth() || size[1] != buf.getHeight()) {
                 buf.resize(size[0], size[1]);
                 screen.setSize(size[0], size[1]);
                 screen.invalidate();
