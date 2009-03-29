@@ -60,7 +60,7 @@ public class CoasterQueueProcessor extends QueueProcessor {
                 Worker wr = workerManager.request(at.maxWallTime, at.task);
                 if (wr != null) {
                     remove();
-                    if (wr.getStatus() != null) {
+                    if (wr.isFailed()) {
                         at.task.setStatus(wr.getStatus());
                     }
                     else {
