@@ -323,6 +323,7 @@ public class WorkerManager extends Thread {
                     busy.add(w);
                 }
                 else {
+                    currentWorkers--;
                     ids.remove(w.getId());
                 }
                 startingTasks.remove(prototype);
@@ -377,30 +378,53 @@ public class WorkerManager extends Thread {
     }
 
     public void workerTerminated(Worker worker) {
-        logger.warn("Worker terminated: " + worker);
+        if (logger.isInfoEnabled()) {
+            logger.info("Worker terminated: " + worker);
+        }
         Status s = worker.getStatus();
+        Task running = worker.getRunning();
         synchronized (this) {
-            if (s.getStatusCode() == Status.FAILED) {
+            if (s.getStatusCode() == Status.FAILED || requested.containsKey(worker.getId())) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Failed or starting: " + worker);
+                }
                 worker.setFailed(true);
+                if (s.getStatusCode() != Status.FAILED) {
+                     worker.setStatus(new StatusImpl(Status.FAILED, "Worker ended prematurely", null));
+                }
                 if (requested.remove(worker.getId()) != null) {
-                    startingTasks.remove(worker.getRunning());
+                    startingTasks.remove(running);
                     // only do this for workers that haven't quite started
                     // yet
-                    // this will cause all the jobs associated with the worker to
+                    // this will cause all the jobs associated with the worker
+                    // to
                     // fail. We want at least one job to fail for each starting
                     // failed worker in order to avoid a deadlock and notify
                     // the user of potential problems
                     ready.put(new WorkerKey(worker), worker);
-                    // but now that we're doing this, make sure the worker has 
+                    // but now that we're doing this, make sure the worker has
                     // a chance of being selected
                     worker.setScheduledTerminationTime(Seconds.NEVER);
                     return;
                 }
             }
-            
+
             currentWorkers--;
-            ready.remove(new WorkerKey(worker));
+            if (busy.remove(worker)) {
+                if (logger.isInfoEnabled()) {
+                    logger.info(worker + " was busy");
+                }
+            }
+            if (ready.remove(new WorkerKey(worker)) != null) {
+                if (logger.isInfoEnabled()) {
+                    logger.info(worker + " was ready");
+                }
+            }
             ids.remove(worker.getId());
+        }
+        if (running != null) {
+            running.setStatus(new StatusImpl(Status.FAILED,
+                "Worker terminated while job was running", null));
         }
     }
 
@@ -534,7 +558,6 @@ public class WorkerManager extends Thread {
                 while (true) {
                     try {
                         Thread.sleep(20000);
-
                         synchronized (WorkerManager.this) {
                             logger.info("Current workers: " + currentWorkers);
                             logger.info("Ready: " + ready);
