@@ -61,4 +61,11 @@ public class VDL2ExecutionContext extends ExecutionContext {
 	public void setRunID(String runID) {
 		this.runID = runID;
 	}
+
+    public void start(VariableStack stack) {
+        if (logger.isInfoEnabled()) {
+            logger.info(stack);
+        }
+        super.start(stack);
+    }
 }
