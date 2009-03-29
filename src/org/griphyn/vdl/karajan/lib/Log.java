@@ -19,9 +19,10 @@ import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public class Log extends AbstractSequentialWithArguments {
 	public static final Arg LEVEL = new Arg.Positional("level");
+	public static final Arg MESSAGE = new Arg.Optional("message", null);
 
 	static {
-		setArguments(Log.class, new Arg[] { LEVEL, Arg.VARGS });
+		setArguments(Log.class, new Arg[] { LEVEL, MESSAGE, Arg.VARGS });
 	}
 
 	private static Map loggers = new HashMap();
@@ -71,12 +72,18 @@ public class Log extends AbstractSequentialWithArguments {
 		Level lvl = getLevel(TypeUtil.toString(LEVEL.getValue(stack)));
 		Logger logger = getLogger(cls);
 		if (logger.isEnabledFor(lvl)) {
-			Object[] msg = Arg.VARGS.asArray(stack);
-			StringBuffer sb = new StringBuffer();
-			for (int i = 0; i < msg.length; i++) {
-				sb.append(TypeUtil.toString(msg[i]));
-			}
-			logger.log(lvl, sb.toString());
+		    Object smsg = MESSAGE.getValue(stack);
+		    if (smsg != null) {
+		        logger.log(lvl, smsg);
+		    }
+		    else {
+		        Object[] msg = Arg.VARGS.asArray(stack);
+		        StringBuffer sb = new StringBuffer();
+		        for (int i = 0; i < msg.length; i++) {
+		            sb.append(TypeUtil.toString(msg[i]));
+		        }
+		        logger.log(lvl, sb.toString());
+		    }
 		}
 		super.post(stack);
 	}
