@@ -23,7 +23,7 @@ public final class DefaultStackFrame implements StackFrame {
 
 	private final Regs regs = new Regs();
 
-	public boolean isDefined(final String varName) {
+	public synchronized boolean isDefined(final String varName) {
 		return map.containsKey(varName);
 	}
 
