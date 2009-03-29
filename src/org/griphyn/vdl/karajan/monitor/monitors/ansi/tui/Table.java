@@ -1,0 +1,213 @@
+/*
+ * Created on Feb 21, 2007
+ */
+package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+
+public class Table extends Container implements TableModelListener {
+	private TableModel model;
+	private Map colWidths;
+	private int presetColWidthsTotal;
+	private int presetColWidthsCount;
+	private int firstRow;
+	private int selectedRow;
+	private VScrollbar sb;
+	private TableCellRenderer cellRenderer;
+
+	public Table() {
+	    this(new DefaultTableModel());
+	}
+	
+	public Table(TableModel model) {
+		this.model = model;
+		colWidths = new HashMap();
+		sb = new VScrollbar();
+		cellRenderer = new DefaultTableCellRenderer();
+	}
+
+	public TableModel getModel() {
+		return model;
+	}
+
+	public void setModel(TableModel model) {
+		if (this.model != null) {
+			this.model.removeTableModelListener(this);
+		}
+		this.model = model;
+		if (this.model != null) {
+			this.model.addTableModelListener(this);
+		}
+		invalidate();
+	}
+
+	public void setColumnWidth(int index, int width) {
+		Integer old = (Integer) colWidths.put(new Integer(index), new Integer(width));
+		if (old != null) {
+			presetColWidthsTotal -= old.intValue();
+			presetColWidthsCount--;
+		}
+		presetColWidthsTotal += width;
+		if (width != 0) {
+			presetColWidthsCount++;
+		}
+	}
+
+	protected void validate() {
+		if (isValid()) {
+			return;
+		}
+		removeAll();
+		sb.setLocation(width - 1, 0);
+		sb.setSize(1, height);
+		sb.setBgColor(bgColor);
+		sb.setFgColor(fgColor);
+		int cc = model.getColumnCount();
+		if (cc == 0) {
+			return;
+		}
+		float defaultWidth;
+		if (cc == presetColWidthsCount) {
+			defaultWidth = 0;
+		}
+		else {
+			defaultWidth = ((float) (width - presetColWidthsTotal)) / (cc - presetColWidthsCount);
+		}
+		float cx = 0;
+		for (int i = 0; i < cc; i++) {
+			boolean last = i == cc - 1;
+			Integer presetColWidth = (Integer) colWidths.get(new Integer(i));
+			int colWidth;
+			if (presetColWidth == null) {
+				colWidth = (int) ((cx + defaultWidth) - (int) cx);
+			}
+			else {
+				colWidth = presetColWidth.intValue();
+			}
+			if (last) {
+				colWidth++;
+			}
+			TableColumn c = new TableColumn(this, model, i);
+			c.setBgColor(bgColor);
+			c.setFgColor(fgColor);
+			c.setLocation((int) cx, 0);
+			c.setSize(colWidth - 1, height);
+			add(c);
+
+			if (!last) {
+				VLine l = new VLine();
+				l.setBgColor(bgColor);
+				l.setFgColor(fgColor);
+				l.setLocation((int) (cx + colWidth) - 1, 0);
+				l.setSize(1, height);
+				add(l);
+
+				VHCrossing cr = new VHCrossing();
+				cr.setBgColor(bgColor);
+				cr.setFgColor(fgColor);
+				cr.setLocation((int) (cx + colWidth) - 1, 1);
+				add(cr);
+			}
+
+			cx += colWidth;
+		}
+		add(sb);
+		super.validate();
+	}
+
+	public void tableChanged(TableModelEvent e) {
+		if (e.getType() == TableModelEvent.DELETE || e.getType() == TableModelEvent.INSERT) {
+			invalidate();
+		}
+		else {
+			redraw();
+		}
+	}
+
+	public void dataChanged() {
+		tableChanged(new TableModelEvent(model));
+	}
+
+	public int getFirstRow() {
+		return firstRow;
+	}
+
+	public void setFirstRow(int firstRow) {
+		this.firstRow = firstRow;
+	}
+
+	public int getSelectedRow() {
+		return selectedRow;
+	}
+
+	public void setSelectedRow(int selectedRow) {
+		if (this.selectedRow != selectedRow) {
+			sb.setTotal(getModel().getRowCount());
+			sb.setCurrent(selectedRow);
+			this.selectedRow = selectedRow;
+			Iterator i = components.iterator();
+			while (i.hasNext()) {
+				Component c = (Component) i.next();
+				if (c instanceof TableColumn) {
+					((TableColumn) c).setSelectedRow(selectedRow);
+				}
+			}
+			redraw();
+		}
+	}
+
+	public boolean keyboardEvent(Key key) {
+		if (key.getModifiers() == 0) {
+			int sr = selectedRow;
+			if (key.getKey() == Key.DOWN) {
+				sr++;
+			}
+			else if (key.getKey() == Key.UP) {
+				sr--;
+			}
+			else if (key.getKey() == Key.PGUP) {
+				sr -= height - 4;
+			}
+			else if (key.getKey() == Key.PGDN) {
+				sr += height - 4;
+			}
+			else {
+				return super.keyboardEvent(key);
+			}
+			if (sr < 0) {
+				sr = 0;
+			}
+			if (sr > model.getRowCount() - 1) {
+				sr = model.getRowCount() - 1;
+			}
+			setSelectedRow(sr);
+			return true;
+		}
+		else {
+			return super.keyboardEvent(key);
+		}
+	}
+
+    public TableCellRenderer getCellRenderer() {
+        return cellRenderer;
+    }
+
+    public void setCellRenderer(TableCellRenderer cellRenderer) {
+        this.cellRenderer = cellRenderer;
+    }
+
+    public int getHighlightFgColor() {
+        return bgColor;
+    }
+
+    public int getHighlightBgColor() {
+        return fgColor;
+    }
+}

@@ -1,0 +1,87 @@
+/*
+ * Created on Feb 22, 2007
+ */
+package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
+
+
+public class Dialog extends Frame {
+	private Component sfocus;
+
+	public Dialog() {
+		bgColor = ANSI.WHITE;
+		fgColor = ANSI.BLACK;
+		setFilled(true);
+	}
+
+	public void display(Screen screen) {
+		sfocus = screen.getFocusedComponent();
+		screen.add(this);
+		focus();
+	}
+
+	public void close() {
+		getScreen().remove(this);
+		setVisible(false);
+		if (sfocus != null) {
+			sfocus.focus();
+		}
+	}
+
+	public void center(Container c) {
+		x = (c.getWidth() - width) / 2;
+		y = (c.getHeight() - height) / 2;
+	}
+
+	public boolean keyboardEvent(Key key) {
+		if (key.getKey() == Key.ESC) {
+			close();
+			return true;
+		}
+		else {
+			return super.keyboardEvent(key);
+		}
+	}
+
+    public static int displaySimpleDialog(Screen screen, String title, String msg,
+            String[] buttons) {
+        final Dialog d = new Dialog();
+        d.setTitle(title);
+        Label l = new Label();
+        l.setText(msg);
+        d.setSize(10 + msg.length(), 6);
+        l.setLocation(5, 2);
+        l.setSize(msg.length(), 1);
+        l.setBgColor(d.getBgColor());
+        l.setFgColor(d.getFgColor());
+        d.add(l);
+        final Button[] bs = new Button[buttons.length];
+        final int[] r = new int[1];
+        for (int i = 0; i < buttons.length; i++) {
+            bs[i] = new Button();
+            bs[i].setLabel(buttons[i]);
+            bs[i].setLocation((d.getWidth() - 10) * i / 3 + 5, 4);
+            bs[i].addActionListener(new ActionListener() {
+                public void actionPerformed(Component source) {
+                    for (int i = 0; i < bs.length; i++) {
+                        if (source == bs[i]) {
+                            r[0] = i;
+                        }
+                    }
+                    d.close();
+                }});
+            d.add(bs[i]);
+        }
+        d.center(screen);
+        d.display(screen);
+        bs[0].focus();
+        while (d.isVisible()) {
+            try {
+                Thread.sleep(50);
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return r[0];
+    }
+}
