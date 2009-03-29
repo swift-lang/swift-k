@@ -202,19 +202,19 @@ public class JobSubmission implements StatusListener {
         try {
             handler.submit(this.task);
         } catch (InvalidSecurityContextException ise) {
-            System.out.println("Security Exception: " + ise.getMessage());
+            System.out.println("Security Exception: " + getMessages(ise));
             logger.debug("Stack trace: ", ise);
             System.exit(1);
         } catch (TaskSubmissionException tse) {
-            System.out.println("Submission Exception: " + tse.getMessage());
+            System.out.println("Submission Exception: " + getMessages(tse));
             logger.debug("Stack trace: ", tse);
             System.exit(1);
         } catch (IllegalSpecException ispe) {
-            System.out.println("Specification Exception: " + ispe.getMessage());
+            System.out.println("Specification Exception: " + getMessages(ispe));
             logger.debug("Stack trace: ", ispe);
             System.exit(1);
         } catch (InvalidServiceContactException isce) {
-            System.out.println("Service Contact Exception");
+            System.out.println("Service Contact Exception: " + getMessages(isce));
             logger.debug("Stack trace: ", isce);
             System.exit(1);
         }
@@ -222,6 +222,20 @@ public class JobSubmission implements StatusListener {
         while (true) {
             Thread.sleep(1000);
         }
+    }
+    
+    private String getMessages(Throwable e) {
+    	StringBuffer sb = new StringBuffer();
+    	Throwable last = null;
+    	while (e != null) {
+    		if (last == null || last.getMessage() == null || last.getMessage().indexOf(e.getMessage()) == -1) {
+    			sb.append("\n\t");
+    			sb.append(e.getMessage());
+    		}
+    		last = e;
+    		e = e.getCause();
+    	}
+    	return sb.toString();
     }
 
     public void marshal() {
