@@ -53,13 +53,13 @@ memberdefinition(type,name,sourcelocation) ::= <<
    <xs:element name="$name$" type="$type$"/>
 >>
 
-procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config) ::= <<
+procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config,line) ::= <<
 <element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$>
   $optargs:default_arg();separator="\n"$
   $outputs:typecheck();separator="\n"$
   $inputs:typecheck();separator="\n"$
 $if(binding)$
-  $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name)$
+  $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
 $else$
   $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements,name=name)$
 $endif$
@@ -97,11 +97,8 @@ typecheck() ::= <<
 <vdl:typecheck argname="$it.name$" var="{$it.name$}" type="$it.type.name$"$if(it.isArray)$ isArray="true"$endif$/>
 >>
 
-vdl_execute(outputs,inputs,application,name) ::= <<
-<log>
-  <string>info</string>
-  <string>PROCEDURE thread={#thread} name=$name$</string>
-</log>
+vdl_execute(outputs,inputs,application,name,line) ::= <<
+<log level="info" message="PROCEDURE line=$line$ thread={#thread} name=$name$"/>
 $inputs:vdl_log_input();separator="\n"$
 $outputs:vdl_log_output();separator="\n"$
 <vdl:execute>
@@ -111,6 +108,7 @@ $outputs:vdl_log_output();separator="\n"$
   $vdl_arguments(arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 </vdl:execute>
 $outputs:vdl_closedataset();separator="\n"$
+<log level="info" message="PROCEDURE_END line=$line$"/>
 >>
 
 vdl_log_input() ::= <<
@@ -199,7 +197,7 @@ iterate(declarations,statements,cond,var) ::= <<
 </vdl:infinitecountingwhile>
 >>
 
-foreach(var,in,indexVar,declarations,statements) ::= <<
+foreach(var,in,indexVar,declarations,statements,line) ::= <<
 <vdl:tparallelFor name="\$">
   <getarrayiterator>$in$</getarrayiterator>
   <set names="\$\$, $var$">
@@ -210,10 +208,12 @@ $if(indexVar)$
       <vdl:new type="int" value="{\$\$}"/>
     </set>
 $endif$
+	<log level="info" message="FOREACH_IT_START line=$line$"/>
     $declarations;separator="\n"$
     $if(statements)$
       $parallel(statements=statements)$
     $endif$
+    <log level="info" message="FOREACH_IT_END line=$line$"/>
 </vdl:tparallelFor>
 >>
 
