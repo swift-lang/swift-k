@@ -20,6 +20,15 @@ public class WorkerKey implements Comparable {
     public WorkerKey(Seconds time) {
         this.time = time;
     }
+    
+    public boolean equals(Object obj) {
+        if (obj instanceof WorkerKey) {
+            return worker == ((WorkerKey) obj).worker;
+        }
+        else {
+            return false;
+        }
+    }
 
     public int compareTo(Object o) {
         WorkerKey wk = (WorkerKey) o;
