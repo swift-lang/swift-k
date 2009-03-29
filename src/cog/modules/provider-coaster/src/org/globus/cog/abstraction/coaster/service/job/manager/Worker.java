@@ -154,6 +154,10 @@ public class Worker implements StatusListener {
     public Status getStatus() {
         return error;
     }
+    
+    protected void setStatus(Status status) {
+        this.error = status;
+    }
 
     public String toString() {
         return "Worker[" + id + "]";
