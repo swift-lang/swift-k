@@ -1445,7 +1445,7 @@ made available to the SwiftScript program through the
 
   <varlistentry><term>-tui</term>
     <listitem>
-      Displays an interactive text mode monitor during a run.
+      Displays an interactive text mode monitor during a run. (since Swift 0.9)
     </listitem>
   </varlistentry>
 
@@ -2894,7 +2894,7 @@ so <literal>absolute</literal> must be used. Conversely on some sites,
 job directories appear in a different place on the worker node file system
 than on the filesystem access node, with the execution system handling
 translation of the job initial working directory. In such cases,
-<literal>relative</literal> mode must be used.
+<literal>relative</literal> mode must be used. (since Swift 0.9)
 							</para>
 
 						</listitem>
@@ -3042,7 +3042,7 @@ then Swift will execute the command specified in
 each application execution, and will record the stdout of that command in the
 wrapper info log file for that job. This is intended to allow software
 version and other arbitrary information about the remote site to be gathered
-and returned to the submit side.
+and returned to the submit side. (since Swift 0.9)
 		</para>
 	</section>
 	<section id="sitecatalog"><title>The Site Catalog - sites.xml</title>
