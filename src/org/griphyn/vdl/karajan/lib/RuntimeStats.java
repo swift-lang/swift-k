@@ -19,9 +19,9 @@ import org.griphyn.vdl.util.VDL2Config;
 proof of concept. */
 
 public class RuntimeStats extends FunctionsCollection {
-    
-    public static final String TICKER = "#swift-runtime-progress-ticker";
-    public static final String PROGRESS = "#swift-runtime-progress";
+
+	public static final String TICKER = "#swift-runtime-progress-ticker";
+	public static final String PROGRESS = "#swift-runtime-progress";
 
 	public static final Arg PA_STATE = new Arg.Positional("state");
 	public static final int MIN_PERIOD_MS=1000;
@@ -53,16 +53,16 @@ public class RuntimeStats extends FunctionsCollection {
 	}
 	
 	public static ProgressTicker getTicker(VariableStack stack) {
-        return (ProgressTicker) stack.getGlobal(TICKER);
-    }
+		return (ProgressTicker) stack.getGlobal(TICKER);
+	}
 	
 	public static void setProgress(VariableStack stack, RuntimeProgress p) {
-        stack.parentFrame().setVar(PROGRESS, p);
-    }
-    
-    public static RuntimeProgress getProgress(VariableStack stack) throws VariableNotFoundException {
-        return (RuntimeProgress) stack.getDeepVar(PROGRESS);
-    }
+		stack.parentFrame().setVar(PROGRESS, p);
+	}
+
+	public static RuntimeProgress getProgress(VariableStack stack) throws VariableNotFoundException {
+		return (RuntimeProgress) stack.getDeepVar(PROGRESS);
+	}
 
 	public Object vdl_startprogressticker(VariableStack stack) throws ExecutionException {
 		ProgressTicker t = new ProgressTicker();
@@ -160,24 +160,24 @@ public class RuntimeStats extends FunctionsCollection {
 		}
 		
 		public Map getSummary() {
-		    Map summary = new HashMap();
-            synchronized(states) {
-                Iterator stateIterator = states.iterator();
+			Map summary = new HashMap();
+			synchronized(states) {
+				Iterator stateIterator = states.iterator();
 
-                // summarize details of known states into summary, with
-                // one entry per state type, storing the number of
-                // jobs in that state.
-                while(stateIterator.hasNext()) {
-                    String key = ((RuntimeProgress)stateIterator.next()).status;
-                    Integer count = (Integer) summary.get(key);
-                    if(count == null) {
-                        summary.put(key,new Integer(1));
-                    } else {
-                        summary.put(key,new Integer(count.intValue()+1));
-                    }
-                }
-            }
-            return summary;
+				// summarize details of known states into summary, with
+				// one entry per state type, storing the number of
+				// jobs in that state.
+				while(stateIterator.hasNext()) {
+					String key = ((RuntimeProgress)stateIterator.next()).status;
+					Integer count = (Integer) summary.get(key);
+					if(count == null) {
+						summary.put(key,new Integer(1));
+					} else {
+						summary.put(key,new Integer(count.intValue()+1));
+					}
+				}
+			}
+			return summary;
 		}
 
 		void printStates(String header) {
