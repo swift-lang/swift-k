@@ -1,3 +1,6 @@
+(03/30/09)
+*** Removed support for .dtm file extension which was deprecated in Swift 0.4
+
 (03/29/09)
 *** Added console text interface to provide live information about swift 
     runs.
