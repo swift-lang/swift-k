@@ -1439,6 +1439,12 @@ be used, irrespective of (at least) expected execution sites, program or user.
     </para></listitem>
   </varlistentry>
 
+  <varlistentry><term>-tui</term>
+    <listitem>
+      Displays an interactive text mode monitor during a run.
+    </listitem>
+  </varlistentry>
+
 </variablelist>
 
 <para>In addition, the following Swift properties can be set on the
