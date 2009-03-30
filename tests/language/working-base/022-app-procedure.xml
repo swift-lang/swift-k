@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="generate">
+  <procedure name="generate" src="line 3">
 
       <output 
     name="f" type="file"

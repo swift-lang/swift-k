@@ -43,7 +43,7 @@
      		</typestructure>
      	</type>   
   </types>  
-  <procedure name="align_warp">
+  <procedure name="align_warp" src="line 14">
 
       <output 
     name="warp" type="warpfile"
@@ -84,7 +84,7 @@
           <variableReference>warp</variableReference></function><stringConstant>-m </stringConstant><variableReference>model</variableReference><variableReference>quick</variableReference>  </application>
     </binding>
   </procedure>
-  <procedure name="reslice">
+  <procedure name="reslice" src="line 20">
 
       <output 
     name="sliced" type="volume"
@@ -111,7 +111,7 @@
           </structureMember></function>  </application>
     </binding>
   </procedure>
-  <procedure name="align_and_reslice">
+  <procedure name="align_and_reslice" src="line 27">
 
       <output 
     name="sliced" type="volume"
@@ -151,7 +151,7 @@
       <input><variableReference>subject</variableReference></input>
     </call>
   </procedure>
-  <procedure name="softmean">
+  <procedure name="softmean" src="line 34">
 
       <output 
     name="atlas" type="volume"
@@ -179,7 +179,7 @@
           </structureMember></function>  </application>
     </binding>
   </procedure>
-  <procedure name="slicer">
+  <procedure name="slicer" src="line 42">
 
       <output 
     name="outslice" type="pgmfile"
@@ -211,7 +211,7 @@
           <variableReference>outslice</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="convert">
+  <procedure name="convert" src="line 49">
 
       <output 
     name="outimg" type="imagefile"
@@ -230,7 +230,7 @@
           <variableReference>outimg</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="slice_to_jpeg">
+  <procedure name="slice_to_jpeg" src="line 56">
 
       <output 
     name="outimg" type="imagefile"
@@ -263,7 +263,7 @@
       <input><variableReference>outslice</variableReference></input>
     </call>
   </procedure>
-  <procedure name="all_align_reslices">
+  <procedure name="all_align_reslices" src="line 63">
 
       <output 
     name="s" type="volume[]"

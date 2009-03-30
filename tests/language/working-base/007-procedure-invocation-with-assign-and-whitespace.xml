@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="echo">
+  <procedure name="echo" src="line 7">
 
       <output 
     name="a" type="file"

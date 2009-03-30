@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="stageIn">
+  <procedure name="stageIn" src="line 3">
 
       <output 
     name="gauge" type="file"
@@ -33,7 +33,7 @@
           <variableReference>gauge</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="stagSolve">
+  <procedure name="stagSolve" src="line 9">
 
       <output 
     name="output" type="file[]"
@@ -65,7 +65,7 @@
           </arraySubscript></function>  </application>
     </binding>
   </procedure>
-  <procedure name="cloverSolve">
+  <procedure name="cloverSolve" src="line 15">
 
       <output 
     name="output" type="file"
@@ -99,7 +99,7 @@
           <variableReference>output</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="cvt12x12">
+  <procedure name="cvt12x12" src="line 21">
 
       <output 
     name="output" type="file"
@@ -118,7 +118,7 @@
           <variableReference>output</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="archive">
+  <procedure name="archive" src="line 27">
 
       <output 
     name="output" type="file"
@@ -137,7 +137,7 @@
           <variableReference>output</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="archiveStag">
+  <procedure name="archiveStag" src="line 33">
 
       <output 
     name="output" type="file"
@@ -164,7 +164,7 @@
           <variableReference>output</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="twoPtHH">
+  <procedure name="twoPtHH" src="line 39">
 
       <output 
     name="sdo" type="file"
@@ -207,7 +207,7 @@
           <variableReference>Q2</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="twoPtSH">
+  <procedure name="twoPtSH" src="line 45">
 
       <output 
     name="sdo" type="file"

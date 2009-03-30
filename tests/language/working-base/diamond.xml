@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="generate">
+  <procedure name="generate" src="line 3">
 
       <output 
     name="f" type="file"
@@ -27,7 +27,7 @@
           <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="process">
+  <procedure name="process" src="line 9">
 
       <output 
     name="f2" type="file"
@@ -56,7 +56,7 @@
           <variableReference>f2</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="combine">
+  <procedure name="combine" src="line 15">
 
       <output 
     name="f3" type="file"
@@ -81,7 +81,7 @@
           <variableReference>f3</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="diamond">
+  <procedure name="diamond" src="line 21">
 
       <output 
     name="fd" type="file"

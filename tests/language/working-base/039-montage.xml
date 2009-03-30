@@ -55,7 +55,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="mProjectPP">
+  <procedure name="mProjectPP" src="line 17">
 
       <output 
     name="projectedImage" type="Image"
@@ -85,7 +85,7 @@
           <variableReference>template</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mProjectPPBatch">
+  <procedure name="mProjectPPBatch" src="line 23">
 
       <output 
     name="projectedImages" type="Image[]"
@@ -146,7 +146,7 @@
       </assign></body>
     </foreach>
   </procedure>
-  <procedure name="mOverlaps">
+  <procedure name="mOverlaps" src="line 34">
 
       <output 
     name="diffsTbl" type="Table"
@@ -165,7 +165,7 @@
           <variableReference>diffsTbl</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mDiffFit">
+  <procedure name="mDiffFit" src="line 41">
 
       <output 
     name="diffImage" type="Image"
@@ -212,7 +212,7 @@
           <variableReference>template</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mDiffFitBatch">
+  <procedure name="mDiffFitBatch" src="line 47">
 
       <output 
     name="diffImages" type="Image[]"
@@ -317,7 +317,7 @@
       </assign></body>
     </foreach>
   </procedure>
-  <procedure name="mStatTbl">
+  <procedure name="mStatTbl" src="line 65">
 
       <output 
     name="statusFilesTbl" type="Table"
@@ -336,7 +336,7 @@
           <variableReference>statusFilesTbl</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mConcatFit">
+  <procedure name="mConcatFit" src="line 71">
 
       <output 
     name="fitsTbl" type="Table"
@@ -365,7 +365,7 @@
           <variableReference>fitsTbl</variableReference></function><variableReference>statusDir</variableReference>  </application>
     </binding>
   </procedure>
-  <procedure name="mBgModel">
+  <procedure name="mBgModel" src="line 77">
 
       <output 
     name="correctionsTbl" type="Table"
@@ -390,7 +390,7 @@
           <variableReference>correctionsTbl</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mBackground">
+  <procedure name="mBackground" src="line 83">
 
       <output 
     name="correctedImage" type="Image"
@@ -431,7 +431,7 @@
           <variableReference>correctionsTbl</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mBackgroundBatch">
+  <procedure name="mBackgroundBatch" src="line 89">
 
       <output 
     name="correctedImages" type="Image[]"
@@ -512,7 +512,7 @@
       </assign></body>
     </foreach>
   </procedure>
-  <procedure name="mImgtbl">
+  <procedure name="mImgtbl" src="line 100">
 
       <output 
     name="imagesTbl" type="Table"
@@ -535,7 +535,7 @@
           <variableReference>imagesTbl</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mImgtbl_t">
+  <procedure name="mImgtbl_t" src="line 106">
 
       <output 
     name="newImagesTbl" type="Table"
@@ -564,7 +564,7 @@
           <variableReference>newImagesTbl</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mAdd">
+  <procedure name="mAdd" src="line 112">
 
       <output 
     name="mosaic" type="Image"
@@ -604,7 +604,7 @@
           <variableReference>mosaic</variableReference></function>  </application>
     </binding>
   </procedure>
-  <procedure name="mShrink">
+  <procedure name="mShrink" src="line 118">
 
       <output 
     name="shrunkImage" type="Image"
@@ -628,7 +628,7 @@
           <variableReference>shrunkImage</variableReference></function><variableReference>factor</variableReference>  </application>
     </binding>
   </procedure>
-  <procedure name="mJPEG">
+  <procedure name="mJPEG" src="line 124">
 
       <output 
     name="jpeg" type="JPEG"

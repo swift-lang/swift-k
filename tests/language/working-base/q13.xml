@@ -14,7 +14,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="greeting">
+  <procedure name="greeting" src="line 4">
 
       <output 
     name="t" type="messagefile"
@@ -32,7 +32,7 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <procedure name="countwords">
+  <procedure name="countwords" src="line 10">
 
       <output 
     name="t" type="countfile"

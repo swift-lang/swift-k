@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="ls">
+  <procedure name="ls" src="line 6">
 
       <output 
     name="f" type="file"
@@ -27,7 +27,7 @@
           <variableReference>f</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <procedure name="wc">
+  <procedure name="wc" src="line 12">
 
       <output 
     name="c" type="file"

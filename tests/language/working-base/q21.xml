@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="greeting">
+  <procedure name="greeting" src="line 3">
 
       <output 
     name="t" type="messagefile"

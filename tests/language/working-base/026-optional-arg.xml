@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="myproc1">
+  <procedure name="myproc1" src="line 4">
 
       <output 
     name="f" type="File"

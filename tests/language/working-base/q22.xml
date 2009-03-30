@@ -14,7 +14,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="countwords">
+  <procedure name="countwords" src="line 4">
 
       <output 
     name="t" type="countfile"

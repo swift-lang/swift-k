@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="waveletTransf">
+  <procedure name="waveletTransf" src="line 7">
 
       <output 
     name="wavelets" type="file"
@@ -42,7 +42,7 @@
           <variableReference>waveletScript</variableReference></function><variableReference>subjNo</variableReference><variableReference>trialType</variableReference>  </application>
     </binding>
   </procedure>
-  <procedure name="batchTrials">
+  <procedure name="batchTrials" src="line 14">
 
       <output 
     name="outputs" type="file[]"

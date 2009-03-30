@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="echo">
+  <procedure name="echo" src="line 3">
 
       <output 
     name="f" type="file"
@@ -26,7 +26,7 @@
         <stdout><variableReference>f</variableReference></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <procedure name="echo_batch">
+  <procedure name="echo_batch" src="line 10">
 
       <output 
     name="fa" type="file[]"

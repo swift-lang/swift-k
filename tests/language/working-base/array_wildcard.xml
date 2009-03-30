@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <procedure name="echo_wildcard">
+  <procedure name="echo_wildcard" src="line 4">
 
       <output 
     name="t" type="file"
