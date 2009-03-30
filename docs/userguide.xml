@@ -3546,7 +3546,7 @@ records into a directory at the CI for reporting, usage tracking, support and de
 			</para>
 			<para>
 <screen>
-rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/home/benc/swift-logs/ --verbose
+rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/disks/ci-gpfs/swift/swift-logs/ --verbose
 </screen>
 			</para>
 		</section>
