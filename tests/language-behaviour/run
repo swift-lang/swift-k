@@ -44,7 +44,7 @@ for testfn in $TESTS; do
   if [ "$RESUME" == "y" ]; then
   	echo Skipping test $t
   else
-	echo Running test $t
+	echo Running test $t at $(date)
 	swift ${SWIFT_TEST_PARAMS} ${t}.swift
 	if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO - test $testfn"; exit 1; fi
 	echo expecting $EXPECTEDS
@@ -88,7 +88,7 @@ for testfn in $TESTS; do
     fi
 
   done
-  echo "Test passed"
+  echo "Test passed at $(date)"
   if [ "$SUB" == "" ]; then
   	echo ----------===========================----------
   fi
