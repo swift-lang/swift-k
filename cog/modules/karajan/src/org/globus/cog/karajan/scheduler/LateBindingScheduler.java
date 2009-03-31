@@ -62,7 +62,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	private static final Logger logger = Logger.getLogger(LateBindingScheduler.class);
 
 	private HashMap virtualContacts;
-	private boolean done;
+	private boolean done, started;
 	private int running;
 
 	protected final Map executionHandlers;
@@ -183,8 +183,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			setConstraints(task, constraints);
 		}
 		synchronized (this) {
-			if (!isAlive()) {
+			if (!started) {
 				start();
+				started = true;
 			}
 			getJobQueue().enqueue(task);
 			notify();
