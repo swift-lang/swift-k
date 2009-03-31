@@ -40,6 +40,7 @@ import org.globus.cog.util.ArgumentParserException;
 import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.karajan.lib.Execute;
+import org.griphyn.vdl.karajan.lib.Log;
 import org.griphyn.vdl.karajan.monitor.MonitorAppender;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
@@ -72,6 +73,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     public static void main(String[] argv) {
         logger.debug("Loader started");
+        logger.info("Max heap: " + Runtime.getRuntime().maxMemory());
         ArgumentParser ap = buildArgumentParser();
         String project = null;
         try {
@@ -436,6 +438,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         if (ap.isPresent(ARG_TUI)) {
             ma = new MonitorAppender(projectName);
             Logger.getRootLogger().addAppender(ma);
+            Logger.getLogger(Log.class).setLevel(Level.DEBUG);
             Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);
             Logger.getLogger(Execute.class).setLevel(Level.DEBUG);
             Logger.getLogger(VDL2ExecutionContext.class).setLevel(Level.INFO);
