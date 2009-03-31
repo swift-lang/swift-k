@@ -245,7 +245,8 @@ public class ANSIContext {
         if (count == 0) {
             count = 10;
             int[] size = querySize();
-            if (size != null && (size[0] != buf.getWidth() || size[1] != buf.getHeight())) {
+            if (size != null
+                    && (size[0] != buf.getWidth() || size[1] != buf.getHeight())) {
                 buf.resize(size[0], size[1]);
                 screen.setSize(size[0], size[1]);
                 screen.invalidate();
@@ -266,47 +267,45 @@ public class ANSIContext {
                 Key key;
                 int c = read();
                 if (c == 27) {
-                    try {
-                        Thread.sleep(25);
+                    c = read();
+                    if (c == 27) {
+                        key = new Key(0, 27);
                     }
-                    catch (InterruptedException e) {
-                        return;
+                    else if (c >= '1' && c <= '5') {
+                        key = new Key(0, Key.F1 + c - '1');
                     }
-                    if (is.available() == 0) {
-                        key = new Key(0, c);
+                    else if (c >= '6' && c <= '9') {
+                        key = new Key(0, Key.F6 + c - '6');
                     }
-                    else {
-                        c = read();
-                        if (c == '[') {
-                            int c0 = read();
-                            if (c0 <= 54) {
-                                int c1 = read();
-                                if (c1 == '~') {
-                                    key = new Key(0, Key.KEYPAD2 + c0);
-                                }
-                                else {
-                                    int c2 = read();
-                                    if (c2 == '~') {
-                                        key = new Key(c0, c1, 0);
-                                    }
-                                    else {
-                                        key = new Key(c0, c1, is.read());
-                                        read();
-                                    }
-                                }
+                    else if (c == '[') {
+                        int c0 = read();
+                        if (c0 <= 54) {
+                            int c1 = read();
+                            if (c1 == '~') {
+                                key = new Key(0, Key.KEYPAD2 + c0);
                             }
                             else {
-                                key = new Key(0, Key.KEYPAD + c0);
+                                int c2 = read();
+                                if (c2 == '~') {
+                                    key = new Key(c0, c1, 0);
+                                }
+                                else {
+                                    key = new Key(c0, c1, is.read());
+                                    read();
+                                }
                             }
                         }
-                        else if (c == 'O') {
-                            // OS X F1 - F4
-                            int c0 = read();
-                            key = new Key(0, Key.F1 + (c0 - 'P'));
-                        }
                         else {
-                            key = new Key(Key.MOD_ALT, c);
+                            key = new Key(0, Key.KEYPAD + c0);
                         }
+                    }
+                    else if (c == 'O') {
+                        // OS X F1 - F4
+                        int c0 = read();
+                        key = new Key(0, Key.F1 + (c0 - 'P'));
+                    }
+                    else {
+                        key = new Key(Key.MOD_ALT, c);
                     }
                 }
                 else if (c < 32 && c != 0x0a && c != 0x0d) {
@@ -335,13 +334,7 @@ public class ANSIContext {
                             e.printStackTrace();
                         }
                     }
-                    if (!done) {
-                        moveTo(1, 1);
-                        bgColor(ANSI.RED);
-                        fgColor(ANSI.WHITE);
-                        text(key.toString());
-                        sync();
-                    }
+                    //screen.status(key.toString());                   
                 }
             }
             catch (Exception e) {
@@ -377,7 +370,7 @@ public class ANSIContext {
             }
         }
         int c = is.read();
-        System.err.print("\n" + c + " - " + (char) c);
+        //logger.warn("CONSOLE IN: " + c + " - " + (char) c);
         return c;
     }
 
@@ -506,10 +499,10 @@ public class ANSIContext {
 
     public void echo(boolean b) throws IOException {
         if (b) {
-            // terminal.enableEcho();
+            terminal.enableEcho();
         }
         else {
-            // terminal.disableEcho();
+            terminal.disableEcho();
         }
     }
 
@@ -518,16 +511,26 @@ public class ANSIContext {
     }
 
     public synchronized void lock() {
-        /*
-         * while (lock > 0) { try { wait(); } catch (InterruptedException e) {
-         * e.printStackTrace(); } } lock++;
-         */
+        if (!doubleBuffered) {
+            while (lock > 0) {
+                try {
+                    wait();
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            lock++;
+        }
     }
 
     public synchronized void unlock() {
-        /*
-         * lock--; if (lock == 0) { notifyAll(); }
-         */
+        if (!doubleBuffered) {
+            lock--;
+            if (lock == 0) {
+                notifyAll();
+            }
+        }
     }
 
     public void exit() {
