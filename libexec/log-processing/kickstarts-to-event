@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$KDIR" == "" ]; then
+  echo No kickstart record directory defined in environment variable KDIR - exiting
+  exit 0
+fi
+
 while read t d id rest; do
   record=$(find ${KDIR} -name ${id}-kickstart.xml)
 
