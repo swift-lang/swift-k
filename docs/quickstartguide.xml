@@ -125,10 +125,6 @@ class="file">swift-&lt;version&gt;.tar.gz</filename>
 class="directory">/path/to/swift/bin</filename>:<envar>$PATH</envar>
 </screen>
 			
-			If you are installing Swift on a machine with access to a graphical
-			display, you can run the <command>cog-setup</command> tool to
-			configure various aspects of the environment required by Swift.
-		
 		</para>
 		<sect2 id="security"><title>Grid Security</title>
 			<para>For local execution of jobs, no grid security configuration
@@ -258,8 +254,9 @@ class="directory">/path/to/swift/bin</filename>:<envar>$PATH</envar>
 			workflow file name as an argument:
 			
 <screen>
+<prompt>&gt;</prompt> <command>cd examples/swift</command>
 <prompt>&gt;</prompt> <command>swift</command> <option><filename
-class="file">example.swift</filename></option>
+class="file">first.swift</filename></option>
 </screen>
 
 			The <ulink 		
