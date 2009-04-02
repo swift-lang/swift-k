@@ -73,7 +73,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     public static void main(String[] argv) {
         logger.debug("Loader started");
-        logger.info("Max heap: " + Runtime.getRuntime().maxMemory());
         ArgumentParser ap = buildArgumentParser();
         String project = null;
         try {
@@ -118,6 +117,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
         try {
             setupLogging(ap, projectName, runID);
+            logger.debug("Max heap: " + Runtime.getRuntime().maxMemory());
 
             if (!(new File(project).exists())) {
                 logger.error("Input file " + project + " does not exist.");
