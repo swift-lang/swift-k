@@ -27,26 +27,26 @@
     concurrent iterations allowed, which should allow swift to scale better
     in certain cases.
 
-(02/09/24)
+(02/24/09)
 *** New configuration option wrapper.invocation.mode, specifiable either
     globally in the configuration file or per-site as a profile key,
     that configures whether wrapper script invocations are made with an
     absolute path (as was the behaviour in Swift 0.8) or with a relative
     path (as was behaviour in previous versions of Swift).
 
-(02/09/22)
+(02/22/09)
 *** Recompilation will happen if a .kml file was compiled with a different
     version of Swift to the version being invoked. This is in addition to the
     existing behaviour where a .swift file will be recompiled if it is newer
     than the corresponding .kml file.
 
-(02/09/17)
+(02/17/09)
 *** There is a new command swift-osg-ress-site-catalog which will generate
     a site catalog based on data gathered from OSG's ReSS information
     system. This can be used by OSG users to easily generate a large number
     of site catalog entries for sites that are likely to work.
 
-(02/09/14)
+(02/14/09)
 *** Handling of [*] and . has changed. [*] has been broken for several
     Swift releases, but now has some approximation of its former behaviour,
     in a cleaner implementation.
