@@ -444,6 +444,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             Logger.getLogger(VDL2ExecutionContext.class).setLevel(Level.INFO);
             Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
                 Level.INFO);
+            ca.setThreshold(Level.FATAL);
         }
     }
 
