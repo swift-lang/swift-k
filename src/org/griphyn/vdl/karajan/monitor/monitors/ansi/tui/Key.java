@@ -45,6 +45,7 @@ public class Key {
 	public static final int CR = 0x0d;
 	public static final int BACKSPACE = 0x7f;
 	public static final int ESC = 0x1b;
+	public static final int TAB = 0x09;
 	
 	private static Map names;
 	
@@ -80,6 +81,7 @@ public class Key {
 		putName(END, "END");
 		putName(INS, "INS");
 		putName(DEL, "DEL");
+		putName(TAB, "TAB");
 	}
 	
 	private final int type;

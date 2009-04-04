@@ -128,6 +128,11 @@ public class ANSIContext {
             terminal.initializeTerminal();
             os.write(ANSI.cursorVisible(false));
             os.flush();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    exit();
+                }
+            });
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -309,7 +314,12 @@ public class ANSIContext {
                     }
                 }
                 else if (c < 32 && c != 0x0a && c != 0x0d) {
-                    key = new Key(Key.MOD_CTRL, c + 96);
+                    if (c == 9) {
+                        key = new Key(Key.TAB);
+                    }
+                    else {
+                        key = new Key(Key.MOD_CTRL, c + 96);
+                    }
                 }
                 else if (c > 128) {
                     // XTerm
@@ -334,7 +344,7 @@ public class ANSIContext {
                             e.printStackTrace();
                         }
                     }
-                    //screen.status(key.toString());                   
+                    screen.status(key.toString());                   
                 }
             }
             catch (Exception e) {
@@ -360,6 +370,9 @@ public class ANSIContext {
                 screen.redraw();
             }
             else {
+                if (done) {
+                    return 0;
+                }
                 try {
                     checkSize();
                     Thread.sleep(10);
@@ -534,6 +547,7 @@ public class ANSIContext {
     }
 
     public void exit() {
+        done = true;
         try {
             os.write(ANSI.cursorVisible(true));
             os.flush();
@@ -541,7 +555,6 @@ public class ANSIContext {
         catch (Exception e) {
             e.printStackTrace();
         }
-        done = true;
         screen = null;
         if (terminal instanceof UnixTerminal) {
             try {
