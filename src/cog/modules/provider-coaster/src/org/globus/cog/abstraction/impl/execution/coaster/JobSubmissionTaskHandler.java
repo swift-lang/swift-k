@@ -62,6 +62,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             	String provider = getBootHandlerProvider(task);
                 url = ServiceManager.getDefault().reserveService(task, provider);
                 cred = getCredentials(task);
+                task.getService(0).getServiceContact().setContact(url);
             }
             else {
                 url = task.getService(0).getServiceContact().getContact();
