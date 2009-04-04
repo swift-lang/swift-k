@@ -384,7 +384,7 @@ or individual elements may be references using <literal>[]</literal> notation.
   <tbody>
    <row><entry>int</entry><entry>integers</entry></row>
    <row><entry>string</entry><entry>strings of text</entry></row>
-   <row><entry>float</entry><entry>floating point numbers</entry></row>
+   <row><entry>float</entry><entry>floating point numbers, that behave the same as Java <literal>double</literal>s</entry></row>
    <row><entry>boolean</entry><entry>true/false</entry></row>
   </tbody>
  </tgroup>
