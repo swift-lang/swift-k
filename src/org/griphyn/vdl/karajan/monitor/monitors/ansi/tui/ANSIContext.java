@@ -284,7 +284,7 @@ public class ANSIContext {
                     }
                     else if (c == '[') {
                         int c0 = read();
-                        if (c0 <= 54) {
+                        if (c0 <= 56) {
                             int c1 = read();
                             if (c1 == '~') {
                                 key = new Key(0, Key.KEYPAD2 + c0);
@@ -577,5 +577,10 @@ public class ANSIContext {
 
     public void setDoubleBuffered(boolean doubleBuffered) {
         this.doubleBuffered = doubleBuffered;
+    }
+
+    public void setCursorVisible(boolean b) throws IOException {
+        os.write(ANSI.cursorVisible(b));
+        os.flush();
     }
 }
