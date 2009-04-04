@@ -54,6 +54,7 @@ public class SubmitJobCommand extends Command {
         add(baos, "identity", identity);
         add(baos, "executable", spec.getExecutable());
         add(baos, "directory", spec.getDirectory());
+        add(baos, "batch", spec.isBatchJob());
         add(baos, "stdin", spec.getStdInput());
         add(baos, "stdout", spec.getStdOutput());
         add(baos, "stderr", spec.getStdError());
@@ -91,6 +92,11 @@ public class SubmitJobCommand extends Command {
             logger.debug("Job data: " + baos.toString());
         }
         addOutData(baos.toByteArray());
+    }
+    
+    private void add(ByteArrayOutputStream baos, String key, boolean value) 
+            throws IOException {
+        add(baos, key, String.valueOf(value));
     }
 
     private void add(ByteArrayOutputStream baos, String key, String value)
