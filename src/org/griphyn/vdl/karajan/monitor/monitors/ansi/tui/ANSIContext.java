@@ -344,7 +344,7 @@ public class ANSIContext {
                             e.printStackTrace();
                         }
                     }
-                    screen.status(key.toString());                   
+                    //screen.status(key.toString());
                 }
             }
             catch (Exception e) {
