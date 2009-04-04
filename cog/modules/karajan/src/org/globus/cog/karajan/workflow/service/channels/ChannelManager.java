@@ -234,7 +234,7 @@ public class ChannelManager {
 	}
 
 	public void handleChannelException(KarajanChannel channel, Exception e) {
-		logger.info("Handling channel exception");
+		logger.info("Handling channel exception", e == null ? new Throwable() : e);
 		if (channel.isOffline()) {
 			logger.info("Channel already shut down");
 			return;
@@ -336,6 +336,16 @@ public class ChannelManager {
 	public void unregisterChannel(KarajanChannel channel) throws ChannelException {
 		unregisterChannel(getMetaChannel(channel));
 	}
+	
+	public void removeChannel(ChannelContext ctx) throws ChannelException {
+	    if (ctx == null) {
+	        throw new NullPointerException("Null context");
+	    }
+        unregisterChannel(getMetaChannel(ctx));
+        synchronized(channels) {
+            channels.remove(ctx.getChannelID());
+        }
+    }
 
 	protected void unregisterChannel(MetaChannel channel) {
 		try {
@@ -373,6 +383,10 @@ public class ChannelManager {
 	public void shutdownChannel(KarajanChannel channel) throws ChannelException {
 		unregisterChannel(getMetaChannel(channel));
 	}
+	
+	public void shutdownChannel(ChannelContext ctx) throws ChannelException {
+        unregisterChannel(getMetaChannel(ctx));
+    }
 
 	private MetaChannel getMetaChannel(KarajanChannel channel) throws ChannelException {
 		if (channel instanceof MetaChannel) {
