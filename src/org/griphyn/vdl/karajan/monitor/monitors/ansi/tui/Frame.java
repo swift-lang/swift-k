@@ -21,11 +21,11 @@ public class Frame extends Container {
 			context.bgColor(bgColor);
 			context.fgColor(fgColor);
 			if (filled) {
-				context.filledFrame(sx, sy, width, height);
+				context.filledRect(sx + 1, sy + 1, width - 2, height - 2);
 			}
-			else {
-				context.frame(sx, sy, width, height);
-			}
+
+			context.frame(sx, sy, width, height);
+			context.bgColor(bgColor);
 			if (title != null) {
 				int tl = title.length() + 2;
 				int space = width - tl;

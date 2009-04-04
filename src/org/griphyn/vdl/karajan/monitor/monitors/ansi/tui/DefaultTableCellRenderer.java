@@ -18,19 +18,25 @@ public class DefaultTableCellRenderer implements TableCellRenderer {
 
     public Component getComponent(Table table, Object value,
             boolean isSelected, boolean hasFocus, int row, int column) {
-            setColors(table, isSelected);
+            setColors(table, isSelected, hasFocus);
             label.setText(String.valueOf(value));
             return label;
     }
     
-    private void setColors(Table table, boolean selected) {
+    private void setColors(Table table, boolean selected, boolean hasFocus) {
         if (!selected) {
             label.setBgColor(table.getBgColor());
             label.setFgColor(table.getFgColor());
         }
         else {
-            label.setBgColor(table.getHighlightBgColor());
-            label.setFgColor(table.getHighlightFgColor());
+            if (hasFocus) {
+                label.setBgColor(table.getFocusedBgColor());
+                label.setFgColor(table.getFgColor());
+            }
+            else {
+                label.setBgColor(table.getHighlightBgColor());
+                label.setFgColor(table.getHighlightFgColor());
+            }
         }
     }
 

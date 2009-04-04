@@ -5,12 +5,14 @@ package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 public class Component {
     public static final int BOTTOM_LAYER = 0;
     public static final int NORMAL_LAYER = 1;
     public static final int TOP_LAYER = 2;
 
-    protected int x, y, width, height, bgColor, fgColor;
+    protected int x, y, width, height, bgColor, fgColor, focusedBgColor;
     protected int sx, sy;
     private boolean visible, valid, focus, focusable;
     private Screen screen;
@@ -19,6 +21,8 @@ public class Component {
 
     public Component() {
         visible = true;
+        focusable = true;
+        focusedBgColor = ANSI.YELLOW;
     }
 
     protected void redraw() {
@@ -117,6 +121,14 @@ public class Component {
         this.fgColor = fgColor;
     }
 
+    public int getFocusedBgColor() {
+        return focusedBgColor;
+    }
+
+    public void setFocusedBgColor(int focusedBgColor) {
+        this.focusedBgColor = focusedBgColor;
+    }
+
     protected void draw(ANSIContext context) throws IOException {
 
     }
@@ -191,15 +203,19 @@ public class Component {
             if (parent.focus()) {
                 focus = parent.childFocused(this);
             }
+            redraw();
         }
         return focus;
     }
 
     public boolean unfocus() {
-        focus = false;
-        Container parent = getParent();
-        if (parent != null) {
-            parent.childUnfocused(this);
+        if (focus) {
+            focus = false;
+            Container parent = getParent();
+            if (parent != null) {
+                parent.childUnfocused(this);
+            }
+            redraw();
         }
         return true;
     }
@@ -233,5 +249,18 @@ public class Component {
 
     public void setLayer(int layer) {
         this.layer = layer;
+    }
+
+    public boolean focusNext() {
+        return false;
+    }
+
+    public boolean focusFirst() {
+        if (isFocusable()) {
+            return focus();
+        }
+        else {
+            return false;
+        }
     }
 }

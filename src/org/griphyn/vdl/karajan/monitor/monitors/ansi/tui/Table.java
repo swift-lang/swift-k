@@ -210,4 +210,18 @@ public class Table extends Container implements TableModelListener {
     public int getHighlightBgColor() {
         return fgColor;
     }
+
+    public boolean isFocusable() {
+        return true;
+    }
+
+    
+    public boolean focusFirst() {
+        focus();
+        return true;
+    }
+
+    public boolean focusNext() {
+        return false;
+    }
 }

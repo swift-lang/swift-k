@@ -42,7 +42,7 @@ public class Screen extends LayeredContainer {
 			context.fgColor(fgColor);
 			drawTree(context);
 			if (status != null) {
-				context.moveTo(0, height);
+				context.moveTo(1, height);
 				context.bgColor(ANSI.RED);
 				context.fgColor(ANSI.YELLOW);
 				context.text(status);

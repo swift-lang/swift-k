@@ -114,6 +114,20 @@ public class LayeredContainer extends Container {
 			return keyboardEvent(key, TOP_LAYER) || keyboardEvent(key, NORMAL_LAYER)
 					|| keyboardEvent(key, BOTTOM_LAYER);
 		}
+		else if (key.equals(Key.TAB)) {
+		    if (focused == null) {
+		        focusFirst();
+		    }
+		    else {
+		    	if (focused.keyboardEvent(key)) {
+		    	    return true;
+		    	}
+		    	else {
+		    		focused.focusNext();
+		    	}
+		    }
+		    return true;
+		}
 		else if (focused != null) {
 			return focused.keyboardEvent(key);
 		}
@@ -122,7 +136,50 @@ public class LayeredContainer extends Container {
 		}
 	}
 
-	protected boolean keyboardEvent(Key key, int layer) {
+	public boolean focusFirst() {
+	    for (int i = 0; i < layers.length; i++) {
+	        if (layers[i] != null) {
+	            Iterator j = layers[i].iterator();
+	            if (j.hasNext()) {
+	                Component comp = (Component) j.next();
+	                if (((Component) j.next()).focusFirst()) {
+	                    return true;
+	                }
+	            }
+	        }
+	    }
+	    return false;
+    }
+	
+	
+    public boolean focusNext() {
+        boolean found = false;
+        if (focused == null) {
+            return focusFirst();
+        }
+        else if (focused.focusNext()) {
+            return true;
+        }
+        
+        for (int i = 0; i < layers.length; i++) {
+            if (layers[i] != null) {
+                Iterator j = layers[i].iterator();
+                while (j.hasNext()) {
+                    if (found) {
+                        if (((Component) j.next()).focusFirst()) {
+                            return true;
+                        }
+                    }
+                    if (j.next() == focused) {
+                        found = true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    protected boolean keyboardEvent(Key key, int layer) {
 		if (layers[layer] == null) {
 			return false;
 		}

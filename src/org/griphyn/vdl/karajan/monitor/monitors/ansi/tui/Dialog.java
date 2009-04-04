@@ -3,47 +3,48 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
 
+import java.util.Iterator;
 
 public class Dialog extends Frame {
-	private Component sfocus;
+    private Component sfocus;
 
-	public Dialog() {
-		bgColor = ANSI.WHITE;
-		fgColor = ANSI.BLACK;
-		setFilled(true);
-	}
+    public Dialog() {
+        bgColor = ANSI.WHITE;
+        fgColor = ANSI.BLACK;
+        setFilled(true);
+    }
 
-	public void display(Screen screen) {
-		sfocus = screen.getFocusedComponent();
-		screen.add(this);
-		focus();
-	}
+    public void display(Screen screen) {
+        sfocus = screen.getFocusedComponent();
+        screen.add(this);
+        focusFirst();
+    }
 
-	public void close() {
-		getScreen().remove(this);
-		setVisible(false);
-		if (sfocus != null) {
-			sfocus.focus();
-		}
-	}
+    public void close() {
+        getScreen().remove(this);
+        setVisible(false);
+        if (sfocus != null) {
+            sfocus.focus();
+        }
+    }
 
-	public void center(Container c) {
-		x = (c.getWidth() - width) / 2;
-		y = (c.getHeight() - height) / 2;
-	}
+    public void center(Container c) {
+        x = (c.getWidth() - width) / 2;
+        y = (c.getHeight() - height) / 2;
+    }
 
-	public boolean keyboardEvent(Key key) {
-		if (key.getKey() == Key.ESC) {
-			close();
-			return true;
-		}
-		else {
-			return super.keyboardEvent(key);
-		}
-	}
+    public boolean keyboardEvent(Key key) {
+        if (key.getKey() == Key.ESC) {
+            close();
+            return true;
+        }
+        else {
+            return super.keyboardEvent(key);
+        }
+    }
 
-    public static int displaySimpleDialog(Screen screen, String title, String msg,
-            String[] buttons) {
+    public static int displaySimpleDialog(Screen screen, String title,
+            String msg, String[] buttons) {
         final Dialog d = new Dialog();
         d.setTitle(title);
         Label l = new Label();
@@ -68,7 +69,8 @@ public class Dialog extends Frame {
                         }
                     }
                     d.close();
-                }});
+                }
+            });
             d.add(bs[i]);
         }
         d.center(screen);
@@ -83,5 +85,26 @@ public class Dialog extends Frame {
             }
         }
         return r[0];
+    }
+
+    public boolean focusNext() {
+        if (focused == null) {
+            return focusFirst();
+        }
+        else if (focused.focusNext()) {
+            return true;
+        }
+        Iterator i = components.iterator();
+        while (i.hasNext()) {
+            if (i.next() == focused) {
+                while (i.hasNext()) {
+                    Component comp = (Component) i.next();
+                    if (comp.focusFirst()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return focusFirst();
     }
 }

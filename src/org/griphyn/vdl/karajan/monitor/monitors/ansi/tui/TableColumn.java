@@ -28,7 +28,7 @@ public class TableColumn extends Container {
         int fr = table.getFirstRow();
         for (int i = 0; i < Math.min(model.getRowCount(), height - 2); i++) {
             Component comp = table.getCellRenderer().getComponent(table,
-                model.getValueAt(i + fr, index), i + fr == selectedRow, false,
+                model.getValueAt(i + fr, index), i + fr == selectedRow, getParent().hasFocus(),
                 i + fr, index);
             comp.setAbsoluteLocation(sx, sy + i + 2);
             comp.setSize(getWidth(), 1);

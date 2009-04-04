@@ -15,8 +15,8 @@ public class Button extends Component {
 
 	public Button(String label) {
 		setLabel(label);
-		bgColor = ANSI.BLACK;
-		fgColor = ANSI.WHITE;
+		bgColor = ANSI.WHITE;
+		fgColor = ANSI.BLACK;
 	}
 
 	public Button() {
@@ -43,21 +43,22 @@ public class Button extends Component {
 		context.lock();
 		try {
 			context.moveTo(sx, sy);
+			context.fgColor(getFgColor());
+			context.bgColor(getBgColor());
+			context.putChar('[');
 			if (this.hasFocus()) {
-				context.putChar('[');
-			}
-			else {
-				context.putChar(' ');
+			    context.bgColor(ANSI.YELLOW);
 			}
 			context.spaces(pad);
 			twlabel.draw(context);
-			context.spaces(width - 2 - pad - len);
 			if (this.hasFocus()) {
-				context.putChar(']');
-			}
-			else {
-				context.putChar(' ');
-			}
+                context.bgColor(ANSI.YELLOW);
+            }
+			context.spaces(width - 2 - pad - len);
+			
+            context.bgColor(getBgColor());
+            context.fgColor(getFgColor());
+			context.putChar(']');
 		}
 		finally {
 			context.unlock();
