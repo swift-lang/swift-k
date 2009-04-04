@@ -19,6 +19,7 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
@@ -44,8 +45,7 @@ public class Worker implements StatusListener {
     private Status error;
     private ChannelContext channelContext;
 
-    public Worker(WorkerManager manager, String id, Seconds maxWallTime,
-            Task w, Task p) {
+    public Worker(WorkerManager manager, String id, Seconds maxWallTime, Task w, Task p) {
         this.manager = manager;
         this.id = id;
         this.maxWallTime = maxWallTime;
@@ -62,8 +62,8 @@ public class Worker implements StatusListener {
         int code = s.getStatusCode();
         Task src = (Task) event.getSource();
         if (code == Status.FAILED) {
-            s.setMessage((s.getMessage() == null ? "" : s.getMessage())
-                    + "\n" + src.getStdOutput() + "\n" + src.getStdError());
+            s.setMessage((s.getMessage() == null ? "" : s.getMessage()) + "\n" + src.getStdOutput()
+                    + "\n" + src.getStdError());
             error = s;
         }
         else if (code == Status.COMPLETED) {
@@ -72,12 +72,10 @@ public class Worker implements StatusListener {
                 logger.info("Worker stderr: " + src.getStdError());
             }
             if (starting) {
-                error = new StatusImpl(Status.FAILED,
-                        "Worker ended prematurely", null);
+                error = new StatusImpl(Status.FAILED, "Worker ended prematurely", null);
             }
             else {
-                error = new StatusImpl(Status.COMPLETED, "Worker exited",
-                        null);
+                error = new StatusImpl(Status.COMPLETED, "Worker exited", null);
             }
         }
         else if (code == Status.CANCELED) {
@@ -85,6 +83,14 @@ public class Worker implements StatusListener {
         }
         if (s.isTerminal()) {
             manager.workerTerminated(this);
+            if (channelContext != null) {
+                try {
+                    ChannelManager.getManager().removeChannel(channelContext);
+                }
+                catch (ChannelException e) {
+                    logger.warn("Failed to remove worker channel", e);
+                }
+            }
         }
     }
 
@@ -129,8 +135,10 @@ public class Worker implements StatusListener {
 
     public void setScheduledTerminationTime(Seconds s) {
         this.scheduledTerminationTime = s;
-        shutdownAfter(s.add(SHUTDOWN_RESERVE).subtract(
-                WorkerManager.TIME_RESERVE).toMilliseconds()
+        if (logger.isInfoEnabled()) {
+            logger.info("Worker " + id + ", setting scheduled termination time to " + s);
+        }
+        shutdownAfter(s.add(SHUTDOWN_RESERVE).subtract(WorkerManager.TIME_RESERVE).toMilliseconds()
                 - System.currentTimeMillis());
     }
 
@@ -144,8 +152,7 @@ public class Worker implements StatusListener {
                     // what this really means is that a walltime spec was wrong
                     // and that the queuing system will likely kill the worker
                     // anyway
-                    logger
-                            .info("Worker still has a running task. Shutdown canceled.");
+                    logger.info("Worker still has a running task. " + "Shutdown canceled.");
                 }
             }
         }, ms);
@@ -154,7 +161,7 @@ public class Worker implements StatusListener {
     public Status getStatus() {
         return error;
     }
-    
+
     protected void setStatus(Status status) {
         this.error = status;
     }
@@ -174,18 +181,14 @@ public class Worker implements StatusListener {
     public ShutdownCallback shutdown() {
         try {
             logger.info("Shutting down worker: " + this);
-            KarajanChannel channel = ChannelManager.getManager()
-                    .reserveChannel(channelContext);
+            KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
             ShutdownCommand sc = new ShutdownCommand();
             ShutdownCallback stc = new ShutdownCallback();
             sc.executeAsync(channel, stc);
             return stc;
         }
         catch (Exception e) {
-            logger
-                    .warn(
-                            "Failed to shut down worker nicely. Trying to cancel task.",
-                            e);
+            logger.warn("Failed to shut down worker nicely. " + "Trying to cancel task.", e);
             try {
                 manager.getTaskHandler().cancel(task);
                 logger.info("Worker task canceled");
@@ -198,8 +201,7 @@ public class Worker implements StatusListener {
     }
 
     public boolean isPastScheduledTerminationTime() {
-        return scheduledTerminationTime.toMilliseconds()
-                - System.currentTimeMillis() < 0;
+        return scheduledTerminationTime.toMilliseconds() - System.currentTimeMillis() < 0;
     }
 
     public synchronized void setRunning(Task task) {
@@ -210,29 +212,29 @@ public class Worker implements StatusListener {
             shutdownAfter(1);
         }
     }
-    
-    public static class ShutdownCallback implements Command.Callback {
+
+    public class ShutdownCallback implements Command.Callback {
         private boolean done;
-        
+
         public void errorReceived(Command cmd, String msg, Exception t) {
             logger.info("Worker shut down failed: " + this + ". " + msg, t);
-            synchronized(this) {
+            synchronized (this) {
                 done = true;
                 notifyAll();
             }
         }
 
         public void replyReceived(Command cmd) {
-            logger.info("Worker shut down: " + this);
-            synchronized(this) {
+            logger.info("Worker shut down: " + Worker.this);
+            synchronized (this) {
                 done = true;
                 notifyAll();
             }
         }
-        
+
         public void waitFor() throws InterruptedException {
-            synchronized(this) {
-                while(!done) {
+            synchronized (this) {
+                while (!done) {
                     wait();
                 }
             }
