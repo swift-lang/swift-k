@@ -44,6 +44,7 @@ my %HANDLERS = (
 	"SUBMITJOB" => \&submitjob,
 	"REGISTER"  => \&register,
 	"HEARTBEAT" => \&heartbeat,
+	"WORKERSHELLCMD" => \&workershellcmd,
 );
 
 my @CMDQ = ();
@@ -403,6 +404,31 @@ sub heartbeat {
 	sendReply($tag, ("OK"));
 }
 
+sub workershellcmd {
+	my ($tag, $timeout, $msgs) = @_;
+	my $cmd = $$msgs[1];
+	my $out;
+	if ($cmd =~ m/cd\s*(.*)/) {
+		wlog "chdir $1\n";
+		chdir $1;
+		if ($! ne '') {
+			sendError($tag, ("$!"));
+		}
+		else {
+			sendReply($tag, ("OK", ""));
+		}
+	}
+	elsif ($cmd =~ m/mls\s*(.*)/) {
+		wlog "mls $1\n";
+		$out = `ls -d $1 2>/dev/null`;
+		sendReply($tag, ("OK", "$out"));
+	}
+	else {
+		$out = `$cmd 2>&1`;
+		sendReply($tag, ("OK", "$out"));
+	}
+}
+
 sub submitjob {
 	my ($tag, $timeout, $msgs) = @_;
 	my $desc = $$msgs[0];
@@ -431,7 +457,7 @@ sub submitjob {
 		}
 	}
 	if (checkJob($tag)) {
-		sendCmd((\&nullCB, "JOBSTATUS", $JOBID, "$ACTIVE", "0", ""));
+		sendCmd((\&nullCB, "JOBSTATUS", $JOBID, "$ACTIVE", "0", "workerid=$ID"));
 		forkjob();
 	}
 }
@@ -452,6 +478,7 @@ sub checkJob() {
 		return 0;
 	}
 	else {
+		chdir $JOB{directory};
 		sendReply($tag, ("OK"));
 		return 1;
 	}
