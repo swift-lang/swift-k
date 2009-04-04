@@ -62,6 +62,7 @@ public class SubmitJobHandler extends RequestHandler {
                 + new IdentityImpl().getValue()));
         spec.setExecutable(h.read("executable").intern());
         spec.setDirectory(h.read("directory"));
+        spec.setBatchJob(h.readBool("batch"));
         spec.setStdInput(h.read("stdin"));
         spec.setStdOutput(h.read("stdout"));
         spec.setStdError(h.read("stderr"));
@@ -122,6 +123,10 @@ public class SubmitJobHandler extends RequestHandler {
 
         public Helper(byte[] buf) {
             is = new ByteArrayInputStream(buf);
+        }
+        
+        public boolean readBool(String key) throws IOException, ProtocolException {
+            return Boolean.valueOf(read(key)).booleanValue();
         }
 
         public String read(String key) throws IOException, ProtocolException {
