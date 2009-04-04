@@ -178,7 +178,8 @@ public class WorkerManager extends Thread {
             int taskSeconds = AssociatedTask.getMaxWallTime(prototype).getSeconds();
             if (TIME_RESERVE.add(taskSeconds).isGreaterThan(maxWallTime)) {
                 prototype.setStatus(new StatusImpl(Status.FAILED,
-                    "Job cannot be run with the given max walltime worker constraint", null));
+                    "Job cannot be run with the given max walltime worker constraint (task: " 
+                    + taskSeconds + ", maxwalltime: " + maxWallTime + ")", null));
                 return;
             }
             logger.debug("Overridden worker maxwalltime is " + maxWallTime);
@@ -390,7 +391,7 @@ public class WorkerManager extends Thread {
                 }
                 worker.setFailed(true);
                 if (s.getStatusCode() != Status.FAILED) {
-                     worker.setStatus(new StatusImpl(Status.FAILED, "Worker ended prematurely", null));
+                    worker.setStatus(new StatusImpl(Status.FAILED, "Worker ended prematurely", null));
                 }
                 if (requested.remove(worker.getId()) != null) {
                     startingTasks.remove(running);
