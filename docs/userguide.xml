@@ -2041,12 +2041,9 @@ member, separated by whitespace, in the same order as the header row.
 For arrays of structs, the file should contain a heading row listing
 structure member names separated by whitespace. There should be one row
 for each element of the array, with structure member elements listed in
-the same order as the header row and separated by whitespace.
+the same order as the header row and separated by whitespace. (since Swift 0.4)
 			</para>
 
-			<para>
-This procedure is new in 0.4.
-			</para>
 		</section>
 		<section id="procedure.readdata2"><title>readdata2</title>
 			<para>
@@ -2082,7 +2079,7 @@ m = readData2("readData2.in");
 			</para>
 			
 			<para>
-This procedure is new in 0.7.
+(since Swift 0.7)
 			</para>
 		</section>
 		<section id="procedure.print"><title>print</title>
