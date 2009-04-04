@@ -12,7 +12,7 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 public final class Seconds {
     private long seconds;
-    public static final Seconds NEVER = new Seconds(Long.MAX_VALUE - Integer.MAX_VALUE);
+    public static final Seconds NEVER = new Seconds((Long.MAX_VALUE - Integer.MAX_VALUE) / 1000);
 
     public Seconds(long seconds) {
         this.seconds = seconds;
