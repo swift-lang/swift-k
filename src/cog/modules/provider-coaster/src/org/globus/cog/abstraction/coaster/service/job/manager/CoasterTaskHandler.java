@@ -65,10 +65,8 @@ public class CoasterTaskHandler implements TaskHandler, Callback {
             TaskSubmissionException {
         try {
             if (logger.isInfoEnabled()) {
-                logger
-                        .info("Submitting "
-                                + task.getIdentity()
-                                + " to "
+                logger.info("Submitting "
+                                + task.getIdentity() + " to "
                                 + task.getService(0).getServiceContact()
                                         .getContact());
             }
