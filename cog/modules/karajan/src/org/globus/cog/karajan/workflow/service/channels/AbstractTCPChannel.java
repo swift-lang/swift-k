@@ -68,6 +68,7 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 	}
 
 	public void shutdown() {
+	    unregister();
 		if (isLocalShutdown()) {
 			return;
 		}
