@@ -25,6 +25,8 @@ import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
 
+import edu.emory.mathcs.backport.java.util.Collections;
+
 public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChannel implements
 		Purgeable {
 	public static final Logger logger = Logger.getLogger(AbstractStreamKarajanChannel.class);
@@ -150,6 +152,10 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	protected void register() {
 		getMultiplexer(FAST).register(this);
 	}
+	
+	protected void unregister() {
+        getMultiplexer(FAST).unregister(this);
+    }
 	
 	public void flush() throws IOException {
 		outputStream.flush();
@@ -302,8 +308,8 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 			this.id = id;
 			setDaemon(true);
 			channels = new HashSet();
-			remove = new ArrayList();
-			add = new ArrayList();
+			remove = Collections.synchronizedList(new ArrayList());
+			add = Collections.synchronizedList(new ArrayList());
 		}
 
 		public synchronized void register(AbstractStreamKarajanChannel channel) {
@@ -371,6 +377,10 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				logger.info("Multiplexer finished");
 				terminated = true;
 			}
+		}
+		
+		public void unregister(AbstractStreamKarajanChannel channel) {
+		    remove.add(channel);
 		}
 
 		private void shutdown(AbstractStreamKarajanChannel channel, Exception e) {
