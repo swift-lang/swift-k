@@ -31,6 +31,7 @@ public class RuntimeStats extends FunctionsCollection {
 		"uninitialized",
 		"Initializing",
 		"Selecting site",
+		"Initializing site shared directory",
 		"Stage in",
 		"Submitting",
 		"Submitted",
