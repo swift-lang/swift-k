@@ -306,6 +306,9 @@ public class Bootstrap {
         if (logger != null) {
             logger.log(message);
         }
+        //one for the log, one for reporting back to the client
+        //if middleware permits
+        System.out.println(message);
         System.err.println(message);
         System.exit(1);
     }
