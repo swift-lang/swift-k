@@ -17,6 +17,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
+import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
@@ -62,7 +63,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             	String provider = getBootHandlerProvider(task);
                 url = ServiceManager.getDefault().reserveService(task, provider);
                 cred = getCredentials(task);
-                task.getService(0).getServiceContact().setContact(url);
+                Service old = task.getService(0);
+                ServiceImpl s = new ServiceImpl(old.getProvider(), 
+                    old.getType(), new ServiceContactImpl(url), 
+                    old.getSecurityContext());
+                task.setService(0, s);
             }
             else {
                 url = task.getService(0).getServiceContact().getContact();
