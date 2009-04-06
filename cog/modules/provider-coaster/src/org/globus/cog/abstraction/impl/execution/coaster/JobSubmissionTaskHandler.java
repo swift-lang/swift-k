@@ -63,11 +63,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             	String provider = getBootHandlerProvider(task);
                 url = ServiceManager.getDefault().reserveService(task, provider);
                 cred = getCredentials(task);
-                Service old = task.getService(0);
-                ServiceImpl s = new ServiceImpl(old.getProvider(), 
-                    old.getType(), new ServiceContactImpl(url), 
-                    old.getSecurityContext());
-                task.setService(0, s);
+                task.getService(0).setAttribute("coaster-url", url);
             }
             else {
                 url = task.getService(0).getServiceContact().getContact();
