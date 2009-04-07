@@ -71,7 +71,6 @@ public class ServiceManager implements StatusListener {
         return defaultManager;
     }
 
-    private String bootstrapScript;
     private BootstrapService bootstrapService;
     private LocalService localService;
     private Map services;
@@ -276,9 +275,6 @@ public class ServiceManager implements StatusListener {
 
     private synchronized String loadBootstrapScript(String[] args)
             throws TaskSubmissionException {
-        if (bootstrapScript != null) {
-            return bootstrapScript;
-        }
         URL u = ServiceManager.class.getClassLoader().getResource(
                 BOOTSTRAP_SCRIPT);
         if (u == null) {
@@ -297,8 +293,7 @@ public class ServiceManager implements StatusListener {
                 line = br.readLine();
             }
             sb.append("\"|/bin/bash");
-            bootstrapScript = sb.toString();
-            return bootstrapScript;
+            return sb.toString();
         }
         catch (IOException e) {
             throw new TaskSubmissionException(
@@ -384,7 +379,7 @@ public class ServiceManager implements StatusListener {
             r = sr.nextInt();
         }
         catch (NoSuchAlgorithmException e) {
-            r = (int) Math.random() * Integer.MAX_VALUE;
+            r = (int) (Math.random() * Integer.MAX_VALUE);
         }
         if (r < 0) {
             return '0' + String.valueOf(-r);
