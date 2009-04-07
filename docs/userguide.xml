@@ -3473,7 +3473,10 @@ and GridFTP are poorly suited.
 The coaster mechanism submits a head job using some other execution
 mechanism such as GRAM, and for each worker node that will be used in
 a remote cluster, it submits a worker job, again using some other
-execution mechanism such as GRAM.
+execution mechanism such as GRAM. Details on the design of the coaster
+mechanism can be found
+<ulink url="http://http://wiki.cogkit.org/wiki/Coasters">
+here</ulink>
 </para>
 <para>
 The head job manages file transfers and the dispatch of execution jobs
