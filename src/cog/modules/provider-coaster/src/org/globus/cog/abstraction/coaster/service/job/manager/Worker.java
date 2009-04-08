@@ -167,7 +167,7 @@ public class Worker implements StatusListener {
     }
 
     public String toString() {
-        return "Worker[" + id + "]";
+        return "Worker[" + id + ", term = " + scheduledTerminationTime + "]";
     }
 
     public void setChannelContext(ChannelContext cc) {
@@ -179,17 +179,28 @@ public class Worker implements StatusListener {
     }
 
     public ShutdownCallback shutdown() {
+        Status s = task.getStatus();
+        if (s != null && s.isTerminal()) {
+            logger.info("Worker is already shut down");
+            return null;
+        }
         try {
             logger.info("Shutting down worker: " + this);
+            manager.removeWorker(this);
             KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
+            if (channel == null) {
+                throw new RuntimeException("Could not get a channel for worker " + this);
+            }
             ShutdownCommand sc = new ShutdownCommand();
             ShutdownCallback stc = new ShutdownCallback();
             sc.executeAsync(channel, stc);
+            logger.info("Shutdown command sent: " + this);
             return stc;
         }
         catch (Exception e) {
-            logger.warn("Failed to shut down worker nicely. " + "Trying to cancel task.", e);
+            logger.warn("Failed to shut down worker nicely. Trying to cancel task.", e);
             try {
+
                 manager.getTaskHandler().cancel(task);
                 logger.info("Worker task canceled");
             }
@@ -200,13 +211,14 @@ public class Worker implements StatusListener {
         }
     }
 
-    public boolean isPastScheduledTerminationTime() {
-        return scheduledTerminationTime.toMilliseconds() - System.currentTimeMillis() < 0;
+    public boolean isinReserve() {
+        return scheduledTerminationTime.subtract(WorkerManager.TIME_RESERVE).toMilliseconds() - 
+            System.currentTimeMillis() < 0;
     }
 
     public synchronized void setRunning(Task task) {
         this.running = task;
-        if (task == null && isPastScheduledTerminationTime()) {
+        if (task == null && isinReserve()) {
             // that's to avoid running the shutdown in some strange thread it
             // shouldn't be running in
             shutdownAfter(1);
