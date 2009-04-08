@@ -2189,129 +2189,7 @@ may impair the correct functionality of Swift.
 				
 				<variablelist>
 					<title>Swift Properties</title>
-					
-					<varlistentry>
-						<term>
-							<property>sites.file</property>
-						</term>
-						<listitem>
-							
-							<para>
-								Valid values: <parameter>&lt;file&gt;</parameter>
-							</para>
-							
-							<para>
-								Default value: ${<varname>swift.home</varname>}<literal>/etc/sites.xml</literal>
-							</para>
-						
-							<para>
-							
-								Points to the location of the site
-								catalog, which contains a list of all sites that
-								Swift should use.
-
-								
-							</para>
-						</listitem>
-					</varlistentry>
-					
-					<varlistentry>
-						<term>
-							<property>tc.file</property>
-						</term>
-						<listitem>
-							<para>
-								Valid values: <parameter>&lt;file&gt;</parameter>
-							</para>
-							
-							<para>
-								Default value: ${<varname>swift.home</varname>}<literal>/etc/tc.data</literal>
-							</para>
-						
-							<para>
-							
-								Points to the location of the transformation
-								catalog file which contains information about
-								installed applications. Details about the format
-								of the transformation catalog can be found
-								<ulink
-								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_TransformationCatalog.html">here</ulink>.
-								
-							</para>
-						</listitem>
-					</varlistentry>
-					
-					<varlistentry>
-						<term>
-							<property>ip.address</property>
-						</term>
-						<listitem>
-						
-							<para>
-								Valid values: <parameter>&lt;ipaddress&gt;</parameter>
-							</para>
-							
-							<para>
-								Default value: N/A
-							</para>
-						
-							<para>
-							
-								The Globus GRAM service uses a callback
-								mechanism to send notifications about the status
-								of submitted jobs. The callback mechanism
-								requires that the Swift client be reachable from
-								the hosts the GRAM services are running on.
-								Normally, Swift can detect the correct IP address
-								of the client machine. However, in certain cases
-								(such as the client machine having more than one
-								network interface) the automatic detection
-								mechanism is not reliable. In such cases, the IP
-								address of the Swift client machine can be
-								specified using this property. The value of this
-								property must be a numeric address without quotes.
-								
-							</para>
-						</listitem>
-					</varlistentry>
-					
-					
-					<varlistentry>
-						<term>
-							<property>lazy.errors</property>
-						</term>
-						<listitem>
-						
-							<para>
-								Valid values: <literal>true</literal>, <literal>false</literal>
-							</para>
-							
-							<para>
-								Default value: <literal>false</literal>
-							</para>
-						
-							<para>
-							
-								Swift can report application errors in two
-								modes, depending on the value of this property.
-								If set to <constant>false</constant>, Swift will
-								report the first error encountered and
-								immediately stop execution. If set to
-								<constant>true</constant>, Swift will attempt to
-								run as much as possible from a SwiftScript program before
-								stopping execution and reporting all errors
-								encountered.
-							</para>
-							<para>When developing SwiftScript programs, using the
-								default value of <constant>false</constant> can
-								make the program easier to debug. However
-								in production runs, using <constant>true</constant>
-								will allow more of a SwiftScript program to be run before
-								Swift aborts execution.
-							</para>
-						</listitem>
-					</varlistentry>
-					
+		
 					<varlistentry id="property.caching.algorithm">
 						<term>
 							<property>caching.algorithm</property>
@@ -2361,7 +2239,77 @@ may impair the correct functionality of Swift.
 							</para>
 						</listitem>
 					</varlistentry>
+				
+					<varlistentry id="property.clustering.enabled">
+						<term>
+							<property>clustering.enabled</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+							
+							<para>
+								Enables <link linkend="clustering">clustering</link>.
+							</para>
+							
+						</listitem>
+					</varlistentry>
+						
+					<varlistentry id="property.clustering.min.time">
+						<term>
+							<property>clustering.min.time</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>60</literal>
+							</para>
+						
+							<para>
+							
+								Indicates the threshold wall time for
+								clustering, in seconds. Jobs that have a 
+								wall time smaller than the value of this
+								property will be considered for clustering.
+								
+							</para>
+						</listitem>
+					</varlistentry>
 
+					<varlistentry id="property.clustering.queue.delay">
+						<term>
+							<property>clustering.queue.delay</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>4</literal>
+							</para>
+							
+							<para>
+							
+								This property indicates the interval, in
+								seconds, at which the clustering queue is
+								processed.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+					
 					<varlistentry id="property.execution.retries">
 						<term>execution.retries</term>
 						<listitem>
@@ -2378,8 +2326,141 @@ may impair the correct functionality of Swift.
 							</para>
 						</listitem>
 					</varlistentry>
-
 					
+					<varlistentry>
+						<term>
+							<property>ip.address</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;ipaddress&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: N/A
+							</para>
+						
+							<para>
+							
+								The Globus GRAM service uses a callback
+								mechanism to send notifications about the status
+								of submitted jobs. The callback mechanism
+								requires that the Swift client be reachable from
+								the hosts the GRAM services are running on.
+								Normally, Swift can detect the correct IP address
+								of the client machine. However, in certain cases
+								(such as the client machine having more than one
+								network interface) the automatic detection
+								mechanism is not reliable. In such cases, the IP
+								address of the Swift client machine can be
+								specified using this property. The value of this
+								property must be a numeric address without quotes.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+		
+					<varlistentry>
+						<term>
+							<property>kickstart.always.transfer</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+							
+							<para>
+							
+								This property controls when output from
+								Kickstart is transfered back to the submit site,
+								if Kickstart is enabled. When set to
+								<literal>false</literal>, Kickstart output is
+								only transfered for jobs that fail. If set to
+								<literal>true</literal>, Kickstart output is
+								transfered after every job is completed or
+								failed.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<property>kickstart.enabled</property>
+						</term>
+						<listitem>
+							
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>, <literal>maybe</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>maybe</literal>
+							</para>
+								
+							<para>
+								
+								This option allows controlling of
+								when Swift uses <link linkend="kickstart">Kickstart</link>. A value of
+								<literal>false</literal> disables the use of
+								Kickstart, while a value of
+								<literal>true</literal> enables the use of
+								Kickstart, in which case sites specified in the
+								<filename type="file">sites.xml</filename> file
+								must have valid
+								<parameter>gridlaunch</parameter> attributes.
+								The <literal>maybe</literal> value will
+								enable the use of Kickstart only
+								on sites that have the
+								<parameter>gridlaunch</parameter> attribute
+								specified.
+
+							</para>
+						</listitem>
+					</varlistentry>
+					
+					<varlistentry>
+						<term>
+							<property>lazy.errors</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+						
+							<para>
+							
+								Swift can report application errors in two
+								modes, depending on the value of this property.
+								If set to <constant>false</constant>, Swift will
+								report the first error encountered and
+								immediately stop execution. If set to
+								<constant>true</constant>, Swift will attempt to
+								run as much as possible from a SwiftScript program before
+								stopping execution and reporting all errors
+								encountered.
+							</para>
+							<para>When developing SwiftScript programs, using the
+								default value of <constant>false</constant> can
+								make the program easier to debug. However
+								in production runs, using <constant>true</constant>
+								will allow more of a SwiftScript program to be run before
+								Swift aborts execution.
+							</para>
+						</listitem>
+					</varlistentry>
+				
 					<varlistentry>
 						<term>
 							<property>pgraph</property>
@@ -2472,136 +2553,48 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 							</para>
 						</listitem>
 					</varlistentry>
-					
-					<varlistentry id="property.clustering.enabled">
-						<term>
-							<property>clustering.enabled</property>
-						</term>
-						<listitem>
-						
-							<para>
-								Valid values: <literal>true</literal>, <literal>false</literal>
-							</para>
-							
-							<para>
-								Default value: <literal>false</literal>
-							</para>
-							
-							<para>
-								Enables <link linkend="clustering">clustering</link>.
-							</para>
-							
-						</listitem>
-					</varlistentry>
-					
-					<varlistentry id="property.clustering.queue.delay">
-						<term>
-							<property>clustering.queue.delay</property>
-						</term>
-						<listitem>
-						
-							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>
-							</para>
-							
-							<para>
-								Default value: <literal>4</literal>
-							</para>
-							
-							<para>
-							
-								This property indicates the interval, in
-								seconds, at which the clustering queue is
-								processed.
-								
-							</para>
-						</listitem>
-					</varlistentry>
-					
-					<varlistentry id="property.clustering.min.time">
-						<term>
-							<property>clustering.min.time</property>
-						</term>
-						<listitem>
-						
-							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>
-							</para>
-							
-							<para>
-								Default value: <literal>60</literal>
-							</para>
-						
-							<para>
-							
-								Indicates the threshold wall time for
-								clustering, in seconds. Jobs that have a 
-								wall time smaller than the value of this
-								property will be considered for clustering.
-								
-							</para>
-						</listitem>
-					</varlistentry>
-					
+			
 					<varlistentry>
 						<term>
-							<property>kickstart.enabled</property>
+							<property>sitedir.keep</property>
 						</term>
 						<listitem>
-							
 							<para>
-								Valid values: <literal>true</literal>, <literal>false</literal>, <literal>maybe</literal>
+								Valid values: <parameter>true</parameter>, <parameter>false</parameter>
 							</para>
-							
-							<para>
-								Default value: <literal>maybe</literal>
-							</para>
-								
-							<para>
-								
-								This option allows controlling of
-								when Swift uses <link linkend="kickstart">Kickstart</link>. A value of
-								<literal>false</literal> disables the use of
-								Kickstart, while a value of
-								<literal>true</literal> enables the use of
-								Kickstart, in which case sites specified in the
-								<filename type="file">sites.xml</filename> file
-								must have valid
-								<parameter>gridlaunch</parameter> attributes.
-								The <literal>maybe</literal> value will
-								enable the use of Kickstart only
-								on sites that have the
-								<parameter>gridlaunch</parameter> attribute
-								specified.
 
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+
+							<para>
+Indicates whether the working directory on the remote site should be
+left intact even when a run completes successfully. This can be
+used to inspect the site working directory for debugging purposes.
 							</para>
 						</listitem>
 					</varlistentry>
 					
 					<varlistentry>
 						<term>
-							<property>kickstart.always.transfer</property>
+							<property>sites.file</property>
 						</term>
 						<listitem>
+							
+							<para>
+								Valid values: <parameter>&lt;file&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: ${<varname>swift.home</varname>}<literal>/etc/sites.xml</literal>
+							</para>
 						
 							<para>
-								Valid values: <literal>true</literal>, <literal>false</literal>
-							</para>
 							
-							<para>
-								Default value: <literal>false</literal>
-							</para>
-							
-							<para>
-							
-								This property controls when output from
-								Kickstart is transfered back to the submit site,
-								if Kickstart is enabled. When set to
-								<literal>false</literal>, Kickstart output is
-								only transfered for jobs that fail. If set to
-								<literal>true</literal>, Kickstart output is
-								transfered after every job is completed or
-								failed.
+								Points to the location of the site
+								catalog, which contains a list of all sites that
+								Swift should use.
+
 								
 							</para>
 						</listitem>
@@ -2609,120 +2602,61 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 
 					<varlistentry>
 						<term>
-							<property>wrapperlog.always.transfer</property>
+							<property>status.mode</property>
 						</term>
 						<listitem>
-						
 							<para>
-								Valid values: <literal>true</literal>, <literal>false</literal>
+								Valid values: <parameter>files</parameter>, <parameter>provider</parameter>
 							</para>
-							
+
 							<para>
-								Default value: <literal>false</literal>
+								Default value: <literal>files</literal>
 							</para>
-							
+
 							<para>
-							
-								This property controls when output from
-								the Swift remote wrapper is transfered
-								back to the submit site. When set to
-								<literal>false</literal>, wrapper logs are 
-								only transfered for jobs that fail. If set to
-								<literal>true</literal>, wrapper logs are
-								transfered after every job is completed or
-								failed.
-								
+Controls how Swift will communicate the result code of running user programs
+from workers to the submit side. In <literal>files</literal> mode, a file
+indicating success or failure will be created on the site shared filesystem.
+In <literal>provider</literal> mode, the execution provider job status will
+be used.
 							</para>
-						</listitem>
-					</varlistentry>
-					
-					<varlistentry>
-						<term>
-							<property>throttle.submit</property>
-						</term>
-						<listitem>
-						
 							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
-							</para>
-							
-							<para>
-								Default value: <literal>4</literal>
-							</para>
-						
-							<para>
-							
-								Limits the number of concurrent submissions for
-								a run. This throttle only limits
-								the number of concurrent tasks (jobs) that are
-								being sent to sites, not the total number of
-								concurrent jobs that can be run. The submission
-								stage in GRAM is one of the most CPU expensive
-								stages (due mostly to the mutual authentication
-								and delegation). Having too many  concurrent
-								submissions can overload either or both the
-								submit host CPU and the remote host/head node
-								causing degraded performance.
-								
-							</para>
-							
-						</listitem>
-					</varlistentry>
-					
-					<varlistentry>
-						<term>
-							<property>throttle.host.submit</property>
-						</term>
-						<listitem>
-						
-							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
-							</para>
-							
-							<para>
-								Default value: <literal>2</literal>
-							</para>
-							
-							<para>
-							
-								Limits the number of concurrent submissions for
-								any of the sites Swift will try to send jobs to.
-								In other words it guarantees that no more than
-								the  value of this throttle jobs sent to any
-								site will be concurrently in a state of being
-								submitted.
-								
-							</para>
-						</listitem>
-					</varlistentry>
-					
-					<varlistentry>
-						<term>
-							<property>throttle.transfers</property>
-						</term>
-						<listitem>
-						
-							<para>
-								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
-							</para>
-						
-							<para>
-								Default value: <literal>4</literal>	
-							</para>
-							
-							<para>
-							
-								Limits the total number of concurrent file
-								transfers that can happen at any given time.
-								File transfers consume bandwidth. Too many
-								concurrent transfers can cause the network to be
-								overloaded preventing various other signaling
-								traffic from flowing properly.
-								
+<literal>provider</literal> mode requires the underlying job execution system
+to correctly return exit codes. In at least the cases of GRAM2, and clusters
+used with any provider, exit codes are not returned, and so
+<literal>files</literal> mode must be used in those cases.  Otherwise,
+<literal>provider</literal> mode can be used to reduce the amount of
+filesystem access. (since Swift 0.8)
 							</para>
 						</listitem>
 					</varlistentry>
 
+					<varlistentry>
+						<term>
+							<property>tc.file</property>
+						</term>
+						<listitem>
+							<para>
+								Valid values: <parameter>&lt;file&gt;</parameter>
+							</para>
+							
+							<para>
+								Default value: ${<varname>swift.home</varname>}<literal>/etc/tc.data</literal>
+							</para>
+						
+							<para>
+							
+								Points to the location of the transformation
+								catalog file which contains information about
+								installed applications. Details about the format
+								of the transformation catalog can be found
+								<ulink
+								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_TransformationCatalog.html">here</ulink>.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+	
 					<varlistentry>
 						<term>
 							<property>throttle.file.operations</property>
@@ -2755,8 +2689,34 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 							</para>
 						</listitem>
 					</varlistentry>
-	
 				
+					<varlistentry>
+						<term>
+							<property>throttle.host.submit</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
+							</para>
+							
+							<para>
+								Default value: <literal>2</literal>
+							</para>
+							
+							<para>
+							
+								Limits the number of concurrent submissions for
+								any of the sites Swift will try to send jobs to.
+								In other words it guarantees that no more than
+								the  value of this throttle jobs sent to any
+								site will be concurrently in a state of being
+								submitted.
+								
+							</para>
+						</listitem>
+					</varlistentry>
+
 					<varlistentry id="property.throttle.score.job.factor">
 						<term>
 							<property>throttle.score.job.factor</property>
@@ -2803,54 +2763,64 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 
 					<varlistentry>
 						<term>
-							<property>sitedir.keep</property>
+							<property>throttle.submit</property>
 						</term>
 						<listitem>
+						
 							<para>
-								Valid values: <parameter>true</parameter>, <parameter>false</parameter>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
-
+							
 							<para>
-								Default value: <literal>false</literal>
+								Default value: <literal>4</literal>
 							</para>
-
+						
 							<para>
-Indicates whether the working directory on the remote site should be
-left intact even when a run completes successfully. This can be
-used to inspect the site working directory for debugging purposes.
+							
+								Limits the number of concurrent submissions for
+								a run. This throttle only limits
+								the number of concurrent tasks (jobs) that are
+								being sent to sites, not the total number of
+								concurrent jobs that can be run. The submission
+								stage in GRAM is one of the most CPU expensive
+								stages (due mostly to the mutual authentication
+								and delegation). Having too many  concurrent
+								submissions can overload either or both the
+								submit host CPU and the remote host/head node
+								causing degraded performance.
+								
 							</para>
+							
 						</listitem>
 					</varlistentry>
+					
 					<varlistentry>
 						<term>
-							<property>status.mode</property>
+							<property>throttle.transfers</property>
 						</term>
 						<listitem>
+						
 							<para>
-								Valid values: <parameter>files</parameter>, <parameter>provider</parameter>
+								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
-
+						
 							<para>
-								Default value: <literal>files</literal>
+								Default value: <literal>4</literal>	
 							</para>
-
+							
 							<para>
-Controls how Swift will communicate the result code of running user programs
-from workers to the submit side. In <literal>files</literal> mode, a file
-indicating success or failure will be created on the site shared filesystem.
-In <literal>provider</literal> mode, the execution provider job status will
-be used.
-							</para>
-							<para>
-<literal>provider</literal> mode requires the underlying job execution system
-to correctly return exit codes. In at least the cases of GRAM2, and clusters
-used with any provider, exit codes are not returned, and so
-<literal>files</literal> mode must be used in those cases.  Otherwise,
-<literal>provider</literal> mode can be used to reduce the amount of
-filesystem access. (since Swift 0.8)
+							
+								Limits the total number of concurrent file
+								transfers that can happen at any given time.
+								File transfers consume bandwidth. Too many
+								concurrent transfers can cause the network to be
+								overloaded preventing various other signaling
+								traffic from flowing properly.
+								
 							</para>
 						</listitem>
 					</varlistentry>
+
 					<varlistentry>
 						<term>
 							<property>ticker.disable</property>
@@ -2897,7 +2867,34 @@ translation of the job initial working directory. In such cases,
 						</listitem>
 					</varlistentry>
 
-
+					<varlistentry>
+						<term>
+							<property>wrapperlog.always.transfer</property>
+						</term>
+						<listitem>
+						
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+							
+							<para>
+							
+								This property controls when output from
+								the Swift remote wrapper is transfered
+								back to the submit site. When set to
+								<literal>false</literal>, wrapper logs are 
+								only transfered for jobs that fail. If set to
+								<literal>true</literal>, wrapper logs are
+								transfered after every job is completed or
+								failed.
+								
+							</para>
+						</listitem>
+					</varlistentry>
 										
 				</variablelist>
 				
