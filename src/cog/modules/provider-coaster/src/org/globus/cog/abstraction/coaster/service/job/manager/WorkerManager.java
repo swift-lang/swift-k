@@ -506,7 +506,9 @@ public class WorkerManager extends Thread {
             synchronized (this) {
                 Iterator i;
                 List callbacks = new ArrayList();
-                i = ready.values().iterator();
+                //wr.shutdown removes the worker from this manager, which messes
+                //up with the iteration
+                i = new ArrayList(ready.values()).iterator();
                 while (i.hasNext()) {
                     Worker wr = (Worker) i.next();
                     callbacks.add(wr.shutdown());
