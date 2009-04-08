@@ -2361,7 +2361,6 @@ in parallel). (since Swift 0.9)
 							</para>
 						
 							<para>
-							
 								The Globus GRAM service uses a callback
 								mechanism to send notifications about the status
 								of submitted jobs. The callback mechanism
@@ -2375,7 +2374,10 @@ in parallel). (since Swift 0.9)
 								address of the Swift client machine can be
 								specified using this property. The value of this
 								property must be a numeric address without quotes.
-								
+							</para>
+							<para>
+								This option is deprecated and the hostname
+								property should be used instead.
 							</para>
 						</listitem>
 					</varlistentry>
