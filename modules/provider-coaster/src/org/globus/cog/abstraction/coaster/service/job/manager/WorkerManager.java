@@ -178,8 +178,8 @@ public class WorkerManager extends Thread {
             int taskSeconds = AssociatedTask.getMaxWallTime(prototype).getSeconds();
             if (TIME_RESERVE.add(taskSeconds).isGreaterThan(maxWallTime)) {
                 prototype.setStatus(new StatusImpl(Status.FAILED,
-                    "Job cannot be run with the given max walltime worker constraint (task: " 
-                    + taskSeconds + ", maxwalltime: " + maxWallTime + ")", null));
+                    "Job cannot be run with the given max walltime worker constraint (task: "
+                            + taskSeconds + ", maxwalltime: " + maxWallTime + ")", null));
                 return;
             }
             logger.debug("Overridden worker maxwalltime is " + maxWallTime);
@@ -203,8 +203,7 @@ public class WorkerManager extends Thread {
         for (int n = 0; n < numWorkers; n++) {
             int id = sr.nextInt();
             if (logger.isInfoEnabled()) {
-                logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime
-                        + "s");
+                logger.info("Starting worker with id=" + id + " and maxwalltime=" + maxWallTime);
             }
             String sid = String.valueOf(id);
 
@@ -262,8 +261,9 @@ public class WorkerManager extends Thread {
         return js;
     }
 
-    private ExecutionService buildService(Task prototype) throws InvalidServiceContactException,
-            InvalidProviderException, ProviderMethodException {
+    public static ExecutionService buildService(Task prototype)
+            throws InvalidServiceContactException, InvalidProviderException,
+            ProviderMethodException {
         ExecutionService s = new ExecutionServiceImpl();
         s.setServiceContact(prototype.getService(0).getServiceContact());
         ExecutionService p = (ExecutionService) prototype.getService(0);
@@ -309,11 +309,11 @@ public class WorkerManager extends Thread {
                 new WorkerKey(new Seconds(maxWallTime.getSeconds()).add(TIME_RESERVE).add(
                     Seconds.now()));
         Worker w = null;
-        if (logger.isDebugEnabled()) {
-            logger.debug("Looking for worker for key " + key);
-            logger.debug("Ready: " + ready);
-        }
         synchronized (this) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Looking for worker for key " + key);
+                logger.info("Ready: " + ready);
+            }
             Collection tm = ready.tailMap(key).values();
             Iterator i = tm.iterator();
 
@@ -322,12 +322,11 @@ public class WorkerManager extends Thread {
                 i.remove();
                 if (!w.isFailed()) {
                     busy.add(w);
+                    startingTasks.remove(prototype);
                 }
                 else {
-                    currentWorkers--;
-                    ids.remove(w.getId());
+                    removeWorker(w);
                 }
-                startingTasks.remove(prototype);
             }
         }
 
@@ -393,39 +392,14 @@ public class WorkerManager extends Thread {
                 if (s.getStatusCode() != Status.FAILED) {
                     worker.setStatus(new StatusImpl(Status.FAILED, "Worker ended prematurely", null));
                 }
-                if (requested.remove(worker.getId()) != null) {
-                    startingTasks.remove(running);
-                    // only do this for workers that haven't quite started
-                    // yet
-                    // this will cause all the jobs associated with the worker
-                    // to
-                    // fail. We want at least one job to fail for each starting
-                    // failed worker in order to avoid a deadlock and notify
-                    // the user of potential problems
-                    ready.put(new WorkerKey(worker), worker);
-                    // but now that we're doing this, make sure the worker has
-                    // a chance of being selected
-                    worker.setScheduledTerminationTime(Seconds.NEVER);
-                    return;
-                }
+                running.setStatus(new StatusImpl(Status.FAILED, "Failed to start worker: "
+                        + s.getMessage(), s.getException()));
             }
-
-            currentWorkers--;
-            if (busy.remove(worker)) {
-                if (logger.isInfoEnabled()) {
-                    logger.info(worker + " was busy");
-                }
+            else if (running != null) {
+                running.setStatus(new StatusImpl(Status.FAILED,
+                    "Worker terminated while job was running", null));
             }
-            if (ready.remove(new WorkerKey(worker)) != null) {
-                if (logger.isInfoEnabled()) {
-                    logger.info(worker + " was ready");
-                }
-            }
-            ids.remove(worker.getId());
-        }
-        if (running != null) {
-            running.setStatus(new StatusImpl(Status.FAILED,
-                "Worker terminated while job was running", null));
+            removeWorker(worker);
         }
     }
 
@@ -454,19 +428,31 @@ public class WorkerManager extends Thread {
     }
 
     public void removeWorker(Worker worker) {
-        synchronized (this) {
-            ready.remove(new WorkerKey(worker));
-            currentWorkers--;
-            busy.remove(worker);
+        synchronized (this) {            
+            if (busy.remove(worker)) {
+                if (logger.isInfoEnabled()) {
+                    logger.info(worker + " was busy");
+                }
+            }
+            if (ready.remove(new WorkerKey(worker)) != null) {
+                if (logger.isInfoEnabled()) {
+                    logger.info(worker + " was ready");
+                }
+            }
             startingTasks.remove(worker.getRunning());
-            ids.remove(worker.getId());
+            if (ids.remove(worker.getId()) != null) {
+                currentWorkers--;
+            }
         }
     }
 
     public void workerTaskDone(Worker wr) {
         synchronized (this) {
-            busy.remove(wr);
-            ready.put(new WorkerKey(wr), wr);
+            // only add to ready if it was not removed previously
+            // as this method may be called after the worker task is done
+            if (busy.remove(wr)) {
+                ready.put(new WorkerKey(wr), wr);
+            }
             notifyAll();
             wr.setRunning(null);
         }
