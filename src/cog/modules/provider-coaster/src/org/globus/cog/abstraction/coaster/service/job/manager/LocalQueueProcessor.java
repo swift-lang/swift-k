@@ -28,6 +28,7 @@ public class LocalQueueProcessor extends QueueProcessor {
             while (!this.getShutdownFlag()) {
                 at = take();
                 try {
+                    at.task.setService(0, WorkerManager.buildService(at.task));
                     taskHandler.submit(at.task);
                 }
                 catch (Exception e) {
