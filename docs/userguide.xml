@@ -2572,7 +2572,50 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 							</para>
 						</listitem>
 					</varlistentry>
-			
+	
+					<varlistentry>
+						<term>
+							<property>replication.enabled</property>
+						</term>
+						<listitem>
+							
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+						
+							<para>
+Enables/disables replication. Replication is used to deal with jobs sitting
+in batch queues for abnormally large amounts of time. If replication is enabled
+and certain conditions are met, Swift creates and submits replicas of jobs, and
+allows multiple instances of a job to compete.
+							</para>
+						</listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<property>replication.limit</property>
+						</term>
+						<listitem>
+							
+							<para>
+								Valid values: positive integers
+							</para>
+							
+							<para>
+								Default value: 3
+							</para>
+						
+							<para>
+The maximum number of replicas that Swift should attempt.
+							</para>
+						</listitem>
+					</varlistentry>
+		
 					<varlistentry>
 						<term>
 							<property>sitedir.keep</property>
