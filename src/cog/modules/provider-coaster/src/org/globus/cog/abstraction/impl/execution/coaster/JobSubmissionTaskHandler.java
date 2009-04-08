@@ -56,7 +56,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        setTask(task);
+        checkAndSetTask(task);
         task.setStatus(Status.SUBMITTING);
         try {
             if (autostart) {
