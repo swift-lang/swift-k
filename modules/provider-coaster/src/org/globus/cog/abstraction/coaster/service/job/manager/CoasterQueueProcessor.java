@@ -19,43 +19,41 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.util.Queue;
 
 public class CoasterQueueProcessor extends QueueProcessor {
-    public static final Logger logger = Logger
-            .getLogger(CoasterQueueProcessor.class);
+    public static final Logger logger = Logger.getLogger(CoasterQueueProcessor.class);
     private TaskHandler taskHandler;
     private WorkerManager workerManager;
     private String workdir;
 
-    public CoasterQueueProcessor(WorkerManager workerManager)
-            throws IOException {
+    public CoasterQueueProcessor(WorkerManager workerManager) throws IOException {
         super("Coaster Queue Processor");
         this.workerManager = workerManager;
         this.taskHandler = new CoasterTaskHandler(workerManager);
     }
 
     public void run() {
-        try {
-            new Thread() {
-                {
-                    setDaemon(true);
-                }
+        new Thread() {
+            {
+                setDaemon(true);
+            }
 
-                public void run() {
-                    while (true) {
-                        try {
-                            Thread.sleep(20000);
-                            Queue q = getQueue();
-                            logger.info("Coaster queue: " + q);
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(20000);
+                        Queue q = getQueue();
+                        logger.info("Coaster queue: " + q);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
-            }.start();
+            }
+        }.start();
 
-            workerManager.start();
-            AssociatedTask at;
-            while (!this.getShutdownFlag()) {
+        workerManager.start();
+        AssociatedTask at;
+        while (!this.getShutdownFlag()) {
+            try {
                 at = next();
                 Worker wr = workerManager.request(at.maxWallTime, at.task);
                 if (wr != null) {
@@ -66,13 +64,12 @@ public class CoasterQueueProcessor extends QueueProcessor {
                     else {
                         try {
                             at.task.getService(0).setServiceContact(
-                                    new ServiceContactImpl(wr.getId()));
+                                new ServiceContactImpl(wr.getId()));
                             new WorkerTaskMonitor(at.task, workerManager, wr);
                             taskHandler.submit(at.task);
                         }
                         catch (Exception e) {
-                            at.task.setStatus(new StatusImpl(Status.FAILED,
-                                    null, e));
+                            at.task.setStatus(new StatusImpl(Status.FAILED, null, e));
                         }
                     }
                 }
@@ -82,9 +79,11 @@ public class CoasterQueueProcessor extends QueueProcessor {
                     }
                 }
             }
+            catch (Exception e) {
+                logger.error("Exception caught in coaster queue processor", e);
+                System.exit(2);
+            }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+
     }
 }
