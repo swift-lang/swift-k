@@ -1457,7 +1457,6 @@ command line:
 <itemizedlist>
 <listitem>caching.algorithm</listitem>
 <listitem>clustering.enabled</listitem>
-<listitem>clustering.enabled</listitem>
 <listitem>clustering.min.time</listitem>
 <listitem>clustering.queue.delay</listitem>
 <listitem>ip.address</listitem>
