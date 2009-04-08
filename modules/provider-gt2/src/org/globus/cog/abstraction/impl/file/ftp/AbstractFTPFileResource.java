@@ -43,6 +43,9 @@ public abstract class AbstractFTPFileResource extends AbstractFileResource {
                 if (se.getCode() == ServerException.REPLY_TIMEOUT) {
                     return new IrrecoverableResourceException(message, e);
                 }
+                else if (se.getCode() == ServerException.PREVIOUS_TRANSFER_ACTIVE) {
+                	return new IrrecoverableResourceException(message, e);
+                }
                 else {
                     return new FileResourceException(message, e);
                 }
