@@ -48,9 +48,15 @@ public class JobQueue {
         	}
         }
         if (s.getProvider().equalsIgnoreCase("coaster") && !spec.isBatchJob()) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Adding task " + t + " to coaster queue");
+            }
             coaster.enqueue(t);
         }
         else {
+            if (logger.isInfoEnabled()) {
+                logger.info("Adding task " + t + " to local queue");
+            }
             local.enqueue(t);
         }
     }
