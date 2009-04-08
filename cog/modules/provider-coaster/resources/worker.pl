@@ -394,6 +394,7 @@ sub shutdownw {
 	my ($tag, $timeout, $msgs) = @_;
 	wlog "Shutdown command received\n";
 	sendReply($tag, ("OK"));
+	select(undef, undef, undef, 1);
 	wlog "Acknowledged shutdown. Exiting\n";
 	wlog "Ran a total for $JOB_COUNT jobs\n";
 	exit 0;
