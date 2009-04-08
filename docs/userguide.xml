@@ -1433,16 +1433,6 @@ made available to the SwiftScript program through the
     </para></listitem>
   </varlistentry>
 
-  <varlistentry><term>-tcp.port.range <literal>start,end</literal></term>
-    <listitem><para>
-      A TCP port range can be specified to restrict the ports on which 
-      GRAM callback services are started. This is likely needed if your
-      submit host is behind a firewall, in which case the firewall 
-      should be configured to allow incoming connections on ports in 
-      the range. 
-    </para></listitem>
-  </varlistentry>
-
   <varlistentry><term>-tui</term>
     <listitem>
       Displays an interactive text mode monitor during a run. (since Swift 0.9)
@@ -1469,6 +1459,7 @@ command line:
 <listitem>sitedir.keep</listitem>
 <listitem>sites.file</listitem>
 <listitem>tc.file</listitem>
+<listitem>tcp.port.range</listitem>
 </itemizedlist>
 </para>
 
@@ -2721,6 +2712,24 @@ filesystem access. (since Swift 0.8)
 						</listitem>
 					</varlistentry>
 	
+  					<varlistentry>
+						<term>
+							<property>tcp.port.range</property>
+						</term>
+						<listitem>
+							<para>Valid values: <parameter>&lt;start></parameter>,<parameter>&lt;end></parameter> where start and end are integers</para>
+							<para>Default value: none</para>
+							<para>
+A TCP port range can be specified to restrict the ports on which 
+GRAM callback services are started. This is likely needed if your
+ submit host is behind a firewall, in which case the firewall 
+should be configured to allow incoming connections on ports in 
+the range. 
+							</para>
+						</listitem>
+  </varlistentry>
+
+
 					<varlistentry>
 						<term>
 							<property>throttle.file.operations</property>
