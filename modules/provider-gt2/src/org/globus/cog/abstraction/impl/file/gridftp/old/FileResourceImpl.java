@@ -76,7 +76,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     private boolean dataChannelReuse;
     private boolean dataChannelInitialized;
     private boolean dataChannelDirection;
-    private boolean transferActive;
 
     /** throws InvalidProviderException */
     public FileResourceImpl() throws Exception {
@@ -339,43 +338,24 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void get(String remoteFileName, DataSink sink,
             MarkerListener mListener) throws FileResourceException {
         try {
-            checkAndSetTransferActive();
             initializeDataChannel(RETRIEVE);
             gridFTPClient.get(remoteFileName, sink, mListener);
         }
         catch (Exception e) {
             throw translateException("Cannot retrieve " + remoteFileName, e);
         }
-        finally {
-            resetTransferActive();
-        }
-    }
-
-    private synchronized void checkAndSetTransferActive() throws IrrecoverableResourceException {
-        if (transferActive) {
-            throw new IrrecoverableResourceException("Cannot start transfer while another transfer is active", new Throwable());
-        }
-        transferActive = true;
-    }
-    
-    private synchronized void resetTransferActive() {
-        transferActive = false;
     }
 
     /** get a remote file */
     public void get(String remoteFileName, File localFile)
             throws FileResourceException {
         try {
-            checkAndSetTransferActive();
             initializeDataChannel(RETRIEVE);
             gridFTPClient.get(remoteFileName, localFile);
         }
         catch (Exception e) {
             throw translateException("Cannot retrieve " + remoteFileName
                     + " to " + localFile, e);
-        }
-        finally {
-            resetTransferActive();
         }
     }
 
@@ -389,10 +369,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             final ProgressMonitor progressMonitor) throws FileResourceException {
         File localFile = new File(localFileName);
         try {
-            checkAndSetTransferActive();
-            initializeDataChannel(RETRIEVE);
-            final long size = localFile.length();
             DataSink sink;
+            final long size = getGridFile(remoteFileName).getSize();
             if (progressMonitor != null) {
                 // The sink is used to follow progress
                 sink = new DataSinkStream(new FileOutputStream(localFile)) {
@@ -405,13 +383,11 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             else {
                 sink = new DataSinkStream(new FileOutputStream(localFile));
             }
+            initializeDataChannel(RETRIEVE);
             gridFTPClient.get(remoteFileName, sink, null);
         }
         catch (Exception e) {
             throw translateException("Exception in getFile", e);
-        }
-        finally {
-            resetTransferActive();
         }
     }
 
@@ -426,8 +402,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         final File localFile = new File(localFileName);
         try {
-            checkAndSetTransferActive();
-            initializeDataChannel(STORE);
             final long size = localFile.length();
             DataSource source;
             if (progressMonitor != null) {
@@ -449,13 +423,11 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                     }
                 };
             }
+            initializeDataChannel(STORE);
             gridFTPClient.put(remoteFileName, source, null, false);
         }
         catch (Exception e) {
             throw translateException(e);
-        }
-        finally {
-            resetTransferActive();
         }
     }
 
@@ -464,16 +436,12 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             throws FileResourceException {
 
         try {
-            checkAndSetTransferActive();
             initializeDataChannel(STORE);
             gridFTPClient.put(localFile, remoteFileName, append);
         }
         catch (Exception e) {
             throw translateException("Cannot transfer " + localFile + " to "
                     + remoteFileName, e);
-        }
-        finally {
-            resetTransferActive();
         }
     }
 
@@ -484,15 +452,11 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void put(DataSource source, String remoteFileName,
             MarkerListener mListener) throws FileResourceException {
         try {
-            checkAndSetTransferActive();
             initializeDataChannel(STORE);
             gridFTPClient.put(remoteFileName, source, mListener);
         }
         catch (Exception e) {
             throw translateException("Cannot transfer to " + remoteFileName, e);
-        }
-        finally {
-            resetTransferActive();
         }
     }
 
