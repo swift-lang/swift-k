@@ -12,25 +12,56 @@ error() {
 	rm -f $DJ
 	exit 1
 }
-find() {
-	R=`eval which $1 2>>$L`
-	CMD="which $1 1>/tmp/$ID 2>>$L"
-	if [ "X$R" == "X" ] || [ ! -x $R ]; then
-		/bin/bash -l -c "$CMD" >>$L 2>>$L
-		R=`cat /tmp/$ID`
-	fi
-	echo "find $1 = $R" >>$L
-	rm -f /tmp/$ID
-	echo $R
+tf() {
+        echo [ "X$1" == "X" ] || [ ! -x "$1" ]
 }
+detectPaths() {
+        R=`eval which java 2>>$L`
+        CMD="which java 1>/tmp/$ID 2>>$L"
+        if tf $R; then
+                /bin/bash -l -c "$CMD" >>$L 2>>$L
+                R=`cat /tmp/$ID`
+                if tf $R; then
+                        R=`eval echo $JAVA_HOME`
+                        if [ "X$R" != "X" ]; then
+                                WR=plain
+                                R=$R/bin/java
+                        else
+                                /bin/bash -l -c 'echo $JAVA_HOME' 1>/tmp/$ID 2>>$L
+                                R=`cat /tmp/$ID`
+                                if [ "X$R" == "X" ]; then
+                                        error "Cannot find java"
+                                fi
+                                WR=wrapped
+                                R=$R/bin/java
+                        fi
+                else
+                        WR=wrapped
+                fi
+        else
+                WR=plain
+        fi
+        echo "detectPaths: using $WR mode" >>$L
+        rm -f /tmp/$ID
+        JAVA=$R
+}
+wrapped() {
+        IFS=" "
+        /bin/bash -l -c "$*"
+}
+plain() {
+        eval "$@"
+}
+
 if [ "$L" == "" ]; then
 	L=~/$B-$ID.log 
 fi
+detectPaths
 DJ=`mktemp /tmp/bootstrap.XXXXXX`
 echo "BS: $BS" >>$L
-WGET=`find wget`
+WGET=`$WR which wget`
 if [ "X$WGET" == "X" ]; then
-	WGET=`find curl`
+	WGET=`$WR which curl`
 	if [ "X$WGET" == "X" ]; then
 		error "No wget or curl available"
 	fi
@@ -38,14 +69,13 @@ if [ "X$WGET" == "X" ]; then
 else
 	WGET="$WGET -c -q $BS/$B.jar -O $DJ >>$L 2>&1"
 fi
-echo "-->$WGET<--" >>$L
 eval $WGET
 if [ "$?" != "0" ]; then
 	error "Failed to download bootstrap jar from $BS"
 fi
-MD5SUM=`find gmd5sum`
+MD5SUM=`$WR which gmd5sum`
 if [ "X$MD5SUM" == "X" ]; then
-	MD5SUM=`find md5sum`
+	MD5SUM=`$WR which md5sum`
 	if [ "X$MD5SUM" == "X" ]; then
 		error "No md5sum or gmd5sum found"
 	fi
@@ -57,14 +87,9 @@ echo "Computed checksum: $AAMD5" >>$L
 if [ "$AAMD5" != "$EMD5" ]; then
 	error "Bootstrap jar checksum failed: $EMD5 != $AAMD5"
 fi
-
-JAVA=`find java`
-if [ "X$JAVA" == "X" ]; then
-	JAVA=$JAVA_HOME/bin/java
-fi
 echo "JAVA=$JAVA" >>$L
 if [ -x $JAVA ]; then 
-	CMD="$JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -jar $DJ $BS $LS $ID"
+	CMD="$WR $JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -jar $DJ $BS $LS $ID"
 	echo $CMD >>$L
 	eval $CMD >>$L	
 	EC=$?
