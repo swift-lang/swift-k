@@ -2326,6 +2326,26 @@ may impair the correct functionality of Swift.
 						</listitem>
 					</varlistentry>
 					
+
+					<varlistentry id="property.foreach.max.threads">
+						<term>foreach.max.threads</term>
+						<listitem>
+							<para>
+								Valid values: positive integers
+							</para>
+							<para>
+								Default value: 1024
+							</para>
+							<para>
+Limits the number of concurrent iterations that each foreach statement
+can have at one time. This conserves memory for swift programs that 
+have large numbers of iterations (which would otherwise all be executed
+in parallel). (since Swift 0.9)
+							</para>
+						</listitem>
+					</varlistentry>
+	
+
 					<varlistentry>
 						<term>
 							<property>ip.address</property>
