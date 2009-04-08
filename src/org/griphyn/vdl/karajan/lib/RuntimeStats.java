@@ -150,14 +150,14 @@ public class RuntimeStats extends FunctionsCollection {
 			long now = System.currentTimeMillis();
 			if(lastDumpTime + MIN_PERIOD_MS > now) return;
 			lastDumpTime = now;
-			printStates("Progress: ");
+			printStates("Progress:");
 		}
 
 		void finalDumpState() {
 			if (disabled) {
 				return;
 			}
-			printStates("Final status: ");
+			printStates("Final status:");
 		}
 		
 		public Map getSummary() {
@@ -192,7 +192,7 @@ public class RuntimeStats extends FunctionsCollection {
 				String key = preferredOutputOrder[pos];
 				Object value = summary.get(key);
 				if(value != null)
-					System.err.print(" "+key+":"+value);
+					System.err.print("  "+key+":"+value);
 				summary.remove(key);
 			}
 
