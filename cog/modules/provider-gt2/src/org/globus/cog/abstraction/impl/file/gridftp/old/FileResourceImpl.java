@@ -25,6 +25,7 @@ import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
+import org.globus.cog.abstraction.impl.file.IrrecoverableResourceException;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.impl.file.ftp.AbstractFTPFileResource;
 import org.globus.cog.abstraction.impl.file.gridftp.DataChannelAuthenticationType;
@@ -60,8 +61,8 @@ import org.ietf.jgss.GSSCredential;
  */
 public class FileResourceImpl extends AbstractFTPFileResource {
     public static final Logger logger = Logger
-            .getLogger(FileResourceImpl.class);
-    
+        .getLogger(FileResourceImpl.class);
+
     protected static final boolean STORE = true;
     protected static final boolean RETRIEVE = false;
 
@@ -75,11 +76,12 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     private boolean dataChannelReuse;
     private boolean dataChannelInitialized;
     private boolean dataChannelDirection;
+    private boolean transferActive;
 
     /** throws InvalidProviderException */
     public FileResourceImpl() throws Exception {
         this(null, new ServiceContactImpl(), AbstractionFactory
-                .newSecurityContext("GridFTP"));
+            .newSecurityContext("GridFTP"));
     }
 
     /** constructor be used normally */
@@ -109,7 +111,8 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             if (logger.isDebugEnabled()) {
                 logger.debug("Initial reply: " + r.getMessage());
             }
-            if (r != null && r.getMessage().indexOf("Virtual Broken GridFTP Server") != -1) {
+            if (r != null
+                    && r.getMessage().indexOf("Virtual Broken GridFTP Server") != -1) {
                 dataChannelReuse = false;
             }
             else {
@@ -119,9 +122,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                 logger.debug("Data channel reuse: " + dataChannelReuse);
             }
             gridFTPClient.setClientWaitParams(MAX_REPLY_WAIT_TIME,
-                    Session.DEFAULT_WAIT_DELAY);
+                Session.DEFAULT_WAIT_DELAY);
             GSSCredential proxy = (GSSCredential) getSecurityContext()
-                    .getCredentials();
+                .getCredentials();
             gridFTPClient.authenticate(proxy);
             gridFTPClient.setType(Session.TYPE_IMAGE);
             if (dataChannelReuse) {
@@ -133,14 +136,14 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
         catch (Exception e) {
             throw translateException(
-                    "Error communicating with the GridFTP server", e);
+                "Error communicating with the GridFTP server", e);
         }
     }
-    
+
     public boolean getDataChannelReuse() {
         return dataChannelReuse;
     }
-    
+
     public void setDataChannelReuse(boolean dataChannelReuse) {
         this.dataChannelReuse = dataChannelReuse;
         this.dataChannelInitialized = false;
@@ -148,13 +151,14 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
     protected void initializeDataChannel(boolean mode) throws ClientException,
             ServerException, IOException {
-        if (!dataChannelInitialized || !dataChannelReuse || dataChannelDirection != mode) {
+        if (!dataChannelInitialized || !dataChannelReuse
+                || dataChannelDirection != mode) {
             gridFTPClient.setPassiveMode(mode);
             dataChannelInitialized = true;
             dataChannelDirection = mode;
         }
     }
-    
+
     protected void resetDataChannel() {
         dataChannelInitialized = false;
     }
@@ -162,31 +166,31 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     protected void setSecurityOptions(GridFTPClient client)
             throws ServerException, IOException {
         DataChannelAuthenticationType dcau = GridFTPSecurityContext
-                .getDataChannelAuthentication(getSecurityContext());
+            .getDataChannelAuthentication(getSecurityContext());
         if (dcau != null) {
             if (dcau.equals(DataChannelAuthenticationType.NONE)) {
                 client
-                        .setDataChannelAuthentication(DataChannelAuthentication.NONE);
+                    .setDataChannelAuthentication(DataChannelAuthentication.NONE);
             }
             else if (dcau.equals(DataChannelAuthenticationType.SELF)) {
                 client
-                        .setDataChannelAuthentication(DataChannelAuthentication.SELF);
+                    .setDataChannelAuthentication(DataChannelAuthentication.SELF);
             }
         }
         DataChannelProtectionType prot = GridFTPSecurityContext
-                .getDataChannelProtection(getSecurityContext());
+            .getDataChannelProtection(getSecurityContext());
         if (prot != null) {
             if (prot.equals(DataChannelProtectionType.CLEAR)) {
                 client
-                        .setDataChannelProtection(GridFTPSession.PROTECTION_CLEAR);
+                    .setDataChannelProtection(GridFTPSession.PROTECTION_CLEAR);
             }
             else if (prot.equals(DataChannelProtectionType.CONFIDENTIAL)) {
                 client
-                        .setDataChannelProtection(GridFTPSession.PROTECTION_CONFIDENTIAL);
+                    .setDataChannelProtection(GridFTPSession.PROTECTION_CONFIDENTIAL);
             }
             else if (prot.equals(DataChannelProtectionType.PRIVATE)) {
                 client
-                        .setDataChannelProtection(GridFTPSession.PROTECTION_PRIVATE);
+                    .setDataChannelProtection(GridFTPSession.PROTECTION_PRIVATE);
             }
             else if (prot.equals(DataChannelProtectionType.SAFE)) {
                 client.setDataChannelProtection(GridFTPSession.PROTECTION_SAFE);
@@ -250,7 +254,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
         catch (Exception e) {
             throw translateException(
-                    "Cannot list the elements of the current directory", e);
+                "Cannot list the elements of the current directory", e);
         }
     }
 
@@ -298,7 +302,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         try {
             if (force == true) {
                 for (Iterator iterator = list(directory).iterator(); iterator
-                        .hasNext();) {
+                    .hasNext();) {
                     gridFile = (GridFile) iterator.next();
                     if (gridFile.isFile()) {
                         gridFTPClient.deleteFile(directory + "/"
@@ -306,7 +310,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                     }
                     else {
                         if (!(gridFile.getName().equals(".") || gridFile
-                                .getName().equals(".."))) {
+                            .getName().equals(".."))) {
                             deleteDirectory(directory + "/"
                                     + gridFile.getName(), force);
                         }
@@ -335,18 +339,34 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void get(String remoteFileName, DataSink sink,
             MarkerListener mListener) throws FileResourceException {
         try {
+            checkAndSetTransferActive();
             initializeDataChannel(RETRIEVE);
             gridFTPClient.get(remoteFileName, sink, mListener);
         }
         catch (Exception e) {
             throw translateException("Cannot retrieve " + remoteFileName, e);
         }
+        finally {
+            resetTransferActive();
+        }
+    }
+
+    private synchronized void checkAndSetTransferActive() throws IrrecoverableResourceException {
+        if (transferActive) {
+            throw new IrrecoverableResourceException("Cannot start transfer while another transfer is active", new Throwable());
+        }
+        transferActive = true;
+    }
+    
+    private synchronized void resetTransferActive() {
+        transferActive = false;
     }
 
     /** get a remote file */
     public void get(String remoteFileName, File localFile)
             throws FileResourceException {
         try {
+            checkAndSetTransferActive();
             initializeDataChannel(RETRIEVE);
             gridFTPClient.get(remoteFileName, localFile);
         }
@@ -354,7 +374,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             throw translateException("Cannot retrieve " + remoteFileName
                     + " to " + localFile, e);
         }
-
+        finally {
+            resetTransferActive();
+        }
     }
 
     public void getFile(String remoteFileName, String localFileName)
@@ -367,6 +389,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             final ProgressMonitor progressMonitor) throws FileResourceException {
         File localFile = new File(localFileName);
         try {
+            checkAndSetTransferActive();
             initializeDataChannel(RETRIEVE);
             final long size = localFile.length();
             DataSink sink;
@@ -387,6 +410,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         catch (Exception e) {
             throw translateException("Exception in getFile", e);
         }
+        finally {
+            resetTransferActive();
+        }
     }
 
     public void putFile(String localFileName, String remoteFileName)
@@ -400,6 +426,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         final File localFile = new File(localFileName);
         try {
+            checkAndSetTransferActive();
             initializeDataChannel(STORE);
             final long size = localFile.length();
             DataSource source;
@@ -427,6 +454,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         catch (Exception e) {
             throw translateException(e);
         }
+        finally {
+            resetTransferActive();
+        }
     }
 
     /** put a local file into remote resource */
@@ -434,12 +464,16 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             throws FileResourceException {
 
         try {
+            checkAndSetTransferActive();
             initializeDataChannel(STORE);
             gridFTPClient.put(localFile, remoteFileName, append);
         }
         catch (Exception e) {
             throw translateException("Cannot transfer " + localFile + " to "
                     + remoteFileName, e);
+        }
+        finally {
+            resetTransferActive();
         }
     }
 
@@ -450,11 +484,15 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void put(DataSource source, String remoteFileName,
             MarkerListener mListener) throws FileResourceException {
         try {
+            checkAndSetTransferActive();
             initializeDataChannel(STORE);
             gridFTPClient.put(remoteFileName, source, mListener);
         }
         catch (Exception e) {
             throw translateException("Cannot transfer to " + remoteFileName, e);
+        }
+        finally {
+            resetTransferActive();
         }
     }
 
@@ -535,7 +573,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
         catch (Exception e) {
             throw translateException(
-                    "Failed to retrieve file information about " + fileName, e);
+                "Failed to retrieve file information about " + fileName, e);
         }
     }
 
@@ -549,7 +587,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         logger.error(newGridFile.getAbsolutePathName());
 
         changeMode(newGridFile.getAbsolutePathName(), Integer
-                .parseInt(newPermissions));
+            .parseInt(newPermissions));
     }
 
     /** Not implemented in GridFTP * */
@@ -592,11 +630,11 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         gridFile.setSize(fi.getSize());
 
         gridFile.setUserPermissions(getPermissions(fi.userCanRead(), fi
-                .userCanWrite(), fi.userCanExecute()));
+            .userCanWrite(), fi.userCanExecute()));
         gridFile.setGroupPermissions(getPermissions(fi.groupCanRead(), fi
-                .groupCanWrite(), fi.groupCanExecute()));
+            .groupCanWrite(), fi.groupCanExecute()));
         gridFile.setAllPermissions(getPermissions(fi.allCanRead(), fi
-                .allCanWrite(), fi.allCanExecute()));
+            .allCanWrite(), fi.allCanExecute()));
 
         return gridFile;
     }
