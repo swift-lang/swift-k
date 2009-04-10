@@ -13,13 +13,13 @@ error() {
 	exit 1
 }
 tf() {
-        echo [ "X$1" == "X" ] || [ ! -x "$1" ]
+        eval [ "X$1" == "X" ] || [ ! -x "$1" ]
 }
 detectPaths() {
         R=`eval which java 2>>$L`
-        CMD="which java 1>/tmp/$ID 2>>$L"
+        CMD="which java 1>/tmp/$ID"
         if tf $R; then
-                /bin/bash -l -c "$CMD" >>$L 2>>$L
+                /bin/bash -l -c "$CMD" >>$L
                 R=`cat /tmp/$ID`
                 if tf $R; then
                         R=`eval echo $JAVA_HOME`
@@ -27,7 +27,7 @@ detectPaths() {
                                 WR=plain
                                 R=$R/bin/java
                         else
-                                /bin/bash -l -c 'echo $JAVA_HOME' 1>/tmp/$ID 2>>$L
+                                /bin/bash -l -c 'echo $JAVA_HOME 1>/tmp/$ID' 2>>$L
                                 R=`cat /tmp/$ID`
                                 if [ "X$R" == "X" ]; then
                                         error "Cannot find java"
@@ -41,13 +41,14 @@ detectPaths() {
         else
                 WR=plain
         fi
-        echo "detectPaths: using $WR mode" >>$L
+        echo "using $WR mode" >>$L
         rm -f /tmp/$ID
         JAVA=$R
 }
 wrapped() {
         IFS=" "
-        /bin/bash -l -c "$*"
+        /bin/bash -l -c "$* 1>/tmp/$ID" >>$L
+        cat /tmp/$ID
 }
 plain() {
         eval "$@"
