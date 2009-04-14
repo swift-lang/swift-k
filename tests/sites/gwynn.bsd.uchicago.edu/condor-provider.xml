@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="teraport" >
+    <gridftp  url="local://localhost" /> 
+    <execution provider="condor" />
+    <workdirectory >/disks/gpfs/swift/site-test</workdirectory>
+  </pool>
+
+</config>
