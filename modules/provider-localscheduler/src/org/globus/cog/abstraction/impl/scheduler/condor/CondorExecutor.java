@@ -91,7 +91,7 @@ public class CondorExecutor extends AbstractExecutor {
 		}
 		wr.write('\n');
 		wr.write("notification = Never\n");
-		wr.write("+LeaveJobInQueue = TRUE\n");
+		wr.write("leave_in_queue = TRUE\n");
 		wr.write("queue\n");
 		wr.close();
 	}
