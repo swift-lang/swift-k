@@ -103,15 +103,15 @@ public class CondorExecutor extends AbstractExecutor {
 		TRIGGERS[' '] = true;
 		TRIGGERS['\n'] = true;
 		TRIGGERS['\t'] = true;
-		TRIGGERS['|'] = true;
 		TRIGGERS['\\'] = true;
 		TRIGGERS['>'] = true;
 		TRIGGERS['<'] = true;
+		TRIGGERS['"'] = true;
 	}
 
 	protected String quote(String s) {
 		if ("".equals(s)) {
-			return "\"\"";
+			return "";
 		}
 		boolean quotes = false;
 		for (int i = 0; i < s.length(); i++) {
@@ -126,6 +126,7 @@ public class CondorExecutor extends AbstractExecutor {
 		}
 		StringBuffer sb = new StringBuffer();
 		if (quotes) {
+			sb.append('\\');
 			sb.append('"');
 		}
 		for (int i = 0; i < s.length(); i++) {
@@ -136,6 +137,7 @@ public class CondorExecutor extends AbstractExecutor {
 			sb.append(c);
 		}
 		if (quotes) {
+			sb.append('\\');
 			sb.append('"');
 		}
 		return sb.toString();
