@@ -198,7 +198,7 @@ public class CondorExecutor extends AbstractExecutor {
 			FileLocation stdErrorLocation, String exitcode,
 			AbstractExecutor executor) {
 		return new Job(jobid, stdout, stdOutputLocation, stderr,
-				stdErrorLocation, exitcode, executor);
+				stdErrorLocation, null, executor);
 	}
 
 	private static QueuePoller poller;
