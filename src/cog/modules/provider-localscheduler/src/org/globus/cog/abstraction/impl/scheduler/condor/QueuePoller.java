@@ -39,7 +39,7 @@ public class QueuePoller extends AbstractQueuePoller {
 
 	protected void processStdout(InputStream is) throws IOException {
 		if (logger.isDebugEnabled()) {
-			logger.debug("Processing qstat stdout");
+			logger.debug("Processing condor_q stdout");
 		}
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		String line;
