@@ -42,6 +42,7 @@ public class CondorExecutor extends AbstractExecutor {
 
 	protected void writeScript(Writer wr, String exitcodefile, String stdout,
 			String stderr) throws IOException {
+		boolean grid = false;
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		String type = (String) spec.getAttribute("jobType");
@@ -51,8 +52,20 @@ public class CondorExecutor extends AbstractExecutor {
 		if ("MPI".equals(type)) {
 			wr.write("universe = MPI\n");
 		}
+		else if("grid".equals(type)) {
+			grid = true;
+			String gridResource = (String) spec.getAttribute("gridResource");
+			wr.write("universe = grid\n");
+			wr.write("grid_resource = "+gridResource+"\n");
+
+// the below two lines are needed to cause the gridmonitor to be used
+// which is the point of all this...
+			wr.write("stream_output = False\n");
+			wr.write("stream_error  = False\n");
+
+			wr.write("Transfer_Executable = false\n");
+		}
 		else {
-			// wr.write("universe = vanilla\n");
 			wr.write("universe = vanilla\n");
 		}
 		writeAttr("count", "machine_count = ", wr);
@@ -75,7 +88,11 @@ public class CondorExecutor extends AbstractExecutor {
 		wr.write("\n");
 
 		if (spec.getDirectory() != null) {
-			wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
+			if(!grid) {
+				wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
+			} else {
+				wr.write("remote_initialdir = " + quote(spec.getDirectory()) + "\n");
+			}
 		}
 		wr.write("executable = " + quote(spec.getExecutable()) + "\n");
 		List args = spec.getArgumentsAsList();

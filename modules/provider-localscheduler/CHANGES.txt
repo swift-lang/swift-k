@@ -1,3 +1,9 @@
+(04/15/09)
+
+*** Support for Condor-G submissions, by setting a job specification attribute
+    of "grid" and specifying a gridResource attribute containing the string
+    to be placed into the Condor-G grid_resource classad.
+
 (03/13/09)
 
 *** Refactored common portions of providers into abstract parts
