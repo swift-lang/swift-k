@@ -10,7 +10,7 @@ package org.globus.cog.abstraction.impl.scheduler.condor.execution;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 
 /**
- *Provides a local PBS <code>TaskHandler</code>
+ *Provides a local Condor <code>TaskHandler</code>
  *for job submission to the local resource without
  *any security context.
  *
@@ -23,6 +23,6 @@ public class TaskHandlerImpl extends
 	}
 
 	protected String getName() {
-		return "PBS";
+		return "Condor";
 	}
 }
