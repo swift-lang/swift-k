@@ -17,7 +17,7 @@ distribute:
 	cp *.event *.html *.png $(SDL)
 
 clean:
-	rm -f start-times.data kickstart-times.data start-time.tmp end-time.tmp threads.list tasks.list log *.data *.shifted *.png *.event *.coloured-event *.total *.tmp *.transitions *.last karatasks-type-counts.txt index.html *.lastsummary execstages.plot total.plot colour.plot jobs-sites.table jobs.retrycount.summary kickstart.stats execution-counts.txt site-duration.txt jobs.retrycount sp.plot karatasks.coloured-sorted-event *.cedps *.stats t.inf *.seenstates tmp-* clusterstats  trname-summary sites-list.data.nm info-md5sums pse2d-tmp.eip karajan.html falkon.html execute2.html info.html execute.html kickstart.html scheduler.html assorted.html
+	rm -f start-times.data kickstart-times.data start-time.tmp end-time.tmp threads.list tasks.list log *.data *.shifted *.png *.event *.coloured-event *.total *.tmp *.transitions *.last karatasks-type-counts.txt index.html *.lastsummary execstages.plot total.plot colour.plot jobs-sites.html jobs.retrycount.summary kickstart.stats execution-counts.txt site-duration.txt jobs.retrycount sp.plot karatasks.coloured-sorted-event *.cedps *.stats t.inf *.seenstates tmp-* clusterstats  trname-summary sites-list.data.nm info-md5sums pse2d-tmp.eip karajan.html falkon.html execute2.html info.html execute.html kickstart.html scheduler.html assorted.html
 
 t.inf: $(LOG)
 	compute-t-inf > t.inf < $(LOG)
@@ -67,8 +67,8 @@ sites-list.data: execute2.event
 sites-list.data.nm: sites-list.data
 	number-sites-list < $< > $@
 
-jobs-sites.table: sites-list.data execute2.event
-	table-jobs-sites > jobs-sites.table
+jobs-sites.html: sites-list.data execute2.event
+	table-jobs-sites > jobs-sites.html
 
 site-duration.txt: execute2.event sites-list.data
 	per-site-execute2-durations > site-duration.txt

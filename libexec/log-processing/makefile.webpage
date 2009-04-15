@@ -44,7 +44,7 @@ dostageout.sorted-start.png dostagein-duration-histogram.png \
 dostageout-duration-histogram.png execute-trails.png execute2-trails.png \
 info-and-karajan-actives.png info-and-karajan-actives.2.png
 
-htmldeps: $(SWIFT_PLOT_HOME)/index.html.template execution-counts.txt jobs-sites.table site-duration.txt execute2.lastsummary execute.lastsummary jobs.retrycount.summary trname-summary
+htmldeps: $(SWIFT_PLOT_HOME)/index.html.template execution-counts.txt jobs-sites.html site-duration.txt execute2.lastsummary execute.lastsummary jobs.retrycount.summary trname-summary
 
 %.html: htmldeps
 	m4 -I$(SWIFT_PLOT_HOME) $(SWIFT_PLOT_HOME)/$@.template > $@

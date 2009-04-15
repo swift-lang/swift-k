@@ -10,7 +10,7 @@ include(`toolbar.html.template')
 <p>Breakdown of execute2 final statuses by site:
 (<a href="execute2.html">More information about execute2 events</a>)</p>
 
-include(`jobs-sites.table')
+include(`jobs-sites.html')
 
 <p>Number of execute2 jobs at once - this is basically the number of
 execution attempts that have been submitted to some batch system such
