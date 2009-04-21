@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="teraport" >
+    <gridftp  url="local://localhost" />
+    <execution provider="condor" />
+    <workdirectory >/home/benc/swifttest</workdirectory>
+  </pool>
+
+</config>
