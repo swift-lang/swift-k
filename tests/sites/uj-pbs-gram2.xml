@@ -1,0 +1,9 @@
+<config>
+
+  <pool handle="teraport" >
+    <gridftp  url="gsiftp://osg-ce.grid.uj.ac.za" /> 
+    <jobmanager universe="vanilla" url="osg-ce.grid.uj.ac.za/jobmanager-pbs" major="2" />
+    <workdirectory >/nfs/home/benc/swifttest</workdirectory>
+  </pool>
+
+</config>
