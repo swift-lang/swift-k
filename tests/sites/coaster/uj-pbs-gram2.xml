@@ -1,0 +1,11 @@
+<config>
+
+  <pool handle="teraport" >
+    <gridftp  url="gsiftp://osg-ce.grid.uj.ac.za" /> 
+    <execution provider="coaster" url="osg-ce.grid.uj.ac.za" jobManager="gt2:pbs" />
+
+    <workdirectory >/nfs/home/benc/swifttest</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">4</profile>
+  </pool>
+
+</config>
