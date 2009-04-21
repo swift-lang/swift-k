@@ -1,0 +1,28 @@
+Site tests
+==========
+
+To run all tests in the root, say:
+
+ $ ./run-all
+
+To run a single site test, say:
+
+ $ ./run-site <nameofsitefile>
+
+To run a subdirectory of tests, say:
+
+ $ ./run-all subdirectory/
+
+The trailing / is important.
+
+The tests in the root of sites/ should generally work for users associated
+with Swift (for example, by being on Swift teragrid allocations or by being
+in an OSG VO)
+
+Tests in wonky/ should run locally against a Swift built with provider-wonky.
+These generally should test the reliabilty mechanisms of Swift.
+
+Tests defined in subdirectories named after hosts (eg tg-login.uc.teragrid.org)
+should be run on that host, and should test functionality available on that
+host (such as a local PBS or condor installation).
+
