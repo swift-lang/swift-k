@@ -203,6 +203,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 read = file.read(buf);
             }
             file.close();
+            out.close();
         }
     }
 
@@ -369,6 +370,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             while (i.hasNext()) {
                 StreamPair sp = (StreamPair) i.next();
                 sp.os.close();
+                sp.is.close();
             }
         }
         public int getExitCode() {
