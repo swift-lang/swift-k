@@ -9,3 +9,4 @@ sed 's/\([^ ]*\) INFO  vdl:initshareddir START host=\([^ ]*\) -.*$/\1 \2 START/'
 sed 's/\([^ ]*\) INFO  vdl:initshareddir END host=\([^ ]*\) -.*$/\1 \2 END/' |\
  grep -E '^[^$]'
 
+exit 0
