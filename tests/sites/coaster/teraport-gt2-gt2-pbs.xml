@@ -2,8 +2,8 @@
 	<pool handle="teraport" >
 		<profile namespace="globus" key="queue">fast</profile>
 		<profile namespace="globus" key="coasterWorkerMaxwalltime">00:05:00</profile>
-		<gridftp url="gsiftp://tp-grid1.ci.uchicago.edu" />
-		<execution provider="coaster" url="tp-grid1.ci.uchicago.edu" jobmanager="gt2:gt2:pbs" />
-		<workdirectory>/gpfs1/osg/data/swift-test</workdirectory>
+		<gridftp url="gsiftp://tp-osg.ci.uchicago.edu" />
+		<execution provider="coaster" url="tp-osg.ci.uchicago.edu" jobmanager="gt2:gt2:pbs" />
+		<workdirectory>/gpfs/teraport/benc/swifttest</workdirectory>
 	</pool>
 </config>
