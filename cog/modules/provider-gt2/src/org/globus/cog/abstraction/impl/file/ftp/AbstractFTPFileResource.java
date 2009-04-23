@@ -16,6 +16,7 @@ import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.IrrecoverableResourceException;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
+import org.globus.ftp.exception.DataChannelException;
 import org.globus.ftp.exception.FTPException;
 import org.globus.ftp.exception.ServerException;
 
@@ -49,6 +50,9 @@ public abstract class AbstractFTPFileResource extends AbstractFileResource {
                 else {
                     return new FileResourceException(message, e);
                 }
+            }
+            else if (e instanceof DataChannelException) {
+                return new IrrecoverableResourceException(message, e);
             }
             else {
                 return new FileResourceException(message, e);
