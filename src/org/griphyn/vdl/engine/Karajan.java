@@ -756,7 +756,7 @@ public class Karajan {
 				 || type.equals("boolean") || type.equals("boolean[]")) {
 					appST.setAttribute("arguments", argumentST);
 				} else {
-					throw new CompilationException("Cannot pass type '"+type+"' as a parameter to application '"+app.getExecutable());
+					throw new CompilationException("Cannot pass type '"+type+"' as a parameter to application '"+app.getExecutable()+"'");
 				}
 			}
 			if(app.getStdin()!=null)
