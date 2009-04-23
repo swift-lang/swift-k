@@ -20,6 +20,11 @@ sed 's/\([^ ]*\) INFO  vdl:execute \([^ ]*\) .*thread=\([^ ]*\).*tr=\([^ ]*\).*$
 sed 's/\([^ ]*\) INFO  vdl:execute \([^ ]*\) .*thread=\([^ ]*\).*$/\1 \3 \2/' |\
  grep -E '^[^$]'
 
+# force a successful exit, rather than using the exit codes from pipeline
+# components above (most probably grep?)
+
+exit 0
+
 #sed 's/^\([^ ]*\) [^ ]+ +vdl:execute \([^ ]*\) thread=\([^ ]*\).*/\1 \3 \2/'
 
 # | \
