@@ -62,6 +62,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private JobOutputStream stderrStream;
     private GSSCredential credential;
     private String jobManager;
+    private boolean clean;
 
     public void submit(Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
@@ -542,12 +543,17 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             default:
                 break;
         }
-        if ((status == 4) || (status == 8)) {
+        if ((status == GRAMConstants.STATUS_FAILED) || (status == GRAMConstants.STATUS_DONE)) {
             cleanup();
         }
     }
 
     private synchronized void cleanup() {
+        if (clean) {
+            logger.warn("Job cleaned before");
+            return;
+        }
+        clean = true;
         try {
             this.gramJob.removeListener(this);
             CallbackHandlerManager.decreaseUsageCount(this.credential);
