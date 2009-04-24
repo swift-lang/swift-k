@@ -65,7 +65,7 @@
     made in the same statement.
 
 (02/05/09)
-*** TIghter type checking on app blocks. Primitive types and arrays of
+*** Tighter type checking on app blocks. Primitive types and arrays of
     primitive types are permitted. Other types are prohibited.
 
 *** Arrays of primitive types can be passed to app blocks, and will be
