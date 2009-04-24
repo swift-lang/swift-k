@@ -349,19 +349,19 @@ public class WorkerManager extends Thread {
         }
         else {
             synchronized (this) {
-                if (currentWorkers >= MAX_WORKERS) {
-                    this.wait(250);
-                    return null;
-                }
-                boolean alreadyThere;
-                alreadyThere = !startingTasks.add(prototype);
-
-                if (!alreadyThere) {
-                    currentWorkers += getCoastersPerNode(prototype);
-                    if (logger.isInfoEnabled()) {
-                        logger.info("No suitable worker found. Attempting to start a new one.");
+                synchronized (allocationRequests) {
+                    if (currentWorkers + allocationRequests.size() >= MAX_WORKERS) {
+                        this.wait(250);
+                        return null;
                     }
-                    synchronized (allocationRequests) {
+                    boolean alreadyThere;
+                    alreadyThere = !startingTasks.add(prototype);
+
+                    if (!alreadyThere) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("No suitable worker found. Attempting to start a new one.");
+                        }
+
                         if (allocationRequests.size() < MAX_STARTING_WORKERS) {
                             allocationRequests.add(new AllocationRequest(maxWallTime, prototype));
                             allocationRequests.notify();
@@ -423,12 +423,13 @@ public class WorkerManager extends Thread {
             startingTasks.remove(wr.getRunning());
             ready.put(new WorkerKey(wr), wr);
             ids.put(id, wr);
+            currentWorkers++;
             wr.workerRegistered();
         }
     }
 
     public void removeWorker(Worker worker) {
-        synchronized (this) {            
+        synchronized (this) {
             if (busy.remove(worker)) {
                 if (logger.isInfoEnabled()) {
                     logger.info(worker + " was busy");
@@ -440,6 +441,7 @@ public class WorkerManager extends Thread {
                 }
             }
             startingTasks.remove(worker.getRunning());
+            requested.remove(worker.getId());
             if (ids.remove(worker.getId()) != null) {
                 currentWorkers--;
             }
@@ -506,8 +508,9 @@ public class WorkerManager extends Thread {
             synchronized (this) {
                 Iterator i;
                 List callbacks = new ArrayList();
-                //wr.shutdown removes the worker from this manager, which messes
-                //up with the iteration
+                // wr.shutdown removes the worker from this manager, which
+                // messes
+                // up with the iteration
                 i = new ArrayList(ready.values()).iterator();
                 while (i.hasNext()) {
                     Worker wr = (Worker) i.next();
