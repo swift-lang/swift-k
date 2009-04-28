@@ -58,6 +58,8 @@ procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,
   $optargs:default_arg();separator="\n"$
   $outputs:typecheck();separator="\n"$
   $inputs:typecheck();separator="\n"$
+  $inputs:vdl_log_input();separator="\n"$
+  $outputs:vdl_log_output();separator="\n"$
 $if(binding)$
   $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
 $else$
@@ -99,8 +101,6 @@ typecheck() ::= <<
 
 vdl_execute(outputs,inputs,application,name,line) ::= <<
 <log level="info" message="PROCEDURE line=$line$ thread={#thread} name=$name$"/>
-$inputs:vdl_log_input();separator="\n"$
-$outputs:vdl_log_output();separator="\n"$
 <vdl:execute>
   <vdl:tr>$application.exec$</vdl:tr>
   $inputs:vdl_stagein();separator="\n"$
