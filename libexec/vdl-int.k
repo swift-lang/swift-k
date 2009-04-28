@@ -421,7 +421,8 @@ namespace("vdl"
 							replicationChannel=replicationChannel
 							jobid=jobid
 						)
-						
+
+						vdl:setprogress("Checking status")
 						if(statusMode == "files"
 							checkJobStatus(rhost, wfdir, jobid, tr, jobdir)
 						)

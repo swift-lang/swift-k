@@ -36,6 +36,7 @@ public class RuntimeStats extends FunctionsCollection {
 		"Submitting",
 		"Submitted",
 		"Active",
+		"Checking status",
 		"Stage out",
 		"Failed",
 		"Replicating",
