@@ -87,6 +87,15 @@ for testfn in $TESTS; do
       fi
     fi
 
+    # check that all execute and execute2 IDs are unique
+    swift-plot-log ${t}-*.log execute.transitions
+    if [ "$( cat execute.transitions | grep ' START ' | cut -d ' ' -f 2 | sort | uniq -d)" != "" ]; then
+      echo EXECUTE IDS NOT UNIQUE
+      exit 3
+    fi
+
+
+
   done
   echo "Test passed at $(date)"
   if [ "$SUB" == "" ]; then
