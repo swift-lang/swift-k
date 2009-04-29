@@ -29,6 +29,7 @@
   <namespace prefix="vdl">
 	<export name="vdl:getdatasetprovenanceid"><elementDef classname="org.griphyn.vdl.karajan.lib.GetDatasetProvenanceID"/></export>
 	<export name="infinitecountingwhile"><elementDef classname="org.griphyn.vdl.karajan.lib.InfiniteCountingWhile"/></export>
+	<export name="sequentialwithid"><elementDef classname="org.griphyn.vdl.karajan.lib.SequentialWithID"/></export>
 	<export name="startprogressticker"><elementDef classname="org.griphyn.vdl.karajan.lib.RuntimeStats"/></export>
 	<export name="stopprogressticker"><elementDef classname="org.griphyn.vdl.karajan.lib.RuntimeStats"/></export>
 	<export name="initprogressstate"><elementDef classname="org.griphyn.vdl.karajan.lib.RuntimeStats"/></export>

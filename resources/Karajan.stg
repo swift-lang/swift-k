@@ -166,7 +166,9 @@ $if(rest(statements))$
   $statements;separator="\n"$
 </parallel>
 $else$
-$statements$
+<sequentialWithID>
+  $statements$
+</sequentialWithID>
 $endif$
 >>
 
