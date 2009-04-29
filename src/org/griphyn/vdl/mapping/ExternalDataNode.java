@@ -35,7 +35,7 @@ public class ExternalDataNode implements DSHandle {
 	    (or any other) particular value. Note that this introduces a
 	    maximum on the number of datasets which can be dealt with in any
 	    run to be about 2^62. */
-	private static long datasetIDCounter = 720000000000l;
+	private static long datasetIDCounter = 850000000000l;
 
 	/** This is used to provide a (hopefully) globally unique identifier for
 	    each time the datasetIDCounter is reset (whenever this class is
