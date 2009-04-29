@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# this will take a log file and produce a set of state transition
+# events for every compound procedure
+
+# 2009-04-29 10:46:36,072+0200 INFO  compound STARTCOMPOUND thread=0 name=compound
+# 2009-04-29 10:46:36,398+0200 INFO  compound ENDCOMPOUND thread=0
+
+grep ' STARTCOMPOUND ' $1 | iso-to-secs | \
+sed 's/^\(.*\) INFO  [^ ]* STARTCOMPOUND thread=\([0-9\-]*\) name=\([^ ]*\).*$/\1 \2 START \3/' 
+
+grep ' ENDCOMPOUND ' $1 | iso-to-secs | \
+sed 's/^\(.*\) INFO  [^ ]* ENDCOMPOUND thread=\([0-9\-]*\).*$/\1 \2 END/' 
+
+

@@ -154,6 +154,7 @@
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-execute2-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-initshareddir-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-karatasks-transitions"/>
+		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-compound-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/logs-for-all"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/lookup-colour"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/max-duration"/>

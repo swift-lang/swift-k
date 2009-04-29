@@ -97,6 +97,9 @@ dostagein.transitions: $(LOG)
 dostageout.transitions: $(LOG)
 	log-to-dostageout-transitions < $(LOG) > dostageout.transitions
 
+compound.transitions: $(LOG)
+	log-to-compound-transitions $(LOG) > compound.transitions
+
 ## retry analysis
 
 jobs.retrycount.summary: execute2.event
