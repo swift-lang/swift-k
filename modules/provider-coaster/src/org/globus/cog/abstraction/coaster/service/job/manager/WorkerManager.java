@@ -66,7 +66,7 @@ public class WorkerManager extends Thread {
 
     public static final int OVERALLOCATION_FACTOR = 10;
 
-    public static final int MAX_WORKERS = 256;
+    public static final int MAX_WORKERS = 2048;
     public static final int MAX_STARTING_WORKERS = 32;
 
     public static final List coasterAttributes =
@@ -196,7 +196,6 @@ public class WorkerManager extends Thread {
         t.setRequiredService(1);
         t.setService(0, buildService(prototype));
         synchronized (this) {
-            maxJobs = getMaxJobs(prototype);
             if (!startingTasks.contains(prototype)) {
                 return;
             }
@@ -222,12 +221,12 @@ public class WorkerManager extends Thread {
         }
         try {
             handler.submit(t);
-            workerTasks.add(t);
         }
         catch (Exception e) {
             prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(), e));
         }
         synchronized (this) {
+            workerTasks.add(t);
             requested.putAll(newlyRequested);
         }
     }
@@ -353,13 +352,14 @@ public class WorkerManager extends Thread {
         }
         else {
             synchronized (this) {
+                maxJobs = getMaxJobs(prototype);
                 synchronized (allocationRequests) {
                     if (currentWorkers + allocationRequests.size() >= MAX_WORKERS) {
                         this.wait(250);
                         return null;
                     }
-                    if (workerTasks.size() >= maxJobs) {
-                        logger.info("Maximum worker jobs reached");
+                    if (workerTasks.size() + allocationRequests.size() + 1 >= maxJobs) {
+                        logger.info("Maximum worker jobs reached (" + maxJobs + ")");
                         this.wait(250);
                         return null;
                     }
