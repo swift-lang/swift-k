@@ -71,7 +71,7 @@ public class WorkerManager extends Thread {
 
     public static final List coasterAttributes =
             Arrays.asList(new String[] { "coasterspernode", "coasterinternalip",
-                    "coasterworkermaxwalltime" });
+                    "coasterworkermaxwalltime", "coastermaxjobs" });
 
     private SortedMap ready;
     private Map ids;
@@ -85,7 +85,8 @@ public class WorkerManager extends Thread {
     private URI callbackURI;
     private LocalTCPService localService;
     private TaskHandler handler;
-    private int currentWorkers;
+    private int currentWorkers, maxJobs;
+    private Set workerTasks;
 
     public WorkerManager(LocalTCPService localService) throws IOException {
         super("Worker Manager");
@@ -100,6 +101,7 @@ public class WorkerManager extends Thread {
         writeScript();
         sr = new IDGenerator();
         handler = new ExecutionTaskHandler();
+        workerTasks = new HashSet();
     }
 
     private void writeScript() throws IOException {
@@ -194,6 +196,7 @@ public class WorkerManager extends Thread {
         t.setRequiredService(1);
         t.setService(0, buildService(prototype));
         synchronized (this) {
+            maxJobs = getMaxJobs(prototype);
             if (!startingTasks.contains(prototype)) {
                 return;
             }
@@ -219,6 +222,7 @@ public class WorkerManager extends Thread {
         }
         try {
             handler.submit(t);
+            workerTasks.add(t);
         }
         catch (Exception e) {
             prototype.setStatus(new StatusImpl(Status.FAILED, e.getMessage(), e));
@@ -354,6 +358,11 @@ public class WorkerManager extends Thread {
                         this.wait(250);
                         return null;
                     }
+                    if (workerTasks.size() >= maxJobs) {
+                        logger.info("Maximum worker jobs reached");
+                        this.wait(250);
+                        return null;
+                    }
                     boolean alreadyThere;
                     alreadyThere = !startingTasks.add(prototype);
 
@@ -384,6 +393,7 @@ public class WorkerManager extends Thread {
         Status s = worker.getStatus();
         Task running = worker.getRunning();
         synchronized (this) {
+            workerTasks.remove(worker.getWorkerTask());
             if (s.getStatusCode() == Status.FAILED || requested.containsKey(worker.getId())) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Failed or starting: " + worker);
@@ -490,7 +500,16 @@ public class WorkerManager extends Thread {
         else {
             return Integer.parseInt(numWorkersString);
         }
-
+    }
+    
+    protected int getMaxJobs(Task t) {
+        String s = (String) ((JobSpecification) t.getSpecification()).getAttribute("coasterMaxJobs");
+        if (s == null) {
+            return Integer.MAX_VALUE;
+        }
+        else {
+            return Integer.parseInt(s);
+        }
     }
 
     private static class AllocationRequest {
