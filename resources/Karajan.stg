@@ -1,5 +1,7 @@
 group Karajan;
 
+// TODO can move progress ticker start into vdl:mains so karajan files
+// are smaller
 program(types,procedures,declarations,statements,constants,buildversion) ::= <<
 <project><!-- CACHE ID $buildversion$ -->
   <import file="sys.xml"/>
@@ -19,7 +21,6 @@ program(types,procedures,declarations,statements,constants,buildversion) ::= <<
   $if(statements)$
   <restartLog>
   	<vdl:mains>
-<!-- TODO can move into vdl:mains so karajan files are smaller -->
 		<vdl:startprogressticker />
 		<vdl:mainp>
 		    $parallel(statements=statements)$
