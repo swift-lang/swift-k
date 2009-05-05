@@ -24,7 +24,11 @@ namespace("vdl"
 	export(
 
 		element(parameterlog, [direction, variable, id],
-			log("info","PARAM thread={#thread} direction={direction} variable={variable} provenanceid={id}")
+
+			if(
+				vdl:configProperty("provenance.log") == "true"
+				log("info","PARAM thread={#thread} direction={direction} variable={variable} provenanceid={id}")
+			)
 		)
 
 		element(split, [var], each(str:split(vdl:getFieldValue(var), " ")))

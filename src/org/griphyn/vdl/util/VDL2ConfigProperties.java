@@ -24,6 +24,7 @@ public class VDL2ConfigProperties {
 	public static final String KICKSTART_ALWAYS_TRANSFER = "kickstart.always.transfer";
 	public static final String WRAPPERLOG_ALWAYS_TRANSFER = "wrapperlog.always.transfer";
 	public static final String SITEDIR_KEEP = "sitedir.keep";
+	public static final String PROVENANCE_LOG = "provenance.log";
 	public static final Map PROPERTIES;
 
 	static {
@@ -108,6 +109,12 @@ public class VDL2ConfigProperties {
 					"<true|false>",
 					"If set to true, keeps remote site run directory after execution has completed."));
 
+
+		PROPERTIES.put(
+				PROVENANCE_LOG,
+				new PropInfo(
+					"<true|false>",
+					"If set to true, will record provenance information in the log file"));
 
 	}
 

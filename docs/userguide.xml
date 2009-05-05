@@ -2968,6 +2968,23 @@ translation of the job initial working directory. In such cases,
 							</para>
 						</listitem>
 					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<property>provenance.log</property>
+						</term>
+						<listitem>
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+							<para>
+								This property controls whether the log file will contain provenance information enabling this will increase the size of log files, sometimes significantly.
+							</para>
+						</listitem>
+					</varlistentry>
 										
 				</variablelist>
 				

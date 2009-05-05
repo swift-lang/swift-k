@@ -83,6 +83,7 @@ public class VDL2Config extends Properties {
 		put("throttle.file.operations", "8");
 		put("throttle.score.job.factor", "4");
 		put(VDL2ConfigProperties.SITEDIR_KEEP, "false");
+		put(VDL2ConfigProperties.PROVENANCE_LOG, "false");
 		
 		put("replication.enabled", "false");
 		put("replication.min.queue.time", "60");
@@ -200,6 +201,10 @@ public class VDL2Config extends Properties {
 
 	public boolean getSitedirKeep() {
 		return Boolean.valueOf(getProperty(VDL2ConfigProperties.SITEDIR_KEEP, "true")).booleanValue();
+	}
+
+	public boolean getProvenanceLog() {
+		return Boolean.valueOf(getProperty(VDL2ConfigProperties.PROVENANCE_LOG, "false")).booleanValue();
 	}
 
 	public String toString() {

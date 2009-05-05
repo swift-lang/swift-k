@@ -20,6 +20,9 @@ import org.griphyn.vdl.type.Types;
 
 import org.griphyn.vdl.karajan.VDL2FutureException;
 
+import org.griphyn.vdl.util.VDL2Config;
+
+
 public abstract class AbstractDataNode implements DSHandle {
 
 	static final String DATASET_URI_PREFIX = "tag:benc@ci.uchicago.edu,2008:swift:dataset:";
@@ -392,12 +395,15 @@ public abstract class AbstractDataNode implements DSHandle {
 		notifyListeners();
 		logger.info("closed " + this.getIdentifyingString());
 		// so because its closed, we can dump the contents
+
 		try {
-			logContent();
+			if(VDL2Config.getConfig().getProvenanceLog()) {
+				logContent();
+			}
 		}
 		catch (Exception e) {
 			logger.warn("Exception whilst logging dataset content for " + this,
-					e);
+				e);
 		}
 		// TODO record retrospective provenance information for this dataset
 		// here
