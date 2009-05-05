@@ -1,0 +1,2691 @@
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [] >
+
+<!-- build this doc by symlinking to it form your swift/docs directory
+and typing make provenance.php -->
+
+<article>
+<title>provenance working notes, benc</title>
+<screen>$Id$</screen>
+<section><title>Goal of this present work</title>
+<para>
+The goal of the work described in this document is to investigate
+<emphasis>retrospective provenance</emphasis> and
+<emphasis>metadata handling</emphasis> in Swift, with an emphasis
+on effective querying of the data, rather than on collection of the data.
+</para>
+
+<para>
+The motivating examples are queries of the kinds discussed in section 4 of
+<ulink url="http://www.ci.uchicago.edu/swift/papers/VirtualDataProvenance.pdf"
+>'Applying the Virtual Data Provenance Model'</ulink>;
+the queries and metadata in the <ulink url="http://twiki.ipaw.info/bin/view/Challenge/FirstProvenanceChallenge"
+>First Provenance Challenge</ulink>; and the metadata database used by
+i2u2 cosmic.
+</para>
+
+<para>
+I am attempting to scope this so that it can be implemented in a few
+months; more expensive features, though desirable, are relegated the the
+'What this work does not address' section. Features which appear fairly
+orthogonal to the main aims are also omitted.
+</para>
+
+<para>
+This document is a combination of working notes and on-going status report
+regarding my provenance work; as such its got quite a lot of opinion in it,
+some of it not justified in the text.
+</para>
+
+</section>
+<section id="owndb"><title>Running your own provenance database</title>
+<para>This section details running your own SQL-based provenance database on
+servers of your own control.</para>
+
+<section><title>Check out the latest SVN code</title>
+
+<para>
+Use the following command to check out the <literal>provenancedb</literal>
+module:
+
+<screen>
+svn co https://svn.ci.uchicago.edu/svn/vdl2/provenancedb                      
+</screen>
+</para>
+
+</section>
+
+
+<section><title>Configuring your SQL database</title>
+<para>
+Follow the instructions in one of the following sections, to configure your
+database either for sqlite3 or for postgres.
+</para>
+<section><title>Configuring your sqlite3 SQL database</title>
+<para>
+This section describes configuring the SQL scripts to use 
+<ulink url="http://www.sqlite.org/">sqlite</ulink>, which is
+appropriate for a single-user installation.
+</para>
+<para>Install or find sqlite3. On
+<literal>communicado.ci.uchicago.edu</literal>, it is installed and can be
+accessed by adding the line <literal>+sqlite3</literal> to your ~/.soft file
+and typing <literal>resoft</literal>. Alternatively, on OS X with MacPorts, this command works:
+<screen>
+$ <userinput>sudo port install sqlite3</userinput>
+</screen>
+Similar commands using <literal>apt</literal> or <literal>yum</literal> will
+probably work under Linux.
+</para>
+<para>
+In the next section, you will create a <literal>provenance.config</literal>
+file. In that, you should configure the use of sqlite3 by specifying:
+<screen>
+export SQLCMD="sqlite3 provdb "
+</screen>
+(note the trailing space before the closing quote)
+</para>
+</section>
+
+<section><title>Configuring your own postgres 8.3 SQL database</title>
+<para>
+This section describes configuring a postgres 8.3 database, which is
+appropriate for a large installation (where large means lots of log
+files or multiple users)
+</para>
+<para>
+First install and start postgres as appropriate for your platform
+(using <command>apt-get</command> or <command>port</command> for example).
+</para>
+<para>
+As user <literal>postgres</literal>, create a database:
+<screen>
+$ <userinput>/opt/local/lib/postgresql83/bin/createdb provtest1</userinput>
+</screen>
+</para>
+<para>
+Check that you can connect and see the empty database:
+<screen>
+$ <userinput>psql83 -d provtest1 -U postgres</userinput>
+Welcome to psql83 8.3.6, the PostgreSQL interactive terminal.
+
+Type:  \copyright for distribution terms
+       \h for help with SQL commands
+       \? for help with psql commands
+       \g or terminate with semicolon to execute query
+       \q to quit
+
+provtest1=# <userinput>\dt</userinput>
+No relations found.
+provtest1=# <userinput>\q</userinput>
+</screen>
+</para>
+<para>
+In the next section, when configuring <literal>provenance.config</literal>,
+specify the use of postgres like this:
+<screen>
+export SQLCMD="psql83 -d provtest1 -U postgres "
+</screen>
+Note the trailing space before the final quote. Also, note that if you
+fiddled the above test command line to make it work, you will have to make
+similar fiddles in the <literal>SQLCMD</literal> configuration line.
+</para>
+</section>
+</section>
+
+<section><title>Import your logs</title>
+<para>
+Now create a <filename>etc/provenance.config</filename> file to define local
+configuration. An example that I use on my laptop is present in
+<filename>provenance.config.soju</filename>.
+The <literal>SQLCMD</literal> indicates which command to run for SQL
+access. This is used by other scripts to access the database. The
+<literal>LOGREPO</literal> and <literal>IDIR</literal> variables should
+point to the directory under which you collect your Swift logs.
+</para>
+<para>
+Now import your logs for the first time like this:
+<screen>
+$ <userinput>./swift-prov-import-all-logs rebuild</userinput>
+</screen>
+</para>
+
+</section>
+
+<section><title>Querying the newly generated database</title>
+<para>
+You can use <command>swift-about-*</command> commands, described in
+the <link linkend="commands">commands section</link>.
+</para>
+<para>
+If you're using the SQLite database, you can get an interactive SQL
+session to query your new provenance database like this:
+<screen>
+$ <userinput>sqlite3 provdb</userinput>
+SQLite version 3.6.11
+Enter ".help" for instructions
+Enter SQL statements terminated with a ";"
+sqlite> 
+</screen>
+
+</para>
+</section>
+
+</section>
+
+<section id="commands"><title>swift-about-* commands</title>
+<para>There are several swift-about- commands:
+</para>
+<para>swift-about-filename - returns the global dataset IDs for the specified
+filename. Several runs may have output the same filename; the provenance
+database cannot tell which run (if any) any file with that name that
+exists now came from.
+</para>
+<para>Example: this looks for information about
+<filename>001-echo.out</filename> which is the output of the first
+test in the language-behaviour test suite:
+<screen>
+$ <userinput>./swift-about-filename 001-echo.out</userinput>
+Dataset IDs for files that have name file://localhost/001-echo.out
+ tag:benc@ci.uchicago.edu,2008:swift:dataset:20080114-1353-g1y3moc0:720000000001
+ tag:benc@ci.uchicago.edu,2008:swift:dataset:20080107-1440-67vursv4:720000000001
+ tag:benc@ci.uchicago.edu,2008:swift:dataset:20080107-2146-ja2r2z5f:720000000001
+ tag:benc@ci.uchicago.edu,2008:swift:dataset:20080107-1608-itdd69l6:720000000001
+ tag:benc@ci.uchicago.edu,2008:swift:dataset:20080303-1011-krz4g2y0:720000000001
+ tag:benc@ci.uchicago.edu,2008:swift:dataset:20080303-1100-4in9a325:720000000001
+</screen>
+Six different datasets in the provenance database have had that filename
+(because six language behaviour test runs have been uploaded to the
+database).
+</para>
+
+<para>swift-about-dataset - returns information about a dataset, given
+that dataset's uri. Returned information includes the IDs of a containing
+dataset, datasets contained within this dataset, and IDs for executions
+that used this dataset as input or output.
+</para>
+<para>Example:
+<screen>
+$ <userinput>./swift-about-dataset tag:benc@ci.uchicago.edu,2008:swift:dataset:20080114-1353-g1y3moc0:720000000001</userinput>
+About dataset tag:benc@ci.uchicago.edu,2008:swift:dataset:20080114-1353-g1y3moc0:720000000001
+That dataset has these filename(s):
+ file://localhost/001-echo.out
+
+That dataset is part of these datasets:
+
+That dataset contains these datasets:
+
+That dataset was input to the following executions (as the specified named parameter):
+
+That dataset was output from the following executions (as the specified return parameter):
+ tag:benc@ci.uchicago.edu,2008:swiftlogs:execute:001-echo-20080114-1353-n7puv429:0                                                | t     
+</screen>
+This shows that this dataset is not part of a more complicated dataset
+structure, and was produced as an output parameter t from an execution.
+</para>
+<para>swift-about-execution - gives information about an execution, given
+an execution ID
+<screen>
+$ <userinput>./swift-about-execution tag:benc@ci.uchicago.edu,2008:swiftlogs:execute:001-echo-20080114-1353-n7puv429:0</userinput>
+About execution tag:benc@ci.uchicago.edu,2008:swiftlogs:execute:001-echo-20080114-1353-n7puv429:0
+                                                                id                                                                |   starttime    |     duration      |                                                            finalstate                                                            |                                                               app                                                                |                                                             scratch                                                              
+----------------------------------------------------------------------------------------------------------------------------------+----------------+-------------------+----------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------
+ tag:benc@ci.uchicago.edu,2008:swiftlogs:execute:001-echo-20080114-1353-n7puv429:0                                                | 1200318839.393 | 0.743000030517578 | 0                                                                                                                                | END_SUCCESS                                                                                                                      | echo                                                                                                                            
+(1 row)
+</screen>
+This shows some basic information about the execution - the start time,
+the duration, the name of the application, the final status.
+</para>
+
+</section>
+
+
+<section><title>What this work does not address</title>
+
+<para>This work explicitly excludes a number of uses which traditionally
+have been associated with the VDS1 Virtual Data Catalog - either as real
+or as imagined functionality.</para>
+
+<para>
+Much of this is open to debate; especially regarding which features are the
+most important to implement after the first round of implementation has
+occurred.
+</para>
+
+<variablelist>
+
+<varlistentry>
+<term>Namespaces and versioning</term>
+<listitem> <para>
+the need for these is somewhat orthogonal to the work here.
+</para>
+<para>Namespaces and versions provide a richer identifier but don't
+fundamentally change the nature of the identifier.</para>
+<para>so for now I mostly ignore as they are
+(I think) fairly straightforward drudgework to implement, rather than
+being fundamentally part of how queries are formed. Global namespaces
+are used a little bit for identifying datasets between runs (see tag URI
+section)
+</para> </listitem>
+</varlistentry>
+
+<varlistentry> <term>Workflow execution summaries</term>
+<listitem> <para>
+general summary information of workflow executions
+(though a workflow probably fits in the compound hierarchy as a compound
+above all others)
+</para>
+</listitem>
+</varlistentry>
+
+
+<varlistentry>
+<term>Prospective provenance</term>
+<listitem> <para>
+SwiftScript source programs don't have as
+close a similarity to their retrospective structure as in VDL1, so a bunch
+of thought required here. Is this required? Is it different from the
+SwiftScript program-library point?
+</para> </listitem>
+</varlistentry>
+<varlistentry> <term>A database of all logged information</term>
+<listitem>
+<para>though it would be interesting
+to see what could be done there. straightforward to import eg.
+.event and/or .transition files from log parsers into the DB.
+</para>
+</listitem>
+</varlistentry>
+
+<varlistentry> <term>Replica management</term>
+<listitem>
+<para>
+No specific replica location or management support. However see sections
+on general metadata handling (in as much as general metadata can support
+replica location as a specific metadata usecase); and also the section on
+global naming in the to-be-discussed section. This ties in with the
+Logical File Names concept somehow.
+</para>
+</listitem>
+</varlistentry>
+
+
+<varlistentry> <term>A library for SwiftScript code</term>
+<listitem>
+<para>need better uses for this and
+some indication that a more conventional version control system is
+not more appropriate.
+</para>
+<para>
+Also included in this exclusion is storage of type definitions.
+Its straightforward to store type names; but the definitions are
+per-execution. More usecases would be useful here to figure out what sort
+of query people want to make.
+</para>
+</listitem>
+</varlistentry>
+
+<varlistentry> <term>Command-line utilities</term>
+<listitem>
+<para>A set of command-line utilities giving access to
+provenance database.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry> <term>Live status updates of in-progress workflows</term>
+<listitem>
+<para>
+this may happen if data goes
+into the DB during run rather than at end (which may or may not happen).
+also need to deal with slightly different data - for example, execute2s
+that ran but failed (which is not direct lineage provenance?)
+</para>
+<para>
+so - one successful invocation has: one execute, one execute2 (the most recent),
+and maybe one kickstart record. it doesn't track execute2s and kickstarts for
+failed execution attempts (nor, perhaps, for failed workflows at all...)
+</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>Deleting or otherwise modifying provenance data</term>
+<listitem>
+<para>
+Deleting or otherwise modifying provenance data. Though deleting/modifying
+other metadata should be taken into account.
+</para>
+</listitem>
+</varlistentry>
+
+<varlistentry> <term>Security</term>
+<listitem>
+<para>There are several approaches
+here. The most native approach is to use the security model of the
+underlying database (which will vary depending on which database is used).
+</para>
+<para>This is a non-trivial area, especially to do with any richness.
+Trust relationships between the various parties accessing the database
+should be taken into account.
+</para>
+</listitem>
+</varlistentry>
+
+<varlistentry><term>A new metadata or provenance query language</term>
+<listitem>
+<para>Designing a (useful - i.e. usable and performing) database
+and query language is a non-trivial exercise (on the order of years).
+</para>
+<para>
+For now, use existing query languages and their implementations. Boilerplate
+queries can be developed around those languages.
+</para>
+<para>
+One property of this is that there will not be a uniform query language for
+all prototypes. This is contrast to the VDS1 VDC which had a language which
+was then mapped to at least SQL and perhaps some XML query language too.
+</para>
+<para>
+An intermediate / alternative to something language-like is a much more
+tightly constrained set of library / template queries with a very constrained
+set of parameters.
+</para>
+<para>
+Related to this is the avoidance as much as possible of mixing models; so that
+one query language is needed for part of a query, and another query language
+is needed for another part of a query. An example of this in practice is the
+storage of XML kickstart records as blobs inside a relational database in the
+VDS1 VDC. SQL could be used to query the containing records, whilst an
+XML query language had to be used to query inner records. No benefit could
+be derived there from query language level joining and query optimisation;
+instead the join had to be implemented poorly by hand.
+</para>
+</listitem>
+</varlistentry>
+
+<varlistentry><term>An elegant collection mechanism for provenance or
+metadata</term>
+<listitem> <para>
+The prototypes here collect their information through log stripping. This
+may or may not be the best way to collect the data. For example, hooks
+inside the code might be a better way.
+</para></listitem>
+</varlistentry>
+
+</variablelist>
+</section>
+
+<section><title>Summary of the queries and metadata in the motivating
+sources</title>
+<para>TODO. a bunch of this is on paper.</para>
+</section>
+
+<section><title>Data model</title>
+<section><title>Introduction to the data model</title>
+<para>
+All of the prototypes use a basic data model that is strongly
+related to the structure of data in the log files; much of the naming here
+comes from names in the log files, which in turn often comes from source
+code procedure names.
+</para>
+<para>
+The data model consists of the following data objects:
+</para>
+<para>execute - an execute represents a procedure call in a
+SwiftScript program.
+</para>
+<para>execute2 - an execute2 is an attempt to actually execute an
+'execute' object.</para>
+<para>dataset - a dataset is data used by a Swift program. this might be
+a file, an array, a structure, or a simple value.</para>
+<para>workflow - a workflow is an execution of an entire SwiftScript
+program</para>
+</section>
+
+<section><title>execute</title>
+
+<para>
+<firstterm>execute</firstterm> - an 'execute' is an execution of a
+procedure call in a SwiftScript program. Every procedure call in a
+SwiftScript program corresponds to either
+one execute (if the execution was attempted) or zero (if the workflow was
+abandoned before an execution was attempted). An 'execute' may encompass
+a number of attempts to run the appropriate procedure, possibly on differnt
+sites. Those attempts are contained within an execute as execute2 entities.
+Each execute is related to zero or more datasets - those passed as inputs
+and those that are produced as outputs.
+</para>
+</section>
+<section><title>execute2</title>
+<para>
+<firstterm>execute2</firstterm> - an 'execute2' is an attempt to run a
+program on some grid site. It consists of staging in input files, running the
+program, and staging out the output files. Each execute2 belongs to exactly
+one execute. If the database is storing only successful workflows and
+successful executions, then each execute will be associated with
+exactly one execute2. If storing data about unsuccessful workflows or
+executions, then each execute may have zero or more execute2s.
+</para>
+</section>
+<section><title>dataset</title>
+<para>
+A dataset represents data within a
+SwiftScript program. A dataset can be an array, a structure, a file or
+a simple value. Depending on the nature of the dataset it may have some
+of the following attributes: a value (for example, if the dataset
+represents an integer); a filename (if the dataset represents a file);
+child datasets (if the dataset represents a structure or an array); and
+parent dataset (if the dataset is contained with a structure or an
+array).
+</para>
+
+<para>
+At present, each dataset corresponds to exactly one in-memory DSHandle
+object in the Swift runtime environment; however this might not continue
+to be the case - see the discussion section on cross-dataset run
+identification.
+</para>
+
+<para>Datasets may be related to executes, either as datasets
+taken as inputs by an execute, or as datasets produced by an execute.
+A dataset may be produced as an output by at most one execute. If it is not
+produced by any execute, it is an <firstterm>input to the workflow</firstterm>
+and has been produced through some other mechanism. Multiple datasets may
+have the same filename - for example, at present, each time the same file
+is used as an input in different workflows, a different dataset appears in
+the database. this might change. multiple workflows might (and commonly do)
+output files with the same name. at present, these are different datasets,
+but are likely to remain that way to some extent - if the contents of files
+is different then the datasets should be regarded as distinct.
+</para>
+</section>
+<section><title>workflow</title>
+<para>
+<firstterm>workflow</firstterm> - a 'workflow' is an execution of an
+entire SwiftScript program. Each execute belongs to exactly one workflow. At
+present, each dataset also belongs to exactly one workflow (though the
+discussion section talks about how that should not necessarily be the case).
+</para>
+</section>
+
+<para>TODO: diagram of the dataset model (similar to the one in the
+provenance paper but probably different). design so that in the XML
+model, the element containment hierarchies can be easily marked in a
+different colour</para>
+</section>
+
+<section><title>Prototype Implementations</title>
+<para>
+I have made a few prototype implementations to explore ways of storing
+and querying provenance data.
+</para>
+<para>
+The basic approach is: build on the log-processing code, which knows how
+to pull out lots of information from the log files and store it in a
+structured text format; extend Swift to log additional information as
+needed;
+write import code which knows
+how to take the log-processing structured files and put them into whatever
+database/format is needed by the particular prototype.
+</para>
+<para>
+If it is desirable to support more than one of these storage/query mechanisms
+(perhaps because
+they have unordered values of usability vs query expessibility) then
+perhaps should be core provenance output code which is somewhat
+agnostic to storage system (equivalent to the post-log-processing
+text files at the moment) and then some relatively straightforward set
+of importers which are doing little more than syntax change
+(cf. it was easy to adapt the SQL import code to make
+prolog code instead)
+</para>
+
+<para>
+The script <command>import-all</command> will import into the
+basic SQL and eXist XML databases.
+</para>
+
+<section><title>Relational, using SQL</title>
+<para>There are a couple of approaches based around relational databases
+using SQL. The plain SQL approach allows many queries to be answered, but
+does provide particularly easy querying for the transitive relations
+(such as the 'preceeds' relation mentioned elsewhere); ameliorating this 
+problem is point of the second model.
+</para>
+<section>
+<title>Plain SQL</title>
+<para>In this model, the provenance model is mapped to a relational
+schema, stored in sqlite3 and queried with SQL.
+</para>
+
+<para>
+This prototype uses sqlite3 on my laptop. The <command>import-all</command>
+will initialise and import into this database (and also into the XML DB).
+</para>
+
+<para>
+example query - counts how many of each procedure have been called.
+<screen>
+sqlite> select procedure_name, count(procedure_name) from executes, invocation_procedure_names where executes.id = invocation_procedure_names.execute_id group by procedure_name;
+align|4
+average|1
+convert|3
+slicer|3
+</screen>
+</para>
+<para>
+needs an SQL database. sqlite is easy to get (from standard OS software
+repos, and from globus toolkit) so this is not as horrible as it seems. 
+setup requirements for sqlite are minimal.
+</para>
+<para>
+metadata: one way is to handle them as SQL relations. this allows them
+to be queried using SQL quite nicely, and to be indexed and joined on
+quite easily.
+</para>
+<para>
+prov query 1:Find the process that led to Atlas X Graphic / everything that caused Atlas X Graphic to be as it is. This should tell us the new brain images from which the averaged atlas was generated, the warping performed etc.
+</para>
+
+<section><title>Description of tables</title>
+<para>
+Executions are stored in a table called 'executes'. Each execution has the fields: id - a globally unique ID for that execution; starttime - the start time
+of the execution attempt, in seconds since the unix epoch (this is roughly
+the time that swift decides to submit the task, *not* the time that a worker
+node started executing the task); duration - in seconds (time from start time
+to swift finally finishing the execution, not the actual on-worker execution
+time); final state (is likely to always be END_SUCCESS as the present import
+code ignores failed tasks, but in future may include details of failures;
+app - the symbolic name of the application
+</para>
+<para>
+Details of datasets are stored in three tables: dataset_filenames,
+dataset_usage and dataset_containment.
+</para>
+<para>
+dataset_filenames maps filenames (or more generally URIs) to unique dataset
+identifiers.
+</para>
+<para>
+dataset_usage maps from unique dataset identifiers to the execution
+unique identifiers for executions that take those datasets as inputs
+and outputs. execute_id and dataset_id identify the execution and the
+procedure which are related. direction indicates whether this dataset
+was used as an input or an output. param_name is the name of the parameter
+in the SwiftScript source file.
+</para>
+<para>
+dataset_containment indicates which datasets are contained within others,
+for example within a structure or array. An array or structure is a dataset
+with its own unique identifier; and each member of the array or structure
+is again a dataset with its own unique identifier. The outer_dataset_id and
+inner_dataset_id fields in each row indicate respectively the
+containing and contained dataset.
+</para>
+
+</section>
+
+</section>
+
+<section>
+<title>SQL with Pre-generated Transitive Closures</title>
+
+<para>SQL does not allow expression of transitive relations. This causes a
+problem for some of the queries.</para>
+<para>Work has previously been done (cite) to work on pre-generating
+transitive closures over relations. This is similar in concept to the
+pregenerated indices that SQL databases traditionally provide.
+</para>
+<para>In the pre-generated transitive closure model, a transitive closure
+table is pregenerated (and can be incrementally maintained as data is added
+to the database). Queries are then made against this table instead of
+against the ground table.
+</para>
+
+<para>All of the data available in the earlier SQL model is available, in
+addition to the additional closures generated here.</para>
+
+<para>
+Prototype code: There is a script called <literal>prov-sql-generate-transitive-closures.sh</literal> to generate the close of the preceeds
+relation and places it in a table called <literal>trans</literal>:
+<screen>
+$ prov-sql-generate-transitive-closures.sh 
+Previous: 0 Now: 869
+Previous: 869 Now: 1077
+Previous: 1077 Now: 1251
+Previous: 1251 Now: 1430
+Previous: 1430 Now: 1614
+Previous: 1614 Now: 1848
+Previous: 1848 Now: 2063
+Previous: 2063 Now: 2235
+Previous: 2235 Now: 2340
+Previous: 2340 Now: 2385
+Previous: 2385 Now: 2396
+Previous: 2396 Now: 2398
+Previous: 2398 Now: 2398
+</screen>
+</para>
+<para>A note on timing - constructing the closure of 869 base relations,
+leading to 2398 relations in the closure takes 48s with no indices; adding
+an index on a column in the transitive relations table takes this time down
+to 1.6s. This is interesting as an example of how some decent understanding
+of the data structure to produce properly optimised queries and the like
+is very helpful in scaling up, and an argument against implementing a poor
+'inner system'.
+</para>
+<para>Now we can reformulate some of the queries from the SQL section
+making use of this table.
+</para>
+<para>
+There's some papers around about transitive closures in SQL:
+
+<ulink url="http://coblitz.codeen.org:3125/citeseer.ist.psu.edu/cache/papers/cs/554/http:zSzzSzsdmc.krdl.org.sgzSzkleislizSzpsZzSzdlsw-ijit97-9.pdf/dong99maintaining.pdf">'Maintaining transitive closure of graphs in SQL'</ulink>
+and
+<ulink url="http://willets.org/sqlgraphs.html"
+>http://willets.org/sqlgraphs.html</ulink>
+</para>
+
+<para>
+how expensive is doing this? how cheaper queries? how more expensive is
+adding data? and how scales (in both time and size (eg row count)) as we
+put in more rows (eg. i2u2 scale?) exponential, perhaps? though
+the theoretical limit is going to be influenced by our usage pattern
+which I think for the most part will be lots of disjoint graphs
+(I think). we get to index the transitive closure table, which we don't
+get to do when making the closure at run time.
+</para>
+
+<para>We don't have the path(s) between nodes but we could store that in the
+closure table too if we wanted (though multiple paths would then be more
+expensive as there are now more unique rows to go in the closure table)</para>
+
+<para>
+This is a violation of normalisation which the traditional relational people
+would say is bad, but OLAP people would say is ok.
+</para>
+
+<para>
+how much easier does it make queries?
+for queries to root, should be much easier (query over
+transitive table almost as if over base table). but queries such as
+'go back n-far then stop' and the like harder to query.
+</para>
+
+<para>
+keyword: 'incremental evaluation system' (to maintain transitive closure)
+</para>
+
+<para>
+The difference between plain SQL and SQL-with-transitive-closures
+is that in SQL mode, construction occurs at query time and the query
+needs to specify that construction. In the transitive-close mode,
+construction occurs at data insertion time, with increased expense there
+and in size of db, but cheaper queries (I think).
+</para>
+<para>
+sample numbers: fmri example has 50 rows in base causal relation
+table. 757 in table with transitive close.
+</para>
+
+<para>
+If running entirely separate workflows, both those numbers will scale linearly
+with the number of workflows; however, if there is some crossover between
+subsequent workflows in terms of shared data files then the transitive
+graph will grow super-linearly.
+</para>
+
+</section>
+</section>
+<section><title>XML</title>
+
+<para>In this XML approach, provenance data and metadata is represented as 
+a set of XML documents.</para>
+
+<para>Each document is stored in some kind of document store.
+Two different document stores are used: 
+the posix filesystem and eXist. XPath and XQuery are investigated as
+query languages.</para>
+
+<para>semi-structuredness allows structured metadata without having to
+necessarily declare its schema (which I think is one of the desired properties
+that turns people off using plain SQL tables to reflect the metadata
+schema). but won't get indexing without some configuration of structure so
+whilst that will be nice for small DBs it may be necessary to scale up
+(though that in itself isn't a problem - it allows gentle start without
+schema declaration and to scale up, add schema declarations later on - fits
+in with the scripting style). semi-structured form of XML lines up very
+will with the desire to have semi-structured metadata. compare ease of
+converting other things (eg fmri showheader output) to loose XML - field
+relabelling without having to know what the fields actually are - to how
+this needs to be done in SQL.
+</para>
+
+<para>
+The hierarchical structure of XML perhaps better for dataset containment
+because we can use // operator which is transitive down the tree for
+dataset containment.
+</para>
+<para>
+XML provides a more convenient export format than SQL or the other formats
+in terms of an easily parseable file format. There are lots of
+tools around for processing XML files in various different ways (for example,
+treating as text-like documents; deserialising into Java in-memory objects
+based on an XML Schema definition), and XML is one of the most familiar
+structured data file formats.
+</para>
+<para>
+Not sure what DAG representation would look like here? many (one per arc)
+small documents? is that a problem for the DBs? many small elements, more
+likely, rather than many small documents - roughly one document per workflow.
+</para>
+
+<section><title>xml metadata</title>
+<para>in the XML model, two different ways of putting in metadata: as descendents of the
+appropriate objects (eg. dataset metadata under the relevant datasets). this
+is most xml-like in the sense that its strongly hierarchical. as separate
+elements at a higher level (eg. separate documents in xml db). the two ways
+are compatible to the extent that some metadata can be stored one way, some
+the other way, although the way of querying each will be different.
+</para>
+<para>
+way i: at time of converting provenance data into XML, insert metadata at
+appropriate slots (though if XML storage medium allows, it could be inserted
+later on).
+</para>
+<para>
+modified <command>prov-to-xml.sh</command> to put that info in for
+the appropriate datasets (identified using the below descripted false-filename
+method</para>
+<para>
+can now make queries such as 'tell me the datasets which have header metadata':
+<screen>
+cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '//dataset[headermeta]'
+</screen>
+</para>
+<para>
+way ii: need to figure out what the dataset IDs for the volumes are. At the
+moment, the filename field for (some) mapped dataset parents still 
+has a filename
+even though that file never exists, like below. This depends on the mapper
+being able to invent a filename for such. Mappers aren't guaranteed to be
+able to do that - eg where filenames are not formed as a function of the
+parameters and path, but rely on eg. whats in the directory at initialisation
+(like the filesystem mapper).
+<screen>
+&lt;dataset identifier="10682109">
+&lt;filename>file://localhost/0001.in&lt;/filename>
+&lt;dataset identifier="12735302">
+&lt;filename>file://localhost/0001.h.in&lt;/filename>
+&lt;/dataset>
+&lt;dataset identifier="7080341">
+&lt;filename>file://localhost/0001.v.in&lt;/filename>
+&lt;/dataset>
+</screen>
+so we can perhaps use that. The mapped filename here is providing a
+dataset identification (by chance, not by design) so we can take advantage
+of it:
+<screen>
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance//dataset[filename="file://localhost/0001.in"]/@identifier'
+10682109
+</screen>
+</para>
+<para>I think metadata in XML is more flexible than metadata in relational,
+in terms of not having to define schema and not having to stick to schema.
+However, how will it stand up to the challenge of scalability? Need to get
+a big DB. Its ok to say that indices need to be made - I don't dispute that.
+What's nice is that you can operate at the low end without such. So need to
+get this stuff being imported into eg eXist (maybe the prototype XML processing
+should look like -> XML doc(s) on disk -> whatever xmldb in order to
+facilitate prototyping and pluggability.)
+</para>
+
+</section>
+
+<section><title>XPath query language</title>
+
+<para>
+XPath queries can be run either against the posix file system store
+or against the eXist database. When using eXist, the opportunity exists
+for more optimised query processing (and indeed, the eXist query processing
+model appears to evaluate queries in an initially surprising and unintuitive
+way to get speed); compared to on the filesystem, 
+where XML is stored in serialised form and must be parsed for each query.
+</para>
+
+<para>
+xml generation:
+<screen>
+./prov-to-xml.sh > /tmp/prov.xml
+</screen>
+and basic querying with xpathtool (http://www.semicomplete.com/projects/xpathtool/)
+<screen>
+cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/provenance/execute[thread="0-4-1"]' 
+</screen>
+</para>
+<para>
+q1:
+<screen>
+cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/provenance//dataset[filename="file://localhost/0001.jpeg"]'       
+&lt;toplevel>
+  &lt;dataset identifier="14976260">
+    &lt;filename>file://localhost/0001.jpeg&lt;/filename>
+  &lt;/dataset>
+&lt;/toplevel>
+</screen>
+or can get the identifier like this:
+<screen>
+ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance//dataset[filename="file://localhost/0001.jpeg"]/@identifier' 
+14976260
+</screen>
+can also request eg IDs for multiple, like this:
+<screen>
+cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance//dataset[filename="file://localhost/0001.jpeg"]/@identifier|/provenance//dataset[filename="file://localhost/0002.jpeg"]/@identifier' 
+</screen>
+</para>
+<para>
+can find the threads that use this dataset like this:
+<screen>
+ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/provenance/tie[dataset=/provenance//dataset[filename="file://localhost/0001.jpeg"]/@identifier]' 
+&lt;toplevel>
+  &lt;tie>
+    &lt;thread>0-4-3&lt;/thread>
+    &lt;direction>output&lt;/direction>
+    &lt;dataset>14976260&lt;/dataset>
+    &lt;param>j&lt;/param>
+    &lt;value>org.griphyn.vdl.mapping.DataNode hashCode 14976260 with no value at dataset=final path=[1]&lt;/value>
+  &lt;/tie>
+</screen>
+</para>
+<para>
+now we can iterate as in the SQL example:
+<screen>
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/tie[thread="0-4-3"][direction="input"]/dataset'
+4845856
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/tie[dataset="4845856"][direction="output"]/thread'
+0-3-3
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/tie[thread="0-3-3"][direction="input"]/dataset'
+3354850
+6033476
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/tie[dataset="3354850"][direction="output"]/thread'
+0-2
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/tie[thread="0-2"][direction="input"]/dataset'
+4436324
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/tie[dataset="4436324"][direction="output"]/thread'
+</screen>
+</para>
+<para>so now we've exhausted the tie relation - dataset 4436324 comes from
+elsewhere...</para>
+<para>
+so we say this:
+<screen>
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/dataset[@identifier="4436324"]//dataset/@identifier'
+11153746
+7202698
+12705705
+7202698
+12705705
+655223
+2088036
+13671126
+2088036
+13671126
+5169861
+14285084
+12896050
+14285084
+12896050
+6487148
+5772360
+4910675
+5772360
+4910675
+</screen>
+which gives us (non-unique) datasets contained within dataset 4436324. We can
+uniquify outside of the language:
+<screen>
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/dataset[@identifier="4436324"]//dataset/@identifier' | sort |uniq
+11153746
+12705705
+12896050
+13671126
+14285084
+2088036
+4910675
+5169861
+5772360
+6487148
+655223
+7202698
+</screen>
+and now need to find what produced all of those... iterate everything again.
+probably we can do it integrated with the previous query so that we
+don't have to iterate externally:
+<screen>
+$ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/provenance/tie[dataset=/provenance/dataset[@identifier="4436324"]//dataset/@identifier]'
+&lt;?xml version="1.0"?>
+&lt;toplevel>
+  &lt;tie>
+    &lt;thread>0-1-3&lt;/thread>
+    &lt;direction>output&lt;/direction>
+    &lt;dataset>5169861&lt;/dataset>
+    &lt;param>o&lt;/param>
+    &lt;value>org.griphyn.vdl.mapping.DataNode hashCode 5169861 with no value at dataset=aligned path=[4]&lt;/value>
+  &lt;/tie>
+  &lt;tie>
+    &lt;thread>0-1-4&lt;/thread>
+    &lt;direction>output&lt;/direction>
+    &lt;dataset>6487148&lt;/dataset>
+    &lt;param>o&lt;/param>
+    &lt;value>org.griphyn.vdl.mapping.DataNode hashCode 6487148 with no value at dataset=aligned path=[1]&lt;/value>
+  &lt;/tie>
+  &lt;tie>
+    &lt;thread>0-1-2&lt;/thread>
+    &lt;direction>output&lt;/direction>
+    &lt;dataset>655223&lt;/dataset>
+    &lt;param>o&lt;/param>
+    &lt;value>org.griphyn.vdl.mapping.DataNode hashCode 655223 with no value at dataset=aligned path=[2]&lt;/value>
+  &lt;/tie>
+  &lt;tie>
+    &lt;thread>0-1-1&lt;/thread>
+    &lt;direction>output&lt;/direction>
+    &lt;dataset>11153746&lt;/dataset>
+    &lt;param>o&lt;/param>
+    &lt;value>org.griphyn.vdl.mapping.DataNode hashCode 11153746 with no value at dataset=aligned path=[3]&lt;/value>
+  &lt;/tie>
+&lt;/toplevel>
+</screen>
+which reveals only 4 ties to procedures from those datasets - the elements
+of the aligned array. We can get just the thread IDs for that by adding
+/thread onto the end:
+<screen>
+ cat /tmp/prov.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh '/provenance/tie[dataset=/provenance/dataset[@identifier="4436324"]//dataset/@identifier]/thread'
+0-1-3
+0-1-4
+0-1-2
+0-1-1
+</screen>
+so now we need to iterate over those four threads as before using same
+process.
+</para>
+<para>so we will ask 'which datasets does this contain?' because at
+present, a composite dataset will ultimately be produced by its component
+datasets (though I think perhaps we'll end up with apps producing datasets
+that are composites, eg when a file is output that then maps into some
+structure - eg file contains  (1,2)   and this maps to struct { int x; int y;}.
+TODO move this para into section on issues-for-future-discussion.
+</para>
+<para>so xpath here doesn't really seem too different in expressive ability
+from the SQL approach - it still needs external implementation of
+transitivity for some of the transitive relations (though not for
+dataset containment). and that's a big complicating factor for ad-hoc queries...
+</para>
+<section><title>notes on using eXist</title>
+<para><ulink url="http://exist.sourceforge.net/client.html">command line
+client doc</ulink></para>
+<para>
+run in command line shell with local embedded DB (not running inside a
+server, so analogous to using sqlite rather than postgres):
+<screen>
+~/work/eXist/bin/client.sh -s -ouri=xmldb:exist://
+</screen>
+</para>
+<para>
+import a file:
+<screen>
+~/work/eXist/bin/client.sh -m /db/prov -p `pwd`/tmp.xml  -ouri=xmldb:exist://
+</screen>
+note that the -p document path is relative to exist root directory, not to
+the pwd, hence the explicit pwd.
+</para>
+<para>
+xpath query from commandline:
+<screen>
+ echo '//tie' |  ~/work/eXist/bin/client.sh -ouri=xmldb:exist:// -x
+</screen>
+</para>
+</section>
+</section>
+
+<section><title>XSLT</title>
+<para>
+very much like when we revieved xpath, xslt and xquery for MDS data - these
+are the three I'll consider for the XML data model? does XSLT add anything?
+not sure. for now I think not so ignore, or at least comment that it does
+not add anything.
+</para>
+<para>
+<screen>
+./prov-to-xml.sh > /tmp/prov.xml
+xsltproc ./prov-xml-stylesheet.xslt /tmp/prov.xml
+</screen>
+with no rules will generate plain text output that is not much use.
+</para>
+<para>
+Two potential uses: i) as a formatting language for stuff coming out of
+some other (perhaps also XSLT, or perhaps other language) query process.
+and ii) as that other language doing semantic rather than presentation
+level querying (better names for those levels?)
+</para>
+</section>
+
+<section><title>XQuery query language</title>
+<para>
+Build query results for this using probably the same database as the
+above XPath section, but indicating where things could be better expressed
+using XPath.
+</para>
+<para>
+Using XQuery with eXists:
+<screen>
+$ cat xq.xq
+//tie
+$ ~/work/eXist/bin/client.sh -ouri=xmldb:exist:// -F `pwd`/xq.xq
+</screen>
+</para>
+<para>
+A more advanced query:
+<screen>
+for $t in //tie
+  let $dataset := //dataset[@identifier=$t/dataset]
+  let $exec := //execute[thread=$t/thread]
+  where $t/direction="input"
+  return &lt;r>An invocation of {$exec/trname} took input {$dataset/filename}&lt;/r>
+</screen>
+</para>
+</section>
+
+</section>
+
+<section><title>RDF and SPARQL</title>
+<para>
+This can probably also be extended to SPARQL-with-transitive-closures
+using the same methods as 1; or see OWL note below.
+</para>
+<para>
+Pegasus/WINGS queries could be interesting to look at here - they
+are from the same tradition as Swift. However, the don't deal very
+well with transitivity.
+</para>
+<para>OWL mentions transitivity as something that can be expressed in
+an OWL ontology but are there any query languages around that can
+make use of that kind of information?
+</para>
+<para>See prolog section on RDF querying with prolog.
+</para>
+<para>
+There's an RDF-in-XML format for exposing information in serialised form.
+Same discussion applies to this as to the discussion in XML above.
+</para>
+</section>
+
+<section><title>Other data models and query languages</title>
+
+<section><title>GraphGrep</title>
+<screen>
+ - download link see email
+<ulink url="http://www.cs.nyu.edu/shasha/papers/graphgrep/">graphgrep</ulink>
+graphgrep install notes: port install db3
+some hack patches to get it to build with db3
+</screen>
+<para>
+Got a version of graph grep with interesting graph language apparently in it.
+Haven't tried it yet though.
+</para>
+</section>
+
+<section><title>prolog</title>
+<para>Perhaps interesting querying ability here. Probably slow? but not
+really sure - SWI Prolog talks about indexing its database (and allowing
+the indexing to be customised) and about supporting very large databases.
+So this sounds hopeful.
+</para>
+<para>
+convert database into SWI prolog. make queries based on that.
+</para>
+<para>Can make library to handle things like transitive relations - should be
+easy to express the transitivity in various different ways (dataset
+containment, procedure-ordering, whatever) - far more clear there than
+in any other query language.</para>
+<para>
+SWI Prolog has some RDF interfacing, so this is clearly a realm that is
+being investigated by some other people. For example:
+<blockquote>It is assumed that Prolog is a suitable vehicle to reason with the data expressed in RDF models -- http://www.swi-prolog.org/packages/rdf2pl.html</blockquote>
+</para>
+<para><ulink
+url="http://www.xml.com/pub/a/2001/04/25/prologrdf/index.html">
+http://www.xml.com/pub/a/2001/04/25/prologrdf/index.html
+</ulink>
+</para>
+<para>
+prolog can be used over RDF or over any other tuples. stuff in SQL
+tables should map neatly too. Stuff in XML hieararchy perhaps not so
+easily but should still be doable.</para>
+<para>indeed, SPARQL queries have a very prolog-like feel to them
+superficially.
+</para>
+<para>prolog db is a program at the moment - want something that looks more
+like a persistent modifiable database. not sure what the prolog approach
+to doing that is.</para>
+<para>
+so maybe prolog makes an interesting place to do future research on
+query language? not used by this immediate work but a direction to
+do query expressibility research (building on top of whatever DB is used
+for this round?)
+</para>
+
+<para>q1 incremental:
+
+<screen>
+?- dataset_filenames(Dataset,'file://localhost/0001.in').
+
+Dataset = '10682109' ;
+</screen>
+
+Now with lib.pl:
+
+<screen>
+dataset_trans_preceeds(Product, Source) :-
+   dataset_usage(Thread, 'O', Product, _, _),
+   dataset_usage(Thread, 'I', Source, _, _).
+
+
+dataset_trans_preceeds(Product, Source) :-
+   dataset_usage(Thread, 'O', Product, _, _),
+   dataset_usage(Thread, 'I', Inter, _, _),
+   dataset_trans_preceeds(Inter, Source).
+</screen>
+
+then we can ask:
+
+<screen>
+?- dataset_trans_preceeds('14976260',S).
+
+S = '4845856' ;
+
+S = '3354850' ;
+
+S = '6033476' ;
+
+S = '4436324' ;
+
+No
+</screen>
+
+which is all the dataset IDs up until the point that we get into
+array construction. This is the same iterative problem we have
+in the SQL section too - however, it should be solvable in the prolog case
+within prolog in the same way that the recursion is. so now:
+
+<screen>
+base_dataset_trans_preceeds(Product, Source, Derivation) :-
+   dataset_usage(Thread, 'O', Product, _, _),
+   dataset_usage(Thread, 'I', Source, _, _),
+   Derivation = f(one).
+
+base_dataset_trans_preceeds(Product, Source, Derivation) :-
+   dataset_containment(Product, Source),
+   Derivation = f(two).
+
+dataset_trans_preceeds(Product, Source, Derivation) :-
+    base_dataset_trans_preceeds(Product, Source, DBase),
+    Derivation = [DBase].
+
+dataset_trans_preceeds(Product, Source, Derivation) :-
+   base_dataset_trans_preceeds(Product, Inter, DA),
+   dataset_trans_preceeds(Inter, Source, DB),
+   Derivation = [DA|DB].
+</screen>
+
+</para>
+
+
+<para>q4:
+
+<screen>
+invocation_procedure_names(Thread, 'align_warp'), dataset_usage(Thread, Direction, Dataset, 'model', '12'), execute(Thread, Time, Duration, Disposition, Executable),  format_time(atom(DayOfWeek), '%u', Time), DayOfWeek = '5'.
+TODO format this multiline, perhaps remove unused bindings
+</screen>
+</para>
+
+
+</section>
+
+<section><title>amazon simpledb</title>
+<para>restricted beta access... dunno if i will get any access - i have
+none so far, though I have applied.</para>
+<para>
+From reading a bit about it, my impressions are that this will prove to be
+a key->value lookup mechanism with poor support for going the other way
+(eg. value or value pattern or predicate-on-value  -> key) or for doing
+joins (so rather like a hash table - which then makes me say 'why not also
+investigate last year's buzzword of DHTs?'. I think that these additional
+lookup mechanisms are probably necessary for a lot of the
+query patterns.
+</para>
+
+<para>
+For some set of queries, though, key -> value lookup is sufficient; and
+likely the set of queries that is appropriate to this model varies depending
+on how the key -> value model is laid out (i.e. what gets to be a key
+and what is its value? do we form a hierarchy from workflow downwards?)
+</para>
+
+</section>
+
+
+<section><title>graphviz</title>
+<para>
+This is a very different approach that is on the boundaries of relevance.
+</para>
+<para>
+goal: produce an annotated graph showing the procedures and the
+datasets, with appropriate annotation of identifiers and
+descriptive text (eg filenames, procedure names, executable names) that
+for small (eg. fmri sized workflows) its easy to get a visual view of
+whats going on.
+</para>
+<para>
+don't target anything much bigger than the fmri example for this.
+(though there is maybe some desire to produce larger visualisations for
+this - perhaps as a separate piece of work. eg could combine foreach
+into single node, datasets into single node)
+</para>
+<para>
+perhaps make subgraphs by the various containment relationships:
+datasets in same subgraph as their top level parent;
+app procedure invocations in the same subgraph as their compound
+procedure invocation.
+</para>
+</section>
+</section>
+</section>
+
+<section><title>Comparison with related work that our group has done
+before</title>
+<section>
+<title>vs VDS1 VDC</title>
+<para>gendax - VDS1 has a tool <command>gendax</command> which provides
+various ways of accessing data from the command line. Eg. prov challenge
+question 1 very easily answered by this.
+</para>
+<para>
+two points I don't like that should discuss here: i) the metadata schema
+(I claim there doesn't need to be a generic metadata schema at all - 
+when applications decide they want to store certain metadata, they declare
+it in the database); and ii) the mixed-model - this is discussed a bit in
+the 'no general query language' section. consolidate/crosslink.
+</para>
+</section>
+
+
+<section><title>vs VDL provenance paper figure 1 schema</title>
+<para>
+The significant differences are:
+(TODO perhaps produce a diagram for comparison. could use same diagram
+differently annotated to indicate trees in the XML section and also
+in the transitivity discussion section)
+</para>
+<para>
+the 'annotation' model - screw that, go
+native</para>
+<para>the dataset containment model, which doesn't exist in the
+virtual dataset model.
+</para>
+<para>
+workflow object has a fromDV and toDV field. what are
+those meant to mean? In present model, there isn't any base data for a workflow
+at the moment - everything can be found in the descriptions of its
+components (such as files used, start time, etc). (see notes on
+compound procedure containment with model of a workflow as a compound
+procedure)
+</para>
+<para>invocation to call to procedure chain. this chain looks different.
+there are executes (which look like invocations/calls) and procedure names
+(which do not exist as primary objects because I am not storing
+program code). kickstart records and execute2 records would be more like
+the annotations you'd get from the annotation part, with the call being
+more directly associated with the execute object.
+</para>
+</section>
+</section>
+<section><title>Questions/Discussion points</title>
+
+<section><title>metadata</title>
+<para>
+discourse analysis: Perhaps the word 'metadata' should be banned in
+this document - it implies that there is
+some special property that distinguishes it sufficiently from normal
+data such that it must be treated differently from different data.
+I don't believe this to be the case.
+</para>
+<para>
+script <command>prov-mfd-meta-to-xml</command> that generates (fake)
+metadata record in XML like this:
+<screen>$ ./prov-mfd-meta-to-xml 123
+&lt;headermeta>
+  &lt;dataset>123&lt;/dataset>
+  &lt;bitspixel>16&lt;/bitspixel>
+  &lt;xdim>256&lt;/xdim>
+  &lt;ydim>256&lt;/ydim>
+  &lt;zdim>128&lt;/zdim>
+  &lt;xsize>1.000000e+00&lt;/xsize>
+  &lt;ysize>1.000000e+00&lt;/ysize>
+  &lt;zsize>1.250000e+00&lt;/zsize>
+  &lt;globalmaximum>4095&lt;/globalmaximum>
+  &lt;globalminimum>0&lt;/globalminimum>
+&lt;/headermeta>
+</screen>
+</para>
+
+<section><title>metadata random notes</title>
+<para>
+metadata: there's a model of arbitrary metadata pairs being
+associated with arbitrary objects.</para>
+<para>there's another model (that I tend to
+favour) in that the metadata schema is more defined than this - eg in i2u2
+for any particular elab, the schema for metadata is fairly well defined.
+</para>
+<para>
+eg in cosmic, there are strongly typed fields such as "blessed" or
+"detector number" that
+are hard-coded throughout the elab. whilst the VDS1 VDC can deal with
+arbitrary typing, that's not the model that i2u2/cosmic is using. need to be
+careful to avoid the inner-platform effect here especially - "we need a
+system that can do arbitrarily typed metadata pairs" is not actually a
+requirement in this case as the schema is known at application build time.
+(note that this matters for SQL a lot, not so much for plain XML data model,
+though if we want to specify things like 'is-transitive' properties then
+in any model things like that need to be better defined)
+</para>
+<para>
+fMRI provenance challenge metadata (extracted using scanheader) looks like
+this:
+<screen>
+$ /Users/benc/work/fmri-tutorial/AIR5.2.5/bin/scanheader ./anatomy0001.hdr
+bits/pixel=16
+x_dim=256
+y_dim=256
+z_dim=128
+x_size=1.000000e+00
+y_size=1.000000e+00
+z_size=1.250000e+00
+
+global maximum=4095
+global minimum=0
+</screen>
+</para>
+</section>
+
+</section>
+
+
+<section><title>The 'preceeds' relation</title>
+
+<section><title>Provenance of hierarchical datasets</title>
+
+
+
+<para>
+One of the main provenance queries is whether some entity (a
+data file or a procedure) was influenced by some other entity.
+</para>
+
+<para>
+In VDS1 a workflow is represented by a bipartite DAG where one
+vertex partition is files and the other is procedures.
+</para>
+
+<para>
+The more complex data structures in Swift make the provenance graph
+not so straightforward. Procedures input and output datasets that may
+be composed of smaller datasets and may in turn be composed into larger
+datasets.
+</para>
+
+<para>
+For example, a dataset D coming out of a procedure P may form a part
+of a larger dataset E. Dataset E may then be an input to procedure Q.
+The ordering is then:
+<screen>
+ P --output--> D --contained-by-> E --input--> Q
+</screen>
+</para>
+
+<para>
+Conversely, a dataset D coming out of a procedure P may contain a
+smaller dataset E. Dataset E may then be used as an input to procedure
+Q.
+<screen>
+ P --output--> D --contains--> E --input--> Q
+</screen>
+</para>
+
+<para>
+So the contains relation and its reverse, the contained-by relation, do not
+in the general case seem to give an appropriate preceeds relation.
+
+<screen>
+so: i) should Q1&lt;->Q be a bidirection dependency (in which case we
+  no longer have a DAG, which causes trouble)
+
+or
+
+    ii) the dependency direction between Q1 and Q depends on how Q and Q1
+were constructed. I think this is the better approach, because I think
+there really is some natural dependency order.
+
+If A writes to Q1 and Q1 is part of Q then A->Q1->Q
+If A writes to Q and Q1 is part of Q then A->Q->Q1
+
+So when we write to a dataset, we need to propagate out the dependency
+from there (both upwards and downwards, I think).
+
+eg. if Q1X is part of Q1 is part of Q
+and A writes to Q1, then Q1X depends on Q1 and Q depends on Q1.
+
+
+</screen>
+
+</para>
+
+
+
+<para>
+Various ways of doing closure - we have various relations in the graph
+such as dataset containment and procedure input/output. Need to figure out
+how this relates to predecessor/successors in the provenance sense.
+
+<screen>
+A(
+Also there are multiple levels of tracking (see the section on that):
+
+If an app procedure produces eg
+volume v, consisting of two files v.img and v.hdr (the fmri example)
+then what is the dependency here? I guess v.img and v.hdr is the
+output... (so in the present model there will never be
+downward propagation as every produced dataset will be produced out of
+base files. however its worth noting that this perhaps not always the
+case...)
+
+Alternatively we can model at the level of the app procedure, which in
+the above case returns a volume v.
+
+I guess this is similar to the case of the compound procedures vs
+contained app procedures...
+
+If we model at the level of files, then we don't really need to know
+about higher datasets much?
+
+Perhaps for now should model at level of procedure calls
+)A
+
+List A()A above as an issue and pick one choice - for now, lowest=file
+production, so that all intermediate and output datasets will end up
+with a strictly upward dependency
+
+This rule does not deal with input-only datasets (that is, datasets
+which we do not know where they came from). It would be fairly natural
+with the above choice to again make dependencies from files upward.
+
+So for now, dataset dependency rule is:
+
+  * parent datasets depend on their children.
+
+Perhaps?
+</screen>
+</para>
+
+
+</section>
+
+<section><title>Transitivity of relations in query language</title>
+<para>
+One of my biggest concerns in query languages such as SQL and XPath
+is lack of decent transitive query ability.
+</para>
+<para>
+I think we need a main relation, the <firstterm>preceeds</firstterm>
+relation. None of the relations defined in the source provenance data
+provides this relation.
+</para>
+<para>The relation needs to be such that if any dataset or program Y that
+contributed to the production of any other dataset or program Y, then
+X preceeds Y.
+</para>
+<para>
+We can construct pieces of this relation from the existing relations:
+<itemizedlist>
+<listitem><para>There are fairly simple rules for procedure inputs and
+outputs:
+A dataset passed as an input to a procedure preceeds that procedure.
+Similarly, a procedure that outputs a dataset preceeds that dataset.
+</para></listitem>
+<listitem>
+<para>
+Hierarchical datasets are straightforward to describe in the present
+implementation. Composite data structures are always described in terms
+of their members, so the members of a data structure always preceed
+the structures that contain them. [not true, i think - we can pass a
+struct into a procedure and have that procedure populate multiple
+contained files... bleugh]
+</para>
+</listitem>
+<listitem><para>
+The relation is transitive, so the presence of some relations by the
+above rules will imply the presence of other relations to ensure
+transitivity.
+</para></listitem>
+</itemizedlist>
+</para>
+</section>
+</section>
+
+
+<section><title>Unique identification of provenance objects</title>
+
+<para>
+A few issues - what are the objects that should be identified? (semantics);
+and how should the objects be identified? (syntax).
+</para>
+<section><title>provenence object identifier syntax</title>
+<para>
+For syntax, I favour a URI-based approach and this is what I have
+implemented in the prototypes. URIs rovide a ready made system for
+identifying different kinds of objects in different ways within the
+same syntax.
+which should be useful for the querys that want to do that.
+file, gsiftp URIs for filenames. probably should be normalising file
+URIs to refer to a specific hostname? otherwise they're fairly
+meaningless outside of one host...
+also, these name files but files are mutable.
+</para>
+<para>
+its also fairly straightforward to subsume other identifier schemes into
+URIs (for example, that is already done for UUIDs, in RFC4122).
+</para>
+<para>
+for other IDs, such as workflow IDs, a tag or uuid URI would be nice.
+</para>
+<para>
+cite: <ulink url="http://www.rfc-editor.org/rfc/rfc4151.txt">RFC4151</ulink>
+<blockquote>
+The tag algorithm lets people mint -- create -- identifiers that no one else using the same algorithm could ever mint. It is simple enough to do in your head, and the resulting identifiers can be easy to read, write, and remember. The identifiers conform to the URI (URL) Syntax.
+</blockquote>
+</para>
+<para>
+cite:  <ulink url="http://www.rfc-editor.org/rfc/rfc4122.txt">RFC4122</ulink>
+<blockquote>
+This specification defines a Uniform Resource Name namespace for
+UUIDs (Universally Unique IDentifier), also known as GUIDs (Globally
+Unique IDentifier).  A UUID is 128 bits long, and requires no central
+registration process.
+</blockquote>
+</para>
+
+<section><title>tag URIs</title>
+
+<para>
+tag URIs for identifiers of provenance objects:
+</para>
+
+<para>
+all URIs allocated according to this section are labelled beginning with one
+of:
+<screen>
+tag:benc@ci.uchicago.edu,2007:swift:
+tag:benc@ci.uchicago.edu,2008:
+</screen>
+</para>
+
+<para>
+for datasets identified only within a run (that is, for example, anything
+that doesn't have a filename):
+tag:benc@ci.uchicago.edu,2007:swift:dataset:TIMESTAMP:SEQ
+with TIMESTAMP being a timestamp of sometime near the start of the run,
+intending to be a unique workflow id (probably better to use the
+run-id)
+and SEQ being a sequence number. However, shouldn't really be pulling any
+information out of these time and seq fields.
+</para>
+<para>
+for executes - this is based on the karajan thread ID and the log base
+filename (which is assumed to be a globally unique identifying string):
+tag:benc@ci.uchicago.edu,2007:swiftlogs:execute:WFID:THREAD with,
+as for datasets, WFID is a workflow-id-like entity.
+</para>
+
+</section>
+
+
+</section>
+
+<section id="crossrun-id"><title>Dataset identifier semantics</title>
+
+<para>At present, dataset identifiers are formed uniquely for every
+dataset object created in the swift runtime (unique across JVMs as well
+as within a JVM).</para>
+
+<para>This provides an overly sensitive(?) identity - datasets
+which are the same will be given different dataset identifiers at
+different times/places; although two different datasets will never be
+given the same identifier.
+</para>
+
+<para>A different approach would be to say 'datasets are made of files,
+so we want to identify files, and files already have identiers called
+filenames'.</para>
+
+<para>I think this approach is also insufficient.</para>
+
+<para>The assertion 'datasets are made of files' is not correct. Datasets
+come in several forms: typed files, typed simple values, and typed
+collections of other datasets. Each of these needs a way to identify it.
+</para>
+
+<para>
+Simple values are probably the easiest to identify. They can be identified
+by their own value and embedded within a suitable URI scheme. For example,
+a dataset representing the integer 7 could be identified as:
+<screen>
+tag:benc@ci.uchicago.edu,2008:swift:types:int:7
+</screen>
+This would have the property that all datasets representing the integer
+7 would be identical (that is, have the same identifier).
+</para>
+
+<para>
+Collections of datasets are more complicated. One interesting example of
+something that feels to me quite similar is the treatment of directories
+in hash-based file systems, such as git. In this model, a collection of
+datasets would be represented by a hash of a canonical representation of
+its contenst, for example, a dataset consisting of a three element array
+of three files in this order: "x-foo:red", "x-foo:green" and "x-foo:blue"
+might be represented as:
+<screen>
+tag:benc@ci.uchicago.edu,2008:collection:QHASH
+</screen>
+where:
+<screen>
+QHASH := sha1sum(QLONG)
+
+QLONG := "[0] x-foo:red [1] x-foo:green [2] x-foo:blue"
+</screen>
+This allows a repeatable computation of dataset identifiers given 
+only knowledge of the contents of the dataset. Specifically it does
+not rely on a shared database to map content to identifier. However,
+it can only be computed when the content of the dataset is fully known
+(roughly equivalent to when the dataset is closed in the Swift
+runtime)
+</para>
+
+<para>
+For identifying a dataset that is a file, there are various properties.
+Filename is one property. File content is another property. It seems
+desirable to distinguish between datasets that have the same name yet
+have different content, whilst identifying datasets that have the same
+content. To this end, an identifier might be constructed from both the
+filename and a hash of the content.
+</para>
+
+
+<para>
+for prototype could deal only with files staged to local system,
+so that we can easily compute a hash over the content.
+</para>
+
+<para>related to taking md5sums, kickstart provides the first few bytes
+of certain files (the executable and specified input and output files);
+whilst useful for basic sanity checks, there are very strong correlations
+with magic numbers and common headers that make this a poor content
+identifying function. perhaps it should be absorbed as dataset metadata if
+its available?
+</para>
+
+
+<para>TODO the following para needs to rephrase as justification for
+having identities for dataset collections  ::: at run-time when can we
+pick up the
+identities from other runs? pretty much we want identity to be expressed
+in some way so that we can get cross-run linkup.
+how do we label a dataset such that we can annotate it - eg in fmri
+example, how do we identify the input datasets (as file pairs) rather than
+the individual files?</para>
+<para>
+Its desirable to give the same dataset the same identifier in multiple
+runs; and be able to figure out that dataset identifier outside of a run,
+for example for the purposes of dealing with metadata that is annotating
+a dataset.
+</para>
+</section>
+
+<section><title>File content tracking</title>
+<para>
+identify file contents with md5sum (or other hash) - this is somewhat
+expensive, but without it we have (significantly) lessened belief in what the
+contents of a file are - we would otherwise, I think, be using only names
+and relying on the fact that those names are primary keys to file content
+(which is not true in general).
+so this should be perhaps optional. plus where to do it? various places...
+in wrapper.sh?
+</para>
+<para>
+References here for using content-hashes:
+git, many of the DHTs (freenet, for example - amusing to cite the classic
+freenet gpl.txt example)
+</para>
+</section>
+
+</section>
+
+<section><title>Type representation</title>
+<para>
+how to represent types in this? for now use names, but that doesn't
+go cross-program because we can define a different type with the same
+name in every different program. hashtree of type definitions?
+</para>
+</section>
+<section><title>representation of workflows</title>
+<para>
+perhaps need a workflow object that acts something like a namespace
+but implicitly definted rather than being user labelled (hence capturing
+the actual runtime space rather than what the user claims). that's the
+runID, I guess.
+</para>
+<para>
+Also tracking of workflow source file. Above-mentioned reference to
+tracking file contents applies to this file too.
+</para>
+</section>
+<section><title>metadata extraction</title>
+<para>
+provenance challenge I question 5 reports about pulling fields out of the
+headers of one of the input files. There's a program, scanheader, that
+extracts this info. Related but not actually useful, I think, for this
+question is that header fields could be mapped into SwiftScript if we
+allowed value+file simultaneous data structures.
+</para>
+</section>
+
+<section><title>source code recreation</title>
+<para>
+should the output of the queries be sufficient to regenerate the
+data? the most difficult thing here seems to be handling data
+sets - we have the mapping tree for a dataset, but what is the right
+way to specify that in swift syntax? maybe need mapper that takes a
+literal datastructure and maps the filenames from it. though that
+doesn't account for file contents (so this bit of this point is
+the file contents issue, which should perhaps be its own chapter
+in this file)
+</para>
+</section>
+<section><title>Input parameters</title>
+<para>
+Should also work on workflows which take an input parameter, so that we
+end up with the same output file generated several times with different
+output values - eg pass a string as a parameter and write that to
+'output.txt' - every time we run it, the file will be different, and we'll
+have multiple provenance reports indicating how it was made, with different
+parameters. that's a simple demonstration of the content-tracking which
+could be useful.
+</para>
+<para>
+If we're tracking datasets for simple values, I think we get this
+automatically. The input parameters are input datasets in the same way
+that input files are input datasets; and so fit into the model in the
+same way.
+</para>
+
+</section>
+
+
+</section>
+
+<section id="opm"><title>Open Provenance Model (OPM)</title>
+<section><title>OPM-defined terms and their relation to Swift</title>
+<para>
+OPM defines a number of terms. This section describes how those terms
+relate to Swift.
+</para>
+<para>
+artifact: This OPM term maps well onto the internal Swift representation
+of <literal>DSHandle</literal>s. Each DSHandle in a Swift run is an
+OPM artifact, and each OPM artifact in a graph is a DSHandle.
+</para>
+<para>collection: OPM collections are a specific kind of artifact, containing
+other artifacts. This corresponds with DSHandles for composite data types
+(structs and arrays). OPM has collection accessors and collection
+constructors which correspond to the <literal>[]</literal> and
+<literal>.</literal> operators (for accessors) and various assignment
+forms for constructors.
+</para>
+<para>
+process: An OPM process corresponds to a number of Swift concepts (although
+they are slowly converging in Swift to a single concept). Those concepts
+are: procedure invocations, function calls, and operators.
+</para>
+<para>
+agent: There are several entities which can act as an agent. At the
+highest level where only Swift is involved, a run of the
+<literal>swift</literal> commandline client is an agent which drives
+everything. Some other components of Swift may be regarded as agents,
+such as the client side wrapper script. For present OPM work, the
+only agent will be the Swift command line client invocation.
+</para>
+<para>
+account: For present OPM work, there will be one account per workflow run.
+In future, different levels of granularity that could be expressed through
+different accounts might include representing compound procedure calls as
+processes vs representing atomic procedures calls explicitly.
+</para>
+<para>
+OPM graph: there are two kinds of OPM graph that appear interesting and
+straightforward to export: i) of entire provenance database (thus containing
+multiple workflow runs); ii) of a single run
+</para>
+</section>
+<section><title>OPM links</title>
+<para><ulink url="http://twiki.ipaw.info/bin/view/Challenge/OPM">Open Provenance Model at ipaw.info</ulink></para>
+</section>
+
+<section><title>Swift specific OPM considerations</title>
+
+<para>
+non-strictness: Swift sometimes lazily constructs collections (leading to
+the notion in Swift of an array being closed, which means that we know no
+more contents will be created, somewhat like knowing we've reached the end
+of a list). It may be that an array is never closed during a run, but that
+we still have sufficient provenance information to answer useful queries
+(for example, if we specify a list [1:100000] and only refer to the 5th
+element in that array, we probably never generate most of the DSHandles...
+so an explicit representation of that array in terms of datasets cannot be
+expressed - though a higher level representation of it in terms of its
+constructor parameters can be made) (?)
+</para>
+
+<para>
+aliasing: (this is related to some similar ambiguity in other parts of
+Swift, to do with dataset roots - not provenance related). It is possible to
+construct arrays by explicitly listing their members:
+<programlisting>
+int i = 8;
+int j = 100;
+int a[] = [i,j];
+int k = a[1];
+// here, k = 8
+</programlisting>
+The dataset contained in <literal>i</literal> is an artifact (a literal, so
+some input artifact that has no creating process). The array
+<literal>a</literal> is an artifact created by the explicit array construction
+syntax <literal>[memberlist]</literal> (which is an OPM process). If we
+then model the array accessor syntax <literal>a[1]</literal> as an OPM
+process, what artifact does it return? The same one or a different one?
+In OPM, we want it to return a different artifact; but in Swift we want this
+to be the same dataset... (perhaps explaining this with <literal>int</literal>
+type variables is not the best way - using file-mapped data might be better)
+TODO: what are the reasons we want files to have a single dataset
+representation in Swift? dependency ordering - definitely. cache management?
+Does this lead to a stronger notion of aliasing in Swift?
+</para>
+
+<para>
+Provenance of array indices: It seems fairly natural to represent arrays as OPM
+collections, with array element extraction being a process. However, in OPM,
+the index of an array is indicated with a role (with suggestions that it might
+be a simple number or an XPath expression). In Swift arrays, the index is
+a number, but it has its own provenance, so by recording only an integer there,
+we lose provenance information about where that integer came from - that
+integer is a Swift dataset in its own right, which has its own provenance.
+It would be nice to be able to represent that (even if its not standardised
+in OPM). I think that needs re-ification of roles so that they can be
+described; or it needs treatment of [] as being like any other binary
+operator (which is what happens inside swift) - where the LHS and RHS are
+artifacts, and the role is not used for identifying the member (which would
+also be an argument for making array element extraction be treated more
+like a plain binary operator inside the Swift compiler and runtime)
+</para>
+
+<para>
+provenance of references vs provenance of the data in them: the array and
+structure access operators can be used to acquire <literal>DSHandle</literal>s
+which have no value yet, and which are then subsequently assigned. In this
+usage, the provenance of the containing structure should perhaps be that it
+is constructed from the assignments made to its members, rather than the
+other way round. There is some subtlety here that I have not fully figured
+out.
+</para>
+
+<para>
+Piecewise construction of collections: arrays and structs can be
+constructed piecewise using <literal>. =</literal> and <literal>[] =</literal>.
+how is this to be represented in OPM? perhaps the closing operation maps
+to the OPM process that creates the array, so that it ends up looking
+like an explicit array construction, happening at the time of the close?
+</para>
+
+<para>
+Provenance of mapper parameters: mapper parameters are artifacts. We can
+represent references to those in a Swift-specific part of an artifacts
+value, perhaps. Probably not something OPM-generalisable.
+</para>
+
+</section>
+
+</section>
+
+
+
+<section><title>stuff</title>
+<para>
+TODO transcribe info from the pile of papers I wrote. esp query analysis
+and the list of things that this section of work does *not* address.
+</para>
+<para>
+Explicitly attempt to avoid
+<ulink url="http://thedailywtf.com/Articles/The_Inner-Platform_Effect.aspx">Inner platform effect</ulink> which was a criticism of the metadata
+handling of the VDS1 VDC.
+</para>
+
+</section>
+
+<section><title>things to do next:</title>
+
+<para>over next week:</para>
+
+<para>i) get import scripts sorted properly (which will include
+perhaps some sorting out of the log-processing packaging too) - to the
+extent that other people could be expected to run this stuff themselves
+(so will need some basic documentation too). also should be able to
+import the results of the unit tests automatically, and perhaps stuff in the
+log repo that is done with a sufficiently recent version.</para>
+<para>ii) experiment with RDF for the q1 and q4 queries that I've
+experimented with for the others.</para>
+<para>iii) tidy up report - conclusions, recommendations, direction for
+further work, options for further work (eg more provenance? live status?
+any of the 'not this' things should be done?).</para>
+<para>
+separate out patches into different pieces - eg logging that can be
+committed now.
+</para>
+</section>
+
+<section><title>Processing i2u2 cosmic metadata</title>
+<para>i2u2 cosmic metadata is extracted from a VDS1 VDC.</para>
+<para>
+TODO some notes here about how I dislike the inner-plaform effect in the
+metadata part of the VDS1 VDC.
+</para>
+<para>
+to launch postgres on soju.hawaga.org.uk:
+<screen>
+sudo -u postgres /opt/local/lib/postgresql82/bin/postgres -D  /opt/local/var/db/postgresql82/defaultdb
+</screen>
+
+and then to import i2u2 vdc data as VDC1 vdc:
+
+<screen>
+$ /opt/local/lib/postgresql82/bin/createdb -U postgres i2u2vdc1
+CREATE DATABASE
+$ psql82 -U postgres -d i2u2vdc1 &lt; work/i2u2.vdc 
+gives lots of errors like this:
+ERROR:  role "portal2006_1022" does not exist
+because indeed that role doesn't exist
+but I think that doesn't matter for these purposes - everything will end
+up being owned by the postgres user which suffices for what I want to do.
+</screen>
+
+</para>
+
+<para>
+annotation tables are:
+<screen>
+ public | anno_bool       | table | postgres   29214 rows
+  this is boolean values
+
+ public | anno_call       | table | postgres   0 rows
+- this is a subject table. also has did
+
+ public | anno_date       | table | postgres   52644 rows
+   this is date values
+
+ public | anno_definition | table | postgres   1849 rows
+    this is XML-embedded derivations (values / objects)
+
+ public | anno_dv         | table | postgres   0 rows
+- this is a subject table. also has did
+
+ public | anno_float      | table | postgres   27966 rows
+    this is float values
+
+ public | anno_int        | table | postgres   58879 rows
+    this is int values
+
+ public | anno_lfn        | table | postgres   411490 rows
+    this is the subject record for LFN subjects - subjects have an
+    mkey (predicate) column
+  
+ public | anno_lfn_b      | table | postgres
+this appears to be keyed by did field - ties dids to what looks like
+LFNs
+
+ public | anno_lfn_i      | table | postgres
+ public | anno_lfn_o      | table | postgres
+likewise these two
+
+ public | anno_targ       | table | postgres
+is this a subject table? it has an mkey value that always appears to be
+'description' and then has a name column which lists invocation parameter
+names and ties them to dids.
+
+ public | anno_text       | table | postgres   242824 rows
+text values (objects)
+
+ public | anno_tr         | table | postgres
+</screen>
+</para>
+
+<para>
+most of the interesting data starts in anno_lfn because data is mostly
+annotating LFNs:
+</para>
+
+<screen>
+i2u2vdc1=# select * from anno_lfn limit 1;
+ id |        name         |   mkey   
+----+---------------------+----------
+  2 | 180.2004.0819.0.raw | origname
+</screen>
+
+<para>
+There are 63 different mkeys (predicates in RDF-speak):
+</para>
+
+<screen>
+i2u2vdc1=# select distinct mkey from anno_lfn;
+             mkey
+------------------------------
+ alpha
+ alpha_error
+ author
+ avgaltitude
+ avglatitude
+ avglongitude
+ background_constant
+ background_constant_error
+ bins
+ blessed
+ caption
+ chan1
+ chan2
+ chan3
+ chan4
+ channel
+ city
+ coincidence
+ comments
+ cpldfrequency
+ creationdate
+ date
+ description
+ detectorcoincidence
+ detectorid
+ dvname
+ enddate
+ energycheck
+ eventcoincidence
+ eventnum
+ expire
+ filename
+ gate
+ gatewidth
+ group
+ height
+ julianstartdate
+ lifetime(microseconds)
+ lifetime_error(microseconds)
+ name
+ nondatalines
+ numBins
+ origname
+ plotURL
+ project
+ provenance
+ radius
+ rawanalyze
+ rawdate
+ school
+ source
+ stacked
+ startdate
+ state
+ study
+ teacher
+ thumbnail
+ time
+ title
+ totalevents
+ transformation
+ type
+ year
+(63 rows)
+</screen>
+
+<para>
+so work on a metadata importer for i2u2 cosmic that will initially deal
+with only the lfn records.
+</para>
+
+<para>
+There are 19040 annotated LFNs, with 411490 annotations in total, so about
+21 annotations per LFN.
+</para>
+
+<para>The typing of the i2u2 data doesn't support metadata objects
+that aren't swift workflow entities - for example high schools as
+objects in their own right - the same text string is stored as a value
+over and over in many anno_text rows. A more generalised 
+Subject-Predicate-Object model in RDF would have perhaps a URI for
+the high school, with metadata on files tying files to a high school and
+metadata on the high school object. In SQL, that same could be modelled
+in a relational schema.
+</para>
+
+<para>
+Conversion of i2u2 VDS1 VDC LFN/text annotations into an XML document
+using quick hack script took 32mins on soju, my laptop. resulting XML
+is 8mb. needed some manual massage to remove malformed embedded xml and
+things like that.
+<screen>
+./i2u2-to-xml.sh >lfn-text-anno.xml
+</screen>
+
+so we end up with a lot of records that look like this:
+
+<screen>
+&lt;lfn name="43.2007.0619.0.raw">
+&lt;origname>rgnew.txt&lt;/origname>
+&lt;group>riogrande&lt;/group>
+&lt;teacher>Luis Torres Rosa&lt;/teacher>
+&lt;school>Escuelo Superior Pedro Falu&lt;/school>
+&lt;city>Rio Grande&lt;/city>
+&lt;state>PR&lt;/state>
+&lt;year>AY2007&lt;/year>
+&lt;project>cosmic&lt;/project>
+&lt;comments>&lt;/comments>
+&lt;detectorid>43&lt;/detectorid>
+&lt;type>raw&lt;/type>
+&lt;avglatitude>18.22.8264&lt;/avglatitude>
+&lt;avglongitude>-65.50.1975&lt;/avglongitude>
+&lt;avgaltitude>-30&lt;/avgaltitude>
+&lt;/lfn>
+</screen>
+
+The translation here is not cosmic-aware - the XML tag is the mkey name from
+vdc and the content is the value. So we get all the different metadata
+(informal) schemas that appear to have been used, translated.
+
+</para>
+
+<para>
+Output the entire provenance database:
+<screen>
+$ time cat lfn-text-anno.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/cosmic'  | wc -c
+ 10178037
+
+real    0m2.624s
+user    0m2.612s
+sys     0m0.348s
+</screen>
+</para>
+
+<para>
+Select all LFN objects (which on this dataset means everything one layer
+down):
+<screen>
+$ time cat lfn-text-anno.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/cosmic/lfn'  | wc -c
+ 9618818
+
+real    0m2.692s
+user    0m2.703s
+sys     0m0.337s
+</screen>
+</para>
+
+<para>
+Try to select an LFN that doesn't exist, by specifying a filename that is not
+there:
+<screen>
+$ time cat lfn-text-anno.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/cosmic/lfn[@name="NOSUCHNAME"]'
+&lt;?xml version="1.0"?>
+&lt;toplevel/>
+
+real    0m0.867s
+user    0m0.740s
+sys     0m0.143s
+</screen>
+</para>
+
+<para>
+Similar query for a filename that does exist:
+<screen>
+$ time cat lfn-text-anno.xml | ~/work/xpathtool-20071102/xpathtool/xpathtool.sh --oxml '/cosmic/lfn[@name="1.2005.0801.0"]'
+&lt;?xml version="1.0"?>
+&lt;toplevel>
+  &lt;lfn name="1.2005.0801.0">
+    &lt;origname>C:\Documents and Settings\zsaleh\My Documents\Tera stuff\Qnet\Qnet Data\All_data_Aug_01_2005_TERA_9_Vth_1000.TXT&lt;/origname>
+    &lt;group>TERA&lt;/group>
+    &lt;teacher>Marcus Hohlmann&lt;/teacher>
+    &lt;school>Florida Institute of Technology&lt;/school>
+    &lt;city>Melbourne&lt;/city>
+    &lt;state>FL&lt;/state>
+    &lt;year>AY2004&lt;/year>
+    &lt;project>cosmic&lt;/project>
+    &lt;comments/>
+    &lt;source>1.2005.0801.0&lt;/source>
+    &lt;detectorid>1&lt;/detectorid>
+    &lt;type>split&lt;/type>
+  &lt;/lfn>
+&lt;/toplevel>
+
+real    0m0.875s
+user    0m0.745s
+sys     0m0.154s
+</screen>
+</para>
+
+</section>
+
+<section><title>processing fMRI metadata</title>
+<para>
+for fmri, we can extract embedded image metadata using the scanheader
+utility.
+</para>
+<para>
+associate that with the 'volume' dataset, not with the actual image data
+files. for now that means we need the datasets to have been labelled with
+their ID already, which is at the moment after execution has completed.
+that's fine for now with the retrospective provenance restriction of this
+immediate work. see the 
+<link linkend="crossrun-id">'cross-run dataset ID' section</link>, for which this
+also applies - we are generating dataset IDs outside of a particular run.
+</para>
+</section>
+
+<section><title>random unsorted notes</title>
+<para>
+to put provdb in postgres instead of sqlite3:
+
+start as per i2u2 instructions, then <command>/opt/local/lib/postgresql82/bin/createdb -U postgres provdb</command>
+
+then:
+<command>
+ psql82 -U postgres -d provdb &lt; prov-init.sql 
+</command> to initialise the db.
+</para>
+<para>
+on terminable, made new database that is not the default system db install,
+by using existing postgres but running under my user id:
+<screen>
+  131  mkdir pgplay
+  133  chmod 0700 pgplay/
+  135  initdb -D ~/pgplay/
+  138  postmaster -D ~/pgplay/ -p 5435
+$ createdb -p 5435 provdb
+CREATE DATABASE
+</screen>
+now can access like this:
+<screen>
+$ psql -p 5435 -d provdb
+provdb=# \dt
+No relations found.
+</screen>
+</para>
+<para>osg/gratia - how does this data tie in?
+</para>
+<para>cedps logging - potential for info there but there doesn't seem
+anything particularly substantial at the moment
+</para>
+</section>
+
+<section><title>Provenance Challenge 1 examples</title>
+<section><title>Basic SQL</title>
+<section><title>provch q1</title>
+
+<screen>
+get the dataset id for the relevant final dataset:
+sqlite> select * from dataset_filenames where filename like '%0001.jpeg';
+14976260|file://localhost/0001.jpeg
+
+get containment info for that file:
+sqlite> select * from dataset_containment where inner_dataset_id = 14976260;
+7316236|14976260
+sqlite> select * from dataset_containment where inner_dataset_id = 7316236;
+[no answer]
+
+now need to find what contributed to those...
+
+> select * from dataset_usage where dataset_id=14976260;
+0-4-3|O|14976260
+
+> select * from dataset_usage where execute_id='0-4-3' and direction='I';
+0-4-3|I|4845856
+qlite> select * from dataset_usage where dataset_id=4845856 and direction='O';
+0-3-3|O|4845856
+
+sqlite> select * from dataset_usage where execute_id='0-3-3' and direction='I';
+0-3-3|I|3354850
+0-3-3|I|6033476
+
+qlite> select * from dataset_usage where (dataset_id=3354850 or dataset_id=6033476) and direction='O';
+0-2|O|3354850
+
+sqlite> select * from dataset_usage where execute_id='0-2' and direction='I';0-2|I|4436324
+
+sqlite> select * from dataset_usage where dataset_id=4436324 and direction='O';
+[no answer]
+
+so here we have run out of places to keep going. however, I think this 4436324
+is not an input - its related to another dataset. so we need another rule for
+inference here...
+
+
+
+</screen>
+</section>
+
+<section><title>prov ch q4</title>
+<para>prov ch q4 incremental solutions:</para>
+
+<para>first cut:
+this will select align_warp procedures and their start times. does not
+select based on parameters, and does not select based on day of week.
+(the former we don't have the information for; the latter maybe don't have
+the information in sqlite3 to do - or maybe need SQL date ops and SQL dates
+rather than unix timestamps)
+<screen>
+sqlite> select id, starttime from invocation_procedure_names, executes where executes.id = invocation_procedure_names.execute_id and procedure_name='align_warp';
+</screen>
+<para>Next, this will display the day of week for an invocation:</para>
+<screen>
+select id, strftime('%w',starttime, 'unixepoch') from executes,invocation_procedure_names where procedure_name='align_warp' and executes.id=invocation_Procedure_names.execute_id;
+0-0-3|5
+0-0-4|5
+0-0-1|5
+0-0-2|5
+</screen>
+</para>
+<para>And this will match day of week (sample data is on day 5, which is a
+Friday, not the day requested in the question):
+<screen>
+sqlite> select id from executes,invocation_procedure_names where procedure_name='align_warp' and executes.id=invocation_Procedure_names.execute_id and strftime('%w',starttime, 'unixepoch') = '5';
+0-0-3
+0-0-4
+0-0-1
+0-0-2
+</screen>
+</para>
+<para>
+Now we bring in input data binding: we query which datasets were passed in
+as the model parameter for each of the above found invocations:
+<screen>
+sqlite> select executes.id, dataset_usage.dataset_id from executes,invocation_procedure_names, dataset_usage where procedure_name='align_warp' and executes.id=invocation_Procedure_names.execute_id and strftime('%w',starttime, 'unixepoch') = '5' and dataset_usage.execute_id = executes.id and direction='I' and param_name='model';
+0-0-3|11032210
+0-0-4|13014156
+0-0-1|14537849
+0-0-2|16166946
+</screen>
+though at the moment this doesn't give us the value of the parameter.
+</para>
+
+<para>so now pull in the parameter value:
+
+<screen>
+sqlite> select executes.id, dataset_usage.dataset_id, dataset_usage.value from executes,invocation_procedure_names, dataset_usage where procedure_name='align_warp' and executes.id=invocation_Procedure_names.execute_id and strftime('%w',starttime, 'unixepoch') = '5' and dataset_usage.execute_id = executes.id and direction='I' and param_name='model';
+0-0-3|11032210|12
+0-0-4|13014156|12
+0-0-1|14537849|12
+0-0-2|16166946|12
+</screen>
+</para>
+
+<para>
+Now we can select on the parameter value and get our final answer:
+<screen>
+sqlite> select executes.id from executes,invocation_procedure_names, dataset_usage where procedure_name='align_warp' and executes.id=invocation_Procedure_names.execute_id and strftime('%w',starttime, 'unixepoch') = '5' and dataset_usage.execute_id = executes.id and direction='I' and param_name='model' and dataset_usage.value=12;
+0-0-3
+0-0-4
+0-0-1
+0-0-2
+</screen>
+Note that in SQL in general,
+we *don't* get typing of the parameter value here so can't do anything
+more than string comparison. For example, we couldn't check for the
+parameter being greater than 12 or similar. In sqlite, it happens that
+its typing is dynamic enough to allow the use of relational operators like
+> on fields no matter what their declared type, because declared type is
+ignored. This would stop working if stuff was run on eg postgres or mysql,
+I think.
+</para>
+</section>
+<section><title>prov ch metadata</title>
+<para>metadata: in the prov challenge, we annotate (some) files with
+their header info. in the provenance paper, we want annotations on more
+than just files.
+</para>
+<para>for prov ch metadata, define a scanheader table with the result of
+scanheader on each input dataset, but do it *after* we've done the
+run (because we're then aware of dataset IDs)</para>
+<para>There's a representation question here - the metadata is about a volume
+dataset which is a pair of files, not about a header or image file separately.
+how to represent this? we need to know the dataset ID for the volume. at
+the moment, we can know that after a run. but this ties into the
+identification of datasets outside of an individual run point - move this
+paragraph into that questions/discussions section.
+</para>
+<para>
+should probably for each storage method show the inner-platform style of
+doing metadata too; associated queries to allow comparison with the
+different styles; speeds of metadata query for large metadata collections
+(eg. dump i2u2 cosmic metadata for real cosmic VDC)
+</para>
+</section>
+</section>
+
+<section><title>SQL with transitive closures</title>
+<section>
+<title>prov ch question 1:</title>
+<screen>
+$ sqlite3 provdb
+SQLite version 3.3.17
+Enter ".help" for instructions
+sqlite> select * from dataset_filenames where filename like '%0001.jpeg';
+14976260|file://localhost/0001.jpeg
+-- can query keeping relations
+sqlite> select * from trans where after=14976260;
+0-4-3|14976260
+4845856|14976260
+0-3-3|14976260
+3354850|14976260
+6033476|14976260
+4825541|14976260
+7061626|14976260
+0-2|14976260
+4436324|14976260
+11153746|14976260
+655223|14976260
+5169861|14976260
+6487148|14976260
+5772360|14976260
+4910675|14976260
+7202698|14976260
+12705705|14976260
+2088036|14976260
+13671126|14976260
+14285084|14976260
+12896050|14976260
+0-1-3|14976260
+0-1-4|14976260
+0-1-2|14976260
+0-1-1|14976260
+2673619|14976260
+9339756|14976260
+10682109|14976260
+8426950|14976260
+16032673|14976260
+2274050|14976260
+1461238|14976260
+13975694|14976260
+9282438|14976260
+12766963|14976260
+8344105|14976260
+9190543|14976260
+14055055|14976260
+2942918|14976260
+12735302|14976260
+7080341|14976260
+0-0-3|14976260
+0-0-4|14976260
+0-0-2|14976260
+0-0-1|14976260
+2307300|14976260
+11032210|14976260
+16166946|14976260
+14537849|14976260
+13014156|14976260
+6435309|14976260
+6646123|14976260
+-- or can query without relations:
+sqlite> select before from trans where after=14976260;
+0-4-3
+4845856
+0-3-3
+3354850
+6033476
+4825541
+7061626
+0-2
+4436324
+11153746
+655223
+5169861
+6487148
+5772360
+4910675
+7202698
+12705705
+2088036
+13671126
+14285084
+12896050
+0-1-3
+0-1-4
+0-1-2
+0-1-1
+2673619
+9339756
+10682109
+8426950
+16032673
+2274050
+1461238
+13975694
+9282438
+12766963
+8344105
+9190543
+14055055
+2942918
+12735302
+7080341
+0-0-3
+0-0-4
+0-0-2
+0-0-1
+2307300
+11032210
+16166946
+14537849
+13014156
+6435309
+6646123
+
+
+</screen>
+</section>
+
+
+</section>
+
+</section>
+
+<section><title>The old 'Getting started' section that you should ignore...</title>
+<para>
+This section details how to make basic use of some of the provenance database
+that I have running at CI.
+</para>
+<section><title>basic commands</title>
+
+<para>ssh to terminable. Set up path to the provenance commands like this:
+<screen>
+$ <userinput>export PATH=~benc/swift-svn/provenancedb:$PATH</userinput>
+</screen>
+</para>
+
+</section>
+
+<section><title>Direct database access on terminable</title>
+
+<para>
+Data is imported into two databases - an SQL database, and an XML database.
+Approximately the same data is imported into both - you can experiment with
+querying using SQL from the SQL language and XPath and XQuery from the
+XML database.
+</para>
+<para>At the moment, the database is generated from my log repository once
+per day. Logs that you put in the log repository a day ago should appear in
+the databases; logs that you added more recently may not.
+</para>
+<para>
+To query SQL, ssh into terminable, and type:
+<screen>
+$ <userinput>psql -p 5435 -d provdb -U benc</userinput>
+</screen>
+</para>
+<para>
+Details of the tables can be found in the 'plain sql' section later.
+</para>
+</section>
+</section>
+
+
+<section><title>Representation of dataset containment and procedure execution in r2681 and how it could change.</title>
+
+<para>
+Representation of processes that transform one dataset into another dataset
+at present only occurs for <literal>app</literal> procedures, in logging of
+<literal>vdl:execute</literal> invocations, in lines like this:
+<screen>
+2009-03-12 12:20:29,772+0100 INFO  vdl:parameterlog PARAM thread=0-10-1 direction=input variable=s provenanceid=tag:benc@ci.uchicago.edu,2008:swift:dataset:20090312-1220-md2mfc24:720000000033
+</screen>
+and dataset containment is represented at closing of the containing DSHandle by this:
+<screen>
+2009-03-12 12:20:30,205+0100 INFO  AbstractDataNode CONTAINMENT parent=tag:benc@ci.uchicago.edu,2008:swift:dataset:20090312-1220-md2mfc24:720000000020 child=tag:benc@ci.uchicago.edu,2008:swift:dataset:20090312-1220-md2mfc24:720000000086
+2009-03-12 12:20:30,205+0100 INFO  AbstractDataNode ROOTPATH dataset=tag:benc@ci.uchicago.edu,2008:swift:dataset:20090312-1220-md2mfc24:720000000086 path=[2]
+</screen>
+</para>
+
+<para>
+This representation does not represent the relationship between datasets when
+they are related by @functions or operators. Nor does it represent causal
+relationships between collections and their members - instead it represents
+containment.
+</para>
+
+<para>
+Adding representation of operators (including array construction) and of
+@function invocations would give substantially more information about
+the provenance of many more datasets.
+</para>
+
+</section>
+
+</article>
+
