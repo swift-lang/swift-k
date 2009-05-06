@@ -9,6 +9,9 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 
 	if(
 		derr == false then(
+			if(done
+				vdl:setprogress("Finished in previous run")
+			)
 			if(
 				sys:not(done) try(
 					sequential(

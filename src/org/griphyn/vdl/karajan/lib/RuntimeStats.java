@@ -40,6 +40,7 @@ public class RuntimeStats extends FunctionsCollection {
 		"Stage out",
 		"Failed",
 		"Replicating",
+		"Finished in previous run",
 		"Finished successfully"
 	};
 
