@@ -2568,6 +2568,23 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 	
 					<varlistentry>
 						<term>
+							<property>provenance.log</property>
+						</term>
+						<listitem>
+							<para>
+								Valid values: <literal>true</literal>, <literal>false</literal>
+							</para>
+							<para>
+								Default value: <literal>false</literal>
+							</para>
+							<para>
+								This property controls whether the log file will contain provenance information enabling this will increase the size of log files, sometimes significantly.
+							</para>
+						</listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
 							<property>replication.enabled</property>
 						</term>
 						<listitem>
@@ -2965,23 +2982,6 @@ translation of the job initial working directory. In such cases,
 								transfered after every job is completed or
 								failed.
 								
-							</para>
-						</listitem>
-					</varlistentry>
-
-					<varlistentry>
-						<term>
-							<property>provenance.log</property>
-						</term>
-						<listitem>
-							<para>
-								Valid values: <literal>true</literal>, <literal>false</literal>
-							</para>
-							<para>
-								Default value: <literal>false</literal>
-							</para>
-							<para>
-								This property controls whether the log file will contain provenance information enabling this will increase the size of log files, sometimes significantly.
 							</para>
 						</listitem>
 					</varlistentry>
