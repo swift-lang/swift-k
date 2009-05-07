@@ -3539,12 +3539,40 @@ properties section</link>.
 
 	</section>
 
-	<section id="restart"> <title>Workflow restart/recovery</title>
+	<section id="reliability"><title>Reliability mechanisms</title>
+	<para>
+This section details reliabilty mechanisms in Swift: retries, restarts
+and replication.
+	</para>
+
+	<section id="retries"> <title>Retries</title>
+		<para>
+If an application procedure execution fails, Swift will attempt that
+execution again repeatedly until it succeeds, up until the limit
+defined in the <literal>execution.retries</literal> configuration
+property.
+		</para>
+		<para>
+Site selection will occur for retried jobs in the same way that it happens
+for new jobs. Retried jobs may run on the same site or may run on a
+different site.
+		</para>
+		<para>
+If the retry limit <literal>execution.retries</literal> is reached for an
+application procedure, then that application procedure will fail. This will
+cause the entire run to fail - either immediately (if the
+<literal>lazy.errors</literal> property is <literal>false</literal>) or
+after all other possible work has been attempted (if the
+<literal>lazy.errors</literal> property is <literal>true</literal>).
+		</para>
+	</section>
+
+	<section id="restart"> <title>Restarts</title>
 		<para>
 If a run fails, Swift can resume the program from the point of
 failure. When a run fails, a restart log file will be left behind in
-a file named using the unique job ID and a .rlog extension. This restart log
-can then be passed to a subsequent Swift invocation using the -resume
+a file named using the unique job ID and a <filename>.rlog</filename> extension. This restart log
+can then be passed to a subsequent Swift invocation using the <literal>-resume</literal>
 parameter. Swift will resume execution, avoiding execution of invocations
 that have previously completed successfully. The SwiftScript source file
 and input data files should not be modified between runs.
@@ -3575,6 +3603,29 @@ class="file">example.swift</filename></option>.
 		</para>
 	</section> 
 
+	<section id="replication"><title>Replication</title>
+		<para>
+When an execution job has been waiting in a site queue for a certain
+period of time, Swift can resubmit replicas of that job (up to the limit
+defined in the <literal>replication.limit</literal> configuration property).
+When any of those jobs moves from queued to active state, all of the
+other replicas will be cancelled.
+		</para>
+		<para>
+This is intended to deal with situations where some sites have a substantially
+longer (sometimes effectively infinite) queue time than other sites.
+Selecting those slower sites can cause a very large delay in overall run time.
+		</para>
+		<para>
+Replication can be enabled by setting the
+<literal>replication.enabled</literal> configuration property to
+<literal>true</literal>. The maximum number of replicas that will be
+submitted for a job is controlled by the <literal>replication.limit</literal>
+configuration property.
+		</para>
+	</section>
+
+	</section>
 
 	<section id="clustering"><title>Clustering</title>
 		<para>
