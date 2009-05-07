@@ -3599,7 +3599,7 @@ class="file">logfile</filename></parameter></option> argument can be
 used after the SwiftScript program file name. Example:
 
 <screen>
-<prompt>&gt;</prompt> <command>swift</command> <option>-resume <filename
+<prompt>$</prompt> <command>swift</command> <option>-resume <filename
 class="file">example-ht0adgi315l61.0.rlog</filename></option> <option><filename
 class="file">example.swift</filename></option>.
 </screen>
