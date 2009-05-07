@@ -1,3 +1,9 @@
+(05/07/09)
+*** swift-log-to-cedps is removed. The functionality of generating
+    .cedps format files is available by specifying the desired .cedps files
+    in an invocation of swift-plot-log. Lack of widespread use of this
+    command means a deprecation period is probably unnecessary.
+
 (05/05/09)
 *** New configuration property provenance.log which controls whether verbose
     provenance-related log information is recorded in the run log file or

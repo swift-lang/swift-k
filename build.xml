@@ -81,7 +81,6 @@
 		<chmod perm="+x" file="${dist.dir}/bin/VDL2Karajan"/>
 		<chmod perm="+x" file="${dist.dir}/bin/vdlc"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-plot-log"/>
-		<chmod perm="+x" file="${dist.dir}/bin/swift-log-to-cedps"/>
 
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/active-state-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/add-runid-as-prefix"/>
