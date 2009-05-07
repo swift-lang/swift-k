@@ -27,10 +27,11 @@ a language called <firstterm>SwiftScript</firstterm>.
 	</para>
 	<para>
 SwiftScript programs are dataflow oriented - they are primarily
-concerned with processing (possibly large) data files, by invoking
-programs to do that processing. Swift handles execution of such programs
-on remote sites by choosing sites, handling the staging of input and output
-files to and from the chosen sites and remote execution of program code.
+concerned with processing (possibly large) collections of data files,
+by invoking programs to do that processing. Swift handles execution of
+such programs on remote sites by choosing sites, handling the staging
+of input and output files to and from the chosen sites and remote execution
+of program code.
 	</para>
 	</section>
 	<section id="language">
@@ -43,7 +44,9 @@ between those invocations.
 </para>
 <para>
 Data is represented in a script by strongly-typed single-assignment
-variables, using a C-like syntax.
+variables. The syntax superficially resembles C and Java. For example,
+<literal>{</literal> and <literal>}</literal> characters are used to
+enclose blocks of statements.
 </para>
 <para>
 Types in Swift can be <firstterm>atomic</firstterm> or
@@ -74,13 +77,6 @@ declares that the data for this variable is stored in a single file named
 <programlisting>
   image photo &lt;"shane.jpeg"&gt;;
 </programlisting>
-
-<para>
-Conceptually, a parallel can be drawn between Swift mapped variables
-and Java reference types. In both cases there is no syntactic distinction
-between primitive types and mapped types or reference types respectively.
-Additionally, the semantic distinction is also kept to a minimum.
-</para>
 
 <para>
 Component programs of scripts are declared in an <firstterm>app
@@ -120,7 +116,7 @@ invocation passed as inputs.
 </para>
 
 <para>
-The examples above have used the type <literal>image</literal> with out any
+The examples above have used the type <literal>image</literal> without any
 definition of that type. We can declare it as a <firstterm>marker type</firstterm>
 which has no structure exposed to SwiftScript:
 </para>
@@ -254,7 +250,7 @@ In this fragment, execution of procedures <literal>p</literal> and
 
 <para>while in this fragment, execution is serialised by the variable
 <literal>y</literal>, with procedure <literal>p</literal> executing
-before <literal>q</literal>:</para>
+before <literal>q</literal>.</para>
 
 <programlisting>
  y=p(x);
@@ -262,11 +258,13 @@ before <literal>q</literal>:</para>
 </programlisting>
 
 <para>
-Arrays in SwiftScript are more generally
-<firstterm>monotonic</firstterm>; that is, knowledge about the
+Arrays in SwiftScript are more
+<firstterm>monotonic</firstterm> - a generalisation of being
+assignment. Knowledge about the
 content of an array increases during execution, but cannot otherwise
-change. Each element of the array is single assignment.
-Eventually, all values for an array are known, and that array
+change. Each element of the array is itself single assignment or monotonic
+(depending on its type).
+During a run all values for an array are eventually known, and that array
 is regarded as <firstterm>closed</firstterm>.
 </para>
 
@@ -515,7 +513,7 @@ of this guide.
 
 		</section>
 		<section>
-			<title>Syntax</title>
+			<title>More technical details about SwiftScript</title>
 <para>The syntax of SwiftScript has a superficial resemblance to C and
 Java. For example, { and } characters are used to enclose blocks of
 statements.
@@ -810,8 +808,7 @@ remote sites for execution or to pass to applications.</para>
 Swift provides a number of mappers that are useful in common cases. This
 section details those standard mappers. For more complex cases, it is
 possible to write application-specific mappers in Java and
-use them within a SwiftScript program. For more information on writing
-an application specific mapper, see the tutorial module on mappers.
+use them within a SwiftScript program. 
 		</para>
 
 		<section id="mapper.single_file_mapper"><title>The single file mapper</title>
@@ -1348,8 +1345,15 @@ would map
 	</section>
 
 	</section>
+	<section id="commands"><title>Commands</title>
+		<para>
+The commands detailed in this section are available in the
+<filename>bin/</filename> directory of a Swift installation and can
+by run from the commandline if that directory is placed on the
+PATH.
+		</para>
 	<section id="swiftcommand">
-	<title>The swift command</title>
+	<title>swift</title>
 	<para>
 The <command>swift</command> command is the main command line tool
 for executing SwiftScript programs.
@@ -1486,6 +1490,70 @@ The <command>swift</command> command may exit with the following return codes:
 </table>
 	</para>
 	</section>
+	</section>
+
+	<section><title>swift-log-to-cedps</title></section>
+	<section><title>swift-osg-ress-site-catalog</title>
+			<para>
+The <command>swift-osg-ress-site-catalog</command> command generates a site
+catalog based on <ulink url="http://www.opensciencegrid.org/">OSG</ulink>'s
+ReSS information system (since Swift 0.9)
+			</para>
+			<para>
+Usage: <command>swift-osg-ress-site-catalog [options]</command>
+			</para>
+			<variablelist>
+			<varlistentry><term>--help</term>
+				<listitem>
+<para>Show help message</para>
+				</listitem>
+			</varlistentry>
+
+			<varlistentry><term>--vo=[name]</term>
+				<listitem>
+<para>Set what VO to query ReSS for</para>
+				</listitem>
+			</varlistentry>
+
+			<varlistentry><term>--engage-verified</term>
+				<listitem>
+<para>Only retrieve sites verified by the Engagement VO site
+verification tests This can not be used together with <literal>--vo</literal>,
+as the query will only work for sites advertising support for the
+Engagement VO.</para>
+
+<para>This option means information will be retrieved from the
+Engagement collector instead of the top-level ReSS collector.</para>
+
+				</listitem>
+			</varlistentry>
+
+			<varlistentry><term>--out=[filename]</term>
+				<listitem>
+<para>Write to [filename] instead of stdout</para>
+				</listitem>
+			</varlistentry>
+			</variablelist>
+
+
+		</section>
+
+
+	<section><title>swift-plot-log</title>
+		<para>
+<command>swift-plot-log</command> generates summaries of Swift run log
+files.
+		</para>
+		<para>
+Usage: <command>swift-plot-log [logfile] [targets]</command>
+		</para>
+		<para>
+When no targets are specified, <command>swift-plog-log</command> will
+generate an HTML report for the run. When targets are specified, only
+those named targets will be generated.
+		</para>
+	</section>
+
 	</section>
 	<section id="appmodel"> <title>Executing <literal>app</literal> procedures</title>
 	<para>
@@ -1670,7 +1738,7 @@ different sites.
 </section>
 
 <section><title>
-notes on how swift implements file input and output
+How Swift implements the site execution model
 </title>
 
 <para>
@@ -1741,7 +1809,7 @@ for each job that has generated a kickstart record.
 </para></listitem>
 
 <listitem><para>
-<filename>jobs/</filename>  //application workspace directories// (optionally placed here - 
+<filename>jobs/</filename> - application workspace directories (optionally placed here - 
 see below)
 </para></listitem>
 </itemizedlist>
@@ -1774,7 +1842,7 @@ script are stored under the <filename>info/</filename> directory.
 
 <para>
 The Swift client side then checks for the presence of and deletes a status 
-file indicating success; copies files from the site shared directory to 
+file indicating success; and copies files from the site shared directory to 
 the appropriate client side location.
 </para>
 
@@ -2508,7 +2576,7 @@ in parallel). (since Swift 0.9)
 								The generated dot file can be rendered
 								into a graphical form using
 								<ulink
-								url="http://www.graphviz.org">Graphviz</ulink>,
+								url="http://www.graphviz.org/">Graphviz</ulink>,
 								for example with a command-line such as:
 							</para>
 							<screen>
@@ -3002,6 +3070,17 @@ ip.address=192.168.0.1
 
 
 	<section id="profiles"><title>Profiles</title>
+		<para>
+Profiles are configuration parameters than can be specified either for
+sites or for transformation catalog entries. They influence the behaviour
+of Swift towards that site (for example, by changing the load Swift will
+place on that sites) or when running a particular procedure.
+		</para>
+		<para>
+Profile entries for a site are specified in the site catalog. Profile
+entries for specific procedures are specified in the transformation
+catalog.
+		</para>
 		<section id="profile.karajan"><title>Karajan namespace</title>
 			<para id="profile.karajan.maxsubmitrate"><literal>maxSubmitRate</literal> limits the maximum rate of job submission, in jobs per second.
 For example:
@@ -3694,36 +3773,6 @@ Because of the way that Swift runs its server side code, provider-specific
 MPI modes (such as GRAM jobType=mpi) should not be used. Instead, the
 mpirun command should be explicitly invoked.
 </para>
-		</section>
-		<section id="tips.osg"><title>Generating a sites.xml for OSG</title>
-			<para>
-The Swift distribution contains a command
-<command>swift-osg-ress-site-catalog</command> that can generate a site
-catalog based on OSG's ReSS information system (since Swift 0.9)
-			</para>
-
-			<screen>
-Usage:
-    swift-osg-ress-site-catalog [options]
-
-Options:
-    --help  Show this help message
-
-    --vo=[name]
-            Set what VO to query ReSS for
-
-    --engage-verified
-            Only retrieve sites verified by the Engagement VO site
-            verification tests This can not be used together with --vo, as
-            the query will only work for sites advertising support for the
-            Engagement VO.
-
-            This option means information will be retrieved from the
-            Engagement collector instead of the top-level ReSS collector.
-
-    --out=[filename]
-            Write to [filename] instead of stdout
-			</screen>
 		</section>
 	</section>
 
