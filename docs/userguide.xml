@@ -3123,6 +3123,10 @@ The following formats are recognized:
 					<listitem>Hours:Minutes:Seconds</listitem>
 				</itemizedlist>
 			</para>
+			<para>When replication is enabled (see <link linkend="replication">replication</link>), then walltime will also be enforced at the Swift client side: when
+a job has been active for more than twice the maxwalltime, Swift will kill the
+job and regard it as failed.
+			</para>
 			<para id="profile.globus.queue"><literal>queue</literal> 
 is used by the PBS, GRAM2 and GRAM4 providers. This profile
 entry specifies which queue jobs will be submitted to. The valid queue names
