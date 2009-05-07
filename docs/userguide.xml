@@ -1492,7 +1492,6 @@ The <command>swift</command> command may exit with the following return codes:
 	</section>
 	</section>
 
-	<section><title>swift-log-to-cedps</title></section>
 	<section><title>swift-osg-ress-site-catalog</title>
 			<para>
 The <command>swift-osg-ress-site-catalog</command> command generates a site
