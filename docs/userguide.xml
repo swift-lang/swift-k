@@ -2166,7 +2166,7 @@ m = readData2("readData2.in");
 			<para>
 <literal>trace</literal> will log its parameters. By default these will appear on both stdout
 and in the run log file. Some formatting occurs to produce the log message.
-The particular output format should not be relied upon. (new in 0.4)
+The particular output format should not be relied upon. (since Swift 0.4)
 			</para>
 		</section>
 
