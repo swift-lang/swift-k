@@ -18,7 +18,7 @@ is removed.
 
 
   <pool handle="localhost">
-    <gridftp  url="local://localhost" />
+    <filesystem provider="local" />
     <execution provider="local" />
     <workdirectory >/var/tmp</workdirectory>
     <profile namespace="karajan" key="jobThrottle">0</profile>
