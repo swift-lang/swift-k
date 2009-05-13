@@ -4,7 +4,7 @@ set view map
 
 set output 'slt2.png'
 
-set ylabel 'arbitary job number'
+set ylabel 'arbitrary job number'
 set xlabel 'realtime / s'
 
 set style arrow 1 nohead

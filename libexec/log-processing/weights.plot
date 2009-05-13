@@ -4,7 +4,7 @@ set output 'weights.png'
 
 set key outside below
 
-set ylabel 'arbitary event number'
+set ylabel 'score'
 set xlabel 'realtime / s'
 
 set style arrow 1 nohead lt 1

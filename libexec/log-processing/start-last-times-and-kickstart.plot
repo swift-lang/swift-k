@@ -4,7 +4,7 @@ set output 'start-last-times-and-kickstart.png'
 
 set key outside below
 
-set ylabel 'arbitary job number'
+set ylabel 'arbitrary job number'
 set xlabel 'realtime / s'
 
 set style arrow 1 nohead lt 1
