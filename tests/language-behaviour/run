@@ -77,25 +77,25 @@ for testfn in $TESTS; do
       echo "No expected output files specified for this test case - not checking output."
     fi
 
-    if [ "$SWIFT_TEST_EXCEPTIONS" == "no" ]; then
-      echo Skipping exception test due to test configuration
-    else
-      grep --quiet "	at " ${t}-*.log
-      if [ "$?" == "0" ]; then
-        echo EXCEPTIONS - stacktrace-like log lines found in output for ${t}
-        exit 2
-      fi
-    fi
-
-    # check that all execute and execute2 IDs are unique
-    swift-plot-log ${t}-*.log execute.transitions compound.transitions
-    if [ "$( cat compound.transitions execute.transitions | grep ' START ' | cut -d ' ' -f 2 | sort | uniq -d)" != "" ]; then
-      echo EXECUTE AND COMPOUND IDS NOT UNIQUE
-      exit 3
-    fi
-
-
   done
+
+  if [ "$SWIFT_TEST_EXCEPTIONS" == "no" ]; then
+    echo Skipping exception test due to test configuration
+  else
+    grep --quiet "	at " ${t}-*.log
+    if [ "$?" == "0" ]; then
+      echo EXCEPTIONS - stacktrace-like log lines found in output for ${t}
+      exit 2
+    fi
+  fi
+
+  # check that all execute and execute2 IDs are unique
+  swift-plot-log ${t}-*.log execute.transitions compound.transitions
+  if [ "$( cat compound.transitions execute.transitions | grep ' START ' | cut -d ' ' -f 2 | sort | uniq -d)" != "" ]; then
+    echo EXECUTE AND COMPOUND IDS NOT UNIQUE
+    exit 3
+  fi
+
   echo "Test passed at $(date)"
   if [ "$SUB" == "" ]; then
   	echo ----------===========================----------
