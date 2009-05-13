@@ -3336,6 +3336,28 @@ can be used to specify which PBS queue jobs will be submitted to.
 		</para>
 
 		<para>
+For execution through a local Condor installation, the <literal>condor</literal>
+provider should be used. This provider can run jobs either in the default
+vanilla universe, or can use Condor-G to run jobs on remote sites.
+		</para>
+		<para>
+When running locally, only the <literal>&lt;execution></literal> element
+needs to be specified:
+<screen>
+&lt;execution provider="condor" url="none" /&gt;
+</screen>
+		</para>
+		<para>
+When running with Condor-G, it is necessary to specify the Condor grid
+universe and the contact string for the remote site. For example:
+<screen>
+ &lt;execution provider="condor" />
+ &lt;profile namespace="globus" key="jobType">grid&lt;/profile>
+ &lt;profile namespace="globus" key="gridResource">gt2 belhaven-1.renci.org/jobmanager-fork&lt;/profile>
+</screen>
+		</para>
+
+		<para>
 For execution through SSH, the <literal>ssh</literal> provider should be used:
 <screen>
 &lt;execution url="www11.i2u2.org" provider="ssh"/&gt;
