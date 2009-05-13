@@ -116,10 +116,6 @@ public class ProcedureSignature {
 		readData2.addOutputArg(rd2OutputArg);     
 		proceduresMap.put("readData2", readData2);
 		
-		ProcedureSignature print = new ProcedureSignature("print");
-		print.setAnyNumOfInputArgs();
-		proceduresMap.put("print", print);
-		
 		ProcedureSignature trace = new ProcedureSignature("trace");
 		trace.setAnyNumOfInputArgs();
 		proceduresMap.put("trace", trace);

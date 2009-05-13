@@ -2162,16 +2162,6 @@ m = readData2("readData2.in");
 (since Swift 0.7)
 			</para>
 		</section>
-		<section id="procedure.print"><title>print</title>
-			<para>
-Deprecated - use <literal><link linkend="procedure.trace">trace</link></literal> instead.
-			</para>
-			<para>
-print will print its parameters to stdout; but will do this at a point
-in execution that is undefined. Specifically, it will not necessarily
-wait for its parameters to be properly set.
-			</para>
-		</section>
 		<section id="procedure.trace"><title>trace</title>
 			<para>
 <literal>trace</literal> will log its parameters. By default these will appear on both stdout
