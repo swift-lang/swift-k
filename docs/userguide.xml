@@ -3257,7 +3257,7 @@ and a remote working directory. Optionally, <link linkend="profiles">profile set
 		</para>
 
 </section>
-<section><title>File transfer method specification</title>
+<section><title>File transfer method</title>
 
 		<para>
 Transfer methods are specified with either 
@@ -3292,7 +3292,7 @@ coasters</link> section.
 		</para>
 </section>
 
-<section><title>Execution method specification</title>
+<section><title>Execution method</title>
 
 		<para>
 Execution methods may be specified either with the <literal>&lt;jobmanager&gt;</literal>
@@ -3368,7 +3368,7 @@ More details about configuration of coasters can be found in the
 <link linkend="coasters">section on coasters</link>.
 		</para>
 </section>
-<section><title>Other site catalog parameters</title>
+<section><title>Work directory</title>
 
 		<para>
 The <literal>workdirectory</literal> element specifies where on the site files can be
@@ -3381,6 +3381,9 @@ in the <literal>&lt;gridftp&gt;</literal> element and also mounted on all worker
 will be used for execution. A shared cluster scratch filesystem is
 appropriate for this. 
 		</para>
+
+</section>
+<section><title>Profiles</title>
 
 		<para>
 <link linkend="profiles">Profile keys</link> can be specified using
