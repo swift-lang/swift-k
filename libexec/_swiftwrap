@@ -18,10 +18,14 @@ info() {
 	env 2>&1 >& "$INFO"
 	infosection "df"
 	df 2>&1 >& "$INFO"
-	infosection "/proc/cpuinfo"
-	cat /proc/cpuinfo 2>&1 >& "$INFO"
-	infosection "/proc/meminfo"
-	cat /proc/meminfo 2>&1 >& "$INFO"
+        if [ -e "/proc/cpuinfo" ]; then
+		infosection "/proc/cpuinfo"
+		cat /proc/cpuinfo 2>&1 >& "$INFO"
+	fi
+	if [ -e "/proc/meminfo" ]; then
+		infosection "/proc/meminfo"
+		cat /proc/meminfo 2>&1 >& "$INFO"
+	fi
 	infosection "command line"
 	echo $COMMANDLINE 2>&1 >& "$INFO"
 	if [ -f "$STDOUT" ] ; then
