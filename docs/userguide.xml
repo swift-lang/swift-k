@@ -1490,6 +1490,29 @@ The <command>swift</command> command may exit with the following return codes:
 </table>
 	</para>
 	</section>
+	<section><title>Environment variables</title>
+		<para>The <command>swift</command> is influenced by the
+following environment variables:
+		</para>
+		<para>
+<literal>GLOBUS_HOSTNAME</literal>, <literal>GLOBUS_TCP_PORT_RANGE</literal> - set in the environment before running
+Swift. These can be set to inform Swift of the
+configuration of your local firewall. More information can be found in
+<ulink url="http://dev.globus.org/wiki/FirewallHowTo">the Globus firewall
+How-to</ulink>.
+		</para>
+		<para>
+<literal>COG_OPTS</literal> - set in the environment before running Swift. Options set in this
+variable will be passed as parameters to the Java Virtual Machine which
+will run Swift. The parameters vary between virtual machine imlementations,
+but can usually be used to alter settings such as maximum heap size.
+Typing 'java -help' will sometimes give a list of commands. The Sun Java
+1.4.2 command line options are <ulink url="http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html">documented here</ulink>.
+		</para>
+
+
+	</section>
+
 	</section>
 
 	<section><title>swift-osg-ress-site-catalog</title>
@@ -3172,46 +3195,24 @@ reside on an unrouted internal network). (since Swift 0.9)
 		<section id="profile.env"><title>env namespace</title>
 			<para>
 Profile keys set in the env namespace will be set in the unix environment of the
-executed job.
+executed job. Some environment variables influence the worker-side
+behaviour of Swift:
 			</para>
-		</section>
-	</section>
-
-	<section id="envvars"><title>Environment variables</title>
-		<para>
-There are a number of environment variables used by Swift. Some of them are
-documented in this section:
-		</para>
-		<para>
+			<para>
 <literal>PATHPREFIX</literal> - set in env namespace profiles. This path is prefixed onto the start
 of the <literal>PATH</literal> when jobs are
 executed. It can be more useful than setting the <literal>PATH</literal> environment variable directly,
 because setting <literal>PATH</literal> will cause the execution site's default path to be lost.
-		</para>
-		<para>
-<literal>GLOBUS_HOSTNAME</literal>, <literal>GLOBUS_TCP_PORT_RANGE</literal> - set in the environment before running
-Swift. These can be set to inform Swift of the
-configuration of your local firewall. More information can be found in
-<ulink url="http://dev.globus.org/wiki/FirewallHowTo">the Globus firewall
-How-to</ulink>.
-		</para>
-		<para>
-<literal>COG_OPTS</literal> - set in the environment before running Swift. Options set in this
-variable will be passed as parameters to the Java Virtual Machine which
-will run Swift. The parameters vary between virtual machine imlementations,
-but can usually be used to alter settings such as maximum heap size.
-Typing 'java -help' will sometimes give a list of commands. The Sun Java
-1.4.2 command line options are <ulink url="http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html">documented here</ulink>.
-		</para>
-		<para>
+			</para>
+			<para>
 <literal>SWIFT_JOBDIR_PATH</literal> - set in env namespace profiles. If set, then Swift will
 use the path specified here as a worker-node local temporary directory to
 copy input files to before running a job. If unset, Swift will keep input
 files on the site-shared filesystem. In some cases, copying to a worker-node
 local directory can be much faster than having applications access the
 site-shared filesystem directly.
-		</para>
-		<para>
+			</para>
+			<para>
 <literal>SWIFT_EXTRA_INFO</literal> - set in env namespace profiles. If set,
 then Swift will execute the command specified in
 <literal>SWIFT_EXTRA_INFO</literal> on execution sites immediately before
@@ -3219,8 +3220,10 @@ each application execution, and will record the stdout of that command in the
 wrapper info log file for that job. This is intended to allow software
 version and other arbitrary information about the remote site to be gathered
 and returned to the submit side. (since Swift 0.9)
-		</para>
+			</para>
+		</section>
 	</section>
+
 	<section id="sitecatalog"><title>The Site Catalog - sites.xml</title>
 		<para>
 The site catalog lists details of each site that Swift can use. The default
