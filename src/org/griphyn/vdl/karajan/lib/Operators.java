@@ -1,5 +1,8 @@
 package org.griphyn.vdl.karajan.lib;
 
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -8,12 +11,15 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
+import org.griphyn.vdl.util.VDL2Config;
 
 public class Operators extends FunctionsCollection {
 
 	public static final SwiftArg L = new SwiftArg.Positional("left");
 	public static final SwiftArg R = new SwiftArg.Positional("right");
 	public static final SwiftArg U = new SwiftArg.Positional("unaryArg");
+
+	public static final Logger provenanceLogger = Logger.getLogger("org.globus.swift.provenance.operators");
 
 	private DSHandle newNum(Type type, double value) throws ExecutionException {
 		try {
@@ -80,24 +86,31 @@ public class Operators extends FunctionsCollection {
 	public Object vdlop_sum(VariableStack stack) throws ExecutionException {
 		Object l = L.getValue(stack);
 		Object r = R.getValue(stack);
+		DSHandle ret;
 		if (l instanceof String || r instanceof String) {
-			return newString(((String) l) + ((String) r));
+			ret = newString(((String) l) + ((String) r));
 		}
 		else {
-			return newNum(type(stack), SwiftArg.checkDouble(l) + SwiftArg.checkDouble(r));
+			ret = newNum(type(stack), SwiftArg.checkDouble(l) + SwiftArg.checkDouble(r));
 		}
+		logBinaryProvenance(stack, "sum", ret);
+		return ret;
 	}
 
 	public Object vdlop_subtraction(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newNum(type(stack), l - r);
+		DSHandle ret = newNum(type(stack), l - r);
+		logBinaryProvenance(stack, "subtraction", ret);
+		return ret;
 	}
 
 	public Object vdlop_product(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newNum(type(stack), l * r);
+		DSHandle ret = newNum(type(stack), l * r);
+		logBinaryProvenance(stack, "product", ret);
+		return ret;
 	}
 
 	public Object vdlop_quotient(VariableStack stack) throws ExecutionException {
@@ -108,43 +121,57 @@ public class Operators extends FunctionsCollection {
 	public Object vdlop_fquotient(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newNum(Types.FLOAT, l / r);
+		DSHandle ret = newNum(Types.FLOAT, l / r);
+		logBinaryProvenance(stack, "fquotient", ret);
+		return ret;
 	}
 
 	public Object vdlop_iquotient(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newNum(Types.INT, l / r);
+		DSHandle ret = newNum(Types.INT, l / r);
+		logBinaryProvenance(stack, "iquotient", ret);
+		return ret;
 	}
 
 	public Object vdlop_remainder(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newNum(type(stack), l % r);
+		DSHandle ret = newNum(type(stack), l % r);
+		logBinaryProvenance(stack, "remainder", ret);
+		return ret;
 	}
 
 	public Object vdlop_le(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newBool(l <= r);
+		DSHandle ret = newBool(l <= r);
+		logBinaryProvenance(stack, "le", ret);
+		return ret;
 	}
 
 	public Object vdlop_ge(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newBool(l >= r);
+		DSHandle ret = newBool(l >= r);
+		logBinaryProvenance(stack, "ge", ret);
+		return ret;
 	}
 
 	public Object vdlop_gt(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newBool(l > r);
+		DSHandle ret = newBool(l > r);
+		logBinaryProvenance(stack, "gt", ret);
+		return ret;
 	}
 
 	public Object vdlop_lt(VariableStack stack) throws ExecutionException {
 		double l = L.getDoubleValue(stack);
 		double r = R.getDoubleValue(stack);
-		return newBool(l < r);
+		DSHandle ret = newBool(l < r);
+		logBinaryProvenance(stack, "lt", ret);
+		return ret;
 	}
 
 	public Object vdlop_eq(VariableStack stack) throws ExecutionException {
@@ -156,7 +183,9 @@ public class Operators extends FunctionsCollection {
 		if (r == null) {
 			throw new ExecutionException("Second operand is null");
 		}
-		return newBool(l.equals(r));
+		DSHandle ret = newBool(l.equals(r));
+		logBinaryProvenance(stack, "eq", ret);
+		return ret;
 	}
 
 	public Object vdlop_ne(VariableStack stack) throws ExecutionException {
@@ -168,23 +197,59 @@ public class Operators extends FunctionsCollection {
 		if (r == null) {
 			throw new ExecutionException("Second operand is null");
 		}
-		return newBool(!(l.equals(r)));
+		DSHandle ret = newBool(!(l.equals(r)));
+		logBinaryProvenance(stack, "ne", ret);
+		return ret;
 	}
 
 	public Object vdlop_and(VariableStack stack) throws ExecutionException {
 		boolean l = ((Boolean)L.getValue(stack)).booleanValue();
 		boolean r = ((Boolean)R.getValue(stack)).booleanValue();
-		return newBool(l && r);
+		DSHandle ret = newBool(l && r);
+		logBinaryProvenance(stack, "and", ret);
+		return ret;
 	}
 
 	public Object vdlop_or(VariableStack stack) throws ExecutionException {
 		boolean l = ((Boolean)L.getValue(stack)).booleanValue();
 		boolean r = ((Boolean)R.getValue(stack)).booleanValue();
-		return newBool(l || r);
+		DSHandle ret = newBool(l || r);
+		logBinaryProvenance(stack, "or", ret);
+		return ret;
 	}
 
 	public Object vdlop_not(VariableStack stack) throws ExecutionException {
 		boolean u = ((Boolean)U.getValue(stack)).booleanValue();
-		return newBool(!u);
+		DSHandle ret = newBool(!u);
+		logUnaryProvenance(stack, "not", ret);
+		return ret;
+	}
+
+	private void logBinaryProvenance(VariableStack stack, String name, DSHandle resultDataset) throws ExecutionException {
+		try {
+			if(VDL2Config.getConfig().getProvenanceLog()) {
+				String thread = stack.getVar("#thread").toString();
+				String lhs = L.getRawValue(stack).getIdentifier();
+				String rhs = R.getRawValue(stack).getIdentifier();
+				String result = resultDataset.getIdentifier();
+				provenanceLogger.info("OPERATOR thread="+thread+" operator="+name+" lhs="+lhs+" rhs="+rhs+" result="+result);
+			}
+		} catch(IOException ioe) {
+			throw new ExecutionException("Exception when logging provenance for binary operator", ioe);
+		}
+	}
+
+	private void logUnaryProvenance(VariableStack stack, String name, DSHandle resultDataset) throws ExecutionException {
+		try {
+			if(VDL2Config.getConfig().getProvenanceLog()) {
+				String thread = stack.getVar("#thread").toString();
+				String lhs = U.getRawValue(stack).getIdentifier();
+				String result = resultDataset.getIdentifier();
+				provenanceLogger.info("UNARYOPERATOR thread="+thread+" operator="+name+" operand="+lhs+" result="+result);
+			}
+		} catch(IOException ioe) {
+			throw new ExecutionException("Exception when logging provenance for unary operator", ioe);
+		}
 	}
 }
+
