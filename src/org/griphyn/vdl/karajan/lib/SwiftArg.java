@@ -84,6 +84,15 @@ public abstract class SwiftArg extends Arg {
 			throw new ExecutionException("Internal type error. Expected a Double. Got " + classOf(dbl));
 		}
 	}
+
+	public DSHandle getRawValue(VariableStack stack) throws ExecutionException {
+		Object v = super.getValue(stack);
+		if(v instanceof DSHandle) {
+			return (DSHandle)v;
+		} else {
+			throw new ExecutionException("Expected Swift data, but got some primitive type (" + v + ")");
+		}
+	}
 	
 	private static Class classOf(Object object) {
 		if (object == null) {
