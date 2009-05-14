@@ -126,6 +126,7 @@ public abstract class AbstractDataNode implements DSHandle {
 		else if (value instanceof Throwable) {
 			sb.append(" containing throwable ");
 			sb.append(value.getClass());
+			sb.append(" dataset=");
 		}
 		else {
 			sb.append(" value=");
