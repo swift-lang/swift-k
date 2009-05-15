@@ -14,7 +14,7 @@
   </assign>
   <foreach var="num"  src="line 3">
   <in><variableReference>nums</variableReference></in>
-  <body><call proc="print" src="line 4">
+  <body><call proc="trace" src="line 4">
       <input><variableReference>num</variableReference></input>
     </call></body>
   </foreach>

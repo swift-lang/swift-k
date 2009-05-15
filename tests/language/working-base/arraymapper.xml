@@ -16,7 +16,7 @@
   </variable>
   <foreach var="f"  src="line 5">
   <in><variableReference>files</variableReference></in>
-  <body><call proc="print" src="line 6">
+  <body><call proc="trace" src="line 6">
       <input><variableReference>f</variableReference></input>
     </call></body>
   </foreach>
