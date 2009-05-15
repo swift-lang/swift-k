@@ -99,20 +99,20 @@ public class Misc extends FunctionsCollection {
 	}
 	
 	public DSHandle swiftscript_strsplit(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-            InvalidPathException {
-        String str = TypeUtil.toString(PA_INPUT.getValue(stack));
-        String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
-        
-        String[] split = str.split(pattern);
-        
-        DSHandle handle = new RootArrayDataNode(Types.STRING.arrayType());
-        for (int i = 0; i < split.length; i++) {
-            DSHandle el = handle.getField(Path.EMPTY_PATH.addFirst(String.valueOf(i), true));
-            el.setValue(split[i]);
-        }
-        handle.closeDeep();
-        return handle;
-    }
+		InvalidPathException {
+		String str = TypeUtil.toString(PA_INPUT.getValue(stack));
+		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
+
+		String[] split = str.split(pattern);
+
+		DSHandle handle = new RootArrayDataNode(Types.STRING.arrayType());
+		for (int i = 0; i < split.length; i++) {
+			DSHandle el = handle.getField(Path.EMPTY_PATH.addFirst(String.valueOf(i), true));
+			el.setValue(split[i]);
+		}
+		handle.closeDeep();
+		return handle;
+	}
 
 	public DSHandle swiftscript_regexp(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
