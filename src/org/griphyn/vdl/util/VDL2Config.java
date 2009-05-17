@@ -89,6 +89,7 @@ public class VDL2Config extends Properties {
 		put("replication.min.queue.time", "60");
 		put("replication.limit", "3");
 		put("status.mode", "files");
+		put("wrapper.parameter.mode", "args");
 		put("wrapper.invocation.mode", "absolute");
 	}
 

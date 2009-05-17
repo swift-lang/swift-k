@@ -113,6 +113,11 @@ namespace("vdl"
 					dir:make(dircat(wfdir, "status"), host=rhost)
 				)
 
+				wrapperMode := configProperty("wrapper.parameter.mode",host=rhost)
+				if(wrapperMode == "files"
+					dir:make(dircat(wfdir, "parameters"), host=rhost)
+				)
+
 				dir:make(dircat(wfdir, "info"), host=rhost)
 				wfdir, sharedDir
 				//we send the cleanup data to vdl:main()
@@ -204,6 +209,24 @@ namespace("vdl"
 			)
 		)
 				
+
+		element(stageWrapperParams, [jobid, jobdir, wrapfile, dir, host]
+			log(LOG:INFO, "START jobid={jobid} - staging in wrapper params")
+			provider := provider(wrapfile)
+			srchost := hostname(wrapfile)
+			srcdir := dirname(wrapfile)
+			destdir := dircat(dir, "/parameters/{jobdir}/")
+			filename := basename(wrapfile)
+
+			cacheOn(list(destdir, host)
+				dir:make(destdir, host=host, provider=provider)
+			)
+
+			task:transfer(srcprovider=provider, srchost=srchost, srcfile=filename, srcdir=srcdir, desthost=host, destdir=destdir)
+			log(LOG:INFO, "END jobid={jobid}")
+
+		)
+
 		element(doStagein, [jobid, files, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - Staging in files")
 			uParallelFor(file, files
@@ -381,27 +404,71 @@ namespace("vdl"
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
 
 				statusMode := configProperty("status.mode",host=rhost)
+				wrapperMode := configProperty("wrapper.parameter.mode",host=rhost)
+
+				ddir := "{VDL:SCRIPTNAME}-{VDL:RUNID}.d"
+				if(sys:not(file:exists(ddir))
+					task:dir:make(ddir)
+				)
+				wrapfile := "{ddir}/param-{jobid}"
+
+				stdout := try(stdout, "stdout.txt")
+				stderr := try(stderr, "stderr.txt")
+				kickstart := vdl:kickstart(rhost)
+				fileDirs := fileDirs(stagein, stageout)
+
+				if(wrapperMode == "files"
+					sequential(
+						sys:file:write(wrapfile,
+							"-e ",vdl:executable(tr, rhost), nl(),
+							"-out ",stdout,nl(),
+							"-err ",stderr,nl(),
+							"-i ",maybe(stdin),nl(),
+							"-d ",flatten(each(fileDirs)),nl(),
+							"-if ",flatten(infiles(stagein)),nl(),
+							"-of ",flatten(outfiles(stageout)),nl(),
+							"-k ",kickstart,nl(),
+							"-status ",statusMode,nl())
+						for(argiterator, arguments
+							sys:file:write(wrapfile,append=true,"-a ",argiterator,nl())
+						)
+					)
+				)
 
 				vdl:setprogress("Stage in")
 				tmpdir := dircat(concat(wfdir, "/jobs/", jobdir), jobid)
 				
-				stdout := try(stdout, "stdout.txt")
-				stderr := try(stderr, "stderr.txt")
 				
-				kickstart := vdl:kickstart(rhost)
 				
 				try(
 					sequential(
-						fileDirs := fileDirs(stagein, stageout)
 						
 						createDirSet(jobid, sharedDir, rhost, fileDirs)
 						doStagein(jobid, stagein, sharedDir, rhost)
+						if(wrapperMode == "files"
+							stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
+						)
+
 
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
 				
 						vdl:setprogress("Submitting")
-						vdl:execute("/bin/bash",
-							list("shared/_swiftwrap", jobid,
+
+						if(wrapperMode == "files"
+							vdl:execute("/bin/bash",
+								list("shared/_swiftwrap", jobid, "-p", jobdir)
+							directory=wfdir
+							redirect=false
+							host=rhost
+							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
+							replicationGroup=replicationGroup
+							replicationChannel=replicationChannel
+							jobid=jobid
+							)
+						)
+						if(wrapperMode == "args"
+							vdl:execute("/bin/bash",
+								list("shared/_swiftwrap", jobid,
 								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 
 								"-out", stdout, 
@@ -412,7 +479,8 @@ namespace("vdl"
 								"-of", flatten(outfiles(stageout)),
 								"-k", kickstart,
 								"-status", statusMode
-								"-a", maybe(each(arguments)))
+								"-a", maybe(each(arguments))
+							)
 							directory=wfdir
 							redirect=false
 							host=rhost
@@ -420,13 +488,18 @@ namespace("vdl"
 							replicationGroup=replicationGroup
 							replicationChannel=replicationChannel
 							jobid=jobid
+							)
 						)
 
 						vdl:setprogress("Checking status")
 						if(statusMode == "files"
 							checkJobStatus(rhost, wfdir, jobid, tr, jobdir)
 						)
-		
+
+						if(wrapperMode == "files"
+							file:remove(wrapfile)
+						)
+
 						log(LOG:DEBUG, "STAGING_OUT jobid={jobid}")
 
 									
@@ -497,7 +570,7 @@ namespace("vdl"
 				)
 			)
 		)
-		
+	
 		element(generateProvenanceGraph, [gdata]
 			pgraph := vdl:configProperty("pgraph")
 			gname := if(pgraph == "true" "{VDL:SCRIPTNAME}-{VDL:RUNID}.dot" pgraph)

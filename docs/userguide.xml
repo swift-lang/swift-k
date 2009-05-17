@@ -3039,6 +3039,25 @@ translation of the job initial working directory. In such cases,
 
 					<varlistentry>
 						<term>
+							<property>wrapper.parameter.mode</property>
+						</term>
+						<listitem>
+							<para>
+Controls how Swift will supply parameters to the remote wrapper script.
+<literal>args</literal> mode will pass parameters on the command line. Some
+execution systems do not pass commandline parameters sufficiently cleanly
+for Swift to operate correctly.
+<literal>files</literal> mode will pass parameters through an additional
+input file (since Swift 0.95). This provides a cleaner communication channel
+for parameters, at the expense of transferring an additional file for each
+job invocation.
+							</para>
+						</listitem>
+
+					</varlistentry>
+
+					<varlistentry>
+						<term>
 							<property>wrapperlog.always.transfer</property>
 						</term>
 						<listitem>

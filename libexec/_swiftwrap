@@ -74,12 +74,21 @@ checkEmpty() {
 	fi
 }
 
+checkparamfile() {
+	log "checking for paramfile"
+	if [ "$1" == "-p" ]; then
+		JOBDIR=$2
+		PARAMFILE=${WFDIR}/parameters/${JOBDIR}/param-${ID}
+	fi
+	log "paramfile is: $PARAMFILE"
+}
+
 getarg() {
 	NAME=$1
 	shift
 	VALUE=""
 	SHIFTCOUNT=0
-	if [ "$1" == "$NAME" ]; then
+	if [ "$PARAMFILE" == "" ] && [ "$1" == "$NAME" ]; then
 		shift
 		let "SHIFTCOUNT=$SHIFTCOUNT+1"
 		while [ "${1:0:1}" != "-" ] && [ "$#" != "0" ]; do
@@ -87,10 +96,12 @@ getarg() {
 			shift
 			let "SHIFTCOUNT=$SHIFTCOUNT+1"
 		done
+		VALUE="${VALUE:1}"
+	elif [ "$PARAMFILE" != "" ] && grep -E "^$NAME " $PARAMFILE ; then
+			VALUE=$(grep -E "^$NAME " $PARAMFILE | cut -d ' ' -f 2-)
 	else
 		fail 254 "Missing $NAME argument"
 	fi
-	VALUE="${VALUE:1}"
 }
 
 openinfo() {
@@ -115,6 +126,7 @@ cd $WFDIR
 
 # make the WFDIR absolute
 WFDIR=$(pwd)
+PARAMFILE=
 
 openinfo "wrapper.log"
 ID=$1
@@ -122,9 +134,15 @@ checkEmpty "$ID" "Missing job ID"
 
 shift
 
-getarg "-jobdir" "$@"
-JOBDIR=$VALUE
-shift $SHIFTCOUNT
+checkparamfile "$@"
+
+# JOBDIR might have been assigned through the -p option, or might
+# be a parameter here
+if [ "$JOBDIR" == "" ] ; then
+	getarg "-jobdir" "$@"
+	JOBDIR=$VALUE
+	shift $SHIFTCOUNT
+fi
 
 checkEmpty "$JOBDIR" "Missing job directory prefix"
 mkdir -p $WFDIR/info/$JOBDIR
@@ -172,14 +190,24 @@ getarg "-status" "$@"
 STATUSMODE=$VALUE
 shift $SHIFTCOUNT
 
-if [ "$1" == "-a" ]; then
+declare -a CMDARGS
+if [ "$PARAMFILE" == "" ] && [ "$1" == "-a" ] ; then
 	shift
+	CMDARGS=("$@")
+elif [ "$PARAMFILE" != "" ] ; then
+	CMDARGS=()
+	FIRST=1
+	while read line ; do
+		if [ "$FIRST" == "1" ] ; then
+			CMDARGS=("$line")
+			FIRST=0
+		else
+			CMDARGS=("${CMDARGS[*]}" "$line")
+		fi
+	done < <(grep -E "^-a " $PARAMFILE | cut -d " " -f 2-)
 else
 	fail 254 "Missing arguments (-a option)"
 fi
-
-declare -a CMDARGS
-CMDARGS=("$@")
 
 if [ "$STATUSMODE" = "files" ]; then
 	mkdir -p $WFDIR/status/$JOBDIR

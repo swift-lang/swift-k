@@ -1,3 +1,10 @@
+(05/17/09)
+*** Allow wrapper parameters to be specific in a file rather than on the
+    commandline. This trades commandline length for an extra file to stage-in
+    per job.
+    A new parameter, wrapper.parameter.mode, is introduced to control this.
+    This was feature request bug 201.
+
 (05/07/09)
 *** swift-log-to-cedps is removed. The functionality of generating
     .cedps format files is available by specifying the desired .cedps files

@@ -1,0 +1,12 @@
+<config>
+
+  <pool handle="localhost">
+    <execution provider="local" />
+    <gridftp  url="local://localhost" />
+    <workdirectory >/var/tmp</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
+    <profile namespace="karajan" key="delayBase">0</profile>
+    <profile namespace="karajan" key="wrapper.parameter.mode">files</profile>
+  </pool>
+
+</config>
