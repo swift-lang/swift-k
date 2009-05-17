@@ -10,7 +10,7 @@ messagefile outfile <"091-case.out">;
 
 int selector = 8;
 
-print(selector);
+trace(selector);
 
 string message;
 
