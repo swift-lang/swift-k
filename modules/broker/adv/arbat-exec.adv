@@ -1,8 +1,0 @@
-[
-Name="Arbat-Exec";
-AdvType="Service";
-ServiceType="JobSubmission";
-Provider="GT2";
-Rank=2;
-ServiceContact="arbat.mcs.anl.gov";
-]
