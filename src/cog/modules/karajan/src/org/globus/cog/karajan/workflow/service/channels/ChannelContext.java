@@ -165,7 +165,7 @@ public class ChannelContext {
 		return (RequestHandler) activeReceivers.get(id);
 	}
 
-	protected void notifyRegisteredListeners(Exception e) {
+	public void notifyRegisteredListeners(Exception e) {
 		notifyListeners(activeReceivers, e);
 		notifyListeners(activeSenders, e);
 	}
@@ -173,7 +173,7 @@ public class ChannelContext {
 	private void notifyListeners(TagTable map, Exception t) {
 		Iterator i = map.values().iterator();
 		while (i.hasNext()) {
-			((RequestReply) i.next()).channelClosed();
+			((RequestReply) i.next()).errorReceived(null, t);
 		}
 	}
 
@@ -239,6 +239,6 @@ public class ChannelContext {
 	}
 	
 	public String toString() {
-		return data.toString();
+		return System.identityHashCode(this) + ": " + data.toString();
 	}
 }

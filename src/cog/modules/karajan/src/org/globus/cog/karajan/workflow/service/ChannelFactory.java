@@ -31,7 +31,7 @@ public class ChannelFactory {
 		else if (contact.getScheme().equals("https")) {
             channel = new GSSChannel(contact, rm, context);
         }
-		else if (contact.getScheme().equals("tcp")) {
+		else if (contact.getScheme().equals("tcp") || contact.getScheme().equals("http")) {
 			channel = new TCPChannel(contact, context, rm);
 		}
 		else if (contact.getScheme().equals("udp")) {
