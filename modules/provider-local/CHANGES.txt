@@ -1,3 +1,7 @@
+(05/24/2009)
+
+*** Honor the count attribute (by starting multiple jobs)
+
 (11/04/2008)
 
 *** Fixed deadlock in job submission handler caused by stderr not 
