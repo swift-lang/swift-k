@@ -33,6 +33,10 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
+import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
+import edu.emory.mathcs.backport.java.util.concurrent.Executors;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
+
 /**
  * @author Kaizar Amin (amin@mcs.anl.gov)
  * 
@@ -41,13 +45,16 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         Runnable {
     private static Logger logger = Logger
             .getLogger(JobSubmissionTaskHandler.class);
+    
+    private static ExecutorService pool = Executors.newCachedThreadPool(new DaemonThreadFactory(
+            Executors.defaultThreadFactory()));
+    
 
     private static final int STDOUT = 0;
     private static final int STDERR = 1;
 
     public static final int BUFFER_SIZE = 1024;
 
-    private Thread thread = null;
     private Process process;
     private volatile boolean killed;
 
@@ -70,16 +77,26 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         try {
+            int count = 1;
+            Object cv = spec.getAttribute("count");
+            if (cv != null) {
+                count = Integer.parseInt(cv.toString());
+            }
             if (logger.isInfoEnabled()) {
                 logger.info("Submitting task " + task);
             }
+            if (count == 1) {
+                logger.info("Submitting single job");
+            }
+            else {
+                logger.info("Submitting " + count + " jobs");
+            }
             synchronized (this) {
-                thread = new Thread(this);
-                thread.setName("Local task " + task.getIdentity());
-                thread.setDaemon(true);
                 if (task.getStatus().getStatusCode() != Status.CANCELED) {
+                    for (int i = 0; i < count; i++) {
+                        pool.submit(this);
+                    }
                     task.setStatus(Status.SUBMITTED);
-                    this.thread.start();
                     if (spec.isBatchJob()) {
                         task.setStatus(Status.COMPLETED);
                     }
@@ -149,9 +166,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             Processor p = new Processor(process, pairs);
 
             if (spec.isBatchJob()) {
-                Thread t = new Thread(p);
-                t.setName("Local task");
-                t.start();
+                pool.execute(p);
                 return;
             }
 
@@ -376,5 +391,20 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         public int getExitCode() {
             return p.exitValue();
         }
+    }
+    
+    static class DaemonThreadFactory implements ThreadFactory {
+        private ThreadFactory delegate;
+
+        public DaemonThreadFactory(ThreadFactory delegate) {
+            this.delegate = delegate;
+        }
+
+        public Thread newThread(Runnable r) {
+            Thread t = delegate.newThread(r);
+            t.setDaemon(true);
+            return t;
+        }
+
     }
 }
