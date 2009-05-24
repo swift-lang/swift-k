@@ -35,21 +35,20 @@ public class SubmitJobHandler extends RequestHandler {
             t = read(getInData(0));
             ChannelContext channelContext = getChannel().getChannelContext();
             new TaskNotifier(t, channelContext);
-            ((CoasterService) channelContext.getService()).getJobQueue()
-                    .enqueue(t);
+            ((CoasterService) channelContext.getService()).getJobQueue().getCoasterQueueProcessor().setClientChannelContext(
+                channelContext);
+            ((CoasterService) channelContext.getService()).getJobQueue().enqueue(t);
             // make sure we'll have something to send notifications to
             ChannelManager.getManager().reserveLongTerm(getChannel());
         }
         catch (Exception e) {
             e.printStackTrace();
-            throw new ProtocolException(
-                    "Could not deserialize job description", e);
+            throw new ProtocolException("Could not deserialize job description", e);
         }
         sendReply(t.getIdentity().toString());
     }
 
-    private Task read(byte[] buf) throws IOException, ProtocolException,
-            IllegalSpecException {
+    private Task read(byte[] buf) throws IOException, ProtocolException, IllegalSpecException {
         Helper h = new Helper(buf);
 
         Task t = new TaskImpl();
@@ -58,8 +57,7 @@ public class SubmitJobHandler extends RequestHandler {
         t.setSpecification(spec);
 
         String clientId = h.read("identity");
-        t.setIdentity(new IdentityImpl(clientId + "-"
-                + new IdentityImpl().getValue()));
+        t.setIdentity(new IdentityImpl(clientId + "-" + new IdentityImpl().getValue()));
         spec.setExecutable(h.read("executable").intern());
         spec.setDirectory(h.read("directory"));
         spec.setBatchJob(h.readBool("batch"));
@@ -81,15 +79,14 @@ public class SubmitJobHandler extends RequestHandler {
 
         ExecutionService service = new ExecutionServiceImpl();
 
-        setServiceParams(service, h.read("contact"), h.read("provider"), h
-                .read("jm").intern());
+        setServiceParams(service, h.read("contact"), h.read("provider"), h.read("jm").intern());
         t.setService(0, service);
 
         return t;
     }
 
-    protected void setServiceParams(ExecutionService s, String contact,
-            String provider, String jm) throws IllegalSpecException {
+    protected void setServiceParams(ExecutionService s, String contact, String provider, String jm)
+            throws IllegalSpecException {
         if (jm == null) {
             jm = "fork";
         }
@@ -124,7 +121,7 @@ public class SubmitJobHandler extends RequestHandler {
         public Helper(byte[] buf) {
             is = new ByteArrayInputStream(buf);
         }
-        
+
         public boolean readBool(String key) throws IOException, ProtocolException {
             return Boolean.valueOf(read(key)).booleanValue();
         }
@@ -173,8 +170,7 @@ public class SubmitJobHandler extends RequestHandler {
                     case -1:
                     case '\n': {
                         if (key == null) {
-                            throw new ProtocolException("Invalid line: "
-                                    + sb.toString());
+                            throw new ProtocolException("Invalid line: " + sb.toString());
                         }
                         else {
                             value = sb.toString();

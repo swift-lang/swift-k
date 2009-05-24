@@ -88,7 +88,7 @@ public class CoasterService extends GSSService {
             localService.start();
             jobQueue = new JobQueue(localService);
             jobQueue.start();
-            localService.setWorkerManager(jobQueue.getWorkerManager());
+            localService.setRegistrationManager((RegistrationManager) jobQueue.getCoasterQueueProcessor());
             logger
                     .info("Started local service: "
                             + localService.getContact());
@@ -101,6 +101,7 @@ public class CoasterService extends GSSService {
                             .reserveChannel(registrationURL, null,
                                     COASTER_REQUEST_MANAGER);
                     channel.getChannelContext().setService(this);
+                    
                     logger.info("Sending registration");
                     RegistrationCommand reg = new RegistrationCommand(id,
                             "https://" + getHost() + ":" + getPort());
@@ -121,7 +122,7 @@ public class CoasterService extends GSSService {
     }
 
     private void stop(Exception e) {
-        jobQueue.getWorkerManager().shutdown();
+        jobQueue.shutdown();
         synchronized (this) {
             this.e = e;
             done = true;
@@ -176,7 +177,7 @@ public class CoasterService extends GSSService {
     public void shutdown() {
         startShutdownWatchdog();
         super.shutdown();
-        jobQueue.getWorkerManager().shutdown();
+        jobQueue.shutdown();
         done = true;
         logger.info("Shutdown sequence completed");
     }
@@ -195,11 +196,10 @@ public class CoasterService extends GSSService {
     private static TimerTask startConnectWatchdog() {
         TimerTask tt = new TimerTask() {
             public void run() {
-                logger.warn("Failed to connect after 2 minutes. Shutting down");
-                System.exit(4);
+                error(4, "Failed to connect after 2 minutes. Shutting down", null);
             }
         };
-        watchdogs.schedule(tt, 2 * 60 * 1000);
+        //watchdogs.schedule(tt, 2 * 60 * 1000);
         return tt;
     }
 
@@ -229,12 +229,21 @@ public class CoasterService extends GSSService {
             System.exit(0);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
+            error(1, null, e);
         }
         catch (Throwable t) {
-            t.printStackTrace();
-            System.exit(2);
+            error(2, null, t);
         }
+    }
+    
+    public static void error(int code, String msg, Throwable t) {
+        if (msg != null) {
+            System.err.println(msg);
+        }
+        if (t != null) {
+            t.printStackTrace();
+        }
+        logger.error(msg, t);
+        System.exit(code);
     }
 }

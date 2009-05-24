@@ -22,9 +22,8 @@ public class RegistrationHandler extends RequestHandler {
         Registering ls = (Registering) getChannel().getChannelContext()
                 .getService();
         try {
-            ls.registrationReceived(id, url, getChannel());
-            this.addOutData("OK");
-            this.sendReply();
+            String rid = ls.registrationReceived(id, url, getChannel());
+            this.sendReply(rid == null ? "OK" : rid);
         }
         catch (Exception e) {
             throw new ProtocolException(e);

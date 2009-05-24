@@ -6,6 +6,11 @@
 
 package org.globus.cog.abstraction.impl.execution.coaster;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
@@ -17,7 +22,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
-import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
@@ -26,6 +30,8 @@ import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
@@ -35,10 +41,38 @@ import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 
-public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements
-        Callback {
-    private static Logger logger = Logger
-            .getLogger(JobSubmissionTaskHandler.class);
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements Callback {
+    private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
+
+    private static Set configured, configuring;
+
+    static {
+        configured = new HashSet();
+        configuring = new HashSet();
+    }
+
+    private static boolean checkConfigured(KarajanChannel channel) throws InterruptedException {
+        Object key = channel.getChannelContext();
+        synchronized (configuring) {
+            while (configuring.contains(key)) {
+                configuring.wait(100);
+            }
+            boolean c = configured.contains(key);
+            if (!c) {
+                configuring.add(key);
+            }
+            return c;
+        }
+    }
+
+    private static void setConfigured(KarajanChannel channel) {
+        Object key = channel.getChannelContext();
+        synchronized (configuring) {
+            configuring.remove(key);
+            configured.add(key);
+            configuring.notifyAll();
+        }
+    }
 
     private Task startServiceTask;
     private SubmitJobCommand jsc;
@@ -53,43 +87,59 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         this.autostart = true;
     }
 
-    public void submit(Task task) throws IllegalSpecException,
-            InvalidSecurityContextException, InvalidServiceContactException,
-            TaskSubmissionException {
+    public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
+            InvalidServiceContactException, TaskSubmissionException {
         checkAndSetTask(task);
         task.setStatus(Status.SUBMITTING);
         try {
-            if (autostart) {
-            	String provider = getBootHandlerProvider(task);
-                url = ServiceManager.getDefault().reserveService(task, provider);
-                cred = getCredentials(task);
-                task.getService(0).setAttribute("coaster-url", url);
-            }
-            else {
-                url = task.getService(0).getServiceContact().getContact();
-            }
-            KarajanChannel channel = ChannelManager.getManager()
-                    .reserveChannel(url, cred, LocalRequestManager.INSTANCE);
-            jsc = new SubmitJobCommand(task);
-            jsc.executeAsync(channel, this);
+            KarajanChannel channel = getChannel(task);
+            configureService(channel, task);
+            submitJob(channel, task);
         }
         catch (Exception e) {
             throw new TaskSubmissionException("Could not submit job", e);
         }
     }
 
-    private String getBootHandlerProvider(Task t)
-            throws InvalidServiceContactException, IllegalSpecException {
+    private KarajanChannel getChannel(Task task) throws InvalidServiceContactException,
+            IllegalSpecException, TaskSubmissionException, InvalidSecurityContextException,
+            ChannelException {
+        if (autostart) {
+            String provider = getBootHandlerProvider(task);
+            url = ServiceManager.getDefault().reserveService(task, provider);
+            cred = getCredentials(task);
+            task.getService(0).setAttribute("coaster-url", url);
+        }
+        else {
+            url = task.getService(0).getServiceContact().getContact();
+        }
+        return ChannelManager.getManager().reserveChannel(url, cred, LocalRequestManager.INSTANCE);
+    }
+
+    private void configureService(KarajanChannel channel, Task task) throws InterruptedException,
+            ProtocolException, IOException {
+        if (!checkConfigured(channel)) {
+            ServiceConfigurationCommand scc = new ServiceConfigurationCommand(task);
+            scc.execute(channel);
+            setConfigured(channel);
+        }
+    }
+
+    private void submitJob(KarajanChannel channel, Task task) throws ProtocolException {
+        jsc = new SubmitJobCommand(task);
+        jsc.executeAsync(channel, this);
+    }
+
+    private String getBootHandlerProvider(Task t) throws InvalidServiceContactException,
+            IllegalSpecException {
         String jm = getJobManager(t);
         if (jm == null) {
             throw new InvalidServiceContactException("Missing job manager");
         }
         String[] jmp = jm.split(":");
         if (jmp.length < 2) {
-            throw new InvalidServiceContactException(
-                    "Invalid job manager: "
-                            + jm
-                            + ". Use <provider>:<remote-provider>[:<remote-job-manager>].");
+            throw new InvalidServiceContactException("Invalid job manager: " + jm
+                    + ". Use <provider>:<remote-provider>[:<remote-job-manager>].");
         }
         return jmp[0];
     }
@@ -103,26 +153,24 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             return ((ExecutionService) s).getJobManager();
         }
         else {
-            throw new IllegalSpecException(
-                    "Service must be an ExecutionService");
+            throw new IllegalSpecException("Service must be an ExecutionService");
         }
     }
 
-    public void suspend() throws InvalidSecurityContextException,
-            TaskSubmissionException {
+    public void suspend() throws InvalidSecurityContextException, TaskSubmissionException {
     }
 
-    public void resume() throws InvalidSecurityContextException,
-            TaskSubmissionException {
+    public void resume() throws InvalidSecurityContextException, TaskSubmissionException {
     }
 
     public synchronized void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
-        //TODO shouldn't this be setting the task status?
+        // TODO shouldn't this be setting the task status?
         try {
             if (jobid != null) {
-                KarajanChannel channel = ChannelManager.getManager()
-                        .reserveChannel(url, cred, LocalRequestManager.INSTANCE);
+                KarajanChannel channel =
+                        ChannelManager.getManager().reserveChannel(url, cred,
+                            LocalRequestManager.INSTANCE);
                 CancelJobCommand cc = new CancelJobCommand(jobid);
                 cc.execute(channel);
                 cancel = false;
@@ -143,14 +191,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         return js.getEnvironmentVariable("JAVA_HOME");
     }
 
-    private GSSCredential getCredentials(Task task)
-            throws InvalidSecurityContextException {
+    private GSSCredential getCredentials(Task task) throws InvalidSecurityContextException {
         SecurityContext sc = task.getService(0).getSecurityContext();
         if (sc == null) {
             GSSManager manager = ExtendedGSSManager.getInstance();
             try {
-                return manager
-                        .createCredential(GSSCredential.INITIATE_AND_ACCEPT);
+                return manager.createCredential(GSSCredential.INITIATE_AND_ACCEPT);
             }
             catch (GSSException e) {
                 throw new InvalidSecurityContextException(e);
@@ -198,20 +244,26 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
         JobSpecification js = new JobSpecificationImpl();
-        js.setExecutable("/bin/echo");
-        // js.addArgument("0");
+        js.setExecutable("/bin/sleep");
+        int base = (int) (rnd.nextDouble() * 20) + 5;
+        js.addArgument(String.valueOf(base + (int) (rnd.nextDouble() * base)));
+        js.setAttribute("maxwalltime", "00:00:" + String.valueOf(base * 2));
+        js.setAttribute("slots", "8");
+        js.setAttribute("lowOverallocation", "6");
+        js.setAttribute("nodeGranularity", "8");
+        js.setAttribute("maxNodes", "8");
+        js.setAttribute("remoteMonitorEnabled", "true");
         t.setSpecification(js);
         ExecutionService s = new ExecutionServiceImpl();
         // s.setServiceContact(new ServiceContactImpl("localhost"));
         // s.setServiceContact(new
         // ServiceContactImpl("tp-grid1.ci.uchicago.edu"));
-        s
-                .setServiceContact(new ServiceContactImpl(
-                        "tg-grid1.uc.teragrid.org"));
-        // s.setServiceContact(new ServiceContactImpl("localhost:50013"));
+        // s.setServiceContact(new
+        // ServiceContactImpl("tg-grid1.uc.teragrid.org"));
+        s.setServiceContact(new ServiceContactImpl("localhost"));
         s.setProvider("coaster");
-        // s.setJobManager("local:local");
-        s.setJobManager("gt2:pbs");
+        s.setJobManager("local:local");
+        // s.setJobManager("gt2:pbs");
         s.setSecurityContext(new SecurityContextImpl());
         t.setService(0, s);
         // JobSubmissionTaskHandler th = new JobSubmissionTaskHandler(
@@ -221,11 +273,15 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         th.submit(t);
         return t;
     }
+    
+    private static Random rnd;
 
     public static void main(String[] args) {
         try {
+        	rnd = new Random();
+        	rnd.setSeed(10L);
             long s = System.currentTimeMillis();
-            Task[] ts = new Task[512];
+            Task[] ts = new Task[2048];
             for (int i = 0; i < ts.length; i++) {
                 ts[i] = submitTask();
                 if (i % 100 == 0) {
@@ -246,8 +302,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 }
             }
             System.err.println("All " + ts.length + " jobs done");
-            System.err.println("Total time: "
-                    + (System.currentTimeMillis() - s));
+            System.err.println("Total time: " + (System.currentTimeMillis() - s));
             System.exit(0);
         }
         catch (Exception e) {

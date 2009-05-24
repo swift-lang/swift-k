@@ -45,6 +45,7 @@ public class CoasterRequestManager extends AbstractRequestManager {
         addHandler(SubmitJobCommand.NAME, SubmitJobHandler.class);
         addHandler(ServiceShutdownHandler.NAME, ServiceShutdownHandler.class);
         addHandler(WorkerShellHandler.NAME, WorkerShellHandler.class);
+        addHandler(ServiceConfigurationHandler.NAME, ServiceConfigurationHandler.class);
         
         addHandler(ExistsCommand.NAME, ExistsHandler.class);
         addHandler(DeleteCommand.NAME, DeleteHandler.class);

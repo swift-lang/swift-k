@@ -5,19 +5,25 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Apr 21, 2009
+ * Created on May 11, 2009
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
-import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+public class PlanningException extends Exception {
 
-public interface QueueProcessor {
+    public PlanningException() {
+        super();
+    }
 
-    public abstract void enqueue(Task t);
+    public PlanningException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    public abstract void shutdown();
+    public PlanningException(String message) {
+        super(message);
+    }
 
-    public abstract void setClientChannelContext(ChannelContext channelContext);
-
+    public PlanningException(Throwable cause) {
+        super(cause);     
+    }
 }
