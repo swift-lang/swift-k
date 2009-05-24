@@ -3242,6 +3242,10 @@ Determines the maximum number of nodes that can be allocated in one coaster bloc
 			<para id="profile.maxtime">
 Indicates the maximum walltime that a coaster block can have. Default: unlimited.
 			</para>
+			<para id="profile.remoteMonitorEnabled">
+If set to "true", the client side will get a Swing window showing, graphically, the state of the
+coaster scheduler (blocks, jobs, etc.). Default: false
+			</para>
 <!--		
 			Reminds me this functionality should be added to the new coaster stuff		
 			<para id="profile.globus.coasterInternalIP"><literal>coasterInternalIP</literal>
