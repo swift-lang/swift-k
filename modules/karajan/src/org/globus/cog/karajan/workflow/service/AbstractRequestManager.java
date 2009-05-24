@@ -12,10 +12,13 @@ package org.globus.cog.karajan.workflow.service;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 import org.globus.cog.karajan.workflow.service.handlers.UnknownCommandHandler;
 
 public abstract class AbstractRequestManager implements RequestManager {
+    public static final Logger logger = Logger.getLogger(AbstractRequestManager.class);
+    
 	private final Map handlers;
 
 	public AbstractRequestManager() {
@@ -31,7 +34,7 @@ public abstract class AbstractRequestManager implements RequestManager {
 		Class handlerClass = (Class) handlers.get(cmd);
 		RequestHandler handler;
 		if (handlerClass == null) {
-			System.err.println("Mee: " + this);
+			logger.warn("Unknown handler: " + cmd + ". Available handlers: " + handlers);
 			handler = new UnknownCommandHandler();
 		}
 		else {
