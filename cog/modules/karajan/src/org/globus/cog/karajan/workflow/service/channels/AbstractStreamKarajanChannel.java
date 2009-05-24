@@ -75,7 +75,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	protected abstract void reconnect() throws ChannelException;
-	
+
 	protected synchronized void handleChannelException(Exception e) {
 		logger.info("Channel config: " + getChannelContext().getConfiguration());
 		ChannelManager.getManager().handleChannelException(this, e);
@@ -110,25 +110,34 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		if (avail == 0) {
 			return false;
 		}
-		if (state == STATE_IDLE && avail >= HEADER_LEN) {
-			readFromStream(inputStream, rhdr, 0);
-			tag = unpack(rhdr, 0);
-			flags = unpack(rhdr, 4);
-			len = unpack(rhdr, 8);
-			if (len > 20000) {
-				System.out.println("Big len: " + len);
+		// we can only rely on GsiInputStream.available() returning 0 if nothing
+		// is available
+		// see https://bugzilla.mcs.anl.gov/globus/show_bug.cgi?id=6747
+		boolean any = false;
+		if (state == STATE_IDLE) {
+			dataPointer = readFromStream(inputStream, rhdr, dataPointer);
+			if (dataPointer == HEADER_LEN) {
+				tag = unpack(rhdr, 0);
+				flags = unpack(rhdr, 4);
+				len = unpack(rhdr, 8);
+				if (len > 65535) {
+					logger.warn("Big len: " + len);
+				}
+				data = new byte[len];
+				dataPointer = 0;
+				state = STATE_RECEIVING_DATA;
+				avail = inputStream.available();
+				any = true;
 			}
-			data = new byte[len];
-			dataPointer = 0;
-			state = STATE_RECEIVING_DATA;
 		}
 		if (state == STATE_RECEIVING_DATA) {
 			while (avail > 0 && dataPointer < len) {
-				dataPointer += inputStream.read(data, dataPointer, Math.min(avail, len
-						- dataPointer));
+				any = true;
+				dataPointer = readFromStream(inputStream, data, dataPointer);
 				avail = inputStream.available();
 			}
 			if (dataPointer == len) {
+				dataPointer = 0;
 				state = STATE_IDLE;
 				boolean fin = (flags & FINAL_FLAG) != 0;
 				boolean error = (flags & ERROR_FLAG) != 0;
@@ -142,7 +151,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				}
 			}
 		}
-		return true;
+		return any;
 	}
 
 	public void purge(KarajanChannel channel) throws IOException {
@@ -152,15 +161,14 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	protected void register() {
 		getMultiplexer(FAST).register(this);
 	}
-	
+
 	protected void unregister() {
-        getMultiplexer(FAST).unregister(this);
-    }
-	
+		getMultiplexer(FAST).unregister(this);
+	}
+
 	public void flush() throws IOException {
 		outputStream.flush();
 	}
-
 
 	private static final int SENDER_COUNT = 1;
 	private static Sender[] sender;
@@ -297,7 +305,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 
 	protected static class Multiplexer extends Thread {
 		public static final Logger logger = Logger.getLogger(Multiplexer.class);
-		
+
 		private Set channels;
 		private List remove, add;
 		private boolean terminated;
@@ -378,9 +386,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				terminated = true;
 			}
 		}
-		
-		public void unregister(AbstractStreamKarajanChannel channel) {
-		    remove.add(channel);
+
+		public synchronized void unregister(AbstractStreamKarajanChannel channel) {
+			remove.add(channel);
 		}
 
 		private void shutdown(AbstractStreamKarajanChannel channel, Exception e) {
@@ -388,7 +396,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				logger.debug("Channel exception caught", e);
 			}
 			channel.handleChannelException(e);
-			remove.add(channel);
+			synchronized (this) {
+				remove.add(channel);
+			}
 		}
 	}
 }

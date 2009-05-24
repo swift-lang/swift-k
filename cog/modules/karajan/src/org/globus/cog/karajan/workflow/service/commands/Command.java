@@ -221,6 +221,7 @@ public abstract class Command extends RequestReply {
 		}
 		else {
 			logger.info(this + ": re-sending");
+			logger.warn("fault was: " + message, ex);
 			try {
 				setChannel(ChannelManager.getManager().reserveChannel(
 						getChannel().getChannelContext()));
