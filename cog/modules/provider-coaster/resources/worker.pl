@@ -20,7 +20,7 @@ my $REPLYTIMEOUT = 60;
 my $MAXFRAGS = 16;
 my $MAX_RECONNECT_ATTEMPTS = 3;
 
-my $IDLETIMEOUT = 10 * 60; #Seconds
+my $IDLETIMEOUT = 4 * 60; #Seconds; 4 minutes
 my $LASTRECV = 0;
 my $JOB_RUNNING = 0;
 
@@ -31,12 +31,14 @@ my $BUFSZ = 2048;
 # 60 seconds by default. Note that since there is no configuration handshake
 # this would have to match the default interval in the service in order to avoid
 # "lost heartbeats".
-my $HEARTBEAT_INTERVAL = 5 * 60;
+my $HEARTBEAT_INTERVAL = 4 * 60;
 
 my %REQUESTS = ();
 my %REPLIES  = ();
 
-my $LOG = "$ENV{HOME}/.globus/coasters/worker$ARGV[1].log";
+my $BLOCKID=$ARGV[1];
+
+my $LOG = "$ENV{HOME}/.globus/coasters/worker-$BLOCKID.log";
 
 
 my %HANDLERS = (
@@ -49,8 +51,9 @@ my %HANDLERS = (
 
 my @CMDQ = ();
 
-my $ID;
+my $ID = "-";
 my $URI=$ARGV[0];
+my $COUNT=$ARGV[2];
 my $SCHEME;
 my $HOSTNAME;
 my $PORT;
@@ -104,7 +107,7 @@ sub reconnect() {
 			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768);
 			wlog "Connected\n";
 			$SOCK->blocking(0);
-			queueCmd(\&registerCB, "REGISTER", $ID, "wid://$ID");
+			queueCmd(\&registerCB, "REGISTER", $BLOCKID, "");
 			last;
 		}
 		else {
@@ -122,12 +125,12 @@ sub initlog() {
 	my $b = select(LOG);
 	$| = 1;
 	select($b);
-	print LOG time(), " $ID Logging started\n";
+	print LOG time(), " $BLOCKID Logging started\n";
 }
 
 
 sub init() {
-	wlog "uri=$URI, scheme=$SCHEME, host=$HOSTNAME, port=$PORT, id=$ID\n";
+	wlog "uri=$URI, scheme=$SCHEME, host=$HOSTNAME, port=$PORT, blockid=$BLOCKID\n";
 	reconnect();
 }
 
@@ -361,8 +364,12 @@ sub registerCB {
 	if ($timeout) {
 		die "Failed to register (timeout)\n";
 	}
-	if ($err) {
+	elsif ($err) {
 		die "Failed to register (service returned error: ".join("\n", @$reply).")";
+	}
+	else {
+		$ID = $$reply[0];
+		wlog "Registration successful. ID=$ID\n";
 	}
 }
 
@@ -515,13 +522,16 @@ sub forkjob {
 			} while $tid != $pid;
 			wlog "Child process $pid terminated. Status is $status. $!\n";
 			my $s = <PARENT_R>;
+			wlog "Got output from child. Closing pipe.\n";
 			close PARENT_R;
-			if ($s eq "") {
-				queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$COMPLETED", "$status", $s);
-			}
-			else {
+			wlog "Queuing status command.\n";
+			if (defined $s) {
 				queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$FAILED", "$status", $s);
 			}
+			else {
+				queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$COMPLETED", "$status", "");
+			}
+			wlog "Status command queued.\n";
 			$JOB_COUNT++;
 		}
 	}
@@ -570,10 +580,9 @@ my @wp;
 
 my $i;
 
-for($i=1; $i<=$#ARGV ; $i++) {
+for($i=1; $i<=$COUNT; $i++) {
 	my $waitpid;
-	if(($waitpid=fork())==0) {
-		$ID =$ARGV[$i];
+	if(($waitpid = fork()) == 0) {
 		my $MSG="0";
 
 		my $myhost=`hostname`;
@@ -589,11 +598,15 @@ for($i=1; $i<=$#ARGV ; $i++) {
 		mainloop();
 		exit(0);
 	}
-	else {
+	elsif (defined $waitpid) {
 		$wp[$i]=$waitpid;
+	}
+	else {
+		wlog("Failed to fork worker $i\n");
+		die("Failed to fork worker $i");
 	}
 }
 
-for ($i=1; $i<=$#ARGV ; $i++) {
-	waitpid($wp[$i],0);
+for ($i=1; $i<=$COUNT ; $i++) {
+	waitpid($wp[$i], 0);
 }
