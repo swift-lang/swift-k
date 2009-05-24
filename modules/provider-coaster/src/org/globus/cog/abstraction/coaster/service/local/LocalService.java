@@ -12,9 +12,7 @@ package org.globus.cog.abstraction.coaster.service.local;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
@@ -30,7 +28,8 @@ import org.globus.gsi.gssapi.auth.SelfAuthorization;
 public class LocalService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalService.class);
 
-    public static final long DEFAULT_REGISTRATION_TIMEOUT = 300 * 1000;
+    //TODO change back to 300
+    public static final long DEFAULT_REGISTRATION_TIMEOUT = 3000 * 1000;
 
     private Map services;
     private Map lastHeardOf;
@@ -55,7 +54,7 @@ public class LocalService extends GSSService implements Registering {
     }
 
     protected void handleConnection(Socket sock) {
-        logger.debug("Got connection");
+        logger.info("Got connection");
         try {
             ConnectionHandler handler = new ConnectionHandler(this, sock,
                     LocalRequestManager.INSTANCE);
@@ -120,7 +119,7 @@ public class LocalService extends GSSService implements Registering {
         }
     }
 
-    public void registrationReceived(String id, String url,
+    public String registrationReceived(String id, String url,
             KarajanChannel channel) {
         if (logger.isDebugEnabled()) {
             logger.debug("Received registration from service " + id + ": "
@@ -142,6 +141,7 @@ public class LocalService extends GSSService implements Registering {
             services.put(id, url);
             services.notifyAll();
         }
+        return null;
     }
 
     public static void main(String[] args) {

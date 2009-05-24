@@ -12,9 +12,10 @@ package org.globus.cog.abstraction.coaster.service;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.coaster.service.job.manager.WorkerManager;
 import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
@@ -25,30 +26,36 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 public class LocalTCPService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalTCPService.class);
     
-    private WorkerManager workerManager;
+    private RegistrationManager registrationManager;
+    
+    private int idseq;
+    
+    private static final NumberFormat IDF = new DecimalFormat("000000");
 
     public LocalTCPService(RequestManager rm) throws IOException {
         super(false, 0);
         setRequestManager(rm);
     }
 
-    public void registrationReceived(String id, String url, KarajanChannel channel) throws ChannelException {
+    public String registrationReceived(String blockid, String url, KarajanChannel channel) throws ChannelException {
         if (logger.isInfoEnabled()) {
-            logger.info("Received registration: id = " + id + ", url = " + url);
+            logger.info("Received registration: blockid = " + blockid + ", url = " + url);
         }
         ChannelContext cc = channel.getChannelContext();
-        cc.getChannelID().setLocalID("coaster");
-        cc.getChannelID().setRemoteID(id);
+        cc.getChannelID().setLocalID(blockid);
+        String wid = registrationManager.nextId(blockid);
+        cc.getChannelID().setRemoteID(wid);
         ChannelManager.getManager().registerChannel(cc.getChannelID(), channel);
-        workerManager.registrationReceived(id, url, channel.getChannelContext());
+        registrationManager.registrationReceived(blockid, wid, channel.getChannelContext());
+        return wid;
     }
 
-    public WorkerManager getWorkerManager() {
-        return workerManager;
+    public RegistrationManager getRegistrationManager() {
+        return registrationManager;
     }
 
-    public void setWorkerManager(WorkerManager workerManager) {
-        this.workerManager = workerManager;
+    public void setRegistrationManager(RegistrationManager workerManager) {
+        this.registrationManager = workerManager;
     }
 
     protected void handleConnection(Socket socket) {

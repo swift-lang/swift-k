@@ -13,5 +13,5 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public interface Registering {
-    void registrationReceived(String id, String url, KarajanChannel channel) throws ChannelException;
+    String registrationReceived(String id, String url, KarajanChannel channel) throws ChannelException;
 }

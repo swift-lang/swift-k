@@ -9,24 +9,26 @@
  */
 package org.globus.cog.abstraction.impl.execution.coaster;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
 /**
- * This class is used to keep track of tasks sent
- * to workers, since the worker is only aware of the
- * task ID. A notification from a worker needs to
- * be coupled with a Task object based on the ID.
+ * This class is used to keep track of tasks sent to workers, since the worker
+ * is only aware of the task ID. A notification from a worker needs to be
+ * coupled with a Task object based on the ID.
  */
 public class NotificationManager {
-    public static final Logger logger = Logger
-            .getLogger(NotificationManager.class);
+    public static final Logger logger = Logger.getLogger(NotificationManager.class);
 
     private static NotificationManager def;
 
@@ -60,7 +62,7 @@ public class NotificationManager {
             }
         }
     }
-    
+
     public void notificationReceived(String id, Status s) {
         Task task;
         synchronized (tasks) {
@@ -81,9 +83,9 @@ public class NotificationManager {
             }
         }
     }
-    
+
     public long getIdleTime() {
-        synchronized(tasks) {
+        synchronized (tasks) {
             if (tasks.size() == 0 && lastNotificationTime != 0) {
                 return System.currentTimeMillis() - lastNotificationTime;
             }
@@ -92,15 +94,15 @@ public class NotificationManager {
             }
         }
     }
-    
+
     public void notIdle() {
-    	synchronized(tasks) {
-    		lastNotificationTime = System.currentTimeMillis();
-    	}
+        synchronized (tasks) {
+            lastNotificationTime = System.currentTimeMillis();
+        }
     }
-    
+
     public int getActiveTaskCount() {
-        synchronized(tasks) {
+        synchronized (tasks) {
             return tasks.size();
         }
     }
@@ -121,5 +123,22 @@ public class NotificationManager {
             pending.put(id, p);
         }
         p.addLast(status);
+    }
+
+    public void serviceTaskEnded(ServiceContact contact, String msg) {
+        List ts;
+        synchronized (tasks) {
+            ts = new ArrayList(tasks.values());
+        }
+        Iterator i = ts.iterator();
+        logger.info(contact.toString());
+        while (i.hasNext()) {
+            Task t = (Task) i.next();
+            logger.info(t.getService(0).getServiceContact().toString());
+            if (t.getService(0).getServiceContact().equals(contact)) {
+                notificationReceived(t.getIdentity().toString(), new StatusImpl(Status.FAILED, msg,
+                    null));
+            }
+        }
     }
 }

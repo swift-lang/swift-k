@@ -12,6 +12,8 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import org.globus.cog.abstraction.coaster.service.CoasterService;
+
 public class IDGenerator {
     private SecureRandom sr;
     
@@ -20,8 +22,7 @@ public class IDGenerator {
             sr = SecureRandom.getInstance("SHA1PRNG");
         }
         catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            System.exit(2);
+        	CoasterService.error(30, "Cannot get SHA1PRNG instance", e);
         }
     }
 

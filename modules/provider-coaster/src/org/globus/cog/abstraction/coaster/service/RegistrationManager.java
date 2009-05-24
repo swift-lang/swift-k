@@ -5,19 +5,14 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Apr 21, 2009
+ * Created on May 4, 2009
  */
-package org.globus.cog.abstraction.coaster.service.job.manager;
+package org.globus.cog.abstraction.coaster.service;
 
-import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
-public interface QueueProcessor {
+public interface RegistrationManager {
+    String registrationReceived(String id, String url, ChannelContext channelContext);
 
-    public abstract void enqueue(Task t);
-
-    public abstract void shutdown();
-
-    public abstract void setClientChannelContext(ChannelContext channelContext);
-
+    String nextId(String id);
 }
