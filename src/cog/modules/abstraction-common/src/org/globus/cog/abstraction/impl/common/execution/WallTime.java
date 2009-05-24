@@ -12,7 +12,7 @@ package org.globus.cog.abstraction.impl.common.execution;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WallTime {
+public class WallTime implements Comparable {
     private static final Map FORMATTERS;
     private static final Formatter DEFAULT_FORMATTER = new DefaultFormatter();
 
@@ -57,6 +57,20 @@ public class WallTime {
 
     public String format() {
         return format(null);
+    }
+    
+    public boolean equals(Object obj) {
+        if (obj instanceof WallTime) {
+            WallTime wt = (WallTime) obj;
+            return seconds == wt.seconds;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        return seconds;
     }
 
     public static String format(String type, int seconds) {
@@ -157,5 +171,14 @@ public class WallTime {
      * 
      */
     private static class NativePBSFormatter extends HHMMSSFormatter {
+    }
+
+    public int compareTo(Object o) {
+        if (o instanceof WallTime) {
+            return seconds - ((WallTime) o).seconds;
+        }
+        else {
+            throw new ClassCastException(o.getClass().getName());
+        }
     }
 }
