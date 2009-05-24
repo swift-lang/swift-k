@@ -3182,16 +3182,68 @@ GRAM2 and GRAM4 providers.
 			<para id="profile.globus.condor_requirements"><literal>condor_requirements</literal> allows a requirements string to be specified
 when Condor is used as an LRM behind GRAM2. Example: <literal>&lt;profile namespace="globus" key="condor_requirements">Arch == &quot;X86_64&quot; || Arch=&quot;INTEL&quot;&lt;/profile></literal>
 			</para>
-			<para id="profile.globus.coastersPerNode"><literal>coastersPerNode</literal> specifies
-the number of coaster workers to be run on each node. This profile entry
-is used by the <link linkend="coasters">coaster execution provider</link>.
+			<para id="profile.slots">
+When using <link linkend="coasters">coasters</link>, this parameter
+specifies the maximum number of jobs/blocks that the coaster scheduler will have running at any given time.
+The default is 20.
 			</para>
-			<para id="profile.globus.coasterWorkerMaxWalltime"><literal>coasterWorkerMaxwalltime</literal>
-specifies the maxwalltime to be used when submitting coaster workers. This
-profile entry is used by the <link linkend="coasters">coaster execution
-provider</link>. If this entry is not specified, the coaster provider
-will compute a maxwalltime based on the maxwalltime of jobs submitted. (since Swift 0.9)
+			<para id="profile.workersPerNode">
+This parameter determines how many coaster workers are 
+started one each compute node. The default value is 1.
 			</para>
+			<para id="profile.nodeGranularity">
+When allocating a coaster worker block, this parameter
+restricts the number of nodes in a block to a multiple of this value. The total number of workers will
+then be a multiple of workersPerNode * nodeGranularity. The default value is 1.
+			</para>
+			<para id="profile.allocationStepSize">
+Each time the coaster block scheduler computes a schedule, it will attempt to allocate a
+number of slots from the number of available slots (limited using the above slots profile). This
+parameter specifies the maximum fraction of slots that are allocated in one schedule. Default is
+0.1.
+			</para>
+			<para id="profile.lowOverallocation">
+Overallocation is a function of the walltime of a job which determines how long (time-wise) a
+worker job will be. For example, if a number of 10s jobs are submitted to the coaster service, 
+and the overallocation for 10s jobs is 10, the coaster scheduler will attempt to start worker
+jobs that have a walltime of 100s. The overallocation is controlled by manipulating the end-points
+of an overallocation function. The low endpoint, specified by this parameter, is the overallocation
+for a 1s job. The high endpoint is the overallocation for a (theoretical) job of infinite length.
+The overallocation for job sizes in the [1s, +inf) interval is determined using an exponential decay function:
+
+overallocation(walltime) = walltime * (lowOverallocation - highOverallocation) * exp(-walltime * overallocationDecayFactor) + highOverallocation
+
+The default value of lowOverallocation is 10.
+			</para>
+			<para id="profile.highOverallocation">
+The high overallocation endpoint (as described above). Default: 1
+			</para>
+			<para id="profile.overallocationDecayFactor">
+The decay factor for the overallocation curve. Default 0.001 (1e-3).
+			</para>
+			<para id="profile.spread">
+When a large number of jobs is submitted to the a coaster service, the work is divided into blocks. This
+parameter allows a rough control of the relative sizes of those blocks. A value of 0 indicates that all work
+should be divided equally between the blocks (and blocks will therefore have equal sizes). A value of 1 
+indicates the largest possible spread. The existence of the spread parameter is based on the assumption
+that smaller overall jobs will generally spend less time in the queue than larger jobs. By submitting
+blocks of different sizes, submitted jobs may be finished quicker by smaller blocks. Default: 0.9.
+			</para>
+			<para id="profile.reserve">
+Reserve time is a time in the allocation of a worker that sits at the end of the worker time and 
+is useable only for critical operations. For example, a job will not be submitted to a worker if 
+it overlaps its reserve time, but a job that (due to inaccurate walltime specification) runs into
+the reserve time will not be killed (note that once the worker exceeds its walltime, the queuing 
+system will kill the job anyway). Default 10 (s).
+			</para>
+			<para id="profile.maxnodes">
+Determines the maximum number of nodes that can be allocated in one coaster block. Default: unlimited.
+			</para>
+			<para id="profile.maxtime">
+Indicates the maximum walltime that a coaster block can have. Default: unlimited.
+			</para>
+<!--		
+			Reminds me this functionality should be added to the new coaster stuff		
 			<para id="profile.globus.coasterInternalIP"><literal>coasterInternalIP</literal>
 specifies the internal address of the coaster head node, to be used by
 coaster workers to communicate with the coaster head node. This can be used
@@ -3199,6 +3251,8 @@ when the address determined automatically by the coaster provider
 is inaccessible from coaster workers (for example, when the workers
 reside on an unrouted internal network). (since Swift 0.9)
 			</para>
+			
+-->
 		</section>
 
 		<section id="profile.env"><title>env namespace</title>
