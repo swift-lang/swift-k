@@ -35,4 +35,8 @@ public class AssociatedTask {
     public String toString() {
         return "AT/" + task.getIdentity();
     }
+    
+    public WallTime getMaxWallTime() {
+        return maxWallTime;
+    }
 }

@@ -9,6 +9,9 @@
  */
 package org.globus.cog.abstraction.impl.execution.coaster;
 
+import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class WorkerShellCommand extends Command {

@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.ServiceShutdownCommand;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -48,14 +49,14 @@ import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.IrrecoverableException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 import org.ietf.jgss.GSSCredential;
 
 public class ServiceManager implements StatusListener {
-    public static final Logger logger = Logger
-            .getLogger(ServiceManager.class);
+    public static final Logger logger = Logger.getLogger(ServiceManager.class);
 
     public static final String BOOTSTRAP_SCRIPT = "bootstrap.sh";
     public static final String BOOTSTRAP_JAR = "coaster-bootstrap.jar";
@@ -70,6 +71,8 @@ public class ServiceManager implements StatusListener {
         }
         return defaultManager;
     }
+
+    public static final boolean LOCALJVM = false;
 
     private BootstrapService bootstrapService;
     private LocalService localService;
@@ -90,9 +93,8 @@ public class ServiceManager implements StatusListener {
         Runtime.getRuntime().addShutdownHook(serviceReaper);
     }
 
-    private TaskHandler getBootHandler(String provider)
-            throws InvalidServiceContactException, InvalidProviderException,
-            ProviderMethodException, IllegalSpecException {
+    private TaskHandler getBootHandler(String provider) throws InvalidServiceContactException,
+            InvalidProviderException, ProviderMethodException, IllegalSpecException {
         synchronized (bootHandlers) {
             TaskHandler th = (TaskHandler) bootHandlers.get(provider);
             if (th == null) {
@@ -113,16 +115,15 @@ public class ServiceManager implements StatusListener {
             // and normal program semantics
             String url = waitForStart(contact);
             if (url == null) {
-                url = startService(contact, sc,
-                        getBootHandler(bootHandlerProvider),
-                        bootHandlerProvider);
+                url =
+                        startService(contact, sc, getBootHandler(bootHandlerProvider),
+                            bootHandlerProvider);
             }
             increaseUsageCount(contact);
             return url;
         }
         catch (Exception e) {
-            throw new TaskSubmissionException(
-                    "Could not start coaster service", e);
+            throw new TaskSubmissionException("Could not start coaster service", e);
         }
     }
 
@@ -148,21 +149,32 @@ public class ServiceManager implements StatusListener {
         localService.heardOf(id);
     }
 
+    private static final String[] STRING_ARRAY = new String[0];
+
     protected String startService(ServiceContact contact, SecurityContext sc,
-            TaskHandler bootHandler, String bootHandlerProvider)
-            throws Exception {
+            TaskHandler bootHandler, String bootHandlerProvider) throws Exception {
         try {
             startLocalService();
-            Task t = buildTask(contact);
+            final Task t = buildTask(contact);
             setSecurityContext(t, sc, bootHandlerProvider);
             t.addStatusListener(this);
             if (logger.isDebugEnabled()) {
-                logger.debug("Starting coaster service on " + contact
-                        + ". Task is " + t);
+                logger.debug("Starting coaster service on " + contact + ". Task is " + t);
             }
-            bootHandler.submit(t);
-            String url = localService.waitForRegistration(t, (String) t
-                    .getAttribute(TASK_ATTR_ID));
+            if (LOCALJVM) {
+                final String ls = getLocalServiceURL();
+                final String id = "l" + getRandomID();
+                t.setAttribute(TASK_ATTR_ID, id);
+                new Thread(new Runnable() {
+                    public void run() {
+                        CoasterService.main(new String[] { ls, id });
+                    }
+                }).start();
+            }
+            else {
+                bootHandler.submit(t);
+            }
+            String url = localService.waitForRegistration(t, (String) t.getAttribute(TASK_ATTR_ID));
             synchronized (services) {
                 services.put(contact, url);
                 credentials.put(url, sc.getCredentials());
@@ -177,11 +189,9 @@ public class ServiceManager implements StatusListener {
         }
     }
 
-    private void setSecurityContext(Task t, SecurityContext sc,
-            String provider) throws InvalidProviderException,
-            ProviderMethodException {
-        t.getService(0).setSecurityContext(
-                AbstractionFactory.newSecurityContext(provider));
+    private void setSecurityContext(Task t, SecurityContext sc, String provider)
+            throws InvalidProviderException, ProviderMethodException {
+        t.getService(0).setSecurityContext(AbstractionFactory.newSecurityContext(provider));
     }
 
     public void statusChanged(StatusEvent event) {
@@ -189,28 +199,32 @@ public class ServiceManager implements StatusListener {
         Status s = event.getStatus();
         if (s.isTerminal()) {
             if (logger.isInfoEnabled()) {
-                logger.info("Service task " + t
-                        + " terminated. Removing service.");
+                logger.info("Service task " + t + " terminated. Removing service.");
             }
             String url;
+            ServiceContact contact = getContact(t);
             synchronized (services) {
-                ServiceContact contact = getContact(t);
                 url = (String) services.remove(contact);
                 if (url == null) {
-                    logger
-                            .info("Service does not appear to be registered with this manager");
+                    logger.info("Service does not appear to be registered with this manager");
                 }
                 else {
                     credentials.remove(url);
                 }
             }
+            String msg =
+                    "Coaster service ended. Reason: " + s.getMessage() + "\n\tstdout: "
+                            + t.getStdOutput() + "\n\tstderr: " + t.getStdError();
+            NotificationManager.getDefault().serviceTaskEnded(contact, msg);
             try {
                 if (url != null) {
-                    GSSCredential cred = (GSSCredential) t.getService(0)
-                            .getSecurityContext().getCredentials();
-                    KarajanChannel channel = ChannelManager.getManager()
-                            .getExistingChannel(url, cred);
+                    GSSCredential cred =
+                            (GSSCredential) t.getService(0).getSecurityContext().getCredentials();
+                    KarajanChannel channel =
+                            ChannelManager.getManager().getExistingChannel(url, cred);
                     if (channel != null) {
+                        channel.getChannelContext().notifyRegisteredListeners(
+                            new IrrecoverableException(msg));
                         channel.close();
                     }
                 }
@@ -235,9 +249,9 @@ public class ServiceManager implements StatusListener {
     protected ServiceContact getContact(Task task) {
         return task.getService(0).getServiceContact();
     }
-   
+
     protected SecurityContext getSecurityContext(Task task) {
-    	return task.getService(0).getSecurityContext();
+        return task.getService(0).getSecurityContext();
     }
 
     private Task buildTask(ServiceContact sc) throws TaskSubmissionException {
@@ -249,14 +263,9 @@ public class ServiceManager implements StatusListener {
             js.addArgument("-c");
             String id = getRandomID();
             t.setAttribute(TASK_ATTR_ID, id);
-            js.addArgument(loadBootstrapScript(new String[] {
-                    getBootstrapServiceURL(),
-                    getLocalServiceURL(),
-                    getMD5(BOOTSTRAP_JAR),
-                    getMD5(Bootstrap.BOOTSTRAP_LIST),
-                    id,
-                    sc.getHost()
-            }));
+            js.addArgument(loadBootstrapScript(new String[] { getBootstrapServiceURL(),
+                    getLocalServiceURL(), getMD5(BOOTSTRAP_JAR), getMD5(Bootstrap.BOOTSTRAP_LIST),
+                    id, sc.getHost() }));
             js.setDelegation(Delegation.FULL_DELEGATION);
             js.setStdOutputLocation(FileLocation.MEMORY);
             js.setStdErrorLocation(FileLocation.MEMORY);
@@ -273,19 +282,15 @@ public class ServiceManager implements StatusListener {
         }
     }
 
-    private synchronized String loadBootstrapScript(String[] args)
-            throws TaskSubmissionException {
-        URL u = ServiceManager.class.getClassLoader().getResource(
-                BOOTSTRAP_SCRIPT);
+    private synchronized String loadBootstrapScript(String[] args) throws TaskSubmissionException {
+        URL u = ServiceManager.class.getClassLoader().getResource(BOOTSTRAP_SCRIPT);
         if (u == null) {
-            throw new TaskSubmissionException(
-                    "Could not find bootstrap script in classpath");
+            throw new TaskSubmissionException("Could not find bootstrap script in classpath");
         }
         try {
             StringBuffer sb = new StringBuffer();
             sb.append("echo -e \"");
-            BufferedReader br = new BufferedReader(new InputStreamReader(u
-                    .openStream()));
+            BufferedReader br = new BufferedReader(new InputStreamReader(u.openStream()));
             String line = br.readLine();
             while (line != null) {
                 escape(sb, line, args);
@@ -296,11 +301,10 @@ public class ServiceManager implements StatusListener {
             return sb.toString();
         }
         catch (IOException e) {
-            throw new TaskSubmissionException(
-                    "Could not load bootstrap script", e);
+            throw new TaskSubmissionException("Could not load bootstrap script", e);
         }
     }
-    
+
     private void escape(StringBuffer sb, String line, String[] args) {
         for (int i = 0; i < line.length(); i++) {
             char c = line.charAt(i);
@@ -346,8 +350,7 @@ public class ServiceManager implements StatusListener {
         return startBootstrapService();
     }
 
-    private String getMD5(String name) throws NoSuchAlgorithmException,
-            IOException {
+    private String getMD5(String name) throws NoSuchAlgorithmException, IOException {
         File f = bootstrapService.getFile(name);
         return Digester.computeMD5(f);
     }
@@ -405,8 +408,8 @@ public class ServiceManager implements StatusListener {
                 Object cred = credentials.get(url);
                 try {
                     System.out.println("Shutting down service at " + url);
-                    KarajanChannel channel = ChannelManager.getManager()
-                            .reserveChannel(url, (GSSCredential) cred);
+                    KarajanChannel channel =
+                            ChannelManager.getManager().reserveChannel(url, (GSSCredential) cred);
                     System.out.println("Got channel " + channel);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();
                     ssc.setReplyTimeout(10);
@@ -431,8 +434,7 @@ public class ServiceManager implements StatusListener {
             System.out.println(" Done");
         }
 
-        public synchronized void errorReceived(Command cmd, String msg,
-                Exception t) {
+        public synchronized void errorReceived(Command cmd, String msg, Exception t) {
             System.out.print("-");
             count--;
             notifyAll();

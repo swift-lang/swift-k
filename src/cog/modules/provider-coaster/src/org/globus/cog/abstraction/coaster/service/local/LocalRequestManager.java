@@ -9,6 +9,7 @@
  */
 package org.globus.cog.abstraction.coaster.service.local;
 
+import org.globus.cog.abstraction.impl.file.coaster.handlers.BQPStatusHandler;
 import org.globus.cog.karajan.workflow.service.AbstractRequestManager;
 import org.globus.cog.karajan.workflow.service.handlers.ChannelConfigurationHandler;
 import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
@@ -23,5 +24,6 @@ public class LocalRequestManager extends AbstractRequestManager {
         addHandler("CHANNELCONFIG", ChannelConfigurationHandler.class);
         addHandler(JobStatusHandler.NAME, JobStatusHandler.class);
         addHandler(HeartBeatHandler.NAME, HeartBeatHandler.class);
+        addHandler(BQPStatusHandler.NAME, BQPStatusHandler.class);
     }
 }

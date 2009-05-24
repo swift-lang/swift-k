@@ -11,9 +11,12 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
@@ -25,6 +28,15 @@ public class SubmitJobCommand extends Command {
     public static final Logger logger = Logger.getLogger(SubmitJobCommand.class);
     
     public static final String NAME = "SUBMITJOB";
+    
+    public static final Set IGNORED_ATTRIBUTES;
+    
+    static {
+        IGNORED_ATTRIBUTES = new HashSet();
+        for (int i = 0; i < Settings.NAMES.length; i++) {
+            IGNORED_ATTRIBUTES.add(Settings.NAMES[i].toLowerCase());
+        }
+    }
 
     private Task t;
     private String id;
@@ -74,7 +86,9 @@ public class SubmitJobCommand extends Command {
         i = spec.getAttributeNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            add(baos, "attr", name + "=" + spec.getAttribute(name));
+            if (!IGNORED_ATTRIBUTES.contains(name)) {
+                add(baos, "attr", name + "=" + spec.getAttribute(name));
+            }
         }
 
         Service s = t.getService(0);

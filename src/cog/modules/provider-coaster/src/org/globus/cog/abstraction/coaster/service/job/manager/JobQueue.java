@@ -21,13 +21,13 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class JobQueue {
 	public static final Logger logger = Logger.getLogger(JobQueue.class);
 	
-    private QueueProcessor local, coaster;
-    private WorkerManager workerManager;
+    private AbstractQueueProcessor local, coaster;
     
     public JobQueue(LocalTCPService localService) throws IOException {
         local = new LocalQueueProcessor();
-        workerManager = new WorkerManager(localService);
-        coaster = new CoasterQueueProcessor(workerManager);
+        BlockQueueProcessor bqp = new BlockQueueProcessor();
+        bqp.getSettings().setCallbackURI(localService.getContact());
+        coaster = bqp;
     }
     
     public void start() {
@@ -61,7 +61,12 @@ public class JobQueue {
         }
     }
     
-    public WorkerManager getWorkerManager() {
-        return workerManager;
+    public QueueProcessor getCoasterQueueProcessor() {
+        return coaster;
+    }
+
+    public void shutdown() {
+        local.shutdown();
+        coaster.shutdown();
     }
 }
