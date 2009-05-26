@@ -2591,46 +2591,6 @@ sqlite> select before from trans where after=14976260;
 
 </section>
 
-<section><title>The old 'Getting started' section that you should ignore...</title>
-<para>
-This section details how to make basic use of some of the provenance database
-that I have running at CI.
-</para>
-<section><title>basic commands</title>
-
-<para>ssh to terminable. Set up path to the provenance commands like this:
-<screen>
-$ <userinput>export PATH=~benc/swift-svn/provenancedb:$PATH</userinput>
-</screen>
-</para>
-
-</section>
-
-<section><title>Direct database access on terminable</title>
-
-<para>
-Data is imported into two databases - an SQL database, and an XML database.
-Approximately the same data is imported into both - you can experiment with
-querying using SQL from the SQL language and XPath and XQuery from the
-XML database.
-</para>
-<para>At the moment, the database is generated from my log repository once
-per day. Logs that you put in the log repository a day ago should appear in
-the databases; logs that you added more recently may not.
-</para>
-<para>
-To query SQL, ssh into terminable, and type:
-<screen>
-$ <userinput>psql -p 5435 -d provdb -U benc</userinput>
-</screen>
-</para>
-<para>
-Details of the tables can be found in the 'plain sql' section later.
-</para>
-</section>
-</section>
-
-
 <section><title>Representation of dataset containment and procedure execution in r2681 and how it could change.</title>
 
 <para>
