@@ -1948,19 +1948,6 @@ value, perhaps. Probably not something OPM-generalisable.
 
 
 
-<section><title>stuff</title>
-<para>
-TODO transcribe info from the pile of papers I wrote. esp query analysis
-and the list of things that this section of work does *not* address.
-</para>
-<para>
-Explicitly attempt to avoid
-<ulink url="http://thedailywtf.com/Articles/The_Inner-Platform_Effect.aspx">Inner platform effect</ulink> which was a criticism of the metadata
-handling of the VDS1 VDC.
-</para>
-
-</section>
-
 <section><title>Processing i2u2 cosmic metadata</title>
 <para>i2u2 cosmic metadata is extracted from a VDS1 VDC.</para>
 <para>
