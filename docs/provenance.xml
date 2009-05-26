@@ -268,16 +268,6 @@ section)
 </para> </listitem>
 </varlistentry>
 
-<varlistentry> <term>Workflow execution summaries</term>
-<listitem> <para>
-general summary information of workflow executions
-(though a workflow probably fits in the compound hierarchy as a compound
-above all others)
-</para>
-</listitem>
-</varlistentry>
-
-
 <varlistentry>
 <term>Prospective provenance</term>
 <listitem> <para>
@@ -321,13 +311,6 @@ Its straightforward to store type names; but the definitions are
 per-execution. More usecases would be useful here to figure out what sort
 of query people want to make.
 </para>
-</listitem>
-</varlistentry>
-
-<varlistentry> <term>Command-line utilities</term>
-<listitem>
-<para>A set of command-line utilities giving access to
-provenance database.</para>
 </listitem>
 </varlistentry>
 
@@ -412,11 +395,6 @@ inside the code might be a better way.
 </varlistentry>
 
 </variablelist>
-</section>
-
-<section><title>Summary of the queries and metadata in the motivating
-sources</title>
-<para>TODO. a bunch of this is on paper.</para>
 </section>
 
 <section><title>Data model</title>
@@ -1117,8 +1095,6 @@ Same discussion applies to this as to the discussion in XML above.
 </para>
 </section>
 
-<section><title>Other data models and query languages</title>
-
 <section><title>GraphGrep</title>
 <screen>
  - download link see email
@@ -1295,7 +1271,6 @@ datasets in same subgraph as their top level parent;
 app procedure invocations in the same subgraph as their compound
 procedure invocation.
 </para>
-</section>
 </section>
 </section>
 
