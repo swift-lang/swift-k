@@ -1961,27 +1961,6 @@ handling of the VDS1 VDC.
 
 </section>
 
-<section><title>things to do next:</title>
-
-<para>over next week:</para>
-
-<para>i) get import scripts sorted properly (which will include
-perhaps some sorting out of the log-processing packaging too) - to the
-extent that other people could be expected to run this stuff themselves
-(so will need some basic documentation too). also should be able to
-import the results of the unit tests automatically, and perhaps stuff in the
-log repo that is done with a sufficiently recent version.</para>
-<para>ii) experiment with RDF for the q1 and q4 queries that I've
-experimented with for the others.</para>
-<para>iii) tidy up report - conclusions, recommendations, direction for
-further work, options for further work (eg more provenance? live status?
-any of the 'not this' things should be done?).</para>
-<para>
-separate out patches into different pieces - eg logging that can be
-committed now.
-</para>
-</section>
-
 <section><title>Processing i2u2 cosmic metadata</title>
 <para>i2u2 cosmic metadata is extracted from a VDS1 VDC.</para>
 <para>
