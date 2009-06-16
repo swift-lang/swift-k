@@ -459,11 +459,25 @@ extractstructelement(parent, memberchild, datatype) ::= <<
 >>
 
 slicearray(parent, memberchild, datatype) ::= <<
-<vdl:slicearray>
-  <argument name="var">$parent$</argument>
-  <argument name="path">$memberchild$</argument>
-  <argument name="type">$datatype$</argument>
-</vdl:slicearray>
+<sequential>
+ <set name="swift#array">$parent$</set> 
+ <set name="swift#slice">
+  <vdl:slicearray>
+    <argument name="var"><variable>swift#array</variable></argument>
+    <argument name="path">$memberchild$</argument>
+    <argument name="type">$datatype$</argument>
+  </vdl:slicearray>
+ </set>
+
+ <log level="info"><concat>
+   <string>SLICEARRAY thread={#thread} slice=</string>
+   <vdl:getdatasetprovenanceid var="{swift#slice}" />
+   <string> member=$memberchild$ array=</string>
+   <vdl:getdatasetprovenanceid var="{swift#array}" />
+ </concat></log>
+
+ <variable>swift#slice</variable>
+</sequential>
 >>
 
 
