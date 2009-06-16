@@ -8,7 +8,10 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.type.Types;
 
 public class FileNames extends VDLFunction {
@@ -18,10 +21,16 @@ public class FileNames extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		String[] f = filename(stack);
-		DSHandle[] h = new DSHandle[f.length];
-		for (int i = 0; i < f.length; i++) {
-			h[i] = RootDataNode.newNode(Types.STRING, relativize(f[i]));
+		DSHandle returnArray = new RootArrayDataNode(Types.STRING.arrayType());
+		try {
+			for (int i = 0; i < f.length; i++) {
+				Path p = parsePath("["+i+"]", stack);
+				DSHandle h = returnArray.getField(p);
+				h.setValue(relativize(f[i]));
+			}
+		} catch (InvalidPathException e) {
+			throw new ExecutionException("Unexpected invalid path exception",e);
 		}
-		return h;
+		return returnArray;
 	}
 }
