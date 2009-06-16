@@ -654,7 +654,7 @@ a[0] = echo("793578934574893");
 
 iterate v {
   a[v+1] = countstep(a[v]);
- print("extract int value ",@extractint(a[v+1]));
+ trace("extract int value ",@extractint(a[v+1]));
 } until (@extractint(a[v+1]) &lt;= 1);
 
 </programlisting>

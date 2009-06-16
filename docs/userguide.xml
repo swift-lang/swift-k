@@ -2046,7 +2046,7 @@ For example:
 string t = "my name is John and i like puppies.";
 string name = @strcut(t, "my name is ([^ ]*) ");
 string out = @strcat("Your name is ",name);
-print(out);
+trace(out);
 			</programlisting>
 
 			<para>
@@ -2067,7 +2067,7 @@ Example:
 string t = "my name is John and i like puppies.";
 string words[] = @strsplit(t, "\\s");
 foreach word in words {
-	print(word);
+	trace(word);
 }
 			</programlisting>
 
