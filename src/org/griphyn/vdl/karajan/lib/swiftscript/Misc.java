@@ -1,5 +1,7 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
+import java.io.IOException;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,11 +20,11 @@ import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Types;
-
+import org.griphyn.vdl.util.VDL2Config;
 
 public class Misc extends FunctionsCollection {
 
-	private static final Logger logger = Logger.getLogger(FunctionsCollection.class);
+	private static final Logger logger = Logger.getLogger(Misc.class);
 
 	public static final SwiftArg PA_INPUT = new SwiftArg.Positional("input");
 	public static final SwiftArg PA_PATTERN = new SwiftArg.Positional("regexp");
@@ -58,6 +60,7 @@ public class Misc extends FunctionsCollection {
 	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
 		Object[] args = SwiftArg.VARGS.asArray(stack);
+		int provid = VDLFunction.nextProvenanceID();
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < args.length; i++) {
 			buf.append(TypeUtil.toString(args[i]));
@@ -65,11 +68,23 @@ public class Misc extends FunctionsCollection {
 		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(buf.toString());
 		handle.closeShallow();
+		try {
+			if(VDL2Config.getConfig().getProvenanceLog()) {
+				DSHandle[] provArgs = SwiftArg.VARGS.asDSHandleArray(stack);
+				for (int i = 0; i < provArgs.length; i++) {
+					VDLFunction.logProvenanceParameter(provid, (DSHandle)provArgs[i], ""+i);
+				}
+				VDLFunction.logProvenanceResult(provid, handle, "strcat");
+			}
+		} catch(IOException ioe) {
+			throw new ExecutionException("When logging provenance for strcat", ioe);
+		}
 		return handle;
 	}
 
 	public DSHandle swiftscript_strcut(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
+		int provid = VDLFunction.nextProvenanceID();
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
 		if (logger.isDebugEnabled()) {
@@ -95,6 +110,9 @@ public class Misc extends FunctionsCollection {
 		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(group);
 		handle.closeShallow();
+		VDLFunction.logProvenanceResult(provid, handle, "strcut");
+		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "input");
+		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
 		return handle;
 	}
 	
@@ -111,6 +129,10 @@ public class Misc extends FunctionsCollection {
 			el.setValue(split[i]);
 		}
 		handle.closeDeep();
+		int provid=VDLFunction.nextProvenanceID();
+		VDLFunction.logProvenanceResult(provid, handle, "strsplit");
+		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "input");
+		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
 		return handle;
 	}
 
@@ -142,6 +164,12 @@ public class Misc extends FunctionsCollection {
 		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(group);
 		handle.closeShallow();
+
+		int provid=VDLFunction.nextProvenanceID();
+		VDLFunction.logProvenanceResult(provid, handle, "regexp");
+		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "input");
+		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
+		VDLFunction.logProvenanceParameter(provid, PA_TRANSFORM.getRawValue(stack), "transform");
 		return handle;
 	}
 
@@ -151,7 +179,9 @@ public class Misc extends FunctionsCollection {
 		DSHandle handle = new RootDataNode(Types.INT);
 		handle.setValue(new Double(Integer.parseInt(inputString)));
 		handle.closeShallow();
+		int provid=VDLFunction.nextProvenanceID();
+		VDLFunction.logProvenanceResult(provid, handle, "toint");
+		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
 		return handle;
 	}
 }
-

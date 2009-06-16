@@ -15,8 +15,11 @@ import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
 import org.griphyn.vdl.karajan.lib.SwiftArg;
+import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Types;
+
 
 public class FnArg extends AbstractFunction {
 	public static final String PARSED_ARGS = "cmdline:named";
@@ -65,7 +68,14 @@ public class FnArg extends AbstractFunction {
 			throw new ExecutionException("Missing command line argument: " + name);
 		}
 		else {
-			return RootDataNode.newNode(Types.STRING, value);	
+			DSHandle result = RootDataNode.newNode(Types.STRING, value);	
+			int provid=VDLFunction.nextProvenanceID();
+			VDLFunction.logProvenanceResult(provid, result, "arg");
+			VDLFunction.logProvenanceParameter(provid, P_NAME.getRawValue(stack), "name");
+			if(P_VALUE.getRawValue(stack) != null) {
+				VDLFunction.logProvenanceParameter(provid, P_VALUE.getRawValue(stack), "value");
+			}
+			return result;
 		}
 	}
 }

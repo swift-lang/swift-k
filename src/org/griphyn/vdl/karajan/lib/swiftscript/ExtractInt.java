@@ -35,7 +35,11 @@ public class ExtractInt extends VDLFunction {
 				String str = breader.readLine();
 				freader.close();
 				Double i = new Double(str);
-				return RootDataNode.newNode(Types.FLOAT, i);
+				DSHandle result = RootDataNode.newNode(Types.FLOAT, i);
+				int provid = VDLFunction.nextProvenanceID();
+				VDLFunction.logProvenanceResult(provid, result, "extractint");
+				VDLFunction.logProvenanceParameter(provid, handle, "filename");
+				return result;
 			}
 		}
 		catch (IOException ioe) {

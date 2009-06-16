@@ -572,4 +572,19 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			return tc;
 		}
 	}
+
+	private static int provenanceIDCount = 451000;
+
+	public static synchronized int nextProvenanceID() {
+		return provenanceIDCount++;
+	}
+
+	public static void logProvenanceResult(int id, DSHandle result, String name) throws ExecutionException {
+		logger.info("FUNCTION id="+id+" name="+name+" result="+result.getIdentifier());
+	}
+
+	public static void logProvenanceParameter(int id, DSHandle parameter, String paramName) throws ExecutionException {
+		logger.info("FUNCTIONPARAMETER id="+id+" input="+parameter.getIdentifier()+" name="+paramName);
+
+	}
 }

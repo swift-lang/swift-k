@@ -31,6 +31,10 @@ public class FileNames extends VDLFunction {
 		} catch (InvalidPathException e) {
 			throw new ExecutionException("Unexpected invalid path exception",e);
 		}
+		int provid = VDLFunction.nextProvenanceID();
+		logProvenanceParameter(provid, (DSHandle) PA_VAR.getValue(stack), "input");
+		logProvenanceResult(provid, returnArray, "filenames");
+
 		return returnArray;
 	}
 }
