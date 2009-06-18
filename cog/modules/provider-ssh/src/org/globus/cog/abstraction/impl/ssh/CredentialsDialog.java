@@ -31,317 +31,358 @@ import javax.swing.JTextField;
 import org.globus.cog.abstraction.impl.common.PublicKeyAuthentication;
 
 public abstract class CredentialsDialog {
-	private static final String NOTHING = "";
-	private static final String SSH_HOME = System.getProperty("user.home") + File.separator
-			+ ".ssh";
+    private static final String NOTHING = "";
+    private static final String SSH_HOME = System.getProperty("user.home")
+            + File.separator + ".ssh";
 
-	protected String userName, privateKey;
+    protected String userName, privateKey;
 
-	public String getPrivateKey() {
-		return privateKey;
-	}
+    public String getPrivateKey() {
+        return privateKey;
+    }
 
-	public void setPrivateKey(String privatekey) {
-		this.privateKey = privatekey;
-	}
+    public void setPrivateKey(String privatekey) {
+        this.privateKey = privatekey;
+    }
 
-	public String getUserName() {
-		return userName;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public void setUserName(String username) {
-		this.userName = username;
-	}
+    public void setUserName(String username) {
+        this.userName = username;
+    }
 
-	public abstract Object getResult();
+    public abstract Object getResult();
 
-	public static Object showCredentialsDialog() {
-		return showCredentialsDialog(null, null);
-	}
+    public static Object showCredentialsDialog() {
+        return showCredentialsDialog(null, null);
+    }
 
-	public static Object showCredentialsDialog(String userName, String privateKey) {
-		return showCredentialsDialog(userName, privateKey, false);
-	}
+    public static Object showCredentialsDialog(String userName,
+            String privateKey) {
+        return showCredentialsDialog(userName, privateKey, false);
+    }
 
-	public static Object showCredentialsDialog(String userName, String privateKey,
-			boolean forceTextMode) {
-		CredentialsDialog cd;
-		try {
-			if (GraphicsEnvironment.isHeadless() || forceTextMode) {
-				cd = new ConsoleCredentialsDialog();
-			}
-			else {
-				cd = new SwingCredentialsDialog();
-			}
-		}
-		catch (Exception e) {
-			cd = new ConsoleCredentialsDialog();
-		}
-		if (userName != null) {
-			cd.setUserName(userName);
-		}
-		if (privateKey != null) {
-			cd.setPrivateKey(privateKey);
-		}
-		return cd.getResult();
-	}
+    public static Object showCredentialsDialog(String userName,
+            String privateKey, boolean forceTextMode) {
+        return showCredentialsDialog(null, userName, privateKey, forceTextMode);
+    }
 
-	public static class SwingCredentialsDialog extends CredentialsDialog {
-		private JOptionPane optionPane = new JOptionPane();
-		private JDialog dialog;
+    public static Object showCredentialsDialog(String target, String userName,
+            String privateKey, boolean forceTextMode) {
+        CredentialsDialog cd;
+        try {
+            if (GraphicsEnvironment.isHeadless() || forceTextMode) {
+                cd = new ConsoleCredentialsDialog(target);
+            }
+            else {
+                cd = new SwingCredentialsDialog(target);
+            }
+        }
+        catch (InternalError e) {
+            cd = new ConsoleCredentialsDialog(target);
+        }
+        if (userName != null) {
+            cd.setUserName(userName);
+        }
+        if (privateKey != null) {
+            cd.setPrivateKey(privateKey);
+        }
+        return cd.getResult();
+    }
 
-		private JLabel passwordLabel;
-		private JTextField usernameField = new JTextField();
-		private JPasswordField passwordField = new JPasswordField();
-		private JTextField privateKeyField = new JTextField();
+    public static class SwingCredentialsDialog extends CredentialsDialog {
+        private JOptionPane optionPane = new JOptionPane();
+        private JDialog dialog;
 
-		private JButton choosePathButton = new JButton("Browse");
+        private JLabel passwordLabel;
+        private JTextField usernameField = new JTextField();
+        private JPasswordField passwordField = new JPasswordField();
+        private JTextField privateKeyField = new JTextField();
 
-		public SwingCredentialsDialog() {
-			// init sizes
-			usernameField.setPreferredSize(new Dimension(125, 20));
-			passwordField.setPreferredSize(new Dimension(125, 20));
-			privateKeyField.setPreferredSize(new Dimension(150, 20));
+        private JButton choosePathButton = new JButton("Browse");
 
-			// the main panel
-			JPanel main = new JPanel(new BorderLayout());
+        private String target;
 
-			// Labels
-			JPanel labels = new JPanel(new GridLayout(0, 1));
-			labels.add(new JLabel("Username: "));
-			labels.add(passwordLabel = new JLabel("Password: "));
-			JLabel pkLabel = new JLabel("Private Key: ");
-			pkLabel.setToolTipText("Your private key if needed, else leave blank");
-			labels.add(pkLabel);
+        public SwingCredentialsDialog() {
+            this(null);
+        }
 
-			// username and password labels/fields
-			JPanel fields = new JPanel(new GridLayout(0, 1));
-			fields.add(usernameField);
-			fields.add(passwordField);
+        public SwingCredentialsDialog(String target) {
+            this.target = target;
+            // init sizes
+            usernameField.setPreferredSize(new Dimension(125, 20));
+            passwordField.setPreferredSize(new Dimension(125, 20));
+            privateKeyField.setPreferredSize(new Dimension(150, 20));
 
-			// path to the private key field/button
-			JPanel pKeyPanel = new JPanel(new BorderLayout());
-			privateKeyField.setToolTipText("Your private key if needed, else leave blank");
-			pKeyPanel.add(privateKeyField, BorderLayout.CENTER);
-			pKeyPanel.add(choosePathButton, BorderLayout.EAST);
+            // the main panel
+            JPanel main = new JPanel(new BorderLayout());
 
-			// add an action listener
-			choosePathButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent aEvent) {
-					choosePathToPrivateKey();
-				}
-			});
+            // Labels
+            JPanel labels = new JPanel(new GridLayout(0, 1));
+            labels.add(new JLabel("Username: "));
+            labels.add(passwordLabel = new JLabel("Password: "));
+            JLabel pkLabel = new JLabel("Private Key: ");
+            pkLabel
+                .setToolTipText("Your private key if needed, else leave blank");
+            labels.add(pkLabel);
 
-			fields.add(pKeyPanel);
+            // username and password labels/fields
+            JPanel fields = new JPanel(new GridLayout(0, 1));
+            fields.add(usernameField);
+            fields.add(passwordField);
 
-			main.add(labels, BorderLayout.WEST);
-			main.add(fields, BorderLayout.CENTER);
+            // path to the private key field/button
+            JPanel pKeyPanel = new JPanel(new BorderLayout());
+            privateKeyField
+                .setToolTipText("Your private key if needed, else leave blank");
+            pKeyPanel.add(privateKeyField, BorderLayout.CENTER);
+            pKeyPanel.add(choosePathButton, BorderLayout.EAST);
 
-			optionPane.setMessage(main);
-			optionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
-			dialog = optionPane.createDialog(null, "Enter Your SSH Credentials");
-		}
+            // add an action listener
+            choosePathButton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent aEvent) {
+                    choosePathToPrivateKey();
+                }
+            });
 
-		protected void choosePathToPrivateKey() {
-			JFileChooser fileChooser = new JFileChooser(SSH_HOME);
-			fileChooser.setFileHidingEnabled(false);
-			int returnVal = fileChooser.showOpenDialog(optionPane);
-			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				setPrivateKeyFieldText(fileChooser.getSelectedFile().getAbsolutePath());
-			}
-		}
+            fields.add(pKeyPanel);
 
-		protected synchronized Object okButtonPushed() {
-			String uname = usernameField.getText();
-			char[] passwd = passwordField.getPassword();
-			String pKeyPath = privateKeyField.getText();
+            main.add(labels, BorderLayout.WEST);
+            main.add(fields, BorderLayout.CENTER);
 
-			if (NOTHING.equals(uname) && NOTHING.equals(passwd) && NOTHING.equals(pKeyPath)) {
-				return null;
-			}
-			else if (passwd == null) { // prevent null pointers
-				return null;
-			}
-			else if (NOTHING.equals(pKeyPath)) {
-				return new PasswordAuthentication(uname, passwd);
-			}
-			else {
-				return new PublicKeyAuthentication(uname, pKeyPath, passwd);
-			}
-		}
+            optionPane.setMessage(main);
+            optionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
+            dialog = optionPane.createDialog(null,
+                target == null ? "Enter SSH Credentials"
+                        : "Enter SSH Credentials for " + target);
+        }
 
-		public Object getResult() {
-			dialog.setVisible(true);
-			if (optionPane.getValue() != null
-					&& ((Integer) optionPane.getValue()).equals(new Integer(JOptionPane.OK_OPTION))) {
-				return okButtonPushed();
-			}
-			else {
-				return null;
-			}
-		}
+        protected void choosePathToPrivateKey() {
+            JFileChooser fileChooser = new JFileChooser(SSH_HOME);
+            fileChooser.setFileHidingEnabled(false);
+            int returnVal = fileChooser.showOpenDialog(optionPane);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                setPrivateKeyFieldText(fileChooser.getSelectedFile()
+                    .getAbsolutePath());
+            }
+        }
 
-		public void setPrivateKey(String privatekey) {
-			super.setPrivateKey(privatekey);
-			setPrivateKeyFieldText(privatekey);
-		}
+        protected synchronized Object okButtonPushed() {
+            String uname = usernameField.getText();
+            char[] passwd = passwordField.getPassword();
+            String pKeyPath = privateKeyField.getText();
 
-		private void setPrivateKeyFieldText(String privateKey) {
-			privateKeyField.setText(privateKey);
-			if (privateKey == null || privateKey.equals("")) {
-				passwordLabel.setText("Password: ");
-			}
-			else {
-				passwordLabel.setText("Passphrase: ");
-			}
-		}
+            if (NOTHING.equals(uname) && NOTHING.equals(passwd)
+                    && NOTHING.equals(pKeyPath)) {
+                return null;
+            }
+            else if (passwd == null) { // prevent null pointers
+                return null;
+            }
+            else if (NOTHING.equals(pKeyPath)) {
+                return new PasswordAuthentication(uname, passwd);
+            }
+            else {
+                return new PublicKeyAuthentication(uname, pKeyPath, passwd);
+            }
+        }
 
-		public void setUserName(String username) {
-			super.setUserName(username);
-			usernameField.setText(username);
-			if (username != null) {
-				passwordField.requestFocus();
-			}
-		}
+        public Object getResult() {
+            dialog.setVisible(true);
+            if (optionPane.getValue() != null
+                    && ((Integer) optionPane.getValue()).equals(new Integer(
+                        JOptionPane.OK_OPTION))) {
+                return okButtonPushed();
+            }
+            else {
+                return null;
+            }
+        }
 
-	}
+        public void setPrivateKey(String privatekey) {
+            super.setPrivateKey(privatekey);
+            setPrivateKeyFieldText(privatekey);
+        }
 
-	public static class ConsoleCredentialsDialog extends CredentialsDialog {
-		public String TAB = "\t";
-		public static final int MAX_MASKED_CHARS = 80;
+        private void setPrivateKeyFieldText(String privateKey) {
+            privateKeyField.setText(privateKey);
+            if (privateKey == null || privateKey.equals("")) {
+                passwordLabel.setText("Password: ");
+            }
+            else {
+                passwordLabel.setText("Passphrase: ");
+            }
+        }
 
-		public Object getResult() {
-			if (userName == null) {
-				System.out.print("Username: ");
-				userName = input();
-			}
-			else {
-				System.out.println("Username: " + userName);
-			}
-			if (privateKey == null) {
-				System.out.println("Empty password for public key authentication.");
-				System.out.print("Password: ");
-				char[] tmp = inputMasked();
-				if (tmp.length == 0) {
-					for (int i = 0; i < 80; i++) {
-						System.out.print('\b');
-					}
-					String defaultPK = getDefaultPrivateKey();
-					System.out.println("Private key file ["+defaultPK+"]: ");
-					privateKey = input();
-					if (privateKey == null || privateKey.equals("")) {
-						privateKey = defaultPK;
-					}
-					System.out.print("Passphrase: ");
-					return new PublicKeyAuthentication(userName, privateKey, inputMasked());
-				}
-				else {
-					return new PasswordAuthentication(userName, tmp);
-				}
-			}
-			else {
-				System.out.println("Private key: " + privateKey);
-				System.out.print("Passphrase: ");
-				return new PublicKeyAuthentication(userName, privateKey, inputMasked());
-			}
-		}
+        public void setUserName(String username) {
+            super.setUserName(username);
+            usernameField.setText(username);
+            if (username != null) {
+                passwordField.requestFocus();
+            }
+        }
 
-		protected String getDefaultPrivateKey() {
-			File pk;
-			pk = new File(SSH_HOME, "identity");
-			if (pk.exists()) {
-				return pk.getAbsolutePath();
-			}
-			pk = new File(SSH_HOME);
-			if (pk.exists()) {
-				return pk.getAbsolutePath();
-			}
-			return "";
-		}
+    }
 
-		protected String input() {
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			try {
-				return br.readLine();
-			}
-			catch (IOException e) {
-				return "";
-			}
-		}
+    public static class ConsoleCredentialsDialog extends CredentialsDialog {
+        public String TAB = "\t";
+        public static final int MAX_MASKED_CHARS = 80;
+        private String target;
 
-		protected synchronized char[] inputMasked() {
-			char[] buf = new char[MAX_MASKED_CHARS];
-			int crt = 0;
-			char c;
-			ConsoleMasker.startMasking();
-			while (crt < MAX_MASKED_CHARS) {
-				try {
-					c = (char) System.in.read();
-					if (c == '\n') {
-						break;
-					}
-					else {
-						buf[crt++] = c;
-					}
-				}
-				catch (IOException e) {
-					break;
-				}
-			}
-			ConsoleMasker.stopMasking();
-			char[] in = new char[crt];
-			System.arraycopy(buf, 0, in, 0, crt);
-			Arrays.fill(buf, '\0');
-			return in;
-		}
-	}
+        public ConsoleCredentialsDialog() {
+            this(null);
+        }
 
-	public static class ConsoleMasker extends Thread {
-		private static ConsoleMasker masker;
-		private volatile boolean done;
+        public ConsoleCredentialsDialog(String target) {
+            this.target = target;
+        }
 
-		public synchronized static void startMasking() {
-			if (masker != null) {
-				throw new IllegalStateException("Another maskeing thread");
-			}
-			masker = new ConsoleMasker();
-			masker.start();
-		}
+        public Object getResult() {
+            synchronized (ConsoleCredentialsDialog.class) {
+                String uprompt = target == null ? "Username: " : target
+                        + " username: ";
+                if (userName == null) {
+                    System.out.print(uprompt);
+                    userName = input();
+                }
+                else {
+                    System.out.println(uprompt + userName);
+                }
+                String pprompt = target == null ? "Password: " : target
+                        + " password: ";
+                if (privateKey == null) {
+                    System.out
+                        .println("Empty password for public key authentication.");
+                    System.out.print(pprompt);
+                    char[] tmp = inputMasked();
+                    if (tmp.length == 0) {
+                        for (int i = 0; i < 80; i++) {
+                            System.out.print('\b');
+                        }
+                        String defaultPK = getDefaultPrivateKey();
+                        System.out.println("Private key file [" + defaultPK
+                                + "]: ");
+                        privateKey = input();
+                        if (privateKey == null || privateKey.equals("")) {
+                            privateKey = defaultPK;
+                        }
+                        System.out.print("Passphrase: ");
+                        return new PublicKeyAuthentication(userName,
+                            privateKey, inputMasked());
+                    }
+                    else {
+                        return new PasswordAuthentication(userName, tmp);
+                    }
+                }
+                else {
+                    System.out.println("Private key: " + privateKey);
+                    System.out.print("Passphrase: ");
+                    return new PublicKeyAuthentication(userName, privateKey,
+                        inputMasked());
+                }
+            }
+        }
 
-		public synchronized static void stopMasking() {
-			if (masker == null) {
-				throw new IllegalStateException("No masking thread is active");
-			}
-			masker.done();
-			masker = null;
-		}
+        protected String getDefaultPrivateKey() {
+            File pk;
+            pk = new File(SSH_HOME, "identity");
+            if (pk.exists()) {
+                return pk.getAbsolutePath();
+            }
+            pk = new File(SSH_HOME);
+            if (pk.exists()) {
+                return pk.getAbsolutePath();
+            }
+            return "";
+        }
 
-		public ConsoleMasker() {
-			this.setPriority(Thread.MAX_PRIORITY);
-			this.setName("Console Masking");
-		}
+        protected String input() {
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                System.in));
+            try {
+                return br.readLine();
+            }
+            catch (IOException e) {
+                return "";
+            }
+        }
 
-		public void run() {
-			System.out.print(' ');
-			char crt = ' ';
-			while (!done) {
-				System.out.print('\b');
-				System.out.print(crt++);
-				System.out.flush();
-				if (crt == 127) {
-					crt = ' ';
-				}
-				try {
-					Thread.sleep(1);
-				}
-				catch (InterruptedException e) {
-					return;
-				}
-			}
-		}
+        protected synchronized char[] inputMasked() {
+            char[] buf = new char[MAX_MASKED_CHARS];
+            int crt = 0;
+            char c;
+            ConsoleMasker.startMasking();
+            while (crt < MAX_MASKED_CHARS) {
+                try {
+                    c = (char) System.in.read();
+                    if (c == '\n') {
+                        break;
+                    }
+                    else {
+                        buf[crt++] = c;
+                    }
+                }
+                catch (IOException e) {
+                    break;
+                }
+            }
+            ConsoleMasker.stopMasking();
+            char[] in = new char[crt];
+            System.arraycopy(buf, 0, in, 0, crt);
+            Arrays.fill(buf, '\0');
+            return in;
+        }
+    }
 
-		private void done() {
-			done = true;
-		}
-	}
+    public static class ConsoleMasker extends Thread {
+        private static ConsoleMasker masker;
+        private volatile boolean done;
+
+        public synchronized static void startMasking() {
+            if (masker != null) {
+                throw new IllegalStateException("Another maskeing thread");
+            }
+            masker = new ConsoleMasker();
+            masker.start();
+        }
+
+        public synchronized static void stopMasking() {
+            if (masker == null) {
+                throw new IllegalStateException("No masking thread is active");
+            }
+            masker.done();
+            masker = null;
+        }
+
+        public ConsoleMasker() {
+            this.setPriority(Thread.MAX_PRIORITY);
+            this.setName("Console Masking");
+        }
+
+        public void run() {
+            System.out.print(' ');
+            char crt = ' ';
+            while (!done) {
+                System.out.print('\b');
+                System.out.print(crt++);
+                System.out.flush();
+                if (crt == 127) {
+                    crt = ' ';
+                }
+                try {
+                    // 25 fps
+                    Thread.sleep(40);
+                }
+                catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+
+        private void done() {
+            done = true;
+        }
+    }
 }
