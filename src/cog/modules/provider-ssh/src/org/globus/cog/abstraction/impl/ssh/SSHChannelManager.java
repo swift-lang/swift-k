@@ -160,6 +160,11 @@ public class SSHChannelManager {
                         auth = new PublicKeyAuthentication(username, pkey,
                                 passphrase.toCharArray());
                     }
+                    else if ("interactive".equals(val)) {
+                        InteractiveSSHSecurityContextImpl sc = new InteractiveSSHSecurityContextImpl();
+                        sc.setHostName(host);
+                        auth = sc.getCredentials();
+                    }
                     else {
                         logger.warn("Unknown authentication type for \"" + host
                                 + "\": " + val);

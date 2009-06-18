@@ -18,6 +18,8 @@ public class InteractiveSSHSecurityContextImpl implements SecurityContext {
 	private Object credentials;
 
 	private Hashtable attributes = new Hashtable();
+	
+	private String hostName;
 
 	public InteractiveSSHSecurityContextImpl() {
 		// this.credentials = new PasswordAuthentication(null, null);
@@ -44,7 +46,7 @@ public class InteractiveSSHSecurityContextImpl implements SecurityContext {
 							(String) text).booleanValue()))) {
 				forceText = true;
 			}
-			credentials = CredentialsDialog.showCredentialsDialog(
+			credentials = CredentialsDialog.showCredentialsDialog(hostName,
 					(String) getAttribute("username"), (String) getAttribute("privatekey"), forceText);
 			if (credentials == null) {
 				// Cancel was pressed, so we set it to mock credentials to
@@ -69,4 +71,12 @@ public class InteractiveSSHSecurityContextImpl implements SecurityContext {
 	public String getAlias() {
 		return null;
 	}
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
 }

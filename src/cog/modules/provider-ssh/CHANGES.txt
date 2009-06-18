@@ -1,3 +1,7 @@
+(06/18/2009)
+
+*** Added interactive authentication to auth.defaults
+
 (12/28/2007)
 
 *** Fixed passing of empty arguments
