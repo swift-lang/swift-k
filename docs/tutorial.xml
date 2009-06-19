@@ -44,7 +44,7 @@ material on topics covered in this manual.
 <section> <title>Hello World</title>
     <para>
 The first example program (found in the file
-<filename>examples/vdsk/first.swift</filename>)
+<filename>examples/swift/first.swift</filename>)
 outputs a hello world message into
 a file called <filename>hello.txt</filename>.
     </para>
@@ -66,7 +66,7 @@ outfile = greeting();
 <para>We can run this program as follows:</para>
 
 <screen>
-$ <userinput>cd examples/vdsk/</userinput>
+$ <userinput>cd examples/swift/</userinput>
 $ <userinput>swift first.swift</userinput>
 Swift v0.2
 
