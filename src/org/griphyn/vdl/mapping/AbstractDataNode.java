@@ -447,10 +447,30 @@ public abstract class AbstractDataNode implements DSHandle {
 				// anyway - should perhaps only be trying to map leafnodes?
 				// Mapping
 				// non-leaf stuff is giving wierd paths anyway
+
+// TODO this is perhaps an unpleasant way of finding if this is a file-backed
+// leaf node or not
+				boolean filemapped = true;
+				Type type = this.getType();
+				if(type.getName().equals("external")) {
+					filemapped = false;
+				}
+				if(type.isPrimitive()) {
+					filemapped = false;
+				}
+				if(type.isArray()) {
+					filemapped = false;
+				}
+				if(handles.size()>0) {
+					filemapped = false;
+				}
+
 				try {
-					Object path = m.map(pathFromRoot);
-					logger.info("FILENAME dataset=" + identifier + " filename="
+					if(filemapped) {
+						Object path = m.map(pathFromRoot);
+						logger.info("FILENAME dataset=" + identifier + " filename="
 							+ path);
+					}
 				}
 				catch (Exception e) {
 					logger.info("NOFILENAME dataset=" + identifier);
