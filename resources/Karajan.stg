@@ -307,6 +307,12 @@ variable(name,type,isArray,expr,mapping,nil,file,waitfor,datatype) ::= <<
     $endif$
   $endif$
 </set>
+<parameterlog>
+<string>intermediate</string>
+<string>$name$</string>
+<vdl:getdatasetprovenanceid var="{$name$}" />
+<string>{#thread}</string>
+</parameterlog>
 >>
 
 vdl_mapping(mapping,file,waitfor) ::= <<
