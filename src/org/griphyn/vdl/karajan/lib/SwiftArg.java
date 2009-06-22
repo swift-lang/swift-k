@@ -89,6 +89,8 @@ public abstract class SwiftArg extends Arg {
 		Object v = super.getValue(stack);
 		if(v instanceof DSHandle) {
 			return (DSHandle)v;
+		} else if(v == null) { 
+			return null;
 		} else {
 			throw new ExecutionException("Expected Swift data, but got some primitive type (" + v + ")");
 		}
