@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# this will take a log file and produce a set of state transition
+# events for every internal procedure
+
+# 2009-05-04 18:02:15,499+0200 INFO  vdl:mains INTERNALPROC_START thread=0-1 name=trace
+
+# 2009-05-04 18:02:15,556+0200 INFO  vdl:mains INTERNALPROC_END thread=0-0
+
+
+grep ' INTERNALPROC_START ' $1 | iso-to-secs | \
+sed 's/^\(.*\) INFO  [^ ]* INTERNALPROC_START thread=\([0-9\-]*\) name=\([^ ]*\).*$/\1 \2 START \3/' 
+
+grep ' INTERNALPROC_END ' $1 | iso-to-secs | \
+sed 's/^\(.*\) INFO  [^ ]* INTERNALPROC_END thread=\([0-9\-]*\).*$/\1 \2 END/' 
+
+

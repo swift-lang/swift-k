@@ -100,6 +100,9 @@ dostageout.transitions: $(LOG)
 compound.transitions: $(LOG)
 	log-to-compound-transitions $(LOG) > compound.transitions
 
+internalproc.transitions: $(LOG)
+	log-to-internal-proc-transitions $(LOG) > internalproc.transitions
+
 ## retry analysis
 
 jobs.retrycount.summary: execute2.event
