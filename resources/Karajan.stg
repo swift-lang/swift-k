@@ -97,7 +97,7 @@ $endif$
 >>
 
 typecheck() ::= <<
-<vdl:typecheck argname="$it.name$" var="{$it.name$}" type="$it.type.name$"$if(it.isArray)$ isArray="true"$endif$/>
+<vdl:typecheck argname="$it.name$" var="{$it.name$}" type="$it.type.name$" />
 >>
 
 vdl_execute(outputs,inputs,application,name,line) ::= <<
@@ -291,15 +291,15 @@ globalConstant(name, expr, datatype) ::= <<
 </global>
 >>
 
-variable(name,type,isArray,expr,mapping,nil,file,waitfor,datatype) ::= <<
+variable(name,type,expr,mapping,nil,file,waitfor,datatype) ::= <<
 <set name="$name$">
   $if(mapping)$
-  <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
+  <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
     $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
   </vdl:new>
   $else$
     $if(file)$
-      <vdl:new type="$type$" dbgname="$name$"$if(isArray)$ isArray="true"$endif$$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
+      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
         $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
       </vdl:new>
     $else$

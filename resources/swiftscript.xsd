@@ -129,8 +129,6 @@
 
     <xs:attribute name="type" type="xs:QName" use="required"/>
 
-    <xs:attribute default="false" name="isArray" type="xs:boolean"/>
-
   </xs:complexType>
 
   <xs:complexType name="Binding">
@@ -302,8 +300,6 @@
     <xs:attribute name="name" type="xs:NCName"/>
 
     <xs:attribute name="type" type="xs:QName" use="required"/>
-
-    <xs:attribute name="isArray" type="xs:boolean"/>
   </xs:complexType>
 
   <xs:complexType name="ActualParameter">

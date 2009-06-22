@@ -242,7 +242,6 @@ public class Karajan {
 		typeST.setAttribute("name", param.getType().getLocalPart());
 		typeST.setAttribute("namespace", param.getType().getNamespaceURI());
 		paramST.setAttribute("type", typeST);
-		paramST.setAttribute("isArray", new Boolean(param.getIsArray1()));
 		if(!param.isNil())
 			paramST.setAttribute("default",expressionToKarajan(param.getAbstractExpression(), scope));
 		return paramST;
@@ -252,7 +251,6 @@ public class Karajan {
 		StringTemplate variableST = template("variable");
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
-		variableST.setAttribute("isArray", Boolean.valueOf(var.getIsArray1()));
 
 		checkIsTypeDefined(var.getType().getLocalPart());
 		if(!var.isNil()) {
