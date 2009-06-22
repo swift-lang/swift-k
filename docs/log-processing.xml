@@ -11,17 +11,9 @@
 	<section>
 		<title>Overview</title>
 		<para>
-There is an under-development package of Swift log processing utilties. 
+There is a package of Swift log processing utilties. 
 		</para>
 
-		<para>
-This code is not distributed in the main Swift release. Instead, it must be
-obtained from the Swift SVN repository, in the directory
-<filename>log-processing/</filename>:
-<screen>
-svn co https://svn.ci.uchicago.edu/svn/vdl2/log-processing
-</screen>
-		</para>
 	</section>
 	<section><title>Prerequisites</title>
 <para>
@@ -32,8 +24,6 @@ gnuplot 4.0, gnu m4, gnu textutils, perl
 	<section><title>Web page about a run</title>
 		<para>
 			<screen>
-cd log-processing/bin
-export PATH=$(pwd):$PATH
 swift-plot-log /path/to/readData-20080304-0903-xgqf5nhe.log 
 			</screen>
 This will create a web page, report-readData-20080304-0903-xgqf5nhe
@@ -47,7 +37,7 @@ report information about the workflow progress so far.
 The log processing tools can output transition streams in
 CEDPS logging format:
 			<screen>
-make LOG=/path/to/readData-20080304-0903-xgqf5nhe.log clean execute.cedps
+swift-plot-log /path/to/readData-20080304-0903-xgqf5nhe.log execute.cedps
 			</screen>
 		</para>
 	</section>
@@ -79,14 +69,14 @@ output formats, such as graphs, web pages and CEDPS log format.</para>
 </para>
 <para>
 Streams are generated from their source log files either as .transitions
-or .event files, for example by <literal>make foo.event</literal>.
+or .event files, for example by <literal>swift-plot-log whatever.log foo.event</literal>.
 </para>
 <para>
 Various plots are available based on different streams:
 
 <table>
  <tgroup cols="2">
-  <thead><row><entry>makefile target</entry><entry>Description</entry></row></thead>
+  <thead><row><entry>Makefile target</entry><entry>Description</entry></row></thead>
   <tbody>
     <row><entry>foo.png</entry><entry>Plots the foo event stream</entry></row>
     <row><entry>foo-total.png</entry><entry>Plots how many foo events are in progress at any time</entry></row>
