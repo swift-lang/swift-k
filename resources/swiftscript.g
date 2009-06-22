@@ -193,15 +193,15 @@ declpart [StringTemplate code, StringTemplate t]
         StringTemplate n=null;
         StringTemplate thisTypeTemplate=null;
         String thisType = (String) t.getAttribute("name");
-	StringTemplate variable=null;
-	StringTemplate m = null;
+        StringTemplate variable=null;
+        StringTemplate m = null;
     }
     :
      n=declarator
      (LBRACK RBRACK {thisType = thisType + "[]"; } )*
      {
-         thisTypeTemplate=template("type");
-         thisTypeTemplate.setAttribute("name", thisType);
+        thisTypeTemplate=template("type");
+        thisTypeTemplate.setAttribute("name", thisType);
         variable = template("variable");
         variable.setAttribute("name", n);
         variable.setAttribute("type", thisTypeTemplate);
