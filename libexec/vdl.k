@@ -23,11 +23,11 @@ namespace("vdl"
 
 	export(
 
-		element(parameterlog, [direction, variable, id],
+		element(parameterlog, [direction, variable, id, thread],
 
 			if(
 				vdl:configProperty("provenance.log") == "true"
-				log("info","PARAM thread={#thread} direction={direction} variable={variable} provenanceid={id}")
+				log("info","PARAM thread={thread} direction={direction} variable={variable} provenanceid={id}")
 			)
 		)
 

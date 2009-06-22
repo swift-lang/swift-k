@@ -406,8 +406,6 @@ public class Karajan {
 
 	public StringTemplate call(Call call, VariableScope scope, boolean inhibitOutput) throws CompilationException {
 		try {
-			StringTemplate callST = template("call");
-			callST.setAttribute("func", call.getProc().getLocalPart());
 			// Check is called procedure declared previously 
 			String procName = call.getProc().getLocalPart();
 			if (proceduresMap.get(procName) == null)
@@ -419,6 +417,15 @@ public class Karajan {
 			Map outArgs = new HashMap();
 			
 			ProcedureSignature proc = (ProcedureSignature)proceduresMap.get(procName);
+			StringTemplate callST;
+			if(proc.getInvocationMode() == ProcedureSignature.INVOCATION_USERDEFINED) {
+				callST = template("callUserDefined");
+			} else if(proc.getInvocationMode() == ProcedureSignature.INVOCATION_INTERNAL) {
+				callST = template("callInternal");
+			} else {
+				throw new CompilationException("Unknown procedure invocation mode "+proc.getInvocationMode());
+			}
+			callST.setAttribute("func", call.getProc().getLocalPart());
 			/* Does number of input arguments match */				
 			for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 				if (proc.getInputArray(i).isOptional())

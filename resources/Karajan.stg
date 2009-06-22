@@ -117,6 +117,7 @@ vdl_log_input() ::= <<
 <string>input</string>
 <string>$it.name$</string>
 <vdl:getdatasetprovenanceid var="{$it.name$}" />
+<string>{#thread}</string>
 </parameterlog>
 >>
 
@@ -125,6 +126,7 @@ vdl_log_output() ::= <<
 <string>output</string>
 <string>$it.name$</string>
 <vdl:getdatasetprovenanceid var="{$it.name$}" />
+<string>{#thread}</string>
 </parameterlog>
 >>
 
@@ -220,7 +222,51 @@ $endif$
 </vdl:tparallelFor>
 >>
 
-call(func, outputs, inputs) ::= <<
+// need to log inputs and outputs at the calling stage here because
+// they are not 
+// $outputs:vdl_log_output();separator="\n"$
+
+callInternal(func, outputs, inputs) ::= <<
+<sequential>
+<log level="info" message="INTERNALPROC_START thread={#thread} name=$func$"/>
+<set name="swift#cs"><variable>#thread</variable></set>
+<$func$>
+  <parallel>
+    $outputs:callInternal_log_output();separator="\n"$
+    $inputs:callInternal_log_input();separator="\n"$
+  </parallel>
+</$func$>
+<log level="info" message="INTERNALPROC_END thread={#thread}"/>
+</sequential>
+>>
+
+callInternal_log_input() ::= <<
+<sequential>
+  <set name="swift#callInternalValue">$it$</set>
+  <parameterlog>
+    <string>input</string>
+    <string>TODO_name_or_pos</string>
+    <vdl:getdatasetprovenanceid var="{swift#callInternalValue}" />
+    <string>{swift#cs}</string>
+  </parameterlog>
+  <variable>swift#callInternalValue</variable>
+</sequential>
+>>
+
+callInternal_log_output() ::= <<
+<sequential>
+  <set name="swift#callInternalValue">$it$</set>
+  <parameterlog>
+    <string>output</string>
+    <string>TODO_name_or_pos</string>
+    <vdl:getdatasetprovenanceid var="{swift#callInternalValue}" />
+    <string>{swift#cs}</string>
+  </parameterlog>
+  <variable>swift#callInternalValue</variable>
+</sequential>
+>>
+
+callUserDefined(func, outputs, inputs) ::= <<
 <$func$>
   <parallel>
     $outputs;separator="\n"$

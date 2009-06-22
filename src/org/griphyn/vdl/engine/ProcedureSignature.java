@@ -13,7 +13,13 @@ public class ProcedureSignature {
 	private ArrayList outputArgs;
 	private boolean anyNumOfInputArgs;
 	private boolean anyNumOfOutputArgs; /* this is maybe unnecessary*/
-	
+	private int invocationMode;
+
+	/* Procedure is built in to Swift. */
+	static public final int INVOCATION_INTERNAL = 600;
+
+	/* Procedure is user defined. */
+	static public final int INVOCATION_USERDEFINED = 601;
 	
 	public ProcedureSignature(String name) {
 		this.name = name;
@@ -21,6 +27,7 @@ public class ProcedureSignature {
 		outputArgs = new ArrayList();
 		anyNumOfInputArgs = false;
 		anyNumOfOutputArgs = false;
+		invocationMode = INVOCATION_USERDEFINED;
 	}
 	
 	public String getName() {
@@ -98,6 +105,14 @@ public class ProcedureSignature {
 			this.addOutputArg(fas);
 		}
 	}
+
+	public void setInvocationMode(int i) {
+		this.invocationMode = i;
+	}
+
+	public int getInvocationMode() {
+		return this.invocationMode;
+	}
 	
 	public static HashMap makeProcedureSignatures() {
 		HashMap proceduresMap = new HashMap();
@@ -107,6 +122,7 @@ public class ProcedureSignature {
 		readData.addInputArg(rdInputArg);
 		FormalArgumentSignature rdOutputArg = new FormalArgumentSignature(true);
 		readData.addOutputArg(rdOutputArg);		
+		readData.setInvocationMode(INVOCATION_INTERNAL);
 		proceduresMap.put("readData", readData);
 		
 		ProcedureSignature readData2 = new ProcedureSignature("readData2");
@@ -114,10 +130,12 @@ public class ProcedureSignature {
 		readData2.addInputArg(rd2InputArg);
 		FormalArgumentSignature rd2OutputArg = new FormalArgumentSignature(true);
 		readData2.addOutputArg(rd2OutputArg);     
+		readData2.setInvocationMode(INVOCATION_INTERNAL);
 		proceduresMap.put("readData2", readData2);
 		
 		ProcedureSignature trace = new ProcedureSignature("trace");
 		trace.setAnyNumOfInputArgs();
+		trace.setInvocationMode(INVOCATION_INTERNAL);
 		proceduresMap.put("trace", trace);
 		
 		return proceduresMap;
