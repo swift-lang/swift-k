@@ -342,10 +342,10 @@ if [ "$MISSING" != "" ]; then
 	fail 254 "The following output files were not created by the application: $MISSING"
 fi
 
-logstate "COPYING_OUTPUTS"
+logstate "MOVING_OUTPUTS"
 for O in $OUTF ; do
-	cp "$DIR/$O" "shared/$O" 2>&1 >& "$INFO"
-	checkError 254 "Failed to copy output file $O to shared directory"
+	mv "$DIR/$O" "shared/$O" 2>&1 >& "$INFO"
+	checkError 254 "Failed to move output file $O to shared directory"
 done
 
 logstate "RM_JOBDIR"
