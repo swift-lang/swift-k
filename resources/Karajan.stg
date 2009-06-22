@@ -320,19 +320,38 @@ array(elements, datatype) ::= <<
 >>
 
 range(from,to,step,datatype) ::= <<
-<vdl:range>
-  <argument name="from">
-    $from$
-  </argument>
-  <argument name="to">
-    $to$
-  </argument>
-  $if(step)$
-  <argument name="step">
-    $step$
-  </argument>
-  $endif$
-</vdl:range>
+<sequential>
+ <set name="swift#from">$from$</set>
+ <set name="swift#to">$to$</set>
+ $if(step)$
+ <set name="swift#step">$step$</set>
+ $endif$
+ <set name="swift#rangeout">
+  <vdl:range>
+    <argument name="from"><variable>swift#from</variable></argument>
+    <argument name="to"><variable>swift#to</variable></argument>
+    $if(step)$
+    <argument name="step"><variable>swift#step</variable></argument>
+    $endif$
+  </vdl:range>
+ </set>
+ <if><equals><vdl:configProperty><string>provenance.log</string></vdl:configProperty><string>true</string></equals>
+ <then>
+ <log level="info"><concat>
+    <string>ARRAYRANGE thread={#thread} array=</string>
+    <vdl:getdatasetprovenanceid var="{swift#rangeout}" />
+    <string> from=</string> <vdl:getdatasetprovenanceid var="{swift#from}" />
+    <string> to=</string> <vdl:getdatasetprovenanceid var="{swift#to}" />
+    $if(step)$
+    <string> step=</string> <vdl:getdatasetprovenanceid var="{swift#step}" />
+    $else$
+    <string> step=none</string>
+    $endif$
+ </concat></log>
+ </then>
+ </if>
+ <variable>swift#rangeout</variable>
+</sequential>
 >>
 
 if(condition,vthen,velse) ::= <<
