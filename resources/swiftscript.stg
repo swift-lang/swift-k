@@ -120,12 +120,6 @@ call(func,outputs,inputs,sourcelocation) ::= <<
 </call>
 >>
 
-vardecl(sourcelocation) ::= <<
-$if (it.type)$
-<variable name="$it.name$" type="$it.type$"/>$\n$
-$endif$
->>
-
 returnParam(type,name,bind,sourcelocation) ::= <<
 <output$if (bind)$ bind="$bind$"$endif$>$name$</output>
 >>
