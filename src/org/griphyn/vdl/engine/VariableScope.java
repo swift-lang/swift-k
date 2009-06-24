@@ -19,7 +19,7 @@ import java.util.Set;
 public class VariableScope {
 
 	/** permit array up-assignment, but not entire variables */
-	final static int ENCLOSURE_LOOP = 301923;
+	public final static int ENCLOSURE_LOOP = 301923;
 
 	/** permit all upwards assignments */
 	public static final int ENCLOSURE_ALL = 301924;
