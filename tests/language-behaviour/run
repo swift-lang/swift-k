@@ -33,7 +33,7 @@ if [ "$SUB" == "y" ]; then
 	rm -rf $1*.out $1*.xml $1*.kml $1*.dot $1*.log $1*.rlog $1*.d
 elif [ "$RESUME" != "y" ]; then
 	echo Removing files from previous runs
-	rm -rf *.out *.xml *.kml *.dot *.log *.rlog *.d
+	rm -rf *.out *.xml *.kml *.dot *.log *.rlog *.d _concurrent
 fi
 
 for testfn in $TESTS; do
