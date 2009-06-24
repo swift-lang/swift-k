@@ -173,6 +173,8 @@ public class Karajan {
 			}
 		}
 		
+		statementsForSymbols(prog, scope);
+
 		// Keep track of declared procedures
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
 			Procedure proc = prog.getProcedureArray(i);
@@ -231,6 +233,7 @@ public class Karajan {
 		else {			
 			VariableScope compoundScope = new VariableScope(this, innerScope);
 			compoundScope.bodyTemplate = procST;
+			statementsForSymbols(proc, compoundScope);		
 			statements(proc, compoundScope);		
 		}			
 	}
@@ -247,12 +250,17 @@ public class Karajan {
 		return paramST;
 	}
 
+	public void variableForSymbol(Variable var, VariableScope scope) throws CompilationException {
+
+		checkIsTypeDefined(var.getType().getLocalPart());
+		scope.addVariable(var.getName(), var.getType().getLocalPart());
+	}
+
 	public void variable(Variable var, VariableScope scope) throws CompilationException {
 		StringTemplate variableST = template("variable");
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
-
-		checkIsTypeDefined(var.getType().getLocalPart());
+		
 		if(!var.isNil()) {
 
 			if (var.getFile() != null) {
@@ -323,8 +331,8 @@ public class Karajan {
 			variableST.setAttribute("mapping", mappingST);
 			variableST.setAttribute("nil", Boolean.TRUE);
 		}
+
 		scope.bodyTemplate.setAttribute("declarations", variableST);
-		scope.addVariable(var.getName(), var.getType().getLocalPart());
 	}
 
 	void checkIsTypeDefined(String type) throws CompilationException {		
@@ -363,12 +371,41 @@ public class Karajan {
 		}
 	}
 
+	public void statementsForSymbols(XmlObject prog, VariableScope scope) throws CompilationException {
+		XmlCursor cursor = prog.newCursor();
+		cursor.selectPath("*");
+		while (cursor.toNextSelection()) {
+			XmlObject child = cursor.getObject();
+			statementForSymbol(child, scope);
+		}
+	}
+
 	public void statements(XmlObject prog, VariableScope scope) throws CompilationException {
 		XmlCursor cursor = prog.newCursor();
 		cursor.selectPath("*");
 		while (cursor.toNextSelection()) {
 			XmlObject child = cursor.getObject();
 			statement(child, scope);
+		}
+	}
+
+	public void statementForSymbol(XmlObject child, VariableScope scope) throws CompilationException {
+		if (child instanceof Variable) {
+			variableForSymbol((Variable) child, scope);
+		}
+		else if (child instanceof Assign
+			|| child instanceof Call
+			|| child instanceof Foreach
+			|| child instanceof Iterate
+			|| child instanceof If
+			|| child instanceof Switch
+			|| child instanceof Procedure
+			|| child instanceof Types
+			|| child instanceof FormalParameter) {
+			// ignore these - they're expected but we don't need to
+			// do anything for them here
+		} else {
+			throw new CompilationException("Unexpected element in XML. Implementing class "+child.getClass()+", content "+child);
 		}
 	}
 
@@ -401,6 +438,7 @@ public class Karajan {
 			throw new CompilationException("Unexpected element in XML. Implementing class "+child.getClass()+", content "+child);
 		}
 	}
+
 
 	public StringTemplate call(Call call, VariableScope scope, boolean inhibitOutput) throws CompilationException {
 		try {
@@ -588,6 +626,7 @@ public class Karajan {
 		iterateST.setAttribute("var", iterate.getVar());
 		innerScope.bodyTemplate = iterateST;
 
+		statementsForSymbols(iterate.getBody(), innerScope);
 		statements(iterate.getBody(), innerScope);
 
 		XmlObject cond = iterate.getAbstractExpression();
@@ -627,6 +666,7 @@ public class Karajan {
 
 			innerScope.bodyTemplate = foreachST;
 
+			statementsForSymbols(foreach.getBody(), innerScope);
 			statements(foreach.getBody(), innerScope);
 
 			Object statementID = new Integer(callID++);
@@ -656,6 +696,7 @@ public class Karajan {
 		innerThenScope.bodyTemplate = template("sub_comp");
 		ifST.setAttribute("vthen", innerThenScope.bodyTemplate);
 
+		statementsForSymbols(thenstat, innerThenScope);
 		statements(thenstat, innerThenScope);
 
 		Object statementID = new Integer(callID++);
@@ -672,6 +713,7 @@ public class Karajan {
 			innerElseScope.bodyTemplate = template("sub_comp");
 			ifST.setAttribute("velse", innerElseScope.bodyTemplate);
 
+			statementsForSymbols(elsestat, innerElseScope);
 			statements(elsestat, innerElseScope);
 
 			Iterator elseScopeIterator = innerElseScope.getVariableIterator();
@@ -714,6 +756,7 @@ public class Karajan {
 			VariableScope defaultScope = new VariableScope(this, scope);
 			defaultScope.bodyTemplate = template("sub_comp");
 			switchST.setAttribute("sdefault", defaultScope.bodyTemplate);
+			statementsForSymbols(defaultstat, defaultScope);
 			statements(defaultstat, defaultScope);
 			Iterator defaultScopeIterator = defaultScope.getVariableIterator();
 			while(defaultScopeIterator.hasNext()) {
@@ -726,6 +769,7 @@ public class Karajan {
 	public void caseStat(Case casestat, VariableScope scope) throws CompilationException {
 		StringTemplate valueST = expressionToKarajan(casestat.getAbstractExpression(), scope);
 		scope.bodyTemplate.setAttribute("value", valueST.toString());
+		statementsForSymbols(casestat.getStatements(), scope);
 		statements(casestat.getStatements(), scope);
 	}
 
