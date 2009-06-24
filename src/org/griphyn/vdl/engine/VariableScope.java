@@ -54,9 +54,9 @@ public class VariableScope {
 	*/
 	public VariableScope(Karajan c, VariableScope parent, int a) {
 		if(parentScope!=null) {
-			logger.info("New scope "+hashCode()+" with parent scope "+parentScope.hashCode());
+			logger.debug("New scope "+hashCode()+" with parent scope "+parentScope.hashCode());
 		} else {
-			logger.info("New scope "+hashCode()+" with no parent.");
+			logger.debug("New scope "+hashCode()+" with no parent.");
 		}
 		compiler = c;
 		parentScope = parent;
@@ -75,7 +75,7 @@ public class VariableScope {
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
 	public void addVariable(String name, String type) throws CompilationException {
-		logger.info("Adding variable "+name+" of type "+type+" to scope "+hashCode());
+		logger.debug("Adding variable "+name+" of type "+type+" to scope "+hashCode());
 		
 		if(isVariableDefined(name)) {
 			throw new CompilationException("Variable "+name+" is already defined.");
@@ -97,7 +97,7 @@ public class VariableScope {
 	 * an exception if the variable is defined in a parent scope
 	 */
 	public void addInternalVariable(String name, String type) throws CompilationException {
-		logger.info("Adding internal variable " + name + " of type " + type + " to scope " + hashCode());
+		logger.debug("Adding internal variable " + name + " of type " + type + " to scope " + hashCode());
 		
 		if(isVariableLocallyDefined(name)) {
 			throw new CompilationException("Variable " + name + " is already defined.");
@@ -162,7 +162,7 @@ public class VariableScope {
 				}
 				ld.setAttribute("waitfor", closeID);
 			} else {
-				logger.info("Variable "+variableName+" is local but has no template.");
+				logger.debug("Variable "+variableName+" is local but has no template.");
 			}
 			StringTemplate postST = compiler.template("partialclose");
 			postST.setAttribute("var", variableName);
@@ -189,7 +189,7 @@ public class VariableScope {
 				if(!statementList.contains(closeID)) {
 					statementList.add(closeID);
 				}
-				logger.info("added "+closeID+" to variable "+variableName+" in scope "+hashCode());
+				logger.debug("added "+closeID+" to variable "+variableName+" in scope "+hashCode());
 			} else {
 				throw new CompilationException("variable "+variableName+" is not writeable in this scope");
 			}
@@ -211,21 +211,21 @@ public class VariableScope {
 		if(decls instanceof StringTemplate) {
 			StringTemplate declST = (StringTemplate) decls;
 			if(declST.getAttribute("name").equals(name)) {
-logger.info("thats the declaration for "+name);
+				logger.debug("thats the declaration for "+name);
 				return declST;
 			}
 		} else { // assume its a List
 			Iterator it = ((List) decls).iterator();
 			while(it.hasNext()) {
 				StringTemplate declST = (StringTemplate) it.next();
-logger.info("looking at declaration "+declST);
+				logger.debug("looking at declaration "+declST);
 try {
 				if(declST.getAttribute("name").equals(name)) {
-logger.info("thats the declaration for "+name);
+					logger.debug("thats the declaration for "+name);
 					return declST;
 				}
 } catch(java.util.NoSuchElementException nse) {
-logger.info("it so definitely wasn't in that one, we got an exception.");
+					logger.debug("it so definitely wasn't in that one, we got an exception.");
 // TODO this is not a nice use of exceptions...
 
 }
