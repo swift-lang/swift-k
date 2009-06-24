@@ -10,7 +10,6 @@ import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
 import org.globus.swift.parser.SwiftScriptLexer;
 import org.globus.swift.parser.SwiftScriptParser;
-;
 
 /** Commandline tool to convert the textual form of SwiftScript into
 	the XML form.
