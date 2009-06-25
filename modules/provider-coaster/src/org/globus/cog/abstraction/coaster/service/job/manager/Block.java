@@ -200,7 +200,7 @@ public class Block implements StatusListener {
     }
 
     public void shutdown() {
-        if (shutdown) {
+        if (shutdown || failed) {
             return;
         }
         shutdown = true;
