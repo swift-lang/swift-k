@@ -197,7 +197,7 @@ public class Karajan {
 	}
 
 	public void procedure(Procedure proc, VariableScope containingScope) throws CompilationException {
-		VariableScope outerScope = new VariableScope(this, null);
+		VariableScope outerScope = new VariableScope(this, containingScope, VariableScope.ENCLOSURE_PROCEDURE);
 		VariableScope innerScope = new VariableScope(this, outerScope, VariableScope.ENCLOSURE_NONE);
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
@@ -253,14 +253,15 @@ public class Karajan {
 	public void variableForSymbol(Variable var, VariableScope scope) throws CompilationException {
 
 		checkIsTypeDefined(var.getType().getLocalPart());
-		scope.addVariable(var.getName(), var.getType().getLocalPart());
+		scope.addVariable(var.getName(), var.getType().getLocalPart(), var.getIsGlobal());
 	}
 
 	public void variable(Variable var, VariableScope scope) throws CompilationException {
 		StringTemplate variableST = template("variable");
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
-		
+		variableST.setAttribute("isGlobal", Boolean.valueOf(var.getIsGlobal()));
+
 		if(!var.isNil()) {
 
 			if (var.getFile() != null) {

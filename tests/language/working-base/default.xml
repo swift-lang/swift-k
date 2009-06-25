@@ -30,8 +30,8 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="hw1" type="file" xsi:nil="true"/>
-  <variable name="hw2" type="file" xsi:nil="true"/>
+  <variable name="hw1" type="file" isGlobal="false" xsi:nil="true"/>
+  <variable name="hw2" type="file" isGlobal="false" xsi:nil="true"/>
   <call proc="echo" src="line 10">
     <output><variableReference>hw1</variableReference></output>
   </call>

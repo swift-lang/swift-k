@@ -178,17 +178,19 @@ topLevelStatement[StringTemplate code]
     | (predictProceduredecl) => d=proceduredecl {code.setAttribute("functions", d);}
     ;
 
-predictDeclaration {StringTemplate x,y;} : x=type y=declarator ;
+predictDeclaration {StringTemplate x,y;} : ("global") | (x=type y=declarator) ;
 
 declaration [StringTemplate code]
-{StringTemplate t=null;}
-    : t=type
-      declpart[code, t]
-      (COMMA declpart[code, t])*
+{StringTemplate t=null;
+ boolean isGlobal = false;}
+    : ("global" {isGlobal = true;})?
+      t=type
+      declpart[code, t, isGlobal]
+      (COMMA declpart[code, t, isGlobal])*
       SEMI
     ;
 
-declpart [StringTemplate code, StringTemplate t]
+declpart [StringTemplate code, StringTemplate t, boolean isGlobal]
     {
         StringTemplate n=null;
         StringTemplate thisTypeTemplate=null;
@@ -205,6 +207,7 @@ declpart [StringTemplate code, StringTemplate t]
         variable = template("variable");
         variable.setAttribute("name", n);
         variable.setAttribute("type", thisTypeTemplate);
+        variable.setAttribute("global", ""+isGlobal);
         code.setAttribute("statements", variable);
     }
 
@@ -731,6 +734,8 @@ procedurecallStatAssignManyReturnOutput [StringTemplate s, StringTemplate code]
                 StringTemplate nameST = (StringTemplate)f.getAttribute("name");
                 var.setAttribute("name",nameST.getAttribute("name"));
                 var.setAttribute("type",f.getAttribute("type"));
+                var.setAttribute("global", Boolean.FALSE);
+
                 s.setAttribute("statements",var);
             }
         }

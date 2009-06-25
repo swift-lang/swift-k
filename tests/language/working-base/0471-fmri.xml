@@ -137,7 +137,7 @@
     name="quick" type="string"
 
      xsi:nil="true" />
-    <variable name="warp" type="warpfile" xsi:nil="true"/>
+    <variable name="warp" type="warpfile" isGlobal="false" xsi:nil="true"/>
     <call proc="align_warp" src="line 29">
       <output><variableReference>warp</variableReference></output>
       <input><variableReference>reference</variableReference></input>
@@ -251,7 +251,7 @@
     name="position" type="string"
 
      xsi:nil="true" />
-    <variable name="outslice" type="pgmfile" xsi:nil="true"/>
+    <variable name="outslice" type="pgmfile" isGlobal="false" xsi:nil="true"/>
     <call proc="slicer" src="line 59">
       <output><variableReference>outslice</variableReference></output>
       <input><variableReference>inp</variableReference></input>
@@ -296,12 +296,12 @@
       </call></body>
     </foreach>
   </procedure>
-  <variable name="references" type="volume[]">
+  <variable name="references" type="volume[]" isGlobal="false">
     <mapping descriptor="csv_mapper">
       <param name="file"><stringConstant>reference.csv</stringConstant></param>
     </mapping>
   </variable>
-  <variable name="reference" type="volume" xsi:nil="true"/>
+  <variable name="reference" type="volume" isGlobal="false" xsi:nil="true"/>
   <assign src="line 75">
    <variableReference>reference</variableReference>
    <arraySubscript>
@@ -309,12 +309,12 @@
     <integerConstant>0</integerConstant>
    </arraySubscript>
   </assign>
-  <variable name="subjects" type="volume[]">
+  <variable name="subjects" type="volume[]" isGlobal="false">
     <mapping descriptor="csv_mapper">
       <param name="file"><stringConstant>subjects.csv</stringConstant></param>
     </mapping>
   </variable>
-  <variable name="slices" type="volume[]">
+  <variable name="slices" type="volume[]" isGlobal="false">
     <mapping descriptor="csv_mapper">
       <param name="file"><stringConstant>slices.csv</stringConstant></param>
     </mapping>
@@ -324,7 +324,7 @@
     <input><variableReference>reference</variableReference></input>
     <input><variableReference>subjects</variableReference></input>
   </call>
-  <variable name="atlas" type="volume">
+  <variable name="atlas" type="volume" isGlobal="false">
     <mapping descriptor="simple_mapper">
       <param name="prefix"><stringConstant>atlas</stringConstant></param>
     </mapping>
@@ -333,7 +333,7 @@
     <output><variableReference>atlas</variableReference></output>
     <input><variableReference>slices</variableReference></input>
   </call>
-  <variable name="directions" type="string[]" xsi:nil="true"/>
+  <variable name="directions" type="string[]" isGlobal="false" xsi:nil="true"/>
   <assign src="line 85">
    <variableReference>directions</variableReference>
 
@@ -344,13 +344,13 @@
   </assign>
   <foreach var="direction"  src="line 85">
   <in><variableReference>directions</variableReference></in>
-  <body><variable name="o" type="imagefile">
+  <body><variable name="o" type="imagefile" isGlobal="false">
       <mapping descriptor="single_file_mapper">
         <param name="file"><function name="strcat">
           <stringConstant>atlas-</stringConstant><variableReference>direction</variableReference><stringConstant>.jpeg</stringConstant></function></param>
       </mapping>
     </variable>
-    <variable name="option" type="string" xsi:nil="true"/>
+    <variable name="option" type="string" isGlobal="false" xsi:nil="true"/>
     <assign src="line 88">
      <variableReference>option</variableReference>
      <function name="strcat">

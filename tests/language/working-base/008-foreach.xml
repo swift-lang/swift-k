@@ -13,7 +13,7 @@
         <variableReference>i</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="sa" type="int[]" xsi:nil="true"/>
+  <variable name="sa" type="int[]" isGlobal="false" xsi:nil="true"/>
   <foreach var="s"  src="line 5">
   <in><variableReference>sa</variableReference></in>
   <body><call proc="echo" src="line 5">

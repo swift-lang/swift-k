@@ -17,8 +17,8 @@
      <variableReference>i</variableReference>
     </assign>
   </procedure>
-  <variable name="fa" type="int[]" xsi:nil="true"/>
-  <variable name="sa" type="int[]" xsi:nil="true"/>
+  <variable name="fa" type="int[]" isGlobal="false" xsi:nil="true"/>
+  <variable name="sa" type="int[]" isGlobal="false" xsi:nil="true"/>
   <foreach var="s"  indexVar="i" src="line 6">
   <in><variableReference>sa</variableReference></in>
   <body><call proc="num" src="line 6">

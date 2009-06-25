@@ -27,13 +27,22 @@ public class VariableScope {
 	/** permit no upwards assignments */
 	public static final int ENCLOSURE_NONE = 301925;
 
+	/** permit no access to the containing scope except for finding
+	    global variables */
+	public static final int ENCLOSURE_PROCEDURE = 301926;
+
 	public static final Logger logger = Logger.getLogger(VariableScope.class);
 
 	/** need this for the program as a whole. probably should factor
 	    that into separate pieces. */
 	Karajan compiler;
 
+	/** the scope that directly contains this scope. */
 	VariableScope parentScope;
+
+	/** the root level scope for the entire SwiftScript program. Sometimes
+	    this will be the same as parentScope or this. */
+	VariableScope rootScope;
 
 	int enclosureType;
 
@@ -61,6 +70,11 @@ public class VariableScope {
 		compiler = c;
 		parentScope = parent;
 		enclosureType = a;
+		if(parentScope == null) {
+			rootScope = this;
+		} else {
+			rootScope = parentScope.getRootScope();
+		}
 	}
 
 
@@ -69,27 +83,49 @@ public class VariableScope {
 	Set variables = new HashSet();
 	Map varTypes = new HashMap();
 
+	/** Set of variables (String token names) which are global and
+	    declared in this scope (which must be a root scope). Variables
+	    in this set must also appear in the variables set. */
+	Set globals = new HashSet();
+
 	/** Asserts that a named variable is declared in this scope.
 	    Might also eventually contain more information about the
 	    variable. Need to define behaviour here when the
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
+
 	public void addVariable(String name, String type) throws CompilationException {
+		addVariable(name,type,false);
+	}
+
+	public void addVariable(String name, String type, boolean global) throws CompilationException {
 		logger.debug("Adding variable "+name+" of type "+type+" to scope "+hashCode());
 		
 		if(isVariableDefined(name)) {
 			throw new CompilationException("Variable "+name+" is already defined.");
 		}
 
+		// TODO does this if() ever fire? or is it always taken
+		// by the above if? in which case isVariableDefined should
+		// be replaced by is locally defined test.
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
 			logger.warn("Variable "+name+" defined in scope "+hashCode()
 			+ " shadows variable of same name in scope "
 			+ parentScope.hashCode());
 		}
 
+		if(global && this != rootScope) {
+			throw new CompilationException("Global "+name+" can only be declared in the root scope of a program.");
+		}
+
 		boolean added = variables.add(name);
 		varTypes.put(name, type);
 		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
+
+		if(global) {
+			added = globals.add(name);
+			if(!added) throw new CompilationException("Could not add global variable "+name+" to scope.");
+		}
 	}
 	
 	/**
@@ -108,13 +144,27 @@ public class VariableScope {
 		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
 	}
 
-
 	public boolean isVariableDefined(String name) {
+		if(rootScope.isGlobalDefined(name)) return true;
+		return isVariableDefinedRecursive(name);
+	}
+
+	private boolean isVariableDefinedRecursive(String name) {
 		if(isVariableLocallyDefined(name)) return true;
-		if(parentScope != null && parentScope.isVariableDefined(name)) return true;
+		if(enclosureType != ENCLOSURE_PROCEDURE && parentScope != null && parentScope.isVariableDefined(name)) return true;
 		return false;
 	}
-	
+
+	public boolean isGlobalDefined(String name) {
+		return globals.contains(name);
+	}
+
+	/** note that this will return variable types for variables in
+	    containing scopes even if they are not accessible. non-null
+	    return value from this method should not be treated as an
+	    indication that the variable is in any way accessible from
+	    this scope. The isVariableDefined and isGlobalDefined methods
+	    should be used to check that. */
 	public String getVariableType(String name) {
 		if(isVariableLocallyDefined(name)) 
 			return varTypes.get(name).toString();
@@ -260,5 +310,8 @@ logger.info("UH OH - couldn't find local definition for "+name);
 		return variableUsage.keySet().iterator();
 	}
 
+	public VariableScope getRootScope() {
+		return rootScope;
+	}
 }
 

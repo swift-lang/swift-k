@@ -9,7 +9,7 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <variable name="files" type="file[]">
+  <variable name="files" type="file[]" isGlobal="false">
     <mapping descriptor="simple_mapper">
       <param name="pattern"><stringConstant>*</stringConstant></param>
     </mapping>

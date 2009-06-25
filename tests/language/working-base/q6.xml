@@ -27,7 +27,7 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="string[]" xsi:nil="true"/>
+  <variable name="greetings" type="string[]" isGlobal="false" xsi:nil="true"/>
   <assign src="line 11">
    <variableReference>greetings</variableReference>
 
@@ -38,7 +38,7 @@
   </assign>
   <foreach var="g"  src="line 11">
   <in><variableReference>greetings</variableReference></in>
-  <body><variable name="hw" type="file" xsi:nil="true"/>
+  <body><variable name="hw" type="file" isGlobal="false" xsi:nil="true"/>
     <call proc="echo" src="line 12">
       <output><variableReference>hw</variableReference></output>
       <input><variableReference>g</variableReference></input>

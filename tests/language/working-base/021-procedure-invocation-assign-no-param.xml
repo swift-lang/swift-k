@@ -12,7 +12,7 @@
      <integerConstant>7</integerConstant>
     </assign>
   </procedure>
-  <variable name="hw1" type="int" xsi:nil="true"/>
+  <variable name="hw1" type="int" isGlobal="false" xsi:nil="true"/>
   <call proc="num" src="line 4">
     <output><variableReference>hw1</variableReference></output>
   </call>

@@ -22,7 +22,7 @@
           <variableReference>t</variableReference></function></stdout><stringConstant>Hello, world!</stringConstant>  </application>
     </binding>
   </procedure>
-  <variable name="outfile" type="messagefile"><file name="hello.txt"/></variable>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="hello.txt"/></variable>
   <call proc="greeting" src="line 11">
     <output><variableReference>outfile</variableReference></output>
   </call>

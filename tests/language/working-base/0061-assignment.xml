@@ -17,8 +17,8 @@
      <integerConstant>3</integerConstant>
     </assign>
   </procedure>
-  <variable name="s" type="int" xsi:nil="true"/>
-  <variable name="a" type="int" xsi:nil="true"/>
+  <variable name="s" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="a" type="int" isGlobal="false" xsi:nil="true"/>
   <call proc="echo" src="line 7">
     <output><variableReference>a</variableReference></output>
     <input><variableReference>s</variableReference></input>

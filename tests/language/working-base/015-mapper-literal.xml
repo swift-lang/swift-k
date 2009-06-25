@@ -9,5 +9,5 @@
      		<typestructure></typestructure>
      	</type>   
   </types>  
-  <variable name="v" type="myfile"><file name="literalfilename.txt"/></variable>
+  <variable name="v" type="myfile" isGlobal="false"><file name="literalfilename.txt"/></variable>
 </program>

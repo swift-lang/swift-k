@@ -33,19 +33,19 @@
           <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
-  <variable name="inputNames" type="string" xsi:nil="true"/>
+  <variable name="inputNames" type="string" isGlobal="false" xsi:nil="true"/>
   <assign src="line 12">
    <variableReference>inputNames</variableReference>
    <stringConstant>one.txt two.txt three.txt</stringConstant>
   </assign>
-  <variable name="inputfiles" type="messagefile[]">
+  <variable name="inputfiles" type="messagefile[]" isGlobal="false">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>inputNames</variableReference></param>
     </mapping>
   </variable>
   <foreach var="f"  src="line 15">
   <in><variableReference>inputfiles</variableReference></in>
-  <body><variable name="c" type="countfile">
+  <body><variable name="c" type="countfile" isGlobal="false">
       <mapping descriptor="regexp_mapper">
         <param name="source"><function name="filename">
           <variableReference>f</variableReference></function></param>

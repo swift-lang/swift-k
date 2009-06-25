@@ -1,3 +1,7 @@
+(06/25/09)
+*** 'global' keyword to allow top level declarations to be visible in all
+    scopes.
+
 (05/17/09)
 *** Allow wrapper parameters to be specific in a file rather than on the
     commandline. This trades commandline length for an extra file to stage-in

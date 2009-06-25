@@ -13,7 +13,7 @@
         <variableReference>i</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="int" xsi:nil="true"/>
+  <variable name="greetings" type="int" isGlobal="false" xsi:nil="true"/>
   <call proc="echo" src="line 7">
     <input><variableReference>greetings</variableReference></input>
   </call>

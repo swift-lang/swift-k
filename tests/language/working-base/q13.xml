@@ -51,8 +51,8 @@
           <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
-  <variable name="outfile" type="messagefile"><file name="q13greeting.txt"/></variable>
-  <variable name="c" type="countfile"><file name="count.txt"/></variable>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="q13greeting.txt"/></variable>
+  <variable name="c" type="countfile" isGlobal="false"><file name="count.txt"/></variable>
   <call proc="greeting" src="line 19">
     <output><variableReference>outfile</variableReference></output>
     <input><stringConstant>hello from Swift</stringConstant></input>

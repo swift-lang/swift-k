@@ -34,9 +34,9 @@
           <variableReference>e</variableReference></function></stderr><stringConstant>hello</stringConstant>  </application>
     </binding>
   </procedure>
-  <variable name="infile" type="messagefile"><file name="test.in"/></variable>
-  <variable name="outfile" type="messagefile"><file name="test.out"/></variable>
-  <variable name="errfile" type="messagefile"><file name="test.err"/></variable>
+  <variable name="infile" type="messagefile" isGlobal="false"><file name="test.in"/></variable>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="test.out"/></variable>
+  <variable name="errfile" type="messagefile" isGlobal="false"><file name="test.err"/></variable>
   <call proc="greeting" src="line 13">
     <output><variableReference>errfile</variableReference></output>
     <output><variableReference>outfile</variableReference></output>

@@ -17,7 +17,7 @@
      <variableReference>i</variableReference>
     </assign>
   </procedure>
-  <variable name="foo" type="int" xsi:nil="true"/>
+  <variable name="foo" type="int" isGlobal="false" xsi:nil="true"/>
   <call proc="q" src="line 3">
     <output><variableReference>foo</variableReference></output>
     <input><integerConstant>7</integerConstant></input>

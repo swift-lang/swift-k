@@ -13,17 +13,17 @@
         <variableReference>g</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="d" type="int" xsi:nil="true"/>
+  <variable name="d" type="int" isGlobal="false" xsi:nil="true"/>
   <assign src="line 5">
    <variableReference>d</variableReference>
    <integerConstant>5</integerConstant>
   </assign>
-  <variable name="j" type="int" xsi:nil="true"/>
-  <variable name="uuu" type="int" xsi:nil="true"/>
-  <variable name="s" type="string" xsi:nil="true"/>
-  <variable name="g" type="int" xsi:nil="true"/>
-  <variable name="t" type="int" xsi:nil="true"/>
-  <variable name="e" type="int" xsi:nil="true"/>
+  <variable name="j" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="uuu" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="s" type="string" isGlobal="false" xsi:nil="true"/>
+  <variable name="g" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="t" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="e" type="int" isGlobal="false" xsi:nil="true"/>
   <switch>
     <variableReference>d</variableReference>
     <case>

@@ -35,7 +35,7 @@
           <variableReference>f</variableReference></function></stdout><variableReference>optional_arg</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="out" type="File" xsi:nil="true"/>
+  <variable name="out" type="File" isGlobal="false" xsi:nil="true"/>
   <call proc="myproc1" src="line 9">
     <output><variableReference>out</variableReference></output>
     <input><integerConstant>100</integerConstant></input>

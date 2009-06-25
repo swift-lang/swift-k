@@ -36,8 +36,8 @@
         </arraySubscript>  </application>
     </binding>
   </procedure>
-  <variable name="outfile" type="messagefile"><file name="q5out.txt"/></variable>
-  <variable name="words" type="string[]" xsi:nil="true"/>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="q5out.txt"/></variable>
+  <variable name="words" type="string[]" isGlobal="false" xsi:nil="true"/>
   <assign src="line 13">
    <variableReference>words</variableReference>
 

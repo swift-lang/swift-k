@@ -49,7 +49,7 @@
       </call></body>
     </foreach>
   </procedure>
-  <variable name="sa" type="string[]" xsi:nil="true"/>
+  <variable name="sa" type="string[]" isGlobal="false" xsi:nil="true"/>
   <assign src="line 16">
    <variableReference>sa</variableReference>
 
@@ -58,7 +58,7 @@
      </array>
 
   </assign>
-  <variable name="fa" type="file[]" xsi:nil="true"/>
+  <variable name="fa" type="file[]" isGlobal="false" xsi:nil="true"/>
   <call proc="echo_batch" src="line 17">
     <output><variableReference>fa</variableReference></output>
     <input><variableReference>sa</variableReference></input>

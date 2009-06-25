@@ -291,8 +291,8 @@ globalConstant(name, expr, datatype) ::= <<
 </global>
 >>
 
-variable(name,type,expr,mapping,nil,file,waitfor,datatype) ::= <<
-<set name="$name$">
+variable(name,type,expr,mapping,nil,file,waitfor,datatype,isGlobal) ::= <<
+$if(isGlobal)$<global name="$name$">$else$<set name="$name$">$endif$
   $if(mapping)$
   <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
     $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
@@ -306,7 +306,7 @@ variable(name,type,expr,mapping,nil,file,waitfor,datatype) ::= <<
       $expr$
     $endif$
   $endif$
-</set>
+$if(isGlobal)$</global>$else$</set>$endif$
 <parameterlog>
 <string>intermediate</string>
 <string>$name$</string>

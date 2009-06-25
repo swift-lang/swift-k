@@ -97,9 +97,9 @@
     name="p2" type="float"
 
      xsi:nil="true" />
-    <variable name="fa" type="file" xsi:nil="true"/>
-    <variable name="fb" type="file" xsi:nil="true"/>
-    <variable name="fc" type="file" xsi:nil="true"/>
+    <variable name="fa" type="file" isGlobal="false" xsi:nil="true"/>
+    <variable name="fb" type="file" isGlobal="false" xsi:nil="true"/>
+    <variable name="fc" type="file" isGlobal="false" xsi:nil="true"/>
     <call proc="generate" src="line 26">
       <output><variableReference>fa</variableReference></output>
       <input><variableReference>p1</variableReference></input>
@@ -122,7 +122,7 @@
       <input><variableReference>fc</variableReference></input>
     </call>
   </procedure>
-  <variable name="final" type="file"><file name="FINAL"/></variable>
+  <variable name="final" type="file" isGlobal="false"><file name="FINAL"/></variable>
   <call proc="diamond" src="line 33">
     <output><variableReference>final</variableReference></output>
     <input><floatConstant>1.0</floatConstant></input>

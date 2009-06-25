@@ -27,8 +27,8 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="outfile" type="messagefile"><file name="q23.txt"/></variable>
-  <variable name="message" type="string" xsi:nil="true"/>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="q23.txt"/></variable>
+  <variable name="message" type="string" isGlobal="false" xsi:nil="true"/>
   <assign src="line 13">
    <variableReference>message</variableReference>
    <function name="arg">

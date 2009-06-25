@@ -33,22 +33,22 @@
           <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
-  <variable name="inputNames" type="string" xsi:nil="true"/>
+  <variable name="inputNames" type="string" isGlobal="false" xsi:nil="true"/>
   <assign src="line 11">
    <variableReference>inputNames</variableReference>
    <stringConstant>one.txt two.txt three.txt</stringConstant>
   </assign>
-  <variable name="outputNames" type="string" xsi:nil="true"/>
+  <variable name="outputNames" type="string" isGlobal="false" xsi:nil="true"/>
   <assign src="line 13">
    <variableReference>outputNames</variableReference>
    <stringConstant>one.count two.count three.count</stringConstant>
   </assign>
-  <variable name="inputfiles" type="messagefile[]">
+  <variable name="inputfiles" type="messagefile[]" isGlobal="false">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>inputNames</variableReference></param>
     </mapping>
   </variable>
-  <variable name="outputfiles" type="countfile[]">
+  <variable name="outputfiles" type="countfile[]" isGlobal="false">
     <mapping descriptor="array_mapper">
       <param name="files"><variableReference>outputNames</variableReference></param>
     </mapping>

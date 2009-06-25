@@ -47,7 +47,7 @@
         </structureMember><stringConstant>pies.</stringConstant>  </application>
     </binding>
   </procedure>
-  <variable name="person" type="details" xsi:nil="true"/>
+  <variable name="person" type="details" isGlobal="false" xsi:nil="true"/>
   <assign src="line 17">
    <structureMember>
      <variableReference>person</variableReference>
@@ -62,7 +62,7 @@
    </structureMember>
    <integerConstant>3</integerConstant>
   </assign>
-  <variable name="outfile" type="messagefile"><file name="q15.txt"/></variable>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="q15.txt"/></variable>
   <call proc="greeting" src="line 21">
     <output><variableReference>outfile</variableReference></output>
     <input><variableReference>person</variableReference></input>

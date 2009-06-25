@@ -27,8 +27,8 @@
           <variableReference>f</variableReference></function></stdout><variableReference>i</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="int" xsi:nil="true"/>
-  <variable name="hw" type="file" xsi:nil="true"/>
+  <variable name="greetings" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="hw" type="file" isGlobal="false" xsi:nil="true"/>
   <call proc="echo" src="line 8">
     <output><variableReference>hw</variableReference></output>
     <input><variableReference>greetings</variableReference></input>

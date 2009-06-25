@@ -26,8 +26,8 @@
      <variableReference>C</variableReference>
     </assign>
   </procedure>
-  <variable name="i" type="int" xsi:nil="true"/>
-  <variable name="j" type="int" xsi:nil="true"/>
+  <variable name="i" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="j" type="int" isGlobal="false" xsi:nil="true"/>
   <call proc="f" src="line 6">
     <output bind="q"><variableReference>i</variableReference></output>
     <output bind="r"><variableReference>j</variableReference></output>

@@ -27,7 +27,7 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="hw" type="file" xsi:nil="true"/>
+  <variable name="hw" type="file" isGlobal="false" xsi:nil="true"/>
   <call proc="echo" src="line 8">
     <output><variableReference>hw</variableReference></output>
     <input><stringConstant>hello world</stringConstant></input>

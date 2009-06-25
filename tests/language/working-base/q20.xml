@@ -27,8 +27,8 @@
           <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
     </binding>
   </procedure>
-  <variable name="outfile" type="messagefile"><file name="hello20.txt"/></variable>
-  <variable name="morning" type="boolean" xsi:nil="true"/>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="hello20.txt"/></variable>
+  <variable name="morning" type="boolean" isGlobal="false" xsi:nil="true"/>
   <assign src="line 13">
    <variableReference>morning</variableReference>
    <booleanConstant>true</booleanConstant>

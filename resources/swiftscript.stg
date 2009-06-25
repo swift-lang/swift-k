@@ -60,15 +60,15 @@ memberdefinition(type,name,sourcelocation) ::= <<
 	</member>
 >>
 
-variable(type,name, sourcelocation, mapping, lfn) ::= <<
+variable(type,name, sourcelocation, mapping, lfn, global) ::= <<
 $if(lfn)$
-<variable name="$name$" type="$type$"><file name="$lfn$"/></variable>
+<variable name="$name$" type="$type$" isGlobal="$global$"><file name="$lfn$"/></variable>
 $else$$if(mapping)$
-<variable name="$name$" type="$type$">
+<variable name="$name$" type="$type$" isGlobal="$global$">
   $mapping$
 </variable>
 $else$
-<variable name="$name$" type="$type$" xsi:nil="true"/>$endif$$endif$
+<variable name="$name$" type="$type$" isGlobal="$global$" xsi:nil="true"/>$endif$$endif$
 >>
 
 mapping(descriptor,params,sourcelocation) ::= <<

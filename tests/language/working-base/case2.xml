@@ -17,12 +17,12 @@
      <variableReference>i</variableReference>
     </assign>
   </procedure>
-  <variable name="t" type="int" xsi:nil="true"/>
+  <variable name="t" type="int" isGlobal="false" xsi:nil="true"/>
   <assign src="line 4">
    <variableReference>t</variableReference>
    <integerConstant>3</integerConstant>
   </assign>
-  <variable name="j" type="int" xsi:nil="true"/>
+  <variable name="j" type="int" isGlobal="false" xsi:nil="true"/>
   <switch>
     <variableReference>t</variableReference>
     <case>

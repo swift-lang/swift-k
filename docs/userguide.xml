@@ -797,6 +797,15 @@ SwiftScript expressions.
 </table>
 	</section>
 
+	<section id="globals"><title>Global constants</title>
+		<para>
+At the top level of a SwiftScript program, the <literal>global</literal>
+modified may be added to a declaration so that it is visible throughout
+the program, rather than only at the top level of the program. This allows
+global constants (of any type) to be defined.
+		</para>
+	</section>
+
 </section>
 		<section id="mappers">
 		<title>Mappers</title>

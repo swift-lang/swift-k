@@ -36,7 +36,7 @@
         </arraySubscript>  </application>
     </binding>
   </procedure>
-  <variable name="greetings" type="string[]" xsi:nil="true"/>
+  <variable name="greetings" type="string[]" isGlobal="false" xsi:nil="true"/>
   <assign src="line 11">
    <variableReference>greetings</variableReference>
 
@@ -45,7 +45,7 @@
      </array>
 
   </assign>
-  <variable name="hw" type="file" xsi:nil="true"/>
+  <variable name="hw" type="file" isGlobal="false" xsi:nil="true"/>
   <call proc="echo_array" src="line 11">
     <output><variableReference>hw</variableReference></output>
     <input><variableReference>greetings</variableReference></input>

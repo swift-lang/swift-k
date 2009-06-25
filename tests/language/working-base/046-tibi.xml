@@ -53,14 +53,14 @@
     name="trialTypes" type="string[]"
 
      xsi:nil="true" />
-    <variable name="waveletScript" type="file">
+    <variable name="waveletScript" type="file" isGlobal="false">
       <mapping descriptor="single_file_mapper">
         <param name="file"><stringConstant>scripts/runTrialSubjectWavelet.R</stringConstant></param>
       </mapping>
     </variable>
     <foreach var="s"  indexVar="i" src="line 19">
     <in><variableReference>trialTypes</variableReference></in>
-    <body><variable name="dataFiles" type="file">
+    <body><variable name="dataFiles" type="file" isGlobal="false">
         <mapping descriptor="simple_mapper">
           <param name="prefix"><stringConstant>101_</stringConstant></param>
           <param name="suffix"><variableReference>s</variableReference></param>
@@ -78,7 +78,7 @@
       </call></body>
     </foreach>
   </procedure>
-  <variable name="trialTypes" type="string[]" xsi:nil="true"/>
+  <variable name="trialTypes" type="string[]" isGlobal="false" xsi:nil="true"/>
   <assign src="line 29">
    <variableReference>trialTypes</variableReference>
 
@@ -87,13 +87,13 @@
      </array>
 
   </assign>
-  <variable name="allOutputs" type="file[]" xsi:nil="true"/>
-  <variable name="namedOutputs" type="file[]">
+  <variable name="allOutputs" type="file[]" isGlobal="false" xsi:nil="true"/>
+  <variable name="namedOutputs" type="file[]" isGlobal="false">
     <mapping descriptor="fixed_array_mapper">
       <param name="files"><stringConstant>101-FBchannel10_cwt-results.Rdata, 101-FBchannel11_cwt-results.Rdata, 101-FBchannel12_cwt-results.Rdata, 101-FBchannel13_cwt-results.Rdata, 101-FBchannel14_cwt-results.Rdata, 101-FBchannel15_cwt-results.Rdata, 101-FBchannel16_cwt-results.Rdata, 101-FBchannel17_cwt-results.Rdata, 101-FBchannel18_cwt-results.Rdata, 101-FBchannel19_cwt-results.Rdata, 101-FBchannel1_cwt-results.Rdata, 101-FBchannel20_cwt-results.Rdata, 101-FBchannel21_cwt-results.Rdata, 101-FBchannel22_cwt-results.Rdata, 101-FBchannel23_cwt-results.Rdata, 101-FBchannel24_cwt-results.Rdata, 101-FBchannel25_cwt-results.Rdata, 101-FBchannel26_cwt-results.Rdata, 101-FBchannel27_cwt-results.Rdata, 101-FBchannel28_cwt-results.Rdata, 101-FBchannel2_cwt-results.Rdata, 101-FBchannel3_cwt-results.Rdata, 101-FBchannel4_cwt-results.Rdata, 101-FBchannel5_cwt-results.Rdata, 101-FBchannel6_cwt-results.Rdata, 101-FBchannel7_cwt-results.Rdata, 101-FBchannel8_cwt-results.Rdata, 101-FBchannel9_cwt-results.Rdata</stringConstant></param>
     </mapping>
   </variable>
-  <variable name="file" type="string" xsi:nil="true"/>
+  <variable name="file" type="string" isGlobal="false" xsi:nil="true"/>
   <assign src="line 38">
    <variableReference>file</variableReference>
    <stringConstant>scripts/runTrialSubjectWavelet.R</stringConstant>

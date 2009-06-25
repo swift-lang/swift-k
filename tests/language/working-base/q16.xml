@@ -33,8 +33,8 @@
           <variableReference>f</variableReference></function>  </application>
     </binding>
   </procedure>
-  <variable name="inputfile" type="messagefile"><file name="q16.txt"/></variable>
-  <variable name="c" type="countfile">
+  <variable name="inputfile" type="messagefile" isGlobal="false"><file name="q16.txt"/></variable>
+  <variable name="c" type="countfile" isGlobal="false">
     <mapping descriptor="regexp_mapper">
       <param name="source"><function name="filename">
         <variableReference>inputfile</variableReference></function></param>
