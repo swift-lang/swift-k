@@ -184,6 +184,9 @@ public class Bootstrap {
         }
         String java = System.getProperty("java");
         List args = new ArrayList();
+        args.add("nice");
+        args.add("-n");
+        args.add("10");
         args.add(java);
         addDebuggingOptions(args);
         args.add("-Xmx128M");
