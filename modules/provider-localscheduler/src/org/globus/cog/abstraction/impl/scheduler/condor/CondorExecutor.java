@@ -68,6 +68,9 @@ public class CondorExecutor extends AbstractExecutor {
 		else {
 			wr.write("universe = vanilla\n");
 		}
+		if ("true".equals(spec.getAttribute("holdIsFailure"))) {
+			wr.write("periodic_remove = JobStatus == 5\n");
+		}
 		writeAttr("count", "machine_count = ", wr);
 		if (spec.getStdInput() != null) {
 			wr.write("input = " + quote(spec.getStdInput()) + "\n");
