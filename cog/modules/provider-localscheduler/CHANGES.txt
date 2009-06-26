@@ -1,3 +1,8 @@
+(06/25/09)
+
+*** Held condor jobs are treated as failures if the heldIsFailure attribute
+    is set to true.
+
 (04/15/09)
 
 *** Support for Condor-G submissions, by setting a job specification attribute

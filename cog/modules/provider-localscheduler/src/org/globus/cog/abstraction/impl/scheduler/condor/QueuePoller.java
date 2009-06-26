@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
+import org.globus.cog.abstraction.interfaces.JobSpecification;
 
 public class QueuePoller extends AbstractQueuePoller {
 	public static final Logger logger = Logger.getLogger(QueuePoller.class);
@@ -55,12 +56,11 @@ public class QueuePoller extends AbstractQueuePoller {
 					currentJob = getJob(currentJobID);
 					if (currentJob != null) {
 						switch (el[1].charAt(0)) {
-							case '3': {
+							case '5': {
 								if (logger.isDebugEnabled()) {
 									logger.debug("Status for " + currentJobID
 											+ " is Held");
 								}
-								// unhold job
 								break;
 							}
 							case '1': {
@@ -77,6 +77,14 @@ public class QueuePoller extends AbstractQueuePoller {
 											+ " is Running");
 								}
 								currentJob.setState(Job.STATE_RUNNING);
+								break;
+							}
+							case '3': {
+								if (logger.isDebugEnabled()) {
+									logger.debug("Status for " + currentJobID
+											+ " is Cancelled");
+								}
+								currentJob.fail("Job was cancelled");
 								break;
 							}
 							case '4': {
