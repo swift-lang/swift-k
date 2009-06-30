@@ -1564,6 +1564,16 @@ Engagement collector instead of the top-level ReSS collector.</para>
 <para>Write to [filename] instead of stdout</para>
 				</listitem>
 			</varlistentry>
+
+			<varlistentry><term>--condor-g</term>
+				<listitem>
+<para>Generates sites files which will submit jobs using a local Condor-G
+installation rather than through direct GRAM2 submission.</para>
+				</listitem>
+			</varlistentry>
+
+
+
 			</variablelist>
 
 

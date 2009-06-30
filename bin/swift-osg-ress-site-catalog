@@ -10,6 +10,7 @@ my $opt_help = 0;
 my $opt_vo = 'engage';
 my $opt_engage_verified = 0;
 my $opt_gt4 = 0;
+my $opt_condorg = 0;
 my $opt_out = '&STDOUT';
 
 Getopt::Long::Configure('bundling');
@@ -18,6 +19,7 @@ GetOptions(
     "vo=s"                   => \$opt_vo,
     "engage-verified"        => \$opt_engage_verified,
     "gt4"                    => \$opt_gt4,
+    "condor-g"               => \$opt_condorg,
     "out=s"                  => \$opt_out,
 ) or pod2usage(1);
 
@@ -94,7 +96,15 @@ foreach my $sitename (keys %ads) {
     print FH "  <!-- $sitename -->\n";
     print FH "  <pool handle=\"$sitename\" >\n";
     print FH "    <gridftp  url=\"gsiftp://$host/\" />\n";
-    if ($opt_gt4) {
+    if ($opt_condorg) {
+        print FH "    <execution provider=\"condor\" />\n";
+        print FH "    <profile namespace=\"globus\" key=\"jobType\">grid</profile>\n";
+        if($opt_gt4) {
+            die("swift-osg-ress-site-catalog cannot generate Condor-G + GRAM4 sites files");
+        }
+        print FH "    <profile namespace=\"globus\" key=\"gridResource\">gt2 $contact</profile>\n";
+    }
+    elsif ($opt_gt4) {
         print FH "    <execution provider=\"gt4\" jobmanager=\"$jm\" url=\"$host:9443\" />\n";
     }
     else {
@@ -142,6 +152,11 @@ instead of the top-level ReSS collector.
 =item B<--out=[filename]>
 
 Write to [filename] instead of stdout
+
+=item B<--condor-g>
+
+Generates sites files which will submit jobs using a local Condor-G
+installation rather than through direct GRAM2 submission.
 
 =back
 
