@@ -213,12 +213,14 @@ $if(indexVar)$
       <vdl:new type="int" value="{\$\$}"/>
     </set>
 $endif$
-	<log level="info" message="FOREACH_IT_START line=$line$"/>
+	<log level="info" message="FOREACH_IT_START line=$line$ thread={#thread}"/>
+<log level="info"><string>SCOPE thread={#thread}</string></log>
+
     $declarations;separator="\n"$
     $if(statements)$
       $parallel(statements=statements)$
     $endif$
-    <log level="info" message="FOREACH_IT_END line=$line$"/>
+    <log level="info" message="FOREACH_IT_END line=$line$ thread={#thread}"/>
 </vdl:tparallelFor>
 >>
 
@@ -410,10 +412,12 @@ if(condition,vthen,velse) ::= <<
 <if>
   <vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
   <then>
+<log level="info"><string>SCOPE thread={#thread}</string></log>
     $vthen$
   </then>
   $if(velse)$
   <else>
+<log level="info"><string>SCOPE thread={#thread}</string></log>
     $velse$
   </else>
   $endif$
