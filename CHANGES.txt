@@ -1,3 +1,7 @@
+(07/01/09)
+*** New writeData procedure which writes data structures to files in the same
+    format as used by readData.
+
 (06/30/09)
 *** New parameter -condor-g for swift-osg-ress-site-catalog which causes
     sites files to be generate which will use a local condor-g installation

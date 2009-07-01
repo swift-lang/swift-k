@@ -137,7 +137,15 @@ public class ProcedureSignature {
 		trace.setAnyNumOfInputArgs();
 		trace.setInvocationMode(INVOCATION_INTERNAL);
 		proceduresMap.put("trace", trace);
-		
+			
+		ProcedureSignature writeData = new ProcedureSignature("writeData");
+		FormalArgumentSignature wdInputArg = new FormalArgumentSignature(true);
+		writeData.addInputArg(wdInputArg);
+		FormalArgumentSignature wdOutputArg = new FormalArgumentSignature(true);
+		writeData.addOutputArg(wdOutputArg);		
+		writeData.setInvocationMode(INVOCATION_INTERNAL);
+		proceduresMap.put("writeData", writeData);
+			
 		return proceduresMap;
 	}
 	

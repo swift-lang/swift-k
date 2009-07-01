@@ -2189,6 +2189,12 @@ The particular output format should not be relied upon. (since Swift 0.4)
 			</para>
 		</section>
 
+		<section id="procedure.writedata"><title>writeData</title>
+			<para>
+<literal>writeData</literal> will write out data structures in the format
+described for <literal>readData</literal>
+			</para>
+		</section>
 	</section>
 
 	<section id="engineconfiguration">	

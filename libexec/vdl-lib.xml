@@ -5,6 +5,7 @@
 	<export name="extractint"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ExtractInt"/></export>
 	<export name="readdata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData"/></export>
 	<export name="readdata2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData2"/></export>
+	<export name="writedata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strsplit"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
