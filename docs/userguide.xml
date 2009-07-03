@@ -806,6 +806,37 @@ global constants (of any type) to be defined.
 		</para>
 	</section>
 
+	<section id="imports"><title>Imports</title>
+		<para>
+The <literal>import</literal> directive can be used to import definitions from
+another SwiftScript file.
+		</para>
+		<para>
+For example, a SwiftScript program might contain this:
+			<programlisting>
+import defs;
+file f;
+			</programlisting>
+which would import the content of <filename>defs.swift</filename> in the
+current directory:
+			<programlisting>
+type file;
+			</programlisting>
+		</para>
+		<para>
+Imported files are read from the current working directory.
+		</para>
+		<para>
+There is no requirement that a module is imported only once. If a module
+is imported multiple times, for example in different files, then Swift will
+only process the imports once.
+		</para>
+		<para>
+Imports may contain anything that is valid in a SwiftScript program,
+including code that causes remote execution.
+		</para>
+	</section>
+
 </section>
 		<section id="mappers">
 		<title>Mappers</title>

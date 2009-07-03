@@ -1,14 +1,20 @@
 package org.griphyn.vdl.engine;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
 
@@ -29,6 +35,7 @@ import org.globus.swift.language.Variable.Mapping;
 import org.globus.swift.language.Variable.Mapping.Param;
 import org.globus.swift.language.If.Else;
 import org.globus.swift.language.If.Then;
+import org.globus.swift.language.ImportsDocument.Imports;
 import org.globus.swift.language.ProgramDocument.Program;
 import org.globus.swift.language.Switch.Case;
 import org.globus.swift.language.Switch.Default;
@@ -36,6 +43,8 @@ import org.globus.swift.language.TypesDocument.Types;
 import org.globus.swift.language.TypesDocument.Types.Type;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.CompilationException;
+import org.griphyn.vdl.toolkit.VDLt2VDLx;
+import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
 
@@ -49,8 +58,10 @@ public class Karajan {
 	Map floatInternMap = new HashMap();
 	Map proceduresMap = new HashMap();
 	Map functionsMap = new HashMap();
-	
-	Types types = null;
+	Map typesMap = new HashMap();
+
+	LinkedList importList = new LinkedList();
+	Set importedNames = new HashSet();
 	
 	int internedIDCounter = 17000;
 
@@ -139,19 +150,53 @@ public class Karajan {
 		return m_templates.getInstanceOf(name);
 	}
 
-	public StringTemplate program(Program prog) throws CompilationException {
-		VariableScope scope = new VariableScope(this, null);
-		scope.bodyTemplate = template("program");
+	private void processImports(Program prog) throws CompilationException {
 
-		scope.bodyTemplate.setAttribute("buildversion",Loader.buildVersion);
+		Imports imports = prog.getImports();
+		if(imports!=null) {
+			logger.debug("Processing SwiftScript imports");
+// process imports in reverse order
+			for(int i = imports.sizeOfImportArray() - 1 ;  i >=0 ; i--) {
+				String moduleToImport = imports.getImportArray(i);
+				logger.debug("Importing module "+moduleToImport);
+				if(!importedNames.contains(moduleToImport)) {
 
-		types = prog.getTypes();
+					// TODO PATH/PERL5LIB-style path handling
+					String swiftfilename = "./"+moduleToImport+".swift";
+					String xmlfilename = "./"+moduleToImport+".xml";
+
+
+					try {
+        	    				VDLt2VDLx.compile(new FileInputStream(swiftfilename),new PrintStream(new FileOutputStream(xmlfilename)));
+						logger.debug("Compiled. Now reading in compiled XML for "+moduleToImport);
+						Program importedProgram = parseProgramXML(xmlfilename).getProgram();
+						logger.debug("Read in compiled XML for "+moduleToImport);
+						importList.addFirst(importedProgram);
+						importedNames.add(moduleToImport);
+						logger.debug("Added "+moduleToImport+" to import list. Processing imports from that.");
+						processImports(importedProgram);
+					} catch(Exception e) {
+						throw new CompilationException("When processing import "+moduleToImport, e);
+					}
+				} else {
+					logger.debug("Skipping repeated import of "+moduleToImport);
+				}
+			}
+		}
+	}
+
+	private void processTypes(Program prog, VariableScope scope) throws CompilationException {
+	Types types = prog.getTypes();
 		if (types != null) {
 			for (int i = 0; i < types.sizeOfTypeArray(); i++) {
 				Type theType = types.getTypeArray(i);
 				String typeName = theType.getTypename();
 				String typeAlias = theType.getTypealias();
-											
+
+				logger.debug("Processing type "+typeName);
+
+				typesMap.put(typeName, theType);
+
 				StringTemplate st = template("typeDef");
 				st.setAttribute("name", typeName);
 				if (typeAlias != null && !typeAlias.equals("") && !typeAlias.equals("string")) {
@@ -172,8 +217,9 @@ public class Karajan {
 				scope.bodyTemplate.setAttribute("types", st);
 			}
 		}
-		
-		statementsForSymbols(prog, scope);
+	}
+
+	private void processProcedures(Program prog, VariableScope scope) throws CompilationException {
 
 		// Keep track of declared procedures
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
@@ -189,7 +235,39 @@ public class Karajan {
 			procedure(proc, scope);
 		}
 
-		statements(prog, scope);
+	}
+
+
+	public StringTemplate program(Program prog) throws CompilationException {
+		VariableScope scope = new VariableScope(this, null);
+		scope.bodyTemplate = template("program");
+
+		scope.bodyTemplate.setAttribute("buildversion",Loader.buildVersion);
+
+		importList.addFirst(prog);
+		processImports(prog);
+
+		Iterator it;
+
+		it=importList.iterator();
+		while(it.hasNext()) {
+			processTypes((Program)it.next(), scope);
+		}
+	
+		it=importList.iterator();
+		while(it.hasNext()) {
+			statementsForSymbols((Program)it.next(), scope);
+		}
+
+		it=importList.iterator();
+		while(it.hasNext()) {
+			processProcedures((Program)it.next(), scope);
+		}
+
+		it=importList.iterator();
+		while(it.hasNext()) {
+			statements((Program)it.next(), scope);
+		}
 
 		generateInternedConstants(scope.bodyTemplate);
 
@@ -341,14 +419,7 @@ public class Karajan {
 			type = type.substring(0, type.length() - 2);		
 		if (!type.equals("int") && !type.equals("float") && !type.equals("string") 
 				&& !type.equals("boolean") && !type.equals("external")) {
-			boolean typeDefined = false;
-			if (types != null) {
-				for (int i = 0; i < types.sizeOfTypeArray(); i++)
-					if (types.getTypeArray(i).getTypename().equals(type)) {
-						typeDefined = true;
-						break;
-					}
-			}
+			boolean typeDefined = typesMap.containsKey(type);
 			if (!typeDefined)
 				throw new CompilationException("Type " + type + " is not defined.");
 		}
@@ -402,7 +473,8 @@ public class Karajan {
 			|| child instanceof Switch
 			|| child instanceof Procedure
 			|| child instanceof Types
-			|| child instanceof FormalParameter) {
+			|| child instanceof FormalParameter
+			|| child instanceof Imports) {
 			// ignore these - they're expected but we don't need to
 			// do anything for them here
 		} else {
@@ -432,7 +504,8 @@ public class Karajan {
 			switchStat((Switch) child, scope);
 		} else if (child instanceof Procedure
 			|| child instanceof Types
-			|| child instanceof FormalParameter) {
+			|| child instanceof FormalParameter
+			|| child instanceof Imports) {
 			// ignore these - they're expected but we don't need to
 			// do anything for them here
 		} else {
@@ -1073,21 +1146,19 @@ boolean arrayMode = false;
 
 			String actualType = null;					
 			// TODO this should be a map lookup of some kind?
-			for (int i = 0; i < types.sizeOfTypeArray(); i++) {
-				if (types.getTypeArray(i).getTypename().equals(parentType)) {
-					TypeStructure ts = types.getTypeArray(i).getTypestructure();
-					int j = 0;
-					for (j = 0; j < ts.sizeOfMemberArray(); j++)			
-						if (ts.getMemberArray(j).getMembername().equals(sm.getMemberName())) {
-							actualType = ts.getMemberArray(j).getMembertype();
-							break;
-						}					
-					if (j == ts.sizeOfMemberArray())
-						throw new CompilationException("No member " + sm.getMemberName() 
-								+ " in structure " + parentType);					
+
+			Type t = (Type)typesMap.get(parentType);
+
+			TypeStructure ts = t.getTypestructure();
+			int j = 0;
+			for (j = 0; j < ts.sizeOfMemberArray(); j++) {
+				if (ts.getMemberArray(j).getMembername().equals(sm.getMemberName())) 	{
+					actualType = ts.getMemberArray(j).getMembertype();
 					break;
 				}
-			}			
+			if (j == ts.sizeOfMemberArray())
+				throw new CompilationException("No member " + sm.getMemberName() + " in structure " + parentType);					
+			}
 			if (actualType == null) {
 				throw new CompilationException("Type " + parentType + " is not defined.");
 			}

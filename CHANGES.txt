@@ -1,3 +1,7 @@
+(07/03/09)
+*** New import keyword which allows other SwiftScript source files to be
+    imported.
+
 (07/01/09)
 *** New writeData procedure which writes data structures to files in the same
     format as used by readData.

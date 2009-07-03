@@ -1,12 +1,17 @@
 group XDTM;
 
-program(namespaces,targetNS,functions,types,statements,sourcelocation) ::= <<
+program(namespaces,targetNS,functions,types,statements,imports,sourcelocation) ::= <<
 <program xmlns=$defaultNS()$
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:xs="http://www.w3.org/2001/XMLSchema"$if(!namespaces)$>
      $else$
 
      $namespaces;separator="\n"$>$endif$
+  $if(imports)$
+  <imports>
+    $imports;separator="\n"$
+  </imports>
+  $endif$
   $if(types)$  
   <types>
      $types;separator="\n"$   
@@ -25,6 +30,10 @@ $endif$
 
 nsDef(prefix,uri,sourcelocation) ::= <<
 $if(prefix)$xmlns:$prefix$="$uri$"$else$targetNamespace="$uri$"$endif$
+>>
+
+import(target,sourcelocation) ::= <<
+<import>$target$</import>
 >>
 
 typeDef(name,type,members,sourcelocation) ::= <<

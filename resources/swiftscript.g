@@ -61,6 +61,7 @@ String quote(String s) {
 program returns [StringTemplate code=template("program")]
     :
     (nsdecl[code])*        //namespace declaration
+    (importStatement[code])*
     (topLevelStatement[code])*
     EOF
     ;
@@ -73,6 +74,14 @@ nsdecl [StringTemplate code]
       code.setAttribute("namespaces", ns);
       if (ns.getAttribute("prefix") == null)
          code.setAttribute("targetNS", ns.getAttribute("uri"));
+    }
+    ;
+
+importStatement [StringTemplate code]
+    : "import" name:ID SEMI {
+        StringTemplate i = template("import");
+        i.setAttribute("target", name.getText());
+        code.setAttribute("imports", i);
     }
     ;
 
