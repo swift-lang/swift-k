@@ -56,7 +56,7 @@ while(<STATUS>) {
     if ($_ eq "") {
         if ($tmp{'GlueSiteName'} ne "") {
             my %copy = %tmp;
-            $ads{$tmp{'GlueSiteName'}} = \%copy;
+            $ads{$tmp{'GlueSiteName'} . "_" . $tmp{'GlueClusterUniqueID'}} = \%copy;
             undef %tmp;
         }
     }
@@ -73,10 +73,10 @@ my $lc_vo = lc($opt_vo);
 
 open(FH, ">$opt_out") or die("Unable to open $opt_out");
 print FH "<config>\n";
-foreach my $sitename (keys %ads) {
-    my $contact = $ads{$sitename}->{'GlueCEInfoContactString'};
+foreach my $siteid (sort keys %ads) {
+    my $contact = $ads{$siteid}->{'GlueCEInfoContactString'};
     my $host = $contact;
-    $host =~ s/:.*//;
+    $host =~ s/[:\/].*//;
     my $jm = $contact;
     $jm =~ s/.*jobmanager-//;
     if ($jm eq "pbs") {
@@ -91,10 +91,10 @@ foreach my $sitename (keys %ads) {
     elsif ($jm eq "condor") {
         $jm = "Condor";
     }
-    my $workdir = $ads{$sitename}->{'GlueCEInfoDataDir'};
+    my $workdir = $ads{$siteid}->{'GlueCEInfoDataDir'};
     print FH "\n";
-    print FH "  <!-- $sitename -->\n";
-    print FH "  <pool handle=\"$sitename\" >\n";
+    print FH "  <!-- $siteid -->\n";
+    print FH "  <pool handle=\"$siteid\" >\n";
     print FH "    <gridftp  url=\"gsiftp://$host/\" />\n";
     if ($opt_condorg) {
         print FH "    <execution provider=\"condor\" />\n";
@@ -110,7 +110,7 @@ foreach my $sitename (keys %ads) {
     else {
         print FH "    <jobmanager universe=\"vanilla\" url=\"$contact\" major=\"2\" />\n";
     }
-    print FH "    <workdirectory >$workdir/$lc_vo/tmp/$sitename</workdirectory>\n";
+    print FH "    <workdirectory >$workdir/$lc_vo/tmp/$host</workdirectory>\n";
     print FH "  </pool>\n";
 }
 print FH "\n</config>\n";
