@@ -802,14 +802,14 @@ SwiftScript expressions.
 At the top level of a SwiftScript program, the <literal>global</literal>
 modified may be added to a declaration so that it is visible throughout
 the program, rather than only at the top level of the program. This allows
-global constants (of any type) to be defined.
+global constants (of any type) to be defined. (since Swift 0.10)
 		</para>
 	</section>
 
 	<section id="imports"><title>Imports</title>
 		<para>
 The <literal>import</literal> directive can be used to import definitions from
-another SwiftScript file.
+another SwiftScript file. (since Swift 0.10)
 		</para>
 		<para>
 For example, a SwiftScript program might contain this:
@@ -1599,7 +1599,7 @@ Engagement collector instead of the top-level ReSS collector.</para>
 			<varlistentry><term>--condor-g</term>
 				<listitem>
 <para>Generates sites files which will submit jobs using a local Condor-G
-installation rather than through direct GRAM2 submission.</para>
+installation rather than through direct GRAM2 submission. (since Swift 0.10)</para>
 				</listitem>
 			</varlistentry>
 
