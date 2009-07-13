@@ -36,6 +36,7 @@ class BlockTaskSubmitter extends Thread {
         }
         synchronized(queue) {
             queue.add(block);
+            queue.notify();
         }
     }
     
@@ -47,9 +48,15 @@ class BlockTaskSubmitter extends Thread {
         while(true) {
             Block b = null;
             synchronized(queue) {
-                if (!queue.isEmpty()) {
-                    b = (Block) queue.removeFirst();
+                while (queue.isEmpty()) {
+                    try {
+                        queue.wait();
+                    }
+                    catch (InterruptedException e) {
+                        logger.warn("Interrupted");
+                    }
                 }
+                b = (Block) queue.removeFirst();
             }
             if (b != null) {
                 if (logger.isInfoEnabled()) {
