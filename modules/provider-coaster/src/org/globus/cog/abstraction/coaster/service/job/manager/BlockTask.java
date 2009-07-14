@@ -51,8 +51,10 @@ public class BlockTask extends TaskImpl {
         js.addArgument(settings.getCallbackURI().toString());
         js.addArgument(block.getId());
         js.addArgument(String.valueOf(settings.getWorkersPerNode()));
-        js.setStdOutputLocation(FileLocation.NONE);
-        js.setStdErrorLocation(FileLocation.NONE);
+        js.setStdOutputLocation(FileLocation.REMOTE);
+        js.setStdErrorLocation(FileLocation.REMOTE);
+        js.setStdOutput("coaster-block.out");
+        js.setStdError("coaster-block.err");
         return js;
     }
 
