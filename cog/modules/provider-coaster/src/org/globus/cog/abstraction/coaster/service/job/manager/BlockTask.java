@@ -51,8 +51,8 @@ public class BlockTask extends TaskImpl {
         js.addArgument(settings.getCallbackURI().toString());
         js.addArgument(block.getId());
         js.addArgument(String.valueOf(settings.getWorkersPerNode()));
-        js.setStdOutputLocation(FileLocation.MEMORY);
-        js.setStdErrorLocation(FileLocation.MEMORY);
+        js.setStdOutputLocation(FileLocation.NONE);
+        js.setStdErrorLocation(FileLocation.NONE);
         return js;
     }
 
