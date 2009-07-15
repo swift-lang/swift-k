@@ -20,7 +20,7 @@ my $REPLYTIMEOUT = 60;
 my $MAXFRAGS = 16;
 my $MAX_RECONNECT_ATTEMPTS = 3;
 
-my $IDLETIMEOUT = 2 * 60; #Seconds; 2 minutes
+my $IDLETIMEOUT = 4 * 60; #Seconds; 2 minutes
 my $LASTRECV = 0;
 my $JOB_RUNNING = 0;
 
@@ -31,7 +31,7 @@ my $BUFSZ = 2048;
 # 60 seconds by default. Note that since there is no configuration handshake
 # this would have to match the default interval in the service in order to avoid
 # "lost heartbeats".
-my $HEARTBEAT_INTERVAL = 4 * 60;
+my $HEARTBEAT_INTERVAL = 2 * 60;
 
 my %REQUESTS = ();
 my %REPLIES  = ();
