@@ -293,6 +293,7 @@ sub checkTimeouts {
 	if ($LASTRECV != 0) {
 		my $dif = time() - $LASTRECV;
 		if ($dif >= $IDLETIMEOUT && $JOB_RUNNING == 0) {
+			wlog "Idle time exceeded";
 			die "Idle time exceeded";
 		}
 	}
@@ -538,6 +539,7 @@ sub forkjob {
 	else {
 		queueCmd(\&nullCB, "JOBSTATUS", $JOBID, "$FAILED", "512", "Could not fork child process");
 	}
+	$LASTRECV = time();
 	$JOB_RUNNING = 0;
 }
 
