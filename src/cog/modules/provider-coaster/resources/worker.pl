@@ -20,7 +20,7 @@ my $REPLYTIMEOUT = 60;
 my $MAXFRAGS = 16;
 my $MAX_RECONNECT_ATTEMPTS = 3;
 
-my $IDLETIMEOUT = 4 * 60; #Seconds; 4 minutes
+my $IDLETIMEOUT = 2 * 60; #Seconds; 2 minutes
 my $LASTRECV = 0;
 my $JOB_RUNNING = 0;
 
