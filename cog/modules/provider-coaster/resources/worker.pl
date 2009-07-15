@@ -179,6 +179,7 @@ sub unpackData {
 
 	my $lendata = length($data);
 	if ($lendata < 12) {
+		wlog "Received faulty message (length < 12: $lendata)";
 		die "Received faulty message (length < 12: $lendata)";
 	}
 	my $tag = unpack("V", substr($data, 0, 4));
@@ -291,9 +292,10 @@ sub checkTimeouts {
 	checkTimeouts2(\%REQUESTS);
 	checkTimeouts2(\%REPLIES);
 	if ($LASTRECV != 0) {
-		my $dif = time() - $LASTRECV;
+		my $time = time();
+		my $dif = $time - $LASTRECV;
 		if ($dif >= $IDLETIMEOUT && $JOB_RUNNING == 0) {
-			wlog "Idle time exceeded";
+			wlog "Idle time exceeded (time=$time, LASTRECV=$LASTRECV, dif=$dif)";
 			die "Idle time exceeded";
 		}
 	}
@@ -304,7 +306,7 @@ sub recvOne {
 	$SOCK->recv($data, 12);
 	if (length($data) > 0) {
 		wlog "Received $data\n";
-		eval { process(unpackData($data)); } || (die "Failed to process data: $@" && wlog "Failed to process data: $@\n");
+		eval { process(unpackData($data)); } || (wlog "Failed to process data: $@\n" && die "Failed to process data: $@");
 	}
 	else {
 		#sleep 250ms
@@ -384,6 +386,7 @@ sub heartbeatCB {
 		}
 	}
 	elsif ($err) {
+		wlog "Heartbeat failed: $reply\n";
 		die "Heartbeat failed: $reply\n";
 	}
 	else {
