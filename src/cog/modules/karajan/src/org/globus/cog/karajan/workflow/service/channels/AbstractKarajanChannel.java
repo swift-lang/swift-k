@@ -29,7 +29,7 @@ import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private static final Logger logger = Logger.getLogger(AbstractKarajanChannel.class);
-	public static final int DEFAULT_HEARTBEAT_INTERVAL = 5 * 60; //seconds
+	public static final int DEFAULT_HEARTBEAT_INTERVAL = 2 * 60; //seconds
 
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
