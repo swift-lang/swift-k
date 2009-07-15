@@ -378,7 +378,7 @@ public abstract class AbstractDataNode implements DSHandle {
 				// Path fullPath =
 				// parentPath.addLast(mapper.getField().getName());
 				Path fullPath = parentPath.addLast(field.getName());
-				if (!mapper.field.getType().isPrimitive() && !mapper.isArray()) {
+				if (!mapper.field.getType().isPrimitive() && !mapper.isArray() && mapper.field.getType().getFields().size() == 0) {
 					list.add(fullPath);
 				}
 				else {

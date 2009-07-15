@@ -196,8 +196,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		try {
 			if (var.getType().isArray()) {
 				return leavesFileNames(var);
-			}
-			else {
+			} else if(var.getType().getFields().size()>0) {
+				return leavesFileNames(var);
+			} else {
 				return new String[] { leafFileName(var) };
 			}
 		}
