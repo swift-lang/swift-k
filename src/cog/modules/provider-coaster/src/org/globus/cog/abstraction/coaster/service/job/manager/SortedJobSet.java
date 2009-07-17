@@ -20,6 +20,7 @@ public class SortedJobSet {
     private SortedMap sm;
     int size;
     int jsize;
+    int seq;
 
     public SortedJobSet() {
         sm = new TreeMap();
@@ -39,6 +40,7 @@ public class SortedJobSet {
         l.add(j);
         jsize += j.getMaxWallTime().getSeconds();
         size++;
+        seq++;
     }
 
     public synchronized Job removeOne(TimeInterval walltime) {
@@ -92,5 +94,9 @@ public class SortedJobSet {
             public void remove() {
             }
         };
+    }
+
+    public synchronized int getSeq() {
+        return seq;
     };
 }

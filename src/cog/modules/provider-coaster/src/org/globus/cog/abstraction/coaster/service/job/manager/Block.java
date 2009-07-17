@@ -48,6 +48,7 @@ public class Block implements StatusListener {
     private BlockQueueProcessor ap;
     private BlockTask task;
     private String id;
+    private int doneJobCount;
 
     private static int sid;
 
@@ -200,21 +201,21 @@ public class Block implements StatusListener {
     }
 
     public void shutdown() {
-        if (shutdown || failed) {
-            return;
-        }
-        shutdown = true;
-        if (running) {
-            synchronized (cpus) {
+        synchronized (cpus) {
+            if (shutdown || failed) {
+                return;
+            }
+            shutdown = true;
+            if (running) {
                 Iterator i = cpus.iterator();
                 while (i.hasNext()) {
                     Cpu cpu = (Cpu) i.next();
                     cpu.shutdown();
                 }
             }
-        }
-        else {
-            forceShutdown();
+            else {
+                forceShutdown();
+            }
         }
     }
 
@@ -290,20 +291,22 @@ public class Block implements StatusListener {
         try {
             Status s = event.getStatus();
             if (s.isTerminal()) {
-                if (!shutdown) {
-                    if (s.getStatusCode() == Status.FAILED) {
-                        logger.info("Failed task spec: "
-                                + ((Task) event.getSource()).getSpecification());
-                        taskFailed(prettifyOut(task.getStdOutput())
-                                + prettifyOut(task.getStdError()), s.getException());
+                synchronized (cpus) {
+                    if (!shutdown) {
+                        if (s.getStatusCode() == Status.FAILED) {
+                            logger.info("Failed task spec: "
+                                    + ((Task) event.getSource()).getSpecification());
+                            taskFailed(prettifyOut(task.getStdOutput())
+                                    + prettifyOut(task.getStdError()), s.getException());
+                        }
+                        else {
+                            taskFailed(id + "Block task ended prematurely\n"
+                                    + prettifyOut(task.getStdOutput())
+                                    + prettifyOut(task.getStdError()), null);
+                        }
                     }
-                    else {
-                        taskFailed(id + "Block task ended prematurely\n"
-                                + prettifyOut(task.getStdOutput())
-                                + prettifyOut(task.getStdError()), null);
-                    }
+                    running = false;
                 }
-                running = false;
                 logger.info(id + " stdout: " + prettifyOut(task.getStdOutput()));
                 logger.info(id + " stderr: " + prettifyOut(task.getStdError()));
             }
@@ -358,5 +361,9 @@ public class Block implements StatusListener {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public void increaseDoneJobCount() {
+        doneJobCount++;
     }
 }

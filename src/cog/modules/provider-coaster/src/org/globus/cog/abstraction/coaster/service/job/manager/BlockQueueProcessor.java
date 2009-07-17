@@ -514,4 +514,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     	System.out.println(overallocatedSize(10000, s));
     	System.out.println(overallocatedSize(100000, s));
     }
+
+    public int getQueueSeq() {
+        return queued.getSeq();
+    }
 }
