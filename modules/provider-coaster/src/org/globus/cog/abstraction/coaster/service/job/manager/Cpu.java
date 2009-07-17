@@ -64,6 +64,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
         if (logger.isInfoEnabled()) {
             logger.info(block.getId() + ":" + getId() + " jobTerminated");
         }
+        block.increaseDoneJobCount();
         block.remove(this);
         donetime = Time.now();
         timelast = donetime;
@@ -134,6 +135,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
             cmd.executeAsync(channel, this);
         }
         catch (Exception e) {
+            logger.info(block.getId() + ":" + getId() + " submission failed " + task.getIdentity());
             taskFailed(null, e);
         }
     }
@@ -221,6 +223,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     private static class PullThread extends Thread {
         private Block block;
         private LinkedList queue;
+        private int qseq;
 
         public PullThread(Block block) {
             setName("Job pull");
@@ -230,6 +233,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
         }
 
         public synchronized void enqueue(Cpu cpu) {
+            qseq++;
             queue.add(cpu);
             notify();
         }
@@ -238,7 +242,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
             while (true) {
                 Cpu cpu;
                 synchronized (this) {
-                    while (queue.isEmpty()) {
+                    while (!stateChanged()) {
                         try {
                             wait(100);
                         }
@@ -249,6 +253,19 @@ public class Cpu implements Comparable, Callback, StatusListener {
                     cpu = (Cpu) queue.removeFirst();
                 }
                 cpu.pull();
+            }
+        }
+        
+        private int lastseq = 0;
+        
+        private boolean stateChanged() {
+            int nseq = qseq + block.getAllocationProcessor().getQueueSeq();
+            if (nseq != lastseq) {
+                lastseq = nseq;
+                return true;
+            }
+            else {
+                return false;
             }
         }
     }
