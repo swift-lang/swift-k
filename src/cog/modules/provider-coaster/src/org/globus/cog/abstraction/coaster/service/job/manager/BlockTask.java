@@ -39,7 +39,12 @@ public class BlockTask extends TaskImpl {
         setAttribute(spec, "maxwalltime", WallTime.format((int) block.getWalltime().getSeconds()));
         setAttribute(spec, "queue", settings.getQueue());
         setAttribute(spec, "project", settings.getProject());
-        setAttribute(spec, "count", String.valueOf(block.getWorkerCount() / settings.getWorkersPerNode()));
+        int count = block.getWorkerCount() / settings.getWorkersPerNode();
+        if (count > 1) {
+            setAttribute(spec, "jobType", "multiple");
+        }
+        setAttribute(spec, "count", String.valueOf(count));
+        setAttribute(spec, "hostCount", String.valueOf(count));
         setRequiredService(1);
         setService(0, buildService());
     }
