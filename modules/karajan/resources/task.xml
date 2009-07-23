@@ -25,6 +25,7 @@
 			<export name="file:chmod"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.Chmod"/></export>
 			<export name="file:rename"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.Rename"/></export>
 			<export name="file:size"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.FileSize"/></export>
+			<export name="file:info"><elementDef className="org.globus.cog.karajan.workflow.nodes.grid.FileInfo"/></export>
 		
 			
 			<import file="sys.xml"/>
@@ -32,6 +33,13 @@
 			<global name="LOCATION:STREAM" value="1"/>
 			<global name="LOCATION:LOCAL" value="2"/>
 			<global name="LOCATION:REMOTE" value="4"/>
+			
+			<global name="FILETYPE:UNKNOWN" value="0"/>
+			<global name="FILETYPE:FILE" value="1"/>
+			<global name="FILETYPE:DIRECTORY" value="2"/>
+			<global name="FILETYPE:SOFTLINK" value="3"/>
+			<global name="FILETYPE:DEVICE" value="4"/>
+			
 			
 			<import file="java.xml"/>
 			
