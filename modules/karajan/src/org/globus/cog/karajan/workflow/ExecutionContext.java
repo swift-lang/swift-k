@@ -15,9 +15,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -43,7 +45,6 @@ import org.globus.cog.karajan.workflow.nodes.CacheNode;
 import org.globus.cog.karajan.workflow.nodes.Define;
 import org.globus.cog.karajan.workflow.nodes.ElementDefNode;
 import org.globus.cog.karajan.workflow.nodes.Export;
-import org.globus.cog.karajan.workflow.nodes.FlowNode;
 import org.globus.cog.karajan.workflow.nodes.Include;
 import org.globus.cog.karajan.workflow.nodes.Namespace;
 import org.globus.cog.karajan.workflow.nodes.ProjectNode;
@@ -79,6 +80,7 @@ public class ExecutionContext implements EventListener {
 	private int id;
 	private long startTime, endTime;
 	private String cwd;
+	private Map attributes;
 
 	public ExecutionContext(ElementTree tree) {
 		this(tree, KarajanProperties.getDefault());
@@ -409,5 +411,21 @@ public class ExecutionContext implements EventListener {
 	        throw new IllegalArgumentException("CWD cannot be null");
 	    }
 		this.cwd = cwd;
+	}
+	
+	public synchronized void setAttribute(String name, Object value) {
+	    if (attributes == null) {
+	        attributes = new HashMap();
+	    }
+	    attributes.put(name, value);
+	}
+	
+	public synchronized Object getAttribute(String name) {
+		if (attributes == null) {
+		    return null;
+		}
+		else {
+		    return attributes.get(name);
+		}
 	}
 }
