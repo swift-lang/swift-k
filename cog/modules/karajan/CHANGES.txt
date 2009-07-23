@@ -1,3 +1,7 @@
+(07/23/2009)
+
+*** Added file:info()
+
 (06/26/2008)
 
 *** WeightedHostScoreScheduler behaviour changed for low scoring sites;
