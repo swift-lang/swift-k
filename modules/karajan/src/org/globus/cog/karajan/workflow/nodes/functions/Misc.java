@@ -85,8 +85,13 @@ public class Misc extends FunctionsCollection {
 	public boolean sys_equals(VariableStack stack) throws ExecutionException {
 		Object[] args = getArguments(ARGS_2VALUES, stack);
 		if (args[0] instanceof Number) {
-			Number n2 = TypeUtil.toNumber(args[1]);
-			return ((Number) args[0]).doubleValue() == n2.doubleValue();
+			try {
+				Number n2 = TypeUtil.toNumber(args[1]);
+				return ((Number) args[0]).doubleValue() == n2.doubleValue();
+			}
+			catch (Exception e) {
+				return false;
+			}
 		}
 		else {
 			return args[0].equals(args[1]);
