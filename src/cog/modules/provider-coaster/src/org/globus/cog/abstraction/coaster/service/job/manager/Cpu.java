@@ -10,6 +10,7 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,7 +30,7 @@ import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 
 public class Cpu implements Comparable, Callback, StatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
-    
+
     private static PullThread pullThread;
 
     private int id;
@@ -38,7 +39,8 @@ public class Cpu implements Comparable, Callback, StatusListener {
     private Block block;
     private Time starttime, endtime, timelast, donetime;
     private ChannelContext channelContext;
-    
+    private int lastseq;
+
     public Cpu() {
         this.done = new ArrayList();
         this.timelast = Time.fromMilliseconds(0);
@@ -77,15 +79,31 @@ public class Cpu implements Comparable, Callback, StatusListener {
         pullLater(this);
     }
 
+    private void sleep() {
+        sleep(this);
+    }
+
+    private static PullThread getPullThread(Block block) {
+        if (pullThread == null) {
+            pullThread = new PullThread(block);
+            pullThread.start();
+        }
+        return pullThread;
+    }
+
     private static synchronized void pullLater(Cpu cpu) {
         if (logger.isInfoEnabled()) {
             logger.info(cpu.block.getId() + ":" + cpu.getId() + " pullLater");
         }
-        if (pullThread == null) {
-            pullThread = new PullThread(cpu.block);
-            pullThread.start();
-        }
-        pullThread.enqueue(cpu);
+        getPullThread(cpu.block).enqueue(cpu);
+    }
+
+    private synchronized void sleep(Cpu cpu) {
+        getPullThread(cpu.block).sleep(cpu);
+    }
+    
+    private boolean started() {
+        return starttime != null;
     }
 
     public synchronized void pull() {
@@ -93,7 +111,11 @@ public class Cpu implements Comparable, Callback, StatusListener {
             if (logger.isInfoEnabled()) {
                 logger.info(block.getId() + ":" + getId() + " pull");
             }
-            if (running == null) {
+            if (!started()) {
+                sleep();
+            }
+            else if (running == null) {
+                lastseq = block.getAllocationProcessor().getQueueSeq();
                 running = block.getAllocationProcessor().request(endtime.subtract(Time.now()));
                 if (running != null) {
                     running.getTask().addStatusListener(this);
@@ -108,12 +130,16 @@ public class Cpu implements Comparable, Callback, StatusListener {
                 else {
                     if (block.getAllocationProcessor().getQueued().size() == 0) {
                         block.getAllocationProcessor().waitForJobs();
+                        pullLater();
                     }
-                    pullLater();
+                    else {
+                        sleep();
+                    }
                 }
             }
             else {
-                CoasterService.error(40, "pull called while another job was running", new Throwable());
+                CoasterService.error(40, "pull called while another job was running",
+                    new Throwable());
             }
         }
         catch (Exception e) {
@@ -139,10 +165,11 @@ public class Cpu implements Comparable, Callback, StatusListener {
             taskFailed(null, e);
         }
     }
-    
+
     public void shutdown() {
         if (running != null) {
-            logger.warn(block.getId() + "- " + id + "Job still running while shutting down", new Throwable());
+            logger.warn(block.getId() + "- " + id + "Job still running while shutting down",
+                new Throwable());
             running.fail("Shutting down worker", null);
         }
         try {
@@ -222,32 +249,39 @@ public class Cpu implements Comparable, Callback, StatusListener {
 
     private static class PullThread extends Thread {
         private Block block;
-        private LinkedList queue;
-        private int qseq;
+        private LinkedList queue, sleeping;
+        private long sleepTime, runTime, last, print;
 
         public PullThread(Block block) {
             setName("Job pull");
             setDaemon(true);
             this.block = block;
             queue = new LinkedList();
+            sleeping = new LinkedList();
         }
 
         public synchronized void enqueue(Cpu cpu) {
-            qseq++;
             queue.add(cpu);
             notify();
         }
 
+        public synchronized void sleep(Cpu cpu) {
+            sleeping.add(cpu);
+        }
+
         public void run() {
+            last = System.currentTimeMillis();
             while (true) {
                 Cpu cpu;
                 synchronized (this) {
-                    while (!stateChanged()) {
-                        try {
-                            wait(100);
-                        }
-                        catch (InterruptedException e) {
-                            return;
+                    while (queue.isEmpty()) {
+                        if (!awakeUseable()) {
+                            try {
+                                mwait(100);
+                            }
+                            catch (InterruptedException e) {
+                                return;
+                            }
                         }
                     }
                     cpu = (Cpu) queue.removeFirst();
@@ -255,18 +289,37 @@ public class Cpu implements Comparable, Callback, StatusListener {
                 cpu.pull();
             }
         }
-        
-        private int lastseq = 0;
-        
-        private boolean stateChanged() {
-            int nseq = qseq + block.getAllocationProcessor().getQueueSeq();
-            if (nseq != lastseq) {
-                lastseq = nseq;
-                return true;
+
+        private boolean awakeUseable() {
+            int seq = block.getAllocationProcessor().getQueueSeq();
+            Iterator i = sleeping.iterator();
+            int sz = sleeping.size();
+            while (i.hasNext()) {
+                Cpu cpu = (Cpu) i.next();
+                if (cpu.lastseq < seq) {
+                    enqueue(cpu);
+                    i.remove();
+                }
             }
-            else {
-                return false;
+            return sz != sleeping.size();
+        }
+        
+        private void mwait(int ms) throws InterruptedException {
+            runTime += countAndResetTime();
+            wait(ms);
+            sleepTime += countAndResetTime();
+            if (runTime + sleepTime> 10000) {
+                logger.info("runTime: " + runTime + ", sleepTime: " + sleepTime);
+                runTime = 0;
+                sleepTime = 0;
             }
+        }
+        
+        private long countAndResetTime() {
+            long t = System.currentTimeMillis();
+            long d = t - last;
+            last = t;
+            return d;
         }
     }
 

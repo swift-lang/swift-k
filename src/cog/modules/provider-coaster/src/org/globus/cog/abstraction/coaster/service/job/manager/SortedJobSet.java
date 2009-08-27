@@ -19,12 +19,18 @@ import java.util.TreeMap;
 public class SortedJobSet {
     private SortedMap sm;
     int size;
-    int jsize;
+    double jsize;
     int seq;
-
+    private Metric metric;
+    
     public SortedJobSet() {
+        this(Metric.NULL_METRIC);
+    }
+    
+    public SortedJobSet(Metric metric) {
         sm = new TreeMap();
         size = 0;
+        this.metric = metric;
     }
 
     public int size() {
@@ -38,7 +44,7 @@ public class SortedJobSet {
             sm.put(j.getMaxWallTime(), l);
         }
         l.add(j);
-        jsize += j.getMaxWallTime().getSeconds();
+        jsize += metric.getSize(j);
         size++;
         seq++;
     }
@@ -57,14 +63,14 @@ public class SortedJobSet {
                 sm.remove(key);
             }
             if (j != null) {
-                jsize -= j.getMaxWallTime().getSeconds();
+                jsize -= metric.getSize(j);
                 size--;
             }
             return j;
         }
     }
 
-    public int getJSize() {
+    public double getJSize() {
         return jsize;
     }
 
