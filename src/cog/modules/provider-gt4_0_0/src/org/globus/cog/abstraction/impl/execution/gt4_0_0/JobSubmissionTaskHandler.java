@@ -189,7 +189,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 }
             }
             this.gramJob.submit(factoryEndpoint, spec.isBatchJob(), spec
-                    .getDelegation() != Delegation.NO_DELEGATION,
+                    .getDelegation() != Delegation.FULL_DELEGATION,
                     "uuid:" + UUIDGenFactory.getUUIDGen().nextUUID());
             logger.info("Task submitted: " + task);
             if (logger.isInfoEnabled()) {
