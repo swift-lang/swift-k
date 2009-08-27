@@ -24,6 +24,7 @@ public class ServiceShutdownHandler extends RequestHandler {
             CoasterService cs = (CoasterService) getChannel()
                     .getChannelContext().getService();
             sendReply("OK");
+            Thread.sleep(100);
             cs.shutdown();
         }
         catch (Exception e) {
