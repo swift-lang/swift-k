@@ -338,13 +338,25 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         public void run2() throws IOException, InterruptedException {
+            IOException e = null;
             while (true) {
-                boolean any = processPairs();
+                boolean any;
+                try {
+                    any = processPairs();
+                }
+                catch (IOException ex) {
+                    e = ex;
+                    any = false;
+                }
                 if (processDone()) {
                     closePairs();
                     return;
                 }
                 else {
+                    if (e != null) {
+                        p.destroy();
+                        throw e;
+                    }
                     if (!any) {
                         Thread.sleep(20);
                     }
@@ -388,6 +400,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 sp.is.close();
             }
         }
+        
         public int getExitCode() {
             return p.exitValue();
         }
