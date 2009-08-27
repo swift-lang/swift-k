@@ -269,7 +269,6 @@ public class ServiceManager implements StatusListener {
             js.setDelegation(Delegation.FULL_DELEGATION);
             js.setStdOutputLocation(FileLocation.MEMORY);
             js.setStdErrorLocation(FileLocation.MEMORY);
-            js.setDelegation(Delegation.FULL_DELEGATION);
             t.setSpecification(js);
             ExecutionService s = new ExecutionServiceImpl();
             s.setServiceContact(sc);
@@ -412,7 +411,7 @@ public class ServiceManager implements StatusListener {
                             ChannelManager.getManager().reserveChannel(url, (GSSCredential) cred);
                     System.out.println("Got channel " + channel);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();
-                    ssc.setReplyTimeout(10);
+                    ssc.setReplyTimeout(10000);
                     ssc.setMaxRetries(0);
                     ssc.executeAsync(channel, this);
                     ChannelManager.getManager().releaseChannel(channel);
