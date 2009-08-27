@@ -179,7 +179,7 @@ sub unpackData {
 
 	my $lendata = length($data);
 	if ($lendata < 12) {
-		wlog "Received faulty message (length < 12: $lendata)";
+		wlog "Received faulty message (length < 12: $lendata)\n";
 		die "Received faulty message (length < 12: $lendata)";
 	}
 	my $tag = unpack("V", substr($data, 0, 4));
@@ -197,7 +197,7 @@ sub unpackData {
 	my $actuallen = length($msg);
 	wlog("< len=$len, actuallen=$actuallen, tag=$tag, flags=$flg, $msg\n");
 	if ($len != $actuallen) {
-		wlog("Warning: len != actuallen");
+		wlog("Warning: len != actuallen\n");
 	}
 	return ($tag, $flg, $msg);
 }
@@ -295,7 +295,7 @@ sub checkTimeouts {
 		my $time = time();
 		my $dif = $time - $LASTRECV;
 		if ($dif >= $IDLETIMEOUT && $JOB_RUNNING == 0) {
-			wlog "Idle time exceeded (time=$time, LASTRECV=$LASTRECV, dif=$dif)";
+			wlog "Idle time exceeded (time=$time, LASTRECV=$LASTRECV, dif=$dif)\n";
 			die "Idle time exceeded";
 		}
 	}
@@ -491,6 +491,7 @@ sub checkJob() {
 	}
 	else {
 		chdir $JOB{directory};
+		wlog "Job check ok\n";
 		sendReply($tag, ("OK"));
 		return 1;
 	}
@@ -615,3 +616,4 @@ for($i=1; $i<=$COUNT; $i++) {
 for ($i=1; $i<=$COUNT ; $i++) {
 	waitpid($wp[$i], 0);
 }
+wlog "All sub-processes finished. Exiting.\n";
