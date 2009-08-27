@@ -67,7 +67,7 @@ public class Settings {
      * Maximum idle time of a block
      */
 
-    private TimeInterval reserve = TimeInterval.fromSeconds(10);
+    private TimeInterval reserve = TimeInterval.fromSeconds(60);
 
     private int maxNodes = Integer.MAX_VALUE;
 
@@ -88,6 +88,8 @@ public class Settings {
     private String queue;
 
     private boolean remoteMonitorEnabled;
+    
+    private double parallelism = 0.01;
 
     public int getSlots() {
         return slots;
@@ -264,6 +266,14 @@ public class Settings {
 
     public void setRemoteMonitorEnabled(boolean monitor) {
         this.remoteMonitorEnabled = monitor;
+    }
+    
+    public double getParallelism() {
+        return parallelism;
+    }
+
+    public void setParallelismBias(double parallelism) {
+        this.parallelism = parallelism;
     }
 
     public void set(String name, String value) throws IllegalArgumentException,
