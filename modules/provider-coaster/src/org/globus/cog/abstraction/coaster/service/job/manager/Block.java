@@ -161,13 +161,12 @@ public class Block implements StatusListener {
 
     private static final TimeInterval NO_TIME = TimeInterval.fromSeconds(0);
 
-    public TimeInterval sizeLeft() {
+    public double sizeLeft() {
         if (running) {
-            return TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)).multiply(
-                workers), NO_TIME);
+            return ap.getMetric().size(workers, (int) TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)), NO_TIME).getSeconds());
         }
         else {
-            return walltime.multiply(workers);
+            return ap.getMetric().size(workers, (int) walltime.getSeconds());
         }
     }
 
@@ -235,6 +234,7 @@ public class Block implements StatusListener {
     }
 
     public void taskFailed(String msg, Exception e) {
+        logger.warn("Worker task failed: " + msg, e);
         synchronized (cpus) {
             synchronized (scpus) {
                 failed = true;
