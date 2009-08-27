@@ -9,8 +9,11 @@
  */
 package org.globus.cog.abstraction.coaster.service.local;
 
+import java.net.URI;
+
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.channels.AbstractStreamKarajanChannel;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public class RegistrationHandler extends RequestHandler {
@@ -23,6 +26,9 @@ public class RegistrationHandler extends RequestHandler {
                 .getService();
         try {
             String rid = ls.registrationReceived(id, url, getChannel());
+            if (getChannel() instanceof AbstractStreamKarajanChannel) {
+            	((AbstractStreamKarajanChannel) getChannel()).setContact(new URI(id + (rid == null ? "" : "-" + rid)));
+            }
             this.sendReply(rid == null ? "OK" : rid);
         }
         catch (Exception e) {
