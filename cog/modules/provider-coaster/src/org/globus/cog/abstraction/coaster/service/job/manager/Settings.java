@@ -90,6 +90,8 @@ public class Settings {
     private boolean remoteMonitorEnabled;
     
     private double parallelism = 0.01;
+    
+    private TimeInterval maxWorkerIdleTime = TimeInterval.fromSeconds(120);
 
     public int getSlots() {
         return slots;
@@ -264,6 +266,14 @@ public class Settings {
         return remoteMonitorEnabled;
     }
 
+    public TimeInterval getMaxWorkerIdleTime() {
+        return maxWorkerIdleTime;
+    }
+
+    public void setMaxWorkerIdleTime(TimeInterval maxWorkerIdleTime) {
+        this.maxWorkerIdleTime = maxWorkerIdleTime;
+    }
+
     public void setRemoteMonitorEnabled(boolean monitor) {
         this.remoteMonitorEnabled = monitor;
     }
@@ -272,7 +282,7 @@ public class Settings {
         return parallelism;
     }
 
-    public void setParallelismBias(double parallelism) {
+    public void setParallelism(double parallelism) {
         this.parallelism = parallelism;
     }
 
@@ -296,6 +306,9 @@ public class Settings {
                 }
                 else if (ms[i].getParameterTypes()[0].equals(boolean.class)) {
                     ms[i].invoke(this, new Object[] { Boolean.valueOf(value) });
+                }
+                else if (ms[i].getParameterTypes()[0].equals(TimeInterval.class)) {
+                    ms[i].invoke(this, new Object[] { TimeInterval.fromSeconds(Integer.parseInt(value)) });
                 }
                 else {
                     throw new IllegalArgumentException("Don't know how to set option with type "
