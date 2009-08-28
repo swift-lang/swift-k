@@ -101,7 +101,7 @@ public class Block implements StatusListener {
                     }
                 }
             }
-            deadline = Time.min(starttime.add(walltime), last.add(ap.getSettings().getReserve()));
+            deadline = Time.min(starttime.add(walltime), last.add(ap.getSettings().getMaxWorkerIdleTime()));
             return Time.now().isGreaterThan(deadline);
         }
         else {
