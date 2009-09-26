@@ -20,15 +20,13 @@ public abstract class CoasterFileRequestHandler extends RequestHandler {
 
 	protected File normalize(String name) {
 	    File f = new File(name);
-	    
-	    return f;
 	     
-	    /*if (f.isAbsolute()) {
+	    if (f.isAbsolute()) {
 	    	return f;
 	    }
 	    else {
 	        return new File(HOME, name);
-	    }*/
+	    }
 	}
 
     protected void sendReply() throws ProtocolException {
