@@ -250,10 +250,6 @@ public class Bootstrap {
                     int c = is.read();
                     while (c != -1) {
                         sb.append((char) c);
-                        if (c == '\n') {
-                            System.out.print(sb.toString());
-                            sb.replace(0, sb.length(), "");
-                        }
                         c = is.read();
                     }
                 }
