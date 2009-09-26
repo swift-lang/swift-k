@@ -74,9 +74,9 @@ eval $WGET
 if [ "$?" != "0" ]; then
 	error "Failed to download bootstrap jar from $BS"
 fi
-MD5SUM=`$WR which gmd5sum`
+MD5SUM=`$WR which gmd5sum 2>>$L`
 if [ "X$MD5SUM" == "X" ]; then
-	MD5SUM=`$WR which md5sum`
+	MD5SUM=`$WR which md5sum 2>>$L`
 	if [ "X$MD5SUM" == "X" ]; then
 		error "No md5sum or gmd5sum found"
 	fi
@@ -92,7 +92,7 @@ echo "JAVA=$JAVA" >>$L
 if [ -x $JAVA ]; then 
 	CMD="$WR $JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -jar $DJ $BS $LS $ID"
 	echo $CMD >>$L
-	eval $CMD >>$L	
+	eval $CMD >>$L
 	EC=$?
 	echo "EC: $EC" >>$L
 	rm -f $DJ
