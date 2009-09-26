@@ -20,8 +20,7 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public class GetFileHandler extends CoasterFileRequestHandler {
-    public static final Logger logger = Logger
-            .getLogger(GetFileHandler.class);
+    public static final Logger logger = Logger.getLogger(GetFileHandler.class);
 
     private File f;
     private long size;
@@ -30,7 +29,6 @@ public class GetFileHandler extends CoasterFileRequestHandler {
 
     public void requestComplete() throws ProtocolException {
         f = normalize(getInDataAsString(0));
-        logger.warn(f.getAbsolutePath());
         size = f.length();
         chunks = (int) ((size - 1) / 16384) + 1;
         sendReply();
@@ -42,7 +40,6 @@ public class GetFileHandler extends CoasterFileRequestHandler {
             public Iterator iterator() {
                 return new Iterator() {
                     private long crt = 0;
-                    private byte[] buf = new byte[16384];
                     private boolean first = true;
                     private FileInputStream is;
 
@@ -67,6 +64,7 @@ public class GetFileHandler extends CoasterFileRequestHandler {
                                 return pack(size);
                             }
                             else {
+                                byte[] buf = new byte[16384];
                                 int l = is.read(buf);
                                 crt += l;
                                 if (crt == size) {
@@ -83,6 +81,12 @@ public class GetFileHandler extends CoasterFileRequestHandler {
                             }
                         }
                         catch (Exception e) {
+                            try {
+                                is.close();
+                            }
+                            catch (Exception e2) {
+                                logger.warn("Failed to close input stream", e2);
+                            }
                             ex = e;
                             return new byte[0];
                         }
@@ -99,7 +103,7 @@ public class GetFileHandler extends CoasterFileRequestHandler {
             }
         };
     }
-    
+
     public void send() throws ProtocolException {
         KarajanChannel channel = getChannel();
         Collection outData = getOutData();
@@ -109,17 +113,23 @@ public class GetFileHandler extends CoasterFileRequestHandler {
         if (logger.isDebugEnabled()) {
             logger.debug(ppOutData("HND"));
         }
-        boolean fin = (outData == null) || (outData.size() == 0);
-        if (!fin) {
-            Iterator i = outData.iterator();
-            while (i.hasNext()) {
-                byte[] buf = (byte[]) i.next();
-                channel.sendTaggedReply(getId(), buf, !i.hasNext(), getErrorFlag());
-            }
-        }
         if (ex != null) {
             logger.info("Transfer exception", ex);
             channel.sendTaggedReply(getId(), ex.getMessage().getBytes(), true, true);
+        }
+        else {
+            boolean fin = (outData == null) || (outData.size() == 0);
+            if (!fin) {
+                Iterator i = outData.iterator();
+                while (i.hasNext()) {
+                    byte[] buf = (byte[]) i.next();
+                    channel.sendTaggedReply(getId(), buf, !i.hasNext(), getErrorFlag());
+                }
+            }
+            if (ex != null) {
+                logger.info("Transfer exception", ex);
+                channel.sendTaggedReply(getId(), ex.getMessage().getBytes(), true, true);
+            }
         }
     }
 }
