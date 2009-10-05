@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.TimerTask;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
@@ -28,6 +29,8 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
 public class Block implements StatusListener {
     public static final Logger logger = Logger.getLogger(Block.class);
+    
+    public static final long SHUTDOWN_WATCHDOG_DELAY = 2 * 60 * 1000;
 
     private static BlockTaskSubmitter submitter;
 
@@ -204,17 +207,34 @@ public class Block implements StatusListener {
             if (shutdown || failed) {
                 return;
             }
+            logger.info("Shutting down block " + this);
             shutdown = true;
+            long busyTotal = 0;
+            long idleTotal = 0;
             if (running) {
                 Iterator i = cpus.iterator();
                 while (i.hasNext()) {
                     Cpu cpu = (Cpu) i.next();
+                    idleTotal = cpu.idleTime;
+                    busyTotal = cpu.busyTime;
                     cpu.shutdown();
+                }
+                CoasterService.addWatchdog(new TimerTask() {
+                    public void run() {
+                    	if (running) {
+                    		forceShutdown();
+                    	}
+                    }
+                }, SHUTDOWN_WATCHDOG_DELAY);
+                if (idleTotal > 0) {
+                    logger.info("Average utilization: " + (busyTotal * 100) / (busyTotal + idleTotal) + "%");
                 }
             }
             else {
+            	logger.info("Block " + this + " not running. Cancelling job.");
                 forceShutdown();
             }
+            cpus.clear();
         }
     }
 
@@ -226,6 +246,7 @@ public class Block implements StatusListener {
             catch (Exception e) {
                 logger.warn("Failed to shut down block", e);
             }
+            ap.blockTaskFinished(this);
         }
     }
 
@@ -245,7 +266,7 @@ public class Block implements StatusListener {
                 }
 
                 Iterator i = cpus.iterator();
-                while (i.hasNext()) {
+                if (i.hasNext()) {
                     Cpu cpu = (Cpu) i.next();
                     cpu.taskFailed(msg, e);
                 }
@@ -304,6 +325,9 @@ public class Block implements StatusListener {
                                     + prettifyOut(task.getStdOutput())
                                     + prettifyOut(task.getStdError()), null);
                         }
+                    }
+                    else {
+                    	ap.blockTaskFinished(this);
                     }
                     running = false;
                 }
