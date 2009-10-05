@@ -43,6 +43,7 @@ public class BQPStatusHandler extends RequestHandler {
 
     public void requestComplete() throws ProtocolException {
         index = 0;
+        sendReply("OK");
         try {
             Status status = new Status();
             String[] items;
@@ -116,7 +117,6 @@ public class BQPStatusHandler extends RequestHandler {
             logger.info("Process BQP status update 1");
             getMonitor().update(status.settings, status.jobs, status.queued, status.blocks);
             logger.info("Process BQP status update 2");
-            sendReply("OK");
         }
         catch (Exception e) {
             logger.warn("Failed to process data", e);
