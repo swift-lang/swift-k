@@ -29,9 +29,6 @@ import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventWorker;
-import org.globus.cog.karajan.workflow.events.WorkerManager;
-import org.globus.cog.karajan.workflow.events.WorkerSweeper;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FuturesMonitor;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
@@ -196,7 +193,6 @@ public class Loader {
 			System.out.println("Average event time: " + (double) EventBus.cummulativeEventTime
 					/ EventBus.eventCount * 1000 + " us");
 			System.out.println("Total future faults: " + FutureFault.count);
-			System.out.println("Event busses added due to high latency: " + WorkerSweeper.added);
 			System.out.println("Memory in use at termination: "
 					+ (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
 					/ 1024 + "KB");
@@ -289,14 +285,6 @@ public class Loader {
 						}
 						if (c == 't') {
 							System.out.println("Threads: " + FlowNode.threadTracker);
-						}
-						if (c == 'e') {
-							WorkerManager wm = EventBus.getBus().getWorkerManager();
-							System.out.println("Workers: idle = " + wm.getIdle() + ", working = "
-									+ wm.getWorking());
-							System.out.println("Events: queued = " + EventBus.eventCount
-									+ ", dispatched = " + EventWorker.eventsDispatched);
-							System.out.println("Queues: " + EventBus.getBus().getQueues().getAll());
 						}
 					}
 				}
