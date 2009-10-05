@@ -24,8 +24,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.globus.cog.karajan.workflow.events.WorkerManager;
-import org.globus.cog.karajan.workflow.events.WorkerSweeper;
+import org.globus.cog.karajan.workflow.events.EventBus;
 
 public class Monitor extends Thread {
 	private JFrame win;
@@ -220,7 +219,7 @@ public class Monitor extends Thread {
 
 	private class WorkerCount implements Source {
 		public int sample() {
-			return WorkerSweeper.textra + WorkerManager.DEFAULT_WORKER_COUNT;
+			return EventBus.DEFAULT_WORKER_COUNT;
 		}
 
 		public String getUnit() {
