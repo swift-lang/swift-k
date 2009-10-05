@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.coaster.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.InflaterInputStream;
 
 import org.globus.cog.abstraction.coaster.service.job.manager.TaskNotifier;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
@@ -29,10 +30,18 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public class SubmitJobHandler extends RequestHandler {
+    public static final boolean COMPRESSION = true;
+    
     public void requestComplete() throws ProtocolException {
         Task t;
         try {
-            t = read(getInData(0));
+            if (COMPRESSION) {
+                t = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
+                //t = read(new ByteArrayInputStream(getInData(0)));
+            }
+            else {
+                t = read(new ByteArrayInputStream(getInData(0)));
+            }
             ChannelContext channelContext = getChannel().getChannelContext();
             new TaskNotifier(t, channelContext);
             ((CoasterService) channelContext.getService()).getJobQueue().getCoasterQueueProcessor().setClientChannelContext(
@@ -48,8 +57,8 @@ public class SubmitJobHandler extends RequestHandler {
         sendReply(t.getIdentity().toString());
     }
 
-    private Task read(byte[] buf) throws IOException, ProtocolException, IllegalSpecException {
-        Helper h = new Helper(buf);
+    private Task read(InputStream is) throws IOException, ProtocolException, IllegalSpecException {
+        Helper h = new Helper(is);
 
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
@@ -57,6 +66,9 @@ public class SubmitJobHandler extends RequestHandler {
         t.setSpecification(spec);
 
         String clientId = h.read("identity");
+        if (clientId == null) {
+            throw new IllegalSpecException("Missing job identity");
+        }
         t.setIdentity(new IdentityImpl(clientId + "-" + new IdentityImpl().getValue()));
         spec.setExecutable(h.read("executable").intern());
         spec.setDirectory(h.read("directory"));
@@ -114,12 +126,12 @@ public class SubmitJobHandler extends RequestHandler {
         return s.substring(i + 1);
     }
 
-    private static class Helper {
+    private class Helper {
         private InputStream is;
         private String key, value;
 
-        public Helper(byte[] buf) {
-            is = new ByteArrayInputStream(buf);
+        public Helper(InputStream is) {
+            this.is = is;
         }
 
         public boolean readBool(String key) throws IOException, ProtocolException {
@@ -169,7 +181,7 @@ public class SubmitJobHandler extends RequestHandler {
                     }
                     case -1:
                     case '\n': {
-                        if (key == null) {
+                    	if (key == null) {
                             throw new ProtocolException("Invalid line: " + sb.toString());
                         }
                         else {
