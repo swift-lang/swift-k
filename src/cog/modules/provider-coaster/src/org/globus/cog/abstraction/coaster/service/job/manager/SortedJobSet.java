@@ -15,8 +15,12 @@ import java.util.NoSuchElementException;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.log4j.Logger;
+
 
 public class SortedJobSet {
+    public static final Logger logger = Logger.getLogger(SortedJobSet.class);
+    
     private SortedMap sm;
     int size;
     double jsize;
@@ -47,6 +51,9 @@ public class SortedJobSet {
         jsize += metric.getSize(j);
         size++;
         seq++;
+        if (logger.isDebugEnabled()) {
+            logger.info("+" + j + "; " + sm);
+        }
     }
 
     public synchronized Job removeOne(TimeInterval walltime) {
@@ -65,6 +72,12 @@ public class SortedJobSet {
             if (j != null) {
                 jsize -= metric.getSize(j);
                 size--;
+            }
+            if (size == 0) {
+                jsize = 0;
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("-" + j + "; " + sm);
             }
             return j;
         }
@@ -104,5 +117,9 @@ public class SortedJobSet {
 
     public synchronized int getSeq() {
         return seq;
-    };
+    }
+    
+    public String toString() {
+        return sm.toString();
+    }
 }
