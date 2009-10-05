@@ -117,6 +117,8 @@ public class CoasterService extends GSSService {
         }
         catch (Exception e) {
             logger.error("Failed to start coaster service", e);
+            System.err.println("Failed to start coaster service");
+            e.printStackTrace();
             stop(e);
         }
     }
@@ -201,6 +203,18 @@ public class CoasterService extends GSSService {
         };
         //watchdogs.schedule(tt, 2 * 60 * 1000);
         return tt;
+    }
+    
+    public static void addWatchdog(TimerTask w, long delay) {
+        synchronized(watchdogs) {
+            watchdogs.schedule(w, delay);
+        }
+    }
+    
+    public static void addPeriodicWatchdog(TimerTask w, long delay) {
+        synchronized(watchdogs) {
+            watchdogs.schedule(w, delay, delay);
+        }
     }
 
     public JobQueue getJobQueue() {
