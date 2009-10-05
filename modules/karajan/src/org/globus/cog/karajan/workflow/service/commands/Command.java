@@ -10,7 +10,10 @@
 package org.globus.cog.karajan.workflow.service.commands;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,8 +25,9 @@ import org.globus.cog.karajan.workflow.service.RequestReply;
 import org.globus.cog.karajan.workflow.service.channels.ChannelIOException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.channels.SendCallback;
 
-public abstract class Command extends RequestReply {
+public abstract class Command extends RequestReply implements SendCallback {
 	private static final Logger logger = Logger.getLogger(Command.class);
 
 	private static final Timer timer;
@@ -32,7 +36,9 @@ public abstract class Command extends RequestReply {
 		timer = new Timer(true);
 	}
 
-	public static final int DEFAULT_REPLY_TIMEOUT = 30 * 1000; //30 seconds
+	public static final DateFormat DF = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
+
+	public static final int DEFAULT_REPLY_TIMEOUT = 120 * 1000;
 	public static final int DEFAULT_MAX_RETRIES = 2;
 	private int replyTimeout = DEFAULT_REPLY_TIMEOUT;
 	private int maxRetries = DEFAULT_MAX_RETRIES;
@@ -42,6 +48,8 @@ public abstract class Command extends RequestReply {
 	private Exception exception;
 	private Timeout timeout;
 	private int retries;
+	private long sendTime;
+	private long sendReqTime;
 
 	public Command() {
 		setId(NOID);
@@ -59,7 +67,6 @@ public abstract class Command extends RequestReply {
 	public void waitForReply() throws ReplyTimeoutException {
 		synchronized (this) {
 			if (!this.isInDataReceived()) {
-				long start = System.currentTimeMillis();
 				long left = replyTimeout;
 				while (!this.isInDataReceived()) {
 					if (left <= 0) {
@@ -71,7 +78,8 @@ public abstract class Command extends RequestReply {
 					catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					left = replyTimeout - (System.currentTimeMillis() - start);
+					left = sendTime == 0 ? 1000 : replyTimeout
+							- (System.currentTimeMillis() - sendTime);
 				}
 			}
 		}
@@ -87,6 +95,8 @@ public abstract class Command extends RequestReply {
 	}
 
 	public void send() throws ProtocolException {
+		sendReqTime = System.currentTimeMillis();
+		cancelTimeout();
 		KarajanChannel channel = getChannel();
 		if (logger.isInfoEnabled()) {
 			logger.info("Sending " + this + " on " + channel);
@@ -101,19 +111,19 @@ public abstract class Command extends RequestReply {
 			logger.debug(ppOutData("CMD"));
 		}
 		try {
-			if (logger.isInfoEnabled()) {
-				logger.info(this + " CMD: " + this);
+			if (logger.isDebugEnabled()) {
+				logger.debug(this + " CMD: " + this);
 			}
 			int id = getId();
 			if (id == NOID) {
 				logger.warn("Command has NOID: " + this, new Throwable());
 			}
-			channel.sendTaggedData(id, fin, getOutCmd().getBytes());
+			channel.sendTaggedData(id, fin, getOutCmd().getBytes(), fin ? this : null);
 			if (!fin) {
 				Iterator i = outData.iterator();
 				while (i.hasNext()) {
 					byte[] buf = (byte[]) i.next();
-					channel.sendTaggedData(id, !i.hasNext(), buf);
+					channel.sendTaggedData(id, !i.hasNext(), buf, !i.hasNext() ? this : null);
 				}
 			}
 		}
@@ -122,12 +132,19 @@ public abstract class Command extends RequestReply {
 		}
 	}
 
-	protected void setupReplyTimeoutChecker() {
-		timer.schedule(timeout = new Timeout(), replyTimeout);
+	public void dataSent() {
+		sendTime = System.currentTimeMillis();
+		setupReplyTimeoutChecker();
+	}
+
+	protected synchronized void setupReplyTimeoutChecker() {
+		timeout = new Timeout();
+		logger.info("SRT " + System.identityHashCode(timeout));
+		timer.schedule(timeout, replyTimeout);
 	}
 
 	public byte[] execute(KarajanChannel channel) throws ProtocolException, IOException {
-		send(channel, false);
+		send(channel);
 		waitForReply();
 		if (errorMsg != null) {
 			throw new ProtocolException(errorMsg, exception);
@@ -140,22 +157,16 @@ public abstract class Command extends RequestReply {
 
 	public void executeAsync(KarajanChannel channel, Callback cb) throws ProtocolException {
 		this.cb = cb;
-		send(channel, true);
+		send(channel);
 	}
 
 	public void executeAsync(KarajanChannel channel) throws ProtocolException {
-		send(channel, true);
+		send(channel);
 	}
 
-	protected void send(KarajanChannel channel, boolean async) throws ProtocolException {
+	protected void send(KarajanChannel channel) throws ProtocolException {
 		channel.registerCommand(this);
-		if (getId() == NOID) {
-			logger.warn("Registration failed for command " + this + " on channel " + channel);
-		}
 		send();
-		if (async) {
-			setupReplyTimeoutChecker();
-		}
 	}
 
 	public int getReplyTimeout() {
@@ -174,11 +185,15 @@ public abstract class Command extends RequestReply {
 		this.maxRetries = maxRetries;
 	}
 
-	public void receiveCompleted() {
+	private synchronized void cancelTimeout() {
 		if (timeout != null) {
 			timeout.cancel();
 			timeout = null;
 		}
+	}
+
+	public void receiveCompleted() {
+		cancelTimeout();
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppInData("CMD"));
 		}
@@ -189,13 +204,16 @@ public abstract class Command extends RequestReply {
 	}
 
 	public void errorReceived(String msg, Exception t) {
+		cancelTimeout();
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppInData("CMDERR"));
 		}
-		this.errorMsg = msg;
-		this.exception = t;
 		if (cb != null) {
 			cb.errorReceived(this, msg, t);
+		}
+		else {
+			this.errorMsg = msg;
+			this.exception = t;
 		}
 		super.receiveCompleted();
 	}
@@ -221,10 +239,14 @@ public abstract class Command extends RequestReply {
 		}
 		else {
 			logger.info(this + ": re-sending");
-			logger.warn("fault was: " + message, ex);
+			logger.warn(this + "fault was: " + message, ex);
 			try {
-				setChannel(ChannelManager.getManager().reserveChannel(
-						getChannel().getChannelContext()));
+				KarajanChannel channel = ChannelManager.getManager().reserveChannel(
+						getChannel().getChannelContext());
+				setChannel(channel);
+				if (getId() == NOID) {
+					channel.registerCommand(this);
+				}
 				send();
 			}
 			catch (ProtocolException e) {
@@ -238,7 +260,10 @@ public abstract class Command extends RequestReply {
 
 	protected void handleReplyTimeout() {
 		timeout = null;
-		logger.info(this + ": handling reply timeout");
+		logger.warn(this
+				+ ": handling reply timeout; sendReqTime="
+				+ DF.format(new Date(sendReqTime)) + ", sendTime=" + DF.format(new Date(sendTime))
+						+ ", now=" + DF.format(new Date()));
 		reexecute("Reply timeout", new ReplyTimeoutException());
 	}
 
@@ -246,6 +271,13 @@ public abstract class Command extends RequestReply {
 		public void run() {
 			handleReplyTimeout();
 		}
+
+		public boolean cancel() {
+			if (logger.isDebugEnabled()) {
+				logger.debug("SRC " + System.identityHashCode(timeout), new Exception());
+			}
+			return super.cancel();
+		}		
 	}
 
 	public String toString() {

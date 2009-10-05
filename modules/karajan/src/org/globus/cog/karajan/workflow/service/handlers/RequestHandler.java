@@ -94,7 +94,7 @@ public abstract class RequestHandler extends RequestReply {
 	}
 
 	public void errorReceived(String msg, Exception t) {
-		//TODO
+		logger.warn(msg, t);
 	}
 	
 	protected String ppOutData(String prefix) {

@@ -37,8 +37,8 @@ public class MetaChannel extends AbstractKarajanChannel {
 		super(requestManager, channelContext, false);
 	}
 
-	public synchronized void sendTaggedData(int tag, int flags, byte[] data) {
-		current.sendTaggedData(tag, flags, data);
+	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
+		current.sendTaggedData(tag, flags, data, cb);
 	}
 
 	public void registerCommand(Command cmd) throws ProtocolException {

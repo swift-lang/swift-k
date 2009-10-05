@@ -29,7 +29,7 @@ public class BufferingChannel extends AbstractKarajanChannel implements Purgeabl
 		buffer = new ArrayList();
 	}
 
-	public synchronized void sendTaggedData(int tag, int flags, byte[] data) {
+	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
 		buffer.add(new DataEntry(tag, flags, data));
 	}
 
