@@ -180,7 +180,11 @@ public abstract class RequestReply {
 			return (byte[]) inData.get(index);
 		}
 		catch (IndexOutOfBoundsException e) {
-			throw new IllegalArgumentException("Missing command argument #" + (index + 1));
+		    List l = new ArrayList();
+		    for (int i = 0; i < inData.size(); i++) {
+		        l.add(new String((byte[]) inData.get(i)));
+		    }
+			throw new IllegalArgumentException("Missing command argument #" + (index + 1) + "; inData: " + l);
 		}
 	}
 
