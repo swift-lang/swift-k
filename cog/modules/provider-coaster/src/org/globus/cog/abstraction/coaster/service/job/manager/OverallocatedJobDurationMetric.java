@@ -44,6 +44,10 @@ public class OverallocatedJobDurationMetric implements Metric {
         return w * pow(h, settings.getParallelism());
     }
     
+    public int width(int sz, int h) {
+        return (int) (sz / pow(h, settings.getParallelism()));
+    }
+
     private double pow(long v, double e) {
         return Math.pow(v, e);
     }
