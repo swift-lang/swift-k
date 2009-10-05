@@ -40,6 +40,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     private Time starttime, endtime, timelast, donetime;
     private ChannelContext channelContext;
     private int lastseq;
+    protected long busyTime, idleTime, lastTime;
 
     public Cpu() {
         this.done = new ArrayList();
@@ -59,7 +60,15 @@ public class Cpu implements Comparable, Callback, StatusListener {
         starttime = Time.now();
         endtime = starttime.add(block.getWalltime());
         timelast = starttime;
+        timeDiff();
         pullLater();
+    }
+    
+    private long timeDiff() {
+    	long now = System.currentTimeMillis();
+    	long dif = now - lastTime;
+    	lastTime = now;
+    	return dif;
     }
 
     public synchronized void jobTerminated() {
@@ -70,7 +79,8 @@ public class Cpu implements Comparable, Callback, StatusListener {
         block.remove(this);
         donetime = Time.now();
         timelast = donetime;
-        done.add(running);
+        busyTime += timeDiff();
+        //done.add(running);
         running = null;
         pullLater();
     }
@@ -85,15 +95,15 @@ public class Cpu implements Comparable, Callback, StatusListener {
 
     private static PullThread getPullThread(Block block) {
         if (pullThread == null) {
-            pullThread = new PullThread(block);
+            pullThread = new PullThread(block.getAllocationProcessor());
             pullThread.start();
         }
         return pullThread;
     }
 
     private static synchronized void pullLater(Cpu cpu) {
-        if (logger.isInfoEnabled()) {
-            logger.info(cpu.block.getId() + ":" + cpu.getId() + " pullLater");
+        if (logger.isDebugEnabled()) {
+            logger.debug(cpu.block.getId() + ":" + cpu.getId() + " pullLater");
         }
         getPullThread(cpu.block).enqueue(cpu);
     }
@@ -120,6 +130,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
                 if (running != null) {
                     running.getTask().addStatusListener(this);
                     running.start();
+                    idleTime += timeDiff(); 
                     timelast = running.getEndTime();
                     if (timelast == null) {
                         CoasterService.error(20, "Timelast is null", new Throwable());
@@ -158,6 +169,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
             KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
             ChannelManager.getManager().reserveLongTerm(channel);
             SubmitJobCommand cmd = new SubmitJobCommand(task);
+            cmd.setCompression(false);
             cmd.executeAsync(channel, this);
         }
         catch (Exception e) {
@@ -167,6 +179,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public void shutdown() {
+    	done.clear();
         if (running != null) {
             logger.warn(block.getId() + "- " + id + "Job still running while shutting down",
                 new Throwable());
@@ -200,7 +213,12 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public Time getTimeLast() {
-        return timelast;
+        if (timelast.isGreaterThan(Time.now())) {
+            return timelast;
+        }
+        else {
+            return Time.now();
+        }
     }
 
     public String toString() {
@@ -222,7 +240,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
             running = block.getAllocationProcessor().request(endtime.subtract(Time.now()));
         }
         if (running != null) {
-            running.fail("Block task failed: " + msg, e);
+            running.fail("Task failed: " + msg, e);
         }
     }
 
@@ -248,14 +266,14 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     private static class PullThread extends Thread {
-        private Block block;
         private LinkedList queue, sleeping;
         private long sleepTime, runTime, last, print;
+        private BlockQueueProcessor bqp;
 
-        public PullThread(Block block) {
+        public PullThread(BlockQueueProcessor bqp) {
+        	this.bqp = bqp;
             setName("Job pull");
             setDaemon(true);
-            this.block = block;
             queue = new LinkedList();
             sleeping = new LinkedList();
         }
@@ -277,7 +295,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
                     while (queue.isEmpty()) {
                         if (!awakeUseable()) {
                             try {
-                                mwait(100);
+                                mwait(50);
                             }
                             catch (InterruptedException e) {
                                 return;
@@ -291,7 +309,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
         }
 
         private boolean awakeUseable() {
-            int seq = block.getAllocationProcessor().getQueueSeq();
+            int seq = bqp.getQueueSeq();
             Iterator i = sleeping.iterator();
             int sz = sleeping.size();
             while (i.hasNext()) {
