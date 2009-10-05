@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
@@ -33,7 +32,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private List sums;
     private List blocks;
 
-    private double queuedsize, allocsize;
+    private double allocsize;
 
     double medianSize, tsum;
 
@@ -46,9 +45,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private BQPMonitor monitor;
 
     private ChannelContext clientChannelContext;
-    
+
     private boolean done, planning;
-    
+
     private Metric metric;
 
     public BlockQueueProcessor() {
@@ -62,7 +61,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         metric = new OverallocatedJobDurationMetric(settings);
         queued = new SortedJobSet(metric);
     }
-    
+
     public Metric getMetric() {
         return metric;
     }
@@ -74,10 +73,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             while (!done) {
                 planTime = updatePlan();
                 logger.info("Plan time: " + planTime);
-                if (jobs.size()  + add.size() == 0) {
-                	planTime = 100;
+                if (jobs.size() + add.size() == 0) {
+                    planTime = 100;
                 }
-                synchronized(add) {
+                synchronized (add) {
                     add.wait(Math.min(planTime * 20, 10000) + 200);
                 }
             }
@@ -98,17 +97,17 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             enqueue(jobs);
         }
     }
-    
+
     public void enqueue(Task t) {
         enqueue1(t);
     }
 
     public void enqueue1(Task t) {
         synchronized (add) {
-        	Job j = new Job(t);
-        	if (logger.isInfoEnabled()) {
-        		logger.info("Got job with walltime = " + j.getMaxWallTime());
-        	}           
+            Job j = new Job(t);
+            if (logger.isInfoEnabled()) {
+                logger.info("Got job with walltime = " + j.getMaxWallTime());
+            }
             if (planning) {
                 add.add(j);
             }
@@ -125,15 +124,14 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private void queue(Job job) {
-        synchronized(queued) {
+        synchronized (queued) {
             queued.add(job);
-            queuedsize += metric.getSize(job);
             queued.notify();
         }
     }
-    
+
     public void waitForJobs() throws InterruptedException {
-        synchronized(queued) {
+        synchronized (queued) {
             queued.wait(1000);
         }
     }
@@ -145,15 +143,17 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             while (ib.hasNext()) {
                 Block b = (Block) ib.next();
                 if (b.isDone()) {
-                    ib.remove();
                     b.shutdown();
                     count++;
                 }
             }
-            logger.info("Cleaned " + count + " done blocks");
+            if (count > 0) {
+                logger.info("Cleaned " + count + " done blocks");
+            }
         }
     }
 
+    private double lastAllocSize;
     private void updateAllocatedSize() {
         synchronized (blocks) {
             allocsize = 0;
@@ -162,7 +162,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 Block b = (Block) i.next();
                 allocsize += b.sizeLeft();
             }
-            logger.info("Updated allocsize: " + allocsize);
+            if (allocsize != lastAllocSize) {
+                logger.info("Updated allocsize: " + allocsize);
+            }
+            lastAllocSize = allocsize;
         }
     }
 
@@ -191,28 +194,33 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         Iterator it = jobs.iterator();
         while (it.hasNext()) {
             Job j = (Job) it.next();
-            if (allocsize - queuedsize > j.getMaxWallTime().getSeconds() && fits(j)) {
+            if (allocsize - queued.getJSize() > j.getMaxWallTime().getSeconds() && fits(j)) {
                 queue(j);
                 remove.add(j);
             }
         }
-        logger.info("Queued " + remove.size() + " jobs to existing blocks");
+        if (remove.size() > 0) {
+            logger.info("Queued " + remove.size() + " jobs to existing blocks");
+        }
         return remove;
     }
 
     private void requeueNonFitting() {
         int count = 0;
-        logger.info("allocsize = " + allocsize + ", queuedsize = " + queuedsize + ", qsz = " + queued.size());
-        while (allocsize - queuedsize < 0) {
+        logger.info("allocsize = " + allocsize + ", queuedsize = " + queued.getJSize() + ", qsz = "
+                + queued.size());
+        while (allocsize - queued.getJSize() < 0) {
             Job j = queued.removeOne(TimeInterval.FOREVER);
             if (j == null) {
-                CoasterService.error(19, "queuedsize > 0 but no job dequeued", new Throwable());
+                CoasterService.error(19, "queuedsize > 0 but no job dequeued. Queued: " + queued,
+                    new Throwable());
             }
             jobs.add(j);
-            queuedsize = queued.jsize;
             count++;
         }
-        logger.info("Requeued " + count + " non-fitting jobs");
+        if (count > 0) {
+            logger.info("Requeued " + count + " non-fitting jobs");
+        }
     }
 
     private void computeSums() {
@@ -234,7 +242,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             Job j = (Job) i.next();
             sz += metric.desiredSize(j);
         }
-        logger.info("Required size: " + sz + " for " + jobs.size() + " jobs");
+        if (sz > 0) {
+            logger.info("Required size: " + sz + " for " + jobs.size() + " jobs");
+        }
         return sz;
     }
 
@@ -245,10 +255,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     public static int overallocatedSize(Job j, Settings settings) {
         return overallocatedSize((int) j.getMaxWallTime().getSeconds(), settings);
     }
-    
+
     private static int overallocatedSize(int wt, Settings settings) {
-        int os = (int) (wt * ((settings.getLowOverallocation() - settings.getHighOverallocation())
-                * Math.exp(-wt * settings.getOverallocationDecayFactor()) + settings.getHighOverallocation()));
+        int os =
+                (int) (wt * ((settings.getLowOverallocation() - settings.getHighOverallocation())
+                        * Math.exp(-wt * settings.getOverallocationDecayFactor()) + settings.getHighOverallocation()));
         if (logger.isDebugEnabled()) {
             logger.debug("overallocatedSize(" + wt + ") = " + os);
         }
@@ -267,8 +278,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private Set allocateBlocks(double tsum) {
         Set remove = new HashSet();
-        int cslots = 
-                (int) Math.ceil((settings.getSlots() - blocks.size()) * settings.getAllocationStepSize());
+        int cslots =
+                (int) Math.ceil((settings.getSlots() - blocks.size())
+                        * settings.getAllocationStepSize());
 
         int last = 0;
         int i = 0;
@@ -291,10 +303,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 // height must be a multiple of the overallocation of the
                 // largest job
                 h = Math.min(Math.max(h, round(h, lastwalltime)), settings.getMaxtime());
-                int w = Math.min(round(msz / h, granularity), settings.getMaxNodes());
+                int w = Math.min(round(metric.width(msz, h), granularity), settings.getMaxNodes() * settings.getWorkersPerNode());
                 int r = (i - last) % w;
                 if (logger.isInfoEnabled()) {
-                    logger.info("h: " + h + ", jj: " + lastwalltime + ", x-last: " + ", r: " + r);
+                    logger.info("h: " + h + ", jj: " + lastwalltime + ", x-last: " + ", r: " + r
+                            + ", sumsz: " + sumSizes(last, i));
                 }
 
                 // readjust number of jobs fitted based on granularity
@@ -305,7 +318,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
                 if (logger.isInfoEnabled()) {
                     logger.info("h: " + h + ", w: " + w + ", size: " + size + ", msz: " + msz
-                        + ", w*h: " + w * h);
+                            + ", w*h: " + w * h);
                 }
 
                 Block b = new Block(w, TimeInterval.fromSeconds(h), this);
@@ -343,7 +356,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             }
         }
     }
-    
+
     private boolean first = true;
 
     private void updateSettings() throws PlanningException {
@@ -376,8 +389,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 }
             }
             if (first) {
-            	logger.info("\n" + settings.toString());
-            	first = false;
+                logger.info("\n" + settings.toString());
+                first = false;
             }
         }
     }
@@ -385,25 +398,32 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private void commitNewJobs() {
         synchronized (add) {
             jobs.addAll(add);
-            logger.info("Committed " + add.size() + " new jobs");
+            if (add.size() > 0) {
+                logger.info("Committed " + add.size() + " new jobs");
+            }
             add.clear();
         }
     }
 
+    private long lastUpdate;
     private void updateMonitor() {
         if (settings.isRemoteMonitorEnabled()) {
-            if (monitor == null) {
-                monitor = new RemoteBQPMonitor(this);
-            }
-            monitor.update();
+            long now = System.currentTimeMillis();
+        	if (now - lastUpdate > 10000) {
+        	    if (monitor == null) {
+        	        monitor = new RemoteBQPMonitor(this);
+        	    }
+        	    monitor.update();
+        	    lastUpdate = now;
+        	}
         }
     }
-    
+
     public int updatePlan() throws PlanningException {
-        synchronized(add) {
+        synchronized (add) {
             planning = true;
         }
-    	long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         commitNewJobs();
         cleanDoneBlocks();
         updateAllocatedSize();
@@ -421,18 +441,14 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         removeJobs(allocateBlocks(tsum));
 
         updateMonitor();
-        synchronized(add) {
+        synchronized (add) {
             planning = false;
         }
         return (int) (System.currentTimeMillis() - start);
     }
 
     public Job request(TimeInterval ti) {
-        Job j = queued.removeOne(ti);
-        if (j != null) {
-            queuedsize -= metric.getSize(j);
-        }
-        return j;
+        return queued.removeOne(ti);
     }
 
     private int round(int v, int g) {
@@ -447,7 +463,28 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     public void shutdown() {
-    	done = true;
+        shutdownBlocks();
+        done = true;
+    }
+
+    private void shutdownBlocks() {
+        logger.info("Shutting down blocks");
+        synchronized (blocks) {
+            Iterator i = new ArrayList(blocks).iterator();
+            while (i.hasNext()) {
+                Block b = (Block) i.next();
+                b.shutdown();
+            }
+        }
+    }
+
+    public void blockTaskFinished(Block block) {
+        if (logger.isInfoEnabled()) {
+            logger.info("Removing block " + block);
+        }
+        synchronized (blocks) {
+            blocks.remove(block);
+        }
     }
 
     public Settings getSettings() {
@@ -506,16 +543,16 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     public ChannelContext getClientChannelContext() {
         return clientChannelContext;
     }
-    
+
     public static void main(String[] args) {
-    	Settings s = new Settings();
-    	System.out.println(overallocatedSize(1, s));
-    	System.out.println(overallocatedSize(10, s));
-    	System.out.println(overallocatedSize(100, s));
-    	System.out.println(overallocatedSize(1000, s));
-    	System.out.println(overallocatedSize(3600, s));
-    	System.out.println(overallocatedSize(10000, s));
-    	System.out.println(overallocatedSize(100000, s));
+        Settings s = new Settings();
+        System.out.println(overallocatedSize(1, s));
+        System.out.println(overallocatedSize(10, s));
+        System.out.println(overallocatedSize(100, s));
+        System.out.println(overallocatedSize(1000, s));
+        System.out.println(overallocatedSize(3600, s));
+        System.out.println(overallocatedSize(10000, s));
+        System.out.println(overallocatedSize(100000, s));
     }
 
     public int getQueueSeq() {
