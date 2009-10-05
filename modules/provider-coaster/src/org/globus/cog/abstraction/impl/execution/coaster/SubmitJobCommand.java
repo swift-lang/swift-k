@@ -11,11 +11,14 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.zip.DeflaterOutputStream;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.SubmitJobHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -26,11 +29,11 @@ import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class SubmitJobCommand extends Command {
     public static final Logger logger = Logger.getLogger(SubmitJobCommand.class);
-    
+
     public static final String NAME = "SUBMITJOB";
-    
+
     public static final Set IGNORED_ATTRIBUTES;
-    
+
     static {
         IGNORED_ATTRIBUTES = new HashSet();
         for (int i = 0; i < Settings.NAMES.length; i++) {
@@ -40,6 +43,15 @@ public class SubmitJobCommand extends Command {
 
     private Task t;
     private String id;
+    private boolean compression = SubmitJobHandler.COMPRESSION;
+
+    public boolean getCompression() {
+        return compression;
+    }
+
+    public void setCompression(boolean compression) {
+        this.compression = compression;
+    }
 
     public SubmitJobCommand(Task t) {
         super(NAME);
@@ -51,70 +63,76 @@ public class SubmitJobCommand extends Command {
             serialize();
         }
         catch (Exception e) {
-            throw new ProtocolException(
-                    "Could not serialize job specification", e);
+            throw new ProtocolException("Could not serialize job specification", e);
         }
         super.send();
     }
 
     protected void serialize() throws IOException {
-        //I'd use Java serialization if not for the fact that a similar
-        //thing needs to be done to communicate with the perl client
+        // I'd use Java serialization if not for the fact that a similar
+        // thing needs to be done to communicate with the perl client
         JobSpecification spec = (JobSpecification) t.getSpecification();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        OutputStream dos;
+        if (compression) {
+            dos = new DeflaterOutputStream(baos);
+            //dos = baos;
+        }
+        else {
+            dos = baos;
+        }
         String identity = t.getIdentity().getValue();
-        add(baos, "identity", identity);
-        add(baos, "executable", spec.getExecutable());
-        add(baos, "directory", spec.getDirectory());
-        add(baos, "batch", spec.isBatchJob());
-        add(baos, "stdin", spec.getStdInput());
-        add(baos, "stdout", spec.getStdOutput());
-        add(baos, "stderr", spec.getStdError());
+        add(dos, "identity", identity);
+        add(dos, "executable", spec.getExecutable());
+        add(dos, "directory", spec.getDirectory());
+        add(dos, "batch", spec.isBatchJob());
+        add(dos, "stdin", spec.getStdInput());
+        add(dos, "stdout", spec.getStdOutput());
+        add(dos, "stderr", spec.getStdError());
 
         Iterator i;
         i = spec.getArgumentsAsList().iterator();
         while (i.hasNext()) {
-            add(baos, "arg", (String) i.next());
+            add(dos, "arg", (String) i.next());
         }
 
         i = spec.getEnvironmentVariableNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            add(baos, "env", name + "=" + spec.getEnvironmentVariable(name));
+            add(dos, "env", name + "=" + spec.getEnvironmentVariable(name));
         }
 
         i = spec.getAttributeNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
             if (!IGNORED_ATTRIBUTES.contains(name)) {
-                add(baos, "attr", name + "=" + spec.getAttribute(name));
+                add(dos, "attr", name + "=" + spec.getAttribute(name));
             }
         }
 
         Service s = t.getService(0);
-        add(baos, "contact", s.getServiceContact().toString());
-        add(baos, "provider", s.getProvider());
+        add(dos, "contact", s.getServiceContact().toString());
+        add(dos, "provider", s.getProvider());
 
         if (s instanceof ExecutionService) {
-            add(baos, "jm", ((ExecutionService) s).getJobManager());
+            add(dos, "jm", ((ExecutionService) s).getJobManager());
         }
         else {
-            add(baos, "jm", "fork");
+            add(dos, "jm", "fork");
         }
-        baos.close();
+        dos.close();
         if (logger.isDebugEnabled()) {
             logger.debug("Job data: " + baos.toString());
         }
+
         addOutData(baos.toByteArray());
     }
-    
-    private void add(ByteArrayOutputStream baos, String key, boolean value) 
-            throws IOException {
+
+    private void add(OutputStream baos, String key, boolean value) throws IOException {
         add(baos, key, String.valueOf(value));
     }
 
-    private void add(ByteArrayOutputStream baos, String key, String value)
-            throws IOException {
+    private void add(OutputStream baos, String key, String value) throws IOException {
         if (value != null) {
             baos.write(key.getBytes("UTF-8"));
             baos.write('=');
@@ -128,16 +146,17 @@ public class SubmitJobCommand extends Command {
                         baos.write(c);
                 }
             }
+            
             baos.write('\n');
         }
     }
-    
+
     public void receiveCompleted() {
-    	id = getInDataAsString(0);
+        id = getInDataAsString(0);
         super.receiveCompleted();
     }
 
     public Task getTask() {
-    	return t;
+        return t;
     }
 }
