@@ -13,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
@@ -48,6 +49,8 @@ import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.ietf.jgss.GSSCredential;
 
 public class FileResourceImpl extends AbstractFileResource {
+    public static final Logger logger = Logger.getLogger(FileResourceImpl.class);
+    
     private boolean autostart;
     private String url, provider;
     
@@ -209,6 +212,7 @@ public class FileResourceImpl extends AbstractFileResource {
                         getServiceContact(), getSecurityContext(), provider);
             }
             catch (TaskSubmissionException e) {
+                logger.warn("Failed to start coaster resource on " + getServiceContact(), e);
                 throw new FileResourceException(
                         "Failed to start coaster resource on "
                                 + getServiceContact(), e);
