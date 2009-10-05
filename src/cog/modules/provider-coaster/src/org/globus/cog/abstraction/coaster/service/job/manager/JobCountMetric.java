@@ -43,4 +43,8 @@ public class JobCountMetric implements Metric {
     public double size(int w, int h) {
         return w;
     }
+
+    public int width(int msz, int h) {
+        return msz;
+    }
 }
