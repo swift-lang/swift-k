@@ -62,4 +62,16 @@ public class PutFileHandler extends CoasterFileRequestHandler {
             }
         }
     }
+
+    public void errorReceived(String msg, Exception t) {
+        if (fos != null) {
+            try {
+                fos.close();
+            }
+            catch (IOException e) {
+                logger.info("Failed to close output stream", e);
+            }
+        }
+        super.errorReceived(msg, t);
+    }    
 }
