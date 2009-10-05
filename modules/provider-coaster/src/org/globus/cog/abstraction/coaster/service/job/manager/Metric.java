@@ -21,6 +21,8 @@ public interface Metric {
 
     double size(int w, int h);
     
+    int width(int msz, int h);
+    
     public class NullMetric implements Metric {
         public double blockSize(int slot, int cslots, double tsum) {
             return 0;
@@ -37,6 +39,9 @@ public interface Metric {
         public double size(int w, int h) {
             return 0;
         }
-        
+
+        public int width(int msz, int h) {
+            return 0;
+        }
     }
 }
