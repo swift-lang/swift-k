@@ -11,6 +11,7 @@
 package org.globus.cog.karajan.workflow.events;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -18,40 +19,56 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
+import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+
 public final class EventBus {
 	public static final Logger logger = Logger.getLogger(EventBus.class);
+	
+	public static final int DEFAULT_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 4;
 	
 	public static final boolean TRACE_EVENTS = false;
 
 	private static final EventBus bus = new EventBus();
 	public volatile static long eventCount;
 	public volatile static long cummulativeEventTime;
-
-	private final Queues events;
-	private final WorkerManager workers;
-
-	private final EventDispatcher dispatcher;
 	
 	private static EventHook hook;
+	
+	private final ThreadPoolExecutor es;
+    private final BlockingQueue bq, sbq;
+    private boolean suspended;
+    public static volatile long eventsDispatched;
 
 	public EventBus() {
-		events = new Queues();
-		workers = new WorkerManager();
-		dispatcher = EventDispatcher.newDispatcher(events, workers);
-		dispatcher.start();
+		bq = new LinkedBlockingQueue();
+		sbq = new LinkedBlockingQueue();
+        es = new ThreadPoolExecutor(DEFAULT_WORKER_COUNT / 4, DEFAULT_WORKER_COUNT, 10, TimeUnit.SECONDS, bq);
 	}
 
 	private void _post(EventListener target, Event event) {
 		EventTargetPair etp = new EventTargetPair(event, target);
-		events.enqueue(etp);
+		if (suspended) {
+		    sbq.offer(etp);
+		}
+		else {
+			es.submit(etp);
+		}
 	}
 
 	private void _suspendAll() {
-		dispatcher.suspendAll();
+		suspended = true;
 	}
 
 	private void _resumeAll() {
-		dispatcher.resumeAll();
+	    suspended = false;
+		Iterator i = sbq.iterator();
+		while (i.hasNext()) {
+		    es.submit((Runnable) i.next());
+		}
+		sbq.clear();
 	}
 
 	public static void post(EventListener target, Event event) {
@@ -63,14 +80,6 @@ public final class EventBus {
 		return bus;
 	}
 	
-	public WorkerManager getWorkerManager() {
-		return workers; 
-	}
-	
-	public Queues getQueues() {
-		return events;
-	}
-
 	public synchronized static void initialize() {
 	}
 
@@ -193,11 +202,11 @@ public final class EventBus {
 		boolean busy = true;
 		int count = 0;
 		while (busy) {
-			if (!bus.dispatcher.isSuspended()) {
+			if (!bus.suspended) {
 				throw new KarajanRuntimeException(
 						"EventBus.waitForEvents() called with an unsuspended bus. Call EventBus.suspendAll() first");
 			}
-			if (bus.workers.getWorking().size() == 0) {
+			if (bus.bq.isEmpty() && bus.es.getActiveCount() == 0) {
 				busy = false;
 			}
 			if (busy) {
@@ -223,14 +232,10 @@ public final class EventBus {
 	}
 
 	public static Collection getAllEvents() {
-		if (!bus.dispatcher.isSuspended()) {
+		if (!bus.suspended) {
 			throw new KarajanRuntimeException(
 					"EventBus.getAllEvents() called with an unsuspended bus. Call EventBus.suspendAll() first");
 		}
-		return bus.dispatcher.getAllEvents();
-	}
-
-	protected static EventDispatcher getDispatcher() {
-		return bus.dispatcher;
+		return bus.sbq;
 	}
 }
