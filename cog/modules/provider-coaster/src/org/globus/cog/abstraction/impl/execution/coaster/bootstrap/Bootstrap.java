@@ -186,10 +186,11 @@ public class Bootstrap {
         List args = new ArrayList();
         args.add("nice");
         args.add("-n");
-        args.add("10");
+        args.add("2");
         args.add(java);
         addDebuggingOptions(args);
-        args.add("-Xmx128M");
+        args.add("-Xmx256M");
+        //args.add("-agentlib:hprof=file=c.hprof");
         addProperties(args);
         args.add("-cp");
         args.add(sb.toString());
