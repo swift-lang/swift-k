@@ -88,7 +88,7 @@ public class UDPChannel extends AbstractKarajanChannel {
 		}
 	}
 
-	public void sendTaggedData(int tag, int flags, byte[] bytes) {
+	public void sendTaggedData(int tag, int flags, byte[] bytes, SendCallback cb) {
 		try {
 			if (bytes.length + HDRLEN > BUFFER_SIZE) {
 				throw new ChannelIOException("Message too large");
@@ -114,6 +114,9 @@ public class UDPChannel extends AbstractKarajanChannel {
 			pack(buf, 0, checksum(buf, 4, bytes.length + HDRLEN - 4));
 			DatagramPacket dp = new DatagramPacket(buf, bytes.length + HDRLEN, addr, port);
 			ds.send(dp);
+			if (cb != null) {
+			    cb.dataSent();
+			}
 		}
 		catch (IOException e) {
 			throw new ChannelIOException(e);
