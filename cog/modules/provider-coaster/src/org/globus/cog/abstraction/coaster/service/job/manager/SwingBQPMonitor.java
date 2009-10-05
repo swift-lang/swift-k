@@ -25,7 +25,11 @@ import javax.swing.JSpinner;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.apache.log4j.Logger;
+
 public class SwingBQPMonitor extends JComponent implements ChangeListener, ActionListener {
+    public static final Logger logger = Logger.getLogger(SwingBQPMonitor.class);
+    
     JSpinner jtime;
 
     private static int xmult, xdiv, ymult, ydiv;
@@ -34,13 +38,13 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
     private Time max;
     int cjobs, blockx;
     private BlockQueueProcessor bqp;
-    
+
     private JButton zoomin, zoomout;
     private Settings settings;
     private List jobs, blocks;
     private SortedJobSet queued;
     private Set blockids;
-    
+
     public SwingBQPMonitor() {
         starttime = Time.now();
         max = starttime.add(TimeInterval.fromSeconds(30));
@@ -55,7 +59,7 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
         f.setContentPane(this);
         f.setSize(800, 600);
         f.setVisible(true);
-        
+
         zoomin = addButton(140, 4, "+");
         zoomout = addButton(200, 4, "-");
         blockids = new HashSet();
@@ -69,7 +73,7 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
         this.queued = bqp.getQueued();
         this.blocks = bqp.getBlocks();
     }
-    
+
     public void update(Settings settings, List jobs, SortedJobSet queued, List blocks) {
         this.settings = settings;
         this.jobs = jobs;
@@ -84,7 +88,7 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
         }
         repaint();
     }
-    
+
     private JButton addButton(int x, int y, String t) {
         JButton b = new JButton();
         b.setText(t);
@@ -114,14 +118,11 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
     private void computeMaxTime() {
         Iterator i = jobs.iterator();
         long m = max.getSeconds();
-        /*long now = Time.now().getSeconds();
-        while (i.hasNext()) {
-            Job j = (Job) i.next();
-            long v = BlockQueueProcessor.overallocatedSize(j, settings) + now;
-            if (m < v) {
-                m = v;
-            }
-        }*/
+        /*
+         * long now = Time.now().getSeconds(); while (i.hasNext()) { Job j =
+         * (Job) i.next(); long v = BlockQueueProcessor.overallocatedSize(j,
+         * settings) + now; if (m < v) { m = v; } }
+         */
         i = blocks.iterator();
         while (i.hasNext()) {
             Block b = (Block) i.next();
@@ -129,94 +130,99 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
                 m = b.getEndTime().getSeconds();
             }
         }
-        max = Time.fromSeconds(m);
+        max = Time.fromSeconds((m / 250) * 250);
     }
 
     public void paint(Graphics g) {
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, getWidth(), getHeight());
-        super.paint(g);
-        if (jobs == null) {
-            return;
+        try {
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, getWidth(), getHeight());
+            super.paint(g);
+            if (jobs == null) {
+                return;
+            }
+            cjobs = Math.max(jobs.size() + queued.size(), cjobs);
+            computeMaxTime();
+
+            int wj = getWidth() * 4 / 5;
+            int hj = getHeight() * 3 / 5;
+
+            g.setColor(Color.BLACK);
+            g.drawLine(10, hj, 10 + wj, hj);
+
+            g.drawString(String.valueOf(max.subtract(starttime).getSeconds()), 10, hj + 20);
+            g.drawString("Queued: " + queued.size(), 10, hj + 30);
+            g.drawString("Not queued: " + jobs.size(), 10, hj + 40);
+            ymult = hj / 2 - 20;
+            ydiv = (int) (Math.max(max.subtract(starttime).getSeconds(), 1L) + 10);
+            xdiv = Math.max(blockx, 100);
+            xmult = wj;
+
+            g.setColor(new Color(80, 100, 255, 64));
+            int i = 0;
+            Iterator qi = queued.iterator();
+            while (qi.hasNext()) {
+                Job j = (Job) qi.next();
+                g.fillRect(scalex(i) + 10, hj * 7 / 5 - scaley(j.getMaxWallTime()), scalex(1),
+                    scaley(j.getMaxWallTime()));
+                i++;
+            }
+
+            Iterator it;
+
+            g.setColor(new Color(255, 0, 0, 64));
+
+            i = 0;
+            it = jobs.iterator();
+            while (it.hasNext()) {
+                Job j = (Job) it.next();
+                g.fillRect(scalex(i) + 10, hj * 8 / 5 - scaley(j.getMaxWallTime()), scalex(1),
+                    scaley(j.getMaxWallTime()));
+                i++;
+            }
+
+            g.setColor(Color.RED);
+            i = 0;
+            it = jobs.iterator();
+            while (it.hasNext()) {
+                Job j = (Job) it.next();
+                int v = BlockQueueProcessor.overallocatedSize(j, settings);
+                g.drawLine(scalex(i) + 10, hj - scaley(v), scalex(i + 1) + 10 - 1, hj - scaley(v));
+                i++;
+            }
+
+            g.setColor(new Color(0, 160, 0));
+
+            int blockx = 10;
+            Iterator bi = blocks.iterator();
+            while (bi.hasNext()) {
+                Block b = (Block) bi.next();
+                max = Time.max(max, b.getEndTime());
+                paintBlock(b, g, hj, blockx);
+                blockx += b.getWorkerCount() + 4;
+            }
+            g.setColor(new Color(0, 128, 0));
+            Time now = Time.now();
+            g.drawLine(10, hj - scaley(now), 10 + wj, hj - scaley(now));
         }
-        cjobs = Math.max(jobs.size() + queued.size(), cjobs);
-        computeMaxTime();
-
-        int wj = getWidth() * 4 / 5;
-        int hj = getHeight() * 3 / 5;
-
-        g.setColor(Color.BLACK);
-        g.drawLine(10, hj, 10 + wj, hj);
-        
-        g.drawString(String.valueOf(max.subtract(starttime).getSeconds()), 10, hj + 20);
-        g.drawString("Queued: " + queued.size(), 10, hj + 30);
-        g.drawString("Not queued: " + jobs.size(), 10, hj + 40);
-        ymult = hj / 2 - 20;
-        ydiv = (int) (Math.max(max.subtract(starttime).getSeconds(), 1L) + 10);
-        xdiv = Math.max(blockx, 100);
-        xmult = wj;
-
-        g.setColor(new Color(80, 100, 255, 64));
-        int i = 0;
-        Iterator qi = queued.iterator();
-        while (qi.hasNext()) {
-            Job j = (Job) qi.next();
-            g.fillRect(scalex(i) + 10, hj * 7 / 5 - scaley(j.getMaxWallTime()), scalex(1),
-                scaley(j.getMaxWallTime()));
-            i++;
+        catch (Exception e) {
+            logger.warn("Exception caught", e);
         }
-
-        Iterator it;
-
-        g.setColor(new Color(255, 0, 0, 64));
-
-        i = 0;
-        it = jobs.iterator();
-        while (it.hasNext()) {
-            Job j = (Job) it.next();
-            g.fillRect(scalex(i) + 10, hj * 8 / 5 - scaley(j.getMaxWallTime()), scalex(1),
-                scaley(j.getMaxWallTime()));
-            i++;
-        }
-
-        g.setColor(Color.RED);
-        i = 0;
-        it = jobs.iterator();
-        while (it.hasNext()) {
-            Job j = (Job) it.next();
-            int v = BlockQueueProcessor.overallocatedSize(j, settings);
-            g.drawLine(scalex(i) + 10, hj - scaley(v), scalex(i + 1) + 10 - 1, hj - scaley(v));
-            i++;
-        }
-
-        g.setColor(new Color(0, 160, 0));
-
-        int blockx = 10;
-        Iterator bi = blocks.iterator();
-        while (bi.hasNext()) {
-            Block b = (Block) bi.next();
-            max = Time.max(max, b.getEndTime());
-            paintBlock(b, g, hj, blockx);
-            blockx += b.getWorkerCount() + 4;
-        }
-        g.setColor(new Color(0, 128, 0));
-        Time now = Time.now();
-        g.drawLine(10, hj - scaley(now), 10 + wj, hj - scaley(now));
     }
 
     static long maxplanning = 0;
     static int maxplanningstep = 0;
-    
+
     private final Color DONEJOB = new Color(128, 255, 128, 170);
     private final Color RUNNINGJOB = new Color(255, 245, 128, 120);
     private final Color PLANNEDJOB = new Color(128, 128, 255, 100);
-    
+
     private final Color DONEBLOCK = new Color(0, 128, 0);
     private final Color RUNNINGBLOCK = new Color(128, 120, 0);
     private final Color PLANNEDBLOCK = new Color(0, 0, 128);
 
     public void stateChanged(ChangeEvent e) {
-        
+
     }
 
     public void paintBlock(Block b, Graphics g, int hj, int x) {
@@ -241,10 +247,9 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
         g.drawRect(10 + scalex(x), hj - scaley(b.getEndTime()), scalex(b.getWorkerCount()),
             scaley(b.getWalltime()));
 
-        g.drawLine(10 + scalex(x + b.getWorkerCount() / 2), hj
-                - scaley(start), 10 + scalex(x + b.getWorkerCount()
-                / 2), hj - scaley(b.getCreationTime()));
-        g.drawString(b.getWalltime().multiply(b.getWorkerCount()).getSeconds() + "s",
+        g.drawLine(10 + scalex(x + b.getWorkerCount() / 2), hj - scaley(start), 10 + scalex(x
+                + b.getWorkerCount() / 2), hj - scaley(b.getCreationTime()));
+        g.drawString(b.getWorkerCount() + "w x " + b.getWalltime().getSeconds() + "s",
             10 + scalex(x), hj - scaley(b.getEndTime()) - 10);
 
         Iterator i = b.getCpus().iterator();
@@ -262,19 +267,19 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
         }
 
         g.setColor(Color.RED);
-        g.drawLine(10 + scalex(x), hj - scaley(dl),
-            10 + scalex(x + b.getWorkerCount()), hj - scaley(dl));
+        g.drawLine(10 + scalex(x), hj - scaley(dl), 10 + scalex(x + b.getWorkerCount()), hj
+                - scaley(dl));
     }
 
     private void paintJob(Graphics g, int hj, int x, Cpu cpu, Job j, Color color) {
-        g.setColor(color);
-        g.fillRect(10 + scalex(x + cpu.getId()), hj
-                - scaley(j.getEndTime()), scalex(1),
-            scaley(j.getEndTime().subtract(j.getStartTime())));
-        g.setColor(Color.BLACK);
-        g.drawLine(10 + scalex(x + cpu.getId()), hj
-                - scaley(j.getEndTime()), 10 + scalex(x
+        if (j.getStartTime() != null && j.getEndTime() != null) {
+            g.setColor(color);
+            g.fillRect(10 + scalex(x + cpu.getId()), hj - scaley(j.getEndTime()), Math.max(1, scalex(1)),
+                scaley(j.getEndTime().subtract(j.getStartTime())));
+            g.setColor(Color.BLACK);
+            g.drawLine(10 + scalex(x + cpu.getId()), hj - scaley(j.getEndTime()), 10 + scalex(x
                 + cpu.getId() + 1) - 1, hj - scaley(j.getEndTime()));
+        }
     }
 
     public void update() {
@@ -283,10 +288,14 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == zoomin) {
-            max = Time.now().add(TimeInterval.fromSeconds((int) (max.subtract(Time.now()).getSeconds() * 2 / 3)));
+            max =
+                    Time.now().add(
+                        TimeInterval.fromSeconds((int) (max.subtract(Time.now()).getSeconds() * 2 / 3)));
         }
         else if (e.getSource() == zoomout) {
-            max = Time.now().add(TimeInterval.fromSeconds((int) (max.subtract(Time.now()).getSeconds() * 3 / 2)));
+            max =
+                    Time.now().add(
+                        TimeInterval.fromSeconds((int) (max.subtract(Time.now()).getSeconds() * 3 / 2)));
         }
         repaint();
     }
