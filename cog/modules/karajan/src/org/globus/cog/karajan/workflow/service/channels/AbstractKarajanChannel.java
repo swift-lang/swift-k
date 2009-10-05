@@ -113,13 +113,21 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public void sendTaggedReply(int tag, byte[] data, boolean fin) {
 		sendTaggedReply(tag, data, fin, false);
 	}
+	
+	public void sendTaggedData(int i, boolean fin, byte[] bytes) {
+		sendTaggedData(i, fin, bytes, null);
+	}
 
-	public void sendTaggedData(int tag, boolean fin, byte[] data) {
+	public void sendTaggedData(int tag, boolean fin, byte[] data, SendCallback cb) {
 		if (logger.isDebugEnabled()) {
 			logger.debug(this + " REQ>: tag = " + tag + ", fin = " + fin + ", datalen = "
 					+ data.length + ", data = " + ppByteBuf(data));
 		}
-		sendTaggedData(tag, fin ? FINAL_FLAG : 0, data);
+		sendTaggedData(tag, fin ? FINAL_FLAG : 0, data, cb);
+	}
+	
+	public void sendTaggedData(int i, int flags, byte[] bytes) {
+		sendTaggedData(i, flags, bytes, null);
 	}
 
 	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err) {

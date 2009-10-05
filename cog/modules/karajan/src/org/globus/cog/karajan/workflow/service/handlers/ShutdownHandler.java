@@ -18,7 +18,6 @@ import org.globus.cog.karajan.workflow.service.channels.ShuttingDownException;
 public class ShutdownHandler extends RequestHandler {
 	private static final Logger logger = Logger.getLogger(ShutdownHandler.class);
 	
-
 	public void requestComplete() throws ProtocolException {
 		try {
 			getChannel().setLocalShutdown();

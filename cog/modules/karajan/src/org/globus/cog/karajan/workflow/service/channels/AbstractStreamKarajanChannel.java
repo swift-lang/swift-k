@@ -14,10 +14,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -80,7 +82,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		logger.info("Channel config: " + getChannelContext().getConfiguration());
 		ChannelManager.getManager().handleChannelException(this, e);
 		try {
-			getSender().purge(this, new NullChannel(true));
+			getSender(this).purge(this, new NullChannel(true));
 		}
 		catch (IOException e1) {
 			logger.warn("Failed to purge queued messages", e1);
@@ -101,12 +103,16 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		logger.info("Channel configured");
 	}
 
-	public synchronized void sendTaggedData(int tag, int flags, byte[] data) {
-		getSender().enqueue(tag, flags, data, this);
+	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
+		getSender(this).enqueue(tag, flags, data, this, cb);
 	}
+
+	private static long savail, cnt;
 
 	protected boolean step() throws IOException {
 		int avail = inputStream.available();
+		savail += avail;
+		cnt++;
 		if (avail == 0) {
 			return false;
 		}
@@ -155,7 +161,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	public void purge(KarajanChannel channel) throws IOException {
-		getSender().purge(this, channel);
+		getSender(this).purge(this, channel);
 	}
 
 	protected void register() {
@@ -170,38 +176,33 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		outputStream.flush();
 	}
 
-	private static final int SENDER_COUNT = 1;
-	private static Sender[] sender;
-	private static int crtSender;
+	private static Map sender;
 
-	private static synchronized Sender getSender() {
+	private static synchronized Sender getSender(KarajanChannel channel) {
 		if (sender == null) {
-			sender = new Sender[SENDER_COUNT];
-			for (int i = 0; i < SENDER_COUNT; i++) {
-				sender[i] = new Sender();
-				sender[i].start();
-			}
+			sender = new HashMap();
 		}
-		try {
-			return sender[crtSender++];
+
+		Sender s = (Sender) sender.get(channel.getClass());
+		if (s == null) {
+			sender.put(channel.getClass(), s = new Sender());
+			s.start();
 		}
-		finally {
-			if (crtSender == SENDER_COUNT) {
-				crtSender = 0;
-			}
-		}
+		return s;
 	}
 
 	private static class SendEntry {
 		public final int tag, flags;
 		public final byte[] data;
 		public final AbstractStreamKarajanChannel channel;
+		public final SendCallback cb;
 
-		public SendEntry(int tag, int flags, byte[] data, AbstractStreamKarajanChannel channel) {
+		public SendEntry(int tag, int flags, byte[] data, AbstractStreamKarajanChannel channel, SendCallback cb) {
 			this.tag = tag;
 			this.flags = flags;
 			this.data = data;
 			this.channel = channel;
+			this.cb = cb;
 		}
 	}
 
@@ -217,23 +218,33 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		}
 
 		public synchronized void enqueue(int tag, int flags, byte[] data,
-				AbstractStreamKarajanChannel channel) {
-			queue.addLast(new SendEntry(tag, flags, data, channel));
-			notify();
+				AbstractStreamKarajanChannel channel, SendCallback cb) {
+			queue.addLast(new SendEntry(tag, flags, data, channel, cb));
+			notifyAll();
 		}
 
 		public void run() {
+			long last = System.currentTimeMillis();
 			try {
 				SendEntry e;
 				while (true) {
+					long now = System.currentTimeMillis();
 					synchronized (this) {
 						while (queue.isEmpty()) {
 							wait();
 						}
 						e = (SendEntry) queue.removeFirst();
+						if (now - last > 10000) {
+							logger.info("Sender " + System.identityHashCode(this) + " queue size: "
+									+ queue.size());
+							last = now;
+						}
 					}
 					try {
 						send(e.tag, e.flags, e.data, e.channel.getOutputStream());
+						if (e.cb != null) {
+							e.cb.dataSent();
+						}
 					}
 					catch (IOException ex) {
 						logger.info("Channel IOException", ex);
@@ -333,13 +344,21 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		public void run() {
 			logger.info("Multiplexer " + id + " started");
 			boolean any;
+			long last = System.currentTimeMillis();
 			try {
 				while (true) {
 					any = false;
+					if (this == multiplexer[0]) {
+						savail = 0;
+						cnt = 0;
+					}
 					Iterator i = channels.iterator();
 					while (i.hasNext()) {
 						AbstractStreamKarajanChannel channel = (AbstractStreamKarajanChannel) i.next();
 						if (channel.isClosed()) {
+							if (logger.isInfoEnabled()) {
+								logger.info("Channel is closed. Removing.");
+							}
 							i.remove();
 						}
 						try {
@@ -368,6 +387,18 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 						remove.clear();
 						add.clear();
 					}
+					if (this == multiplexer[0]) {
+						long now = System.currentTimeMillis();
+						if (now - last > 10000) {
+							if (cnt > 0) {
+								logger.info("Avg stream buf: " + (savail / cnt));
+							}
+							else {
+								logger.info("No streams");
+							}
+							last = now;
+						}
+					}
 					if (!any) {
 						Thread.sleep(20);
 					}
@@ -388,6 +419,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		}
 
 		public synchronized void unregister(AbstractStreamKarajanChannel channel) {
+			if (logger.isInfoEnabled()) {
+				logger.info("Unregistering channel " + channel);
+			}
 			remove.add(channel);
 		}
 
@@ -397,6 +431,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 			}
 			channel.handleChannelException(e);
 			synchronized (this) {
+				if (logger.isInfoEnabled()) {
+					logger.info("Removing faulty channel " + channel);
+				}
 				remove.add(channel);
 			}
 		}

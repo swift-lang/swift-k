@@ -22,10 +22,15 @@ public interface KarajanChannel {
 	public static final int REPLY_FLAG = 0x00000001;
 	public static final int FINAL_FLAG = 0x00000002;
 	public static final int ERROR_FLAG = 0x00000004;
+	public static final int COMPRESSED_FLAG = 0x00000008;
 
 	void sendTaggedData(int i, boolean fin, byte[] bytes);
 
 	void sendTaggedData(int i, int flags, byte[] bytes);
+	
+	void sendTaggedData(int i, boolean fin, byte[] bytes, SendCallback cb);
+
+	void sendTaggedData(int i, int flags, byte[] bytes, SendCallback cb);
 
 	void registerCommand(Command command) throws ProtocolException;
 

@@ -23,7 +23,7 @@ public class NullChannel extends AbstractKarajanChannel {
         this.sink = sink;
     }
 
-	public void sendTaggedData(int i, int flags, byte[] bytes) {
+	public void sendTaggedData(int i, int flags, byte[] bytes, SendCallback cb) {
 		if (!sink) {
 			throw new ChannelIOException("Null channel");
 		}
