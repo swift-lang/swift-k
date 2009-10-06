@@ -32,43 +32,51 @@ public class PackageList {
         add("cog-karajan-*.jar");
         add("cog-provider-coaster-*.jar");
         add("cog-provider-gt2-*.jar");
-        add("cog-provider-gt4*.jar");
+        addOptional("cog-provider-gt4*.jar");
         add("cog-provider-local-*.jar");
         add("cog-provider-localscheduler-*.jar");
-        add("cog-provider-ssh-*.jar");
+        addOptional("cog-provider-ssh-*.jar");
         add("cog-util-*.jar");
         add("cryptix*.jar");
-        add("concurrent*.jar");
-        add("j2ssh*.jar");
-        add("jaxrpc.jar");
+        addOptional("concurrent*.jar");
+        addOptional("j2ssh*.jar");
+        addOptional("jaxrpc.jar");
         add("jce-*.jar");
         add("jgss.jar");
         add("log4j*.jar");
-        add("puretls.jar");
-        add("addressing*.jar");
-        add("commonj*.jar");
-        add("axis*.jar");
-        add("cog-axis*.jar");
-        add("globus_delegation*.jar");
-        add("globus_wsrf*.jar");
-        add("gram*.jar");
-        add("naming*.jar");
-        add("saaj*.jar");
-        add("wsdl4j*.jar");
-        add("wss4j*.jar");
-        add("commons-collections*.jar");
-        add("commons-digester*.jar");
-        add("commons-discovery*.jar");
-        add("commons-beanutils*.jar");
+        addOptional("puretls.jar");
+        addOptional("addressing*.jar");
+        addOptional("commonj*.jar");
+        addOptional("axis*.jar");
+        addOptional("cog-axis*.jar");
+        addOptional("globus_delegation*.jar");
+        addOptional("globus_wsrf*.jar");
+        addOptional("gram*.jar");
+        addOptional("naming*.jar");
+        addOptional("saaj*.jar");
+        addOptional("wsdl4j*.jar");
+        addOptional("wss4j*.jar");
+        addOptional("commons-collections*.jar");
+        addOptional("commons-digester*.jar");
+        addOptional("commons-discovery*.jar");
+        addOptional("commons-beanutils*.jar");
         add("commons-logging-*.jar");
-        add("wsrf*.jar");
-        add("xalan*.jar");
-        add("xercesImpl*.jar");
-        add("xml-apis*.jar");
-        add("xmlsec*.jar");
+        addOptional("wsrf*.jar");
+        addOptional("xalan*.jar");
+        addOptional("xercesImpl*.jar");
+        addOptional("xml-apis*.jar");
+        addOptional("xmlsec*.jar");
+    }
+    
+    private void add(String name) {
+        add(name, false);
+    }
+    
+    private void addOptional(String name) {
+        add(name, true);
     }
 
-    private void add(String name) {
+    private void add(String name, boolean optional) {
         final String filt = name.replaceAll("\\.", "\\.").replaceAll("\\*", ".*");
         File[] f = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -76,7 +84,12 @@ public class PackageList {
             }
         });
         if (f.length == 0) {
-            throw new RuntimeException("Missing package: " + name);
+            if (optional) {
+                return;
+            }
+            else {
+                throw new RuntimeException("Missing package: " + name);
+            }
         }
         else {
             for (int i = 0; i < f.length; i++) {
