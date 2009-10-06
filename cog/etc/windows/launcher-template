@@ -6,11 +6,11 @@ goto cogpath
 :nocogpath
     set UNSET_COG_INSTALL_PATH=1
     set COG_INSTALL_PATH=..
-    if NOT EXIST %COG_INSTALL_PATH%\lib\@jar@ goto nocogpath15
+    if NOT EXIST "%COG_INSTALL_PATH%\lib\@jar@" goto nocogpath15
     goto cogpath
 	
 :nocogpath15
-	if NOT EXIST %COG_INSTALL_PATH%\lib\cog.jar goto nocogpath2
+	if NOT EXIST "%COG_INSTALL_PATH%\lib\cog.jar" goto nocogpath2
 	goto cogpath
     
 :nocogpath2
