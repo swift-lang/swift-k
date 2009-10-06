@@ -36,11 +36,11 @@ goto cogpath
      
 :found2
     set COG_INSTALL_PATH=%PARTIAL_PATH%
-    if NOT EXIST %COG_INSTALL_PATH%\lib\@jar@ goto nocogpath25
+    if NOT EXIST "%COG_INSTALL_PATH%\lib\@jar@" goto nocogpath25
     goto cogpath
 	
 :nocogpath25
-	if NOT EXIST %COG_INSTALL_PATH%\lib\cog.jar goto nocogpath3
+	if NOT EXIST "%COG_INSTALL_PATH%\lib\cog.jar" goto nocogpath3
 	goto cogpath
     
 :nocogpath3
