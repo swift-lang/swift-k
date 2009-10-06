@@ -57,7 +57,7 @@ goto cogpath
     
     set SAVECLASSPATH=%CLASSPATH%
     set CLASSPATH=%LOCALCLASSPATH%
-    java %COG_OPTS% @class@ %*
+    java %OPTS% @class@ %*
     set CLASSPATH=%SAVECLASSPATH%
 
 :end
