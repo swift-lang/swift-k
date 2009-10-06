@@ -250,8 +250,8 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 			<replacevalue>set LOCALCLASSPATH=%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift.bat">
-			<replacetoken>set COG_OPTS=</replacetoken>
-			<replacevalue>set COG_OPTS=-DCOG_INSTALL_PATH=%SWIFT_HOME% -Dswift.home=%SWIFT_HOME% -Dvds.home=%SWIFT_HOME% </replacevalue>
+			<replacetoken>set OPTS=</replacetoken>
+			<replacevalue>set OPTS=-DCOG_INSTALL_PATH="%SWIFT_HOME%" -Dswift.home="%SWIFT_HOME%" -Dvds.home="%SWIFT_HOME%" </replacevalue>
 		</replace>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
@@ -285,6 +285,7 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 	</target>
 
 
+
 	<!-- ================================================ -->
 	<!-- Compile                                          -->
 	<!-- ================================================ -->
@@ -292,7 +293,7 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 	<target name="compile">
 		<ant antfile="${main.buildfile}" target="compile"/>
 	</target>
-
+	
 	<!-- ================================================ -->
 	<!-- Clean                                            -->
 	<!-- ================================================ -->
