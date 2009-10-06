@@ -1,5 +1,7 @@
 <project name="Launchers" default="create" basedir=".">
 	<target name="create">
+		<delete file="${dist.dir}/bin/swift.bat"/>
+		<delete file="${dist.dir}/bin/swift"/>
 		<ant antfile="${main.buildfile}" target="launcher">
 			<property name="launcher-name" value="VDLx2Karajan"/>
 			<property name="class-name" value="org.griphyn.vdl.engine.Karajan"/>
