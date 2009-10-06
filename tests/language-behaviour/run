@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#Some of the space-and-quotes output files break checkouts on Windows
+./generate-odd-files
+
 # make up a tc.data file
 
 cp $(dirname $(which swift))/../etc/tc.data ./tc.data
