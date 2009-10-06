@@ -53,7 +53,7 @@ goto cogpath
 
 	set LOCALCLASSPATH=%CLASSPATH%;%COG_INSTALL_PATH%\etc
 	
-	for %%J in ("%COG_INSTALL_PATH%\lib\*.jar") DO call :setpath "%%J"
+	for %%J in ("%COG_INSTALL_PATH%\lib\*.jar") DO call :setpath %%J
     
     set SAVECLASSPATH=%CLASSPATH%
     set CLASSPATH=%LOCALCLASSPATH%
@@ -65,7 +65,7 @@ goto cogpath
     goto done
     
 :setpath
-    set LOCALCLASSPATH=%LOCALCLASSPATH%;%1
+    set LOCALCLASSPATH=%LOCALCLASSPATH%;%*
     goto done
 
 :restore
