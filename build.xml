@@ -246,8 +246,8 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 			<replacevalue>SWIFT_HOME</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift.bat">
-			<replacetoken>set LOCALCLASSPATH=%SWIFT_HOME%\etc</replacetoken>
-			<replacevalue>set LOCALCLASSPATH=%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec</replacevalue>
+			<replacetoken>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc</replacetoken>
+			<replacevalue>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec</replacevalue>
 		</replace>
 		<replace file="${dist.dir}/bin/swift.bat">
 			<replacetoken>set OPTS=</replacetoken>
