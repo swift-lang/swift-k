@@ -3314,6 +3314,31 @@ reside on an unrouted internal network). (since Swift 0.9)
 			
 -->
 		</section>
+		
+		<section id="profile.swift"><title>swift namespace</title>
+			<para id="swift.wrapperInterpreter"><literal>wrapperInterpreter</literal>
+The wrapper interpreter indicates the command (executable) to be used to run the Swift wrapper
+script. The default is "/bin/bash" on Unix sites and "cscript.exe" on Windows sites.
+			</para>
+			<para id="swift.wrapperInterpreterOptions"><literal>wrapperInterpreterOptions</literal>
+Allows specifying additional options to the executable used to run the Swift wrapper. The defaults
+are no options on Unix sites and "//Nologo" on Windows sites.
+			</para>
+			<para id="swift.wrapperScript"><literal>wrapperScript</literal>
+Specifies the name of the wrapper script to be used on a site. The defaults are "_swiftwrap" on 
+Unix sites and "_swiftwrap.vbs" on Windows sites. If you specify a custom wrapper script, it 
+must be present in the "libexec" directory of the Swift installation.
+			</para>
+			<para id="swift.cleanupCommand"><literal>cleanupCommand</literal>
+Indicates the command to be run at the end of a Swift run to clean up the run directories on a 
+remote site. Defaults are "/bin/rm" on Unix sites and "cmd.exe" on Windows sites
+			</para>
+			<para id="swift.cleanupCommandOptions"><literal>cleanupCommandOptions</literal>
+Specifies the options to be passed to the cleanup command above. The options are passed in the
+argument list to the cleanup command. After the options, the last argument is the directory
+to be deleted. The default on Unix sites is "-rf". The default on Windows sites is ["/C", "del", "/Q"].
+			</para>
+		</section>
 
 		<section id="profile.env"><title>env namespace</title>
 			<para>
@@ -4002,6 +4027,55 @@ Because of the way that Swift runs its server side code, provider-specific
 MPI modes (such as GRAM jobType=mpi) should not be used. Instead, the
 mpirun command should be explicitly invoked.
 </para>
+		</section>
+		<section id="tips.windows"><title>Running on Windows</title>
+			<para>
+			
+				Since 10/11/09, the development version of Swift has the
+ability to run on a Windows machine, as well as the ability to submit
+jobs to a Windows site (provided that an appropriate provider is used). 
+			
+			</para>
+			<para>
+			
+In order to launch Swift on Windows, use the provided batch file
+(swift.bat). In certain cases, when a large number of jar libraries are
+present in the Swift lib directory and depending on the exact location
+of the Swift installation, the classpath environment variable that the
+Swift batch launcher tries to create may be larger than what Windows can
+handle. In such a case, either install Swift in a directory closer to
+the root of the disk (say, c:\swift) or remove non-essential jar files
+from the Swift lib directory.
+
+			</para>
+			
+			<para>
+			
+Due to the large differences between Windows and Unix environments,
+Swift must use environment specific tools to achieve some of its goals.
+In particular, each Swift executable is launched using a wrapper script.
+This script is a Bourne Shell script. On Windows machines, which have no
+Bourne Shell interpreter installed by default, the Windows Scripting
+Host is used instead, and the wrapper script is written in VBScript.
+Similarly, when cleaning up after a run, the "/bin/rm" command available
+in typical Unix environments must be replaced by the "del" shell command.
+			
+			</para>
+			
+			<para>
+			
+It is important to note that in order to select the proper set of tools
+to use, Swift must know when a site runs under Windows. To inform Swift
+of this, specify the "sysinfo" attribute for the "pool" element in the
+site catalog. For example:
+
+<programlisting>
+	<pool handle="localhost" sysinfo="INTEL32::WINDOWS">
+	...
+	</pool>
+</programlisting>
+			
+			</para>
 		</section>
 	</section>
 
