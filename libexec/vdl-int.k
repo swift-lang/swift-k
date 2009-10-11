@@ -183,7 +183,13 @@ namespace("vdl"
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "START dir={dir} host={host}")
 			if(vdl:configProperty("sitedir.keep") == "false"
-				task:execute("/bin/rm", arguments="-rf {dir}", host=host, batch=true)
+				task:execute(
+					vdl:siteprofile(host, "swift:cleanupCommand"), 
+					arguments=list(
+						vdl:siteprofile(host, "swift:cleanupCommandOptions"),
+						dir
+					)
+					host=host, batch=true)
 			)
 			log(LOG:INFO, "END dir={dir} host={host}")
 		)
@@ -417,7 +423,7 @@ namespace("vdl"
 				stderr := try(stderr, "stderr.txt")
 				kickstart := vdl:kickstart(rhost)
 				fileDirs := fileDirs(stagein, stageout)
-				os := vdl:tcprofile(tr, rhost, fqn="INTERNAL:OS") 
+				os := vdl:siteprofile(rhost, "SYSINFO:OS") 
 
 				if(wrapperMode == "files"
 					sequential(
@@ -458,10 +464,10 @@ namespace("vdl"
 
 						if(wrapperMode == "files"
 							vdl:execute(
-								vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreter"),
+								vdl:siteprofile(rhost, "swift:wrapperInterpreter"),
 								list(
-									vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreterOptions"),
-									dircat("shared", vdl:tcprofile(tr, rhost, fqn="swift:wrapperScript"), os=os), 
+									vdl:siteprofile(rhost, "swift:wrapperInterpreterOptions"),
+									dircat("shared", vdl:siteprofile(rhost, "swift:wrapperScript"), os=os), 
 									jobid, "-p", jobdir
 								)
 								directory=wfdir
@@ -475,10 +481,10 @@ namespace("vdl"
 						)
 						if(wrapperMode == "args"
 							vdl:execute(
-								vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreter"),
+								vdl:siteprofile(rhost, "swift:wrapperInterpreter"),
 								list(
-								vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreterOptions"),
-								dircat("shared", vdl:tcprofile(tr, rhost, fqn="swift:wrapperScript"), os=os),
+								vdl:siteprofile(rhost, "swift:wrapperInterpreterOptions"),
+								dircat("shared", vdl:siteprofile(rhost, "swift:wrapperScript"), os=os),
 								jobid,
 								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 
