@@ -143,6 +143,7 @@ public class Misc extends FunctionsCollection {
 				text.append('\n');
 				line = br.readLine();
 			}
+			br.close();
 			return text.toString();
 		}
 		catch (Exception e) {
