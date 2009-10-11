@@ -25,12 +25,12 @@ import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.griphyn.common.catalog.transformation.File;
-import org.griphyn.common.classes.TCType;
 import org.griphyn.vdl.util.FQN;
 
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.interfaces.Status;
+import org.globus.swift.catalog.transformation.File;
+import org.globus.swift.catalog.types.TCType;
 
 
 public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler {

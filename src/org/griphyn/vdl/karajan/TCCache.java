@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.classes.TCType;
+import org.globus.swift.catalog.TransformationCatalog;
+import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.util.FQN;
 
 public class TCCache {
