@@ -70,7 +70,7 @@ namespace("vdl"
 					 * the presence of the success file and remove it, all
 					 * in one operation. It relies on file:remove() throwing 
 					 * an exception if the file is not there. 
-					 */
+					 */ 
 					file:remove("{wfdir}/status/{jobdir}/{jobid}-success", host=rhost)
 					log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 				)
@@ -104,8 +104,9 @@ namespace("vdl"
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				sharedDir := dircat(wfdir, "shared")
 				dir:make(sharedDir, host=rhost)
-				transfer(srcdir="{vds.home}/libexec/", srcfile="_swiftwrap", destdir=sharedDir, desthost=rhost)
-				transfer(srcdir="{vds.home}/libexec/", srcfile="_swiftseq", destdir=sharedDir, desthost=rhost)
+				transfer(srcdir="{swift.home}/libexec/", srcfile="_swiftwrap", destdir=sharedDir, desthost=rhost)
+				transfer(srcdir="{swift.home}/libexec/", srcfile="_swiftwrap.vbs", destdir=sharedDir, desthost=rhost)
+				transfer(srcdir="{swift.home}/libexec/", srcfile="_swiftseq", destdir=sharedDir, desthost=rhost)
 				dir:make(dircat(wfdir, "kickstart"), host=rhost)
 
 				statusMode := configProperty("status.mode",host=rhost)
@@ -416,6 +417,7 @@ namespace("vdl"
 				stderr := try(stderr, "stderr.txt")
 				kickstart := vdl:kickstart(rhost)
 				fileDirs := fileDirs(stagein, stageout)
+				os := vdl:tcprofile(tr, rhost, fqn="INTERNAL:OS") 
 
 				if(wrapperMode == "files"
 					sequential(
@@ -455,20 +457,29 @@ namespace("vdl"
 						vdl:setprogress("Submitting")
 
 						if(wrapperMode == "files"
-							vdl:execute("/bin/bash",
-								list("shared/_swiftwrap", jobid, "-p", jobdir)
-							directory=wfdir
-							redirect=false
-							host=rhost
-							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
-							replicationGroup=replicationGroup
-							replicationChannel=replicationChannel
-							jobid=jobid
+							vdl:execute(
+								vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreter"),
+								list(
+									vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreterOptions"),
+									dircat("shared", vdl:tcprofile(tr, rhost, fqn="swift:wrapperScript"), os=os), 
+									jobid, "-p", jobdir
+								)
+								directory=wfdir
+								redirect=false
+								host=rhost
+								vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
+								replicationGroup=replicationGroup
+								replicationChannel=replicationChannel
+								jobid=jobid
 							)
 						)
 						if(wrapperMode == "args"
-							vdl:execute("/bin/bash",
-								list("shared/_swiftwrap", jobid,
+							vdl:execute(
+								vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreter"),
+								list(
+								vdl:tcprofile(tr, rhost, fqn="swift:wrapperInterpreterOptions"),
+								dircat("shared", vdl:tcprofile(tr, rhost, fqn="swift:wrapperScript"), os=os),
+								jobid,
 								"-jobdir", jobdir,
 								"-e", vdl:executable(tr, rhost), 
 								"-out", stdout, 
@@ -538,7 +549,7 @@ namespace("vdl"
 						outs := transferStandardFiles(rhost, tmpdir, jobid, stdout, stderr)
 						
 						discard(maybe(transferWrapperLog(rhost, wfdir, jobid, jobdir)))
-							
+
 						kickstartRec := if(
 							kickstart == "" ""
 							else(
