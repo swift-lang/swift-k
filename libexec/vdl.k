@@ -14,8 +14,8 @@ namespace("vdl"
 	import("java.k")
 
 	once("vdl.k-print-version"
-		log("info",sys:file:read("{vds.home}/libexec/version.txt"))
-		echo(sys:file:read("{vds.home}/libexec/version.txt"))
+		log("info",sys:file:read("{swift.home}/libexec/version.txt"))
+		echo(sys:file:read("{swift.home}/libexec/version.txt"))
 
 		log("info","RUNID id=tag:benc@ci.uchicago.edu,2007:swift:run:{VDL:RUNID}")
 		echo("RunID: {VDL:RUNID}")
