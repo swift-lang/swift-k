@@ -6,13 +6,6 @@ Set shell = WScript.CreateObject("WScript.Shell")
 MandatoryArg = True
 OptionalArg = False
 
-'WScript.Echo("-ab-:" + prepareOne("ab"))
-'WScript.Echo("-a b-:" + prepareOne("a b"))
-'WScript.Echo("-a\b-:" + prepareOne("a\b"))
-'WScript.Echo("-a""b-:" + prepareOne("a""b"))
-'WScript.Echo("-a\""b-:" + prepareOne("a\""b"))
-'WScript.Echo("-a\\b-:" + prepareOne("a\\b"))
-'WScript.Echo("-a\\""b-:" + prepareOne("a\\""b"))
 
 Sub fail(message, code)
 	log message
