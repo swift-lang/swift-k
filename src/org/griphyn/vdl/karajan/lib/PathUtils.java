@@ -9,7 +9,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
-import org.griphyn.common.classes.Os;
+import org.globus.swift.catalog.types.Os;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class PathUtils extends FunctionsCollection {

@@ -8,7 +8,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.TransformationCatalogEntry;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.util.FQN;
 
