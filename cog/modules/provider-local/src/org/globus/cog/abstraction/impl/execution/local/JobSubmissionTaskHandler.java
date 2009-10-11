@@ -172,13 +172,15 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
             p.run();
             int exitCode = p.getExitCode();
-
+         
+            
             if (logger.isDebugEnabled()) {
                 logger.debug("Exit code was " + exitCode);
             }
             if (killed) {
                 return;
             }
+            
             if (exitCode == 0) {
                 getTask().setStatus(Status.COMPLETED);
             }
@@ -349,6 +351,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                     any = false;
                 }
                 if (processDone()) {
+                	processPairs();
                     closePairs();
                     return;
                 }
