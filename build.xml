@@ -231,7 +231,6 @@
 			<replacetoken>updateOptions "$SWIFT_HOME" "SWIFT_HOME"
 </replacetoken>
 			<replacevalue>updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
-updateOptions "$SWIFT_HOME" "vds.home"
 updateOptions "$SWIFT_HOME" "swift.home"
 #Use /dev/urandom instead of /dev/random for seeding RNGs
 #This will lower the randomness of the seed, but avoid
@@ -251,7 +250,7 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 		</replace>
 		<replace file="${dist.dir}/bin/swift.bat">
 			<replacetoken>set OPTS=</replacetoken>
-			<replacevalue>set OPTS=-DCOG_INSTALL_PATH="%SWIFT_HOME%" -Dswift.home="%SWIFT_HOME%" -Dvds.home="%SWIFT_HOME%" </replacevalue>
+			<replacevalue>set OPTS=-DCOG_INSTALL_PATH="%SWIFT_HOME%" -Dswift.home="%SWIFT_HOME%"</replacevalue>
 		</replace>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
