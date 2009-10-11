@@ -394,7 +394,9 @@ public abstract class AbstractDataNode implements DSHandle {
 		}
 		this.closed = true;
 		notifyListeners();
-		logger.info("closed " + this.getIdentifyingString());
+		if (logger.isInfoEnabled()) {
+			logger.info("closed " + this.getIdentifyingString());
+		}
 		// so because its closed, we can dump the contents
 
 		try {
@@ -425,11 +427,13 @@ public abstract class AbstractDataNode implements DSHandle {
 		String identifier = this.getIdentifier();
 		Path pathFromRoot = this.getPathFromRoot();
 		if (this.getPathFromRoot() != null) {
-			logger.info("ROOTPATH dataset=" + identifier + " path="
-					+ pathFromRoot);
-			if (this.getType().isPrimitive()) {
-				logger.info("VALUE dataset=" + identifier + " VALUE="
-						+ this.toString());
+			if (logger.isInfoEnabled()) {
+				logger.info("ROOTPATH dataset=" + identifier + " path="
+						+ pathFromRoot);
+				if (this.getType().isPrimitive()) {
+					logger.info("VALUE dataset=" + identifier + " VALUE="
+							+ this.toString());
+				}
 			}
 
 			Mapper m;
@@ -468,12 +472,16 @@ public abstract class AbstractDataNode implements DSHandle {
 				try {
 					if(filemapped) {
 						Object path = m.map(pathFromRoot);
-						logger.info("FILENAME dataset=" + identifier + " filename="
-							+ path);
+						if (logger.isInfoEnabled()) {
+							logger.info("FILENAME dataset=" + identifier + " filename="
+								+ path);
+						}
 					}
 				}
 				catch (Exception e) {
-					logger.info("NOFILENAME dataset=" + identifier);
+					if (logger.isInfoEnabled()) {
+						logger.info("NOFILENAME dataset=" + identifier);
+					}
 				}
 			}
 		}
@@ -483,8 +491,10 @@ public abstract class AbstractDataNode implements DSHandle {
 			while (i.hasNext()) {
 				Map.Entry e = (Map.Entry) i.next();
 				AbstractDataNode node = (AbstractDataNode) e.getValue();
-				logger.info("CONTAINMENT parent=" + identifier + " child="
-						+ node.getIdentifier());
+				if (logger.isInfoEnabled()) {
+					logger.info("CONTAINMENT parent=" + identifier + " child="
+							+ node.getIdentifier());
+				}
 				node.logContent();
 			}
 		}
