@@ -12,6 +12,7 @@ namespace("vdl"
 					to(properties
 						each(properties)
 						maybe(property("gridlaunch", gridlaunch))
+						maybe(property("sysinfo", sysinfo))
 					)
 				)
 			)
@@ -31,7 +32,7 @@ namespace("vdl"
 					major == "4" "GT4"
 					major == "2" "GT2"
 					throw("Unknown job manager version: major = {major}, minor = {minor}, patch = {patch}, url = {url}")
-				)
+				) 
 				service(type="execution", provider=provider, url=url)
 			)
 
