@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.arguments.ArgUtil;
@@ -21,15 +22,19 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
+import org.griphyn.common.classes.Os;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.util.FQN;
 
 public class TCProfile extends VDLFunction {
+    public static final Logger logger = Logger.getLogger(TCProfile.class);
+    
 	public static final Arg PA_TR = new Arg.Positional("tr");
 	public static final Arg PA_HOST = new Arg.Positional("host");
+	public static final Arg OA_FQN = new Arg.Optional("fqn");
 
 	static {
-		setArguments(TCProfile.class, new Arg[] { PA_TR, PA_HOST });
+		setArguments(TCProfile.class, new Arg[] { PA_TR, PA_HOST, OA_FQN });
 	}
 
 	private static Map PROFILE_T;
@@ -51,11 +56,14 @@ public class TCProfile extends VDLFunction {
 		TCCache tc = getTC(stack);
 		String tr = TypeUtil.toString(PA_TR.getValue(stack));
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
+		if (OA_FQN.isPresent(stack)) {
+		    return getSingle(tc, tr, bc, new FQN(TypeUtil.toString(OA_FQN.getValue(stack))));
+		}
 		
 		NamedArguments named = ArgUtil.getNamedReturn(stack);
 		Map attrs = null;
 		
-		attrs = attributesFromHost(bc, attrs);
+		attrs = attributesFromHost(bc, attrs, named);
 
 		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
 		
@@ -67,17 +75,102 @@ public class TCProfile extends VDLFunction {
 				named.add(GridExec.A_ENVIRONMENT, env);
 			}
 
-			attrs = attributesFromTC(tce, attrs);
+			attrs = attributesFromTC(tce, attrs, named);
 		}
-		checkWalltime(tr, attrs);
+		checkWalltime(tr, named);
 		addAttributes(named, attrs);
 		return null;
 	}
 	
-	private void checkWalltime(String tr, Map attrs) {
+	public static final FQN SWIFT_WRAPPER_INTERPRETER = new FQN("swift:wrapperInterpreter");
+	public static final FQN SWIFT_WRAPPER_INTERPRETER_OPTIONS = new FQN("swift:wrapperInterpreterOptions");
+	public static final FQN SWIFT_WRAPPER_SCRIPT = new FQN("swift:wrapperScript");
+	public static final FQN INTERNAL_OS = new FQN("INTERNAL:OS");
+	
+	private Object getSingle(TCCache tc, String tr, BoundContact bc, FQN fqn) {
+            TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
+            String value = getProfile(tce, fqn);
+            if (value == null) {
+                value = getProfile(bc, fqn);
+            }
+            if (value == null) {
+                if (SWIFT_WRAPPER_INTERPRETER.equals(fqn)) {
+                    if (tce.getSysInfo().getOs().equals(Os.WINDOWS)) {
+                        return "cscript.exe";
+                    }
+                    else {
+                        return "/bin/bash";
+                    }
+                }
+                else if (SWIFT_WRAPPER_SCRIPT.equals(fqn)) {
+                    if (tce.getSysInfo().getOs().equals(Os.WINDOWS)) {
+                        return "_swiftwrap.vbs";
+                    }
+                    else {
+                        return "_swiftwrap";
+                    }
+                }
+                else if (SWIFT_WRAPPER_INTERPRETER_OPTIONS.equals(fqn)) {
+                	if (tce.getSysInfo().getOs().equals(Os.WINDOWS)) {
+                		return new String[] {"//Nologo"};
+                	}
+                	else {
+                		return null;
+                	}
+                }
+                else if (INTERNAL_OS.equals(fqn)) {
+                	Os os = tce.getSysInfo().getOs();
+                	if (os == null) {
+                		return Os.LINUX;
+                	}
+                	else {
+                		return os;
+                	}
+                }
+            }
+            return value;
+	}
+
+    private String getProfile(BoundContact bc, FQN fqn) {
+        Object o = bc.getProperty(fqn.toString());
+        if (o == null) {
+            return null;
+        }
+        else {
+            return o.toString();
+        }
+    }
+
+    private String getProfile(TransformationCatalogEntry tce, FQN fqn) {
+        List profiles = tce.getProfiles();
+        if (profiles == null) {
+        	return null;
+        }
+        Iterator i = profiles.iterator();
+        while (i.hasNext()) {
+            Profile p = (Profile) i.next();
+            if (eq(p.getProfileNamespace(), fqn.getNamespace()) && eq(p.getProfileKey(), fqn.getName())) {
+                return p.getProfileValue();
+            }
+        }
+        return null;
+    }
+	
+	private boolean eq(Object o1, Object o2) {
+	    if (o1 == null) {
+	        return o2 == null;
+	    }
+	    else {
+	        return o1.equals(o2);
+	    }
+	}
+
+    private void checkWalltime(String tr, NamedArguments attrs) {
 	    Object walltime = null;
 	    if (attrs != null) {
-	    	walltime = attrs.get("maxwalltime");
+	        if (attrs.hasArgument("maxwalltime")) {
+	            walltime = attrs.getArgument("maxwalltime");
+	        }
 	    }
         if (walltime == null) {
             return;
@@ -130,40 +223,37 @@ public class TCProfile extends VDLFunction {
 	}
 	
 	private void addAttributes(NamedArguments named, Map attrs) {
+	    if (logger.isInfoEnabled()) {
+	        logger.info("Attributes: " + attrs);
+	    }
 	    if (attrs == null || attrs.size() == 0) {
-	        return;
-	    }
-	    Iterator i = attrs.entrySet().iterator();
-	    while (i.hasNext()) {
-	        Map.Entry e = (Map.Entry) i.next();
-	        Arg a = (Arg) PROFILE_T.get(e.getKey());
-	        if (a != null) {
-	            named.add(a, e.getValue());
-	            i.remove();
-	        }
-	    }
-	    if (attrs.size() == 0) {
 	        return;
 	    }
 	    named.add(GridExec.A_ATTRIBUTES, attrs);
 	}
 
-	private Map attributesFromTC(TransformationCatalogEntry tce, Map attrs) {
+	private Map attributesFromTC(TransformationCatalogEntry tce, Map attrs, NamedArguments named) {
 		List l = tce.getProfiles(Profile.GLOBUS);
 		if (l != null) {
 			Iterator i = l.iterator();
 			while (i.hasNext()) {
 				Profile p = (Profile) i.next();
-				if (attrs == null) {
-				    attrs = new HashMap();
+				Arg a = (Arg) PROFILE_T.get(p.getProfileKey());
+				if (a == null) {
+				    if (attrs == null) {
+				        attrs = new HashMap();
+				    }
+				    attrs.put(p.getProfileKey(), p.getProfileValue());
 				}
-				attrs.put(p.getProfileKey(), p.getProfileValue());
+				else {
+				    named.add(a, p.getProfileValue());
+				}
 			}
 		}
 		return attrs;
 	}
 	
-	private Map attributesFromHost(BoundContact bc, Map attrs) {
+	private Map attributesFromHost(BoundContact bc, Map attrs, NamedArguments named) {
 		Map props = bc.getProperties();
 		if (props != null) {
 		    Iterator i = props.entrySet().iterator();
@@ -171,10 +261,16 @@ public class TCProfile extends VDLFunction {
 		        Map.Entry e = (Map.Entry) i.next();
 		        FQN fqn = new FQN((String) e.getKey());
 		        if (Profile.GLOBUS.equalsIgnoreCase(fqn.getNamespace())) {
-		            if (attrs == null) {
-		                attrs = new HashMap();
+		            Arg a = (Arg) PROFILE_T.get(fqn.getName());
+		            if (a == null) {
+		                if (attrs == null) {
+		                    attrs = new HashMap();
+		                }
+		                attrs.put(fqn.getName(), e.getValue());
 		            }
-		            attrs.put(fqn.getName(), e.getValue());
+		            else {
+		                named.add(a, e.getValue());
+		            }
 		        }
 		    }
 		}
