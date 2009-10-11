@@ -22,9 +22,11 @@ public class VDL2Config extends Properties {
 
 	public static final String CONFIG_FILE_NAME = "swift.properties";
 	public static final String[] CONFIG_FILE_SEARCH_PATH = new String[] {
-			System.getProperty("vds.home") + File.separator + "etc" + File.separator
+			System.getProperty("swift.home") + File.separator + "etc" + File.separator
 					+ CONFIG_FILE_NAME,
 			System.getProperty("user.home") + File.separator + ".swift" + File.separator
+					+ CONFIG_FILE_NAME,
+			System.getProperty("vds.home") + File.separator + "etc" + File.separator
 					+ CONFIG_FILE_NAME };
 
 	private static VDL2Config config;
