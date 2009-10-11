@@ -281,24 +281,24 @@ If KICKSTART = "" Then
 	Set p = shell.exec(prepareOne(EXEC) + " " + qargs)
 	log "Executable started"
 
-	Do While Not p.StdOut.AtEndOfStream and Not p.StdErr.AtEndOfStream and p.Status = 0
+	Do Until p.StdOut.AtEndOfStream and p.StdErr.AtEndOfStream and p.Status <> 0
 		some = False
 		If Not min Is Nothing Then
 			l = min.ReadLine
-			p.StdIn.WriteLine(l)
+			p.StdIn.Write(l)
 			some = True
 		End If
 		If Not p.StdOut.AtEndOfStream Then
 			l = p.StdOut.ReadLine
 			If Not mout Is Nothing Then
-				mout.WriteLine(l)
+				mout.Write(l)
 			End If
 			some = True
 		End If
 		If Not p.StdErr.AtEndOfStream Then
 			l = p.StdErr.ReadLine
 			If Not merr Is Nothing Then
-				merr.WriteLine(l)
+				merr.Write(l)
 			End If
 			some = True
 		End If
@@ -314,7 +314,7 @@ If KICKSTART = "" Then
 		merr.close()
 	End If
 	If p.ExitCode <> 0 Then
-		fail "Exit code " + p.ExitCode, p.ExitCode
+		fail "Exit code " + CStr(p.ExitCode), p.ExitCode
 	End If
 Else
 	fail "Kickstart is not supported on Windows", 250
