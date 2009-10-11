@@ -19,8 +19,8 @@ import org.globus.cog.karajan.scheduler.TaskTransformer;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.classes.TCType;
+import org.globus.swift.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2Config;
 
