@@ -9,6 +9,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.griphyn.common.classes.Os;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class PathUtils extends FunctionsCollection {
@@ -67,25 +68,41 @@ public class PathUtils extends FunctionsCollection {
     }
     
     public static final Arg DIR = new Arg.Positional("dir");
+    public static final Arg OS = new Arg.Optional("os");
+    
     static {
-        setArguments("vdl_dircat", new Arg[] { DIR, PATH });
+        setArguments("vdl_dircat", new Arg[] { DIR, PATH, OS });
     }
 
     public String vdl_dircat(VariableStack stack) throws ExecutionException {
         String dir = TypeUtil.toString(DIR.getValue(stack));
     	String path = TypeUtil.toString(PATH.getValue(stack));
+    	boolean windows = false;
+    	if (OS.isPresent(stack)) {
+    		Os os = (Os) OS.getValue(stack);
+    		windows = Os.WINDOWS.equals(os);
+    	}
         if (dir.equals("")) {
-            return path;
+            return windowsify(path, windows);
         }
         else if (dir.endsWith("/")) {
-            return dir + path;
+        	return windowsify(dir + path, windows);
         }
         else {
-            return dir + '/' + path;
+            return windowsify(dir + '/' + path, windows);
         }
     }
     
-    public static final Arg FILES = new Arg.Positional("files");
+    private String windowsify(String path, boolean windows) {
+		if (windows) {
+			return path.replace('/', '\\');
+		}
+		else {
+			return path;
+		}
+	}
+
+	public static final Arg FILES = new Arg.Positional("files");
     static {
         setArguments("vdl_pathnames", new Arg[] { FILES });
     }
