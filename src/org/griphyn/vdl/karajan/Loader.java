@@ -168,8 +168,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
             else {
                 stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_RUN);
             }
-            // TODO should not be referring to vds.home any more
-            stack.setGlobal("vds.home", System.getProperty("vds.home"));
+            stack.setGlobal("swift.home", System.getProperty("swift.home"));
+            stack.setGlobal("PATH_SEPARATOR", File.separator);
 
             List arguments = ap.getArguments();
             if (ap.hasValue(ARG_RESUME)) {
