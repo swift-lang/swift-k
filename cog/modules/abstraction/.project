@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>abstraction</name>
+	<comment></comment>
+	<projects>
+		<project>abstraction-common</project>
+		<project>abstraction-examples</project>
+		<project>abstraction-provider-gt2</project>
+		<project>abstraction-provider-ssh</project>
+		<project>abstraction-provider-webdav</project>
+		<project>abstraction-provider-local</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+</projectDescription>
