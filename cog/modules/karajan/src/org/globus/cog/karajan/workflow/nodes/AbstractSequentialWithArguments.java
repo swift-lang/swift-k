@@ -357,11 +357,11 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 			String name = (String) i.next();
 			if (args == null || !args.containsKey(name)) {
 				if (args != null) {
-					throw new KarajanRuntimeException("\tUnsupported argument: " + name
+					throw new KarajanRuntimeException(this + ": Unsupported argument: " + name
 							+ ". Valid arguments are: " + args.keySet());
 				}
 				else {
-					throw new KarajanRuntimeException("\tUnsupported argument: " + name
+					throw new KarajanRuntimeException(this + ": Unsupported argument: " + name
 							+ ". This element does not support any arguments.");
 				}
 			}
