@@ -3198,6 +3198,29 @@ When more than that amount of space is used, the remote temporary file
 cache will be cleared using the algorithm specified in the
 <link linkend="property.caching.algorithm"><literal>caching.algorithm</literal></link> property.
 			</para>
+			<para id="swift.wrapperInterpreter"><literal>wrapperInterpreter</literal>
+The wrapper interpreter indicates the command (executable) to be used to run the Swift wrapper
+script. The default is "/bin/bash" on Unix sites and "cscript.exe" on Windows sites.
+			</para>
+			<para id="swift.wrapperInterpreterOptions"><literal>wrapperInterpreterOptions</literal>
+Allows specifying additional options to the executable used to run the Swift wrapper. The defaults
+are no options on Unix sites and "//Nologo" on Windows sites.
+			</para>
+			<para id="swift.wrapperScript"><literal>wrapperScript</literal>
+Specifies the name of the wrapper script to be used on a site. The defaults are "_swiftwrap" on 
+Unix sites and "_swiftwrap.vbs" on Windows sites. If you specify a custom wrapper script, it 
+must be present in the "libexec" directory of the Swift installation.
+			</para>
+			<para id="swift.cleanupCommand"><literal>cleanupCommand</literal>
+Indicates the command to be run at the end of a Swift run to clean up the run directories on a 
+remote site. Defaults are "/bin/rm" on Unix sites and "cmd.exe" on Windows sites
+			</para>
+			<para id="swift.cleanupCommandOptions"><literal>cleanupCommandOptions</literal>
+Specifies the options to be passed to the cleanup command above. The options are passed in the
+argument list to the cleanup command. After the options, the last argument is the directory
+to be deleted. The default on Unix sites is "-rf". The default on Windows sites is ["/C", "del", "/Q"].
+			</para>
+
 		</section>
 		<section id="profile.globus"><title>Globus namespace</title>
 			<para id="profile.globus.maxwalltime"><literal>maxwalltime</literal> specifies a walltime limit for each job, in minutes.
@@ -3315,31 +3338,6 @@ reside on an unrouted internal network). (since Swift 0.9)
 -->
 		</section>
 		
-		<section id="profile.swift"><title>swift namespace</title>
-			<para id="swift.wrapperInterpreter"><literal>wrapperInterpreter</literal>
-The wrapper interpreter indicates the command (executable) to be used to run the Swift wrapper
-script. The default is "/bin/bash" on Unix sites and "cscript.exe" on Windows sites.
-			</para>
-			<para id="swift.wrapperInterpreterOptions"><literal>wrapperInterpreterOptions</literal>
-Allows specifying additional options to the executable used to run the Swift wrapper. The defaults
-are no options on Unix sites and "//Nologo" on Windows sites.
-			</para>
-			<para id="swift.wrapperScript"><literal>wrapperScript</literal>
-Specifies the name of the wrapper script to be used on a site. The defaults are "_swiftwrap" on 
-Unix sites and "_swiftwrap.vbs" on Windows sites. If you specify a custom wrapper script, it 
-must be present in the "libexec" directory of the Swift installation.
-			</para>
-			<para id="swift.cleanupCommand"><literal>cleanupCommand</literal>
-Indicates the command to be run at the end of a Swift run to clean up the run directories on a 
-remote site. Defaults are "/bin/rm" on Unix sites and "cmd.exe" on Windows sites
-			</para>
-			<para id="swift.cleanupCommandOptions"><literal>cleanupCommandOptions</literal>
-Specifies the options to be passed to the cleanup command above. The options are passed in the
-argument list to the cleanup command. After the options, the last argument is the directory
-to be deleted. The default on Unix sites is "-rf". The default on Windows sites is ["/C", "del", "/Q"].
-			</para>
-		</section>
-
 		<section id="profile.env"><title>env namespace</title>
 			<para>
 Profile keys set in the env namespace will be set in the unix environment of the
