@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="etc"/>
+	<classpathentry excluding="**/CVS/*" kind="src" path="resources"/>
+	<classpathentry exported="true" kind="src" path="/abstraction-common">
+		<accessrules>
+			<accessrule kind="nonaccessible" pattern="**/CVS/*"/>
+		</accessrules>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/util"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jglobus"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j-1.2.8"/>
+	<classpathentry kind="output" path=".build"/>
+</classpath>
