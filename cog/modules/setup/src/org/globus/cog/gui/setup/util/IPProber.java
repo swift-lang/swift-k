@@ -96,4 +96,34 @@ public class IPProber extends Thread {
 	public boolean finished() {
 		return finished;
 	}
+	
+	public static void main(String[] args) {
+	    try {
+	        boolean quiet = false;
+	        if (args.length > 0) {
+	            if ("-help".equals(args[0])) {
+    	            System.out.println("Reports the IP address of the interface used to connect to the Internet for this computer.");
+    	            System.out.println("Usage:");
+    	            System.out.println("\t-help\tDisplay This message");
+    	            System.out.println("\t-q\tQuiet. Only report IP at the end.");
+    	            System.exit(0);
+	            }
+	            else if ("-q".equals(args[0])) {
+	                quiet = true;
+	            }
+	        }
+	        IPProber prober = new IPProber(true, false, 20000);
+	        if (!quiet) {
+	            System.out.println("Probing...");
+	        }
+	        prober.start();
+	        while (!prober.finished()) {
+	            Thread.sleep(20);
+	        }
+	        System.out.println((quiet ? "" : "IP: ") + prober.getProbedIP());
+	    }
+	    catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
 }
