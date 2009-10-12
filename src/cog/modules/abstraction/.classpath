@@ -13,6 +13,6 @@
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-dcache"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-http"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-localscheduler"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j-1.2.8"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j-1.2.8"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
