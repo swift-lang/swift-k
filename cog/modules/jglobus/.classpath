@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="etc"/>
+	<classpathentry exported="true" kind="lib" path="lib/cryptix.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/cryptix32.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jgss.jar" sourcepath="/home/mike/work/jglobus-crt/jglobus/src"/>
+	<classpathentry exported="true" kind="lib" path="lib/cryptix-asn1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/puretls.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jce-jdk13-131.jar" sourcepath="/home/mike/work/sources/jce"/>
+	<classpathentry exported="true" kind="lib" path="lib/commons-logging-1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/cog-jobmanager-dev-080222.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/cog-jglobus-dev-080222.jar" sourcepath="/jglobus2/src"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.USER_LIBRARY/junit"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j-1.2.8"/>
+	<classpathentry kind="output" path=".build"/>
+</classpath>
