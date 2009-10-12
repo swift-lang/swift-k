@@ -9,10 +9,10 @@
 	<classpathentry exported="true" kind="src" path="/abstraction-provider-webdav"/>
 	<classpathentry exported="true" kind="src" path="/abstraction-provider-gt4_0_0"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-local"/>
-	<classpathentry kind="lib" path="/home/mike/work/cog-svn/cogkit/trunk/current/src/cog/lib/log4j-1.2.8.jar" sourcepath="/home/mike/work/sources/logging-log4j-1.2.13/src"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-condor"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-dcache"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-http"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-localscheduler"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j-1.2.8"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
