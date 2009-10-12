@@ -1,0 +1,10 @@
+#Mon Aug 13 17:10:47 CDT 2007
+eclipse.preferences.version=1
+formatter_profile=_spaces
+formatter_settings_version=11
+org.eclipse.jdt.ui.exception.name=e
+org.eclipse.jdt.ui.gettersetter.use.is=false
+org.eclipse.jdt.ui.javadoc=false
+org.eclipse.jdt.ui.keywordthis=false
+org.eclipse.jdt.ui.overrideannotation=true
+org.eclipse.jdt.ui.text.custom_code_templates=<?xml version\="1.0" encoding\="UTF-8"?><templates/>
