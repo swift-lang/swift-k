@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="etc"/>
+	<classpathentry exported="true" kind="src" path="/setup">
+		<accessrules>
+			<accessrule kind="nonaccessible" pattern="**/CVS/*"/>
+		</accessrules>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/abstraction"/>
+	<classpathentry kind="output" path=".build"/>
+</classpath>
