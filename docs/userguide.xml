@@ -4068,9 +4068,9 @@ of this, specify the "sysinfo" attribute for the "pool" element in the
 site catalog. For example:
 
 <programlisting>
-	<pool handle="localhost" sysinfo="INTEL32::WINDOWS">
+	&lt;pool handle="localhost" sysinfo="INTEL32::WINDOWS"&gt;
 	...
-	</pool>
+	&lt;/pool&gt;
 </programlisting>
 			
 			</para>
