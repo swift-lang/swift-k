@@ -73,6 +73,8 @@ public class ServiceManager implements StatusListener {
     }
 
     public static final boolean LOCALJVM = false;
+    
+    public static final boolean LOCALJVM_WHEN_LOCAL = true;
 
     private BootstrapService bootstrapService;
     private LocalService localService;
@@ -161,7 +163,8 @@ public class ServiceManager implements StatusListener {
             if (logger.isDebugEnabled()) {
                 logger.debug("Starting coaster service on " + contact + ". Task is " + t);
             }
-            if (LOCALJVM) {
+            boolean local = "local".equals(bootHandlerProvider);
+            if (LOCALJVM || (LOCALJVM_WHEN_LOCAL && local)) {
                 final String ls = getLocalServiceURL();
                 final String id = "l" + getRandomID();
                 t.setAttribute(TASK_ATTR_ID, id);
