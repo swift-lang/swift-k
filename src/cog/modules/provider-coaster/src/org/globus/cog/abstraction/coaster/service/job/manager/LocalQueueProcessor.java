@@ -60,6 +60,12 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
         s.setServiceContact(prototype.getService(0).getServiceContact());
         ExecutionService p = (ExecutionService) prototype.getService(0);
         String jm = p.getJobManager();
+        //this jm is provider and provider is jm and part of the jm is the provider
+        //while jm is inside the provider and the provider is part of the jm is
+        //getting a bit confusing
+        if (jm == null) {
+        	jm = "local";
+        }
         int colon = jm.indexOf(':');
         // remove provider used to bootstrap coasters
         jm = jm.substring(colon + 1);

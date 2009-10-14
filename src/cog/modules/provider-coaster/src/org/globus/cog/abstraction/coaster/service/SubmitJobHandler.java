@@ -103,7 +103,11 @@ public class SubmitJobHandler extends RequestHandler {
             jm = "fork";
         }
 
-        if (jm.equalsIgnoreCase("fork")) {
+        String[] els = jm.split(":");
+        if (els.length == 2 && "fork".equals(els[1])) {
+        	s.setProvider("local");
+        }
+        else if (jm.equalsIgnoreCase("fork")) {
             s.setProvider("local");
         }
         else {
