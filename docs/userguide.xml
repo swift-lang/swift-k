@@ -1220,8 +1220,9 @@ another using regular expression matching.</para>
     <row><entry>match</entry><entry>Regular expression pattern to match, use
 <literal>()</literal> to match whatever regular expression is inside the
 parentheses, and indicate the start and end of a group; the contents of a
-group can be retrieved with the <literal>\number</literal> special
-sequence</entry></row>
+group can be retrieved with the <literal>\\number</literal> special sequence 
+(two backslashes are needed because the backslash is an escape sequence introducer)
+</entry></row>
     <row><entry>transform</entry><entry>The pattern of the file name to
 transform to, use <literal>\number</literal> to reference the
 group matched.</entry></row>
@@ -1235,7 +1236,7 @@ group matched.</entry></row>
   file f &lt;regexp_mapper;
     source=s,
     match=&quot;(.*)gif&quot;,
-    transform=&quot;\1jpg&quot;>; </programlisting>
+    transform=&quot;\\1jpg&quot;>; </programlisting>
 
 This example transforms a string ending <literal>gif</literal> into one
 ending <literal>jpg</literal> and maps that to a file.
