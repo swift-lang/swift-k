@@ -144,6 +144,10 @@ public class MappingParam {
 	}
 
 	public String toString() {
-		return "mapping parameter "+name;
+		return "mapping parameter " + name;
 	}
+
+    public String getName() {
+        return name;
+    }
 }

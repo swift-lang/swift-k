@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -38,6 +39,11 @@ public class RegularExpressionMapper extends AbstractMapper {
 	}
 
 	public PhysicalFormat map(Path path) {
+	    if (PARAM_MATCH.getRawValue(this) instanceof DSHandle) {
+	        DSHandle h = (DSHandle) PARAM_MATCH.getRawValue(this);
+	        throw new IllegalArgumentException("Non-primitive value specified for " + 
+	            PARAM_MATCH.getName() + "; maybe you meant @filename(" + h.getPathFromRoot() + ")?");
+	    }
 		String match = PARAM_MATCH.getStringValue(this);
 		String source = PARAM_SOURCE.getStringValue(this);
 		String transform = PARAM_TRANSFORM.getStringValue(this);
