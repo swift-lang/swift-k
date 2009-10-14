@@ -63,6 +63,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_LOGFILE = "logfile";
     public static final String ARG_RUNID = "runid";
     public static final String ARG_TUI = "tui";
+    public static final String ARG_RECOMPILE = "recompile";
 
     public static final String CONST_VDL_OPERATION = "vdl:operation";
     public static final String VDL_OPERATION_RUN = "run";
@@ -126,7 +127,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
             if (project.endsWith(".swift")) {
                 try {
-                    project = compile(project);
+                    project = compile(project, ap.isPresent(ARG_RECOMPILE));
                 }
                 catch (ParsingException pe) {
                     // the compiler should have already logged useful
@@ -203,8 +204,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
     private static void shortUsage() {
         System.err.print("For usage information:  swift -help\n\n");
     }
-
+    
     public static String compile(String project) throws FileNotFoundException,
+            ParsingException, IncorrectInvocationException,
+            CompilationException, IOException {
+        return compile(project, false);
+    }
+
+    public static String compile(String project, boolean forceRecompile) throws FileNotFoundException,
             ParsingException, IncorrectInvocationException,
             CompilationException, IOException {
         File swiftscript = new File(project);
@@ -214,7 +221,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
         loadBuildVersion();
 
-        boolean recompile = false;
+        boolean recompile = forceRecompile;
 
         if (swiftscript.lastModified() > kml.lastModified()) {
             logger.info(project + ": source file is new. Recompiling.");
@@ -342,6 +349,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
         ap.addFlag(ARG_HELP, "Display usage information");
         ap.addAlias(ARG_HELP, "h");
 
+        ap.addFlag(ARG_RECOMPILE, 
+            "Forces Swift to re-compile the invoked Swift script. " +
+            "While Swift is meant to detect when recompilation is necessary, " +
+            "in some special cases it fails to do so. This flag helps with those special cases.");
         ap.addFlag(ARG_TYPECHECK,
             "Does a typecheck instead of executing the SwiftScript program");
 
