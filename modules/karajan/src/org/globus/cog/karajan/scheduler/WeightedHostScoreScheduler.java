@@ -232,10 +232,13 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Next contact: " + selected);
 		}
-
+		
 		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
 		selected.notifyUsed();
+		if (logger.isInfoEnabled()) {
+            logger.info("CONTACT_SELECTED host=" + selected.getHost() + ", score=" + WeightedHost.D4.format(selected.getTScore()));
+        }
 		return selected.getHost();
 	}
 
