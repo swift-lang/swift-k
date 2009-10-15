@@ -13,8 +13,10 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.commands.BQPStatusCommand;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 
-public class RemoteBQPMonitor implements BQPMonitor {
+public class RemoteBQPMonitor implements BQPMonitor, Callback {
     public static final Logger logger = Logger.getLogger(RemoteBQPMonitor.class);
 
     private BlockQueueProcessor bqp;
@@ -30,10 +32,23 @@ public class RemoteBQPMonitor implements BQPMonitor {
                         bqp.getQueued());
             KarajanChannel channel =
                     ChannelManager.getManager().reserveChannel(bqp.getClientChannelContext());
-            bsc.executeAsync(channel);
+            bsc.executeAsync(channel, this);
         }
         catch (Exception e) {
             logger.warn("Failed to send BQP updates", e);
         }
+    }
+    
+    private void releaseChannel(Command cmd) {
+        ChannelManager.getManager().releaseChannel(cmd.getChannel());
+    }
+
+    public void errorReceived(Command cmd, String msg, Exception t) {
+        logger.warn("Failed to send command: " + msg, t);
+        releaseChannel(cmd);
+    }
+
+    public void replyReceived(Command cmd) {
+        releaseChannel(cmd);
     }
 }
