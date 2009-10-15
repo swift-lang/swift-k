@@ -73,7 +73,11 @@ public class Block implements StatusListener {
     }
 
     public void start() {
-        logger.info("Starting block: workers=" + workers + ", walltime=" + walltime);
+        if (logger.isInfoEnabled()) {
+            logger.info("Starting block: workers=" + workers + ", walltime=" + walltime);
+        }
+        ap.getRLogger().log("BLOCK_REQUESTED id=" + getId() + 
+            ", w=" + getWorkerCount() + ", h=" + getWalltime().getSeconds());
         task = new BlockTask(this);
         task.addStatusListener(this);
         try {
@@ -208,6 +212,7 @@ public class Block implements StatusListener {
                 return;
             }
             logger.info("Shutting down block " + this);
+            ap.getRLogger().log("BLOCK_SHUTDOWN id=" + getId());
             shutdown = true;
             long busyTotal = 0;
             long idleTotal = 0;
@@ -227,7 +232,11 @@ public class Block implements StatusListener {
                     }
                 }, SHUTDOWN_WATCHDOG_DELAY);
                 if (idleTotal > 0) {
-                    logger.info("Average utilization: " + (busyTotal * 100) / (busyTotal + idleTotal) + "%");
+                    double u = (busyTotal * 10000) / (busyTotal + idleTotal);
+                    u /= 100;
+                    logger.info("Average utilization: " + u + "%");
+                    ap.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + 
+                        ", u=" + u);
                 }
             }
             else {
@@ -339,6 +348,7 @@ public class Block implements StatusListener {
                 starttime = Time.now();
                 endtime = starttime.add(walltime);
                 deadline = starttime.add(ap.getSettings().getReserve());
+                ap.getRLogger().log("BLOCK_ACTIVE id=" + getId());
             }
         }
         catch (Exception e) {
