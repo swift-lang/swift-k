@@ -41,7 +41,7 @@ if [ -d $INFODIR ]; then
 fi
 
 if [ "X$2" = "X" ]; then
-make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean webpage.kara webpage.weights karatasks.JOB_SUBMISSION.Queue.transitions karatasks.JOB_SUBMISSION.Queue.event karatasks.JOB_SUBMISSION.eip  $MAKETARGETS webpage distribute
+make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean webpage.kara webpage.weights webpage.coasters karatasks.JOB_SUBMISSION.Queue.transitions karatasks.JOB_SUBMISSION.Queue.event karatasks.JOB_SUBMISSION.eip  $MAKETARGETS webpage distribute
 else
 shift
 make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean $@
