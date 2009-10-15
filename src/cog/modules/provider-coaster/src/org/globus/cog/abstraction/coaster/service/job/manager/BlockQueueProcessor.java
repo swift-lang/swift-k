@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.rlog.RemoteLogger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -49,6 +50,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private boolean done, planning;
 
     private Metric metric;
+    
+    private final RemoteLogger rlogger;
 
     public BlockQueueProcessor() {
         super("Block Queue Processor");
@@ -60,6 +63,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         add = new ArrayList();
         metric = new OverallocatedJobDurationMetric(settings);
         queued = new SortedJobSet(metric);
+        rlogger = new RemoteLogger();
     }
 
     public Metric getMetric() {
@@ -193,8 +197,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         Set remove = new HashSet();
         Iterator it = jobs.iterator();
         while (it.hasNext()) {
-            Job j = (Job) it.next();
-            if (allocsize - queued.getJSize() > j.getMaxWallTime().getSeconds() && fits(j)) {
+            Job j = (Job) it.next(); 
+            if (allocsize - queued.getJSize() > metric.getSize(j) && fits(j)) {
                 queue(j);
                 remove.add(j);
             }
@@ -538,6 +542,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     public void setClientChannelContext(ChannelContext channelContext) {
         this.clientChannelContext = channelContext;
+        rlogger.setChannelContext(channelContext);
     }
 
     public ChannelContext getClientChannelContext() {
@@ -557,5 +562,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     public int getQueueSeq() {
         return queued.getSeq();
+    }
+    
+    public RemoteLogger getRLogger() {
+        return rlogger;
     }
 }
