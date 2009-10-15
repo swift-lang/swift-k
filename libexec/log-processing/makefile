@@ -8,6 +8,7 @@ include makefile.karatasks
 include makefile.webpage
 include makefile.kickstart
 include makefile.errors
+include makefile.coasters
 
 distributable: 
 	rm -f *.tmp log *.transitions tmp-*

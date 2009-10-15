@@ -106,15 +106,15 @@ include(`karatasks.JOB_SUBMISSION.Active.stats')
 
 <hr />
 <h2>job clusters</h2>
-1. <img src="karatasks.clusters.png" />  
+1. <img src="karatasks.clusters.png" alt="-"/>
 <br />
-2. <img src="karatasks.clusters-total.png" /> 
+2. <img src="karatasks.clusters-total.png" alt="-"/>
 <br />
-3. <img src="karatasks.clusters.sorted-start.png" />
+3. <img src="karatasks.clusters.sorted-start.png" alt="-"/>
 <br />
-4. <img src="karatasks.clusters-duration-histogram.png" />
+4. <img src="karatasks.clusters-duration-histogram.png" alt="-"/>
 <br />
-5. <img src="cluster-jobcount-histogram.png" />
+5. <img src="cluster-jobcount-histogram.png" alt="-"/>
 <hr />
 
 <p>end</p>

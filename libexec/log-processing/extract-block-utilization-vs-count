@@ -1,0 +1,15 @@
+#!/bin/bash
+
+LOG=$1
+
+rm -f coaster-block-utilization-vs-count.data
+
+IFS=$'\n'
+for LINE in $(cat coasters.tmp); do
+	ID=`echo $LINE | sed 's/^.*id=\([^ ]*\)\(,.*$\|$\)/\1/'`
+	U=`echo $LINE | sed -n 's/^.*BLOCK_UTILIZATION.*u=\([^ ]*\)$/\1/p'`
+	if [ "$U" != "" ]; then
+		COUNT=`cat block-count-table.tmp | grep "$ID" | cut -d , -f 2`
+		echo "$COUNT $U" >> coaster-block-utilization-vs-count.data
+	fi
+done

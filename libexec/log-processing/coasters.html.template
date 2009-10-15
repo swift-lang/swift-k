@@ -1,0 +1,30 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<h2>Coasters</h2>
+<h3>The block timeline</h3>
+<p>This shows how many workers were requested and how many workers were running at each time:</p>
+<img src="coaster-block-timeline.png" />
+
+<h3>Queue wait times</h3>
+<p>How much a block waited in the queue based on it's total size (CPU seconds):</p>
+<img src="coaster-qwait-size.png" />
+
+<p>How much a block waited in the queue based on the number of workers:</p>
+<img src="coaster-qwait-count.png" />
+
+<p>How much a block waited in the queue based on it's walltime:</p>
+<img src="coaster-qwait-wtime.png" />
+
+<h3>Worker utilization</h3>
+<p>Sorted block utilization (average (time spent running jobs / total time) for each worker in the block):</p>
+<img src="coaster-block-utilization.png" />
+<p>Utilization vs. Number of workers:</p>
+<img src="coaster-block-utilization-vs-count.png" />
+
+<p>end</p>
+</body>

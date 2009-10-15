@@ -9,14 +9,14 @@ include(`toolbar.html.template')
 <p>kickstart records.
 (<a href="kickstart.event">text file of events</a>)
 this shows applications which are actually running on a worker node, executing:</p>
-<img src="kickstart.png" />
+<img src="kickstart.png" alt="-"/>
 
 <p>kickstart records total - this represents how many worker nodes were
 actually executing applications at any time:</p>
-<img src="kickstart-total.png" />
+<img src="kickstart-total.png" alt="-"/>
 
 <p>kickstart records sorted by start time:</p>
-<img src="kickstart.sorted-start.png" />
+<img src="kickstart.sorted-start.png" alt="-"/>
 
 <p>kickstart stats:
 <pre>
@@ -26,7 +26,7 @@ include(`kickstart.stats')
 
 <p>cumulative histogram(?) of kickstart job durations</p>
 
-<img src="kickstart-duration-histogram.png" />
+<img src="kickstart-duration-histogram.png" alt="-"/>
 
 <p>end</p>
 </body>

@@ -1,7 +1,7 @@
 webpage: pngs htmls
 
 htmls: index.html execute2.html execute.html karajan.html info.html \
-assorted.html kickstart.html falkon.html scheduler.html
+assorted.html kickstart.html falkon.html scheduler.html coasters.html
 
 webpage.kara: karatasks.png karatasks-coloured.png karatasks-type-counts.txt \
 karatasks.lastsummary karatasks-coloured-sorted.png \
@@ -21,6 +21,9 @@ karatasks.JOB_SUBMISSION.Queue-total.png \
 karatasks.JOB_SUBMISSION.Queue.sorted-start.png \
 karatasks.JOB_SUBMISSION.Queue.stats \
 karatasks.JOB_SUBMISSION.Queue-duration-histogram.png
+
+webpage.coasters: coaster-block-timeline.png coaster-qwait-count.png coaster-qwait-size.png \
+	coaster-qwait-wtime.png coaster-block-utilization.png coaster-block-utilization-vs-count.png
 
 webpage.clusters: karatasks.clusters.png karatasks.clusters-total.png \
 karatasks.clusters.sorted-start.png karatasks.clusters-duration-histogram.png

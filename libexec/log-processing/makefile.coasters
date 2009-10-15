@@ -1,0 +1,41 @@
+coaster-block-timeline.png: coaster-block-timeline.data
+	gnuplot $(SWIFT_PLOT_HOME)/coaster-block-timeline.plot
+
+extract-timeline:
+	extract-coaster-timeline $(LOG)
+
+coaster-block-timeline.data: extract-timeline
+coasters.tmp: extract-timeline
+block-count-table.tmp: extract-timeline
+
+extract-coaster-qwait: coasters.tmp
+	extract-coaster-qwait $(LOG)
+
+coaster-qwait-count.data: extract-coaster-qwait
+coaster-qwait-size.data: extract-coaster-qwait
+coaster-qwait-wtime.data: extract-coaster-qwait
+coaster-block-utilization-vs-count.data: extract-block-utilization-vs-count
+
+extract-block-utilization: coasters.tmp
+	extract-coaster-block-utilization $(LOG)
+
+extract-block-utilization-vs-count: coasters.tmp
+	extract-block-utilization-vs-count $(LOG)
+
+coaster-block-utilization.data:
+	extract-coaster-block-utilization
+
+coaster-qwait-count.png: coaster-qwait-count.data
+	gnuplot $(SWIFT_PLOT_HOME)/coaster-qwait-count.plot
+
+coaster-qwait-size.png: coaster-qwait-size.data
+	gnuplot $(SWIFT_PLOT_HOME)/coaster-qwait-size.plot
+
+coaster-qwait-wtime.png: coaster-qwait-wtime.data
+	gnuplot $(SWIFT_PLOT_HOME)/coaster-qwait-wtime.plot
+
+coaster-block-utilization.png: coaster-block-utilization.data
+	gnuplot $(SWIFT_PLOT_HOME)/coaster-block-utilization.plot
+
+coaster-block-utilization-vs-count.png: coaster-block-utilization-vs-count.data
+	gnuplot $(SWIFT_PLOT_HOME)/coaster-block-utilization-vs-count.plot
