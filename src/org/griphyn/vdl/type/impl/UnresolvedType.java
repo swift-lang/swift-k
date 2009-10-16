@@ -86,8 +86,12 @@ public class UnresolvedType implements Type {
 	public boolean isArray() {
 		return this.name.endsWith("[]");
 	}
+	
+	public boolean isComposite() {
+        return isArray();
+    }
 
-	public void setBaseType(Type base) {
+    public void setBaseType(Type base) {
 		throw new UnsupportedOperationException();
 	}
 

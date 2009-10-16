@@ -52,6 +52,11 @@ public interface Type {
 	public URI getNamespaceURI();
 
 	boolean isArray();
+	
+	/**
+	 * Returns true if this type is a composite type (array or struct).
+	 */
+	boolean isComposite();
 
 	/**
 	 * set the full name as a QName

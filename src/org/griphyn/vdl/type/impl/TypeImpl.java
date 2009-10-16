@@ -107,8 +107,13 @@ public class TypeImpl extends UnresolvedType {
 	public void setPrimitive() {
 		primitive = true;
 	}
+	
 
-	private static class Array extends TypeImpl {
+    public boolean isComposite() {
+        return isArray() || !fields.isEmpty();
+    }
+
+    private static class Array extends TypeImpl {
 		private Field field;
 
 		/** Constructs an array that will contain elements of the
