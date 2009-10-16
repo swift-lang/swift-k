@@ -43,4 +43,12 @@ public interface Mapper {
     void setParam(String name, Object value);
 
     Object getParam(String name);
+
+    /**
+     * Specifies whether paths mapped by this mapper can be re-mapped
+     * if needed (such as when aliasing another variable)
+     */
+    boolean canBeRemapped(Path path);
+    
+    void remap(Path path, PhysicalFormat file);
 }

@@ -51,4 +51,11 @@ public abstract class AbstractMapper implements Mapper {
 		return r;
 	}
 
+	public boolean canBeRemapped(Path path) {
+	    return false;
+	}
+
+    public void remap(Path path, PhysicalFormat file) {
+        throw new UnsupportedOperationException();
+    }
 }
