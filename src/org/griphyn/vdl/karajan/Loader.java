@@ -35,13 +35,16 @@ import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode;
+import org.globus.cog.karajan.workflow.service.channels.AbstractKarajanChannel;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.karajan.lib.Execute;
 import org.griphyn.vdl.karajan.lib.Log;
+import org.griphyn.vdl.karajan.lib.New;
 import org.griphyn.vdl.karajan.monitor.MonitorAppender;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
@@ -64,6 +67,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_RUNID = "runid";
     public static final String ARG_TUI = "tui";
     public static final String ARG_RECOMPILE = "recompile";
+    public static final String ARG_REDUCED_LOGGING = "reduced.logging";
 
     public static final String CONST_VDL_OPERATION = "vdl:operation";
     public static final String VDL_OPERATION_RUN = "run";
@@ -397,6 +401,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 "Specifies the run identifier. This must be unique for every invocation of a workflow and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier.",
                 "string", ArgumentParser.OPTIONAL);
         ap.addFlag(ARG_TUI);
+        ap.addFlag(ARG_REDUCED_LOGGING, "Makes logging more terse by disabling provenance " +
+        		"information and low-level task messages");
 
         Map desc = VDL2ConfigProperties.getPropertyDescriptions();
         Iterator i = desc.entrySet().iterator();
@@ -456,6 +462,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
             Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
                 Level.INFO);
             ca.setThreshold(Level.FATAL);
+        }
+        else if (ap.isPresent(ARG_REDUCED_LOGGING)) {
+            Logger.getLogger(AbstractDataNode.class).setLevel(Level.WARN);
+            Logger.getLogger(New.class).setLevel(Level.WARN);
+            Logger.getLogger("org.globus.cog.karajan.workflow.service").setLevel(Level.WARN);
         }
     }
 
