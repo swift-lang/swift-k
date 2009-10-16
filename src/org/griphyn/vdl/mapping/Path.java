@@ -19,6 +19,8 @@ public class Path {
 
 	/** True if any element of the Path contains a wildcard. */
 	private boolean wildcard;
+	
+	private String tostrcached;
 
 	public static class EmptyPath extends Path {
 		public EmptyPath() {
@@ -245,7 +247,10 @@ public class Path {
 	 * made that <code>Path.parse(somePath.stringForm()).equals(somePath)</code>.
 	 * For a consistent such representation of this path use {@link stringForm}.
 	 */
-	public String toString() {
+	public synchronized String toString() {
+	    if (tostrcached != null) {
+	        return tostrcached;
+	    }
 		StringBuffer sb = new StringBuffer();
 		Iterator i = iterator();
 		while (i.hasNext()) {
@@ -260,7 +265,7 @@ public class Path {
 				sb.append(e.getName());
 			}
 		}
-		return sb.toString();
+		return tostrcached = sb.toString();
 	}
 
 	public Iterator iterator() {
