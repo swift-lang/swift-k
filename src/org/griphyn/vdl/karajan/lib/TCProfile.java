@@ -136,8 +136,8 @@ public class TCProfile extends VDLFunction {
 	}
 	
 	private void addAttributes(NamedArguments named, Map attrs) {
-	    if (logger.isInfoEnabled()) {
-	        logger.info("Attributes: " + attrs);
+	    if (logger.isDebugEnabled()) {
+	        logger.debug("Attributes: " + attrs);
 	    }
 	    if (attrs == null || attrs.size() == 0) {
 	        return;
