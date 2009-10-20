@@ -51,6 +51,10 @@ namespace("vdl"
 					property("{namespace}:{key}", value)
 				)
 			)
+			
+			element(env, [name, value]
+				property("env:{name}", value)
+			)
 
 			element(workdirectory, [dir]
 				property(name="workdir", value = dir)
