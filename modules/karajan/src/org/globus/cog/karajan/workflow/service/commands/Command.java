@@ -139,7 +139,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 
 	protected synchronized void setupReplyTimeoutChecker() {
 		timeout = new Timeout();
-		logger.info("SRT " + System.identityHashCode(timeout));
 		timer.schedule(timeout, replyTimeout);
 	}
 
