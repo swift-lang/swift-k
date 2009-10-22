@@ -18,5 +18,6 @@ public class RemoteLogHandler extends RequestHandler {
 
     public void requestComplete() throws ProtocolException {
         logger.info(getInDataAsString(0));
+        sendReply("OK");
     }
 }
