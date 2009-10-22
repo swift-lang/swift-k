@@ -24,8 +24,6 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
-import org.globus.cog.abstraction.impl.scheduler.pbs.PBSExecutor;
-import org.globus.cog.abstraction.impl.scheduler.pbs.QueuePoller;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.Task;
 
@@ -178,7 +176,7 @@ public class CobaltExecutor extends AbstractExecutor {
 	private static QueuePoller poller;
 
 	protected AbstractQueuePoller getQueuePoller() {
-		synchronized(PBSExecutor.class) {
+		synchronized(CobaltExecutor.class) {
 			if (poller == null) {
 				poller = new QueuePoller(getProperties());
 				poller.start();
