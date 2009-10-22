@@ -45,6 +45,7 @@ public class BlockTask extends TaskImpl {
         }
         setAttribute(spec, "count", String.valueOf(count));
         setAttribute(spec, "hostCount", String.valueOf(count));
+        setAttribute(spec, "kernelprofile", settings.getKernelprofile());
         setRequiredService(1);
         setService(0, buildService());
     }

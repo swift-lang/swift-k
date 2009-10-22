@@ -25,7 +25,7 @@ public class Settings {
             new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
                     "maxNodes", "lowOverallocation", "highOverallocation",
                     "overallocationDecayFactor", "spread", "reserve",
-                    "maxtime", "project", "queue", "remoteMonitorEnabled" };
+                    "maxtime", "project", "queue", "remoteMonitorEnabled", "kernelprofile" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -86,6 +86,8 @@ public class Settings {
     private String project;
 
     private String queue;
+    
+    private String kernelprofile;
 
     private boolean remoteMonitorEnabled;
     
@@ -284,6 +286,14 @@ public class Settings {
 
     public void setParallelism(double parallelism) {
         this.parallelism = parallelism;
+    }
+
+    public String getKernelprofile() {
+        return kernelprofile;
+    }
+
+    public void setKernelprofile(String kernelprofile) {
+        this.kernelprofile = kernelprofile;
     }
 
     public void set(String name, String value) throws IllegalArgumentException,
