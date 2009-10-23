@@ -45,7 +45,7 @@ my %REPLIES  = ();
 my $BLOCKID=$ARGV[1];
 
 my $LOGDIR=$ARGV[3];
-my $LOG = "$BASE/worker-$BLOCKID.log";
+my $LOG = "$LOGDIR/worker-$BLOCKID.log";
 
 
 my %HANDLERS = (
