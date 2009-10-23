@@ -69,7 +69,8 @@ public class Settings {
 
     private TimeInterval reserve = TimeInterval.fromSeconds(60);
 
-    private int maxNodes = Integer.MAX_VALUE;
+    //this would cause bad things for workersPerNode > 1024
+    private int maxNodes = Integer.MAX_VALUE / 1024;
 
     private int maxtime = Integer.MAX_VALUE;
 
