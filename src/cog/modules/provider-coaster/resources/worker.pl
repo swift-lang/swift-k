@@ -2,6 +2,7 @@
 use IO::Socket;
 use Cwd;
 use POSIX ":sys_wait_h";
+use File::Basename;
 use strict;
 use warnings;
 
@@ -44,7 +45,8 @@ my %REPLIES  = ();
 
 my $BLOCKID=$ARGV[1];
 
-my $LOG = "$ENV{HOME}/.globus/coasters/worker-$BLOCKID.log";
+my $LOGDIR=$ARGV[3];
+my $LOG = "$BASE/worker-$BLOCKID.log";
 
 
 my %HANDLERS = (
