@@ -31,6 +31,7 @@ public class QueuePoller extends AbstractQueuePoller {
 	public QueuePoller(AbstractProperties properties) {
 		super("Cobalt provider queue poller", properties);
 		processed = new HashSet();
+		setDelayedCommit(true);
 	}
 
 	protected String parseToWhitespace(String s, int startindex) {
