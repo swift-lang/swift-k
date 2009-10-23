@@ -80,7 +80,6 @@ public abstract class AbstractExecutor implements ProcessListener {
 
 		try {
 			int code = process.waitFor();
-			process.getErrorStream().close();
 			if (code != 0) {
 				String errorText = "no error output";
 				try {
@@ -188,12 +187,17 @@ public abstract class AbstractExecutor implements ProcessListener {
 			logger.debug("Waiting for output from "
 					+ getProperties().getSubmitCommandName());
 		}
-		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		StringBuffer sb = new StringBuffer();
-		String out = br.readLine();
-		while (out != null) {
-			sb.append(out);
-			out = br.readLine();
+		try {
+		    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		    String out = br.readLine();
+		    while (out != null) {
+		        sb.append(out);
+		        out = br.readLine();
+		    }
+		}
+		catch (IOException e) {
+		    sb.append("<Error reading output>");
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("Output from "
