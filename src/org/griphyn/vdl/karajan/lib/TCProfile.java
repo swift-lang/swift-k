@@ -29,11 +29,11 @@ import org.griphyn.vdl.util.FQN;
 public class TCProfile extends VDLFunction {
     public static final Logger logger = Logger.getLogger(TCProfile.class);
     
-	public static final Arg PA_TR = new Arg.Positional("tr");
+	public static final Arg OA_TR = new Arg.Optional("tr");
 	public static final Arg PA_HOST = new Arg.Positional("host");
 	
 	static {
-		setArguments(TCProfile.class, new Arg[] { PA_TR, PA_HOST });
+		setArguments(TCProfile.class, new Arg[] { PA_HOST, OA_TR });
 	}
 
 	private static Map PROFILE_T;
@@ -53,7 +53,10 @@ public class TCProfile extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		TCCache tc = getTC(stack);
-		String tr = TypeUtil.toString(PA_TR.getValue(stack));
+		String tr = null;
+		if (OA_TR.isPresent(stack)) {
+		    tr = TypeUtil.toString(OA_TR.getValue(stack));
+		}
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
 		
 		NamedArguments named = ArgUtil.getNamedReturn(stack);
@@ -61,7 +64,10 @@ public class TCProfile extends VDLFunction {
 		
 		attrs = attributesFromHost(bc, attrs, named);
 
-		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
+		TransformationCatalogEntry tce = null;
+		if (tr != null) {
+		    getTCE(tc, new FQN(tr), bc);
+		}
 		
 		Map env = new HashMap();
 		if (tce != null) {
