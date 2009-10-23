@@ -213,11 +213,16 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public Time getTimeLast() {
-        if (timelast.isGreaterThan(Time.now())) {
-            return timelast;
+        if (running != null) {
+            if (timelast.isGreaterThan(Time.now())) {
+                return timelast;
+            }
+            else {
+                return Time.now();
+            }
         }
         else {
-            return Time.now();
+            return timelast;
         }
     }
 
