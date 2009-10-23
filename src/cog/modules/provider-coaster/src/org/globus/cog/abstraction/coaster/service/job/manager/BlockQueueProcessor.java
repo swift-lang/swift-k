@@ -306,7 +306,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 int h = overallocatedSize(getJob(i));
                 // height must be a multiple of the overallocation of the
                 // largest job
-                h = Math.min(Math.max(h, round(h, lastwalltime)), settings.getMaxtime());
+                h = Math.min(Math.max(h, round(h, lastwalltime)), settings.getMaxtime() - 
+                    (int) settings.getReserve().getSeconds());
                 int w = Math.min(round(metric.width(msz, h), granularity), settings.getMaxNodes() * settings.getWorkersPerNode());
                 int r = (i - last) % w;
                 if (logger.isInfoEnabled()) {

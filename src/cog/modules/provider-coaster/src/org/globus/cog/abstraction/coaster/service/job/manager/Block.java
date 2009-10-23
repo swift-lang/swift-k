@@ -107,6 +107,11 @@ public class Block implements StatusListener {
                         last = cpu.getTimeLast();
                     }
                 }
+                if (cpus.isEmpty()) {
+                    //prevent block from being done when startup of workers is really really slow, 
+                    //like as on the BGP where it takes a couple of minutes to initialize a partition
+                    last = Time.now();
+                }
             }
             deadline = Time.min(starttime.add(walltime), last.add(ap.getSettings().getMaxWorkerIdleTime()));
             return Time.now().isGreaterThan(deadline);
