@@ -71,7 +71,7 @@ public abstract class AbstractQueuePoller implements Runnable {
     public void run() {
         boolean empty;
         while (true) {
-            while (jobs.size() + newjobs.size() == 0) {
+            while (jobs.size() + newjobs.size() + delayqueue.size() == 0) {
                 try {
                     Thread.sleep(250);
                 }
