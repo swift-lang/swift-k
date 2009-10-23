@@ -17,6 +17,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Bootstrap;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -46,6 +47,9 @@ public class BlockTask extends TaskImpl {
         setAttribute(spec, "count", String.valueOf(count));
         setAttribute(spec, "hostCount", String.valueOf(count));
         setAttribute(spec, "kernelprofile", settings.getKernelprofile());
+        if (settings.getAlcfbgpnat()) {
+            spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
+        }
         setRequiredService(1);
         setService(0, buildService());
     }
@@ -57,6 +61,7 @@ public class BlockTask extends TaskImpl {
         js.addArgument(settings.getCallbackURI().toString());
         js.addArgument(block.getId());
         js.addArgument(String.valueOf(settings.getWorkersPerNode()));
+        js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
         return js;
