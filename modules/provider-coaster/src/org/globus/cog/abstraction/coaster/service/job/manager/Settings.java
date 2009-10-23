@@ -25,7 +25,7 @@ public class Settings {
             new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
                     "maxNodes", "lowOverallocation", "highOverallocation",
                     "overallocationDecayFactor", "spread", "reserve",
-                    "maxtime", "project", "queue", "remoteMonitorEnabled", "kernelprofile" };
+                    "maxtime", "project", "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -88,6 +88,8 @@ public class Settings {
     private String queue;
     
     private String kernelprofile;
+    
+    private boolean alcfbgpnat;
 
     private boolean remoteMonitorEnabled;
     
@@ -294,6 +296,14 @@ public class Settings {
 
     public void setKernelprofile(String kernelprofile) {
         this.kernelprofile = kernelprofile;
+    }
+
+    public boolean getAlcfbgpnat() {
+        return alcfbgpnat;
+    }
+
+    public void setAlcfbgpnat(boolean alcfbgpnat) {
+        this.alcfbgpnat = alcfbgpnat;
     }
 
     public void set(String name, String value) throws IllegalArgumentException,

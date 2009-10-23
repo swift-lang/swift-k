@@ -40,7 +40,7 @@ public class Bootstrap {
             + "coasters"
             + File.separator + "cache");
 
-    private static final File LOG_DIR = new File(System
+    public static final File LOG_DIR = new File(System
             .getProperty("user.home")
             + File.separator + ".globus" + File.separator + "coasters");
     
