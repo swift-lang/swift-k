@@ -206,7 +206,7 @@ public abstract class AbstractExecutor implements ProcessListener {
 			throw new IOException(getProperties().getSubmitCommandName()
 					+ " returned an empty job ID");
 		}
-		return out;
+		return out.trim();
 	}
 
 	protected abstract void writeScript(Writer wr, String exitcode,
