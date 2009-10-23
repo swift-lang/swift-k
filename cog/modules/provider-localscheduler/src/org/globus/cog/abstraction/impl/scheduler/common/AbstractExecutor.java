@@ -81,15 +81,8 @@ public abstract class AbstractExecutor implements ProcessListener {
 		try {
 			int code = process.waitFor();
 			if (code != 0) {
-				String errorText = "no error output";
-				try {
-					errorText = getOutput(process.getErrorStream());
-				}
-				catch (Exception e) {
-					logger.debug("Ignoring exception whilst getting "
-							+ getProperties().getSubmitCommandName()
-							+ " error text", e);
-				}
+				String errorText = getOutput(process.getInputStream()) + 
+				    getOutput(process.getErrorStream());
 				throw new ProcessException("Could not submit job ("
 						+ getProperties().getSubmitCommandName()
 						+ " reported an exit code of " + code + "). "
@@ -197,13 +190,14 @@ public abstract class AbstractExecutor implements ProcessListener {
 		    }
 		}
 		catch (IOException e) {
-		    sb.append("<Error reading output>");
+		    sb.append("<Error reading from stream>");
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("Output from "
 					+ getProperties().getSubmitCommandName() + " is: \"" + sb.toString()
 					+ "\"");
 		}
+		sb.append('\n');
 		return sb.toString();
 	}
 	
