@@ -488,7 +488,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		catch (Exception e) {
 			throw new TaskSubmissionException("Cannot submit task", e);
 		}
-		handlers.put(t, handler);
 		synchronized (taskContacts) {
 			taskContacts.put(t, contacts);
 		}
@@ -503,6 +502,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		queues[3] = shq.getProviderQueue(t.getService(0).getProvider(), sshInitialRate, 2,
 				".*throttled.*");
 		synchronized (this) {
+		    handlers.put(t, handler);
 			NonBlockingSubmit nbs = new NonBlockingSubmit(handler, t, queues);
 			nbs.go();
 			incRunning();
@@ -612,30 +612,35 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					}
 
 					TaskHandler handler = getHandler(task);
-					try {
-						handler.remove(task);
+					if (handler == null) {
+					    logger.warn("No handler found for task " + task);
 					}
-					catch (ActiveTaskException e1) {
-						/*
-						 * I think this is the out of order status events
-						 * phenomenon, where a task gets in an ACTIVE state
-						 * after being COMPLETED. The good news is that it
-						 * should only once get into the state of ACTIVE
-						 */
-						task.getStatus().setStatusCode(code);
-						try {
-							handler.remove(task);
-						}
-						catch (ActiveTaskException e2) {
-							// now it's really weird
-							e1.printStackTrace();
-							Throwable t = new RuntimeException("Something is wrong here", e1);
-							t.printStackTrace();
-						}
-					}
-					finally {
-						removeHandler(task);
-						notify();
+					else {
+    					try {
+    						handler.remove(task);
+    					}
+    					catch (ActiveTaskException e1) {
+    						/*
+    						 * I think this is the out of order status events
+    						 * phenomenon, where a task gets in an ACTIVE state
+    						 * after being COMPLETED. The good news is that it
+    						 * should only once get into the state of ACTIVE
+    						 */
+    						task.getStatus().setStatusCode(code);
+    						try {
+    							handler.remove(task);
+    						}
+    						catch (ActiveTaskException e2) {
+    							// now it's really weird
+    							e1.printStackTrace();
+    							Throwable t = new RuntimeException("Something is wrong here", e1);
+    							t.printStackTrace();
+    						}
+    					}
+    					finally {
+    						removeHandler(task);
+    						notify();
+    					}
 					}
 				}
 				if (code == Status.FAILED) {
