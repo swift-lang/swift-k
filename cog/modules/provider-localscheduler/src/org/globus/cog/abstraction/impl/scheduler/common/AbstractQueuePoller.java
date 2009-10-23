@@ -26,10 +26,9 @@ public abstract class AbstractQueuePoller implements Runnable {
     public static final int MAX_CONSECUTIVE_FAILURES = 3;
 
     private String name;
-    private LinkedList newjobs, donejobs, delayqueue;
+    private LinkedList newjobs, donejobs;
     private Map jobs;
     boolean any = false;
-    boolean delayedCommit = false;
     private int sleepTime;
     private int failures;
 
@@ -46,7 +45,6 @@ public abstract class AbstractQueuePoller implements Runnable {
         jobs = new HashMap();
         newjobs = new LinkedList();
         donejobs = new LinkedList();
-        delayqueue = new LinkedList();
     }
 
     public void start() {
@@ -71,7 +69,7 @@ public abstract class AbstractQueuePoller implements Runnable {
     public void run() {
         boolean empty;
         while (true) {
-            while (jobs.size() + newjobs.size() + delayqueue.size() == 0) {
+            while (jobs.size() + newjobs.size() == 0) {
                 try {
                     Thread.sleep(250);
                 }
@@ -95,27 +93,16 @@ public abstract class AbstractQueuePoller implements Runnable {
     }
 
     protected void commitNewJobs() {
-        if (newjobs.isEmpty() && delayqueue.isEmpty()) {
+        if (newjobs.isEmpty()) {
             return;
         }
         else {
             synchronized (newjobs) {
-                if (delayedCommit) {
-                    commitJobs(delayqueue);
-                    delayqueue.addAll(newjobs);
-                    newjobs.clear();
-                }
-                else {
-                    commitJobs(newjobs);
+                while (!newjobs.isEmpty()) {
+                    Job job = (Job) newjobs.removeFirst();
+                    jobs.put(job.getJobID(), job);
                 }
             }
-        }
-    }
-
-    protected void commitJobs(LinkedList src) {
-        while (!src.isEmpty()) {
-            Job job = (Job) src.removeFirst();
-            jobs.put(job.getJobID(), job);
         }
     }
 
@@ -209,14 +196,6 @@ public abstract class AbstractQueuePoller implements Runnable {
 
     protected void addDoneJob(String id) {
         donejobs.add(id);
-    }
-
-    public boolean getDelayedCommit() {
-        return delayedCommit;
-    }
-
-    public void setDelayedCommit(boolean delayedCommit) {
-        this.delayedCommit = delayedCommit;
     }
 
     protected abstract void processStdout(InputStream is) throws IOException;

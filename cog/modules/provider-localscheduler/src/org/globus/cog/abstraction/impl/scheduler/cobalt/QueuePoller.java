@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,13 +26,16 @@ import org.globus.cog.abstraction.impl.scheduler.common.Job;
 
 public class QueuePoller extends AbstractQueuePoller {
 	public static final Logger logger = Logger.getLogger(QueuePoller.class);
+	
+	public static final int MAX_INITIAL_WAIT_ROUNDS = 6;
 
 	private Set processed;
+	private Map ticks;
 	
 	public QueuePoller(AbstractProperties properties) {
 		super("Cobalt provider queue poller", properties);
 		processed = new HashSet();
-		setDelayedCommit(true);
+		ticks = new HashMap();
 	}
 
 	protected String parseToWhitespace(String s, int startindex) {
@@ -93,6 +97,13 @@ public class QueuePoller extends AbstractQueuePoller {
 			String id = (String) e.getKey();
 			if (!processed.contains(id)) {
 				Job job = (Job) e.getValue();
+				if (job.getState() == job.STATE_NONE) {
+				    int t = incTicks(id);
+				    if (t <= MAX_INITIAL_WAIT_ROUNDS) {
+				        continue;
+				    }
+				    ticks.remove(id);
+				}
 				if (logger.isDebugEnabled()) {
 					logger.debug("Status for " + id + " is Done");
 				}
@@ -104,7 +115,16 @@ public class QueuePoller extends AbstractQueuePoller {
 		}
 	}
 
-	protected void processStderr(InputStream is) throws IOException {
+	private int incTicks(String id) {
+        Integer i = (Integer) ticks.get(id);
+        if (i == null) {
+            i = new Integer(0);
+        }
+        ticks.put(id, new Integer(i.intValue() + 1));
+        return i.intValue();
+    }
+
+    protected void processStderr(InputStream is) throws IOException {
 	}
 
 	public static String[] CMDARRAY;
@@ -115,5 +135,4 @@ public class QueuePoller extends AbstractQueuePoller {
 		}
 		return CMDARRAY;
 	}
-
 }
