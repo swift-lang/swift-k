@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.impl.scheduler.cobalt;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.CharArrayWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -76,6 +77,15 @@ public class CobaltJob extends Job {
             if (wr == null) {
                 wr = new NullWriter();
             }
+            try {
+                File f = new File(stdout);
+                while (!f.exists()) {
+                    Thread.sleep(1000);
+                }
+            }
+            catch (InterruptedException e) {
+                return false;
+            }
             BufferedReader br = new BufferedReader(new FileReader(stdout));
             String line;
             do {
@@ -119,6 +129,15 @@ public class CobaltJob extends Job {
             }
             if (wr == null) {
                 wr = new NullWriter();
+            }
+            try {
+                File f = new File(stderr);
+                while (!f.exists()) {
+                    Thread.sleep(1000);
+                }
+            }
+            catch (InterruptedException e) {
+                return false;
             }
             BufferedReader br = new BufferedReader(new FileReader(stderr));
             String line;
