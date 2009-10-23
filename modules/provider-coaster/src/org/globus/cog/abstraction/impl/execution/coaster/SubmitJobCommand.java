@@ -105,7 +105,7 @@ public class SubmitJobCommand extends Command {
         i = spec.getAttributeNames().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            if (!IGNORED_ATTRIBUTES.contains(name)) {
+            if (!IGNORED_ATTRIBUTES.contains(name) || spec.isBatchJob()) {
                 add(dos, "attr", name + "=" + spec.getAttribute(name));
             }
         }
