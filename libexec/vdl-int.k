@@ -188,7 +188,7 @@ namespace("vdl"
 						vdl:siteprofile(host, "swift:cleanupCommandOptions"),
 						dir
 					)
-					host=host, batch=true)
+					host=host, batch=true, tcprofile(host))
 			)
 			log(LOG:INFO, "END dir={dir} host={host}")
 		)
@@ -472,7 +472,7 @@ namespace("vdl"
 								directory=wfdir
 								redirect=false
 								host=rhost
-								vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
+								vdl:tcprofile(rhost, tr=tr) //this gets various app params from the tc, such as environment, walltime, etc
 								replicationGroup=replicationGroup
 								replicationChannel=replicationChannel
 								jobid=jobid
@@ -500,7 +500,7 @@ namespace("vdl"
 							directory=wfdir
 							redirect=false
 							host=rhost
-							vdl:tcprofile(tr, rhost) //this gets various app params from the tc, such as environment, walltime, etc
+							vdl:tcprofile(rhost, tr=tr) //this gets various app params from the tc, such as environment, walltime, etc
 							replicationGroup=replicationGroup
 							replicationChannel=replicationChannel
 							jobid=jobid
