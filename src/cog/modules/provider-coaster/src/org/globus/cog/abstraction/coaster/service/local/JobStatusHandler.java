@@ -9,6 +9,8 @@
  */
 package org.globus.cog.abstraction.coaster.service.local;
 
+import java.util.Date;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
@@ -36,6 +38,9 @@ public class JobStatusHandler extends RequestHandler {
             }
             if (message != null && !message.equals("")) {
                 s.setMessage(message);
+            }
+            if (getInDataChuncks().size() > 4) {
+                s.setTime(new Date(this.getInDataAsLong(4)));
             }
             NotificationManager.getDefault().notificationReceived(jobId, s);
             sendReply("OK");
