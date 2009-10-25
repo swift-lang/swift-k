@@ -488,9 +488,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		catch (Exception e) {
 			throw new TaskSubmissionException("Cannot submit task", e);
 		}
-		synchronized (taskContacts) {
-			taskContacts.put(t, contacts);
-		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("Submitting task " + t);
 		}
@@ -502,6 +499,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		queues[3] = shq.getProviderQueue(t.getService(0).getProvider(), sshInitialRate, 2,
 				".*throttled.*");
 		synchronized (this) {
+			taskContacts.put(t, contacts);
 		    handlers.put(t, handler);
 			NonBlockingSubmit nbs = new NonBlockingSubmit(handler, t, queues);
 			nbs.go();
@@ -574,10 +572,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			Task task = (Task) e.getSource();
 			Status status = e.getStatus();
 			int code = status.getStatusCode();
-			Contact[] contacts = (Contact[]) taskContacts.get(task);
-			if (contacts == null) {
-				return;
-			}
 			if (code == Status.COMPLETED) {
 				if (logger.isInfoEnabled()) {
 					logger.info(task + " Completed. Waiting: " + getJobQueue().size()
@@ -590,6 +584,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			}
 			if (status.isTerminal()) {
 				synchronized (this) {
+					Contact[] contacts = getContacts(task);
+					if (contacts == null) {
+						logger.warn("Task had no contacts " + task);
+					}
 					tasksFinished = true;
 					decRunning();
 					task.removeStatusListener(this);
@@ -606,9 +604,11 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 						taskContacts.remove(task);
 					}
 
-					for (int i = 0; i < contacts.length; i++) {
-						BoundContact c = (BoundContact) contacts[i];
-						c.setActiveTasks(c.getActiveTasks() - 1);
+					if (contacts != null) {
+						for (int i = 0; i < contacts.length; i++) {
+							BoundContact c = (BoundContact) contacts[i];
+							c.setActiveTasks(c.getActiveTasks() - 1);
+						}
 					}
 
 					TaskHandler handler = getHandler(task);
