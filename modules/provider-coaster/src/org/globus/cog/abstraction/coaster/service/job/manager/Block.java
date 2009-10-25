@@ -340,9 +340,7 @@ public class Block implements StatusListener {
                                     + prettifyOut(task.getStdError()), null);
                         }
                     }
-                    else {
-                    	ap.blockTaskFinished(this);
-                    }
+                   	ap.blockTaskFinished(this);
                     running = false;
                 }
                 logger.info(id + " stdout: " + prettifyOut(task.getStdOutput()));
