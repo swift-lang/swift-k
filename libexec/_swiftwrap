@@ -149,7 +149,7 @@ SCRATCH=$VALUE
 shift $SHIFTCOUNT
 
 if [ "X$PROGRESSIVE_INFO" == "X" ]; then
-	INFODIR=$SCRATCH/info/$JOBDIR
+	INFODIR=$SCRATCH/$JOBDIR/$ID
 else
 	INFODIR=$WFDIR/info/$JOBDIR
 fi
@@ -235,19 +235,19 @@ fi
 PATH=$PATH:/bin:/usr/bin
 
 if [ "$PATHPREFIX" != "" ]; then
-export PATH=$PATHPREFIX:$PATH
+	export PATH=$PATHPREFIX:$PATH
 fi
 
 if [ "$SWIFT_EXTRA_INFO" != "" ]; then
-  log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
+	log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
 fi
 
 if [ "X${EXEC:0:1}" != "X/" ] ; then
-export ORIGEXEC=$EXEC
-export EXEC=$(which $EXEC)
-if [ "X$EXEC" = "X" ] ; then
-fail 254 "Cannot find executable $ORIGEXEC on site system path"
-fi
+	export ORIGEXEC=$EXEC
+	export EXEC=$(which $EXEC)
+	if [ "X$EXEC" = "X" ] ; then
+		fail 254 "Cannot find executable $ORIGEXEC on site system path"
+	fi
 fi
 
 log "DIR=$DIR"
@@ -279,13 +279,13 @@ done
 logstate "LINK_INPUTS"
 for L in $INF ; do
 	if [ $COPYNOTLINK = 1 ]; then
-		cp "$PWD/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+		cp "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
 		checkError 254 "Failed to copy input file $L"
-		log "Copied input: $PWD/shared/$L to $DIR/$L"
+		log "Copied input: $WFDIR/shared/$L to $DIR/$L"
 	else
-		ln -s "$PWD/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+		ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
 		checkError 254 "Failed to link input file $L"
-		log "Linked input: $PWD/shared/$L to $DIR/$L"
+		log "Linked input: $WFDIR/shared/$L to $DIR/$L"
 	fi
 done
 
@@ -363,7 +363,7 @@ fi
 
 logstate "MOVING_OUTPUTS"
 for O in $OUTF ; do
-	mv "$DIR/$O" "shared/$O" 2>&1 >& "$INFO"
+	mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >& "$INFO"
 	checkError 254 "Failed to move output file $O to shared directory"
 done
 
@@ -373,7 +373,7 @@ checkError 254 "Failed to remove job directory $DIR"
 
 if [ "$STATUSMODE" = "files" ]; then
 	logstate "TOUCH_SUCCESS"
-	touch status/${JOBDIR}/${ID}-success
+	touch $WFDIR/status/${JOBDIR}/${ID}-success
 fi
 
 logstate "END"
