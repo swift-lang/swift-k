@@ -427,6 +427,10 @@ namespace("vdl"
 				if(wrapperMode == "files"
 					sequential(
 						sys:file:write(wrapfile,
+							"-scratch", try(
+								vdl:siteprofile(rhost, "scratch")
+								vdl:siteprofile(rhost, "workdir")
+							)
 							"-e ",vdl:executable(tr, rhost), nl(),
 							"-out ",stdout,nl(),
 							"-err ",stderr,nl(),
@@ -486,6 +490,10 @@ namespace("vdl"
 								dircat("shared", vdl:siteprofile(rhost, "swift:wrapperScript"), os=os),
 								jobid,
 								"-jobdir", jobdir,
+								"-scratch", try(
+									vdl:siteprofile(rhost, "scratch")
+									vdl:siteprofile(rhost, "workdir")
+								)
 								"-e", vdl:executable(tr, rhost), 
 								"-out", stdout, 
 								"-err", stderr, 

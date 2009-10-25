@@ -159,6 +159,10 @@ openinfo(WFDIR + "\info\" + JOBDIR + "\" + ID + "-info")
 
 logstate "LOG_START"
 
+expectArg("scratch")
+SCRATCH = getArgVal(MandatoryArg, "job dir")
+'though we'll ignore SCRATCH here
+
 expectArg("e")
 EXEC = getArgVal(MandatoryArg, "executable")
 

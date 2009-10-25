@@ -144,11 +144,20 @@ if [ "$JOBDIR" == "" ] ; then
 	shift $SHIFTCOUNT
 fi
 
+getarg "-scratch" "$@"
+SCRATCH=$VALUE
+shift $SHIFTCOUNT
+
+if [ "X$PROGRESSIVE_INFO" == "X" ]; then
+	INFODIR=$SCRATCH/info/$JOBDIR
+else
+	INFODIR=$WFDIR/info/$JOBDIR
+fi
 checkEmpty "$JOBDIR" "Missing job directory prefix"
-mkdir -p $WFDIR/info/$JOBDIR
+mkdir -p $INFODIR
 closeinfo
-rm -f "$WFDIR/info/$JOBDIR/${ID}-info"
-openinfo "$WFDIR/info/$JOBDIR/${ID}-info"
+rm -f "$INFODIR/${ID}-info"
+openinfo "$INFODIR/${ID}-info"
 
 logstate "LOG_START"
 infosection "Wrapper"
@@ -213,9 +222,9 @@ if [ "$STATUSMODE" = "files" ]; then
 	mkdir -p $WFDIR/status/$JOBDIR
 fi
 
-if [ "X$SWIFT_JOBDIR_PATH" != "X" ]; then
+if [ "$WFDIR" != "$SCRATCH" ]; then
   log "Job directory mode is: local copy"
-  DIR=${SWIFT_JOBDIR_PATH}/$JOBDIR/$ID
+  DIR=$SCRATCH/$JOBDIR/$ID
   COPYNOTLINK=1
 else
   log "Job directory mode is: link on shared filesystem"
@@ -293,8 +302,18 @@ if [ ! -x "$EXEC" ]; then
 fi
 if [ "$KICKSTART" == "" ]; then
 	if [ "$STDIN" == "" ]; then
+		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+			echo "#!/bin/bash" > run.sh
+			echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
+			chmod +x run.sh
+		fi
 		"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
 	else
+		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+			echo "#!/bin/bash" > run.sh
+			echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\" <\"$STDIN\"" >> run.sh
+			chmod +x run.sh
+		fi
 		"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 	fi
 	checkError $? "Exit code $?"
@@ -361,6 +380,10 @@ logstate "END"
 
 closeinfo
 
-# ensure we exit with a 0 after a successful exection
+if [ "X$PROGRESSIVE_INFO" == "X" ]; then
+	mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
+fi
+
+# ensure we exit with a 0 after a successful execution
 exit 0
 
