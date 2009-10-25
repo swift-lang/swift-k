@@ -62,5 +62,6 @@ public class JobStatusCommand extends Command {
         	sb.append(sw.toString());
         }
         addOutData(sb.toString());
+        addOutData(status.getTime().getTime());
     }
 }
