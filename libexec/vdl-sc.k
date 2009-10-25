@@ -59,6 +59,10 @@ namespace("vdl"
 			element(workdirectory, [dir]
 				property(name="workdir", value = dir)
 			)
+			
+			element(scratch, [dir]
+				property(name="scratch", value = dir)
+			)
 
 			resources(
 				executeFile(file)
