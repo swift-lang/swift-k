@@ -38,7 +38,7 @@ public class SiteProfile extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
-		return getSingle(bc, new FQN(TypeUtil.toString(PA_FQN.getValue(stack))));
+		return getSingle(stack, bc, new FQN(TypeUtil.toString(PA_FQN.getValue(stack))));
 	}
 	
 	public static final FQN SWIFT_WRAPPER_INTERPRETER = new FQN("swift:wrapperInterpreter");
@@ -91,7 +91,7 @@ public class SiteProfile extends VDLFunction {
 		addDefault(null, SWIFT_CLEANUP_COMMAND_OPTIONS, new String[] {"-rf"});
 	}
 	
-	private Object getSingle(BoundContact bc, FQN fqn) {
+	private Object getSingle(VariableStack stack, BoundContact bc, FQN fqn) throws ExecutionException {
             String value = getProfile(bc, fqn);
             if (value == null) {
             	Os os = getOS(bc);
@@ -102,7 +102,7 @@ public class SiteProfile extends VDLFunction {
                 	return os;
                 }
                 else {
-                	return null;
+                	throw new ExecutionException(stack, "Missing profile: " + fqn);
                 }
             }
             else {
