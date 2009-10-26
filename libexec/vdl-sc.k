@@ -57,11 +57,28 @@ namespace("vdl"
 			)
 
 			element(workdirectory, [dir]
-				property(name="workdir", value = dir)
+				property("workdir", dir)
 			)
 			
 			element(scratch, [dir]
-				property(name="scratch", value = dir)
+				property("scratch", dir)
+			)
+			
+			element(intrepidCoasterParams, [optional(averageJobTime, blockSize)]
+				property("scratch", "/scratch")
+				property("workersPerNode", "4")
+				maybe(
+					discard(averageJobTime)
+					blockSize := try(blockSize, 512)
+					parallelism := averageJobTime * 100	
+					echo("parallelism: {parallelism}")
+					property("slots", math:round(parallelism / (blockSize * 4)))
+					property("nodeGranularity", blockSize)
+					property("maxNodes", blockSize)
+					jt := parallelism * 2
+					property("jobThrottle", jt / 100)
+					print("For best results, please set the foreach.max.threads property in swift.properties to {jt}") 
+				)
 			)
 
 			resources(
