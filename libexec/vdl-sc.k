@@ -65,18 +65,22 @@ namespace("vdl"
 			)
 			
 			element(intrepidCoasterParams, [optional(averageJobTime, blockSize)]
-				property("scratch", "/scratch")
-				property("workersPerNode", "4")
+				print("Setting Intrepid coaster params:")
+				element(p, [name, value]
+					print("	{name} = {value}")
+					property(name, value)
+				)
+				p("scratch", "/scratch")
+				p("workersPerNode", "4")
 				maybe(
 					discard(averageJobTime)
 					blockSize := try(blockSize, 512)
 					parallelism := averageJobTime * 100	
-					echo("parallelism: {parallelism}")
-					property("slots", math:round(parallelism / (blockSize * 4)))
-					property("nodeGranularity", blockSize)
-					property("maxNodes", blockSize)
+					p("slots", math:round(parallelism / (blockSize * 4)))
+					p("nodeGranularity", blockSize)
+					p("maxNodes", blockSize)
 					jt := parallelism * 2
-					property("jobThrottle", jt / 100)
+					p("jobThrottle", jt / 100)
 					print("For best results, please set the foreach.max.threads property in swift.properties to {jt}") 
 				)
 			)
