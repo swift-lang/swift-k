@@ -199,6 +199,14 @@ public class Math extends FunctionsCollection {
 	public double math_int(VariableStack stack) throws ExecutionException {
 		return java.lang.Math.floor(TypeUtil.toDouble(A_VALUE.getValue(stack)));
 	}
+	
+	static {
+		setArguments("math_round", new Arg[] { A_VALUE });
+	}
+
+	public double math_round(VariableStack stack) throws ExecutionException {
+		return java.lang.Math.round(TypeUtil.toDouble(A_VALUE.getValue(stack)));
+	}
 
 	static {
 		setArguments("math_ln", new Arg[] { A_VALUE });
