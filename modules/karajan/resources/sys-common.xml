@@ -132,6 +132,7 @@
 		<export name="min"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
 		<export name="max"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
 		<export name="int"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
+		<export name="round"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
 		<export name="ln"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
 		<export name="exp"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
 		<export name="random"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Math"/></export>
