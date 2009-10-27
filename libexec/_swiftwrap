@@ -222,7 +222,7 @@ if [ "$STATUSMODE" = "files" ]; then
 	mkdir -p $WFDIR/status/$JOBDIR
 fi
 
-if [ "$WFDIR" != "$SCRATCH" ]; then
+if [ "X$SCRATCH" != "X" ]; then
   log "Job directory mode is: local copy"
   DIR=$SCRATCH/$JOBDIR/$ID
   COPYNOTLINK=1
