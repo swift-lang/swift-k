@@ -64,12 +64,13 @@ namespace("vdl"
 				property("scratch", dir)
 			)
 			
+			element(p, [name, value]
+				print("	{name} = {value}")
+				property(name, value)
+			)
+			
 			element(intrepidCoasterParams, [optional(averageJobTime, blockSize)]
 				print("Setting Intrepid coaster params:")
-				element(p, [name, value]
-					print("	{name} = {value}")
-					property(name, value)
-				)
 				p("scratch", "/scratch")
 				p("workersPerNode", "4")
 				p("kernelprofile", "zeptoos")
@@ -81,6 +82,25 @@ namespace("vdl"
 					p("slots", math:round(parallelism / (blockSize * 4)))
 					p("nodeGranularity", blockSize)
 					p("maxNodes", blockSize)
+					jt := parallelism * 2
+					p("jobThrottle", jt / 100)
+					print("For best results, please set the foreach.max.threads property in swift.properties to {jt}") 
+				)
+			)
+			
+			element(surveyorCoasterParams, [optional(averageJobTime, blockSize)]
+				print("Setting Surveyor coaster params:")	
+				p("scratch", "/scratch")
+				p("workersPerNode", "4")
+				p("kernelprofile", "zeptoos")
+				p("alcfbgpnat", "true")
+				maybe(
+					discard(averageJobTime)
+					blockSize := try(blockSize, 64)
+					parallelism := averageJobTime * 100	
+					p("slots", 12)
+					p("nodeGranularity", blockSize)
+					p("maxTime", 3500)
 					jt := parallelism * 2
 					p("jobThrottle", jt / 100)
 					print("For best results, please set the foreach.max.threads property in swift.properties to {jt}") 
