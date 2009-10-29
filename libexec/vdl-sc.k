@@ -72,6 +72,8 @@ namespace("vdl"
 				)
 				p("scratch", "/scratch")
 				p("workersPerNode", "4")
+				p("kernelprofile", "zeptoos")
+				p("alcfbgpnat", "true")
 				maybe(
 					discard(averageJobTime)
 					blockSize := try(blockSize, 512)
