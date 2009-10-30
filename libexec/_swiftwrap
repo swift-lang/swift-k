@@ -148,7 +148,7 @@ getarg "-scratch" "$@"
 SCRATCH=$VALUE
 shift $SHIFTCOUNT
 
-if [ "X$PROGRESSIVE_INFO" == "X" && "X$SCRATCH" != "X" ]; then
+if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
 	INFODIR=$SCRATCH
 else
 	INFODIR=$WFDIR/info/$JOBDIR
@@ -380,7 +380,7 @@ logstate "END"
 
 closeinfo
 
-if [ "X$PROGRESSIVE_INFO" == "X" && "X$SCRATCH" != "X" ]; then
+if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
 	mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
 fi
 
