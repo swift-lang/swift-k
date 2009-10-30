@@ -38,7 +38,7 @@ public class Properties extends AbstractProperties {
 		setSubmitCommand("cqsub");
 		setPollCommand("cqstat");
 		setRemoveCommand("cqdel");
-		setExitcodeRegexp("(?BG/L job exit status = ([0-9]+))|(?exit status = \\(([0-9]+)\\))");
+		setExitcodeRegexp("(?:.*BG/. job exit status =\\s*([0-9]+))|(?:.*exit status = \\(([0-9]+)\\))");
 	}
 
 	
