@@ -9,8 +9,10 @@
  */
 package org.globus.cog.abstraction.impl.scheduler.common;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -163,14 +165,15 @@ public abstract class AbstractQueuePoller implements Runnable {
                 logger.debug("Poll command: " + Arrays.asList(cmdarray));
             }
             Process pqstat = Runtime.getRuntime().exec(cmdarray);
+            
             processStdout(pqstat.getInputStream());
-            processStderr(pqstat.getErrorStream());
+            
             int ec = pqstat.waitFor();
             if (ec != 0) {
                 failures++;
                 if (failures >= MAX_CONSECUTIVE_FAILURES) {
                     failAll(getProperties().getPollCommandName()
-                            + " failed (exit code " + ec + ")");
+                            + " failed (exit code " + ec + "): " + readStderr(pqstat.getErrorStream()));
                 }
             }
             else {
@@ -180,6 +183,23 @@ public abstract class AbstractQueuePoller implements Runnable {
         catch (Exception e) {
             failAll(e);
         }
+    }
+
+    private String readStderr(InputStream is) {
+        StringBuffer sb = new StringBuffer();
+        try {
+        	BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        	String line = br.readLine();
+        	while (line != null) {
+        		sb.append(line);
+        		sb.append('\n');
+        		line = br.readLine();
+        	}
+        }
+        catch (IOException e) {
+        	sb.append(e);
+        }
+        return sb.toString();
     }
 
     protected AbstractProperties getProperties() {

@@ -52,7 +52,8 @@ public class QueuePoller extends AbstractQueuePoller {
 		String line;
 		String header = br.readLine();
 		if (header == null) {
-			throw new IOException("Failed to read cqstat header");
+			logger.warn("Failed to read cqstat header");
+			return;
 		}
 		int jobIDIndex = header.indexOf("JobID");
 		int stateIndex = header.indexOf("State");
