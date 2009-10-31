@@ -170,7 +170,7 @@ public class ServiceManager implements StatusListener {
                 t.setAttribute(TASK_ATTR_ID, id);
                 new Thread(new Runnable() {
                     public void run() {
-                        CoasterService.main(new String[] { ls, id });
+                        CoasterService.main(new String[] { ls, id, "-local" });
                     }
                 }).start();
             }
@@ -375,6 +375,11 @@ public class ServiceManager implements StatusListener {
     private synchronized String getLocalServiceURL() throws IOException {
         startLocalService();
         return localService.getURL();
+    }
+    
+    public LocalService getLocalService() throws IOException {
+    	startLocalService();
+    	return localService;
     }
 
     private String getRandomID() {
