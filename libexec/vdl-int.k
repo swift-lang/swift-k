@@ -126,6 +126,16 @@ namespace("vdl"
 			)
 		)
 		
+		element(initDDir, []
+			ddir := "{VDL:SCRIPTNAME}-{VDL:RUNID}.d"
+			once(ddir
+				if(sys:not(file:exists(ddir))
+					task:dir:make(ddir)
+				)
+			)
+			ddir
+		)
+		
 		element(inFileDirs, [stageins]
 			for(file, stageins
 		 		reldirname(file)
@@ -360,9 +370,6 @@ namespace("vdl"
 		)
 		
 		element(transferKickstartRec, [rhost, wfdir, jobid, jobdir]
-			if(sys:not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
-				task:dir:make("{VDL:SCRIPTNAME}-{VDL:RUNID}.d")
-			)
 			recfile := "{jobid}-kickstart.xml"
 			srcdir := dircat(concat(wfdir, "/kickstart/"), jobdir)
 			try(
@@ -376,9 +383,6 @@ namespace("vdl"
 		)
 
 		element(transferWrapperLog, [rhost, wfdir, jobid, jobdir]
-			if(sys:not(file:exists("{VDL:SCRIPTNAME}-{VDL:RUNID}.d"))
-				task:dir:make("{VDL:SCRIPTNAME}-{VDL:RUNID}.d")
-			)
 			recfile := "{jobid}-info"
 			srcdir := dircat(concat(wfdir, "/info/"), jobdir)
 			try(
@@ -398,6 +402,7 @@ namespace("vdl"
 			stageout := list(unique(each(stageout)))
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr, stagein=stagein)
 				
+				ddir := initDDir()
 				[wfdir, sharedDir] := try(
 					initSharedDir(rhost)
 					throw(exception("Could not initialize shared directory on {rhost}", exception))
@@ -412,10 +417,6 @@ namespace("vdl"
 				statusMode := configProperty("status.mode",host=rhost)
 				wrapperMode := configProperty("wrapper.parameter.mode",host=rhost)
 
-				ddir := "{VDL:SCRIPTNAME}-{VDL:RUNID}.d"
-				if(sys:not(file:exists(ddir))
-					task:dir:make(ddir)
-				)
 				wrapfile := "{ddir}/param-{jobid}"
 
 				stdout := try(stdout, "stdout.txt")
