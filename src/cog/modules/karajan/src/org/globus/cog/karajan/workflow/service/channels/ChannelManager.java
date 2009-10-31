@@ -113,8 +113,11 @@ public class ChannelManager {
 			throws ChannelException {
 		synchronized (channels) {
 			HostCredentialPair hcp = new HostCredentialPair(url, cred);
-			MetaChannel previous = getMetaChannel(channel);
-			if (previous == null) {
+			MetaChannel previous;
+			try {
+			    previous = getMetaChannel(channel);
+			}
+			catch (ChannelException e) {
 				previous = new MetaChannel(channel.getRequestManager(), channel.getChannelContext());
 			}
 			channels.put(hcp, previous);
