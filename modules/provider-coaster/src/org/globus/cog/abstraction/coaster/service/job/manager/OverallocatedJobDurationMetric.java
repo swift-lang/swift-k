@@ -19,16 +19,31 @@ public class OverallocatedJobDurationMetric implements Metric {
 
     public double blockSize(int slot, int cslots, double tsum) {
         double medianSize = tsum / cslots;
-        double minsize = medianSize * (1 - settings.getSpread());
-        double maxsize = medianSize * (1 + settings.getSpread());
-        if (cslots == 0) {
-            return 0;
-        }
-        else if (cslots == 1) {
-            return tsum;
+        if (settings.getExponentialSpread() != 0) {
+            int exp = (int) (Math.log(tsum / settings.getNodeGranularity()) / Math.log(settings.getExponentialSpread()));
+            int crt = exp * slot / cslots;
+            if (cslots == 0) {
+                return 0;
+            }
+            else if (cslots == 1) {
+                return settings.getNodeGranularity() * Math.pow(settings.getExponentialSpread(), exp);
+            }
+            else {
+                return settings.getNodeGranularity() * Math.pow(settings.getExponentialSpread(), crt);
+            }
         }
         else {
-            return Math.ceil(minsize + (maxsize - minsize) * slot / (cslots - 1));
+            double minsize = medianSize * (1 - settings.getSpread());
+            double maxsize = medianSize * (1 + settings.getSpread());
+            if (cslots == 0) {
+                return 0;
+            }
+            else if (cslots == 1) {
+                return tsum;
+            }
+            else {
+                return Math.ceil(minsize + (maxsize - minsize) * slot / (cslots - 1));
+            }
         }
     }
 
@@ -43,7 +58,7 @@ public class OverallocatedJobDurationMetric implements Metric {
     public double size(int w, int h) {
         return w * pow(h, settings.getParallelism());
     }
-    
+
     public int width(int sz, int h) {
         return (int) (sz / pow(h, settings.getParallelism()));
     }
@@ -51,8 +66,19 @@ public class OverallocatedJobDurationMetric implements Metric {
     private double pow(long v, double e) {
         return Math.pow(v, e);
     }
-    
+
     private double pow(int v, double e) {
         return Math.pow(v, e);
+    }
+    
+    public static void main(String[] args) {
+        Settings s = new Settings();
+        Metric m = new OverallocatedJobDurationMetric(s);
+        s.setNodeGranularity(32);
+        s.setExponentialSpread(2);
+        System.out.println(m.blockSize(0, 4, 16384));
+        System.out.println(m.blockSize(1, 4, 16384));
+        System.out.println(m.blockSize(2, 4, 16384));
+        System.out.println(m.blockSize(3, 4, 16384));
     }
 }

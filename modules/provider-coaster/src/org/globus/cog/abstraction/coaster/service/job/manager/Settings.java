@@ -67,6 +67,8 @@ public class Settings {
      * Maximum idle time of a block
      */
 
+    private int exponentialSpread = 0;
+    
     private TimeInterval reserve = TimeInterval.fromSeconds(60);
 
     //this would cause bad things for workersPerNode > 1024
@@ -168,6 +170,14 @@ public class Settings {
 
     public void setSpread(double spread) {
         this.spread = spread;
+    }
+
+    public int getExponentialSpread() {
+        return exponentialSpread;
+    }
+
+    public void setExponentialSpread(int exponentialSpread) {
+        this.exponentialSpread = exponentialSpread;
     }
 
     public TimeInterval getReserve() {
