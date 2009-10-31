@@ -381,6 +381,7 @@ logstate "END"
 closeinfo
 
 if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
+	mkdir -p "$WFDIR/info/$JOBDIR"
 	mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
 fi
 
