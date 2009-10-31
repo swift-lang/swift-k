@@ -31,6 +31,8 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.channels.PipedClientChannel;
+import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
 import org.globus.cog.karajan.workflow.service.channels.StreamChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
@@ -143,17 +145,11 @@ public class CoasterService extends GSSService {
     }
 
     private KarajanChannel createLocalChannel() throws IOException, ChannelException {
-        PipedInputStream is = new PipedInputStream();
-        PipedOutputStream os = new PipedOutputStream();
-        PipedInputStream is2 = new PipedInputStream();
-        PipedOutputStream os2 = new PipedOutputStream();
-        is.connect(os2);
-        os.connect(is2);
-        StreamChannel sc = new StreamChannel(is, os, COASTER_REQUEST_MANAGER, new ChannelContext());
-        ChannelManager.getManager().registerChannel(sc.getChannelContext().getChannelID(), sc);
-        ServiceManager.getDefault().getLocalService().handleConnection(is2, os2);
-        sc.start();
-        return sc;
+        PipedServerChannel psc = ServiceManager.getDefault().getLocalService().newPipedServerChannel();
+        PipedClientChannel pcc = new PipedClientChannel(COASTER_REQUEST_MANAGER, new ChannelContext(), psc);
+        psc.setClientChannel(pcc);
+        ChannelManager.getManager().registerChannel(pcc.getChannelContext().getChannelID(), pcc);
+        return pcc;
     }
 
     private void stop(Exception e) {
