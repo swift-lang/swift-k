@@ -10,6 +10,8 @@
 package org.globus.cog.abstraction.coaster.service.local;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +30,7 @@ import org.globus.gsi.gssapi.auth.SelfAuthorization;
 public class LocalService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalService.class);
 
-    //TODO change back to 300
+    // TODO change back to 300
     public static final long DEFAULT_REGISTRATION_TIMEOUT = 3000 * 1000;
 
     private Map services;
@@ -56,8 +58,8 @@ public class LocalService extends GSSService implements Registering {
     protected void handleConnection(Socket sock) {
         logger.info("Got connection");
         try {
-            ConnectionHandler handler = new ConnectionHandler(this, sock,
-                    LocalRequestManager.INSTANCE);
+            ConnectionHandler handler =
+                    new ConnectionHandler(this, sock, LocalRequestManager.INSTANCE);
             logger.info("Initialized connection handler");
             handler.start();
             logger.info("Connection handler started");
@@ -67,13 +69,24 @@ public class LocalService extends GSSService implements Registering {
         }
     }
 
-    public String waitForRegistration(Task t, String id)
-            throws InterruptedException, TaskSubmissionException {
+    public void handleConnection(InputStream is, OutputStream os) {
+        try {
+            ConnectionHandler handler =
+                    new ConnectionHandler(this, is, os, LocalRequestManager.INSTANCE);
+            handler.start();
+        }
+        catch (Exception e) {
+            logger.warn("Could not start local connection handler", e);
+        }
+    }
+
+    public String waitForRegistration(Task t, String id) throws InterruptedException,
+            TaskSubmissionException {
         return waitForRegistration(t, id, DEFAULT_REGISTRATION_TIMEOUT);
     }
 
-    public String waitForRegistration(Task t, String id, long timeout)
-            throws InterruptedException, TaskSubmissionException {
+    public String waitForRegistration(Task t, String id, long timeout) throws InterruptedException,
+            TaskSubmissionException {
         if (logger.isDebugEnabled()) {
             logger.debug("Waiting for registration from service " + id);
         }
@@ -82,29 +95,28 @@ public class LocalService extends GSSService implements Registering {
             while (!services.containsKey(id)) {
                 services.wait(250);
                 if (timeout < System.currentTimeMillis() - lastHeardOf(id)) {
-                    throw new TaskSubmissionException(
-                            "Timed out waiting for registration for " + id);
+                    throw new TaskSubmissionException("Timed out waiting for registration for "
+                            + id);
                 }
                 Status s = t.getStatus();
                 if (s.isTerminal()) {
-                    throw new TaskSubmissionException(
-                            "Task ended before registration was received"
-                                    + (s.getMessage() == null ? ". " : ": "
-                                            + s.getMessage()) + out("STDOUT", t.getStdOutput()) + 
-                                    out("STDERR", t.getStdError()), s.getException());
+                    throw new TaskSubmissionException("Task ended before registration was received"
+                            + (s.getMessage() == null ? ". " : ": " + s.getMessage())
+                            + out("STDOUT", t.getStdOutput()) + out("STDERR", t.getStdError()),
+                        s.getException());
                 }
             }
             return (String) services.get(id);
         }
     }
-    
+
     private String out(String name, String value) {
-    	if (value != null) {
-    		return "\n" + name + ": " + value;
-    	}
-    	else {
-    		return "";
-    	}
+        if (value != null) {
+            return "\n" + name + ": " + value;
+        }
+        else {
+            return "";
+        }
     }
 
     public void heardOf(String id) {
@@ -119,24 +131,20 @@ public class LocalService extends GSSService implements Registering {
         }
     }
 
-    public String registrationReceived(String id, String url,
-            KarajanChannel channel) {
+    public String registrationReceived(String id, String url, KarajanChannel channel) {
         if (logger.isDebugEnabled()) {
-            logger.debug("Received registration from service " + id + ": "
-                    + url);
+            logger.debug("Received registration from service " + id + ": " + url);
         }
         synchronized (services) {
             if (services.containsKey(id)) {
-                logger.info("Replacing channel for service with id=" + id
-                        + ".");
+                logger.info("Replacing channel for service with id=" + id + ".");
             }
             try {
                 ChannelManager.getManager().registerChannel(url,
-                        channel.getUserContext().getCredential(), channel);
+                    channel.getUserContext().getCredential(), channel);
             }
             catch (Exception e) {
-                throw new RuntimeException("Failed to register channel "
-                        + url);
+                throw new RuntimeException("Failed to register channel " + url);
             }
             services.put(id, url);
             services.notifyAll();

@@ -10,6 +10,8 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,13 +21,17 @@ import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.abstraction.coaster.service.local.JobStatusHandler;
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
+import org.globus.cog.abstraction.impl.execution.coaster.ServiceManager;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.ServiceRequestManager;
+import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.channels.StreamChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
 public class CoasterService extends GSSService {
@@ -43,14 +49,16 @@ public class CoasterService extends GSSService {
     private boolean done;
     private boolean suspended;
     private static Timer watchdogs = new Timer();
+    private boolean local;
 
     public CoasterService() throws IOException {
-        this(null, null);
+        this(null, null, true);
     }
 
-    public CoasterService(String registrationURL, String id)
+    public CoasterService(String registrationURL, String id, boolean local)
             throws IOException {
-        super();
+        super(!local, 0);
+        this.local = true;
         this.registrationURL = registrationURL;
         this.id = id;
         setAuthorization(new SelfAuthorization());
@@ -61,6 +69,10 @@ public class CoasterService extends GSSService {
     }
 
     protected void handleConnection(Socket sock) {
+        if (local) {
+            logger.warn("Discarding connection");
+            return;
+        }
         logger.debug("Got connection");
         if (isSuspended()) {
             try {
@@ -97,9 +109,16 @@ public class CoasterService extends GSSService {
                     logger.info("Reserving channel for registration");
                     RemoteConfiguration.getDefault().prepend(
                             getChannelConfiguration(registrationURL));
-                    KarajanChannel channel = ChannelManager.getManager()
+                    KarajanChannel channel;
+                    
+                    if (local) {
+                        channel = createLocalChannel();
+                    }
+                    else {
+                        channel = ChannelManager.getManager()
                             .reserveChannel(registrationURL, null,
                                     COASTER_REQUEST_MANAGER);
+                    }
                     channel.getChannelContext().setService(this);
                     
                     logger.info("Sending registration");
@@ -121,6 +140,20 @@ public class CoasterService extends GSSService {
             e.printStackTrace();
             stop(e);
         }
+    }
+
+    private KarajanChannel createLocalChannel() throws IOException, ChannelException {
+        PipedInputStream is = new PipedInputStream();
+        PipedOutputStream os = new PipedOutputStream();
+        PipedInputStream is2 = new PipedInputStream();
+        PipedOutputStream os2 = new PipedOutputStream();
+        is.connect(os2);
+        os.connect(is2);
+        StreamChannel sc = new StreamChannel(is, os, COASTER_REQUEST_MANAGER, new ChannelContext());
+        ChannelManager.getManager().registerChannel(sc.getChannelContext().getChannelID(), sc);
+        ServiceManager.getDefault().getLocalService().handleConnection(is2, os2);
+        sc.start();
+        return sc;
     }
 
     private void stop(Exception e) {
@@ -234,7 +267,11 @@ public class CoasterService extends GSSService {
                 s = new CoasterService();
             }
             else {
-                s = new CoasterService(args[0], args[1]);
+                boolean local = false;
+                if (args.length == 3) {
+                    local = "-local".equals(args[2]);
+                }
+                s = new CoasterService(args[0], args[1], local);
             }
             TimerTask t = startConnectWatchdog();
             s.start();
