@@ -170,8 +170,8 @@ public class ServiceManager implements StatusListener {
                 t.setAttribute(TASK_ATTR_ID, id);
                 new Thread(new Runnable() {
                     public void run() {
-                        //CoasterService.main(new String[] { ls, id, "-local" });
-                        CoasterService.main(new String[] { ls, id });
+                        CoasterService.main(new String[] { ls, id, "-local" });
+                        //CoasterService.main(new String[] { ls, id });
                     }
                 }).start();
             }
