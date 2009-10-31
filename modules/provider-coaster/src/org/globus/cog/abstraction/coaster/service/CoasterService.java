@@ -58,7 +58,7 @@ public class CoasterService extends GSSService {
     public CoasterService(String registrationURL, String id, boolean local)
             throws IOException {
         super(!local, 0);
-        this.local = true;
+        this.local = local;
         this.registrationURL = registrationURL;
         this.id = id;
         setAuthorization(new SelfAuthorization());
