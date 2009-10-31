@@ -597,6 +597,8 @@ my @wp;
 
 my $i;
 
+initlog();
+
 for($i=1; $i<=$COUNT; $i++) {
 	my $waitpid;
 	if(($waitpid = fork()) == 0) {
@@ -604,8 +606,6 @@ for($i=1; $i<=$COUNT; $i++) {
 
 		my $myhost=`hostname`;
 		$myhost =~ s/\s+$//;
-		
-		initlog();
 		
 		wlog($DEBUG, "Initialized coaster worker $i\n");
 		wlog($INFO, "Running on node $myhost\n");
