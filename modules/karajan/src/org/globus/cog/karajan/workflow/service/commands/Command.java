@@ -134,7 +134,10 @@ public abstract class Command extends RequestReply implements SendCallback {
 
 	public void dataSent() {
 		sendTime = System.currentTimeMillis();
-		setupReplyTimeoutChecker();
+		//when using the piped channels the reply will arrive before this method is called
+		if (!isInDataReceived()) {
+			setupReplyTimeoutChecker();
+		}
 	}
 
 	protected synchronized void setupReplyTimeoutChecker() {
