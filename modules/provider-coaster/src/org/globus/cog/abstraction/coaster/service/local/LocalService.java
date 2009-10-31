@@ -23,8 +23,11 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
+import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
+import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
 public class LocalService extends GSSService implements Registering {
@@ -78,6 +81,10 @@ public class LocalService extends GSSService implements Registering {
         catch (Exception e) {
             logger.warn("Could not start local connection handler", e);
         }
+    }
+    
+    public PipedServerChannel newPipedServerChannel() {
+        return new PipedServerChannel(LocalRequestManager.INSTANCE, new ChannelContext(this));
     }
 
     public String waitForRegistration(Task t, String id) throws InterruptedException,
