@@ -29,4 +29,8 @@ public class FutureFault extends RuntimeException {
 	public Future getFuture() {
 		return f;
 	}
+
+	public synchronized Throwable fillInStackTrace() {
+		return this;
+	}
 }
