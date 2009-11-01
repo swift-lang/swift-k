@@ -109,8 +109,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     public void enqueue1(Task t) {
         synchronized (add) {
             Job j = new Job(t);
-            if (logger.isInfoEnabled()) {
-                logger.info("Got job with walltime = " + j.getMaxWallTime());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got job with walltime = " + j.getMaxWallTime());
             }
             if (planning) {
                 add.add(j);
