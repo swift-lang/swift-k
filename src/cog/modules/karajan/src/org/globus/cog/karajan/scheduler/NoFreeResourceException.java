@@ -28,4 +28,7 @@ public class NoFreeResourceException extends Exception {
 		super(message, cause);
 	}
 
+	public Throwable fillInStackTrace() {
+		return this;
+	}
 }
