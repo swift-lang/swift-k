@@ -9,8 +9,10 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 
 public class AbstractPipedChannel extends AbstractKarajanChannel {
 	private UserContext uc;
@@ -19,6 +21,7 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 	public AbstractPipedChannel(RequestManager requestManager, ChannelContext channelContext, boolean client) {
 		super(requestManager, channelContext, client);
 		uc = new UserContext(null, channelContext);
+		channelContext.setConfiguration(new Entry("localhost", "KEEPALIVE(-1)"));
 	}
 	
 	protected void setOther(AbstractPipedChannel s) {
