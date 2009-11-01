@@ -97,6 +97,9 @@ public class MetaChannel extends AbstractKarajanChannel {
 	}
 
 	public synchronized void deactivateLater(int seconds) {
+	    if (seconds == -1) {
+	        return;
+	    }
 		if (deactivator != null) {
 			deactivator.cancel();
 		}
