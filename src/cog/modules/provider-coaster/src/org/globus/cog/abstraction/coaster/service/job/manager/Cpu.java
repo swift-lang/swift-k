@@ -181,8 +181,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     public void shutdown() {
     	done.clear();
         if (running != null) {
-            logger.warn(block.getId() + "- " + id + "Job still running while shutting down",
-                new Throwable());
+            logger.warn(block.getId() + "- " + id + "Job still running while shutting down");
             running.fail("Shutting down worker", null);
         }
         try {
