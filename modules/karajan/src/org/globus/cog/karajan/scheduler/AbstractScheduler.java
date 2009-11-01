@@ -61,7 +61,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		listeners = new HashMap();
 		handlerMap = new HashMap();
 		grid = new ContactSet();
-		maxSimultaneousJobs = 16384;
+		maxSimultaneousJobs = 65536;
 		properties = new HashMap();
 		constraints = new HashMap();
 		taskTransformers = new LinkedList();
