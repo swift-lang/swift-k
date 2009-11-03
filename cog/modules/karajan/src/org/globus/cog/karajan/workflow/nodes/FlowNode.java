@@ -233,7 +233,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			execute(stack);
 		}
 		catch (FutureFault e) {
-			if (!logger.isDebugEnabled()) {
+			if (logger.isDebugEnabled()) {
 				logger.debug(this + " got future exception. Future is " + e.getFuture());
 			}
 			if (FlowNode.debug) {
@@ -267,9 +267,11 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public final void start(final VariableStack stack) throws ExecutionException {
-		if (!initialized) {
-			initializeStatic();
-			initialized = true;
+		synchronized (this) {
+			if (!initialized) {
+				initializeStatic();
+				initialized = true;
+			}
 		}
 		if (frame) {
 			stack.enter();
@@ -751,7 +753,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		return uid;
 	}
 
-	public void loadComplete() {
+	public synchronized void loadComplete() {
 		initializeStatic();
 		initialized = true;
 	}
