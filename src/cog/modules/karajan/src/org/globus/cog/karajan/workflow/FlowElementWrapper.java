@@ -220,11 +220,9 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		return true;
 	}
 
-	public void event(final Event e) throws ExecutionException {
-		synchronized (this) {
-			if (peer == null) {
-				bind(e.getStack());
-			}
+	public synchronized void event(final Event e) throws ExecutionException {
+		if (peer == null) {
+			bind(e.getStack());
 		}
 		peer.event(e);
 	}
@@ -323,11 +321,9 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 	}
 
 	public void executeSimple(VariableStack stack) throws ExecutionException {
-		if (peer == null) {
-			synchronized (this) {
-				if (peer == null) {
-					bind(stack);
-				}
+		synchronized (this) {
+			if (peer == null) {
+				bind(stack);
 			}
 		}
 		if (peer instanceof ExtendedFlowElement) {
