@@ -31,8 +31,7 @@ public class NumericValue extends AbstractFunction implements DirectExecution {
 		String strval = TypeUtil.toString(A_VALUE.getValue(stack));
 		value = TypeUtil.toDouble(A_VALUE.getValue(stack));
 		Double ret = new Double(value);
-		setValue(ret);
-		setSimple(true);
+		setSimple(ret);
 		return ret;
 	}
 }
