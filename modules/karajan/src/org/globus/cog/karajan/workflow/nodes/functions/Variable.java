@@ -34,10 +34,12 @@ public class Variable extends AbstractFunction implements DirectExecution {
 	}
 	
 	public Object function(VariableStack stack) throws ExecutionException {
-		if (name == null) {
-			name = TypeUtil.toString(A_NAME.getStatic(this)).toLowerCase();
-			if (getStaticArguments().size() == 1) {
-				setStaticArguments(Collections.EMPTY_MAP);
+		synchronized (this) {
+			if (name == null) {
+				name = TypeUtil.toString(A_NAME.getStatic(this)).toLowerCase();
+				if (getStaticArguments().size() == 1) {
+					setStaticArguments(Collections.EMPTY_MAP);
+				}
 			}
 		}
 
