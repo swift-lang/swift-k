@@ -43,8 +43,7 @@ public class Variable extends AbstractFunction implements DirectExecution {
 
 		if (stack.parentFrame().isDefined("#quoted")) {
 			Object value = new Identifier(name);
-			setValue(value);
-			setSimple(true);
+			setSimple(value);
 			return value;
 		}
 		else {

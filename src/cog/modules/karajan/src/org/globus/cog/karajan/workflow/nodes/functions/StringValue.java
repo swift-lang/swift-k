@@ -27,8 +27,7 @@ public class StringValue extends AbstractFunction implements DirectExecution {
 		Object value;
 		if (A_VALUE.isPresentStatic(this)
 				&& ((value = A_VALUE.getStatic(this))) instanceof String) {
-			setValue(value);
-			setSimple(true);
+			setSimple(value);
 		}
 	}
 
