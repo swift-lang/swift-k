@@ -31,7 +31,7 @@ public class QuotedString extends AbstractFunction {
 		if (value == null) {
 			value = TypeUtil.toString(A_VALUE.getValue(stack));
 		}
-		setValue(value);
+		setSimple(value);
 		return value;
 	}
 }

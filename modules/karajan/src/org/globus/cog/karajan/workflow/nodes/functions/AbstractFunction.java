@@ -23,24 +23,6 @@ public abstract class AbstractFunction extends SequentialWithArguments {
 		setAcceptsInlineText(true);
 	}
 
-	public void pre(VariableStack stack) throws ExecutionException {
-		if (simple) {
-			ret(stack, value);
-		}
-		else {
-			super.pre(stack);
-		}
-	}
-
-	protected void executeChildren(VariableStack stack) throws ExecutionException {
-		if (simple) {
-			complete(stack);
-		}
-		else {
-			super.executeChildren(stack);
-		}
-	}
-
 	public final void post(VariableStack stack) throws ExecutionException {
 		ret(stack, function(stack));
 		super.post(stack);
@@ -69,24 +51,30 @@ public abstract class AbstractFunction extends SequentialWithArguments {
 
 	public abstract Object function(VariableStack stack) throws ExecutionException;
 
-	protected void setSimple(boolean simple) {
+	protected synchronized void setSimple(boolean simple) {
 		this.simple = simple;
 	}
 
-	protected void setValue(Object value) {
+	protected synchronized void setSimple(Object value) {
 		this.value = value;
+		this.simple = true;
 	}
 
-	public boolean isSimple() {
+	public synchronized boolean isSimple() {
 		return simple;
+	}
+	
+	private synchronized Object getValue() {
+		return simple ? value : null;
 	}
 
 	public void executeSimple(final VariableStack stack) throws ExecutionException {
 		startCount++;
 		stack.enter();
 		initializeArgs(stack);
-		if (value != null) {
-			ret(stack, value);
+		Object v = getValue();
+		if (v != null) {
+			ret(stack, v);
 		}
 		else {
 			ret(stack, function(stack));
