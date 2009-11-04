@@ -43,6 +43,13 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 			complete(stack);
 		}
 	}
+	
+	protected void executeChildren(VariableStack stack) throws ExecutionException {
+		if (elementCount() == 0) {
+			return;
+		}
+		super.executeChildren(stack);
+	}
 
 	protected void citerate(VariableStack stack, Identifier var, KarajanIterator i)
 			throws ExecutionException {
