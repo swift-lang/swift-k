@@ -41,8 +41,10 @@ public class RegularExpressionMapper extends AbstractMapper {
 	public PhysicalFormat map(Path path) {
 	    if (PARAM_MATCH.getRawValue(this) instanceof DSHandle) {
 	        DSHandle h = (DSHandle) PARAM_MATCH.getRawValue(this);
-	        throw new IllegalArgumentException("Non-primitive value specified for " + 
-	            PARAM_MATCH.getName() + "; maybe you meant @filename(" + h.getPathFromRoot() + ")?");
+	        if (!h.getType().isPrimitive()) {
+	            throw new IllegalArgumentException("Non-primitive value specified for " + 
+	                PARAM_MATCH.getName() + "; maybe you meant @filename(" + h.getPathFromRoot() + ")?");
+	        }
 	    }
 		String match = PARAM_MATCH.getStringValue(this);
 		String source = PARAM_SOURCE.getStringValue(this);
