@@ -54,6 +54,9 @@ public class ParallelChoice extends Parallel {
 	}
 
 	public void executeChildren(VariableStack stack) throws ExecutionException {
+		if (elementCount() == 0) {
+			return;
+		}
 		int index = 0;
 		Iterator i = elements().iterator();
 		synchronized (this) {
