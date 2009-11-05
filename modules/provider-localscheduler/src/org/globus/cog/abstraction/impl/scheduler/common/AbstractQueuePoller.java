@@ -167,6 +167,9 @@ public abstract class AbstractQueuePoller implements Runnable {
             Process pqstat = Runtime.getRuntime().exec(cmdarray);
             
             processStdout(pqstat.getInputStream());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Stderr from poll command: " + readStderr(pqstat.getErrorStream()));
+            }
             
             int ec = pqstat.waitFor();
             if (ec != 0) {
