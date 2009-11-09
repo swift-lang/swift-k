@@ -28,6 +28,9 @@ public class LogVargOperator extends VariableArgumentsOperator {
 	}
 
 	protected synchronized Object update(Object oldvalue, Object item) {
+		if (closed) {
+			return null;
+		}
 		try {
 			String str = (String) item;
 			writer.write(str);
