@@ -147,7 +147,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             while (ib.hasNext()) {
                 Block b = (Block) ib.next();
                 if (b.isDone()) {
-                    b.shutdown();
+                    b.shutdown(false);
                     count++;
                 }
             }
@@ -478,7 +478,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             Iterator i = new ArrayList(blocks).iterator();
             while (i.hasNext()) {
                 Block b = (Block) i.next();
-                b.shutdown();
+                b.shutdown(true);
             }
         }
     }

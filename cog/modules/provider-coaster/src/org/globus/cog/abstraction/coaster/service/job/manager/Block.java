@@ -211,7 +211,7 @@ public class Block implements StatusListener {
         this.walltime = t;
     }
 
-    public void shutdown() {
+    public void shutdown(boolean now) {
         synchronized (cpus) {
             if (shutdown || failed) {
                 return;
@@ -221,6 +221,7 @@ public class Block implements StatusListener {
             shutdown = true;
             long busyTotal = 0;
             long idleTotal = 0;
+            int count = 0;
             if (running) {
                 Iterator i = cpus.iterator();
                 while (i.hasNext()) {
@@ -228,6 +229,7 @@ public class Block implements StatusListener {
                     idleTotal = cpu.idleTime;
                     busyTotal = cpu.busyTime;
                     cpu.shutdown();
+                    count++;
                 }
                 CoasterService.addWatchdog(new TimerTask() {
                     public void run() {
@@ -242,6 +244,9 @@ public class Block implements StatusListener {
                     logger.info("Average utilization: " + u + "%");
                     ap.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + 
                         ", u=" + u);
+                }
+                if (count < workers || now) {
+                    forceShutdown();
                 }
             }
             else {
