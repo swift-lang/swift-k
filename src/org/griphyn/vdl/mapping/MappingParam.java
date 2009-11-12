@@ -59,7 +59,29 @@ public class MappingParam {
 			return value;
 		}
 	}
-
+	
+	public Object getValue(Map params) {
+        Object value = params.get(name);
+        if (value instanceof DSHandle) {
+            DSHandle handle = (DSHandle) value;
+            checkHandle(handle);
+            return handle.toString();
+        }
+        else if (value == null) {
+            if (!defSet) {
+                throw new InvalidMappingParameterException("Missing required mapping parameter: "
+                        + name);
+            }
+            else {
+                return defValue;
+            }
+        }
+        else {
+            return value;
+        }
+    }
+	
+	
 
 	/** return the raw value of this parameter. Defaulting and type
 	  * conversion will not occur. */
@@ -85,6 +107,13 @@ public class MappingParam {
 			return null;
 		return String.valueOf(value);
 	}
+	
+	public String getStringValue(Map params) {
+        Object value = getValue(params);
+        if (value == null)
+            return null;
+        return String.valueOf(value);
+    }
 
 	public void setValue(Mapper mapper, Object value) {
 		mapper.setParam(name, value);
@@ -133,10 +162,6 @@ public class MappingParam {
 		else {
 			throw new NumberFormatException(String.valueOf(value));
 		}
-	}
-
-	public Object getValue(Map map) {
-		return map.get(name);
 	}
 
 	public void setValue(Map map, Object value) {
