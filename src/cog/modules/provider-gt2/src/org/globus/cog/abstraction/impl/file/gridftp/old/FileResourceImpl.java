@@ -153,6 +153,11 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             ServerException, IOException {
         if (!dataChannelInitialized || !dataChannelReuse
                 || dataChannelDirection != mode) {
+            if (!dataChannelReuse) {
+                //always use passive mode in non-EBLOCK mode
+                //to avoid firewall issues
+                mode = true;
+            }
             gridFTPClient.setPassiveMode(mode);
             dataChannelInitialized = true;
             dataChannelDirection = mode;
