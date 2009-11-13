@@ -112,7 +112,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             }
             if (r != null
                     && r.getMessage().indexOf("Virtual Broken GridFTP Server") != -1 
-                    || "false".equals(System.getProperty("gridFTPdataChannelReuse"))) {
+                    || "false".equals(System.getProperty("gridFTPDataChannelReuse"))) {
                 dataChannelReuse = false;
             }
             else {
