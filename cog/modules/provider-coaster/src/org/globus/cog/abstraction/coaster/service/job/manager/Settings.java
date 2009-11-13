@@ -24,8 +24,8 @@ public class Settings {
     public static final String[] NAMES =
             new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
                     "maxNodes", "lowOverallocation", "highOverallocation",
-                    "overallocationDecayFactor", "spread", "reserve",
-                    "maxtime", "project", "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat" };
+                    "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
+                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", "internalHostname" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -68,10 +68,10 @@ public class Settings {
      */
 
     private int exponentialSpread = 0;
-    
+
     private TimeInterval reserve = TimeInterval.fromSeconds(60);
 
-    //this would cause bad things for workersPerNode > 1024
+    // this would cause bad things for workersPerNode > 1024
     private int maxNodes = Integer.MAX_VALUE / 1024;
 
     private int maxtime = Integer.MAX_VALUE;
@@ -89,15 +89,15 @@ public class Settings {
     private String project;
 
     private String queue;
-    
+
     private String kernelprofile;
-    
+
     private boolean alcfbgpnat;
 
     private boolean remoteMonitorEnabled;
-    
+
     private double parallelism = 0.01;
-    
+
     private TimeInterval maxWorkerIdleTime = TimeInterval.fromSeconds(120);
 
     public int getSlots() {
@@ -276,7 +276,7 @@ public class Settings {
     public boolean getRemoteMonitorEnabled() {
         return remoteMonitorEnabled;
     }
-    
+
     public boolean isRemoteMonitorEnabled() {
         return remoteMonitorEnabled;
     }
@@ -292,7 +292,7 @@ public class Settings {
     public void setRemoteMonitorEnabled(boolean monitor) {
         this.remoteMonitorEnabled = monitor;
     }
-    
+
     public double getParallelism() {
         return parallelism;
     }
@@ -339,7 +339,8 @@ public class Settings {
                     ms[i].invoke(this, new Object[] { Boolean.valueOf(value) });
                 }
                 else if (ms[i].getParameterTypes()[0].equals(TimeInterval.class)) {
-                    ms[i].invoke(this, new Object[] { TimeInterval.fromSeconds(Integer.parseInt(value)) });
+                    ms[i].invoke(this,
+                        new Object[] { TimeInterval.fromSeconds(Integer.parseInt(value)) });
                 }
                 else {
                     throw new IllegalArgumentException("Don't know how to set option with type "
@@ -349,9 +350,9 @@ public class Settings {
             }
         }
     }
-    
-    private Object get(String name) throws IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException {
+
+    private Object get(String name) throws IllegalArgumentException, IllegalAccessException,
+            InvocationTargetException {
         Method[] ms = getClass().getMethods();
         String getterName = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         for (int i = 0; i < ms.length; i++) {
@@ -361,7 +362,7 @@ public class Settings {
         }
         return null;
     }
-    
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("Settings {\n");
