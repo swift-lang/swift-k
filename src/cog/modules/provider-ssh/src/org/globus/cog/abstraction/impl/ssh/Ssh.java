@@ -352,7 +352,7 @@ public class Ssh {
                 throw new InvalidSecurityContextException(
                     "Authentication canceled by user");
             }
-            if (username == null) {
+            if (results.length == 3) {
                 username = new String(results[0]);
                 keyfile = new String(results[1]);
                 passphrase = results[2];
