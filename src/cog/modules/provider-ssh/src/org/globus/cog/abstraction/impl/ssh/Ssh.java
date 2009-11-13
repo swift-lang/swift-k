@@ -287,6 +287,10 @@ public class Ssh {
                         break;
                     }
                 }
+                if (!authenticated) {
+                    throw new InvalidSecurityContextException(
+                    "Authentication failed");
+                }
             }
 
         }
