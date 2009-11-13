@@ -183,6 +183,7 @@ public abstract class CredentialsDialog {
                 .createEmptyBorder(8, 8, 8, 8)));
 
             dialog = new JFrame();
+            dialog.setTitle("SSH " + title);
             dialog.getContentPane().add(main);
             dialog.setSize(Math.max(320, titleLabel.getPreferredSize().width),
                 titleLabel.getPreferredSize().height + prompts.length
