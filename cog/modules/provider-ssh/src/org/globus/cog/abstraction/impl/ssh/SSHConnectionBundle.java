@@ -101,16 +101,16 @@ public class SSHConnectionBundle {
         if (id.credentials instanceof PasswordAuthentication) {
             PasswordAuthentication auth = (PasswordAuthentication) id.credentials;
             ssh.setUsername(auth.getUserName());
-            ssh.setPassword(String.valueOf(auth.getPassword()));
         }
         else if (id.credentials instanceof PublicKeyAuthentication) {
             PublicKeyAuthentication auth = (PublicKeyAuthentication) id.credentials;
             ssh.setUsername(auth.getUsername());
-            ssh.setKeyfile(auth.getPrivateKeyFile().getAbsolutePath());
-            if (auth.getPassPhrase() != null) {
-                ssh.setPassphrase(String.valueOf(auth.getPassPhrase()));
-            }
         }
+        else if (id.credentials instanceof InteractiveAuthentication) {
+            InteractiveAuthentication auth = (InteractiveAuthentication) id.credentials;
+            ssh.setUsername(auth.getUsername());
+        }
+        ssh.setCredentials(id.credentials);
         Connection c = new Connection(ssh);
         return c;
     }

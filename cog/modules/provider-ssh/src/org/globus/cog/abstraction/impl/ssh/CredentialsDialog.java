@@ -7,11 +7,18 @@
 package org.globus.cog.abstraction.impl.ssh;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.GraphicsEnvironment;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Dialog.ModalExclusionType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -19,14 +26,16 @@ import java.io.InputStreamReader;
 import java.net.PasswordAuthentication;
 import java.util.Arrays;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.text.JTextComponent;
 
 import org.globus.cog.abstraction.impl.common.PublicKeyAuthentication;
 
@@ -53,235 +62,284 @@ public abstract class CredentialsDialog {
         this.userName = username;
     }
 
-    public abstract Object getResult();
+    public abstract char[][] getResults();
 
-    public static Object showCredentialsDialog() {
-        return showCredentialsDialog(null, null);
+    public static Object showCredentialsDialog(String host) {
+        return showCredentialsDialog(host, null, (String) null);
     }
 
-    public static Object showCredentialsDialog(String userName,
+    public static Object showCredentialsDialog(String host, String userName,
             String privateKey) {
-        return showCredentialsDialog(userName, privateKey, false);
+        return showCredentialsDialog(host, userName, privateKey, false);
     }
 
-    public static Object showCredentialsDialog(String userName,
+    public static char[][] showCredentialsDialog(String host, String userName,
             String privateKey, boolean forceTextMode) {
-        return showCredentialsDialog(null, userName, privateKey, forceTextMode);
+        return showCredentialsDialog(host, new Prompt[] {
+                new Prompt("Username: ", Prompt.TYPE_TEXT, userName),
+                new Prompt("Private Key: ", Prompt.TYPE_FILE, privateKey) },
+            forceTextMode);
     }
 
-    public static Object showCredentialsDialog(String target, String userName,
-            String privateKey, boolean forceTextMode) {
+    public static char[][] showCredentialsDialog(String title, Prompt[] prompts) {
+        return showCredentialsDialog(title, prompts, false);
+    }
+
+    public static char[][] showCredentialsDialog(String title,
+            Prompt[] prompts, boolean forceTextMode) {
         CredentialsDialog cd;
         try {
             if (GraphicsEnvironment.isHeadless() || forceTextMode) {
-                cd = new ConsoleCredentialsDialog(target);
+                cd = new ConsoleCredentialsDialog(title, prompts);
             }
             else {
-                cd = new SwingCredentialsDialog(target);
+                cd = new SwingCredentialsDialog(title, prompts);
             }
         }
         catch (InternalError e) {
-            cd = new ConsoleCredentialsDialog(target);
+            cd = new ConsoleCredentialsDialog(title, prompts);
         }
-        if (userName != null) {
-            cd.setUserName(userName);
-        }
-        if (privateKey != null) {
-            cd.setPrivateKey(privateKey);
-        }
-        return cd.getResult();
+        return cd.getResults();
     }
 
-    public static class SwingCredentialsDialog extends CredentialsDialog {
-        private JOptionPane optionPane = new JOptionPane();
-        private JDialog dialog;
+    public static class SwingCredentialsDialog extends CredentialsDialog
+            implements ActionListener, FocusListener, KeyListener {
+        private JFrame dialog;
 
-        private JLabel passwordLabel;
-        private JTextField usernameField = new JTextField();
-        private JPasswordField passwordField = new JPasswordField();
-        private JTextField privateKeyField = new JTextField();
+        private JLabel[] labels;
+        private JLabel titleLabel;
+        private JTextComponent[] fields;
 
-        private JButton choosePathButton = new JButton("Browse");
+        private JButton[] browse;
 
-        private String target;
+        private String title;
+        private Prompt[] prompts;
+        private boolean enterPressed, cancelPressed;
 
         public SwingCredentialsDialog() {
-            this(null);
+            this(null, null);
         }
 
-        public SwingCredentialsDialog(String target) {
-            this.target = target;
-            // init sizes
-            usernameField.setPreferredSize(new Dimension(125, 20));
-            passwordField.setPreferredSize(new Dimension(125, 20));
-            privateKeyField.setPreferredSize(new Dimension(150, 20));
+        public SwingCredentialsDialog(String title, Prompt[] prompts) {
+            this.title = title;
+            this.prompts = prompts;
 
             // the main panel
             JPanel main = new JPanel(new BorderLayout());
-
+            titleLabel = new JLabel(title);
+            titleLabel.setAlignmentX(0.5f);
+            titleLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+            main.add(titleLabel, BorderLayout.NORTH);
             // Labels
-            JPanel labels = new JPanel(new GridLayout(0, 1));
-            labels.add(new JLabel("Username: "));
-            labels.add(passwordLabel = new JLabel("Password: "));
-            JLabel pkLabel = new JLabel("Private Key: ");
-            pkLabel
-                .setToolTipText("Your private key if needed, else leave blank");
-            labels.add(pkLabel);
+            GridBagLayout gbl = new GridBagLayout();
+            JPanel lpane = new JPanel(gbl);
+            GridBagConstraints gbc = new GridBagConstraints();
 
-            // username and password labels/fields
-            JPanel fields = new JPanel(new GridLayout(0, 1));
-            fields.add(usernameField);
-            fields.add(passwordField);
+            lpane.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 
-            // path to the private key field/button
-            JPanel pKeyPanel = new JPanel(new BorderLayout());
-            privateKeyField
-                .setToolTipText("Your private key if needed, else leave blank");
-            pKeyPanel.add(privateKeyField, BorderLayout.CENTER);
-            pKeyPanel.add(choosePathButton, BorderLayout.EAST);
+            labels = new JLabel[prompts.length];
+            fields = new JTextComponent[prompts.length];
+            browse = new JButton[prompts.length];
 
-            // add an action listener
-            choosePathButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent aEvent) {
-                    choosePathToPrivateKey();
+            for (int i = 0; i < prompts.length; i++) {
+                labels[i] = new JLabel(prompts[i].label);
+                labels[i].setFont(new Font("SansSerif", Font.BOLD, 14));
+                lpane.add(labels[i]);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.gridy = i;
+                gbc.gridx = 0;
+                gbc.weightx = 0.0;
+                gbl.setConstraints(labels[i], gbc);
+
+                switch (prompts[i].type) {
+                    case Prompt.TYPE_TEXT:
+                        fields[i] = new JTextField();
+                        break;
+                    case Prompt.TYPE_HIDDEN_TEXT:
+                        fields[i] = new JPasswordField();
+                        break;
+                    case Prompt.TYPE_FILE:
+                        fields[i] = new JTextField();
                 }
-            });
+                fields[i].addFocusListener(this);
+                fields[i].setSize(fields[i].getPreferredSize().height + 8, 120);
+                fields[i].addKeyListener(this);
+                if (prompts[i].def != null) {
+                    fields[i].setText(prompts[i].def);
+                }
+                lpane.add(fields[i]);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.gridx = 1;
+                gbc.weightx = 1.0;
+                gbl.setConstraints(fields[i], gbc);
+                if (prompts[i].type == Prompt.TYPE_FILE) {
+                    browse[i] = new JButton("...");
+                    browse[i].addActionListener(this);
+                    lpane.add(browse[i]);
+                    gbc.gridx = 2;
+                    gbc.weightx = 0.0;
+                    gbl.setConstraints(browse[i], gbc);
+                }
+            }
 
-            fields.add(pKeyPanel);
+            main.add(lpane, BorderLayout.CENTER);
+            main.setBorder(BorderFactory.createCompoundBorder(BorderFactory
+                .createLineBorder(Color.BLACK, 1), BorderFactory
+                .createEmptyBorder(8, 8, 8, 8)));
 
-            main.add(labels, BorderLayout.WEST);
-            main.add(fields, BorderLayout.CENTER);
-
-            optionPane.setMessage(main);
-            optionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
-            dialog = optionPane.createDialog(null,
-                target == null ? "Enter SSH Credentials"
-                        : "Enter SSH Credentials for " + target);
+            dialog = new JFrame();
+            dialog.getContentPane().add(main);
+            dialog.setSize(Math.max(320, titleLabel.getPreferredSize().width),
+                titleLabel.getPreferredSize().height + prompts.length
+                        * (labels[0].getPreferredSize().height + 8) + 24);
+            dialog.setLocationRelativeTo(null);
+            dialog.setUndecorated(true);
         }
 
-        protected void choosePathToPrivateKey() {
-            JFileChooser fileChooser = new JFileChooser(SSH_HOME);
+        protected void choosePath(int index) {
+            String existing = fields[index].getText();
+            if (existing == null || existing.equals("")) {
+                existing = SSH_HOME;
+            }
+            else {
+                existing = new File(existing).getParentFile().getAbsolutePath();
+            }
+            JFileChooser fileChooser = new JFileChooser(existing);
             fileChooser.setFileHidingEnabled(false);
-            int returnVal = fileChooser.showOpenDialog(optionPane);
+            int returnVal = fileChooser.showOpenDialog(null);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
-                setPrivateKeyFieldText(fileChooser.getSelectedFile()
+                fields[index].setText(fileChooser.getSelectedFile()
                     .getAbsolutePath());
             }
         }
 
-        protected synchronized Object okButtonPushed() {
-            String uname = usernameField.getText();
-            char[] passwd = passwordField.getPassword();
-            String pKeyPath = privateKeyField.getText();
-
-            if (NOTHING.equals(uname) && NOTHING.equals(passwd)
-                    && NOTHING.equals(pKeyPath)) {
-                return null;
-            }
-            else if (passwd == null) { // prevent null pointers
-                return null;
-            }
-            else if (NOTHING.equals(pKeyPath)) {
-                return new PasswordAuthentication(uname, passwd);
-            }
-            else {
-                return new PublicKeyAuthentication(uname, pKeyPath, passwd);
-            }
-        }
-
-        public Object getResult() {
+        public char[][] getResults() {
             dialog.setVisible(true);
-            if (optionPane.getValue() != null
-                    && ((Integer) optionPane.getValue()).equals(new Integer(
-                        JOptionPane.OK_OPTION))) {
-                return okButtonPushed();
+            waitForKeyPress();
+            char[][] results = new char[prompts.length][];
+
+            for (int i = 0; i < prompts.length; i++) {
+                if (fields[i] instanceof JPasswordField) {
+                    if (cancelPressed) {
+                        Arrays.fill(((JPasswordField) fields[i]).getPassword(), (char) 0);
+                    }
+                    results[i] = ((JPasswordField) fields[i]).getPassword();
+                }
+                else {
+                    results[i] = fields[i].getText().toCharArray();
+                }
             }
-            else {
+
+            dialog.setVisible(false);
+            dialog.dispose();
+            if (cancelPressed) {
                 return null;
             }
+            else {
+                return results;
+            }
         }
 
-        public void setPrivateKey(String privatekey) {
-            super.setPrivateKey(privatekey);
-            setPrivateKeyFieldText(privatekey);
+        private synchronized void waitForKeyPress() {
+            while (!enterPressed && !cancelPressed) {
+                try {
+                    wait(250);
+                }
+                catch (InterruptedException e) {
+                    return;
+                }
+            }
         }
 
-        private void setPrivateKeyFieldText(String privateKey) {
-            privateKeyField.setText(privateKey);
-            if (privateKey == null || privateKey.equals("")) {
-                passwordLabel.setText("Password: ");
+        public void actionPerformed(ActionEvent e) {
+            for (int i = 0; i < browse.length; i++) {
+                if (e.getSource() == browse[i]) {
+                    choosePath(i);
+                    break;
+                }
+            }
+        }
+
+        public void focusGained(FocusEvent e) {
+            if (e.getSource() instanceof JPasswordField) {
+                JPasswordField src = (JPasswordField) e.getSource();
+                int l;
+                if ((l = src.getPassword().length) != 0) {
+                    src.setSelectionStart(0);
+                    src.setSelectionEnd(l);
+                }
             }
             else {
-                passwordLabel.setText("Passphrase: ");
+                JTextComponent src = (JTextComponent) e.getSource();
+                src.setSelectionStart(0);
+                src.setSelectionEnd(src.getText().length());
             }
         }
 
-        public void setUserName(String username) {
-            super.setUserName(username);
-            usernameField.setText(username);
-            if (username != null) {
-                passwordField.requestFocus();
-            }
+        public void focusLost(FocusEvent e) {
         }
 
+        public void keyPressed(KeyEvent e) {
+        }
+
+        public void keyReleased(KeyEvent e) {
+        }
+
+        public synchronized void keyTyped(KeyEvent e) {
+            if (e.getKeyChar() == '\n') {
+                for (int i = 0; i < fields.length; i++) {
+                    if (e.getSource() == fields[i]) {
+                        if (i < fields.length - 1) {
+                            fields[i + 1].requestFocus();
+                        }
+                        else {
+                            enterPressed = true;
+                            notify();
+                        }
+                    }
+                }
+            }
+            else if (e.getKeyChar() == 27) {
+                cancelPressed = true;
+                notify();
+            }
+        }
     }
 
     public static class ConsoleCredentialsDialog extends CredentialsDialog {
         public String TAB = "\t";
         public static final int MAX_MASKED_CHARS = 80;
-        private String target;
+        private String title;
+
+        private Prompt[] prompts;
 
         public ConsoleCredentialsDialog() {
-            this(null);
+            this(null, null);
         }
 
-        public ConsoleCredentialsDialog(String target) {
-            this.target = target;
+        public ConsoleCredentialsDialog(String title, Prompt[] prompts) {
+            this.title = title;
+            this.prompts = prompts;
         }
 
-        public Object getResult() {
+        public char[][] getResults() {
+            char[][] results = new char[prompts.length][];
             synchronized (ConsoleCredentialsDialog.class) {
-                String uprompt = target == null ? "Username: " : target
-                        + " username: ";
-                if (userName == null) {
+                for (int i = 0; i < prompts.length; i++) {
+                    String uprompt = title == null ? prompts[i].label
+                            : title + " " + prompts[i].label + prompts[i].def == null ? ""
+                                    : " [" + prompts[i].def + "] ";
                     System.out.print(uprompt);
-                    userName = input();
-                }
-                else {
-                    System.out.println(uprompt + userName);
-                }
-                String pprompt = target == null ? "Password: " : target
-                        + " password: ";
-                if (privateKey == null) {
-                    System.out
-                        .println("Empty password for public key authentication.");
-                    System.out.print(pprompt);
-                    char[] tmp = inputMasked();
-                    if (tmp.length == 0) {
-                        for (int i = 0; i < 80; i++) {
-                            System.out.print('\b');
-                        }
-                        String defaultPK = getDefaultPrivateKey();
-                        System.out.println("Private key file [" + defaultPK
-                                + "]: ");
-                        privateKey = input();
-                        if (privateKey == null || privateKey.equals("")) {
-                            privateKey = defaultPK;
-                        }
-                        System.out.print("Passphrase: ");
-                        return new PublicKeyAuthentication(userName,
-                            privateKey, inputMasked());
-                    }
-                    else {
-                        return new PasswordAuthentication(userName, tmp);
+                    switch (prompts[i].type) {
+                        case Prompt.TYPE_TEXT:
+                        case Prompt.TYPE_FILE:
+                            results[i] = input().toCharArray();
+                            break;
+                        case Prompt.TYPE_HIDDEN_TEXT:
+                            results[i] = inputMasked();
                     }
                 }
-                else {
-                    System.out.println("Private key: " + privateKey);
-                    System.out.print("Passphrase: ");
-                    return new PublicKeyAuthentication(userName, privateKey,
-                        inputMasked());
-                }
+                return results;
             }
         }
 
@@ -383,6 +441,30 @@ public abstract class CredentialsDialog {
 
         private void done() {
             done = true;
+        }
+    }
+
+    public static class Prompt {
+        public static final int TYPE_TEXT = 0;
+        public static final int TYPE_HIDDEN_TEXT = 1;
+        public static final int TYPE_FILE = 2;
+        public final String label;
+        public final int type;
+        public final String def;
+
+        public Prompt(String label, int type) {
+            this(label, type, null);
+        }
+
+        public Prompt(String label, int type, String def) {
+            this.label = label;
+            this.type = type;
+            if (type == TYPE_HIDDEN_TEXT) {
+                this.def = null;
+            }
+            else {
+                this.def = def;
+            }
         }
     }
 }
