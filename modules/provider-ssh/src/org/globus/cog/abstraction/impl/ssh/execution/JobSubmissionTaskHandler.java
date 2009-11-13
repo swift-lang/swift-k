@@ -55,6 +55,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         exec = new Exec();
         exec.setCmd(cmd);
         exec.setDir(spec.getDirectory());
+        
+        if (FileLocation.LOCAL.overlaps(spec.getStdInputLocation())) {
+            throw new IllegalSpecException(
+                    "The SSH provider does not support local input");
+        }
 
         if (FileLocation.LOCAL.overlaps(spec.getStdOutputLocation())
                 && notEmpty(spec.getStdOutput())) {
@@ -63,6 +68,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
             exec.setOutMem(true);
         }
+        if (FileLocation.REMOTE.overlaps(spec.getStdOutputLocation())) {
+            exec.setRemoteOut(spec.getStdOutput());
+        }
 
         if (FileLocation.LOCAL.overlaps(spec.getStdErrorLocation())
                 && notEmpty(spec.getStdError())) {
@@ -70,6 +78,13 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
             exec.setErrMem(true);
+        }
+        if (FileLocation.REMOTE.overlaps(spec.getStdErrorLocation())) {
+            exec.setRemoteErr(spec.getStdError());
+        }
+        
+        if (FileLocation.REMOTE.overlaps(spec.getStdInputLocation())) {
+            exec.setRemoteIn(spec.getStdInput());
         }
 
         SSHRunner r = new SSHRunner(s, exec);
@@ -99,7 +114,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private String prepareSpecification(JobSpecification spec)
             throws TaskSubmissionException, IllegalSpecException {
-        StringBuffer cmd = new StringBuffer("/bin/sh -c '");
+        StringBuffer cmd = new StringBuffer();
         append(cmd, spec.getExecutable());
         if (spec.getArgumentsAsString() != null) {
             cmd.append(' ');
@@ -112,25 +127,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 }
             }
         }
-        if (FileLocation.LOCAL.overlaps(spec.getStdInputLocation())) {
-            throw new IllegalSpecException(
-                    "The SSH provider does not support local input");
-        }
-        if (notEmpty(spec.getStdInput())) {
-            cmd.append(" <");
-            append(cmd, spec.getStdInput());
-        }
-        if (FileLocation.REMOTE.overlaps(spec.getStdOutputLocation())
-                && notEmpty(spec.getStdOutput())) {
-            cmd.append(" 1>");
-            append(cmd, spec.getStdOutput());
-        }
-        if (FileLocation.REMOTE.overlaps(spec.getStdErrorLocation())
-                && notEmpty(spec.getStdError())) {
-            cmd.append(" 2>");
-            append(cmd, spec.getStdError());
-        }
-        cmd.append('\'');
         return cmd.toString();
     }
 
@@ -156,6 +152,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         ESCAPE['*'] = true;
         ESCAPE['`'] = true;
         ESCAPE['"'] = true;
+        ESCAPE[';'] = true;
     }
 
     private void append(StringBuffer sb, String str) {
@@ -196,6 +193,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             getTask().setStatus(Status.COMPLETED);
         }
         else if (status == SSHTaskStatusListener.FAILED) {
+            getTask().setStdOutput(exec.getTaskOutput());
+            getTask().setStdError(exec.getTaskError());
             failTask(null, e);
         }
         else {
