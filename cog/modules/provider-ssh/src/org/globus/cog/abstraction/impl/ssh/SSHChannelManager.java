@@ -172,7 +172,7 @@ public class SSHChannelManager {
                     if ("password".equals(val)) {
                         String password = p.getProperty(host + ".password");
                         auth = new PasswordAuthentication(username,
-                            password == null ? new char[0] : password.toCharArray());
+                            password == null ? null : password.toCharArray());
                     }
                     else if ("key".equals(val)) {
                         String pkey = p.getProperty(host + ".key");

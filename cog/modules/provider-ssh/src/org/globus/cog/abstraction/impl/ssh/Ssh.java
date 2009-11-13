@@ -318,12 +318,13 @@ public class Ssh {
             PublicKeyAuthentication auth = (PublicKeyAuthentication) credentials;
             keyfile = auth.getPrivateKeyFile().getAbsolutePath();
             passphrase = auth.getPassPhrase();
-
+            username = auth.getUsername();
         }
         else if (credentials instanceof InteractiveAuthentication) {
             InteractiveAuthentication auth = (InteractiveAuthentication) credentials;
             keyfile = auth.getKeyFile();
             passphrase = auth.getPassPhrase();
+            username = auth.getUsername();
         }
 
         if (!force || keyfile == null) {
@@ -430,10 +431,12 @@ public class Ssh {
         if (credentials instanceof PasswordAuthentication) {
             PasswordAuthentication auth = (PasswordAuthentication) credentials;
             password = auth.getPassword();
+            username = auth.getUsername();
         }
         else if (credentials instanceof InteractiveAuthentication) {
             InteractiveAuthentication auth = (InteractiveAuthentication) credentials;
             password = auth.getPassword();
+            username = auth.getUsername();
         }
 
         if (username == null || password == null) {
@@ -443,7 +446,7 @@ public class Ssh {
             char[][] results = CredentialsDialog.showCredentialsDialog(host,
                 !promptedForUsername ?
                         new Prompt[] {
-                            new Prompt("Username: ", Prompt.TYPE_TEXT, System.getProperty("user.name")),
+                            new Prompt("Username: ", Prompt.TYPE_TEXT, username),
                             new Prompt("Password: ", Prompt.TYPE_HIDDEN_TEXT) }
                             :
                         new Prompt[] {
