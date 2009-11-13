@@ -12,7 +12,6 @@ package org.globus.cog.abstraction.impl.ssh;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.PasswordAuthentication;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,6 +21,7 @@ import java.util.Properties;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.PasswordAuthentication;
 import org.globus.cog.abstraction.impl.common.PublicKeyAuthentication;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
@@ -30,7 +30,7 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 
 public class SSHChannelManager {
     public static final Logger logger = Logger
-            .getLogger(SSHChannelManager.class);
+        .getLogger(SSHChannelManager.class);
 
     public static final long REAP_INTERVAL = 10 * 1000;
 
@@ -56,42 +56,62 @@ public class SSHChannelManager {
     public SSHChannel getChannel(String host, int port, Object credentials)
             throws InvalidSecurityContextException, IllegalSpecException,
             InvalidServiceContactException, TaskSubmissionException {
+        Object pcred = credentials;
         if (port == -1) {
             port = 22;
         }
-        ConnectionID i = new ConnectionID(host, port, getCredentials(credentials, host));
-        SSHConnectionBundle bundle = null;
-        synchronized (bundles) {
-            bundle = (SSHConnectionBundle) bundles.get(i);
-            if (bundle == null) {
-                bundle = new SSHConnectionBundle(i);
-                bundles.put(i, bundle);
+        try {
+            ConnectionID i = new ConnectionID(host, port, getCredentials(
+                credentials, host));
+            SSHConnectionBundle bundle = null;
+            synchronized (bundles) {
+                bundle = (SSHConnectionBundle) bundles.get(i);
+                if (bundle == null) {
+                    bundle = new SSHConnectionBundle(i);
+                    bundles.put(i, bundle);
+                }
             }
+            return bundle.allocateChannel();
         }
-        return bundle.allocateChannel();
+        catch (InvalidSecurityContextException e) {
+            if (pcred == null) {
+                invalidateCredentials(credentials, host);
+            }
+            throw e;
+        }
     }
 
     private static final char[] NO_PASSPHRASE = new char[0];
+
+    public static void invalidateCredentials(Object credentials, String host) {
+        Object def = getDefaultCredentials(host);
+        if (def instanceof InteractiveAuthentication) {
+            ((InteractiveAuthentication) def).reset();
+        }
+    }
 
     public static Object getCredentials(Object credentials, String host)
             throws InvalidSecurityContextException {
         if (credentials == null) {
             credentials = getDefaultCredentials(host);
         }
-        if (credentials instanceof PasswordAuthentication) {
+        if (credentials instanceof InteractiveAuthentication) {
+            return credentials;
+        }
+        else if (credentials instanceof PasswordAuthentication) {
             return credentials;
         }
         else if (credentials instanceof PublicKeyAuthentication) {
             return credentials;
         }
         else if (credentials == null) {
-            throw new InvalidSecurityContextException(
-                    "No credentials specified and no entry found in "
-                            + getAuthFilePath() + " for " + host);
+            return null;
+            /*return new InteractiveAuthentication(System
+                .getProperty("user.name"), null, null, null);*/
         }
         else {
             throw new InvalidSecurityContextException(
-                    "Unsupported credentials: " + credentials);
+                "Unsupported credentials: " + credentials);
         }
     }
 
@@ -151,19 +171,20 @@ public class SSHChannelManager {
                     Object auth = null;
                     if ("password".equals(val)) {
                         String password = p.getProperty(host + ".password");
-                        auth = new PasswordAuthentication(username, password
-                                .toCharArray());
+                        auth = new PasswordAuthentication(username,
+                            password == null ? new char[0] : password.toCharArray());
                     }
                     else if ("key".equals(val)) {
                         String pkey = p.getProperty(host + ".key");
                         String passphrase = p.getProperty(host + ".passphrase");
                         auth = new PublicKeyAuthentication(username, pkey,
-                                passphrase.toCharArray());
+                            toCharArray(passphrase));
                     }
                     else if ("interactive".equals(val)) {
-                        InteractiveSSHSecurityContextImpl sc = new InteractiveSSHSecurityContextImpl();
-                        sc.setHostName(host);
-                        auth = sc.getCredentials();
+                        auth = new InteractiveAuthentication(p.getProperty(host
+                                + ".username"), toCharArray(p.getProperty(host
+                                + ".password")), p.getProperty(host + ".key"),
+                            toCharArray(p.getProperty(host + ".passphrase")));
                     }
                     else {
                         logger.warn("Unknown authentication type for \"" + host
@@ -173,6 +194,15 @@ public class SSHChannelManager {
                 }
             }
             lastLoad = System.currentTimeMillis();
+        }
+    }
+
+    private static char[] toCharArray(String v) {
+        if (v == null) {
+            return null;
+        }
+        else {
+            return v.toCharArray();
         }
     }
 
@@ -192,7 +222,8 @@ public class SSHChannelManager {
                         while (i.hasNext()) {
                             Map.Entry e = (Entry) i.next();
                             ConnectionID ix = (ConnectionID) e.getKey();
-                            SSHConnectionBundle bundle = (SSHConnectionBundle) e.getValue();
+                            SSHConnectionBundle bundle = (SSHConnectionBundle) e
+                                .getValue();
                             if (!bundle.shutdownIdleConnections(shutdownList)) {
                                 i.remove();
                             }
@@ -204,7 +235,8 @@ public class SSHChannelManager {
                             ((Runnable) i.next()).run();
                         }
                         catch (Exception e) {
-                            logger.warn("Failed to shut down SSH connection", e);
+                            logger
+                                .warn("Failed to shut down SSH connection", e);
                         }
                     }
                     shutdownList.clear();
