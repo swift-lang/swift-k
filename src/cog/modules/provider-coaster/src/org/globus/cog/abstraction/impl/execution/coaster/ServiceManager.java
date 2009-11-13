@@ -296,7 +296,7 @@ public class ServiceManager implements StatusListener {
             BufferedReader br = new BufferedReader(new InputStreamReader(u.openStream()));
             String line = br.readLine();
             while (line != null) {
-                escape(sb, line, args);
+                escape(sb, line.trim(), args);
                 sb.append("\\x0a");
                 line = br.readLine();
             }
