@@ -520,8 +520,8 @@ public class Ssh {
                     logger.debug("Displaying credential dialog");
                 }
                 char[][] results = CredentialsDialog.showCredentialsDialog(host
-                        + (name == null ? "" : " - " + name) 
-                        + (instruction == null ? "" : " - " + instruction), p);
+                        + (empty(name) ? "" : " - " + name) 
+                        + (empty(instruction) ? "" : " - " + instruction), p);
                 if (results != null) {
                     for (int i = 0; i < prompts.length; i++) {
                         prompts[i].setResponse(new String(results[i]));
@@ -566,6 +566,10 @@ public class Ssh {
                 return false;
             }
         }
+    }
+    
+    private boolean empty(String s) {
+        return s == null || s.equals("");
     }
 
     public void setUsername(String username) {
