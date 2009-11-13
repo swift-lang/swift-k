@@ -40,6 +40,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.common.util.WriterMultiplexer;
 import org.globus.cog.abstraction.impl.ssh.SSHTask;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 
 import com.sshtools.j2ssh.session.SessionChannelClient;
 
@@ -47,6 +48,7 @@ public class Exec implements SSHTask {
     static Logger logger = Logger.getLogger(Exec.class.getName());
     private String cmd;
     private String dir;
+    private String remoteOut, remoteErr, remoteIn;
     private String outFile, errFile;
     private boolean outMem, errMem;
     private CharArrayWriter out, err;
@@ -70,6 +72,30 @@ public class Exec implements SSHTask {
         dir = string;
     }
 
+    public String getRemoteOut() {
+        return remoteOut;
+    }
+
+    public void setRemoteOut(String remoteOut) {
+        this.remoteOut = remoteOut;
+    }
+
+    public String getRemoteErr() {
+        return remoteErr;
+    }
+
+    public void setRemoteErr(String remoteErr) {
+        this.remoteErr = remoteErr;
+    }
+
+    public String getRemoteIn() {
+        return remoteIn;
+    }
+
+    public void setRemoteIn(String remoteIn) {
+        this.remoteIn = remoteIn;
+    }
+
     public void execute(SessionChannelClient session)
             throws IllegalSpecException, InvalidSecurityContextException,
             InvalidServiceContactException, TaskSubmissionException,
@@ -91,7 +117,11 @@ public class Exec implements SSHTask {
             if (getCmd() == null) {
                 throw new TaskSubmissionException("No executable specified");
             }
-            if (!session.executeCommand("/bin/sh")) {
+        
+            if (!session.executeCommand("/bin/sh" + 
+                    (remoteIn == null ? "" : " <" + remoteIn) + 
+                    (remoteOut == null ? "" : " 1>" + remoteOut) +
+                    (remoteErr == null ? "" : " 2>" + remoteErr))) {
                 throw new TaskSubmissionException("Failed to start /bin/sh");
             }
             logger.debug("Executing " + getCmd());
@@ -144,6 +174,9 @@ public class Exec implements SSHTask {
                         charsout = 0;
                     }
                     if (charsout > 0) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Out bytes from process: " + new String(bufout, 0, charsout));
+                        }
                         owr.write(bufout, 0, charsout);
                     }
                 }
@@ -155,14 +188,17 @@ public class Exec implements SSHTask {
                         charserr = 0;
                     }
                     if (charserr > 0) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Error bytes from process: " + new String(buferr, 0, charserr));
+                        }
                         ewr.write(buferr, 0, charsout);
                     }
                 }
 
-                if (session.getInputStream().isClosed()) {
-                    break;
-                }
                 if (charsout + charserr == 0) {
+                    if (session.getInputStream().isClosed()) {
+                        break;
+                    }
                     Thread.sleep(20);
                 }
             }
