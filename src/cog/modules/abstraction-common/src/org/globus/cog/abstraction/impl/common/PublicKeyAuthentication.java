@@ -19,7 +19,7 @@ public class PublicKeyAuthentication {
 	public PublicKeyAuthentication(String username, File privateKeyFile, char[] passPhrase) {
 		this.username = username;
 		this.privateKeyFile = privateKeyFile;
-		this.passPhrase = passPhrase;
+		this.passPhrase = passPhrase == null ? null : (char[]) passPhrase.clone();
 	}
 	
 	public PublicKeyAuthentication(String username, String privateKeyFile, char[] passPhrase) {
