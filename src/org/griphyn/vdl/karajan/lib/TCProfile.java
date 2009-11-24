@@ -66,7 +66,7 @@ public class TCProfile extends VDLFunction {
 
 		TransformationCatalogEntry tce = null;
 		if (tr != null) {
-		    getTCE(tc, new FQN(tr), bc);
+		    tce = getTCE(tc, new FQN(tr), bc);
 		}
 		
 		Map env = new HashMap();
