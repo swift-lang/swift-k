@@ -231,13 +231,7 @@ public class Block implements StatusListener {
                     cpu.shutdown();
                     count++;
                 }
-                CoasterService.addWatchdog(new TimerTask() {
-                    public void run() {
-                    	if (running) {
-                    		forceShutdown();
-                    	}
-                    }
-                }, SHUTDOWN_WATCHDOG_DELAY);
+                addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
                 if (idleTotal > 0) {
                     double u = (busyTotal * 10000) / (busyTotal + idleTotal);
                     u /= 100;
@@ -246,7 +240,7 @@ public class Block implements StatusListener {
                         ", u=" + u);
                 }
                 if (count < workers || now) {
-                    forceShutdown();
+                    addForcedShutdownWatchdog(100);
                 }
             }
             else {
@@ -255,6 +249,16 @@ public class Block implements StatusListener {
             }
             cpus.clear();
         }
+    }
+    
+    private void addForcedShutdownWatchdog(long delay) {
+        CoasterService.addWatchdog(new TimerTask() {
+            public void run() {
+                if (running) {
+                    forceShutdown();
+                }
+            }
+        }, delay);
     }
 
     public void forceShutdown() {
