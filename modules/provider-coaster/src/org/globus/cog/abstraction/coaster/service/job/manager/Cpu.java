@@ -140,8 +140,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
                 }
                 else {
                     if (block.getAllocationProcessor().getQueued().size() == 0) {
-                        block.getAllocationProcessor().waitForJobs();
-                        pullLater();
+                        sleep();
                     }
                     else {
                         sleep();
