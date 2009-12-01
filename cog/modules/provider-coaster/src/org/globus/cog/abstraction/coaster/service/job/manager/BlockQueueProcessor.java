@@ -514,7 +514,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     public String registrationReceived(String bid, String id, ChannelContext channelContext) {
-        return getBlock(bid).cpuStarted(id, channelContext);
+        return getBlock(bid).workerStarted(id, channelContext);
     }
 
     public String nextId(String id) {

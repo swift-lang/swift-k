@@ -50,6 +50,9 @@ public class BlockTask extends TaskImpl {
         if (settings.getAlcfbgpnat()) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
+        if (block.getWorkerCount() <= 16) {
+            spec.addEnvironmentVariable("WORKER_LOGGING_ENABLED", "true");
+        }
         setRequiredService(1);
         setService(0, buildService());
     }
@@ -60,7 +63,6 @@ public class BlockTask extends TaskImpl {
         js.addArgument(block.getAllocationProcessor().getScript().getAbsolutePath());
         js.addArgument(settings.getCallbackURI().toString());
         js.addArgument(block.getId());
-        js.addArgument(String.valueOf(settings.getWorkersPerNode()));
         js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
