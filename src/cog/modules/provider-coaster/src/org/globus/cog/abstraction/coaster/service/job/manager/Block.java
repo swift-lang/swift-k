@@ -29,7 +29,7 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
 public class Block implements StatusListener {
     public static final Logger logger = Logger.getLogger(Block.class);
-    
+
     public static final long SHUTDOWN_WATCHDOG_DELAY = 2 * 60 * 1000;
 
     private static BlockTaskSubmitter submitter;
@@ -76,8 +76,9 @@ public class Block implements StatusListener {
         if (logger.isInfoEnabled()) {
             logger.info("Starting block: workers=" + workers + ", walltime=" + walltime);
         }
-        ap.getRLogger().log("BLOCK_REQUESTED id=" + getId() + 
-            ", w=" + getWorkerCount() + ", h=" + getWalltime().getSeconds());
+        ap.getRLogger().log(
+            "BLOCK_REQUESTED id=" + getId() + ", w=" + getWorkerCount() + ", h="
+                    + getWalltime().getSeconds());
         task = new BlockTask(this);
         task.addStatusListener(this);
         try {
@@ -108,12 +109,16 @@ public class Block implements StatusListener {
                     }
                 }
                 if (cpus.isEmpty()) {
-                    //prevent block from being done when startup of workers is really really slow, 
-                    //like as on the BGP where it takes a couple of minutes to initialize a partition
+                    // prevent block from being done when startup of workers is
+                    // really really slow,
+                    // like as on the BGP where it takes a couple of minutes to
+                    // initialize a partition
                     last = Time.now();
                 }
             }
-            deadline = Time.min(starttime.add(walltime), last.add(ap.getSettings().getMaxWorkerIdleTime()));
+            deadline =
+                    Time.min(starttime.add(walltime),
+                        last.add(ap.getSettings().getMaxWorkerIdleTime()));
             return Time.now().isGreaterThan(deadline);
         }
         else {
@@ -175,7 +180,9 @@ public class Block implements StatusListener {
 
     public double sizeLeft() {
         if (running) {
-            return ap.getMetric().size(workers, (int) TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)), NO_TIME).getSeconds());
+            return ap.getMetric().size(
+                workers,
+                (int) TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)), NO_TIME).getSeconds());
         }
         else {
             return ap.getMetric().size(workers, (int) walltime.getSeconds());
@@ -236,21 +243,20 @@ public class Block implements StatusListener {
                     double u = (busyTotal * 10000) / (busyTotal + idleTotal);
                     u /= 100;
                     logger.info("Average utilization: " + u + "%");
-                    ap.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + 
-                        ", u=" + u);
+                    ap.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
                 }
                 if (count < workers || now) {
                     addForcedShutdownWatchdog(100);
                 }
             }
             else {
-            	logger.info("Block " + this + " not running. Cancelling job.");
+                logger.info("Block " + this + " not running. Cancelling job.");
                 forceShutdown();
             }
             cpus.clear();
         }
     }
-    
+
     private void addForcedShutdownWatchdog(long delay) {
         CoasterService.addWatchdog(new TimerTask() {
             public void run() {
@@ -301,18 +307,23 @@ public class Block implements StatusListener {
         return id;
     }
 
-    public String cpuStarted(String sid, ChannelContext channelContext) {
+    public String workerStarted(String sid, ChannelContext channelContext) {
         synchronized (cpus) {
             synchronized (scpus) {
                 int id = Integer.parseInt(sid);
-                Cpu cpu = new Cpu(id, this);
-                scpus.add(cpu);
-                cpus.add(cpu);
-                cpu.workerStarted(channelContext);
+                for (int i = 0; i < ap.getSettings().getWorkersPerNode(); i++) {
+                    //this id scheme works out because the sid is based on the
+                    //number of cpus already added (i.e. cpus.size()).
+                    Cpu cpu = new Cpu(id + i, this);
+                    scpus.add(cpu);
+                    cpus.add(cpu);
+                    cpu.workerStarted(channelContext);
+                    logger.info("Started CPU " + cpu);
+                }
                 if (logger.isInfoEnabled()) {
                     logger.info("Started worker " + this.id + ":" + IDF.format(id));
                 }
-                return IDF.format(id);
+                return sid;
             }
         }
     }
@@ -349,7 +360,7 @@ public class Block implements StatusListener {
                                     + prettifyOut(task.getStdError()), null);
                         }
                     }
-                   	ap.blockTaskFinished(this);
+                    ap.blockTaskFinished(this);
                     running = false;
                 }
                 logger.info(id + " stdout: " + prettifyOut(task.getStdOutput()));
