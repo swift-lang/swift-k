@@ -35,6 +35,7 @@ public abstract class AbstractExecutor implements ProcessListener {
 	private JobSpecification spec;
 	private Task task;
 	private ProcessListener listener;
+	private Job job;
 
 	protected AbstractExecutor(Task task, ProcessListener listener) {
 		this.task = task;
@@ -111,7 +112,7 @@ public abstract class AbstractExecutor implements ProcessListener {
 		process.getInputStream().close();
 
 		getQueuePoller().addJob(
-				createJob(jobid, stdout, spec.getStdOutputLocation(), stderr,
+				job = createJob(jobid, stdout, spec.getStdOutputLocation(), stderr,
 						spec.getStdErrorLocation(), exitcode, this));
 	}
 
@@ -297,4 +298,8 @@ public abstract class AbstractExecutor implements ProcessListener {
 	public String getJobid() {
 		return jobid;
 	}
+
+    public Job getJob() {
+        return job;
+    }
 }
