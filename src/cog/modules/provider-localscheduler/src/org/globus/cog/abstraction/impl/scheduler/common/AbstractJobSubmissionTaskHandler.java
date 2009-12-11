@@ -107,7 +107,19 @@ public abstract class AbstractJobSubmissionTaskHandler extends
 
 	public void statusChanged(int status) {
 		if (status == Job.STATE_RUNNING) {
-			getTask().setStatus(Status.ACTIVE);
+		    Job job = executor.getJob();
+		    String location = null;
+		    if (job != null) {
+		        location = executor.getJob().getLocation();
+		    }
+		    Status newStatus = new StatusImpl();
+		    Status prev = getTask().getStatus();
+		    newStatus.setPrevStatusCode(prev.getStatusCode());
+		    newStatus.setStatusCode(Status.ACTIVE);
+		    if (location != null) {
+		        newStatus.setMessage("location=" + location);
+		    }
+			getTask().setStatus(newStatus);
 		}
 	}
 
