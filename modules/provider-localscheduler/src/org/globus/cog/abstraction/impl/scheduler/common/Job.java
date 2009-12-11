@@ -28,7 +28,7 @@ public class Job {
 
 	private static final int NO_EXITCODE = -1;
 
-	private String jobID;
+	private String jobID, location;
 	private String exitcodeFileName;
 	private String stdout, stderr;
 	private FileLocation outLoc, errLoc;
@@ -223,4 +223,12 @@ public class Job {
 	public void setExitcode(int exitcode) {
 		this.exitcode = exitcode;
 	}
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }
