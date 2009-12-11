@@ -31,7 +31,7 @@ public class UploadHandler extends RequestHandler {
 		ByteArrayInputStream bais = new ByteArrayInputStream(getInData(0));
 		Inflater inflater = new Inflater();
 		InputStreamReader isr = new InputStreamReader(new InflaterInputStream(bais, inflater));
-		ElementTree source = XMLConverter.readSource(isr, null);
+		ElementTree source = XMLConverter.readSourceWithUIDs(isr, null);
 
 		String clientID = new String(getInData(1));
 		String name = new String(getInData(2));
