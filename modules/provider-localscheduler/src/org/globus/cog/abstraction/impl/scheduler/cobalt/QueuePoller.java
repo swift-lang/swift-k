@@ -57,7 +57,8 @@ public class QueuePoller extends AbstractQueuePoller {
 		}
 		int jobIDIndex = header.indexOf("JobID");
 		int stateIndex = header.indexOf("State");
-		if (jobIDIndex == -1 || stateIndex == -1) {
+		int locationIndex = header.indexOf("Location");
+		if (jobIDIndex == -1 || stateIndex == -1 || locationIndex == -1) {
 			throw new IOException("Invalid cqstat header: " + header);
 		}
 		// skip the =====...
@@ -68,6 +69,7 @@ public class QueuePoller extends AbstractQueuePoller {
 			if (line != null) {
 				String jobid = parseToWhitespace(line, jobIDIndex);
 				String state = parseToWhitespace(line, stateIndex);
+				String location = parseToWhitespace(line, locationIndex);
 				if (jobid == null || jobid.equals("") || state == null
 						|| state.equals("")) {
 					throw new IOException("Failed to parse cqstat line: "
@@ -88,6 +90,7 @@ public class QueuePoller extends AbstractQueuePoller {
 					if (logger.isDebugEnabled()) {
 						logger.debug("Status for " + jobid + " is R");
 					}
+					job.setLocation(location);
 					job.setState(Job.STATE_RUNNING);
 				}
 			}
