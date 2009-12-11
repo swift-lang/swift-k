@@ -372,6 +372,7 @@ public class Block implements StatusListener {
                 endtime = starttime.add(walltime);
                 deadline = starttime.add(ap.getSettings().getReserve());
                 ap.getRLogger().log("BLOCK_ACTIVE id=" + getId());
+                ap.getSettings().getHook().blockActive(event);
             }
         }
         catch (Exception e) {

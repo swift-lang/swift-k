@@ -25,7 +25,7 @@ public class Settings {
             new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
                     "maxNodes", "lowOverallocation", "highOverallocation",
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
-                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", "internalHostname" };
+                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", "internalHostname", "hookClass" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -99,6 +99,10 @@ public class Settings {
     private double parallelism = 0.01;
 
     private TimeInterval maxWorkerIdleTime = TimeInterval.fromSeconds(120);
+    
+    private String hookClass;
+    
+    private Hook hook;
 
     public int getSlots() {
         return slots;
@@ -315,6 +319,24 @@ public class Settings {
 
     public void setAlcfbgpnat(boolean alcfbgpnat) {
         this.alcfbgpnat = alcfbgpnat;
+    }
+
+    public String getHookClass() {
+        return hookClass;
+    }
+    
+    public Hook getHook() {
+    	return hook;
+    }
+
+    public void setHookClass(String hookClass) {
+        this.hookClass = hookClass;
+        try {
+            this.hook = (Hook) Class.forName(hookClass).newInstance();
+        }
+        catch (Exception e) {
+        	throw new RuntimeException(e);
+        }
     }
 
     public void set(String name, String value) throws IllegalArgumentException,
