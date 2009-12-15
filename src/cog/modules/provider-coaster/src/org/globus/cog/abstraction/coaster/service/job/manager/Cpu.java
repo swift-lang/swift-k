@@ -318,7 +318,10 @@ public class Cpu implements Comparable, Callback, StatusListener {
             int sz = sleeping.size();
             while (i.hasNext()) {
                 Cpu cpu = (Cpu) i.next();
-                if (cpu.lastseq < seq) {
+                if (!cpu.getBlock().isRunning()) {
+                	i.remove();
+                }
+                else if (cpu.lastseq < seq) {
                     enqueue(cpu);
                     i.remove();
                 }

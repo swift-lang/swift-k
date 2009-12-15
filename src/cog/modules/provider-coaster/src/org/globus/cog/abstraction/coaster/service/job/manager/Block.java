@@ -282,6 +282,7 @@ public class Block implements StatusListener {
         synchronized (cpus) {
             synchronized (scpus) {
                 failed = true;
+                running = false;
                 for (int j = cpus.size(); j < workers; j++) {
                     Cpu cpu = new Cpu(j, this);
                     scpus.add(cpu);
