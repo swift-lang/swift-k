@@ -345,7 +345,7 @@ public class Block implements StatusListener {
                                     + prettifyOut(task.getStdError()), s.getException());
                         }
                         else {
-                            taskFailed(id + "Block task ended prematurely\n"
+                            taskFailed(id + " Block task ended prematurely\n"
                                     + prettifyOut(task.getStdOutput())
                                     + prettifyOut(task.getStdError()), null);
                         }
