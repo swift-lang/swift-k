@@ -371,4 +371,8 @@ public class Cpu implements Comparable, Callback, StatusListener {
     public void addDoneJob(Job d) {
         done.add(d);
     }
+    
+    public Block getBlock() {
+    	return block;
+    }
 }
