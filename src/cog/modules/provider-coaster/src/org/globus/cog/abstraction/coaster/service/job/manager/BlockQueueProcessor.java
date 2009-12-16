@@ -304,10 +304,12 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 int msz = (int) size;
                 int lastwalltime = (int) getJob(i).getMaxWallTime().getSeconds();
                 int h = overallocatedSize(getJob(i));
+                
+                int maxt = settings.getMaxtime() - (int) settings.getReserve().getSeconds();
+                
                 // height must be a multiple of the overallocation of the
                 // largest job
-                h = Math.min(Math.max(h, round(h, lastwalltime)), settings.getMaxtime() - 
-                    (int) settings.getReserve().getSeconds());
+                h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
                 int w = Math.min(round(metric.width(msz, h), granularity), settings.getMaxNodes() * settings.getWorkersPerNode());
                 int r = (i - last) % w;
                 if (logger.isInfoEnabled()) {
@@ -318,9 +320,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 // readjust number of jobs fitted based on granularity
                 i += (w - r);
                 if (r != 0) {
-                    h += lastwalltime;
+                    h = Math.min(h + lastwalltime, maxt);
                 }
-
+                
                 if (logger.isInfoEnabled()) {
                     logger.info("h: " + h + ", w: " + w + ", size: " + size + ", msz: " + msz
                             + ", w*h: " + w * h);
