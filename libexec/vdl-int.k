@@ -550,6 +550,10 @@ namespace("vdl"
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
+						if(matches(exception,".*executable bit.*")
+     					           generateError(exception)
+						)
+
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
 							cleanupFiles(cacheFilesToRemove, rhost)
 						)
