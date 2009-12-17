@@ -370,7 +370,7 @@
         <param name="build.target" value="javadoc"/>
     </antcall>
     <antcall target="do.javadoc"/>
-        <antcall target="add.to.javadoc.index"/>
+    <antcall target="add.to.javadoc.index"/>
     <antcall target="finish.javadoc.index"/>
   </target>
         
@@ -386,6 +386,7 @@
       sourcepath="src"
       destdir="${javadoc.dir}"
       private="false"
+      linksource="${javadoc.linksource}"
       doctitle="The Java Commodity Grid Kit"
       windowtitle="${long.name} API"
       use="true">
