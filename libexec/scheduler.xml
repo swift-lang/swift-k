@@ -25,9 +25,9 @@
             </not>
             <then>
 		<generateError>
-		<argument name="exception">
+		<string>
 		Could not find sites file: {sites}
-		</argument></generateError></then>
+		</string></generateError></then>
 	</if>
 
 	<log level="info"><string>Using tc.data: {tcfile}</string></log>
