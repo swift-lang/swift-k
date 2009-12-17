@@ -21,6 +21,15 @@
 	</set>
 	
 	<log level="info"><string>Using sites file: {sites}</string></log>
+	<if><not><file:exists name="{sites}"/>
+            </not>
+            <then>
+		<generateError>
+		<argument name="exception">
+		Could not find sites file: {sites}
+		</argument></generateError></then>
+	</if>
+
 	<log level="info"><string>Using tc.data: {tcfile}</string></log>
   
 	<scheduler type="vds-adaptive" shareID="vdl2:scheduler:{sites}">
