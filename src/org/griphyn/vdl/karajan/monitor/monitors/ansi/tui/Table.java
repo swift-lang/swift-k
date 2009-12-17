@@ -159,6 +159,12 @@ public class Table extends Container implements TableModelListener {
 					((TableColumn) c).setSelectedRow(selectedRow);
 				}
 			}
+			if (selectedRow < firstRow) {
+			    firstRow = Math.min(selectedRow - height + 4, 0);
+			}
+			if (selectedRow > firstRow + height - 4) {
+			    firstRow = selectedRow;
+			}
 			redraw();
 		}
 	}
