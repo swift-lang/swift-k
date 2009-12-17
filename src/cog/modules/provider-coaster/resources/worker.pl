@@ -238,6 +238,8 @@ sub process {
 	my $reply = $flg & $REPLY_FLAG;
 	my ($record, $cont, $start, $frags);
 	
+	$LASTRECV = time();
+
 	if ($reply) {
 		if (exists($REPLIES{$tag})) {
 			$record = $REPLIES{$tag};
@@ -249,7 +251,6 @@ sub process {
 		}
 	}
 	else {
-		$LASTRECV = time();
 		if (!exists($REQUESTS{$tag})) {
 			$REQUESTS{$tag} = [\&processRequest, time(), []];
 			wlog $DEBUG, "New request ($tag)\n";

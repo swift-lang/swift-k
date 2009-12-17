@@ -213,7 +213,7 @@ public class Block implements StatusListener {
 
     public void shutdown(boolean now) {
         synchronized (cpus) {
-            if (shutdown || failed) {
+            if (shutdown) {
                 return;
             }
             logger.info("Shutting down block " + this);
@@ -228,19 +228,23 @@ public class Block implements StatusListener {
                     Cpu cpu = (Cpu) i.next();
                     idleTotal = cpu.idleTime;
                     busyTotal = cpu.busyTime;
-                    cpu.shutdown();
+	                cpu.shutdown();
                     count++;
                 }
-                addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
+				if (!failed) {
+					if (count < workers || now) {	
+	                    addForcedShutdownWatchdog(100);
+    	            }
+					else {
+	   					addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
+					}	
+				}
                 if (idleTotal > 0) {
                     double u = (busyTotal * 10000) / (busyTotal + idleTotal);
                     u /= 100;
                     logger.info("Average utilization: " + u + "%");
                     ap.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + 
                         ", u=" + u);
-                }
-                if (count < workers || now) {
-                    addForcedShutdownWatchdog(100);
                 }
             }
             else {

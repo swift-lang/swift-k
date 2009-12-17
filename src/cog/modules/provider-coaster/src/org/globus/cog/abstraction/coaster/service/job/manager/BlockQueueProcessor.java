@@ -140,6 +140,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
+
     private void cleanDoneBlocks() {
         synchronized (blocks) {
             int count = 0;
@@ -443,9 +444,12 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
         computeSums();
 
+
         tsum = computeTotalRequestSize();
 
-        removeJobs(allocateBlocks(tsum));
+		if (tsum != 0) {
+        	removeJobs(allocateBlocks(tsum));
+		}
 
         updateMonitor();
         synchronized (add) {

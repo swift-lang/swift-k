@@ -41,6 +41,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     private ChannelContext channelContext;
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
+	private boolean shutdown;
 
     public Cpu() {
         this.done = new ArrayList();
@@ -121,6 +122,9 @@ public class Cpu implements Comparable, Callback, StatusListener {
             if (logger.isInfoEnabled()) {
                 logger.info(block.getId() + ":" + getId() + " pull");
             }
+			if (shutdown) {
+				return;
+			}
             if (!started()) {
                 sleep();
             }
@@ -179,6 +183,10 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public void shutdown() {
+		if (shutdown) {
+			return;
+		}
+		shutdown = true;
     	done.clear();
         if (running != null) {
             logger.info(block.getId() + "-" + id + ": Job still running while shutting down");
@@ -234,6 +242,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public void taskFailed(String msg, Exception e) {
+		shutdown = true;
         if (running == null) {
             if (starttime == null) {
                 starttime = Time.now();
