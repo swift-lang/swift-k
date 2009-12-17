@@ -211,12 +211,15 @@ public class Settings {
     public void setInternalHostname(String internalHostname) {
         if (internalHostname != null) { // override automatically determined
             try {
-                logger.warn("original callback URI is " + callbackURI);
+                URI original = callbackURI; 
                 callbackURI =
                         new URI(callbackURI.getScheme(), callbackURI.getUserInfo(),
                             internalHostname, callbackURI.getPort(), callbackURI.getPath(),
                             callbackURI.getQuery(), callbackURI.getFragment());
-                logger.warn("callback URI has been overridden to " + callbackURI);
+                if (! original.toString().equals(callbackURI.toString())) {
+                    logger.warn("original callback URI is " + callbackURI);
+                    logger.warn("callback URI has been overridden to " + callbackURI);
+                }
             }
             catch (URISyntaxException use) {
                 throw new RuntimeException(use);
@@ -224,7 +227,7 @@ public class Settings {
             // TODO nasty exception in the line above
         }
     }
-
+    
     public URI getCallbackURI() {
         return callbackURI;
     }
