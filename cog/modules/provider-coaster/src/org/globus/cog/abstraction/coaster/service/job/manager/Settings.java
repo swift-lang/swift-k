@@ -103,6 +103,10 @@ public class Settings {
     private String hookClass;
     
     private Hook hook;
+    
+    public Settings() {
+        hook = new Hook();
+    }
 
     public int getSlots() {
         return slots;
