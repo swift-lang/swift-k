@@ -65,7 +65,9 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		catch (InvalidMapperException e) {
 			throw new RuntimeException("InvalidMapperException caught in mapper initialization", e);
 		}
-		notifyListeners();
+		if (isClosed()) {
+		    notifyListeners();
+		}
 	}
 
 	private void checkInputs() {
