@@ -55,7 +55,9 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		catch (InvalidMapperException e) {
 			throw new RuntimeException(e);
 		}
-		notifyListeners();
+		if (isClosed()) {
+		    notifyListeners();
+		}
 	}
 
 	private void checkInputs() {
