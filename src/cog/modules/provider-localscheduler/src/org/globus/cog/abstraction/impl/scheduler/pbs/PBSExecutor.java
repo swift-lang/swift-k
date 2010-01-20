@@ -95,6 +95,7 @@ public class PBSExecutor extends AbstractExecutor {
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
+		wr.write("cat $PBS_NODEFILE | pdsh -N -w - ");
 		wr.write(quote(spec.getExecutable()));
 		List args = spec.getArgumentsAsList();
 		if (args != null && args.size() > 0) {
