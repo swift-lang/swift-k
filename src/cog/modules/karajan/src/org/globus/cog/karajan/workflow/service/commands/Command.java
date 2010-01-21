@@ -85,16 +85,24 @@ public abstract class Command extends RequestReply implements SendCallback {
 		}
 	}
 
-	public void dataReceived(byte[] data) throws ProtocolException {
-		super.dataReceived(data);
-		this.addInData(data);
+	public void dataReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
+		super.dataReceived(fin, err, data);
+		this.addInData(fin, err, data);
 	}
 
-	public void replyReceived(byte[] data) throws ProtocolException {
-		this.dataReceived(data);
+	public void replyReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
+		this.dataReceived(fin, err, data);
 	}
-
-	public void send() throws ProtocolException {
+	
+	protected final void replyReceived(byte[] data) {
+		throw new RuntimeException("Do not use this");
+	}
+	
+	protected final void dataReceived(byte[] data) {
+		throw new RuntimeException("Do not use this");
+	}
+	
+	public void send(boolean err) throws ProtocolException {
 		sendReqTime = System.currentTimeMillis();
 		cancelTimeout();
 		KarajanChannel channel = getChannel();

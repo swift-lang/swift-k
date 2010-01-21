@@ -18,6 +18,7 @@ import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.service.InstanceContext;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelID;
 
 public class SubmitHandler extends RequestHandler {
 	private String file, clientID, user;
@@ -36,7 +37,7 @@ public class SubmitHandler extends RequestHandler {
 				UserContext uc = getChannel().getUserContext().getChannelContext().newUserContext(user);
 				InstanceContext ic = uc.newInstanceContext();
 				ic.setClientID(clientID);
-				ic.setServerID(new UID().toString());
+				ic.setServerID(ChannelID.newUID());
 				ic.setTree(tree);
 				ic.setName(f.getName());
 				addOutData(ic.getServerID());

@@ -29,7 +29,7 @@ public class HeartBeatCommand extends Command {
 		super.send();
 	}
 
-	public void replyReceived(byte[] data) throws ProtocolException {
-		super.replyReceived(data);
+	public void replyReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
+		super.replyReceived(fin, err, data);
 	}
 }

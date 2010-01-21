@@ -11,6 +11,7 @@ package org.globus.cog.karajan.workflow.service.channels;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestManager;
@@ -31,6 +32,8 @@ public interface KarajanChannel {
 	void sendTaggedData(int i, boolean fin, byte[] bytes, SendCallback cb);
 
 	void sendTaggedData(int i, int flags, byte[] bytes, SendCallback cb);
+	
+	void sendTaggedData(int i, int flags, ByteBuffer buf, SendCallback cb);
 
 	void registerCommand(Command command) throws ProtocolException;
 
@@ -39,6 +42,10 @@ public interface KarajanChannel {
 	void unregisterHandler(int tag);
 
 	void sendTaggedReply(int i, byte[] buf, boolean fin, boolean errorFlag);
+	
+	void sendTaggedReply(int i, byte[] buf, boolean fin, boolean errorFlag, SendCallback cb);
+	
+	void sendTaggedReply(int id, ByteBuffer buf, boolean fin, boolean errorFlag, SendCallback cb);
 
 	void registerHandler(RequestHandler handler, int tag);
 

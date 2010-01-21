@@ -37,7 +37,7 @@ public class ChannelConfigurationHandler extends RequestHandler {
 		ChannelContext cc = getChannel().getChannelContext();
 		ChannelID cid = cc.getChannelID();
 		if (remoteID.length() == 0) {
-			remoteID = new UID().toString();
+			remoteID = ChannelID.newUID();
 		}
 		cid.setLocalID(localID);
 		cid.setRemoteID(remoteID);

@@ -15,7 +15,7 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 public class UnknownCommandHandler extends RequestHandler {
     
 	public void requestComplete() throws ProtocolException {
-		sendError("Unknown command: "+this.getInCmd());
+		sendError("Unknown command: " + this.getInCmd());
 	}
 
 	public void dataReceived(byte[] data) throws ProtocolException {

@@ -21,6 +21,7 @@ import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.service.InstanceContext;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelID;
 
 public class UploadHandler extends RequestHandler {
 	private static final Logger logger = Logger.getLogger(UploadHandler.class);
@@ -31,14 +32,14 @@ public class UploadHandler extends RequestHandler {
 		ByteArrayInputStream bais = new ByteArrayInputStream(getInData(0));
 		Inflater inflater = new Inflater();
 		InputStreamReader isr = new InputStreamReader(new InflaterInputStream(bais, inflater));
-		ElementTree source = XMLConverter.readSource(isr, null);
+		ElementTree source = XMLConverter.readSourceWithUIDs(isr, null);
 
 		String clientID = new String(getInData(1));
 		String name = new String(getInData(2));
 		UserContext uc = getChannel().getUserContext();
 		ic = uc.newInstanceContext();
 		ic.setClientID(clientID);
-		ic.setServerID(new UID().toString());
+		ic.setServerID(ChannelID.newUID());
 		ic.setTree(source);
 		ic.setName(name);
 		addOutData(ic.getServerID());
