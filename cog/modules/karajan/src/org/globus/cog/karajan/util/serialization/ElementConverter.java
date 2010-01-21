@@ -132,13 +132,12 @@ public class ElementConverter extends AbstractKarajanConverter {
 			wrapper.setProperty(FlowElement.LINE, new Integer(mrd.getLineNumber()));
 		}
 		if (!wrapper.hasProperty(FlowElement.UID)) {
-			Integer uid = getKContext().getTree().getUIDMap().nextUID();
-			wrapper.setProperty(FlowElement.UID, uid);
-			getKContext().getTree().getUIDMap().put(uid, wrapper);
+				Integer uid = getKContext().getTree().getUIDMap().nextUID();
+				wrapper.setProperty(FlowElement.UID, uid);
 		}
-		else {
+		if (getKContext().getUIDs()) {
 			getKContext().getTree().getUIDMap().put((Integer) wrapper.getProperty(FlowElement.UID),
-					wrapper);
+						wrapper);
 		}
 	}
 

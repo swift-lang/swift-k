@@ -25,6 +25,10 @@ public class SourceElementMarshallingPolicy extends AbstractElementMarshallingPo
 
 	public void marshal(Object elem, HierarchicalStreamWriter wr, MarshallingContext context) {
 		FlowElement node = (FlowElement) elem;
+		if (!node.hasProperty(FlowElement.UID)) {
+			Integer uid = getKContext().getTree().getUIDMap().nextUID();
+			node.setProperty(FlowElement.UID, uid);
+		}
 		writeProperties(node, wr, context);
 		getKContext().getSourceElements().put(node.getProperty(FlowElement.UID), node);
 		writeChildren(node, wr, context);
