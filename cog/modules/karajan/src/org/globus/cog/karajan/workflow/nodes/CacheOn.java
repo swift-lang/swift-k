@@ -21,6 +21,6 @@ public class CacheOn extends CacheNode {
 	}
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		cpre(A_VALUE.getValue(stack), stack);
+		cpre(A_VALUE.getValue(stack), Boolean.FALSE, stack);
 	}
 }
