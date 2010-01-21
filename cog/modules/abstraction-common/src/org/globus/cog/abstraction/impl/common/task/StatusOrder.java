@@ -30,6 +30,10 @@ public class StatusOrder {
                 return Status.SUBMITTING;
             case Status.ACTIVE:
                 return Status.SUBMITTED;
+            case Status.STAGE_OUT:
+                return Status.ACTIVE;
+            case Status.STAGE_IN:
+                return Status.SUBMITTED;
             case Status.RESUMED:
                 return Status.SUSPENDED;
             default:

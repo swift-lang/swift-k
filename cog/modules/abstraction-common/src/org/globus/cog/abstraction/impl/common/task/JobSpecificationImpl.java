@@ -17,10 +17,12 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
+import org.globus.cog.abstraction.interfaces.StagingSet;
 
 public class JobSpecificationImpl implements JobSpecification {
     private Boolean delegationEnabled;
@@ -42,6 +44,8 @@ public class JobSpecificationImpl implements JobSpecification {
     private String executable;
     private FileLocation stdinLocation, stdoutLocation, stderrLocation,
             executableLocation;
+    private StagingSet stagein, stageout;
+    private CleanUpSet cleanUpSet;
 
     public JobSpecificationImpl() {
         this.type = Specification.JOB_SUBMISSION;
@@ -388,5 +392,29 @@ public class JobSpecificationImpl implements JobSpecification {
                     "Memory is not a valid setting for the executable location");
         }
         this.executableLocation = executableLocation;
+    }
+
+    public StagingSet getStageIn() {
+        return stagein;
+    }
+
+    public StagingSet getStageOut() {
+        return stageout;
+    }
+
+    public void setStageIn(StagingSet stagein) {
+        this.stagein = stagein;
+    }
+
+    public void setStageOut(StagingSet stageout) {
+        this.stageout = stageout;
+    }
+
+    public CleanUpSet getCleanUpSet() {
+        return cleanUpSet;
+    }
+
+    public void setCleanUpSet(CleanUpSet cleanUpSet) {
+        this.cleanUpSet = cleanUpSet;
     }
 }
