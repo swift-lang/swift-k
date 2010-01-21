@@ -22,6 +22,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.nodes.PartialArgumentsContainer;
+import org.globus.cog.karajan.workflow.service.channels.ChannelID;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
@@ -123,7 +124,7 @@ public class RemoteNode extends PartialArgumentsContainer implements Callback {
 				VersionCommand ver = (VersionCommand) cmd;
 				logger.info("Server version: " + ver.getServerVersion());
 				InstanceContext ic = channel.getUserContext().newInstanceContext();
-				ic.setClientID(new UID().toString());
+				ic.setClientID(ChannelID.newUID());
 
 				UploadInstance ui = new UploadInstance(makeTree(stack), ic,
 						(String) getTreeProperty("_filename", this));
