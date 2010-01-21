@@ -24,10 +24,10 @@ public class Once extends CacheNode {
 	}
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		cpre(A_VALUE.getValue(stack), stack);
+		cpre(A_VALUE.getValue(stack), Boolean.FALSE, stack);
 	}
 
-	protected synchronized Cache getCache(VariableStack stack) throws ExecutionException {
+	protected synchronized Cache getCache(VariableStack stack, Boolean staticdef) throws ExecutionException {
 		Cache cache = (Cache) stack.getGlobal(CACHE);
 		if (cache == null) {
 			cache = new Cache();
