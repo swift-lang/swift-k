@@ -10,6 +10,8 @@
 package org.globus.cog.abstraction.impl.file;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -316,5 +318,17 @@ public abstract class AbstractFileResource implements FileResource {
                 throw e;
             }
         }
+    }
+
+    public InputStream openInputStream(String name) throws FileResourceException {
+        throw new UnsupportedOperationException();
+    }
+
+    public OutputStream openOutputStream(String name) throws FileResourceException {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean supportsStreams() {
+        return false;
     }
 }

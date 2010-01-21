@@ -127,6 +127,12 @@ public class StatusImpl implements Status {
             case Status.UNSUBMITTED:
                 return "Unsubmitted";
 
+            case Status.STAGE_IN:
+                return "Stagein";
+                
+            case Status.STAGE_OUT:
+                return "Stageout";
+                
             default:
                 return "Unknown (" + statusCode + ")";
         }

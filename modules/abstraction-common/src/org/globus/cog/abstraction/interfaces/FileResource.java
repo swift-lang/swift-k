@@ -7,6 +7,8 @@
 package org.globus.cog.abstraction.interfaces;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -328,4 +330,10 @@ public interface FileResource extends GridResource {
      * Returns attribute value for the given attribute name
      */
     public Object getAttribute(String name);
+    
+    public InputStream openInputStream(String name) throws FileResourceException;
+    
+    public OutputStream openOutputStream(String name) throws FileResourceException;
+    
+    boolean supportsStreams();
 }

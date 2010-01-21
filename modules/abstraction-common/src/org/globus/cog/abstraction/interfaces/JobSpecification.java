@@ -433,4 +433,16 @@ public interface JobSpecification extends Specification {
      * @deprecated Use {@link #setDelegation(int)}
      */
     public void setDelegationEnabled(boolean delegation);
+    
+    public void setStageIn(StagingSet stagein);
+    
+    public StagingSet getStageIn();
+    
+    public void setStageOut(StagingSet stageout);
+    
+    public StagingSet getStageOut();
+    
+    void setCleanUpSet(CleanUpSet cs);
+    
+    CleanUpSet getCleanUpSet();
 }
