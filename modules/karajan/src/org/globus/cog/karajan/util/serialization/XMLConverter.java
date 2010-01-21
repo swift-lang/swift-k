@@ -120,14 +120,23 @@ public class XMLConverter {
 	public void write(Object obj, Writer writer) {
 		xstream.toXML(obj, writer);
 	}
-
-	public static ElementTree readSource(Reader reader, String name) {
-		return readSource(reader, name, true);
+	
+	public static ElementTree readSourceWithUIDs(Reader reader, String name) {
+		return readSource(reader, name, true, true);
 	}
 
-	public static ElementTree readSource(Reader reader, String name, boolean lineNumbers) {
+	public static ElementTree readSourceNoUIDs(Reader reader, String name) {
+		return readSource(reader, name, true, false);
+	}
+	
+	public static ElementTree readSourceNoUIDs(Reader reader, String name, boolean lineNumbers) {
+		return readSource(reader, name, lineNumbers, false);
+	}
+
+	public static ElementTree readSource(Reader reader, String name, boolean lineNumbers, boolean uids) {
 		XMLConverter loader = new XMLConverter();
 		loader.getKContext().setKmode(lineNumbers);
+		loader.getKContext().setUIDs(uids);
 		loader.registerConverter(new ProjectNodeConverter(loader.kcontext));
 		loader.alias("project", ProjectNode.class);
 		loader.alias("karajan", ProjectNode.class);
