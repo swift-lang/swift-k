@@ -62,7 +62,7 @@ public class SetVar extends SequentialWithArguments {
 		super.post(stack);
 	}
 
-	protected StackFrame getFrame(VariableStack stack) {
+	protected StackFrame getFrame(VariableStack stack) throws ExecutionException {
 		return stack.parentFrame();
 	}
 
