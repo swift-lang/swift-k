@@ -62,6 +62,10 @@ public interface Status extends Serializable {
      * successfully.
      */
     public static final int COMPLETED = 7;
+    
+    public static final int STAGE_IN = 16;
+    
+    public static final int STAGE_OUT = 17;
 
     /**
      * Unknown status.

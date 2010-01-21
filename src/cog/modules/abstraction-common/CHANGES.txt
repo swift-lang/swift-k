@@ -1,3 +1,12 @@
+(01/21/2010)
+
+*** Added stage-in, stage-out and cleanup fields to job
+    specifications.
+
+*** Added open(Input|Output)Stream methods to file resources
+
+*** Updated version to 2.4 due to major api changes
+
 (04/07/2008)
 
 *** SecurityContextImpl, ServiceImpl, and ServiceContactImpl now
