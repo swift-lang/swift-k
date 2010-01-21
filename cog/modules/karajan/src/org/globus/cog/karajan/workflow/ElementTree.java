@@ -21,19 +21,13 @@ public class ElementTree {
 	private FlowElement root;
 	private String name;
 	private transient String basedir;
-	private Cache cache;
-
-	public Cache getCache() {
-		return cache;
-	}
-
+	
 	public ElementTree() {
 		this(new UIDMap());
 	}
 
 	private ElementTree(UIDMap UIDMap) {
 		this.UIDMap = UIDMap;
-		cache = new Cache();
 	}
 
 	private ElementTree(ElementTree other) {
@@ -93,9 +87,5 @@ public class ElementTree {
 		else {
 			return new File(getBasedir() + File.separator + f.getPath());
 		}
-	}
-
-	public void setCache(Cache cache) {
-		this.cache = cache;
 	}
 }

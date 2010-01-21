@@ -26,6 +26,7 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.LinkedStack;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.Cache;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.karajan.util.StateManager;
@@ -81,6 +82,15 @@ public class ExecutionContext implements EventListener {
 	private long startTime, endTime;
 	private String cwd;
 	private Map attributes;
+	private Cache cache;
+
+	public Cache getCache() {
+		return cache;
+	}
+	
+	public void setCache(Cache cache) {
+		this.cache = cache;
+	}
 
 	public ExecutionContext(ElementTree tree) {
 		this(tree, KarajanProperties.getDefault());
@@ -95,6 +105,7 @@ public class ExecutionContext implements EventListener {
 		eventListeners = new LinkedList();
 		this.properties = properties;
 		cwd = new File(".").getAbsolutePath();
+		cache = new Cache();
 	}
 
 	public boolean isMonitoringEnabled() {
