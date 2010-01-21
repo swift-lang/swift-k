@@ -94,7 +94,8 @@ namespace("vdl"
 														
 		element(appStageins, [jobid, files, dir]
 			for(file, files
-				provider := provider(file)
+				//provider := vdl:provider(file)
+				provider := "coaster"
 				srchost := hostname(file)
 				srcdir := dirname(file)
 				destdir := dircat(dir, reldirname(file))
@@ -111,7 +112,8 @@ namespace("vdl"
 			for(pv, stageouts
 				[path, var] := each(pv)
 				file := vdl:absfilename(vdl:getfield(var, path = path))
-				provider := vdl:provider(file)
+				//provider := vdl:provider(file)
+				provider := "coaster"
 				dhost := vdl:hostname(file)
 				rdir := dircat(dir, reldirname(file))
 				bname := basename(file)
