@@ -54,9 +54,9 @@ public abstract class GroupHandler extends RequestHandler {
 		handler.requestComplete();
 	}
 
-	public void dataReceived(byte[] data) throws ProtocolException {
+	public void dataReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
 		if (membertags == null) {
-			super.dataReceived(data);
+			super.dataReceived(fin, err, data);
 		}
 		else {
 			// sub-commands
@@ -71,14 +71,14 @@ public abstract class GroupHandler extends RequestHandler {
 				}
 			}
 			else {
-				handlerDataReceived(crtHandler, data);
+				handlerDataReceived(crtHandler, fin, err, data);
 			}
 		}
 	}
 
-	protected void handlerDataReceived(RequestHandler handler, byte[] data)
+	protected void handlerDataReceived(RequestHandler handler, boolean fin, boolean err, byte[] data)
 			throws ProtocolException {
-		handler.dataReceived(data);
+		handler.dataReceived(fin, err, data);
 	}
 
 	public void errorReceived(String msg, Exception t) {

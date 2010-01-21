@@ -46,17 +46,17 @@ public abstract class RequestHandler extends RequestReply {
 		this.getChannel().unregisterHandler(this.getId());
 	}
 	
-	public void dataReceived(byte[] data) throws ProtocolException {
-		super.dataReceived(data);
+	public void dataReceived(boolean fin, boolean error, byte[] data) throws ProtocolException {
+		super.dataReceived(fin, error, data);
 		if (getInCmd() == null) {
 			setInCmd(new String(data));
 		}
 		else {
-			this.addInData(data);
+			this.addInData(fin, error, data);
 		}
 	}
 	
-	public void send() throws ProtocolException {
+	public void send(boolean err) throws ProtocolException {
 		KarajanChannel channel = getChannel();
 		Collection outData = getOutData();
 		if (channel == null) {
@@ -70,7 +70,7 @@ public abstract class RequestHandler extends RequestReply {
 			Iterator i = outData.iterator();
 			while (i.hasNext()) {
 				byte[] buf = (byte[]) i.next();
-				channel.sendTaggedReply(getId(), buf, !i.hasNext(), getErrorFlag());
+				channel.sendTaggedReply(getId(), buf, !i.hasNext(), err);
 			}
 		}
 	}
