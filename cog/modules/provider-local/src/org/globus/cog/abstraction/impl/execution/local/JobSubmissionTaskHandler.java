@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -20,16 +21,23 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
+import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.common.util.NullOutputStream;
 import org.globus.cog.abstraction.impl.common.util.OutputStreamMultiplexer;
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.FileLocation;
+import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
+import org.globus.cog.abstraction.interfaces.StagingSet;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
@@ -41,14 +49,11 @@ import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
  * @author Kaizar Amin (amin@mcs.anl.gov)
  * 
  */
-public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
-        Runnable {
-    private static Logger logger = Logger
-            .getLogger(JobSubmissionTaskHandler.class);
-    
-    private static ExecutorService pool = Executors.newCachedThreadPool(new DaemonThreadFactory(
-            Executors.defaultThreadFactory()));
-    
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements Runnable {
+    private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
+
+    private static ExecutorService pool =
+            Executors.newCachedThreadPool(new DaemonThreadFactory(Executors.defaultThreadFactory()));
 
     private static final int STDOUT = 0;
     private static final int STDERR = 1;
@@ -58,9 +63,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private Process process;
     private volatile boolean killed;
 
-    public void submit(Task task) throws IllegalSpecException,
-            InvalidSecurityContextException, InvalidServiceContactException,
-            TaskSubmissionException {
+    public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
+            InvalidServiceContactException, TaskSubmissionException {
         checkAndSetTask(task);
         task.setStatus(Status.SUBMITTING);
         JobSpecification spec;
@@ -68,8 +72,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             spec = (JobSpecification) task.getSpecification();
         }
         catch (Exception e) {
-            throw new IllegalSpecException(
-                    "Exception while retrieving Job Specification", e);
+            throw new IllegalSpecException("Exception while retrieving Job Specification", e);
         }
 
         if (logger.isDebugEnabled()) {
@@ -108,12 +111,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    public void suspend() throws InvalidSecurityContextException,
-            TaskSubmissionException {
+    public void suspend() throws InvalidSecurityContextException, TaskSubmissionException {
     }
 
-    public void resume() throws InvalidSecurityContextException,
-            TaskSubmissionException {
+    public void resume() throws InvalidSecurityContextException, TaskSubmissionException {
     }
 
     public void cancel(String message) throws InvalidSecurityContextException,
@@ -125,22 +126,26 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    private static final FileLocation REDIRECT_LOCATION = FileLocation.MEMORY
-            .and(FileLocation.LOCAL);
+    private static final FileLocation REDIRECT_LOCATION =
+            FileLocation.MEMORY.and(FileLocation.LOCAL);
 
     public void run() {
         try {
             // TODO move away from the multi-threaded approach
-            JobSpecification spec = (JobSpecification) getTask()
-                    .getSpecification();
+            JobSpecification spec = (JobSpecification) getTask().getSpecification();
 
             File dir = null;
             if (spec.getDirectory() != null) {
                 dir = new File(spec.getDirectory());
             }
+            else {
+                dir = new File(".");
+            }
 
-            process = Runtime.getRuntime().exec(buildCmdArray(spec),
-                    buildEnvp(spec), dir);
+            stageIn(spec, dir);
+
+            process = Runtime.getRuntime().exec(buildCmdArray(spec), buildEnvp(spec), dir);
+
             getTask().setStatus(Status.ACTIVE);
 
             processIN(spec.getStdInput(), dir);
@@ -148,16 +153,18 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             List pairs = new LinkedList();
 
             if (!FileLocation.NONE.equals(spec.getStdOutputLocation())) {
-                OutputStream os = prepareOutStream(spec.getStdOutput(), spec
-                        .getStdOutputLocation(), dir, getTask(), STDOUT);
+                OutputStream os =
+                        prepareOutStream(spec.getStdOutput(), spec.getStdOutputLocation(), dir,
+                            getTask(), STDOUT);
                 if (os != null) {
                     pairs.add(new StreamPair(process.getInputStream(), os));
                 }
             }
 
             if (!FileLocation.NONE.equals(spec.getStdErrorLocation())) {
-                OutputStream os = prepareOutStream(spec.getStdError(), spec
-                        .getStdErrorLocation(), dir, getTask(), STDERR);
+                OutputStream os =
+                        prepareOutStream(spec.getStdError(), spec.getStdErrorLocation(), dir,
+                            getTask(), STDERR);
                 if (os != null) {
                     pairs.add(new StreamPair(process.getErrorStream(), os));
                 }
@@ -172,16 +179,17 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
             p.run();
             int exitCode = p.getExitCode();
-         
-            
+
             if (logger.isDebugEnabled()) {
                 logger.debug("Exit code was " + exitCode);
             }
             if (killed) {
                 return;
             }
-            
+
             if (exitCode == 0) {
+                stageOut(spec, dir);
+                cleanUp(spec, dir);
                 getTask().setStatus(Status.COMPLETED);
             }
             else {
@@ -197,6 +205,117 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
             failTask(null, e);
         }
+    }
+
+    private void cleanUp(JobSpecification spec, File dir) throws TaskSubmissionException {
+        CleanUpSet cs = spec.getCleanUpSet();
+        if (cs == null || cs.isEmpty()) {
+            return;
+        }
+        Iterator i = cs.iterator();
+        while (i.hasNext()) {
+            String e = (String) i.next();
+            File f = new File(e);
+            if (!f.getAbsolutePath().startsWith(dir.getAbsolutePath())) {
+                throw new TaskSubmissionException("Cleaning outside of the job directory is not allowed " +
+                		"(cleanup entry: " + f.getAbsolutePath() + ", jobdir: " + dir.getAbsolutePath());
+            }
+            removeRecursively(f);
+        }
+    }
+
+    private void removeRecursively(File f) throws TaskSubmissionException {
+        if (f.isDirectory()) {
+            File[] files = f.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                removeRecursively(files[i]);
+            }
+        }
+        else {
+            if (f.exists() && !f.delete()) {
+                throw new TaskSubmissionException("Failed to remove file: " + f.getAbsolutePath());
+            }
+        }
+    }
+
+    private void stageOut(JobSpecification spec, File dir) throws Exception {
+        StagingSet s = spec.getStageOut();
+        if (s == null || s.isEmpty()) {
+            return;
+        }
+
+        getTask().setStatus(Status.STAGE_OUT);
+        stage(s, dir);
+    }
+
+    private void stage(StagingSet s, File dir) throws Exception {
+        Iterator i = s.iterator();
+        while (i.hasNext()) {
+            StagingSetEntry e = (StagingSetEntry) i.next();
+            copy(e.getSource(), e.getDestination(), dir);
+        }
+    }
+
+    private void stageIn(JobSpecification spec, File dir) throws Exception {
+        StagingSet s = spec.getStageIn();
+        if (s == null || s.isEmpty()) {
+            return;
+        }
+
+        getTask().setStatus(Status.STAGE_IN);
+        stage(s, dir);
+    }
+
+    private void copy(String src, String dest, File dir) throws Exception {
+        URI suri = new URI(src);
+        URI duri = new URI(dest);
+
+        String srcScheme = defaultToLocal(suri.getScheme());
+        String dstScheme = defaultToLocal(duri.getScheme());
+        FileResource sres = AbstractionFactory.newFileResource(srcScheme);
+        FileResource dres = AbstractionFactory.newFileResource(dstScheme);
+        sres.setServiceContact(getServiceContact(suri));
+        sres.start();
+
+        dres.setServiceContact(getServiceContact(duri));
+        dres.start();
+
+        InputStream is = sres.openInputStream(getPath(suri, dir));
+        OutputStream os = dres.openOutputStream(getPath(duri, dir));
+        byte[] buffer = new byte[BUFFER_SIZE];
+
+        int len = is.read(buffer);
+        while (len != -1) {
+            os.write(buffer, 0, len);
+            len = is.read(buffer);
+        }
+
+        sres.stop();
+        dres.stop();
+    }
+
+    private String getPath(URI uri, File dir) {
+        if (uri.getScheme() == null && !uri.getPath().startsWith("/")) {
+            return new File(dir, uri.getPath()).getAbsolutePath();
+        }
+        else {
+            return uri.getPath();
+        }
+    }
+
+    private ServiceContact getServiceContact(URI uri) {
+        ServiceContact sc = new ServiceContactImpl();
+        if (uri.getHost() != null) {
+            sc.setHost(uri.getHost());
+        }
+        if (uri.getPort() != -1) {
+            sc.setPort(uri.getPort());
+        }
+        return sc;
+    }
+
+    private String defaultToLocal(String scheme) {
+        return scheme == null ? "local" : scheme;
     }
 
     protected void processIN(String in, File dir) throws IOException {
@@ -224,8 +343,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    protected OutputStream prepareOutStream(String out, FileLocation loc,
-            File dir, Task task, int stream) throws IOException {
+    protected OutputStream prepareOutStream(String out, FileLocation loc, File dir, Task task,
+            int stream) throws IOException {
 
         OutputStream os = null;
         TaskOutputStream baos = null;
@@ -233,12 +352,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             baos = new TaskOutputStream(task, stream);
             os = baos;
         }
-        if ((FileLocation.LOCAL.overlaps(loc) || FileLocation.REMOTE
-                .equals(loc))
-                && out != null) {
+        if ((FileLocation.LOCAL.overlaps(loc) || FileLocation.REMOTE.equals(loc)) && out != null) {
             if (os != null) {
-                os = new OutputStreamMultiplexer(os,
-                        new FileOutputStream(out));
+                os = new OutputStreamMultiplexer(os, new FileOutputStream(out));
             }
             else {
                 os = new FileOutputStream(out);
@@ -296,6 +412,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     private static class TaskOutputStream extends ByteArrayOutputStream {
+        public static final int MAX_SIZE = 8192;
         private Task task;
         private int stream;
 
@@ -308,14 +425,30 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             super.close();
             String value = toString();
             if (logger.isDebugEnabled()) {
-                logger.debug((stream == STDOUT ? "STDOUT" : "STDERR")
-                        + " from job: " + value);
+                logger.debug((stream == STDOUT ? "STDOUT" : "STDERR") + " from job: " + value);
             }
             if (stream == STDOUT) {
                 task.setStdOutput(value);
             }
             else {
                 task.setStdError(value);
+            }
+        }
+
+        public synchronized void write(byte[] b, int off, int len) {
+            super.write(b, off, len);
+            checkSize();
+        }
+
+        public synchronized void write(int b) {
+            super.write(b);
+            checkSize();
+        }
+
+        private void checkSize() {
+            if (count > MAX_SIZE) {
+                System.arraycopy(buf, MAX_SIZE / 2, buf, 0, MAX_SIZE / 2);
+                count = MAX_SIZE / 2;
             }
         }
     }
@@ -351,7 +484,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                     any = false;
                 }
                 if (processDone()) {
-                	processPairs();
+                    processPairs();
                     closePairs();
                     return;
                 }
@@ -384,7 +517,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
             return any;
         }
-       
+
         private boolean processDone() {
             try {
                 p.exitValue();
@@ -403,12 +536,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 sp.is.close();
             }
         }
-        
+
         public int getExitCode() {
             return p.exitValue();
         }
     }
-    
+
     static class DaemonThreadFactory implements ThreadFactory {
         private ThreadFactory delegate;
 

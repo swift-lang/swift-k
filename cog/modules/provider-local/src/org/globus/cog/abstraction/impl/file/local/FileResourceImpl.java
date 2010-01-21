@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -396,4 +398,31 @@ public class FileResourceImpl extends AbstractFileResource {
         return gridFile;
     }
 
+    public InputStream openInputStream(String name) throws FileResourceException {
+        try {
+            return new FileInputStream(name);
+        }
+        catch (java.io.FileNotFoundException e) {
+            throw new FileResourceException(e);
+        }
+    }
+
+    public OutputStream openOutputStream(String name) throws FileResourceException {
+        try {
+            File p = new File(name).getParentFile();
+            if (!p.exists()) {
+                if (!p.mkdirs()) {
+                    throw new FileResourceException("Cannot create directory " + p.getAbsolutePath());
+                }
+            }
+            return new FileOutputStream(name);
+        }
+        catch (java.io.FileNotFoundException e) {
+            throw new FileResourceException(e);
+        }
+    }
+
+    public boolean supportsStreams() {
+        return true;
+    }    
 }
