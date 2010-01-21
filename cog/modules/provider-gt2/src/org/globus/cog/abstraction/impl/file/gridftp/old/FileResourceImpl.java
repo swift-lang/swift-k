@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -47,12 +49,15 @@ import org.globus.ftp.DataSourceStream;
 import org.globus.ftp.FileInfo;
 import org.globus.ftp.GridFTPClient;
 import org.globus.ftp.GridFTPSession;
+import org.globus.ftp.InputStreamDataSink;
 import org.globus.ftp.MarkerListener;
 import org.globus.ftp.MlsxEntry;
+import org.globus.ftp.OutputStreamDataSource;
 import org.globus.ftp.Session;
 import org.globus.ftp.exception.ClientException;
 import org.globus.ftp.exception.ServerException;
 import org.globus.ftp.vanilla.Reply;
+import org.globus.ftp.vanilla.TransferState;
 import org.ietf.jgss.GSSCredential;
 
 /**
@@ -666,5 +671,61 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
     protected GridFTPClient getGridFTPClient() {
         return gridFTPClient;
+    }
+    
+    public InputStream openInputStream(String name)
+            throws FileResourceException {
+        InputStreamDataSink sink = null;
+        try {
+            initializeDataChannel(RETRIEVE);
+            
+            sink = new InputStreamDataSink();
+
+            TransferState state = gridFTPClient.asynchGet(name, sink, null);
+            state.waitForStart();
+            
+            return sink.getInputStream();
+        }
+        catch (Exception e) {
+            if (sink != null) {
+                try {
+                    sink.close();
+                }
+                catch (IOException ee) {
+                    logger.warn("Failed to close FTP sink", ee);
+                }
+            }
+            throw translateException("Failed to open FTP stream", e);
+        }
+    }
+
+    public OutputStream openOutputStream(String name)
+            throws FileResourceException {
+        OutputStreamDataSource source = null;
+        try {
+            initializeDataChannel(STORE);
+            
+            source = new OutputStreamDataSource(16384);
+            
+            TransferState state = gridFTPClient.asynchPut(name, source, null, false);        
+            state.waitForStart();
+
+            return source.getOutputStream();
+        }
+        catch (Exception e) {
+            if (source != null) {
+                try {
+                    source.close();
+                }
+                catch (IOException ee) {
+                    logger.warn("Failed to close FTP source", ee);
+                }
+            }
+            throw translateException("Failed to open FTP stream", e);
+        }
+    }
+    
+    public boolean supportsStreams() {
+        return true;
     }
 }
