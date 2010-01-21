@@ -14,14 +14,19 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.CleanUpSetImpl;
+import org.globus.cog.abstraction.impl.common.StagingSetEntryImpl;
+import org.globus.cog.abstraction.impl.common.StagingSetImpl;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.GenericTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
+import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
@@ -68,6 +73,9 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	public static final Arg A_ATTRIBUTES = new Arg.Optional("attributes", Collections.EMPTY_MAP);
 	public static final Arg A_FAIL_ON_JOB_ERROR = new Arg.Optional("failonjoberror", Boolean.TRUE);
 	public static final Arg A_BATCH = new Arg.Optional("batch", Boolean.FALSE);
+	public static final Arg.Channel C_STAGEIN = new Arg.Channel("stagein");
+	public static final Arg.Channel C_STAGEOUT = new Arg.Channel("stageout");
+	public static final Arg.Channel C_CLEANUP = new Arg.Channel("cleanup");
 
 	static {
 		setArguments(GridExec.class, new Arg[] { A_EXECUTABLE, A_ARGS, A_ARGUMENTS, A_HOST,
@@ -75,7 +83,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 				A_COUNT, A_HOST_COUNT, A_JOBTYPE, A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME,
 				A_ENVIRONMENT, A_QUEUE, A_PROJECT, A_MINMEMORY, A_MAXMEMORY, A_REDIRECT,
 				A_SECURITY_CONTEXT, A_DIRECTORY, A_NATIVESPEC, A_DELEGATION, A_ATTRIBUTES,
-				C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH });
+				C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH, C_STAGEIN, C_STAGEOUT, C_CLEANUP });
 	}
 
 	public void submitTask(VariableStack stack) throws ExecutionException {
@@ -136,27 +144,18 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 			if (A_ATTRIBUTES.isPresent(stack)) {
 				setAttributes(js, A_ATTRIBUTES.getValue(stack));
 			}
-			if (A_ATTRIBUTES.isPresent(stack)) {
-				setAttributes(js, A_ATTRIBUTES.getValue(stack));
-			}
+
 			js.setBatchJob(TypeUtil.toBoolean(A_BATCH.getValue(stack)));
 			setMiscAttributes(js, stack);
 
 			Object host = A_HOST.getValue(stack, null);
 			String provider = TypeUtil.toString(A_PROVIDER.getValue(stack, null));
 
-			VariableArguments env = C_ENVIRONMENT.get(stack);
-			Iterator j = env.iterator();
-			while (j.hasNext()) {
-				Object v = j.next();
-				try {
-					Map.Entry e = (Map.Entry) v;
-					js.addEnvironmentVariable((String) e.getKey(), (String) e.getValue());
-				}
-				catch (ClassCastException e) {
-					throw new ExecutionException("Invalid environment entry: " + v);
-				}
-			}
+			addEnvironment(stack, js);
+			addStageIn(stack, js);
+			addStageOut(stack, js);
+			addCleanups(stack, js);
+
 			if (js.getArguments() == null && js.getSpecification() == null) {
 				js.setArguments("");
 			}
@@ -192,8 +191,7 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 					task.setService(0, service);
 				}
 				else if ("local".equals(provider)) {
-					Service service = BoundContact.LOCALHOST.getService(Service.EXECUTION,
-							"local");
+					Service service = BoundContact.LOCALHOST.getService(Service.EXECUTION, "local");
 					setSecurityContext(stack, service);
 					task.setService(0, service);
 				}
@@ -224,6 +222,62 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 			throw new ExecutionException("Exception caught while submitting job", e);
 		}
 	}
+
+	protected void addEnvironment(VariableStack stack, JobSpecificationImpl js)
+			throws ExecutionException {
+		VariableArguments env = C_ENVIRONMENT.get(stack);
+		Iterator j = env.iterator();
+		while (j.hasNext()) {
+			Object v = j.next();
+			try {
+				Map.Entry e = (Map.Entry) v;
+				js.addEnvironmentVariable((String) e.getKey(), (String) e.getValue());
+			}
+			catch (ClassCastException e) {
+				throw new ExecutionException("Invalid environment entry: " + v);
+			}
+		}
+	}
+
+	protected void addStageIn(VariableStack stack, JobSpecificationImpl js) throws ExecutionException {
+		js.setStageIn(getStagingSet(stack, C_STAGEIN));
+	}
+	
+	protected void addStageOut(VariableStack stack, JobSpecificationImpl js) throws ExecutionException {
+        js.setStageOut(getStagingSet(stack, C_STAGEOUT));
+    }
+
+	private StagingSet getStagingSet(VariableStack stack, Arg.Channel channel)
+			throws ExecutionException {
+		VariableArguments s = channel.get(stack);
+		StagingSet ss = new StagingSetImpl();
+		Iterator j = s.iterator();
+		while (j.hasNext()) {
+			Object v = j.next();
+			try {
+				List e = (List) v;
+				ss.add(new StagingSetEntryImpl(TypeUtil.toString(e.get(0)),
+						TypeUtil.toString(e.get(1))));
+			}
+			catch (ClassCastException e) {
+				throw new ExecutionException("Invalid stagein entry: " + v);
+			}
+		}
+		return ss;
+	}
+	
+	protected void addCleanups(VariableStack stack, JobSpecificationImpl js) throws ExecutionException {
+	    VariableArguments s = C_CLEANUP.get(stack);
+	    if (s == null || s.isEmpty()) {
+	        return;
+	    }
+	    CleanUpSet cs = new CleanUpSetImpl();
+	    Iterator i = s.iterator();
+	    while (i.hasNext()) {
+	    	cs.add(TypeUtil.toString(i.next()));
+	    }
+        js.setCleanUpSet(cs);
+    }
 
 	protected void setArguments(JobSpecification js, Object value) {
 		if (value instanceof List) {
