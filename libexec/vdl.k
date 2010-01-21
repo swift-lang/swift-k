@@ -9,8 +9,11 @@ namespace("vdl"
 
 	import("vdl-sc.k", export = true)
 	import("vdl-lib.xml", export = true)
+	
+	pstaging := configProperty("use.provider.staging")
+	int := if (pstaging == "true", "vdl-int-staging.k", "vdl-int.k")
 
-	import("vdl-int.k")
+	import(int)
 	import("java.k")
 
 	once("vdl.k-print-version"
