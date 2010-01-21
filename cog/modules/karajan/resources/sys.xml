@@ -6,6 +6,7 @@
 			<export name="setvar"><elementDef className="org.globus.cog.karajan.workflow.nodes.SetVar"/></export>
 			<export name="set"><elementDef className="org.globus.cog.karajan.workflow.nodes.SetVar"/></export>
 			<export name="global"><elementDef className="org.globus.cog.karajan.workflow.nodes.Global"/></export>
+			<export name="update"><elementDef className="org.globus.cog.karajan.workflow.nodes.UpdateVar"/></export>
 			
 			<export name="fold">
 				<parallelElement arguments="lambda, initial" vargs="true">
