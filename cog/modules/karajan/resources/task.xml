@@ -130,6 +130,35 @@
 				</element>
 			</export>
 			
+			<export name="stageIn">
+				<element arguments="source, destination">
+					<channel:to name="stagein">
+						<list>
+							<variable name="source"/>
+							<variable name="destination"/>
+						</list>
+					</channel:to>
+				</element>
+			</export>
+			
+			<export name="stageOut">
+				<element arguments="source, destination">
+					<channel:to name="stageout">
+						<list>
+							<variable name="source"/>
+							<variable name="destination"/>
+						</list>
+					</channel:to>
+				</element>
+			</export>
+			
+			<export name="cleanUp">
+				<element arguments="file">
+					<channel:to name="cleanup">
+						<variable name="file"/>
+					</channel:to>
+				</element>
+			</export>
 		</namespace>
 	</cache>
 </karajan>
