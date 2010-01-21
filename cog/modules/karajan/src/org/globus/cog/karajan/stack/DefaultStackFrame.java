@@ -28,9 +28,7 @@ public final class DefaultStackFrame implements StackFrame {
 	}
 
 	public synchronized Object getVar(final String name) {
-		synchronized (map) {
-			return map.get(name);
-		}
+		return map.get(name);
 	}
 
 	public synchronized void setVar(final String name, final Object value) {

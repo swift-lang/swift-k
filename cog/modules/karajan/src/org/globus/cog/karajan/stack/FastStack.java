@@ -94,6 +94,10 @@ public final class FastStack implements VariableStack {
 	public StackFrame getFrame(final int index) {
 		return stack[index];
 	}
+	
+	public StackFrame getFrameFromTop(int frame) {
+		return stack[frameCount - frame];
+	}
 
 	public boolean isDefined(final String varName) {
 		if (varName.charAt(0) == '#') {
@@ -146,6 +150,35 @@ public final class FastStack implements VariableStack {
 		}
 		throw new VariableNotFoundException("Variable not found: " + name);
 	}
+	
+	private int getVarFrame(final String name, final int index) {
+		for (int i = index; i >= 0; i--) {
+			StackFrame frame = stack[i];
+			Object o = frame.getVar(name);
+			if (o != null) {
+				return frameCount - i;
+			}
+			else if (frame.isDefined(name)) {
+				return frameCount - 1;
+			}
+			if (frame.hasBarrier()) {
+				if (firstFrame().isDefined(name)) {
+					return FIRST_FRAME;
+				}
+				break;
+			}
+		}
+		return NO_FRAME;
+	}
+	
+	public int getVarFrameFromTop(String name) {
+		if (name.charAt(0) == '#') {
+			return -1;
+		}
+		else {
+			return getVarFrame(name, frameCount - 1);
+		}
+	}
 
 	private Object _getVarFromFrame(final String name, final int index)
 			throws VariableNotFoundException {
@@ -153,7 +186,7 @@ public final class FastStack implements VariableStack {
 			return getVarFromFrame(name, index, true);
 		}
 		else {
-			return getVarFromFrame(name, index, false);
+			return getVarFromFrame(name, index);
 		}
 	}
 
