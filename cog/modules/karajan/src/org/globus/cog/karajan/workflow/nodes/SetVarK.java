@@ -87,7 +87,7 @@ public class SetVarK extends SequentialWithArguments {
 		return name;
 	}
 
-	protected StackFrame getFrame(VariableStack stack) {
+	protected StackFrame getFrame(VariableStack stack) throws ExecutionException {
 		return stack.parentFrame();
 	}
 
