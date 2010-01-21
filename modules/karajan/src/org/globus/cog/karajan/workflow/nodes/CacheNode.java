@@ -25,6 +25,7 @@ import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Cache;
+import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
@@ -32,8 +33,10 @@ import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class CacheNode extends PartialArgumentsContainer {
 	public static final Arg A_ON = new Arg.Optional("on");
+	public static final Arg A_STATIC = new Arg.Optional("static");
 
 	public static final String KEY = "##cachekey";
+	public static final String STATICDEF = "##staticdef";
 
 	private static final Map instances;
 
@@ -43,12 +46,13 @@ public class CacheNode extends PartialArgumentsContainer {
 	}
 
 	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		cpre(A_ON.getValue(stack, getProperty(UID)), stack);
+		cpre(A_ON.getValue(stack, getProperty(UID)), Boolean.valueOf(!A_ON.isPresent(stack)), stack);
 	}
 
-	protected void cpre(Object key, VariableStack stack) throws ExecutionException {
+	protected void cpre(Object key, Boolean staticdef, VariableStack stack) throws ExecutionException {
 		stack.setVar(KEY, key);
-		Cache cache = getCache(stack);
+		stack.setVar(STATICDEF, staticdef);
+		Cache cache = getCache(stack, staticdef);
 		synchronized (cache) {
 			if (cache.isCached(key)) {
 				returnCachedArguments(stack, (Arguments) cache.getCachedValue(key));
@@ -76,7 +80,8 @@ public class CacheNode extends PartialArgumentsContainer {
 	public void post(VariableStack stack) throws ExecutionException {
 		Arguments ret = getTrackingArguments(stack);
 		Object key = stack.currentFrame().getVar(KEY);
-		Cache cache = getCache(stack);
+		Boolean staticdef = (Boolean) stack.currentFrame().getVar(STATICDEF);
+		Cache cache = getCache(stack, staticdef);
 		synchronized (cache) {
 			cache.addValue(key, ret);
 
@@ -166,8 +171,16 @@ public class CacheNode extends PartialArgumentsContainer {
 					(VariableArguments) ret.getChannels().get(channel));
 		}
 	}
+	
+	private static final Cache scache = new Cache();
 
-	protected Cache getCache(VariableStack stack) throws ExecutionException {
-		return stack.getExecutionContext().getTree().getCache();
+	protected Cache getCache(VariableStack stack, Boolean staticdef) throws ExecutionException {
+		boolean _static = TypeUtil.toBoolean(A_STATIC.getValue(stack, staticdef));
+		if (_static) {
+			return scache;
+		}
+		else {
+			return stack.getExecutionContext().getCache();
+		}
 	}
 }
