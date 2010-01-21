@@ -3,6 +3,7 @@ cache(
 		import("sys-common.xml", export = true)
 		export(set, elementDef(classname="org.globus.cog.karajan.workflow.nodes.SetVarK"))
 		export(global, elementDef(classname="org.globus.cog.karajan.workflow.nodes.GlobalK"))
+		export(update, elementDef(classname="org.globus.cog.karajan.workflow.nodes.UpdateVarK"))
        	
 		export(quoted, elementDef(classname="org.globus.cog.karajan.workflow.nodes.functions.QuotedString"))
 		export(__dot___dot___dot_, elementDef(classname="org.globus.cog.karajan.workflow.nodes.functions.VargsK"))
