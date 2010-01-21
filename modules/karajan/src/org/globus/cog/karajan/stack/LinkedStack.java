@@ -64,6 +64,10 @@ public final class LinkedStack implements VariableStack {
 	public StackFrame getFrame(final int index) {
 		return skip(frameCount - index - 1).frame;
 	}
+	
+	public StackFrame getFrameFromTop(int frames) {
+		return skip(frames).frame;
+	}
 
 	private Entry skip(int count) {
 		Entry crt = top;
@@ -129,6 +133,43 @@ public final class LinkedStack implements VariableStack {
 		}
 		throw new VariableNotFoundException(name);
 	}
+	
+	private int getVarFrame(final String name, final int index) {
+	    int i = index;
+        for (Entry crt = skip(frameCount - index - 1); crt != null; crt = crt.prev) {
+            final StackFrame frame = crt.frame;
+            final Object o = frame.getVar(name);
+            if (o != null) {
+                return frameCount - i - 1;
+            }
+            else if (frame.isDefined(name)) {
+                return frameCount - i - 1;
+            }
+            if (frame.hasBarrier()) {
+                final StackFrame first = firstFrame();
+                final Object g = first.getVar(name);
+                if (g != null) {
+                    return FIRST_FRAME;
+                }
+                else if (first.isDefined(name)) {
+                    return FIRST_FRAME;
+                }
+                break;
+            }
+            i--;
+        }
+        return NO_FRAME;
+    }
+
+	
+	public int getVarFrameFromTop(String name) {
+        if (name.charAt(0) == '#') {
+            return -1;
+        }
+        else {
+            return getVarFrame(name, frameCount - 1);
+        }
+    }
 	
 	private Object getDeepVarFromFrame(final String name, final int index)
 			throws VariableNotFoundException {

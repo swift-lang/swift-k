@@ -16,6 +16,9 @@ import org.globus.cog.karajan.workflow.events.EventListener;
 
 
 public interface VariableStack {
+	public static final int NO_FRAME = -2;
+	public static final int FIRST_FRAME = -1;
+	
 	void enter();
 
 	void leave();
@@ -43,6 +46,8 @@ public interface VariableStack {
 	StackFrame firstFrame();
 	
 	StackFrame getFrame(int frame);
+	
+	StackFrame getFrameFromTop(int frame);
 
 	void setVar(String name, Object value);
 
@@ -79,4 +84,6 @@ public interface VariableStack {
 	void setCaller(EventListener caller);
 
 	List getAllCallers();
+
+	int getVarFrameFromTop(String name);
 }
