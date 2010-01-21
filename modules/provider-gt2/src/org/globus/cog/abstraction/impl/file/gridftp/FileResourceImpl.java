@@ -77,8 +77,8 @@ public class FileResourceImpl extends
                 while (i.hasNext()) {
                     GridFile entry = convertEntry((MlsxEntry) i.next(), cwd);
                     if (entry != null) {
-                        assert entry.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
-                        assert entry.getName() != null : "convertEntry returned an entry with null name";
+                        //assert entry.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
+                        //assert entry.getName() != null : "convertEntry returned an entry with null name";
                         list.add(entry);
                     }
                 }
@@ -136,11 +136,11 @@ public class FileResourceImpl extends
                 Iterator i = v.iterator();
                 while (i.hasNext()) {
                     String absPath = directory;
-                    assert absPath.startsWith("/") : "absPath does not start with / - absPath = "+absPath;
+                    //assert absPath.startsWith("/") : "absPath does not start with / - absPath = "+absPath;
                     GridFile gf = convertEntry((MlsxEntry) i.next(), absPath);
                     if (gf != null) {
-                        assert gf.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
-                        assert gf.getName() != null : "convertEntry returned an entry with null name";
+                        //assert gf.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
+                        //assert gf.getName() != null : "convertEntry returned an entry with null name";
                         list.add(gf);
                     }
                 }

@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.PasswordAuthentication;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -39,7 +41,10 @@ import org.globus.ftp.DataSource;
 import org.globus.ftp.DataSourceStream;
 import org.globus.ftp.FTPClient;
 import org.globus.ftp.FileInfo;
+import org.globus.ftp.InputStreamDataSink;
+import org.globus.ftp.OutputStreamDataSource;
 import org.globus.ftp.Session;
+import org.globus.ftp.vanilla.TransferState;
 
 /**
  * File resource interface implementation for FTP Servers. Supports relative and
@@ -48,12 +53,12 @@ import org.globus.ftp.Session;
 public class FileResourceImpl extends AbstractFTPFileResource {
     private FTPClient ftpClient;
     public static final Logger logger = Logger.getLogger(FileResource.class
-            .getName());
+        .getName());
 
     /** throws invalidprovider exception */
     public FileResourceImpl() throws Exception {
         this(null, new ServiceContactImpl(), AbstractionFactory
-                .newSecurityContext("FTP"));
+            .newSecurityContext("FTP"));
     }
 
     /** the constructor to be used normally */
@@ -79,7 +84,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             }
             ftpClient = new FTPClient(host, port);
             PasswordAuthentication credentials = (PasswordAuthentication) getSecurityContext()
-                    .getCredentials();
+                .getCredentials();
             String username = credentials.getUserName();
             String password = String.valueOf(credentials.getPassword());
 
@@ -89,7 +94,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
         catch (Exception se) {
             throw translateException(
-                    "Error while communicating with the FTP server", se);
+                "Error while communicating with the FTP server", se);
         }
     }
 
@@ -164,7 +169,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
         catch (Exception e) {
             throw translateException(
-                    "Cannot list the elements of the current directory", e);
+                "Cannot list the elements of the current directory", e);
         }
     }
 
@@ -221,7 +226,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         try {
             if (force) {
                 for (Iterator iterator = list(directory).iterator(); iterator
-                        .hasNext();) {
+                    .hasNext();) {
                     gridFile = (GridFile) (iterator.next());
                     if (gridFile.isFile()) {
                         ftpClient.deleteFile(directory + "/"
@@ -229,7 +234,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
                     }
                     else {
                         deleteDirectory(directory + "/" + gridFile.getName(),
-                                force);
+                            force);
                     }
 
                 }
@@ -381,7 +386,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         logger.error(newGridFile.getAbsolutePathName());
 
         changeMode(newGridFile.getAbsolutePathName(), Integer
-                .parseInt(newPermissions));
+            .parseInt(newPermissions));
     }
 
     /** returns true if the file exists */
@@ -391,7 +396,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
         catch (Exception e) {
             throw translateException(
-                    "Cannot determine the existence of the file", e);
+                "Cannot determine the existence of the file", e);
         }
     }
 
@@ -424,7 +429,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void submit(ExecutableObject commandWorkflow)
             throws IllegalSpecException, TaskSubmissionException {
         throw new TaskSubmissionException(
-                "Cannot perform submit. Operation not implemented for ftp");
+            "Cannot perform submit. Operation not implemented for ftp");
     }
 
     private GridFile createGridFile(Object obj) throws FileResourceException,
@@ -502,4 +507,61 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         tempFile.delete();
     }
 
+    public InputStream openInputStream(String name)
+            throws FileResourceException {
+        InputStreamDataSink sink = null;
+        try {
+            ftpClient.setPassive();
+            ftpClient.setLocalActive();
+
+            sink = new InputStreamDataSink();
+
+            TransferState state = ftpClient.asynchGet(name, sink, null);
+            state.waitForStart();
+            
+            return sink.getInputStream();
+        }
+        catch (Exception e) {
+            if (sink != null) {
+                try {
+                    sink.close();
+                }
+                catch (IOException ee) {
+                    logger.warn("Failed to close FTP sink", ee);
+                }
+            }
+            throw translateException("Failed to open FTP stream", e);
+        }
+    }
+
+    public OutputStream openOutputStream(String name)
+            throws FileResourceException {
+        OutputStreamDataSource source = null;
+        try {
+            ftpClient.setPassive();
+            ftpClient.setLocalActive();
+            
+            source = new OutputStreamDataSource(16384);
+            
+            TransferState state = ftpClient.asynchPut(name, source, null, false);        
+            state.waitForStart();
+
+            return source.getOutputStream();
+        }
+        catch (Exception e) {
+            if (source != null) {
+                try {
+                    source.close();
+                }
+                catch (IOException ee) {
+                    logger.warn("Failed to close FTP source", ee);
+                }
+            }
+            throw translateException("Failed to open FTP stream", e);
+        }
+    }
+    
+    public boolean supportsStreams() {
+        return true;
+    }
 }

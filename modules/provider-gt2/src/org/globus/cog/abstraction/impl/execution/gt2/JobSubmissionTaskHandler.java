@@ -27,6 +27,8 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
+import org.globus.cog.abstraction.interfaces.StagingSet;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.gram.GramException;
@@ -49,10 +51,10 @@ import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 
-public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
-        GramJobListener, JobOutputListener {
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
+        implements GramJobListener, JobOutputListener {
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class
-            .getName());
+        .getName());
     private GramJob gramJob;
     private Vector jobList;
     private boolean startGassServer;
@@ -78,7 +80,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         catch (Exception e) {
             throw new IllegalSpecException(
-                    "Exception while retreiving Job Specification", e);
+                "Exception while retreiving Job Specification", e);
         }
         RslNode rslTree = null;
         try {
@@ -112,7 +114,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         catch (IllegalArgumentException iae) {
             throw new InvalidSecurityContextException(
-                    "Cannot set the SecurityContext twice", iae);
+                "Cannot set the SecurityContext twice", iae);
         }
 
         if (!spec.isBatchJob()) {
@@ -148,7 +150,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         catch (GSSException gsse) {
             cleanup();
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
-                    gsse);
+                gsse);
         }
     }
 
@@ -174,7 +176,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private boolean isLimitedDelegation(SecurityContext sc) {
         if (sc instanceof GlobusSecurityContextImpl) {
             return ((GlobusSecurityContextImpl) securityContext)
-                    .getDelegation() != Delegation.FULL_DELEGATION;
+                .getDelegation() != Delegation.FULL_DELEGATION;
         }
         else {
             return true;
@@ -199,7 +201,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             nv = node.getParam("resourceManagerContact");
             if (nv == null) {
                 throw new IllegalSpecException(
-                        "Error: No resource manager contact for job.");
+                    "Error: No resource manager contact for job.");
             }
             else {
                 Object obj = nv.getFirstValue();
@@ -223,7 +225,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         catch (IllegalArgumentException iae) {
             throw new InvalidSecurityContextException(
-                    "Cannot set the SecurityContext twice", iae);
+                "Cannot set the SecurityContext twice", iae);
         }
 
         boolean limitedDeleg = isLimitedDelegation(this.securityContext);
@@ -241,7 +243,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         catch (GSSException gsse) {
             listener.failed(true);
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
-                    gsse);
+                gsse);
         }
         listener.runningJob();
     }
@@ -265,8 +267,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             TaskSubmissionException {
         try {
             if (getTask().getStatus().getStatusCode() == Status.UNSUBMITTED) {
-                getTask().setStatus(new StatusImpl(Status.CANCELED, message,
-                        null));
+                getTask().setStatus(
+                    new StatusImpl(Status.CANCELED, message, null));
                 return;
             }
             String jobCount = (String) getTask().getAttribute("jobCount");
@@ -289,7 +291,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         catch (GSSException gsse) {
             cleanup();
             throw new InvalidSecurityContextException("Invalid GSSCredentials",
-                    gsse);
+                gsse);
         }
     }
 
@@ -302,28 +304,31 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
             catch (ParseException e) {
                 throw new IllegalSpecException("Failed to parse specification",
-                        e);
+                    e);
             }
         }
         else {
             boolean batchJob = spec.isBatchJob();
             if ("sge".equals(jobManager) && !batchJob) {
                 logger
-                        .info("Forcing redirection because the SGE JM is broken.");
-                spec.setStdOutputLocation(FileLocation.MEMORY);
-                spec.setStdErrorLocation(FileLocation.MEMORY);
+                    .info("Forcing redirection because the SGE JM is broken.");
+                // spec.setStdOutputLocation(FileLocation.MEMORY);
+                // spec.setStdErrorLocation(FileLocation.MEMORY);
             }
             boolean redirected = spec.getStdOutputLocation().overlaps(
-                    FileLocation.MEMORY_AND_LOCAL)
+                FileLocation.MEMORY_AND_LOCAL)
                     || spec.getStdErrorLocation().overlaps(
-                            FileLocation.MEMORY_AND_LOCAL);
+                        FileLocation.MEMORY_AND_LOCAL);
 
             if (batchJob && redirected) {
                 throw new IllegalSpecException(
-                        "Cannot redirect the output/error of a batch job");
+                    "Cannot redirect the output/error of a batch job");
             }
 
-            if (redirected
+            boolean staging = notEmpty(spec.getStageIn())
+                    || notEmpty(spec.getStageOut());
+
+            if (redirected || staging
                     || FileLocation.LOCAL.equals(spec.getStdInputLocation())
                     || FileLocation.LOCAL.equals(spec.getExecutableLocation())) {
                 this.startGassServer = true;
@@ -332,142 +337,196 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 subst.add(new Binding("GLOBUSRUN_GASS_URL", gassURL));
                 rsl.add(subst);
             }
-            // sets the executable
-            if (spec.getExecutable() != null) {
-                if (FileLocation.LOCAL.equals(spec.getExecutableLocation())) {
-                    rsl.add(new NameOpValue("executable", NameOpValue.EQ,
-                            new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
-                                    fixAbsPath(spec.getExecutable())))));
+            addExecutable(spec, rsl);
+            addArguments(spec, rsl);
+            setDirectory(spec, rsl);
+            addEnvironment(spec, rsl);
+
+            setStdin(spec, rsl);
+            setStdout(spec, rsl);
+            setStderr(spec, rsl);
+
+            setCondorRequirements(spec, rsl);
+
+            setOtherAttributes(spec, rsl);
+            
+            addStagingSpec(spec, rsl);
+
+            return rsl;
+        }
+    }
+
+    private void addStagingSpec(JobSpecification spec, RslNode rsl) {
+        addStagingSpec(spec.getStageIn(), rsl, "file_stage_in");
+        addStagingSpec(spec.getStageOut(), rsl, "file_stage_out");
+    }
+
+    private void addStagingSpec(StagingSet set, RslNode rsl, String name) {
+        if (set == null || set.isEmpty()) {
+            return;
+        }
+        NameOpValue s = new NameOpValue(name, NameOpValue.EQ);
+        Iterator i = set.iterator();
+        while (i.hasNext()) {
+            StagingSetEntry e = (StagingSetEntry) i.next();
+            List l = new LinkedList();
+            l.add(new Value(e.getSource()));
+            l.add(new Value(e.getDestination()));
+            s.add(l);
+        }
+        rsl.add(s);
+    }
+
+    private void setOtherAttributes(JobSpecification spec, RslNode rsl)
+            throws IllegalSpecException {
+        Iterator i = spec.getAttributeNames().iterator();
+        while (i.hasNext()) {
+            try {
+                String key = (String) i.next();
+                String value = (String) spec.getAttribute(key);
+                if (key.equals("condor_requirements")) {
+                    continue;
                 }
-                else {
-                    rsl.add(new NameOpValue("executable", NameOpValue.EQ, spec
-                            .getExecutable()));
+                if (key.toLowerCase().equals("maxwalltime")) {
+                    value = WallTime.normalize(value, jobManager);
                 }
+                rsl.add(new NameOpValue(key, NameOpValue.EQ, value));
+            }
+            catch (Exception e) {
+                throw new IllegalSpecException(
+                    "Cannot parse the user defined attributes", e);
+            }
+        }
+    }
+
+    private void setCondorRequirements(JobSpecification spec, RslNode rsl) {
+        if (spec.getAttribute("condor_requirements") != null) {
+            String requirementString = (String) spec
+                .getAttribute("condor_requirements");
+            NameOpValue req = new NameOpValue("condorsubmit", NameOpValue.EQ);
+            List l = new LinkedList();
+            l.add(new Value("Requirements"));
+            l.add(new Value(requirementString));
+            req.add(l);
+            rsl.add(req);
+        }
+    }
+
+    private void setStderr(JobSpecification spec, RslNode rsl) {
+        // if error is to be redirected
+        if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdErrorLocation())) {
+            Value v;
+            // if no error file is specified, use the stdout
+            if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
+                v = new Value("/dev/stderr-"
+                        + getTask().getIdentity().toString());
             }
             else {
-                throw new IllegalSpecException("Missing executable");
+                v = new Value(fixAbsPath(spec.getStdError()));
             }
+            rsl.add(new NameOpValue("stderr", NameOpValue.EQ, new VarRef(
+                "GLOBUSRUN_GASS_URL", null, v)));
+        }
+        else if (spec.getStdError() != null) {
+            // error on the remote machine
+            rsl.add(new NameOpValue("stderr", NameOpValue.EQ, spec
+                .getStdError()));
+        }
+    }
 
-            // sets other parameters
-            NameOpValue args = new NameOpValue("arguments", NameOpValue.EQ);
-            if (!spec.getArgumentsAsList().isEmpty()) {
-                Iterator i = spec.getArgumentsAsList().iterator();
-                while (i.hasNext()) {
-                    if ("condor".equals(jobManager)) {
-                        args.add(condorify((String) i.next()));
-                    }
-                    else {
-                        args.add((String) i.next());
-                    }
-                }
-                rsl.add(args);
+    private void setStdout(JobSpecification spec, RslNode rsl) {
+        // if output is to be redirected
+        if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec.getStdOutputLocation())) {
+            Value v;
+            // if no output file is specified, use the stdout
+            if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
+                v = new Value("/dev/stdout-"
+                        + getTask().getIdentity().toString());
             }
+            else {
+                v = new Value(fixAbsPath(spec.getStdOutput()));
+            }
+            rsl.add(new NameOpValue("stdout", NameOpValue.EQ, new VarRef(
+                "GLOBUSRUN_GASS_URL", null, v)));
+        }
+        else if (spec.getStdOutput() != null) {
+            // output on the remote machine
+            rsl.add(new NameOpValue("stdout", NameOpValue.EQ, spec
+                .getStdOutput()));
+        }
+    }
 
-            if (spec.getDirectory() != null) {
-                rsl.add(new NameOpValue("directory", NameOpValue.EQ, spec
-                        .getDirectory()));
+    private void setStdin(JobSpecification spec, RslNode rsl) {
+        // sets the stdin
+        if (spec.getStdInput() != null) {
+            if (FileLocation.LOCAL.equals(spec.getStdInputLocation())) {
+                rsl.add(new NameOpValue("stdin", NameOpValue.EQ, new VarRef(
+                    "GLOBUSRUN_GASS_URL", null, new Value(fixAbsPath(spec
+                        .getStdInput())))));
             }
+            else {
+                rsl.add(new NameOpValue("stdin", NameOpValue.EQ, spec
+                    .getStdInput()));
+            }
+        }
+    }
 
-            Collection environment = spec.getEnvironmentVariableNames();
-            if (environment.size() > 0) {
-                NameOpValue env = new NameOpValue("environment", NameOpValue.EQ);
-                Iterator iterator = environment.iterator();
-                while (iterator.hasNext()) {
-                    String name = (String) iterator.next();
-                    String value = spec.getEnvironmentVariable(name);
-                    List l = new LinkedList();
-                    l.add(new Value(name));
-                    l.add(new Value(value));
-                    env.add(l);
-                }
-                rsl.add(env);
-            }
-
-            // sets the stdin
-            if (spec.getStdInput() != null) {
-                if (FileLocation.LOCAL.equals(spec.getStdInputLocation())) {
-                    rsl.add(new NameOpValue("stdin", NameOpValue.EQ,
-                            new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
-                                    fixAbsPath(spec.getStdInput())))));
-                }
-                else {
-                    rsl.add(new NameOpValue("stdin", NameOpValue.EQ, spec
-                            .getStdInput()));
-                }
-            }
-
-            // if output is to be redirected
-            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec
-                    .getStdOutputLocation())) {
-                Value v;
-                // if no output file is specified, use the stdout
-                if (FileLocation.MEMORY.overlaps(spec.getStdOutputLocation())) {
-                    v = new Value("/dev/stdout-"
-                            + getTask().getIdentity().toString());
-                }
-                else {
-                    v = new Value(fixAbsPath(spec.getStdOutput()));
-                }
-                rsl.add(new NameOpValue("stdout", NameOpValue.EQ, new VarRef(
-                        "GLOBUSRUN_GASS_URL", null, v)));
-            }
-            else if (spec.getStdOutput() != null) {
-                // output on the remote machine
-                rsl.add(new NameOpValue("stdout", NameOpValue.EQ, spec
-                        .getStdOutput()));
-            }
-            // if error is to be redirected
-            if (FileLocation.MEMORY_AND_LOCAL.overlaps(spec
-                    .getStdErrorLocation())) {
-                Value v;
-                // if no error file is specified, use the stdout
-                if (FileLocation.MEMORY.overlaps(spec.getStdErrorLocation())) {
-                    v = new Value("/dev/stderr-"
-                            + getTask().getIdentity().toString());
-                }
-                else {
-                    v = new Value(fixAbsPath(spec.getStdError()));
-                }
-                rsl.add(new NameOpValue("stderr", NameOpValue.EQ, new VarRef(
-                        "GLOBUSRUN_GASS_URL", null, v)));
-            }
-            else if (spec.getStdError() != null) {
-                // error on the remote machine
-                rsl.add(new NameOpValue("stderr", NameOpValue.EQ, spec
-                        .getStdError()));
-            }
-
-            if (spec.getAttribute("condor_requirements") != null) {
-                String requirementString = (String) spec
-                        .getAttribute("condor_requirements");
-                NameOpValue req = new NameOpValue("condorsubmit",
-                        NameOpValue.EQ);
+    private void addEnvironment(JobSpecification spec, RslNode rsl) {
+        Collection environment = spec.getEnvironmentVariableNames();
+        if (environment.size() > 0) {
+            NameOpValue env = new NameOpValue("environment", NameOpValue.EQ);
+            Iterator iterator = environment.iterator();
+            while (iterator.hasNext()) {
+                String name = (String) iterator.next();
+                String value = spec.getEnvironmentVariable(name);
                 List l = new LinkedList();
-                l.add(new Value("Requirements"));
-                l.add(new Value(requirementString));
-                req.add(l);
-                rsl.add(req);
+                l.add(new Value(name));
+                l.add(new Value(value));
+                env.add(l);
             }
+            rsl.add(env);
+        }
+    }
 
-            Iterator i = spec.getAttributeNames().iterator();
+    private void setDirectory(JobSpecification spec, RslNode rsl) {
+        if (spec.getDirectory() != null) {
+            rsl.add(new NameOpValue("directory", NameOpValue.EQ, spec
+                .getDirectory()));
+        }
+    }
+
+    private void addArguments(JobSpecification spec, RslNode rsl) {
+        // sets other parameters
+        NameOpValue args = new NameOpValue("arguments", NameOpValue.EQ);
+        if (!spec.getArgumentsAsList().isEmpty()) {
+            Iterator i = spec.getArgumentsAsList().iterator();
             while (i.hasNext()) {
-                try {
-                    String key = (String) i.next();
-                    String value = (String) spec.getAttribute(key);
-                    if (key.equals("condor_requirements")) {
-                        continue;
-                    }
-                    if (key.toLowerCase().equals("maxwalltime")) {
-                        value = WallTime.normalize(value, jobManager);
-                    }
-                    rsl.add(new NameOpValue(key, NameOpValue.EQ, value));
+                if ("condor".equals(jobManager)) {
+                    args.add(condorify((String) i.next()));
                 }
-                catch (Exception e) {
-                    throw new IllegalSpecException(
-                            "Cannot parse the user defined attributes", e);
+                else {
+                    args.add((String) i.next());
                 }
             }
-            return rsl;
+            rsl.add(args);
+        }
+    }
+
+    private void addExecutable(JobSpecification spec, RslNode rsl)
+            throws IllegalSpecException {
+        if (spec.getExecutable() != null) {
+            if (FileLocation.LOCAL.equals(spec.getExecutableLocation())) {
+                rsl.add(new NameOpValue("executable", NameOpValue.EQ,
+                    new VarRef("GLOBUSRUN_GASS_URL", null, new Value(
+                        fixAbsPath(spec.getExecutable())))));
+            }
+            else {
+                rsl.add(new NameOpValue("executable", NameOpValue.EQ, spec
+                    .getExecutable()));
+            }
+        }
+        else {
+            throw new IllegalSpecException("Missing executable");
         }
     }
 
@@ -494,7 +553,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private String startGassServer() throws TaskSubmissionException {
         GlobusSecurityContextImpl securityContext = (GlobusSecurityContextImpl) getTask()
-                .getService(0).getSecurityContext();
+            .getService(0).getSecurityContext();
         String gassURL = null;
 
         try {
@@ -503,19 +562,19 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         catch (Exception e) {
             throw new TaskSubmissionException(
-                    "Problems while creating a Gass Server", e);
+                "Problems while creating a Gass Server", e);
         }
 
         gassURL = gassServer.getURL();
         this.stdoutStream = new JobOutputStream(this);
         this.stderrStream = new JobOutputStream(this);
-        
+
         String identity = getTask().getIdentity().toString();
 
-        gassServer.registerJobOutputStream("err-"
-                + identity, this.stderrStream);
-        gassServer.registerJobOutputStream("out-"
-                + identity, this.stdoutStream);
+        gassServer
+            .registerJobOutputStream("err-" + identity, this.stderrStream);
+        gassServer
+            .registerJobOutputStream("out-" + identity, this.stdoutStream);
         logger.debug("Started the GASS server");
         return gassURL;
     }
@@ -543,7 +602,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             default:
                 break;
         }
-        if ((status == GRAMConstants.STATUS_FAILED) || (status == GRAMConstants.STATUS_DONE)) {
+        if ((status == GRAMConstants.STATUS_FAILED)
+                || (status == GRAMConstants.STATUS_DONE)) {
             cleanup();
         }
     }
@@ -589,7 +649,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             GSSManager manager = ExtendedGSSManager.getInstance();
             try {
                 sc.setCredentials(manager
-                        .createCredential(GSSCredential.INITIATE_AND_ACCEPT));
+                    .createCredential(GSSCredential.INITIATE_AND_ACCEPT));
             }
             catch (GSSException e) {
                 throw new InvalidSecurityContextException(e);
@@ -628,5 +688,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         else {
             return path;
         }
+    }
+
+    private boolean notEmpty(StagingSet l) {
+        return l != null || !l.isEmpty();
     }
 }
