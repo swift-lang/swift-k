@@ -10,8 +10,6 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,6 +20,8 @@ import org.globus.cog.abstraction.coaster.service.local.JobStatusHandler;
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceManager;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
@@ -33,7 +33,6 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.PipedClientChannel;
 import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
-import org.globus.cog.karajan.workflow.service.channels.StreamChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
 public class CoasterService extends GSSService {
@@ -67,6 +66,8 @@ public class CoasterService extends GSSService {
         RequestManager rm = new ServiceRequestManager();
         rm.addHandler("REGISTER", RegistrationHandler.class);
         rm.addHandler("JOBSTATUS", JobStatusHandler.class);
+        rm.addHandler("GET", GetFileHandler.class);
+        rm.addHandler("PUT", PutFileHandler.class);
         localService = new LocalTCPService(rm);
     }
 
@@ -149,6 +150,7 @@ public class CoasterService extends GSSService {
         PipedClientChannel pcc = new PipedClientChannel(COASTER_REQUEST_MANAGER, new ChannelContext(), psc);
         psc.setClientChannel(pcc);
         ChannelManager.getManager().registerChannel(pcc.getChannelContext().getChannelID(), pcc);
+        ChannelManager.getManager().registerChannel(psc.getChannelContext().getChannelID(), psc);
         return pcc;
     }
 

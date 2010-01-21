@@ -36,6 +36,15 @@ public class SortedJobSet {
         size = 0;
         this.metric = metric;
     }
+    
+    public SortedJobSet(SortedJobSet other) {
+        metric = other.metric;
+        synchronized(other) {
+            sm = new TreeMap(other.sm);
+            jsize = other.jsize;
+            size = other.size;
+        }
+    }
 
     public int size() {
         return size;

@@ -60,8 +60,8 @@ public class LocalTCPService extends GSSService implements Registering {
 
     protected void handleConnection(Socket socket) {
         try {
-            socket.setReceiveBufferSize(2048);
-            socket.setSendBufferSize(4096);
+            socket.setReceiveBufferSize(16384);
+            socket.setSendBufferSize(16384);
             socket.setTcpNoDelay(true);
         }
         catch (SocketException e) {
