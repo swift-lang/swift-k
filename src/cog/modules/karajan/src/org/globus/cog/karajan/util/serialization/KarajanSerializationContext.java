@@ -29,6 +29,7 @@ public class KarajanSerializationContext {
 	private boolean kmode;
 	private boolean detachedSource;
 	private ElementMarshallingPolicy elementMarshallingPolicy;
+	private boolean uids;
 	
 	public KarajanSerializationContext() {
 		this(new ElementTree());
@@ -123,5 +124,13 @@ public class KarajanSerializationContext {
 	public void setElementMarshallingPolicy(ElementMarshallingPolicy elementMarshallingPolicy) {
 		this.elementMarshallingPolicy = elementMarshallingPolicy;
 		elementMarshallingPolicy.setKContext(this);
+	}
+
+	public void setUIDs(boolean uids) {
+		this.uids = uids;
+	}
+	
+	public boolean getUIDs() {
+		return uids;
 	}
 }
