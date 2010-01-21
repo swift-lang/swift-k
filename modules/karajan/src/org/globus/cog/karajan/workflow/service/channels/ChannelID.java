@@ -9,6 +9,8 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.rmi.server.UID;
+
 public class ChannelID {
 	private String localID, remoteID, uniqueID;
 	private boolean client;
@@ -33,7 +35,7 @@ public class ChannelID {
 
 	public String getUniqueID() {
 		if (uniqueID == null) {
-			uniqueID = localID + ":" + remoteID;
+			uniqueID = localID + "-" + remoteID;
 		}
 		return uniqueID;
 	}
@@ -56,5 +58,9 @@ public class ChannelID {
 
 	public void setClient(boolean client) {
 		this.client = client;
+	}
+	
+	public static String newUID() {
+		return "u" + new UID().toString().replace(':', '-');
 	}
 }

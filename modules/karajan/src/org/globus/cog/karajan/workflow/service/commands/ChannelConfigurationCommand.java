@@ -42,7 +42,7 @@ public class ChannelConfigurationCommand extends Command {
 		ChannelContext cc = getChannel().getChannelContext();
 		ChannelID cid = cc.getChannelID();
 		if (cid.getLocalID() == null) {
-			cid.setLocalID(new UID().toString());
+			cid.setLocalID(ChannelID.newUID());
 		}
 		addOutID(cid.getLocalID());
 		addOutID(cid.getRemoteID());

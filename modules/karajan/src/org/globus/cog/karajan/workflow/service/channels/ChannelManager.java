@@ -92,10 +92,15 @@ public class ChannelManager {
 	}
 
 	private String normalize(String url) {
+		boolean https = false;
 		StringBuffer sb = new StringBuffer();
 		int pi = url.indexOf("://");
+		if (url.startsWith("https://")) {
+			https = true;
+		}
 		if (pi == -1) {
 			sb.append("https://");
+			https = true;
 			pi = -3;
 		}
 		else {
@@ -103,7 +108,7 @@ public class ChannelManager {
 		}
 		sb.append(url.substring(pi + 3));
 		int hi = url.indexOf(':', pi + 3);
-		if (hi == -1) {
+		if (hi == -1 && https) {
 			sb.append(":1984");
 		}
 		return sb.toString();
@@ -115,7 +120,7 @@ public class ChannelManager {
 			HostCredentialPair hcp = new HostCredentialPair(url, cred);
 			MetaChannel previous;
 			try {
-			    previous = getMetaChannel(channel);
+				previous = getMetaChannel(channel);
 			}
 			catch (ChannelException e) {
 				previous = new MetaChannel(channel.getRequestManager(), channel.getChannelContext());
@@ -129,8 +134,10 @@ public class ChannelManager {
 		if (channel == null) {
 			throw new ChannelException("Cannot register null channel");
 		}
+		HostCredentialPair hcp = new HostCredentialPair("id://" + id.toString(),
+				channel.getUserContext().getCredential());
 		synchronized (channels) {
-			MetaChannel previous = (MetaChannel) channels.get(id);
+			MetaChannel previous = (MetaChannel) channels.get(hcp);
 			if (previous != null) {
 				if (logger.isInfoEnabled()) {
 					logger.info("Re-registering " + id + " = " + channel);
@@ -162,13 +169,13 @@ public class ChannelManager {
 					logger.debug("Registering " + id + " = " + channel);
 				}
 				if (channel instanceof MetaChannel) {
-					channels.put(id, channel);
+					channels.put(hcp, channel);
 				}
 				else {
 					previous = new MetaChannel(channel.getRequestManager(),
 							channel.getChannelContext());
 					previous.bind(channel);
-					channels.put(id, previous);
+					channels.put(hcp, previous);
 				}
 			}
 		}
@@ -339,16 +346,16 @@ public class ChannelManager {
 	public void unregisterChannel(KarajanChannel channel) throws ChannelException {
 		unregisterChannel(getMetaChannel(channel));
 	}
-	
+
 	public void removeChannel(ChannelContext ctx) throws ChannelException {
-	    if (ctx == null) {
-	        throw new NullPointerException("Null context");
-	    }
-        unregisterChannel(getMetaChannel(ctx));
-        synchronized(channels) {
-            channels.remove(ctx.getChannelID());
-        }
-    }
+		if (ctx == null) {
+			throw new NullPointerException("Null context");
+		}
+		unregisterChannel(getMetaChannel(ctx));
+		synchronized (channels) {
+			channels.remove(ctx.getChannelID());
+		}
+	}
 
 	protected void unregisterChannel(MetaChannel channel) {
 		try {
@@ -386,10 +393,10 @@ public class ChannelManager {
 	public void shutdownChannel(KarajanChannel channel) throws ChannelException {
 		unregisterChannel(getMetaChannel(channel));
 	}
-	
+
 	public void shutdownChannel(ChannelContext ctx) throws ChannelException {
-        unregisterChannel(getMetaChannel(ctx));
-    }
+		unregisterChannel(getMetaChannel(ctx));
+	}
 
 	private MetaChannel getMetaChannel(KarajanChannel channel) throws ChannelException {
 		if (channel instanceof MetaChannel) {
@@ -404,7 +411,8 @@ public class ChannelManager {
 				logger.debug("\nLooking up " + context.getChannelID());
 			}
 			MetaChannel meta = null;
-			meta = (MetaChannel) channels.get(context.getChannelID());
+			meta = (MetaChannel) channels.get(new HostCredentialPair("id://"
+					+ context.getChannelID(), (GSSCredential) null));
 
 			if (meta == null && context.getRemoteContact() != null) {
 				meta = (MetaChannel) channels.get(new HostCredentialPair(

@@ -13,6 +13,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TimerTask;
@@ -29,7 +30,7 @@ import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private static final Logger logger = Logger.getLogger(AbstractKarajanChannel.class);
-	public static final int DEFAULT_HEARTBEAT_INTERVAL = 2 * 60; //seconds
+	public static final int DEFAULT_HEARTBEAT_INTERVAL = 2 * 60; // seconds
 
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
@@ -55,7 +56,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	protected void configureHeartBeat() {
-	    TimerTask heartBeatTask;
+		TimerTask heartBeatTask;
 		Entry config = context.getConfiguration();
 		int heartBeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 		if (config != null && config.hasOption(RemoteConfiguration.HEARTBEAT)) {
@@ -65,7 +66,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			heartBeatInterval *= 1000;
 		}
 		if (!isOffline() && isClient()) {
-		    heartBeatTask = new HeartBeatTask(this);
+			heartBeatTask = new HeartBeatTask(this);
 			context.getTimer().schedule(heartBeatTask, heartBeatInterval, heartBeatInterval);
 		}
 		else {
@@ -85,9 +86,10 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			}
 		}
 		if (!isOffline() && !isClient()) {
-		    int mult = 2;
-		    heartBeatTask = new HeartBeatCheckTask(this, heartBeatInterval, mult);
-			context.getTimer().schedule(heartBeatTask, mult * heartBeatInterval, mult * heartBeatInterval);
+			int mult = 2;
+			heartBeatTask = new HeartBeatCheckTask(this, heartBeatInterval, mult);
+			context.getTimer().schedule(heartBeatTask, mult * heartBeatInterval,
+					mult * heartBeatInterval);
 		}
 	}
 
@@ -113,7 +115,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public void sendTaggedReply(int tag, byte[] data, boolean fin) {
 		sendTaggedReply(tag, data, fin, false);
 	}
-	
+
 	public void sendTaggedData(int i, boolean fin, byte[] bytes) {
 		sendTaggedData(i, fin, bytes, null);
 	}
@@ -125,12 +127,16 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		}
 		sendTaggedData(tag, fin ? FINAL_FLAG : 0, data, cb);
 	}
-	
+
 	public void sendTaggedData(int i, int flags, byte[] bytes) {
 		sendTaggedData(i, flags, bytes, null);
 	}
 
 	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err) {
+		sendTaggedReply(tag, data, fin, err, null);
+	}
+
+	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err, SendCallback cb) {
 		if (logger.isDebugEnabled()) {
 			logger.debug(this + " REPL>: tag = " + tag + ", fin = " + fin + ", datalen = "
 					+ data.length + ", data = " + ppByteBuf(data));
@@ -142,7 +148,33 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		if (err) {
 			flags |= ERROR_FLAG;
 		}
-		sendTaggedData(tag, flags, data);
+		sendTaggedData(tag, flags, data, cb);
+	}
+
+	public void sendTaggedReply(int id, ByteBuffer buf, boolean fin, boolean errorFlag,
+			SendCallback cb) {
+		// TODO this should probably be changed to use buffers more efficiently
+		if (buf.hasArray() && (buf.limit() == buf.capacity())) {
+			sendTaggedReply(id, buf.array(), fin, errorFlag, cb);
+		}
+		else {
+			byte[] bbuf = new byte[buf.limit()];
+			buf.get(bbuf);
+			buf.rewind();
+			sendTaggedReply(id, bbuf, fin, errorFlag, cb);
+		}
+	}
+
+	public void sendTaggedData(int i, int flags, ByteBuffer buf, SendCallback cb) {
+		if (buf.hasArray() && (buf.limit() == buf.capacity())) {
+			sendTaggedData(i, flags, buf.array(), cb);
+		}
+		else {
+			byte[] bbuf = new byte[buf.limit()];
+			buf.get(bbuf);
+			buf.rewind();
+			sendTaggedData(i, flags, bbuf, cb);
+		}
 	}
 
 	public ChannelContext getChannelContext() {
@@ -283,10 +315,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		Command cmd = getChannelContext().getRegisteredCommand(tag);
 		if (cmd != null) {
 			try {
-			    if (error) {
-			        cmd.raiseErrorFlag();
-			    }
-				cmd.replyReceived(data);
+				cmd.replyReceived(fin, error, data);
 				if (fin) {
 					if (logger.isInfoEnabled()) {
 						logger.info(this + " REPL: " + cmd);
@@ -301,6 +330,10 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 				}
 			}
 			catch (ProtocolException e) {
+				logger.warn("Protocol exception caught while processing reply", e);
+				cmd.errorReceived(e.getMessage(), e);
+			}
+			catch (Exception e) {
 				logger.warn("Exception caught while processing reply", e);
 				cmd.errorReceived(e.getMessage(), e);
 			}
@@ -323,7 +356,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		try {
 			if (handler != null) {
 				handler.register(this);
-				handler.dataReceived(data);
+				handler.dataReceived(fin, error, data);
 			}
 			else {
 				try {
@@ -373,6 +406,10 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		catch (ProtocolException e) {
 			unregisterHandler(tag);
 			logger.warn(e);
+		}
+		catch (Exception e) {
+			unregisterHandler(tag);
+			logger.warn("Unhandled exception in handler processing code", e);
 		}
 	}
 

@@ -37,7 +37,7 @@ public abstract class RequestReply {
 	private String inCmd;
 	private List outData;
 	private List inData;
-	private boolean inDataReceived, errorFlag;
+	private boolean inDataReceived;
 	private KarajanChannel channel;
 
 	private static final byte[] NO_EXCEPTION = new byte[0];
@@ -86,7 +86,7 @@ public abstract class RequestReply {
 		addOutData(pack(value));
 	}
 
-	protected byte[] pack(long value) {
+	protected static byte[] pack(long value) {
 		byte[] b = new byte[8];
 		b[0] = (byte) (value & 0xff);
 		b[1] = (byte) ((value >> 8) & 0xff);
@@ -108,7 +108,14 @@ public abstract class RequestReply {
 	}
 
 	public void sendError(String error, Throwable e) throws ProtocolException {
-		raiseErrorFlag();
+		if (error == null) {
+			if (e == null) {
+				error = "No message available";
+			}
+			else {
+				error = e.toString();
+			}
+		}
 		this.addOutData(error.getBytes());
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		if (e != null) {
@@ -116,27 +123,27 @@ public abstract class RequestReply {
 			e.printStackTrace(ps);
 		}
 		this.addOutData(baos.toByteArray());
-		send();
+		send(true);
+	}
+	
+	public void send() throws ProtocolException {
+		send(false);
+	}
+	
+	public abstract void send(boolean err) throws ProtocolException;
+
+	protected void dataReceived(boolean fin, boolean error, byte[] data) throws ProtocolException {
 	}
 
-	public void raiseErrorFlag() {
-		errorFlag = true;
-	}
-
-	protected boolean getErrorFlag() {
-		return errorFlag;
-	}
-
-	public abstract void send() throws ProtocolException;
-
-	protected void dataReceived(byte[] data) throws ProtocolException {
-	}
-
-	protected synchronized void addInData(byte[] data) {
+	protected synchronized void addInData(boolean fin, boolean err, byte[] data) {
 		if (inData == null) {
 			inData = new ArrayList(4);
 		}
 		inData.add(data);
+	}
+	
+	protected final void addInData(byte[] data) {
+		throw new RuntimeException("Should not be used");
 	}
 
 	public void receiveCompleted() {
@@ -207,16 +214,26 @@ public abstract class RequestReply {
 
 	public long getInDataAsLong(int index) {
 		return unpackLong(getInData(index));
-
 	}
 
-	protected long unpackLong(byte[] b) {
+	public static long unpackLong(byte[] b) {
 		if (b.length != 8) {
 			throw new IllegalArgumentException("Wrong data size: " + b.length + ". Data was "
 					+ AbstractKarajanChannel.ppByteBuf(b));
 		}
-		return b[0] + (b[1] << 8) + (b[2] << 16) + (b[3] << 24) + (b[2] << 32) + (b[3] << 40)
-				+ (b[2] << 48) + (b[3] << 56);
+		long l = 0;
+		for (int i = 7; i >=0 ; i--) {
+		    l <<= 8;
+		    l += b[i] & 0xff;
+		}
+		return l;
+	}
+	
+	public static void main(String[] args) {
+	    System.out.println(unpackLong(pack(1L)));
+	    System.out.println(unpackLong(pack(10L)));
+	    System.out.println(unpackLong(pack(1000000000L)));
+	    System.out.println(unpackLong(pack(10000000000000L)));
 	}
 
 	public boolean getInDataAsBoolean(int index) {

@@ -9,12 +9,15 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.rmi.server.UID;
+
 import org.globus.cog.karajan.workflow.service.RequestManager;
 
 public class PipedServerChannel extends AbstractPipedChannel {
 	
 	public PipedServerChannel(RequestManager requestManager, ChannelContext channelContext) {
 		super(requestManager, channelContext, false);
+		channelContext.getChannelID().setLocalID(ChannelID.newUID());
 	}
 	
 	public void setClientChannel(PipedClientChannel c) {
