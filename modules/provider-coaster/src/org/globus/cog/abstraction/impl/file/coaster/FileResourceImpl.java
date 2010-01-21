@@ -127,7 +127,7 @@ public class FileResourceImpl extends AbstractFileResource {
         try {
             run(new GetFileCommand(remoteFileName, localFileName, progressMonitor));
         }
-        catch (FileNotFoundException e) {
+        catch (IOException e) {
             throw new FileResourceException(e);
         }
     }
@@ -166,7 +166,7 @@ public class FileResourceImpl extends AbstractFileResource {
         try {
             run(new PutFileCommand(localFileName, remoteFileName));
         }
-        catch (FileNotFoundException e) {
+        catch (Exception e) {
             throw new FileResourceException(e);
         }
 

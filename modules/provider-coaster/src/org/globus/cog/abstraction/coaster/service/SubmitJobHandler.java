@@ -15,14 +15,19 @@ import java.io.InputStream;
 import java.util.zip.InflaterInputStream;
 
 import org.globus.cog.abstraction.coaster.service.job.manager.TaskNotifier;
+import org.globus.cog.abstraction.impl.common.CleanUpSetImpl;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.impl.common.StagingSetEntryImpl;
+import org.globus.cog.abstraction.impl.common.StagingSetImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
@@ -31,13 +36,13 @@ import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public class SubmitJobHandler extends RequestHandler {
     public static final boolean COMPRESSION = true;
-    
+
     public void requestComplete() throws ProtocolException {
         Task t;
         try {
             if (COMPRESSION) {
                 t = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
-                //t = read(new ByteArrayInputStream(getInData(0)));
+                // t = read(new ByteArrayInputStream(getInData(0)));
             }
             else {
                 t = read(new ByteArrayInputStream(getInData(0)));
@@ -89,6 +94,41 @@ public class SubmitJobHandler extends RequestHandler {
             spec.setAttribute(getKey(s), getValue(s));
         }
 
+        StagingSet ss = null;
+        while ((s = h.read("stagein")) != null) {
+            if (ss == null) {
+                ss = new StagingSetImpl();
+            }
+            ss.add(new StagingSetEntryImpl(getSource(s), getDestination(s)));
+        }
+        if (ss != null) {
+            spec.setStageIn(ss);
+        }
+
+        ss = null;
+        while ((s = h.read("stageout")) != null) {
+            if (ss == null) {
+                ss = new StagingSetImpl();
+            }
+            ss.add(new StagingSetEntryImpl(getSource(s), getDestination(s)));
+        }
+        if (ss != null) {
+            spec.setStageOut(ss);
+        }
+        
+        CleanUpSet cs = null;
+        
+        while ((s = h.read("cleanup")) != null) {
+            if (cs == null) {
+                cs = new CleanUpSetImpl();
+            }
+            cs.add(s);
+        }
+        
+        if (cs != null) {
+            spec.setCleanUpSet(cs);
+        }
+
         ExecutionService service = new ExecutionServiceImpl();
 
         setServiceParams(service, h.read("contact"), h.read("provider"), h.read("jm").intern());
@@ -105,7 +145,7 @@ public class SubmitJobHandler extends RequestHandler {
 
         String[] els = jm.split(":");
         if (els.length == 2 && "fork".equals(els[1])) {
-        	s.setProvider("local");
+            s.setProvider("local");
         }
         else if (jm.equalsIgnoreCase("fork")) {
             s.setProvider("local");
@@ -115,6 +155,26 @@ public class SubmitJobHandler extends RequestHandler {
             s.setJobManager(jm);
         }
         s.setServiceContact(new ServiceContactImpl(contact));
+    }
+
+    private String getSource(String s) {
+        int i = s.indexOf('\n');
+        return makeAbsolute(s.substring(0, i));
+    }
+
+    private String getDestination(String s) {
+        int i = s.indexOf('\n');
+        return makeAbsolute(s.substring(i + 1));
+    }
+
+    private String makeAbsolute(String path) {
+        if (path.startsWith("file://localhost")) {
+            return "coaster://" + getChannel().getChannelContext().getChannelID()
+                    + path.substring("file://localhost".length());
+        }
+        else {
+            return path;
+        }
     }
 
     private String getKey(String s) throws ProtocolException {
@@ -185,7 +245,7 @@ public class SubmitJobHandler extends RequestHandler {
                     }
                     case -1:
                     case '\n': {
-                    	if (key == null) {
+                        if (key == null) {
                             throw new ProtocolException("Invalid line: " + sb.toString());
                         }
                         else {

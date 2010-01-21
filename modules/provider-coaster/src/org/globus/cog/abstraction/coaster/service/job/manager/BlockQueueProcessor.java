@@ -8,7 +8,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,7 +52,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private boolean done, planning;
 
     private Metric metric;
-    
+
     private final RemoteLogger rlogger;
 
     public BlockQueueProcessor() {
@@ -158,6 +160,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private double lastAllocSize;
+
     private void updateAllocatedSize() {
         synchronized (blocks) {
             allocsize = 0;
@@ -178,7 +181,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             Iterator i = blocks.iterator();
             while (i.hasNext()) {
                 Block b = (Block) i.next();
-                if (b.fits(j)) {
+                if (!b.isSuspended() && b.fits(j)) {
                     return true;
                 }
             }
@@ -197,7 +200,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         Set remove = new HashSet();
         Iterator it = jobs.iterator();
         while (it.hasNext()) {
-            Job j = (Job) it.next(); 
+            Job j = (Job) it.next();
             if (allocsize - queued.getJSize() > metric.getSize(j) && fits(j)) {
                 queue(j);
                 remove.add(j);
@@ -280,6 +283,45 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         return (Job) jobs.get(index);
     }
 
+    private void removeIdleBlocks() {
+        LinkedList sorted = new LinkedList();
+        LinkedList szleft = new LinkedList();
+        synchronized (blocks) {
+            Iterator i = blocks.iterator();
+            while (i.hasNext()) {
+                Block b = (Block) i.next();
+                if (!b.isRunning() || b.isSuspended()) {
+                    continue;
+                }
+                Double szl = new Double(b.sizeLeft());
+                int ix = 0;
+                ListIterator is = szleft.listIterator();
+                ListIterator ib = sorted.listIterator();
+                while (is.hasNext()) {
+                    Double v = (Double) is.next();
+                    ib.next();
+                    if (szl.doubleValue() > v.doubleValue()) {
+                        break;
+                    }
+                }
+                is.add(szl);
+                ib.add(b);
+            }
+        }
+        
+        double needed = queued.getJSize();
+        
+        double sum = 0;
+        Iterator i = sorted.iterator();
+        while (i.hasNext()) {
+            Block b = (Block) i.next();
+            sum += b.sizeLeft();
+            if (sum > needed && (System.currentTimeMillis() - b.getLastUsed()) > Block.SUSPEND_SHUTDOWN_DELAY) {
+                b.suspend();
+            }
+        }
+    }
+
     private Set allocateBlocks(double tsum) {
         Set remove = new HashSet();
         int cslots =
@@ -306,9 +348,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 int h = overallocatedSize(getJob(i));
                 // height must be a multiple of the overallocation of the
                 // largest job
-                h = Math.min(Math.max(h, round(h, lastwalltime)), settings.getMaxtime() - 
-                    (int) settings.getReserve().getSeconds());
-                int w = Math.min(round(metric.width(msz, h), granularity), settings.getMaxNodes() * settings.getWorkersPerNode());
+                int maxt = settings.getMaxtime() - (int) settings.getReserve().getSeconds();
+                h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
+                int w =
+                        Math.min(round(metric.width(msz, h), granularity), settings.getMaxNodes()
+                                * settings.getWorkersPerNode());
                 int r = (i - last) % w;
                 if (logger.isInfoEnabled()) {
                     logger.info("h: " + h + ", jj: " + lastwalltime + ", x-last: " + ", r: " + r
@@ -318,7 +362,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 // readjust number of jobs fitted based on granularity
                 i += (w - r);
                 if (r != 0) {
-                    h += lastwalltime;
+                    h = Math.min(h + lastwalltime, maxt);
                 }
 
                 if (logger.isInfoEnabled()) {
@@ -411,16 +455,17 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private long lastUpdate;
+
     private void updateMonitor() {
         if (settings.isRemoteMonitorEnabled()) {
             long now = System.currentTimeMillis();
-        	if (now - lastUpdate > 10000) {
-        	    if (monitor == null) {
-        	        monitor = new RemoteBQPMonitor(this);
-        	    }
-        	    monitor.update();
-        	    lastUpdate = now;
-        	}
+            if (now - lastUpdate > 10000) {
+                if (monitor == null) {
+                    monitor = new RemoteBQPMonitor(this);
+                }
+                monitor.update();
+                lastUpdate = now;
+            }
         }
     }
 
@@ -437,13 +482,19 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
         int jss = jobs.size();
         requeueNonFitting();
+
         updateSettings();
 
         computeSums();
 
         tsum = computeTotalRequestSize();
 
-        removeJobs(allocateBlocks(tsum));
+        if (tsum == 0) {
+            removeIdleBlocks();
+        }
+        else {
+            removeJobs(allocateBlocks(tsum));
+        }
 
         updateMonitor();
         synchronized (add) {
@@ -564,7 +615,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     public int getQueueSeq() {
         return queued.getSeq();
     }
-    
+
     public RemoteLogger getRLogger() {
         return rlogger;
     }
