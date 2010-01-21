@@ -117,6 +117,7 @@ public class Loader {
 				tree = loadFromString(source);
 			}
 
+			Cache cc = null;
 			if (cache) {
 				if (source != null) {
 					error("Cannot use -" + ARG_CACHE + " with -" + ARG_EXECUTE);
@@ -126,7 +127,7 @@ public class Loader {
 				try {
 					if (f.lastModified() < c.lastModified()) {
 						FileReader fr = new FileReader(project + ".cache");
-						tree.setCache((Cache) XMLConverter.readObject(fr));
+						cc = (Cache) XMLConverter.readObject(fr);
 						fr.close();
 					}
 				}
@@ -150,6 +151,7 @@ public class Loader {
 					ec.setStdout(new PrintStreamChannel(System.out, true));
 				}
 				ec.setArguments(ap.getArguments());
+				ec.setCache(cc);
 				ec.start();
 				/*
 				 * Strange thing here. For even slightly not so short programs,
@@ -164,7 +166,7 @@ public class Loader {
 			if (cache) {
 				try {
 					FileWriter fw = new FileWriter(project + ".cache");
-					XMLConverter.serializeObject(tree.getCache(), fw);
+					XMLConverter.serializeObject(cc, fw);
 					fw.close();
 				}
 				catch (Exception e) {
@@ -222,10 +224,10 @@ public class Loader {
 			EventBus.suspendAll();
 			ElementTree source;
 			if (xml) {
-				source = XMLConverter.readSource(reader, name);
+				source = XMLConverter.readSourceNoUIDs(reader, name);
 			}
 			else {
-				source = XMLConverter.readSource(new KarajanTranslator(reader, name).translate(),
+				source = XMLConverter.readSourceNoUIDs(new KarajanTranslator(reader, name).translate(),
 						name, false);
 			}
 			EventBus.resumeAll();
