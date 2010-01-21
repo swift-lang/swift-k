@@ -9,69 +9,137 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOHandle;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProvider;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProviderFactory;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOWriter;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.WriteIOCallback;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 
-public class PutFileHandler extends CoasterFileRequestHandler {
+public class PutFileHandler extends CoasterFileRequestHandler implements WriteIOCallback {
     public static final Logger logger = Logger.getLogger(PutFileHandler.class);
-    
+
     private long len = -1;
-    private File f;
-    private FileOutputStream fos;
+    private String src, dst;
+    private IOProvider provider;
+    private IOWriter writer;
 
     public void requestComplete() throws ProtocolException {
-        try {
-            fos.close();
-            sendReply("OK");
-        }
-        catch (IOException e) {
-            sendError("Failed to close file", e);
-        }
-    }
-    
-    protected void addInData(byte[] data) {
-        if (len == -1) {
-            len = unpackLong(data);
-            if (logger.isInfoEnabled()) {
-                logger.info("Size: " + len);
-            }
-        }
-        else if (f == null) {
-            f = normalize(new String(data));
-            if (logger.isInfoEnabled()) {
-                logger.info("Name: " + f.getPath());
-            }
+        if (writer != null && provider.isDirect()) {
             try {
-                fos = new FileOutputStream(f);
-            }
-            catch (FileNotFoundException e) {
-                errorReceived(e.getMessage(), e);
-            }
-        }
-        else {
-            try {
-                fos.write(data);
+                logger.info("07 " + writer + " - request complete");
+                writer.close();
+                logger.info("08 " + writer + " - writer closed");
             }
             catch (IOException e) {
-                errorReceived(e.getMessage(), e);
+                sendError("Failed to close file", e);
             }
         }
+    }
+
+    protected void addInData(boolean fin, boolean err, byte[] data) {
+        try {
+            if (err) {
+                super.addInData(fin, err, data);
+            }
+            else if (len == -1) {
+                len = unpackLong(data);
+                if (logger.isInfoEnabled()) {
+                    logger.info("01 " + dst + " Size: " + len);
+                }
+            }
+            else if (src == null) {
+                src = new String(data);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Source: " + src);
+                }
+            }
+            else if (dst == null) {
+                dst = new String(data);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Destination: " + dst);
+                }
+                provider = IOProviderFactory.getDefault().instance(getProtocol(dst));
+                logger.info("02 " + dst + " - got provider");
+                writer = provider.push(src, dst, this);
+                logger.info("03 " + writer + " - got writer");
+                writer.setLength(len);
+                logger.info("04 " + writer + " - writer length set");
+            }
+            else {
+                if (provider.isDirect()) {
+                    if (writer == null) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Writer was not initialized properly, but data still being sent. Discarding.");
+                        }
+                    }
+                    else {
+                        logger.info("05 " + writer + " - writing data");
+                        writer.write(fin, data);
+                        logger.info("06 " + writer + " - data written");
+                    }
+                }
+                else {
+                    sendError("Spurious data in request");
+                }
+            }
+        }
+        catch (Exception e) {
+            try {
+                sendError(e.getMessage(), e);
+            }
+            catch (ProtocolException e1) {
+                logger.warn("Failed to send error", e1);
+            }
+        }
+    }
+
+    public void done(IOHandle op) {
+        try {
+            logger.info("09 " + writer + " - sending reply");
+            sendReply("OK");
+            logger.info("10 " + writer + " - reply sent");
+        }
+        catch (ProtocolException e) {
+            logger.warn("Failed to send reply", e);
+        }
+    }
+
+    public void error(IOHandle op, Exception e) {
+        try {
+            sendError("Failed to write file data: " + e.getMessage());
+        }
+        catch (ProtocolException ee) {
+            logger.warn("Failed to send reply", ee);
+        }
+    }
+
+    public void sendError(String error, Throwable e) throws ProtocolException {
+        if (provider != null && writer != null) {
+            try {
+                provider.abort(writer);
+            }
+            catch (Exception ee) {
+                logger.warn("Failed to abort transfer", ee);
+            }
+        }
+        super.sendError(error, e);
     }
 
     public void errorReceived(String msg, Exception t) {
-        if (fos != null) {
+        logger.warn(msg, t);
+        if (provider != null) {
             try {
-                fos.close();
+                provider.abort(writer);
             }
             catch (IOException e) {
                 logger.info("Failed to close output stream", e);
             }
         }
         super.errorReceived(msg, t);
-    }    
+    }
 }

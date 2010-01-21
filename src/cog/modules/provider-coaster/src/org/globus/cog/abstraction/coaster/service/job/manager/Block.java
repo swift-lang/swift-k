@@ -31,6 +31,8 @@ public class Block implements StatusListener {
     public static final Logger logger = Logger.getLogger(Block.class);
 
     public static final long SHUTDOWN_WATCHDOG_DELAY = 2 * 60 * 1000;
+    
+    public static final long SUSPEND_SHUTDOWN_DELAY = 30 * 1000;
 
     private static BlockTaskSubmitter submitter;
 
@@ -47,11 +49,13 @@ public class Block implements StatusListener {
     private Time endtime, starttime, deadline, creationtime;
     private SortedSet scpus;
     private List cpus;
-    private boolean running, failed, shutdown;
+    private List nodes;
+    private boolean running, failed, shutdown, suspended;
     private BlockQueueProcessor ap;
     private BlockTask task;
     private String id;
     private int doneJobCount;
+    private long lastUsed;
 
     private static int sid;
 
@@ -61,6 +65,7 @@ public class Block implements StatusListener {
         this.id = id;
         scpus = new TreeSet();
         cpus = new ArrayList();
+        nodes = new ArrayList();
     }
 
     public Block(int workers, TimeInterval walltime, BlockQueueProcessor ap) {
@@ -127,6 +132,9 @@ public class Block implements StatusListener {
     }
 
     public boolean fits(Job j) {
+        if (suspended) {
+            return false;
+        }
         if (!running) {
             return j.getMaxWallTime().isGreaterThan(walltime);
         }
@@ -175,11 +183,22 @@ public class Block implements StatusListener {
             }
         }
     }
+    
+    public void cpuIsClear(Cpu cpu) {
+        synchronized (scpus) {
+            if (scpus.isEmpty()) {
+                shutdown(false);
+            }
+        }
+    }
 
     private static final TimeInterval NO_TIME = TimeInterval.fromSeconds(0);
 
     public double sizeLeft() {
-        if (running) {
+        if (failed) {
+            return 0;
+        }
+        else if (running) {
             return ap.getMetric().size(
                 workers,
                 (int) TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)), NO_TIME).getSeconds());
@@ -220,7 +239,7 @@ public class Block implements StatusListener {
 
     public void shutdown(boolean now) {
         synchronized (cpus) {
-            if (shutdown || failed) {
+            if (shutdown) {
                 return;
             }
             logger.info("Shutting down block " + this);
@@ -235,17 +254,21 @@ public class Block implements StatusListener {
                     Cpu cpu = (Cpu) i.next();
                     idleTotal = cpu.idleTime;
                     busyTotal = cpu.busyTime;
-                    cpu.shutdown();
+                    if (!failed) {
+                        cpu.shutdown();
+                    }
                     count++;
                 }
-                addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
+                if (!failed) {
+                    addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
+                }
                 if (idleTotal > 0) {
                     double u = (busyTotal * 10000) / (busyTotal + idleTotal);
                     u /= 100;
                     logger.info("Average utilization: " + u + "%");
                     ap.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
                 }
-                if (count < workers || now) {
+                if ((count < workers || now) && !failed) {
                     addForcedShutdownWatchdog(100);
                 }
             }
@@ -288,8 +311,9 @@ public class Block implements StatusListener {
         synchronized (cpus) {
             synchronized (scpus) {
                 failed = true;
+                running = false;
                 for (int j = cpus.size(); j < workers; j++) {
-                    Cpu cpu = new Cpu(j, this);
+                    Cpu cpu = new Cpu(j, new Node(j, this, null));
                     scpus.add(cpu);
                     cpus.add(cpu);
                 }
@@ -311,13 +335,16 @@ public class Block implements StatusListener {
         synchronized (cpus) {
             synchronized (scpus) {
                 int id = Integer.parseInt(sid);
+                Node n = new Node(id, this, channelContext);
+                nodes.add(n);
                 for (int i = 0; i < ap.getSettings().getWorkersPerNode(); i++) {
                     //this id scheme works out because the sid is based on the
                     //number of cpus already added (i.e. cpus.size()).
-                    Cpu cpu = new Cpu(id + i, this);
+                    Cpu cpu = new Cpu(id + i, n);
                     scpus.add(cpu);
                     cpus.add(cpu);
-                    cpu.workerStarted(channelContext);
+                    n.add(cpu);
+                    cpu.workerStarted();
                     logger.info("Started CPU " + cpu);
                 }
                 if (logger.isInfoEnabled()) {
@@ -355,7 +382,7 @@ public class Block implements StatusListener {
                                     + prettifyOut(task.getStdError()), s.getException());
                         }
                         else {
-                            taskFailed(id + "Block task ended prematurely\n"
+                            taskFailed(id + " Block task ended prematurely\n"
                                     + prettifyOut(task.getStdOutput())
                                     + prettifyOut(task.getStdError()), null);
                         }
@@ -423,5 +450,21 @@ public class Block implements StatusListener {
 
     public void increaseDoneJobCount() {
         doneJobCount++;
+    }
+
+    public void suspend() {
+        suspended = true;
+    }
+
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    public void jobPulled() {
+        lastUsed = System.currentTimeMillis();
+    }
+    
+    public long getLastUsed() {
+        return lastUsed;
     }
 }

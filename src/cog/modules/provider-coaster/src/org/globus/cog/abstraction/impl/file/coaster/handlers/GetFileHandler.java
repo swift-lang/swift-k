@@ -9,127 +9,101 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.AbstractCollection;
-import java.util.Collection;
-import java.util.Iterator;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOHandle;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProvider;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProviderFactory;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOReader;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.ReadIOCallback;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.channels.SendCallback;
 
-public class GetFileHandler extends CoasterFileRequestHandler {
+public class GetFileHandler extends CoasterFileRequestHandler implements SendCallback, ReadIOCallback {
     public static final Logger logger = Logger.getLogger(GetFileHandler.class);
 
-    private File f;
     private long size;
-    private int chunks;
     private Exception ex;
+    private IOProvider provider;
+    private IOReader reader;
+    private boolean lengthSent;
 
     public void requestComplete() throws ProtocolException {
-        f = normalize(getInDataAsString(0));
-        size = f.length();
-        chunks = (int) ((size - 1) / 16384) + 1;
-        sendReply();
+        String src = getInDataAsString(0);
+        try {
+            logger.info("01 " + src + " - request complete");
+            provider = IOProviderFactory.getDefault().instance(getProtocol(src));
+            logger.info("02 " + src + " - provider instantiated");
+            sendReply();
+            logger.info("13 " + src + " - reply sent");
+        }
+        catch (Exception e) {
+            throw new ProtocolException(e);
+        }
     }
-
-    public Collection getOutData() {
-        return new AbstractCollection() {
-
-            public Iterator iterator() {
-                return new Iterator() {
-                    private long crt = 0;
-                    private boolean first = true;
-                    private FileInputStream is;
-
-                    {
-                        try {
-                            is = new FileInputStream(f);
-                        }
-                        catch (Exception e) {
-                            logger.info("Could not open file", e);
-                            ex = e;
-                        }
-                    }
-
-                    public boolean hasNext() {
-                        return (first || crt < size) && ex == null;
-                    }
-
-                    public Object next() {
-                        try {
-                            if (first) {
-                                first = false;
-                                return pack(size);
-                            }
-                            else {
-                                byte[] buf = new byte[16384];
-                                int l = is.read(buf);
-                                crt += l;
-                                if (crt == size) {
-                                    is.close();
-                                }
-                                if (l == buf.length) {
-                                    return buf;
-                                }
-                                else {
-                                    byte[] mb = new byte[l];
-                                    System.arraycopy(buf, 0, mb, 0, l);
-                                    return mb;
-                                }
-                            }
-                        }
-                        catch (Exception e) {
-                            try {
-                                is.close();
-                            }
-                            catch (Exception e2) {
-                                logger.warn("Failed to close input stream", e2);
-                            }
-                            ex = e;
-                            return new byte[0];
-                        }
-                    }
-
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-
-            public int size() {
-                return ex == null ? chunks + 1 : 0;
-            }
-        };
-    }
+    
+    
 
     public void send() throws ProtocolException {
         KarajanChannel channel = getChannel();
-        Collection outData = getOutData();
+        String src = getInDataAsString(0);
+        String dst = getInDataAsString(1);
         if (channel == null) {
             throw new ProtocolException("Unregistered command");
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug(ppOutData("HND"));
+        if (!provider.isDirect()) {
+            // send this first so that it doesn't get sent
+            // after the final reply due to funny sequencing
+            channel.sendTaggedReply(getId(), pack(-1), false, false);
         }
-        if (ex != null) {
-            logger.info("Transfer exception", ex);
-            channel.sendTaggedReply(getId(), ex.getMessage().getBytes(), true, true);
+        try {
+            logger.info("03 " + src + " - calling pull");
+            reader = provider.pull(src, dst, this);
+            logger.info("04 " + reader + " - got reader");
+            reader.start();
+            logger.info("05 " + reader + " - reader started");
         }
-        else {
-            boolean fin = (outData == null) || (outData.size() == 0);
-            if (!fin) {
-                Iterator i = outData.iterator();
-                while (i.hasNext()) {
-                    byte[] buf = (byte[]) i.next();
-                    channel.sendTaggedReply(getId(), buf, !i.hasNext(), getErrorFlag());
-                }
-            }
-            if (ex != null) {
-                logger.info("Transfer exception", ex);
-                channel.sendTaggedReply(getId(), ex.getMessage().getBytes(), true, true);
-            }
+        catch (IOException e) {
+            throw new ProtocolException(e);
+        }
+    }
+
+    public void dataSent() {
+        reader.dataSent();
+    }
+
+    public void data(IOHandle handle, ByteBuffer data, boolean last) {
+        if (!lengthSent) {
+            throw new RuntimeException("No length provided");
+        }
+        logger.info("08 " + handle + " - got data");
+        getChannel().sendTaggedReply(getId(), data, last, false, this);
+        logger.info("09 " + handle + " - data sent");
+    }
+
+    public void done(IOHandle op) {
+        if (!provider.isDirect()) {
+            logger.info("10 " + op + " - done");
+            getChannel().sendTaggedReply(getId(), "OK".getBytes(), true, false, null);
+            logger.info("11 " + op + " - final reply sent");
+            reader.close();
+            logger.info("12 " + op + " - reader closed");
+        }
+    }
+
+    public void error(IOHandle op, Exception e) {
+        getChannel().sendTaggedReply(getId(), e.getMessage().getBytes(), true, true);
+    }
+
+    public void length(long len) {
+        if (provider.isDirect()) {
+            logger.info("06 " + reader + " - got length");
+            lengthSent = true;
+            getChannel().sendTaggedReply(getId(), pack(len), len == 0, false);
+            logger.info("07 " + reader + " - sent length");
         }
     }
 }

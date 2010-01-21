@@ -36,9 +36,8 @@ public class Cpu implements Comparable, Callback, StatusListener {
     private int id;
     private List done;
     private Job running;
-    private Block block;
+    private Node node;
     private Time starttime, endtime, timelast, donetime;
-    private ChannelContext channelContext;
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
 
@@ -47,31 +46,31 @@ public class Cpu implements Comparable, Callback, StatusListener {
         this.timelast = Time.fromMilliseconds(0);
     }
 
-    public Cpu(int id, Block block) {
+    public Cpu(int id, Node node) {
         this();
         this.id = id;
-        this.block = block;
+        this.node = node;
         timelast = Time.fromSeconds(0);
     }
 
-    public void workerStarted(ChannelContext channelContext) {
-        this.channelContext = channelContext;
-        block.remove(this);
+    public void workerStarted() {
+        node.getBlock().remove(this);
         starttime = Time.now();
-        endtime = starttime.add(block.getWalltime());
+        endtime = starttime.add(node.getBlock().getWalltime());
         timelast = starttime;
         timeDiff();
         pullLater();
     }
-    
+
     private long timeDiff() {
-    	long now = System.currentTimeMillis();
-    	long dif = now - lastTime;
-    	lastTime = now;
-    	return dif;
+        long now = System.currentTimeMillis();
+        long dif = now - lastTime;
+        lastTime = now;
+        return dif;
     }
 
     public synchronized void jobTerminated() {
+        Block block = node.getBlock();
         if (logger.isInfoEnabled()) {
             logger.info(block.getId() + ":" + getId() + " jobTerminated");
         }
@@ -80,9 +79,11 @@ public class Cpu implements Comparable, Callback, StatusListener {
         donetime = Time.now();
         timelast = donetime;
         busyTime += timeDiff();
-        //done.add(running);
+        // done.add(running);
         running = null;
-        pullLater();
+        if (!checkSuspended(block)) {
+            pullLater();
+        }
     }
 
     private void pullLater() {
@@ -102,22 +103,28 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     private static synchronized void pullLater(Cpu cpu) {
+        Block block = cpu.node.getBlock();
         if (logger.isDebugEnabled()) {
-            logger.debug(cpu.block.getId() + ":" + cpu.getId() + " pullLater");
+            logger.debug(block.getId() + ":" + cpu.getId() + " pullLater");
         }
-        getPullThread(cpu.block).enqueue(cpu);
+        getPullThread(block).enqueue(cpu);
     }
 
     private synchronized void sleep(Cpu cpu) {
-        getPullThread(cpu.block).sleep(cpu);
+        getPullThread(cpu.node.getBlock()).sleep(cpu);
     }
-    
+
     private boolean started() {
         return starttime != null;
     }
 
     public synchronized void pull() {
         try {
+            Block block = node.getBlock();
+            if (checkSuspended(block)) {
+                return;
+            }
+            block.jobPulled();
             if (logger.isInfoEnabled()) {
                 logger.info(block.getId() + ":" + getId() + " pull");
             }
@@ -130,7 +137,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
                 if (running != null) {
                     running.getTask().addStatusListener(this);
                     running.start();
-                    idleTime += timeDiff(); 
+                    idleTime += timeDiff();
                     timelast = running.getEndTime();
                     if (timelast == null) {
                         CoasterService.error(20, "Timelast is null", new Throwable());
@@ -157,15 +164,27 @@ public class Cpu implements Comparable, Callback, StatusListener {
             CoasterService.error(21, "Failed pull", e);
         }
     }
+    
+    private boolean checkSuspended(Block block) {
+        if (block.isSuspended()) {
+            block.cpuIsClear(this);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
     protected void submit(Job job) {
+        Block block = node.getBlock();
         Task task = job.getTask();
         if (logger.isInfoEnabled()) {
             logger.info(block.getId() + ":" + getId() + " submitting " + task.getIdentity());
         }
         task.setStatus(Status.SUBMITTING);
         try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
+            KarajanChannel channel =
+                    ChannelManager.getManager().reserveChannel(node.getChannelContext());
             ChannelManager.getManager().reserveLongTerm(channel);
             SubmitJobCommand cmd = new SubmitJobCommand(task);
             cmd.setCompression(false);
@@ -178,21 +197,13 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public void shutdown() {
-    	done.clear();
+        Block block = node.getBlock();
+        done.clear();
         if (running != null) {
             logger.info(block.getId() + "-" + id + ": Job still running while shutting down");
             running.fail("Shutting down worker", null);
         }
-        try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
-            ChannelManager.getManager().reserveLongTerm(channel);
-            ShutdownCommand cmd = new ShutdownCommand();
-            cmd.executeAsync(channel, this);
-        }
-        catch (Exception e) {
-            logger.info("Failed to shut down worker", e);
-            block.forceShutdown();
-        }
+        node.shutdown();
     }
 
     public int compareTo(Object obj) {
@@ -233,6 +244,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public void taskFailed(String msg, Exception e) {
+        Block block = node.getBlock();
         if (running == null) {
             if (starttime == null) {
                 starttime = Time.now();
@@ -248,24 +260,13 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     public void errorReceived(Command cmd, String msg, Exception t) {
-        if (cmd instanceof ShutdownCommand) {
-            logger.info("Failed to shut down " + this + ": " + msg, t);
-            block.forceShutdown();
-        }
-        else {
-            taskFailed(msg, t);
-        }
+        taskFailed(msg, t);
     }
 
     public void replyReceived(Command cmd) {
-        if (cmd instanceof ShutdownCommand) {
-            logger.info(this + " shut down successfully");
-        }
-        else {
-            SubmitJobCommand sjc = (SubmitJobCommand) cmd;
-            Task task = sjc.getTask();
-            task.setStatus(Status.SUBMITTED);
-        }
+        SubmitJobCommand sjc = (SubmitJobCommand) cmd;
+        Task task = sjc.getTask();
+        task.setStatus(Status.SUBMITTED);
     }
 
     private static class PullThread extends Thread {
@@ -274,7 +275,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
         private BlockQueueProcessor bqp;
 
         public PullThread(BlockQueueProcessor bqp) {
-        	this.bqp = bqp;
+            this.bqp = bqp;
             setName("Job pull");
             setDaemon(true);
             queue = new LinkedList();
@@ -324,18 +325,18 @@ public class Cpu implements Comparable, Callback, StatusListener {
             }
             return sz != sleeping.size();
         }
-        
+
         private void mwait(int ms) throws InterruptedException {
             runTime += countAndResetTime();
             wait(ms);
             sleepTime += countAndResetTime();
-            if (runTime + sleepTime> 10000) {
+            if (runTime + sleepTime > 10000) {
                 logger.info("runTime: " + runTime + ", sleepTime: " + sleepTime);
                 runTime = 0;
                 sleepTime = 0;
             }
         }
-        
+
         private long countAndResetTime() {
             long t = System.currentTimeMillis();
             long d = t - last;

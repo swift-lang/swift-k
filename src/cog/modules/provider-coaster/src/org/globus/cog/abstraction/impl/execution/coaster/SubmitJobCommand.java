@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -23,9 +24,12 @@ import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.commands.Command;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 public class SubmitJobCommand extends Command {
     public static final Logger logger = Logger.getLogger(SubmitJobCommand.class);
@@ -76,7 +80,7 @@ public class SubmitJobCommand extends Command {
         OutputStream dos;
         if (compression) {
             dos = new DeflaterOutputStream(baos);
-            //dos = baos;
+            // dos = baos;
         }
         else {
             dos = baos;
@@ -110,6 +114,23 @@ public class SubmitJobCommand extends Command {
             }
         }
 
+        i = iterator(spec.getStageIn());
+        while (i.hasNext()) {
+            StagingSetEntry e = (StagingSetEntry) i.next();
+            add(dos, "stagein", e.getSource() + '\n' + e.getDestination());
+        }
+        
+        i = iterator(spec.getStageOut());
+        while (i.hasNext()) {
+            StagingSetEntry e = (StagingSetEntry) i.next();
+            add(dos, "stageout", e.getSource() + '\n' + e.getDestination());
+        }
+        
+        i = iterator(spec.getCleanUpSet());
+        while (i.hasNext()) {
+            add(dos, "cleanup", (String) i.next());
+        }
+
         Service s = t.getService(0);
         add(dos, "contact", s.getServiceContact().toString());
         add(dos, "provider", s.getProvider());
@@ -128,6 +149,15 @@ public class SubmitJobCommand extends Command {
         addOutData(baos.toByteArray());
     }
 
+    private Iterator iterator(Collection c) {
+        if (c == null) {
+            return Collections.EMPTY_LIST.iterator();
+        }
+        else {
+            return c.iterator();
+        }
+    }
+
     private void add(OutputStream baos, String key, boolean value) throws IOException {
         add(baos, key, String.valueOf(value));
     }
@@ -140,13 +170,14 @@ public class SubmitJobCommand extends Command {
                 char c = value.charAt(i);
                 switch (c) {
                     case '\n':
+                        c = 'n';
                     case '\\':
                         baos.write('\\');
                     default:
                         baos.write(c);
                 }
             }
-            
+
             baos.write('\n');
         }
     }

@@ -9,42 +9,49 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.commands;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
-public class GetFileCommand extends Command {
+public class GetFileCommand extends Command implements WriteBufferCallback {
     public static final String NAME = "GET";
     private long len = -1;
-    private FileOutputStream fos;
-    private String local;
+    private WriteBuffer wt;
+    private String dst;
     private ProgressMonitor pm;
 
-    public GetFileCommand(String remote, String local, ProgressMonitor pm)
-            throws FileNotFoundException {
+    public GetFileCommand(String src, String dst, ProgressMonitor pm)
+            throws IOException {
         super(NAME);
-        addOutData(remote);
-        this.local = local;
+        addOutData(src);
+        addOutData(dst);
+        this.dst = dst;
         this.pm = pm;
-        fos = new FileOutputStream(local);
+        wt = createWriteBuffer(); 
     }
 
-    protected void addInData(byte[] data) {
-        if (this.getErrorFlag()) {
-            super.addInData(data);
+    protected WriteBuffer createWriteBuffer() throws IOException {
+        return Buffers.newWriteBuffer(new FileOutputStream(dst).getChannel(), this);
+    }
+    
+    protected void addInData(boolean fin, boolean err, byte[] data) {
+        if (err) {
+            super.addInData(fin, err, data);
         }
         else {
-            if (len == -1) {
-                len = unpackLong(data);
+            if (getLen() == -1) {
+                setLen(unpackLong(data));
             }
             else {
                 try {
-                    fos.write(data);
+                    wt.write(fin, data);
                 }
-                catch (IOException e) {
+                catch (Exception e) {
                     errorReceived(e.getMessage(), e);
                 }
             }
@@ -54,10 +61,33 @@ public class GetFileCommand extends Command {
     public void receiveCompleted() {
         super.receiveCompleted();
         try {
-            fos.close();
+            wt.close();
         }
         catch (IOException e) {
             errorReceived(e.getMessage(), e);
         }
+    }
+
+    public void done(boolean last) {
+    	if (last) {
+    		try {
+                wt.close();
+            }
+            catch (IOException e) {
+                this.errorReceived("Failed to close file channel", e);
+            }
+    	}
+    }
+
+    public void error(boolean last, Exception e) {
+    	this.errorReceived("Failed to write file data", e);
+    }
+
+    protected long getLen() {
+        return len;
+    }
+
+    protected void setLen(long len) {
+        this.len = len;
     }
 }
