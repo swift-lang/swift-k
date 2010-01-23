@@ -208,7 +208,7 @@ namespace("vdl"
 			parallelFor(i, cleanup
 				[dir, host] := each(i)
 				try(
-					cleanup(dir, host)
+					vdl:cleanup(dir, host)
 					catch(".*",
 						log(LOG:DEBUG, "EXCEPTION - Exception caught while cleaning up", exception)
 						to(warnings, exception("Cleanup on {host} failed", exception))
