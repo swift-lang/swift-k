@@ -64,7 +64,6 @@ public class ExecutionException extends Exception {
 		sb.append('\n');
 		if (stack != null) {
 			sb.append(Trace.get(stack));
-
 		}
 		else {
 			//sb.append("\t-- no stack --\n");
