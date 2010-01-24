@@ -142,7 +142,7 @@ public class ProxyIOProvider implements IOProvider {
         private int crt;
 
         protected CReadBuffer(Buffers buffers, ReadBufferCallback cb) {
-            super(buffers, cb);
+            super(buffers, cb, -1);
             queue = new LinkedBlockingQueue();
         }
 

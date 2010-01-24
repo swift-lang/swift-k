@@ -9,7 +9,6 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.handlers.providers;
 
-import java.nio.ByteBuffer;
 
 public interface IOCallback {
     void done(IOHandle handle);
