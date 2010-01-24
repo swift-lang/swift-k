@@ -295,4 +295,8 @@ public class CoasterService extends GSSService {
         logger.error(msg, t);
         System.exit(code);
     }
+
+    public boolean isLocal() {
+        return local;
+    }
 }
