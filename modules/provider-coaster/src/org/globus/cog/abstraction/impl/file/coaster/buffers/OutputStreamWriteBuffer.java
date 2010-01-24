@@ -10,28 +10,28 @@
 package org.globus.cog.abstraction.impl.file.coaster.buffers;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.GatheringByteChannel;
 
-public class NIOChannelWriteBuffer extends WriteBuffer {
+public class OutputStreamWriteBuffer extends WriteBuffer {
     
-    private GatheringByteChannel channel;
+    private OutputStream os;
     private WriteBufferCallback cb;
 
-    protected NIOChannelWriteBuffer(Buffers buffers, GatheringByteChannel channel, WriteBufferCallback cb) {
+    protected OutputStreamWriteBuffer(Buffers buffers, OutputStream os, WriteBufferCallback cb) {
     	super(buffers);
-        this.channel = channel;
+        this.os = os;
         this.cb = cb;
     }
 
     public void doStuff(boolean last, ByteBuffer b) {
         try {
-            channel.write(b);
+            os.write(toByteArray(b));
             b.rewind();
             cb.done(last);
             buffers.free(1);
             if (last) {
-                channel.close();
+                os.close();
             }
         }
         catch (IOException e) {
