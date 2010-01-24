@@ -225,6 +225,6 @@ public class VDL2ErrorTranslator {
 			public void windowIconified(WindowEvent e) {}
 			public void windowOpened(WindowEvent e) {}
 		});
-		frame.show();
+		frame.setVisible(true);
 	}
 }
