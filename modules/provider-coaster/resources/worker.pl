@@ -2,6 +2,7 @@
 use IO::Socket;
 use File::Basename;
 use File::Path;
+use File::Copy;
 use Time::HiRes qw(time);
 use Cwd;
 use POSIX ":sys_wait_h";
@@ -76,10 +77,6 @@ my %HANDLERS = (
 	"REGISTER"  => \&register,
 	"HEARTBEAT" => \&heartbeat,
 	"WORKERSHELLCMD" => \&workershellcmd,
-);
-
-my %DIRECT_PROVIDERS = (
-	"coaster" => 1,
 );
 
 my @CMDQ = ();
@@ -619,17 +616,19 @@ sub workershellcmd {
 	}
 }
 
-sub isDirect {
+sub urisplit {
 	my ($name) = @_;
 	
-	my ($protocol, $rest) = split(/:\/\//, $name, 2);
-	return $DIRECT_PROVIDERS{$protocol};
+	my ($protocol, $path) = split(/:\/\//, $name, 2);
+	return ($protocol, $path);
 }
 
 sub getFileCB {
 	my ($jobid, $src, $dst) = @_;
 	
-	if (isDirect($src)) {
+	my ($protocol, $path) = urisplit($src);
+	
+	if ($protocol eq "coaster") {
 		wlog DEBUG, "Opening $dst...\n";
 		my $dir = dirname($dst);
 		if (-f $dir) {
@@ -716,34 +715,46 @@ sub getFileCBDataIn {
 }
 
 sub stagein {
-	my ($JOBID) = @_;
+	my ($jobid) = @_;
 	
-	my $STAGE = $JOBDATA{$JOBID}{"stagein"};
-	my $STAGED = $JOBDATA{$JOBID}{"stageind"}; 
-	my $STAGEINDEX = $JOBDATA{$JOBID}{"stageindex"};
+	my $STAGE = $JOBDATA{$jobid}{"stagein"};
+	my $STAGED = $JOBDATA{$jobid}{"stageind"}; 
+	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"};
 	
 	if (scalar @$STAGE <= $STAGEINDEX) {
 		wlog DEBUG, "Done staging in files ($STAGEINDEX, $STAGE)\n";
-		$JOBDATA{$JOBID}{"stageindex"} = 0;
-		sendCmd((nullCB(), "JOBSTATUS", $JOBID, ACTIVE, "0", "workerid=$ID"));
-		forkjob($JOBID);
+		$JOBDATA{$jobid}{"stageindex"} = 0;
+		sendCmd((nullCB(), "JOBSTATUS", $jobid, ACTIVE, "0", "workerid=$ID"));
+		forkjob($jobid);
 	}
 	else {
 		if ($STAGEINDEX == 0) {
-			sendCmd((nullCB(), "JOBSTATUS", $JOBID, STAGEIN, "0", "workerid=$ID"));
+			sendCmd((nullCB(), "JOBSTATUS", $jobid, STAGEIN, "0", "workerid=$ID"));
 		}
 		wlog DEBUG, "Staging in $$STAGE[$STAGEINDEX]\n";
-		my $state;
-		eval {
-			$state = getFileCB($JOBID, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
-		};
-		if ($@) {
-			wlog DEBUG, "Error staging in file: $@\n";
-			queueCmd((nullCB(), "JOBSTATUS", $JOBID, FAILED, "524", "$@"));	
+		$JOBDATA{$jobid}{"stageindex"} =  $STAGEINDEX + 1;
+		my ($protocol, $path) = urisplit($$STAGE[$STAGEINDEX]);
+		if ($protocol eq "sfs") {
+			if (!copy($path, $$STAGED[$STAGEINDEX])) {
+				wlog DEBUG, "Error staging in $path: $!\n";
+				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));
+			}
+			else {
+				stagein($jobid);		
+			}
 		}
 		else {
-			$JOBDATA{$JOBID}{"stageindex"} =  $STAGEINDEX + 1;
-			sendCmd(($state, "GET", $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]));
+			my $state;
+			eval {
+				$state = getFileCB($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
+			};
+			if ($@) {
+				wlog DEBUG, "Error staging in file: $@\n";
+				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));	
+			}
+			else {
+				sendCmd(($state, "GET", $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]));
+			}
 		}
 	}
 }
@@ -773,8 +784,18 @@ sub stageout {
 			my $rfile = $$STAGED[$STAGEINDEX];
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
 			wlog DEBUG, "Staging out $lfile.\n";
-			if (isDirect($rfile)) {
+			my ($protocol, $path) = urisplit($rfile);
+			if ($protocol eq "coaster") {
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
+			}
+			elsif ($protocol eq "sfs") {
+				if (!copy($lfile, $path)) {
+					queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "528", "$!"));
+					return;
+				}
+				else {
+					stageout($jobid);
+				}
 			}
 			else {
 				queueCmd((putFileCB($jobid), "PUT", pack("VV", 0, 0), $lfile, $rfile));
