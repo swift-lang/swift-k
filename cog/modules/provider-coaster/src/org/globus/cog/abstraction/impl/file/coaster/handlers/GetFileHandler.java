@@ -34,11 +34,8 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     public void requestComplete() throws ProtocolException {
         String src = getInDataAsString(0);
         try {
-            logger.info("01 " + src + " - request complete");
             provider = IOProviderFactory.getDefault().instance(getProtocol(src));
-            logger.info("02 " + src + " - provider instantiated");
             sendReply();
-            logger.info("13 " + src + " - reply sent");
         }
         catch (Exception e) {
             throw new ProtocolException(e);
@@ -60,11 +57,8 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
             channel.sendTaggedReply(getId(), pack(-1), false, false);
         }
         try {
-            logger.info("03 " + src + " - calling pull");
             reader = provider.pull(src, dst, this);
-            logger.info("04 " + reader + " - got reader");
             reader.start();
-            logger.info("05 " + reader + " - reader started");
         }
         catch (IOException e) {
             throw new ProtocolException(e);
@@ -79,18 +73,13 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
         if (!lengthSent) {
             throw new RuntimeException("No length provided");
         }
-        logger.info("08 " + handle + " - got data");
         getChannel().sendTaggedReply(getId(), data, last, false, this);
-        logger.info("09 " + handle + " - data sent");
     }
 
     public void done(IOHandle op) {
         if (!provider.isDirect()) {
-            logger.info("10 " + op + " - done");
             getChannel().sendTaggedReply(getId(), "OK".getBytes(), true, false, null);
-            logger.info("11 " + op + " - final reply sent");
             reader.close();
-            logger.info("12 " + op + " - reader closed");
         }
     }
 
@@ -100,10 +89,8 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
 
     public void length(long len) {
         if (provider.isDirect()) {
-            logger.info("06 " + reader + " - got length");
             lengthSent = true;
             getChannel().sendTaggedReply(getId(), pack(len), len == 0, false);
-            logger.info("07 " + reader + " - sent length");
         }
     }
 }
