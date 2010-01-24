@@ -14,8 +14,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,17 +45,17 @@ public class AbstractionProperties extends java.util.Properties {
     public static final String TYPE_FILE_OPERATION_TASK_HANDLER = "fileOperationTaskHandler";
     public static final String TYPE_SECURITY_CONTEXT = "securityContext";
 
-    private static Map providerProperties;
+    private static Map<String, AbstractionProperties> providerProperties;
 
-    private static Map aliases;
+    private static Map<String, String> aliases;
 
     /**
      * Returns a list with the names of all the providers known in this JVM
      * instance.
      */
-    public static List getProviders() {
+    public static List<String> getProviders() {
         loadProviderProperties();
-        return new LinkedList(providerProperties.keySet());
+        return new LinkedList<String>(providerProperties.keySet());
     }
 
     /**
@@ -63,17 +64,25 @@ public class AbstractionProperties extends java.util.Properties {
      * <code>getProviders({@link TYPE_EXECUTION_TASK_HANDLER})</code> to
      * retrieve a list of a all providers that have an excution task handler.
      */
-    public static List getProviders(String type) {
+    public static List<String> getProviders(String type) {
         loadProviderProperties();
         type = type.toLowerCase();
-        List l = new LinkedList();
-        Iterator i = providerProperties.entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry) i.next();
-            String name = (String) e.getKey();
-            AbstractionProperties props = (AbstractionProperties) e.getValue();
+        List<String> l = new LinkedList<String>();
+        for (Map.Entry<String, AbstractionProperties> e : providerProperties.entrySet()) {
+            String name = e.getKey();
+            AbstractionProperties props = e.getValue();
             if (props.containsKey(type)) {
                 l.add(name);
+            }
+        }
+        return l;
+    }
+    
+    public static List<String> getAliases(String provider) {
+        List<String> l = new ArrayList<String>();
+        for (Map.Entry<String, String> e : aliases.entrySet()) {
+            if (provider.equals(e.getValue())) {
+                l.add(e.getKey());
             }
         }
         return l;
@@ -84,22 +93,18 @@ public class AbstractionProperties extends java.util.Properties {
             return "none";
         }
         else {
-            Map m = new Hashtable();
-            Iterator i = aliases.entrySet().iterator();
-            while (i.hasNext()) {
-                Map.Entry e = (Map.Entry) i.next();
+            Map<String, List<String>> m = new HashMap<String, List<String>>();
+            for (Map.Entry<String, String> e : aliases.entrySet()) {
                 if (!m.containsKey(e.getValue())) {
-                    m.put(e.getValue(), new LinkedList());
+                    m.put(e.getValue(), new LinkedList<String>());
                 }
-                ((List) m.get(e.getValue())).add(e.getKey());
+                m.get(e.getValue()).add(e.getKey());
             }
             StringBuffer sb = new StringBuffer();
-            i = m.entrySet().iterator();
-            while (i.hasNext()) {
-                Map.Entry e = (Map.Entry) i.next();
+            for (Map.Entry<String, List<String>> e : m.entrySet()) {
                 sb.append(e.getKey());
                 sb.append(" <-> ");
-                Iterator j = ((List) e.getValue()).iterator();
+                Iterator<String> j = e.getValue().iterator();
                 while (j.hasNext()) {
                     sb.append(j.next());
                     if (j.hasNext()) {
@@ -119,10 +124,10 @@ public class AbstractionProperties extends java.util.Properties {
         loadProviderProperties();
         provider = provider.toLowerCase();
         if (aliases.containsKey(provider)) {
-            provider = (String) aliases.get(provider);
+            provider = aliases.get(provider);
         }
         if (providerProperties.containsKey(provider)) {
-            return (AbstractionProperties) providerProperties.get(provider);
+            return providerProperties.get(provider);
         }
         else {
             logger.info("No properties for provider " + provider
@@ -153,13 +158,13 @@ public class AbstractionProperties extends java.util.Properties {
             return;
         }
         try {
-            providerProperties = new Hashtable();
-            aliases = new Hashtable();
-            Enumeration e = AbstractionFactory.class.getClassLoader()
+            providerProperties = new HashMap<String, AbstractionProperties>();
+            aliases = new HashMap<String, String>();
+            Enumeration<URL> e = AbstractionFactory.class.getClassLoader()
                     .getResources(PROVIDER_PROPERTY_FILE);
             while (e.hasMoreElements()) {
                 try {
-                    loadProviderProperties(((URL) e.nextElement()).openStream());
+                    loadProviderProperties(e.nextElement().openStream());
                 }
                 catch (Exception ee) {
                     logger.warn("Error reading from provider properties", ee);
@@ -184,10 +189,7 @@ public class AbstractionProperties extends java.util.Properties {
             String classLoaderProps = null;
             String classLoaderBoot = null;
             boolean nameFound = false;
-            Iterator i = props.iterator();
-            while (i.hasNext()) {
-                Property prop = (Property) i.next();
-
+            for (Property prop : props) {
                 if (prop.name.equalsIgnoreCase("provider")) {
                     map = new AbstractionProperties();
                     map.putAll(common);
@@ -282,14 +284,12 @@ public class AbstractionProperties extends java.util.Properties {
     public void load(InputStream is) throws IOException {
         Properties props = new Properties();
         props.load(is);
-        Iterator i = props.iterator();
-        while (i.hasNext()) {
-            Property prop = (Property) i.next();
+        for (Property prop : props) {
             put(prop.name, prop.value);
         }
     }
 
-    public static class Properties extends LinkedList {
+    public static class Properties extends LinkedList<Property> {
 
         public void load(InputStream is) throws IOException {
             BufferedReader isr = new BufferedReader(new InputStreamReader(is));
