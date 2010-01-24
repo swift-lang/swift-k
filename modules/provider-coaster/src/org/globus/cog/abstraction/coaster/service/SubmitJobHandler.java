@@ -36,10 +36,14 @@ import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public class SubmitJobHandler extends RequestHandler {
     public static final boolean COMPRESSION = true;
+    
+    private CoasterService service;
 
     public void requestComplete() throws ProtocolException {
         Task t;
         try {
+            ChannelContext channelContext = getChannel().getChannelContext();
+            service = (CoasterService) channelContext.getService();
             if (COMPRESSION) {
                 t = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
                 // t = read(new ByteArrayInputStream(getInData(0)));
@@ -47,11 +51,10 @@ public class SubmitJobHandler extends RequestHandler {
             else {
                 t = read(new ByteArrayInputStream(getInData(0)));
             }
-            ChannelContext channelContext = getChannel().getChannelContext();
             new TaskNotifier(t, channelContext);
-            ((CoasterService) channelContext.getService()).getJobQueue().getCoasterQueueProcessor().setClientChannelContext(
+            service.getJobQueue().getCoasterQueueProcessor().setClientChannelContext(
                 channelContext);
-            ((CoasterService) channelContext.getService()).getJobQueue().enqueue(t);
+            service.getJobQueue().enqueue(t);
             // make sure we'll have something to send notifications to
             ChannelManager.getManager().reserveLongTerm(getChannel());
         }
@@ -168,9 +171,9 @@ public class SubmitJobHandler extends RequestHandler {
     }
 
     private String makeAbsolute(String path) {
-        if (path.startsWith("file://localhost")) {
-            return "coaster://" + getChannel().getChannelContext().getChannelID()
-                    + path.substring("file://localhost".length());
+        if (path.startsWith("proxy://localhost")) {
+            return "proxy://" + getChannel().getChannelContext().getChannelID()
+                    + path.substring("proxy://localhost".length());
         }
         else {
             return path;
