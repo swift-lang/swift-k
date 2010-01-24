@@ -57,6 +57,9 @@ fail() {
 	if [ "$STATUSMODE" = "files" ]; then
 		exit 0
 	else
+		if [ "X$STDERR" != "X" ]; then
+			echo "$@" >>$STDER
+		fi
 		exit $EC
 	fi
 }
