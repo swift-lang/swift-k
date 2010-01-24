@@ -73,7 +73,7 @@ public class SetVarK extends SequentialWithArguments {
 	protected final void setSingle(Identifier ident, VariableArguments vargs, VariableStack stack)
 			throws ExecutionException {
 		if (vargs.size() != 1) {
-			throw new ExecutionException("Got one name and " + vargs.size() + " values: " + vargs);
+			throw new ExecutionException("Got one name (" + ident + ") and " + vargs.size() + " values: " + vargs);
 		}
 		else {
 			getFrame(stack).setVar(checkName(((Identifier) ident).getName()), vargs.get(0));
