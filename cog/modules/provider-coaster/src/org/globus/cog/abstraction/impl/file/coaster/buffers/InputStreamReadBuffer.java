@@ -10,18 +10,18 @@
 package org.globus.cog.abstraction.impl.file.coaster.buffers;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.ScatteringByteChannel;
 
-public class NIOChannelReadBuffer extends ReadBuffer {
-    private ScatteringByteChannel channel;
+public class InputStreamReadBuffer extends ReadBuffer {
+    private InputStream is;
     private long crt;
     private Exception ex;
 
-    protected NIOChannelReadBuffer(Buffers buffers, ScatteringByteChannel channel, long size,
+    protected InputStreamReadBuffer(Buffers buffers, InputStream is, long size,
             ReadBufferCallback cb) throws InterruptedException {
         super(buffers, cb, size);
-        this.channel = channel;
+        this.is = is;
         init();
     }
 
@@ -30,8 +30,16 @@ public class NIOChannelReadBuffer extends ReadBuffer {
             return;
         }
         try {
-            channel.read(b);
-            b.limit(b.position());
+            if (b.hasArray()) {
+                int len = is.read(b.array());
+                b.limit(len);
+            }
+            else {
+                byte[] buf = new byte[b.capacity()];
+                int len = is.read(buf);
+                b.put(buf, 0, len);
+                b.limit(len);
+            }
             b.rewind();
             bufferRead(b);
         }
@@ -42,6 +50,6 @@ public class NIOChannelReadBuffer extends ReadBuffer {
 
     public void close() throws IOException {
         super.close();
-        channel.close();
+        is.close();
     }
 }

@@ -9,6 +9,8 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.buffers;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
@@ -22,18 +24,35 @@ public class Buffers extends Thread {
     public static final int ENTRY_SIZE = 16384;
     public static final int ENTRIES_PER_STREAM = 16;
     public static final int MAX_ENTRIES = 1024;
+    public static final int PERFORMANCE_LOGGING_INTERVAL = 10000;
 
     private static final Buffers INSTANCE = new Buffers();
 
-    private LinkedList queue;
+    private LinkedList<Entry> queue;
     private Object sizeLock = new Object();
     private int crt;
+    private long lastTime, bufTime;
+    private double avgBuffersUsed;
+    private int maxBuffersUsed, minBuffersUsed;
 
     public Buffers() {
-        queue = new LinkedList();
+        queue = new LinkedList<Entry>();
         setName("I/O Queue");
         setDaemon(true);
         start();
+    }
+
+    public synchronized void start() {
+        super.start();
+        resetCounters();
+    }
+
+    private void resetCounters() {
+        bufTime = System.currentTimeMillis();
+        lastTime = bufTime;
+        avgBuffersUsed = 0;
+        minBuffersUsed = Integer.MAX_VALUE;
+        maxBuffersUsed = 0;
     }
 
     public static ReadBuffer newReadBuffer(ScatteringByteChannel channel, long size,
@@ -41,8 +60,17 @@ public class Buffers extends Thread {
         return new NIOChannelReadBuffer(INSTANCE, channel, size, cb);
     }
 
+    public static ReadBuffer newReadBuffer(InputStream is, long size, ReadBufferCallback cb)
+            throws InterruptedException {
+        return new InputStreamReadBuffer(INSTANCE, is, size, cb);
+    }
+
     public static WriteBuffer newWriteBuffer(GatheringByteChannel channel, WriteBufferCallback cb) {
         return new NIOChannelWriteBuffer(INSTANCE, channel, cb);
+    }
+
+    public static WriteBuffer newWriteBuffer(OutputStream os, WriteBufferCallback cb) {
+        return new OutputStreamWriteBuffer(INSTANCE, os, cb);
     }
 
     public synchronized void queueRequest(boolean last, ByteBuffer buf, Buffer buffer) {
@@ -55,12 +83,26 @@ public class Buffers extends Thread {
             while (crt + count > MAX_ENTRIES) {
                 sizeLock.wait(1000);
             }
+            updateBuffersUsed();
             crt += count;
         }
     }
 
+    private void updateBuffersUsed() {
+        long time = System.currentTimeMillis();
+        avgBuffersUsed += (time - bufTime) * crt;
+        if (crt > maxBuffersUsed) {
+            maxBuffersUsed = crt;
+        }
+        if (crt < minBuffersUsed) {
+            minBuffersUsed = crt;
+        }
+        bufTime = time;
+    }
+
     public void free(int count) {
         synchronized (sizeLock) {
+            updateBuffersUsed();
             crt -= count;
             sizeLock.notify();
         }
@@ -74,10 +116,20 @@ public class Buffers extends Thread {
                     while (queue.isEmpty()) {
                         this.wait();
                     }
-                    e = (Entry) queue.removeFirst();
+                    e = queue.removeFirst();
                 }
                 try {
                     e.buffer.doStuff(e.last, e.buf);
+                    if (logger.isInfoEnabled()) {
+                        long time = System.currentTimeMillis();
+                        long dif = time - lastTime;
+                        if (dif > PERFORMANCE_LOGGING_INTERVAL) {
+                            int avgbuf = (int) (avgBuffersUsed / dif);
+                            logger.info("elapsedTime=" + dif + ", buffersUsed[min,avg,max]="
+                                    + minBuffersUsed + ", " + avgbuf + ", " + maxBuffersUsed);
+                            resetCounters();
+                        }
+                    }
                 }
                 catch (Exception ex) {
                     logger.error(e.buffer.getClass() + " throws exception in doStuff. Fix it!", ex);
