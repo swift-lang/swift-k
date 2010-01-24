@@ -22,4 +22,16 @@ public abstract class Buffer {
 
     public void close() throws IOException {
     }
+    
+    
+    protected byte[] toByteArray(ByteBuffer b) {
+        if (b.hasArray() && (b.limit() == b.capacity())) {
+            return b.array();
+        }
+        else {
+            byte[] bbuf = new byte[b.limit()];
+            b.get(bbuf);
+            return bbuf;
+        }
+    }
 }
