@@ -386,7 +386,7 @@ public class Settings {
         String getterName = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         for (int i = 0; i < ms.length; i++) {
             if (ms[i].getName().equals(getterName)) {
-                return ms[i].invoke(this, null);
+                return ms[i].invoke(this, (Object) null);
             }
         }
         return null;
