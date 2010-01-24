@@ -129,7 +129,7 @@ public class AbstractionFactory {
             return false;
         }
     }
-
+    
     public static Object newObject(String provider, String role)
             throws InvalidProviderException, ProviderMethodException {
         AbstractionProperties providerProps = AbstractionProperties
