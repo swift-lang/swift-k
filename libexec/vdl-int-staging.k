@@ -92,10 +92,10 @@ namespace("vdl"
 			)
 		)
 														
-		element(appStageins, [jobid, files, dir]
+		element(appStageins, [jobid, files, dir, stagingMethod]
 			for(file, files
-				//provider := vdl:provider(file)
-				provider := "coaster"
+				protocol := vdl:provider(file)
+				provider := if(protocol == "file", stagingMethod, protocol)
 				srchost := hostname(file)
 				srcdir := dirname(file)
 				destdir := dircat(dir, reldirname(file))
@@ -108,12 +108,12 @@ namespace("vdl"
 			)
 		)
 		
-		element(appStageouts, [jobid, stageouts, dir]
+		element(appStageouts, [jobid, stageouts, dir, stagingMethod]
 			for(pv, stageouts
 				[path, var] := each(pv)
 				file := vdl:absfilename(vdl:getfield(var, path = path))
-				//provider := vdl:provider(file)
-				provider := "coaster"
+				protocol := vdl:provider(file)
+				provider := if(protocol == "file", stagingMethod, protocol)
 				dhost := vdl:hostname(file)
 				rdir := dircat(dir, reldirname(file))
 				bname := basename(file)
@@ -231,20 +231,17 @@ namespace("vdl"
 							replicationChannel = replicationChannel
 							jobid = jobid
 							
-							/*stageIn("copy://localhost/{swift.home}/libexec/{wrapper}", wrapper)
-							appStageins(jobid, stagein, ".")
-							stageOut("wrapper.log", "copy://localhost/{ddir}/{jobid}.info")
-							stageOut("{stdout}", "copy://localhost/{ddir}/{stdout}")
-							stageOut("{stderr}", "copy://localhost/{ddir}/{stderr}")*/
+							stagingMethod := vdl:siteProfile(rhost, "swift:stagingMethod", default="proxy") 	
 							
-							stageIn("file://localhost/{swift.home}/libexec/{wrapper}", wrapper)
-							appStageins(jobid, stagein, ".")
-							stageOut("wrapper.log", "file://localhost/{ddir}/{jobid}.info")
-							stageOut("{stdout}", "file://localhost/{ddir}/{stdout}")
-							stageOut("{stderr}", "file://localhost/{ddir}/{stderr}")
+							stageIn("{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
+							appStageins(jobid, stagein, ".", stagingMethod)
 							
-							task:cleanUp("") //the whole job directory
-							appStageouts(jobid, stageout, ".")
+							stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info")
+							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
+							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
+							appStageouts(jobid, stageout, ".", stagingMethod)
+							
+							task:cleanUp(".") //the whole job directory
 						)
 						doRestartlog(restartout)
 						log(LOG:DEBUG, "JOB_END jobid={jobid}")
