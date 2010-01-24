@@ -31,9 +31,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
     public void requestComplete() throws ProtocolException {
         if (writer != null && provider.isDirect()) {
             try {
-                logger.info("07 " + writer + " - request complete");
                 writer.close();
-                logger.info("08 " + writer + " - writer closed");
             }
             catch (IOException e) {
                 sendError("Failed to close file", e);
@@ -49,7 +47,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             else if (len == -1) {
                 len = unpackLong(data);
                 if (logger.isInfoEnabled()) {
-                    logger.info("01 " + dst + " Size: " + len);
+                    logger.info(dst + " Size: " + len);
                 }
             }
             else if (src == null) {
@@ -64,11 +62,8 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
                     logger.info("Destination: " + dst);
                 }
                 provider = IOProviderFactory.getDefault().instance(getProtocol(dst));
-                logger.info("02 " + dst + " - got provider");
                 writer = provider.push(src, dst, this);
-                logger.info("03 " + writer + " - got writer");
                 writer.setLength(len);
-                logger.info("04 " + writer + " - writer length set");
             }
             else {
                 if (provider.isDirect()) {
@@ -78,9 +73,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
                         }
                     }
                     else {
-                        logger.info("05 " + writer + " - writing data");
                         writer.write(fin, data);
-                        logger.info("06 " + writer + " - data written");
                     }
                 }
                 else {
@@ -100,9 +93,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
 
     public void done(IOHandle op) {
         try {
-            logger.info("09 " + writer + " - sending reply");
             sendReply("OK");
-            logger.info("10 " + writer + " - reply sent");
         }
         catch (ProtocolException e) {
             logger.warn("Failed to send reply", e);
