@@ -24,8 +24,8 @@ import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.CoasterFileRequestHandler;
 
-public class LocalIOProvider implements IOProvider {
-    public static final Logger logger = Logger.getLogger(LocalIOProvider.class); 
+public class CoGResourceIOProvider implements IOProvider {
+    public static final Logger logger = Logger.getLogger(CoGResourceIOProvider.class);
 
     public void abort(IOHandle handle) throws IOException {
         ((Abortable) handle).abort();
@@ -53,10 +53,6 @@ public class LocalIOProvider implements IOProvider {
             this.cb = cb;
             f = CoasterFileRequestHandler.normalize(dest);
         }
-        
-        public String toString() {
-            return "LW " + f;
-        }
 
         public void close() throws IOException {
             buf.close();
@@ -64,16 +60,17 @@ public class LocalIOProvider implements IOProvider {
 
         public void setLength(long len) throws IOException {
             this.len = len;
+            File p = f.getParentFile();
+            if (!p.exists()) {
+                if (!p.mkdirs()) {
+                    throw new IOException("Failed to create directory " + p.getAbsolutePath());
+                }
+            }
             if (len == 0) {
+                f.createNewFile();
                 cb.done(this);
             }
             else {
-                File p = f.getParentFile();
-                if (!p.exists()) {
-                    if (!p.mkdirs()) {
-                        throw new IOException("Failed to create directory " + p.getAbsolutePath());
-                    }
-                }
                 buf = Buffers.newWriteBuffer(new FileOutputStream(f).getChannel(), this);
             }
         }
@@ -119,7 +116,7 @@ public class LocalIOProvider implements IOProvider {
             this.cb = cb;
             fc = new FileInputStream(f).getChannel();
         }
-        
+
         public String toString() {
             return "LR " + f;
         }
@@ -127,7 +124,7 @@ public class LocalIOProvider implements IOProvider {
         public void start() throws IOException {
             cb.length(f.length());
             try {
-                synchronized(this) {
+                synchronized (this) {
                     rbuf = Buffers.newReadBuffer(fc, f.length(), this);
                 }
             }
