@@ -31,14 +31,15 @@ public class SiteProfile extends VDLFunction {
     
 	public static final Arg PA_HOST = new Arg.Positional("host");
 	public static final Arg PA_FQN = new Arg.Positional("fqn");
+	public static final Arg OA_DEFAULT = new Arg.Optional("default", null);
 
 	static {
-		setArguments(SiteProfile.class, new Arg[] { PA_HOST, PA_FQN });
+		setArguments(SiteProfile.class, new Arg[] { PA_HOST, PA_FQN, OA_DEFAULT });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
-		return getSingle(stack, bc, new FQN(TypeUtil.toString(PA_FQN.getValue(stack))));
+		return getSingle(stack, bc, new FQN(TypeUtil.toString(PA_FQN.getValue(stack))), OA_DEFAULT.getValue(stack));
 	}
 	
 	public static final FQN SWIFT_WRAPPER_INTERPRETER = new FQN("swift:wrapperInterpreter");
@@ -49,8 +50,10 @@ public class SiteProfile extends VDLFunction {
 	public static final FQN SYSINFO_OS = new FQN("SYSINFO:OS");
 	
 	private static final Map DEFAULTS;
+	private static final Set<FQN> DEFAULTS_NAMES; 
 	
 	private static void addDefault(Os os, FQN fqn, Object value) {
+		DEFAULTS_NAMES.add(fqn);
 		Map osm = (Map) DEFAULTS.get(os);
 		if (osm == null) {
 			osm = new HashMap();
@@ -79,6 +82,7 @@ public class SiteProfile extends VDLFunction {
 	
 	static {
 		DEFAULTS = new HashMap();
+		DEFAULTS_NAMES = new HashSet<FQN>();
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_INTERPRETER, "cscript.exe");
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_SCRIPT, "_swiftwrap.vbs");
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_INTERPRETER_OPTIONS, new String[] {"//Nologo"});
@@ -91,15 +95,19 @@ public class SiteProfile extends VDLFunction {
 		addDefault(null, SWIFT_CLEANUP_COMMAND_OPTIONS, new String[] {"-rf"});
 	}
 	
-	private Object getSingle(VariableStack stack, BoundContact bc, FQN fqn) throws ExecutionException {
+	private Object getSingle(VariableStack stack, BoundContact bc, FQN fqn, Object defval) 
+	    throws ExecutionException {
             String value = getProfile(bc, fqn);
             if (value == null) {
             	Os os = getOS(bc);
-            	if ("swift".equals(fqn.getNamespace())) {
+            	if (DEFAULTS_NAMES.contains(fqn)) {
             		return getDefault(os, fqn);
             	}
                 else if (SYSINFO_OS.equals(fqn)) {
                 	return os;
+                }
+                else if (defval != null) {
+                    return defval;
                 }
                 else {
                 	throw new ExecutionException(stack, "Missing profile: " + fqn);
