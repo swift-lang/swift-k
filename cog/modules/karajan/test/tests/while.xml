@@ -11,12 +11,12 @@
 								<lessThan value1="{i}" value2="8"/>
 							</condition>
 							<argument value="{i}"/>
-							<set name="i">
+							<update name="i">
 								<sum>
 									<variable>i</variable>
 									<number>1</number>
 								</sum>
-							</set>
+							</update>
 						</while>
 					</list>
 				</element>
@@ -36,12 +36,12 @@
 								</then>
 							</if>
 							<variable>i</variable>
-							<set name="i">
+							<update name="i">
 								<sum>
 									<variable>i</variable>
 									<number>1</number>
 								</sum>
-							</set>
+							</update>
 						</while>									
 					</list>
 				</element>
@@ -53,12 +53,12 @@
 							<condition>
 								<lessThan value1="{i}" value2="3"/>
 							</condition>
-							<set name="i">
+							<update name="i">
 								<sum>
 									<variable>i</variable>
 									<number>1</number>
 								</sum>
-							</set>
+							</update>
 							<if>
 								<equalsNumeric value1="{i}" value2="2"/>
 
