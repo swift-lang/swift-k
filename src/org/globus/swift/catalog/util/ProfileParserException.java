@@ -20,7 +20,7 @@ package org.globus.swift.catalog.util;
  * @see ProfileParser
  *
  * @author Gaurang Mehta
- * @author Jens-S. Vöckler
+ * @author Jens-S. Voeckler
  * @version $Revision: 1.1 $
  */
 public class ProfileParserException 

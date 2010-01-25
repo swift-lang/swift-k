@@ -22,7 +22,7 @@ package org.globus.swift.catalog.util;
  * representation of a definition looks like ns::name:version, and
  * a textual representation of a uses like ns::name:min,max.<p>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. Voeckler
  * @author Yong Zhao
  * @version $Revision: 1.6 $
  *

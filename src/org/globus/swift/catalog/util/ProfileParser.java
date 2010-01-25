@@ -26,7 +26,7 @@ import java.util.Iterator;
  * and the parsed triples and back again.
  *
  * @author Gaurang Mehta
- * @author Jens-S. V�ckler
+ * @author Jens-S. Voeckler
  */
 public class ProfileParser
 {
