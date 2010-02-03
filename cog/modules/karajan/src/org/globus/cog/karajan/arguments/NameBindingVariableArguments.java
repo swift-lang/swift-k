@@ -46,7 +46,8 @@ public class NameBindingVariableArguments extends VariableArgumentsImpl {
 		}
 		else {
 			if (!hasVargs) {
-				throw new KarajanRuntimeException("Illegal extra argument to " + owner);
+				System.out.println("" + value);
+				throw new KarajanRuntimeException("Illegal extra argument `" + value + "' to " + owner);
 			}
 			else {
 				super.append(value);
