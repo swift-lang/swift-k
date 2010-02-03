@@ -38,6 +38,7 @@ import org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode;
 import org.globus.cog.karajan.workflow.service.channels.AbstractKarajanChannel;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
+import org.globus.swift.data.Director;
 import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.karajan.lib.Execute;
@@ -64,6 +65,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_VERBOSE = "verbose";
     public static final String ARG_DEBUG = "debug";
     public static final String ARG_LOGFILE = "logfile";
+    public static final String ARG_CDMFILE = "cdm.file";
     public static final String ARG_RUNID = "runid";
     public static final String ARG_TUI = "tui";
     public static final String ARG_RECOMPILE = "recompile";
@@ -89,6 +91,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
             if (ap.isPresent(ARG_MONITOR)) {
                 new Monitor().start();
+            }
+            if (ap.isPresent(ARG_CDMFILE)) {
+                loadCDM(ap); 
             }
             if (!ap.hasValue(ArgumentParser.DEFAULT)) {
                 error("No SwiftScript program specified");
@@ -207,6 +212,20 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     private static void shortUsage() {
         System.err.print("For usage information:  swift -help\n\n");
+    }
+    
+    static void loadCDM(ArgumentParser ap) {
+        String cdmString = null;
+        try { 
+            cdmString = ap.getStringValue(ARG_CDMFILE);
+            File cdmFile = new File(cdmString); 
+            Director.load(cdmFile); 
+        }
+        catch (IOException e) { 
+            logger.debug("Detailed exception:", e);
+            error("Could not start execution.\n\t" +
+                  "Could not read given CDM policy file: " + cdmString);
+        }
     }
     
     public static String compile(String project) throws FileNotFoundException,
@@ -395,6 +414,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 "Specifies a file where log messages should go to. By default Swift "
                         + "uses the name of the SwiftScript program being run and additional information to make the name unique.",
                 "file", ArgumentParser.OPTIONAL);
+        ap
+        .addOption(
+            ARG_CDMFILE,
+            "Specifies a CDM policy file.",
+            "file", ArgumentParser.OPTIONAL);
         ap
             .addOption(
                 ARG_RUNID,
