@@ -316,11 +316,12 @@ log "FIND: $( find . )"
 
 logstate "LINK_INPUTS"
 for L in $INF ; do
+        log "L: $L" 
         CDM_POLICY=$( perl shared/cdm.pl $L < shared/$CDM_FILE )
 	log "CDM_POLICY: $CDM_POLICY" 
 	if [ $CDM_POLICY != "DEFAULT" ]; then
     	        eval cdm $DIR "INPUT" $L $CDM_POLICY 
-		break
+		continue
 	fi
 	if [ $COPYNOTLINK = 1 ]; then
 		cp "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
