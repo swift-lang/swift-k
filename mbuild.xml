@@ -1,5 +1,5 @@
 <project name="Java CoG Kit" default="dist" basedir=".">
-  
+
 	<property file="${cog.dir}/VERSION"/>
 	<property file="${cog.dir}/build.properties"/>
 	
