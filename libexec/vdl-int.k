@@ -215,6 +215,7 @@ namespace("vdl"
 					)
 				)
 			)
+			log(LOG:INFO, "END cleanups={cleanup}")
 		)
 		
 		element(cleanupFiles, [files, host]
@@ -245,6 +246,21 @@ namespace("vdl"
 
 		element(doStagein, [jobid, files, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - Staging in files")
+
+			cdmfile := cdm:file()
+			log(LOG:DEBUG, "cdmfile: {cdmfile}")
+			log(LOG:DEBUG, "swift.home: {swift.home}")
+			libexec := "{swift.home}/libexec"
+
+			if (cdmfile != "" then(
+				doStageinFile(provider="file", srchost="localhost", srcfile=basename(cdmfile), 
+					    	srcdir=dirname(cdmfile), desthost=host, destdir=dir, 
+						size=file:size(cdmfile), policy="DEFAULT")
+				doStageinFile(provider="file", srchost="localhost", srcfile="cdm.pl", 
+					    	srcdir=libexec, desthost=host, destdir=dir, 
+						size=file:size("{libexec}/cdm.pl}"), policy="DEFAULT")
+			))
+
 			uParallelFor(file, files
 				provider := provider(file)
 				srchost := hostname(file)
@@ -253,25 +269,35 @@ namespace("vdl"
 				filename := basename(file)
 				size := file:size("{srcdir}/{filename}", host=srchost, provider=provider)
 
-				vdl:cacheAddAndLockFile(filename, destdir, host, size
-					cleanupFiles(cacheFilesToRemove, host)
-					log(LOG:DEBUG, "FILE_STAGE_IN_START file={file} srchost={srchost} srcdir={srcdir} srcname={filename} ",
-						"desthost={host} destdir={destdir} provider={provider}")
-					restartOnError(".*", 2
-					    task:transfer(srcprovider=provider, srchost=srchost, srcfile=filename, 
-					    	srcdir=srcdir, desthost=host, destdir=destdir)
-					)
-					log(LOG:DEBUG, "FILE_STAGE_IN_END file={file} srchost={srchost} srcdir={srcdir} srcname={filename} ",
-						"desthost={host} destdir={destdir} provider={provider}")
-				)
-			)
+				policy := cdm:query(query=file)
+				log(LOG:DEBUG, "policy: {file} : {policy}")
+
+				doStageinFile(provider=provider, srchost=srchost, srcfile=filename, 
+						srcdir=srcdir, desthost=host, destdir=destdir, size=size, policy=policy)
+			)			
 			log(LOG:INFO, "END jobid={jobid} - Staging in finished")
 		)
-		
+
+		element(doStageinFile, [provider, srchost, srcfile, srcdir, desthost, destdir, size, policy]
+			vdl:cacheAddAndLockFile(srcfile, destdir, desthost, size
+				       cleanupFiles(cacheFilesToRemove, desthost)
+
+			log(LOG:DEBUG, "FILE_STAGE_IN_START file={srcfile} srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
+					"desthost={desthost} destdir={destdir} provider={provider}")
+			if (policy == "DEFAULT" then( 
+				restartOnError(".*", 2
+					task:transfer(srcprovider=provider, srchost=srchost, srcfile=srcfile, 
+							srcdir=srcdir, desthost=desthost, destdir=destdir)))
+			else(log(LOG:DEBUG, "FILE_STAGE_IN_SKIP file={srcfile} policy={policy}")))
+			log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
+                                               "desthost={desthost} destdir={destdir} provider={provider}")
+			)			
+ 	        )
+
 		element(doStageout, [jobid, stageouts, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - Staging out files")
 			done := list(
-				uparallelFor(pv, stageouts
+				uParallelFor(pv, stageouts
 					[path, var] := each(pv)
 					file := vdl:absfilename(vdl:getfield(var, path = path))
 					provider := vdl:provider(file)
@@ -286,9 +312,12 @@ namespace("vdl"
 							"destdir={ldir} desthost={dhost} provider={provider}")
 					//make sure we do have the directory on the client side
 					dir:make(ldir, host=dhost, provider=provider)
-					restartOnError(".*", 2
-					    task:transfer(srchost=host, srcfile=bname,
-					        srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)
+					policy := cdm:query(query=file)
+					if (policy == "DEFAULT" then(
+						restartOnError(".*", 2
+							task:transfer(srchost=host, srcfile=bname,
+								srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)))
+					else(log(LOG:DEBUG, "FILE_STAGE_OUT_SKIP srcname={bname}"))
 					)
 					log(LOG:DEBUG, "FILE_STAGE_OUT_END srcname={bname} srcdir={rdir} srchost={host} ",
 						"destdir={ldir} desthost={dhost} provider={provider}")
@@ -437,6 +466,7 @@ namespace("vdl"
 							"-if ",flatten(infiles(stagein)),nl(),
 							"-of ",flatten(outfiles(stageout)),nl(),
 							"-k ",kickstart,nl(),
+							"-cdmfile ",cdm:file(),nl(),
 							"-status ",statusMode,nl())
 						for(argiterator, arguments
 							sys:file:write(wrapfile,append=true,"-a ",argiterator,nl())
@@ -497,7 +527,8 @@ namespace("vdl"
 								"-if", flatten(infiles(stagein)), 
 								"-of", flatten(outfiles(stageout)),
 								"-k", kickstart,
-								"-status", statusMode
+								"-cdmfile", cdm:file(),
+								"-status", statusMode,
 								"-a", maybe(each(arguments))
 							)
 							directory=wfdir

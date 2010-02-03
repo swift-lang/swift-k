@@ -97,4 +97,10 @@
 	
 	<export name="tparallelFor"><elementDef classname="org.griphyn.vdl.karajan.lib.ThrottledParallelFor"/></export>
   </namespace>
+
+  <namespace prefix="cdm">
+  	<export name="query"><elementDef classname="org.globus.swift.data.Query"/></export>
+  	<export name="file"><elementDef classname="org.globus.swift.data.Query"/></export>
+  </namespace>
+
 </karajan>

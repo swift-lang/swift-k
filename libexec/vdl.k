@@ -155,7 +155,9 @@ namespace("vdl"
 			if(
 				sys:not(anyerrors) then(
 					//hmm, you can append to channels!
+					log(LOG:DEBUG, "Starting cleanups")
 					append(warnings, from(warnings, cleanups(cleanup)))
+					log(LOG:DEBUG, "Ending cleanups")
 				)
 				else(
 					log(LOG:INFO, "Errors detected. Cleanup not done.")
