@@ -64,4 +64,31 @@ public class Director {
     	}
     	return Policy.DEFAULT;
     }
+    
+    /** 
+     * Check the policy effect of name with respect to policy_file
+     * @param args {name, policy_file} 
+     */
+    public static void main(String[] args) {
+        if (args.length != 2) {
+            System.out.println("Incorrect args");
+            System.exit(1);
+        }
+            
+        try {
+       
+            String name = args[0]; 
+            File policyFile = new File(args[1]);
+            if (! policyFile.exists()) {
+                System.out.println("Policy file does not exist: " + 
+                    args[1]);
+            }
+            load(policyFile);
+            Policy policy = lookup(name);
+            System.out.println(name + ": " + policy);
+        } catch (Exception e) { 
+            e.printStackTrace();
+            System.exit(2);
+        }
+    }   
 }
