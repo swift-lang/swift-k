@@ -1,7 +1,7 @@
 # this script must be invoked inside of bash, not plain sh
 
 infosection() {
-	echo >& "$INFO"
+        echo >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
 	echo >& "$INFO"
 	echo "        $1" >& "$INFO" 
@@ -98,7 +98,7 @@ getarg() {
 		done
 		VALUE="${VALUE:1}"
 	elif [ "$PARAMFILE" != "" ] && grep -E "^$NAME " $PARAMFILE ; then
-			VALUE=$(grep -E "^$NAME " $PARAMFILE | cut -d ' ' -f 2-)
+		VALUE=$(grep -E "^$NAME " $PARAMFILE | cut -d ' ' -f 2-)
 	else
 		fail 254 "Missing $NAME argument"
 	fi
@@ -113,35 +113,48 @@ closeinfo() {
 	exec 3>&-
 }
 
+contains() {
+	ARRAY=$1
+	X=$2
+
+	for a in ${!ARRAY}
+	do
+		if [[ ${a} == ${X} ]]; then 
+			return 0
+		fi
+	done
+	return 1
+}
+
 cdm() {
-    log "CDM: $@"
+	log "CDM: $@"
 
-    local JOBDIR=$1  # Given jobdir
-    local MODE=$2    # INPUT or OUTPUT
-    local FILE=$3    # User file
-    local POLICY=$4  # DIRECT, BROADCAST, ... 
-    shift 4
-    local ARGS=$@
+	local JOBDIR=$1  # Given jobdir
+	local MODE=$2    # INPUT or OUTPUT
+	local FILE=$3    # User file
+	local POLICY=$4  # DIRECT, BROADCAST, ... 
+	shift 4
+	local ARGS=$@
 
-    case $POLICY in 
-	DIRECT)
-	    DIRECT_DIR=${ARGS[0]}
-	    log "CDM[DIRECT]: Linking $JOBDIR/$FILE to $DIRECT_DIR/$FILE"
-	    if [ $MODE == "INPUT" ]; then 
-		[ -f "$DIRECT_DIR/$FILE" ]
-		checkError 254 "CDM[DIRECT]: $DIRECT_DIR/$FILE does not exist!"
-		ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
-		checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
-	    elif [ $MODE == "OUTPUT" ]; then 
-		touch $DIRECT_DIR/$FILE
-		checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
-		ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
-		checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
-	    else 
-		fail 254 "Unknown MODE: $MODE"
-	    fi
-	    ;;
-    esac
+	case $POLICY in 
+		DIRECT)
+			DIRECT_DIR=${ARGS[0]}
+			log "CDM[DIRECT]: Linking $JOBDIR/$FILE to $DIRECT_DIR/$FILE"
+			if [ $MODE == "INPUT" ]; then 
+				[ -f "$DIRECT_DIR/$FILE" ]
+				checkError 254 "CDM[DIRECT]: $DIRECT_DIR/$FILE does not exist!"
+				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
+				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
+			elif [ $MODE == "OUTPUT" ]; then 
+				touch $DIRECT_DIR/$FILE
+				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
+				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
+				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
+			else 
+				fail 254 "Unknown MODE: $MODE"
+			fi
+			;;
+	esac
 }
 
 COMMANDLINE=$@
@@ -257,13 +270,13 @@ if [ "$STATUSMODE" = "files" ]; then
 fi
 
 if [ "X$SCRATCH" != "X" ]; then
-  log "Job directory mode is: local copy"
-  DIR=$SCRATCH/$JOBDIR/$ID
-  COPYNOTLINK=1
+	log "Job directory mode is: local copy"
+	DIR=$SCRATCH/$JOBDIR/$ID
+	COPYNOTLINK=1
 else
-  log "Job directory mode is: link on shared filesystem"
-  DIR=jobs/$JOBDIR/$ID
-  COPYNOTLINK=0
+	log "Job directory mode is: link on shared filesystem"
+	DIR=jobs/$JOBDIR/$ID
+	COPYNOTLINK=0
 fi
 
 PATH=$PATH:/bin:/usr/bin
@@ -337,13 +350,13 @@ for L in $INF ; do
 done
 
 logstate "LINK_CDM_OUTPUTS"
+SKIPPED_OUTPUT=()
 for L in $OUTF ; do
 	CDM_POLICY=$( perl shared/cdm.pl $L < shared/$CDM_FILE )
 	log "CDM_POLICY: $CDM_POLICY" 
 	if [ $CDM_POLICY != "DEFAULT" ]; then
     	        eval cdm $DIR "OUTPUT" $L $CDM_POLICY
-		eval CDM_OUTPUT_$L="SKIP"
-		break
+		SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
 	fi
 done
 
@@ -406,7 +419,6 @@ log "Job ran successfully"
 
 MISSING=
 for O in $OUTF ; do
-    log "checking: $O"
 	if [ ! -f "$DIR/$O" ]; then
 		if [ "$MISSING" == "" ]; then
 			MISSING=$O
@@ -421,12 +433,12 @@ fi
 
 logstate "MOVING_OUTPUTS $OUTF"
 for O in $OUTF ; do
-    log "output: $O ${CDM_OUTPUTS}"
-	if [ $( eval echo "$"$( echo CDM_OUTPUT_$O ) ) != "SKIP" ]; then
-	    mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
-	    checkError 254 "Failed to move output file $O to shared directory"
+	log "output: $O"
+	if ! contains SKIPPED_OUTPUT $O ; then
+		mv -v "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
+		checkError 254 "Failed to move output file $O to shared directory"
 	else
-	    log "CDM: SKIP OUTPUT: $O"
+		log "CDM: SKIPPED_OUTPUT: $O"
 	fi
 done
 
@@ -445,10 +457,14 @@ logstate "END"
 closeinfo
 
 if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
-	mkdir -p "$WFDIR/info/$JOBDIR"
+        mkdir -p "$WFDIR/info/$JOBDIR"
 	mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
 fi
 
 # ensure we exit with a 0 after a successful execution
 exit 0
 
+# Local Variables: 
+# mode: sh
+# sh-basic-offset: 8
+# End:
