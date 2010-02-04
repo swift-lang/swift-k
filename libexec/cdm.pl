@@ -21,10 +21,11 @@ sub cdm_lookup
 	$pattern = $_;
 	if ($file =~ /$pattern/)
 	{
-	    print("$$hash{$pattern}\n");
+	    $result = "$$hash{$pattern}\n";
 	    last;
 	}
     }
+    print "$result\n";
 }
 
 # Command-line arguments: 
