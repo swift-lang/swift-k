@@ -126,8 +126,19 @@ contains() {
 	return 1
 }
 
-cdm() {
-	log "CDM: $@"
+cdm_lookup() {
+	FILE=$1
+	CDM_FILE=$2
+
+	RESULT="DEFAULT"
+	if [ -f shared/cdm.pl ]; then 
+		RESULT=$( perl shared/cdm.pl $FILE < $CDM_FILE )
+	fi
+	echo $RESULT
+}
+
+cdm_action() {
+	log "CDM_ACTION: $@"
 
 	local JOBDIR=$1  # Given jobdir
 	local MODE=$2    # INPUT or OUTPUT
@@ -200,6 +211,7 @@ fi
 checkEmpty "$JOBDIR" "Missing job directory prefix"
 mkdir -p $INFODIR
 closeinfo
+
 rm -f "$INFODIR/${ID}-info"
 openinfo "$INFODIR/${ID}-info"
 
@@ -330,10 +342,10 @@ log "FIND: $( find . )"
 logstate "LINK_INPUTS"
 for L in $INF ; do
         log "L: $L" 
-        CDM_POLICY=$( perl shared/cdm.pl $L < shared/$CDM_FILE )
-	log "CDM_POLICY: $CDM_POLICY" 
+        CDM_POLICY=$( cdm_lookup $L shared/$CDM_FILE )
+	log "CDM_POLICY: $CDM_POLICY"
 	if [ $CDM_POLICY != "DEFAULT" ]; then
-    	        eval cdm $DIR "INPUT" $L $CDM_POLICY 
+    	        eval cdm_action $DIR "INPUT" $L $CDM_POLICY 
 		continue
 	fi
 	if [ $COPYNOTLINK = 1 ]; then
@@ -352,7 +364,7 @@ done
 logstate "LINK_CDM_OUTPUTS"
 SKIPPED_OUTPUT=()
 for L in $OUTF ; do
-	CDM_POLICY=$( perl shared/cdm.pl $L < shared/$CDM_FILE )
+	CDM_POLICY=$( cdm_lookup $L shared/$CDM_FILE )
 	log "CDM_POLICY: $CDM_POLICY" 
 	if [ $CDM_POLICY != "DEFAULT" ]; then
     	        eval cdm $DIR "OUTPUT" $L $CDM_POLICY
