@@ -365,9 +365,9 @@ logstate "LINK_CDM_OUTPUTS"
 SKIPPED_OUTPUT=()
 for L in $OUTF ; do
 	CDM_POLICY=$( cdm_lookup $L shared/$CDM_FILE )
-	log "CDM_POLICY: $CDM_POLICY" 
+	log "CDM_POLICY: $L $CDM_POLICY" 
 	if [ $CDM_POLICY != "DEFAULT" ]; then
-    	        eval cdm $DIR "OUTPUT" $L $CDM_POLICY
+    	        eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
 		SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
 	fi
 done
