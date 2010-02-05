@@ -288,6 +288,9 @@ namespace("vdl"
 				restartOnError(".*", 2
 					task:transfer(srcprovider=provider, srchost=srchost, srcfile=srcfile, 
 							srcdir=srcdir, desthost=desthost, destdir=destdir)))
+			    policy == "BROADCAST" then(
+				log(LOG:DEBUG, "FILE_STAGE_IN_BROADCAST file={srcfile} policy={policy}")
+				cdm:broadcast(srcfile=srcfile, srcdir=srcdir))
 			else(log(LOG:DEBUG, "FILE_STAGE_IN_SKIP file={srcfile} policy={policy}")))
 			log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
                                                "desthost={desthost} destdir={destdir} provider={provider}")

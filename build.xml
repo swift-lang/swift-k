@@ -254,6 +254,7 @@ updateOptions "file:///dev/urandom" "java.security.egd"
 		</replace>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
+		<chmod perm="+x" file="${dist.dir}/libexec/cdm_broadcast.sh"/>
 	</target>
 
 	<target name="antlr">

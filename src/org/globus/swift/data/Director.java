@@ -3,10 +3,13 @@ package org.globus.swift.data;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,12 +34,13 @@ public class Director {
     /**
        Maps from Patterns to Policies
      */
-    static Map map;
+    static Map map = new LinkedHashMap();
 
-    static {
-    	map = new LinkedHashMap();
-    }
-
+    /** 
+       Remember the files we have broadcasted
+     */
+    static Set<String> broadcasted = new HashSet<String>();
+    
     public static void load(File policyFile) throws IOException {
         logger.info("loading: " + policyFile);
         Director.policyFile = policyFile;
@@ -52,6 +56,8 @@ public class Director {
         String[] tokens = LineReader.tokenize(s);
         Pattern pattern = Pattern.compile(tokens[0]);
         Policy policy = Policy.valueOf(tokens[1]);
+        List<String> tokenList = Arrays.asList(tokens);        
+        policy.settings(tokenList.subList(2,tokenList.size()));
         map.put(pattern, policy);
     }
 
@@ -63,6 +69,14 @@ public class Director {
     			return (Policy) map.get(pattern);
     	}
     	return Policy.DEFAULT;
+    }
+    
+    public static boolean broadcasted(String file, String dir) {
+        return broadcasted.contains(dir+"/"+file);
+    }
+    
+    public static void broadcast(String file, String dir) {
+        broadcasted.add(dir+"/"+file);
     }
     
     /** 

@@ -165,6 +165,18 @@ cdm_action() {
 				fail 254 "Unknown MODE: $MODE"
 			fi
 			;;
+		BROADCAST)
+			BROADCAST_DIR=${ARGS[0]}
+			log "CDM[BROADCAST]: Linking $JOBDIR/$FILE to $BROADCAST_DIR/$FILE"
+			if [ $MODE == "INPUT" ]; then 
+				[ -f "$BROADCAST_DIR/$FILE" ]
+				checkError 254 "CDM[BROADCAST]: $BROADCAST_DIR/$FILE does not exist!"
+				ln -s $BROADCAST_DIR/$FILE $JOBDIR/$FILE
+				checkError 254 "CDM[BROADCAST]: Linking to $BROADCAST_DIR/$FILE failed!"
+			else 
+				fail 254 "Cannot BROADCAST an output file!"
+			fi
+			;;
 	esac
 }
 
