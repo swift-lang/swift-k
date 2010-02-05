@@ -12,11 +12,12 @@ sub print_hash
 
 sub cdm_lookup
 {
-    my $hash = $_[0];
-    my $file = $_[1];
+    my $keys = $_[0];
+    my $hash = $_[1];
+    my $file = $_[2];
 
     $result = "DEFAULT";
-    foreach (keys %$hash)
+    foreach (@$keys)
     {
 	$pattern = $_;
 	if ($file =~ /$pattern/)
@@ -32,7 +33,8 @@ sub cdm_lookup
 $file = $ARGV[0];
 
 # Read fs.data off of stdin: 
-%map = ();
+@keys = ();
+%map  = ();
 while (<STDIN>)
 {
     chomp;
@@ -41,7 +43,8 @@ while (<STDIN>)
     @tokens = split(/ /, $_); 
     $key    = shift(@tokens);
     $rest   = join(' ', @tokens);
+    @keys   = (@keys, $key); 
     $map{$key} = $rest;
 }
 
-cdm_lookup(\%map, $file);
+cdm_lookup(\@keys, \%map, $file);
