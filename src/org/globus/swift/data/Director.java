@@ -4,6 +4,7 @@ package org.globus.swift.data;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -32,9 +33,14 @@ public class Director {
     static File policyFile;
 
     /**
-       Maps from Patterns to Policies
+       Maps from Patterns to Policies for fs.data rules
      */
-    static Map map = new LinkedHashMap();
+    static Map<Pattern,Policy> map = new LinkedHashMap();
+    
+    /**
+       Maps from String names to String values for fs.data properties
+    */
+    static Map<String,String> properties = new HashMap();
 
     /** 
        Remember the files we have broadcasted
@@ -54,19 +60,43 @@ public class Director {
 
     static void addLine(String s) {
         String[] tokens = LineReader.tokenize(s);
-        Pattern pattern = Pattern.compile(tokens[0]);
-        Policy policy = Policy.valueOf(tokens[1]);
-        List<String> tokenList = Arrays.asList(tokens);        
-        policy.settings(tokenList.subList(2,tokenList.size()));
-        map.put(pattern, policy);
+        String type = tokens[0];
+        if (type.equals("rule")) { 
+            addRule(tokens);
+        }
+        else if (type.equals("property")) { 
+            addProperty(tokens);
+        }
+       
     }
 
+    static void addRule(String[] tokens) { 
+        Pattern pattern = Pattern.compile(tokens[1]);
+        Policy policy = Policy.valueOf(tokens[2]);
+        List<String> tokenList = Arrays.asList(tokens);        
+        policy.settings(tokenList.subList(3,tokenList.size()));
+        map.put(pattern, policy);
+    }
+    
+    static void addProperty(String[] tokens) { 
+        String name = tokens[1];
+        String value = concat(tokens, 2);        
+        properties.put(name, value);
+    }
+    
+    static String concat(String[] tokens, int start) {
+        StringBuilder result = new StringBuilder();
+        for (int i = start; i < tokens.length; i++) { 
+            result.append(tokens[i]);
+        }
+        return result.toString();
+    }
+    
     public static Policy lookup(String file) {
-    	for (Iterator it = map.keySet().iterator(); it.hasNext(); ) {
-    	    Pattern pattern = (Pattern) it.next();
+    	for (Pattern pattern : map.keySet()) {
     		Matcher matcher = pattern.matcher(file);
     		if (matcher.matches())
-    			return (Policy) map.get(pattern);
+    			return map.get(pattern);
     	}
     	return Policy.DEFAULT;
     }
