@@ -101,6 +101,13 @@ public class Director {
     	return Policy.DEFAULT;
     }
     
+    public static String property(String name) {
+        String result = properties.get(name);
+        if (result == null) 
+            result = "UNSET";
+        return result;
+    }
+    
     public static boolean broadcasted(String file, String dir) {
         return broadcasted.contains(dir+"/"+file);
     }
@@ -134,5 +141,5 @@ public class Director {
             e.printStackTrace();
             System.exit(2);
         }
-    }   
+    }
 }
