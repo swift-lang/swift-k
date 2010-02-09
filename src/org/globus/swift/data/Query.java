@@ -19,7 +19,7 @@ public class Query extends FunctionsCollection {
 
     static {
         setArguments("cdm_query", new Arg[]{ PA_QUERY });
-        setArguments("cdm_name", new Arg[]{ PA_NAME });
+        setArguments("cdm_get", new Arg[]{ PA_NAME });
         setArguments("cdm_file", new Arg[]{});
     }
 
@@ -29,7 +29,10 @@ public class Query extends FunctionsCollection {
         return policy.toString();
     }
 
-    public String cdm_property(VariableStack stack) throws ExecutionException {
+    /** 
+     Get a CDM property
+    */
+    public String cdm_get(VariableStack stack) throws ExecutionException {
         String name  = (String) PA_NAME.getValue(stack);
         String value = Director.property(name);
         return value;
