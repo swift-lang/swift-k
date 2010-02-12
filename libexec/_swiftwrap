@@ -1,4 +1,5 @@
 # this script must be invoked inside of bash, not plain sh
+# note that this script modifies $IFS
 
 infosection() {
         echo >& "$INFO"
@@ -132,7 +133,7 @@ cdm_lookup() {
 
 	RESULT="DEFAULT"
 	if [ -f shared/cdm.pl ]; then 
-		RESULT=$( perl shared/cdm.pl $FILE < $CDM_FILE )
+		RESULT=$( perl shared/cdm.pl lookup $FILE < $CDM_FILE )
 	fi
 	echo $RESULT
 }
@@ -177,7 +178,21 @@ cdm_action() {
 				fail 254 "Cannot BROADCAST an output file!"
 			fi
 			;;
+		GATHER)
+			if [ $MODE == "INPUT" ]; then 
+				fail 254 "Cannot GATHER an input file!"
+			fi
 	esac
+}
+
+cdm_gather()
+{
+	GATHER_OUTPUT=${*}
+	if [[ $CDM_FILE == "" ]]; then 
+		return
+	fi
+	
+	cdm_gather_action $GATHER_MAX $GATHER_OUTPUT
 }
 
 COMMANDLINE=$@
@@ -263,7 +278,10 @@ KICKSTART=$VALUE
 shift $SHIFTCOUNT
 
 getarg "-cdmfile" "$@"
-CDM_FILE=$VALUE
+CDM_FILE=
+if [ "X$VALUE" != "X" ]; then 
+	CDM_FILE=shared/$VALUE
+fi
 shift $SHIFTCOUNT
 
 getarg "-status" "$@"
@@ -291,6 +309,12 @@ fi
 
 if [ "$STATUSMODE" = "files" ]; then
 	mkdir -p $WFDIR/status/$JOBDIR
+fi
+
+if [ "X$CDM_FILE" != "X" ]; then
+	logstate "SOURCE_CDM_LIB $WFDIR/shared/cdm_lib.sh"
+	source $WFDIR/shared/cdm_lib.sh
+	checkError 254 "Could not source: $WFDIR/shared/cdm_lib.sh"
 fi
 
 if [ "X$SCRATCH" != "X" ]; then
@@ -348,14 +372,11 @@ for D in $DIRS ; do
 	log "Created output directory: $DIR/$D"
 done
 
-log "PWD: $( pwd )"
-log "FIND: $( find . )"
-
 logstate "LINK_INPUTS"
 for L in $INF ; do
-        CDM_POLICY=$( cdm_lookup $L shared/$CDM_FILE )
-	log "CDM_POLICY: $L -> $CDM_POLICY"
+        CDM_POLICY=$( cdm_lookup $L $CDM_FILE )
 	if [ $CDM_POLICY != "DEFAULT" ]; then
+		log "CDM_POLICY: $L -> $CDM_POLICY"
     	        eval cdm_action $DIR "INPUT" $L $CDM_POLICY 
 		continue
 	fi
@@ -374,12 +395,16 @@ done
 
 logstate "LINK_CDM_OUTPUTS"
 SKIPPED_OUTPUT=()
+GATHER_OUTPUT=()
 for L in $OUTF ; do
-	CDM_POLICY=$( cdm_lookup $L shared/$CDM_FILE )
-	log "CDM_POLICY: $L -> $CDM_POLICY" 
+	CDM_POLICY=$( cdm_lookup $L $CDM_FILE )
 	if [ $CDM_POLICY != "DEFAULT" ]; then
+		log "CDM_POLICY: $L -> $CDM_POLICY" 
     	        eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
 		SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
+	fi
+	if [ $CDM_POLICY == "GATHER" ]; then 
+		GATHER_OUTPUT=( $GATHER_OUTPUT $L )
 	fi
 done
 
@@ -456,23 +481,21 @@ fi
 
 logstate "MOVING_OUTPUTS $OUTF"
 for O in $OUTF ; do
-	log "output: $O"
 	if ! contains SKIPPED_OUTPUT $O ; then
 		mv -v "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
 		checkError 254 "Failed to move output file $O to shared directory"
-	else
-		log "CDM: SKIPPED_OUTPUT: $O"
 	fi
 done
 
+cdm_gather $GATHER_OUTPUT
+
 logstate "RM_JOBDIR"
-# rm -rf "$DIR" 2>&1 >& "$INFO"
+rm -rf "$DIR" 2>&1 >& "$INFO"
 checkError 254 "Failed to remove job directory $DIR" 
 
 if [ "$STATUSMODE" = "files" ]; then
 	logstate "TOUCH_SUCCESS"
 	touch $WFDIR/status/${JOBDIR}/${ID}-success
-	log "TOUCH CODE: $WFDIR/status/${JOBDIR}/${ID}-success $?"
 fi
 
 logstate "END"

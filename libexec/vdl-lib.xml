@@ -100,7 +100,7 @@
 
   <namespace prefix="cdm">
   	<export name="query"><elementDef classname="org.globus.swift.data.Query"/></export>
-	<export name="property"><elementDef classname="org.globus.swift.data.Query"/></export>
+	<export name="get"><elementDef classname="org.globus.swift.data.Query"/></export>
   	<export name="file"><elementDef classname="org.globus.swift.data.Query"/></export>
   	<export name="broadcast"><elementDef classname="org.globus.swift.data.Action"/></export>
   </namespace>

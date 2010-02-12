@@ -191,6 +191,25 @@ namespace("vdl"
 		
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "START dir={dir} host={host}")
+			cdmfile := cdm:file()
+			log(LOG:INFO, "cdmfile {cdmfile}")
+			if(cdmfile != "" then(
+				log(LOG:INFO, "submitting cdm_cleanup.sh to {dir}")
+				task:transfer(srcfile="cdm_cleanup.sh", 
+					      srcdir="{swift.home}/libexec",
+					      desthost=host, destdir=dir)
+				task:transfer(srcfile="cdm_lib.sh", 
+					      srcdir="{swift.home}/libexec",
+					      desthost=host, destdir=dir)
+			        log(LOG:INFO, "execute: cdm_cleanup.sh")
+				task:execute(
+					     executable="/bin/bash", 
+					     arguments=list("{dir}/cdm_cleanup.sh", 
+					                     cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET")
+							     sys:uid() )
+					     host=host, batch=true, tcprofile(host))
+				)
+			)
 			if(vdl:configProperty("sitedir.keep") == "false"
 				task:execute(
 					vdl:siteprofile(host, "swift:cleanupCommand"), 
@@ -259,6 +278,9 @@ namespace("vdl"
 				doStageinFile(provider="file", srchost="localhost", srcfile="cdm.pl", 
 					    	srcdir=libexec, desthost=host, destdir=dir, 
 						size=file:size("{libexec}/cdm.pl}"), policy="DEFAULT")
+				doStageinFile(provider="file", srchost="localhost", srcfile="cdm_lib.sh", 
+					    	srcdir=libexec, desthost=host, destdir=dir, 
+						size=file:size("{libexec}/cdm_lib.sh}"), policy="DEFAULT")
 			))
 
 			uParallelFor(file, files
