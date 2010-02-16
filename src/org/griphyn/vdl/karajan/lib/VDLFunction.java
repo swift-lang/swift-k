@@ -283,6 +283,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			return relativize(String.valueOf(var.getValue()));
 		}
 		else {
+			if (var.getMapper() == null) {
+				throw new ExecutionException("Cannot invoke filename() on data without a mapper: " + var);
+			}
 			PhysicalFormat f = var.getMapper().map(var.getPathFromRoot());
 			if (f instanceof GeneralizedFileFormat) {
 				String filename = ((GeneralizedFileFormat) f).getURIAsString();
