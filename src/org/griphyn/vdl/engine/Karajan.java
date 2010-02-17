@@ -711,7 +711,7 @@ public class Karajan {
 		Iterator scopeIterator = innerScope.getVariableIterator();
 		while(scopeIterator.hasNext()) {
 			String v=(String) scopeIterator.next();
-			scope.addWriter(v, statementID, false);
+			scope.addWriter(v, statementID, true);
 		}
 		scope.appendStatement(iterateST);
 	}
