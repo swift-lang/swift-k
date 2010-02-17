@@ -743,11 +743,15 @@ public class Karajan {
 			statementsForSymbols(foreach.getBody(), innerScope);
 			statements(foreach.getBody(), innerScope);
 
+			String inVar = (String) inST.getAttribute("var");
 			Object statementID = new Integer(callID++);
 			Iterator scopeIterator = innerScope.getVariableIterator();
 			while(scopeIterator.hasNext()) {
 				String v=(String) scopeIterator.next();
 				scope.addWriter(v, statementID, true);
+				if (v.equals(inVar) && !innerScope.isVariableLocallyDefined(v)) {
+				    foreachST.setAttribute("selfClose", "true");
+				}
 			}
 			scope.appendStatement(foreachST);
 		} catch(CompilationException re) {
