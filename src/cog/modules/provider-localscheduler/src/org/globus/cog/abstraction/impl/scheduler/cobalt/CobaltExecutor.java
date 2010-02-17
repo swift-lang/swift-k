@@ -173,7 +173,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		new File(getStderr()).delete();
 	}
 	
-	private static QueuePoller poller;
+	private static AbstractQueuePoller poller;
 
 	protected AbstractQueuePoller getQueuePoller() {
 		synchronized(CobaltExecutor.class) {

@@ -30,11 +30,25 @@ public abstract class AbstractExecutor implements ProcessListener {
 	public static final Logger logger = Logger
 			.getLogger(AbstractExecutor.class);
 
+    protected static final boolean[] TRIGGERS;
+    
+    static {
+        TRIGGERS = new boolean[128];
+        TRIGGERS[' '] = true;
+        TRIGGERS['\n'] = true;
+        TRIGGERS['\t'] = true;
+        TRIGGERS['|'] = true;
+        TRIGGERS['\\'] = true;
+        TRIGGERS['>'] = true;
+        TRIGGERS['<'] = true;
+    }
+
 	private File script;
 	private String stdout, stderr, exitcode, jobid;
 	private JobSpecification spec;
 	private Task task;
 	private ProcessListener listener;
+	private Job job;
 
 	protected AbstractExecutor(Task task, ProcessListener listener) {
 		this.task = task;
@@ -111,7 +125,7 @@ public abstract class AbstractExecutor implements ProcessListener {
 		process.getInputStream().close();
 
 		getQueuePoller().addJob(
-				createJob(jobid, stdout, spec.getStdOutputLocation(), stderr,
+				job = createJob(jobid, stdout, spec.getStdOutputLocation(), stderr,
 						spec.getStdErrorLocation(), exitcode, this));
 	}
 
@@ -139,9 +153,23 @@ public abstract class AbstractExecutor implements ProcessListener {
 			logger.debug("Wrote " + getName() + " script to " + script);
 		}
 
-		String[] cmdline = new String[] { getProperties().getSubmitCommand(),
-				script.getAbsolutePath() };
-		return cmdline;
+		String[] params = getAdditionalSubmitParameters();
+		if (params == null) {
+		    params = new String[0];
+		}
+		    
+	    String[] cmdline = new String[2 + params.length];
+	    cmdline[0] = getProperties().getSubmitCommand();
+	    for (int i = 0; i < params.length; i++) {
+	        cmdline[i + 1] = params[i];
+	    }
+	    cmdline[cmdline.length - 1] = script.getAbsolutePath();
+	
+	    return cmdline;
+	}
+	
+	protected String[] getAdditionalSubmitParameters() {
+	    return null;
 	}
 
 	public void cancel() throws TaskSubmissionException {
@@ -297,4 +325,84 @@ public abstract class AbstractExecutor implements ProcessListener {
 	public String getJobid() {
 		return jobid;
 	}
+
+    public Job getJob() {
+        return job;
+    }
+
+    protected String quote(String s) {
+    	if ("".equals(s)) {
+    		return "\"\"";
+    	}
+    	boolean quotes = false;
+    	for (int i = 0; i < s.length(); i++) {
+    		char c = s.charAt(i);
+    		if (c < 128 && TRIGGERS[c]) {
+    			quotes = true;
+    			break;
+    		}
+    	}
+    	if (!quotes) {
+    		return s;
+    	}
+    	StringBuffer sb = new StringBuffer();
+    	if (quotes) {
+    		sb.append('"');
+    	}
+    	for (int i = 0; i < s.length(); i++) {
+    		char c = s.charAt(i);
+    		if (c == '"' || c == '\\') {
+    			sb.append('\\');
+    		}
+    		sb.append(c);
+    	}
+    	if (quotes) {
+    		sb.append('"');
+    	}
+    	return sb.toString();
+    }
+
+    protected String replaceVars(String str) {
+    	StringBuffer sb = new StringBuffer();
+    	boolean escaped = false;
+    	for (int i = 0; i < str.length(); i++) {
+    		char c = str.charAt(i);
+    		if (c == '\\') {
+    			if (escaped) {
+    				sb.append('\\');
+    			}
+    			else {
+    				escaped = true;
+    			}
+    		}
+    		else {
+    			if (c == '$' && !escaped) {
+    				if (i == str.length() - 1) {
+    					sb.append('$');
+    				}
+    				else {
+    					int e = str.indexOf(' ', i);
+    					if (e == -1) {
+    						e = str.length();
+    					}
+    					String name = str.substring(i + 1, e);
+    					Object attr = getSpec().getAttribute(name);
+    					if (attr != null) {
+    						sb.append(attr.toString());
+    					}
+    					else {
+    						sb.append('$');
+    						sb.append(name);
+    					}
+    					i = e;
+    				}
+    			}
+    			else {
+    				sb.append(c);
+    			}
+    			escaped = false;
+    		}
+    	}
+    	return sb.toString();
+    }
 }

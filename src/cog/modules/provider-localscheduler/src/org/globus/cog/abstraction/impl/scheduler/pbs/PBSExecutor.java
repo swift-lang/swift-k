@@ -53,16 +53,13 @@ public class PBSExecutor extends AbstractExecutor {
 			String stderr) throws IOException {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
-		wr.write("#PBS -S /bin/sh\n");
+		wr.write("#PBS -S /bin/bash\n");
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
 		writeAttr("count", "-l nodes=", wr);
 		writeWallTime(wr);
 		writeAttr("queue", "-q ", wr);
-		if (spec.getStdInput() != null) {
-			throw new IOException("The PBSlocal provider cannot redirect STDIN");
-		}
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
 		Iterator i = spec.getEnvironmentVariableNames().iterator();
@@ -77,6 +74,19 @@ public class PBSExecutor extends AbstractExecutor {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
 		}
+		boolean multiple = false; 
+		if ("multiple".equals(type)) {		    
+		    multiple = true;
+
+		}
+		
+		if (multiple) {
+            wr.write("NODES=`cat $PE_HOSTLIST`\n");
+            wr.write("ECF=" + exitcodefile + "\n");
+            wr.write("INDEX=0\n");
+            wr.write("for NODE in $NODES; do\n");
+            wr.write("  ssh $NODE /bin/bash -c \"");
+        }
 		if (type != null) {
 			String wrapper = Properties.getProperties().getProperty(
 					"wrapper." + type);
@@ -95,7 +105,7 @@ public class PBSExecutor extends AbstractExecutor {
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
-		wr.write("cat $PBS_NODEFILE | pdsh -N -w - ");
+		
 		wr.write(quote(spec.getExecutable()));
 		List args = spec.getArgumentsAsList();
 		if (args != null && args.size() > 0) {
@@ -108,100 +118,39 @@ public class PBSExecutor extends AbstractExecutor {
 				}
 			}
 		}
+		
+		if (spec.getStdInput() != null) {
+            wr.write(" < " + quote(spec.getStdInput()));
+        }
+		if (multiple) {
+		    wr.write("; echo \\$? > $ECF.$INDEX\" &");
+		}
 		wr.write('\n');
-
-		wr.write("/bin/echo $? >" + exitcodefile + '\n');
+		if (multiple) {
+		    wr.write("  INDEX=$((INDEX + 1))\n");
+		    wr.write("done\n");
+            wr.write("wait\n");
+            wr.write("EC=0\n");
+            wr.write("INDEX=0\n");
+            wr.write("PATH=PATH:/bin:/usr/bin\n");
+            wr.write("for NODE in $NODES; do\n");
+            wr.write("  touch $ECF.$INDEX\n");
+            wr.write("  read TEC < $ECF.$INDEX\n");
+            wr.write("  rm $ECF.$INDEX\n");
+            wr.write("  if [ \"$EC\" = \"0\" -a \"$TEC\" != \"0\" ]; then\n");
+            wr.write("    EC=$TEC\n");
+            wr.write("    /bin/echo $EC > $ECF\n");
+            wr.write("  fi\n");
+            wr.write("  INDEX=$((INDEX + 1))\n");
+		}
+		else {
+		    wr.write("/bin/echo $? >" + exitcodefile + '\n');
+		}
+		if (multiple) {
+		    wr.write("done\n");
+		}
 		wr.close();
-	}
-
-	private static final boolean[] TRIGGERS;
-
-	static {
-		TRIGGERS = new boolean[128];
-		TRIGGERS[' '] = true;
-		TRIGGERS['\n'] = true;
-		TRIGGERS['\t'] = true;
-		TRIGGERS['|'] = true;
-		TRIGGERS['\\'] = true;
-		TRIGGERS['>'] = true;
-		TRIGGERS['<'] = true;
-	}
-
-	protected String quote(String s) {
-		if ("".equals(s)) {
-			return "\"\"";
-		}
-		boolean quotes = false;
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-			if (c < 128 && TRIGGERS[c]) {
-				quotes = true;
-				break;
-			}
-		}
-		if (!quotes) {
-			return s;
-		}
-		StringBuffer sb = new StringBuffer();
-		if (quotes) {
-			sb.append('"');
-		}
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-			if (c == '"' || c == '\\') {
-				sb.append('\\');
-			}
-			sb.append(c);
-		}
-		if (quotes) {
-			sb.append('"');
-		}
-		return sb.toString();
-	}
-
-	protected String replaceVars(String str) {
-		StringBuffer sb = new StringBuffer();
-		boolean escaped = false;
-		for (int i = 0; i < str.length(); i++) {
-			char c = str.charAt(i);
-			if (c == '\\') {
-				if (escaped) {
-					sb.append('\\');
-				}
-				else {
-					escaped = true;
-				}
-			}
-			else {
-				if (c == '$' && !escaped) {
-					if (i == str.length() - 1) {
-						sb.append('$');
-					}
-					else {
-						int e = str.indexOf(' ', i);
-						if (e == -1) {
-							e = str.length();
-						}
-						String name = str.substring(i + 1, e);
-						Object attr = getSpec().getAttribute(name);
-						if (attr != null) {
-							sb.append(attr.toString());
-						}
-						else {
-							sb.append('$');
-							sb.append(name);
-						}
-						i = e;
-					}
-				}
-				else {
-					sb.append(c);
-				}
-				escaped = false;
-			}
-		}
-		return sb.toString();
-	}
+	}	
 
 	protected String getName() {
 		return "PBS";
