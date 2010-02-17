@@ -202,8 +202,8 @@ iterate(declarations,statements,cond,var) ::= <<
 </vdl:infinitecountingwhile>
 >>
 
-foreach(var,in,indexVar,declarations,statements,line) ::= <<
-<vdl:tparallelFor name="\$">
+foreach(var,in,indexVar,declarations,statements,line,selfClose) ::= <<
+<vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$>
   <getarrayiterator>$in$</getarrayiterator>
   <set names="\$\$, $var$">
     <each items="{\$}"/>
