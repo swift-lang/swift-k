@@ -1,3 +1,8 @@
+(02/17/10)
+
+*** Fixed deadlock when iterating on an array that is being written to
+    in a foreach loop
+
 (07/03/09)
 *** New import keyword which allows other SwiftScript source files to be
     imported.
