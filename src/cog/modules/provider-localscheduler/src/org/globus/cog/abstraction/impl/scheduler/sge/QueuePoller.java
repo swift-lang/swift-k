@@ -10,6 +10,7 @@
 package org.globus.cog.abstraction.impl.scheduler.sge;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -96,14 +97,26 @@ public class QueuePoller extends AbstractQueuePoller {
         while (i.hasNext()) {
             Map.Entry e = (Map.Entry) i.next();
             String id = (String) e.getKey();
+            Job job = (Job) e.getValue();
             if (!processed.contains(id)) {
-                Job job = (Job) e.getValue();
                 if (logger.isDebugEnabled()) {
                     logger.debug(id + " is done");
                 }
                 job.setState(Job.STATE_DONE);
                 if (job.getState() == Job.STATE_DONE) {
                     addDoneJob(id);
+                }
+            }
+            else {
+                // at least on Ranger the job is done long
+                // before qstat reports it as done, so check
+                // if the exit code file is there
+                File f = new File(job.getExitcodeFileName());
+                if (f.exists()) {
+                    job.setState(Job.STATE_DONE);
+                    if (job.getState() == Job.STATE_DONE) {
+                        addDoneJob(id);
+                    }
                 }
             }
         }

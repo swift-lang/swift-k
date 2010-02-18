@@ -81,11 +81,7 @@ public class PBSExecutor extends AbstractExecutor {
 		}
 		
 		if (multiple) {
-            wr.write("NODES=`cat $PE_HOSTLIST`\n");
-            wr.write("ECF=" + exitcodefile + "\n");
-            wr.write("INDEX=0\n");
-            wr.write("for NODE in $NODES; do\n");
-            wr.write("  ssh $NODE /bin/bash -c \"");
+		    writeMultiJobPreamble(wr, exitcodefile);
         }
 		if (type != null) {
 			String wrapper = Properties.getProperties().getProperty(
@@ -123,34 +119,24 @@ public class PBSExecutor extends AbstractExecutor {
             wr.write(" < " + quote(spec.getStdInput()));
         }
 		if (multiple) {
-		    wr.write("; echo \\$? > $ECF.$INDEX\" &");
-		}
-		wr.write('\n');
-		if (multiple) {
-		    wr.write("  INDEX=$((INDEX + 1))\n");
-		    wr.write("done\n");
-            wr.write("wait\n");
-            wr.write("EC=0\n");
-            wr.write("INDEX=0\n");
-            wr.write("PATH=PATH:/bin:/usr/bin\n");
-            wr.write("for NODE in $NODES; do\n");
-            wr.write("  touch $ECF.$INDEX\n");
-            wr.write("  read TEC < $ECF.$INDEX\n");
-            wr.write("  rm $ECF.$INDEX\n");
-            wr.write("  if [ \"$EC\" = \"0\" -a \"$TEC\" != \"0\" ]; then\n");
-            wr.write("    EC=$TEC\n");
-            wr.write("    /bin/echo $EC > $ECF\n");
-            wr.write("  fi\n");
-            wr.write("  INDEX=$((INDEX + 1))\n");
+		    writeMultiJobPostamble(wr);
 		}
 		else {
+		    wr.write('\n');
 		    wr.write("/bin/echo $? >" + exitcodefile + '\n');
 		}
-		if (multiple) {
-		    wr.write("done\n");
-		}
 		wr.close();
-	}	
+	}
+	
+	protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
+            throws IOException {
+        wr.write("NODES=`cat $PBS_NODEFILE`\n");
+        wr.write("ECF=" + exitcodefile + "\n");
+        wr.write("INDEX=0\n");
+        wr.write("for NODE in $NODES; do\n");
+        wr.write("  echo \"N\" >$ECF.$INDEX\n");
+        wr.write("  ssh $NODE /bin/bash -c \"");
+    }
 
 	protected String getName() {
 		return "PBS";
