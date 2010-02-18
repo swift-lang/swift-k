@@ -123,7 +123,7 @@ public class SGEExecutor extends AbstractExecutor {
         }
 
         if (multiple) {
-            wr.write("NODES=`cat $PE_HOSTLIST`\n");
+            wr.write("NODES=`cat $PE_HOSTFILE`\n");
             wr.write("ECF=" + exitcodefile + "\n");
             wr.write("INDEX=0\n");
             wr.write("for NODE in $NODES; do\n");
