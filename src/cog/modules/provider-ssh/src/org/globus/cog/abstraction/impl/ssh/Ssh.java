@@ -234,14 +234,19 @@ public class Ssh {
 
                 });
 
+                boolean authenticated = false;
                 if (credentials instanceof PublicKeyAuthentication) {
-                    authenticateWithPublicKey(true);
+                    authenticated = authenticateWithPublicKey(true);
                 }
                 else if (credentials instanceof PasswordAuthentication) {
-                    authenticateWithPassword(true);
+                    authenticated = authenticateWithPassword(true);
                 }
                 else if (credentials instanceof InteractiveAuthentication) {
-                    authenticateWithKBI(true);
+                    authenticated = authenticateWithKBI(true);
+                }
+                
+                if (authenticated) {
+                    return;
                 }
 
                 if (username == null) {
@@ -252,8 +257,6 @@ public class Ssh {
                     throw new InvalidSecurityContextException(
                         "Authentication canceled by the user");
                 }
-
-                boolean authenticated = false;
 
                 if (logger.isDebugEnabled()) {
                     logger.debug("Authenticating " + username);
