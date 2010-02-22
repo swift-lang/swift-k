@@ -191,6 +191,9 @@ cdm_gather()
 	if [[ $CDM_FILE == "" ]]; then 
 		return
 	fi
+	if [[ $GATHER_OUTPUT == "" ]]; then 
+		return
+	fi
 	
 	cdm_gather_action $GATHER_MAX $GATHER_OUTPUT
 }
