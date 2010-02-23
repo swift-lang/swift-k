@@ -23,6 +23,7 @@ public class WallTime implements Comparable {
         FORMATTERS.put("pbs", new PBSFormatter());
         FORMATTERS.put("globus-jobmanager-pbs", new PBSFormatter());
         FORMATTERS.put("pbs-native", new NativePBSFormatter());
+        FORMATTERS.put("sge-native", new NativeSGEFormatter());
     }
 
     public static Formatter getFormatter(String type) {
@@ -171,6 +172,9 @@ public class WallTime implements Comparable {
      * 
      */
     private static class NativePBSFormatter extends HHMMSSFormatter {
+    }
+    
+    private static class NativeSGEFormatter extends HHMMSSFormatter {
     }
 
     public int compareTo(Object o) {
