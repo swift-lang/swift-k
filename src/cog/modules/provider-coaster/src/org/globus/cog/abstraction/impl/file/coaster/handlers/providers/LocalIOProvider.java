@@ -88,7 +88,7 @@ public class LocalIOProvider implements IOProvider {
                 }
             }
             catch (InterruptedException e) {
-                throw new IOException(e);
+                throw new IOException(e.toString());
             }
         }
 
@@ -132,7 +132,7 @@ public class LocalIOProvider implements IOProvider {
                 }
             }
             catch (InterruptedException e) {
-                throw new IOException(e);
+                throw new IOException(e.toString());
             }
         }
 
