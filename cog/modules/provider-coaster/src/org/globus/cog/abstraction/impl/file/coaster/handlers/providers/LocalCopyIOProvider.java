@@ -69,7 +69,7 @@ public class LocalCopyIOProvider implements IOProvider {
                 return uri.getPath().substring(1);
             }
             catch (URISyntaxException e) {
-                throw new IOException(e);
+                throw new IOException(e.toString());
             }
         }
 

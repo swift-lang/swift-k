@@ -81,7 +81,7 @@ public class ProxyIOProvider implements IOProvider {
                 cmd.executeAsync(channel, this);
             }
             catch (Exception e) {
-                throw new IOException(e);
+                throw new IOException(e.getMessage());
             }
         }
 
