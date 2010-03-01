@@ -139,10 +139,10 @@ public class ProcedureSignature {
 		proceduresMap.put("trace", trace);
 
 		ProcedureSignature tracef = new ProcedureSignature("tracef");
-		trace.setAnyNumOfInputArgs();
-		trace.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("tracef", trace);
-			
+		tracef.setAnyNumOfInputArgs();
+		tracef.setInvocationMode(INVOCATION_INTERNAL);
+		proceduresMap.put("tracef", tracef);
+		
 		ProcedureSignature writeData = new ProcedureSignature("writeData");
 		FormalArgumentSignature wdInputArg = new FormalArgumentSignature(true);
 		writeData.addInputArg(wdInputArg);
@@ -229,6 +229,12 @@ public class ProcedureSignature {
 		FormalArgumentSignature toOut1 = new FormalArgumentSignature("int");
 		toint.addOutputArg(toOut1);
 		functionsMap.put(toint.getName(), toint);
+		
+		ProcedureSignature java = new ProcedureSignature("java");
+		java.setAnyNumOfInputArgs();
+		FormalArgumentSignature output = new FormalArgumentSignature("java");
+		java.addOutputArg(output);
+		functionsMap.put(java.getName(), java);
 		
 		return functionsMap;
 	}

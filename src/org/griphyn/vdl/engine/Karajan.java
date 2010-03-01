@@ -430,7 +430,8 @@ public class Karajan {
 			StringTemplate assignST = template("assign");
 			StringTemplate varST = expressionToKarajan(assign.getAbstractExpressionArray(0),scope);
 			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1),scope);
-			if (!datatype(varST).equals(datatype(valueST)))
+			if (! (datatype(varST).equals(datatype(valueST)) ||
+			       datatype(valueST).equals("java")))
 				throw new CompilationException("You cannot assign value of type " + datatype(valueST) +
 						" to a variable of type " + datatype(varST));
 			assignST.setAttribute("var", varST);
@@ -1395,7 +1396,13 @@ boolean arrayMode = false;
 	}
 	
 	String datatype(StringTemplate st) {
-		return st.getAttribute("datatype").toString();
+	    String result = null;
+	    try { 
+	        result = st.getAttribute("datatype").toString();
+	    }
+	    catch (Exception e) { 
+	        throw new RuntimeException("Not typed properly: " + st); 
+	    }
+	    return result; 
 	}
-
 }
