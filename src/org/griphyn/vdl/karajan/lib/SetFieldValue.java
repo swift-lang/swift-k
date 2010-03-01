@@ -47,7 +47,7 @@ public class SetFieldValue extends VDLFunction {
 					}
 					deepCopy(leaf, value, stack);
 				}
-				if (var.getParent().getType().isArray()) {
+				if (var.getParent() != null && var.getParent().getType().isArray()) {
 				    markAsAvailable(stack, leaf.getParent(), leaf.getPathFromRoot().getLast());
 				}
 			}
