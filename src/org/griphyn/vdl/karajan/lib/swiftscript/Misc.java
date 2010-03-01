@@ -58,121 +58,122 @@ public class Misc extends FunctionsCollection {
 		return null;
 	}
 
-        /**
-           Formatted trace output. <br>
-           Example: tracef("\t%s\n", "hello"); <br>
-           Differences from trace(): 1) respects \t, \n and \\;
-           2) allows for typechecked format specifiers; 3) allows for
-           consumption of variables without display (%k); 4) does not
-           impose any formatting (commas, etc.).  <br><br>
-           Format specifiers: <br>
+    /**
+       Formatted trace output. <br>
+       Example: tracef("\t%s\n", "hello"); <br>
+       Differences from trace(): 
+       1) respects \t, \n and \\;
+       2) allows for typechecked format specifiers; 
+       3) allows for consumption of variables without display (%k); 
+       4) does not impose any formatting (commas, etc.).  <br><br>
+       Format specifiers: <br>
            %%: % sign. <br>
            %p: Not typechecked, output as in trace(). <br>
            %i: Typechecked int output. <br>
            %s: Typechecked string output. <br>
            %k: Variable sKipped, no output. 
-        */
-	public DSHandle swiftscript_tracef(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-			InvalidPathException {
-
-		DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
+    */
+	public DSHandle swiftscript_tracef(VariableStack stack) 
+	throws ExecutionException, NoSuchTypeException, 
+	InvalidPathException {
+	    DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
 
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < args.length; i++) {
 			DSHandle handle = args[i];
 			VDLFunction.waitFor(stack, handle);
 		}
-                String msg = format(args); 
-                buf.append(msg);
-                traceLogger.warn(buf); 
+		String msg = format(args); 
+		buf.append(msg);
+		traceLogger.warn(buf); 
 		return null;
 	}
 
-        /**
-           Helper for {@link #swiftscript_tracef}.
-        */
-        private String format(DSHandle[] args) throws ExecutionException {
+    /**
+       Helper for {@link #swiftscript_tracef}.
+    */
+	private String format(DSHandle[] args) throws ExecutionException {
 	    if (! (args[0].getType() == Types.STRING))
-		throw new ExecutionException("First argument to tracef() must be a string!"); 
-
+	        throw new ExecutionException("First argument to tracef() must be a string!"); 
+	    
 	    String spec = args[0].toString(); 
 	    StringBuffer output = new StringBuffer(); 
 	    int i = 0; 
 	    int a = 1; 
 	    while (i < spec.length()) {
-		char c = spec.charAt(i);
-		if (c == '%') {
-		    char d = spec.charAt(++i); 
-		    a = append(d, a, args, output);
-                }
-                else if (c == '\\') {
-                    char d = spec.charAt(++i);
-                    escape(d, output); 
-		}
-                else {
-		    output.append(c);
-		}
-                i++;
+	        char c = spec.charAt(i);
+	        if (c == '%') {
+	            char d = spec.charAt(++i); 
+	            a = append(d, a, args, output);
+	        }
+	        else if (c == '\\') {
+	            char d = spec.charAt(++i);
+	            escape(d, output); 
+	        }
+	        else {
+	            output.append(c);
+	        }
+	        i++;
 	    }
 	    String result = output.toString(); 
 	    return result; 
 	}
-
-        /**
-           Helper for {@link #swiftscript_tracef}.
-        */
-        private int append(char c, int arg, DSHandle[] args, StringBuffer output) throws ExecutionException {
-            if (c == '%') {
-		output.append('%');
-                return arg;
-            }
-            if (arg >= args.length) {
-                throw new ExecutionException("tracef(): too many specifiers!");
-            }
+	
+	/**
+       Helper for {@link #swiftscript_tracef}.
+     */
+	private int append(char c, int arg, DSHandle[] args, StringBuffer output) throws ExecutionException {
+	    if (c == '%') {
+	        output.append('%');
+	        return arg;
+	    }
+	    if (arg >= args.length) {
+	        throw new ExecutionException("tracef(): too many specifiers!");
+	    }
 	    if (c == 'p') {
-		output.append(args[arg].toString());
-            }
-            else if (c == 's') {
-                if (args[arg].getType() == Types.STRING) {
-		    output.append(args[arg]).toString();
-                }
-                else {
-                    throw new ExecutionException("tracef(): %s requires a string!");
-                }
-            }
+	        output.append(args[arg].toString());
+	    }
+	    else if (c == 's') {
+	        if (args[arg].getType() == Types.STRING) {
+	            output.append(args[arg]).toString();
+	        }
+	        else {
+	            throw new ExecutionException("tracef(): %s requires a string!");
+	        }
+	    }
 	    else if (c == 'i') {
-                if (args[arg].getType() == Types.INT) {
-		    output.append(args[arg]).toString();
-                }
-                else {
-                    throw new ExecutionException("tracef(): %i requires an int!");
-                }
-            }
-            else if (c == 'k') {
-                ;
-            }
+	        if (args[arg].getType() == Types.INT) {
+	            output.append(args[arg]).toString();
+	        }
+	        else {
+	            throw new ExecutionException("tracef(): %i requires an int!");
+	        }
+	    }
+	    else if (c == 'k') {
+	        ;
+	    }
 	    else {
-		throw new ExecutionException("tracef(): Unknown format: %" + c);
-            }
+	        throw new ExecutionException("tracef(): Unknown format: %" + c);
+	    }
 	    return arg+1;
 	}
-
-        /**
-           Helper for {@link #swiftscript_tracef}.
-        */
-        private void escape(char c, StringBuffer output) throws ExecutionException {
-            if (c == '\\') {
-                output.append('\\');
-            }
-            else if (c == 'n') {
-                output.append('\n');
-            }
-            else if (c == 't') {
-                output.append('\t');
-            }
-            else {
-                throw new ExecutionException("tracef(): unknown backslash escape sequence!");
-            }
+	
+	/**
+       Helper for {@link #swiftscript_tracef}.
+	 */
+	private void escape(char c, StringBuffer output) throws ExecutionException {
+	    if (c == '\\') {
+	        output.append('\\');
+	    }
+	    else if (c == 'n') {
+	        output.append('\n');
+	    }
+	    else if (c == 't') {
+	        output.append('\t');
+	    }
+	    else {
+	        throw new ExecutionException("tracef(): unknown backslash escape sequence!");
+	    }
 	}
 	
 	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
