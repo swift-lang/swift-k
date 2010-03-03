@@ -67,7 +67,9 @@ public abstract class AbstractExecutor implements ProcessListener {
                     + scriptdir + ")");
         }
         script = File.createTempFile(getName(), ".submit", scriptdir);
-        script.deleteOnExit();
+        if (!getProperties().isDebugEnabled()) {
+	    script.deleteOnExit();
+	}
         stdout = spec.getStdOutput() == null ? script.getAbsolutePath()
                 + ".stdout" : spec.getStdOutput();
         stderr = spec.getStdError() == null ? script.getAbsolutePath()
@@ -406,7 +408,7 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected void writeMultiJobPostamble(Writer wr) throws IOException {
-        wr.write("; echo \\$? > $ECF.$INDEX\" &\n");
+        wr.write("; echo \\\\\\$? > $ECF.$INDEX \" \\\" &\n");
         wr.write("  INDEX=$((INDEX + 1))\n");
         wr.write("done\n");
         wr.write("wait\n");

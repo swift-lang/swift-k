@@ -135,7 +135,7 @@ public class PBSExecutor extends AbstractExecutor {
         wr.write("INDEX=0\n");
         wr.write("for NODE in $NODES; do\n");
         wr.write("  echo \"N\" >$ECF.$INDEX\n");
-        wr.write("  ssh $NODE /bin/bash -c \"");
+        wr.write("  ssh $NODE /bin/bash -c \\\" \"");
     }
 
 	protected String getName() {
