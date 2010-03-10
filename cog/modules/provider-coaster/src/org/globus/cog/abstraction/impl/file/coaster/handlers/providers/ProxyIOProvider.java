@@ -202,7 +202,7 @@ public class ProxyIOProvider implements IOProvider {
                 channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
             }
             catch (ChannelException e) {
-                throw new IOException("Cannot establish channel to " + uri.getHost(), e);
+                throw new IOException("Cannot establish channel to " + uri.getHost());
             }
         }
         
@@ -218,7 +218,7 @@ public class ProxyIOProvider implements IOProvider {
             }
             catch (ProtocolException e) {
                 logger.warn("Error requesting file from " + channel, e);
-                throw new IOException("Error requesting file from " + channel, e);
+                throw new IOException("Error requesting file from " + channel);
             }
         }
 
