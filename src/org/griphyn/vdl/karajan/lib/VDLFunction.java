@@ -191,7 +191,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	} 
 
 	/** The caller is expected to have synchronized on the root of var. */
-	public String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
+	public static String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
 		assert Thread.holdsLock(var.getRoot());
 		try {
 			if (var.getType().isArray()) {
@@ -207,7 +207,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	private String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
+	private static String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
 		List l = new ArrayList();
 		Iterator i;
 		try {
@@ -278,7 +278,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	private String leafFileName(DSHandle var) throws ExecutionException {
+	private static String leafFileName(DSHandle var) throws ExecutionException {
 		if (Types.STRING.equals(var.getType())) {
 			return relativize(String.valueOf(var.getValue()));
 		}
@@ -311,7 +311,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected String pathOnly(String file) {
+	protected static String pathOnly(String file) {
 		return new AbsFile(file).getPath();
 	}
 
@@ -347,7 +347,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	 * removes leading / character from a supplied filename if present, so that
 	 * the path can be used as a relative path.
 	 */
-	public String relativize(String name) {
+	public static String relativize(String name) {
 		name = pathOnly(name);
 		if (name != null && name.length() > 0 && name.charAt(0) == '/') {
 			return name.substring(1);

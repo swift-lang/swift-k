@@ -35,6 +35,7 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_tracef", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
+        setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
@@ -132,6 +133,20 @@ public class Misc extends FunctionsCollection {
 	    }
 	    if (c == 'p') {
 	        output.append(args[arg].toString());
+	    }
+	    else if (c == 'M') {
+	        try {
+	            synchronized (args[arg].getRoot()) { 
+	                String[] names = VDLFunction.filename(args[arg]);
+	                if (names.length > 1)
+	                    output.append(names);
+	                else 
+	                    output.append(names[0]);
+	            }
+	        }
+	        catch (Exception e) { 
+	            throw new ExecutionException("tracef(%M): Could not lookup: " + args[arg]); 
+	        }
 	    }
 	    else if (c == 's') {
 	        if (args[arg].getType() == Types.STRING) {
@@ -234,6 +249,22 @@ public class Misc extends FunctionsCollection {
 		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
 		return handle;
 	}
+	
+    public DSHandle swiftscript_strstr(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+            InvalidPathException {
+        
+        String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+        String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
+        if (logger.isDebugEnabled()) {
+            logger.debug("strstr will search '" + inputString + 
+                "' for pattern '" + pattern + "'");
+        }
+        int result = inputString.indexOf(pattern);
+        DSHandle handle = new RootDataNode(Types.INT);
+        handle.setValue(new Double(result));
+        handle.closeShallow();
+        return handle;
+    }
 	
 	public DSHandle swiftscript_strsplit(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 		InvalidPathException {
