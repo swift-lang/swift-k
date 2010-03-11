@@ -158,6 +158,8 @@ cdm_action() {
 				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
 				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
 			elif [ $MODE == "OUTPUT" ]; then 
+				mkdir -p $DIRECT_DIR
+				checkError 254 "CDM[DIRECT]: mkdir -p $DIRECT_DIR failed!"
 				touch $DIRECT_DIR/$FILE
 				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
 				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
