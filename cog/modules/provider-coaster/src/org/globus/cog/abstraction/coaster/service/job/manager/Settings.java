@@ -379,6 +379,8 @@ public class Settings {
             }
         }
     }
+    
+    private static final Object[] NO_ARGS = new Object[0];
 
     private Object get(String name) throws IllegalArgumentException, IllegalAccessException,
             InvocationTargetException {
@@ -386,7 +388,7 @@ public class Settings {
         String getterName = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         for (int i = 0; i < ms.length; i++) {
             if (ms[i].getName().equals(getterName)) {
-                return ms[i].invoke(this, (Object) null);
+                return ms[i].invoke(this, NO_ARGS);
             }
         }
         return null;
