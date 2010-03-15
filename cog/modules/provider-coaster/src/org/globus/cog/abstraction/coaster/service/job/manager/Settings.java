@@ -404,6 +404,7 @@ public class Settings {
             }
             catch (Exception e) {
                 sb.append("<exception>");
+                logger.warn(e);
             }
             sb.append('\n');
         }
