@@ -9,10 +9,14 @@
  */
 package org.globus.cog.abstraction.impl.scheduler.sge;
 
+import java.io.BufferedReader;
+import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
@@ -183,26 +187,28 @@ public class SGEExecutor extends AbstractExecutor {
     protected Properties getSGEProperties() {
         return (Properties) getProperties();
     }
+    
+    public static final Pattern JOB_ID_LINE = Pattern.compile("your job (\\d+) \\(.*\\) has been submitted");
 
     protected String parseSubmitCommandOutput(String out) throws IOException {
-        out = out.trim();
-        StringBuilder sb = new StringBuilder();
-        for (int i = out.length() - 1; i > 0; i--) {
-            if (!Character.isDigit(out.charAt(i))) {
-                break;
+        // > your job 2494189 ("t1.sub") has been submitted
+        BufferedReader br = new BufferedReader(new CharArrayReader(out.toCharArray()));
+        String line = br.readLine();
+        while (line != null) {
+            Matcher m = JOB_ID_LINE.matcher(line);
+            if (m.matches()) {
+                String id = m.group(1);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Job id from qsub: " + id);
+                }
+                return id;
             }
-            else {
-                sb.append(out.charAt(i));
-            }
+            line = br.readLine();
         }
-        sb.reverse();
-        if (logger.isInfoEnabled()) {
-            logger.info("Job id from qsub: " + sb.toString().trim());
-        }
-        return sb.toString().trim();
+        throw new IOException("None of the qsub lines matches the required patten: " + JOB_ID_LINE);
     }
 
-    private static final String[] QSUB_PARAMS = new String[] { "-terse" };
+    private static final String[] QSUB_PARAMS = new String[] {};
 
     protected String[] getAdditionalSubmitParameters() {
         return QSUB_PARAMS;
