@@ -2,6 +2,9 @@ package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,8 +17,10 @@ import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.NoSuchTypeException;
@@ -162,6 +167,31 @@ public class Misc extends FunctionsCollection {
 	        }
 	        else {
 	            throw new ExecutionException("tracef(): %i requires an int!");
+	        }
+	    }
+	    else if (c == 'q') {
+	        if (args[arg] instanceof ArrayDataNode) {
+	            ArrayDataNode node = (ArrayDataNode) args[arg];
+	            output.append("[");
+	            try {
+	                Stack stack = new Stack();
+                    Collection children = args[arg].getFields(Path.CHILDREN);
+                    for (Object o : children) 
+                        stack.push(o);
+                    while (!stack.empty()) {
+                        DSHandle child = (DSHandle) stack.pop();
+                        output.append(child);
+                        if (!stack.empty())
+                            output.append(",");
+                    }
+                }
+                catch (Exception e) {
+                    throw new ExecutionException("trace(%q): Could not get children of: " + args[arg]);
+                }
+                output.append("]");
+	        }
+	        else {
+	            throw new ExecutionException("tracef(): %q requires an array!");
 	        }
 	    }
 	    else if (c == 'k') {
