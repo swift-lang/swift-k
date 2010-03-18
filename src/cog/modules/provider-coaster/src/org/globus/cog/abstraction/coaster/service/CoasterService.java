@@ -214,14 +214,14 @@ public class CoasterService extends GSSService {
     }
 
     private void startShutdownWatchdog() {
-        watchdogs.schedule(new TimerTask() {
-            public void run() {
-                logger
-                        .warn("Shutdown failed after 5 minutes. Forcefully shutting down");
-                System.exit(3);
-            }
-
-        }, 5 * 60 * 1000);
+    	if (!local) {
+	        watchdogs.schedule(new TimerTask() {
+    	        public void run() {
+        	        logger.warn("Shutdown failed after 5 minutes. Forcefully shutting down");
+	                System.exit(3);
+    	        }
+            }, 5 * 60 * 1000);
+        }
     }
 
     private static TimerTask startConnectWatchdog() {
@@ -259,11 +259,11 @@ public class CoasterService extends GSSService {
     public static void main(String[] args) {
         try {
             CoasterService s;
+            boolean local = false;
             if (args.length < 2) {
                 s = new CoasterService();
             }
             else {
-                boolean local = false;
                 if (args.length == 3) {
                     local = "-local".equals(args[2]);
                 }
@@ -273,7 +273,9 @@ public class CoasterService extends GSSService {
             s.start();
             t.cancel();
             s.waitFor();
-            System.exit(0);
+            if (!local) {
+	            System.exit(0);
+	        }
         }
         catch (Exception e) {
             error(1, null, e);
