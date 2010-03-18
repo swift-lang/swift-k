@@ -2,9 +2,6 @@ package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +41,7 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
+		setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
 	}
 
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
@@ -174,19 +172,18 @@ public class Misc extends FunctionsCollection {
 	            ArrayDataNode node = (ArrayDataNode) args[arg];
 	            output.append("[");
 	            try {
-	                Stack stack = new Stack();
-                    Collection children = args[arg].getFields(Path.CHILDREN);
-                    for (Object o : children) 
-                        stack.push(o);
-                    while (!stack.empty()) {
-                        DSHandle child = (DSHandle) stack.pop();
-                        output.append(child);
-                        if (!stack.empty())
-                            output.append(",");
-                    }
-                }
-                catch (Exception e) {
-                    throw new ExecutionException("trace(%q): Could not get children of: " + args[arg]);
+	                int size = node.size();
+	                for (int i = 0; i < size; i++) {
+	                    String entry = ""+i; 
+	                    DSHandle handle = node.getField(Path.parse(entry));
+	                    output.append(handle);
+	                    if (i < size-1)
+	                        output.append(",");
+	                }
+	            }
+	            catch (Exception e) {
+	                e.printStackTrace();
+	                throw new ExecutionException("trace(%q): Could not get children of: " + args[arg]);
                 }
                 output.append("]");
 	        }
@@ -363,5 +360,14 @@ public class Misc extends FunctionsCollection {
 		VDLFunction.logProvenanceResult(provid, handle, "toint");
 		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
 		return handle;
+	}
+	
+	public DSHandle swiftscript_tostring(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+	InvalidPathException {
+	    Object input = PA_INPUT.getValue(stack);
+	    DSHandle handle = new RootDataNode(Types.STRING);
+	    handle.setValue(""+input);
+	    handle.closeShallow();
+	    return handle;
 	}
 }

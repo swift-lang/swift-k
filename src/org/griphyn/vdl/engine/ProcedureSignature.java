@@ -214,7 +214,7 @@ public class ProcedureSignature {
 		strcut.addOutputArg(strcutOut1);
 		functionsMap.put(strcut.getName(), strcut);
 
-                ProcedureSignature strstr = new ProcedureSignature("strstr");
+		ProcedureSignature strstr = new ProcedureSignature("strstr");
 		FormalArgumentSignature strstrIn1 = new FormalArgumentSignature("string");
 		strstr.addInputArg(strstrIn1);
 		FormalArgumentSignature strstrIn2 = new FormalArgumentSignature("string");
@@ -224,13 +224,13 @@ public class ProcedureSignature {
 		functionsMap.put(strstr.getName(), strstr);
                 
 		ProcedureSignature strsplit = new ProcedureSignature("strsplit");
-                FormalArgumentSignature strsplitIn1 = new FormalArgumentSignature("string");
-                strsplit.addInputArg(strsplitIn1);
-                FormalArgumentSignature strsplitIn2 = new FormalArgumentSignature("string");
-                strsplit.addInputArg(strsplitIn2);
-                FormalArgumentSignature strsplitOut1 = new FormalArgumentSignature("string[]");
-                strsplit.addOutputArg(strsplitOut1);
-                functionsMap.put(strsplit.getName(), strsplit);
+		FormalArgumentSignature strsplitIn1 = new FormalArgumentSignature("string");
+		strsplit.addInputArg(strsplitIn1);
+		FormalArgumentSignature strsplitIn2 = new FormalArgumentSignature("string");
+		strsplit.addInputArg(strsplitIn2);
+		FormalArgumentSignature strsplitOut1 = new FormalArgumentSignature("string[]");
+		strsplit.addOutputArg(strsplitOut1);
+		functionsMap.put(strsplit.getName(), strsplit);
 		
 		ProcedureSignature toint = new ProcedureSignature("toint");
 		FormalArgumentSignature tointIn1 = new FormalArgumentSignature("string");
@@ -238,6 +238,13 @@ public class ProcedureSignature {
 		FormalArgumentSignature toOut1 = new FormalArgumentSignature("int");
 		toint.addOutputArg(toOut1);
 		functionsMap.put(toint.getName(), toint);
+		
+		ProcedureSignature tostring = new ProcedureSignature("tostring");
+		FormalArgumentSignature tostringIn1 = new FormalArgumentSignature(true);
+		tostring.addInputArg(tostringIn1);
+		FormalArgumentSignature tostringOut1 = new FormalArgumentSignature("string");
+		tostring.addOutputArg(tostringOut1);
+		functionsMap.put(tostring.getName(), tostring);
 		
 		ProcedureSignature java = new ProcedureSignature("java");
 		java.setAnyNumOfInputArgs();
