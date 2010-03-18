@@ -8,6 +8,7 @@
 	<export name="writedata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="strstr"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>	
 	<export name="strsplit"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="regexp"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="toint"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>

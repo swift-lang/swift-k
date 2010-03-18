@@ -213,15 +213,24 @@ public class ProcedureSignature {
 		FormalArgumentSignature strcutOut1 = new FormalArgumentSignature("string");
 		strcut.addOutputArg(strcutOut1);
 		functionsMap.put(strcut.getName(), strcut);
-		
+
+                ProcedureSignature strstr = new ProcedureSignature("strstr");
+		FormalArgumentSignature strstrIn1 = new FormalArgumentSignature("string");
+		strstr.addInputArg(strstrIn1);
+		FormalArgumentSignature strstrIn2 = new FormalArgumentSignature("string");
+		strstr.addInputArg(strstrIn2);
+		FormalArgumentSignature strstrOut1 = new FormalArgumentSignature("int");
+		strstr.addOutputArg(strstrOut1);
+		functionsMap.put(strstr.getName(), strstr);
+                
 		ProcedureSignature strsplit = new ProcedureSignature("strsplit");
-        FormalArgumentSignature strsplitIn1 = new FormalArgumentSignature("string");
-        strsplit.addInputArg(strsplitIn1);
-        FormalArgumentSignature strsplitIn2 = new FormalArgumentSignature("string");
-        strsplit.addInputArg(strsplitIn2);
-        FormalArgumentSignature strsplitOut1 = new FormalArgumentSignature("string[]");
-        strsplit.addOutputArg(strsplitOut1);
-        functionsMap.put(strsplit.getName(), strsplit);
+                FormalArgumentSignature strsplitIn1 = new FormalArgumentSignature("string");
+                strsplit.addInputArg(strsplitIn1);
+                FormalArgumentSignature strsplitIn2 = new FormalArgumentSignature("string");
+                strsplit.addInputArg(strsplitIn2);
+                FormalArgumentSignature strsplitOut1 = new FormalArgumentSignature("string[]");
+                strsplit.addOutputArg(strsplitOut1);
+                functionsMap.put(strsplit.getName(), strsplit);
 		
 		ProcedureSignature toint = new ProcedureSignature("toint");
 		FormalArgumentSignature tointIn1 = new FormalArgumentSignature("string");
