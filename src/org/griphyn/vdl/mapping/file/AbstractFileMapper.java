@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -36,6 +37,8 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
   *                  this string. If suffix does not begin with a '.'
   *                  character, then a '.' will be added automatically to
   *                  separate the rest of the filename from the suffix</li>
+  *   <li>noauto - if specified as "true", then the suffix auto addition of a'.'
+  *                  will be disabled.  Default value is "false".</li>
   *   <li>pattern - if specified, then filenames will be selected from
   *                 the location directory when they match the unix glob
   *                 pattern supplied in this parameter.</li>
@@ -47,6 +50,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_SUFFIX = new MappingParam("suffix", null);
 	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern", null);
 	public static final MappingParam PARAM_LOCATION = new MappingParam("location", null);
+	public static final MappingParam PARAM_NOAUTO = new MappingParam("noauto", "false");
 
 	public static final Logger logger = Logger.getLogger(AbstractFileMapper.class);
 
@@ -79,7 +83,12 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		super.setParams(params);
 		if (PARAM_SUFFIX.isPresent(this)) {
 			String suffix = PARAM_SUFFIX.getStringValue(this);
-			if (!suffix.startsWith(".")) {
+			String noauto = PARAM_NOAUTO.getStringValue(this);
+			if (!noauto.equals("true") && !noauto.equals("false")) {
+				throw new InvalidMappingParameterException("noauto parameter value should be 'true' or 'false'" + 
+						". Value set was '" + noauto + "'");
+			}
+			if (!suffix.startsWith(".") && noauto.equals("false")) {
 				PARAM_SUFFIX.setValue(this, "." + suffix);
 			}
 		}
