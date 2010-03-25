@@ -17,6 +17,8 @@ public abstract class Policy {
             return new Default();
         else if (token.compareToIgnoreCase("direct") == 0)
             return new Direct();
+        else if (token.compareToIgnoreCase("local") == 0)
+            return new Local();
         else if (token.compareToIgnoreCase("broadcast") == 0)
             return new Broadcast();
         else if (token.compareToIgnoreCase("gather") == 0)

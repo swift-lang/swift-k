@@ -127,6 +127,7 @@ contains() {
 	return 1
 }
 
+# Output: 
 cdm_lookup() {
 	FILE=$1
 	CDM_FILE=$2
@@ -151,7 +152,7 @@ cdm_action() {
 	case $POLICY in 
 		DIRECT)
 			DIRECT_DIR=${ARGS[0]}
-			log "CDM[DIRECT]: Linking $JOBDIR/$FILE to $DIRECT_DIR/$FILE"
+			log "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE via $JOBDIR/$FILE"
 			if [ $MODE == "INPUT" ]; then 
 				[ -f "$DIRECT_DIR/$FILE" ]
 				checkError 254 "CDM[DIRECT]: $DIRECT_DIR/$FILE does not exist!"
@@ -168,6 +169,22 @@ cdm_action() {
 				fail 254 "Unknown MODE: $MODE"
 			fi
 			;;
+ 		LOCAL)
+ 			TOOL=${ARGS[0]}
+ 			REMOTE_DIR=${ARGS[1]}
+ 			FLAGS=${ARGS[3]}
+ 			log "CDM[LOCAL]: Copying $DIRECT_DIR/$FILE to $JOBDIR/$FILE"
+ 			if [ $MODE == "INPUT" ]; then 
+ 				[ -f "$DIRECT_DIR/$FILE" ]
+ 				checkError 254 "CDM[DIRECT]: $REMOTE_DIR/$FILE does not exist!"
+ 				$TOOL $FLAGS $REMOTE_DIR/$FILE $JOBDIR/$FILE
+ 				checkError 254 "CDM[DIRECT]: Tool failed!"
+ 			elif [ $MODE == "OUTPUT" ]; then 
+ 				log "CDM[LOCAL]..."
+ 			else 
+ 				fail 254 "Unknown MODE: $MODE"
+ 			fi
+ 			;;
 		BROADCAST)
 			BROADCAST_DIR=${ARGS[0]}
 			log "CDM[BROADCAST]: Linking $JOBDIR/$FILE to $BROADCAST_DIR/$FILE"
@@ -187,6 +204,31 @@ cdm_action() {
 	esac
 }
 
+cdm_local_output()
+{
+ 	L=$1
+
+	if [[ $CDM_FILE == "" ]]; then 
+		return
+	fi
+
+ 	CDM_POLICY=$( cdm_lookup $L $CDM_FILE )
+ 	cdm_local_output_perform $L $CDM_POLICY
+}
+
+cdm_local_output_perform()
+{
+	L=$1
+	TOOL=$2
+	REMOTE_DIR=$3
+	FLAGS=$3
+	log "Copying $REMOTE_DIR/$FILE to $JOBDIR/$FILE"
+	mkdir -p $REMOTE_DIR
+	checkError 254 "CDM[LOCAL]: mkdir -p $REMOTE_DIR failed!"
+	$TOOL $FLAGS $JOBDIR/$FILE $REMOTE_DIR/$FILE
+	checkError 254 "CDM[LOCAL]: Tool failed!"
+}
+
 cdm_gather()
 {
 	GATHER_OUTPUT=${*}
@@ -201,6 +243,8 @@ cdm_gather()
 }
 
 COMMANDLINE=$@
+
+echo $0 $COMMANDLINE >> /tmp/swiftwrap.out
 
 # get the parent directory of the directory containing _swiftwrap, to use
 # as the run directory
@@ -410,6 +454,8 @@ for L in $OUTF ; do
 	fi
 	if [ $CDM_POLICY == "GATHER" ]; then 
 		GATHER_OUTPUT=( $GATHER_OUTPUT $L )
+	elif [ $CDM_POLICY == "LOCAL" ]; then 
+		CDM_LOCAL_OUTPUT=( $CDM_LOCAL_OUTPUT $L )
 	fi
 done
 
@@ -492,6 +538,7 @@ for O in $OUTF ; do
 	fi
 done
 
+cdm_local_output $CDM_LOCAL_OUTPUT
 cdm_gather $GATHER_OUTPUT
 
 logstate "RM_JOBDIR"
