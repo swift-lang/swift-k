@@ -143,19 +143,20 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private void cleanDoneBlocks() {
+        int count = 0;
+        List snapshot;
         synchronized (blocks) {
-            int count = 0;
-            Iterator ib = blocks.iterator();
-            while (ib.hasNext()) {
-                Block b = (Block) ib.next();
-                if (b.isDone()) {
-                    b.shutdown(false);
-                    count++;
-                }
+            snapshot = new ArrayList(blocks);
+        }
+        for (Object o : snapshot) {
+            Block b = (Block) o;
+            if (b.isDone()) {
+                b.shutdown(false);
+                count++;
             }
-            if (count > 0) {
-                logger.info("Cleaned " + count + " done blocks");
-            }
+        }
+        if (count > 0) {
+            logger.info("Cleaned " + count + " done blocks");
         }
     }
 
