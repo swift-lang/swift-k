@@ -82,7 +82,7 @@ public class SGEExecutor extends AbstractExecutor {
                 + " ", wr, "1");
 
         writeWallTime(wr);
-        writeAttr("queue", "-q ", wr, "normal");
+        writeAttr("queue", "-q ", wr);
         if (spec.getStdInput() != null) {
             wr.write("#$ -i " + quote(spec.getStdInput()) + '\n');
         }
