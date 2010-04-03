@@ -46,6 +46,7 @@ public class AllocateHost extends PartialArgumentsContainer implements StatusLis
 					logger.debug("Allocated host " + contact);
 				}
 				stack.setVar(TypeUtil.toString(A_NAME.getValue(stack)), contact);
+				stack.setVar(HOST, contact);
 				super.partialArgumentsEvaluated(stack);
 				startRest(stack);
 			}
