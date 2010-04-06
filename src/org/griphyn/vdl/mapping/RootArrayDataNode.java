@@ -9,9 +9,10 @@ import org.griphyn.vdl.type.Type;
 
 public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener {
 
-	private boolean initialized=false;
+	private boolean initialized = false;
 	private Mapper mapper;
 	private Map params;
+	private DSHandle waitingMapperParam;
 
 	/**
 	 * Instantiate a root array data node with specified type.
@@ -23,9 +24,10 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 
 	public void init(Map params) {
 		this.params = params;
-		if(this.params == null) {
+		if (this.params == null) {
 			initialized();
-		} else {
+		} 
+		else {
 			innerInit();
 		}
 	}
@@ -35,9 +37,9 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		while(i.hasNext()) {
 			Map.Entry entry = (Map.Entry) i.next();
 			Object v = entry.getValue();
-			if(v instanceof DSHandle && !( (DSHandle)v).isClosed()) {
-				DSHandle dh = (DSHandle)v;
-				dh.addListener(this);
+			if (v instanceof DSHandle && !((DSHandle) v).isClosed()) {
+				waitingMapperParam = (DSHandle) v;
+				waitingMapperParam.addListener(this);
 				return;
 			}
 		}
@@ -93,11 +95,13 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		return null;
 	}
 
-	public Mapper getMapper() {
-		if(initialized) {
+	public synchronized Mapper getMapper() {
+		if (initialized) {
 			return mapper;
-		} else {
-			throw new VDL2FutureException(this);
+		}
+		else {
+		    assert(waitingMapperParam != null);
+		    throw new VDL2FutureException(waitingMapperParam);
 		}
 	}
 
@@ -105,13 +109,12 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		return true;
 	}
 
-        public void setValue(Object value) {
-                super.setValue(value);
-                initialized();
-        }
+    public void setValue(Object value) {
+        super.setValue(value);
+        initialized();
+    }
 
-        private void initialized() {
-                initialized=true;
-        }
-
+    private void initialized() {
+        initialized = true;
+    }
 }
