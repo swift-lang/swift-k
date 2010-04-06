@@ -188,7 +188,7 @@ public class SGEExecutor extends AbstractExecutor {
         return (Properties) getProperties();
     }
     
-    public static final Pattern JOB_ID_LINE = Pattern.compile("your job (\\d+) \\(.*\\) has been submitted");
+    public static final Pattern JOB_ID_LINE = Pattern.compile("[Yy]our job (\\d+) \\(.*\\) has been submitted");
 
     protected String parseSubmitCommandOutput(String out) throws IOException {
         // > your job 2494189 ("t1.sub") has been submitted
