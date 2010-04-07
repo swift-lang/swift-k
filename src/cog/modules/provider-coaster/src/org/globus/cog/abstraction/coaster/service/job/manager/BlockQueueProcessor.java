@@ -19,7 +19,9 @@ import org.globus.cog.abstraction.coaster.rlog.RemoteLogger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
+import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
@@ -309,17 +311,18 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 ib.add(b);
             }
         }
-        
+
         double needed = queued.getJSize();
-        
+
         double sum = 0;
         Iterator i = sorted.iterator();
         while (i.hasNext()) {
             Block b = (Block) i.next();
-            sum += b.sizeLeft();
-            if (sum > needed && (System.currentTimeMillis() - b.getLastUsed()) > Block.SUSPEND_SHUTDOWN_DELAY) {
+            if (sum > needed
+                    && (System.currentTimeMillis() - b.getLastUsed()) > Block.SUSPEND_SHUTDOWN_DELAY) {
                 b.suspend();
             }
+            sum += b.sizeLeft();
         }
     }
 
@@ -476,7 +479,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
         long start = System.currentTimeMillis();
         commitNewJobs();
+
         cleanDoneBlocks();
+
         updateAllocatedSize();
 
         removeJobs(queueToExistingBlocks());
