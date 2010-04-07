@@ -270,6 +270,9 @@ public abstract class Command extends RequestReply implements SendCallback {
 
 	protected void handleReplyTimeout() {
 		timeout = null;
+		if (isInDataReceived()) {
+			return;
+		}
 		logger.warn(this
 				+ ": handling reply timeout; sendReqTime="
 				+ DF.format(new Date(sendReqTime)) + ", sendTime=" + DF.format(new Date(sendTime))
