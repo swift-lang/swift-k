@@ -14,8 +14,8 @@ import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 
 public class AbstractPipedChannel extends AbstractKarajanChannel {
 	public static final Logger logger = Logger.getLogger(AbstractPipedChannel.class);
@@ -92,7 +92,7 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 		public Sender() {
 			super("Piped Channel Sender");
 			setDaemon(true);
-			queue = new ArrayBlockingQueue(32);
+			queue = new LinkedBlockingQueue();
 			start();
 		}
 
