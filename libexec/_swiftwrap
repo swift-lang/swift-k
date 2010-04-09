@@ -1,3 +1,4 @@
+#!/bin/bash
 # this script must be invoked inside of bash, not plain sh
 # note that this script modifies $IFS
 
@@ -533,7 +534,7 @@ fi
 logstate "MOVING_OUTPUTS $OUTF"
 for O in $OUTF ; do
 	if ! contains SKIPPED_OUTPUT $O ; then
-		mv -v "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
+		mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
 		checkError 254 "Failed to move output file $O to shared directory"
 	fi
 done
