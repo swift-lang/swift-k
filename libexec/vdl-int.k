@@ -314,8 +314,8 @@ namespace("vdl"
 				log(LOG:DEBUG, "FILE_STAGE_IN_BROADCAST file={srcfile} policy={policy}")
 				cdm:broadcast(srcfile=srcfile, srcdir=srcdir))
 			else(log(LOG:DEBUG, "FILE_STAGE_IN_SKIP file={srcfile} policy={policy}")))
-			log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
-                                               "desthost={desthost} destdir={destdir} provider={provider}")
+				log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
+                                              "desthost={desthost} destdir={destdir} provider={provider}")
 			)			
  	        )
 
@@ -338,10 +338,11 @@ namespace("vdl"
 					//make sure we do have the directory on the client side
 					dir:make(ldir, host=dhost, provider=provider)
 					policy := cdm:query(query=file)
-					if (policy == "DEFAULT" then(
+					if (sys:or(policy == "DEFAULT", policy == "BROADCAST")
+						then(
 						restartOnError(".*", 2
-							task:transfer(srchost=host, srcfile=bname,
-								srcdir=rdir, destdir=ldir, desthost=dhost, destprovider=provider)))
+							task:transfer(srchost=host, srcfile=bname,srcdir=rdir, 
+								destdir=ldir, desthost=dhost, destprovider=provider)))
 					else(log(LOG:DEBUG, "FILE_STAGE_OUT_SKIP srcname={bname}"))
 					)
 					log(LOG:DEBUG, "FILE_STAGE_OUT_END srcname={bname} srcdir={rdir} srchost={host} ",
