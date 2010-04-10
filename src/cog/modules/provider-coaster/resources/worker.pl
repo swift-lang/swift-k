@@ -131,12 +131,12 @@ sub reconnect() {
 	my $fail = 0;
 	my $i;
 	for ($i = 0; $i < MAX_RECONNECT_ATTEMPTS; $i++) {
-		wlog DEBUG, "Connecting ($i)...\n";
+		wlog INFO, "Connecting ($i)...\n";
 		$SOCK = IO::Socket::INET->new(Proto=>'tcp', PeerAddr=>$HOSTNAME, PeerPort=>$PORT, Blocking=>1) || ($fail = 1);
 		if (!$fail) {
 			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 16384);
 			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768);
-			wlog DEBUG, "Connected\n";
+			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);
 			queueCmd(registerCB(), "REGISTER", $BLOCKID, "");
 			last;
@@ -149,6 +149,7 @@ sub reconnect() {
 	if ($fail) {
 		die "Failed to connect: $!";
 	}
+	$LAST_HEARTBEAT = time();
 }
 
 sub initlog() {
@@ -618,8 +619,13 @@ sub workershellcmd {
 
 sub urisplit {
 	my ($name) = @_;
-	
+
+	if (index($name, ":") == -1) {
+		return ("file", $name);
+	}
+
 	my ($protocol, $path) = split(/:\/\//, $name, 2);
+
 	return ($protocol, $path);
 }
 
@@ -627,8 +633,9 @@ sub getFileCB {
 	my ($jobid, $src, $dst) = @_;
 	
 	my ($protocol, $path) = urisplit($src);
+	wlog DEBUG, "src: $src, protocol: $protocol, path: $path\n";
 	
-	if ($protocol eq "coaster") {
+	if (($protocol eq "file") || ($protocol eq "proxy")) {
 		wlog DEBUG, "Opening $dst...\n";
 		my $dir = dirname($dst);
 		if (-f $dir) {
@@ -785,7 +792,7 @@ sub stageout {
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
 			wlog DEBUG, "Staging out $lfile.\n";
 			my ($protocol, $path) = urisplit($rfile);
-			if ($protocol eq "coaster") {
+			if ($protocol eq "file" || $protocol eq "proxy") {
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
 			}
 			elsif ($protocol eq "sfs") {
@@ -813,8 +820,14 @@ sub stageout {
 sub cleanup {
 	my ($jobid) = @_;
 	
+	my $ec = $JOBDATA{$jobid}{"exitcode"};
 	if (ASYNC) {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+		if ($ec == 0) {
+			queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+		}
+		else {
+			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with an exit code of $ec"));
+		}
 	}
 	
 	my $CLEANUP = $JOBDATA{$jobid}{"cleanup"};
@@ -825,7 +838,12 @@ sub cleanup {
 	}
 	
 	if (!ASYNC) {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+		if ($ec == 0) {
+			queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+		}
+		else {
+			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with and exit code of $ec"));
+		}
 	}
 }
 
@@ -962,6 +980,7 @@ sub submitjob {
 sub checkJob() {
 	my ($tag, $JOBID, $JOB) = @_;
 	
+	wlog INFO, "Job info received (tag=$tag)\n";
 	my $executable = $$JOB{"executable"};
 	if (!(defined $JOBID)) {
 		my $ds = hts($JOB);
@@ -988,7 +1007,9 @@ sub checkJob() {
 		}
 		chdir $dir;
 		wlog DEBUG, "Job check ok\n";
+		wlog INFO, "Sending submit reply (tag=$tag)\n";
 		sendReply($tag, ("OK"));
+		wlog INFO, "Submut reply sent (tag=$tag)\n";
 		return 1;
 	}
 }
@@ -1080,6 +1101,7 @@ sub checkJobStatus {
 	my $s = <$RD>;
 	wlog DEBUG, "Got output from child. Closing pipe.\n";
 	close $RD;
+	$JOBDATA{$JOBID}{"exitcode"} = $status;
 	if (defined $s) {
 		wlog DEBUG, "Sending failure.\n";
 		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "$status", $s);
