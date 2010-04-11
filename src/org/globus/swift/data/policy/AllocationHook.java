@@ -1,5 +1,5 @@
 
-package org.globus.swift.data.AllocationHook;
+package org.globus.swift.data.policy;
 
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
