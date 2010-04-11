@@ -267,8 +267,6 @@ namespace("vdl"
 			log(LOG:INFO, "START jobid={jobid} - Staging in files")
 
 			cdmfile := cdm:file()
-			log(LOG:DEBUG, "cdmfile: {cdmfile}")
-			log(LOG:DEBUG, "swift.home: {swift.home}")
 			libexec := "{swift.home}/libexec"
 
 			if (cdmfile != "" then(
@@ -292,7 +290,7 @@ namespace("vdl"
 				size := file:size("{srcdir}/{filename}", host=srchost, provider=provider)
 
 				policy := cdm:query(query=file)
-				log(LOG:DEBUG, "policy: {file} : {policy}")
+				log(LOG:DEBUG, "CDM: {file} : {policy}")
 
 				doStageinFile(provider=provider, srchost=srchost, srcfile=filename, 
 						srcdir=srcdir, desthost=host, destdir=destdir, size=size, policy=policy)
@@ -304,8 +302,10 @@ namespace("vdl"
 			vdl:cacheAddAndLockFile(srcfile, destdir, desthost, size
 				       cleanupFiles(cacheFilesToRemove, desthost)
 
-			log(LOG:DEBUG, "FILE_STAGE_IN_START file={srcfile} srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
-					"desthost={desthost} destdir={destdir} provider={provider}")
+			log(LOG:DEBUG, "FILE_STAGE_IN_START file={srcfile} ",
+                                        "srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
+					"desthost={desthost} destdir={destdir} provider={provider} ", 
+                                        "policy={policy}")
 			if (policy == "DEFAULT" then( 
 				restartOnError(".*", 2
 					task:transfer(srcprovider=provider, srchost=srchost, srcfile=srcfile, 
@@ -314,9 +314,12 @@ namespace("vdl"
 				log(LOG:DEBUG, "FILE_STAGE_IN_BROADCAST file={srcfile} policy={policy}")
 				cdm:broadcast(srcfile=srcfile, srcdir=srcdir))
 			else(log(LOG:DEBUG, "FILE_STAGE_IN_SKIP file={srcfile} policy={policy}")))
-				log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
-                                              "desthost={desthost} destdir={destdir} provider={provider}")
-			)			
+				log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} ",
+					"srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
+                                        "desthost={desthost} destdir={destdir} provider={provider}")
+			)
+			cdm:wait()
+			echo("doStageinFile: complete: {srcfile}")
  	        )
 
 		element(doStageout, [jobid, stageouts, dir, host]

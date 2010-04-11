@@ -106,6 +106,7 @@
 	<export name="get"><elementDef classname="org.globus.swift.data.Query"/></export>
   	<export name="file"><elementDef classname="org.globus.swift.data.Query"/></export>
   	<export name="broadcast"><elementDef classname="org.globus.swift.data.Action"/></export>
+  	<export name="wait"><elementDef classname="org.globus.swift.data.Action"/></export>
   </namespace>
 
 </karajan>

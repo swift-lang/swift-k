@@ -3,29 +3,80 @@
 SWIFT_HOME=$( dirname $( dirname $0 ) )
 LOG=${SWIFT_HOME}/etc/cdm_broadcast.log
 
+# For each given location, broadcast the given files to it
+# Input: bgp_broadcast [-l <location> <file>*]*
 bgp_broadcast()
 {
-  DIR=$1
-  FILE=$2
-  DEST=$3
-  if [[ ! -f ips.list ]] 
-    then
-    BLOCKS=$( qstat -u ${USER} | grep ${USER} | awk '{ print $6 }' )
-    IPS=$( listip ${BLOCKS} )
-    for IP in ${IPS}
-     do
-     echo ${IP}
-    done >> ip.list
-  else
-    while read T
-     do 
-     BLOCKS="$BLOCKS $T" 
-    done < ip.list
-  fi
-  for IP in ${BLOCKS}
+  while [[ ${*} != "" ]]
    do
-   ssh ${IP} /bin.rd/f2cn ${DIR}/${FILE} ${DEST}/${FILE}
+   L=$1 # -l
+   shift 
+   ARGS=$1 # Location
+   shift
+   while true
+    do
+    if [[ $1 == "-l" || $1 == "" ]] 
+      then
+      break
+    fi
+    ARGS="${ARGS} $1"
+    shift
+   done
+   bgp_broadcast_perform ${ARGS}
   done
+}
+
+# Broadcast the given files to the given location
+# Input: bgp_broadcast_perform <location> <file>*
+bgp_broadcast_perform()
+{
+  LOCATION=$1
+  shift
+  WORK=( ${*} )
+
+  IP=$( listip ${LOCATION} )  
+
+  if [[ ${#WORK[@]} > 3 ]] 
+    then
+    SCRIPT=$( mktemp )
+    {
+      echo "#!/bin/sh"
+      while [[ ${*} != "" ]] 
+       do
+       FILE=$1
+       DEST=$2
+       shift 2
+       echo "/bin.rd/f2cn ${FILE} ${DEST}"
+      done
+    } > ${SCRIPT}
+    scp ${SCRIPT} ${IP}:${SCRIPT}
+    ssh ${IP} ${SCRIPT}
+  else
+    while [[ ${*} != "" ]] 
+     do
+     FILE=$1
+     DEST=$2
+     shift 2
+     ssh_until_success 120 ${IP} /bin.rd/f2cn ${FILE} ${DEST}
+    done
+  fi
+}
+
+# Repeat command N times until success
+ssh_until_success()
+{
+  N=$1 
+  shift 
+  for (( i=0 ; i < N ; i++ ))
+   do
+   ssh -o PasswordAuthentication=no ${*}
+   if [[ $? == 0 ]]; 
+     then
+     break
+   fi
+   sleep 1
+  done
+  return 0
 }
 
 local_broadcast()
@@ -36,19 +87,15 @@ local_broadcast()
   cp -v ${FILE} ${DEST}/${FILE}
 }
   
+set -x
 {
-  declare -p PWD
-    set -x
-
-    FILE=$1
-    DIR=$2
-    DEST=$3
-
-    if [[ $( uname -p ) == "ppc64" ]]
-      then
-      bgp_broadcast ${DIR} ${FILE} ${DEST}
-    else 
-      bgp_local ${DIR} ${FILE} ${DEST}
-    fi
-
-} >> ${LOG} 2>&1
+  declare -p PWD LOG
+  
+  if [[ $( uname -p ) == "ppc64" ]]
+    then
+    bgp_broadcast ${*}
+  else 
+    bgp_local ${*}
+  fi
+  
+} >> /tmp/cdm_broadcast.log 2>&1 # ${LOG} 2>&1
