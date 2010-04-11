@@ -1,4 +1,6 @@
 
+package org.globus.swift.data.AllocationHook;
+
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.coaster.service.job.manager.Hook;
