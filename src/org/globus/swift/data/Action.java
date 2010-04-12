@@ -2,6 +2,8 @@ package org.globus.swift.data;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -13,7 +15,8 @@ import org.globus.swift.data.policy.Policy;
  * Karajan-accessible CDM functions that change something.
  * */
 public class Action extends FunctionsCollection {
-
+    private static final Logger logger = Logger.getLogger(Action.class);
+    
     public static final Arg PA_FILE = new Arg.Positional("srcfile");
     public static final Arg PA_DIR  = new Arg.Positional("srcdir");
 
@@ -30,7 +33,7 @@ public class Action extends FunctionsCollection {
         String srcfile = (String) PA_FILE.getValue(stack);
         String srcdir  = (String) PA_DIR.getValue(stack);
 
-        System.out.println("cdm_broadcast()");
+        logger.debug("cdm_broadcast()");
         
         Policy policy = Director.lookup(srcfile);
         
@@ -51,7 +54,7 @@ public class Action extends FunctionsCollection {
        Wait until CDM has ensured that all data has been propagated.
     */
     public void cdm_wait(VariableStack stack) throws ExecutionException {
-        System.out.println("cdm_wait()");
+        logger.debug("cdm_wait()");
         Director.doBroadcast();
     }
 }

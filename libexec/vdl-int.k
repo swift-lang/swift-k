@@ -319,7 +319,6 @@ namespace("vdl"
                                         "desthost={desthost} destdir={destdir} provider={provider}")
 			)
 			cdm:wait()
-			echo("doStageinFile: complete: {srcfile}")
  	        )
 
 		element(doStageout, [jobid, stageouts, dir, host]
