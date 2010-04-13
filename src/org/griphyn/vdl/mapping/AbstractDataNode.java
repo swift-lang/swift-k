@@ -504,6 +504,26 @@ public abstract class AbstractDataNode implements DSHandle {
 	public boolean isClosed() {
 		return closed;
 	}
+	
+	/**
+     * Recursively closes arrays through a tree of arrays and complex types.
+     */
+    public void closeArraySizes() {
+        if (!this.closed && this.getType().isArray()) {
+            closeShallow();
+        }
+        synchronized (handles) {
+            Iterator i = handles.entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                AbstractDataNode child = (AbstractDataNode) e.getValue();
+                if (child.getType().isArray() ||
+                                  child.getType().getFields().size() > 0) {
+                    child.closeArraySizes();
+                }
+            }
+        }
+    }
 
 	public void closeDeep() {
 		if (!this.closed) {
@@ -515,25 +535,6 @@ public abstract class AbstractDataNode implements DSHandle {
 				Map.Entry e = (Map.Entry) i.next();
 				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
 				mapper.closeDeep();
-			}
-		}
-	}
-
-	/** Recursively closes arrays through a tree of arrays and complex
- 	    types. */
-	public void closeDeepStructure() {
-		if (!this.closed && this.getType().isArray()) {
-			closeShallow();
-		}
-		synchronized (handles) {
-			Iterator i = handles.entrySet().iterator();
-			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
-				AbstractDataNode child = (AbstractDataNode) e.getValue();
-				if(child.getType().isArray()  ||
-				   child.getType().getFields().size() > 0 ) {
-					child.closeDeepStructure();
-				}
 			}
 		}
 	}

@@ -29,7 +29,7 @@ public class SetFieldValue extends VDLFunction {
 	public Object function(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		try {
-			Path path = parsePath(OA_PATH.getValue(stack), stack);
+		    Path path = parsePath(OA_PATH.getValue(stack), stack);
 			DSHandle leaf = var.getField(path);
 			DSHandle value = (DSHandle) PA_VALUE.getValue(stack);
 			if (logger.isInfoEnabled()) {
@@ -46,6 +46,9 @@ public class SetFieldValue extends VDLFunction {
 						throw new FutureNotYetAvailable(addFutureListener(stack, value));
 					}
 					deepCopy(leaf, value, stack);
+				}
+				if (var.getParent() != null && var.getParent().getType().isArray()) {
+				    markAsAvailable(stack, leaf.getParent(), leaf.getPathFromRoot().getLast());
 				}
 			}
 			return null;

@@ -113,6 +113,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			checkConsistency(root);
 		}
 		else if (mapper.isStatic()) {
+			// Static mappers are (array) mappers which know the size of
+			// an array statically. A good example is the fixed array mapper
 			Iterator i = mapper.existing().iterator();
 			while (i.hasNext()) {
 				Path p = (Path) i.next();
@@ -129,7 +131,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 				}
 			}
 			if (root.isArray()) {
-				root.closeDeepStructure();
+			    root.closeArraySizes();
 			}
 			checkConsistency(root);
 		}
