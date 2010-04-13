@@ -26,7 +26,7 @@ public class VDL2ExecutionContext extends ExecutionContext {
 
 	protected void printFailure(FailureNotificationEvent e) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(e.getMessage(), e.getException());
+			logger.debug(e.getFlowElement() + ": " + e.getMessage(), e.getException());
 		}
 		String msg = e.getMessage();
 		if (!"Execution completed with errors".equals(msg)) {
