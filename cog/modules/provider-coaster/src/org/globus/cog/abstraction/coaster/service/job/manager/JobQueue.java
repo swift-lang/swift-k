@@ -10,6 +10,8 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.Collection;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
@@ -25,11 +27,35 @@ public class JobQueue {
     
     public JobQueue(LocalTCPService localService) throws IOException {
         local = new LocalQueueProcessor();
-        BlockQueueProcessor bqp = new BlockQueueProcessor();
-        bqp.getSettings().setCallbackURI(localService.getContact());
-        coaster = bqp;
+        coaster = newQueueProcessor(localService);
     }
     
+    private AbstractQueueProcessor newQueueProcessor(LocalTCPService localService) {
+    	String qp = System.getProperty("coaster.qp");
+    	if (qp == null) {
+    		qp = "block";
+    	}
+    	if ("block".equals(qp)) {
+    	    BlockQueueProcessor bqp = new BlockQueueProcessor();
+    	    Collection<URI> addrs = bqp.getSettings().getLocalContacts(localService.getPort());
+    	    if (addrs == null) {
+    	        bqp.getSettings().setCallbackURI(localService.getContact());
+    	    }
+    	    else {
+    	        bqp.getSettings().setCallbackURIs(addrs);
+    	    }
+    	    return bqp;
+    	}
+    	else if ("passive".equals(qp)) {
+    		return new PassiveQueueProcessor(localService.getContact());
+    	}
+    	else {
+    		throw new IllegalArgumentException("Invalid queue processor requested: " + qp);
+    	}
+    }
+    
+    
+
     public void start() {
         local.start();
         coaster.start();

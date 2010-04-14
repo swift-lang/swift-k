@@ -10,6 +10,9 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 
+import java.util.Collection;
+import java.util.Iterator;
+
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
@@ -61,12 +64,24 @@ public class BlockTask extends TaskImpl {
         JobSpecification js = new JobSpecificationImpl();
         js.setExecutable("/usr/bin/perl");
         js.addArgument(block.getAllocationProcessor().getScript().getAbsolutePath());
-        js.addArgument(settings.getCallbackURI().toString());
+        js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
         js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
         return js;
+    }
+
+    private String join(Collection<?> c, String sep) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<?> i = c.iterator();
+        while (i.hasNext()) {
+            sb.append(i.next().toString());
+            if (i.hasNext()) {
+                sb.append(sep);
+            }
+        }
+        return sb.toString();
     }
 
     private ExecutionService buildService() throws InvalidServiceContactException,
