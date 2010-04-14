@@ -24,7 +24,7 @@ public class Node implements Callback {
     public static final Logger logger = Logger.getLogger(Node.class);
 
     private int id;
-    private List cpus;
+    private List<Cpu> cpus;
     private Block block;
     private ChannelContext channelContext;
     private boolean shutdown;
@@ -33,7 +33,13 @@ public class Node implements Callback {
         this.id = id;
         this.block = block;
         this.channelContext = channelContext;
-        cpus = new ArrayList(block.getAllocationProcessor().getSettings().getWorkersPerNode());
+        cpus = new ArrayList<Cpu>(block.getAllocationProcessor().getSettings().getWorkersPerNode());
+    }
+    
+    public Node(int id, int workersPerNode, ChannelContext channelContext) {
+    	this.id = id;
+    	this.channelContext = channelContext;
+    	cpus = new ArrayList<Cpu>(workersPerNode);
     }
 
     public void add(Cpu cpu) {
