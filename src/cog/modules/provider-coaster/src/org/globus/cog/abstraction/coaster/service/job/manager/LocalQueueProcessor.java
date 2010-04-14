@@ -40,8 +40,8 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
                     taskHandler.submit(at.task);
                 }
                 catch (Exception e) {
-                	e.printStackTrace();
-                	at.task.setStatus(new StatusImpl(Status.FAILED, null, e));
+                    e.printStackTrace();
+                    at.task.setStatus(new StatusImpl(Status.FAILED, null, e));
                 }
             }
         }
@@ -52,7 +52,7 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
 
     public void setClientChannelContext(ChannelContext channelContext) {
     }
-    
+
     public static ExecutionService buildService(Task prototype)
             throws InvalidServiceContactException, InvalidProviderException,
             ProviderMethodException {
@@ -60,11 +60,12 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
         s.setServiceContact(prototype.getService(0).getServiceContact());
         ExecutionService p = (ExecutionService) prototype.getService(0);
         String jm = p.getJobManager();
-        //this jm is provider and provider is jm and part of the jm is the provider
-        //while jm is inside the provider and the provider is part of the jm is
-        //getting a bit confusing
+        // this jm is provider and provider is jm and part of the jm is the
+        // provider
+        // while jm is inside the provider and the provider is part of the jm is
+        // getting a bit confusing
         if (jm == null) {
-        	jm = "local";
+            jm = "local";
         }
         int colon = jm.indexOf(':');
         // remove provider used to bootstrap coasters
