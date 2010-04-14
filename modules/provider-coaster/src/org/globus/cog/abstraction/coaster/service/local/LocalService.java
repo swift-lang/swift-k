@@ -159,6 +159,16 @@ public class LocalService extends GSSService implements Registering {
         return null;
     }
 
+    public void unregister(String id) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Unregistering service " + id);
+        }
+        synchronized(services) {
+            services.remove(id);
+            services.notifyAll();
+        }
+    }
+
     public static void main(String[] args) {
         try {
             LocalService ls = new LocalService();
