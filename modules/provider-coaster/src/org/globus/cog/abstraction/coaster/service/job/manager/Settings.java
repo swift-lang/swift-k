@@ -11,8 +11,17 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
@@ -76,7 +85,7 @@ public class Settings {
 
     private int maxtime = Integer.MAX_VALUE;
 
-    private URI callbackURI;
+    private final Set<URI> callbackURIs;
 
     private ServiceContact serviceContact;
 
@@ -106,6 +115,7 @@ public class Settings {
     
     public Settings() {
         hook = new Hook();
+        callbackURIs = new TreeSet<URI>();
     }
 
     public int getSlots() {
@@ -205,20 +215,19 @@ public class Settings {
     }
 
     public String getInternalHostname() {
-        return callbackURI.getHost();
+        return getCallbackURI().getHost();
     }
 
     public void setInternalHostname(String internalHostname) {
         if (internalHostname != null) { // override automatically determined
             try {
-                URI original = callbackURI; 
-                callbackURI =
-                        new URI(callbackURI.getScheme(), callbackURI.getUserInfo(),
-                            internalHostname, callbackURI.getPort(), callbackURI.getPath(),
-                            callbackURI.getQuery(), callbackURI.getFragment());
-                if (! original.toString().equals(callbackURI.toString())) {
-                    logger.warn("original callback URI is " + callbackURI);
-                    logger.warn("callback URI has been overridden to " + callbackURI);
+                URI original = getCallbackURI(); 
+                setCallbackURI(new URI(original.getScheme(), original.getUserInfo(),
+                            internalHostname, original.getPort(), original.getPath(),
+                            original.getQuery(), original.getFragment()));
+                if (! original.toString().equals(getCallbackURI().toString())) {
+                    logger.warn("original callback URI is " + original);
+                    logger.warn("callback URI has been overridden to " + getCallbackURI());
                 }
             }
             catch (URISyntaxException use) {
@@ -228,12 +237,55 @@ public class Settings {
         }
     }
     
+    public Collection<URI> getLocalContacts(int port) {
+        List<URI> l = new ArrayList<URI>();
+        try {
+            Enumeration<NetworkInterface> e1 = NetworkInterface.getNetworkInterfaces();
+            while (e1.hasMoreElements()) {
+                NetworkInterface ni = e1.nextElement();
+                Enumeration<InetAddress> e2 = ni.getInetAddresses();
+                while (e2.hasMoreElements()) {
+                    InetAddress addr = e2.nextElement();
+                    if (!"127.0.0.1".equals(addr.getHostAddress())) {
+                        l.add(new URI("http://" + addr.getHostAddress() + ":" + port));
+                    }
+                }
+            }
+            if (logger.isInfoEnabled()) {
+                logger.info("Local contacts: " + l);
+            }
+            return l;
+        }
+        catch (SocketException e) {
+            logger.warn("Could not get network interface addresses", e);
+            return null;
+        }
+        catch (URISyntaxException e) {
+            logger.warn("Could not build URI from local network interface addresses", e);
+            return null;
+        }
+    }
+    
     public URI getCallbackURI() {
-        return callbackURI;
+        if (callbackURIs.isEmpty()) {
+            return null;
+        }
+        else {
+            return callbackURIs.iterator().next();
+        }
     }
 
     public void setCallbackURI(URI callbackURI) {
-        this.callbackURI = callbackURI;
+        callbackURIs.add(callbackURI);
+    }
+    
+    public void setCallbackURIs(Collection<URI> callbackURIs) {
+        this.callbackURIs.clear();
+        this.callbackURIs.addAll(callbackURIs);
+    }
+    
+    public Collection<URI> getCallbackURIs() {
+        return callbackURIs;
     }
 
     public String getProvider() {

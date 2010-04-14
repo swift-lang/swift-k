@@ -82,13 +82,17 @@ my %HANDLERS = (
 my @CMDQ = ();
 
 my $ID = "-";
-my $URI=$ARGV[0];
-my $SCHEME;
-my $HOSTNAME;
-my $PORT;
-if ($URI =~ /(.*):\/\//) { $SCHEME = $1; } else { die "Could not parse url scheme: $URI"; }
-if ($URI =~ /.*:\/\/(.*):/) { $HOSTNAME = $1; } else { die "Could not parse url hostname: $URI"; }
-if ($URI =~ /.*:\/\/.*:(.*)/) { $PORT = $1; } else { die "Could not parse url port: $URI"; }
+my $URISTR=$ARGV[0];
+my @URIS = split(/,/, $URISTR); 
+my @SCHEME;
+my @HOSTNAME;
+my @PORT;
+my $URI;
+foreach $URI (@URIS) {
+	if ($URI =~ /(.*):\/\//) { push(@SCHEME, $1); } else { die "Could not parse url scheme: $URI"; }
+	if ($URI =~ /.*:\/\/(.*):/) { push(@HOSTNAME, $1); } else { die "Could not parse url hostname: $URI"; }
+	if ($URI =~ /.*:\/\/.*:(.*)/) { push(@PORT, $1); } else { die "Could not parse url port: $URI"; }
+}
 my $SOCK;
 my $LAST_HEARTBEAT = 0;
 
@@ -129,11 +133,24 @@ sub hts {
 
 sub reconnect() {
 	my $fail = 0;
-	my $i;
+	my $any;
+	my $i, $j; 
 	for ($i = 0; $i < MAX_RECONNECT_ATTEMPTS; $i++) {
 		wlog INFO, "Connecting ($i)...\n";
-		$SOCK = IO::Socket::INET->new(Proto=>'tcp', PeerAddr=>$HOSTNAME, PeerPort=>$PORT, Blocking=>1) || ($fail = 1);
-		if (!$fail) {
+		my $sz = @HOSTNAME;
+		$any = 0;
+		for ($j = 0; $j < $sz; $j++) {
+			wlog DEBUG, "Trying $HOSTNAME[$j]:$PORT[$j]...\n";
+			$SOCK = IO::Socket::INET->new(Proto=>'tcp', PeerAddr=>$HOSTNAME[$j], PeerPort=>$PORT[$j], Blocking=>1) || ($fail = 1);
+			if (!$fail) {
+				$any = 1;
+				last;
+			}
+			else {
+				wlog DEBUG, "Connection failed: $!. Trying other addresses\n"; 
+			}
+		}
+		if ($any) {
 			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 16384);
 			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768);
 			wlog INFO, "Connected\n";
@@ -142,11 +159,12 @@ sub reconnect() {
 			last;
 		}
 		else {
-			wlog ERROR, "Connection failed: $!\n";
-			select(undef, undef, undef, 2 ** $i);
+			my $delay = 2 ** $i;
+			wlog ERROR, "Connection failed for all addresses. Retrying in $delay seconds\n";
+			select(undef, undef, undef, $delay);
 		}
 	}
-	if ($fail) {
+	if ($any) {
 		die "Failed to connect: $!";
 	}
 	$LAST_HEARTBEAT = time();
