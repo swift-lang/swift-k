@@ -9,16 +9,24 @@
  */
 package org.globus.cog.abstraction.coaster.service.local;
 
+import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 
 public class UnregisterHandler extends RequestHandler {
     public static final String NAME = "UNREGISTER";
-    
-	public static final String VERSION = "0.1";
 	
 	public void requestComplete() throws ProtocolException {
-		sendReply(VERSION.getBytes());
+	    String id = this.getInDataAsString(0);
+        Registering ls = (Registering) 
+            getChannel().getChannelContext().getService();
+        try {
+            ls.unregister(id);
+            this.sendReply("OK");
+        }
+        catch (Exception e) {
+            throw new ProtocolException(e);
+        }
 	}
 }

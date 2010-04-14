@@ -5,15 +5,16 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Feb 15, 2008
+ * Created on Jul 20, 2005
  */
 package org.globus.cog.abstraction.coaster.service;
 
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.abstraction.coaster.service.local.UnregisterHandler;
+import org.globus.cog.karajan.workflow.service.commands.Command;
 
-public interface Registering {
-    String registrationReceived(String id, String url, KarajanChannel channel) throws ChannelException;
-
-    void unregister(String id);
+public class UnregisterCommand extends Command {
+	public UnregisterCommand(String id) {
+		super(UnregisterHandler.NAME);
+		addOutData(id);
+	}
 }
