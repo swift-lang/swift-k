@@ -28,13 +28,18 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
 
     public void enqueue(Task t) {
         synchronized (q) {
+            if (shutdownFlag) {
+                throw new IllegalStateException("Queue is shut down");
+            }
             q.enqueue(new AssociatedTask(t));
             q.notifyAll();
         }
     }
 
     public void shutdown() {
-        shutdownFlag = true;
+        synchronized(q) {
+            shutdownFlag = true;
+        }
     }
 
     protected boolean getShutdownFlag() {
@@ -47,25 +52,6 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
 
     protected final AssociatedTask take() throws InterruptedException {
         return (AssociatedTask) q.take();
-    }
-
-    protected final AssociatedTask next() throws InterruptedException {
-        synchronized (q) {
-            while (q.isEmpty()) {
-                q.wait();
-            }
-            if (cursor == null) {
-                cursor = q.cursor();
-            }
-            if (!cursor.hasNext()) {
-                cursor.reset();
-                wrap = true;
-            }
-            else {
-            	wrap = false;
-            }
-            return (AssociatedTask) cursor.next();
-        }
     }
 
     protected final boolean hasWrapped() {

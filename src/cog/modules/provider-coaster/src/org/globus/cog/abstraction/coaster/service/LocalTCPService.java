@@ -50,6 +50,10 @@ public class LocalTCPService extends GSSService implements Registering {
         return wid;
     }
 
+    public void unregister(String id) {
+        throw new UnsupportedOperationException();
+    }
+
     public RegistrationManager getRegistrationManager() {
         return registrationManager;
     }
