@@ -51,6 +51,7 @@ public class CoasterService extends GSSService {
     private boolean suspended;
     private static Timer watchdogs = new Timer();
     private boolean local;
+    private KarajanChannel channelToClient;
 
     public CoasterService() throws IOException {
         this(null, null, true);
@@ -112,22 +113,21 @@ public class CoasterService extends GSSService {
                     logger.info("Reserving channel for registration");
                     RemoteConfiguration.getDefault().prepend(
                             getChannelConfiguration(registrationURL));
-                    KarajanChannel channel;
                     
                     if (local) {
-                        channel = createLocalChannel();
+                        channelToClient = createLocalChannel();
                     }
                     else {
-                        channel = ChannelManager.getManager()
+                        channelToClient = ChannelManager.getManager()
                             .reserveChannel(registrationURL, null,
                                     COASTER_REQUEST_MANAGER);
                     }
-                    channel.getChannelContext().setService(this);
+                    channelToClient.getChannelContext().setService(this);
                     
                     logger.info("Sending registration");
                     RegistrationCommand reg = new RegistrationCommand(id,
                             "https://" + getHost() + ":" + getPort());
-                    reg.execute(channel);
+                    reg.execute(channelToClient);
                     logger.info("Registration complete");
                 }
                 catch (Exception e) {
@@ -155,12 +155,15 @@ public class CoasterService extends GSSService {
     }
 
     private void stop(Exception e) {
-        jobQueue.shutdown();
+        if (jobQueue != null) {
+            jobQueue.shutdown();
+        }
         synchronized (this) {
             this.e = e;
             done = true;
             notifyAll();
         }
+        unregister();
     }
 
     public void waitFor() throws Exception {
@@ -212,18 +215,32 @@ public class CoasterService extends GSSService {
         super.shutdown();
         jobQueue.shutdown();
         done = true;
+        unregister();
         logger.info("Shutdown sequence completed");
+    }
+    
+    private void unregister() {
+        try {
+            if (id != null && channelToClient != null) {
+                UnregisterCommand ur = new UnregisterCommand(id);
+                ur.executeAsync(channelToClient);
+            }
+        }
+        catch (Exception e) {
+            logger.warn("Failed to unregister", e);
+        }
     }
 
     private void startShutdownWatchdog() {
-        watchdogs.schedule(new TimerTask() {
-            public void run() {
-                logger
-                        .warn("Shutdown failed after 5 minutes. Forcefully shutting down");
-                System.exit(3);
-            }
-
-        }, 5 * 60 * 1000);
+        if (!local) {
+            watchdogs.schedule(new TimerTask() {
+                public void run() {
+                    logger
+                            .warn("Shutdown failed after 5 minutes. Forcefully shutting down");
+                    System.exit(3);
+                }
+            }, 5 * 60 * 1000);
+        }
     }
 
     private static TimerTask startConnectWatchdog() {
@@ -261,11 +278,11 @@ public class CoasterService extends GSSService {
     public static void main(String[] args) {
         try {
             CoasterService s;
+            boolean local = false;
             if (args.length < 2) {
                 s = new CoasterService();
             }
             else {
-                boolean local = false;
                 if (args.length == 3) {
                     local = "-local".equals(args[2]);
                 }
@@ -275,7 +292,9 @@ public class CoasterService extends GSSService {
             s.start();
             t.cancel();
             s.waitFor();
-            System.exit(0);
+            if (!local) {
+                System.exit(0);
+            }
         }
         catch (Exception e) {
             error(1, null, e);
