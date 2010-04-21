@@ -56,7 +56,7 @@ import org.globus.cog.util.ImageLoader;
 import org.globus.util.ConfigUtil;
 
 /**
- * Allows simple editing of file lists through a ComboBox
+ * Allows simple editing of fike lists through a ComboBox
  */
 public class CAControl extends GridContainer implements ActionListener, ListSelectionListener {
 	private static Logger logger = Logger.getLogger(CAControl.class);
@@ -290,7 +290,7 @@ public class CAControl extends GridContainer implements ActionListener, ListSele
 				else {
 					items.addElement(createEntry(token, true));
 				}
-				
+
 			}
 		}
 		items.fireTableDataChanged();
