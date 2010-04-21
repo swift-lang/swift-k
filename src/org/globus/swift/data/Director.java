@@ -35,7 +35,7 @@ public class Director {
        Has a CDM policy file been provided?
     */
     static boolean enabled = false;
-    
+
     /**
        Save the location of the given CDM policy file
      */
@@ -45,13 +45,13 @@ public class Director {
        Maps from Patterns to Policies for fs.data rules
      */
     static Map<Pattern,Policy> map = new LinkedHashMap();
-    
+
     /**
        Maps from String names to String values for fs.data properties
     */
     static Map<String,String> properties = new HashMap();
 
-    /** 
+    /**
        Remember the files we have broadcasted.
        Map from allocations to filenames.
        NOTE: must be accessed only using synchronized Director methods
@@ -64,7 +64,7 @@ public class Director {
        NOTE: must be accessed only using synchronized Director methods
     */
     private static Set<String> broadcastWork = new LinkedHashSet<String>();
-    
+
     /**
        Remember all known allocations
     */
@@ -74,7 +74,7 @@ public class Director {
     {
         return enabled;
     }
-    
+
     /**
        Read in the user-supplied CDM policy file.
     */
@@ -90,34 +90,52 @@ public class Director {
         }
     }
 
+    /**
+       A line is either a rule or a property.
+    */
     static void addLine(String s) {
         String[] tokens = LineReader.tokenize(s);
         String type = tokens[0];
-        if (type.equals("rule")) { 
+        if (type.equals("rule")) {
             addRule(tokens);
         }
-        else if (type.equals("property")) { 
+        else if (type.equals("property")) {
             addProperty(tokens);
         }
     }
 
-    static void addRule(String[] tokens) { 
+    /**
+       A rule has a pattern, a policy token, and extra arguments.
+       <br>
+       E.g.: rule .*.txt BROADCAST arg arg arg
+    */
+    static void addRule(String[] tokens) {
         Pattern pattern = Pattern.compile(tokens[1]);
         Policy policy = Policy.valueOf(tokens[2]);
-        List<String> tokenList = Arrays.asList(tokens);        
+        List<String> tokenList = Arrays.asList(tokens);
         policy.settings(tokenList.subList(3,tokenList.size()));
         map.put(pattern, policy);
     }
-    
-    static void addProperty(String[] tokens) { 
+
+    /**
+       A property has a name and a value.
+       Properties can be overwritten.
+       <br>
+       E.g.: property X 3
+    */
+    static void addProperty(String[] tokens) {
         String name = tokens[1];
-        String value = concat(tokens, 2);        
+        String value = concat(tokens, 2);
         properties.put(name, value);
     }
-    
+
+    /**
+       Utility to concatenate all strings from array {@link tokens}
+       starting at index {@link start}.
+    */
     static String concat(String[] tokens, int start) {
         StringBuilder result = new StringBuilder();
-        for (int i = start; i < tokens.length; i++) { 
+        for (int i = start; i < tokens.length; i++) {
             result.append(tokens[i]);
         }
         return result.toString();
@@ -133,7 +151,7 @@ public class Director {
             if (matcher.matches())
                 return map.get(pattern);
     	}
-        
+
     	return Policy.DEFAULT;
     }
 
@@ -142,7 +160,7 @@ public class Director {
     */
     public static String property(String name) {
         String result = properties.get(name);
-        if (result == null) 
+        if (result == null)
             result = "UNSET";
         return result;
     }
@@ -158,8 +176,8 @@ public class Director {
 
     /**
        Add a location to the list of allocations.
-       If the location is added twice, the second addition is considered to be an
-       empty allocation with no CDM state
+       If the location is added twice, the second addition
+       is considered to be an empty allocation with no CDM state.
     */
     public static synchronized void addAllocation(String allocation) {
         logger.debug("addAllocation(): " + allocation);
@@ -167,7 +185,7 @@ public class Director {
         broadcasted.put(allocation, new HashSet<String>());
         doBroadcast();
     }
-    
+
     /**
        Create a batch of broadcast work to do and send it to be performed.
     */
@@ -185,7 +203,8 @@ public class Director {
 
     /**
        Obtain a map from allocations to files.
-       For each allocation, its corresponding files should be broadcasted to it.
+       For each allocation, its corresponding files should
+       be broadcasted to it.
        Should only be called by {@link doBroadcast}.
     */
     private static Map<String,List<String>> getBroadcastBatch() {
@@ -226,7 +245,7 @@ public class Director {
                 assert (! contents.contains(file));
                 logger.debug("markBroadcasts: add: " + file);
                 contents.add(file);
-            }                
+            }
         }
     }
 
@@ -235,29 +254,29 @@ public class Director {
         return broadcasted.contains(dir+"/"+file);
     }
     */
-    
-    /** 
+
+    /**
         Check the policy effect of name with respect to policy_file
-        @param args {name, policy_file} 
+        @param args {name, policy_file}
     */
     public static void main(String[] args) {
         if (args.length != 2) {
             logger.debug("Incorrect args");
             System.exit(1);
         }
-            
+
         try {
-       
-            String name = args[0]; 
+
+            String name = args[0];
             File policyFile = new File(args[1]);
             if (! policyFile.exists()) {
-                logger.debug("Policy file does not exist: " + 
+                logger.debug("Policy file does not exist: " +
                     args[1]);
             }
             load(policyFile);
             Policy policy = lookup(name);
             logger.debug(name + ": " + policy);
-        } catch (Exception e) { 
+        } catch (Exception e) {
             e.printStackTrace();
             System.exit(2);
         }
