@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.Inet6Address;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URI;
@@ -246,6 +247,8 @@ public class Settings {
                 Enumeration<InetAddress> e2 = ni.getInetAddresses();
                 while (e2.hasMoreElements()) {
                     InetAddress addr = e2.nextElement();
+                    if (addr instanceof Inet6Address)
+                        continue; 
                     if (!"127.0.0.1".equals(addr.getHostAddress())) {
                         l.add(new URI("http://" + addr.getHostAddress() + ":" + port));
                     }
