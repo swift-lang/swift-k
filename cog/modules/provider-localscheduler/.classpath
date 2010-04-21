@@ -10,5 +10,6 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/jglobus"/>
+	<classpathentry kind="lib" path="/util/lib/log4j-1.2.8.jar"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>

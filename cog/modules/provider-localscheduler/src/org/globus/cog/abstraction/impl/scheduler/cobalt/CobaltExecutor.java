@@ -41,12 +41,12 @@ public class CobaltExecutor extends AbstractExecutor {
 		this.exitcodeRegexp = Pattern.compile(Properties.getProperties()
 				.getExitcodeRegexp());
 	}
-	
+
 	protected Job createJob(String jobid, String stdout,
 			FileLocation stdOutputLocation, String stderr,
 			FileLocation stdErrorLocation, String exitcode,
 			AbstractExecutor executor) {
-		return new CobaltJob(jobid, stdout, stderr, getSpec().getStdOutput(), stdOutputLocation, 
+		return new CobaltJob(jobid, stdout, stderr, getSpec().getStdOutput(), stdOutputLocation,
 				getSpec().getStdError(), stdErrorLocation, exitcodeRegexp, this);
 	}
 
@@ -172,7 +172,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		new File(getStdout()).delete();
 		new File(getStderr()).delete();
 	}
-	
+
 	private static QueuePoller poller;
 
 	protected AbstractQueuePoller getQueuePoller() {

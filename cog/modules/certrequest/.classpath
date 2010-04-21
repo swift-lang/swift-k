@@ -2,7 +2,12 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="output" path=".build"/>
 	<classpathentry kind="lib" path="etc"/>
-	<classpathentry exported="true" excluding="**/CVS/*" kind="src" path="/jglobus"/>
+	<classpathentry exported="true" kind="src" path="/jglobus">
+		<accessrules>
+			<accessrule kind="nonaccessible" pattern="**/CVS/*"/>
+		</accessrules>
+	</classpathentry>
+	<classpathentry kind="lib" path="/util/lib/log4j-1.2.8.jar"/>
+	<classpathentry kind="output" path=".build"/>
 </classpath>
