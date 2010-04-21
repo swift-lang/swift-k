@@ -31,11 +31,11 @@ import org.globus.io.gass.server.JobOutputStream;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
-public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements
         GramJobListener, JobOutputListener {
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class
             .getName());
-    
+
     private GramJob gramJob;
     private Vector jobList = null;
     private boolean startGassServer = false;
@@ -186,7 +186,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
             String mpichg2_rsl = "";
             try {
-               
+
                 FileInputStream fstream = new FileInputStream(rslFile);
                 DataInputStream in = new DataInputStream(fstream);
                 while (in.available() != 0) {

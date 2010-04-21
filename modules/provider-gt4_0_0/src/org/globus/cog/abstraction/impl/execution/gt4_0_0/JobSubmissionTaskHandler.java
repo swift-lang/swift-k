@@ -55,10 +55,10 @@ import org.ietf.jgss.GSSCredential;
  * @author CoG Team
  * @author David Del Vecchio
  */
-public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements 
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements
         GramJobListener {
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
-    
+
     private GramJob gramJob;
     private boolean canceling;
     private String jobManager;
@@ -78,7 +78,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     public void submit(final Task task) throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        
+
         checkAndSetTask(task);
         task.setStatus(Status.SUBMITTING);
 
@@ -233,7 +233,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             TaskSubmissionException {
         throw new UnsupportedOperationException("resume");
     }
-    
+
     public void cancel() throws InvalidSecurityContextException,
         TaskSubmissionException {
         cancel("Canceled");

@@ -21,7 +21,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 /**
  * @author Kaizar Amin (amin@mcs.anl.gov)
- * 
+ *
  */
 public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements ProcessListener {
 

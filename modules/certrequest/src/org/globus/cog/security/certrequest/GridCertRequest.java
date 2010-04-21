@@ -365,7 +365,7 @@ public final class GridCertRequest {
       // load CA certs and grab the DN for the request (every thing but the CN part)
       TrustedCertificates tcerts = TrustedCertificates.getDefaultTrustedCertificates();
       String CADN = "";
-      
+
       if(tcerts != null){
           X509Certificate[] caCerts = tcerts.getCertificates();
           if(caCerts == null){
@@ -379,13 +379,13 @@ public final class GridCertRequest {
       if(CADN == null){
           CADN = "";
       }
-       
+
       // replace CA dn's CN elem with the user's CN
       if ( CADN.indexOf("CN") != -1 ) CADN =  CADN.substring(0, CADN.indexOf("CN") );
       if ( CADN.indexOf("cn") != -1 ) CADN =  CADN.substring(0, CADN.indexOf("cn") );
 
       dname = CADN + "CN=" + dname;
-      
+
 
       logger.debug("Using DN=" + dname);
       KeyPair kp = null;
