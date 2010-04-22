@@ -134,7 +134,8 @@ sub hts {
 sub reconnect() {
 	my $fail = 0;
 	my $any;
-	my $i, $j; 
+	my $i;
+	my $j; 
 	for ($i = 0; $i < MAX_RECONNECT_ATTEMPTS; $i++) {
 		wlog INFO, "Connecting ($i)...\n";
 		my $sz = @HOSTNAME;
@@ -185,7 +186,10 @@ sub initlog() {
 
 
 sub init() {
-	wlog DEBUG, "uri=$URI, scheme=$SCHEME, host=$HOSTNAME, port=$PORT, blockid=$BLOCKID\n";
+	my $schemes = join(", ", @SCHEME);
+	my $hosts = join(", ", @HOSTNAME);
+	my $ports = join(", ", @PORT);
+	wlog DEBUG, "uri=$URI, scheme=$schemes, host=$hosts, port=$ports, blockid=$BLOCKID\n";
 	reconnect();
 }
 
