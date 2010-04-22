@@ -691,6 +691,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
     }
 
     private boolean notEmpty(StagingSet l) {
-        return l != null || !l.isEmpty();
+        return l != null && !l.isEmpty();
     }
 }
