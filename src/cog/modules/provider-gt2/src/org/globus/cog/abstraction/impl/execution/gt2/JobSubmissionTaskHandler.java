@@ -87,7 +87,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
             rslTree = prepareSpecification(spec);
         }
         catch (Throwable e) {
-            throw new IllegalSpecException("Cannot parse the given RSL", e);
+            throw new IllegalSpecException("Failed to translate specification", e);
         }
         if (logger.isDebugEnabled()) {
             logger.debug("RSL: " + rslTree);
