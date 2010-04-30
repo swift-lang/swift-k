@@ -513,7 +513,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return getFutureWrapperMap(stack).addFutureListListener(handle, value).futureIterator(stack);
 	}
 
-	private void markAsAvailable(VariableStack stack, DSHandle handle, Object key)
+	protected void markAsAvailable(VariableStack stack, DSHandle handle, Object key)
 			throws ExecutionException {
 		getFutureWrapperMap(stack).markAsAvailable(handle, key);
 	}
