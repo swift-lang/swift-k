@@ -177,6 +177,10 @@ public class Path {
 	public String getFirst() {
 		return ((Entry) elements.get(0)).name;
 	}
+	
+	public String getLast() {
+		return ((Entry) elements.get(elements.size() - 1)).name;
+	}
 
 	public boolean isEmpty() {
 		return elements == null || elements.size() == 0;
