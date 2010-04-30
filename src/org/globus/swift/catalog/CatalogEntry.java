@@ -18,7 +18,7 @@ package org.globus.swift.catalog;
 /**
  * This interface create a common ancestor for all catalog entries.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. Voeckler
  * @author Yong Zhao
  * @version $Revision: 1.1 $
  */

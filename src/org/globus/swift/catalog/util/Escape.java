@@ -33,7 +33,7 @@ package org.globus.swift.catalog.util;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @author Jens-S. Vöckler
+ * @author Jens-S. Voeckler
  * @version $Revision: 1.1 $
  */
 public class Escape 
