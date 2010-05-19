@@ -236,6 +236,7 @@ public class CondorExecutor extends AbstractExecutor {
 	}
 
 	protected String parseSubmitCommandOutput(String out) throws IOException {
+	    out = out.trim();
 		if (out.endsWith(".")) {
 			out = out.substring(0, out.length() - 1);
 		}
