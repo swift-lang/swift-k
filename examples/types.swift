@@ -7,7 +7,7 @@ type details {
 
 (messagefile t) greeting (details d) {   
     app {
-        echo "Hello. Your names is" d.name "and you have eaten" d.pies "pies." stdout=@filename(t);
+        echo "Hello. Your name is" d.name "and you have eaten" d.pies "pies." stdout=@filename(t);
     }
 }
 
