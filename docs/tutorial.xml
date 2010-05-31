@@ -37,14 +37,16 @@ successfully run the test SwiftScript program mentioned there.
 There is also a
 <ulink url="http://www.ci.uchicago.edu/swift/guides/userguide.php">Swift User's Guide</ulink>
 which contains more detailed reference
-material on topics covered in this manual.
+material on topics covered in this manual. 
+
+All of the programs included in this tutorial can be found in your Swift distribution in the examples/swift directory.
     </para>
 </section>
 
 <section> <title>Hello World</title>
     <para>
-The first example program (found in the file
-<filename>examples/swift/first.swift</filename>)
+The first example program,
+<filename>first.swift</filename>,
 outputs a hello world message into
 a file called <filename>hello.txt</filename>.
     </para>
@@ -52,10 +54,8 @@ a file called <filename>hello.txt</filename>.
 <programlisting>
 type messagefile;
 
-(messagefile t) greeting () {
-    app {
+app (messagefile t) greeting () {
         echo &quot;Hello, world!&quot; stdout=@filename(t);
-    }
 }
 
 messagefile outfile &lt;&quot;hello.txt&quot;&gt;;
@@ -68,12 +68,11 @@ outfile = greeting();
 <screen>
 $ <userinput>cd examples/swift/</userinput>
 $ <userinput>swift first.swift</userinput>
-Swift v0.2
+Swift svn swift-r3334 (swift modified locally) cog-r2752
 
-RunID: e1bupgygrzn12
-echo started
-echo completed
-
+RunID: 20100526-1925-8zjupq1b
+Progress:
+Final status:  Finished successfully:1
 $ <userinput>cat hello.txt</userinput>
 Hello, world!
 </screen>
@@ -103,15 +102,13 @@ very simple type. Later on we will see more complex type examples.
 
 
 <programlisting>
-(messagefile t) greeting () {
-    app {
-        echo &quot;Hello, world!&quot; stdout=@filename(t);
-    }
+app (messagefile t) greeting() { 
+    echo "Hello, world!" stdout=@filename(t);
 }
 </programlisting>
 
 <para>
-Next we define a procedure called write. This procedure will write out
+Next we define a procedure called greeting. This procedure will write out
 the &quot;hello world&quot; message to a file.
 </para>
 
@@ -212,7 +209,6 @@ type messagefile;
 
 messagefile english &lt;&quot;english.txt&quot;&gt;;
 messagefile french &lt;&quot;francais.txt&quot;&gt;;
-
 english = greeting(&quot;hello&quot;);
 french = greeting(&quot;bonjour&quot;);
 
@@ -259,7 +255,7 @@ There are several steps:
 <firstterm>transformation catalog</firstterm> to define
 a logical transformation for the tc utility.  The transformation
 catalog can be found in <filename>etc/tc.data</filename>.
-There is already one entry specifying where <command>echo</command> can
+There are already several entries specifying where programs can
 be found. Add a new line to the file, specifying where 
 <command>tr</command> can be found
 (usually in <filename>/usr/bin/tr</filename>
@@ -267,11 +263,11 @@ but it may differ on your system), like this:
 </para>
 
 <programlisting>
-local      translate  /usr/bin/tr  INSTALLED INTEL32::LINUX null
+localhost       tr      /usr/bin/tr     INSTALLED       INTEL32::LINUX  null
 </programlisting>
 
 <para>For now, ignore all of the fields except the second and the third.
-The second field 'translate' specifies a logical application name and the
+The second field 'tr' specifies a logical application name and the
 third specifies the location of the application executable.
 </para>
 
@@ -281,13 +277,13 @@ use it in SwiftScript.
 
 <para>
 We can define a new procedure, <command>capitalise</command> which calls
-transform.
+tr.
 <programlisting>
-(messagefile t) capitalise (messagefile f) {  
-    app {  
-        translate "[a-z]" "[A-Z]" stdin=@filename(f) stdout=@filename(t);  
-    }  
-}  
+(messagefile o) capitalise(messagefile i) {   
+    app {
+        tr "[a-z]" "[A-Z]" stdin=@filename(i) stdout=@filename(o);
+    }
+}
 </programlisting>
 </para>
 
@@ -295,7 +291,8 @@ transform.
 <para>
 We can call capitalise like this:
 <programlisting>
-cfile = capitalise(outfile); 
+messagefile final &lt;&quot;capitals.txt&quot;&gt;;
+final = capitalise(hellofile);
 </programlisting>
 </para>
 
@@ -303,34 +300,34 @@ cfile = capitalise(outfile);
 So a full program based on the first exercise might look like this:
 
 <programlisting>
-type messagefile;  
-  
-(messagefile t) greeting (string s) {  
-    app {  
-        echo s stdout=@filename(t);  
-    }  
-}  
-  
-(messagefile t) capitalise (messagefile f) {  
-    app {  
-        translate "[a-z]" "[A-Z]" stdin=@filename(f) stdout=@filename(t);  
-    }  
-}  
-  
-messagefile outfile &lt;"greeting.txt"&gt;;  
-messagefile cfile &lt;"capitalised.txt"&gt;;  
-  
-outfile = greeting("hello from Swift");  
-cfile = capitalise(outfile); 
+type messagefile {} 
+
+(messagefile t) greeting (string s) {   
+    app {
+        echo s stdout=@filename(t);
+    }
+}
+
+(messagefile o) capitalise(messagefile i) {   
+    app {
+        tr "[a-z]" "[A-Z]" stdin=@filename(i) stdout=@filename(o);
+    }
+}
+
+messagefile hellofile &lt;&quot;hello.txt&quot;&gt;;
+messagefile final &lt;&quot;capitals.txt&quot;&gt;;
+
+hellofile = greeting("hello from Swift");
+final = capitalise(hellofile);
 </programlisting>
 </para>
 
 <para>We can use the swift command to run this:
 
 <screen>
-$ <userinput>swift t.swift</userinput>
+$ <userinput>swift second_procedure.swift</userinput>
 [...]
-$ <userinput>cat capitalised.txt</userinput>
+$ <userinput>cat capitals.txt</userinput>
 HELLO FROM SWIFT
 </screen>
 </para>
@@ -383,7 +380,7 @@ structure, for example:
 <programlisting>
 type details {
     string name;
-    string place;
+    int pies;
 }
 </programlisting>
 Each element of the structured type can be accessed using a . like this:
@@ -393,36 +390,36 @@ person.name = "john";
 </para>
 
 <para>
-The following complete program outputs a greeting using a user-defined
+The following complete program, types.swift, outputs a greeting using a user-defined
 structure type to hold parameters for the message:
 
 <programlisting>
-type messagefile;
+type messagefile {} 
 
 type details {
     string name;
-    string place;
+    int pies;
 }
 
-(messagefile t) greeting (details d) {
+(messagefile t) greeting (details d) {   
     app {
-        echo &quot;Hello&quot; d.name &quot;You live in&quot; d.place stdout=@filename(t);
+        echo "Hello. Your name is" d.name "and you have eaten" d.pies "pies." stdout=@filename(t);
     }
 }
 
 details person;
 
-person.name = &quot;John&quot;;
-person.place = &quot;Namibia&quot;;
+person.name = "John";
+person.pies = 3;
 
-messagefile outfile &lt;&quot;types.txt&quot;&gt;;
+messagefile outfile &lt;&quot;q15.txt&gt;&quot;;
 
 outfile = greeting(person);
 </programlisting>
 </para>
 
 <para>
-Structured types can comprised marker types for files. See the later
+Structured types can be comprised of marker types for files. See the later
 section on mappers for more information about this.
 </para>
 
@@ -433,7 +430,7 @@ section on mappers for more information about this.
 <programlisting>
 messagefile m[];
 </programlisting>
-This will declare an array of message files.
+This program, q5.swift, will declare an array of message files.
 </para>
 
 <programlisting>
@@ -527,9 +524,9 @@ and uses the result of that transformation as the filename to map.</para>
 is based on the name of the input file: our input file is mapped
 to the inputfile variable using the simple named mapper, and then
 we use the regular expression mapper to map the output file. Then we
-use the countwords() procedure that we defined in exercise ANOTHERPROCEDURE
-to count the works in the input file and store the result in the
-output file.
+use the countwords() procedure to count the works in the input file and 
+store the result in the output file. In order for the countwords() procedure 
+to work correctly, add the wc utility (usually found in /usr/bin/wc) to tc.data.
 </para>
 
 <para>
@@ -682,24 +679,18 @@ entry for it. Then run the example program like this:
 </para>
 
 <screen>
-$ <userinput>swift fold9.swift</userinput>
-Swift v0.2-dev r1230
+$ <userinput>swift iterate.swift</userinput>
+Swift svn swift-r3334 cog-r2752
 
-RunID: 20070918-1434-l6bt8x4a
-echo started
-echo completed
-wcl started
-extract int value 16.0
-wcl completed
-wcl started
-extract int value 2.0
-wcl completed
-wcl started
-extract int value 1.0
-wcl completed
+RunID: 20100526-2259-gtlz8zf4
+Progress:
+SwiftScript trace: extract int value , 16.0
+SwiftScript trace: extract int value , 2.0
+SwiftScript trace: extract int value , 1.0
+Final status:  Finished successfully:4
 
-$ <userinput>ls foldout.*</userinput>
-foldout.0 foldout.1 foldout.2 foldout.3
+$ <userinput>ls foldout*</userinput>
+foldout0000  foldout0001  foldout0002  foldout0003
 </screen>
 
 </section>
@@ -714,9 +705,9 @@ When running a workflow, its possible to generate a provenance graph at the
 same time:
 <screen>
 $ <userinput>swift -pgraph graph.dot first.swift</userinput>
-$ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
+$ <userinput>dot -ograph.png -Tpng graph.dot</userinput>
 </screen>
-which can then be viewed using your favourite image viewer.
+graph.png can then be viewed using your favourite image viewer.
 </para>
 </section>
 
@@ -925,7 +916,7 @@ with a hello world program:
 <programlisting>
 type messagefile;
 
-(messagefile t) greeting() {.
+(messagefile t) greeting() {
     app {
         echo "hello" stdout=@filename(t);
     }
@@ -1162,8 +1153,8 @@ We must define some transformation catalog entries:
 </para>
 
 <programlisting>
-localhost       touch           /usr/bin/touch  INSTALLED       INTEL32::LINUX  null
-localhost       broken          /bin/true   INSTALLED       INTEL32::LINUX  null
+localhost	touch	/usr/bin/touch	INSTALLED	INTEL32::LINUX	null
+localhost	broken	/bin/true	INSTALLED	INTEL32::LINUX	null
 </programlisting>
 
 <para>
@@ -1172,18 +1163,11 @@ Now we can run the program:
 
 <programlisting>
 $ swift restart.swift  
+Swift 0.9 swift-r2860 cog-r2388
 
-Swift v0.1-dev
-
-RunID: php8y7ydim8x0
-touch started
-echo started
-broken started
-touch completed
-broken completed
-echo completed
-echo started
-echo completed
+RunID: 20100526-1119-3kgzzi15
+Progress:
+Final status:  Finished successfully:4
 </programlisting>
 
 <para>
@@ -1204,23 +1188,19 @@ localhost    broken     /bin/false   INSTALLED       INTEL32::LINUX  null
 <programlisting>
 $ swift restart.swift 
 
-Swift v0.1-dev
+Swift 0.9 swift-r2860 cog-r2388
 
-RunID: 6y3urvnm5kch1
-touch started
-broken started
-touch completed
-echo started
-echo completed
-broken failed
-The following errors have occurred:
-1. Application echo not executed due to errors in dependencies
-2. Application "broken" failed (Job failed with an exit code of 1)
-        Arguments: "process"
-        Host: localhost
-        Directory: restart-6y3urvnm5kch1/broken-4empvyci
-        STDERR: 
-        STDOUT:
+RunID: 20100526-1121-tssdcljg
+Progress:
+Progress:  Stage in:1  Finished successfully:2
+Execution failed:
+	Exception in broken:
+Arguments: [process]
+Host: localhost
+Directory: restart-20100526-1121-tssdcljg/jobs/1/broken-1i6ufisj
+stderr.txt: 
+stdout.txt: 
+
 </programlisting>
 
 <para>From the output we can see that touch and the first echo completed,
@@ -1231,8 +1211,8 @@ final echo.</para>
 </para>
 
 <programlisting>
-$ ls *6y3urvnm5kch1*rlog
-restart-6y3urvnm5kch1.0.rlog
+$ ls *20100526-1121-tssdcljg*rlog
+restart-20100526-1121-tssdcljg.0.rlog
 </programlisting>
 
 <para>This restart log contains enough information for swift to know
@@ -1241,21 +1221,25 @@ which parts of the workflow were executed successfully.</para>
 <para>We can try to rerun it immediately, like this:</para>
 
 <programlisting>
-$ swift -resume restart-6y3urvnm5kch1.0.rlog restart.swift 
+$ swift -resume restart-20100526-1121-tssdcljg.0.rlog restart.swift 
 
-Swift v0.1-dev
+Swift 0.9 swift-r2860 cog-r2388
 
-RunID: nyrg0sqeudnu1
-broken started
-broken failed
-The following errors have occurred:
-1. Application echo not executed due to errors in dependencies
-2. Application "broken" failed (Job failed with an exit code of 1)
-        Arguments: "process"
-        Host: localhost
-        Directory: restart-nyrg0sqeudnu1/broken-i2guvyci
-        STDERR: 
-        STDOUT:
+RunID: 20100526-1125-7yx0zi6d
+Progress:
+Execution failed:
+	Exception in broken:
+Arguments: [process]
+Host: localhost
+Directory: restart-20100526-1125-7yx0zi6d/jobs/m/broken-msn1gisj
+stderr.txt: 
+stdout.txt: 
+
+----
+
+Caused by:
+	Exit code 1
+
 </programlisting>
 
 <para>
@@ -1282,16 +1266,13 @@ Now run again:
 </para>
 
 <programlisting>
-$ swift -resume restart-6y3urvnm5kch1.0.rlog restart.swift 
+$ swift -resume restart-20100526-1121-tssdcljg.0.rlog restart.swift
 
-Swift v0.1-dev
+wift 0.9 swift-r2860 cog-r2388
 
-RunID: x03l8zci03il1
-broken started
-echo started
-broken completed
-echo completed
-
+RunID: 20100526-1128-a2gfuxhg
+Progress:
+Final status:  Initializing:2  Finished successfully:2
 </programlisting>
 
 <para>Swift tries to run 'broken' again. This time it works, and so
@@ -1316,7 +1297,7 @@ be named, and if desired a default value can be specified:
 </programlisting>
 
 When we invoke the procedure, we can specify values for the parameters
-by name:
+by name. The following code can be found in q21.swift.
 
 <programlisting>
 french = greeting(s="bonjour");
