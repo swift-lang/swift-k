@@ -32,10 +32,13 @@ public class Settings {
     public static final Logger logger = Logger.getLogger(Settings.class);
 
     public static final String[] NAMES =
-            new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
-                    "maxNodes", "lowOverallocation", "highOverallocation",
-                    "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
-                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", "internalHostname", "hookClass" };
+            new String[] { "slots", "workersPerNode", "nodeGranularity",
+                           "allocationStepSize", "maxNodes",
+                           "lowOverallocation", "highOverallocation",
+                           "overallocationDecayFactor", "spread", "reserve",
+                           "maxtime", "project", "queue",
+                           "remoteMonitorEnabled", "kernelprofile",
+                           "alcfbgpnat", "internalHostname", "hookClass" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -220,6 +223,7 @@ public class Settings {
     }
 
     public void setInternalHostname(String internalHostname) {
+      logger.debug("setInternalHostname: " + internalHostname);
         if (internalHostname != null) { // override automatically determined
             try {
                 URI original = getCallbackURI(); 
@@ -279,6 +283,7 @@ public class Settings {
     }
 
     public void setCallbackURI(URI callbackURI) {
+        callbackURIs.clear();
         callbackURIs.add(callbackURI);
     }
     
@@ -394,7 +399,7 @@ public class Settings {
     public void setHookClass(String hookClass) {
         this.hookClass = hookClass;
         try {
-            this.hook = (Hook) Class.forName(hookClass).newInstance();
+            this.hook = (Hook) Class.forName(hookClass.trim()).newInstance();
         }
         catch (Exception e) {
         	throw new RuntimeException(e);
