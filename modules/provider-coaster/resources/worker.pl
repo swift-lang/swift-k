@@ -62,17 +62,18 @@ use constant BUFSZ => 2048;
 # "lost heartbeats".
 use constant HEARTBEAT_INTERVAL => 2 * 60;
 
+# Command-line arguments:
+my $URISTR=$ARGV[0];
+my $BLOCKID=$ARGV[1];
+my $LOGDIR=$ARGV[2];
+
 my %REQUESTS = ();
 my %REPLIES  = ();
 
-my $BLOCKID=$ARGV[1];
-
-my $LOGDIR=$ARGV[2];
 my $LOG = "$LOGDIR/worker-$BLOCKID.log";
 
-
 my %HANDLERS = (
-	"SHUTDOWN" 	=> \&shutdownw,
+	"SHUTDOWN"  => \&shutdownw,
 	"SUBMITJOB" => \&submitjob,
 	"REGISTER"  => \&register,
 	"HEARTBEAT" => \&heartbeat,
@@ -82,7 +83,7 @@ my %HANDLERS = (
 my @CMDQ = ();
 
 my $ID = "-";
-my $URISTR=$ARGV[0];
+
 my @URIS = split(/,/, $URISTR); 
 my @SCHEME;
 my @HOSTNAME;
@@ -104,9 +105,11 @@ sub wlog {
 	my $level = shift;
 	if ($level >= $LOGLEVEL) {
 		foreach $msg (@_) {
-			my $msg2 = sprintf("%.3f %s %s %s", time(), $LEVELS[$level], $ID, $msg);
+			my $t = sprintf("%.3f", time());
+			#my @d = localtime(time());
+			#my $t = sprintf("%i/%2i/%2i %2i:%2i", $d[5]+1900, $d[4], $d[3], $d[2], $d[1]);
+			my $msg2 = sprintf("%s %s %s %s", $t, $LEVELS[$level], $ID, $msg);
 			print LOG $msg2;
-			#print $msg;
 		}
 	}
 }
@@ -133,25 +136,25 @@ sub hts {
 
 sub reconnect() {
 	my $fail = 0;
-	my $any;
+	my $success;
 	my $i;
 	my $j; 
 	for ($i = 0; $i < MAX_RECONNECT_ATTEMPTS; $i++) {
 		wlog INFO, "Connecting ($i)...\n";
 		my $sz = @HOSTNAME;
-		$any = 0;
+		$success = 0;
 		for ($j = 0; $j < $sz; $j++) {
 			wlog DEBUG, "Trying $HOSTNAME[$j]:$PORT[$j]...\n";
 			$SOCK = IO::Socket::INET->new(Proto=>'tcp', PeerAddr=>$HOSTNAME[$j], PeerPort=>$PORT[$j], Blocking=>1) || ($fail = 1);
 			if (!$fail) {
-				$any = 1;
+				$success = 1;
 				last;
 			}
 			else {
 				wlog DEBUG, "Connection failed: $!. Trying other addresses\n"; 
 			}
 		}
-		if ($any) {
+		if ($success) {
 			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 16384);
 			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768);
 			wlog INFO, "Connected\n";
@@ -165,19 +168,20 @@ sub reconnect() {
 			select(undef, undef, undef, $delay);
 		}
 	}
-	if ($any) {
+	if (!$success) {
 		die "Failed to connect: $!";
 	}
 	$LAST_HEARTBEAT = time();
 }
 
 sub initlog() {
-	if (defined $ENV{"WORKER_LOGGING_ENABLED"}) {
+        if (defined $ENV{"WORKER_LOGGING_ENABLED"}) {
 		open(LOG, ">>$LOG") or die "Failed to open log file: $!";
 		my $b = select(LOG);
 		$| = 1;
 		select($b);
-		wlog INFO, "$BLOCKID Logging started\n";
+		my $date = localtime;
+		wlog INFO, "$BLOCKID Logging started: $date\n";
 	}
 	else {
 		$LOGLEVEL = 999;
@@ -186,10 +190,11 @@ sub initlog() {
 
 
 sub init() {
+        my $uris = join(", ", @URIS);
 	my $schemes = join(", ", @SCHEME);
 	my $hosts = join(", ", @HOSTNAME);
 	my $ports = join(", ", @PORT);
-	wlog DEBUG, "uri=$URI, scheme=$schemes, host=$hosts, port=$ports, blockid=$BLOCKID\n";
+	wlog DEBUG, "uri=$uris, scheme=$schemes, host=$hosts, port=$ports, blockid=$BLOCKID\n";
 	reconnect();
 }
 
@@ -489,7 +494,7 @@ sub recvOne {
 	my $data;
 	$SOCK->recv($data, 12);
 	if (length($data) > 0) {
-		wlog DEBUG, "Received $data\n";
+		# wlog DEBUG, "Received " . unpackData($data) . "\n";
 		eval { process(unpackData($data)); } || (wlog ERROR, "Failed to process data: $@\n" && die "Failed to process data: $@");
 	}
 	else {
@@ -1151,6 +1156,7 @@ sub runjob {
 	foreach $ename (keys %$JOBENV) {
 		$ENV{$ename} = $$JOBENV{$ename};
 	}
+	wlog DEBUG, "Command: @$JOBARGS\n";
 	unshift @$JOBARGS, $executable;
 	if (defined $$JOB{directory}) {
 	    chdir $$JOB{directory};
@@ -1186,3 +1192,10 @@ init();
 mainloop();
 wlog INFO, "Worker finished. Exiting.\n";
 exit(0);
+
+# This file works well with cperl-mode
+# Local Variables:
+# indent-tabs-mode: t
+# tab-width: 8
+# cperl-indent-level: 8
+# End:
