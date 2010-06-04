@@ -25,4 +25,9 @@ public class TaskHandlerImpl extends
 	protected String getName() {
 		return "Cobalt";
 	}
+
+    public String toString()
+    {
+        return "TaskHandlerImpl(execution cobalt)";
+    }
 }

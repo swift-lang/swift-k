@@ -12,6 +12,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -22,6 +23,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 public class ExecutionTaskHandler extends TaskHandlerSkeleton {
+    Logger logger = Logger.getLogger(ExecutionTaskHandler.class);
     private Hashtable mapping;
     public ExecutionTaskHandler() {
         this.mapping = new Hashtable();
@@ -35,20 +37,23 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
             InvalidServiceContactException,
             TaskSubmissionException {
         if (task.getType() != Task.JOB_SUBMISSION) {
-            throw new TaskSubmissionException("Execution handler can only handle job submission tasks");
+            throw new TaskSubmissionException
+                ("Execution handler can only handle job submission tasks");
         }
         String provider = task.getService(0).getProvider().toLowerCase();
+        logger.info("provider="+provider); 
         TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
-        if (taskHandler != null) {
-            taskHandler.submit(task);
-        } else {
+
+        if (taskHandler == null) {
             try {
                 taskHandler = createTaskHandler(provider);
             } catch (InvalidProviderException ipe) {
                 throw new TaskSubmissionException("Cannot submit task", ipe);
             }
-            taskHandler.submit(task);
         }
+
+        logger.debug("taskHandler="+taskHandler);
+        taskHandler.submit(task);
     }
 
     public void suspend(Task task)
