@@ -13,6 +13,7 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
@@ -27,6 +28,8 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 
 public class BlockTask extends TaskImpl {
+    public static final Logger logger = Logger.getLogger(BlockTask.class);
+  
     private Block block;
     private Settings settings;
 
@@ -53,7 +56,8 @@ public class BlockTask extends TaskImpl {
         if (settings.getAlcfbgpnat()) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
-        if (block.getWorkerCount() <= 16) {
+        if (block.getWorkerCount() <= 16 ||
+            "force".equals(System.getProperty("coaster.worker.logging"))) {
             spec.addEnvironmentVariable("WORKER_LOGGING_ENABLED", "true");
         }
         setRequiredService(1);
@@ -63,12 +67,16 @@ public class BlockTask extends TaskImpl {
     private JobSpecification buildSpecification() {
         JobSpecification js = new JobSpecificationImpl();
         js.setExecutable("/usr/bin/perl");
+
         js.addArgument(block.getAllocationProcessor().getScript().getAbsolutePath());
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
         js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
+        logger.debug("arguments: " + js.getArguments());
+        
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
+        
         return js;
     }
 
