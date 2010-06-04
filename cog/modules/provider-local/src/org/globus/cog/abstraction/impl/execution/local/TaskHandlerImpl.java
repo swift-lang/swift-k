@@ -22,4 +22,9 @@ public class TaskHandlerImpl extends
 	protected String getName() {
 		return "Local";
 	}
+
+    public String toString()
+    {
+        return "TaskHandlerImpl(execution local)";
+    }
 }

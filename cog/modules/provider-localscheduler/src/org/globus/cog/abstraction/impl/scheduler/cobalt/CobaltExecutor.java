@@ -139,7 +139,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		l.add(getSpec().getExecutable());
 		l.addAll(getSpec().getArgumentsAsList());
 		if (logger.isDebugEnabled()) {
-			logger.debug("Cqsub cmd line: " + l);
+			logger.debug("cqsub command: " + l);
 		}
 		return (String[]) l.toArray(EMPTY_STRING_ARRAY);
 	}
