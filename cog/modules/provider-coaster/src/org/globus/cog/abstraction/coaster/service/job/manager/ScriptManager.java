@@ -27,7 +27,8 @@ public class ScriptManager {
             throw new IOException("Failed to create script dir (" + scriptDir + ")");
         }
         File script = File.createTempFile("cscript", ".pl", scriptDir);
-        script.deleteOnExit();
+        if (! "persistent".equals(System.getProperty("coaster.worker.script")))
+            script.deleteOnExit();
         InputStream is = ScriptManager.class.getClassLoader().getResourceAsStream(SCRIPT);
         if (is == null) {
             throw new IOException("Could not find resource in class path: " + SCRIPT);
