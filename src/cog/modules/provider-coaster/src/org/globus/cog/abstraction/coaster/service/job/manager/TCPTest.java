@@ -30,11 +30,9 @@ public class TCPTest {
     }
 
     static void process(Socket socket)
-        throws Exception
-    {
+        throws Exception {
         System.out.println("connected");
-        while (true)
-        {
+        while (true) {
             BufferedReader reader =
                 new BufferedReader
                 (new InputStreamReader(socket.getInputStream()));
