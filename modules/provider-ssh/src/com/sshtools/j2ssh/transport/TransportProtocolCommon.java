@@ -1092,24 +1092,25 @@ public abstract class TransportProtocolCommon implements TransportProtocol,
 
         // Close the input/output streams
         //sshIn.close();
-        messageStore.close();
-
-        // 05/01/2003 moiz change begin:
-        // all close all the registerd messageStores
-        SshMessageStore ms;
-
-        for (it = messageStores.iterator(); (it != null) && it.hasNext();) {
-            ms = (SshMessageStore) it.next();
-
-            try {
-                ms.close();
-            } catch (Exception e) {
+        if (messageStore != null) {
+            messageStore.close();
+    
+            // 05/01/2003 moiz change begin:
+            // all close all the registerd messageStores
+            SshMessageStore ms;
+    
+            for (it = messageStores.iterator(); (it != null) && it.hasNext();) {
+                ms = (SshMessageStore) it.next();
+    
+                try {
+                    ms.close();
+                } catch (Exception e) {
+                }
             }
+    
+            // 05/01/2003 moizd change end:
+            messageStore = null;
         }
-
-        // 05/01/2003 moizd change end:
-        messageStore = null;
-
         try {
             provider.close();
         } catch (IOException ioe) {
