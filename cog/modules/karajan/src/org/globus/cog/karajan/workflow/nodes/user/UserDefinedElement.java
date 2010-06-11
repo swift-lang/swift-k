@@ -144,7 +144,6 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 
 	public void pre(VariableStack stack) throws ExecutionException {
 		super.pre(stack);
-		skip = 0;
 		if (!kmode) {
 			if (type != null) {
 				DefUtil.updateEnvCache(stack, stack.parentFrame());
@@ -157,6 +156,14 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 				env.leave();
 				ArgUtil.getVariableReturn(stack).append(new UDEDefinition(this, getEnv(stack)));
 			}
+		}
+		else if (skip == 2) {
+			String name = (String) A_NAME.getStatic(this);
+			String namespaceprefix = TypeUtil.toString(stack.getVar("#namespaceprefix"));
+			DefUtil.updateEnvCache(stack, stack.parentFrame());
+			DefUtil.addDef(stack, stack.parentFrame(), namespaceprefix,
+				Transliterator.transliterate(name), new UDEDefinition(this,
+						getEnv(stack)));
 		}
 	}
 
