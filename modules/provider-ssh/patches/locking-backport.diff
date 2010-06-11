@@ -1,0 +1,69 @@
+diff -r src-orig//com/sshtools/j2ssh/transport/TransportProtocolCommon.java src/com/sshtools/j2ssh/transport/TransportProtocolCommon.java
+817,825c817,841
+< 
+<         int[] filter = new int[1];
+< 
+<         filter[0] = SshMsgNewKeys.SSH_MSG_NEWKEYS;
+< 
+<         msg = (SshMsgNewKeys) readMessage(filter);
+< 
+<         if (log.isDebugEnabled()) {
+<             log.debug("Received " + msg.getMessageName());
+---
+>         
+>         // Do we need to hold the algorithmsOut lock during
+>         // the input message handling below? If not, then the 
+>         // lock could be taken just before completeKeyExchange 
+>         // or even moved into the completeKeyExchange method.
+>         // We would then not need the try-finally below (which
+>         // is needed for exceptions from eg the readMessage call).
+>         boolean hasReleasedLock = false;
+>         try {
+>             int[] filter = new int[1];
+>             filter[0] = SshMsgNewKeys.SSH_MSG_NEWKEYS;
+>             msg = (SshMsgNewKeys) readMessage(filter);
+>             
+>             if (log.isDebugEnabled()) {
+>                 log.debug("Received " + msg.getMessageName());
+>             }
+>             
+>             // Release done in completeKeyExchange
+>             hasReleasedLock = true;
+>             completeKeyExchange();
+>         }
+>         finally {
+>             if( ! hasReleasedLock ) {
+>                 algorithmsOut.release();
+>             }
+827,828d842
+< 
+<         completeKeyExchange();
+860a875
+> 	boolean hasReleasedLock = false;
+890a906
+>             hasReleasedLock = true;
+941a958,962
+>         finally {
+>             if( ! hasReleasedLock ) {
+>                 algorithmsOut.release();
+>             }
+>         }
+1188a1210,1212
+>             	if (ch == (char) -1) {
+>             		throw new ThrottlingException();
+>             	}
+1281c1305
+<         algorithmsIn.lock();
+---
+>         //algorithmsIn.lock();
+1284a1309,1311
+>         	// We need to take this lock since
+>                 // it is released in completeKeyExchange.
+>                 algorithmsOut.lock();
+diff -r src-orig//com/sshtools/j2ssh/transport/TransportProtocolOutputStream.java src/com/sshtools/j2ssh/transport/TransportProtocolOutputStream.java
+179d178
+<             algorithms.release();
+191a191,193
+>         }
+>         finally {
+>     	    algorithms.release();
