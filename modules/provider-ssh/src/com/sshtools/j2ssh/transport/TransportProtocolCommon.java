@@ -814,18 +814,32 @@ public abstract class TransportProtocolCommon implements TransportProtocol,
         // Lock the outgoing algorithms so nothing else is sent untill
         // weve updated them with the new keys
         algorithmsOut.lock();
-
-        int[] filter = new int[1];
-
-        filter[0] = SshMsgNewKeys.SSH_MSG_NEWKEYS;
-
-        msg = (SshMsgNewKeys) readMessage(filter);
-
-        if (log.isDebugEnabled()) {
-            log.debug("Received " + msg.getMessageName());
+        
+        // Do we need to hold the algorithmsOut lock during
+        // the input message handling below? If not, then the 
+        // lock could be taken just before completeKeyExchange 
+        // or even moved into the completeKeyExchange method.
+        // We would then not need the try-finally below (which
+        // is needed for exceptions from eg the readMessage call).
+        boolean hasReleasedLock = false;
+        try {
+            int[] filter = new int[1];
+            filter[0] = SshMsgNewKeys.SSH_MSG_NEWKEYS;
+            msg = (SshMsgNewKeys) readMessage(filter);
+            
+            if (log.isDebugEnabled()) {
+                log.debug("Received " + msg.getMessageName());
+            }
+            
+            // Release done in completeKeyExchange
+            hasReleasedLock = true;
+            completeKeyExchange();
         }
-
-        completeKeyExchange();
+        finally {
+            if( ! hasReleasedLock ) {
+                algorithmsOut.release();
+            }
+        }
     }
 
     /**
@@ -858,6 +872,7 @@ public abstract class TransportProtocolCommon implements TransportProtocol,
     protected void completeKeyExchange() throws IOException {
         log.info("Completing key exchange");
 
+	boolean hasReleasedLock = false;
         try {
             // Reset the state variables
             //completeOnNewKeys = new Boolean(false);
@@ -888,6 +903,7 @@ public abstract class TransportProtocolCommon implements TransportProtocol,
 
             //algorithmsIn.release();
             algorithmsOut.release();
+            hasReleasedLock = true;
 
             /*
 
@@ -938,6 +954,11 @@ public abstract class TransportProtocolCommon implements TransportProtocol,
             throw new TransportProtocolException(
                 "The connection was disconnected because"
                 + " of an algorithm initialization error");
+        }
+        finally {
+            if( ! hasReleasedLock ) {
+                algorithmsOut.release();
+            }
         }
     }
 
@@ -1281,10 +1302,13 @@ public abstract class TransportProtocolCommon implements TransportProtocol,
         // Determine whether we have completed our own
         log.debug("Received New Keys");
 
-        algorithmsIn.lock();
+        //algorithmsIn.lock();
 
         synchronized (completeOnNewKeys) {
             if (completeOnNewKeys.booleanValue()) {
+        	// We need to take this lock since
+                // it is released in completeKeyExchange.
+                algorithmsOut.lock();
                 completeKeyExchange();
             } else {
                 completeOnNewKeys = new Boolean(true);
