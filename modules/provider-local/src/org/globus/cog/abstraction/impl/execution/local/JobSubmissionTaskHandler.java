@@ -39,6 +39,7 @@ import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
+import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -84,15 +85,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             if (cv != null) {
                 count = Integer.parseInt(cv.toString());
             }
-            if (logger.isInfoEnabled()) {
-                logger.info("Submitting task " + task);
-            }
-            if (count == 1) {
-                logger.info("Submitting single job");
-            }
-            else {
-                logger.info("Submitting " + count + " jobs");
-            }
+            log(task, count);
             synchronized (this) {
                 if (task.getStatus().getStatusCode() != Status.CANCELED) {
                     for (int i = 0; i < count; i++) {
@@ -107,6 +100,28 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         catch (Exception e) {
             throw new TaskSubmissionException("Cannot submit job", e);
+        }
+    }
+
+    void log(Task task, int count) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Submitting task " + task);
+        }
+        else if (logger.isInfoEnabled()) {
+            Specification spec = task.getSpecification();
+            if (spec instanceof JobSpecification) {
+                JobSpecification jobspec = (JobSpecification) spec;
+                logger.info("Submit: " +
+                    "in: " + jobspec.getDirectory() +
+                    " command: " + jobspec.getExecutable() +
+                    " " + jobspec.getArguments());
+            }
+        }
+        if (count == 1) {
+            logger.debug("Submitting single job");
+        }
+        else {
+            logger.debug("Submitting " + count + " jobs");
         }
     }
 
@@ -420,6 +435,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             this.stream = stream;
         }
 
+        @Override
         public void close() throws IOException {
             super.close();
             String value = toString();
@@ -434,11 +450,13 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
         }
 
+        @Override
         public synchronized void write(byte[] b, int off, int len) {
             super.write(b, off, len);
             checkSize();
         }
 
+        @Override
         public synchronized void write(int b) {
             super.write(b);
             checkSize();
