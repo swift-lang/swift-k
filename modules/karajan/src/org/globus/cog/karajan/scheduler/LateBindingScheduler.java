@@ -10,6 +10,8 @@
 package org.globus.cog.karajan.scheduler;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -234,6 +236,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return --running;
 	}
 
+	@Override
 	public void run() {
 		Queue queue = getJobQueue();
 		Queue.Cursor c = queue.cursor();
@@ -312,7 +315,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		t.setStatus(s);
 		fireJobStatusChangeEvent(t, s);
 	}
-	
+
 	private List contactTran = new ArrayList();
 
 	void submitUnbound(Task t) throws NoFreeResourceException {
@@ -341,7 +344,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					}
 				}
 			}
- 
+
 			for (int i = 0; i < services.length; i++) {
 				if (contacts[i] != null && contacts[i].isVirtual()) {
 					contacts[i] = resolveContact(t, contacts[i]);
@@ -370,7 +373,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					((JobSpecification) t.getSpecification()).setAttribute("project", project);
 				}
 			}
-			
+
 			submitBoundToServices(t, contacts, services);
 			logger.debug("No host specified");
 		}
@@ -542,6 +545,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		}
 	}
 
+	@Override
 	public void setProperty(String name, Object value) {
 		if (name.equalsIgnoreCase(JOBS_PER_CPU)) {
 			logger.debug("Scheduler: setting jobsPerCpu to " + value);
@@ -573,13 +577,20 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			Status status = e.getStatus();
 			int code = status.getStatusCode();
 			if (code == Status.COMPLETED) {
-				if (logger.isInfoEnabled()) {
-					logger.info(task + " Completed. Waiting: " + getJobQueue().size()
+				if (logger.isDebugEnabled()) {
+					logger.debug(task + " Completed. Waiting: " + getJobQueue().size()
 							+ ", Running: " + (getRunning() - 1) + ". Heap size: "
 							+ (Runtime.getRuntime().totalMemory() / (1024 * 1024))
 							+ "M, Heap free: "
 							+ (Runtime.getRuntime().freeMemory() / (1024 * 1024)) + "M, Max heap: "
 							+ (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + "M");
+				}
+				else if (logger.isInfoEnabled()) {
+					logger.info("Complete: " + task.getSpecification());
+					Collection en = task.getAttributeNames();
+					for (Object o : en)
+						logger.info("attr: " + o);
+					logger.info("JobQueue: " + getJobQueue().size());
 				}
 			}
 			if (status.isTerminal()) {
@@ -664,7 +675,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public void cancelTask(Task task) {
 		cancelTask(task, null);
 	}
-	
+
 	public void cancelTask(Task task, String message) {
 		TaskHandler handler = getHandler(task);
 		if (handler != null) {
@@ -681,6 +692,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	public static String[] propertyNames;
 
+	@Override
 	public synchronized String[] getPropertyNames() {
 		if (propertyNames == null) {
 			propertyNames = AbstractScheduler.combineNames(super.getPropertyNames(), new String[] {
@@ -693,7 +705,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	protected Contact[] getContacts(Task t) {
 		return (Contact[]) taskContacts.get(t);
 	}
-	
+
 	protected synchronized void raiseTasksFinished() {
 		this.tasksFinished = true;
 	}
