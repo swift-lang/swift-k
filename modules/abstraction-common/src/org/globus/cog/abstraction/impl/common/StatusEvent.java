@@ -41,4 +41,9 @@ public class StatusEvent
     {
         return this.status;
     }
+
+    public String toString()
+    {
+        return "StatusEvent: " + source + " " + status;
+    }
 }
