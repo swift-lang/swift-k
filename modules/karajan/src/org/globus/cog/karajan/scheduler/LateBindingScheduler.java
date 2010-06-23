@@ -587,9 +587,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				}
 				else if (logger.isInfoEnabled()) {
 					logger.info("Complete: " + task.getSpecification());
-					Collection en = task.getAttributeNames();
-					for (Object o : en)
-						logger.info("attr: " + o);
 					logger.info("JobQueue: " + getJobQueue().size());
 				}
 			}

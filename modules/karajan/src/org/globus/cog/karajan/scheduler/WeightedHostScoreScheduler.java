@@ -265,6 +265,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 		catch (NoFreeResourceException e) {
 			logger.warn("Failed to release contact " + contact, e);
+                        e.printStackTrace();
 		}
 	}
 
