@@ -29,6 +29,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
+import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -577,18 +578,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			Status status = e.getStatus();
 			int code = status.getStatusCode();
 			if (code == Status.COMPLETED) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(task + " Completed. Waiting: " + getJobQueue().size()
-							+ ", Running: " + (getRunning() - 1) + ". Heap size: "
-							+ (Runtime.getRuntime().totalMemory() / (1024 * 1024))
-							+ "M, Heap free: "
-							+ (Runtime.getRuntime().freeMemory() / (1024 * 1024)) + "M, Max heap: "
-							+ (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + "M");
-				}
-				else if (logger.isInfoEnabled()) {
-					logger.info("Complete: " + task.getSpecification());
-					logger.info("JobQueue: " + getJobQueue().size());
-				}
+				logComplete(task);
 			}
 			if (status.isTerminal()) {
 				synchronized (this) {
@@ -667,6 +657,31 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			logger.warn("Exception caught while processing event", ee);
 		}
 		fireJobStatusChangeEvent(e);
+	}
+
+	void logComplete(Task task) {
+		if (logger.isDebugEnabled()) {
+			logger.debug(task + " Completed. Waiting: " + getJobQueue().size()
+					+ ", Running: " + (getRunning() - 1) + ". Heap size: "
+					+ (Runtime.getRuntime().totalMemory() / (1024 * 1024))
+					+ "M, Heap free: "
+					+ (Runtime.getRuntime().freeMemory() / (1024 * 1024)) + "M, Max heap: "
+					+ (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + "M");
+		}
+		else if (logger.isInfoEnabled()) {
+			Specification spec = task.getSpecification();
+            if (spec instanceof JobSpecification) {
+            	JobSpecification jobspec = (JobSpecification) spec;
+            	logger.info("Complete: " +
+            			"in: " + jobspec.getDirectory() +
+            			" command: " + jobspec.getExecutable() +
+            			" " + jobspec.getArguments());
+            }
+            else {
+            	logger.info("Complete: " + spec);
+            }
+			logger.info("JobQueue: " + getJobQueue().size());
+		}
 	}
 
 	public void cancelTask(Task task) {
