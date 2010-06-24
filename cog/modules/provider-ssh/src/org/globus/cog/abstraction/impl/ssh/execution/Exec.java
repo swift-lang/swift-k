@@ -30,7 +30,10 @@ import java.io.CharArrayWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
@@ -40,7 +43,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactExceptio
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.common.util.WriterMultiplexer;
 import org.globus.cog.abstraction.impl.ssh.SSHTask;
-import org.globus.cog.abstraction.interfaces.FileLocation;
 
 import com.sshtools.j2ssh.session.SessionChannelClient;
 
@@ -52,6 +54,7 @@ public class Exec implements SSHTask {
     private String outFile, errFile;
     private boolean outMem, errMem;
     private CharArrayWriter out, err;
+    private Map<String, String> envVars;
 
     public Exec() {
     }
@@ -95,6 +98,20 @@ public class Exec implements SSHTask {
     public void setRemoteIn(String remoteIn) {
         this.remoteIn = remoteIn;
     }
+    
+    public void addEnv(String name, String value) {
+        if (envVars == null) {
+            envVars = new HashMap<String, String>();
+        }
+        envVars.put(name, value);
+    }
+    
+    public void removeEnv(String name) {
+        if (envVars == null) {
+            return;
+        }
+        envVars.remove(name);
+    }
 
     public void execute(SessionChannelClient session)
             throws IllegalSpecException, InvalidSecurityContextException,
@@ -124,13 +141,20 @@ public class Exec implements SSHTask {
                     (remoteErr == null ? "" : " 2>" + remoteErr))) {
                 throw new TaskSubmissionException("Failed to start /bin/sh");
             }
-            logger.debug("Executing " + getCmd());
-            if (getDir() != null) {
-                session.getOutputStream().write(
-                        ("cd " + getDir() + "\n").getBytes());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Executing " + getCmd());
             }
-            session.getOutputStream().write((getCmd() + "\n").getBytes());
-            session.getOutputStream().write("exit\n".getBytes());
+            OutputStream os = session.getOutputStream();
+            if (getDir() != null) {
+                os.write(("cd " + getDir() + "\n").getBytes());
+            }
+            if (envVars != null) {
+                for (Map.Entry<String, String> e : envVars.entrySet()) {
+                    os.write((e.getKey() + "='" + e.getValue() + "'; export " + e.getKey() + "\n").getBytes());
+                }
+            }
+            os.write((getCmd() + "\n").getBytes());
+            os.write("exit\n".getBytes());
             BufferedReader stdout = new BufferedReader(new InputStreamReader(
                     session.getInputStream()));
             BufferedReader stderr = new BufferedReader(new InputStreamReader(
