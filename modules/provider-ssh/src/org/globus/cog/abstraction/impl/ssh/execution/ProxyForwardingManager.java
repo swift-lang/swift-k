@@ -135,30 +135,40 @@ public class ProxyForwardingManager {
         try {
             SSHChannel cp = s.getBundle().allocateChannel();
             SftpSubsystemClient sftp = new SftpSubsystemClient();
-            if (!cp.getSession().startSubsystem(sftp)) {
-                throw new InvalidSecurityContextException(
+            try {
+                if (!cp.getSession().startSubsystem(sftp)) {
+                    throw new InvalidSecurityContextException(
                         "Failed to start the SFTP subsystem on " + cp.getBundle().getId());
+                }
+
+                String globusDir = makeGlobusDir(sftp);
+                cleanupOldProxies(sftp, globusDir);
+                SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+                String name = PREFIX + "-" + Math.abs(random.nextInt()) + "-"
+                        + (cred.getTimeLeft() + System.currentTimeMillis() / 1000);
+                FileAttributes fa = new FileAttributes();
+                fa.setPermissions(new UnsignedInteger32(FileAttributes.S_IRUSR
+                        | FileAttributes.S_IWUSR));
+                SftpFile f = sftp.openFile(globusDir + "/" + name,
+                        SftpSubsystemClient.OPEN_WRITE
+                                | SftpSubsystemClient.OPEN_CREATE
+                                | SftpSubsystemClient.OPEN_EXCLUSIVE,
+                        fa);
+                // specifying the permissions to sftp.openFile() above doesn't
+                // seem to work
+                sftp.changePermissions(f, fa.getPermissions().intValue());
+                BufferedOutputStream out = new BufferedOutputStream(new SftpFileOutputStream(
+                    f));
+
+                cred.save(out);
+                out.close();
+                return new Info(globusDir + "/" + name, cred.getTimeLeft() * 1000
+                        + System.currentTimeMillis());
             }
-
-            String globusDir = makeGlobusDir(sftp);
-            cleanupOldProxies(sftp, globusDir);
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-            String name = PREFIX + "-" + Math.abs(random.nextInt()) + "-"
-                    + (cred.getTimeLeft() + System.currentTimeMillis() / 1000);
-            FileAttributes fa = new FileAttributes();
-            fa.setPermissions(new UnsignedInteger32(FileAttributes.S_IRUSR
-                    | FileAttributes.S_IWUSR));
-            SftpFile f = sftp.openFile(globusDir + "/" + name, SftpSubsystemClient.OPEN_WRITE
-                    | SftpSubsystemClient.OPEN_CREATE | SftpSubsystemClient.OPEN_EXCLUSIVE,
-                    fa);
-            //specifying the permissions to sftp.openFile() above doesn't seem to work
-            sftp.changePermissions(f, fa.getPermissions().intValue());
-            BufferedOutputStream out = new BufferedOutputStream(new SftpFileOutputStream(f));
-
-            cred.save(out);
-            out.close();
-            return new Info(globusDir + "/" + name, cred.getTimeLeft() * 1000
-                    + System.currentTimeMillis());
+            finally {
+                sftp.stop();
+                s.getBundle().releaseChannel(cp);
+            }
         }
         catch (InvalidSecurityContextException e) {
             throw e;
@@ -168,9 +178,11 @@ public class ProxyForwardingManager {
         }
     }
 
-    private static final Pattern PROXY_NAME_PATTERN = Pattern.compile("sshproxy-([0-9]+)-([0-9]+)");
-    
-    private void cleanupOldProxies(SftpSubsystemClient sftp, String globusDir) throws IOException {
+    private static final Pattern PROXY_NAME_PATTERN = Pattern
+            .compile("sshproxy-([0-9]+)-([0-9]+)");
+
+    private void cleanupOldProxies(SftpSubsystemClient sftp, String globusDir)
+            throws IOException {
         List<SftpFile> files = new ArrayList<SftpFile>();
         SftpFile dir = sftp.openDirectory(globusDir);
         try {
