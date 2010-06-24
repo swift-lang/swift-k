@@ -19,6 +19,7 @@ import org.globus.cog.abstraction.impl.ssh.SSHChannelManager;
 import org.globus.cog.abstraction.impl.ssh.SSHRunner;
 import org.globus.cog.abstraction.impl.ssh.SSHSecurityContextImpl;
 import org.globus.cog.abstraction.impl.ssh.SSHTaskStatusListener;
+import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
@@ -52,7 +53,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
         s = SSHChannelManager.getDefault().getChannel(host,
                 port, getSecurityContext().getCredentials());
+        
         exec = new Exec();
+        if (spec.getDelegation() != Delegation.NO_DELEGATION) {
+            String proxyFile = ProxyForwardingManager.getDefault().forwardProxy(spec.getDelegation(), s);
+            if (proxyFile != null) {
+                exec.addEnv("X509_USER_PROXY", proxyFile);
+            }
+        }
         exec.setCmd(cmd);
         exec.setDir(spec.getDirectory());
         
