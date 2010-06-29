@@ -14,7 +14,10 @@ import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
+import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -61,13 +64,16 @@ public class CSVMapper extends AbstractMapper {
 		if (read) {
 			return;
 		}
-		String file = PARAM_FILE.getStringValue(this);
+		
+		String file = getCSVFile(); 
+		
 		String delim = PARAM_DELIMITER.getStringValue(this);
 		String hdelim = PARAM_HDELIMITER.getStringValue(this);
 		boolean header = PARAM_HEADER.getBooleanValue(this);
 		int skip = PARAM_SKIP.getIntValue(this);
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(file));
+			BufferedReader br = 
+			    new BufferedReader(new FileReader(file));
 
 			String line;
 			StringTokenizer st;
@@ -78,10 +84,6 @@ public class CSVMapper extends AbstractMapper {
 				int ix = 0;
 				while (st.hasMoreTokens()) {
 					String column = st.nextToken();
-					// TODO PMD reports this for the
-					// following line:
-					// An operation on an Immutable object (String, BigDecimal or BigInteger) won't change the object itself
-					// This is likely a bug
 					column.replaceAll("\\s", "_");
 					cols.add(column);
 					colindex.put(column, new Integer(ix));
@@ -127,7 +129,19 @@ public class CSVMapper extends AbstractMapper {
 		}
 	}
 
-	public Collection existing() {
+	private String getCSVFile() {
+	    String result = null;
+	    Object object = PARAM_FILE.getRawValue(this);
+        DSHandle handle = (DSHandle) object;
+        Mapper mapper = handle.getMapper();
+        PhysicalFormat format = mapper.map(Path.EMPTY_PATH);
+        GeneralizedFileFormat fileFormat = 
+            (GeneralizedFileFormat) format;
+        result  = fileFormat.getPath();
+        return result;
+    }
+
+    public Collection existing() {
 		readFile();
 		List l = new ArrayList();
 		Iterator itl = content.iterator();
