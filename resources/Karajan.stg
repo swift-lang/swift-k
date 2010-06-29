@@ -2,6 +2,7 @@ group Karajan;
 
 // TODO can move progress ticker start into vdl:mains so karajan files
 // are smaller
+
 program(types,procedures,declarations,statements,constants,buildversion) ::= <<
 <project><!-- CACHE ID $buildversion$ -->
   <import file="sys.xml"/>
@@ -101,7 +102,7 @@ typecheck() ::= <<
 >>
 
 vdl_execute(outputs,inputs,application,name,line) ::= <<
-<log level="info" message="PROCEDURE line=$line$ thread={#thread} name=$name$"/>
+<log level="debug" message="PROCEDURE line=$line$ thread={#thread} name=$name$"/>
 <vdl:execute>
   <vdl:tr>$application.exec$</vdl:tr>
   $inputs:vdl_stagein();separator="\n"$
@@ -109,7 +110,7 @@ vdl_execute(outputs,inputs,application,name,line) ::= <<
   $vdl_arguments(arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 </vdl:execute>
 $outputs:vdl_closedataset();separator="\n"$
-<log level="info" message="PROCEDURE_END line=$line$"/>
+<log level="debug" message="PROCEDURE_END line=$line$"/>
 >>
 
 vdl_log_input() ::= <<
@@ -213,14 +214,14 @@ $if(indexVar)$
       <vdl:new type="int" value="{\$\$}"/>
     </set>
 $endif$
-	<log level="info" message="FOREACH_IT_START line=$line$ thread={#thread}"/>
-<log level="info"><string>SCOPE thread={#thread}</string></log>
+	<log level="debug" message="FOREACH_IT_START line=$line$ thread={#thread}"/>
+<log level="debug"><string>SCOPE thread={#thread}</string></log>
 
     $declarations;separator="\n"$
     $if(statements)$
       $parallel(statements=statements)$
     $endif$
-    <log level="info" message="FOREACH_IT_END line=$line$ thread={#thread}"/>
+    <log level="debug" message="FOREACH_IT_END line=$line$ thread={#thread}"/>
 </vdl:tparallelFor>
 >>
 
@@ -230,7 +231,7 @@ $endif$
 
 callInternal(func, outputs, inputs) ::= <<
 <sequential>
-<log level="info" message="INTERNALPROC_START thread={#thread} name=$func$"/>
+<log level="debug" message="INTERNALPROC_START thread={#thread} name=$func$"/>
 <set name="swift#cs"><variable>#thread</variable></set>
 <$func$>
   <parallel>
@@ -238,7 +239,7 @@ callInternal(func, outputs, inputs) ::= <<
     $inputs:callInternal_log_input();separator="\n"$
   </parallel>
 </$func$>
-<log level="info" message="INTERNALPROC_END thread={#thread}"/>
+<log level="debug" message="INTERNALPROC_END thread={#thread}"/>
 </sequential>
 >>
 
@@ -412,12 +413,12 @@ if(condition,vthen,velse) ::= <<
 <if>
   <vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
   <then>
-<log level="info"><string>SCOPE thread={#thread}</string></log>
+<log level="debug"><string>SCOPE thread={#thread}</string></log>
     $vthen$
   </then>
   $if(velse)$
   <else>
-<log level="info"><string>SCOPE thread={#thread}</string></log>
+<log level="debug"><string>SCOPE thread={#thread}</string></log>
     $velse$
   </else>
   $endif$
@@ -544,7 +545,7 @@ slicearray(parent, memberchild, datatype) ::= <<
   </vdl:slicearray>
  </set>
 
- <log level="info"><concat>
+ <log level="debug"><concat>
    <string>SLICEARRAY thread={#thread} slice=</string>
    <vdl:getdatasetprovenanceid var="{swift#slice}" />
    <string> member=$memberchild$ array=</string>

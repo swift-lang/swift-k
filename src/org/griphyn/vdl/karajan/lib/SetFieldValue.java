@@ -10,6 +10,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.karajan.PairIterator;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -32,9 +33,9 @@ public class SetFieldValue extends VDLFunction {
 		    Path path = parsePath(OA_PATH.getValue(stack), stack);
 			DSHandle leaf = var.getField(path);
 			DSHandle value = (DSHandle) PA_VALUE.getValue(stack);
-			if (logger.isInfoEnabled()) {
-				logger.info("Setting " + leaf + " to " + value);
-			}
+			
+			log(leaf, value);
+			    
 			synchronized (var.getRoot()) {
             // TODO want to do a type check here, for runtime type checking
             // and pull out the appropriate internal value from value if it
@@ -61,7 +62,24 @@ public class SetFieldValue extends VDLFunction {
 		}
 	}
 
-	/** make dest look like source - if its a simple value, copy that
+	private void log(DSHandle leaf, DSHandle value) {
+	    if (logger.isDebugEnabled()) {
+	        logger.debug("Setting " + leaf + " to " + value);
+	    }
+	    else if (logger.isInfoEnabled()) {
+	        if (leaf instanceof AbstractDataNode) {
+	            AbstractDataNode data = (AbstractDataNode) leaf;
+                    Path path = data.getPathFromRoot();
+                    String p = path.toString();
+                    if (p.equals("$"))
+                        p = "";
+	            String name = data.getDisplayableName() + p;
+	            logger.info("Set: " + name + "=" + value);
+	        }
+	    }
+    }
+
+    /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
 	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack) throws ExecutionException {
 		if (source.getType().isPrimitive()) {

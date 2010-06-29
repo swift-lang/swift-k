@@ -32,15 +32,14 @@ public class PartialCloseDataset extends VDLFunction {
 		boolean hasUnseenToken = false;
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		String statementID = (String) OA_STATEMENTID.getValue(stack);
-		if (logger.isInfoEnabled()) {
-			logger.info("Partially closing " + var + " for statement " + statementID);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Partially closing " + var +
+                                     " hash: " + var.hashCode() +
+                                     " for statement " + statementID);
 		}
 
-		logger.info("var is "+var);
-		logger.info("var hash is "+var.hashCode());
-
 		if(var.isClosed()) {
-			logger.info("variable already closed - skipping partial close processing");
+			logger.debug("variable already closed - skipping partial close processing");
 			return null;
 		}
 
@@ -53,10 +52,10 @@ public class PartialCloseDataset extends VDLFunction {
 			}
 
 			c.add(statementID);
-			logger.info("Adding token "+statementID+" with hash "+statementID.hashCode());
+			logger.debug("Adding token "+statementID+" with hash "+statementID.hashCode());
 
 			String needToWaitFor = (String) var.getParam("waitfor");
-			logger.info("need to wait for "+needToWaitFor);
+			logger.debug("need to wait for "+needToWaitFor);
 			StringTokenizer stok = new StringTokenizer(needToWaitFor, " ");
 			while(stok.hasMoreTokens()) {
 				String s = stok.nextToken();
@@ -66,16 +65,16 @@ public class PartialCloseDataset extends VDLFunction {
 					// then we have a required element that we have not
 					// seen yet, so...
 					hasUnseenToken = true;
-					logger.info("Container does not contain token "+s);
+					logger.debug("Container does not contain token "+s);
 				} else {
-					logger.info("Container does contain token "+s);
+					logger.debug("Container does contain token "+s);
 				}
 			}
 		}
-		logger.info("hasUnseenToken = "+hasUnseenToken);
+		logger.debug("hasUnseenToken = "+hasUnseenToken);
 		if(!hasUnseenToken) {
-			if(logger.isInfoEnabled()) {
-				logger.info("All partial closes for " + var + " have happened. Closing fully.");
+			if(logger.isDebugEnabled()) {
+				logger.debug("All partial closes for " + var + " have happened. Closing fully.");
 			}
 			var.closeDeep();
 			pendingDatasets.remove(var);

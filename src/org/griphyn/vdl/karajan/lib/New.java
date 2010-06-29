@@ -134,7 +134,7 @@ public class New extends VDLFunction {
 				throw new ExecutionException("vdl:new requires a type specification for value "
 						+ value);
 			}
-			logger.info("NEW id="+handle.getIdentifier());
+			logger.debug("NEW id="+handle.getIdentifier());
 			return handle;
 		}
 		catch (Exception e) {

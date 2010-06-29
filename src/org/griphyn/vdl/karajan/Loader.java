@@ -476,6 +476,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ca.setThreshold(level);
             ca.activateOptions();
         }
+        Logger.getLogger(Log.class).setLevel(Level.INFO);
         if (ap.isPresent(ARG_TUI)) {
             ma = new MonitorAppender(projectName);
             Logger.getRootLogger().addAppender(ma);

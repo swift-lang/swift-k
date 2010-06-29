@@ -23,8 +23,8 @@ public class CloseDataset extends VDLFunction {
 		Path path = parsePath(OA_PATH.getValue(stack), stack);
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		try {
-			if (logger.isInfoEnabled()) {
-				logger.info("Closing " + var);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Closing " + var);
 			}
 			var = var.getField(path);
 			closeChildren(stack, var);

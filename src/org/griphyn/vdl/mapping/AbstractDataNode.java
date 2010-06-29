@@ -151,7 +151,7 @@ public abstract class AbstractDataNode implements DSHandle {
 		return sb.toString();
 	}
 
-	protected String getDisplayableName() {
+	public String getDisplayableName() {
 		String prefix = getRoot().getParam("dbgname");
 		if (prefix == null) {
 			prefix = getRoot().getParam("prefix");
@@ -395,7 +395,7 @@ public abstract class AbstractDataNode implements DSHandle {
 		this.closed = true;
 		notifyListeners();
 		if (logger.isInfoEnabled()) {
-			logger.info("closed " + this.getIdentifyingString());
+			logger.debug("closed " + this.getIdentifyingString());
 		}
 		// so because its closed, we can dump the contents
 
@@ -563,8 +563,8 @@ public abstract class AbstractDataNode implements DSHandle {
 	}
 
 	public synchronized void addListener(DSHandleListener listener) {
-		if (logger.isInfoEnabled()) {
-			logger.info("Adding handle listener \"" + listener + "\" to \""
+		if (logger.isDebugEnabled()) {
+			logger.debug("Adding handle listener \"" + listener + "\" to \""
 					+ getIdentifyingString() + "\"");
 		}
 		if (listeners == null) {
@@ -582,9 +582,9 @@ public abstract class AbstractDataNode implements DSHandle {
 			while (i.hasNext()) {
 				DSHandleListener listener = (DSHandleListener) i.next();
 				i.remove();
-				if (logger.isInfoEnabled()) {
-					logger.info("Notifying listener \"" + listener
-							+ "\" about \"" + getIdentifyingString() + "\"");
+				if (logger.isDebugEnabled()) {
+					logger.debug("Notifying listener \"" + listener
+                                                     + "\" about \"" + getIdentifyingString() + "\"");
 				}
 				listener.handleClosed(this);
 			}
