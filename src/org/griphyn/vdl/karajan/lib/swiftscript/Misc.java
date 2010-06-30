@@ -11,6 +11,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.griphyn.vdl.karajan.lib.PathUtils;
 import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -23,6 +24,9 @@ import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
+
+import org.griphyn.vdl.mapping.AbsFile;
+import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 
 public class Misc extends FunctionsCollection {
 
@@ -37,11 +41,12 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_tracef", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
-        setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
+                setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
 		setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
+                setArguments("swiftscript_dirname", new Arg[] { Arg.VARGS });
 	}
 
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
@@ -362,12 +367,42 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 	
-	public DSHandle swiftscript_tostring(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-	InvalidPathException {
-	    Object input = PA_INPUT.getValue(stack);
-	    DSHandle handle = new RootDataNode(Types.STRING);
-	    handle.setValue(""+input);
-	    handle.closeShallow();
-	    return handle;
+	public DSHandle swiftscript_tostring(VariableStack stack)
+                throws ExecutionException, NoSuchTypeException,
+                InvalidPathException {
+                Object input = PA_INPUT.getValue(stack);
+                DSHandle handle = new RootDataNode(Types.STRING);
+                handle.setValue(""+input);
+                handle.closeShallow();
+                return handle;
 	}
+
+        public DSHandle swiftscript_dirname(VariableStack stack) 
+                throws ExecutionException, NoSuchTypeException, InvalidPathException {
+                DSHandle handle;
+                try
+                {
+                        DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
+                        DSHandle arg = args[0];
+                        String[] input = VDLFunction.filename(arg);
+                        String name = input[0]; 
+                        String result = new AbsFile(name).getDir();
+                        handle = new RootDataNode(Types.STRING);
+                        handle.setValue(result);
+                        handle.closeShallow();
+                }
+                catch (HandleOpenException e) {
+                        throw new FutureNotYetAvailable
+                                (VDLFunction.addFutureListener(stack, e.getSource()));
+                }
+                return handle;
+        }
 }
+
+/*
+ * Local Variables:
+ *  c-basic-offset: 8
+ * End:
+ *
+ * vim: ft=c ts=8 sts=4 sw=4 expandtab
+ */

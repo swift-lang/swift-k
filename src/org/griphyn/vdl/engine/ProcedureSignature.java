@@ -180,14 +180,21 @@ public class ProcedureSignature {
 		FormalArgumentSignature filenameOut1 = new FormalArgumentSignature("string");
 		filename.addOutputArg(filenameOut1);
 		functionsMap.put(filename.getName(), filename);
-		
+                
 		ProcedureSignature filenames = new ProcedureSignature("filenames");
 		FormalArgumentSignature filenamesIn1 = new FormalArgumentSignature(true); /* file can be specified as any type */
 		filenames.addInputArg(filenamesIn1);
 		FormalArgumentSignature filenamesOut1 = new FormalArgumentSignature("string[]"); /* i think this is what it returns */
 		filenames.addOutputArg(filenamesOut1);
 		functionsMap.put(filenames.getName(), filenames);
-		
+
+                ProcedureSignature dirname = new ProcedureSignature("dirname");
+		FormalArgumentSignature dirnameIn1 = new FormalArgumentSignature(true); /* dir can be specified as any type */
+		dirname.addInputArg(dirnameIn1);
+		FormalArgumentSignature dirnameOut1 = new FormalArgumentSignature("string");
+		dirname.addOutputArg(dirnameOut1);
+		functionsMap.put(dirname.getName(), dirname);
+                
 		ProcedureSignature regexp = new ProcedureSignature("regexp");
 		FormalArgumentSignature regexpIn1 = new FormalArgumentSignature("string");
 		regexp.addInputArg(regexpIn1);

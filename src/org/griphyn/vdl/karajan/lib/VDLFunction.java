@@ -175,7 +175,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-	public String[] filename(VariableStack stack) throws ExecutionException {
+	public static String[] filename(VariableStack stack) throws ExecutionException {
 		DSHandle ovar = (DSHandle)PA_VAR.getValue(stack);
 		synchronized(ovar.getRoot()) {
 			try {
@@ -475,7 +475,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected static Future addFutureListener(VariableStack stack, DSHandle handle)
+        public static Future addFutureListener(VariableStack stack, DSHandle handle)
 			throws ExecutionException {
 		assert Thread.holdsLock(handle.getRoot());
 		return getFutureWrapperMap(stack).addNodeListener(handle);
