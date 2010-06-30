@@ -18,6 +18,7 @@
 	<export name="java"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Java"/></export>
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
 	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileNames"/></export>
+	<export name="dirname"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="arg">
 		<import file="sys.xml"/>
 		<if>
