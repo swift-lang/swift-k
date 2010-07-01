@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.Inet6Address;
 import java.net.NetworkInterface;
@@ -32,13 +33,11 @@ public class Settings {
     public static final Logger logger = Logger.getLogger(Settings.class);
 
     public static final String[] NAMES =
-            new String[] { "slots", "workersPerNode", "nodeGranularity",
-                           "allocationStepSize", "maxNodes",
-                           "lowOverallocation", "highOverallocation",
-                           "overallocationDecayFactor", "spread", "reserve",
-                           "maxtime", "project", "queue",
-                           "remoteMonitorEnabled", "kernelprofile",
-                           "alcfbgpnat", "internalHostname", "hookClass" };
+            new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
+                    "maxNodes", "lowOverallocation", "highOverallocation",
+                    "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
+                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
+                    "internalHostname", "hookClass", "workerManager" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -116,6 +115,8 @@ public class Settings {
     private String hookClass;
     
     private Hook hook;
+    
+    private String workerManager = "block";
     
     public Settings() {
         hook = new Hook();
@@ -216,6 +217,14 @@ public class Settings {
 
     public void setMaxtime(int maxtime) {
         this.maxtime = maxtime;
+    }
+    
+    public String getWorkerManager() {
+        return workerManager;
+    }
+
+    public void setWorkerManager(String workerManager) {
+        this.workerManager = workerManager;
     }
 
     public String getInternalHostname() {
