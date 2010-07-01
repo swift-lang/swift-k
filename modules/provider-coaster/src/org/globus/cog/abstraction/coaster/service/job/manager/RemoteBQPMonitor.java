@@ -10,7 +10,6 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.file.coaster.commands.BQPStatusCommand;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
