@@ -9,8 +9,6 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
-import java.util.Iterator;
-
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.util.Queue;
 
@@ -18,7 +16,6 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     private final Queue q;
     private Queue.Cursor cursor;
     private boolean shutdownFlag;
-    private Iterator i;
     private boolean wrap;
 
     public AbstractQueueProcessor(String name) {
