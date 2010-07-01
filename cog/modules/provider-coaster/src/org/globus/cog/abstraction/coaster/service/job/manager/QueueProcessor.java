@@ -15,6 +15,8 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 public interface QueueProcessor {
 
     public abstract void enqueue(Task t);
+    
+    public abstract void start();
 
     public abstract void shutdown();
 

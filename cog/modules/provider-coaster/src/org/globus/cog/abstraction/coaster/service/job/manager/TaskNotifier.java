@@ -35,10 +35,10 @@ public class TaskNotifier implements StatusListener, Callback {
     private Task task;
     private KarajanChannel channel;
     private static int notacknowledged;
-    private static LinkedList queue;
+    private static LinkedList<Entry> queue;
 
     static {
-        queue = new LinkedList();
+        queue = new LinkedList<Entry>();
         CoasterService.addPeriodicWatchdog(new TimerTask() {
             public void run() {
                 synchronized (TaskNotifier.class) {
@@ -103,7 +103,7 @@ public class TaskNotifier implements StatusListener, Callback {
 
     private static void checkQueue() {
         if (notacknowledged < CONGESTION_THRESHOLD && !queue.isEmpty()) {
-            Entry e = (Entry) queue.removeFirst();
+            Entry e = queue.removeFirst();
             sendStatus(e.tn, e.s);
         }
     }
