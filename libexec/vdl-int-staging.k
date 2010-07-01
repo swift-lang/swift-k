@@ -64,7 +64,7 @@ namespace("vdl"
 			
 				file := vdl:filename(vdl:getfield(var, path = path))
 				
-				dirname(file)
+				vdl:dirname(file)
 			)
 		)
 		

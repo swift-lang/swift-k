@@ -148,7 +148,7 @@ namespace("vdl"
 			
 				file := vdl:filename(vdl:getfield(var, path = path))
 				
-				dirname(file)
+				vdl:dirname(file)
 			)
 		)
 		
@@ -284,7 +284,7 @@ namespace("vdl"
 			uParallelFor(file, files
 				provider := provider(file)
 				srchost := hostname(file)
-				srcdir := dirname(file)
+				srcdir := vdl:dirname(file)
 				destdir := dircat(dir, reldirname(file))
 				filename := basename(file)
 				size := file:size("{srcdir}/{filename}", host=srchost, provider=provider)
@@ -331,7 +331,7 @@ namespace("vdl"
 					dhost := vdl:hostname(file)
 					rdir := dircat(dir, reldirname(file))
 					bname := basename(file)
-					ldir := dirname(file)
+					ldir := vdl:dirname(file)
 					fullLocal := dircat(ldir, bname)
 					fullRemote := dircat(rdir, bname)
 										
