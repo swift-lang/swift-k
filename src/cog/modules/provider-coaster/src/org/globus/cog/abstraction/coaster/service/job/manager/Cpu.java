@@ -21,20 +21,18 @@ import org.globus.cog.abstraction.impl.execution.coaster.SubmitJobCommand;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 
-public class Cpu implements Comparable, Callback, StatusListener {
+public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
 
     private static PullThread pullThread;
 
     private int id;
-    private List done;
+    private List<Job> done;
     private Job running;
     private Node node;
     private Time starttime, endtime, timelast, donetime;
@@ -42,7 +40,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     protected long busyTime, idleTime, lastTime;
 
     public Cpu() {
-        this.done = new ArrayList();
+        this.done = new ArrayList<Job>();
         this.timelast = Time.fromMilliseconds(0);
     }
 
@@ -206,8 +204,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
         node.shutdown();
     }
 
-    public int compareTo(Object obj) {
-        Cpu o = (Cpu) obj;
+    public int compareTo(Cpu o) {
         TimeInterval diff = timelast.subtract(o.timelast);
         if (diff.getMilliseconds() == 0) {
             return id - o.id;
@@ -239,7 +236,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
         return id + ":" + timelast;
     }
 
-    public List getDoneJobs() {
+    public List<Job> getDoneJobs() {
         return done;
     }
 
@@ -270,7 +267,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
     }
 
     private static class PullThread extends Thread {
-        private LinkedList queue, sleeping;
+        private LinkedList<Cpu> queue, sleeping;
         private long sleepTime, runTime, last, print;
         private BlockQueueProcessor bqp;
 
@@ -278,8 +275,8 @@ public class Cpu implements Comparable, Callback, StatusListener {
             this.bqp = bqp;
             setName("Job pull");
             setDaemon(true);
-            queue = new LinkedList();
-            sleeping = new LinkedList();
+            queue = new LinkedList<Cpu>();
+            sleeping = new LinkedList<Cpu>();
         }
 
         public synchronized void enqueue(Cpu cpu) {
@@ -306,7 +303,7 @@ public class Cpu implements Comparable, Callback, StatusListener {
                             }
                         }
                     }
-                    cpu = (Cpu) queue.removeFirst();
+                    cpu = queue.removeFirst();
                 }
                 cpu.pull();
             }
@@ -314,10 +311,10 @@ public class Cpu implements Comparable, Callback, StatusListener {
 
         private boolean awakeUseable() {
             int seq = bqp.getQueueSeq();
-            Iterator i = sleeping.iterator();
+            Iterator<Cpu> i = sleeping.iterator();
             int sz = sleeping.size();
             while (i.hasNext()) {
-                Cpu cpu = (Cpu) i.next();
+                Cpu cpu = i.next();
                 if (cpu.lastseq < seq) {
                     enqueue(cpu);
                     i.remove();

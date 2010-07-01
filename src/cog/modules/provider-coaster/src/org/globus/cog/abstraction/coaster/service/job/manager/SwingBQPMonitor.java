@@ -13,8 +13,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -41,9 +41,10 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
 
     private JButton zoomin, zoomout;
     private Settings settings;
-    private List jobs, blocks;
+    private List<Job> jobs;
+    private Collection<Block> blocks;
     private SortedJobSet queued;
-    private Set blockids;
+    private Set<String> blockids;
 
     public SwingBQPMonitor() {
         starttime = Time.now();
@@ -62,7 +63,7 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
 
         zoomin = addButton(140, 4, "+");
         zoomout = addButton(200, 4, "-");
-        blockids = new HashSet();
+        blockids = new HashSet<String>();
     }
 
     public SwingBQPMonitor(BlockQueueProcessor bqp) {
@@ -71,18 +72,16 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
         this.settings = bqp.getSettings();
         this.jobs = bqp.getJobs();
         this.queued = bqp.getQueued();
-        this.blocks = bqp.getBlocks();
+        this.blocks = bqp.getBlocks().values();
     }
 
-    public void update(Settings settings, List jobs, SortedJobSet queued, List blocks) {
+    public void update(Settings settings, List<Job> jobs, SortedJobSet queued, Collection<Block> blocks) {
         this.settings = settings;
         this.jobs = jobs;
         this.queued = queued;
         this.blocks = blocks;
-        Iterator i = blocks.iterator();
         blockx = 10;
-        while (i.hasNext()) {
-            Block b = (Block) i.next();
+        for (Block b : blocks) {
             blockids.add(b.getId());
             blockx += b.getWorkerCount() + 4;
         }
@@ -116,16 +115,13 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
     }
 
     private void computeMaxTime() {
-        Iterator i = jobs.iterator();
         long m = max.getSeconds();
         /*
          * long now = Time.now().getSeconds(); while (i.hasNext()) { Job j =
          * (Job) i.next(); long v = BlockQueueProcessor.overallocatedSize(j,
          * settings) + now; if (m < v) { m = v; } }
          */
-        i = blocks.iterator();
-        while (i.hasNext()) {
-            Block b = (Block) i.next();
+        for (Block b : blocks) {
             if (m < b.getEndTime().getSeconds()) {
                 m = b.getEndTime().getSeconds();
             }
@@ -160,22 +156,16 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
 
             g.setColor(new Color(80, 100, 255, 64));
             int i = 0;
-            Iterator qi = queued.iterator();
-            while (qi.hasNext()) {
-                Job j = (Job) qi.next();
+            for (Job j : queued) {
                 g.fillRect(scalex(i) + 10, hj * 7 / 5 - scaley(j.getMaxWallTime()), scalex(1),
                     scaley(j.getMaxWallTime()));
                 i++;
             }
 
-            Iterator it;
-
             g.setColor(new Color(255, 0, 0, 64));
 
             i = 0;
-            it = jobs.iterator();
-            while (it.hasNext()) {
-                Job j = (Job) it.next();
+            for (Job j : jobs) {
                 g.fillRect(scalex(i) + 10, hj * 8 / 5 - scaley(j.getMaxWallTime()), scalex(1),
                     scaley(j.getMaxWallTime()));
                 i++;
@@ -183,9 +173,7 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
 
             g.setColor(Color.RED);
             i = 0;
-            it = jobs.iterator();
-            while (it.hasNext()) {
-                Job j = (Job) it.next();
+            for (Job j : jobs) {
                 int v = BlockQueueProcessor.overallocatedSize(j, settings);
                 g.drawLine(scalex(i) + 10, hj - scaley(v), scalex(i + 1) + 10 - 1, hj - scaley(v));
                 i++;
@@ -194,9 +182,7 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
             g.setColor(new Color(0, 160, 0));
 
             int blockx = 10;
-            Iterator bi = blocks.iterator();
-            while (bi.hasNext()) {
-                Block b = (Block) bi.next();
+            for (Block b : blocks) {
                 max = Time.max(max, b.getEndTime());
                 paintBlock(b, g, hj, blockx);
                 blockx += b.getWorkerCount() + 4;
@@ -252,12 +238,8 @@ public class SwingBQPMonitor extends JComponent implements ChangeListener, Actio
         g.drawString(b.getWorkerCount() + "w x " + b.getWalltime().getSeconds() + "s",
             10 + scalex(x), hj - scaley(b.getEndTime()) - 10);
 
-        Iterator i = b.getCpus().iterator();
-        while (i.hasNext()) {
-            Cpu cpu = (Cpu) i.next();
-            Iterator ji = cpu.getDoneJobs().iterator();
-            while (ji.hasNext()) {
-                Job j = (Job) ji.next();
+        for (Cpu cpu : b.getCpus()) {
+            for (Job j : cpu.getDoneJobs()) {
                 paintJob(g, hj, x, cpu, j, DONEJOB);
             }
             Job running = cpu.getRunning();

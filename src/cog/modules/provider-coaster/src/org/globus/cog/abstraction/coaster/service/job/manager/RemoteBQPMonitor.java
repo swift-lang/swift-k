@@ -28,7 +28,7 @@ public class RemoteBQPMonitor implements BQPMonitor, Callback {
     public void update() {
         try {
             BQPStatusCommand bsc =
-                    new BQPStatusCommand(bqp.getSettings(), bqp.getJobs(), bqp.getBlocks(),
+                    new BQPStatusCommand(bqp.getSettings(), bqp.getJobs(), bqp.getBlocks().values(),
                         bqp.getQueued());
             KarajanChannel channel =
                     ChannelManager.getManager().reserveChannel(bqp.getClientChannelContext());
