@@ -20,13 +20,13 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 class BlockTaskSubmitter extends Thread {
     public static final Logger logger = Logger.getLogger(BlockTaskSubmitter.class);
     
-    private LinkedList queue;
+    private LinkedList<Block> queue;
     private TaskHandler handler;
     
     public BlockTaskSubmitter() {
         setDaemon(true);
         setName("Block Submitter");
-        queue = new LinkedList();
+        queue = new LinkedList<Block>();
         handler = new ExecutionTaskHandler();
     }
     
@@ -56,7 +56,7 @@ class BlockTaskSubmitter extends Thread {
                         logger.warn("Interrupted");
                     }
                 }
-                b = (Block) queue.removeFirst();
+                b = queue.removeFirst();
             }
             if (b != null) {
                 if (logger.isInfoEnabled()) {

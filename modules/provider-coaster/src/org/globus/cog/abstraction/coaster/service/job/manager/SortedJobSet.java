@@ -18,10 +18,10 @@ import java.util.TreeMap;
 import org.apache.log4j.Logger;
 
 
-public class SortedJobSet {
+public class SortedJobSet implements Iterable<Job> {
     public static final Logger logger = Logger.getLogger(SortedJobSet.class);
     
-    private SortedMap sm;
+    private SortedMap<TimeInterval, LinkedList<Job>> sm;
     int size;
     double jsize;
     int seq;
@@ -32,7 +32,7 @@ public class SortedJobSet {
     }
     
     public SortedJobSet(Metric metric) {
-        sm = new TreeMap();
+        sm = new TreeMap<TimeInterval, LinkedList<Job>>();
         size = 0;
         this.metric = metric;
     }
@@ -40,7 +40,7 @@ public class SortedJobSet {
     public SortedJobSet(SortedJobSet other) {
         metric = other.metric;
         synchronized(other) {
-            sm = new TreeMap(other.sm);
+            sm = new TreeMap<TimeInterval, LinkedList<Job>>(other.sm);
             jsize = other.jsize;
             size = other.size;
         }
@@ -51,9 +51,9 @@ public class SortedJobSet {
     }
 
     public synchronized void add(Job j) {
-        LinkedList l = (LinkedList) sm.get(j.getMaxWallTime());
+        LinkedList<Job> l = sm.get(j.getMaxWallTime());
         if (l == null) {
-            l = new LinkedList();
+            l = new LinkedList<Job>();
             sm.put(j.getMaxWallTime(), l);
         }
         l.add(j);
@@ -67,14 +67,14 @@ public class SortedJobSet {
 
     public synchronized Job removeOne(TimeInterval walltime) {
         // remove largest job with a walltime smaller than the specified value
-        SortedMap sm2 = sm.headMap(walltime);
+        SortedMap<TimeInterval, LinkedList<Job>> sm2 = sm.headMap(walltime);
         if (sm2.isEmpty()) {
             return null;
         }
         else {
-            TimeInterval key = (TimeInterval) sm2.lastKey();
-            LinkedList jobs = (LinkedList) sm2.get(key);
-            Job j = (Job) jobs.removeFirst();
+            TimeInterval key = sm2.lastKey();
+            LinkedList<Job> jobs = sm2.get(key);
+            Job j = jobs.removeFirst();
             if (jobs.isEmpty()) {
                 sm.remove(key);
             }
@@ -96,22 +96,21 @@ public class SortedJobSet {
         return jsize;
     }
 
-    public Iterator iterator() {
-        return new Iterator() {
-            private Iterator it1 = sm.values().iterator();
-            private Iterator it2 = it1.hasNext() ? ((LinkedList) it1.next())
-                .iterator() : null;
+    public Iterator<Job> iterator() {
+        return new Iterator<Job>() {
+            private Iterator<LinkedList<Job>> it1 = sm.values().iterator();
+            private Iterator<Job> it2 = it1.hasNext() ? it1.next().iterator() : null;
 
             public boolean hasNext() {
                 return it2 != null && (it2.hasNext() || it1.hasNext());
             }
 
-            public Object next() {
+            public Job next() {
                 if (it2.hasNext()) {
                     return it2.next();
                 }
                 else if (it1.hasNext()) {
-                    it2 = ((LinkedList) it1.next()).iterator();
+                    it2 = it1.next().iterator();
                     return it2.next();
                 }
                 else {

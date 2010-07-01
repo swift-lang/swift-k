@@ -13,7 +13,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 
-public final class TimeInterval implements Comparable {
+public final class TimeInterval implements Comparable<TimeInterval> {
     private long ms;
     public static final TimeInterval FOREVER = new TimeInterval(Long.MAX_VALUE/2);
 
@@ -88,8 +88,7 @@ public final class TimeInterval implements Comparable {
         return a.ms > b.ms ? a : b;
     }
 
-    public int compareTo(Object o) {
-        TimeInterval ti = (TimeInterval) o;
+    public int compareTo(TimeInterval ti) {
         return sgn(ms - ti.ms);
     }
     
