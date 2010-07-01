@@ -9,21 +9,22 @@
  */
 package org.globus.cog.abstraction.coaster.rlog;
 
-import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class RemoteLogCommand extends Command {
     public static final String NAME = "RLOG";
     
-    private final String msg;
+    public enum Type {
+        STDOUT, STDERR, FATAL, ERROR, WARN, INFO, DEBUG;
+    }
     
     public RemoteLogCommand(String msg) {
-        super(NAME);
-        this.msg = msg;
+        this(Type.INFO, msg);
     }
-
-    public void send() throws ProtocolException {
+    
+    public RemoteLogCommand(Type type, String msg) {
+        super(NAME);
+        addOutData(type.toString());
         addOutData(msg);
-        super.send();
     }
 }
