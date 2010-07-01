@@ -7,7 +7,7 @@
 /*
  * Created on May 18, 2009
  */
-package org.globus.cog.abstraction.impl.file.coaster.commands;
+package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.util.ArrayList;
 import java.util.Collection;
