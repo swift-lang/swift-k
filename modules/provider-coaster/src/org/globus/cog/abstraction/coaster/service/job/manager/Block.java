@@ -13,7 +13,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TimerTask;
@@ -27,7 +26,7 @@ import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
-public class Block implements StatusListener {
+public class Block implements StatusListener, Comparable<Block> {
     public static final Logger logger = Logger.getLogger(Block.class);
 
     public static final long SHUTDOWN_WATCHDOG_DELAY = 2 * 60 * 1000;
@@ -47,9 +46,9 @@ public class Block implements StatusListener {
     private int workers, qt;
     private TimeInterval walltime;
     private Time endtime, starttime, deadline, creationtime;
-    private SortedSet scpus;
-    private List cpus;
-    private List nodes;
+    private SortedSet<Cpu> scpus;
+    private List<Cpu> cpus;
+    private List<Node> nodes;
     private boolean running, failed, shutdown, suspended;
     private BlockQueueProcessor ap;
     private BlockTask task;
@@ -63,13 +62,17 @@ public class Block implements StatusListener {
 
     public Block(String id) {
         this.id = id;
-        scpus = new TreeSet();
-        cpus = new ArrayList();
-        nodes = new ArrayList();
+        scpus = new TreeSet<Cpu>();
+        cpus = new ArrayList<Cpu>();
+        nodes = new ArrayList<Node>();
+    }
+    
+    public Block(int workers, TimeInterval walltime, BlockQueueProcessor ap) {
+        this(ap.getBQPId() + "-" + IDF.format(sid++), workers, walltime, ap);
     }
 
-    public Block(int workers, TimeInterval walltime, BlockQueueProcessor ap) {
-        this(ap.getBQPId() + "-" + IDF.format(sid++));
+    public Block(String id, int workers, TimeInterval walltime, BlockQueueProcessor ap) {
+        this(id);
         this.workers = workers;
         this.walltime = walltime;
         this.ap = ap;
@@ -106,9 +109,7 @@ public class Block implements StatusListener {
         else if (running) {
             Time last = getStartTime();
             synchronized (cpus) {
-                Iterator i = cpus.iterator();
-                while (i.hasNext()) {
-                    Cpu cpu = (Cpu) i.next();
+                for (Cpu cpu: cpus) {
                     if (cpu.getTimeLast().isGreaterThan(last)) {
                         last = cpu.getTimeLast();
                     }
@@ -143,9 +144,7 @@ public class Block implements StatusListener {
         }
         else {
             synchronized (cpus) {
-                Iterator i = cpus.iterator();
-                while (i.hasNext()) {
-                    Cpu cpu = (Cpu) i.next();
+                for (Cpu cpu : cpus) {
                     Job running = cpu.getRunning();
                     if (running == null) {
                         return true;
@@ -175,7 +174,7 @@ public class Block implements StatusListener {
             if (!scpus.add(cpu)) {
                 CoasterService.error(15, "CPU is already in the block", new Throwable());
             }
-            Cpu last = (Cpu) scpus.last();
+            Cpu last = scpus.last();
             if (last != null) {
                 deadline =
                         Time.min(last.getTimeLast().add(ap.getSettings().getReserve()),
@@ -249,9 +248,7 @@ public class Block implements StatusListener {
             long idleTotal = 0;
             int count = 0;
             if (running) {
-                Iterator i = cpus.iterator();
-                while (i.hasNext()) {
-                    Cpu cpu = (Cpu) i.next();
+                for (Cpu cpu : cpus) {
                     idleTotal = cpu.idleTime;
                     busyTotal = cpu.busyTime;
                     if (!failed) {
@@ -318,9 +315,7 @@ public class Block implements StatusListener {
                     cpus.add(cpu);
                 }
 
-                Iterator i = cpus.iterator();
-                if (i.hasNext()) {
-                    Cpu cpu = (Cpu) i.next();
+                for (Cpu cpu : cpus) {
                     cpu.taskFailed(msg, e);
                 }
             }
@@ -440,12 +435,16 @@ public class Block implements StatusListener {
         this.creationtime = t;
     }
 
-    public Collection getCpus() {
+    public Collection<Cpu> getCpus() {
         return cpus;
     }
 
     public boolean isRunning() {
         return running;
+    }
+    
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 
     public void increaseDoneJobCount() {
@@ -466,5 +465,9 @@ public class Block implements StatusListener {
     
     public long getLastUsed() {
         return lastUsed;
+    }
+
+    public int compareTo(Block o) {
+        return id.compareTo(o.id);
     }
 }

@@ -52,8 +52,7 @@ public class SubmitJobHandler extends RequestHandler {
                 t = read(new ByteArrayInputStream(getInData(0)));
             }
             new TaskNotifier(t, channelContext);
-            service.getJobQueue().getCoasterQueueProcessor().setClientChannelContext(
-                channelContext);
+            service.getJobQueue().setClientChannelContext(channelContext);
             service.getJobQueue().enqueue(t);
             // make sure we'll have something to send notifications to
             ChannelManager.getManager().reserveLongTerm(getChannel());

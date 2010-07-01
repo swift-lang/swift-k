@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceConfigurationCommand;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
@@ -26,7 +25,7 @@ public class ServiceConfigurationHandler extends RequestHandler {
 
     public void requestComplete() throws ProtocolException {
         Settings settings =
-                ((BlockQueueProcessor) ((CoasterService) getChannel().getChannelContext().getService()).getJobQueue().getCoasterQueueProcessor()).getSettings();
+                ((CoasterService) getChannel().getChannelContext().getService()).getJobQueue().getSettings();
         try {
             List l = getInDataChuncks();
             if (l != null) {

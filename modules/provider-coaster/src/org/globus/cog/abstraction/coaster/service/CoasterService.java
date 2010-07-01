@@ -61,6 +61,7 @@ public class CoasterService extends GSSService {
             throws IOException {
         super(!local, 0);
         this.local = local;
+        addLocalHook();
         this.registrationURL = registrationURL;
         this.id = id;
         setAuthorization(new SelfAuthorization());
@@ -104,7 +105,7 @@ public class CoasterService extends GSSService {
             localService.start();
             jobQueue = new JobQueue(localService);
             jobQueue.start();
-            localService.setRegistrationManager((RegistrationManager) jobQueue.getCoasterQueueProcessor());
+            localService.setRegistrationManager(jobQueue);
             logger
                     .info("Started local service: "
                             + localService.getContact());
@@ -113,7 +114,7 @@ public class CoasterService extends GSSService {
                     logger.info("Reserving channel for registration");
                     RemoteConfiguration.getDefault().prepend(
                             getChannelConfiguration(registrationURL));
-                    
+
                     if (local) {
                         channelToClient = createLocalChannel();
                     }
@@ -123,7 +124,7 @@ public class CoasterService extends GSSService {
                                     COASTER_REQUEST_MANAGER);
                     }
                     channelToClient.getChannelContext().setService(this);
-                    
+
                     logger.info("Sending registration");
                     RegistrationCommand reg = new RegistrationCommand(id,
                             "https://" + getHost() + ":" + getPort());
@@ -146,8 +147,10 @@ public class CoasterService extends GSSService {
     }
 
     private KarajanChannel createLocalChannel() throws IOException, ChannelException {
-        PipedServerChannel psc = ServiceManager.getDefault().getLocalService().newPipedServerChannel();
-        PipedClientChannel pcc = new PipedClientChannel(COASTER_REQUEST_MANAGER, new ChannelContext(), psc);
+        PipedServerChannel psc =
+                ServiceManager.getDefault().getLocalService().newPipedServerChannel();
+        PipedClientChannel pcc =
+                new PipedClientChannel(COASTER_REQUEST_MANAGER, new ChannelContext(), psc);
         psc.setClientChannel(pcc);
         ChannelManager.getManager().registerChannel(pcc.getChannelContext().getChannelID(), pcc);
         ChannelManager.getManager().registerChannel(psc.getChannelContext().getChannelID(), psc);
@@ -211,14 +214,40 @@ public class CoasterService extends GSSService {
     }
 
     public void shutdown() {
-        startShutdownWatchdog();
-        super.shutdown();
-        jobQueue.shutdown();
-        done = true;
-        unregister();
+        try {
+            startShutdownWatchdog();
+            super.shutdown();
+            jobQueue.shutdown();
+            unregister();
+        }
+        finally {
+            done = true;
+        }
         logger.info("Shutdown sequence completed");
     }
-    
+
+    /**
+     * This is needed if the service is running in local mode. The (client)
+     * application may call System.exit before all the cleanup is done. This is
+     * fine in non-local mode, but not some much otherwise.
+     */
+    public void addLocalHook() {
+        if (local) {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    try {
+                        while (!done) {
+                            Thread.sleep(50);
+                        }
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    }
+
     private void unregister() {
         try {
             if (id != null && channelToClient != null) {
@@ -249,18 +278,18 @@ public class CoasterService extends GSSService {
                 error(4, "Failed to connect after 2 minutes. Shutting down", null);
             }
         };
-        //watchdogs.schedule(tt, 2 * 60 * 1000);
+        // watchdogs.schedule(tt, 2 * 60 * 1000);
         return tt;
     }
-    
+
     public static void addWatchdog(TimerTask w, long delay) {
-        synchronized(watchdogs) {
+        synchronized (watchdogs) {
             watchdogs.schedule(w, delay);
         }
     }
-    
+
     public static void addPeriodicWatchdog(TimerTask w, long delay) {
-        synchronized(watchdogs) {
+        synchronized (watchdogs) {
             watchdogs.schedule(w, delay, delay);
         }
     }
@@ -303,7 +332,7 @@ public class CoasterService extends GSSService {
             error(2, null, t);
         }
     }
-    
+
     public static void error(int code, String msg, Throwable t) {
         if (msg != null) {
             System.err.println(msg);

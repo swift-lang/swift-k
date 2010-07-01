@@ -18,7 +18,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,19 +77,19 @@ public class ServiceManager implements StatusListener {
 
     private BootstrapService bootstrapService;
     private LocalService localService;
-    private Map services;
-    private Map credentials;
-    private Map bootHandlers;
-    private Set starting;
-    private Map usageCount;
+    private Map<Object, String> services;
+    private Map<String, Object> credentials;
+    private Map<String, TaskHandler> bootHandlers;
+    private Set<Object> starting;
+    private Map<Object, Integer> usageCount;
     private ServiceReaper serviceReaper;
 
     public ServiceManager() {
-        services = new HashMap();
-        credentials = new HashMap();
-        starting = new HashSet();
-        usageCount = new HashMap();
-        bootHandlers = new HashMap();
+        services = new HashMap<Object, String>();
+        credentials = new HashMap<String, Object>();
+        starting = new HashSet<Object>();
+        usageCount = new HashMap<Object, Integer>();
+        bootHandlers = new HashMap<String, TaskHandler>();
         serviceReaper = new ServiceReaper();
         Runtime.getRuntime().addShutdownHook(serviceReaper);
     }
@@ -98,7 +97,7 @@ public class ServiceManager implements StatusListener {
     private TaskHandler getBootHandler(String provider) throws InvalidServiceContactException,
             InvalidProviderException, ProviderMethodException, IllegalSpecException {
         synchronized (bootHandlers) {
-            TaskHandler th = (TaskHandler) bootHandlers.get(provider);
+            TaskHandler th = bootHandlers.get(provider);
             if (th == null) {
                 th = AbstractionFactory.newExecutionTaskHandler(provider);
                 bootHandlers.put(provider, th);
@@ -139,7 +138,7 @@ public class ServiceManager implements StatusListener {
             while (starting.contains(service)) {
                 services.wait(100);
             }
-            String url = (String) services.get(service);
+            String url = services.get(service);
             if (url == null) {
                 starting.add(service);
             }
@@ -208,7 +207,7 @@ public class ServiceManager implements StatusListener {
             String url;
             ServiceContact contact = getContact(t);
             synchronized (services) {
-                url = (String) services.remove(contact);
+                url = services.remove(contact);
                 if (url == null) {
                     logger.info("Service does not appear to be registered with this manager");
                 }
@@ -242,11 +241,11 @@ public class ServiceManager implements StatusListener {
 
     protected void increaseUsageCount(Object service) {
         synchronized (usageCount) {
-            Integer i = (Integer) usageCount.get(service);
+            Integer i = usageCount.get(service);
             if (i == null) {
                 i = ZERO;
             }
-            usageCount.put(service, new Integer(i.intValue() + 1));
+            usageCount.put(service, i + 1);
         }
     }
 
@@ -409,10 +408,8 @@ public class ServiceManager implements StatusListener {
 
         public void run() {
             System.out.println("Cleaning up...");
-            Iterator i = services.values().iterator();
             count = services.size();
-            while (i.hasNext()) {
-                String url = (String) i.next();
+            for (String url : services.values()) {
                 Object cred = credentials.get(url);
                 try {
                     System.out.println("Shutting down service at " + url);
