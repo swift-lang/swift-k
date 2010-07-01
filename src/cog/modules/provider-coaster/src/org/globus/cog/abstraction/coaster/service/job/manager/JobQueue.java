@@ -15,50 +15,29 @@ import java.util.Collection;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
+import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
-public class JobQueue {
-	public static final Logger logger = Logger.getLogger(JobQueue.class);
-	
-    private AbstractQueueProcessor local, coaster;
-    
+public class JobQueue implements RegistrationManager {
+    public static final Logger logger = Logger.getLogger(JobQueue.class);
+
+    private QueueProcessor local, coaster;
+    private Settings settings;
+    private LocalTCPService localService;
+    private ChannelContext clientChannelContext;
+
     public JobQueue(LocalTCPService localService) throws IOException {
-        local = new LocalQueueProcessor();
-        coaster = newQueueProcessor(localService);
+        settings = new Settings();
+        this.localService = localService;
     }
-    
-    private AbstractQueueProcessor newQueueProcessor(LocalTCPService localService) {
-    	String qp = System.getProperty("coaster.qp");
-    	if (qp == null) {
-    		qp = "block";
-    	}
-    	if ("block".equals(qp)) {
-    	    BlockQueueProcessor bqp = new BlockQueueProcessor();
-    	    Collection<URI> addrs = bqp.getSettings().getLocalContacts(localService.getPort());
-    	    if (addrs == null) {
-    	        bqp.getSettings().setCallbackURI(localService.getContact());
-    	    }
-    	    else {
-    	        bqp.getSettings().setCallbackURIs(addrs);
-    	    }
-    	    return bqp;
-    	}
-    	else if ("passive".equals(qp)) {
-    		return new PassiveQueueProcessor(localService.getContact());
-    	}
-    	else {
-    		throw new IllegalArgumentException("Invalid queue processor requested: " + qp);
-    	}
-    }
-    
-    
 
     public void start() {
+        local = new LocalQueueProcessor();
         local.start();
-        coaster.start();
     }
 
     public void enqueue(Task t) {
@@ -69,30 +48,91 @@ public class JobQueue {
             jm = ((ExecutionService) s).getJobManager();
         }
         if (spec.isBatchJob()) {
-        	if (logger.isInfoEnabled()) {
-        		logger.info("Job batch mode flag set. Routing through local queue.");
-        	}
+            if (logger.isInfoEnabled()) {
+                logger.info("Job batch mode flag set. Routing through local queue.");
+            }
         }
+        QueueProcessor qp;
         if (s.getProvider().equalsIgnoreCase("coaster") && !spec.isBatchJob()) {
             if (logger.isInfoEnabled()) {
                 logger.info("Adding task " + t + " to coaster queue");
             }
-            coaster.enqueue(t);
+            qp = getQueueProcessor(settings.getWorkerManager());
         }
         else {
             if (logger.isInfoEnabled()) {
                 logger.info("Adding task " + t + " to local queue");
             }
-            local.enqueue(t);
+            qp = local;
+        }
+        qp.enqueue(t);
+    }
+
+    protected synchronized QueueProcessor getQueueProcessor(String name) {
+        if (coaster == null) {
+            coaster = newQueueProcessor(name);
+            coaster.setClientChannelContext(clientChannelContext);
+            coaster.start();
+        }
+        return coaster;
+    }
+
+    private QueueProcessor newQueueProcessor(String name) {
+        if (name.equals("local")) {
+            return new LocalQueueProcessor();
+        }
+        else if (name.equals("block")) {
+            return newBlockQueueProcessor();
+        }
+        else if (name.equals("passive")) {
+            return new PassiveQueueProcessor(settings, localService.getContact());
+        }
+        else {
+            throw new IllegalArgumentException("No such queue processor: " + name);
         }
     }
-    
-    public QueueProcessor getCoasterQueueProcessor() {
-        return coaster;
+
+    private AbstractQueueProcessor newBlockQueueProcessor() {
+        BlockQueueProcessor bqp = new BlockQueueProcessor(settings);
+        Collection<URI> addrs = settings.getLocalContacts(localService.getPort());
+        if (addrs == null) {
+            settings.setCallbackURI(localService.getContact());
+        }
+        else {
+            settings.setCallbackURIs(addrs);
+        }
+        return bqp;
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 
     public void shutdown() {
         local.shutdown();
         coaster.shutdown();
+    }
+
+    public void setClientChannelContext(ChannelContext channelContext) {
+        if (this.clientChannelContext != null) {
+            return;
+        }
+        this.clientChannelContext = channelContext;
+        local.setClientChannelContext(channelContext);
+        if (coaster != null) {
+            coaster.setClientChannelContext(channelContext);
+        }
+    }
+
+    public String nextId(String id) {
+        return ((RegistrationManager) coaster).nextId(id);
+    }
+
+    public String registrationReceived(String id, String url, ChannelContext channelContext) {
+        return ((RegistrationManager) coaster).registrationReceived(id, url, channelContext);
+    }
+
+    public QueueProcessor getCoasterQueueProcessor() {
+        return coaster;
     }
 }

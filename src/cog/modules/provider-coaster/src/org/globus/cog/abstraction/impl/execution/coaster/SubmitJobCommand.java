@@ -36,10 +36,10 @@ public class SubmitJobCommand extends Command {
 
     public static final String NAME = "SUBMITJOB";
 
-    public static final Set IGNORED_ATTRIBUTES;
+    public static final Set<String> IGNORED_ATTRIBUTES;
 
     static {
-        IGNORED_ATTRIBUTES = new HashSet();
+        IGNORED_ATTRIBUTES = new HashSet<String>();
         for (int i = 0; i < Settings.NAMES.length; i++) {
             IGNORED_ATTRIBUTES.add(Settings.NAMES[i].toLowerCase());
         }

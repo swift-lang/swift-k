@@ -10,32 +10,62 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.net.URI;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Set;
+import java.util.Map;
 
+import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
 import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
-public class PassiveQueueProcessor extends AbstractQueueProcessor implements RegistrationManager {
-    private int id;
-    private Set<ChannelContext> idle;
+public class PassiveQueueProcessor extends BlockQueueProcessor implements RegistrationManager {
+    private final URI callbackURI;
     
-    public PassiveQueueProcessor(URI callbackURI) {
-        super("Passive Queue Processor");
-        System.out.println("Passive queue processor initialized. Callback URI is " + callbackURI);
+    public PassiveQueueProcessor(Settings settings, URI callbackURI) {
+        super(settings);
+        setName("Passive Queue Processor");
+        setSettings(settings);
+        this.callbackURI = callbackURI;
     }
     
+    @Override
     public void setClientChannelContext(ChannelContext channelContext) {
+        super.setClientChannelContext(channelContext);
+        KarajanChannel channel;
+        try {
+            channel = ChannelManager.getManager().reserveChannel(channelContext);
+            RemoteLogCommand cmd = new RemoteLogCommand(RemoteLogCommand.Type.STDERR, 
+                "Passive queue processor initialized. Callback URI is " + callbackURI);
+            cmd.executeAsync(channel, null);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private static final NumberFormat IDF = new DecimalFormat("0000");
+    @Override
+    public int updatePlan() throws PlanningException {
+        return 1;
+    }
+
+    @Override
+    protected void removeIdleBlocks() {
+        // no removing of idle blocks here
+    }
+
+    @Override
+    protected Block getBlock(String id) {
+        Map<String, Block> blocks = getBlocks();
+        synchronized(blocks) {
+            Block b = blocks.get(id);
+            if (b == null) {
+                b = new Block(id, 1, TimeInterval.FOREVER, this);
+                b.setRunning(true);
+                blocks.put(id, b);
+            }
+            return b;
+        }
+    }
     
-    public synchronized String nextId(String id) {
-        return IDF.format(this.id++);
-    }
-
-    public String registrationReceived(String id, String url, ChannelContext channelContext) {
-        return null;
-    }
+    
 }

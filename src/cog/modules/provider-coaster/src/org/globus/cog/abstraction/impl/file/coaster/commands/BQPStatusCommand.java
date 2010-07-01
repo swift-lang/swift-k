@@ -10,7 +10,7 @@
 package org.globus.cog.abstraction.impl.file.coaster.commands;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 
 import org.globus.cog.abstraction.coaster.service.job.manager.Block;
@@ -26,40 +26,32 @@ public class BQPStatusCommand extends Command {
 
     public static final String NAME = "BQPSTATUS";
 
-    public BQPStatusCommand(Settings settings, List jobs, List blocks, SortedJobSet queued) {
+    public BQPStatusCommand(Settings settings, List<Job> jobs, Collection<Block> blocks, SortedJobSet queued) {
         super(NAME);
         addOutData("settings: " + settings.getLowOverallocation() + " "
                 + settings.getHighOverallocation() + " " + settings.getOverallocationDecayFactor());
         synchronized (queued) {
             addOutData("queuedsize: " + queued.size());
-            Iterator i = queued.iterator();
-            while (i.hasNext()) {
-                Job j = (Job) i.next();
+            for (Job j : queued) {
                 addOutData("job: " + getMS(j.getMaxWallTime()) + " " + getMS(j.getStartTime())
                         + " " + getMS(j.getEndTime()));
             }
         }
-        List mjobs = new ArrayList(jobs);
+        List<Job> mjobs = new ArrayList<Job>(jobs);
         addOutData("jobssize: " + mjobs.size());
-        Iterator i = mjobs.iterator();
-        while (i.hasNext()) {
-            Job j = (Job) i.next();
+        for (Job j : mjobs) {
             addOutData("job: " + getMS(j.getMaxWallTime()) + " " + getMS(j.getStartTime()) + " "
                     + getMS(j.getEndTime()));
         }
-        List mblocks = new ArrayList(blocks);
-        i = mblocks.iterator();
+        List<Block> mblocks = new ArrayList<Block>(blocks);
         int bcnt = 0;
-        while (i.hasNext()) {
-            Block b = (Block) i.next();
+        for (Block b : mblocks) {
             if (!b.isDone()) {
                 bcnt++;
             }
         }
         addOutData("blockssize: " + bcnt);
-        i = mblocks.iterator();
-        while (i.hasNext()) {
-            Block b = (Block) i.next();
+        for (Block b : mblocks) {
             if (b.isDone()) {
                 continue;
             }
@@ -68,10 +60,8 @@ public class BQPStatusCommand extends Command {
                         + getMS(b.getCreationTime()) + " " + getMS(b.getStartTime()) + " "
                         + getMS(b.getEndTime()) + " " + getMS(b.getDeadline()) + " "
                         + getMS(b.getWalltime()) + " " + b.getCpus().size());
-                List mcpus = new ArrayList(b.getCpus());
-                Iterator j = mcpus.iterator();
-                while (j.hasNext()) {
-                    Cpu c = (Cpu) j.next();
+                List<Cpu> mcpus = new ArrayList<Cpu>(b.getCpus());
+                for (Cpu c : mcpus) {
                     synchronized (c) {
                         Job running = c.getRunning();
                         addOutData("cpu: " + c.getId() + " " + (running != null) + " "
@@ -80,10 +70,8 @@ public class BQPStatusCommand extends Command {
                             addOutData("runningjob: " + getMS(running.getMaxWallTime()) + " "
                                     + getMS(running.getStartTime()));
                         }
-                        List mdoneJobs = new ArrayList(c.getDoneJobs());
-                        Iterator k = mdoneJobs.iterator();
-                        while (k.hasNext()) {
-                            Job dj = (Job) k.next();
+                        List<Job> mdoneJobs = new ArrayList<Job>(c.getDoneJobs());
+                        for (Job dj : mdoneJobs) {
                             addOutData("donejob: " + getMS(dj.getMaxWallTime()) + " "
                                     + getMS(dj.getStartTime()) + " " + getMS(dj.getEndTime()));
                         }
