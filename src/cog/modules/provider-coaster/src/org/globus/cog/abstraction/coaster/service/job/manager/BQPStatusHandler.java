@@ -7,7 +7,7 @@
 /*
  * Created on May 18, 2009
  */
-package org.globus.cog.abstraction.impl.file.coaster.handlers;
+package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,6 @@ import org.globus.cog.abstraction.coaster.service.job.manager.SortedJobSet;
 import org.globus.cog.abstraction.coaster.service.job.manager.SwingBQPMonitor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Time;
 import org.globus.cog.abstraction.coaster.service.job.manager.TimeInterval;
-import org.globus.cog.abstraction.impl.file.coaster.commands.BQPStatusCommand;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 

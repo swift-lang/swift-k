@@ -11,7 +11,7 @@ package org.globus.cog.abstraction.coaster.service.local;
 
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogHandler;
-import org.globus.cog.abstraction.impl.file.coaster.handlers.BQPStatusHandler;
+import org.globus.cog.abstraction.coaster.service.job.manager.BQPStatusHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.karajan.workflow.service.AbstractRequestManager;
