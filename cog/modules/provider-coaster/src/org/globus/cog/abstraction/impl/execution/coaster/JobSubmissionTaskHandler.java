@@ -44,11 +44,11 @@ import org.ietf.jgss.GSSManager;
 public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements Callback {
     private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
 
-    private static Set configured, configuring;
+    private static Set<Object> configured, configuring;
 
     static {
-        configured = new HashSet();
-        configuring = new HashSet();
+        configured = new HashSet<Object>();
+        configuring = new HashSet<Object>();
     }
 
     private static boolean checkConfigured(KarajanChannel channel) throws InterruptedException {
