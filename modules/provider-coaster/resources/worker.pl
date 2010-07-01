@@ -1,4 +1,13 @@
 #!/usr/bin/perl
+# Args:
+# 	<URIs> <blockid> <logdir>
+#	where:
+#		<URIs> - comma separated list of URIs for the coaster service; they
+#				will be tried in order
+#		<blockid> - some block id (the log file will be named based on this)
+#		<logdir> - some directory in which the logs should go
+#
+
 use IO::Socket;
 use File::Basename;
 use File::Path;
@@ -190,11 +199,10 @@ sub initlog() {
 
 
 sub init() {
-        my $uris = join(", ", @URIS);
 	my $schemes = join(", ", @SCHEME);
 	my $hosts = join(", ", @HOSTNAME);
 	my $ports = join(", ", @PORT);
-	wlog DEBUG, "uri=$uris, scheme=$schemes, host=$hosts, port=$ports, blockid=$BLOCKID\n";
+	wlog DEBUG, "uri=$URISTR, scheme=$schemes, host=$hosts, port=$ports, blockid=$BLOCKID\n";
 	reconnect();
 }
 
@@ -1023,6 +1031,9 @@ sub checkJob() {
 	}
 	else {
 		my $dir = $$JOB{directory};
+		if (!defined $dir) {
+			$dir = ".";
+		}
 		my $dirlen = length($dir);
 		my $cleanup = $$JOB{"cleanup"};
 		my $c;
@@ -1151,7 +1162,9 @@ sub runjob {
 	my $cwd = getcwd();
 	wlog DEBUG, "CWD: $cwd\n";
 	wlog DEBUG, "Running $executable\n";
-	wlog DEBUG, "Directory: $$JOB{directory}\n";
+	if (defined $$JOB{directory}) {
+		wlog DEBUG, "Directory: $$JOB{directory}\n";
+	}
 	my $ename;
 	foreach $ename (keys %$JOBENV) {
 		$ENV{$ename} = $$JOBENV{$ename};
