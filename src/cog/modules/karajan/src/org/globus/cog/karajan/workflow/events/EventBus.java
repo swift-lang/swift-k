@@ -140,6 +140,7 @@ public final class EventBus {
 		catch (ExecutionException e) {
 			if (logger.isInfoEnabled()) {
 				logger.info("Caught execution exception", e);
+				logger.info("Near Karajan line: " + l);
 			}
 			try {
 				if (event instanceof FlowEvent) {
