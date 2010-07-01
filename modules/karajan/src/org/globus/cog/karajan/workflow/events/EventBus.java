@@ -6,7 +6,7 @@
 
 /*
  * Created on Jun 6, 2003
- *  
+ *
  */
 package org.globus.cog.karajan.workflow.events;
 
@@ -26,17 +26,17 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 public final class EventBus {
 	public static final Logger logger = Logger.getLogger(EventBus.class);
-	
+
 	public static final int DEFAULT_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 4;
-	
+
 	public static final boolean TRACE_EVENTS = false;
 
 	private static final EventBus bus = new EventBus();
 	public volatile static long eventCount;
 	public volatile static long cummulativeEventTime;
-	
+
 	private static EventHook hook;
-	
+
 	private final ThreadPoolExecutor es;
     private final BlockingQueue bq, sbq;
     private boolean suspended;
@@ -75,11 +75,11 @@ public final class EventBus {
 		eventCount++;
 		bus._post(target, event);
 	}
-	
+
 	public static EventBus getBus() {
 		return bus;
 	}
-	
+
 	public synchronized static void initialize() {
 	}
 
@@ -159,6 +159,7 @@ public final class EventBus {
 				logger.warn("Uncaught exception: " + e.toString() + " in " + l, e);
 				logger.warn("Event was " + event);
 				logger.warn("Exception is: " + e);
+				logger.warn("Near Karajan line: " + l);
 				try {
 					if (event instanceof FlowEvent) {
 						failElement(l, (FlowEvent) event, "Uncaught exception: " + e.toString());
