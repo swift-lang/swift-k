@@ -26,6 +26,9 @@ public class ServiceConfigurationHandler extends RequestHandler {
     public void requestComplete() throws ProtocolException {
         Settings settings =
                 ((CoasterService) getChannel().getChannelContext().getService()).getJobQueue().getSettings();
+
+        logger.debug(settings);
+
         try {
             List l = getInDataChuncks();
             if (l != null) {
