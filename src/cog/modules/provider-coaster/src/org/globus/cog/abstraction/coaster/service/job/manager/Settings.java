@@ -415,38 +415,56 @@ public class Settings {
         }
     }
 
-    public void set(String name, String value) throws IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException {
+    public void set(String name, String value)
+        throws IllegalArgumentException {
         if (logger.isDebugEnabled()) {
             logger.debug("Setting " + name + " to " + value);
         }
-        Method[] ms = getClass().getMethods();
-        String setterName = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
-        for (int i = 0; i < ms.length; i++) {
-            if (ms[i].getName().equals(setterName)) {
-                if (ms[i].getParameterTypes()[0].equals(String.class)) {
-                    ms[i].invoke(this, new Object[] { value });
+        Method[] methods = getClass().getMethods();
+        String setterName = "set" +
+            Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        try {
+            for (Method method : methods) {
+                if (method.getName().equals(setterName)) {
+                    set(method, value);
+                    break;
                 }
-                else if (ms[i].getParameterTypes()[0].equals(int.class)) {
-                    ms[i].invoke(this, new Object[] { Integer.valueOf(value) });
-                }
-                else if (ms[i].getParameterTypes()[0].equals(double.class)) {
-                    ms[i].invoke(this, new Object[] { Double.valueOf(value) });
-                }
-                else if (ms[i].getParameterTypes()[0].equals(boolean.class)) {
-                    ms[i].invoke(this, new Object[] { Boolean.valueOf(value) });
-                }
-                else if (ms[i].getParameterTypes()[0].equals(TimeInterval.class)) {
-                    ms[i].invoke(this,
-                        new Object[] { TimeInterval.fromSeconds(Integer.parseInt(value)) });
-                }
-                else {
-                    throw new IllegalArgumentException("Don't know how to set option with type "
-                            + ms[i].getParameterTypes()[0]);
-                }
-                return;
             }
         }
+        catch (InvocationTargetException e) {
+            throw new IllegalArgumentException
+                ("Cannot set: " + name + " to: " + value);
+        }
+        catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    void set(Method method, String value)
+        throws InvocationTargetException, IllegalAccessException {
+        Class clazz = method.getParameterTypes()[0];
+        Object[] args = null;
+        if (clazz.equals(String.class)) {
+            args = new Object[] { value };
+        }
+        else if (clazz.equals(int.class)) {
+            args = new Object[] { Integer.valueOf(value) };
+        }
+        else if (clazz.equals(double.class)) {
+            args = new Object[] { Double.valueOf(value) };
+        }
+        else if (clazz.equals(boolean.class)) {
+            args = new Object[] { Boolean.valueOf(value) };
+        }
+        else if (clazz.equals(TimeInterval.class)) {
+            args = new Object[]
+                { TimeInterval.fromSeconds(Integer.parseInt(value)) };
+        }
+        else {
+            throw new IllegalArgumentException
+                ("Don't know how to set option with type " + clazz);
+        }
+        method.invoke(this, args);
     }
     
     private static final Object[] NO_ARGS = new Object[0];
