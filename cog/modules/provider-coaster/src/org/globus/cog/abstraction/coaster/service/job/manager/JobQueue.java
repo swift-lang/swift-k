@@ -33,6 +33,13 @@ public class JobQueue implements RegistrationManager {
     public JobQueue(LocalTCPService localService) throws IOException {
         settings = new Settings();
         this.localService = localService;
+        Collection<URI> addrs = settings.getLocalContacts(localService.getPort());
+        if (addrs == null) {
+            settings.setCallbackURI(localService.getContact());
+        }
+        else {
+            settings.setCallbackURIs(addrs);
+        }
     }
 
     public void start() {
@@ -82,7 +89,7 @@ public class JobQueue implements RegistrationManager {
             return new LocalQueueProcessor();
         }
         else if (name.equals("block")) {
-            return newBlockQueueProcessor();
+            return new BlockQueueProcessor(settings);
         }
         else if (name.equals("passive")) {
             return new PassiveQueueProcessor(settings, localService.getContact());
@@ -90,18 +97,6 @@ public class JobQueue implements RegistrationManager {
         else {
             throw new IllegalArgumentException("No such queue processor: " + name);
         }
-    }
-
-    private AbstractQueueProcessor newBlockQueueProcessor() {
-        BlockQueueProcessor bqp = new BlockQueueProcessor(settings);
-        Collection<URI> addrs = settings.getLocalContacts(localService.getPort());
-        if (addrs == null) {
-            settings.setCallbackURI(localService.getContact());
-        }
-        else {
-            settings.setCallbackURIs(addrs);
-        }
-        return bqp;
     }
 
     public Settings getSettings() {
