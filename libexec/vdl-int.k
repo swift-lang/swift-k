@@ -250,7 +250,7 @@ namespace("vdl"
 			log(LOG:INFO, "START jobid={jobid} - staging in wrapper params")
 			provider := provider(wrapfile)
 			srchost := hostname(wrapfile)
-			srcdir := dirname(wrapfile)
+			srcdir := vdl:dirname(wrapfile)
 			destdir := dircat(dir, "/parameters/{jobdir}/")
 			filename := basename(wrapfile)
 
@@ -271,7 +271,7 @@ namespace("vdl"
 
 			if (cdmfile != "" then(
 				doStageinFile(provider="file", srchost="localhost", srcfile=basename(cdmfile), 
-					    	srcdir=dirname(cdmfile), desthost=host, destdir=dir, 
+					    	srcdir=vdl:dirname(cdmfile), desthost=host, destdir=dir, 
 						size=file:size(cdmfile), policy="DEFAULT")
 				doStageinFile(provider="file", srchost="localhost", srcfile="cdm.pl", 
 					    	srcdir=libexec, desthost=host, destdir=dir, 

@@ -97,7 +97,7 @@ namespace("vdl"
 				protocol := vdl:provider(file)
 				provider := if(protocol == "file", stagingMethod, protocol)
 				srchost := hostname(file)
-				srcdir := dirname(file)
+				srcdir := vdl:dirname(file)
 				destdir := dircat(dir, reldirname(file))
 				filename := basename(file)
 				
@@ -117,7 +117,7 @@ namespace("vdl"
 				dhost := vdl:hostname(file)
 				rdir := dircat(dir, reldirname(file))
 				bname := basename(file)
-				ldir := dirname(file)
+				ldir := vdl:dirname(file)
 				fullLocal := dircat(ldir, bname)
 				fullRemote := dircat(rdir, bname)
 				
