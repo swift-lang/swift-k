@@ -79,7 +79,7 @@ my $LOGDIR=$ARGV[2];
 my %REQUESTS = ();
 my %REPLIES  = ();
 
-my $LOG = "$LOGDIR/worker-$BLOCKID.log";
+my $LOG = logfilename($LOGDIR, $BLOCKID);
 
 my %HANDLERS = (
 	"SHUTDOWN"  => \&shutdownw,
@@ -109,18 +109,65 @@ my $LAST_HEARTBEAT = 0;
 my %JOBWAITDATA = ();
 my %JOBDATA = ();
 
+sub logfilename {
+    $LOGDIR = shift;
+    $BLOCKID = shift;
+    my $result = undef;
+    my $uci;
+    if (-r "/proc/personality.sh") {
+	$uci = get_bg_uci();
+	$result = "$LOGDIR/worker-$BLOCKID-$uci.log";
+    }
+    else {
+	$result = "$LOGDIR/worker-$BLOCKID.log";
+    }
+    return $result;
+}
+
+# Get the BlueGene Universal Component Identifier from Zepto 
+sub get_bg_uci() {
+    my %vars = file2hash("/proc/personality.sh");
+    my $uci = $vars{"BG_UCI"};
+    return $uci;
+}
+
+# Read a file into a hash, with file formatted as: 
+# KEY=VALUE
+sub file2hash() {
+    my $file = shift;
+    my %hash;
+    open FILE, "<$file";
+    while (<FILE>)
+    {
+	chomp;
+	my ($key, $val) = split /=/;
+	$hash{$key} = $val;
+    }
+    close FILE;
+    return %hash;
+}
+
 sub wlog {
 	my $msg;
 	my $level = shift;
 	if ($level >= $LOGLEVEL) {
 		foreach $msg (@_) {
-			my $t = sprintf("%.3f", time());
-			#my @d = localtime(time());
-			#my $t = sprintf("%i/%2i/%2i %2i:%2i", $d[5]+1900, $d[4], $d[3], $d[2], $d[1]);
-			my $msg2 = sprintf("%s %s %s %s", $t, $LEVELS[$level], $ID, $msg);
-			print LOG $msg2;
+		        my $timestamp = timestring();
+			my $msgline = sprintf("%s %s %s %s", 
+					      $timestamp,
+					      $LEVELS[$level], 
+					      $ID, $msg);
+			print LOG $msgline;
 		}
 	}
+}
+
+sub timestring() {
+  my $t = sprintf("%.3f", time());
+  #my @d = localtime(time());
+  #my $t = sprintf("%i/%02i/%02i %02i:%02i",
+  # $d[5]+1900, $d[4], $d[3], $d[2], $d[1]);
+  return $t;
 }
 
 sub hts {
@@ -139,7 +186,7 @@ sub hts {
 		}
 		$s = $s."$k = $$H{$k}";
 	}
-	
+      
 	return $s."}";
 }
 
@@ -199,11 +246,19 @@ sub initlog() {
 
 
 sub init() {
-	my $schemes = join(", ", @SCHEME);
+        logsetup();
+        reconnect();
+}
+
+sub logsetup() {
+        my $schemes = join(", ", @SCHEME);
 	my $hosts = join(", ", @HOSTNAME);
 	my $ports = join(", ", @PORT);
-	wlog DEBUG, "uri=$URISTR, scheme=$schemes, host=$hosts, port=$ports, blockid=$BLOCKID\n";
-	reconnect();
+	wlog DEBUG, "uri=$URISTR\n";
+	wlog DEBUG, "scheme=$schemes\n";
+	wlog DEBUG, "host=$hosts\n";
+	wlog DEBUG, "port=$ports\n";
+	wlog DEBUG, "blockid=$BLOCKID\n";
 }
 
 sub sendm {
@@ -1197,8 +1252,8 @@ my $MSG="0";
 my $myhost=`hostname`;
 $myhost =~ s/\s+$//;
 
-wlog(DEBUG, "Initialized coaster worker\n");
 wlog(INFO, "Running on node $myhost\n");
+# wlog(INFO, "New log name: $LOGNEW \n");
 
 init();
 
@@ -1206,7 +1261,7 @@ mainloop();
 wlog INFO, "Worker finished. Exiting.\n";
 exit(0);
 
-# This file works well with cperl-mode
+# This file works well with cperl-mode in the latest emacs
 # Local Variables:
 # indent-tabs-mode: t
 # tab-width: 8
