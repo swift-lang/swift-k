@@ -50,7 +50,7 @@ public class Block implements StatusListener, Comparable<Block> {
     private List<Cpu> cpus;
     private List<Node> nodes;
     private boolean running, failed, shutdown, suspended;
-    private BlockQueueProcessor ap;
+    private BlockQueueProcessor bqp;
     private BlockTask task;
     private String id;
     private int doneJobCount;
@@ -75,7 +75,7 @@ public class Block implements StatusListener, Comparable<Block> {
         this(id);
         this.workers = workers;
         this.walltime = walltime;
-        this.ap = ap;
+        this.bqp = ap;
         this.creationtime = Time.now();
         this.deadline = Time.now().add(ap.getSettings().getReserve());
     }
@@ -84,7 +84,7 @@ public class Block implements StatusListener, Comparable<Block> {
         if (logger.isInfoEnabled()) {
             logger.info("Starting block: workers=" + workers + ", walltime=" + walltime);
         }
-        ap.getRLogger().log(
+        bqp.getRLogger().log(
             "BLOCK_REQUESTED id=" + getId() + ", w=" + getWorkerCount() + ", h="
                     + getWalltime().getSeconds());
         task = new BlockTask(this);
@@ -99,7 +99,7 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public BlockQueueProcessor getAllocationProcessor() {
-        return ap;
+        return bqp;
     }
 
     public boolean isDone() {
@@ -124,7 +124,7 @@ public class Block implements StatusListener, Comparable<Block> {
             }
             deadline =
                     Time.min(starttime.add(walltime),
-                        last.add(ap.getSettings().getMaxWorkerIdleTime()));
+                        last.add(bqp.getSettings().getMaxWorkerIdleTime()));
             return Time.now().isGreaterThan(deadline);
         }
         else {
@@ -177,7 +177,7 @@ public class Block implements StatusListener, Comparable<Block> {
             Cpu last = scpus.last();
             if (last != null) {
                 deadline =
-                        Time.min(last.getTimeLast().add(ap.getSettings().getReserve()),
+                        Time.min(last.getTimeLast().add(bqp.getSettings().getReserve()),
                             getEndTime());
             }
         }
@@ -198,12 +198,12 @@ public class Block implements StatusListener, Comparable<Block> {
             return 0;
         }
         else if (running) {
-            return ap.getMetric().size(
+            return bqp.getMetric().size(
                 workers,
                 (int) TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)), NO_TIME).getSeconds());
         }
         else {
-            return ap.getMetric().size(workers, (int) walltime.getSeconds());
+            return bqp.getMetric().size(workers, (int) walltime.getSeconds());
         }
     }
 
@@ -242,7 +242,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 return;
             }
             logger.info("Shutting down block " + this);
-            ap.getRLogger().log("BLOCK_SHUTDOWN id=" + getId());
+            bqp.getRLogger().log("BLOCK_SHUTDOWN id=" + getId());
             shutdown = true;
             long busyTotal = 0;
             long idleTotal = 0;
@@ -263,7 +263,7 @@ public class Block implements StatusListener, Comparable<Block> {
                     double u = (busyTotal * 10000) / (busyTotal + idleTotal);
                     u /= 100;
                     logger.info("Average utilization: " + u + "%");
-                    ap.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
+                    bqp.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
                 }
                 if ((count < workers || now) && !failed) {
                     addForcedShutdownWatchdog(100);
@@ -295,7 +295,7 @@ public class Block implements StatusListener, Comparable<Block> {
             catch (Exception e) {
                 logger.warn("Failed to shut down block", e);
             }
-            ap.blockTaskFinished(this);
+            bqp.blockTaskFinished(this);
         }
     }
 
@@ -332,7 +332,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 int id = Integer.parseInt(sid);
                 Node n = new Node(id, this, channelContext);
                 nodes.add(n);
-                for (int i = 0; i < ap.getSettings().getWorkersPerNode(); i++) {
+                for (int i = 0; i < bqp.getSettings().getWorkersPerNode(); i++) {
                     //this id scheme works out because the sid is based on the
                     //number of cpus already added (i.e. cpus.size()).
                     Cpu cpu = new Cpu(id + i, n);
@@ -382,7 +382,7 @@ public class Block implements StatusListener, Comparable<Block> {
                                     + prettifyOut(task.getStdError()), null);
                         }
                     }
-                    ap.blockTaskFinished(this);
+                    bqp.blockTaskFinished(this);
                     running = false;
                 }
                 logger.info(id + " stdout: " + prettifyOut(task.getStdOutput()));
@@ -392,9 +392,9 @@ public class Block implements StatusListener, Comparable<Block> {
                 running = true;
                 starttime = Time.now();
                 endtime = starttime.add(walltime);
-                deadline = starttime.add(ap.getSettings().getReserve());
-                ap.getRLogger().log("BLOCK_ACTIVE id=" + getId());
-                ap.getSettings().getHook().blockActive(event);
+                deadline = starttime.add(bqp.getSettings().getReserve());
+                bqp.getRLogger().log("BLOCK_ACTIVE id=" + getId());
+                bqp.getSettings().getHook().blockActive(event);
             }
         }
         catch (Exception e) {
