@@ -73,6 +73,7 @@ public class CoasterService extends GSSService {
         localService = new LocalTCPService(rm);
     }
 
+    @Override
     protected void handleConnection(Socket sock) {
         if (local) {
             logger.warn("Discarding connection");
@@ -99,6 +100,7 @@ public class CoasterService extends GSSService {
         }
     }
 
+    @Override
     public void start() {
         super.start();
         try {
@@ -126,8 +128,8 @@ public class CoasterService extends GSSService {
                     channelToClient.getChannelContext().setService(this);
 
                     logger.info("Sending registration");
-                    RegistrationCommand reg = new RegistrationCommand(id,
-                            "https://" + getHost() + ":" + getPort());
+                    String url = "https://" + getHost() + ":" + getPort();
+                    RegistrationCommand reg = new RegistrationCommand(id, url);
                     reg.execute(channelToClient);
                     logger.info("Registration complete");
                 }
@@ -181,6 +183,7 @@ public class CoasterService extends GSSService {
         }
     }
 
+    @Override
     public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
         stop(e);
     }
@@ -213,6 +216,7 @@ public class CoasterService extends GSSService {
         this.suspended = false;
     }
 
+    @Override
     public void shutdown() {
         try {
             startShutdownWatchdog();
@@ -234,6 +238,7 @@ public class CoasterService extends GSSService {
     public void addLocalHook() {
         if (local) {
             Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
                 public void run() {
                     try {
                         while (!done) {
@@ -263,6 +268,7 @@ public class CoasterService extends GSSService {
     private void startShutdownWatchdog() {
         if (!local) {
             watchdogs.schedule(new TimerTask() {
+                @Override
                 public void run() {
                     logger
                             .warn("Shutdown failed after 5 minutes. Forcefully shutting down");
@@ -274,6 +280,7 @@ public class CoasterService extends GSSService {
 
     private static TimerTask startConnectWatchdog() {
         TimerTask tt = new TimerTask() {
+            @Override
             public void run() {
                 error(4, "Failed to connect after 2 minutes. Shutting down", null);
             }

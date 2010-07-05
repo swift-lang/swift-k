@@ -84,6 +84,7 @@ public class GSSService extends BaseServer implements Service {
 		this.requestManager = requestManager;
 	}
 
+	@Override
 	public void initialize() {
 		// prevent the server from being started by BaseServer constructors
 	}
@@ -101,10 +102,12 @@ public class GSSService extends BaseServer implements Service {
 		}
 	}
 
+	@Override
 	protected void handleConnection(Socket socket) {
 		logger.debug("Got connection");
 		try {
-			ConnectionHandler handler = new ConnectionHandler(this, socket, requestManager);
+			ConnectionHandler handler =
+				new ConnectionHandler(this, socket, requestManager);
 			handler.start();
 		}
 		catch (Exception e) {
@@ -116,6 +119,7 @@ public class GSSService extends BaseServer implements Service {
 		return contact;
 	}
 
+	@Override
 	public void start() {
 		try {
 			contact = new URI(getProtocol(), null, getHost(), getPort(), null, null, null);
@@ -132,6 +136,7 @@ public class GSSService extends BaseServer implements Service {
 		}
 	}
 
+	@Override
 	public String toString() {
 		return String.valueOf(contact);
 	}
