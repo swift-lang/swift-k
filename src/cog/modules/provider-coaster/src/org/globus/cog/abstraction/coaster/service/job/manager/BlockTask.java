@@ -29,7 +29,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 public class BlockTask extends TaskImpl {
     public static final Logger logger = Logger.getLogger(BlockTask.class);
-  
+
     private Block block;
     private Settings settings;
 
@@ -59,6 +59,7 @@ public class BlockTask extends TaskImpl {
         if (block.getWorkerCount() <= 16 ||
             "force".equals(System.getProperty("coaster.worker.logging"))) {
             spec.addEnvironmentVariable("WORKER_LOGGING_ENABLED", "true");
+            logger.info("Worker logging enabled");
         }
         setRequiredService(1);
         setService(0, buildService());
@@ -73,10 +74,10 @@ public class BlockTask extends TaskImpl {
         js.addArgument(block.getId());
         js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
         logger.debug("arguments: " + js.getArguments());
-        
+
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
-        
+
         return js;
     }
 
@@ -107,7 +108,7 @@ public class BlockTask extends TaskImpl {
             spec.setAttribute(name, value);
         }
     }
-    
+
     public void setAttribute(String name, int value) {
         super.setAttribute(name, String.valueOf(value));
     }
