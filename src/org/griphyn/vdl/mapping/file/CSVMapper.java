@@ -21,6 +21,7 @@ import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.type.Types;
 
 public class CSVMapper extends AbstractMapper {
 	public static final MappingParam PARAM_FILE = new MappingParam("file");
@@ -133,10 +134,16 @@ public class CSVMapper extends AbstractMapper {
 	    String result = null;
 	    Object object = PARAM_FILE.getRawValue(this);
         DSHandle handle = (DSHandle) object;
-        Mapper mapper = handle.getMapper();
-        PhysicalFormat format = mapper.map(Path.EMPTY_PATH);
-        GeneralizedFileFormat fileFormat = 
-            (GeneralizedFileFormat) format;
+        GeneralizedFileFormat fileFormat;
+        if (handle.getType().equals(Types.STRING)) {
+            String path = (String) handle.getValue();
+            fileFormat = new AbsFile(path);
+        }
+        else {
+            Mapper mapper = handle.getMapper();
+            PhysicalFormat format = mapper.map(Path.EMPTY_PATH);
+            fileFormat = (GeneralizedFileFormat) format;
+        }
         result  = fileFormat.getPath();
         return result;
     }
