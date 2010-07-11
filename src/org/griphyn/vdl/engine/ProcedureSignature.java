@@ -188,7 +188,7 @@ public class ProcedureSignature {
 		filenames.addOutputArg(filenamesOut1);
 		functionsMap.put(filenames.getName(), filenames);
 
-                ProcedureSignature dirname = new ProcedureSignature("dirname");
+        ProcedureSignature dirname = new ProcedureSignature("dirname");
 		FormalArgumentSignature dirnameIn1 = new FormalArgumentSignature(true); /* dir can be specified as any type */
 		dirname.addInputArg(dirnameIn1);
 		FormalArgumentSignature dirnameOut1 = new FormalArgumentSignature("string");
@@ -245,6 +245,13 @@ public class ProcedureSignature {
 		FormalArgumentSignature toOut1 = new FormalArgumentSignature("int");
 		toint.addOutputArg(toOut1);
 		functionsMap.put(toint.getName(), toint);
+
+		ProcedureSignature tofloat = new ProcedureSignature("tofloat");
+		FormalArgumentSignature tofloatIn1 = new FormalArgumentSignature("string");
+		tofloat.addInputArg(tofloatIn1);
+		FormalArgumentSignature tofloatOut1 = new FormalArgumentSignature("float");
+		tofloat.addOutputArg(tofloatOut1);
+		functionsMap.put(tofloat.getName(), tofloat);
 		
 		ProcedureSignature tostring = new ProcedureSignature("tostring");
 		FormalArgumentSignature tostringIn1 = new FormalArgumentSignature(true);

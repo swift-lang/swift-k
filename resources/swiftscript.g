@@ -78,7 +78,7 @@ nsdecl [StringTemplate code]
     ;
 
 importStatement [StringTemplate code]
-    : "import" name:ID SEMI {
+    : "import" name:STRING_LITERAL SEMI {
         StringTemplate i = template("import");
         i.setAttribute("target", name.getText());
         code.setAttribute("imports", i);

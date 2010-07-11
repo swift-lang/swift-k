@@ -41,10 +41,11 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_tracef", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcat", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
-                setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
+        setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
+		setArguments("swiftscript_tofloat", new Arg[] { PA_INPUT });
 		setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
                 setArguments("swiftscript_dirname", new Arg[] { Arg.VARGS });
 	}
@@ -170,6 +171,14 @@ public class Misc extends FunctionsCollection {
 	        }
 	        else {
 	            throw new ExecutionException("tracef(): %i requires an int!");
+	        }
+        }
+	    else if (c == 'f') {
+	        if (args[arg].getType() == Types.FLOAT) {
+	            output.append(args[arg]).toString();
+	        }
+	        else {
+	            throw new ExecutionException("tracef(): %f requires a float!");
 	        }
 	    }
 	    else if (c == 'q') {
@@ -358,11 +367,28 @@ public class Misc extends FunctionsCollection {
 	public DSHandle swiftscript_toint(VariableStack stack) throws ExecutionException, NoSuchTypeException,
 			InvalidPathException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+		int i = inputString.indexOf(".");
+		if( i >= 0 )
+		{
+			inputString = inputString.substring(0, i);
+		}
 		DSHandle handle = new RootDataNode(Types.INT);
 		handle.setValue(new Double(Integer.parseInt(inputString)));
 		handle.closeShallow();
 		int provid=VDLFunction.nextProvenanceID();
 		VDLFunction.logProvenanceResult(provid, handle, "toint");
+		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
+		return handle;
+	}
+
+	public DSHandle swiftscript_tofloat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+			InvalidPathException {
+		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+		DSHandle handle = new RootDataNode(Types.FLOAT);
+		handle.setValue(new Double(inputString));
+		handle.closeShallow();
+		int provid=VDLFunction.nextProvenanceID();
+		VDLFunction.logProvenanceResult(provid, handle, "tofloat");
 		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
 		return handle;
 	}

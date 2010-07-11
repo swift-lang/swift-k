@@ -155,19 +155,20 @@ public class Karajan {
 		Imports imports = prog.getImports();
 		if(imports!=null) {
 			logger.debug("Processing SwiftScript imports");
-// process imports in reverse order
+            // process imports in reverse order
 			for(int i = imports.sizeOfImportArray() - 1 ;  i >=0 ; i--) {
 				String moduleToImport = imports.getImportArray(i);
 				logger.debug("Importing module "+moduleToImport);
 				if(!importedNames.contains(moduleToImport)) {
 
 					// TODO PATH/PERL5LIB-style path handling
-					String swiftfilename = "./"+moduleToImport+".swift";
-					String xmlfilename = "./"+moduleToImport+".xml";
-
+					//String swiftfilename = "./"+moduleToImport+".swift";
+					//String xmlfilename = "./"+moduleToImport+".xml";
+					String swiftfilename = moduleToImport+".swift";
+					String xmlfilename = moduleToImport+".xml";
 
 					try {
-        	    				VDLt2VDLx.compile(new FileInputStream(swiftfilename),new PrintStream(new FileOutputStream(xmlfilename)));
+        	    		VDLt2VDLx.compile(new FileInputStream(swiftfilename),new PrintStream(new FileOutputStream(xmlfilename)));
 						logger.debug("Compiled. Now reading in compiled XML for "+moduleToImport);
 						Program importedProgram = parseProgramXML(xmlfilename).getProgram();
 						logger.debug("Read in compiled XML for "+moduleToImport);
