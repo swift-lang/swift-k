@@ -43,12 +43,12 @@ public class ReadData2 extends VDLFunction {
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
 				if (!af.getProtocol().equalsIgnoreCase("file")) {
-					throw new ExecutionException("readData only supports local files");
+					throw new ExecutionException("readData2 only supports local files");
 				}
 				readData(dest, af.getPath());
 			}
 			else {
-				throw new ExecutionException("readData only supports reading from files");
+				throw new ExecutionException("readData2 only supports reading from files");
 			}
 		}
 		return null;
