@@ -73,11 +73,13 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         return metric;
     }
 
+    @Override
     public void run() {
         try {
             script = ScriptManager.writeScript();
             int planTime = 1;
             while (!done) {
+                logger.debug("Plan: jobs.size(): " + jobs.size());
                 planTime = updatePlan();
                 logger.info("Plan time: " + planTime);
                 if (jobs.size() + add.size() == 0) {
@@ -105,6 +107,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
+    @Override
     public void enqueue(Task t) {
         enqueue1(t);
     }
@@ -343,7 +346,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                             + ", sumsz: " + sumSizes(last, i));
                 }
 
-                // readjust number of jobs fitted based on granularity
+                // read just number of jobs fitted based on granularity
                 i += (w - r);
                 if (r != 0) {
                     h = Math.min(h + lastwalltime, maxt);
@@ -502,6 +505,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         queue(new Job(t));
     }
 
+    @Override
     public void shutdown() {
         shutdownBlocks();
         done = true;
@@ -521,7 +525,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             logger.info("Removing block " + block);
         }
         synchronized (blocks) {
-            blocks.remove(block);
+            blocks.remove(block.getId());
         }
     }
 
