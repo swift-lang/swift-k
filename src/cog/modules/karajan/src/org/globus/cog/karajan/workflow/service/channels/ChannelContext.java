@@ -138,7 +138,7 @@ public class ChannelContext {
 		Object removed;
 		removed = activeSenders.remove(cmd.getId());
 		if (removed == null) {
-			logger.warn("Attemted to unregister unregistered command with id " + cmd.getId());
+			logger.warn("Attempted to unregister unregistered command with id " + cmd.getId());
 		}
 		else {
 			cmd.setId(RequestReply.NOID);
@@ -153,7 +153,7 @@ public class ChannelContext {
 		Object removed;
 		removed = activeReceivers.remove(tag);
 		if (removed == null) {
-			logger.warn("Attemted to unregister unregistered handler with id " + tag);
+			logger.warn("Attempted to unregister unregistered handler with id " + tag);
 		}
 	}
 
