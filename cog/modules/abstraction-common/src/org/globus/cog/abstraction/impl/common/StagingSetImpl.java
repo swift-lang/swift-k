@@ -14,13 +14,5 @@ import java.util.HashSet;
 import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 
-public class StagingSetImpl extends HashSet implements StagingSet {
-
-    public void add(StagingSetEntry e) {
-        super.add(e);
-    }
-
-    public void remove(StagingSetEntry e) {
-        super.remove(e);
-    }
+public class StagingSetImpl extends HashSet<StagingSetEntry> implements StagingSet {
 }
