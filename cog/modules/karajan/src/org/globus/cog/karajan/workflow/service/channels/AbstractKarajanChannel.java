@@ -182,6 +182,12 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	public void setChannelContext(ChannelContext context) {
+	    if (this.getChannelContext() != null) {
+            logger.warn("Changing channel context from " + this.getChannelContext() + " to " + context, new Throwable());
+        }
+	    else {
+	        logger.warn("Setting channel context to " + context, new Throwable());
+	    }
 		this.context = context;
 	}
 
@@ -287,7 +293,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	public String toString() {
-		return getName();
+		return getName() + "[" + context + "]";
 	}
 
 	public synchronized URI getCallbackURI() throws Exception {
@@ -399,7 +405,9 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 					throw e;
 				}
 				finally {
-					unregisterHandler(tag);
+					if (handler != null) {
+						unregisterHandler(tag);
+					}
 				}
 			}
 		}
