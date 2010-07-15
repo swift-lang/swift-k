@@ -110,6 +110,7 @@ public abstract class CredentialsDialog {
         private String title;
         private Prompt[] prompts;
         private boolean enterPressed, cancelPressed;
+        private int focusIndex = -1;
 
         public SwingCredentialsDialog() {
             this(null, null);
@@ -175,6 +176,9 @@ public abstract class CredentialsDialog {
                     gbc.weightx = 0.0;
                     gbl.setConstraints(browse[i], gbc);
                 }
+                if (prompts[i].def == null && focusIndex == -1) {
+                    focusIndex = i;
+                }
             }
 
             main.add(lpane, BorderLayout.CENTER);
@@ -211,6 +215,9 @@ public abstract class CredentialsDialog {
 
         public char[][] getResults() {
             dialog.setVisible(true);
+            if (focusIndex != -1) {
+                fields[focusIndex].requestFocus();
+            }
             waitForKeyPress();
             char[][] results = new char[prompts.length][];
 
