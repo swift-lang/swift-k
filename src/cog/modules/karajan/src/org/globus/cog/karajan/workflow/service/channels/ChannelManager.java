@@ -12,6 +12,7 @@ package org.globus.cog.karajan.workflow.service.channels;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.Client;
@@ -27,7 +28,8 @@ public class ChannelManager {
 	private static final Logger logger = Logger.getLogger(ChannelManager.class);
 
 	private static ChannelManager manager;
-	private HashMap channels, hosts, rchannels;
+	private Map<MetaChannel, List<HostCredentialPair>> rchannels;
+	private Map<HostCredentialPair, MetaChannel> channels;
 	private RemoteConfiguration config;
 	private Service localService;
 	private RequestManager clientRequestManager;
@@ -40,9 +42,8 @@ public class ChannelManager {
 	}
 
 	private ChannelManager() {
-		channels = new HashMap();
-		hosts = new HashMap();
-		rchannels = new HashMap();
+		channels = new HashMap<HostCredentialPair, MetaChannel>();
+		rchannels = new HashMap<MetaChannel, List<HostCredentialPair>>();
 		config = RemoteConfiguration.getDefault();
 		clientRequestManager = new ClientRequestManager();
 	}
@@ -59,7 +60,7 @@ public class ChannelManager {
 		host = normalize(host);
 		synchronized (channels) {
 			HostCredentialPair hcp = new HostCredentialPair(host, cred);
-			channel = (MetaChannel) channels.get(hcp);
+			channel = getChannel(hcp);
 		}
 		return channel;
 	}
@@ -74,7 +75,7 @@ public class ChannelManager {
 			host = normalize(host);
 			synchronized (channels) {
 				HostCredentialPair hcp = new HostCredentialPair(host, cred);
-				channel = (MetaChannel) channels.get(hcp);
+				channel = getChannel(hcp);
 				if (channel == null) {
 					ChannelContext context = new ChannelContext();
 					context.setConfiguration(RemoteConfiguration.getDefault().find(host));
@@ -125,9 +126,24 @@ public class ChannelManager {
 			catch (ChannelException e) {
 				previous = new MetaChannel(channel.getRequestManager(), channel.getChannelContext());
 			}
-			channels.put(hcp, previous);
+			putChannel(hcp, previous);
 			previous.bind(channel);
 		}
+	}
+
+	private void putChannel(HostCredentialPair key, MetaChannel value) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("putChannel(" + key + ", " + value + ")");
+		}
+		channels.put(key, value);
+	}
+
+	private MetaChannel getChannel(HostCredentialPair key) {
+		MetaChannel meta =  channels.get(key);
+		if (logger.isDebugEnabled()) {
+			logger.debug("getChannel(" + key + "): " + meta);
+		}
+		return meta;
 	}
 
 	public void registerChannel(ChannelID id, KarajanChannel channel) throws ChannelException {
@@ -137,7 +153,7 @@ public class ChannelManager {
 		HostCredentialPair hcp = new HostCredentialPair("id://" + id.toString(),
 				channel.getUserContext().getCredential());
 		synchronized (channels) {
-			MetaChannel previous = (MetaChannel) channels.get(hcp);
+			MetaChannel previous = getChannel(hcp);
 			if (previous != null) {
 				if (logger.isInfoEnabled()) {
 					logger.info("Re-registering " + id + " = " + channel);
@@ -169,13 +185,13 @@ public class ChannelManager {
 					logger.debug("Registering " + id + " = " + channel);
 				}
 				if (channel instanceof MetaChannel) {
-					channels.put(hcp, channel);
+					putChannel(hcp, (MetaChannel) channel);
 				}
 				else {
 					previous = new MetaChannel(channel.getRequestManager(),
 							channel.getChannelContext());
 					previous.bind(channel);
-					channels.put(hcp, previous);
+					putChannel(hcp, previous);
 				}
 			}
 		}
@@ -220,9 +236,10 @@ public class ChannelManager {
 			}
 			Client client = Client.newClient(contact, meta.getChannelContext(),
 					clientRequestManager);
-			channels.put(client.getChannel().getChannelContext().getChannelID(), meta);
+			putChannel(new HostCredentialPair("id://"
+					+ client.getChannel().getChannelContext().getChannelID(),
+					client.getChannel().getUserContext().getCredential()), meta);
 			meta.bind(client.getChannel());
-
 		}
 		catch (ChannelException e) {
 			throw e;
@@ -331,12 +348,12 @@ public class ChannelManager {
 		}
 	}
 
-	private void registerChannel(Object key, MetaChannel channel) {
+	private void registerChannel(HostCredentialPair key, MetaChannel channel) {
 		synchronized (channels) {
-			channels.put(key, channel);
-			List l = (List) rchannels.get(channel);
+			putChannel(key, channel);
+			List<HostCredentialPair> l = rchannels.get(channel);
 			if (l == null) {
-				l = new LinkedList();
+				l = new LinkedList<HostCredentialPair>();
 				rchannels.put(channel, l);
 			}
 			l.add(key);
@@ -353,7 +370,7 @@ public class ChannelManager {
 		}
 		unregisterChannel(getMetaChannel(ctx));
 		synchronized (channels) {
-			channels.remove(ctx.getChannelID());
+			channels.remove(new HostCredentialPair("id://" + ctx.getChannelID(), ctx.getUserContext().getCredential()));
 		}
 	}
 
@@ -411,23 +428,30 @@ public class ChannelManager {
 				logger.debug("\nLooking up " + context.getChannelID());
 			}
 			MetaChannel meta = null;
-			meta = (MetaChannel) channels.get(new HostCredentialPair("id://"
-					+ context.getChannelID(), (GSSCredential) null));
+			HostCredentialPair hcp = new HostCredentialPair("id://"
+					+ context.getChannelID(), (GSSCredential) null);
+			meta = getChannel(hcp);
 
 			if (meta == null && context.getRemoteContact() != null) {
-				meta = (MetaChannel) channels.get(new HostCredentialPair(
-						context.getRemoteContact(), context.getCredential()));
+				hcp = new HostCredentialPair(
+						context.getRemoteContact(), context.getCredential());
+				meta = getChannel(hcp);
 			}
 
 			if (meta == null) {
 				throw new ChannelException("Invalid channel: " + context);
 			}
 			else {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Found      " + meta.getChannelContext().getChannelID());
-				}
-				if (context != meta.getChannelContext()) {
-					throw new ChannelException("Stored context is invalid");
+				synchronized (meta) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Found      " + meta.getChannelContext().getChannelID());
+					}
+					if (context != meta.getChannelContext()) {
+						logger.warn("Channels: " + channels);
+						logger.warn("Context: " + context);
+						logger.warn("Meta context: " + meta.getChannelContext());
+						throw new ChannelException("Stored context is invalid");
+					}
 				}
 				return meta;
 			}
