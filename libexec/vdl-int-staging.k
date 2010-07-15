@@ -91,42 +91,6 @@ namespace("vdl"
 				)
 			)
 		)
-														
-		element(appStageins, [jobid, files, dir, stagingMethod]
-			for(file, files
-				protocol := vdl:provider(file)
-				provider := if(protocol == "file", stagingMethod, protocol)
-				srchost := hostname(file)
-				srcdir := vdl:dirname(file)
-				destdir := dircat(dir, reldirname(file))
-				filename := basename(file)
-				
-				stageIn(
-					"{provider}://{srchost}/{srcdir}/{filename}", 
-					"{destdir}/{filename}"
-				)
-			)
-		)
-		
-		element(appStageouts, [jobid, stageouts, dir, stagingMethod]
-			for(pv, stageouts
-				[path, var] := each(pv)
-				file := vdl:absfilename(vdl:getfield(var, path = path))
-				protocol := vdl:provider(file)
-				provider := if(protocol == "file", stagingMethod, protocol)
-				dhost := vdl:hostname(file)
-				rdir := dircat(dir, reldirname(file))
-				bname := basename(file)
-				ldir := vdl:dirname(file)
-				fullLocal := dircat(ldir, bname)
-				fullRemote := dircat(rdir, bname)
-				
-				stageOut(
-					"{rdir}/{bname}",
-				    "{provider}://{dhost}/{ldir}/{bname}"
-				)									
-			)
-		)
 
 		element(doRestartlog, [restartouts]
 			uParallelFor(f, restartouts,
@@ -179,6 +143,7 @@ namespace("vdl"
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
+			
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr, stagein=stagein)
 				
 				ddir := initDDir()
@@ -237,8 +202,8 @@ namespace("vdl"
 							appStageins(jobid, stagein, ".", stagingMethod)
 							
 							stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info")
-							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
-							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
+							//stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
+							//stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
 							appStageouts(jobid, stageout, ".", stagingMethod)
 							
 							task:cleanUp(".") //the whole job directory
