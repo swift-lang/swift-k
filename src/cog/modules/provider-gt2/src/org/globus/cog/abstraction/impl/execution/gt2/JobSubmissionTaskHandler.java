@@ -6,11 +6,11 @@
 
 package org.globus.cog.abstraction.impl.execution.gt2;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
@@ -56,7 +56,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
     static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class
         .getName());
     private GramJob gramJob;
-    private Vector jobList;
+    private List<GramJob> jobList;
     private boolean startGassServer;
     private GassServer gassServer;
     private SecurityContext securityContext;
@@ -89,6 +89,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
         catch (Throwable e) {
             throw new IllegalSpecException("Failed to translate specification", e);
         }
+        setName(task, rslTree);
         if (logger.isDebugEnabled()) {
             logger.debug("RSL: " + rslTree);
         }
@@ -100,6 +101,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
         else {
             task.setAttribute("jobCount", "single");
             submitSingleJob(rslTree, spec, server);
+        }
+    }
+
+    private void setName(Task task, RslNode rslTree) {
+        if (task.getName() != null) {
+            rslTree.add(new NameOpValue("name", NameOpValue.EQ, task.getName()));
         }
     }
 
@@ -188,15 +195,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
             InvalidServiceContactException, TaskSubmissionException {
 
         MultiJobListener listener = new MultiJobListener(getTask());
-        this.jobList = new Vector();
-        List jobs = rslTree.getSpecifications();
-        Iterator iter = jobs.iterator();
+        this.jobList = new ArrayList<GramJob>();
+        Iterator<RslNode> iter = rslTree.getSpecifications().iterator();
         RslNode node;
         NameOpValue nv;
         String rmc;
         String rsl;
         while (iter.hasNext()) {
-            node = (RslNode) iter.next();
+            node = iter.next();
             rsl = node.toRSL(true);
             nv = node.getParam("resourceManagerContact");
             if (nv == null) {
@@ -273,9 +279,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
             }
             String jobCount = (String) getTask().getAttribute("jobCount");
             if (jobCount.equalsIgnoreCase("multiple")) {
-                Iterator iterator = this.jobList.iterator();
-                while (iterator.hasNext()) {
-                    GramJob job = (GramJob) iterator.next();
+                for (GramJob job : jobList) {
                     job.cancel();
                 }
             }
@@ -366,28 +370,21 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
             return;
         }
         NameOpValue s = new NameOpValue(name, NameOpValue.EQ);
-        Iterator i = set.iterator();
-        while (i.hasNext()) {
-            StagingSetEntry e = (StagingSetEntry) i.next();
-            List l = new LinkedList();
-            l.add(new Value(e.getSource()));
-            l.add(new Value(e.getDestination()));
-            s.add(l);
+        for (StagingSetEntry e : set) {
+            s.add(valuePair(e.getSource(), e.getDestination()));
         }
         rsl.add(s);
     }
 
     private void setOtherAttributes(JobSpecification spec, RslNode rsl)
             throws IllegalSpecException {
-        Iterator i = spec.getAttributeNames().iterator();
-        while (i.hasNext()) {
+        for (String key : spec.getAttributeNames()) {
             try {
-                String key = (String) i.next();
                 String value = (String) spec.getAttribute(key);
                 if (key.equals("condor_requirements")) {
                     continue;
                 }
-                if (key.toLowerCase().equals("maxwalltime")) {
+                if (key.equalsIgnoreCase("maxwalltime")) {
                     value = WallTime.normalize(value, jobManager);
                 }
                 rsl.add(new NameOpValue(key, NameOpValue.EQ, value));
@@ -404,10 +401,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
             String requirementString = (String) spec
                 .getAttribute("condor_requirements");
             NameOpValue req = new NameOpValue("condorsubmit", NameOpValue.EQ);
-            List l = new LinkedList();
-            l.add(new Value("Requirements"));
-            l.add(new Value(requirementString));
-            req.add(l);
+            req.add(valuePair("Requirements", requirementString));
             rsl.add(req);
         }
     }
@@ -472,20 +466,22 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
     }
 
     private void addEnvironment(JobSpecification spec, RslNode rsl) {
-        Collection environment = spec.getEnvironmentVariableNames();
+        Collection<String> environment = spec.getEnvironmentVariableNames();
         if (environment.size() > 0) {
             NameOpValue env = new NameOpValue("environment", NameOpValue.EQ);
-            Iterator iterator = environment.iterator();
-            while (iterator.hasNext()) {
-                String name = (String) iterator.next();
+            for (String name : environment) {
                 String value = spec.getEnvironmentVariable(name);
-                List l = new LinkedList();
-                l.add(new Value(name));
-                l.add(new Value(value));
-                env.add(l);
+                env.add(valuePair(name, value));
             }
             rsl.add(env);
         }
+    }
+    
+    private List<Value> valuePair(String v1, String v2) {
+        List<Value> l = new LinkedList<Value>();
+        l.add(new Value(v1));
+        l.add(new Value(v2));
+        return l;
     }
 
     private void setDirectory(JobSpecification spec, RslNode rsl) {
@@ -499,13 +495,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
         // sets other parameters
         NameOpValue args = new NameOpValue("arguments", NameOpValue.EQ);
         if (!spec.getArgumentsAsList().isEmpty()) {
-            Iterator i = spec.getArgumentsAsList().iterator();
-            while (i.hasNext()) {
+            for (String arg : spec.getArgumentsAsList()) {
                 if ("condor".equals(jobManager)) {
-                    args.add(condorify((String) i.next()));
+                    args.add(condorify(arg));
                 }
                 else {
-                    args.add((String) i.next());
+                    args.add(arg);
                 }
             }
             rsl.add(args);
