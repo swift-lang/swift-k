@@ -101,6 +101,9 @@
 	<export name="expandArguments"><elementDef classname="org.griphyn.vdl.karajan.lib.ExpandArguments"/></export>
 	
 	<export name="tparallelFor"><elementDef classname="org.griphyn.vdl.karajan.lib.ThrottledParallelFor"/></export>
+	
+	<export name="appStageins"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageins"/></export>
+	<export name="appStageouts"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageouts"/></export>
   </namespace>
 
   <namespace prefix="cdm">
