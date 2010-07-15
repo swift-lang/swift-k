@@ -62,11 +62,20 @@ public class MetaChannel extends AbstractKarajanChannel {
 	}
 
 	public synchronized void bind(KarajanChannel channel) throws ChannelException {
+		if (channel != null) {
+			if (channel.getChannelContext() != this.getChannelContext()) {
+				throw new ChannelException("Trying to bind invalid channel (" + channel.getChannelContext() + ") to " + this.getChannelContext());
+			}
+		}
 		if (channel == current) {
-			logger.info("Trying to re-bind current channel");
+			if (logger.isInfoEnabled()) {
+				logger.info("Trying to re-bind current channel");
+			}
 			return;
 		}
-		logger.info(this + ".bind -> " + channel);
+		if (logger.isInfoEnabled()) {
+			logger.info(this + ".bind -> " + channel);
+		}
 		if (current instanceof Purgeable) {
 			try {
 				((Purgeable) current).purge(channel);
@@ -152,7 +161,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 	}
 
 	public String toString() {
-		return "MetaChannel: " + System.identityHashCode(this) + " -> " + current;
+		return "MetaChannel: " + System.identityHashCode(this) + "[" + this.getChannelContext() + "]" + " -> " + current;
 	}
 
 	public boolean isClient() {
@@ -173,5 +182,14 @@ public class MetaChannel extends AbstractKarajanChannel {
 	}
 
 	public void start() throws ChannelException {
+	}
+	
+	public KarajanChannel current() {
+		return current;
+	}
+
+	@Override
+	public void setChannelContext(ChannelContext context) {
+		super.setChannelContext(context);
 	}
 }
