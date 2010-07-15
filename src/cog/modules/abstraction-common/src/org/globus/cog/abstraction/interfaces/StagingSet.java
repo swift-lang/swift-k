@@ -9,8 +9,5 @@
  */
 package org.globus.cog.abstraction.interfaces;
 
-public interface StagingSet extends java.util.Set {
-    void add(StagingSetEntry e);
-    
-    void remove(StagingSetEntry e);
+public interface StagingSet extends java.util.Set<StagingSetEntry> {
 }

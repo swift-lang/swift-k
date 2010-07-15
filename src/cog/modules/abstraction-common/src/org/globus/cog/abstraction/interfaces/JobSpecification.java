@@ -85,7 +85,7 @@ public interface JobSpecification extends Specification {
      * @param a
      *            list with the values of the arguments
      */
-    void setArguments(List arguments);
+    void setArguments(List<String> arguments);
 
     /**
      * Returns the set of space-separated arguments supplied for the remote
@@ -172,7 +172,7 @@ public interface JobSpecification extends Specification {
      *         by this method will affect the argument list in the
      *         specification.
      */
-    public List getArgumentsAsList();
+    public List<String> getArgumentsAsList();
 
     /**
      * Adds an environment variable to the remote execution environment.
@@ -218,7 +218,7 @@ public interface JobSpecification extends Specification {
      * associated with the remote execution environment.
      * 
      */
-    public Collection getEnvironmentVariableNames();
+    public Collection<String> getEnvironmentVariableNames();
 
     /**
      * Sets the file for redirecting the output produced on the stdout of the
@@ -383,7 +383,7 @@ public interface JobSpecification extends Specification {
      *         previously to this specification. The names are returned in no
      *         particular order
      */
-    public Collection getAttributeNames();
+    public Collection<String> getAttributeNames();
 
     /**
      * Queries whether delegation is enabled for this job. At this time
