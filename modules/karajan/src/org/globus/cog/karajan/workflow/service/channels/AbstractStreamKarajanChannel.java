@@ -126,7 +126,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				tag = unpack(rhdr, 0);
 				flags = unpack(rhdr, 4);
 				len = unpack(rhdr, 8);
-				if (len > 65535) {
+				if (len > 1048576) {
 					logger.warn("Big len: " + len + " (tag: " + tag + ", flags: " + flags + ")");
 					data = new byte[1024];
 					inputStream.read(data);
