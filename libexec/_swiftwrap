@@ -248,8 +248,6 @@ cdm_gather()
 
 COMMANDLINE=$@
 
-echo $0 $COMMANDLINE >> /tmp/swiftwrap.out
-
 # get the parent directory of the directory containing _swiftwrap, to use
 # as the run directory
 # this assumes that _swiftwrap is being executed from the top level of
