@@ -43,6 +43,7 @@ public class BlockTask extends TaskImpl {
         setType(Task.JOB_SUBMISSION);
         JobSpecification spec = buildSpecification();
         setSpecification(spec);
+        setName("Block-" + block.getId());
         setAttribute(spec, "maxwalltime", WallTime.format((int) block.getWalltime().getSeconds()));
         setAttribute(spec, "queue", settings.getQueue());
         setAttribute(spec, "project", settings.getProject());
