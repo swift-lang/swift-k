@@ -64,7 +64,7 @@ public class ProxyIOProvider implements IOProvider {
         }
         
         public String toString() {
-            return "PW " + dst;
+            return "PW " + src + " -> " + dst;
         }
 
         public void close() throws IOException {
