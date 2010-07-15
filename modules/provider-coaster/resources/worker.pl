@@ -18,6 +18,10 @@ use POSIX ":sys_wait_h";
 use strict;
 use warnings;
 
+# If ASYNC is on, the following will be done:
+#   1. Stageouts will be done in parallel
+#   2. The job status will be set to "COMPLETED" as soon as the last
+#      file is staged out (and before any cleanup is done).
 use constant ASYNC => 0;
 
 use constant {
@@ -33,7 +37,7 @@ use constant {
 	YIELD => 1,
 };
 
-my $LOGLEVEL = TRACE;
+my $LOGLEVEL = DEBUG;
 
 my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR"); 
 
@@ -76,7 +80,11 @@ my $URISTR=$ARGV[0];
 my $BLOCKID=$ARGV[1];
 my $LOGDIR=$ARGV[2];
 
+
+# REQUESTS holds a map of incoming requests
 my %REQUESTS = ();
+
+# REPLIES stores the state of (outgoing) commands for which replies are expected
 my %REPLIES  = ();
 
 my $LOG = logfilename($LOGDIR, $BLOCKID);
@@ -160,6 +168,7 @@ sub wlog {
 			print LOG $msgline;
 		}
 	}
+	return 1;
 }
 
 sub timestring() {
@@ -267,10 +276,13 @@ sub sendm {
 	my $buf = pack("VVV", $tag, $flags, $len);
 	$buf = $buf.$msg;
 
-	wlog(TRACE, "OUT: len=$len, tag=$tag, flags=$flags, $msg\n");
+	wlog(DEBUG, "OUT: len=$len, tag=$tag, flags=$flags\n");
+	wlog(TRACE, "$msg\n");
 
 	#($SOCK->send($buf) == length($buf)) || reconnect();
-	eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n");
+	$SOCK->blocking(1);
+	eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
+	#eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n");
 }
 
 sub sendFrags {
@@ -299,7 +311,7 @@ sub sendFrags {
 			my ($cont, $start) = ($$record[0], $$record[1]);
 			if (defined($$cont{"dataSent"})) {
 				$$cont{"dataSent"}($cont, $tag);
-			}		
+			}
 		}
 		wlog(DEBUG, "done sending frags for $tag\n");
 	}
@@ -350,8 +362,19 @@ sub nextFileData {
 		my $handle = $$state{"handle"};
 		my $buffer;
 		my $sz = read($handle, $buffer, 8192);
+		if (!defined $sz) {
+			wlog INFO, "Failed to read data from file: $!\n";
+			return (FINAL_FLAG + ERROR_FLAG, "$!", CONTINUE);
+		}
+		elsif ($sz == 0 && $$state{"sent"} < $$state{"size"}) {
+			wlog INFO, "File size mismatch. $$state{'size'} vs. $$state{'sent'}\n";
+			return (FINAL_FLAG + ERROR_FLAG, "File size mismatch. Expected $$state{'size'}, got $$state{'sent'}", CONTINUE);
+		}
 		$$state{"sent"} += $sz;
 		wlog DEBUG, "size: $$state{'size'}, sent: $$state{'sent'}\n";
+		if ($$state{"sent"} == $$state{"size"}) {
+			close $handle;
+		}
 		return (($$state{"sent"} < $$state{"size"}) ? 0 : FINAL_FLAG, $buffer, YIELD);
 	}
 }
@@ -359,11 +382,15 @@ sub nextFileData {
 sub fileData {
 	my ($cmd, $lname, $rname) = @_;
 	
-	open F, "<$lname";
+	my $desc;
+	if (!open($desc, "<", "$lname")) {
+		wlog WARN, "Failed to open $lname\n";
+		# let it go on for now. The next read from the descriptor will fail	
+	}
 	return {
 		"cmd" => $cmd,
 		"state" => 0,
-		"handle" => \*F,
+		"handle" => $desc,
 		"nextData" => \&nextFileData,
 		"size" => -s $lname,
 		"lname" => $lname,
@@ -374,9 +401,11 @@ sub fileData {
 
 sub sendCmdInt {
 	my ($cont, $state) = @_;
-	my $ctag = $TAG++;
-	
-	registerCmd($ctag, $cont);
+	my $ctag = $$state{"tag"};
+	if (!defined $ctag) {
+		$ctag =  $TAG++;
+		registerCmd($ctag, $cont);
+	}
 	sendFrags($ctag, 0, $state);
 	return $ctag;
 }
@@ -498,9 +527,15 @@ sub process {
 
 	if ($fin) {
 		if ($reply) {
+			# A reply for a command sent by us has been received, which means that
+			# the lifecycle of the command is complete, therefore the state of
+			# that command can be deleted.
 			delete($REPLIES{$tag});
 		}
 		else {
+			# All fragments of a request have been received. Since the record is 
+			# stored in $cont, $tag, $err, $fin, $msg, we can remove it from the
+			# table of (partial) incoming requests
 			delete($REQUESTS{$tag});
 		}
 		wlog DEBUG, "Fin flag set\n";
@@ -555,6 +590,7 @@ sub checkTimeouts {
 
 sub recvOne {
 	my $data;
+	$SOCK->blocking(0);
 	$SOCK->recv($data, 12);
 	if (length($data) > 0) {
 		# wlog DEBUG, "Received " . unpackData($data) . "\n";
@@ -723,29 +759,33 @@ sub getFileCB {
 	my ($jobid, $src, $dst) = @_;
 	
 	my ($protocol, $path) = urisplit($src);
-	wlog DEBUG, "src: $src, protocol: $protocol, path: $path\n";
+	wlog DEBUG, "$jobid src: $src, protocol: $protocol, path: $path\n";
 	
 	if (($protocol eq "file") || ($protocol eq "proxy")) {
 		wlog DEBUG, "Opening $dst...\n";
 		my $dir = dirname($dst);
 		if (-f $dir) {
-			die "Cannot create directory $dir. A file with this name already exists";
+			die "$jobid Cannot create directory $dir. A file with this name already exists";
 		}
 		if (!-d $dir) {
 			if (!mkpath($dir)) {
 				die "Cannot create directory $dir. $!";
 			}
 		}
-		if (!open(F, ">$dst")) {
+		# don't try open(DESC, ...) (as I did). It will use the same reference 
+		# and concurrent operations will fail. 
+		my $desc;
+		if (!open($desc, ">", "$dst")) {
 			die "Failed to open $dst: $!";
 		}
 		else {
+			wlog DEBUG, "$jobid Opened $dst\n";
 			return {
 				"jobid" => $jobid,
 				"dataIn" => \&getFileCBDataIn,
 				"state" => 0,
 				"lfile" => $dst,
-				"desc" => \*F
+				"desc" => $desc
 			};
 		}
 	}
@@ -762,7 +802,7 @@ sub getFileCBDataInIndirect {
 	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
 	
 	my $jobid = $$state{"jobid"};
-	wlog DEBUG, "getFileCBDataInIndirect jobid: $jobid, tag: $tag, err: $err, fin: $fin\n";
+	wlog DEBUG, "$jobid getFileCBDataInIndirect jobid: $jobid, tag: $tag, err: $err, fin: $fin\n";
 	if ($err) {
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "520", "Error staging in file: $reply"));
 		delete($JOBDATA{$jobid});
@@ -784,7 +824,7 @@ sub getFileCBDataIn {
 	
 	my $s = $$state{"state"};
 	my $jobid = $$state{"jobid"};
-	wlog DEBUG, "getFileCBDataIn jobid: $jobid, state: $s, tag: $tag, err: $err, fin: $fin\n";
+	wlog DEBUG, "$jobid getFileCBDataIn jobid: $jobid, state: $s, tag: $tag, err: $err, fin: $fin\n";
 	if ($err) {
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "520", "Error staging in file: $reply"));
 		delete($JOBDATA{$jobid});
@@ -802,11 +842,18 @@ sub getFileCBDataIn {
 	}
 	else {
 		my $desc = $$state{"desc"};
-		print $desc $reply;
+		if (!(print {$desc} $reply)) {
+			close $desc;
+			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $desc; lfile: $$state{'lfile'}\n"; 
+			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "522", "Could not write to file: $!"));
+			delete($JOBDATA{$jobid});
+			return;
+		}
 	}
 	if ($fin) {
 		my $desc = $$state{"desc"};
 		close $desc;
+		wlog DEBUG, "$jobid Closed $$state{'lfile'}\n";
 		stagein($jobid);
 	}
 }
@@ -819,7 +866,7 @@ sub stagein {
 	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"};
 	
 	if (scalar @$STAGE <= $STAGEINDEX) {
-		wlog DEBUG, "Done staging in files ($STAGEINDEX, $STAGE)\n";
+		wlog DEBUG, "$jobid Done staging in files ($STAGEINDEX, $STAGE)\n";
 		$JOBDATA{$jobid}{"stageindex"} = 0;
 		sendCmd((nullCB(), "JOBSTATUS", $jobid, ACTIVE, "0", "workerid=$ID"));
 		forkjob($jobid);
@@ -828,12 +875,12 @@ sub stagein {
 		if ($STAGEINDEX == 0) {
 			sendCmd((nullCB(), "JOBSTATUS", $jobid, STAGEIN, "0", "workerid=$ID"));
 		}
-		wlog DEBUG, "Staging in $$STAGE[$STAGEINDEX]\n";
+		wlog DEBUG, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
 		$JOBDATA{$jobid}{"stageindex"} =  $STAGEINDEX + 1;
 		my ($protocol, $path) = urisplit($$STAGE[$STAGEINDEX]);
 		if ($protocol eq "sfs") {
 			if (!copy($path, $$STAGED[$STAGEINDEX])) {
-				wlog DEBUG, "Error staging in $path: $!\n";
+				wlog DEBUG, "$jobid Error staging in $path: $!\n";
 				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));
 			}
 			else {
@@ -846,7 +893,7 @@ sub stagein {
 				$state = getFileCB($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
 			};
 			if ($@) {
-				wlog DEBUG, "Error staging in file: $@\n";
+				wlog DEBUG, "$jobid Error staging in file: $@\n";
 				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));	
 			}
 			else {
@@ -860,7 +907,7 @@ sub stagein {
 sub stageout {
 	my ($jobid) = @_;
 	
-	wlog DEBUG, "Staging out\n";
+	wlog DEBUG, "$jobid Staging out\n";
 	my $STAGE = $JOBDATA{$jobid}{"stageout"};
 	my $STAGED = $JOBDATA{$jobid}{"stageoutd"}; 
 	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"};
@@ -869,18 +916,19 @@ sub stageout {
 	wlog DEBUG, "sz: $sz, STAGEINDEX: $STAGEINDEX\n";
 	if (scalar @$STAGE <= $STAGEINDEX) {
 		$JOBDATA{$jobid}{"stageindex"} = 0;
-		wlog DEBUG, "No more stageouts. Doing cleanup.\n";
+		wlog DEBUG, "$jobid No more stageouts. Doing cleanup.\n";
 		cleanup($jobid);
 	}
 	else {
 		my $lfile = $$STAGE[$STAGEINDEX];
 		if (-e $lfile) {
 			if ($STAGEINDEX == 0) {
+				wlog DEBUG, "$jobid Sending STAGEOUT status\n";
 				sendCmd((nullCB(), "JOBSTATUS", $jobid, STAGEOUT, "0", "workerid=$ID"));
 			}
 			my $rfile = $$STAGED[$STAGEINDEX];
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
-			wlog DEBUG, "Staging out $lfile.\n";
+			wlog DEBUG, "$jobid Staging out $lfile.\n";
 			my ($protocol, $path) = urisplit($rfile);
 			if ($protocol eq "file" || $protocol eq "proxy") {
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
@@ -897,10 +945,10 @@ sub stageout {
 			else {
 				queueCmd((putFileCB($jobid), "PUT", pack("VV", 0, 0), $lfile, $rfile));
 			}
-			wlog DEBUG, "PUT sent.\n";
+			wlog DEBUG, "$jobid PUT sent.\n";
 		}
 		else {
-			wlog INFO, "Skipping stageout of missing file ($lfile)\n";
+			wlog INFO, "$jobid Skipping stageout of missing file ($lfile)\n";
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
 			stageout($jobid);
 		}
@@ -920,11 +968,25 @@ sub cleanup {
 		}
 	}
 	
+	if ($ec != 0) {
+		wlog DEBUG, "$jobid Job data: ".hts($JOBDATA{$jobid})."\n";
+		wlog DEBUG, "$jobid Job: ".hts($JOBDATA{$jobid}{'job'})."\n";
+		wlog DEBUG, "$jobid Job dir ".`ls -al $JOBDATA{$jobid}{'job'}{'directory'}`."\n";
+	}
+	
 	my $CLEANUP = $JOBDATA{$jobid}{"cleanup"};
 	my $c;
-	for $c (@$CLEANUP) {
-		wlog DEBUG, "Removing $c\n";
-		rmtree($c, {safe => 1});
+	if ($ec == 0) {
+		for $c (@$CLEANUP) {
+			if ($c =~ /\/\.$/) {
+				chop $c;
+				chop $c;
+			}
+			wlog DEBUG, "$jobid Removing $c\n";
+			rmtree($c, {safe => 1});
+			rmdir($c);
+			wlog DEBUG, "$jobid Removed $c\n";
+		}
 	}
 	
 	if (!ASYNC) {
@@ -932,6 +994,7 @@ sub cleanup {
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
 		}
 		else {
+			wlog DEBUG, "$jobid Sending failure.\n";
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with and exit code of $ec"));
 		}
 	}
@@ -968,6 +1031,7 @@ sub putFileCBDataIn {
 	
 	if ($err || $timeout) {
 		if ($JOBDATA{$jobid}) {
+			wlog DEBUG, "Stage out failed ($reply)\n";
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "515", "Stage out failed ($reply)"));
 			delete($JOBDATA{$jobid});
 		}
@@ -1006,6 +1070,7 @@ sub submitjob {
 		$line =~ s/\\n/\n/;
 		$line =~ s/\\\\/\\/;
 		my @pair = split(/=/, $line, 2);
+		wlog DEBUG, "$JOBID $pair[0]=$pair[1]\n";
 		if ($pair[0] eq "arg") {
 			push @JOBARGS, $pair[1];
 		}
@@ -1070,12 +1135,12 @@ sub submitjob {
 sub checkJob() {
 	my ($tag, $JOBID, $JOB) = @_;
 	
-	wlog INFO, "Job info received (tag=$tag)\n";
+	wlog INFO, "$JOBID Job info received (tag=$tag)\n";
 	my $executable = $$JOB{"executable"};
 	if (!(defined $JOBID)) {
 		my $ds = hts($JOB);
 		
-		wlog DEBUG, "Job details $ds\n";
+		wlog DEBUG, "$JOBID Job details $ds\n";
 		
 		sendError($tag, ("Missing job identity"));
 		return 0;
@@ -1099,10 +1164,10 @@ sub checkJob() {
 			}
 		}
 		chdir $dir;
-		wlog DEBUG, "Job check ok\n";
-		wlog INFO, "Sending submit reply (tag=$tag)\n";
+		wlog DEBUG, "$JOBID Job check ok (dir: $dir)\n";
+		wlog INFO, "$JOBID Sending submit reply (tag=$tag)\n";
 		sendReply($tag, ("OK"));
-		wlog INFO, "Submut reply sent (tag=$tag)\n";
+		wlog INFO, "$JOBID Submit reply sent (tag=$tag)\n";
 		return 1;
 	}
 }
@@ -1124,7 +1189,7 @@ sub forkjob {
 			close CHILD_W;
 		}
 		else {
-			wlog DEBUG, "Forked process $pid. Waiting for its completion\n";
+			wlog DEBUG, "$JOBID Forked process $pid. Waiting for its completion\n";
 			close CHILD_W;
 			$JOBS_RUNNING++;
 			$JOBWAITDATA{$JOBID} = {
@@ -1175,12 +1240,12 @@ sub checkJobStatus {
 	my $tid;
 	my $status;
 	
-	wlog DEBUG, "Checking pid $pid\n";
+	wlog DEBUG, "$JOBID Checking pid $pid\n";
 	
 	$tid = waitpid($pid, &WNOHANG);
 	if ($tid != $pid) {
 		# not done
-		wlog DEBUG, "Job $pid still running\n";
+		wlog DEBUG, "$JOBID Job $pid still running\n";
 		return 0;
 	}
 	else {
@@ -1190,13 +1255,12 @@ sub checkJobStatus {
 		$status = $? >> 8 + (($? & 0xff) << 8);
 	}
 
-	wlog DEBUG, "Child process $pid terminated. Status is $status. $!\n";
+	wlog DEBUG, "$JOBID Child process $pid terminated. Status is $status. $!\n";
 	my $s = <$RD>;
-	wlog DEBUG, "Got output from child. Closing pipe.\n";
+	wlog DEBUG, "$JOBID Got output from child. Closing pipe.\n($s)\n";
 	close $RD;
 	$JOBDATA{$JOBID}{"exitcode"} = $status;
 	if (defined $s) {
-		wlog DEBUG, "Sending failure.\n";
 		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "$status", $s);
 	}
 	else {
