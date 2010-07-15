@@ -109,7 +109,7 @@ internalproc.transitions: $(LOG)
 jobs.retrycount.summary: execute2.event
 	cat execute2.event  | cut -f 5 -d ' ' | sort | uniq -c | sort | sed 's/^ *\(.*\) .*$$/\1/' | uniq -c > jobs.retrycount.summary
 
-execstages.png: execute2.event dostagein.event dostageout.event start-time.tmp
+execstages.png: execute2.event dostagein.event dostageout.event start-time.tmp workflow.event 
 	execstages-plot
 
 # weight processing
