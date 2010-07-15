@@ -37,9 +37,9 @@ public class JobSpecificationImpl implements JobSpecification {
     private boolean localInput;
     
     private int type;
-    private Map attributes;
-    private List arguments;
-    private Map environment;
+    private Map<String, Object> attributes;
+    private List<String> arguments;
+    private Map<String, String> environment;
     private String directory;
     private String executable;
     private FileLocation stdinLocation, stdoutLocation, stderrLocation,
@@ -49,7 +49,7 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public JobSpecificationImpl() {
         this.type = Specification.JOB_SUBMISSION;
-        this.arguments = new ArrayList(4);
+        this.arguments = new ArrayList<String>(4);
         this.stdinLocation = FileLocation.REMOTE;
         this.stdoutLocation = FileLocation.REMOTE;
         this.stderrLocation = FileLocation.REMOTE;
@@ -109,27 +109,27 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public String removeArgument(int index) {
-        return (String) this.arguments.remove(index);
+        return this.arguments.remove(index);
     }
 
     public Vector getArgumentsAsVector() {
         return new Vector(this.arguments);
     }
 
-    public List getArgumentsAsList() {
+    public List<String> getArgumentsAsList() {
         return arguments;
     }
 
     public void setArguments(Vector arguments) {
-        this.arguments = new ArrayList(arguments);
+        this.arguments = new ArrayList<String>(arguments);
     }
 
-    public void setArguments(List arguments) {
+    public void setArguments(List<String> arguments) {
         this.arguments = arguments;
     }
 
     public void setArguments(String arguments) {
-        this.arguments = new ArrayList();
+        this.arguments = new ArrayList<String>();
         StringTokenizer st = new StringTokenizer(arguments);
         while (st.hasMoreTokens()) {
             this.arguments.add(st.nextToken());
@@ -144,7 +144,7 @@ public class JobSpecificationImpl implements JobSpecification {
         String arg;
         if (!this.arguments.isEmpty()) {
             StringBuffer sb = new StringBuffer();
-            Iterator i = this.arguments.iterator();
+            Iterator<String> i = this.arguments.iterator();
             while (i.hasNext()) {
                 sb.append(i.next());
                 if (i.hasNext()) {
@@ -160,14 +160,14 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void addEnvironmentVariable(String name, String value) {
         if (environment == null) {
-            environment = new HashMap();
+            environment = new HashMap<String, String>();
         }
         environment.put(name, value);
     }
 
     public String removeEnvironmentVariable(String name) {
         if (environment != null) {
-            return (String) environment.remove(name);
+            return environment.remove(name);
         }
         else {
             return null;
@@ -176,28 +176,28 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public String getEnvironmentVariable(String name) {
         if (environment != null) {
-            return (String) environment.get(name);
+            return environment.get(name);
         }
         else {
             return null;
         }
     }
 
-    public Collection getEnvironment() {
+    public Collection<String> getEnvironment() {
         if (environment != null) {
             return environment.keySet();
         }
         else {
-            return Collections.EMPTY_MAP.keySet();
+            return Collections.emptySet();
         }
     }
 
-    public Collection getEnvironmentVariableNames() {
+    public Collection<String> getEnvironmentVariableNames() {
         if (environment != null) {
             return environment.keySet();
         }
         else {
-            return Collections.EMPTY_MAP.keySet();
+            return Collections.emptySet();
         }
     }
 
@@ -289,7 +289,7 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void setAttribute(String name, Object value) {
         if (attributes == null) {
-            attributes = new HashMap();
+            attributes = new HashMap<String, Object>();
         }
         attributes.put(name.toLowerCase(), value);
     }
@@ -312,12 +312,12 @@ public class JobSpecificationImpl implements JobSpecification {
         }
     }
 
-    public Collection getAttributeNames() {
+    public Collection<String> getAttributeNames() {
         if (attributes != null) {
             return attributes.keySet();
         }
         else {
-            return Collections.EMPTY_MAP.keySet();
+            return Collections.emptySet();
         }
     }
 
