@@ -167,7 +167,7 @@ public class GSSChannel extends AbstractTCPChannel {
 	}
 
 	public String toString() {
-		return "GSS" + (isClient() ? "C" : "S") + "Channel-" + getContact() + "(" + id + ")";
+		return "GSS" + (isClient() ? "C" : "S") + "Channel-" + getContact() + "(" + id + ")" + "[" + this.getChannelContext() + "]";
 	}
 
 	protected synchronized void ensureCallbackServiceStarted() throws Exception {
