@@ -33,19 +33,19 @@ public class ConfigProperty extends AbstractFunction {
         boolean instance = TypeUtil.toBoolean(INSTANCE.getValue(stack));
         Object host = HOST.getValue(stack);
         if(logger.isDebugEnabled()) {
-		logger.debug("Getting property "+name+" with host "+host);
-	}
-	if(host!= null) {
-		// see if the host has this property defined, and if so
-		// get its value
-		BoundContact h = (BoundContact)host;
-		String prop = (String) h.getProperty(name);
-		if(prop != null) {
-			logger.debug("Found property "+name+" in BoundContact");
-			return prop;
-		}
-			logger.debug("Could not find property "+name+" in BoundContact");
-	}
+            logger.debug("Getting property "+name+" with host "+host);
+        }
+        if(host!= null) {
+            // see if the host has this property defined, and if so
+            // get its value
+            BoundContact h = (BoundContact)host;
+            String prop = (String) h.getProperty(name);
+            if(prop != null) {
+                logger.debug("Found property "+name+" in BoundContact");
+                return prop;
+            }
+            logger.debug("Could not find property "+name+" in BoundContact");
+        }
         return getProperty(name, instance, stack);
     }
 

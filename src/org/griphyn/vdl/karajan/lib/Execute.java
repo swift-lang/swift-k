@@ -46,7 +46,7 @@ public class Execute extends GridExec {
 			Object constraints) throws ExecutionException {
 		try {
 			registerReplica(stack, task);
-                        log(task, stack);
+			log(task, stack);
 			scheduler.addJobStatusListener(this, task);
 			synchronized (tasks) {
 				tasks.put(task, stack);
@@ -61,32 +61,32 @@ public class Execute extends GridExec {
 		}
 	}
 
-        void log(Task task, VariableStack stack)
-            throws ExecutionException
-        {
-            if (logger.isDebugEnabled()) {
-                logger.debug(task);
-                logger.debug("Submitting task " + task);
-            }
-            String jobid = (String)A_JOBID.getValue(stack,null);
-            if (logger.isDebugEnabled()) {
-                logger.debug("jobid="+jobid+" task=" + task);
-            }
-            else if (logger.isInfoEnabled()) {
-                Specification spec = task.getSpecification();
-                if (spec instanceof JobSpecification) {
-                    JobSpecification jobspec = (JobSpecification) spec;
-                    logger.info("Submit: " +
-                                "in: " + jobspec.getDirectory() +
-                                " command: " + jobspec.getExecutable() + 
-                                " " + jobspec.getArguments());
-                }
-                else {
-                    logger.info("Submit: " + spec);
-                }
-            }
-        }
-            
+	void log(Task task, VariableStack stack)
+	throws ExecutionException
+	{
+	    if (logger.isDebugEnabled()) {
+	        logger.debug(task);
+	        logger.debug("Submitting task " + task);
+	    }
+	    String jobid = (String) A_JOBID.getValue(stack,null);
+	    if (logger.isDebugEnabled()) {
+	        logger.debug("jobid="+jobid+" task=" + task);
+	    }
+	    else if (logger.isInfoEnabled()) {
+	        Specification spec = task.getSpecification();
+	        if (spec instanceof JobSpecification) {
+	            JobSpecification jobspec = (JobSpecification) spec;
+	            logger.info("Submit: " +
+	                "in: " + jobspec.getDirectory() +
+	                " command: " + jobspec.getExecutable() + 
+	                " " + jobspec.getArguments());
+	        }
+	        else {
+	            logger.info("Submit: " + spec);
+	        }
+	    }
+	}
+
 	protected void registerReplica(VariableStack stack, Task task) throws CanceledReplicaException {
 		setTaskIdentity(stack, task);
 		try {

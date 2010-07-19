@@ -15,9 +15,6 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
-import edu.emory.mathcs.backport.java.util.concurrent.Executors;
-
 public class SetFieldValue extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(SetFieldValue.class);
 
@@ -69,10 +66,10 @@ public class SetFieldValue extends VDLFunction {
 	    else if (logger.isInfoEnabled()) {
 	        if (leaf instanceof AbstractDataNode) {
 	            AbstractDataNode data = (AbstractDataNode) leaf;
-                    Path path = data.getPathFromRoot();
-                    String p = path.toString();
-                    if (p.equals("$"))
-                        p = "";
+	            Path path = data.getPathFromRoot();
+	            String p = path.toString();
+	            if (p.equals("$"))
+	                p = "";
 	            String name = data.getDisplayableName() + p;
 	            logger.info("Set: " + name + "=" + value);
 	        }
