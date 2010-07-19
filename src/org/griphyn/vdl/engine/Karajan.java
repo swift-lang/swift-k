@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,7 +43,6 @@ import org.globus.swift.language.TypesDocument.Types.Type;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
-import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
 
