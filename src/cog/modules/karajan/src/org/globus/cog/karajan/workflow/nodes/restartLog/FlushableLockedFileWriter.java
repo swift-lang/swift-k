@@ -14,10 +14,11 @@ import org.apache.log4j.Logger;
  */
 public class FlushableLockedFileWriter extends OutputStreamWriter {
 	public static final Logger logger = Logger.getLogger(FlushableLockedFileWriter.class);
-	
+
 	private final FileOutputStream fos;
 	private File file;
 	private FileLock lock;
+	private SyncThread syncThread;
 
 	public FlushableLockedFileWriter(File f, boolean append) throws IOException {
 		this(new FileOutputStream(f, append));
@@ -33,11 +34,19 @@ public class FlushableLockedFileWriter extends OutputStreamWriter {
 	private FlushableLockedFileWriter(FileOutputStream fos) {
 		super(fos);
 		this.fos = fos;
+		syncThread = new SyncThread(this);
+		syncThread.start();
 	}
 
 	public void flush() throws IOException {
-		super.flush();
-		fos.getFD().sync();
+		syncThread.flush();
+	}
+
+	public void actualFlush() throws IOException {
+		if (isLocked()) {
+			super.flush();
+			fos.getFD().sync();
+		}
 	}
 
 	public File getFile() {
@@ -50,11 +59,11 @@ public class FlushableLockedFileWriter extends OutputStreamWriter {
 		}
 		super.close();
 	}
-	
+
 	public boolean isLocked() {
 		return lock != null && lock.isValid();
 	}
-	
+
 	public boolean lockExists() {
 		return lock != null;
 	}
