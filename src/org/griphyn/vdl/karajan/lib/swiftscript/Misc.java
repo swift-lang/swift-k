@@ -206,7 +206,7 @@ public class Misc extends FunctionsCollection {
 			inputString = inputString.substring(0, i);
 		}
 		DSHandle handle = new RootDataNode(Types.INT);
-		handle.setValue(new Double(Integer.parseInt(inputString)));
+		handle.setValue( new Integer( inputString ) );
 		handle.closeShallow();
 		int provid=VDLFunction.nextProvenanceID();
 		VDLFunction.logProvenanceResult(provid, handle, "toint");
