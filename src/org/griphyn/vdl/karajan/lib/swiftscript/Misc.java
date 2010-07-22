@@ -368,9 +368,13 @@ public class Misc extends FunctionsCollection {
 			InvalidPathException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		int i = inputString.indexOf(".");
-		if( i >= 0 )
+		if( i > 0 )
 		{
 			inputString = inputString.substring(0, i);
+		}
+		if( i == 0 )
+		{
+		    inputString = "0";
 		}
 		DSHandle handle = new RootDataNode(Types.INT);
 		handle.setValue(new Double(Integer.parseInt(inputString)));
