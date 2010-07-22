@@ -8,14 +8,14 @@
 	<export name="writedata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
-	<export name="strstr"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>	
+	<export name="strstr"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strsplit"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="regexp"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="toint"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="tofloat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="tostring"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="trace"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
-	<export name="tracef"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="tracef"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Tracef"/></export>
 	<export name="java"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Java"/></export>
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
 	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileNames"/></export>
@@ -88,7 +88,7 @@
 	<export name="log"><elementDef classname="org.griphyn.vdl.karajan.lib.Log"/></export>
 
 	<export name="kickstart"><elementDef classname="org.griphyn.vdl.karajan.lib.Kickstart"/></export>
-	
+
 	<export name="dirname"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
 	<export name="reldirname"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
 	<export name="basename"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
@@ -96,12 +96,12 @@
 	<export name="hostname"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
 	<export name="dircat"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
 	<export name="pathnames"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
-	
+
 	<export name="execute"><elementDef classname="org.griphyn.vdl.karajan.lib.Execute"/></export>
 	<export name="expandArguments"><elementDef classname="org.griphyn.vdl.karajan.lib.ExpandArguments"/></export>
-	
+
 	<export name="tparallelFor"><elementDef classname="org.griphyn.vdl.karajan.lib.ThrottledParallelFor"/></export>
-	
+
 	<export name="appStageins"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageins"/></export>
 	<export name="appStageouts"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageouts"/></export>
   </namespace>

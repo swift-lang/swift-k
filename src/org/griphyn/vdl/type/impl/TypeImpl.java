@@ -80,8 +80,8 @@ public class TypeImpl extends UnresolvedType {
 		return list;
 	}
 
-	public List getFields() {
-		return new ArrayList(fields.values());
+	public List<Field> getFields() {
+		return new ArrayList<Field>(fields.values());
 	}
 
 	public Type getBaseType() {

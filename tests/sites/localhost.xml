@@ -1,0 +1,12 @@
+
+<!-- Local execution in the given workspace -->
+
+<config>
+
+  <pool handle="localhost" sysinfo="INTEL32::LINUX">
+    <gridftp url="local://localhost" />
+    <execution provider="local" url="none" />
+    <workdirectory>_WORK_</workdirectory>
+  </pool>
+
+</config>

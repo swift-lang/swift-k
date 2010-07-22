@@ -108,7 +108,7 @@ public interface Type {
 	 * 
 	 * @return a list of Fields
 	 */
-	public List getFields();
+	public List<Field> getFields();
 
 	/**
 	 * get the base type of this type as a type can be derived from another type

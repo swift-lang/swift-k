@@ -1,79 +1,95 @@
 #!/bin/bash
 
-OUTDIR=$PWD
+# set -x
+
+# USAGE NOTES:
+# Run nightly.sh -h for quick help
+# When something goes wrong, find and check tests.log
+# Code is checked out into TOPDIR
+# Swift is installed in its source tree
+# The run is executed in RUNDIR (TOPDIR/RUNDIRBASE)
+# The build test is started in TOPDIR
+# Everything for a Swift test is written in its RUNDIR
+# The temporary output always goes to OUTPUT (TOPDIR/exec.out)
+
+printhelp() {
+  echo "nightly.sh <options> <output>"
+  echo ""
+  echo "usage:"
+  printf "\t -c      Do not clean                    \n"
+  printf "\t -g      Do not run grid tests           \n"
+  printf "\t -h      This message                    \n"
+  printf "\t -p      Do not build the package        \n"
+  printf "\t -s      Do not do a fresh svn checkout  \n"
+  printf "\t -x      Do not continue after a failure \n"
+  printf "\t output  Location for output (TOPDIR)    \n"
+}
+
+# Defaults:
+CLEAN=1
+BUILD_PACKAGE=1
+GRID_TESTS=1
+SKIP_CHECKOUT=0
+ALWAYS_EXITONFAILURE=0
+# The directory in which to start:
+TOPDIR=$PWD
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -c)
+      CLEAN=0
+      shift;;
+    -g)
+      GRID_TESTS=0
+      shift;;
+    -h)
+      printhelp
+      exit 0;;
+    -p)
+      BUILD_PACKAGE=0
+      shift;;
+    -s)
+      SKIP_CHECKOUT=1
+      shift;;
+    -x)
+      ALWAYS_EXITONFAILURE=1
+      shift;;
+    *)
+      TOPDIR=$1
+      shift;;
+  esac
+done
+
 LOGCOUNT=0
 SEQ=1
-DATE=`date +"%Y-%m-%d"`
-TIME=`date +"%T %Z(%z)"`
+DATE=$( date +"%Y-%m-%d" )
+TIME=$( date +"%T" )
+
 RUNDIRBASE="run-$DATE"
-RUNDIR=$OUTDIR/$RUNDIRBASE
+RUNDIR=$TOPDIR/$RUNDIRBASE
+LOGBASE=$RUNDIRBASE/tests.log
+LOG=$TOPDIR/$LOGBASE
+OUTPUT=$TOPDIR/exec.out
+
+HTMLPATH=$RUNDIRBASE/tests-$DATE.html
+HTML=$TOPDIR/$HTMLPATH
+
+BRANCH="branches/tests-01"
+
+SCRIPTDIR=$( dirname $0 )
+
+cd $TOPDIR
 mkdir -p $RUNDIR
+[ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
 
-if [ "$1" == "-fco" ]; then
-	FCO=1
-	shift
-elif [ "$2" == "-fco" ]; then
-	FCO=1
-fi
+header() {
+        CURRENT=$SCRIPTDIR/html/current.html
+	sed "s@_HTMLBASE_@$HTMLPATH@" < $CURRENT > $TOPDIR/current.html
 
-if [ "$1" == "" ]; then
-	OUTBASE=$RUNDIRBASE/tests.log
-else
-	OUTBASE=$RUNDIRBASE/$1
-fi
-OUT=$OUTDIR/$OUTBASE
-
-head() {
-	HTMLBASE=tests-$DATE.html
-	HTML=$OUTDIR/$HTMLBASE
-	rm -f $OUTDIR/current.html
-	
-	#This doesn't work well with servers that don't follow symlinks
-	#ln -s $HTML $OUTDIR/current.html
-	
-	cat <<DOH >$OUTDIR/current.html
-<html>
-	<head>
-		<title>Redirecting...</title>
-		<meta http-equiv="cache-control" content="no-cache">
-		<script language="JavaScript">
-			function redirect() {
-				window.location="$HTMLBASE";
-			}
-		</script>
-	</head>
-	<body onLoad="redirect()">
-		You should be redirected to <a href="$HTMLBASE">$HTMLBASE</a>
-	</body>
-</html>
-DOH
-	cat <<DOH >$HTML
-<html>
-	<head>
-		<title>Swift nightly integration tests and build ($DATE $TIME)</title>
-		<style type="text/css">
-			a:link {color:black}
-			a:visited {color:black}
-			td.success {background: #60ff00; text-align: center;}
-			td.failure {background: #ff6000; text-align: center;}
-			tr.testline {background: #e0e0e0}
-			tr.part {background: #c0c0c0; text-align: center; font-size: large;}
-		</style>
-	</head>
-	<body>
-	<h1>Swift nightly integration tests and build</h1>
-	<ul>
-	  <li>Date: $DATE</li>
-	  <li>Time: $TIME</li>
-	  <li>Test host: $(hostname)</li>
-	</ul>
-	<ol>
-		<li><a href="#tests">Test results</a>
-		<li><a href="#packages">Compiled packages</a>
-		<li><a href="#older">Older tests</a>
-		<li><a href="addtests.html">How to add new tests</a>
-	</ol>
-DOH
+        HEADER=$SCRIPTDIR/html/header.html
+        HOST=$( hostname )
+        SEDCMD="s/_DATE_/$DATE/;s/_TIME_/$TIME/;s/_HOST_/$HOST"/
+	sed $SEDCMD < $HEADER > $HTML
 	FIRSTTEST=1
 }
 
@@ -81,12 +97,24 @@ html() {
 	echo $@ >>$HTML
 }
 
-tail() {
-	MONTHS=("" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
+a_name() {
+  NAME=$1
+  html "<a name=\"$NAME\">"
+}
+
+a_href() {
+  HREF=$1
+  TEXT=$2
+  html "<a href=\"$HREF\">$TEXT</a>"
+}
+
+footer() {
+	MONTHS=("" "Jan" "Feb" "Mar" "Apr" "May" "Jun" \
+                   "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
 	html "</tr></table></tr></table>"
-	
+
 	if [ "$BINPACKAGE" != "" ]; then
-		FBP=$OUTDIR/$BINPACKAGE
+		FBP=$RUNDIR/$BINPACKAGE
 		SIZE=`ls -hs $FBP`
 		SIZE=${SIZE/$FBP}
 		cat <<DOH >>$HTML
@@ -95,7 +123,7 @@ tail() {
 	<a href="$BINPACKAGE">$BINPACKAGE</a> ($SIZE)<br>
 DOH
 	fi
-	
+
 	LASTYR="00"
 	LASTMO="00"
 	html "<h1>Older tests</h1>"
@@ -142,7 +170,6 @@ DOH
 DOH
 }
 
-
 outecho() {
 	TYPE=$1
 	shift
@@ -150,20 +177,19 @@ outecho() {
 }
 
 out() {
-	echo $@
+        # echo $@
 	TYPE=$1
 	if [ "$TYPE" == "test" ]; then
-	
+
 		NAME=$2
 		SEQ=$3
 		CMD=$4
 		RES=$5
-		LOG=$6
-		
+
 		if [ "$FIRSTTEST" == "1" ]; then
 			html "<h1>Test results</h1>"
-			html "<a name=\"tests\">"
-			html "<a href=\"$OUTBASE\">Output log from tests</a>"
+                        a_name "tests"
+			a_href "tests.log" "Output log from tests"
 			html "<table border=\"0\">"
 			FIRSTTEST=0
 		else
@@ -171,12 +197,12 @@ out() {
 				html "</tr></table></tr>"
 			fi
 		fi
-		
+
 		if [ "$TESTPART" != "" ]; then
 			html "<tr class=\"part\"><th colspan=\"2\">$TESTPART</th></tr>"
 			TESTPART=
 		fi
-		
+
 		if [ "$FLUSH" == "1" ]; then
 			html "<tr class=\"testline\"><th align=\"right\">$NAME: </th><td><table border=\"0\"><tr>"
 		fi
@@ -187,47 +213,50 @@ out() {
 		fi
 		if [ "$RES" == "Passed" ]; then
 			html "<td class=\"success\" $WIDTH title=\"$CMD\">"
-			html "<a href=\"$LOG\">$SEQ</a>"
+			html "<a href=\"$TLOG\">$SEQ</a>"
 		else
+                        echo "FAILED"
+                        cat $TLOG < /dev/null
 			html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
-			html "<a href=\"$LOG\">$SEQ</a>"
+			html "<a href=\"$TLOG\">$SEQ</a>"
 		fi
 		html "</td>"
-		
+
 	elif [ "$TYPE" == "package" ]; then
 		BINPACKAGE=$2
 	else
 		html $@
 	fi
-	
 }
 
 aexec() {
-	echo Executing "$@" >>$OUT
-	rm -f $OUTDIR/x73010test.log
+        declare -p PWD
+	echo "Executing: $@" >>$LOG
+	rm -fv $OUTPUT
 	LASTCMD="$@"
-	"$@" >$OUTDIR/x73010test.log 2>&1
+	"$@" > $OUTPUT 2>&1
+        head $OUTPUT
 	EXITCODE=$?
 	if [ "$EXITCODE" == "127" ]; then
-		echo "Command not found: $@" >$OUTDIR/x73010test.log
+		echo "Command not found: $@" > $OUTPUT
 	fi
-	if [ -f $OUTDIR/x73010test.log ]; then
-		cat $OUTDIR/x73010test.log >>$OUT
+	if [ -f $OUTPUT ]; then
+		cat $OUTPUT >>$LOG
 	fi
-	
 }
 
+# TLOG = this (current) log
 tlog() {
 	TLOG="output_$LOGCOUNT.txt"
-	rm -f $RUNDIR/$TLOG
+	rm -fv $TLOG
 	banner "$LASTCMD" $RUNDIR/$TLOG
-	if [ -f $OUTDIR/x73010test.log ]; then
-		cat $OUTDIR/x73010test.log >>$RUNDIR/$TLOG 2>>$OUT
+	if [ -f $OUTPUT ]; then
+		cp -v $OUTPUT $RUNDIR/$TLOG 2>>$LOG
 	fi
-	TLOG="$RUNDIRBASE/$TLOG"
 	let "LOGCOUNT=$LOGCOUNT+1"
 }
 
+# Fake exec
 fexec() {
 	FLUSH=1
 	banner "$TEST (faked)"
@@ -237,18 +266,29 @@ fexec() {
 	vtest
 }
 
+stars() {
+  for i in {1..90}
+  do
+    printf "*"
+  done
+  echo
+}
+
 banner() {
 	if [ "$2" == "" ]; then
-		BOUT=$OUT
+		BOUT=$LOG
 	else
 		BOUT=$2
 	fi
-	echo "">>$BOUT
-	echo "*****************************************************************************************">>$BOUT
-	echo "* $1" >>$BOUT
-	echo "*****************************************************************************************">>$BOUT
+        {
+	  echo ""
+          # stars
+	  echo "* $1"
+	  # stars
+        } >>$BOUT
 }
 
+# Execute as part of test set
 pexec() {
 	banner "$TEST (part $SEQ)"
 	echo "Executing $TEST (part $SEQ)"
@@ -270,6 +310,7 @@ ssexec() {
 	FLUSH=0
 }
 
+# Execute final test in set
 vexec() {
 	if [ "$SEQ" == "1" ]; then
 		banner "$TEST"
@@ -291,10 +332,10 @@ ptest() {
 		RES="Failed"
 	fi
 	tlog
-	out test "$TEST" $SEQ "$LASTCMD" $RES $TLOG
+	out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
 	if [ "$EXITONFAILURE" == "true" ]; then
 		if [ "$EXITCODE" != "0" ]; then
-			exit
+			exit $EXITCODE
 		fi
 	fi
 }
@@ -307,76 +348,83 @@ vtest() {
 		RES="Failed"
 	fi
 	tlog
-	out test "$TEST" $SEQ "$LASTCMD" $RES $TLOG
+	out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
 	if [ "$EXITCODE" != "0" ]; then
 		if [ "$EXITONFAILURE" == "true" ]; then
-			exit
+			exit $EXITCODE
 		fi
 	fi
 }
 
-date > $OUT
+build_package() {
+  TEST="Package"
+  pexec cd $SWIFT_HOME/lib
+  pexec rm -f castor*.jar *gt2ft*.jar ant.jar
+  pexec cd $TOPDIR
+  vexec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
+  out package "swift-$DATE.tar.gz"
+}
+
+date > $LOG
 FLUSH=1
 
-head
+header
+cd $TOPDIR
+
 TESTPART="Part I: Build"
 EXITONFAILURE=true
-if [ "$FCO" != "1" ]; then
+if [ "$SKIP_CHECKOUT" != "1" ]; then
 	TEST="Checkout CoG"
 	pexec rm -rf cog
-	vexec svn co https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog
+        COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog"
+	vexec svn co $COG
 
 	TEST="Checkout Swift"
-	pexec rm -rf trunk
-	#vexec cvs -d :pserver:anonymous@cvs.cogkit.org:/cvs/cogkit co src/vdsk
-	vexec svn co https://svn.ci.uchicago.edu/svn/vdl2/trunk
+        pexec cd cog/modules
+	pexec rm -rf swift
+	vexec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
 fi
 
-TEST="Directory setup"
-pexec mkdir cog/modules/vdsk
-vexec cp -r trunk/* cog/modules/vdsk
-
 TEST="Compile"
-pexec cd cog/modules/vdsk
-pexec rm -rf dist
+pexec cd $TOPDIR/cog/modules/swift
+if [ $CLEAN == "1" ]; then
+  pexec rm -rf dist
+fi
 vexec ant -quiet dist
+SWIFT_HOME=$TOPDIR/cog/modules/swift/dist/swift-svn
 
-TEST="Package"
-pexec cd dist
-VDSK=`ls -d vdsk*.*`
-pexec cd $VDSK/lib
-pexec rm -f castor*.jar *gt2ft*.jar ant.jar
-pexec cd ../..
-pexec rm -rf vdsk-$DATE
-pexec mv $VDSK vdsk-$DATE
-vexec tar -pczf $OUTDIR/vdsk-$DATE.tar.gz vdsk-$DATE
-out package "vdsk-$DATE.tar.gz"
+if [ $BUILD_PACKAGE = "1" ]; then
+  build_package
+fi
 
-PATH=$PWD/vdsk-$DATE/bin:$PATH
-cd ..
-TESTDIR=$PWD/tests
-echo "Path: $PATH" >>$OUT
+PATH=$SWIFT_HOME/bin:$PATH
+cd $TOPDIR
+which swift
+TESTDIR=$TOPDIR/cog/modules/swift/tests
 cd $RUNDIR
 
-EXITONFAILURE=false
+if [ $ALWAYS_EXITONFAILURE != "1" ]; then
+    EXITONFAILURE=false
+fi
 TESTPART="Part II: Local Tests"
 
-for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
-	BN=`basename $TEST`
-	echo $BN
-	cp $TESTDIR/$BN .
-	
-	
-	TESTNAME=${BN%.dtm}
-	TESTNAME=${TESTNAME%.swift}
-	TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
-	
-	ssexec "Compile" vdlc $BN
-	for ((i=0; $i<9; i=$i+1)); do
-		pexec swift -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
-	done
-	vexec swift -sites.file ~/.vdl2/sites-local.xml $TESTNAME.kml
+for TEST in $( ls $TESTDIR/*.swift ); do # $TESTDIR/*.dtm
+  TESTNAME=$( basename $TEST)
+  echo TESTNAME: $TESTNAME $TESTDIR/$TESTNAME
+  cp -uv $TESTDIR/$TESTNAME .
+  sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
+
+  TESTLINK="<a href=\"$TESTNAME\">$TESTNAME</a>"
+
+  for ((i=0; $i<9; i=$i+1)); do
+    pexec swift -sites.file sites.xml $TESTNAME
+  done
+  vexec swift -sites.file sites.xml $TESTNAME
 done
+
+if [ $GRID_TESTS == "0" ]; then
+  exit
+fi
 
 TESTPART="Part III: Grid Tests"
 
@@ -384,11 +432,11 @@ for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
 	BN=`basename $TEST`
 	echo $BN
 	cp $TESTDIR/$BN .
-	
+
 	TESTNAME=${BN%.dtm}
 	TESTNAME=${TESTNAME%.swift}
 	TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
-	
+
 	ssexec "Compile" vdlc $BN
 	for ((i=0; $i<9; i=$i+1)); do
 		pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
@@ -397,4 +445,4 @@ for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
 done
 
 #Don't remove me:
-tail
+footer

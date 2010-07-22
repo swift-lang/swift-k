@@ -132,8 +132,8 @@ public class Java extends VDLFunction {
         catch (Exception e) { 
             e.printStackTrace(); 
             throw new RuntimeException
-            ("Error attempting to invoke: " + method.getDeclaringClass() + 
-                "." + method); 
+            ("Error attempting to invoke: " + 
+                method.getDeclaringClass() + "." + method); 
         }
         return result;
     }

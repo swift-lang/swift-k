@@ -1,13 +1,11 @@
 type file {}
 
-(file f) echo (string s) {
-    app {
+app (file f) echo (string s) {
         echo s stdout=@filename(f);
-    }
 }
 
 (file fa[]) echo_batch (string sa[]) {
-    foreach string s, i in sa {
+    foreach s, i in sa {
         fa[i] = echo(s);
     }
 }
