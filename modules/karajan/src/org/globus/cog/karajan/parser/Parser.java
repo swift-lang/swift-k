@@ -9,6 +9,21 @@
  */
 package org.globus.cog.karajan.parser;
 
+/**
+ * A parser for the .k language which uses a PEG.
+ * 
+ * The essence of it is that the parser is an interpreter similar to
+ * Prolog with some stack manipulation features from FORTH.
+ * 
+ * A grammar rule is equivalent to the definition of predicate. The
+ * typical usage is that there are a few matching sub-predicates (which
+ * push parsed tokens unto the stack) followed by some non-pure stack 
+ * manipulation predicates which transform the values on the stack into
+ * a parse-tree.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class Parser {
 	private static final String GRAMMAR = "karajan-expression.gr";
 	private static final String MAPPING = "karajan-expression.map";
