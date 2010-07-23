@@ -16,6 +16,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * A stack frame implementation which uses a {@link ListMap} implementation
+ * if less that 4 variables are stored and transparently switches to
+ * a {@link HashMap} implementation otherwise.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public final class DefaultStackFrame implements StackFrame {
 	private static final long serialVersionUID = 5576647919365350913L;
 

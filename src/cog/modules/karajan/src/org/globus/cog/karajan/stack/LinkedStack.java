@@ -16,6 +16,7 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.events.EventListener;
 
+
 public final class LinkedStack implements VariableStack {
 	private static final Logger logger = Logger.getLogger(LinkedStack.class);
 

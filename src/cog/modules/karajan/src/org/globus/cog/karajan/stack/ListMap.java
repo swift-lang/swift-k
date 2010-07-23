@@ -16,6 +16,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * An implementation of {@link java.util.Map} backed by an array 
+ * with sequential access and a fixed size of 4 entries. It has a 
+ * smaller memory consumption than {@link java.util.HashMap}, but 
+ * O(n) put/lookup time. 
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public final class ListMap implements Map {
 	private final Map.Entry[] map;
 	private int next;
