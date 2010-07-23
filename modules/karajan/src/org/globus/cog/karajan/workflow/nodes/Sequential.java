@@ -51,8 +51,7 @@ public class Sequential extends FlowContainer {
 			post(stack);
 			return;
 		}
-		int index = getIndex(stack);
-		preIncIndex(stack);
+		int index = preIncIndex(stack) - 1;
 		if (FlowNode.debug) {
 			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 		}
