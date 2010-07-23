@@ -12,10 +12,19 @@ package org.globus.cog.karajan.scheduler.submitQueue;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.util.KarajanProperties;
 
+/**
+ * A submit queue which enforces a global throttle on the number
+ * of tasks being submitted. This is generally the first queue in the
+ * set of submit queues and is shared across all scheduler instances
+ * which generally honor throttling parameters.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class GlobalSubmitQueue extends AbstractSubmitQueue {
 	public static final Logger logger = Logger.getLogger(GlobalSubmitQueue.class);
 
-	public static final int DEFAULT_GLOBAL_SUBMIT_THROTTLE = 100;
+	public static final int DEFAULT_GLOBAL_SUBMIT_THROTTLE = 1024;
 
 	private static GlobalSubmitQueue queue;
 
