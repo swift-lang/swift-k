@@ -20,6 +20,20 @@ import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.FlowNode;
 
+/**
+ * <p>Utility class to handle function definitions. It uses 
+ * {@link DefList definition lists} to hold relevant information.</p>
+ * 
+ * <p>When a definition is added a {@link DefList definition list}
+ * is added to the current stack frame (if not already present) and
+ * linked to the closest list in the stack.</p>
+ * <p>Each element name has a definition list in a given stack frame
+ * and each different namespace for a name is associated with a 
+ * different entry in the same definition list.<p>
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class DefUtil {
 	public static final Logger logger = Logger.getLogger(DefUtil.class);
 	public static final String ENV_CACHE = "##envcache";

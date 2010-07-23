@@ -11,6 +11,16 @@ package org.globus.cog.karajan.util;
 
 import org.globus.cog.karajan.stack.VariableStack;
 
+/**
+ * The <code>DefinitionEnvironment</code> holds information about
+ * the context in which a function/element was defined so that
+ * definition lookups are lexical rather than dynamic. In a sense
+ * this is similar to closures but limited to function definitions
+ * rather than variables in general.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class DefinitionEnvironment {
 	private VariableStack stack;
 	private DefinitionEnvironment prev;

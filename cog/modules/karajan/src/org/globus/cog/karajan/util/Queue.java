@@ -6,6 +6,14 @@
 
 package org.globus.cog.karajan.util;
 
+/**
+ * A queue implementation which allows traversal (using a cursor)
+ * which remains valid even when elements are added or removed from
+ * the queue. The queue is implemented as a doubly-linked list.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public final class Queue {
 	private Entry head;
 	private int size;

@@ -11,6 +11,19 @@ package org.globus.cog.karajan.util;
 
 import java.util.ArrayList;
 
+/**
+ * <p>An implementation of a {@link java.util.List} that tracks
+ * typical required capacities and initializes new instances
+ * with average sizes inferred from historical information.</p>
+ * 
+ * <p>The constructor allows initialization with different contexts,
+ * each of which represents a different set of historical 
+ * information</p>
+ *  
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class AdaptiveArrayList extends ArrayList {
 	private final Context context;
 	

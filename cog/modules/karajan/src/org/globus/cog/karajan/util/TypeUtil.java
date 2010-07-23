@@ -26,6 +26,15 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
+/**
+ * A set of type conversion classes used by the implicit
+ * type conversion system in Karajan. They should be used
+ * by Java implementations of elements whenever a certain
+ * type is desired.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class TypeUtil {
 
 	public static double toDouble(final Object obj) {
