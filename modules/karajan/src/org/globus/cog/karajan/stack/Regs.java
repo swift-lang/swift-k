@@ -11,6 +11,14 @@ package org.globus.cog.karajan.stack;
 
 import org.globus.cog.karajan.workflow.events.EventListener;
 
+/**
+ * A class to hold commonly used variables on a stack frame.
+ * This is used in order to avoid {@link java.util.HashMap}
+ * lookups for such frequently used variables.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public final class Regs {
 	public static final int BA = 0x00000001;
 	public static final int BB = 0x00000002;
