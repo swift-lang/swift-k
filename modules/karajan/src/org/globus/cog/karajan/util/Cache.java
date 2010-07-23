@@ -14,11 +14,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
-/*
- * Most system defined elements are not cached (they are considered to be
- * relatively fast). User defined elements are cached. Functions that have both
- * arguments and return value as primitive types are cached using a combination
- * of MRU and MFU. Elements that accept variable arguments should not be cached
+/**
+ * This is a simple/generic cache used by:
+ * <ul>
+ *  <li>{@link org.globus.cog.karajan.workflow.nodes.CacheNode}, which is the implementation of sys:cache</li>
+ *  <li>{@link org.globus.cog.karajan.workflow.nodes.Once}</li>
+ * </ul>
  */
 public class Cache implements Serializable {
 	private static final long serialVersionUID = -8944421098726077701L;

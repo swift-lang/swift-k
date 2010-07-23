@@ -9,6 +9,14 @@
  */
 package org.globus.cog.karajan.util;
 
+/**
+ * This class implements a token representing a contact
+ * (i.e. remote host). However, it provides no concrete
+ * information about such a host. It is mostly used as
+ * a "virtual" contact that is to be bound later to a 
+ * concrete site.
+ * 
+ */
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 
 public abstract class Contact {

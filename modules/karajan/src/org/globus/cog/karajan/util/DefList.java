@@ -14,6 +14,16 @@ import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+/**
+ * <p>A definition list holds pointers to the definition(s) of
+ * functions in different namespaces and different call
+ * depths.</p>
+ * 
+ * <p>The actual definition management is done in {@link DefUtil}</p>
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class DefList {
 	private final DefList prev;
 	private final String name;

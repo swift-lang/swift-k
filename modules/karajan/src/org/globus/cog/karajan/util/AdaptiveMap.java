@@ -15,6 +15,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+
+/**
+ * <p>An implementation of a {@link java.util.Map} that tracks
+ * typical required capacities and initializes new instances
+ * with average sizes inferred from historical information.</p>
+ * 
+ * <p>The constructor allows initialization with different contexts,
+ * each of which represents a different set of historical 
+ * information</p>
+ *  
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class AdaptiveMap implements Map {
 	private final Context context;
 	private Map map;
