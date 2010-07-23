@@ -24,6 +24,22 @@ import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
+/**
+ * <p>Lightweight threading in Karajan is implemented using events.
+ * The major events are {@link ControlEvent control events}, which are
+ * sent to elements in order to command a certain execution behavior, and 
+ * {@link NotificationEvent notification events} which are used to
+ * report on the status of the execution of elements.</p>
+ * 
+ * <p>Events are sent to element using an event bus, which in turn uses
+ * a fixed number of worker threads to do the actual dispatch. This is 
+ * needed since most elements do their actual work as part of the event
+ * handling code. As such, the <code>EventBus</code> can be seen
+ * as a form of {@link java.util.concurrent.ExecutorService}.<p>
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public final class EventBus {
 	public static final Logger logger = Logger.getLogger(EventBus.class);
 
@@ -71,6 +87,10 @@ public final class EventBus {
 		sbq.clear();
 	}
 
+	/**
+	 * Post an event to the bus. The event will be placed in a queue
+	 * and delivered in FIFO order using available worker threads.
+	 */
 	public static void post(EventListener target, Event event) {
 		eventCount++;
 		bus._post(target, event);
@@ -83,10 +103,20 @@ public final class EventBus {
 	public synchronized static void initialize() {
 	}
 
+	/**
+	 * Halts the dispatching of events. This is used to suspend the
+	 * execution of a script. However, it is not sufficient to call
+	 * this method, since some things may be running without sending
+	 * or responding to events (for example a remote job).
+	 */
 	public static void suspendAll() {
 		bus._suspendAll();
 	}
 
+	/**
+	 * Resumes dispatching of events if previously stopped using
+	 * {@link suspendAll}.
+	 */
 	public static void resumeAll() {
 		bus._resumeAll();
 	}
@@ -103,6 +133,10 @@ public final class EventBus {
 		EventBus.hook = null;
 	}
 
+	/**
+	 * Send an event directly to the destination while also passing it
+	 * through the hook if one is defined.
+	 */
 	public static void sendHooked(final EventListener l, final Event e) {
 		if (hook == null) {
 			send(l, e);
@@ -125,6 +159,10 @@ public final class EventBus {
 		}
 	}
 
+	/**
+	 * Directly send an event to a destination. Typically the worker threads
+	 * would use this method rather than it being used directly.
+	 */
 	public static void send(final EventListener l, final Event event) {
 		try {
 			if (TRACE_EVENTS) {
@@ -200,6 +238,11 @@ public final class EventBus {
 		fe.failImmediately(stack, message);
 	}
 
+	/**
+	 * Wait until all (atomic) executing elements have finished execution.
+	 * In other words, wait until the state of the execution of a script
+	 * is properly suspended. 
+	 */
 	public static boolean waitForEvents() {
 		boolean busy = true;
 		int count = 0;
