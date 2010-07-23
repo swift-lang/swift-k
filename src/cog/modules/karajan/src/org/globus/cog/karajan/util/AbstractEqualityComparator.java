@@ -13,6 +13,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A class implementing deep comparison operation for lists and maps.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public abstract class AbstractEqualityComparator implements EqualityComparator {
 
 	public boolean equals(Object o1, Object o2) {

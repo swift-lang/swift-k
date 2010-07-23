@@ -18,6 +18,14 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
+/**
+ * This class sub-classes {@link Contact} and adds concrete
+ * contact information, such as a {@link #getHost host} and
+ * a set of {@link #getServices services}.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class BoundContact extends Contact {
 	private Map services;
 
