@@ -198,23 +198,13 @@ public class ExecutionContext implements EventListener {
 		}
 		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
 			failed(e);
-			setDone();
 		}
 		else if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
 			completed(e);
-			setDone();
 		}
 	}
 
 	protected void failed(NotificationEvent e) {
-		synchronized(this) {
-			if (failed) {
-				return;
-			}
-			else {
-				failed = true;
-			}
-		}
 		if (dumpState) {
 			try {
 				DateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
@@ -233,6 +223,15 @@ public class ExecutionContext implements EventListener {
 		}
 		stateManager.stop();
 		fireNotificationEvent(new NotificationEvent(null, NotificationEventType.EXECUTION_FAILED, null), null);
+		synchronized(this) {
+			if (failed) {
+				return;
+			}
+			else {
+				failed = true;
+			}
+			setDone();
+		}
 	}
 	
 	protected void printFailure(FailureNotificationEvent e) {
@@ -243,6 +242,7 @@ public class ExecutionContext implements EventListener {
 
 	protected void completed(NotificationEvent e) {
 		stateManager.stop();
+		setDone();
 		fireNotificationEvent(new NotificationEvent(null, NotificationEventType.EXECUTION_COMPLETED, null), null);
 	}
 
