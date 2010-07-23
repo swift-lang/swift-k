@@ -429,6 +429,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		if (taskType == Task.JOB_SUBMISSION) {
 			htype = TaskHandler.EXECUTION;
 		}
+		else if (taskType == 0) {
+		    htype = TaskHandler.EXECUTION;
+		}
 		else {
 			htype = TaskHandler.FILE_OPERATION;
 		}
@@ -505,8 +508,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		synchronized (this) {
 			taskContacts.put(t, contacts);
 		    handlers.put(t, handler);
-			NonBlockingSubmit nbs = new NonBlockingSubmit(handler, t, queues);
-			nbs.go();
+		}
+		NonBlockingSubmit nbs = new NonBlockingSubmit(handler, t, queues);
+		nbs.go();
+		synchronized(this) {
 			incRunning();
 			if (t.getType() == Task.FILE_OPERATION) {
 				currentFileOperations++;
