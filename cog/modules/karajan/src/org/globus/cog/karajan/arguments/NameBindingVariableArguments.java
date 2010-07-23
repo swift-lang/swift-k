@@ -14,6 +14,14 @@ import java.util.List;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
+/**
+ * An implementation of a channel that binds values to a set of NamedArguments
+ * based on a list of names. This is done in order to allow access
+ * to arguments by name while supplying them in a positional fashion.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class NameBindingVariableArguments extends VariableArgumentsImpl {
 	private final NamedArguments named;
 	private final String[] names;

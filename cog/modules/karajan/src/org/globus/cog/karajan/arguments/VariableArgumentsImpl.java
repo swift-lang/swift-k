@@ -22,6 +22,12 @@ import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.ListKarajanIterator;
 import org.globus.cog.karajan.util.TypeUtil;
 
+/**
+ * Basic implementation of a synchronous channel.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class VariableArgumentsImpl implements VariableArguments {
 	public static final Object[] EMPTY_ARRAY = new Object[0];
 
