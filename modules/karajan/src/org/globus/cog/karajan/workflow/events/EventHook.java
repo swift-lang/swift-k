@@ -12,6 +12,14 @@ package org.globus.cog.karajan.workflow.events;
 
 import org.globus.cog.karajan.workflow.ExecutionException;
 
+/**
+ * Event hooks can be added to the {@link EventBus} in order to intercept
+ * various events. This can be used to implement monitoring tools, profiling
+ * tools, etc.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public interface EventHook {
 	void event(EventListener element, Event e) throws ExecutionException;
 }
