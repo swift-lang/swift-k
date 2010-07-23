@@ -17,6 +17,14 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
+/**
+ * Base class for arguments to a function. Java implementations of 
+ * functions/elements must use one of the sub-classes of this class
+ * to build their signatures.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public abstract class Arg {
 	public static final int NOINDEX = -1;
 	public static final int CHANNEL = -2;
@@ -88,6 +96,11 @@ public abstract class Arg {
 		}
 	}
 
+	/**
+	 * Allows retrieval of a static argument value. This would typically
+	 * be specified in an XML script using attributes, but can also
+	 * be introduced in the parse tree by the .k parser. 
+	 */
 	public Object getStatic(FlowElement node) {
 		return node.getStaticArguments().get(name);
 	}
@@ -118,6 +131,16 @@ public abstract class Arg {
 		return name;
 	}
 
+	/**
+	 * Represents a positional argument for a function/element. A
+	 * positional argument has a name and an index. It is not necessary
+	 * to explicitly specify an index, since the interpreter figures that
+	 * out based on the order in which positional arguments are added
+	 * to a signature.
+	 * 
+	 * @author Mihael Hategan
+	 *
+	 */
 	public static final class Positional extends Arg {
 		public Positional(String name, int index) {
 			super(name, index);
@@ -143,6 +166,13 @@ public abstract class Arg {
 		}
 	}
 
+	/**
+	 * A positional argument with the addition that type checking is 
+	 * performed when getValue() is called.
+	 * 
+	 * @author Mihael Hategan
+	 *
+	 */
 	public static final class TypedPositional extends Arg {
 		private final Class cls;
 		private final String type;
@@ -189,6 +219,14 @@ public abstract class Arg {
 		}
 	}
 
+	/**
+	 * Represents an optional argument. An optional argument has a name and 
+	 * an optional default value. The getValue method will either return the
+	 * supplied value if present or the default value.
+	 * 
+	 * @author Mihael Hategan
+	 *
+	 */
 	public static final class Optional extends Arg {
 		private final Object defaultValue;
 
@@ -216,6 +254,19 @@ public abstract class Arg {
 		}
 	}
 
+	/**
+	 * Represents a channel argument. A channel argument can hold multiple values
+	 * and special functions (such as channel:to) may be required to return values
+	 * on a specific channel.
+	 * 
+	 * Channels can be commutative. A commutative channel is a channel for which 
+	 * the lack of order in the values does not induce nondeterminism. For example,
+	 * sum(1, 2, 3) is equivalent to sum(3, 2, 1) (or any other permutation of the values).
+	 * In such cases the interpreter can make certain optimizations.
+	 * 
+	 * @author Mihael Hategan
+	 *
+	 */
 	public static class Channel extends Arg {
 		private transient String variableName;
 		private final transient boolean commutative; 
@@ -345,7 +396,6 @@ public abstract class Arg {
 		public String getVariableName() {
 			return "#vargs";
 		}
-
 	}
 
 	public static final Vargs VARGS = new Vargs();
