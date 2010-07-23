@@ -13,6 +13,13 @@ import java.util.Map;
 
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
+/**
+ * An implementation of named arguments which can be used to keep a copy
+ * of the argument values. This is mainly used for caching.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class TrackingNamedArguments extends NamedArgumentsImpl {
 	private final NamedArguments target;
 

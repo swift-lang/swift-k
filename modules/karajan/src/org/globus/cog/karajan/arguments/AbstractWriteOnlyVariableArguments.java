@@ -12,6 +12,15 @@ package org.globus.cog.karajan.arguments;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This is an abstract sink channel. Channel sinks (such as the stdout and stderr
+ * channels) are derived from this class. It implements some bulk operations
+ * such as appendAll and merge and throws UnsupportedOperationException for 
+ * read operations.  
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public abstract class AbstractWriteOnlyVariableArguments implements VariableArguments {
 	private static final String WRO = ": write only channel";
 

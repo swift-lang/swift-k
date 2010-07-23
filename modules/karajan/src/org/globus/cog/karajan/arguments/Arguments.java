@@ -16,6 +16,14 @@ import java.util.Map;
 
 import org.globus.cog.karajan.arguments.Arg.Channel;
 
+/**
+ * A class holding a set of function arguments. In essence, a function signature.
+ * The arguments are divided into named and channels. The named arguments represent
+ * both the positional and optional arguments. 
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class Arguments {
 	private Object type;
 	private NamedArguments named;

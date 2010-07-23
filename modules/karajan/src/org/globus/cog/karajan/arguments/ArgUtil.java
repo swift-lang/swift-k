@@ -22,6 +22,13 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
+/**
+ * Utility class to deal with various aspects of argument manipulation
+ * on the stack.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public final class ArgUtil {
 	private final static Logger logger = Logger.getLogger(ArgUtil.class);
 
@@ -89,6 +96,13 @@ public final class ArgUtil {
 		return stack.isDefined(channel.getVariableName());
 	}
 
+	/**
+     * Creates a channel on the current frame and adds it to the
+     * list of currently defined channels.
+     * 
+     * The list of currently defined channels is kept on a deep variable
+     * named "#channels". 
+     */
 	public static void createChannel(VariableStack stack, Arg.Channel channel,
 			VariableArguments data) {
 		createChannelNL(stack, channel, data);
@@ -182,6 +196,19 @@ public final class ArgUtil {
 		return stack.currentFrame().isDefined(NARGS);
 	}
 
+	/**
+	 * Channel buffers are used when writing to a non-commutative channel 
+	 * in parallel. The semantics are such that lexical order is preserved.
+	 * In other words, list(parallel(1, 2)) will always produce [1, 2]. 
+	 * The buffers are used to store values until it is determined exactly what
+	 * all the previous (lexically) values are, at which point the buffer is 
+	 * committed to the channel.
+	 * 
+	 * In the above example, if "2" is produced first, it is stored in a buffer
+	 * until "1" is also produced. "1" is then committed to the channel after
+	 * which "2" is. The closeBuffers() method below is used to notify a buffer
+	 * when it is known that no more values will be added to it. 
+	 */
 	public static void initializeChannelBuffers(VariableStack stack) throws ExecutionException {
 		Set channels = ArgUtil.getDefinedChannels(stack);
 		ArrayList pairs = new ArrayList();

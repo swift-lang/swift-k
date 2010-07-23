@@ -14,6 +14,13 @@ import java.util.List;
 
 import org.globus.cog.karajan.stack.StackFrame;
 
+/**
+ * This class represents a set of chains of channel buffers. There
+ * is one chain for each non-commutative channel.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public final class ParallelChannelBuffer {
 	private final List dest;
 
@@ -21,6 +28,10 @@ public final class ParallelChannelBuffer {
 		this.dest = dest;
 	}
 
+	/**
+	 * Add a buffer for each channel to the supplied stack frame and linked
+	 * it with the previous buffer in each chain.  
+	 */
 	public void add(StackFrame frame) {
 		Iterator i = dest.iterator();
 		while (i.hasNext()) {
@@ -32,6 +43,9 @@ public final class ParallelChannelBuffer {
 		}
 	}
 
+	/**
+	 * Closes all buffers, which commits their values to the destination channels. 
+	 */
 	public void close(StackFrame frame) {
 		Iterator i = dest.iterator();
 		while (i.hasNext()) {
