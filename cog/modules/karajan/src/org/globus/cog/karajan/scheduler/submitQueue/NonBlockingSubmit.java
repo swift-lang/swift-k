@@ -19,11 +19,20 @@ import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
 import edu.emory.mathcs.backport.java.util.concurrent.Executors;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
 
+/**
+ * A class that makes <code>submit()</code> calls asynchronous. This is
+ * required because, while the task submit calls are theoretically short,
+ * they may in practice take arbitrarily large amounts of time, which may
+ * otherwise block the scheduler thread.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class NonBlockingSubmit implements Runnable {
 	private static final Logger logger = Logger.getLogger(NonBlockingSubmit.class);
 
 	private static ExecutorService pool = Executors.newCachedThreadPool(new DaemonThreadFactory(
-			Executors.defaultThreadFactory()));
+					Executors.defaultThreadFactory()));
 
 	private final TaskHandler taskHandler;
 	private final Task task;
@@ -112,6 +121,7 @@ public class NonBlockingSubmit implements Runnable {
 
 	static class DaemonThreadFactory implements ThreadFactory {
 		private ThreadFactory delegate;
+		private int id;
 
 		public DaemonThreadFactory(ThreadFactory delegate) {
 			this.delegate = delegate;
@@ -119,9 +129,9 @@ public class NonBlockingSubmit implements Runnable {
 
 		public Thread newThread(Runnable r) {
 			Thread t = delegate.newThread(r);
+			t.setName("NBS" + (id++));
 			t.setDaemon(true);
 			return t;
 		}
-
 	}
 }

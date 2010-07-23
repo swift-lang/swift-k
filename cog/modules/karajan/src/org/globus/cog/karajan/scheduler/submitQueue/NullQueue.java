@@ -9,6 +9,12 @@
  */
 package org.globus.cog.karajan.scheduler.submitQueue;
 
+/**
+ * A queue that simply forwards to the next queue.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class NullQueue implements SubmitQueue {
 	public void queue(NonBlockingSubmit nbs) {
 		nbs.nextQueue();

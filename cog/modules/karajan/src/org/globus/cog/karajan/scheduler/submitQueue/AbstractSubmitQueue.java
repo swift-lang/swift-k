@@ -12,6 +12,20 @@ package org.globus.cog.karajan.scheduler.submitQueue;
 import edu.emory.mathcs.backport.java.util.Queue;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * Base class for submit queues. It uses a generic throttle value.
+ * Progress through the queues is triggered using the {@link step()} method
+ * which can either be called during the initial submission or when
+ * a task completes (which are the only possible cases when something
+ * needs to happen within a queue). The {@link step()} method keeps track of 
+ * the number of active tasks and, when called, and when the number 
+ * of active tasks is below the throttle value, the first task in the
+ * queue is forwarded to the next queue. If there is no next queue, the
+ * task is submitted.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class AbstractSubmitQueue implements SubmitQueue {
 	private Queue queue;
 	private int active;
