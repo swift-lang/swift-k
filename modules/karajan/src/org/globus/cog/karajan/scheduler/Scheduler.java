@@ -24,7 +24,7 @@ public interface Scheduler {
 	 *            be scheduler. While the semantics of the constraints are left
 	 *            to the implementation, such an implementation should be able
 	 *            to handle at least constraints of the type Contact.
-	 * @see org.globus.karajan.util.Contact
+	 * @see org.globus.cog.karajan.util.Contact
 	 */
 	void enqueue(Task task, Object constraints);
 
