@@ -14,6 +14,25 @@ import java.util.Map;
 
 import org.globus.cog.karajan.util.BoundContact;
 
+/**
+ * <p>A queue which enforces a host-dependent throttle.</p>
+ * 
+ * <p>In addition, it adds a method ({@link #getProviderQueue}) used to create
+ * and instance of (host, provider) dependent throttling. This provider queue 
+ * is generally used to provide submission rate limits as follows:</p>  
+ * <ul>
+ *  <li>A {@link RateLimiterQueue} is used for SSH, since the OpenSSH server 
+ *  is by default configured to start denying connections if the connections
+ *  rate exceeds a certain value.</li>
+ *  <li>If a host ({@link BoundContact}) has an attribute named 
+ *  <code>maxSubmitRate</code>, a {@link FixedRateQueue} is used.</li>
+ *  <li>In all other cases a {@link NullQueue} is used</li>
+ * </ul> 
+ * 
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class HostSubmitQueue extends AbstractSubmitQueue {
 	private Map providerQueues;
 	private BoundContact contact;
