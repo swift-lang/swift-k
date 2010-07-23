@@ -18,6 +18,16 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.karajan.util.BoundContact;
 
+/**
+ * An implementation of an adaptive rate queue. The rate is decreased
+ * as long as a certain condition occurs (typically the task fails 
+ * with a specific error). Failed tasks that match the rate decrease
+ * condition are re-submitted up to a specific amount of times
+ * ({@link #DEFAULT_MAX_RETRIES}). 
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class RateLimiterQueue extends AbstractSubmitQueue implements StatusListener {
 	public static final Logger logger = Logger.getLogger(RateLimiterQueue.class);
 

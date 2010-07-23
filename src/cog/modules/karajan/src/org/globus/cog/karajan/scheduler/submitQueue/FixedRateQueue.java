@@ -14,6 +14,13 @@ import java.util.TimerTask;
 
 import org.globus.cog.abstraction.interfaces.Task;
 
+/**
+ * A submit queue which enforces a minimum time delay between
+ * subsequent tasks. 
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class FixedRateQueue extends AbstractSubmitQueue {
 	private long lastSubmit, delay;
 	private static Timer timer;

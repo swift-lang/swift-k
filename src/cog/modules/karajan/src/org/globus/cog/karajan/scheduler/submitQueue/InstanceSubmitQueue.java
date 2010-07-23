@@ -14,6 +14,14 @@ import java.util.Map;
 
 import org.globus.cog.karajan.util.BoundContact;
 
+/**
+ * A plain throttling queue. Each scheduler instance should have one
+ * instance of this queue, typically chained after the global submit
+ * queue and before host submit queues.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class InstanceSubmitQueue extends AbstractSubmitQueue {
 	private Map queues;
 	private int hostThrottle = 8;
