@@ -29,16 +29,20 @@ public class IsLogged extends VDLFunction {
 		else {
 			path = Path.parse(TypeUtil.toString(p));
 		}
-		path = var.getPathFromRoot().append(path);
-		LogEntry entry = LogEntry.build(var.getRoot().getParam("swift#restartid") + "." + path.stringForm());
-		Map map = getLogData(stack);
-		boolean found = false;
-		synchronized (map) {
-			List files = (List) map.get(entry);
-			if (files != null && !files.isEmpty()) {
-				found = true;
-			}
-		}
-		return Boolean.valueOf(found);
+		return Boolean.valueOf(isLogged(stack, var, path));
+	}
+	
+	public static boolean isLogged(VariableStack stack, DSHandle var, Path path) throws ExecutionException {
+	    path = var.getPathFromRoot().append(path);
+        LogEntry entry = LogEntry.build(var.getRoot().getParam("swift#restartid") + "." + path.stringForm());
+        Map map = getLogData(stack);
+        boolean found = false;
+        synchronized (map) {
+            List files = (List) map.get(entry);
+            if (files != null && !files.isEmpty()) {
+                found = true;
+            }
+        }
+        return found;
 	}
 }
