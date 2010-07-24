@@ -21,6 +21,9 @@ public class ArrayFileMapper extends AbstractMapper {
 	public Collection existing() {
 		List l = new ArrayList();
 		DSHandle dn = (DSHandle) PARAM_FILES.getRawValue(this);
+		if (dn == null) {
+		    throw new RuntimeException("Missing 'files' mapper attribute");
+		}
 		Map m = dn.getArrayValue();
 		Set s = m.keySet();
 		Iterator i = s.iterator();
@@ -32,7 +35,6 @@ public class ArrayFileMapper extends AbstractMapper {
 	}
 
 	public PhysicalFormat map(Path path) {
-
 		if (path.isEmpty()) {
 			throw new IllegalArgumentException("Path cannot be empty");
 		}
