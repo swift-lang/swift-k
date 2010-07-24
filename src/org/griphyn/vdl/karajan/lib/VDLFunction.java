@@ -371,7 +371,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected Map getLogData(VariableStack stack) throws ExecutionException {
+	protected static Map getLogData(VariableStack stack) throws ExecutionException {
 		try {
 			return (Map) stack.getDeepVar(RestartLog.LOG_DATA);
 		}
