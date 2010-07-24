@@ -15,7 +15,7 @@ namespace("vdl"
 	export(
 		element(rmdir, [dir, host]
 			parallelFor(entry, file:list(dir, host=host)
-				epath := concat(dir, "/", entry)
+				epath := "{dir}/{entry}"
 				if(
 					file:isDirectory(epath, host=host) rmdir(epath, host)
 					file:remove(epath, host=host)
@@ -30,35 +30,7 @@ namespace("vdl"
 
 			dir:make(dc, host=host)
 		)
-							
-		element(isDone, [stageout]
-			sys:and(
-				for(pv, stageout
-					[path, var] := each(pv)
-					vdl:isLogged(var, path)
-				)
-				sys:not(isEmpty(stageout))
-			)
-		)
-			
-		element(mark, [restarts, err, optional(mapping)]
-			if(
-				err for(pv, restarts
-					[path, var] := each(pv)
-					vdl:setFutureFault(var, path=path, mapping=mapping)
-				)
-			)
-		)
 		
-		element(flatten, [...]
-			if (
-				isEmpty(...) ""
-				
-				concat(
-					for(i, butLast(...), if(isList(i) flatten(i) i), "|") last(...)
-				)
-			)
-		)
 		
 		element(checkJobStatus, [rhost, wfdir, jobid, tr, jobdir]
 			log(LOG:DEBUG, "START jobid={jobid}")
@@ -135,37 +107,11 @@ namespace("vdl"
 			)
 			ddir
 		)
-		
-		element(inFileDirs, [stageins]
-			for(file, stageins
-		 		reldirname(file)
-			)
-		)
-		
-		element(outFileDirs, [stageouts] 
-			for(pv, stageouts
-				[path, var] := each(pv)
-			
-				file := vdl:filename(vdl:getfield(var, path = path))
 				
-				vdl:dirname(file)
-			)
-		)
-		
 		element(inFiles, [stageins]
 			pathnames(stageins)
 		)
-		
-		element(outFiles, [stageouts]
-			for(pv, stageouts
-				[path, var] := each(pv)
-			
-				file := vdl:filename(vdl:getfield(var, path = path))
 				
-				file
-			)
-		)
-		
 		element(fileDirs, [stageins, stageouts]
 			list(
 				unique(
@@ -361,13 +307,6 @@ namespace("vdl"
 			)
 			log(LOG:INFO, "END jobid={jobid} - Staging out finished")
 		)
-
-		element(doRestartlog, [restartouts]
-			uParallelFor(f, restartouts,
-				[path, var] := each(f)
-				vdl:logvar(var, path)
-			)
-		)
 		
 		element(graphStuff, [tr, stagein, stageout, err, optional(args)]
 			if(
@@ -428,7 +367,7 @@ namespace("vdl"
 		
 		element(transferKickstartRec, [rhost, wfdir, jobid, jobdir]
 			recfile := "{jobid}-kickstart.xml"
-			srcdir := dircat(concat(wfdir, "/kickstart/"), jobdir)
+			srcdir := dircat("{wfdir}/kickstart/", jobdir)
 			try(
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
@@ -441,7 +380,7 @@ namespace("vdl"
 
 		element(transferWrapperLog, [rhost, wfdir, jobid, jobdir]
 			recfile := "{jobid}-info"
-			srcdir := dircat(concat(wfdir, "/info/"), jobdir)
+			srcdir := dircat("{wfdir}/info/", jobdir)
 			try(
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
@@ -467,7 +406,7 @@ namespace("vdl"
 				
 				uid := uid()
 				jobdir := substring(uid, from=0, to=1)
-				jobid := concat(tr, "-", uid)
+				jobid := "{tr}-{uid}"
 				
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
 
@@ -503,7 +442,7 @@ namespace("vdl"
 				)
 
 				vdl:setprogress("Stage in")
-				tmpdir := dircat(concat(wfdir, "/jobs/", jobdir), jobid)
+				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 				
 				
 				

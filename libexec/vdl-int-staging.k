@@ -13,35 +13,6 @@ global(LOG:FATAL, "fatal")
 
 namespace("vdl"
 	export(
-		element(isDone, [stageout]
-			sys:and(
-				for(pv, stageout
-					[path, var] := each(pv)
-					vdl:isLogged(var, path)
-				)
-				sys:not(isEmpty(stageout))
-			)
-		)
-			
-		element(mark, [restarts, err, optional(mapping)]
-			if(
-				err for(pv, restarts
-					[path, var] := each(pv)
-					vdl:setFutureFault(var, path=path, mapping=mapping)
-				)
-			)
-		)
-		
-		element(flatten, [...]
-			if (
-				isEmpty(...) ""
-				
-				concat(
-					for(i, butLast(...), if(isList(i) flatten(i) i), "|") last(...)
-				)
-			)
-		)		
-				
 		element(initDDir, []
 			ddir := "{VDL:SCRIPTNAME}-{VDL:RUNID}.d"
 			once(ddir
@@ -52,35 +23,8 @@ namespace("vdl"
 			ddir
 		)
 		
-		element(inFileDirs, [stageins]
-			for(file, stageins
-		 		reldirname(file)
-			)
-		)
-		
-		element(outFileDirs, [stageouts] 
-			for(pv, stageouts
-				[path, var] := each(pv)
-			
-				file := vdl:filename(vdl:getfield(var, path = path))
-				
-				vdl:dirname(file)
-			)
-		)
-		
 		element(inFiles, [stageins]
 			pathnames(stageins)
-		)
-		
-		
-		element(outFiles, [stageouts]
-			for(pv, stageouts
-				[path, var] := each(pv)
-			
-				file := vdl:filename(vdl:getfield(var, path = path))
-				
-				file
-			)
 		)
 		
 		element(fileDirs, [stageins, stageouts]
@@ -89,13 +33,6 @@ namespace("vdl"
 					inFileDirs(stageins)
 					outFileDirs(stageouts)
 				)
-			)
-		)
-
-		element(doRestartlog, [restartouts]
-			uParallelFor(f, restartouts,
-				[path, var] := each(f)
-				vdl:logvar(var, path)
 			)
 		)
 		
@@ -150,7 +87,7 @@ namespace("vdl"
 				
 				uid := uid()
 				jobdir := substring(uid, from=0, to=1)
-				jobid := concat(tr, "-", uid)
+				jobid := "{tr}-{uid}"
 				
 				fileDirs := fileDirs(stagein, stageout)
 				
@@ -164,7 +101,7 @@ namespace("vdl"
 
 				vdl:setprogress("Stage in")
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
-				tmpdir := dircat(concat(wfdir, "/jobs/", jobdir), jobid)
+				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 				
 				try(
 					sequential(
