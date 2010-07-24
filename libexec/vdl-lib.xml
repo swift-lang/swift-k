@@ -104,6 +104,13 @@
 
 	<export name="appStageins"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageins"/></export>
 	<export name="appStageouts"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageouts"/></export>
+	<export name="isDone"><elementDef classname="org.griphyn.vdl.karajan.lib.IsDone"/></export>
+	<export name="mark"><elementDef classname="org.griphyn.vdl.karajan.lib.Mark"/></export>
+	<export name="flatten"><elementDef classname="org.griphyn.vdl.karajan.lib.Flatten"/></export>
+	<export name="parameterlog"><elementDef classname="org.griphyn.vdl.karajan.lib.Parameterlog"/></export>
+	<export name="inFileDirs"><elementDef classname="org.griphyn.vdl.karajan.lib.InFileDirs"/></export>
+	<export name="outFileDirs"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFileDirs"/></export>
+	<export name="outFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFiles"/></export>
   </namespace>
 
   <namespace prefix="cdm">
