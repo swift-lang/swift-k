@@ -516,19 +516,20 @@ public abstract class AbstractDataNode implements DSHandle {
             }
         }
     }
-
-    /** Recursively closes arrays through a tree of arrays and complex
- 	    types. */
-    public void closeDeepStructure() {
+	
+	/**
+     * Recursively closes arrays through a tree of arrays and complex types.
+     */
+    public void closeArraySizes() {
         if (!this.closed && this.getType().isArray()) {
             closeShallow();
         }
         synchronized (handles) {
             for (DSHandle handle : handles.values()) {
                 AbstractDataNode child = (AbstractDataNode) handle;
-                if(child.getType().isArray()  ||
-                        child.getType().getFields().size() > 0 ) {
-                    child.closeDeepStructure();
+                if (child.getType().isArray() ||
+                                  child.getType().getFields().size() > 0) {
+                    child.closeArraySizes();
                 }
             }
         }
