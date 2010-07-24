@@ -111,6 +111,7 @@
 	<export name="inFileDirs"><elementDef classname="org.griphyn.vdl.karajan.lib.InFileDirs"/></export>
 	<export name="outFileDirs"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFileDirs"/></export>
 	<export name="outFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFiles"/></export>
+	<export name="doRestartLog"><elementDef classname="org.griphyn.vdl.karajan.lib.DoRestartLog"/></export>
   </namespace>
 
   <namespace prefix="cdm">
