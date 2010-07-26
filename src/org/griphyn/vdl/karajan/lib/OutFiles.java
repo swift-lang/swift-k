@@ -16,7 +16,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
-public class OutFiles extends AbstractSequentialWithArguments {
+public class OutFiles extends VDLFunction {
     public static final Arg STAGEOUTS = new Arg.Positional("stageouts");
 
     static {
@@ -24,7 +24,7 @@ public class OutFiles extends AbstractSequentialWithArguments {
     }
 
     @Override
-    protected void post(VariableStack stack) throws ExecutionException {
+    protected Object function(VariableStack stack) throws ExecutionException {
         List files = TypeUtil.toList(STAGEOUTS.getValue(stack));
         VariableArguments ret = ArgUtil.getVariableReturn(stack);
         try {
@@ -33,13 +33,13 @@ public class OutFiles extends AbstractSequentialWithArguments {
                 Path p = Path.parse(TypeUtil.toString(pv.get(0)));
                 DSHandle handle = (DSHandle) pv.get(1);
                 DSHandle leaf = handle.getField(p);
-                String fname = VDLFunction.filename(leaf)[0];
+                String fname = argList(VDLFunction.filename(leaf), true);
                 ret.append(fname);
             }
         }
         catch (Exception e) {
             throw new ExecutionException(e);
         }
-        super.post(stack);
+        return null;
     }
 }
