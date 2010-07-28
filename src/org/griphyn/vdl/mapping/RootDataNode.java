@@ -15,6 +15,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	private boolean initialized=false;
 	private Mapper mapper;
 	private Map params;
+	private DSHandle waitingMapperParam;
 
 	public static DSHandle newNode(Type type, Object value) {
 		DSHandle handle = new RootDataNode(type);
@@ -40,14 +41,13 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	/** must have this.params set to the appropriate parameters before
 	    being called. */
 	private synchronized void innerInit() {
-
 		Iterator i = params.entrySet().iterator();
 		while(i.hasNext()) {
 			Map.Entry entry = (Map.Entry) i.next();
 			Object v = entry.getValue();
 			if(v instanceof DSHandle && !( (DSHandle)v).isClosed()) {
-				DSHandle dh = (DSHandle)v;
-				dh.addListener(this);
+				waitingMapperParam = (DSHandle) v;
+                waitingMapperParam.addListener(this);
 				return;
 			}
 		}
@@ -205,7 +205,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		if(initialized) {
 			return mapper;
 		} else {
-			throw new VDL2FutureException(this);
+			assert(waitingMapperParam != null);
+            throw new VDL2FutureException(waitingMapperParam);
 		}
 	}
 
