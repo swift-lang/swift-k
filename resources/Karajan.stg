@@ -58,8 +58,6 @@ memberdefinition(type,name,sourcelocation) ::= <<
 procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config,line) ::= <<
 <element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$>
   $optargs:default_arg();separator="\n"$
-  $outputs:typecheck();separator="\n"$
-  $inputs:typecheck();separator="\n"$
   $inputs:vdl_log_input();separator="\n"$
   $outputs:vdl_log_output();separator="\n"$
 $if(binding)$
@@ -95,10 +93,6 @@ $if(it.default)$
 $it.default$
 </default>
 $endif$
->>
-
-typecheck() ::= <<
-<vdl:typecheck argname="$it.name$" var="{$it.name$}" type="$it.type.name$" />
 >>
 
 vdl_execute(outputs,inputs,application,name,line) ::= <<
@@ -306,7 +300,7 @@ $if(isGlobal)$<global name="$name$">$else$<set name="$name$">$endif$
         $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
       </vdl:new>
     $else$
-      $expr$
+      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ />
     $endif$
   $endif$
 $if(isGlobal)$</global>$else$</set>$endif$
