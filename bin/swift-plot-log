@@ -1,10 +1,11 @@
 #!/bin/bash
 
+# $1 should be the pathname of the log file to plot
+# The rest of the line is passed to make 
+#    They must be figures
+
 ORIGDIR=$(pwd)
 WORKINGDIR=$(mktemp -d /tmp/swift-plot-log-XXXXXXXXXXXXXXXX)
-
-
-# $1 should be the pathname of the log file to plot
 
 LOG_CODE_HOME="`dirname $0`/../libexec/log-processing/"
 export SWIFT_PLOT_HOME=$LOG_CODE_HOME
@@ -41,13 +42,13 @@ if [ -d $INFODIR ]; then
 fi
 
 if [ "X$2" = "X" ]; then
-make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean webpage.kara webpage.weights webpage.coasters karatasks.JOB_SUBMISSION.Queue.transitions karatasks.JOB_SUBMISSION.Queue.event karatasks.JOB_SUBMISSION.eip  $MAKETARGETS webpage distribute
+make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH webpage.kara webpage.weights webpage.coasters karatasks.JOB_SUBMISSION.Queue.transitions karatasks.JOB_SUBMISSION.Queue.event karatasks.JOB_SUBMISSION.eip  $MAKETARGETS webpage distribute
 else
 shift
-make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH clean $@
+make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH $@
 cp $@ $ORIGDIR/
 fi
 
 # mv report-$LOG_FILE_BASE $LOG_DIRECTORY/
 
-rm -r $WORKINGDIR
+# rm -r $WORKINGDIR

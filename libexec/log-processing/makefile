@@ -112,9 +112,12 @@ jobs.retrycount.summary: execute2.event
 execstages.png: execute2.event dostagein.event dostageout.event start-time.tmp workflow.event 
 	execstages-plot
 
+simple-start-time.tmp: $(LOG) 
+	simple-start-time.sh $(LOG) $(@)
+
 # weight processing
-weights.png: $(LOG)
-	weights.sh $(LOG)
+weights.png: simple-start-time.tmp $(LOG)
+	weights.sh $(LOG) $(shell cat simple-start-time.tmp ) 
 
 info.transitions:
 	info-to-transitions $(IDIR) > $@

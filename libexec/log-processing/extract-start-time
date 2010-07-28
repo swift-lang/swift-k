@@ -1,3 +1,9 @@
+#!/bin/sh
+
+set -x 
+
+/bin/pwd 1>&2 
+
 rm -f tmp-extract-starttime2
 
 if [ "X$LOG" != "X" ] ; then
