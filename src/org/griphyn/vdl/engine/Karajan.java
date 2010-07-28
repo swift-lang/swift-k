@@ -8,12 +8,14 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.xml.namespace.QName;
 
@@ -43,6 +45,7 @@ import org.globus.swift.language.TypesDocument.Types.Type;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
+import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
 
@@ -162,9 +165,30 @@ public class Karajan {
 					// TODO PATH/PERL5LIB-style path handling
 					//String swiftfilename = "./"+moduleToImport+".swift";
 					//String xmlfilename = "./"+moduleToImport+".xml";
+				    String lib_path = System.getenv("SWIFT_LIB");
 					String swiftfilename = moduleToImport+".swift";
 					String xmlfilename = moduleToImport+".xml";
-
+					
+					File local = new File(swiftfilename);
+					if( !( lib_path == null || local.exists() ) )
+					{
+					    StringTokenizer st = new StringTokenizer(lib_path, ":");
+					    while(st.hasMoreTokens())
+					    {
+					        String path = st.nextToken();
+					        String lib_script_location = path + "/" + swiftfilename; 
+					        File tmp = new File(lib_script_location);
+					        
+					        if(tmp.exists())
+					        {
+					            swiftfilename = path + "/" + swiftfilename;
+					            xmlfilename = path + "/" + xmlfilename;
+					            moduleToImport = path + "/" + moduleToImport;
+					            break;
+					        }
+					    }  
+					}
+					
 					try {
         	    		VDLt2VDLx.compile(new FileInputStream(swiftfilename),new PrintStream(new FileOutputStream(xmlfilename)));
 						logger.debug("Compiled. Now reading in compiled XML for "+moduleToImport);
