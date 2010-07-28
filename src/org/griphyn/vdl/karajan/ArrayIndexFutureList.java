@@ -5,7 +5,8 @@ package org.griphyn.vdl.karajan;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,155 +20,146 @@ import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureList;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.globus.cog.util.CopyOnWriteHashSet;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DSHandleListener;
 
 public class ArrayIndexFutureList implements FutureList, DSHandleListener {
-	private ArrayList keys;
-	private Map values;
-	private boolean closed;
-	private CopyOnWriteHashSet listeners;
-	private FutureEvaluationException exception;
+    private ArrayList<Object> keys;
+    private Map values;
+    private boolean closed;
+    private List<EventTargetPair> listeners;
+    private FutureEvaluationException exception;
 
-	public ArrayIndexFutureList(DSHandle handle, Map values) {
-		this.values = values;
-		keys = new ArrayList();
-		handle.addListener(this);
-	}
-	
-	private RuntimeException notYetAvailable() {
-		if (exception != null) {
-			return exception;
-		}
-		return new FutureNotYetAvailable(this);
-	}
+    public ArrayIndexFutureList(DSHandle handle, Map values) {
+        this.values = values;
+        keys = new ArrayList<Object>();
+        handle.addListener(this);
+    }
 
-	public Object get(int index) {
-		if (exception != null) {
-			throw exception;
-		}
-		if (!closed && index >= keys.size()) {
-			throw notYetAvailable();
-		}
-		else {
-			Object key = keys.get(index);
-			return new Pair(key, values.get(key));
-		}
-	}
+    private RuntimeException notYetAvailable() {
+        if (exception != null) {
+            return exception;
+        }
+        return new FutureNotYetAvailable(this);
+    }
 
-	public int available() {
-		return keys.size();
-	}
+    public Object get(int index) {
+        if (exception != null) {
+            throw exception;
+        }
+        if (!closed && index >= keys.size()) {
+            throw notYetAvailable();
+        }
+        else {
+            Object key = keys.get(index);
+            return new Pair(key, values.get(key));
+        }
+    }
 
-	public void addKey(Object key) {
-		keys.add(key);
-		notifyListeners();
-	}
+    public int available() {
+        return keys.size();
+    }
 
-	public FutureIterator futureIterator() {
-		return new FuturePairIterator(this);
-	}
+    public void addKey(Object key) {
+        keys.add(key);
+        notifyListeners();
+    }
 
-	public FutureIterator futureIterator(VariableStack stack) {
-		return new FuturePairIterator(this, stack);
-	}
+    public FutureIterator futureIterator() {
+        return new FuturePairIterator(this);
+    }
 
-	public synchronized void close() {
-		closed = true;
-		Set allkeys = new HashSet(values.keySet());
-		Iterator i = keys.iterator();
-		while (i.hasNext()) {
-			allkeys.remove(i.next());
-		}
-		// remaining keys must be added
-		i = allkeys.iterator();
-		while (i.hasNext()) {
-			keys.add(i.next());
-		}
-		notifyListeners();
-	}
+    public FutureIterator futureIterator(VariableStack stack) {
+        return new FuturePairIterator(this, stack);
+    }
 
-	public boolean isClosed() {
-		return closed;
-	}
+    public synchronized void close() {
+        closed = true;
+        Set<Object> allkeys = new HashSet<Object>(values.keySet());
+        allkeys.removeAll(keys);
+        // remaining keys must be added
+        keys.addAll(allkeys);
+        notifyListeners();
+    }
 
-	public Object getValue() throws VariableNotFoundException {
-		return this;
-	}
+    public boolean isClosed() {
+        return closed;
+    }
 
-	public synchronized void addModificationAction(EventListener target, Event event) {
-		if (listeners == null) {
-			listeners = new CopyOnWriteHashSet();
-		}
+    public Object getValue() throws VariableNotFoundException {
+        return this;
+    }
 
-		listeners.add(new EventTargetPair(event, target));
-		if (closed) {
-			notifyListeners();
-		}
-	}
+    public synchronized void addModificationAction(EventListener target,
+            Event event) {
+        if (listeners == null) {
+            listeners = new LinkedList<EventTargetPair>();
+        }
 
-	private synchronized void notifyListeners() {
-		if (listeners == null) {
-			return;
-		}
+        listeners.add(new EventTargetPair(event, target));
+        if (closed) {
+            notifyListeners();
+        }
+    }
 
-		Iterator i = listeners.iterator();
-		try {
-			while (i.hasNext()) {
-				try {
-					EventTargetPair etp = (EventTargetPair) i.next();
-					etp.getTarget().event(etp.getEvent());
-				}
-				catch (ExecutionException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		finally {
-			listeners.release();
-		}
-	}
+    private synchronized void notifyListeners() {
+        if (listeners == null) {
+            return;
+        }
 
-	public EventTargetPair[] getListenerEvents() {
-		return (EventTargetPair[]) listeners.toArray(new EventTargetPair[0]);
-	}
+        for (EventTargetPair etp : listeners) {
+            try {
+                etp.getTarget().event(etp.getEvent());
+            }
+            catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        listeners = null;
+    }
 
-	public int size() {
-		if (closed) {
-			return keys.size();
-		}
-		else {
-			throw notYetAvailable();
-		}
-	}
+    public EventTargetPair[] getListenerEvents() {
+        return listeners.toArray(new EventTargetPair[0]);
+    }
 
-	public String toString() {
-		String l;
-		if (listeners == null) {
-			l = "no listeners";
-		}
-		else {
-			l = listeners.size() + " listeners";
-		}
-		if (!closed) {
-			return "Open, " + keys.size() + " elements, " + l;
-		}
-		else {
-			return "Closed, " + keys.size() + " elements, " + l;
-		}
-	}
-	
-	public void fail(FutureEvaluationException e) {
-		this.exception = e;
-		notifyListeners();
-	}
-	
-	public FutureEvaluationException getException() {
-		return exception;
-	}
+    public int size() {
+        if (closed) {
+            return keys.size();
+        }
+        else {
+            throw notYetAvailable();
+        }
+    }
 
-	public void handleClosed(DSHandle handle) {
-		close();
-	}
+    public String toString() {
+        String l;
+        if (listeners == null) {
+            l = "no listeners";
+        }
+        else {
+            l = listeners.size() + " listeners";
+        }
+        if (!closed) {
+            return "Open, " + keys.size() + " elements, " + l;
+        }
+        else {
+            if (listeners != null) {
+                System.out.println("Badness");
+            }
+            return "Closed, " + keys.size() + " elements, " + l;
+        }
+    }
+
+    public void fail(FutureEvaluationException e) {
+        this.exception = e;
+        notifyListeners();
+    }
+
+    public FutureEvaluationException getException() {
+        return exception;
+    }
+
+    public void handleClosed(DSHandle handle) {
+        close();
+    }
 }
