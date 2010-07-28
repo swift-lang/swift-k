@@ -19,10 +19,28 @@ import java.util.Set;
  * An implementation of <tt>Set</tt> which guarantees that iterations
  * on the set always occur on a consistent snapshot of the set. 
  * 
+ * A copy of the set is only performed if the set is locked for iteration. 
+ * The set is automatically locked for iteration by {@link #iterator()} and
+ * must be unlocked when the iteration is done using {@link #release()}:
+ * <pre>
+ *  Iterator<T> i = set.iterator();
+ *  try {
+ *      while (i.hasNext()) {
+ *          ...
+ *      }
+ *  }
+ *  finally {
+ *      set.release();
+ *  }
+ * </pre>
+ * 
+ * Once a copy is made, subsequent mutative operations will not trigger
+ * another copy unless a new iterator is created from this set.
+ * 
  */
 
-public class CopyOnWriteHashSet implements Set {
-	private Set set = Collections.EMPTY_SET;
+public class CopyOnWriteHashSet<T> implements Set<T> {
+	private Set<T> set = Collections.emptySet();
 	private int lock;	
 
 	public int size() {
@@ -43,7 +61,7 @@ public class CopyOnWriteHashSet implements Set {
 		}
 	}
 
-	public synchronized Iterator iterator() {
+	public synchronized Iterator<T> iterator() {
 		lock++;
 		return set.iterator();
 	}
@@ -52,11 +70,11 @@ public class CopyOnWriteHashSet implements Set {
 		return set.toArray();
 	}
 
-	public Object[] toArray(Object[] o) {
-		return set.toArray(o);
-	}
+    public <T> T[] toArray(T[] a) {
+        return set.toArray(a);
+    }
 
-	public synchronized boolean add(Object o) {
+    public synchronized boolean add(T o) {
 		if (lock > 0 || set.isEmpty()) {
 			return copyAndAdd(o);
 		}
@@ -65,8 +83,8 @@ public class CopyOnWriteHashSet implements Set {
 		}
 	}
 	
-	private boolean copyAndAdd(Object o) {
-		Set newset = new HashSet(set);
+	private boolean copyAndAdd(T o) {
+		Set<T> newset = new HashSet<T>(set);
 		boolean b = newset.add(o);
 		set = newset;
 		lock = 0;
@@ -83,18 +101,18 @@ public class CopyOnWriteHashSet implements Set {
 	}
 	
 	private boolean copyAndRemove(Object o) {
-		Set newset = new HashSet(set);
+		Set<T> newset = new HashSet<T>(set);
 		boolean b = newset.remove(o);
 		set = newset;
 		lock = 0;
 		return b;
 	}
 
-	public boolean containsAll(Collection c) {
+	public boolean containsAll(Collection<?> c) {
 		return set.containsAll(c);
 	}
 
-	public synchronized boolean addAll(Collection c) {
+	public synchronized boolean addAll(Collection<? extends T> c) {
 		if (lock > 0 || set.isEmpty()) {
 			return copyAndAddAll(c);
 		}
@@ -103,15 +121,15 @@ public class CopyOnWriteHashSet implements Set {
 		}
 	}
 	
-	private boolean copyAndAddAll(Collection c) {
-		Set newset = new HashSet(set);
+	private boolean copyAndAddAll(Collection<? extends T> c) {
+		Set<T> newset = new HashSet<T>(set);
 		boolean b = newset.addAll(c);
 		set = newset;
 		lock = 0;
 		return b;
 	}
 
-	public synchronized boolean retainAll(Collection c) {
+	public synchronized boolean retainAll(Collection<?> c) {
 		if (lock > 0) {
 			return copyAndRetainAll(c);
 		}
@@ -120,15 +138,15 @@ public class CopyOnWriteHashSet implements Set {
 		}
 	}
 	
-	private boolean copyAndRetainAll(Collection c) {
-		Set newset = new HashSet(set);
+	private boolean copyAndRetainAll(Collection<?> c) {
+		Set<T> newset = new HashSet<T>(set);
 		boolean b = newset.retainAll(c);
 		set = newset;
 		lock = 0;
 		return b;
 	}
 
-	public boolean removeAll(Collection c) {
+	public boolean removeAll(Collection<?> c) {
 		if (lock > 0) {
 			return copyAndRemoveAll(c);
 		}
@@ -137,8 +155,8 @@ public class CopyOnWriteHashSet implements Set {
 		}
 	}
 	
-	private boolean copyAndRemoveAll(Collection c) {
-		Set newset = new HashSet(set);
+	private boolean copyAndRemoveAll(Collection<?> c) {
+		Set<T> newset = new HashSet<T>(set);
 		boolean b = newset.removeAll(c);
 		set = newset;
 		lock = 0;
@@ -146,15 +164,15 @@ public class CopyOnWriteHashSet implements Set {
 	}
 
 	public synchronized void clear() {
-		set = Collections.EMPTY_SET;
+		set = Collections.emptySet();
 		lock = 0;
 	}
 
 	public boolean equals(Object obj) {
-		if (obj instanceof CopyOnWriteHashSet) {
-			return set.equals(((CopyOnWriteHashSet) obj).set);
+		if (obj instanceof CopyOnWriteHashSet<?>) {
+			return set.equals(((CopyOnWriteHashSet<?>) obj).set);
 		}
-		else if (obj instanceof Set) {
+		else if (obj instanceof Set<?>) {
 			return set.equals(obj);
 		}
 		return false;
