@@ -26,6 +26,16 @@ public abstract class Types {
 			return type;
 		}
 	}
+	
+	public static boolean isPrimitive(String name) {
+	    try {
+	        Type t = getType(name);
+	        return t.isPrimitive();
+	    }
+	    catch (NoSuchTypeException e) {
+	        return false;
+	    }
+	}
 
 	//TODO: check duplicate type?
 	public synchronized static void addType(Type type) {
