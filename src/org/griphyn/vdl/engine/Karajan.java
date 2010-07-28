@@ -401,7 +401,7 @@ public class Karajan {
 						pparamST.setAttribute("name", "prefix");
 						pparamST.setAttribute("expr", parameterVariableName + "-" + UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
 						pmappingST.setAttribute("params", pparamST);
-						variableDeclarationST.setAttribute("mapping", pmappingST);
+						//variableDeclarationST.setAttribute("mapping", pmappingST);
 						variableDeclarationST.setAttribute("nil", Boolean.TRUE);
 						variableDeclarationST.setAttribute("name", parameterVariableName);
 						scope.bodyTemplate.setAttribute("declarations",variableDeclarationST);
@@ -415,7 +415,14 @@ public class Karajan {
 						variableAssignmentST.setAttribute("var",variableReferenceST);
 						variableAssignmentST.setAttribute("value",paramValueST);
 						scope.appendStatement(variableAssignmentST);
-						paramST.setAttribute("expr",variableReferenceST);
+						if (param.getAbstractExpression().getDomNode().getNodeName().equals("stringConstant")) {
+							StringTemplate valueST = template("sConst");
+							valueST.setAttribute("innervalue", param.getAbstractExpression().getDomNode().getFirstChild().getNodeValue());
+                            paramST.setAttribute("expr",valueST); 
+                        }
+                        else {
+                        	paramST.setAttribute("expr",variableReferenceST);
+                        }
 					}
 					mappingST.setAttribute("params", paramST);
 				}
@@ -423,15 +430,17 @@ public class Karajan {
 			}
 		} else {
 			// add temporary mapping info
-			StringTemplate mappingST = new StringTemplate("mapping");
-			mappingST.setAttribute("descriptor", "concurrent_mapper");
-			StringTemplate paramST = template("vdl_parameter");
-			paramST.setAttribute("name", "prefix");
-			paramST.setAttribute("expr", var.getName() + "-"
-					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
-			mappingST.setAttribute("params", paramST);
-			variableST.setAttribute("mapping", mappingST);
-			variableST.setAttribute("nil", Boolean.TRUE);
+			if (!org.griphyn.vdl.type.Types.isPrimitive(var.getType().getLocalPart())) {
+    			StringTemplate mappingST = new StringTemplate("mapping");
+    			mappingST.setAttribute("descriptor", "concurrent_mapper");
+    			StringTemplate paramST = template("vdl_parameter");
+    			paramST.setAttribute("name", "prefix");
+    			paramST.setAttribute("expr", var.getName() + "-"
+    					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+    			mappingST.setAttribute("params", paramST);
+    			variableST.setAttribute("mapping", mappingST);
+    			variableST.setAttribute("nil", Boolean.TRUE);
+			}
 		}
 
 		scope.bodyTemplate.setAttribute("declarations", variableST);
