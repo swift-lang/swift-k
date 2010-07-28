@@ -81,6 +81,9 @@ public class CSVMapper extends AbstractMapper {
 
 			if (header) {
 				line = br.readLine();
+				if (line == null) {
+				    throw new RuntimeException("Invalid CSV file (" + file + "): missing header.");
+				}
 				st = new StringTokenizer(line, hdelim);
 				int ix = 0;
 				while (st.hasMoreTokens()) {
