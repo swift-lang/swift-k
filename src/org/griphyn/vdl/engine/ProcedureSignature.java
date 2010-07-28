@@ -194,6 +194,13 @@ public class ProcedureSignature {
 		FormalArgumentSignature dirnameOut1 = new FormalArgumentSignature("string");
 		dirname.addOutputArg(dirnameOut1);
 		functionsMap.put(dirname.getName(), dirname);
+		
+		ProcedureSignature length = new ProcedureSignature("length");
+		FormalArgumentSignature lengthIn1 = new FormalArgumentSignature(true);
+		length.addInputArg(lengthIn1);
+		FormalArgumentSignature lengthOut1 = new FormalArgumentSignature("int");
+		length.addOutputArg(lengthOut1);
+		functionsMap.put(length.getName(), length);
                 
 		ProcedureSignature regexp = new ProcedureSignature("regexp");
 		FormalArgumentSignature regexpIn1 = new FormalArgumentSignature("string");
@@ -240,18 +247,36 @@ public class ProcedureSignature {
 		functionsMap.put(strsplit.getName(), strsplit);
 		
 		ProcedureSignature toint = new ProcedureSignature("toint");
-		FormalArgumentSignature tointIn1 = new FormalArgumentSignature("string");
+		FormalArgumentSignature tointIn1 = new FormalArgumentSignature(true);
 		toint.addInputArg(tointIn1);
 		FormalArgumentSignature toOut1 = new FormalArgumentSignature("int");
 		toint.addOutputArg(toOut1);
 		functionsMap.put(toint.getName(), toint);
 
 		ProcedureSignature tofloat = new ProcedureSignature("tofloat");
-		FormalArgumentSignature tofloatIn1 = new FormalArgumentSignature("string");
+		FormalArgumentSignature tofloatIn1 = new FormalArgumentSignature(true);
 		tofloat.addInputArg(tofloatIn1);
 		FormalArgumentSignature tofloatOut1 = new FormalArgumentSignature("float");
 		tofloat.addOutputArg(tofloatOut1);
 		functionsMap.put(tofloat.getName(), tofloat);
+		
+	    ProcedureSignature format = new ProcedureSignature("format");
+	    FormalArgumentSignature formatIn1 = new FormalArgumentSignature("float");
+	    FormalArgumentSignature formatIn2 = new FormalArgumentSignature("int");
+	    format.addInputArg(formatIn1);
+	    format.addInputArg(formatIn2);
+	    FormalArgumentSignature formatOut = new FormalArgumentSignature("string");
+	    format.addOutputArg(formatOut);
+	    functionsMap.put(format.getName(), format);
+	    
+	    ProcedureSignature pad = new ProcedureSignature("pad");
+        FormalArgumentSignature padIn1 = new FormalArgumentSignature("int");
+        FormalArgumentSignature padIn2 = new FormalArgumentSignature("int");
+        pad.addInputArg(padIn1);
+        pad.addInputArg(padIn2);
+        FormalArgumentSignature padOut = new FormalArgumentSignature("string");
+        pad.addOutputArg(padOut);
+        functionsMap.put(pad.getName(), pad);
 		
 		ProcedureSignature tostring = new ProcedureSignature("tostring");
 		FormalArgumentSignature tostringIn1 = new FormalArgumentSignature(true);

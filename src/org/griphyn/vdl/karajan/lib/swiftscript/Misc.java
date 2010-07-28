@@ -1,6 +1,8 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +28,8 @@ import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 
+import org.griphyn.vdl.mapping.ArrayDataNode;
+
 public class Misc extends FunctionsCollection {
 
 	private static final Logger logger = Logger.getLogger(Misc.class);
@@ -43,8 +47,11 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
 		setArguments("swiftscript_tofloat", new Arg[] { PA_INPUT });
+		setArguments("swiftscript_format", new Arg[] { PA_INPUT, PA_TRANSFORM });
+		setArguments("swiftscript_pad", new Arg[] { PA_INPUT, PA_TRANSFORM });
 		setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
 		setArguments("swiftscript_dirname", new Arg[] { Arg.VARGS });
+		setArguments("swiftscript_length", new Arg[] { Arg.VARGS });
 	}
 
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
@@ -206,8 +213,17 @@ public class Misc extends FunctionsCollection {
 			inputString = inputString.substring(0, i);
 		}
 		DSHandle handle = new RootDataNode(Types.INT);
-		handle.setValue(new Double(inputString));
+		
+		try
+		{
+		    handle.setValue(new Double(inputString));
+		}
+		catch(NumberFormatException e)
+		{
+		    throw new ExecutionException(stack, "Could not convert value \""+inputString+"\" to type int");
+		}
 		handle.closeShallow();
+		
 		int provid=VDLFunction.nextProvenanceID();
 		VDLFunction.logProvenanceResult(provid, handle, "toint");
 		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
@@ -218,12 +234,64 @@ public class Misc extends FunctionsCollection {
 			InvalidPathException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		DSHandle handle = new RootDataNode(Types.FLOAT);
-		handle.setValue(new Double(inputString));
+		
+		try
+		{
+		    handle.setValue(new Double(inputString));
+		}
+		catch(NumberFormatException e)
+		{
+		    throw new ExecutionException(stack, "Could not convert value \""+inputString+"\" to type float");
+		}
 		handle.closeShallow();
 		int provid=VDLFunction.nextProvenanceID();
 		VDLFunction.logProvenanceResult(provid, handle, "tofloat");
 		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
 		return handle;
+	}
+	
+	/*
+	 * Takes in a float and formats to desired precision and returns a string
+	 */
+	public DSHandle swiftscript_format(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+    InvalidPathException {
+	    String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+	    String inputFormat = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
+	    DSHandle handle = new RootDataNode(Types.STRING);
+	    
+	    String output = String.format("%."+inputFormat+"f", Double.parseDouble(inputString));
+	    handle.setValue(output);
+	    handle.closeShallow();
+	    
+	    int provid=VDLFunction.nextProvenanceID();
+	    VDLFunction.logProvenanceResult(provid, handle, "format");
+	    VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "float");
+	    VDLFunction.logProvenanceParameter(provid, PA_TRANSFORM.getRawValue(stack), "float");
+	    return handle;
+	}
+	
+	/*
+	 * Takes in an int and pads zeros to the left and returns a string
+	 */
+	public DSHandle swiftscript_pad(VariableStack stack) throws ExecutionException, NoSuchTypeException,
+	        InvalidPathException {
+	    String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
+	    String inputFormat = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
+	    DSHandle handle = new RootDataNode(Types.STRING);  
+	    
+	    int num_length = inputString.length();
+	    int zeros_to_pad = Integer.parseInt(inputFormat);
+	    zeros_to_pad += num_length;
+	    
+	    String output = String.format("%0"+zeros_to_pad+"d", Integer.parseInt(inputString));
+	    handle.setValue(output);
+	    handle.closeShallow();
+	        
+	    int provid=VDLFunction.nextProvenanceID();
+	    VDLFunction.logProvenanceResult(provid, handle, "pad");
+	    VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "int");
+	    VDLFunction.logProvenanceParameter(provid, PA_TRANSFORM.getRawValue(stack), "int");
+	    return handle;
 	}
 	
 	public DSHandle swiftscript_tostring(VariableStack stack)
@@ -236,26 +304,51 @@ public class Misc extends FunctionsCollection {
                 return handle;
 	}
 
-        public DSHandle swiftscript_dirname(VariableStack stack) 
-                throws ExecutionException, NoSuchTypeException, InvalidPathException {
-                DSHandle handle;
-                try
-                {
-                        DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
-                        DSHandle arg = args[0];
-                        String[] input = VDLFunction.filename(arg);
-                        String name = input[0]; 
-                        String result = new AbsFile(name).getDir();
-                        handle = new RootDataNode(Types.STRING);
-                        handle.setValue(result);
-                        handle.closeShallow();
-                }
-                catch (HandleOpenException e) {
-                        throw new FutureNotYetAvailable
-                                (VDLFunction.addFutureListener(stack, e.getSource()));
-                }
-                return handle;
-        }
+	public DSHandle swiftscript_dirname(VariableStack stack) 
+	throws ExecutionException, NoSuchTypeException, InvalidPathException {
+	    DSHandle handle;
+	    try
+	    {
+	        DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
+	        DSHandle arg = args[0];
+	        String[] input = VDLFunction.filename(arg);
+	        String name = input[0]; 
+	        String result = new AbsFile(name).getDir();
+	        handle = new RootDataNode(Types.STRING);
+	        handle.setValue(result);
+	        handle.closeShallow();
+	    }
+	    catch (HandleOpenException e) {
+	        throw new FutureNotYetAvailable
+	        (VDLFunction.addFutureListener(stack, e.getSource()));
+	    }
+	    return handle;
+	}
+	
+	/*
+	 * This is copied from swiftscript_dirname. Both the functions could be changed to be more readable.
+	 * Returns length of an array.
+	 * Good for debugging because array needs to be closed before the length is determined
+	 */
+	public DSHandle swiftscript_length(VariableStack stack) 
+	throws ExecutionException, NoSuchTypeException, InvalidPathException {
+	    DSHandle handle;
+	    DSHandle[] args = SwiftArg.VARGS.asDSHandleArray( stack );
+	    DSHandle arg = args[0];
+	    ArrayDataNode adn = (ArrayDataNode)arg;
+	        
+	    if( !( adn.isClosed() ) )
+	    {
+	        throw new FutureNotYetAvailable( VDLFunction.addFutureListener( stack, adn ) );
+	    }
+	        
+	    int result = adn.size();
+	    handle = new RootDataNode(Types.INT);
+	    handle.setValue(result);
+	    handle.closeShallow();
+	    
+	    return handle;
+	}
 }
 
 /*

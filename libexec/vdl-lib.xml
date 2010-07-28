@@ -13,6 +13,8 @@
 	<export name="regexp"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="toint"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="tofloat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="format"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="pad"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="tostring"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="trace"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="tracef"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Tracef"/></export>
@@ -20,6 +22,7 @@
 	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
 	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileNames"/></export>
 	<export name="dirname"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="length"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="arg">
 		<import file="sys.xml"/>
 		<if>
