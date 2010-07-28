@@ -5,8 +5,7 @@ package org.griphyn.vdl.karajan;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,6 +19,7 @@ import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureList;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.globus.cog.util.CopyOnWriteArrayList;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DSHandleListener;
 
@@ -27,7 +27,7 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
     private ArrayList<Object> keys;
     private Map values;
     private boolean closed;
-    private List<EventTargetPair> listeners;
+    private CopyOnWriteArrayList<EventTargetPair> listeners;
     private FutureEvaluationException exception;
 
     public ArrayIndexFutureList(DSHandle handle, Map values) {
@@ -82,7 +82,7 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
         notifyListeners();
     }
 
-    public boolean isClosed() {
+    public synchronized boolean isClosed() {
         return closed;
     }
 
@@ -93,7 +93,7 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
     public synchronized void addModificationAction(EventListener target,
             Event event) {
         if (listeners == null) {
-            listeners = new LinkedList<EventTargetPair>();
+            listeners = new CopyOnWriteArrayList<EventTargetPair>();
         }
 
         listeners.add(new EventTargetPair(event, target));
@@ -107,15 +107,22 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
             return;
         }
 
-        for (EventTargetPair etp : listeners) {
-            try {
-                etp.getTarget().event(etp.getEvent());
-            }
-            catch (ExecutionException e) {
-                e.printStackTrace();
+        Iterator<EventTargetPair> i = listeners.iterator();
+        try {
+            while (i.hasNext()) {
+                try {
+                    EventTargetPair etp = i.next();
+                    i.remove();
+                    etp.getTarget().event(etp.getEvent());
+                }
+                catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
         }
-        listeners = null;
+        finally {
+            listeners.release();
+        }
     }
 
     public EventTargetPair[] getListenerEvents() {
