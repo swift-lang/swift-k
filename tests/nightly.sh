@@ -82,7 +82,8 @@ OUTPUT=$TOPDIR/exec.out
 HTMLPATH=$RUNDIRBASE/tests-$DATE.html
 HTML=$TOPDIR/$HTMLPATH
 
-BRANCH="branches/tests-01"
+BRANCH=trunk
+#BRANCH="branches/tests-01"
 
 SCRIPTDIR=$( dirname $0 )
 
