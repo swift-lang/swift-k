@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# set -x
-
 # USAGE NOTES:
 # Run nightly.sh -h for quick help
 # When something goes wrong, find and check tests.log
@@ -22,6 +20,7 @@ printhelp() {
   printf "\t -p      Do not build the package        \n"
   printf "\t -s      Do not do a fresh svn checkout  \n"
   printf "\t -x      Do not continue after a failure \n"
+  printf "\t -v      Verbose (set -x)                \n"
   printf "\t output  Location for output (TOPDIR)    \n"
 }
 
@@ -31,6 +30,7 @@ BUILD_PACKAGE=1
 GRID_TESTS=1
 SKIP_CHECKOUT=0
 ALWAYS_EXITONFAILURE=0
+VERBOSE=0
 # The directory in which to start:
 TOPDIR=$PWD
 
@@ -54,11 +54,19 @@ while [ $# -gt 0 ]; do
     -x)
       ALWAYS_EXITONFAILURE=1
       shift;;
+    -v)
+      VERBOSE=1
+      shift;;
     *)
       TOPDIR=$1
       shift;;
   esac
 done
+
+(( VERBOSE )) && set -x
+
+# Iterations
+ITERS_LOCAL=1
 
 LOGCOUNT=0
 SEQ=1
@@ -83,18 +91,18 @@ mkdir -p $RUNDIR
 [ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
 
 header() {
-        CURRENT=$SCRIPTDIR/html/current.html
-	sed "s@_HTMLBASE_@$HTMLPATH@" < $CURRENT > $TOPDIR/current.html
+  CURRENT=$SCRIPTDIR/html/current.html
+  sed "s@_HTMLBASE_@$HTMLPATH@" < $CURRENT > $TOPDIR/current.html
 
-        HEADER=$SCRIPTDIR/html/header.html
-        HOST=$( hostname )
-        SEDCMD="s/_DATE_/$DATE/;s/_TIME_/$TIME/;s/_HOST_/$HOST"/
-	sed $SEDCMD < $HEADER > $HTML
-	FIRSTTEST=1
+  HEADER=$SCRIPTDIR/html/header.html
+  HOST=$( hostname )
+  SEDCMD="s/_DATE_/$DATE/;s/_TIME_/$TIME/;s/_HOST_/$HOST"/
+  sed $SEDCMD < $HEADER > $HTML
+  FIRSTTEST=1
 }
 
 html() {
-	echo $@ >>$HTML
+  echo $@ >>$HTML
 }
 
 a_name() {
@@ -109,161 +117,135 @@ a_href() {
 }
 
 footer() {
-	MONTHS=("" "Jan" "Feb" "Mar" "Apr" "May" "Jun" \
-                   "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
-	html "</tr></table></tr></table>"
+  MONTHS=("" "Jan" "Feb" "Mar" "Apr" "May" "Jun" \
+    "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
+  html "</tr></table></tr></table>"
 
-	if [ "$BINPACKAGE" != "" ]; then
-		FBP=$RUNDIR/$BINPACKAGE
-		SIZE=`ls -hs $FBP`
-		SIZE=${SIZE/$FBP}
-		cat <<DOH >>$HTML
+  if [ "$BINPACKAGE" != "" ]; then
+    FBP=$RUNDIR/$BINPACKAGE
+    SIZE=`ls -hs $FBP`
+    SIZE=${SIZE/$FBP}
+    cat <<DOH >>$HTML
 	<h1>Binary packages</h1>
 	<a name="#packages">
 	<a href="$BINPACKAGE">$BINPACKAGE</a> ($SIZE)<br>
 DOH
-	fi
+  fi
 
-	LASTYR="00"
-	LASTMO="00"
-	html "<h1>Older tests</h1>"
-	html '<a name="older">'
-	html "<table><tr>"
-	for OLDER in `ls $OUTDIR/tests-*.html|sort`; do
-		O=`basename $OLDER`
-		YR=${O:6:2}
-		MO=${O:8:2}
-		DY=${O:10:2}
-		if echo "$DY$MO$YR"|egrep -v "[0-9]{6}"; then
-			YR=${O#tests-}
-			YR=${YR%.html}
-			MO=0
-			DY=$YR
-		else
-			YR="20$YR"
-		fi
-		if [ $LASTYR != $YR ]; then
-			html "</tr></table>"
-			html "<h2>$YR</h2>"
-			LASTYR=$YR
-		fi
-		if [ $LASTMO != $MO ]; then
-			html "</tr></table>"
-			html "<h3>${MONTHS[$MO]}</h3>"
-			html "<table border=\"0\"><tr>"
-			LASTMO=$MO
-		fi
-		SUCCESS=`grep 'class="success"' $OLDER|wc -l`
-		FAILURE=`grep 'class="failure"' $OLDER|wc -l`
-		if [ "$SUCCESS$FAILURE" == "00" ]; then
-			COLOR="#e0e0e0"
-		else
-			COLOR=`perl -e "printf \"#%02x%02x%02x\", $FAILURE/($SUCCESS+$FAILURE)*220+35, $SUCCESS/($SUCCESS+$FAILURE)*220+35, 40;"`
-		fi
-		html "<td bgcolor=\"$COLOR\"><a href=\"$O\">$DY</a></td>"
-	done
-	html "</tr></table><br><br>"
-	cat <<DOH >>$HTML
+  LASTYR="00"
+  LASTMO="00"
+  html "<h1>Older tests</h1>"
+  html '<a name="older">'
+  html "<table><tr>"
+  for OLDER in `ls $OUTDIR/tests-*.html|sort`; do
+    O=`basename $OLDER`
+    YR=${O:6:2}
+    MO=${O:8:2}
+    DY=${O:10:2}
+    if echo "$DY$MO$YR"|egrep -v "[0-9]{6}"; then
+      YR=${O#tests-}
+      YR=${YR%.html}
+      MO=0
+      DY=$YR
+    else
+      YR="20$YR"
+    fi
+    if [ $LASTYR != $YR ]; then
+      html "</tr></table>"
+      html "<h2>$YR</h2>"
+      LASTYR=$YR
+    fi
+    if [ $LASTMO != $MO ]; then
+      html "</tr></table>"
+      html "<h3>${MONTHS[$MO]}</h3>"
+      html "<table border=\"0\"><tr>"
+      LASTMO=$MO
+    fi
+    SUCCESS=`grep 'class="success"' $OLDER|wc -l`
+    FAILURE=`grep 'class="failure"' $OLDER|wc -l`
+    if [ "$SUCCESS$FAILURE" == "00" ]; then
+      COLOR="#e0e0e0"
+    else
+      COLOR=`perl -e "printf \"#%02x%02x%02x\", $FAILURE/($SUCCESS+$FAILURE)*220+35, $SUCCESS/($SUCCESS+$FAILURE)*220+35, 40;"`
+    fi
+    html "<td bgcolor=\"$COLOR\"><a href=\"$O\">$DY</a></td>"
+  done
+  html "</tr></table><br><br>"
+  cat <<DOH >>$HTML
 	<a href="addtests.html">How to add new tests</a>
 	</body>
-</html>
+        </html>
 DOH
 }
 
 outecho() {
-	TYPE=$1
-	shift
-	echo "<$TYPE>$1|$2|$3|$4|$5|$6|$7|$8|$9|"
+  TYPE=$1
+  shift
+  echo "<$TYPE>$1|$2|$3|$4|$5|$6|$7|$8|$9|"
 }
 
 out() {
         # echo $@
-	TYPE=$1
-	if [ "$TYPE" == "test" ]; then
+  TYPE=$1
+  if [ "$TYPE" == "test" ]; then
 
-		NAME=$2
-		SEQ=$3
-		CMD=$4
-		RES=$5
+    NAME=$2  #
+    LABEL=$3 # Text on link to output
+    CMD=$4
+    RES=$5
 
-		if [ "$FIRSTTEST" == "1" ]; then
-			html "<h1>Test results</h1>"
-                        a_name "tests"
-			a_href "tests.log" "Output log from tests"
-			html "<table border=\"0\">"
-			FIRSTTEST=0
-		else
-			if [ "$FLUSH" == "1" ]; then
-				html "</tr></table></tr>"
-			fi
-		fi
+    if [ "$FIRSTTEST" == "1" ]; then
+      html "<h1>Test results</h1>"
+      a_name "tests"
+      a_href "tests.log" "Output log from tests"
+      html "<table border=\"0\">"
+      FIRSTTEST=0
+    else
+      if [ "$FLUSH" == "1" ]; then
+	html "</tr></table></tr>"
+      fi
+    fi
 
-		if [ "$TESTPART" != "" ]; then
-			html "<tr class=\"part\"><th colspan=\"2\">$TESTPART</th></tr>"
-			TESTPART=
-		fi
+    if [ "$TESTPART" != "" ]; then
+      html "<tr class=\"part\"><th colspan=\"2\">$TESTPART</th></tr>"
+      TESTPART=
+    fi
 
-		if [ "$FLUSH" == "1" ]; then
-			html "<tr class=\"testline\"><th align=\"right\">$NAME: </th><td><table border=\"0\"><tr>"
-		fi
-		if [ ${#SEQ} -gt 2 ]; then
-			WIDTH=""
-		else
-			WIDTH="width=\"20\""
-		fi
-		if [ "$RES" == "Passed" ]; then
-			html "<td class=\"success\" $WIDTH title=\"$CMD\">"
-			html "<a href=\"$TLOG\">$SEQ</a>"
-		else
-                        echo "FAILED"
-                        cat $TLOG < /dev/null
-			html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
-			html "<a href=\"$TLOG\">$SEQ</a>"
-		fi
-		html "</td>"
+    if [ "$FLUSH" == "1" ]; then
+      html "<tr class=\"testline\"><th align=\"right\">$NAME: </th><td><table border=\"0\"><tr>"
+    fi
+    if [ ${#LABEL} -gt 2 ]; then
+      WIDTH=""
+    else
+      WIDTH="width=\"20\""
+    fi
+    if [ "$RES" == "Passed" ]; then
+      html "<td class=\"success\" $WIDTH title=\"$CMD\">"
+      a_href $TLOG $LABEL
+    else
+      echo "FAILED"
+      cat $TLOG < /dev/null
+      html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
+      a_href $TLOG $LABEL
+    fi
+    html "</td>"
 
-	elif [ "$TYPE" == "package" ]; then
-		BINPACKAGE=$2
-	else
-		html $@
-	fi
-}
-
-aexec() {
-        declare -p PWD
-	echo "Executing: $@" >>$LOG
-	rm -fv $OUTPUT
-	LASTCMD="$@"
-	"$@" > $OUTPUT 2>&1
-        head $OUTPUT
-	EXITCODE=$?
-	if [ "$EXITCODE" == "127" ]; then
-		echo "Command not found: $@" > $OUTPUT
-	fi
-	if [ -f $OUTPUT ]; then
-		cat $OUTPUT >>$LOG
-	fi
+  elif [ "$TYPE" == "package" ]; then
+    BINPACKAGE=$2
+  else
+    html $@
+  fi
 }
 
 # TLOG = this (current) log
 tlog() {
-	TLOG="output_$LOGCOUNT.txt"
-	rm -fv $TLOG
-	banner "$LASTCMD" $RUNDIR/$TLOG
-	if [ -f $OUTPUT ]; then
-		cp -v $OUTPUT $RUNDIR/$TLOG 2>>$LOG
-	fi
-	let "LOGCOUNT=$LOGCOUNT+1"
-}
-
-# Fake exec
-fexec() {
-	FLUSH=1
-	banner "$TEST (faked)"
-	echo "Faking $TEST"
-	EXITCODE=0
-	LASTCMD=""
-	vtest
+  TLOG="output_$LOGCOUNT.txt"
+  rm -fv $TLOG
+  banner "$LASTCMD" $RUNDIR/$TLOG
+  if [ -f $OUTPUT ]; then
+    cp -v $OUTPUT $RUNDIR/$TLOG 2>>$LOG
+  fi
+  let "LOGCOUNT=$LOGCOUNT+1"
 }
 
 stars() {
@@ -275,85 +257,110 @@ stars() {
 }
 
 banner() {
-	if [ "$2" == "" ]; then
-		BOUT=$LOG
-	else
-		BOUT=$2
-	fi
-        {
-	  echo ""
+  if [ "$2" == "" ]; then
+    BOUT=$LOG
+  else
+    BOUT=$2
+  fi
+  {
+    echo ""
           # stars
-	  echo "* $1"
+    echo "* $1"
 	  # stars
-        } >>$BOUT
+  } >>$BOUT
+}
+
+aexec() {
+  declare -p PWD
+  printf "\nExecuting: $@" >>$LOG
+  rm -fv $OUTPUT
+  LASTCMD="$@"
+  "$@" > $OUTPUT 2>&1
+  EXITCODE=$?
+  if [ "$EXITCODE" == "127" ]; then
+    echo "Command not found: $@" > $OUTPUT
+  fi
+  if [ -f $OUTPUT ]; then
+    cat $OUTPUT >>$LOG
+  fi
 }
 
 # Execute as part of test set
 pexec() {
-	banner "$TEST (part $SEQ)"
-	echo "Executing $TEST (part $SEQ)"
-	aexec "$@"
-	ptest
-	let "SEQ=$SEQ+1"
-	FLUSH=0
+  banner "$TEST (part $SEQ)"
+  echo "Executing $TEST (part $SEQ)"
+  aexec "$@"
+  ptest
+  let "SEQ=$SEQ+1"
+  FLUSH=0
 }
 
 ssexec() {
-	SEQSAVE=$SEQ
-	SEQ=$1
-	shift
-	banner "$TEST (part $SEQ)"
-	echo "Executing $TEST (part $SEQ)"
-	aexec "$@"
-	ptest
-	SEQ=$SEQSAVE
-	FLUSH=0
+  SEQSAVE=$SEQ
+  SEQ=$1
+  shift
+  banner "$TEST (part $SEQ)"
+  echo "Executing $TEST (part $SEQ)"
+  aexec "$@"
+  ptest
+  SEQ=$SEQSAVE
+  FLUSH=0
 }
 
 # Execute final test in set
 vexec() {
-	if [ "$SEQ" == "1" ]; then
-		banner "$TEST"
-		echo "Executing $TEST"
-	else
-		banner "$TEST (part $SEQ)"
-		echo "Executing $TEST (part $SEQ)"
-	fi
-	aexec "$@"
-	vtest
-	SEQ=1
-	FLUSH=1
+  if [ "$SEQ" == "1" ]; then
+    banner "$TEST"
+    echo "Executing $TEST"
+  else
+    banner "$TEST (part $SEQ)"
+    echo "Executing $TEST (part $SEQ)"
+  fi
+  aexec "$@"
+  vtest
+  SEQ=1
+  FLUSH=1
+}
+
+# Fake exec
+fexec() {
+  FLUSH=1
+  banner "$TEST (faked)"
+  echo "Faking $TEST"
+  EXITCODE=0
+  LASTCMD=""
+  vtest
 }
 
 ptest() {
-	if [ "$EXITCODE" == "0" ]; then
-		RES="Passed"
-	else
-		RES="Failed"
-	fi
-	tlog
-	out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
-	if [ "$EXITONFAILURE" == "true" ]; then
-		if [ "$EXITCODE" != "0" ]; then
-			exit $EXITCODE
-		fi
-	fi
+  if [ "$EXITCODE" == "0" ]; then
+    RES="Passed"
+  else
+    RES="Failed"
+  fi
+  tlog
+  out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
+  if [ "$EXITONFAILURE" == "true" ]; then
+    if [ "$EXITCODE" != "0" ]; then
+      exit $EXITCODE
+    fi
+  fi
 }
 
 vtest() {
-	EC=$?
-	if [ "$EXITCODE" == "0" ]; then
-		RES="Passed"
-	else
-		RES="Failed"
-	fi
-	tlog
-	out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
-	if [ "$EXITCODE" != "0" ]; then
-		if [ "$EXITONFAILURE" == "true" ]; then
-			exit $EXITCODE
-		fi
-	fi
+  EC=$?
+  if [ "$EXITCODE" == "0" ]; then
+    RES="Passed"
+  else
+    RES="Failed"
+  fi
+  tlog
+  out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
+  if [ "$EXITCODE" != "0" ]; then
+    if [ "$EXITONFAILURE" == "true" ]; then
+      exit $EXITCODE
+    fi
+  fi
 }
 
 build_package() {
@@ -374,15 +381,15 @@ cd $TOPDIR
 TESTPART="Part I: Build"
 EXITONFAILURE=true
 if [ "$SKIP_CHECKOUT" != "1" ]; then
-	TEST="Checkout CoG"
-	pexec rm -rf cog
-        COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog"
-	vexec svn co $COG
+  TEST="Checkout CoG"
+  pexec rm -rf cog
+  COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog"
+  vexec svn co $COG
 
-	TEST="Checkout Swift"
-        pexec cd cog/modules
-	pexec rm -rf swift
-	vexec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
+  TEST="Checkout Swift"
+  pexec cd cog/modules
+  pexec rm -rf swift
+  vexec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
 fi
 
 TEST="Compile"
@@ -404,7 +411,7 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 cd $RUNDIR
 
 if [ $ALWAYS_EXITONFAILURE != "1" ]; then
-    EXITONFAILURE=false
+  EXITONFAILURE=false
 fi
 TESTPART="Part II: Local Tests"
 
@@ -416,7 +423,7 @@ for TEST in $( ls $TESTDIR/*.swift ); do # $TESTDIR/*.dtm
 
   TESTLINK="<a href=\"$TESTNAME\">$TESTNAME</a>"
 
-  for ((i=0; $i<9; i=$i+1)); do
+  for ((i=1; $i<$ITERS_LOCAL; i=$i+1)); do
     pexec swift -sites.file sites.xml $TESTNAME
   done
   vexec swift -sites.file sites.xml $TESTNAME
@@ -429,20 +436,24 @@ fi
 TESTPART="Part III: Grid Tests"
 
 for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
-	BN=`basename $TEST`
-	echo $BN
-	cp $TESTDIR/$BN .
+  BN=`basename $TEST`
+  echo $BN
+  cp $TESTDIR/$BN .
 
-	TESTNAME=${BN%.dtm}
-	TESTNAME=${TESTNAME%.swift}
-	TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
+  TESTNAME=${BN%.dtm}
+  TESTNAME=${TESTNAME%.swift}
+  TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
 
-	ssexec "Compile" vdlc $BN
-	for ((i=0; $i<9; i=$i+1)); do
-		pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
-	done
-	vexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+  ssexec "Compile" vdlc $BN
+  for ((i=0; $i<9; i=$i+1)); do
+    pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+  done
+  vexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 done
 
 #Don't remove me:
 footer
+
+# Local Variables:
+# sh-basic-offset: 2
+# End:
