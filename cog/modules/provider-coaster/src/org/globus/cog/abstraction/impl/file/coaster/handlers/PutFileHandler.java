@@ -10,7 +10,6 @@
 package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOHandle;
@@ -122,7 +121,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
     }
 
     public void errorReceived(String msg, Exception t) {
-        logger.warn(msg, t);
+        logger.info(msg, t);
         if (provider != null) {
             try {
                 provider.abort(writer);

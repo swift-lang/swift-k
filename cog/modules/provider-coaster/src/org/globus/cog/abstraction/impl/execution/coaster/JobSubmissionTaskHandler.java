@@ -82,9 +82,13 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private String cancelMessage;
     private boolean cancel;
     private boolean autostart;
-
+    
     public JobSubmissionTaskHandler() {
-        this.autostart = true;
+        this(true);
+    }
+
+    public JobSubmissionTaskHandler(boolean autostart) {
+        this.autostart = autostart;
     }
 
     public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
