@@ -22,7 +22,7 @@ use warnings;
 #   1. Stageouts will be done in parallel
 #   2. The job status will be set to "COMPLETED" as soon as the last
 #      file is staged out (and before any cleanup is done).
-use constant ASYNC => 0;
+use constant ASYNC => 1;
 
 use constant {
 	TRACE => 0,
@@ -984,7 +984,6 @@ sub cleanup {
 			}
 			wlog DEBUG, "$jobid Removing $c\n";
 			rmtree($c, {safe => 1});
-			rmdir($c);
 			wlog DEBUG, "$jobid Removed $c\n";
 		}
 	}
@@ -1070,7 +1069,6 @@ sub submitjob {
 		$line =~ s/\\n/\n/;
 		$line =~ s/\\\\/\\/;
 		my @pair = split(/=/, $line, 2);
-		wlog DEBUG, "$JOBID $pair[0]=$pair[1]\n";
 		if ($pair[0] eq "arg") {
 			push @JOBARGS, $pair[1];
 		}
@@ -1255,9 +1253,12 @@ sub checkJobStatus {
 		$status = $? >> 8 + (($? & 0xff) << 8);
 	}
 
-	wlog DEBUG, "$JOBID Child process $pid terminated. Status is $status. $!\n";
-	my $s = <$RD>;
-	wlog DEBUG, "$JOBID Got output from child. Closing pipe.\n($s)\n";
+	wlog DEBUG, "$JOBID Child process $pid terminated. Status is $status.\n";
+	my $s;
+	if (!eof($RD)) {
+		$s = <$RD>;
+	}
+	wlog DEBUG, "$JOBID Got output from child. Closing pipe.\n";
 	close $RD;
 	$JOBDATA{$JOBID}{"exitcode"} = $status;
 	if (defined $s) {
