@@ -74,7 +74,7 @@ public class CoasterPersistentService extends CoasterService {
             }
             GSSCredential cred = new GlobusGSSCredentialImpl(gc, GSSCredential.INITIATE_AND_ACCEPT);
             
-            int port = 0;
+            int port = 1984;
             if (ap.hasValue("port")) {
                 port = ap.getIntValue("port");
             }
