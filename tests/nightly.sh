@@ -20,7 +20,7 @@ printhelp() {
   printf "\t -p      Do not build the package        \n"
   printf "\t -s      Do not do a fresh svn checkout  \n"
   printf "\t -x      Do not continue after a failure \n"
-  printf "\t -v      Verbose (set -x)                \n"
+  printf "\t -v      Verbose (set -x, HTML comments) \n"
   printf "\t output  Location for output (TOPDIR)    \n"
 }
 
@@ -63,7 +63,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-(( VERBOSE )) && set -x
+if (( VERBOSE )); then
+  set -x
+  HTML_COMMENTS=1
+fi
 
 # Iterations
 ITERS_LOCAL=1
@@ -106,21 +109,80 @@ html() {
   echo $@ >>$HTML
 }
 
-a_name() {
+html_h1() {
+  TEXT=$1
+  html "<h1>$TEXT</h1>"
+}
+
+html_a_name() {
   NAME=$1
   html "<a name=\"$NAME\">"
 }
 
-a_href() {
+html_a_href() {
   HREF=$1
   TEXT=$2
   html "<a href=\"$HREF\">$TEXT</a>"
 }
 
+html_table() {
+  html "<table border=\"0\">"
+}
+
+html_~table() {
+  html "</table>"
+}
+
+html_tr() {
+  CLASS=$1
+  if [ -n $CLASS ]; then
+    html "<tr class=\"$CLASS\">"
+  else
+    html "<tr>"
+  fi
+}
+
+html_~tr() {
+  html "</tr>"
+}
+
+html_th() {
+  COLSPAN=$1
+  if [ -n $COLSPAN ]; then
+    html "<th colspan=\"$COLSPAN\">"
+  else
+    html "<th>"
+  fi
+}
+
+html_~th() {
+  html "</th>"
+}
+
+html_td() {
+  ALIGN=$1
+  if [ -n $ALIGN ]; then
+    html "<td align=\"$ALIGN\">"
+  else
+    html "<td>"
+  fi
+}
+
+html_~td() {
+  html "</td>"
+}
+
+html_comment() {
+  COMMENT=$1
+  (( HTML_COMMENTS == 1 )) && html "<!-- $COMMENT -->"
+}
+
 footer() {
+  html "</tr></table></tr></table>"
+  html_comment "End of tests"
+
   MONTHS=("" "Jan" "Feb" "Mar" "Apr" "May" "Jun" \
     "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
-  html "</tr></table></tr></table>"
 
   if [ "$BINPACKAGE" != "" ]; then
     FBP=$RUNDIR/$BINPACKAGE
@@ -190,44 +252,26 @@ out() {
   TYPE=$1
   if [ "$TYPE" == "test" ]; then
 
-    NAME=$2  #
-    LABEL=$3 # Text on link to output
-    CMD=$4
-    RES=$5
+    LABEL=$2  # Text on link to output
+    CMD=$3    # Command issued (td title)
+    RESULT=$4
 
-    if [ "$FIRSTTEST" == "1" ]; then
-      html "<h1>Test results</h1>"
-      a_name "tests"
-      a_href "tests.log" "Output log from tests"
-      html "<table border=\"0\">"
-      FIRSTTEST=0
-    else
-      if [ "$FLUSH" == "1" ]; then
-	html "</tr></table></tr>"
-      fi
-    fi
-
-    if [ "$TESTPART" != "" ]; then
-      html "<tr class=\"part\"><th colspan=\"2\">$TESTPART</th></tr>"
-      TESTPART=
-    fi
 
     if [ "$FLUSH" == "1" ]; then
-      html "<tr class=\"testline\"><th align=\"right\">$NAME: </th><td><table border=\"0\"><tr>"
+      html_~tr
+      html_~table
+      html_~tr
     fi
-    if [ ${#LABEL} -gt 2 ]; then
-      WIDTH=""
-    else
-      WIDTH="width=\"20\""
-    fi
-    if [ "$RES" == "Passed" ]; then
+
+    WIDTH=$( width $LABEL )
+    if [ "$RESULT" == "Passed" ]; then
       html "<td class=\"success\" $WIDTH title=\"$CMD\">"
-      a_href $TLOG $LABEL
+      html_a_href $TLOG $LABEL
     else
       echo "FAILED"
       cat $TLOG < /dev/null
       html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
-      a_href $TLOG $LABEL
+      html_a_href $TLOG $LABEL
     fi
     html "</td>"
 
@@ -236,6 +280,55 @@ out() {
   else
     html $@
   fi
+}
+
+start_test_results() {
+  html_h1 "Test results"
+  html_a_name "tests"
+  html_a_href "tests.log" "Output log from tests"
+  html_table
+}
+
+start_part() {
+  PART=$1
+  html_tr part
+  html_th 2
+  html $PART
+  html_~th
+  html_~tr
+}
+
+start_row() {
+  html_tr testline
+  html_td right
+  if [[ -n $TESTLINK ]]; then
+    html_a_href $TESTLINK $TESTNAME
+  else
+    html $TESTNAME
+  fi
+  html_~td
+  html_td
+  html_table
+  html_tr
+  SEQ=1
+}
+
+end_row() {
+  html_~tr
+  html_~table
+  html_~td
+  html_~tr
+}
+
+# HTML width of label (for alignment)
+width() {
+  LABEL=$1
+  if [ ${#LABEL} -gt 2 ]; then
+    WIDTH=""
+  else
+    WIDTH="width=\"20\""
+  fi
+  echo $WIDTH
 }
 
 # TLOG = this (current) log
@@ -293,7 +386,6 @@ pexec() {
   aexec "$@"
   ptest
   let "SEQ=$SEQ+1"
-  FLUSH=0
 }
 
 ssexec() {
@@ -308,21 +400,6 @@ ssexec() {
   FLUSH=0
 }
 
-# Execute final test in set
-vexec() {
-  if [ "$SEQ" == "1" ]; then
-    banner "$TEST"
-    echo "Executing $TEST"
-  else
-    banner "$TEST (part $SEQ)"
-    echo "Executing $TEST (part $SEQ)"
-  fi
-  aexec "$@"
-  vtest
-  SEQ=1
-  FLUSH=1
-}
-
 # Fake exec
 fexec() {
   FLUSH=1
@@ -330,35 +407,19 @@ fexec() {
   echo "Faking $TEST"
   EXITCODE=0
   LASTCMD=""
-  vtest
+  ptest
 }
 
 ptest() {
   if [ "$EXITCODE" == "0" ]; then
-    RES="Passed"
+    RESULT="Passed"
   else
-    RES="Failed"
+    RESULT="Failed"
   fi
   tlog
-  out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
+  out test $SEQ "$LASTCMD" $RESULT $TLOG
   if [ "$EXITONFAILURE" == "true" ]; then
     if [ "$EXITCODE" != "0" ]; then
-      exit $EXITCODE
-    fi
-  fi
-}
-
-vtest() {
-  EC=$?
-  if [ "$EXITCODE" == "0" ]; then
-    RES="Passed"
-  else
-    RES="Failed"
-  fi
-  tlog
-  out test "$TESTLINK" $SEQ "$LASTCMD" $RES $TLOG
-  if [ "$EXITCODE" != "0" ]; then
-    if [ "$EXITONFAILURE" == "true" ]; then
       exit $EXITCODE
     fi
   fi
@@ -369,36 +430,44 @@ build_package() {
   pexec cd $SWIFT_HOME/lib
   pexec rm -f castor*.jar *gt2ft*.jar ant.jar
   pexec cd $TOPDIR
-  vexec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
+  pexec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
   out package "swift-$DATE.tar.gz"
 }
 
 date > $LOG
-FLUSH=1
 
 header
+start_test_results
 cd $TOPDIR
 
-TESTPART="Part I: Build"
+start_part "Part I: Build"
+
+TESTLINK=
 EXITONFAILURE=true
 if [ "$SKIP_CHECKOUT" != "1" ]; then
-  TEST="Checkout CoG"
+  TESTNAME="Checkout CoG"
+  start_row
   pexec rm -rf cog
   COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog"
-  vexec svn co $COG
+  pexec svn co $COG
+  end_row
 
-  TEST="Checkout Swift"
+  TESTNAME="Checkout Swift"
+  start_row
   pexec cd cog/modules
   pexec rm -rf swift
-  vexec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
+  pexec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
+  end_row
 fi
 
-TEST="Compile"
+TESTNAME="Compile"
+start_row
+
 pexec cd $TOPDIR/cog/modules/swift
 if [ $CLEAN == "1" ]; then
   pexec rm -rf dist
 fi
-vexec ant -quiet dist
+pexec ant -quiet dist
 SWIFT_HOME=$TOPDIR/cog/modules/swift/dist/swift-svn
 
 if [ $BUILD_PACKAGE = "1" ]; then
@@ -411,23 +480,28 @@ which swift
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 cd $RUNDIR
 
+end_row
+
 if [ $ALWAYS_EXITONFAILURE != "1" ]; then
   EXITONFAILURE=false
 fi
-TESTPART="Part II: Local Tests"
+
+start_part "Part II: Local Tests"
 
 for TEST in $( ls $TESTDIR/*.swift ); do # $TESTDIR/*.dtm
   TESTNAME=$( basename $TEST)
-  echo TESTNAME: $TESTNAME $TESTDIR/$TESTNAME
   cp -uv $TESTDIR/$TESTNAME .
   sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
+  TESTLINK=$TESTNAME
 
-  TESTLINK="<a href=\"$TESTNAME\">$TESTNAME</a>"
+  start_row
 
   for ((i=1; $i<$ITERS_LOCAL; i=$i+1)); do
     pexec swift -sites.file sites.xml $TESTNAME
   done
-  vexec swift -sites.file sites.xml $TESTNAME
+  pexec swift -sites.file sites.xml $TESTNAME
+
+  end_row
 done
 
 if [ $GRID_TESTS == "0" ]; then
@@ -449,7 +523,7 @@ for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
   for ((i=0; $i<9; i=$i+1)); do
     pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
   done
-  vexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+  pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 done
 
 #Don't remove me:
