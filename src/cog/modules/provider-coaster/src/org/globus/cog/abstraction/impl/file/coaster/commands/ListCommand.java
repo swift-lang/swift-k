@@ -12,14 +12,12 @@ package org.globus.cog.abstraction.impl.file.coaster.commands;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.AbstractKarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class ListCommand extends Command {
@@ -30,8 +28,8 @@ public class ListCommand extends Command {
         addOutData(name);
     }
     
-    public Collection getResult() throws ProtocolException {
-        List l = new ArrayList();
+    public Collection<GridFile> getResult() throws ProtocolException {
+        List<GridFile> l = new ArrayList<GridFile>();
         int i = 0;
         int sz = getInDataSize();
         if (sz % 7 != 0) {

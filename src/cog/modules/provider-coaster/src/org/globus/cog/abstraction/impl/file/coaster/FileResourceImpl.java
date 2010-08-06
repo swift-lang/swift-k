@@ -9,7 +9,6 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -55,13 +54,22 @@ public class FileResourceImpl extends AbstractFileResource {
     private String url, provider;
     
     public FileResourceImpl() {
-        this.autostart = true;
+        this(true);
+    }
+    
+    public FileResourceImpl(boolean autostart) {
+        this.autostart = autostart;
+    }
+    
+    public FileResourceImpl(String name, String protocol,
+            ServiceContact serviceContact, SecurityContext securityContext) {
+        this(name, protocol, serviceContact, securityContext, true);
     }
 
     public FileResourceImpl(String name, String protocol,
-            ServiceContact serviceContact, SecurityContext securityContext) {
+            ServiceContact serviceContact, SecurityContext securityContext, boolean autostart) {
         super(name, protocol, serviceContact, securityContext);
-        this.autostart = true;
+        this.autostart = autostart;
     }
 
     private void run(Command cmd) throws FileResourceException {
@@ -145,11 +153,11 @@ public class FileResourceImpl extends AbstractFileResource {
         return ic.getResult();
     }
 
-    public Collection list() throws FileResourceException {
+    public Collection<GridFile> list() throws FileResourceException {
         return list(".");
     }
 
-    public Collection list(String directoryName)
+    public Collection<GridFile> list(String directoryName)
             throws DirectoryNotFoundException, FileResourceException {
         ListCommand lc = new ListCommand(directoryName);
         run(lc);

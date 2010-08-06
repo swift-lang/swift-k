@@ -34,6 +34,7 @@ import org.globus.cog.abstraction.impl.file.coaster.handlers.RenameHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.RmdirHandler;
 import org.globus.cog.karajan.workflow.service.AbstractRequestManager;
 import org.globus.cog.karajan.workflow.service.handlers.ChannelConfigurationHandler;
+import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
 import org.globus.cog.karajan.workflow.service.handlers.ShutdownHandler;
 import org.globus.cog.karajan.workflow.service.handlers.VersionHandler;
 
@@ -42,6 +43,7 @@ public class CoasterRequestManager extends AbstractRequestManager {
         addHandler("VERSION", VersionHandler.class);
         addHandler("CHANNELCONFIG", ChannelConfigurationHandler.class);
         addHandler("SHUTDOWN", ShutdownHandler.class);
+        addHandler("HEARTBEAT", HeartBeatHandler.class);
         addHandler(SubmitJobCommand.NAME, SubmitJobHandler.class);
         addHandler(ServiceShutdownHandler.NAME, ServiceShutdownHandler.class);
         addHandler(WorkerShellHandler.NAME, WorkerShellHandler.class);
