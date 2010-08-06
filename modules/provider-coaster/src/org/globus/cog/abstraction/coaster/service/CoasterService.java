@@ -10,6 +10,7 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -34,6 +35,7 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.PipedClientChannel;
 import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
+import org.ietf.jgss.GSSCredential;
 
 public class CoasterService extends GSSService {
     public static final Logger logger = Logger
@@ -52,9 +54,22 @@ public class CoasterService extends GSSService {
     private static Timer watchdogs = new Timer();
     private boolean local;
     private KarajanChannel channelToClient;
+    private boolean ignoreIdleTime;
 
     public CoasterService() throws IOException {
-        this(null, null, true);
+        this(true);
+    }
+    
+    public CoasterService(boolean local) throws IOException {
+        this(null, null, local);
+    }
+
+    public CoasterService(boolean secure, int port, InetAddress bindTo) throws IOException {
+        super(secure, port, bindTo);
+    }
+
+    public CoasterService(GSSCredential cred, int port, InetAddress bindTo) throws IOException {
+        super(cred, port, bindTo);   
     }
 
     public CoasterService(String registrationURL, String id, boolean local)
@@ -65,6 +80,10 @@ public class CoasterService extends GSSService {
         this.registrationURL = registrationURL;
         this.id = id;
         setAuthorization(new SelfAuthorization());
+        initializeLocalService();
+    }
+    
+    protected void initializeLocalService() throws IOException {
         RequestManager rm = new ServiceRequestManager();
         rm.addHandler("REGISTER", RegistrationHandler.class);
         rm.addHandler("JOBSTATUS", JobStatusHandler.class);
@@ -104,6 +123,9 @@ public class CoasterService extends GSSService {
     public void start() {
         super.start();
         try {
+            if (localService == null) {
+                throw new IllegalStateException("Local service not initialized");
+            }
             localService.start();
             jobQueue = new JobQueue(localService);
             jobQueue.start();
@@ -189,6 +211,9 @@ public class CoasterService extends GSSService {
     }
 
     private synchronized void checkIdleTime() {
+        if (ignoreIdleTime) {
+            return;
+        }
         // the notification manager should probably not be a singleton
         long idleTime = NotificationManager.getDefault().getIdleTime();
         logger.info("Idle time: " + idleTime);
@@ -303,6 +328,14 @@ public class CoasterService extends GSSService {
 
     public JobQueue getJobQueue() {
         return jobQueue;
+    }
+    
+    public boolean getIgnoreIdleTime() {
+        return ignoreIdleTime;
+    }
+
+    public void setIgnoreIdleTime(boolean ignoreIdleTime) {
+        this.ignoreIdleTime = ignoreIdleTime;
     }
 
     protected RemoteConfiguration.Entry getChannelConfiguration(String contact) {
