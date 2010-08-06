@@ -8,6 +8,4 @@ type file {}
 }
 
 string greetings[] = ["how","are","you"];
-file hw = echo(greetings);	
-
-
+file hw = echo_wildcard(greetings);
