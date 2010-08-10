@@ -267,21 +267,14 @@ out() {
   TYPE=$1
   if [ "$TYPE" == "test" ]; then
 
-    LABEL=$2  # Text on link to output
+    LABEL="$2"  # Text on link to output
     CMD=$3    # Command issued (td title)
-    RESULT=$4
+    RESULT=$4 # Passed or Failed
 
-
-    if [ "$FLUSH" == "1" ]; then
-      html_~tr
-      html_~table
-      html_~tr
-    fi
-
-    WIDTH=$( width $LABEL )
+    WIDTH=$( width "$LABEL" )
     if [ "$RESULT" == "Passed" ]; then
       html "<td class=\"success\" $WIDTH title=\"$CMD\">"
-      html_a_href $TLOG $LABEL
+      html_a_href $TLOG "$LABEL"
     else
       echo "FAILED"
       cat $TLOG < /dev/null
@@ -337,7 +330,7 @@ end_row() {
 
 # HTML width of label (for alignment)
 width() {
-  LABEL=$1
+  LABEL="$1"
   if [ ${#LABEL} -gt 2 ]; then
     WIDTH=""
   else
@@ -379,6 +372,24 @@ banner() {
   } >>$BOUT
 }
 
+# Check for early bailout condition
+check_bailout() {
+  if [ "$EXITONFAILURE" == "true" ]; then
+    if [ "$EXITCODE" != "0" ]; then
+      exit $EXITCODE
+    fi
+  fi
+}
+
+# Translate exit code into result (Passed/Failed) string
+result() {
+  if [ "$EXITCODE" == "0" ]; then
+    echo "Passed"
+  else
+    echo "Failed"
+  fi
+}
+
 aexec() {
   declare -p PWD
   printf "\nExecuting: $@" >>$LOG
@@ -399,8 +410,45 @@ pexec() {
   banner "$TEST (part $SEQ)"
   echo "Executing $TEST (part $SEQ)"
   aexec "$@"
-  ptest
+  RESULT=$( result )
+  tlog
+  out test $SEQ "$LASTCMD" $RESULT $TLOG
+
+  check_bailout
+
   let "SEQ=$SEQ+1"
+}
+
+# Execute helper script (setup, check, or clean)
+script_exec() {
+  SCRIPT=$1
+  SYMBOL="$2"
+
+  aexec $SCRIPT
+  RESULT=$( result )
+
+  tlog
+  out test "$SYMBOL" "$LASTCMD" $RESULT
+
+  check_bailout
+}
+
+# Execute Swift test case w/ setup, check, clean
+swift_test() {
+  SWIFTSCRIPT=$1
+  SETUPSCRIPT=${SWIFTSCRIPT%.swift}.setup.sh
+  CHECKSCRIPT=${SWIFTSCRIPT%.swift}.check.sh
+  CLEANSCRIPT=${SWIFTSCRIPT%.swift}.clean.sh
+  if [ -x $TESTDIR/$SETUPSCRIPT ]; then
+    script_exec $TESTDIR/$SETUPSCRIPT "S"
+  fi
+  pexec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
+  if [ -x $TESTDIR/$CHECKSCRIPT ]; then
+    script_exec $TESTDIR/$CHECKSCRIPT "&#8730;"
+  fi
+  if [ -x $TESTDIR/$CLEANSCRIPT ]; then
+    script_exec $TESTDIR/$CLEANSCRIPT "C"
+  fi
 }
 
 ssexec() {
@@ -412,33 +460,19 @@ ssexec() {
   aexec "$@"
   ptest
   SEQ=$SEQSAVE
-  FLUSH=0
 }
 
 # Fake exec
 fexec() {
-  FLUSH=1
   banner "$TEST (faked)"
   echo "Faking $TEST"
   EXITCODE=0
   LASTCMD=""
-  ptest
+  # ptest
 }
 
-ptest() {
-  if [ "$EXITCODE" == "0" ]; then
-    RESULT="Passed"
-  else
-    RESULT="Failed"
-  fi
-  tlog
-  out test $SEQ "$LASTCMD" $RESULT $TLOG
-  if [ "$EXITONFAILURE" == "true" ]; then
-    if [ "$EXITCODE" != "0" ]; then
-      exit $EXITCODE
-    fi
-  fi
-}
+#ptest() {
+#}
 
 build_package() {
   TEST="Package"
@@ -519,7 +553,7 @@ for TEST in $( ls $TESTDIR/*.swift ); do
 
   start_row
   for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
-    pexec swift -sites.file sites.xml -tc.file tc.data $TESTNAME
+    swift_test $TESTNAME
   done
   end_row
 done
