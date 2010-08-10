@@ -14,9 +14,11 @@ printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""
   echo "usage:"
+  printf "\t -a      Do not run ant                  \n"
   printf "\t -c      Do not clean                    \n"
   printf "\t -g      Do not run grid tests           \n"
   printf "\t -h      This message                    \n"
+  printf "\t -k <N>  Skip first N tests              \n"
   printf "\t -p      Do not build the package        \n"
   printf "\t -s      Do not do a fresh svn checkout  \n"
   printf "\t -x      Do not continue after a failure \n"
@@ -25,7 +27,9 @@ printhelp() {
 }
 
 # Defaults:
+RUN_ANT=1
 CLEAN=1
+SKIP_TESTS=0
 BUILD_PACKAGE=1
 GRID_TESTS=1
 SKIP_CHECKOUT=0
@@ -36,6 +40,9 @@ TOPDIR=$PWD
 
 while [ $# -gt 0 ]; do
   case $1 in
+    -a)
+      RUN_ANT=0
+      shift;;
     -c)
       CLEAN=0
       shift;;
@@ -45,6 +52,9 @@ while [ $# -gt 0 ]; do
     -h)
       printhelp
       exit 0;;
+    -k)
+      SKIP_TESTS=$2
+      shift 2;;
     -p)
       BUILD_PACKAGE=0
       shift;;
@@ -69,7 +79,7 @@ if (( VERBOSE )); then
 fi
 
 # Iterations
-ITERS_LOCAL=1
+ITERS_LOCAL=2
 
 LOGCOUNT=0
 SEQ=1
@@ -106,7 +116,7 @@ header() {
 }
 
 html() {
-  echo $@ >>$HTML
+  printf "$@\n" >>$HTML
 }
 
 html_h1() {
@@ -172,6 +182,14 @@ html_~td() {
   html "</td>"
 }
 
+html_~body() {
+  html "</body>"
+}
+
+html_~html() {
+  html "</html>"
+}
+
 html_comment() {
   COMMENT=$1
   (( HTML_COMMENTS == 1 )) && html "<!-- $COMMENT -->"
@@ -234,11 +252,8 @@ DOH
     html "<td bgcolor=\"$COLOR\"><a href=\"$O\">$DY</a></td>"
   done
   html "</tr></table><br><br>"
-  cat <<DOH >>$HTML
-	<a href="addtests.html">How to add new tests</a>
-	</body>
-        </html>
-DOH
+  html_~body
+  html_~html
 }
 
 outecho() {
@@ -293,7 +308,7 @@ start_part() {
   PART=$1
   html_tr part
   html_th 2
-  html $PART
+  html "$PART"
   html_~th
   html_~tr
 }
@@ -464,10 +479,12 @@ TESTNAME="Compile"
 start_row
 
 pexec cd $TOPDIR/cog/modules/swift
-if [ $CLEAN == "1" ]; then
+if (( $CLEAN )); then
   pexec rm -rf dist
 fi
-pexec ant -quiet dist
+if (( $RUN_ANT )); then
+  pexec ant -quiet dist
+fi
 SWIFT_HOME=$TOPDIR/cog/modules/swift/dist/swift-svn
 
 if [ $BUILD_PACKAGE = "1" ]; then
@@ -486,21 +503,24 @@ if [ $ALWAYS_EXITONFAILURE != "1" ]; then
   EXITONFAILURE=false
 fi
 
+sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
+sed "s@_DIR_@$TESTDIR@"   < $TESTDIR/tc.template.data    > tc.data
+
 start_part "Part II: Local Tests"
 
-for TEST in $( ls $TESTDIR/*.swift ); do # $TESTDIR/*.dtm
+J=0
+for TEST in $( ls $TESTDIR/*.swift ); do
+
+  (( J++ < SKIP_TESTS )) && continue
+
   TESTNAME=$( basename $TEST)
   cp -uv $TESTDIR/$TESTNAME .
-  sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
   TESTLINK=$TESTNAME
 
   start_row
-
-  for ((i=1; $i<$ITERS_LOCAL; i=$i+1)); do
-    pexec swift -sites.file sites.xml $TESTNAME
+  for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
+    pexec swift -sites.file sites.xml -tc.file tc.data $TESTNAME
   done
-  pexec swift -sites.file sites.xml $TESTNAME
-
   end_row
 done
 
