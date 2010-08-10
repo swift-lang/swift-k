@@ -10,6 +10,7 @@ app (file f) echo (string s) {
     }
 }
 
-string sa[] = ["hello","hi there","how are you"];
-file fa[];
-fa = echo_batch(sa);
+string m[] = ["hello","hi there","how are you"];
+string f[] = ["f1.txt", "f2.txt", "f3.txt"];
+file fa[]<array_mapper; files=f>;
+fa = echo_batch(m);

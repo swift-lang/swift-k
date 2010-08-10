@@ -1,12 +1,7 @@
-type file {}
+type file;
 
-
-(file t) echo (string s) {
-    app {
-        echo s stdout=@filename(t);
-    }
+app (file t) echo (string s) {
+  echo s stdout=@filename(t);
 }
 
-file hw = echo("hello world");		// May need syntax to give a call a name.
-
-
+file hw<"hello.txt"> = echo("hello world");

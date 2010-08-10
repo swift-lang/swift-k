@@ -1,11 +1,8 @@
-type file {}
+type file;
 
-
-(file t) echo_wildcard (string s[]) {
-    app {
-        echo s[*] stdout=@filename(t);
-    }
+app (file t) echo_wildcard (string s[]) {
+  echo s[*] stdout=@filename(t);
 }
 
 string greetings[] = ["how","are","you"];
-file hw = echo_wildcard(greetings);
+file hw<"hw.txt"> = echo_wildcard(greetings);
