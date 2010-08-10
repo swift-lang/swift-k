@@ -89,7 +89,7 @@ if (( VERBOSE )); then
 fi
 
 # Iterations
-ITERS_LOCAL=2
+ITERS_LOCAL=1
 
 LOGCOUNT=0
 SEQ=1
@@ -572,9 +572,9 @@ fi
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
 
-#start_part "Part II: Working Tests"
-#GROUP=$TESTDIR/language/working
-#test_group
+start_part "Part II: Working Tests"
+GROUP=$TESTDIR/language/working
+test_group
 
 start_part "Part III: Local Tests"
 GROUP=$TESTDIR/local
