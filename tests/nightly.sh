@@ -10,6 +10,14 @@
 # Everything for a Swift test is written in its RUNDIR
 # The temporary output always goes to OUTPUT (TOPDIR/exec.out)
 
+# Each *.swift test may be accompanied by a
+# *.setup.sh, *.check.sh, and/or *.clean.sh script
+# These may setup and inspect files in RUNDIR including swift.out
+
+# OUTPUT is the stdout of the current test
+# stdout.txt retains stdout from the previous test (for *.clean.sh)
+# output_*.txt is the HTML-linked permanent output from a test
+
 printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""
@@ -90,7 +98,7 @@ RUNDIRBASE="run-$DATE"
 RUNDIR=$TOPDIR/$RUNDIRBASE
 LOGBASE=$RUNDIRBASE/tests.log
 LOG=$TOPDIR/$LOGBASE
-OUTPUT=$TOPDIR/exec.out
+OUTPUT=$RUNDIR/exec.out
 
 HTMLPATH=$RUNDIRBASE/tests-$DATE.html
 HTML=$TOPDIR/$HTMLPATH
@@ -339,13 +347,14 @@ width() {
   echo $WIDTH
 }
 
-# TLOG = this (current) log
-tlog() {
+# TLOG = test log
+test_log() {
   TLOG="output_$LOGCOUNT.txt"
   rm -fv $TLOG
   banner "$LASTCMD" $RUNDIR/$TLOG
   if [ -f $OUTPUT ]; then
     cp -v $OUTPUT $RUNDIR/$TLOG 2>>$LOG
+    cp -v $OUTPUT stdout.txt
   fi
   let "LOGCOUNT=$LOGCOUNT+1"
 }
@@ -411,7 +420,7 @@ pexec() {
   echo "Executing $TEST (part $SEQ)"
   aexec "$@"
   RESULT=$( result )
-  tlog
+  test_log
   out test $SEQ "$LASTCMD" $RESULT $TLOG
 
   check_bailout
@@ -427,7 +436,7 @@ script_exec() {
   aexec $SCRIPT
   RESULT=$( result )
 
-  tlog
+  test_log
   out test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
