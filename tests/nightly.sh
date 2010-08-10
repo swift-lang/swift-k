@@ -1,6 +1,15 @@
 #!/bin/bash
 
 # USAGE NOTES:
+
+# Run this script from a working directory in which you
+# are willing to check out the whole Swift source and
+# generate many small test files.
+
+# The script will checkout Swift, run several tests,
+# in a subdirectory called run-DATE, including generating
+# useful HTML output and tests.log
+
 # Run nightly.sh -h for quick help
 # When something goes wrong, find and check tests.log
 # Code is checked out into TOPDIR
