@@ -498,10 +498,9 @@ test_group() {
 
   sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
 
-  J=0
   for TEST in $( ls $GROUP/*.swift ); do
 
-    (( J++ < SKIP_TESTS )) && continue
+    (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
     TESTNAME=$( basename $TEST)
     cp -uv $GROUP/$TESTNAME .
@@ -572,6 +571,7 @@ fi
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
 
+SKIP_COUNTER=0
 start_part "Part II: Working Tests"
 GROUP=$TESTDIR/language/working
 test_group
