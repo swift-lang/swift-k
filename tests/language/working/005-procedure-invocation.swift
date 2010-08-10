@@ -1,7 +1,7 @@
 
-echo(int i) {
-app { echo i ; }
+app echo(int i) {
+  echo i;
 }
 
-int greetings;
+int greetings = 34;
 echo(greetings);
