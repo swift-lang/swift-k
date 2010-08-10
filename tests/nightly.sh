@@ -14,6 +14,8 @@
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
 # These may setup and inspect files in RUNDIR including swift.out
 
+# Tests are GROUPed into directories
+
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
 # output_*.txt is the HTML-linked permanent output from a test
@@ -289,7 +291,7 @@ out() {
       html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
       html_a_href $TLOG $LABEL
     fi
-    html "</td>"
+    html_~td
 
   elif [ "$TYPE" == "package" ]; then
     BINPACKAGE=$2
@@ -448,15 +450,15 @@ swift_test() {
   SETUPSCRIPT=${SWIFTSCRIPT%.swift}.setup.sh
   CHECKSCRIPT=${SWIFTSCRIPT%.swift}.check.sh
   CLEANSCRIPT=${SWIFTSCRIPT%.swift}.clean.sh
-  if [ -x $TESTDIR/$SETUPSCRIPT ]; then
-    script_exec $TESTDIR/$SETUPSCRIPT "S"
+  if [ -x $GROUP/$SETUPSCRIPT ]; then
+    script_exec $GROUP/$SETUPSCRIPT "S"
   fi
   pexec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
-  if [ -x $TESTDIR/$CHECKSCRIPT ]; then
-    script_exec $TESTDIR/$CHECKSCRIPT "&#8730;"
+  if [ -x $GROUP/$CHECKSCRIPT ]; then
+    script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   fi
-  if [ -x $TESTDIR/$CLEANSCRIPT ]; then
-    script_exec $TESTDIR/$CLEANSCRIPT "C"
+  if [ -x $GROUP/$CLEANSCRIPT ]; then
+    script_exec $GROUP/$CLEANSCRIPT "C"
   fi
 }
 
@@ -491,6 +493,28 @@ build_package() {
   pexec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
   out package "swift-$DATE.tar.gz"
 }
+
+test_group() {
+
+  sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
+
+  J=0
+  for TEST in $( ls $GROUP/*.swift ); do
+
+    (( J++ < SKIP_TESTS )) && continue
+
+    TESTNAME=$( basename $TEST)
+    cp -uv $GROUP/$TESTNAME .
+    TESTLINK=$TESTNAME
+
+    start_row
+    for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
+      swift_test $TESTNAME
+    done
+    end_row
+  done
+}
+
 
 date > $LOG
 
@@ -537,7 +561,6 @@ fi
 PATH=$SWIFT_HOME/bin:$PATH
 cd $TOPDIR
 which swift
-TESTDIR=$TOPDIR/cog/modules/swift/tests
 cd $RUNDIR
 
 end_row
@@ -546,26 +569,16 @@ if [ $ALWAYS_EXITONFAILURE != "1" ]; then
   EXITONFAILURE=false
 fi
 
+TESTDIR=$TOPDIR/cog/modules/swift/tests
 sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
-sed "s@_DIR_@$TESTDIR@"   < $TESTDIR/tc.template.data    > tc.data
 
-start_part "Part II: Local Tests"
+#start_part "Part II: Working Tests"
+#GROUP=$TESTDIR/language/working
+#test_group
 
-J=0
-for TEST in $( ls $TESTDIR/*.swift ); do
-
-  (( J++ < SKIP_TESTS )) && continue
-
-  TESTNAME=$( basename $TEST)
-  cp -uv $TESTDIR/$TESTNAME .
-  TESTLINK=$TESTNAME
-
-  start_row
-  for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
-    swift_test $TESTNAME
-  done
-  end_row
-done
+start_part "Part III: Local Tests"
+GROUP=$TESTDIR/local
+test_group
 
 if [ $GRID_TESTS == "0" ]; then
   exit
