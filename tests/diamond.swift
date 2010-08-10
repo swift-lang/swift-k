@@ -8,7 +8,7 @@ app (file f2) process (file f1, string text) {
   append @f1 text @f2;
 }
 
-(file f3) combine (file f1, file f2) {
+app (file f3) combine (file f1, file f2) {
   cat @f1 @f2 stdout=@f3;
 }
 
