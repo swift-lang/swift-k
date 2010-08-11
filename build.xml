@@ -213,45 +213,6 @@
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/log4j.properties" 
 			overwrite="true"/>
-		<replace file="${dist.dir}/bin/swift">
-			<replacetoken>COG_INSTALL_PATH</replacetoken>
-			<replacevalue>SWIFT_HOME</replacevalue>
-		</replace>
-		<replace file="${dist.dir}/bin/swift">
-			<replacetoken>LOCALCLASSPATH=$SWIFT_HOME/etc</replacetoken>
-			<replacevalue>LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec</replacevalue>
-		</replace>
-		<replace file="${dist.dir}/bin/swift">
-			<replacetoken>HEAPMAX=
-</replacetoken>
-			<replacevalue>HEAPMAX=256M
-</replacevalue>
-		</replace>
-		<replace file="${dist.dir}/bin/swift">
-			<replacetoken>updateOptions "$SWIFT_HOME" "SWIFT_HOME"
-</replacetoken>
-			<replacevalue>updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
-updateOptions "$SWIFT_HOME" "swift.home"
-#Use /dev/urandom instead of /dev/random for seeding RNGs
-#This will lower the randomness of the seed, but avoid
-#large delays if /dev/random does not have enough entropy collected
-updateOptions "file:///dev/urandom" "java.security.egd"
-
-</replacevalue>
-		</replace>
-
-		<replace file="${dist.dir}/bin/swift.bat">
-			<replacetoken>COG_INSTALL_PATH</replacetoken>
-			<replacevalue>SWIFT_HOME</replacevalue>
-		</replace>
-		<replace file="${dist.dir}/bin/swift.bat">
-			<replacetoken>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc</replacetoken>
-			<replacevalue>set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec</replacevalue>
-		</replace>
-		<replace file="${dist.dir}/bin/swift.bat">
-			<replacetoken>set OPTS=</replacetoken>
-			<replacevalue>set OPTS=-DCOG_INSTALL_PATH="%SWIFT_HOME%" -Dswift.home="%SWIFT_HOME%"</replacevalue>
-		</replace>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/cdm_broadcast.sh"/>

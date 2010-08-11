@@ -1,0 +1,152 @@
+#! /bin/sh
+
+EXEC=org.griphyn.vdl.karajan.Loader
+OPTIONS=
+
+CYGWIN=
+CPDELIM=":"
+HEAPMAX=256M
+
+if echo `uname` | grep -i "cygwin"; then
+    CYGWIN="yes"
+    CPDELIM=";"
+fi
+
+fixCommandLine() {
+
+    COMMANDLINE=
+
+    while [ "X$1" !=  "X" ] ; do
+        COMMANDLINE="${COMMANDLINE} '$1'"
+        shift
+    done
+
+    echo $COMMANDLINE
+}
+
+updateOptions() {
+ 
+    if [ "X$1" != "X" ] ; then
+	OPTIONS="$OPTIONS -D$2=$1"
+    fi
+
+}
+
+####### MAIN BODY ##########
+
+if [ ! -d "$SWIFT_HOME" ] ; then
+    SWIFT_HOME=`dirname $0`"/.."
+    if [ ! -f "$SWIFT_HOME/lib/cog-swift-svn.jar" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
+		MY_PATH=`which $0`
+		SWIFT_HOME=`dirname $MY_PATH`"/.."
+		if [ ! -f "$SWIFT_HOME/lib/cog-swift-svn.jar" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
+	    	echo "Error: SWIFT_HOME is not set, and all attempts at guessing it failed"
+	    	exit
+		fi
+    fi
+fi
+
+OPTIONS="$OPTIONS -Djava.endorsed.dirs=$SWIFT_HOME/lib/endorsed"
+
+LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec
+for JAR in $SWIFT_HOME/lib/*.jar; do
+	LOCALCLASSPATH="$LOCALCLASSPATH$CPDELIM$JAR"
+done
+LOCALCLASSPATH=$LOCALCLASSPATH$CPDELIM$CLASSPATH
+
+CMDLINE=`fixCommandLine "$@"`
+
+### SETUP OTHER ENV VARIABLES ####
+
+USERID=`id | awk '{printf("%s\n", substr($1, 5, index($1, "(")-5 ) ) }'`
+
+if [ "X$GLOBUS_HOSTNAME" = "X" ] && [ "X$HOSTNAME" != "X" ]; then 
+	GLOBUS_HOSTNAME=$HOSTNAME  
+fi
+
+updateOptions "$USERID" "UID"
+updateOptions "$GLOBUS_INSTALL_PATH" "GLOBUS_INSTALL_PATH"
+updateOptions "$GLOBUS_DEPLOY_PATH" "GLOBUS_DEPLOY_PATH"
+updateOptions "$GLOBUS_TCP_PORT_RANGE" "GLOBUS_TCP_PORT_RANGE"
+updateOptions "$GLOBUS_TCP_SOURCE_PORT_RANGE" "GLOBUS_TCP_SOURCE_PORT_RANGE"
+updateOptions "$GLOBUS_UDP_SOURCE_PORT_RANGE" "GLOBUS_UDP_SOURCE_PORT_RANGE"
+updateOptions "$GLOBUS_HOSTNAME" "GLOBUS_HOSTNAME"
+updateOptions "$X509_USER_CERT" "X509_USER_CERT"
+updateOptions "$X509_USER_KEY" "X509_USER_KEY"
+updateOptions "$X509_CERT_DIR" "X509_CERT_DIR"
+updateOptions "$X509_USER_PROXY" "X509_USER_PROXY"
+updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
+updateOptions "$SWIFT_HOME" "swift.home"
+#Use /dev/urandom instead of /dev/random for seeding RNGs
+#This will lower the randomness of the seed, but avoid
+#large delays if /dev/random does not have enough entropy collected
+updateOptions "file:///dev/urandom" "java.security.egd"
+
+if [ "X$HEAPMAX" != "X" ]; then
+	OPTIONS="-Xmx$HEAPMAX $OPTIONS"
+fi
+
+# Anonymous usage statistics
+LISTENER="bridled.ci.uchicago.edu"
+PORT="9999"
+
+if [ -z "$SWIFT_USAGE_STATS" ]; then
+    SWIFT_USAGE_STATS=1
+fi
+
+# To disable usage statistics, uncomment the line below
+#SWIFT_USAGE_STATS=0
+
+PATH=$PATH:/sbin
+IFCONFIG=`which ifconfig`
+if [ -x "$IFCONFIG" ]; then
+    MAC=`$IFCONFIG |grep HWaddr`
+fi
+
+MD5SUM=`which md5sum`
+if [ ! -x "$MD5SUM" ]; then
+    echo "warning: unable to find md5sum"
+    SWIFT_USAGE_STATS=0
+fi
+
+NC=`which nc`
+if [ ! -x "$NC" ]; then
+    echo "warning: unable to find nc"
+    SWIFT_USAGE_STATS=0
+fi
+
+if [ "$SWIFT_USAGE_STATS" = 1 ]; then
+    for var in "$@"
+    do
+        SCRIPT=`echo $var|grep -i .swift`
+        if [ -e "$SCRIPT" ]; then
+            SCRIPT=$var
+            SCRIPTID=`$MD5SUM $SCRIPT|cut -d ' ' -f1`
+            SCRIPTLENGTH=`wc -l $SCRIPT|cut -d ' ' -f1`
+        fi 
+    done
+    HOSTNAME=`hostname`
+    USERID=`echo $USERID $HOSTNAME $MAC | $MD5SUM |cut -d ' ' -f1`
+    DATE=`date`
+    KEY=`echo $USERID $DATE $$ | $MD5SUM | cut -d ' ' -f1`
+    echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH -1 0| $NC -u $LISTENER $PORT
+fi
+
+### EXECUTE ############
+if test -n "$CYGWIN"; then
+    set CLASSPATHSAVE=$CLASSPATH
+    export CLASSPATH="$LOCALCLASSPATH"
+    eval java ${OPTIONS} ${COG_OPTS} ${EXEC} ${CMDLINE}
+    export CLASSPATH=$CLASSPATHSAVE
+else
+    eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE}
+fi
+return_code=$?
+
+if [ "$SWIFT_USAGE_STATS" = 1 ]; then
+	echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1| $NC -u $LISTENER $PORT
+fi
+
+exit $return_code
+
+
