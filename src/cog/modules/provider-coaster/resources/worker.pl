@@ -118,41 +118,40 @@ my %JOBWAITDATA = ();
 my %JOBDATA = ();
 
 sub logfilename {
-    $LOGDIR = shift;
-    $BLOCKID = shift;
-    my $result = undef;
-    my $uci;
-    if (-r "/proc/personality.sh") {
-	$uci = get_bg_uci();
-	$result = "$LOGDIR/worker-$BLOCKID-$uci.log";
-    }
-    else {
-	$result = "$LOGDIR/worker-$BLOCKID.log";
-    }
-    return $result;
+	$LOGDIR = shift;
+	$BLOCKID = shift;
+	my $result = undef;
+	my $uci;
+	if (-r "/proc/personality.sh") {
+		$uci = get_bg_uci();
+		$result = "$LOGDIR/worker-$BLOCKID-$uci.log";
+	}
+	else {
+		$result = "$LOGDIR/worker-$BLOCKID.log";
+	}
+	return $result;
 }
 
 # Get the BlueGene Universal Component Identifier from Zepto 
 sub get_bg_uci() {
-    my %vars = file2hash("/proc/personality.sh");
-    my $uci = $vars{"BG_UCI"};
-    return $uci;
+	my %vars = file2hash("/proc/personality.sh");
+	my $uci = $vars{"BG_UCI"};
+	return $uci;
 }
 
 # Read a file into a hash, with file formatted as: 
 # KEY=VALUE
 sub file2hash() {
-    my $file = shift;
-    my %hash;
-    open FILE, "<$file";
-    while (<FILE>)
-    {
-	chomp;
-	my ($key, $val) = split /=/;
-	$hash{$key} = $val;
-    }
-    close FILE;
-    return %hash;
+	my $file = shift;
+	my %hash;
+	open FILE, "<$file";
+	while (<FILE>) {
+		chomp;
+		my ($key, $val) = split /=/;
+		$hash{$key} = $val;
+	}
+	close FILE;
+	return %hash;
 }
 
 sub wlog {
@@ -172,11 +171,11 @@ sub wlog {
 }
 
 sub timestring() {
-  my $t = sprintf("%.3f", time());
-  #my @d = localtime(time());
-  #my $t = sprintf("%i/%02i/%02i %02i:%02i",
-  # $d[5]+1900, $d[4], $d[3], $d[2], $d[1]);
-  return $t;
+	my $t = sprintf("%.3f", time());
+	#my @d = localtime(time());
+	#my $t = sprintf("%i/%02i/%02i %02i:%02i",
+	# $d[5]+1900, $d[4], $d[3], $d[2], $d[1]);
+	return $t;
 }
 
 sub hts {
@@ -1326,9 +1325,8 @@ mainloop();
 wlog INFO, "Worker finished. Exiting.\n";
 exit(0);
 
-# This file works well with cperl-mode in the latest emacs
 # Local Variables:
 # indent-tabs-mode: t
 # tab-width: 8
-# cperl-indent-level: 8
+# perl-indent-level: 8
 # End:
