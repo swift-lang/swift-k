@@ -6,6 +6,7 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
+import org.globus.cog.abstraction.interfaces.FileOperationSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 
 public class FileOperationTask extends TaskImpl {
@@ -18,5 +19,12 @@ public class FileOperationTask extends TaskImpl {
     public FileOperationTask(String name) {
         super(name, Task.FILE_OPERATION);
         setRequiredService(1);
+    }
+
+    public String toString() {
+        FileOperationSpecification spec = (FileOperationSpecification) getSpecification();
+        String op = spec == null ? "-" : spec.getOperation();
+        String args = spec == null ? "[]" : String.valueOf(spec.getArguments());
+        return "Task(type=" + typeString(getType()) + ", op=" + op + ", args=" + args + ", identity=" + getIdentity() + ")";
     }
 }
