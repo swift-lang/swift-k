@@ -263,6 +263,7 @@ public class ArgumentParser {
 		else {
 			System.out.println("  " + executableName + " <options> ");
 		}
+		System.out.println("\n\twhere options are:\n");
 		Iterator i = details.keySet().iterator();
 		while (i.hasNext()) {
 			String name = (String) i.next();
