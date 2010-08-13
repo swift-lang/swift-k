@@ -69,6 +69,12 @@ public class BlockTask extends TaskImpl {
     private JobSpecification buildSpecification() {
         JobSpecification js = new JobSpecificationImpl();
         js.setExecutable("/usr/bin/perl");
+        // Cobalt on Intrepid, if no directory is specified, assumes $CWD for the
+        // job directory.
+        // If $CWD happens to be /scratch/something it has a filter in place
+        // that rejects the job with the warning that /scratch/something is not accessible
+        // on the worker node. And we don't care about the $CWD for the worker.
+        js.setDirectory("/");
 
         js.addArgument(block.getAllocationProcessor().getScript().getAbsolutePath());
         js.addArgument(join(settings.getCallbackURIs(), ","));
