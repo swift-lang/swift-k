@@ -36,11 +36,13 @@ public final class EventTargetPair implements Runnable {
 	}
 
 	public void run() {
-		if (logger.isDebugEnabled()) {
-			logger.debug(getEvent() + " -> " + getTarget());
-		}
 		start = System.currentTimeMillis();
-		EventBus.sendHooked(target, event);
+		if (EventBus.MONITORING_ENABLED) {
+			EventBus.sendHooked(target, event);
+		}
+		else {
+		    EventBus.send(target, event);
+		}
 		EventBus.cummulativeEventTime += System.currentTimeMillis() - start;
 		start = Long.MAX_VALUE;
 		EventBus.eventsDispatched++;

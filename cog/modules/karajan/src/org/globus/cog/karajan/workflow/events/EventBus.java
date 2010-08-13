@@ -46,6 +46,7 @@ public final class EventBus {
 	public static final int DEFAULT_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 4;
 
 	public static final boolean TRACE_EVENTS = false;
+	public static final boolean MONITORING_ENABLED = false;
 
 	private static final EventBus bus = new EventBus();
 	public volatile static long eventCount;
