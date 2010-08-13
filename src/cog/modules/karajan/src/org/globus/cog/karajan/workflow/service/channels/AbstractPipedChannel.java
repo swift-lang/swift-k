@@ -17,6 +17,13 @@ import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * A channel implementation for which the other endpoint lives in the
+ * same JVM.
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class AbstractPipedChannel extends AbstractKarajanChannel {
 	public static final Logger logger = Logger.getLogger(AbstractPipedChannel.class);
 
