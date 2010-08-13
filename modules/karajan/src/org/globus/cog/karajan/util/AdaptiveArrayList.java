@@ -24,7 +24,7 @@ import java.util.ArrayList;
  * @author Mihael Hategan
  *
  */
-public class AdaptiveArrayList extends ArrayList {
+public class AdaptiveArrayList<T> extends ArrayList<T> {
 	private final Context context;
 	
 	public AdaptiveArrayList(Context context) {
@@ -33,7 +33,7 @@ public class AdaptiveArrayList extends ArrayList {
 		context.incLists();
 	}
 	
-	public boolean add(Object o) {
+	public boolean add(T o) {
 		context.incItems();
 		return super.add(o);
 	}
