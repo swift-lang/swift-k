@@ -129,7 +129,7 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
     USERID=`echo $USERID $HOSTNAME $MAC | $MD5SUM |cut -d ' ' -f1`
     DATE=`date`
     KEY=`echo $USERID $DATE $$ | $MD5SUM | cut -d ' ' -f1`
-    echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH -1 0| $NC -u $LISTENER $PORT &
+    echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH -1 0| $NC -w 60 -u $LISTENER $PORT &
 fi
 
 ### EXECUTE ############
@@ -144,7 +144,7 @@ fi
 return_code=$?
 
 if [ "$SWIFT_USAGE_STATS" = 1 ]; then
-	echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1| $NC -u $LISTENER $PORT &
+	echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1| $NC -w 60 -u $LISTENER $PORT &
 fi
 
 exit $return_code
