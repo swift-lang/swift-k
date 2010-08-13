@@ -63,7 +63,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 
 	public synchronized void bind(KarajanChannel channel) throws ChannelException {
 		if (channel != null) {
-			if (channel.getChannelContext() != this.getChannelContext()) {
+			if (channel.getChannelContext() != this.getChannelContext() && channel.getChannelContext() != null) {
 				throw new ChannelException("Trying to bind invalid channel (" + channel.getChannelContext() + ") to " + this.getChannelContext());
 			}
 		}
