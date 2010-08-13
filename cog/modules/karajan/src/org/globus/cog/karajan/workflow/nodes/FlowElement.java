@@ -50,7 +50,7 @@ public interface FlowElement extends EventListener {
 	 */
 	void removeElement(int index);
 	
-	void setElements(List elements);
+	void setElements(List<FlowElement> elements);
 	
 	/**
 	 * Returns the number of child elements for this element
@@ -60,7 +60,7 @@ public interface FlowElement extends EventListener {
 	/**
 	 * Returns the list of child elements 
 	 */
-	List elements();
+	List<FlowElement> elements();
 	
 	/**
 	 * Sets the element type. The element type is a string reflecting
@@ -79,7 +79,7 @@ public interface FlowElement extends EventListener {
 	 */
 	void setProperty(String name, Object value);
 	
-	void setProperties(Map properties);
+	void setProperties(Map<String, Object> properties);
 	
 	/**
 	 * Completely removes a property previously set on this
@@ -107,13 +107,13 @@ public interface FlowElement extends EventListener {
 	 * Returns a collection of all the property names that are
 	 * set on this element. 
 	 */
-	Collection propertyNames();
+	Collection<String> propertyNames();
 	
 	void addStaticArgument(String name, Object value);
 	
-	void setStaticArguments(Map args);
+	void setStaticArguments(Map<String, Object> args);
 	
-	Map getStaticArguments();
+	Map<String, Object> getStaticArguments();
 	
 	/**
 	 * Sets the lexical parent of this element. When adding a child
