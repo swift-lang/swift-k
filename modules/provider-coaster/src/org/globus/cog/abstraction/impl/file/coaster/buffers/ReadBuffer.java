@@ -21,6 +21,7 @@ public abstract class ReadBuffer extends Buffer {
     protected LinkedList<ByteBuffer> empty;
     protected long read;
     protected long size;
+    private Buffers.Allocation alloc;
 
     protected ReadBuffer(Buffers buffers, ReadBufferCallback cb, long size) {
         super(buffers);
@@ -35,7 +36,7 @@ public abstract class ReadBuffer extends Buffer {
     protected void init() throws InterruptedException {
         full = new LinkedList<ByteBuffer>();
         empty = new LinkedList<ByteBuffer>();
-        buffers.request(Buffers.ENTRIES_PER_STREAM);
+        alloc = buffers.request(Buffers.ENTRIES_PER_STREAM);
         for (int i = 0; i < Buffers.ENTRIES_PER_STREAM; i++) {
             empty.add(ByteBuffer.allocate(Buffers.ENTRY_SIZE));
         }
@@ -77,8 +78,12 @@ public abstract class ReadBuffer extends Buffer {
         getCallback().dataRead(read == size, buf);
     }
     
+    protected void deallocateBuffers() {
+        buffers.free(alloc);
+    }
+    
     public void close() throws IOException {
         super.close();
-        buffers.free(Buffers.ENTRIES_PER_STREAM);
+        deallocateBuffers();
     }
 }

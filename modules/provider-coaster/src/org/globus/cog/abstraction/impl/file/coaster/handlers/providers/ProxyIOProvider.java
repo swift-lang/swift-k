@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
@@ -140,10 +141,12 @@ public class ProxyIOProvider implements IOProvider {
         private BlockingQueue queue;
         private boolean seenLast;
         private int crt;
+        private LinkedList<Buffers.Allocation> alloc;
 
         protected CReadBuffer(Buffers buffers, ReadBufferCallback cb) {
             super(buffers, cb, -1);
             queue = new LinkedBlockingQueue();
+            alloc = new LinkedList<Buffers.Allocation>();
         }
 
         public void error(Exception e) {
@@ -155,7 +158,7 @@ public class ProxyIOProvider implements IOProvider {
                 wait();
             }
             crt++;
-            buffers.request(1);
+            alloc.add(buffers.request(1));
             if (last) {
                 seenLast = true;
             }
@@ -163,9 +166,12 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         public synchronized void freeFirst() {
-            buffers.free(1);
+            buffers.free(alloc.removeFirst());
             crt--;
             notify();
+        }
+
+        protected void deallocateBuffers() {
         }
 
         public void doStuff(boolean last, ByteBuffer b) {
