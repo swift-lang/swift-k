@@ -62,17 +62,17 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	private static int uidCounter = 0;
 
-	private List elements;
+	private List<FlowElement> elements;
 
 	private String elementType;
 
-	private Map properties, staticArguments;
+	private Map<String, Object> properties, staticArguments;
 
 	private FlowElement parent;
 
 	private boolean inlineText;
 
-	public static final Map threadTracker = new HashMap();
+	public static final Map<FNTP, VariableStack> threadTracker = new HashMap<FNTP, VariableStack>();
 
 	public static long startCount = 0;
 
@@ -83,9 +83,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	public FlowNode() {
 		checkpointable = true;
 		frame = true;
-		elements = Collections.EMPTY_LIST;
-		properties = Collections.EMPTY_MAP;
-		staticArguments = Collections.EMPTY_MAP;
+		elements = Collections.emptyList();
+		properties = Collections.emptyMap();
+		staticArguments = Collections.emptyMap();
 	}
 
 	protected boolean executeErrorHandler(VariableStack stack, NotificationEvent error)
@@ -134,8 +134,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			}
 			if (!errorHandler) {
 				fireNotificationEvent(fne, stack);
-				fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack,
+				if (EventBus.MONITORING_ENABLED) {
+					fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack,
 						fne.getException());
+				}
 			}
 		}
 		catch (ExecutionException e) {
@@ -160,7 +162,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	 * Notification events notify callers of the status of the execution
 	 * (completed, failed, aborted, ...)
 	 */
-	public void fireNotificationEvent(final FlowEvent event, final VariableStack stack) {
+	public void fireNotificationEvent(final NotificationEvent event, final VariableStack stack) {
 		EventListener caller = stack.getCaller();
 		if (caller == null) {
 			logger.error("Caller is null");
@@ -172,9 +174,12 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 					"No #caller found on stack for " + this, null));
 		}
 		else {
-			// optimize a little. it improves speed by about 50%
-			EventBus.sendHooked(caller, event);
-			// EventBus.post(caller, event);
+		    if (EventBus.MONITORING_ENABLED) {
+		    	EventBus.sendHooked(caller, event);
+		    }
+		    else {
+		        EventBus.send(caller, event);
+		    }
 		}
 	}
 
@@ -259,7 +264,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		if (frame) {
 			stack.leave();
 		}
-		fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack, message);
+		if (EventBus.MONITORING_ENABLED) {
+			fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack, message);
+		}
 		if (FlowNode.debug) {
 			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 		}
@@ -276,7 +283,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		if (frame) {
 			stack.enter();
 		}
-		fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_STARTED, stack, null);
+		if (EventBus.MONITORING_ENABLED) {
+			fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_STARTED, stack, null);
+		}
 		restart(stack);
 	}
 
@@ -294,7 +303,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		if (frame) {
 			stack.leave();
 		}
-		fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_COMPLETED, stack, null);
+		if (EventBus.MONITORING_ENABLED) {
+			fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_COMPLETED, stack, null);
+		}
 		fireNotificationEvent(new NotificationEvent(this,
 				NotificationEventType.EXECUTION_COMPLETED, stack), stack);
 	}
@@ -304,10 +315,8 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public final FlowElement copy() {
 		try {
-			FlowNode nfe = (FlowNode) this.getClass().newInstance();
-			Iterator i = this.properties.keySet().iterator();
-			while (i.hasNext()) {
-				String key = (String) i.next();
+			FlowNode nfe = this.getClass().newInstance();
+			for (String key : properties.keySet()) {
 				nfe.setProperty(key, properties.get(key));
 			}
 			for (int j = 0; j < elementCount(); j++) {
@@ -327,11 +336,11 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	public void event(final Event e) throws ExecutionException {
 		try {
 			final EventClass cls = e.getEventClass();
-			if (EventClass.CONTROL_EVENT.equals(cls)) {
+			if (EventClass.NOTIFICATION_EVENT.equals(cls)) {
+                notificationEvent((NotificationEvent) e);
+            }
+            else if (EventClass.CONTROL_EVENT.equals(cls)) {
 				controlEvent((ControlEvent) e);
-			}
-			else if (EventClass.NOTIFICATION_EVENT.equals(cls)) {
-				notificationEvent((NotificationEvent) e);
 			}
 			else if (EventClass.MONITORING_EVENT.equals(cls)) {
 				monitoringEvent((MonitoringEvent) e);
@@ -507,7 +516,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		return tmp;
 	}
 
-	public List elements() {
+	public List<FlowElement> elements() {
 		return elements;
 	}
 
@@ -521,12 +530,12 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public synchronized void addElement(FlowElement element) {
 		if (elements.isEmpty()) {
-			elements = new ArrayList();
+			elements = new ArrayList<FlowElement>();
 		}
 		elements.add(element);
 	}
 
-	public void setElements(List elements) {
+	public void setElements(List<FlowElement> elements) {
 		this.elements = elements;
 	}
 
@@ -543,7 +552,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public FlowElement getElement(int index) {
-		return (FlowElement) elements.get(index);
+		return elements.get(index);
 	}
 
 	public int elementCount() {
@@ -556,12 +565,12 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			return;
 		}
 		if (properties.isEmpty()) {
-			properties = new HashMap();
+			properties = new HashMap<String, Object>();
 		}
 		properties.put(name.toLowerCase(), value);
 	}
 
-	public void setProperties(Map properties) {
+	public void setProperties(Map<String, Object> properties) {
 		uid = (Integer) properties.remove(UID);
 		if (properties.size() == 0) {
 			return;
@@ -641,16 +650,16 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public void addStaticArgument(String name, Object value) {
 		if (staticArguments.isEmpty()) {
-			staticArguments = new HashMap();
+			staticArguments = new HashMap<String, Object>();
 		}
 		staticArguments.put(name, value);
 	}
 
-	public void setStaticArguments(Map args) {
+	public void setStaticArguments(Map<String, Object> args) {
 		this.staticArguments = args;
 	}
 
-	public Map getStaticArguments() {
+	public Map<String, Object> getStaticArguments() {
 		return staticArguments;
 	}
 
@@ -674,7 +683,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		parent = element;
 	}
 
-	public Collection propertyNames() {
+	public Collection<String> propertyNames() {
 		return properties.keySet();
 	}
 
@@ -702,7 +711,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		return inlineText;
 	}
 
-	public final Object checkClass(final Object value, final Class cls, final String name)
+	public final Object checkClass(final Object value, final Class<?> cls, final String name)
 			throws ExecutionException {
 		if (value != null) {
 			if (!cls.isAssignableFrom(value.getClass())) {
