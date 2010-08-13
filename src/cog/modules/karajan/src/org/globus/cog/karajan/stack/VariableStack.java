@@ -18,6 +18,7 @@ import org.globus.cog.karajan.workflow.events.EventListener;
 public interface VariableStack {
 	public static final int NO_FRAME = -2;
 	public static final int FIRST_FRAME = -1;
+	public static final int DYNAMIC_FRAME = -3;
 	
 	void enter();
 
