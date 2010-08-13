@@ -9,7 +9,6 @@ package org.globus.cog.karajan.workflow.nodes;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.workflow.DirectExecution;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.events.NotificationEventType;
@@ -67,9 +66,6 @@ public class Sequential extends FlowContainer {
 			((ExtendedFlowElement) fn).executeSimple(stack);
 			post(stack);
 		}
-		else if (fn instanceof DirectExecution) {
-			((DirectExecution) fn).start(stack);
-		}
 		else {
 			super.startElement(fn, stack);
 		}
@@ -83,9 +79,6 @@ public class Sequential extends FlowContainer {
 		if (fn instanceof ExtendedFlowElement && ((ExtendedFlowElement) fn).isSimple()) {
 			((ExtendedFlowElement) fn).executeSimple(stack);
 			childCompleted(stack);
-		}
-		else if (fn instanceof DirectExecution) {
-			((DirectExecution) fn).start(stack);
 		}
 		else {
 			super.startElement(fn, stack);
