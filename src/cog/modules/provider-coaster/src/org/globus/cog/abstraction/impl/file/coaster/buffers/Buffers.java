@@ -34,7 +34,7 @@ public class Buffers extends Thread {
     private long lastTime, bufTime;
     private double avgBuffersUsed;
     private int maxBuffersUsed, minBuffersUsed;
-
+    
     public Buffers() {
         queue = new LinkedList<Entry>();
         setName("I/O Queue");
@@ -78,13 +78,16 @@ public class Buffers extends Thread {
         notify();
     }
 
-    public void request(int count) throws InterruptedException {
+    public Allocation request(int count) throws InterruptedException {
         synchronized (sizeLock) {
             while (crt + count > MAX_ENTRIES) {
                 sizeLock.wait(1000);
             }
             updateBuffersUsed();
             crt += count;
+            Allocation a = new Allocation(count);
+            assert(!a.free);
+            return a;
         }
     }
 
@@ -100,10 +103,18 @@ public class Buffers extends Thread {
         bufTime = time;
     }
 
-    public void free(int count) {
+    public void free(Allocation alloc) {
         synchronized (sizeLock) {
+            if (alloc == null) {
+                throw new IllegalArgumentException("Null alloc");
+            }
+            if (alloc.free) {
+                logger.warn("Trying to release buffer allocation twice", new Exception());
+                return;
+            }
             updateBuffersUsed();
-            crt -= count;
+            crt -= alloc.count;
+            alloc.free();
             sizeLock.notify();
         }
     }
@@ -149,6 +160,19 @@ public class Buffers extends Thread {
             this.last = last;
             this.buf = buf;
             this.buffer = buffer;
+        }
+    }
+    
+    public static class Allocation {
+        private int count;
+        private boolean free;
+        
+        public Allocation(int count) {
+            this.count = count;
+        }
+        
+        public void free() {
+            free = true;
         }
     }
 

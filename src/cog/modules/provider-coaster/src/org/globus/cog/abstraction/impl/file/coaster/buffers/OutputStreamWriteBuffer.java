@@ -29,7 +29,6 @@ public class OutputStreamWriteBuffer extends WriteBuffer {
             os.write(toByteArray(b));
             b.rewind();
             cb.done(last);
-            buffers.free(1);
             if (last) {
                 os.close();
             }
