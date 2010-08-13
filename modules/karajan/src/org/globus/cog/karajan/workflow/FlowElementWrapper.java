@@ -32,25 +32,26 @@ import org.globus.cog.karajan.workflow.nodes.user.UDEWrapper;
 
 public final class FlowElementWrapper implements ExtendedFlowElement {
 	private FlowElement peer, parent;
-	private List elements;
-	private Map properties;
-	private Map staticArguments;
+	private List<FlowElement> elements;
+	private Map<String, Object> properties;
+	private Map<String, Object> staticArguments;
 	private String type;
 	private boolean peerInitialized;
+
 	private static AdaptiveMap.Context pc = new AdaptiveMap.Context(),
 			sac = new AdaptiveMap.Context();
 	private static AdaptiveArrayList.Context ec = new AdaptiveArrayList.Context();
 
 	public FlowElementWrapper() {
-		properties = new AdaptiveMap(pc);
-		staticArguments = new AdaptiveMap(sac);
-		elements = Collections.EMPTY_LIST;
+		properties = new AdaptiveMap<String, Object>(pc);
+		staticArguments = new AdaptiveMap<String, Object>(sac);
+		elements = Collections.emptyList();
 	}
 
 	public void addElement(FlowElement element) {
 		if (peer == null) {
 			if (elements.isEmpty()) {
-				elements = new AdaptiveArrayList(ec);
+				elements = new AdaptiveArrayList<FlowElement>(ec);
 			}
 			elements.add(element);
 		}
@@ -79,7 +80,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 
 	public FlowElement getElement(int index) {
 		if (peer == null) {
-			return (FlowElement) elements.get(index);
+			return elements.get(index);
 		}
 		else {
 			return peer.getElement(index);
@@ -95,7 +96,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		}
 	}
 
-	public List elements() {
+	public List<FlowElement> elements() {
 		if (peer == null) {
 			return elements;
 		}
@@ -152,7 +153,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		}
 	}
 
-	public Collection propertyNames() {
+	public Collection<String> propertyNames() {
 		if (peer == null) {
 			return properties.keySet();
 		}
@@ -170,11 +171,11 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		}
 	}
 
-	public void setStaticArguments(Map args) {
+	public void setStaticArguments(Map<String, Object> args) {
 		throw new UnsupportedOperationException("setStaticArguments");
 	}
 
-	public Map getStaticArguments() {
+	public Map<String, Object> getStaticArguments() {
 		if (peer == null) {
 			return staticArguments;
 		}
@@ -259,6 +260,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 			}
 			peer.setElementType(def.getFullName());
 			populate(peer);
+			replaceElement(getParent(), this, peer);
 			this.peer = peer;
 			if (peer instanceof LoadListener) {
 				((LoadListener) peer).loadComplete();
@@ -269,6 +271,19 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		}
 		catch (KarajanRuntimeException e) {
 			throw new ExecutionException("Karajan exception: " + e.getMessage(), e);
+		}
+	}
+
+	private void replaceElement(FlowElement parent, FlowElementWrapper s,
+			FlowElement d) {
+		if (parent != null) {
+			List<FlowElement> l = parent.elements();
+			for (int i = 0; i < l.size(); i++) {
+				if (l.get(i) == s) {
+					l.set(i, d);
+					break;
+				}
+			}
 		}
 	}
 
@@ -289,20 +304,20 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		StringBuffer sb = new StringBuffer();
 		sb.append(getElementType());
 		if (hasProperty("annotation")) {
-            sb.append(" (");
+			sb.append(" (");
 			sb.append(getProperty("annotation"));
-            sb.append(") ");
+			sb.append(") ");
 		}
 		Object fileName = FlowNode.getTreeProperty(FILENAME, this);
 		if (fileName instanceof String) {
 			String fn = (String) fileName;
 			fn = fn.substring(1 + fn.lastIndexOf('/'));
 			sb.append(" @ ");
-            sb.append(fn);
+			sb.append(fn);
 
 			if (hasProperty(LINE)) {
-				sb.append(", line: "); 
-                sb.append(getProperty(LINE));
+				sb.append(", line: ");
+				sb.append(getProperty(LINE));
 			}
 		}
 		return sb.toString();
@@ -337,11 +352,11 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		}
 	}
 
-	public void setElements(List elements) {
+	public void setElements(List<FlowElement> elements) {
 		throw new UnsupportedOperationException("setElements");
 	}
 
-	public void setProperties(Map properties) {
+	public void setProperties(Map<String, Object> properties) {
 		throw new UnsupportedOperationException("setProperties");
 	}
 }
