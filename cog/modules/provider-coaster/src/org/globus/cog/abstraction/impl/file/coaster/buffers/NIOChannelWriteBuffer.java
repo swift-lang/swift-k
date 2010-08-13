@@ -29,7 +29,6 @@ public class NIOChannelWriteBuffer extends WriteBuffer {
             channel.write(b);
             b.rewind();
             cb.done(last);
-            buffers.free(1);
             if (last) {
                 channel.close();
             }
