@@ -165,7 +165,7 @@ public final class LinkedStack implements VariableStack {
 	
 	public int getVarFrameFromTop(String name) {
         if (name.charAt(0) == '#') {
-            return -1;
+            return DYNAMIC_FRAME;
         }
         else {
             return getVarFrame(name, frameCount - 1);
