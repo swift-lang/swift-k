@@ -29,18 +29,18 @@ import java.util.Set;
  * @author Mihael Hategan
  *
  */
-public class AdaptiveMap implements Map {
+public class AdaptiveMap<K, V> implements Map<K, V> {
 	private final Context context;
-	private Map map;
+	private Map<K, V> map;
 
 	public AdaptiveMap(Context context) {
 		this.context = context;
 		context.incMaps();
 	}
 
-	public Object put(Object key, Object value) {
+	public V put(K key, V value) {
 		createMap();
-		Object old = map.put(key, value);
+		V old = map.put(key, value);
 		if (old == null) {
 			context.incItems();
 		}
@@ -71,9 +71,9 @@ public class AdaptiveMap implements Map {
 		}
 	}
 
-	public Set entrySet() {
+	public Set<Map.Entry<K, V>> entrySet() {
 		if (map == null) {
-			return Collections.EMPTY_SET;
+			return Collections.emptySet();
 		}
 		else {
 			return map.entrySet();
@@ -81,15 +81,15 @@ public class AdaptiveMap implements Map {
 	}
 
 	public boolean equals(Object o) {
-		if (!(o instanceof Map)) {
+		if (!(o instanceof Map<?, ?>)) {
 			return false;
 		}
 		if (map == null) {
-			return ((Map) o).isEmpty();
+			return ((Map<?, ?>) o).isEmpty();
 		}
 		else {
-			if (o instanceof AdaptiveMap) {
-				return map.equals(((AdaptiveMap) o).map);
+			if (o instanceof AdaptiveMap<?, ?>) {
+				return map.equals(((AdaptiveMap<?, ?>) o).map);
 			}
 			else {
 				return map.equals(o);
@@ -97,7 +97,7 @@ public class AdaptiveMap implements Map {
 		}
 	}
 
-	public Object get(Object key) {
+	public V get(Object key) {
 		if (map == null) {
 			return null;
 		}
@@ -119,22 +119,22 @@ public class AdaptiveMap implements Map {
 		return map == null || map.isEmpty();
 	}
 
-	public Set keySet() {
+	public Set<K> keySet() {
 		if (map == null) {
-			return Collections.EMPTY_SET;
+			return Collections.emptySet();
 		}
 		else {
 			return map.keySet();
 		}
 	}
 
-	public void putAll(Map t) {
+	public void putAll(Map<? extends K, ? extends V> t) {
 		context.incItems(t.size());
 		createMap();
 		map.putAll(t);
 	}
 
-	public Object remove(Object key) {
+	public V remove(Object key) {
 		if (map == null) {
 			return null;
 		}
@@ -152,9 +152,9 @@ public class AdaptiveMap implements Map {
 		}
 	}
 
-	public Collection values() {
+	public Collection<V> values() {
 		if (map == null) {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		else {
 			return map.values();
@@ -163,7 +163,7 @@ public class AdaptiveMap implements Map {
 
 	private void createMap() {
 		if (map == null) {
-			map = new HashMap(context.getSize());
+			map = new HashMap<K, V>(context.getSize());
 		}
 	}
 
