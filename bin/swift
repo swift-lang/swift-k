@@ -98,18 +98,18 @@ fi
 #SWIFT_USAGE_STATS=0
 
 PATH=$PATH:/sbin
-IFCONFIG=`which ifconfig`
+IFCONFIG=`which ifconfig 2>&1`
 if [ -x "$IFCONFIG" ]; then
     MAC=`$IFCONFIG |grep HWaddr`
 fi
 
-MD5SUM=`which md5sum`
+MD5SUM=`which md5sum 2>&1`
 if [ ! -x "$MD5SUM" ]; then
     echo "warning: unable to find md5sum"
     SWIFT_USAGE_STATS=0
 fi
 
-NC=`which nc`
+NC=`which nc 2>&1`
 if [ ! -x "$NC" ]; then
     echo "warning: unable to find nc"
     SWIFT_USAGE_STATS=0
