@@ -30,12 +30,15 @@ public class NIOChannelReadBuffer extends ReadBuffer {
             return;
         }
         try {
+            if (b == null) {
+                b = allocateOneBuffer();
+            }
             channel.read(b);
             b.limit(b.position());
             b.rewind();
             bufferRead(b);
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             error(b, ex);
         }
     }
