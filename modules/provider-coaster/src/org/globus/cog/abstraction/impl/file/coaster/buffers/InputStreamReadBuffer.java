@@ -30,6 +30,9 @@ public class InputStreamReadBuffer extends ReadBuffer {
             return;
         }
         try {
+            if (b == null) {
+                b = allocateOneBuffer();
+            }
             if (b.hasArray()) {
                 int len = is.read(b.array());
                 b.limit(len);
@@ -43,7 +46,7 @@ public class InputStreamReadBuffer extends ReadBuffer {
             b.rewind();
             bufferRead(b);
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             error(b, ex);
         }
     }
