@@ -87,7 +87,7 @@ if [ "X$HEAPMAX" != "X" ]; then
 fi
 
 # Anonymous usage statistics
-LISTENER="bridled.ci.uchicago.edu"
+LISTENER="128.135.125.18"
 PORT="9999"
 
 if [ -z "$SWIFT_USAGE_STATS" ]; then
@@ -111,8 +111,11 @@ fi
 
 NC=`which nc 2>&1`
 if [ ! -x "$NC" ]; then
-    echo "warning: unable to find nc"
-    SWIFT_USAGE_STATS=0
+    NC=`which netcat 2>&1`
+    if [ ! -x "$NC" ]; then
+        echo "warning: unable to find nc"
+        SWIFT_USAGE_STATS=0
+    fi
 fi
 
 if [ "$SWIFT_USAGE_STATS" = 1 ]; then
@@ -148,5 +151,3 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
 fi
 
 exit $return_code
-
-
