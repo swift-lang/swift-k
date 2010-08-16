@@ -6,8 +6,8 @@
 # are willing to check out the whole Swift source and
 # generate many small test files.
 
-# The script will checkout Swift, run several tests,
-# in a subdirectory called run-DATE, including generating
+# The script will checkout Swift, run several tests
+# in a subdirectory called run-DATE, and generate
 # useful HTML output and tests.log
 
 # Run nightly.sh -h for quick help
@@ -33,8 +33,8 @@ printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""
   echo "usage:"
-  printf "\t -a      Do not run ant                  \n"
-  printf "\t -c      Do not clean                    \n"
+  printf "\t -a      Do not run ant dist             \n"
+  printf "\t -c      Do not remove dist (clean)      \n"
   printf "\t -g      Do not run grid tests           \n"
   printf "\t -h      This message                    \n"
   printf "\t -k <N>  Skip first N tests              \n"
@@ -122,6 +122,12 @@ SCRIPTDIR=$( dirname $0 )
 cd $TOPDIR
 mkdir -p $RUNDIR
 [ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
+
+crash() {
+  MSG=$1
+  echo $MSG
+  exit 1
+}
 
 header() {
   CURRENT=$SCRIPTDIR/html/current.html
@@ -293,12 +299,12 @@ out() {
     WIDTH=$( width "$LABEL" )
     if [ "$RESULT" == "Passed" ]; then
       html "<td class=\"success\" $WIDTH title=\"$CMD\">"
-      html_a_href $TLOG "$LABEL"
+      html_a_href $TEST_LOG "$LABEL"
     else
       echo "FAILED"
-      cat $TLOG < /dev/null
+      cat $TEST_LOG < /dev/null
       html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
-      html_a_href $TLOG $LABEL
+      html_a_href $TEST_LOG $LABEL
     fi
     html_~td
 
@@ -358,13 +364,13 @@ width() {
   echo $WIDTH
 }
 
-# TLOG = test log
+# TEST_LOG = test log
 test_log() {
-  TLOG="output_$LOGCOUNT.txt"
-  rm -fv $TLOG
-  banner "$LASTCMD" $RUNDIR/$TLOG
+  TEST_LOG="output_$LOGCOUNT.txt"
+  rm -fv $TEST_LOG
+  banner "$LASTCMD" $RUNDIR/$TEST_LOG
   if [ -f $OUTPUT ]; then
-    cp -v $OUTPUT $RUNDIR/$TLOG 2>>$LOG
+    cp -v $OUTPUT $RUNDIR/$TEST_LOG 2>>$LOG
     cp -v $OUTPUT stdout.txt
   fi
   let "LOGCOUNT=$LOGCOUNT+1"
@@ -379,17 +385,20 @@ stars() {
 }
 
 banner() {
-  if [ "$2" == "" ]; then
-    BOUT=$LOG
+  MSG=$1
+  FILE=$2
+
+  if [ "$FILE" == "" ]; then
+    BANNER_OUTPUT=$LOG
   else
-    BOUT=$2
+    BANNER_OUTPUT=$2
   fi
   {
     echo ""
           # stars
-    echo "* $1"
+    echo "* $MSG"
 	  # stars
-  } >>$BOUT
+  } >> $BANNER_OUTPUT
 }
 
 # Check for early bailout condition
@@ -401,7 +410,7 @@ check_bailout() {
   fi
 }
 
-# Translate exit code into result (Passed/Failed) string
+# Translate (global) test exit code into result (Passed/Failed) string
 result() {
   if [ "$EXITCODE" == "0" ]; then
     echo "Passed"
@@ -410,7 +419,7 @@ result() {
   fi
 }
 
-aexec() {
+process_exec() {
   declare -p PWD
   printf "\nExecuting: $@" >>$LOG
   rm -fv $OUTPUT
@@ -421,18 +430,87 @@ aexec() {
     echo "Command not found: $@" > $OUTPUT
   fi
   if [ -f $OUTPUT ]; then
-    cat $OUTPUT >>$LOG
+    cat $OUTPUT >> $LOG
   fi
+  return $EXITCODE
 }
 
 # Execute as part of test set
-pexec() {
+# Equivalent to monitored_exec() (but w/o monitoring)
+test_exec() {
   banner "$TEST (part $SEQ)"
   echo "Executing $TEST (part $SEQ)"
-  aexec "$@"
+  process_exec "$@"
   RESULT=$( result )
   test_log
-  out test $SEQ "$LASTCMD" $RESULT $TLOG
+  out test $SEQ "$LASTCMD" $RESULT $TEST_LOG
+
+  check_bailout
+
+  let "SEQ=$SEQ+1"
+}
+
+# Background process monitoring function
+# To be executed in the background as well
+# If the monitored process times out, monitor() kills it and writes
+# a message to OUTPUT
+# If monitor() kills the process, it returns 0
+# Otherwise, return non-zero (as would result from killing
+# this function)
+monitor() {
+  (( $VERBOSE )) && set -x
+
+  PID=$1
+  TIMEOUT=$2 # seconds
+  OUTPUT=$3
+
+  sleep $TIMEOUT
+  EXITCODE=1
+
+  /bin/kill -TERM $PID
+  KILLCODE=$?
+  if [ $KILLCODE == 0 ]; then
+    echo "monitor(): killed process (TERM)"
+    sleep 1
+  fi
+  /bin/kill -KILL $PID
+  if [ $KILLCODE == 0 ]; then
+    echo "monitor(): killed process (KILL)"
+  fi
+
+  MSG="nightly.sh: monitor(): killed: exceeded $TIMEOUT seconds"
+  echo "$MSG" >> $OUTPUT
+}
+
+# Execute given command line in background with monitor
+# Otherwise equivalent to test_exec()
+monitored_exec()
+{
+  banner "$TEST (part $SEQ)"
+  echo "Executing $TEST (part $SEQ)"
+
+  START=$( date +%s )
+
+  process_exec "$@" &
+  PROCESS_PID=$!
+
+  monitor $PROCESS_PID 30 $OUTPUT &
+  MONITOR_PID=$!
+
+  wait $PROCESS_PID
+  EXITCODE=$?
+
+  STOP=$( date +%s )
+
+  # If EXITCODE != 0, monitor() may have work to do
+  (( $EXITCODE != 0 )) && sleep 5
+  kill -TERM $MONITOR_PID
+
+  echo "TOOK: $(( STOP-START ))"
+
+  RESULT=$( result )
+  test_log
+  out test $SEQ "$LASTCMD" $RESULT $TEST_LOG
 
   check_bailout
 
@@ -444,7 +522,7 @@ script_exec() {
   SCRIPT=$1
   SYMBOL="$2"
 
-  aexec $SCRIPT
+  process_exec $SCRIPT
   RESULT=$( result )
 
   test_log
@@ -454,7 +532,7 @@ script_exec() {
 }
 
 # Execute Swift test case w/ setup, check, clean
-swift_test() {
+swift_test_case() {
   SWIFTSCRIPT=$1
   SETUPSCRIPT=${SWIFTSCRIPT%.swift}.setup.sh
   CHECKSCRIPT=${SWIFTSCRIPT%.swift}.check.sh
@@ -462,7 +540,8 @@ swift_test() {
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   fi
-  pexec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
+  # test_exec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
+  monitored_exec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   fi
@@ -496,16 +575,26 @@ fexec() {
 
 build_package() {
   TEST="Package"
-  pexec cd $SWIFT_HOME/lib
-  pexec rm -f castor*.jar *gt2ft*.jar ant.jar
-  pexec cd $TOPDIR
-  pexec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
+  test_exec cd $SWIFT_HOME/lib
+  test_exec rm -f castor*.jar *gt2ft*.jar ant.jar
+  test_exec cd $TOPDIR
+  test_exec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
   out package "swift-$DATE.tar.gz"
+}
+
+create_tc_data() {
+  if [ -f $GROUP/tc.template.data ]; then
+    sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
+    [ $? != 0 ] && crash "Could not create tc.data!"
+  else
+    cp -uv $SWIFT_HOME/etc/tc.data .
+    [ $? != 0 ] && crash "Could not copy tc.data!"
+  fi
 }
 
 test_group() {
 
-  sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
+  create_tc_data
 
   for TEST in $( ls $GROUP/*.swift ); do
 
@@ -517,7 +606,7 @@ test_group() {
 
     start_row
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
-      swift_test $TESTNAME
+      swift_test_case $TESTNAME
     done
     end_row
   done
@@ -537,28 +626,28 @@ EXITONFAILURE=true
 if [ "$SKIP_CHECKOUT" != "1" ]; then
   TESTNAME="Checkout CoG"
   start_row
-  pexec rm -rf cog
+  test_exec rm -rf cog
   COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog"
-  pexec svn co $COG
+  test_exec svn co $COG
   end_row
 
   TESTNAME="Checkout Swift"
   start_row
-  pexec cd cog/modules
-  pexec rm -rf swift
-  pexec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
+  test_exec cd cog/modules
+  test_exec rm -rf swift
+  test_exec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
   end_row
 fi
 
 TESTNAME="Compile"
 start_row
 
-pexec cd $TOPDIR/cog/modules/swift
+test_exec cd $TOPDIR/cog/modules/swift
 if (( $CLEAN )); then
-  pexec rm -rf dist
+  test_exec rm -rf dist
 fi
 if (( $RUN_ANT )); then
-  pexec ant -quiet dist
+  test_exec ant -quiet dist
 fi
 SWIFT_HOME=$TOPDIR/cog/modules/swift/dist/swift-svn
 
@@ -589,6 +678,10 @@ start_part "Part III: Local Tests"
 GROUP=$TESTDIR/local
 test_group
 
+start_part "Part IV: Should-Not-Work Tests"
+GROUP=$TESTDIR/language/should-not-work
+test_group
+
 if [ $GRID_TESTS == "0" ]; then
   exit
 fi
@@ -606,12 +699,11 @@ for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
 
   ssexec "Compile" vdlc $BN
   for ((i=0; $i<9; i=$i+1)); do
-    pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+    test_exec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
   done
-  pexec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
+  test_exec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 done
 
-#Don't remove me:
 footer
 
 # Local Variables:
