@@ -105,9 +105,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
     }
 
     private void setName(Task task, RslNode rslTree) {
-        if (task.getName() != null) {
-            rslTree.add(new NameOpValue("name", NameOpValue.EQ, task.getName()));
-        }
+        // GRAM doesn't support this?
     }
 
     private void submitSingleJob(RslNode rsl, JobSpecification spec,
