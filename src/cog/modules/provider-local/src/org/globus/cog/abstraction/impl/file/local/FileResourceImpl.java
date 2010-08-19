@@ -409,9 +409,9 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public OutputStream openOutputStream(String name) throws FileResourceException {
         try {
-            File p = new File(name).getParentFile();
-            if (!p.exists()) {
-                if (!p.mkdirs()) {
+            File p = new File(name).getAbsoluteFile().getParentFile();
+            if (!p.mkdirs()) {
+                if (!p.exists()) {
                     throw new FileResourceException("Cannot create directory " + p.getAbsolutePath());
                 }
             }

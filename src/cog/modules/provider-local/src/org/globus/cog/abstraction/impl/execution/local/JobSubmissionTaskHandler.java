@@ -230,6 +230,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         while (i.hasNext()) {
             String e = (String) i.next();
             File f = new File(e);
+            if (!f.isAbsolute()) {
+                f = new File(dir, f.getPath());
+            }
             if (!f.getAbsolutePath().startsWith(dir.getAbsolutePath())) {
                 throw new TaskSubmissionException("Cleaning outside of the job directory is not allowed " +
                 		"(cleanup entry: " + f.getAbsolutePath() + ", jobdir: " + dir.getAbsolutePath());
@@ -309,11 +312,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     private String getPath(URI uri, File dir) {
-        if (uri.getScheme() == null && !uri.getPath().startsWith("/")) {
+        if (uri.getScheme() == null && !uri.getPath().startsWith("//")) {
             return new File(dir, uri.getPath()).getAbsolutePath();
         }
         else {
-            return uri.getPath();
+            return uri.getPath().substring(1);
         }
     }
 
