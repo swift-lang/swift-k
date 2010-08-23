@@ -30,7 +30,7 @@ public class OutFiles extends VDLFunction {
         try {
             for (Object f : files) {
                 List pv = TypeUtil.toList(f);
-                Path p = Path.parse(TypeUtil.toString(pv.get(0)));
+                Path p = parsePath(pv.get(0), stack);
                 DSHandle handle = (DSHandle) pv.get(1);
                 DSHandle leaf = handle.getField(p);
                 String fname = argList(VDLFunction.filename(leaf), true);
