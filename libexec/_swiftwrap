@@ -135,7 +135,8 @@ cdm_lookup() {
 
 	RESULT="DEFAULT"
 	if [ -f shared/cdm.pl ]; then 
-		RESULT=$( perl shared/cdm.pl lookup $FILE < $CDM_FILE )
+		RESULT=$( perl shared/cdm.pl lookup $FILE < $CDM_FILE 2> $INFO )
+		checkError 254 "CDM[LOOKUP]: failed! (malformed CDM file?)"
 	fi
 	echo $RESULT
 }
@@ -162,6 +163,8 @@ cdm_action() {
 			elif [ $MODE == "OUTPUT" ]; then 
 				mkdir -p $DIRECT_DIR
 				checkError 254 "CDM[DIRECT]: mkdir -p $DIRECT_DIR failed!"
+				mkdir -p $( dirname $DIRECT_DIR/$FILE ) 
+				checkError 254 "CDM[DIRECT]: mkdir -p $( dirname $FILE ) failed!"
 				touch $DIRECT_DIR/$FILE
 				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
 				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
@@ -396,6 +399,7 @@ if [ "X${EXEC:0:1}" != "X/" ] ; then
 	fi
 fi
 
+log "PWD=$PWD"
 log "DIR=$DIR"
 log "EXEC=$EXEC"
 log "STDIN=$STDIN"
