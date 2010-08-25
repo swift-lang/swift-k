@@ -66,7 +66,7 @@ while (<STDIN>)
 
     next if $_ eq "";
 
-    @tokens = split(/ /, $_); 
+    @tokens = split(/[ \t]+/, $_); 
     $type   = shift(@tokens); 
     if ($type eq "rule") 
     {
