@@ -142,6 +142,7 @@ header() {
 
 html() {
   printf "$@\n" >>$HTML
+  [ $? != 0 ] && echo "html(): write error!" && exit 1
 }
 
 html_h1() {
@@ -670,17 +671,17 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
 
 SKIP_COUNTER=0
-start_part "Part II: Working Tests"
-GROUP=$TESTDIR/language/working
-test_group
+#start_part "Part II: Working Tests"
+#GROUP=$TESTDIR/language/working
+#test_group
 
 start_part "Part III: Local Tests"
 GROUP=$TESTDIR/local
 test_group
 
-start_part "Part IV: Should-Not-Work Tests"
-GROUP=$TESTDIR/language/should-not-work
-test_group
+#start_part "Part IV: Should-Not-Work Tests"
+#GROUP=$TESTDIR/language/should-not-work
+#test_group
 
 if [ $GRID_TESTS == "0" ]; then
   exit
