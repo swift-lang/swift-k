@@ -24,6 +24,12 @@
 # These may setup and inspect files in RUNDIR including swift.out
 
 # Tests are GROUPed into directories
+# Each GROUP directory has:
+#      1) a list of *.swift tests (plus *.sh scripts)
+#      2) optionally a tc.template.data
+#      3) optionally a swift.properties
+#      4) optionally a title.txt
+#      5) preferably a README.txt
 
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
@@ -542,7 +548,9 @@ swift_test_case() {
     script_exec $GROUP/$SETUPSCRIPT "S"
   fi
   # test_exec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
-  monitored_exec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
+  monitored_exec swift -config swift.properties \
+                       -sites.file sites.xml \
+                       -tc.file tc.data $SWIFTSCRIPT
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   fi
@@ -583,7 +591,7 @@ build_package() {
   out package "swift-$DATE.tar.gz"
 }
 
-create_tc_data() {
+group_tc_data() {
   if [ -f $GROUP/tc.template.data ]; then
     sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
     [ $? != 0 ] && crash "Could not create tc.data!"
@@ -593,9 +601,28 @@ create_tc_data() {
   fi
 }
 
+group_swift_properties() {
+  if [ -f $GROUP/swift.properties ]; then
+    cp -uv $GROUP/swift.properties .
+    [ $? != 0 ] && crash "Could not copy swift.properties!"
+  else
+    cp -uv $SWIFT_HOME/etc/swift.properties .
+    [ $? != 0 ] && crash "Could not copy swift.properties!"
+  fi
+}
+
+group_title() {
+  if [ -r $GROUP/title.txt ]; then
+    cat $GROUP/title.txt
+  else
+    echo "untitled"
+  fi
+}
+
 test_group() {
 
-  create_tc_data
+  group_tc_data
+  group_swift_properties
 
   for TEST in $( ls $GROUP/*.swift ); do
 
@@ -620,7 +647,7 @@ header
 start_test_results
 cd $TOPDIR
 
-start_part "Part I: Build"
+start_part "Prolog: Build"
 
 TESTLINK=
 EXITONFAILURE=true
@@ -671,23 +698,27 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
 
 SKIP_COUNTER=0
-#start_part "Part II: Working Tests"
-#GROUP=$TESTDIR/language/working
-#test_group
 
-start_part "Part III: Local Tests"
-GROUP=$TESTDIR/local
-test_group
+GROUPLIST=( $TESTDIR/language/working \
+            $TESTDIR/local \
+            $TESTDIR/language/should-not-work )
 
-#start_part "Part IV: Should-Not-Work Tests"
-#GROUP=$TESTDIR/language/should-not-work
-#test_group
+echo ${GROUPLIST[@]}
+
+GROUPCOUNT=1
+for G in ${GROUPLIST[@]}; do
+  GROUP=$G
+  TITLE=$( group_title )
+  start_part "Part $GROUPCOUNT: $TITLE"
+  test_group
+  (( GROUPCOUNT++ ))
+done
 
 if [ $GRID_TESTS == "0" ]; then
   exit
 fi
 
-TESTPART="Part III: Grid Tests"
+TESTPART="Appendix G: Grid Tests"
 
 for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
   BN=`basename $TEST`
