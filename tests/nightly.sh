@@ -21,7 +21,7 @@
 
 # Each *.swift test may be accompanied by a
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
-# These may setup and inspect files in RUNDIR including swift.out
+# These may setup and inspect files in RUNDIR including exec.out
 
 # Tests are GROUPed into directories
 # Each GROUP directory has:
@@ -430,7 +430,6 @@ process_exec() {
   declare -p PWD
   printf "\nExecuting: $@" >>$LOG
   rm -fv $OUTPUT
-  LASTCMD="$@"
   "$@" > $OUTPUT 2>&1
   EXITCODE=$?
   if [ "$EXITCODE" == "127" ]; then
@@ -517,6 +516,7 @@ monitored_exec()
 
   RESULT=$( result )
   test_log
+  LASTCMD="$@"
   out test $SEQ "$LASTCMD" $RESULT $TEST_LOG
 
   check_bailout
@@ -547,10 +547,15 @@ swift_test_case() {
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   fi
-  # test_exec swift -sites.file sites.xml -tc.file tc.data $SWIFTSCRIPT
+
+  CDM=
+  [ -r fs.data ] && CDM="-cdm.file fs.data"
+
   monitored_exec swift -config swift.properties \
                        -sites.file sites.xml \
-                       -tc.file tc.data $SWIFTSCRIPT
+                       -tc.file tc.data \
+                       $CDM $SWIFTSCRIPT
+
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   fi
@@ -596,8 +601,17 @@ group_tc_data() {
     sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
     [ $? != 0 ] && crash "Could not create tc.data!"
   else
-    cp -uv $SWIFT_HOME/etc/tc.data .
+    cp -v $SWIFT_HOME/etc/tc.data .
     [ $? != 0 ] && crash "Could not copy tc.data!"
+  fi
+}
+
+group_fs_data() {
+  if [ -f $GROUP/fs.template.data ]; then
+    sed "s@_PWD_@$PWD@" < $GROUP/fs.template.data > fs.data
+    [ $? != 0 ] && crash "Could not create fs.data!"
+  else
+    rm -f fs.data
   fi
 }
 
@@ -622,6 +636,7 @@ group_title() {
 test_group() {
 
   group_tc_data
+  group_fs_data
   group_swift_properties
 
   for TEST in $( ls $GROUP/*.swift ); do
@@ -701,7 +716,8 @@ SKIP_COUNTER=0
 
 GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/local \
-            $TESTDIR/language/should-not-work )
+            $TESTDIR/language/should-not-work \
+            $TESTDIR/cdm )
 
 echo ${GROUPLIST[@]}
 
@@ -715,7 +731,7 @@ for G in ${GROUPLIST[@]}; do
 done
 
 if [ $GRID_TESTS == "0" ]; then
-  exit
+  exit 0
 fi
 
 TESTPART="Appendix G: Grid Tests"
