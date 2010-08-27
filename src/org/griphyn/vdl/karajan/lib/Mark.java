@@ -33,7 +33,7 @@ public class Mark extends VDLFunction {
                 List files = TypeUtil.toList(RESTARTS.getValue(stack));
                 for (Object f : files) {
                     List pv = TypeUtil.toList(f);
-                    Path p = Path.parse(TypeUtil.toString(pv.get(0)));
+                    Path p = parsePath(pv.get(0), stack);
                     DSHandle handle = (DSHandle) pv.get(1);
                     DSHandle leaf = handle.getField(p);
                     synchronized (leaf) {
