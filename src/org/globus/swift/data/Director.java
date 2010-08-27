@@ -231,7 +231,7 @@ public class Director {
     }
 
     /**
-       Mark that the files in the given batch have been sucessfully broadcasted.
+       Mark that the files in the given batch have been successfully broadcasted.
        Should only be called by {@link doBroadcast}.
     */
     private static void markBroadcasts(Map<String,List<String>> batch) {
