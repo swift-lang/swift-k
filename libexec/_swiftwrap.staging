@@ -4,7 +4,7 @@ infosection() {
 	echo >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
 	echo >& "$INFO"
-	echo "        $1" >& "$INFO" 
+	echo "        $1" >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
 	echo >& "$INFO"
 }
@@ -164,6 +164,14 @@ getarg "-k" "$@"
 KICKSTART=$VALUE
 shift $SHIFTCOUNT
 
+getarg "-cdmfile" "$@"
+CDM_FILE=
+if [ "X$VALUE" != "X" ]; then
+	CDM_FILE=$VALUE
+	log "CDM_FILE: $CDM_FILE"
+fi
+shift $SHIFTCOUNT
+
 getarg "-status" "$@"
 STATUSMODE=$VALUE
 shift $SHIFTCOUNT
@@ -187,6 +195,8 @@ else
 	fail 254 "Missing arguments (-a option)"
 fi
 
+[[ $CDM_FILE != "" ]] && source cdm_lib.sh
+
 PATH=$PATH:/bin:/usr/bin
 
 if [ "$PATHPREFIX" != "" ]; then
@@ -205,6 +215,7 @@ if [ "X${EXEC:0:1}" != "X/" ] ; then
 	fi
 fi
 
+log "PWD=$PWD"
 log "EXEC=$EXEC"
 log "STDIN=$STDIN"
 log "STDOUT=$STDOUT"
@@ -224,6 +235,14 @@ for D in $DIRS ; do
 	checkError 254 "Failed to create input directory $D"
 	log "Created output directory: $D"
 done
+
+if [[ $CDM_FILE != "" ]] ; then
+	for F in $INF ; do
+		CDM_POLICY=$( cdm_lookup cdm.pl $CDM_FILE $F )
+		log "CDM_POLICY: $F -> $CDM_POLICY"
+		eval cdm_action $PWD "INPUT" $F $CDM_POLICY
+	done
+fi
 
 logstate "EXECUTE"
 
@@ -285,3 +304,9 @@ closeinfo
 # ensure we exit with a 0 after a successful execution
 exit 0
 
+# Local Variables:
+# mode: sh
+# sh-basic-offset: 4
+# tab-width: 4
+# indent-tabs-mode: 1
+# End:

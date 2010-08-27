@@ -1,6 +1,90 @@
 
 # Source this for CDM shell functions
 
+log "Reading cdm_lib.sh ..."
+
+# Do a CDM lookup
+cdm_lookup() {
+	CDM_PL=$1
+	CDM_FILE=$2
+	FILE=$3
+
+	RESULT="DEFAULT"
+	if [ -f $CDM_PL ]; then
+		RESULT=$( perl $CDM_PL lookup $FILE < $CDM_FILE 2> $INFO )
+		checkError 254 "cdm_lookup(): failed! (malformed CDM file?)"
+	fi
+	echo $RESULT
+}
+
+cdm_action() {
+	log "CDM_ACTION: $@"
+
+	local JOBDIR=$1  # Given jobdir
+	local MODE=$2    # INPUT or OUTPUT
+	local FILE=$3    # User file
+	local POLICY=$4  # DIRECT, BROADCAST, ...
+	shift 4
+	local ARGS=$@
+
+	log "POLICY=$POLICY"
+	case $POLICY in
+		DIRECT)
+			DIRECT_DIR=${ARGS[0]}
+			log "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE via $JOBDIR/$FILE"
+			if [ $MODE == "INPUT" ]; then
+				[ -f "$DIRECT_DIR/$FILE" ]
+				checkError 254 "CDM[DIRECT]: $DIRECT_DIR/$FILE does not exist!"
+				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
+				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
+			elif [ $MODE == "OUTPUT" ]; then
+				mkdir -p $DIRECT_DIR
+				checkError 254 "CDM[DIRECT]: mkdir -p $DIRECT_DIR failed!"
+				mkdir -p $( dirname $DIRECT_DIR/$FILE )
+				checkError 254 "CDM[DIRECT]: mkdir -p $( dirname $FILE ) failed!"
+				touch $DIRECT_DIR/$FILE
+				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
+				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
+				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
+			else
+				fail 254 "Unknown MODE: $MODE"
+			fi
+			;;
+ 		LOCAL)
+ 			TOOL=${ARGS[0]}
+ 			REMOTE_DIR=${ARGS[1]}
+ 			FLAGS=${ARGS[3]}
+ 			log "CDM[LOCAL]: Copying $DIRECT_DIR/$FILE to $JOBDIR/$FILE"
+ 			if [ $MODE == "INPUT" ]; then
+ 				[ -f "$DIRECT_DIR/$FILE" ]
+ 				checkError 254 "CDM[LOCAL]: $REMOTE_DIR/$FILE does not exist!"
+ 				$TOOL $FLAGS $REMOTE_DIR/$FILE $JOBDIR/$FILE
+ 				checkError 254 "CDM[LOCAL]: Tool failed!"
+ 			elif [ $MODE == "OUTPUT" ]; then
+ 				log "CDM[LOCAL]..."
+ 			else
+ 				fail 254 "Unknown MODE: $MODE"
+ 			fi
+ 			;;
+		BROADCAST)
+			BROADCAST_DIR=${ARGS[0]}
+			if [ $MODE == "INPUT" ]; then
+				log "CDM[BROADCAST]: Linking $JOBDIR/$FILE to $BROADCAST_DIR/$FILE"
+				[ -f "$BROADCAST_DIR/$FILE" ]
+				checkError 254 "CDM[BROADCAST]: $BROADCAST_DIR/$FILE does not exist!"
+				ln -s $BROADCAST_DIR/$FILE $JOBDIR/$FILE
+				checkError 254 "CDM[BROADCAST]: Linking to $BROADCAST_DIR/$FILE failed!"
+			else
+				echo "CDM[BROADCAST]: Skipping output file: ${FILE}"
+			fi
+			;;
+		GATHER)
+			if [ $MODE == "INPUT" ]; then
+				fail 254 "Cannot GATHER an input file!"
+			fi
+    esac
+}
+
 # Setup GATHER_DIR and some variables
 cdm_gather_setup() {
 	GATHER_DIR=$1
@@ -8,7 +92,7 @@ cdm_gather_setup() {
 	logstate "GATHER_DIR $GATHER_DIR"
 	mkdir -p $GATHER_DIR
 	checkError 254 "Could not create: $GATHER_DIR"
-	
+
 	GATHER_LOCKFILE=$GATHER_DIR/.cdm.lock
 	GATHER_MY_FILE=$GATHER_DIR/.cdm-$ID.lock
 	GATHER_MY_OUTBOX=$GATHER_DIR/.cdm-outgoing-$ID
@@ -72,7 +156,7 @@ cdm_gather_lock_release() {
 	unlink $GATHER_LOCKFILE
 }
 
-# Move files from (LFS) OUTBOX to (GFS) GATHER_TARGET 
+# Move files from (LFS) OUTBOX to (GFS) GATHER_TARGET
 cdm_gather_flush() {
 	pushd ${GATHER_MY_OUTBOX}
 	logstate "GATHER_TARGET $GATHER_TARGET"
@@ -93,10 +177,10 @@ cdm_gather_action() {
 	GATHER_MAX=$(    perl shared/cdm.pl property GATHER_LIMIT  < $CDM_FILE )
 	GATHER_TARGET=$( perl shared/cdm.pl property GATHER_TARGET < $CDM_FILE )
 
-	cdm_gather_setup $GATHER_DIR 
-	cdm_gather_lock_acquire 
+	cdm_gather_setup $GATHER_DIR
+	cdm_gather_lock_acquire
 
-	cdm_gather_import 
+	cdm_gather_import
 
 	USAGE=$( du -s --exclude=".cdm*" -B 1 $GATHER_DIR )
 	USAGE=${USAGE%	*} # Chop off filename in output
@@ -104,22 +188,22 @@ cdm_gather_action() {
 	logstate "USAGE_CHECK $USAGE / $GATHER_MAX"
 
 	FLUSH="no"
-	if (( USAGE > GATHER_MAX )); then 
+	if (( USAGE > GATHER_MAX )); then
 		FLUSH="yes"
 		cdm_gather_export
 	fi
-	
+
 	cdm_gather_lock_release
-	if [ $FLUSH == "yes" ]; then 
-		cdm_gather_flush 
+	if [ $FLUSH == "yes" ]; then
+		cdm_gather_flush
 	fi
 }
 
 # Called by cdm_cleanup.sh at the end of the workflow
 cdm_gather_cleanup() {
 	declare -p PWD DIR GATHER_DIR GATHER_TARGET ID
-	cdm_gather_setup $GATHER_DIR 
-	cdm_gather_lock_acquire 
+	cdm_gather_setup $GATHER_DIR
+	cdm_gather_lock_acquire
 	cdm_gather_export
 	EXPORT_RESULT=$?
 	cdm_gather_lock_release
@@ -128,7 +212,10 @@ cdm_gather_cleanup() {
 	fi
 }
 
-# Local Variables: 
+
+# Local Variables:
 # mode: sh
-# sh-basic-offset: 8
+# sh-basic-offset: 4
+# tab-width: 4
+# indent-tabs-mode: 1
 # End:

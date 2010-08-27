@@ -6,7 +6,7 @@ infosection() {
         echo >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
 	echo >& "$INFO"
-	echo "        $1" >& "$INFO" 
+	echo "        $1" >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
 	echo >& "$INFO"
 }
@@ -121,104 +121,23 @@ contains() {
 
 	for a in ${!ARRAY}
 	do
-		if [[ ${a} == ${X} ]]; then 
+		if [[ ${a} == ${X} ]]; then
 			return 0
 		fi
 	done
 	return 1
 }
 
-# Output: 
-cdm_lookup() {
-	FILE=$1
-	CDM_FILE=$2
-
-	RESULT="DEFAULT"
-	if [ -f shared/cdm.pl ]; then 
-		RESULT=$( perl shared/cdm.pl lookup $FILE < $CDM_FILE 2> $INFO )
-		checkError 254 "CDM[LOOKUP]: failed! (malformed CDM file?)"
-	fi
-	echo $RESULT
-}
-
-cdm_action() {
-	log "CDM_ACTION: $@"
-
-	local JOBDIR=$1  # Given jobdir
-	local MODE=$2    # INPUT or OUTPUT
-	local FILE=$3    # User file
-	local POLICY=$4  # DIRECT, BROADCAST, ... 
-	shift 4
-	local ARGS=$@
-
-	case $POLICY in 
-		DIRECT)
-			DIRECT_DIR=${ARGS[0]}
-			log "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE via $JOBDIR/$FILE"
-			if [ $MODE == "INPUT" ]; then 
-				[ -f "$DIRECT_DIR/$FILE" ]
-				checkError 254 "CDM[DIRECT]: $DIRECT_DIR/$FILE does not exist!"
-				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
-				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
-			elif [ $MODE == "OUTPUT" ]; then 
-				mkdir -p $DIRECT_DIR
-				checkError 254 "CDM[DIRECT]: mkdir -p $DIRECT_DIR failed!"
-				mkdir -p $( dirname $DIRECT_DIR/$FILE ) 
-				checkError 254 "CDM[DIRECT]: mkdir -p $( dirname $FILE ) failed!"
-				touch $DIRECT_DIR/$FILE
-				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
-				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
-				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
-			else 
-				fail 254 "Unknown MODE: $MODE"
-			fi
-			;;
- 		LOCAL)
- 			TOOL=${ARGS[0]}
- 			REMOTE_DIR=${ARGS[1]}
- 			FLAGS=${ARGS[3]}
- 			log "CDM[LOCAL]: Copying $DIRECT_DIR/$FILE to $JOBDIR/$FILE"
- 			if [ $MODE == "INPUT" ]; then 
- 				[ -f "$DIRECT_DIR/$FILE" ]
- 				checkError 254 "CDM[LOCAL]: $REMOTE_DIR/$FILE does not exist!"
- 				$TOOL $FLAGS $REMOTE_DIR/$FILE $JOBDIR/$FILE
- 				checkError 254 "CDM[LOCAL]: Tool failed!"
- 			elif [ $MODE == "OUTPUT" ]; then 
- 				log "CDM[LOCAL]..."
- 			else 
- 				fail 254 "Unknown MODE: $MODE"
- 			fi
- 			;;
-		BROADCAST)
-			BROADCAST_DIR=${ARGS[0]}
-			
-			if [ $MODE == "INPUT" ]; then 
-				log "CDM[BROADCAST]: Linking $JOBDIR/$FILE to $BROADCAST_DIR/$FILE"
-				[ -f "$BROADCAST_DIR/$FILE" ]
-				checkError 254 "CDM[BROADCAST]: $BROADCAST_DIR/$FILE does not exist!"
-				ln -s $BROADCAST_DIR/$FILE $JOBDIR/$FILE
-				checkError 254 "CDM[BROADCAST]: Linking to $BROADCAST_DIR/$FILE failed!"
-			else 
-				echo "CDM[BROADCAST]: Skipping output file: ${FILE}"
-			fi
-			;;
-		GATHER)
-			if [ $MODE == "INPUT" ]; then 
-				fail 254 "Cannot GATHER an input file!"
-			fi
-	esac
-}
-
 cdm_local_output()
 {
  	L=$1
 
-	if [[ $CDM_FILE == "" ]]; then 
+	if [[ $CDM_FILE == "" ]]; then
 		return
 	fi
 
- 	CDM_POLICY=$( cdm_lookup $L $CDM_FILE )
-	if [[ $CDM_POLICY == "LOCAL" ]]; then 
+ 	CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+	if [[ $CDM_POLICY == "LOCAL" ]]; then
 		cdm_local_output_perform $L $CDM_POLICY
 	fi
 }
@@ -239,13 +158,13 @@ cdm_local_output_perform()
 cdm_gather()
 {
 	GATHER_OUTPUT=${*}
-	if [[ $CDM_FILE == "" ]]; then 
+	if [[ $CDM_FILE == "" ]]; then
 		return
 	fi
-	if [[ $GATHER_OUTPUT == "" ]]; then 
+	if [[ $GATHER_OUTPUT == "" ]]; then
 		return
 	fi
-	
+
 	cdm_gather_action $GATHER_MAX $GATHER_OUTPUT
 }
 
@@ -333,7 +252,7 @@ shift $SHIFTCOUNT
 
 getarg "-cdmfile" "$@"
 CDM_FILE=
-if [ "X$VALUE" != "X" ]; then 
+if [ "X$VALUE" != "X" ]; then
 	CDM_FILE=shared/$VALUE
 fi
 shift $SHIFTCOUNT
@@ -429,10 +348,10 @@ done
 
 logstate "LINK_INPUTS"
 for L in $INF ; do
-        CDM_POLICY=$( cdm_lookup $L $CDM_FILE )
+        CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
 	if [ $CDM_POLICY != "DEFAULT" ]; then
 		log "CDM_POLICY: $L -> $CDM_POLICY"
-    	        eval cdm_action $DIR "INPUT" $L $CDM_POLICY 
+    	        eval cdm_action $DIR "INPUT" $L $CDM_POLICY
 		continue
 	fi
 	if [ $COPYNOTLINK = 1 ]; then
@@ -441,7 +360,7 @@ for L in $INF ; do
 		log "Copied input: $WFDIR/shared/$L to $DIR/$L"
 	else
 		[ -f $WFDIR/shared/$L ]
-		checkError 254 "Could not locate input file: $L" 
+		checkError 254 "Could not locate input file: $L"
 		ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
 		checkError 254 "Failed to link input file $L"
 		log "Linked input: $WFDIR/shared/$L to $DIR/$L"
@@ -452,16 +371,16 @@ logstate "LINK_CDM_OUTPUTS"
 SKIPPED_OUTPUT=()
 GATHER_OUTPUT=()
 for L in $OUTF ; do
-	CDM_POLICY=$( cdm_lookup $L $CDM_FILE )
-	if [[ $CDM_POLICY != "DEFAULT" && 
+	CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+	if [[ $CDM_POLICY != "DEFAULT" &&
               $CDM_POLICY != "BROADCAST"* ]]; then
-		log "CDM_POLICY: $L -> $CDM_POLICY" 
+		log "CDM_POLICY: $L -> $CDM_POLICY"
     	        eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
 		SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
 	fi
-	if [ $CDM_POLICY == "GATHER" ]; then 
+	if [ $CDM_POLICY == "GATHER" ]; then
 		GATHER_OUTPUT=( $GATHER_OUTPUT $L )
-	elif [ $CDM_POLICY == "LOCAL" ]; then 
+	elif [ $CDM_POLICY == "LOCAL" ]; then
 		CDM_LOCAL_OUTPUT=( $CDM_LOCAL_OUTPUT $L )
 	fi
 done
@@ -496,7 +415,7 @@ if [ "$KICKSTART" == "" ]; then
 else
 	if [ ! -f "$KICKSTART" ]; then
 		log "Kickstart executable ($KICKSTART) not found"
-		fail 254 "The Kickstart executable ($KICKSTART) was not found"		
+		fail 254 "The Kickstart executable ($KICKSTART) was not found"
 	elif [ ! -x "$KICKSTART" ]; then
 		log "Kickstart executable ($KICKSTART) is not executable"
 		fail 254 "The Kickstart executable ($KICKSTART) does not have the executable bit set"
@@ -550,7 +469,7 @@ cdm_gather $GATHER_OUTPUT
 
 logstate "RM_JOBDIR"
 rm -rf "$DIR" 2>&1 >& "$INFO"
-checkError 254 "Failed to remove job directory $DIR" 
+checkError 254 "Failed to remove job directory $DIR"
 
 if [ "$STATUSMODE" = "files" ]; then
 	logstate "TOUCH_SUCCESS"
@@ -569,7 +488,7 @@ fi
 # ensure we exit with a 0 after a successful execution
 exit 0
 
-# Local Variables: 
+# Local Variables:
 # mode: sh
 # sh-basic-offset: 8
 # End:

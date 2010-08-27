@@ -22,11 +22,11 @@ namespace("vdl"
 			)
 			ddir
 		)
-		
+
 		element(inFiles, [stageins]
 			pathnames(stageins)
 		)
-		
+
 		element(fileDirs, [stageins, stageouts]
 			list(
 				unique(
@@ -35,13 +35,13 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(graphStuff, [tr, stagein, stageout, err, optional(args)]
 			if(
 				vdl:configProperty("pgraph") != "false" then(
 					errprops := if(err ",color=lightsalmon" ",color=lightsteelblue1")
 					tp := vdl:threadPrefix()
-					to(graph, 
+					to(graph,
 						concat(str:quote(tp), " [label=", str:quote(tr), "{errprops}]")
 					)
 					for(si, stagein
@@ -57,7 +57,7 @@ namespace("vdl"
 						file := basename(file)
 						label := vdl:niceName(var, path = path)
 						to(graph
-							concat(str:quote(file), " [shape=parallelogram,label=", 
+							concat(str:quote(file), " [shape=parallelogram,label=",
 								str:quote(label), "]")
 							concat(str:quote(tp), " -> ", str:quote(file))
 						)
@@ -65,13 +65,13 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(fileSizes, [files]
 			math:sum(
 				for(f, files, file:size(file))
 			)
 		)
-		
+
 		element(cleanups, [cleanup]
 			log(LOG:INFO, "START cleanups={cleanup}")
 		)
@@ -80,17 +80,17 @@ namespace("vdl"
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
-			
+
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr, stagein=stagein)
-				
+
 				ddir := initDDir()
-				
+
 				uid := uid()
 				jobdir := substring(uid, from=0, to=1)
 				jobid := "{tr}-{uid}"
-				
+
 				fileDirs := fileDirs(stagein, stageout)
-				
+
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
 
 				wrapper := "_swiftwrap.staging"
@@ -102,11 +102,12 @@ namespace("vdl"
 				vdl:setprogress("Stage in")
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
-				
+                                cdmfile := cdm:file()
+
 				try(
 					sequential(
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
-				
+
 						vdl:setprogress("Submitting")
 
 						vdl:execute(
@@ -114,14 +115,15 @@ namespace("vdl"
 							list(
 								vdl:siteprofile(rhost, "swift:wrapperInterpreterOptions"),
 								wrapper,
-								"-e", vdl:executable(tr, rhost), 
+								"-e", vdl:executable(tr, rhost),
 								"-out", stdout,
-								"-err", stderr, 
+								"-err", stderr,
 								"-i", maybe(stdin),
 								"-d", flatten(each(fileDirs)),
-								"-if", flatten(infiles(stagein)), 
+								"-if", flatten(infiles(stagein)),
 								"-of", flatten(outfiles(stageout)),
 								"-k",
+								"-cdmfile", cdmfile,
 								"-status", "provider"
 								"-a", maybe(each(arguments))
 							)
@@ -132,17 +134,27 @@ namespace("vdl"
 							replicationGroup = replicationGroup
 							replicationChannel = replicationChannel
 							jobid = jobid
-							
-							stagingMethod := vdl:siteProfile(rhost, "swift:stagingMethod", default="proxy") 	
-							
+
+							stagingMethod := vdl:siteProfile(rhost, "swift:stagingMethod", default="proxy")
+
 							stageIn("{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
+
+							if( cdmfile != "" then(
+								d := vdl:dirname(cdmfile)
+								f := basename(cdmfile)
+								echo("d: {d} f: {f}")
+								stageIn("{stagingMethod}://localhost/{d}/{f}", cdmfile)
+								stageIn("{stagingMethod}://localhost/{swift.home}/libexec/cdm.pl", "cdm.pl")
+								stageIn("{stagingMethod}://localhost/{swift.home}/libexec/cdm_lib.sh", "cdm_lib.sh")
+								))
+
 							appStageins(jobid, stagein, ".", stagingMethod)
-							
+
 							stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info")
 							//stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
 							//stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
 							appStageouts(jobid, stageout, ".", stagingMethod)
-							
+
 							task:cleanUp(".") //the whole job directory
 						)
 						doRestartlog(restartout)
@@ -155,7 +167,7 @@ namespace("vdl"
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
-						
+
 						throw(
 							exception(
 								concat(
@@ -173,7 +185,7 @@ namespace("vdl"
 				)
 			)
 		)
-	
+
 		element(generateProvenanceGraph, [gdata]
 			pgraph := vdl:configProperty("pgraph")
 			gname := if(pgraph == "true" "{VDL:SCRIPTNAME}-{VDL:RUNID}.dot" pgraph)
@@ -181,7 +193,7 @@ namespace("vdl"
 				"digraph SwiftProvenance {{", nl()
 				"	graph [", vdl:configProperty("pgraph.graph.options"), "];", nl()
 				"	node [", vdl:configProperty("pgraph.node.options"), "];", nl()
-						
+
 				for(i, gdata
 					"	", i, nl()
 				)
