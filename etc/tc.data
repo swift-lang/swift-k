@@ -15,3 +15,4 @@ localhost 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
 localhost 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
 localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
 localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+localhost 	cp 		/bin/cp         INSTALLED	INTEL32::LINUX	null
