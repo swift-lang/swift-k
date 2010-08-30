@@ -242,6 +242,11 @@ if [[ $CDM_FILE != "" ]] ; then
 		log "CDM_POLICY: $F -> $CDM_POLICY"
 		eval cdm_action $PWD "INPUT" $F $CDM_POLICY
 	done
+	for F in $OUTF ; do
+		CDM_POLICY=$( cdm_lookup cdm.pl $CDM_FILE $F )
+		log "CDM_POLICY: $F -> $CDM_POLICY"
+		eval cdm_action $PWD "OUTPUT" $F $CDM_POLICY
+	done
 fi
 
 logstate "EXECUTE"
