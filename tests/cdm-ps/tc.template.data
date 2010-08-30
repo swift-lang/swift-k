@@ -17,3 +17,4 @@ localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
 localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
 
 coasterslocal 	cp 		/bin/cp         INSTALLED	INTEL32::LINUX	null
+coasterslocal 	merge 		_DIR_/merge.sh      INSTALLED	INTEL32::LINUX	null
