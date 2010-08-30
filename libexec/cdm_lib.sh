@@ -10,7 +10,7 @@ cdm_lookup() {
 	FILE=$3
 
 	RESULT="DEFAULT"
-	if [ -f $CDM_PL ]; then
+	if [ ! -z $CDM_FILE ] && [ -f $CDM_PL ] && [ -f $CDM_FILE ]; then
 		RESULT=$( perl $CDM_PL lookup $FILE < $CDM_FILE 2> $INFO )
 		checkError 254 "cdm_lookup(): failed! (malformed CDM file?)"
 	fi
