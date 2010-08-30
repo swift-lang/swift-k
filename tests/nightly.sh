@@ -551,7 +551,8 @@ swift_test_case() {
   CDM=
   [ -r fs.data ] && CDM="-cdm.file fs.data"
 
-  monitored_exec swift -config swift.properties \
+  monitored_exec swift -wrapperlog.always.transfer true \
+                       -config swift.properties \
                        -sites.file sites.xml \
                        -tc.file tc.data \
                        $CDM $SWIFTSCRIPT
@@ -596,6 +597,19 @@ build_package() {
   out package "swift-$DATE.tar.gz"
 }
 
+GLOBUS_HOSTNAME=$( ifconfig | grep inet | head -1 | cut -d ':' -f 2 | \
+                   awk '{print $1}' )
+group_sites_xml() {
+  TEMPLATE=$GROUP/sites.template.xml
+  if [ -f $TEMPLATE ]; then
+    sed "s@_WORK_@$PWD/work@;s@_HOST_@$GLOBUS_HOSTNAME@" < $TEMPLATE > sites.xml
+    [ $? != 0 ] && crash "Could not create sites.xml!"
+  else
+    sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
+    [ $? != 0 ] && crash "Could not create sites.xml!"
+  fi
+}
+
 group_tc_data() {
   if [ -f $GROUP/tc.template.data ]; then
     sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
@@ -635,6 +649,7 @@ group_title() {
 
 test_group() {
 
+  group_sites_xml
   group_tc_data
   group_fs_data
   group_swift_properties
@@ -710,14 +725,14 @@ if [ $ALWAYS_EXITONFAILURE != "1" ]; then
 fi
 
 TESTDIR=$TOPDIR/cog/modules/swift/tests
-sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
 
 SKIP_COUNTER=0
 
 GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/local \
             $TESTDIR/language/should-not-work \
-            $TESTDIR/cdm )
+            $TESTDIR/cdm \
+            $TESTDIR/cdm-ps )
 
 echo ${GROUPLIST[@]}
 
