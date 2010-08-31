@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 set -x
 
-COUNT=( $( ls f*.txt ) )
+COUNT=( $( ls f[a-d].txt ) )
 (( ${#COUNT[@]} == 4 )) || exit 1
 
 LINES=$( wc -l < fd.txt )
