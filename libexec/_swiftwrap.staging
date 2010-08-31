@@ -58,7 +58,7 @@ fail() {
 		exit 0
 	else
 		if [ "X$STDERR" != "X" ]; then
-			echo "$@" >>$STDER
+			echo "$@" >>$STDERR
 		fi
 		exit $EC
 	fi
@@ -231,7 +231,9 @@ IFS="|"
 
 logstate "CREATE_INPUTDIR"
 for D in $DIRS ; do
-	mkdir -p "$D" 2>&1 >>"$INFO"
+	if [ _$D != _ ]; then
+		mkdir -p "$D" 2>&1 >>"$INFO"
+	fi
 	checkError 254 "Failed to create input directory $D"
 	log "Created output directory: $D"
 done
