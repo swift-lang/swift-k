@@ -35,12 +35,12 @@ public abstract class RequestReply {
 	private int id;
 	private String outCmd;
 	private String inCmd;
-	private List outData;
-	private List inData;
+	private List<byte[]> outData;
+	private List<byte[]> inData;
 	private boolean inDataReceived;
 	private KarajanChannel channel;
 
-	private static final byte[] NO_EXCEPTION = new byte[0];
+	// private static final byte[] NO_EXCEPTION = new byte[0];
 
 	protected String getInCmd() {
 		return inCmd;
@@ -64,7 +64,7 @@ public abstract class RequestReply {
 
 	protected synchronized void addOutData(byte[] data) {
 		if (this.outData == null) {
-			this.outData = new LinkedList();
+			this.outData = new LinkedList<byte[]>();
 		}
 		this.outData.add(data);
 	}
@@ -137,7 +137,7 @@ public abstract class RequestReply {
 
 	protected synchronized void addInData(boolean fin, boolean err, byte[] data) {
 		if (inData == null) {
-			inData = new ArrayList(4);
+			inData = new ArrayList<byte[]>(4);
 		}
 		inData.add(data);
 	}
@@ -153,7 +153,7 @@ public abstract class RequestReply {
 		}
 	}
 
-	public List getInDataChuncks() {
+	public List<byte[]> getInDataChuncks() {
 		return inData;
 	}
 
@@ -162,17 +162,13 @@ public abstract class RequestReply {
 			return null;
 		}
 		int len = 0;
-		Iterator i = inData.iterator();
-		while (i.hasNext()) {
-			byte[] chunk = (byte[]) i.next();
+		for (byte[] chunk : inData) {
 			len += chunk.length;
 		}
 
 		byte[] data = new byte[len];
 		len = 0;
-		i = inData.iterator();
-		while (i.hasNext()) {
-			byte[] chunk = (byte[]) i.next();
+		for (byte[] chunk : inData) {
 			System.arraycopy(chunk, 0, data, len, chunk.length);
 			len += chunk.length;
 		}
@@ -187,7 +183,7 @@ public abstract class RequestReply {
 			return (byte[]) inData.get(index);
 		}
 		catch (IndexOutOfBoundsException e) {
-		    List l = new ArrayList();
+		    List<String> l = new ArrayList<String>();
 		    for (int i = 0; i < inData.size(); i++) {
 		        l.add(new String((byte[]) inData.get(i)));
 		    }
@@ -242,7 +238,7 @@ public abstract class RequestReply {
 
 	public synchronized void setInData(int index, byte[] data) {
 		if (inData == null) {
-			inData = new LinkedList();
+			inData = new LinkedList<byte[]>();
 		}
 		inData.set(index, data);
 	}
@@ -267,7 +263,7 @@ public abstract class RequestReply {
 		this.channel = channel;
 	}
 
-	public Collection getOutData() {
+	public Collection<byte[]> getOutData() {
 		return outData;
 	}
 
@@ -276,7 +272,7 @@ public abstract class RequestReply {
 	public void errorReceived() {
 		String msg = null;
 		Exception exception = null;
-		List data = getInDataChuncks();
+		List<byte[]> data = getInDataChuncks();
 		if (data.size() > 0) {
 			msg = new String((byte[]) data.get(0));
 			if (data.size() > 1) {
@@ -287,7 +283,8 @@ public abstract class RequestReply {
 		errorReceived(msg, exception);
 	}
 
-	protected String ppData(String prefix, String cmd, Collection data) {
+	protected String ppData(String prefix, String cmd, 
+			                Collection<byte[]> data) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(getChannel());
 		sb.append(": ");
@@ -297,7 +294,7 @@ public abstract class RequestReply {
 		sb.append(cmd);
 		if (data != null && data.size() != 0) {
 			sb.append('(');
-			Iterator i = data.iterator();
+			Iterator<byte[]> i = data.iterator();
 			while (i.hasNext()) {
 				byte[] buf = (byte[]) i.next();
 				sb.append(AbstractKarajanChannel.ppByteBuf(buf));

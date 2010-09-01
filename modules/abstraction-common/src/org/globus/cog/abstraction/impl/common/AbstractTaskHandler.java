@@ -9,7 +9,6 @@ package org.globus.cog.abstraction.impl.common;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.globus.cog.abstraction.impl.common.task.ActiveTaskException;
@@ -26,10 +25,10 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
  * Provides an abstract <code>TaskHandler</code>.
  */
 public abstract class AbstractTaskHandler extends TaskHandlerSkeleton {
-	private Map handleMap;
+	private Map<Task,DelegatedTaskHandler> handleMap;
 
 	public AbstractTaskHandler() {
-		this.handleMap = new HashMap();
+		this.handleMap = new HashMap<Task,DelegatedTaskHandler>();
 		setType(TaskHandler.GENERIC);
 	}
 
@@ -51,21 +50,21 @@ public abstract class AbstractTaskHandler extends TaskHandlerSkeleton {
 	protected abstract String getName();
 
 	public void suspend(Task task) throws InvalidSecurityContextException, TaskSubmissionException {
-		DelegatedTaskHandler dth = (DelegatedTaskHandler) this.handleMap.get(task);
+		DelegatedTaskHandler dth = this.handleMap.get(task);
 		if (dth != null) {
 			dth.suspend();
 		}
 	}
 
 	public void resume(Task task) throws InvalidSecurityContextException, TaskSubmissionException {
-		DelegatedTaskHandler dth = (DelegatedTaskHandler) this.handleMap.get(task);
+		DelegatedTaskHandler dth = this.handleMap.get(task);
 		if (dth != null) {
 			dth.resume();
 		}
 	}
 	
 	public void cancel(Task task, String message) throws InvalidSecurityContextException, TaskSubmissionException {
-		DelegatedTaskHandler dth = (DelegatedTaskHandler) this.handleMap.get(task);
+		DelegatedTaskHandler dth = this.handleMap.get(task);
 		if (dth != null) {
 			dth.cancel(message);
 		}
@@ -90,56 +89,54 @@ public abstract class AbstractTaskHandler extends TaskHandlerSkeleton {
 	}
 
 	/** return a collection of all tasks submitted to the handler */
-	public Collection getAllTasks() {
+	public Collection<Task> getAllTasks() {
 		try {
-			return new ArrayList(handleMap.keySet());
+			return new ArrayList<Task>(handleMap.keySet());
 		}
 		catch (Exception e) {
 			return null;
 		}
 	}
 	
-	protected Collection getTasksWithStatus(int code) {
-        ArrayList l = new ArrayList();
+	protected Collection<Task> getTasksWithStatus(int code) {
+        Collection<Task> list = new ArrayList<Task>();
         synchronized(handleMap) {
-            Iterator i = handleMap.keySet().iterator();
-            while (i.hasNext()) {
-                Task t = (Task) i.next();
-                if (t.getStatus().getStatusCode() == code) {
-                	l.add(t);
+            for (Task task : handleMap.keySet()) {
+                if (task.getStatus().getStatusCode() == code) {
+                	list.add(task);
                 }
             }
         }
-        return l;
+        return list;
     }
 
 	/** return a collection of active tasks */
-	public Collection getActiveTasks() {
+	public Collection<Task> getActiveTasks() {
 	    return getTasksWithStatus(Status.ACTIVE);
 	}
 
 	/** return a collection of failed tasks */
-	public Collection getFailedTasks() {
+	public Collection<Task> getFailedTasks() {
 	    return getTasksWithStatus(Status.FAILED);
 	}
 
 	/** return a collection of completed tasks */
-	public Collection getCompletedTasks() {
+	public Collection<Task> getCompletedTasks() {
 	    return getTasksWithStatus(Status.COMPLETED);
 	}
 
 	/** return a collection of suspended tasks */
-	public Collection getSuspendedTasks() {
+	public Collection<Task> getSuspendedTasks() {
 	    return getTasksWithStatus(Status.SUSPENDED);
 	}
 
 	/** return a collection of resumed tasks */
-	public Collection getResumedTasks() {
+	public Collection<Task> getResumedTasks() {
 	    return getTasksWithStatus(Status.RESUMED);
 	}
 
 	/** return a collection of canceled tasks */
-	public Collection getCanceledTasks() {
+	public Collection<Task> getCanceledTasks() {
 	    return getTasksWithStatus(Status.CANCELED);
 	}
 }

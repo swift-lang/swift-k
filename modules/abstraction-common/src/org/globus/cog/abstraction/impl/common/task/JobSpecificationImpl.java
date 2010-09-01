@@ -141,7 +141,6 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     public String getArgumentsAsString() {
-        String arg;
         if (!this.arguments.isEmpty()) {
             StringBuffer sb = new StringBuffer();
             Iterator<String> i = this.arguments.iterator();

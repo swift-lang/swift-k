@@ -111,7 +111,7 @@ public interface Task extends ExecutableObject {
      * 
      * @return a <code>Collection</code> of services
      */
-    public Collection removeAllServices();
+    public Collection<Service> removeAllServices();
 
     /**
      * Removes all the services associated with this task that also belongs to
@@ -119,7 +119,7 @@ public interface Task extends ExecutableObject {
      * 
      * @return a <code>Collection</code> of services
      */
-    public void removeService(Collection collection);
+    public void removeService(Collection<Service> collection);
 
     /**
      * Returns the {@link Service}at the given index of the ordered list of
@@ -137,7 +137,7 @@ public interface Task extends ExecutableObject {
      * 
      * @return a <code>Collection</code> of services
      */
-    public Collection getAllServices();
+    public Collection<Service> getAllServices();
 
     /**
      * Sets the maximum number of services required for this task. For example,
