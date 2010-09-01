@@ -1,0 +1,109 @@
+NAME
+    File::Which - Portable implementation of the `which' utility
+
+SYNOPSIS
+      use File::Which;                  # exports which()
+      use File::Which qw(which where);  # exports which() and where()
+      
+  my $exe_path = which('perldoc');
+      
+  my @paths = where('perl');
+      - Or -
+      my @paths = which('perl'); # an array forces search for all of them
+
+DESCRIPTION
+    "File::Which" was created to be able to get the paths to executable
+    programs on systems under which the `which' program wasn't implemented
+    in the shell.
+
+    "File::Which" searches the directories of the user's "PATH" (as returned
+    by "File::Spec->path()"), looking for executable files having the name
+    specified as a parameter to "which()". Under Win32 systems, which do not
+    have a notion of directly executable files, but uses special extensions
+    such as ".exe" and ".bat" to identify them, "File::Which" takes extra
+    steps to assure that you will find the correct file (so for example, you
+    might be searching for "perl", it'll try perl.exe, perl.bat, etc.)
+
+Steps Used on Win32, DOS, OS2 and VMS
+  Windows NT
+    Windows NT has a special environment variable called "PATHEXT", which is
+    used by the shell to look for executable files. Usually, it will contain
+    a list in the form ".EXE;.BAT;.COM;.JS;.VBS" etc. If "File::Which" finds
+    such an environment variable, it parses the list and uses it as the
+    different extensions.
+
+  Windows 9x and other ancient Win/DOS/OS2
+    This set of operating systems don't have the "PATHEXT" variable, and
+    usually you will find executable files there with the extensions ".exe",
+    ".bat" and (less likely) ".com". "File::Which" uses this hardcoded list
+    if it's running under Win32 but does not find a "PATHEXT" variable.
+
+  VMS
+    Same case as Windows 9x: uses ".exe" and ".com" (in that order).
+
+Functions
+  which($short_exe_name)
+    Exported by default.
+
+    $short_exe_name is the name used in the shell to call the program (for
+    example, "perl").
+
+    If it finds an executable with the name you specified, "which()" will
+    return the absolute path leading to this executable (for example,
+    /usr/bin/perl or C:\Perl\Bin\perl.exe).
+
+    If it does *not* find the executable, it returns "undef".
+
+    If "which()" is called in list context, it will return *all* the
+    matches.
+
+  where($short_exe_name)
+    Not exported by default.
+
+    Same as "which($short_exe_name)" in array context. Same as the `where'
+    utility, will return an array containing all the path names matching
+    $short_exe_name.
+
+BUGS AND CAVEATS
+    Not tested on VMS or MacOS, although there is platform specific code for
+    those. Anyone who haves a second would be very kind to send me a report
+    of how it went.
+
+    File::Spec adds the current directory to the front of PATH if on Win32,
+    VMS or MacOS. I have no knowledge of those so don't know if the current
+    directory is searced first or not. Could someone please tell me?
+
+SUPPORT
+    Bugs should be reported via the CPAN bug tracker at
+
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=File-Which>
+
+    For other issues, contact the maintainer.
+
+AUTHOR
+    Adam Kennedy <adamk@cpan.org>
+
+    Per Einar Ellefsen <pereinar@cpan.org>
+
+    Originated in modperl-2.0/lib/Apache/Build.pm. Changed for use in DocSet
+    (for the mod_perl site) and Win32-awareness by me, with slight
+    modifications by Stas Bekman, then extracted to create "File::Which".
+
+    Version 0.04 had some significant platform-related changes, taken from
+    the Perl Power Tools `which' implementation by Abigail with enhancements
+    from Peter Prymmer. See
+    <http://www.perl.com/language/ppt/src/which/index.html> for more
+    information.
+
+COPYRIGHT
+    Copyright 2002 Per Einar Ellefsen.
+
+    Some parts copyright 2009 Adam Kennedy.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+SEE ALSO
+    File::Spec, which(1), Perl Power Tools:
+    <http://www.perl.com/language/ppt/index.html>.
+
