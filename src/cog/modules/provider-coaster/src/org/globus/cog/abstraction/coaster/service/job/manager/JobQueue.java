@@ -49,11 +49,11 @@ public class JobQueue implements RegistrationManager {
 
     public void enqueue(Task t) {
         Service s = t.getService(0);
-        String jm = null;
+        // String jm = null;
         JobSpecification spec = (JobSpecification) t.getSpecification();
-        if (s instanceof ExecutionService) {
-            jm = ((ExecutionService) s).getJobManager();
-        }
+        // if (s instanceof ExecutionService) {
+        //    jm = ((ExecutionService) s).getJobManager();
+        // }
         if (spec.isBatchJob()) {
             if (logger.isInfoEnabled()) {
                 logger.info("Job batch mode flag set. Routing through local queue.");

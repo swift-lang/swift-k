@@ -82,7 +82,7 @@ public class FileOperation implements StatusListener {
         /*
          * If the operation is to start the file resource, then extract the
          * SESSION-ID for this session. This session id will be used to
-         * communicate with this resource for all subsequent transcations.
+         * communicate with this resource for all subsequent transactions.
          */
         if (operation.equalsIgnoreCase(FileOperationSpecification.START)) {
             Service service = new ServiceImpl(Service.FILE_OPERATION);

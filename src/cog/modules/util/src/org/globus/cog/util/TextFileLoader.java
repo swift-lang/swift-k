@@ -33,7 +33,7 @@ public class TextFileLoader {
 	}
 
 	/**
-	 * Reads text from an imput stream
+	 * Reads text from an input stream
 	 * @param is the input stream to read the text from
 	 * @return a String with the loaded text
 	 * @throws IOException

@@ -209,4 +209,8 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
         this.mapping.put(provider, taskHandler);
         return taskHandler;
     }
+    
+    public String toString() {
+        return "ExecutionTaskHandler"; 
+    }
 }

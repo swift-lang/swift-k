@@ -23,7 +23,7 @@ public class GetFileCommand extends Command implements WriteBufferCallback {
     private long len = -1;
     private WriteBuffer wt;
     private String dst;
-    private ProgressMonitor pm;
+    // private ProgressMonitor pm;
 
     public GetFileCommand(String src, String dst, ProgressMonitor pm)
             throws IOException {
@@ -31,7 +31,7 @@ public class GetFileCommand extends Command implements WriteBufferCallback {
         addOutData(src);
         addOutData(dst);
         this.dst = dst;
-        this.pm = pm;
+        // this.pm = pm;
         wt = createWriteBuffer(); 
     }
 

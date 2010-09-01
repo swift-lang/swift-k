@@ -11,7 +11,7 @@ import java.io.Serializable;
 /**
  * Every Grid Task has an associated <code>Specification</code> that dictates
  * the objective of the task and the environment required to achieve the
- * objective. The {@link TaskHandler}manages the tasks based on the parameters
+ * objective. The {@link TaskHandler} manages the tasks based on the parameters
  * specified in the specification. The interpretation of the parameters in the
  * specification is handler specific.
  */
