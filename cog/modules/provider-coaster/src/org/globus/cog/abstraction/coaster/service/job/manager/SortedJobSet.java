@@ -24,6 +24,9 @@ public class SortedJobSet implements Iterable<Job> {
     private SortedMap<TimeInterval, LinkedList<Job>> sm;
     int size;
     double jsize;
+    /** 
+       Monotonically increasing job sequence number
+     */
     int seq;
     private Metric metric;
     

@@ -45,18 +45,19 @@ public class TaskImpl implements Task {
     private String error = null;
     private Status status = STATUS_NONE;
 
-    private CopyOnWriteHashSet statusListeners, outputListeners;
+    private CopyOnWriteHashSet<StatusListener> statusListeners;
+    private CopyOnWriteHashSet<OutputListener> outputListeners;
 
     private Map attributes;
 
-    private ArrayList serviceList;
+    private ArrayList<Service> serviceList;
     private int requiredServices = 0;
 
     private boolean anythingWaiting;
 
     public TaskImpl() {
         this.id = new IdentityImpl();
-        this.serviceList = new ArrayList(2);
+        this.serviceList = new ArrayList<Service>(2);
         this.status = new StatusImpl();
         statusListeners = new CopyOnWriteHashSet();
         outputListeners = new CopyOnWriteHashSet();
@@ -138,17 +139,17 @@ public class TaskImpl implements Task {
         return (Service) serviceList.get(index);
     }
 
-    public Collection removeAllServices() {
-        Collection services = this.serviceList;
-        this.serviceList = new ArrayList(2);
+    public Collection<Service> removeAllServices() {
+        Collection<Service> services = this.serviceList;
+        this.serviceList = new ArrayList<Service>(2);
         return services;
     }
 
-    public void removeService(Collection collection) {
+    public void removeService(Collection<Service> collection) {
         this.serviceList.removeAll(collection);
     }
 
-    public Collection getAllServices() {
+    public Collection<Service> getAllServices() {
         return serviceList;
     }
 
@@ -171,10 +172,8 @@ public class TaskImpl implements Task {
     public void setStdOutput(String output) {
         this.output = output;
         OutputEvent event = new OutputEvent(this, this.output);
-        Iterator i = outputListeners.iterator();
         try {
-            while (i.hasNext()) {
-                OutputListener listener = (OutputListener) i.next();
+            for (OutputListener listener : outputListeners) { 
                 listener.outputChanged(event);
             }
         }
@@ -229,10 +228,8 @@ public class TaskImpl implements Task {
 
     protected void notifyListeners(Status status) {
         StatusEvent event = new StatusEvent(this, status);
-        Iterator i = statusListeners.iterator();
         try {
-            while (i.hasNext()) {
-                StatusListener listener = (StatusListener) i.next();
+            for (StatusListener listener : statusListeners) {     
                 listener.statusChanged(event);
             }
         }

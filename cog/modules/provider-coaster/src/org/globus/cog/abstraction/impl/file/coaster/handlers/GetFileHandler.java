@@ -25,8 +25,8 @@ import org.globus.cog.karajan.workflow.service.channels.SendCallback;
 public class GetFileHandler extends CoasterFileRequestHandler implements SendCallback, ReadIOCallback {
     public static final Logger logger = Logger.getLogger(GetFileHandler.class);
 
-    private long size;
-    private Exception ex;
+    // private long size;
+    // private Exception ex;
     private IOProvider provider;
     private IOReader reader;
     private boolean lengthSent;
@@ -41,8 +41,6 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
             throw new ProtocolException(e);
         }
     }
-    
-    
 
     public void send() throws ProtocolException {
         KarajanChannel channel = getChannel();

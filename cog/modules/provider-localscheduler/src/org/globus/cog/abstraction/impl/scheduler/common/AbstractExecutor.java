@@ -67,7 +67,7 @@ public abstract class AbstractExecutor implements ProcessListener {
 
 		String[] cmdline = buildCommandLine(scriptdir, script, exitcode,
 				stdout, stderr);
-
+		
 		if (logger.isDebugEnabled()) {
 			logCommandLine(cmdline);
 		}

@@ -28,10 +28,10 @@ import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
 public class ServiceNode extends AbstractFunction {
 	private static final Logger logger = Logger.getLogger(ServiceNode.class);
 	
-	private static final Map stypes;
+	private static final Map<String,Integer> stypes;
 	
 	static {
-		stypes = new HashMap();
+		stypes = new HashMap<String,Integer>();
 		stypes.put(AbstractionProperties.TYPE_EXECUTION_TASK_HANDLER, new Integer(
 				Service.EXECUTION));
 		stypes.put(AbstractionProperties.TYPE_FILE_TRANSFER_TASK_HANDLER, new Integer(
