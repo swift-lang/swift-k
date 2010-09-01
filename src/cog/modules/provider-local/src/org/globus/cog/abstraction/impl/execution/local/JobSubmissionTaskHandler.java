@@ -284,6 +284,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     private void copy(String src, String dest, File dir) throws Exception {
+        src = dropCDMPrefix(src);
         URI suri = new URI(src);
         URI duri = new URI(dest);
 
@@ -335,6 +336,16 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         return scheme == null ? "local" : scheme;
     }
 
+    /** 
+     * Strips off CDM prefixes, including "pinned:" 
+     */
+    private String dropCDMPrefix(String uri) throws Exception {
+        if (uri.startsWith("pinned:")) {
+            uri = uri.substring(7);
+        }
+        return uri;
+    }
+    
     protected void processIN(String in, File dir) throws IOException {
 
         byte[] buf = new byte[BUFFER_SIZE];
@@ -575,5 +586,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             return t;
         }
 
+    }
+    
+    public String toString() {
+        return "JobSubmissionTaskHandler(local)";
     }
 }
