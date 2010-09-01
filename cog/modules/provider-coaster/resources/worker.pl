@@ -37,9 +37,9 @@ use constant {
 	YIELD => 1,
 };
 
-my $LOGLEVEL = DEBUG;
+my $LOGLEVEL = TRACE;
 
-my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR"); 
+my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR");
 
 use constant {
 	REPLY_FLAG => 0x00000001,
@@ -101,7 +101,7 @@ my @CMDQ = ();
 
 my $ID = "-";
 
-my @URIS = split(/,/, $URISTR); 
+my @URIS = split(/,/, $URISTR);
 my @SCHEME;
 my @HOSTNAME;
 my @PORT;
@@ -132,14 +132,14 @@ sub logfilename {
 	return $result;
 }
 
-# Get the BlueGene Universal Component Identifier from Zepto 
+# Get the BlueGene Universal Component Identifier from Zepto
 sub get_bg_uci() {
 	my %vars = file2hash("/proc/personality.sh");
 	my $uci = $vars{"BG_UCI"};
 	return $uci;
 }
 
-# Read a file into a hash, with file formatted as: 
+# Read a file into a hash, with file formatted as:
 # KEY=VALUE
 sub file2hash() {
 	my $file = shift;
@@ -160,9 +160,9 @@ sub wlog {
 	if ($level >= $LOGLEVEL) {
 		foreach $msg (@_) {
 		        my $timestamp = timestring();
-			my $msgline = sprintf("%s %s %s %s", 
+			my $msgline = sprintf("%s %s %s %s",
 					      $timestamp,
-					      $LEVELS[$level], 
+					      $LEVELS[$level],
 					      $ID, $msg);
 			print LOG $msgline;
 		}
@@ -180,11 +180,11 @@ sub timestring() {
 
 sub hts {
 	my ($H) = @_;
-	
-	my $k;	
+
+	my $k;
 	my $s = "{";
 	my $first = 1;
-	
+
 	for $k (keys %$H) {
 		if (!$first) {
 			$s = $s.", ";
@@ -194,7 +194,7 @@ sub hts {
 		}
 		$s = $s."$k = $$H{$k}";
 	}
-      
+
 	return $s."}";
 }
 
@@ -202,7 +202,7 @@ sub reconnect() {
 	my $fail = 0;
 	my $success;
 	my $i;
-	my $j; 
+	my $j;
 	for ($i = 0; $i < MAX_RECONNECT_ATTEMPTS; $i++) {
 		wlog INFO, "Connecting ($i)...\n";
 		my $sz = @HOSTNAME;
@@ -215,7 +215,7 @@ sub reconnect() {
 				last;
 			}
 			else {
-				wlog DEBUG, "Connection failed: $!. Trying other addresses\n"; 
+				wlog DEBUG, "Connection failed: $!. Trying other addresses\n";
 			}
 		}
 		if ($success) {
@@ -286,7 +286,7 @@ sub sendm {
 
 sub sendFrags {
 	my ($tag, $flg, $data) = @_;
-	
+
 	my $flg2;
 	my $msg;
 	my $yield;
@@ -297,7 +297,7 @@ sub sendFrags {
 		($flg2, $msg, $yield) = $$data{"nextData"}($data);
 		sendm($tag, $flg | $flg2, $msg);
 	} while (($flg2 & FINAL_FLAG) == 0 && !$yield);
-	
+
 	if (($flg2 & FINAL_FLAG) == 0) {
 		# final flag not set; put it back in the queue
 		wlog DEBUG, "$tag yielding\n";
@@ -318,7 +318,7 @@ sub sendFrags {
 
 sub nextArrayData {
 	my ($state) = @_;
-	
+
 	my $index = $$state{"index"};
 	$$state{"index"} = $index + 1;
 	my $data = $$state{"data"};
@@ -338,7 +338,7 @@ sub arrayData {
 
 sub nextFileData {
 	my ($state) = @_;
-	
+
 	my $s = $$state{"state"};
 	if ($s == 0) {
 		$$state{"state"} = $s + 1;
@@ -380,11 +380,11 @@ sub nextFileData {
 
 sub fileData {
 	my ($cmd, $lname, $rname) = @_;
-	
+
 	my $desc;
 	if (!open($desc, "<", "$lname")) {
 		wlog WARN, "Failed to open $lname\n";
-		# let it go on for now. The next read from the descriptor will fail	
+		# let it go on for now. The next read from the descriptor will fail
 	}
 	return {
 		"cmd" => $cmd,
@@ -427,7 +427,7 @@ sub queueCmdCustomDataHandling {
 }
 
 sub sendReply {
-	my ($tag, @msgs) = @_;	
+	my ($tag, @msgs) = @_;
 	sendFrags($tag, REPLY_FLAG, arrayData(@msgs));
 }
 
@@ -455,7 +455,7 @@ sub unpackData {
 		$alen = $alen + length($frag);
 		$msg = $msg.$frag;
 	}
-	
+
 	my $actuallen = length($msg);
 	wlog(TRACE, " IN: len=$len, actuallen=$actuallen, tag=$tag, flags=$flg, $msg\n");
 	if ($len != $actuallen) {
@@ -466,14 +466,14 @@ sub unpackData {
 
 sub processRequest {
 	my ($state, $tag, $timeout, $err, $fin, $msg) = @_;
-	
+
 	my $request = $$state{"request"};
 	if (!defined($request)) {
 		$request = [];
 		$$state{"request"} = $request;
 	}
 	push(@$request, $msg);
-	
+
 	if ($timeout) {
 		sendError($tag, ("Timed out waiting for all fragments"));
 	}
@@ -495,11 +495,11 @@ sub processRequest {
 
 sub process {
 	my ($tag, $flg, $msg) = @_;
-	
-	
+
+
 	my $reply = $flg & REPLY_FLAG;
 	my ($record, $cont, $start);
-	
+
 	if ($reply) {
 		if (exists($REPLIES{$tag})) {
 			$record = $REPLIES{$tag};
@@ -519,10 +519,10 @@ sub process {
 		$record = $REQUESTS{$tag};
 		($cont, $start) = ($$record[0], $$record[1]);
 	}
-		
+
 	my $fin = $flg & FINAL_FLAG;
 	my $err = $flg & ERROR_FLAG;
-		
+
 
 	if ($fin) {
 		if ($reply) {
@@ -532,28 +532,28 @@ sub process {
 			delete($REPLIES{$tag});
 		}
 		else {
-			# All fragments of a request have been received. Since the record is 
+			# All fragments of a request have been received. Since the record is
 			# stored in $cont, $tag, $err, $fin, $msg, we can remove it from the
 			# table of (partial) incoming requests
 			delete($REQUESTS{$tag});
 		}
 		wlog DEBUG, "Fin flag set\n";
 	}
-	
+
 	$$cont{"dataIn"}($cont, $tag, 0, $err, $fin, $msg);
-	
+
 	return 1;
 }
 
 sub checkTimeouts2 {
 	my ($hash) = @_;
-	
+
 	my $now = time();
 	my @del = ();
-	
+
 	my $k;
 	my $v;
-	
+
 	while (($k, $v) = each(%$hash)) {
 		if ($now - $$v[1] > REPLYTIMEOUT) {
 			push(@del, $k);
@@ -561,7 +561,7 @@ sub checkTimeouts2 {
 			$$cont{"dataIn"}($cont, $k, 1, 0, 0, "Reply timeout");
 		}
 	}
-	
+
 	foreach $k (@del) {
 		delete $$hash{$k};
 	}
@@ -579,7 +579,7 @@ sub checkTimeouts {
 	checkTimeouts2(\%REPLIES);
 	if ($LASTRECV != 0) {
 		my $dif = $time - $LASTRECV;
-		wlog TRACE, "time: $time, lastrecv: $LASTRECV, dif: $dif\n"; 
+		wlog TRACE, "time: $time, lastrecv: $LASTRECV, dif: $dif\n";
 		if ($dif >= IDLETIMEOUT && $JOBS_RUNNING == 0) {
 			wlog INFO, "Idle time exceeded (time=$time, LASTRECV=$LASTRECV, dif=$dif)\n";
 			die "Idle time exceeded";
@@ -604,9 +604,9 @@ sub recvOne {
 
 sub registerCmd {
 	my ($tag, $cont) = @_;
-	
+
 	wlog DEBUG, "Replies: ".hts(\%REPLIES)."\n";
-	
+
 	$REPLIES{$tag} = [$cont, time(), ()];
 }
 
@@ -658,7 +658,7 @@ sub registerCB {
 
 sub registerCBDataIn {
 	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
-	
+
 	if ($timeout) {
 		die "Failed to register (timeout)\n";
 	}
@@ -679,7 +679,7 @@ sub heartbeatCB {
 
 sub heartbeatCBDataIn {
 	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
-	
+
 	if ($timeout) {
 		if (time() - $LAST_HEARTBEAT > 2 * HEARTBEAT_INTERVAL) {
 			wlog WARN, "No heartbeat replies in a while. Dying.\n";
@@ -689,7 +689,7 @@ sub heartbeatCBDataIn {
 	elsif ($err) {
 		wlog WARN, "Heartbeat failed: $reply\n";
 		die "Heartbeat failed: $reply\n";
-	} 
+	}
 	else {
 		wlog DEBUG, "Heartbeat acknowledged\n";
 	}
@@ -756,10 +756,17 @@ sub urisplit {
 
 sub getFileCB {
 	my ($jobid, $src, $dst) = @_;
-	
+
+	wlog DEBUG, "getFileCB($jobid, $src, $dst)\n";
+
 	my ($protocol, $path) = urisplit($src);
+
+	wlog TRACE, "getFileCB(src: $protocol, $path)\n";
+	$protocol =~ s/pinned://;
+	wlog TRACE, "getFileCB(src: $protocol, $path)\n";
+
 	wlog DEBUG, "$jobid src: $src, protocol: $protocol, path: $path\n";
-	
+
 	if (($protocol eq "file") || ($protocol eq "proxy")) {
 		wlog DEBUG, "Opening $dst...\n";
 		my $dir = dirname($dst);
@@ -771,8 +778,8 @@ sub getFileCB {
 				die "Cannot create directory $dir. $!";
 			}
 		}
-		# don't try open(DESC, ...) (as I did). It will use the same reference 
-		# and concurrent operations will fail. 
+		# don't try open(DESC, ...) (as I did). It will use the same reference
+		# and concurrent operations will fail.
 		my $desc;
 		if (!open($desc, ">", "$dst")) {
 			die "Failed to open $dst: $!";
@@ -799,7 +806,7 @@ sub getFileCB {
 
 sub getFileCBDataInIndirect {
 	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
-	
+
 	my $jobid = $$state{"jobid"};
 	wlog DEBUG, "$jobid getFileCBDataInIndirect jobid: $jobid, tag: $tag, err: $err, fin: $fin\n";
 	if ($err) {
@@ -820,7 +827,7 @@ sub getFileCBDataInIndirect {
 
 sub getFileCBDataIn {
 	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
-	
+
 	my $s = $$state{"state"};
 	my $jobid = $$state{"jobid"};
 	wlog DEBUG, "$jobid getFileCBDataIn jobid: $jobid, state: $s, tag: $tag, err: $err, fin: $fin\n";
@@ -843,7 +850,7 @@ sub getFileCBDataIn {
 		my $desc = $$state{"desc"};
 		if (!(print {$desc} $reply)) {
 			close $desc;
-			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $desc; lfile: $$state{'lfile'}\n"; 
+			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $desc; lfile: $$state{'lfile'}\n";
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "522", "Could not write to file: $!"));
 			delete($JOBDATA{$jobid});
 			return;
@@ -859,11 +866,11 @@ sub getFileCBDataIn {
 
 sub stagein {
 	my ($jobid) = @_;
-	
+
 	my $STAGE = $JOBDATA{$jobid}{"stagein"};
-	my $STAGED = $JOBDATA{$jobid}{"stageind"}; 
+	my $STAGED = $JOBDATA{$jobid}{"stageind"};
 	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"};
-	
+
 	if (scalar @$STAGE <= $STAGEINDEX) {
 		wlog DEBUG, "$jobid Done staging in files ($STAGEINDEX, $STAGE)\n";
 		$JOBDATA{$jobid}{"stageindex"} = 0;
@@ -883,34 +890,47 @@ sub stagein {
 				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));
 			}
 			else {
-				stagein($jobid);		
+				stagein($jobid);
 			}
 		}
+		elsif ($protocol =~ "pinned:") {
+			wlog DEBUG, "Handling pinned file: $$STAGE[$STAGEINDEX]\n";
+			my $src = $$STAGE[$STAGEINDEX];
+			$src =~ s/pinned://;
+			getFile($jobid, $src, $$STAGED[$STAGEINDEX]);
+		}
 		else {
-			my $state;
-			eval {
-				$state = getFileCB($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
-			};
-			if ($@) {
-				wlog DEBUG, "$jobid Error staging in file: $@\n";
-				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));	
-			}
-			else {
-				sendCmd(($state, "GET", $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]));
-			}
+			getFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
 		}
 	}
 }
 
+sub getFile {
+	my ($jobid, $src, $dst) = @_;
+
+	wlog TRACE, "getFile($jobid, $src, $dst)\n";
+
+	my $state;
+	eval {
+		$state = getFileCB($jobid, $src, $dst);
+	};
+	if ($@) {
+		wlog DEBUG, "$jobid Error staging in file: $@\n";
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));
+	}
+	else {
+		sendCmd(($state, "GET", $src, $dst));
+	}
+}
 
 sub stageout {
 	my ($jobid) = @_;
-	
+
 	wlog DEBUG, "$jobid Staging out\n";
 	my $STAGE = $JOBDATA{$jobid}{"stageout"};
-	my $STAGED = $JOBDATA{$jobid}{"stageoutd"}; 
+	my $STAGED = $JOBDATA{$jobid}{"stageoutd"};
 	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"};
-	
+
 	my $sz = scalar @$STAGE;
 	wlog DEBUG, "sz: $sz, STAGEINDEX: $STAGEINDEX\n";
 	if (scalar @$STAGE <= $STAGEINDEX) {
@@ -956,7 +976,7 @@ sub stageout {
 
 sub cleanup {
 	my ($jobid) = @_;
-	
+
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
 	if (ASYNC) {
 		if ($ec == 0) {
@@ -966,13 +986,13 @@ sub cleanup {
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with an exit code of $ec"));
 		}
 	}
-	
+
 	if ($ec != 0) {
 		wlog DEBUG, "$jobid Job data: ".hts($JOBDATA{$jobid})."\n";
 		wlog DEBUG, "$jobid Job: ".hts($JOBDATA{$jobid}{'job'})."\n";
 		wlog DEBUG, "$jobid Job dir ".`ls -al $JOBDATA{$jobid}{'job'}{'directory'}`."\n";
 	}
-	
+
 	my $CLEANUP = $JOBDATA{$jobid}{"cleanup"};
 	my $c;
 	if ($ec == 0) {
@@ -986,7 +1006,7 @@ sub cleanup {
 			wlog DEBUG, "$jobid Removed $c\n";
 		}
 	}
-	
+
 	if (!ASYNC) {
 		if ($ec == 0) {
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
@@ -1009,7 +1029,7 @@ sub putFileCB {
 
 sub putFileCBDataSent {
 	my ($state, $tag) = @_;
-	
+
 	if (ASYNC) {
 		wlog DEBUG, "putFileCBDataSent\n";
 		my $jobid = $$state{"jobid"};
@@ -1022,11 +1042,11 @@ sub putFileCBDataSent {
 
 sub putFileCBDataIn {
 	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
-	
+
 	wlog DEBUG, "putFileCBDataIn: $reply\n";
-	
+
 	my $jobid = $$state{"jobid"};
-	
+
 	if ($err || $timeout) {
 		if ($JOBDATA{$jobid}) {
 			wlog DEBUG, "Stage out failed ($reply)\n";
@@ -1045,7 +1065,7 @@ sub putFileCBDataIn {
 
 sub isabsolute {
 	my ($fn) = @_;
-	
+
 	return substr($fn, 0, 1) eq "/";
 }
 
@@ -1124,21 +1144,21 @@ sub submitjob {
 			stageoutd => \@STAGEOUTD,
 			cleanup => \@CLEANUP,
 		};
-		
+
 		stagein($JOBID);
 	}
 }
 
 sub checkJob() {
 	my ($tag, $JOBID, $JOB) = @_;
-	
+
 	wlog INFO, "$JOBID Job info received (tag=$tag)\n";
 	my $executable = $$JOB{"executable"};
 	if (!(defined $JOBID)) {
 		my $ds = hts($JOB);
-		
+
 		wlog DEBUG, "$JOBID Job details $ds\n";
-		
+
 		sendError($tag, ("Missing job identity"));
 		return 0;
 	}
@@ -1172,11 +1192,11 @@ sub checkJob() {
 sub forkjob {
 	my ($JOBID) = @_;
 	my ($pid, $status);
-	
+
 	my $JOB = $JOBDATA{$JOBID}{"job"};
 	my $JOBARGS = $JOBDATA{$JOBID}{"jobargs"};
 	my $JOBENV = $JOBDATA{$JOBID}{"jobenv"};
-	
+
 	pipe(PARENT_R, CHILD_W);
 	$pid = fork();
 	if (defined($pid)) {
@@ -1212,11 +1232,11 @@ sub checkJobs {
 	if (!%JOBWAITDATA) {
 		return;
 	}
-	
+
 	wlog DEBUG, "Checking jobs status ($JOBS_RUNNING active)\n";
-	
+
 	my @DELETEIDS = ();
-	 
+
 	for my $JOBID (keys %JOBWAITDATA) {
 		if (checkJobStatus($JOBID)) {
 			push @DELETEIDS, $JOBID;
@@ -1229,16 +1249,16 @@ sub checkJobs {
 
 sub checkJobStatus {
 	my ($JOBID) = @_;
-	
-	
+
+
 	my $pid = $JOBWAITDATA{$JOBID}{"pid"};
 	my $RD = $JOBWAITDATA{$JOBID}{"pipe"};
-	
+
 	my $tid;
 	my $status;
-	
+
 	wlog DEBUG, "$JOBID Checking pid $pid\n";
-	
+
 	$tid = waitpid($pid, &WNOHANG);
 	if ($tid != $pid) {
 		# not done
@@ -1327,6 +1347,7 @@ exit(0);
 
 # Local Variables:
 # indent-tabs-mode: t
-# tab-width: 8
-# perl-indent-level: 8
+# tab-width: 4
 # End:
+
+# perl-indent-level: 8
