@@ -78,10 +78,14 @@
 		<copy todir="${dist.dir}/bin">
 			<fileset dir="${cog.dir}/modules/${module.name}/bin"/>
 		</copy>
+		<copy todir="${dist.dir}/lib/perl">
+			<fileset dir="${cog.dir}/modules/${module.name}/lib/perl"/>
+                </copy>
 		<chmod perm="+x" file="${dist.dir}/bin/VDL2Karajan"/>
 		<chmod perm="+x" file="${dist.dir}/bin/vdlc"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-plot-log"/>
-
+		<chmod perm="+x" file="${dist.dir}/bin/swiftconfig"/>
+		<chmod perm="+x" file="${dist.dir}/bin/swiftrun"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/active-state-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/add-runid-as-prefix"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/affine-transform"/>
@@ -213,6 +217,12 @@
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/log4j.properties" 
 			overwrite="true"/>
+		<copy todir="${dist.dir}/etc/sites">
+			<fileset dir="${cog.dir}/modules/${module.name}/etc/sites"/>
+		</copy>
+		<copy todir="${dist.dir}/etc/apps">
+			<fileset dir="${cog.dir}/modules/${module.name}/etc/apps"/>
+		</copy>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/cdm_broadcast.sh"/>

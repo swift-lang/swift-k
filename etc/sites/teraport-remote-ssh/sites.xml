@@ -1,0 +1,7 @@
+<pool handle="teraport-remote-ssh">
+    <filesystem url="tp-login2.ci.uchicago.edu" provider="ssh"/>
+    <execution url="tp-login2.ci.uchicago.edu" provider="ssh"/>
+    <workdirectory >$HOME/swiftwork</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
+</pool>
+

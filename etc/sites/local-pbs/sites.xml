@@ -1,0 +1,6 @@
+<pool handle="local-pbs">
+    <filesystem provider="local" url="none" />
+    <execution provider="local" url="none" jobmanager="local:pbs" />
+    <workdirectory>$HOME/swiftwork</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
+</pool>
