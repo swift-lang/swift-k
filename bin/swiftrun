@@ -135,7 +135,6 @@ open( SITEFILE, ">$run_directory/sites.xml" )
     || die "Unable to open $run_directory/sites.xml for writing\n";
 print SITEFILE "<config>\n@sites_xml</config>\n";
 close(SITEFILE);
-exit;
 
 # Link input data
 foreach my $input_file (@option_inputs) {
