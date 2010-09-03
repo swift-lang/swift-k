@@ -21,7 +21,7 @@ our @EXPORT = qw(create_directory get_entry add_ssh remove_ssh
 update_tc_hostname update_xml write_file print_directory strip_directory
 copy_file cat_file add_application edit_application remove_application
 list_applications initialize_swiftconfig update_site_applications import_tc
-import_xml edit_profile
+import_xml edit_profile add_to_group list_group remove_from_group
 );
 our $VERSION = '0.01';
 
@@ -542,6 +542,7 @@ sub edit_application {
 sub initialize_swiftconfig {
     create_directory("$ENV{'HOME'}/.swift");
     create_directory("$ENV{'HOME'}/.swift/sites");
+    create_directory("$ENV{'HOME'}/.swift/groups");
     if(!-e "$ENV{'HOME'}/.swift/apps") {
         create_directory("$ENV{'HOME'}/.swift/apps");
         my @app_files = glob("$FindBin::Bin/../etc/apps/*.apps");
@@ -703,6 +704,59 @@ sub edit_profile {
     return $xml_ref;
 }
 
+sub add_to_group {
+    my ($group_filename) = @_;
+    if(!-e $group_filename) {
+        print "Unable to find file $group_filename for editing\n";
+        return;
+    }
+    open(GROUPFILE, ">>$group_filename") || die "Error opening $group_filename\n";
+    my @all_sites = glob("$ENV{'HOME'}/.swift/sites/*");
+    foreach(@all_sites) {
+        $_ = strip_directory($_);
+    }
+    my $new_site = get_entry("Enter name of site to add", '', 0, @all_sites);
+    
+    print GROUPFILE "$new_site\n";
+    close(GROUPFILE);    
+}
+
+sub list_group {
+    my ($group_filename) = @_;
+    if(!-e $group_filename) {
+        print "Unable to find $group_filename for editing\n";
+        return;
+    }
+    system("cat $group_filename");
+}
+
+sub remove_from_group {
+    my ($group_filename) = @_;
+    if(!-e $group_filename) {
+        print "Unable to find $group_filename for editing\n";
+        return;
+    } 
+    
+    open(GROUPFILE, $group_filename) || die "Error opening $group_filename\n";
+    my @group_data = <GROUPFILE>;
+    close(GROUPFILE);
+    
+    my $remove_group = get_entry("Enter name of site to remove", '', 0);
+    $remove_group .= "\n";
+    
+    my $found=0;
+    foreach(@group_data) {
+        if($_ eq $remove_group)
+        {
+            $found=1;
+            $_ = '';
+        }
+    }
+    if(!$found) {
+        print "Unable to find site $remove_group. Use 'l' to get a list\n";
+    }
+    write_file($group_filename, @group_data);
+}
 1;
 __END__
 

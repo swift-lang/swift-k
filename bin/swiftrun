@@ -17,17 +17,19 @@ use SwiftConfig;
 my @option_sites;     # Site name to execute upon
 my $option_script;    # Script name to run
 my @option_inputs;    # Name of data to include with execution
+my @option_groups;    # Name of group/groups to run script on
 
 GetOptions(
     'site|sites=s{,}'   => \@option_sites,
     'script=s'          => \$option_script,
     'input|inputs=s{,}' => \@option_inputs,
-    'help|man'              => sub { pod2usage(-verbose => 2); },
+    'help|man|h'        => sub { pod2usage(-verbose => 2); },
+    'group|groups=s{,}' => \@option_groups,
 );
 
 # Check arguments
 initialize_swiftconfig();
-if(!$option_script || !@option_sites) {
+if(!$option_script || (!@option_sites && !@option_groups)) {
     print "Incorrect usage. Try swiftrun -help\n";
     exit;
 }
@@ -43,108 +45,97 @@ my ($run_number) = $run_directories[-1] =~ m{(\d+)};
 $run_number++;
 my $run_directory = getcwd() . "/" . sprintf "run.%04s", $run_number;
 create_directory($run_directory);
-my @sites_xml;
 
 # Copy over needed files
 copy_file( "$option_script", "$run_directory" );
 
-# Sites.xml for 'all'
-if( grep /all/, @option_sites ) {
-    foreach my $all_site(<$dotswift_directory/sites/*>) {
-        if ( !-d "$all_site" ) {
-            die "Unable to find directory for $all_site\n";
-        }
-        if ( !-e "$all_site/sites.xml" ) {
-            die "Unable to find sites.xml for $all_site\n";
-        }
-        my $properties_file = "$dotswift_directory/sites/$all_site/swift.properties";
-        if( -e "$properties_file") {
-            copy_file( $properties_file, "$run_directory/swift.properties");
-        }
+# Determine list of sites. Store each swiftconfig directory we need in @sites
+my @sites = ();
 
-        open(CURRENT_SITE, "$all_site/sites.xml")
-            || die "Unable to open $all_site/sites.xml";
-        my @current_site_data = <CURRENT_SITE>;
-        push(@sites_xml, @current_site_data);
-        close(CURRENT_SITE);
-        # Add applications
-        my @all_apps;
-        if(-e "$all_site/apps") {
-            open(APPFILE, "$all_site/apps")
-                || die "Unable to open $all_site/apps";
-            @all_apps = <APPFILE>;
-            close(APPFILE);
-            foreach(@all_apps) {
-                chomp($_);
-                $_ = "$dotswift_directory/apps/$_.apps\n";
-            }
-        }
-        else {   
-            @all_apps = glob("$dotswift_directory/apps/*.apps");
-        }
-        foreach my $current_app_file(@all_apps) {
-            chomp($current_app_file);
-            open(CURRENT_APP, $current_app_file) || die "Unable to open app file $current_app_file\n";
-            my @current_app_data = <CURRENT_APP>;
-            close(CURRENT_APP);
-            $all_site = strip_directory($all_site);
-            foreach(@current_app_data) {
-                s/SWIFTCONFIGURATION/$all_site/ig;
-            }
-            open(RUNTC, ">>$run_directory/tc.data") || die "Unable to write to $run_directory/tc.data\n";
-            print RUNTC @current_app_data;
-            close(RUNTC);
-        }
+# Check for -sites all
+foreach my $option_site (@option_sites) {
+    if(lc($option_site) eq 'all') {
+        @sites = glob("$dotswift_directory/sites/*");
     }
 }
-  
-# Sites.xml for non-'all'
-else {
-    foreach my $site (@option_sites) {
-        if ( !-d "$dotswift_directory/sites/$site" ) {
-            die "Unable to find configuration for $site\n";
-        }
-        if ( !-e "$dotswift_directory/sites/$site/sites.xml" ) {
-            die "Unable to find sites.xml for $site\n";
-        }              
-        open(CURRENT_SITE, "$dotswift_directory/sites/$site/sites.xml")
-            || die "Unable to open $dotswift_directory/sites/$site/sites.xml";
-        my @current_site_data = <CURRENT_SITE>;
-        close(CURRENT_SITE);
-        push(@sites_xml,  @current_site_data);
-        my $properties_file = "$dotswift_directory/sites/$site/swift.properties";
-        if( -e "$properties_file") {
-            copy_file( $properties_file, "$run_directory");
-        }
-        # Add applications
-        my @all_apps;
-        if(-e "$dotswift_directory/sites/$site/apps") {
-            open(APPFILE, "$dotswift_directory/sites/$site/apps")
-                || die "Unable to open $site/apps";
-            @all_apps = <APPFILE>;
-            close(APPFILE);
-            foreach(@all_apps) {
-                chomp($_);
-                $_ = "$dotswift_directory/apps/$_.apps";
+
+# Everything else specified by -sites
+foreach my $option_site (@option_sites) {
+    if(lc($option_site) eq 'all') {
+        next;
+    }
+    if(-d "$dotswift_directory/sites/$option_site") {
+        push(@sites, "$dotswift_directory/sites/$option_site");
+    }
+    else {
+        die "Unable to find configuration for $option_site\n";
+    }
+}
+
+# Groups
+foreach my $group(@option_groups) {
+    open(GROUPFILE, "$dotswift_directory/groups/$group.group")
+        || die "Unable to open file for $group\n";
+    while(<GROUPFILE>) {
+        chomp($_);
+        push(@sites, "$dotswift_directory/sites/$_");
+    }
+    close(GROUPFILE);
+}
+
+# Create configuration files for run         
+my @sites_xml;
+my @apps_data;
+foreach my $site (@sites) {
+    if ( !-d "$site" ) {
+        die "Unable to find configuration for $site\n";
+    }
+    
+    # Sites.xml
+    if ( !-e "$site/sites.xml" ) {
+        die "Unable to find sites.xml for $site\n";
+    }              
+    open(CURRENT_SITE, "$site/sites.xml")
+            || die "Unable to open $site/sites.xml";
+    push(@sites_xml, <CURRENT_SITE>);
+    close(CURRENT_SITE);
+    
+    # Properties
+    if( -e "$site/swift.properties") {
+        copy_file( "$site/swift.properties", "$run_directory");
+    }
+
+    # Applications
+    if(-e "$site/apps") {
+        open(APPFILE, "$site/apps") || die "Unable to open $site/apps";
+        while(<APPFILE>) {
+            chomp($_);
+            if(-e "$dotswift_directory/apps/$_.apps") {
+                open(APPDATA, "$dotswift_directory/apps/$_.apps")
+                    || die "Unable to open $dotswift_directory/apps/$_.apps";
+                my @temp_app_data = <APPDATA>;
+                close(APPDATA);
+                foreach(@temp_app_data) {
+                    my $simple_site_name = strip_directory($site);
+                    s/SWIFTCONFIGURATION/$simple_site_name/ig;
+                }
+                push(@apps_data, @temp_app_data);
             }
-        }
-        else {   
-            @all_apps = glob("$dotswift_directory/apps/*.apps");
-        }
-        foreach my $current_app_file(@all_apps) {
-            open(CURRENT_APP, $current_app_file) || die "Unable to open app file $current_app_file\n";
-            my @current_app_data = <CURRENT_APP>;
-            close(CURRENT_APP);
-            foreach(@current_app_data) {
-                s/SWIFTCONFIGURATION/$site/ig;
-            }
-            open(RUNTC, ">>$run_directory/tc.data") || die "Unable to write to $run_directory/tc.data\n";
-            print RUNTC @current_app_data;
-            close(RUNTC);
         }
     }
 }
 
+# Save configuration information
+open(TC, ">>$run_directory/tc.data") 
+    || die "Unable to write to $run_directory/tc.data\n";
+print TC @apps_data;
+close(TC);
+
+open( SITEFILE, ">$run_directory/sites.xml" ) 
+    || die "Unable to open $run_directory/sites.xml for writing\n";
+print SITEFILE "<config>\n@sites_xml</config>\n";
+close(SITEFILE);
+exit;
 
 # Link input data
 foreach my $input_file (@option_inputs) {
@@ -161,11 +152,6 @@ foreach my $input_file (@option_inputs) {
     symlink $input_file, $new_path
         || die "Unable to create symlink to $new_path\n";
 }
-
-open( SITEFILE, ">$run_directory/sites.xml" ) 
-    || die "Unable to open $run_directory/sites.xml for writing\n";
-print SITEFILE "<config>\n@sites_xml</config>\n";
-close(SITEFILE);
 
 # Run swift
 chdir("$run_directory") || die "Unable to chdir to $run_directory\n";
@@ -213,10 +199,10 @@ generated by swiftconfig.
 =head1 DESCRIPTION
 
 General operations:
-   -site <site1 site2>	Execute swift on given sitename(s)
-   -script file.swift	Specify the swift script to run
-   -input <file1 file2>  Link to data required for execution
-   
+   -site <site1 site2>	  Execute swift on given sitename(s)
+   -script file.swift	  Specify the swift script to run
+   -input <file1 file2>    Link to data required for execution
+   -groups <group1 group2> Run script on a site grouping
 =head1 EXAMPLES
 
 Run a script on a single site

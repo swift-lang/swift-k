@@ -15,16 +15,17 @@ use XML::Simple;
 use File::Which qw(which where);
 use Data::Dumper;
 
-# Variables used for sites.xml
-my $option_list         = q{};            # List information about config
-my $option_remove       = q{};            # Remove entry from sites.xml
-my $option_edit         = q{};            # Edit mode
-my $option_default      = q{};            # When adding a site, use all defaults
-my @option_templates    = ();            # Create config from template specified
-my $option_copy         = q{};            # Copy an existing configuration
-my $option_applications = q{};            # Edit applications
-my $option_import       = q{};            # Import existing configuration
-my @option_profiles 	= ();		  # Specify one or more profiles to edit
+# Variables for command line options
+my $option_list         = q{};      # List information about config
+my $option_remove       = q{};      # Remove entry from sites.xml
+my $option_edit         = q{};      # Edit mode
+my $option_default      = q{};      # When adding a site, use all defaults
+my @option_templates    = ();       # Create config from template specified
+my $option_copy         = q{};      # Copy an existing configuration
+my $option_applications = q{};      # Edit applications
+my $option_import       = q{};      # Import existing configuration
+my @option_profiles 	= ();       # Specify one or more profiles to edit
+my $option_groups       = q{};      # Edit site groupings
 
 # Assign variables from command line options
 GetOptions(
@@ -37,8 +38,9 @@ GetOptions(
     'apps|applications'     	=> \$option_applications,
     'import=s'              	=> \$option_import,
     'list=s'                	=> \$option_list,
-    'help|man'              	=> sub { pod2usage(-verbose => 2); },
+    'help|man|h'              	=> sub { pod2usage(-verbose => 2); },
     'profile|profiles=s{,}' 	=> \@option_profiles,
+    'group|groups'              => \$option_groups,
 );
 
 # Prepare data
@@ -46,13 +48,14 @@ my $xml = new XML::Simple();
 initialize_swiftconfig();
 
 # Check command line options
-if( !$option_remove 
+if(    !$option_remove 
     && !@option_templates 
     && !$option_edit 
     && !$option_copy 
     && !$option_applications 
     && !$option_import 
-    && !$option_list) {
+    && !$option_list
+    && !$option_groups) {
     print "Incorrect usage. See swiftconfig -help for more information\n";  
     exit;
 }
@@ -78,7 +81,7 @@ if (@option_templates) {
     	if ( !-e "$sites_input_file" ) {
     	    die "Unable to find template for $option_template\n";
     	}
-	my $xml_ref          = update_xml("$sites_input_file", 0, $option_default);
+	    my $xml_ref          = update_xml("$sites_input_file", 0, $option_default);
     	my $new_sitename     = $xml_ref->{handle};
     	my $output_directory = "$dotswift_directory/sites/$new_sitename";
     	if ( -d "$output_directory" ) {
@@ -98,7 +101,6 @@ if (@option_templates) {
     	    SuppressEmpty => 1,
     	);
     	write_file( "$output_directory/sites.xml", $xml_out_ref );
-	
     	update_site_applications($new_sitename, $option_default);
 
     	# Handle SSH
@@ -143,7 +145,7 @@ if ($option_edit) {
     }
     else {
     	$xml_ref = update_xml("$xml_filename", 1, $option_default);
-	update_site_applications($option_edit, $option_default);
+	    update_site_applications($option_edit, $option_default);
     }
 
    # Save
@@ -212,6 +214,54 @@ if($option_copy) {
     if ( $xml_ref->{execution}{provider} eq 'ssh' ) {
         add_ssh( $xml_ref->{handle}, $xml_ref->{execution}{url} );
     }
+}
+
+# Edit site groupings
+if($option_groups) {
+    my @groups = glob("$dotswift_directory/groups/*");
+    foreach(@groups) {
+        $_ = strip_directory($_);
+        my ($base, $ext) = split('\.');
+        $_ = $base;
+    }
+    push(@groups, 'new');
+    my $group_selection = get_entry('Select group', 'new', 0, @groups);
+    if($group_selection eq 'new') {
+        $group_selection = get_entry('Name of new group', '', 0);
+        if(-e "$dotswift_directory/groups/$group_selection.group") {
+            print "Group named $group_selection already exists!\n";
+            exit;
+        }
+        open(GROUPFILE, ">$dotswift_directory/groups/$group_selection.group")
+            || die "Unable to create group file $dotswift_directory/groups/$group_selection.group";
+        print "Group $group_selection created\n";
+        close(GROUPFILE);
+    }
+    
+    my $quit = 0;
+    my $group_filename = "$dotswift_directory/groups/$group_selection.group";
+    
+    while($quit == 0) {
+        print "\n(A)dd, (r)emove, (l)ist, or (q)uit: ";
+           my $command = <STDIN>;
+           chomp($command);
+           
+           if(lc($command) eq 'a') {
+               add_to_group($group_filename);
+           }
+           elsif(lc($command) eq 'q') {
+               $quit = 1;
+           }
+           elsif(lc($command) eq 'r') {
+                remove_from_group($group_filename);
+           }
+           elsif(lc($command) eq 'l') {
+                list_group($group_filename);
+           }
+           else {
+               print "Unknown option: $command\n";
+           }
+     }
 }
 
 # Add/Edit applications
@@ -311,6 +361,8 @@ if($option_list) {
         }
     }
 }
+
+
 __END__
 
 =head1 NAME
@@ -339,6 +391,7 @@ General operations:
    -import               Import a sites.xml file into swiftconfig
    -list                 Options: templates, configs, or a config
    -apps                 Edit or create application sets
+   -groups               Edit site groupings
    
 =head1 EXAMPLES
 
