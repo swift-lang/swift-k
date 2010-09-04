@@ -245,12 +245,14 @@ public class BootstrapService implements Runnable {
                     }
                     skeys.clear();
 
-                    if (!newChannels.isEmpty()) {
-                        i = newChannels.iterator();
-                        while (i.hasNext()) {
-                            SocketChannel s = (SocketChannel) i.next();
-                            s.register(selector, SelectionKey.OP_READ);
-                            i.remove();
+                    synchronized(channels) {
+                        if (!newChannels.isEmpty()) {
+                            i = newChannels.iterator();
+                            while (i.hasNext()) {
+                                SocketChannel s = (SocketChannel) i.next();
+                                s.register(selector, SelectionKey.OP_READ);
+                                i.remove();
+                            }
                         }
                     }
                     if (n == 0) {
