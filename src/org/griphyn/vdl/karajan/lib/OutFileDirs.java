@@ -34,7 +34,12 @@ public class OutFileDirs extends VDLFunction {
                 DSHandle leaf = handle.getField(p);
                 String fname = VDLFunction.filename(leaf)[0];
                 String dir = new AbsFile(fname).getDir();
-                ret.append(dir);
+                if (dir.startsWith("/") && dir.length() != 1) {
+                    ret.append(dir.substring(1));
+                }
+                else if (dir.length() != 0) {
+                    ret.append(dir);
+                }
             }
         }
         catch (Exception e) {
