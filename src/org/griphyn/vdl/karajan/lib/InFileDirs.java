@@ -28,10 +28,14 @@ public class InFileDirs extends AbstractSequentialWithArguments {
         for (Object f : files) { 
         	String path = (String) f;
             String dir = new AbsFile(path).getDir();
-            if (dir.startsWith("/")) {
+            // there could be a clash here since
+            // "/a/b/c.txt" would be remotely the same
+            // as "a/b/c.txt". Perhaps absolute paths
+            // should have a unique prefix.
+            if (dir.startsWith("/") && dir.length() != 1) {
             	ret.append(dir.substring(1));
             }
-            else {
+            else if (dir.length() != 0) {
                 ret.append(dir);
             }
         }
