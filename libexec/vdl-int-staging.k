@@ -27,15 +27,6 @@ namespace("vdl"
 			pathnames(stageins)
 		)
 
-		element(fileDirs, [stageins, stageouts]
-			list(
-				unique(
-					inFileDirs(stageins)
-					outFileDirs(stageouts)
-				)
-			)
-		)
-
 		element(graphStuff, [tr, stagein, stageout, err, optional(args)]
 			if(
 				vdl:configProperty("pgraph") != "false" then(
@@ -89,10 +80,8 @@ namespace("vdl"
 				jobdir := substring(uid, from=0, to=1)
 				jobid := "{tr}-{uid}"
 
-				fileDirs := fileDirs(stagein, stageout)
-
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
-
+				
 				wrapper := "_swiftwrap.staging"
 				wrapfile := "{ddir}/param-{jobid}"
 
@@ -119,7 +108,7 @@ namespace("vdl"
 								"-out", stdout,
 								"-err", stderr,
 								"-i", maybe(stdin),
-								"-d", flatten(each(fileDirs)),
+								"-d", flatten(unique(outFileDirs(stageout))),
 								"-if", flatten(infiles(stagein)),
 								"-of", flatten(outfiles(stageout)),
 								"-k",
@@ -130,7 +119,8 @@ namespace("vdl"
 							directory = "{wfdir}-{jobdir}-{jobid}"
 							redirect = false
 							host = rhost
-							vdl:tcprofile(rhost, tr = tr) //this gets various app params from the tc, such as environment, walltime, etc
+							
+							vdl:tcprofile(rhost, tr = tr) //this gets various app params from the tc, such as environment, walltime, etc 
 							replicationGroup = replicationGroup
 							replicationChannel = replicationChannel
 							jobid = jobid
