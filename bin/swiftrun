@@ -14,10 +14,11 @@ use Pod::Usage;
 use SwiftConfig;
 
 # Command line processing
-my @option_sites;     # Site name to execute upon
-my $option_script;    # Script name to run
-my @option_inputs;    # Name of data to include with execution
-my @option_groups;    # Name of group/groups to run script on
+my @option_sites;      	# Site name to execute upon
+my $option_script;     	# Script name to run
+my @option_inputs;     	# Name of data to include with execution
+my @option_groups;     	# Name of group/groups to run script on
+my $option_certificate;	# Use a default certificate instead of your own 
 
 GetOptions(
     'site|sites=s{,}'   => \@option_sites,
@@ -25,6 +26,7 @@ GetOptions(
     'input|inputs=s{,}' => \@option_inputs,
     'help|man|h'        => sub { pod2usage(-verbose => 2); },
     'group|groups=s{,}' => \@option_groups,
+    'certificate'	=> \$option_certificate,
 );
 
 # Check arguments
@@ -151,6 +153,14 @@ foreach my $input_file (@option_inputs) {
     symlink $input_file, $new_path
         || die "Unable to create symlink to $new_path\n";
 }
+
+# Handle certificates if needed
+if($option_certificate) {
+	$ENV{'X509_CERT_DIR'} = "$FindBin::Bin/../etc/certificate";
+	$ENV{'X509_CADIR'} = "$FindBin::Bin/../etc/certificate";
+	$ENV{'X509_USER_PROXY'} = "$FindBin::Bin/../etc/certificate/x509up_swift";
+}
+
 
 # Run swift
 chdir("$run_directory") || die "Unable to chdir to $run_directory\n";

@@ -223,6 +223,9 @@
 		<copy todir="${dist.dir}/etc/apps">
 			<fileset dir="${cog.dir}/modules/${module.name}/etc/apps"/>
 		</copy>
+		<copy todir="${dist.dir}/etc/certificate">
+			<fileset dir="${cog.dir}/modules/${module.name}/etc/certificate"/>
+		</copy>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/cdm_broadcast.sh"/>
