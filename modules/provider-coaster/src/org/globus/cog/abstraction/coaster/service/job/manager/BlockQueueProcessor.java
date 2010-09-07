@@ -257,13 +257,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private static int overallocatedSize(int wt, Settings settings) {
-        int os =
-                (int) (wt * ((settings.getLowOverallocation() - settings.getHighOverallocation())
+        return (int) (wt * ((settings.getLowOverallocation() - settings.getHighOverallocation())
                         * Math.exp(-wt * settings.getOverallocationDecayFactor()) + settings.getHighOverallocation()));
-        if (logger.isDebugEnabled()) {
-            logger.debug("overallocatedSize(" + wt + ") = " + os);
-        }
-        return os;
     }
 
     private int sumSizes(int start, int end) {
