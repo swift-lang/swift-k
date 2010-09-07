@@ -24,16 +24,18 @@ import org.ietf.jgss.GSSException;
 
 public class CoasterPersistentService extends CoasterService {
     public static final Logger logger = Logger.getLogger(CoasterPersistentService.class);
-    
+
     public CoasterPersistentService() throws IOException {
         super(false);
     }
 
-    public CoasterPersistentService(GSSCredential cred, int port, InetAddress bindTo) throws IOException {
+    public CoasterPersistentService(GSSCredential cred, int port, InetAddress bindTo)
+            throws IOException {
         super(cred, port, bindTo);
     }
 
-    public CoasterPersistentService(boolean secure, int port, InetAddress bindTo) throws IOException {
+    public CoasterPersistentService(boolean secure, int port, InetAddress bindTo)
+            throws IOException {
         super(secure, port, bindTo);
     }
 
@@ -46,7 +48,7 @@ public class CoasterPersistentService extends CoasterService {
         ap.addFlag("nosec", "Disables GSI security and uses plain TCP sockets instead");
         ap.addOption("proxy",
             "Specifies the location of a proxy credential that will be used for authentication. " +
-            "If not specified, the default proxy will be used.",
+                    "If not specified, the default proxy will be used.",
             "file", ArgumentParser.OPTIONAL);
         ap.addFlag("local", "Binds the service to the loopback interface");
         ap.addFlag("help", "Displays usage information");
@@ -65,20 +67,23 @@ public class CoasterPersistentService extends CoasterService {
             if (ap.isPresent("nosec")) {
                 secure = false;
             }
-            GlobusCredential gc;
-            if (ap.hasValue("proxy")) {
-                gc = new GlobusCredential(ap.getStringValue("proxy"));
+            GSSCredential cred = null;
+            if (secure) {
+                GlobusCredential gc;
+                if (ap.hasValue("proxy")) {
+                    gc = new GlobusCredential(ap.getStringValue("proxy"));
+                }
+                else {
+                    gc = GlobusCredential.getDefaultCredential();
+                }
+                cred = new GlobusGSSCredentialImpl(gc, GSSCredential.INITIATE_AND_ACCEPT);
             }
-            else {
-                gc = GlobusCredential.getDefaultCredential();
-            }
-            GSSCredential cred = new GlobusGSSCredentialImpl(gc, GSSCredential.INITIATE_AND_ACCEPT);
-            
+
             int port = 1984;
             if (ap.hasValue("port")) {
                 port = ap.getIntValue("port");
             }
-            
+
             CoasterPersistentService s;
             if (!secure) {
                 s = new CoasterPersistentService(false, port, bindTo);
