@@ -46,9 +46,6 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		if (channelContext != null) {
 			this.context = channelContext;
 		}
-		else {
-			this.context = new ChannelContext();
-		}
 		this.requestManager = requestManager;
 		registeredMaps = new LinkedList();
 		this.client = client;
@@ -99,7 +96,9 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	public void unregisterCommand(Command cmd) {
-		logger.info("Unregistering " + cmd);
+	    if (logger.isDebugEnabled()) {
+	    	logger.debug("Unregistering " + cmd);
+	    }
 		context.unregisterCommand(cmd);
 	}
 
@@ -298,7 +297,12 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public synchronized URI getCallbackURI() throws Exception {
 		ensureCallbackServiceStarted();
-		return getCallbackService().getContact();
+		if (getCallbackService() != null) {
+			return getCallbackService().getContact();
+		}
+		else {
+		    return null;
+		}
 	}
 
 	public Service getCallbackService() {
@@ -323,8 +327,8 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			try {
 				cmd.replyReceived(fin, error, data);
 				if (fin) {
-					if (logger.isInfoEnabled()) {
-						logger.info(this + " REPL: " + cmd);
+					if (logger.isDebugEnabled()) {
+						logger.debug(this + " REPL: " + cmd);
 					}
 					if (error) {
 						cmd.errorReceived();
@@ -377,8 +381,8 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			}
 			if (fin) {
 				try {
-					if (logger.isInfoEnabled()) {
-						logger.info(this + " REQ: " + handler);
+					if (logger.isDebugEnabled()) {
+						logger.debug(this + " REQ: " + handler);
 					}
 					if (error) {
 						handler.errorReceived();
