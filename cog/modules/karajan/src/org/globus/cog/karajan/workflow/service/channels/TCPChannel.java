@@ -20,10 +20,11 @@ public class TCPChannel extends AbstractTCPChannel {
 	private UserContext uc;
 	private URI contact;
 
-	public TCPChannel(URI contact, ChannelContext context, RequestManager rm) {
-		super(rm, context, true);
+	public TCPChannel(URI contact, ChannelContext channelContext, RequestManager rm) {
+		super(rm, channelContext, true);
 		this.contact = contact;
 		setName(contact.toString());
+		uc = new UserContext(null, channelContext);
 	}
 
 	public TCPChannel(Socket socket, RequestManager requestManager, ChannelContext channelContext)
