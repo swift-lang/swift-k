@@ -63,9 +63,6 @@ public class SortedJobSet implements Iterable<Job> {
         jsize += metric.getSize(j);
         size++;
         seq++;
-        if (logger.isDebugEnabled()) {
-            logger.info("+" + j + "; " + sm);
-        }
     }
 
     public synchronized Job removeOne(TimeInterval walltime) {
@@ -87,9 +84,6 @@ public class SortedJobSet implements Iterable<Job> {
             }
             if (size == 0) {
                 jsize = 0;
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug("-" + j + "; " + sm);
             }
             return j;
         }
