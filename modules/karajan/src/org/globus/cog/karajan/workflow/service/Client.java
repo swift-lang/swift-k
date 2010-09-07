@@ -107,12 +107,13 @@ public class Client {
 				sc = new ChannelContext();
 				sc.setConfiguration(RemoteConfiguration.getDefault().find(contact.toString()));
 			}
+			URI c = contact;
 			String host = contact.getHost();
 			int port = contact.getPort();
 			if (port == -1) {
-				port = 1984;
+				c = new URI(contact.getScheme(), null, contact.getHost(), 1984, null, null, null);
 			}
-			channel = ChannelFactory.newChannel(contact, sc, requestManager);
+			channel = ChannelFactory.newChannel(c, sc, requestManager);
 			connected = true;
 		}
 		catch (Exception e) {
