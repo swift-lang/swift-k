@@ -61,14 +61,14 @@ public class JobQueue implements RegistrationManager {
         }
         QueueProcessor qp;
         if (s.getProvider().equalsIgnoreCase("coaster") && !spec.isBatchJob()) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Adding task " + t + " to coaster queue");
+            if (logger.isDebugEnabled()) {
+                logger.debug("Adding task " + t + " to coaster queue");
             }
             qp = getQueueProcessor(settings.getWorkerManager());
         }
         else {
-            if (logger.isInfoEnabled()) {
-                logger.info("Adding task " + t + " to local queue");
+            if (logger.isDebugEnabled()) {
+                logger.debug("Adding task " + t + " to local queue");
             }
             qp = local;
         }
