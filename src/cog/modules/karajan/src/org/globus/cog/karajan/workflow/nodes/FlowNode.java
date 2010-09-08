@@ -60,7 +60,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	private boolean checkpointable;
 
-	private static int uidCounter = 0;
+	// private static int uidCounter = 0;
 
 	private List<FlowElement> elements;
 
