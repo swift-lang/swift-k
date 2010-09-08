@@ -13,5 +13,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/jglobus"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.USER_LIBRARY/backport-util-concurrent"/>
 	<classpathentry kind="lib" path="/util/lib/log4j-1.2.8.jar"/>
+	<classpathentry kind="lib" path="/util/lib/backport-util-concurrent.jar"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
