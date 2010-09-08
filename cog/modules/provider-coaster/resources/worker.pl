@@ -117,6 +117,16 @@ my $LAST_HEARTBEAT = 0;
 my %JOBWAITDATA = ();
 my %JOBDATA = ();
 
+# CDM variables:
+my $PINNED_READY = 0;
+# Map file names to INFLIGHT or COMPLETE
+my %PINNED = ();
+use constant {
+	INFLIGHT => 1,
+	COMPLETE => 2,
+};
+my %PINNED_WAITING = ();
+
 sub logfilename {
 	$LOGDIR = shift;
 	$BLOCKID = shift;
@@ -760,10 +770,7 @@ sub getFileCB {
 	wlog DEBUG, "getFileCB($jobid, $src, $dst)\n";
 
 	my ($protocol, $path) = urisplit($src);
-
-	wlog TRACE, "getFileCB(src: $protocol, $path)\n";
 	$protocol =~ s/pinned://;
-	wlog TRACE, "getFileCB(src: $protocol, $path)\n";
 
 	wlog DEBUG, "$jobid src: $src, protocol: $protocol, path: $path\n";
 
@@ -860,12 +867,40 @@ sub getFileCBDataIn {
 		my $desc = $$state{"desc"};
 		close $desc;
 		wlog DEBUG, "$jobid Closed $$state{'lfile'}\n";
+		if ($PINNED_READY) {
+			completePinnedFile($jobid);
+		}
 		stagein($jobid);
+	}
+}
+
+sub completePinnedFile {
+	my ($jobid) = @_;
+
+	my $STAGE = $JOBDATA{$jobid}{"stagein"};
+	my $STAGED = $JOBDATA{$jobid}{"stageind"};
+	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"}-1;
+
+	my $rdst = $$STAGED[$STAGEINDEX];
+	my $jobdir = $JOBDATA{$jobid}{'job'}{'directory'};
+	$rdst =~ s/$jobdir//;
+
+	wlog TRACE, "completePinnedFile(): $rdst\n";
+
+	$PINNED{$rdst} = COMPLETE;
+	my $WAITING = $PINNED_WAITING{$rdst};
+	if (defined $WAITING) {
+		foreach (@$WAITING) {
+			wlog TRACE, "completePinnedFile(): $_\n";
+			stagein($_);
+		}
 	}
 }
 
 sub stagein {
 	my ($jobid) = @_;
+
+	wlog TRACE, "stagein(): $jobid\n";
 
 	my $STAGE = $JOBDATA{$jobid}{"stagein"};
 	my $STAGED = $JOBDATA{$jobid}{"stageind"};
@@ -894,10 +929,7 @@ sub stagein {
 			}
 		}
 		elsif ($protocol =~ "pinned:") {
-			wlog DEBUG, "Handling pinned file: $$STAGE[$STAGEINDEX]\n";
-			my $src = $$STAGE[$STAGEINDEX];
-			$src =~ s/pinned://;
-			getFile($jobid, $src, $$STAGED[$STAGEINDEX]);
+			getPinnedFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
 		}
 		else {
 			getFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
@@ -921,6 +953,61 @@ sub getFile {
 	else {
 		sendCmd(($state, "GET", $src, $dst));
 	}
+}
+
+sub getPinnedFile() {
+	my ($jobid, $src, $dst) = @_;
+	my $error;
+	wlog DEBUG, "Handling pinned file: $src\n";
+	$src =~ s/pinned://;
+	my $jobdir = $JOBDATA{$jobid}{'job'}{'directory'};
+	my $pinned_dir = "$jobdir/../pinned";
+	if (! $PINNED_READY) {
+		if (! -d $pinned_dir) {
+			wlog DEBUG, "mkpath: $pinned_dir\n";
+			mkpath($pinned_dir) ||
+				wlog WARN, "getPinnedFile(): " .
+				"Could not mkdir: $pinned_dir\n";
+		}
+		$PINNED_READY = 1;
+	}
+	my $rdst = $dst;
+	$rdst =~ s/$jobdir//;
+	if (! defined $PINNED{$rdst}) {
+		$PINNED{$rdst} = INFLIGHT;
+		getFile($jobid, $src, $dst);
+		wlog DEBUG, "link: $dst -> $pinned_dir$rdst\n";
+		if (! -f "$pinned_dir$rdst") {
+			link($dst, "$pinned_dir$rdst") ||
+				wlog WARN, "getPinnedFile(): " .
+				"Could not link: $pinned_dir$rdst\n";
+		}
+	}
+	else {
+		wlog DEBUG, "link: $pinned_dir$rdst -> $dst\n";
+		link("$pinned_dir$rdst", $dst) ||
+			die "getPinnedFile(): Could not link!\n";
+		if ($PINNED{$rdst} == INFLIGHT) {
+			waitForPinnedFile($rdst, $jobid);
+		}
+		else {
+			stagein($jobid);
+		}
+	}
+}
+
+# Add this jobid to the list of jobs waiting for in-flight file rdst
+sub waitForPinnedFile {
+	my ($rdst, $jobid) = @_;
+
+	wlog TRACE, "waitForPinned(): $rdst $jobid\n";
+
+	if (! defined $PINNED_WAITING{$rdst}) {
+		$PINNED_WAITING{$rdst} = [];
+	}
+
+	my $waiting = $PINNED_WAITING{$rdst};
+	push(@$waiting, $jobid);
 }
 
 sub stageout {
