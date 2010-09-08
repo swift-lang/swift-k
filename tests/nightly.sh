@@ -747,7 +747,7 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/local \
             $TESTDIR/language/should-not-work \
             $TESTDIR/cdm \
-            $TESTDIR/cdm-ps )
+            $TESTDIR/cdm/ps )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
