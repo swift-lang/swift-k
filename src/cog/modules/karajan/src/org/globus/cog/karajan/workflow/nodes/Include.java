@@ -144,6 +144,7 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 		}
 		setProperty("_processed", true);
 		A_FILE.setStatic(this, iname);
+		logger.debug("Importing: " + iname);
 		Reader reader = null;
 		if (iname == null) {
 			throw new ExecutionException("No include file specified");
@@ -172,12 +173,15 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 					if (dir.startsWith("@classpath/")) {
 						try {
 							if (iname.indexOf("..") != -1) {
-								continue;
+								// continue;
 								/*
 								 * Although getResource() seems to not resolve
 								 * those, which is good, but I'm not betting on
 								 * it
 								 */
+								throw new ExecutionException
+								("Parent reference `..' not allowed" + 
+								 "in include/import!");  
 							}
 							String path = dir.substring("@classpath/".length());
 							URL url = getClass().getClassLoader().getResource(path + iname);
