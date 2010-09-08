@@ -81,7 +81,7 @@ namespace("vdl"
 				jobid := "{tr}-{uid}"
 
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
-				
+
 				wrapper := "_swiftwrap.staging"
 				wrapfile := "{ddir}/param-{jobid}"
 
@@ -91,7 +91,7 @@ namespace("vdl"
 				vdl:setprogress("Stage in")
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
-                                cdmfile := cdm:file()
+				cdmfile := cdm:file()
 
 				try(
 					sequential(
@@ -119,24 +119,26 @@ namespace("vdl"
 							directory = "{wfdir}-{jobdir}-{jobid}"
 							redirect = false
 							host = rhost
-							
-							vdl:tcprofile(rhost, tr = tr) //this gets various app params from the tc, such as environment, walltime, etc 
+
+							vdl:tcprofile(rhost, tr = tr) //this gets various app params from the tc, such as environment, walltime, etc
 							replicationGroup = replicationGroup
 							replicationChannel = replicationChannel
 							jobid = jobid
 
 							stagingMethod := vdl:siteProfile(rhost, "swift:stagingMethod", default="proxy")
+							pinOption := configProperty("provider.staging.pin.swiftfiles")
+							pin := if (pinOption == "" then ("pinned:") else (""))
 
-							stageIn("{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
+							stageIn("{pin}{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
 
-							if( cdmfile != "" then(
-								d := vdl:dirname(cdmfile)
-								f := basename(cdmfile)
-								echo("d: {d} f: {f}")
-								stageIn("{stagingMethod}://localhost/{d}/{f}", cdmfile)
+							if ( cdmfile != "" then(
+								d  := vdl:dirname(cdmfile)
+								file := basename(cdmfile)
+								dir := if ( d == "" then("./") else(str:concat(d,"/")))
+								stageIn("{stagingMethod}://localhost/{dir}{file}", cdmfile)
 								stageIn("{stagingMethod}://localhost/{swift.home}/libexec/cdm.pl", "cdm.pl")
 								stageIn("{stagingMethod}://localhost/{swift.home}/libexec/cdm_lib.sh", "cdm_lib.sh")
-								))
+							))
 
 							appStageins(jobid, stagein, ".", stagingMethod)
 
@@ -193,3 +195,8 @@ namespace("vdl"
 		)
 	)
 )
+
+// Local variables:
+// tab-width: 4
+// indent-tabs-mode: 1
+// End:
