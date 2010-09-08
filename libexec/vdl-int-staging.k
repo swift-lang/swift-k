@@ -127,7 +127,7 @@ namespace("vdl"
 
 							stagingMethod := vdl:siteProfile(rhost, "swift:stagingMethod", default="proxy")
 							pinOption := configProperty("provider.staging.pin.swiftfiles")
-							pin := if (pinOption == "" then ("pinned:") else (""))
+							pin := if (pinOption == "true" then ("pinned:") else (""))
 
 							stageIn("{pin}{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
 
