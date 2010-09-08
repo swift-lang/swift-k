@@ -18,7 +18,9 @@ import org.globus.common.CoGProperties;
 
 public class VDL2Config extends Properties {
 
-	public static final Logger logger = Logger.getLogger(VDL2Config.class);
+    private static final long serialVersionUID = 1L;
+
+    public static final Logger logger = Logger.getLogger(VDL2Config.class);
 
 	public static final String CONFIG_FILE_NAME = "swift.properties";
 	public static final String[] CONFIG_FILE_SEARCH_PATH = new String[] {
@@ -62,11 +64,11 @@ public class VDL2Config extends Properties {
 		return config.check();
 	}
 
-	private List files, tried;
+	private List<String> files, tried;
 
 	private VDL2Config() {
-		files = new LinkedList();
-		tried = new LinkedList();
+		files = new LinkedList<String>();
+		tried = new LinkedList<String>();
 		put(VDL2ConfigProperties.POOL_FILE, "${vds.home}/etc/sites.xml");
 		put(VDL2ConfigProperties.TC_FILE, "${vds.home}/var/tc.data");
 		put(VDL2ConfigProperties.LAZY_ERRORS, "false");
@@ -131,7 +133,7 @@ public class VDL2Config extends Properties {
 	}
 
 	/**
-	 * Overriden to do variable expansion. Variables will be expanded if there
+	 * Overridden to do variable expansion. Variables will be expanded if there
 	 * is a system property with that name. Otherwise, the expansion will not
 	 * occur.
 	 */
@@ -228,12 +230,11 @@ public class VDL2Config extends Properties {
 			String prop = (String) bc.getProperty(name);
 			if(prop != null) {
 				return prop;
-                	}
+			}
 		}
 		if(logger.isDebugEnabled()) {
 			logger.debug("Getting property "+name+" from global configuration");
 		}
 		return getProperty(name);
 	}
-
 }
