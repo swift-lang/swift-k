@@ -129,6 +129,16 @@ cd $TOPDIR
 mkdir -p $RUNDIR
 [ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
 
+checkfail() {
+  ERR=$?
+  shift
+  MSG=${*}
+  if [[ $ERR != 0 ]]; then
+    echo "FAILED($ERR): $MSG"
+    exit $ERR
+  fi
+}
+
 crash() {
   MSG=$1
   echo $MSG
@@ -288,6 +298,13 @@ DOH
   html_~html
 }
 
+printlist() {
+  while [[ $1 != "" ]]; do
+    echo $1
+    shift
+  done
+}
+
 outecho() {
   TYPE=$1
   shift
@@ -427,7 +444,6 @@ result() {
 }
 
 process_exec() {
-  declare -p PWD
   printf "\nExecuting: $@" >>$LOG
   rm -fv $OUTPUT
   "$@" > $OUTPUT 2>&1
@@ -585,9 +601,6 @@ fexec() {
   # ptest
 }
 
-#ptest() {
-#}
-
 build_package() {
   TEST="Package"
   test_exec cd $SWIFT_HOME/lib
@@ -631,10 +644,10 @@ group_fs_data() {
 
 group_swift_properties() {
   if [ -f $GROUP/swift.properties ]; then
-    cp -uv $GROUP/swift.properties .
+    cp -v $GROUP/swift.properties .
     [ $? != 0 ] && crash "Could not copy swift.properties!"
   else
-    cp -uv $SWIFT_HOME/etc/swift.properties .
+    cp -v $SWIFT_HOME/etc/swift.properties .
     [ $? != 0 ] && crash "Could not copy swift.properties!"
   fi
 }
@@ -654,12 +667,15 @@ test_group() {
   group_fs_data
   group_swift_properties
 
-  for TEST in $( ls $GROUP/*.swift ); do
+  SWIFTS=$( ls $GROUP/*.swift )
+  checkfail "Could not ls: $GROUP"
+
+  for TEST in $SWIFTS; do
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
     TESTNAME=$( basename $TEST)
-    cp -uv $GROUP/$TESTNAME .
+    cp -v $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
 
     start_row
@@ -669,7 +685,6 @@ test_group() {
     end_row
   done
 }
-
 
 date > $LOG
 
@@ -734,8 +749,6 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/cdm \
             $TESTDIR/cdm-ps )
 
-echo ${GROUPLIST[@]}
-
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
   GROUP=$G
@@ -768,6 +781,8 @@ for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
 done
 
 footer
+
+exit 0
 
 # Local Variables:
 # sh-basic-offset: 2
