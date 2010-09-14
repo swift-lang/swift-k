@@ -21,6 +21,7 @@ import org.griphyn.vdl.type.Types;
     4) does not impose any formatting (commas, etc.).  <br><br>
     Format specifiers: <br>
       %%: % sign. <br>
+      %M: Filename output: waits for close
       %p: Not typechecked, output as in trace(). <br>
       %f: Typechecked float output. <br>
       %i: Typechecked int output. <br>
