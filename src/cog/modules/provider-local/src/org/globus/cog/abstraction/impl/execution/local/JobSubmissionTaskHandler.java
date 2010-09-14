@@ -484,7 +484,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    private static class Processor implements Runnable {
+    private class Processor implements Runnable {
         private Process p;
         private List streamPairs;
         byte[] buf;
@@ -539,11 +539,26 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                     buf = new byte[BUFFER_SIZE];
                 }
                 StreamPair sp = (StreamPair) i.next();
-                int avail = sp.is.available();
-                if (avail > 0) {
-                    any = true;
-                    int len = sp.is.read(buf);
-                    sp.os.write(buf, 0, len);
+                
+                try {
+                    int avail = sp.is.available();
+                    if (avail > 0) {
+                        any = true;
+                        int len = sp.is.read(buf);
+                        sp.os.write(buf, 0, len);
+                    }
+                }
+                catch (IOException e) {
+                    // When a job is canceled, process.destroy() is called, which will
+                    // call close() on the process streams. Attempting to read from 
+                    // streams on which close() has been called explicitly will
+                    // cause an exception to be thrown. So ignore IOExceptions
+                    // when the process is killed.
+                    synchronized(JobSubmissionTaskHandler.this) {
+                        if (!killed) {
+                            throw e;
+                        }
+                    }
                 }
             }
             return any;
