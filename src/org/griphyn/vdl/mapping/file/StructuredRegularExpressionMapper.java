@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
@@ -17,7 +19,11 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
 public class StructuredRegularExpressionMapper extends AbstractFileMapper {
-	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
+
+        public static final Logger logger =
+            Logger.getLogger(StructuredRegularExpressionMapper.class);
+
+        public static final MappingParam PARAM_SOURCE = new MappingParam("source");
 	public static final MappingParam PARAM_MATCH = new MappingParam("match");
 	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
 
@@ -57,6 +63,9 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 	}
 
 	public PhysicalFormat map(Path path) {
+
+                logger.debug("map(): path: " + path); 
+
 		String match = PARAM_MATCH.getStringValue(this);
 		String transform = PARAM_TRANSFORM.getStringValue(this);
 
