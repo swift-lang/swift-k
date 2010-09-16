@@ -84,15 +84,14 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		if (value != null) {
 			final VariableArguments vret = ArgUtil.getVariableReturn(stack);
 			if (value.getClass().isArray()) {
-				try {
+				if (value.getClass().getComponentType().isPrimitive()) {
+					vret.append(value);
+				}
+				else {
 					Object[] array = (Object[]) value;
 					for (int i = 0; i < array.length; i++) {
 						vret.append(array[i]);
 					}
-				}
-				catch (ClassCastException e) {
-					// array of primitives; return as is
-					vret.append(value);
 				}
 			}
 			else {
