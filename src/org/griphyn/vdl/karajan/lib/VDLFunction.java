@@ -210,6 +210,10 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 
 	private static String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
+	    Mapper mapper;
+        synchronized (var.getRoot()) {
+            mapper = var.getMapper();
+        }
 		List l = new ArrayList();
 		Iterator i;
 		try {
@@ -223,10 +227,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			}
 			Collections.sort(src, new PathComparator());
 			i = src.iterator();
-			Mapper mapper;
-            synchronized (var.getRoot()) {
-                mapper = var.getMapper();
-            }
 			while (i.hasNext()) {
 				Path p = (Path) i.next();
 				l.add(leafFileName(var.getField(p), mapper));
