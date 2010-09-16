@@ -44,6 +44,7 @@ import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
@@ -175,29 +176,31 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
 	public static String[] filename(VariableStack stack) throws ExecutionException {
-		DSHandle ovar = (DSHandle)PA_VAR.getValue(stack);
-		synchronized(ovar.getRoot()) {
-			try {
-				return filename(ovar);
-			}
-                	catch(VDL2FutureException ve) {
-				throw new FutureNotYetAvailable(addFutureListener(stack, ve.getHandle()));
-                	}
-			catch (HandleOpenException e) {
-				throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-			}
-		}
-	} 
+		DSHandle handle = (DSHandle)PA_VAR.getValue(stack);
+		return filename(stack, handle);
+	}
+	
+	public static String[] filename(VariableStack stack, DSHandle handle) throws ExecutionException {
+        try {
+            return filename(handle);
+        }
+        catch(VDL2FutureException ve) {
+            throw new FutureNotYetAvailable(addFutureListener(stack, ve.getHandle()));
+        }
+        catch (HandleOpenException e) {
+            throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
+        }
+	}
 
-	/** The caller is expected to have synchronized on the root of var. */
 	public static String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
-		assert Thread.holdsLock(var.getRoot());
 		try {
 			if (var.getType().isArray()) {
 				return leavesFileNames(var);
-			} else if(var.getType().getFields().size()>0) {
+			}
+			else if(var.getType().getFields().size() > 0) {
 				return leavesFileNames(var);
-			} else {
+			}
+			else {
 				return new String[] { leafFileName(var) };
 			}
 		}
@@ -220,9 +223,13 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			}
 			Collections.sort(src, new PathComparator());
 			i = src.iterator();
+			Mapper mapper;
+            synchronized (var.getRoot()) {
+                mapper = var.getMapper();
+            }
 			while (i.hasNext()) {
 				Path p = (Path) i.next();
-				l.add(leafFileName(var.getField(p)));
+				l.add(leafFileName(var.getField(p), mapper));
 			}
 		}
 		catch (InvalidPathException e) {
@@ -276,13 +283,23 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			return Integer.parseInt(i1) - Integer.parseInt(i2);
 		}
 	}
-
+	
 	private static String leafFileName(DSHandle var) throws ExecutionException {
+	    Mapper mapper;
+	    synchronized (var.getRoot()) {
+	        mapper = var.getMapper();
+	    }
+	    return leafFileName(var, mapper);
+	}
+
+	private static String leafFileName(DSHandle var, Mapper mapper) throws ExecutionException {
 		if (Types.STRING.equals(var.getType())) {
 			return relativize(String.valueOf(var.getValue()));
 		}
 		else {
-			PhysicalFormat f = var.getMapper().map(var.getPathFromRoot());
+			PhysicalFormat f;
+			Path pathFromRoot = var.getPathFromRoot();
+			f = mapper.map(pathFromRoot);
 			if (f instanceof GeneralizedFileFormat) {
 				String filename = ((GeneralizedFileFormat) f).getURIAsString();
 				if (filename == null) {
@@ -491,7 +508,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		getFutureWrapperMap(stack).markAsAvailable(handle, key);
 	}
 
-	protected final Path parsePath(Object o, VariableStack stack) throws ExecutionException {
+	public static Path parsePath(Object o, VariableStack stack) throws ExecutionException {
 		Path q = Path.EMPTY_PATH;
 		Path p;
 		if (o instanceof Path) {
