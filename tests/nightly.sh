@@ -21,8 +21,11 @@
 
 # Each *.swift test may be accompanied by a
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
-# These may setup and inspect files in RUNDIR including exec.out
+# and a *.timeout specifier
+# The scripts may setup and inspect files in RUNDIR including exec.out
 # The GROUP scripts can read the GROUP variable
+# The timeout number in the *.timeout file overrides the default
+# timeout
 
 # Tests are GROUPed into directories
 # Each GROUP directory has:
@@ -37,7 +40,19 @@
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
 # output_*.txt is the HTML-linked permanent output from a test
 
-# WARNING: On timeout, this script will call killall -9 java
+# WARNING: On timeout, this script will call killall on java and sleep
+
+# All timeouts in this script are in seconds
+
+# PID TREE:
+# Background processes are used so that hung Swift jobs can be killed
+# These are the background processes (PIDs are tracked)
+# nightly.sh
+# +-monitor()
+#   +-sleep
+# +-process_exec()
+#   +-bin/swift
+#     +-java
 
 printhelp() {
   echo "nightly.sh <options> <output>"
@@ -56,6 +71,7 @@ printhelp() {
 }
 
 # Defaults:
+DEFAULT_TIMEOUT=30 # seconds
 RUN_ANT=1
 CLEAN=1
 SKIP_TESTS=0
@@ -511,30 +527,43 @@ monitor() {
   TIMEOUT=$2 # seconds
   OUTPUT=$3
 
-  sleep $TIMEOUT
-  EXITCODE=1
+  V=$SWIFTCOUNT
 
-#   /bin/kill -TERM $PID
-#   KILLCODE=$?
-#   if [ $KILLCODE == 0 ]; then
-#     echo "monitor(): killed process (TERM)"
-#     sleep 1
-#   fi
+  # Use background so kill/trap is immediate
+  sleep $TIMEOUT &
+  SLEEP_PID=$!
+  trap "monitor_trap $SLEEP_PID $V" SIGTERM
+  wait $SLEEP_PID
+  [ $? != 0 ] && echo "monitor($V) cancelled" && return 0
+
   /bin/kill -TERM $PID
   KILLCODE=$?
   if [ $KILLCODE == 0 ]; then
-    echo "monitor(): killed process_exec (TERM)"
+    echo "monitor($V): killed process_exec (TERM)"
   fi
 
   sleep 1
-  MSG="nightly.sh: monitor(): killed: exceeded $TIMEOUT seconds"
+  MSG="nightly.sh: monitor($V): killed: exceeded $TIMEOUT seconds"
   echo "$MSG" >> $OUTPUT
+  trap
+  return 1
+}
+
+monitor_trap() {
+  SLEEP_PID=$1
+  V=$2
+  echo "monitor_trap($V)"
+  /bin/kill -9 $SLEEP_PID
 }
 
 # Execute given command line in background with monitor
 # Otherwise equivalent to test_exec()
+# usage: monitored_exec <TIMEOUT> <command> <args>*
 monitored_exec()
 {
+  TIMEOUT=$1
+  shift
+
   banner "$TEST (part $SEQ)"
   echo "Executing $TEST (part $SEQ)"
 
@@ -543,7 +572,7 @@ monitored_exec()
   process_exec "$@" &
   PROCESS_PID=$!
 
-  monitor $PROCESS_PID 30 $OUTPUT &
+  monitor $PROCESS_PID $TIMEOUT $OUTPUT &
   MONITOR_PID=$!
 
   wait $PROCESS_PID
@@ -553,6 +582,7 @@ monitored_exec()
 
   # If EXITCODE != 0, monitor() may have work to do
   (( $EXITCODE != 0 )) && sleep 5
+  echo "Killing monitor..."
   /bin/kill -TERM $MONITOR_PID
 
   echo "TOOK: $(( STOP-START ))"
@@ -587,6 +617,7 @@ swift_test_case() {
   SETUPSCRIPT=${SWIFTSCRIPT%.swift}.setup.sh
   CHECKSCRIPT=${SWIFTSCRIPT%.swift}.check.sh
   CLEANSCRIPT=${SWIFTSCRIPT%.swift}.clean.sh
+  TIMEOUTFILE=${SWIFTSCRIPT%.swift}.timeout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   fi
@@ -596,10 +627,13 @@ swift_test_case() {
 
   (( SWIFTCOUNT++ ))
 
-  monitored_exec swift -wrapperlog.always.transfer true \
-                       -config swift.properties \
-                       -sites.file sites.xml \
-                       -tc.file tc.data \
+  TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
+
+  monitored_exec $TIMEOUT swift                         \
+                       -wrapperlog.always.transfer true \
+                       -config swift.properties         \
+                       -sites.file sites.xml            \
+                       -tc.file tc.data                 \
                        $CDM $SWIFTSCRIPT
 
   if [ -x $GROUP/$CHECKSCRIPT ]; then
@@ -608,6 +642,18 @@ swift_test_case() {
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
   fi
+}
+
+# All timeouts in this script are in seconds
+gettimeout() {
+  FILE=$1
+
+  if [ -f $FILE ]; then
+    cat $FILE
+  else
+    echo $DEFAULT_TIMEOUT
+  fi
+  return 0
 }
 
 ssexec() {
