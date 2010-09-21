@@ -35,6 +35,8 @@
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
 # output_*.txt is the HTML-linked permanent output from a test
 
+# WARNING: On timeout, this script will call killall -9 java
+
 printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""
@@ -124,6 +126,8 @@ BRANCH=trunk
 #BRANCH="branches/tests-01"
 
 SCRIPTDIR=$( dirname $0 )
+
+SWIFTCOUNT=0
 
 cd $TOPDIR
 mkdir -p $RUNDIR
@@ -349,7 +353,7 @@ start_test_results() {
 start_part() {
   PART=$1
   html_tr part
-  html_th 2
+  html_th 3
   html "$PART"
   html_~th
   html_~tr
@@ -357,6 +361,9 @@ start_part() {
 
 start_row() {
   html_tr testline
+  html_td right
+  html "<b>$SWIFTCOUNT</b>"
+  html_~td
   html_td right
   if [[ -n $TESTLINK ]]; then
     html_a_href $TESTLINK $TESTNAME
@@ -446,7 +453,13 @@ result() {
 process_exec() {
   printf "\nExecuting: $@" >>$LOG
   rm -fv $OUTPUT
-  "$@" > $OUTPUT 2>&1
+
+  "$@" > $OUTPUT 2>&1 &
+  EXEC_PID=$!
+
+  trap "process_exec_trap $EXEC_PID" SIGTERM
+
+  wait $EXEC_PID
   EXITCODE=$?
   if [ "$EXITCODE" == "127" ]; then
     echo "Command not found: $@" > $OUTPUT
@@ -455,6 +468,16 @@ process_exec() {
     cat $OUTPUT >> $LOG
   fi
   return $EXITCODE
+}
+
+# Ensure we kill the tested process and any subordinate java processes
+# in case of monitor() timeout
+# Rationale: Killing bin/swift does not kill the Swift java process
+process_exec_trap() {
+  EXEC_PID=$1
+  echo "process_exec_trap()"
+  kill -KILL $EXEC_PID
+  killall -9 java
 }
 
 # Execute as part of test set
@@ -489,17 +512,19 @@ monitor() {
   sleep $TIMEOUT
   EXITCODE=1
 
+#   /bin/kill -TERM $PID
+#   KILLCODE=$?
+#   if [ $KILLCODE == 0 ]; then
+#     echo "monitor(): killed process (TERM)"
+#     sleep 1
+#   fi
   /bin/kill -TERM $PID
   KILLCODE=$?
   if [ $KILLCODE == 0 ]; then
-    echo "monitor(): killed process (TERM)"
-    sleep 1
-  fi
-  /bin/kill -KILL $PID
-  if [ $KILLCODE == 0 ]; then
-    echo "monitor(): killed process (KILL)"
+    echo "monitor(): killed process_exec (TERM)"
   fi
 
+  sleep 1
   MSG="nightly.sh: monitor(): killed: exceeded $TIMEOUT seconds"
   echo "$MSG" >> $OUTPUT
 }
@@ -526,7 +551,7 @@ monitored_exec()
 
   # If EXITCODE != 0, monitor() may have work to do
   (( $EXITCODE != 0 )) && sleep 5
-  kill -TERM $MONITOR_PID
+  /bin/kill -TERM $MONITOR_PID
 
   echo "TOOK: $(( STOP-START ))"
 
@@ -566,6 +591,8 @@ swift_test_case() {
 
   CDM=
   [ -r fs.data ] && CDM="-cdm.file fs.data"
+
+  (( SWIFTCOUNT++ ))
 
   monitored_exec swift -wrapperlog.always.transfer true \
                        -config swift.properties \
@@ -743,15 +770,19 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 SKIP_COUNTER=0
 
-GROUPLIST=( $TESTDIR/language/working \
+# GROUPLIST=( $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/ps $TESTDIR/cdm/ps/pinned )
+
+GROUPLIST=( $TESTDIR/language-behaviour
+            $TESTDIR/language/working \
             $TESTDIR/local \
             $TESTDIR/language/should-not-work \
             $TESTDIR/cdm \
-            $TESTDIR/cdm/ps )
+            $TESTDIR/cdm/ps \
+            $TESTDIR/cdm/ps/pinned )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
-  GROUP=$G
+  export GROUP=$G
   TITLE=$( group_title )
   start_part "Part $GROUPCOUNT: $TITLE"
   test_group
