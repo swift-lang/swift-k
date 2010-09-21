@@ -22,14 +22,16 @@
 # Each *.swift test may be accompanied by a
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
 # These may setup and inspect files in RUNDIR including exec.out
+# The GROUP scripts can read the GROUP variable
 
 # Tests are GROUPed into directories
 # Each GROUP directory has:
 #      1) a list of *.swift tests (plus *.sh scripts)
 #      2) optionally a tc.template.data
-#      3) optionally a swift.properties
-#      4) optionally a title.txt
-#      5) preferably a README.txt
+#      3) optionally a fs.template.data
+#      4) optionally a swift.properties
+#      5) optionally a title.txt
+#      6) preferably a README.txt
 
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)

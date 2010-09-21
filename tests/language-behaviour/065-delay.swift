@@ -1,9 +1,6 @@
 
-delay() { 
-    app {
-        sleep "90s";
-    }
+app delay() {
+  sleep "3";
 }
 
 delay();
-

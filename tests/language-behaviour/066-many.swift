@@ -1,8 +1,7 @@
 
-p() { 
-    app {
-        touch "nop";
-    }
+app p()
+{
+  touch "nop";
 }
 
 foreach i in [1:3000] {
