@@ -22,7 +22,9 @@
 # Each *.swift test may be accompanied by a
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
 # and a *.timeout specifier
-# The scripts may setup and inspect files in RUNDIR including exec.out
+# The scripts may setup and inspect files in RUNDIR including exec.out,
+# which must be accessed in stdout.txt, because the currently running
+# tested process writes to exec.out, stdout.txt is a copy
 # The GROUP scripts can read the GROUP variable
 # The timeout number in the *.timeout file overrides the default
 # timeout
@@ -348,7 +350,7 @@ out() {
       html_a_href $TEST_LOG "$LABEL"
     else
       echo "FAILED"
-      cat $TEST_LOG < /dev/null
+      cat $RUNDIR/$TEST_LOG < /dev/null
       html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
       html_a_href $TEST_LOG $LABEL
     fi
@@ -416,7 +418,6 @@ width() {
 # TEST_LOG = test log
 test_log() {
   TEST_LOG="output_$LOGCOUNT.txt"
-  rm -fv $TEST_LOG
   banner "$LASTCMD" $RUNDIR/$TEST_LOG
   if [ -f $OUTPUT ]; then
     cp -v $OUTPUT $RUNDIR/$TEST_LOG 2>>$LOG
