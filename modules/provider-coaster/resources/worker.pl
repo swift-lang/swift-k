@@ -37,7 +37,7 @@ use constant {
 	YIELD => 1,
 };
 
-my $LOGLEVEL = TRACE;
+my $LOGLEVEL = INFO;
 
 my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR");
 
@@ -957,42 +957,64 @@ sub getFile {
 
 sub getPinnedFile() {
 	my ($jobid, $src, $dst) = @_;
-	my $error;
+
 	wlog DEBUG, "Handling pinned file: $src\n";
+	my $error;
 	$src =~ s/pinned://;
 	my $jobdir = $JOBDATA{$jobid}{'job'}{'directory'};
 	my $pinned_dir = "$jobdir/../pinned";
+	my $rdst = $dst;
+	$rdst =~ s/$jobdir//;
+
+	mkPinnedDirectory($pinned_dir);
+	if (! defined $PINNED{$rdst}) {
+		downloadPinnedFile($jobid, $src, $dst, $rdst, $pinned_dir);
+	}
+	else {
+		linkToPinnedFile($jobid, $dst, $rdst, $pinned_dir);
+	}
+}
+
+sub mkPinnedDirectory() { 
+	my ($pinned_dir) = @_;
 	if (! $PINNED_READY) {
 		if (! -d $pinned_dir) {
 			wlog DEBUG, "mkpath: $pinned_dir\n";
 			mkpath($pinned_dir) ||
-				wlog WARN, "getPinnedFile(): " .
+				die "mkPinnedDirectory(): " .
 				"Could not mkdir: $pinned_dir\n";
 		}
 		$PINNED_READY = 1;
 	}
-	my $rdst = $dst;
-	$rdst =~ s/$jobdir//;
-	if (! defined $PINNED{$rdst}) {
-		$PINNED{$rdst} = INFLIGHT;
-		getFile($jobid, $src, $dst);
-		wlog DEBUG, "link: $dst -> $pinned_dir$rdst\n";
-		if (! -f "$pinned_dir$rdst") {
-			link($dst, "$pinned_dir$rdst") ||
-				wlog WARN, "getPinnedFile(): " .
-				"Could not link: $pinned_dir$rdst\n";
-		}
+}
+
+sub downloadPinnedFile() { 
+	my ($jobid, $src, $dst, $rdst, $pinned_dir) = @_;
+	$PINNED{$rdst} = INFLIGHT;
+	getFile($jobid, $src, $dst);
+	wlog DEBUG, "link: $dst -> $pinned_dir$rdst\n";
+	if (! -f "$pinned_dir$rdst") {
+		link($dst, "$pinned_dir$rdst") ||
+			die "getPinnedFile(): Could not link: $pinned_dir$rdst\n";
+	}
+}
+
+sub linkToPinnedFile() {
+	my ($jobid, $dst, $rdst, $pinned_dir) = @_;
+	wlog DEBUG, "link: $pinned_dir$rdst -> $dst\n";
+	my $dir = dirname($dst);
+	if (! -d $dir) {
+		wlog DEBUG, "mkpath: $dir\n";
+		mkpath($dir) || 
+			die "getPinnedFile(): Could not mkdir: $dir\n";
+	}
+	link("$pinned_dir$rdst", $dst) ||
+		die "getPinnedFile(): Could not link!\n";
+	if ($PINNED{$rdst} == INFLIGHT) {
+		waitForPinnedFile($rdst, $jobid);
 	}
 	else {
-		wlog DEBUG, "link: $pinned_dir$rdst -> $dst\n";
-		link("$pinned_dir$rdst", $dst) ||
-			die "getPinnedFile(): Could not link!\n";
-		if ($PINNED{$rdst} == INFLIGHT) {
-			waitForPinnedFile($rdst, $jobid);
-		}
-		else {
-			stagein($jobid);
-		}
+		stagein($jobid);
 	}
 }
 
