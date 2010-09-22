@@ -25,10 +25,10 @@ public class VDL2ConfigProperties {
 	public static final String WRAPPERLOG_ALWAYS_TRANSFER = "wrapperlog.always.transfer";
 	public static final String SITEDIR_KEEP = "sitedir.keep";
 	public static final String PROVENANCE_LOG = "provenance.log";
-	public static final Map PROPERTIES;
+	public static final Map<String, PropInfo> PROPERTIES;
 
 	static {
-		PROPERTIES = new TreeMap();
+		PROPERTIES = new TreeMap<String, PropInfo>();
 		PROPERTIES.put(POOL_FILE, new PropInfo("file",
 				"Points to the location of the sites.xml file"));
 		PROPERTIES.put(TC_FILE, new PropInfo("file", "Points to the location of the tc.data file"));
@@ -118,12 +118,12 @@ public class VDL2ConfigProperties {
 
 	}
 
-	public static Map getPropertyDescriptions() {
+	public static Map<String, PropInfo> getPropertyDescriptions() {
 		return PROPERTIES;
 	}
 
 	public static String getPropertyDescription(String name) {
-		return (String) PROPERTIES.get(name);
+		return PROPERTIES.get(name).desc;
 	}
 
 	public static class PropInfo {
