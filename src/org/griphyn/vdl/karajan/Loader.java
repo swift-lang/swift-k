@@ -70,6 +70,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_TUI = "tui";
     public static final String ARG_RECOMPILE = "recompile";
     public static final String ARG_REDUCED_LOGGING = "reduced.logging";
+    public static final String ARG_MINIMAL_LOGGING = "minimal.logging";
 
     public static final String CONST_VDL_OPERATION = "vdl:operation";
     public static final String VDL_OPERATION_RUN = "run";
@@ -427,6 +428,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         ap.addFlag(ARG_TUI);
         ap.addFlag(ARG_REDUCED_LOGGING, "Makes logging more terse by disabling provenance " +
         		"information and low-level task messages");
+        ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
+                 "reports warnings only");
 
         Map desc = VDL2ConfigProperties.getPropertyDescriptions();
         Iterator i = desc.entrySet().iterator();
@@ -487,6 +490,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
                 Level.INFO);
             ca.setThreshold(Level.FATAL);
+        }
+        else if (ap.isPresent(ARG_MINIMAL_LOGGING)) {
+            fa.setThreshold(Level.WARN);
         }
         else if (ap.isPresent(ARG_REDUCED_LOGGING)) {
             Logger.getLogger(AbstractDataNode.class).setLevel(Level.WARN);
