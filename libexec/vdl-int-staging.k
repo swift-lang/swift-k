@@ -135,9 +135,10 @@ namespace("vdl"
 								d  := vdl:dirname(cdmfile)
 								file := basename(cdmfile)
 								dir := if ( d == "" then("./") else(str:concat(d,"/")))
-								stageIn("{stagingMethod}://localhost/{dir}{file}", cdmfile)
-								stageIn("{stagingMethod}://localhost/{swift.home}/libexec/cdm.pl", "cdm.pl")
-								stageIn("{stagingMethod}://localhost/{swift.home}/libexec/cdm_lib.sh", "cdm_lib.sh")
+								loc := "{pin}{stagingMethod}://localhost/"
+								stageIn("{loc}{dir}{file}", cdmfile)
+								stageIn("{loc}{swift.home}/libexec/cdm.pl", "cdm.pl")
+								stageIn("{loc}{swift.home}/libexec/cdm_lib.sh", "cdm_lib.sh")
 							))
 
 							appStageins(jobid, stagein, ".", stagingMethod)
