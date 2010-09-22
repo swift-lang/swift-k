@@ -421,7 +421,7 @@ test_log() {
   banner "$LASTCMD" $RUNDIR/$TEST_LOG
   if [ -f $OUTPUT ]; then
     cp -v $OUTPUT $RUNDIR/$TEST_LOG 2>>$LOG
-    cp -v $OUTPUT stdout.txt
+    cp -v $OUTPUT $RUNDIR/stdout.txt
   fi
   let "LOGCOUNT=$LOGCOUNT+1"
 }
