@@ -57,7 +57,7 @@ public class Settings {
 
     /**
      * How long (timewise) the request should be based on the job walltime. os
-     * is a factor for 1 jobs, and oe is a factor for +Inf jobs. Things
+     * is a factor for 1s jobs, and oe is a factor for +Inf jobs. Things
      * in-between are derived using x * ((os - oe) / x + oe.
      * 
      * For example, with oe = 100, a bunch of jobs of walltime 1 will generate
