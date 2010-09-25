@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -42,6 +44,15 @@ public class LocalIOProvider implements IOProvider {
     public boolean isDirect() {
         return true;
     }
+    
+    private static URI newURI(String src) throws IOException {
+        try {
+            return new URI(src);
+        }
+        catch (URISyntaxException e) {
+            throw new IOException("Malformed URI: " + e.getMessage());
+        }
+    }
 
     private static class Writer implements IOWriter, WriteBufferCallback, Abortable {
         private File f;
@@ -51,6 +62,8 @@ public class LocalIOProvider implements IOProvider {
 
         public Writer(String dest, WriteIOCallback cb) throws IOException {
             this.cb = cb;
+            URI destURI = newURI(dest);
+            f = CoasterFileRequestHandler.normalize(destURI.getPath().substring(1));
             f = CoasterFileRequestHandler.normalize(dest);
         }
         
@@ -115,7 +128,8 @@ public class LocalIOProvider implements IOProvider {
         private FileChannel fc;
 
         public Reader(String src, ReadIOCallback cb) throws IOException {
-            f = CoasterFileRequestHandler.normalize(src);
+            URI srcURI = newURI(src);
+            f = CoasterFileRequestHandler.normalize(srcURI.getPath().substring(1));
             this.cb = cb;
             fc = new FileInputStream(f).getChannel();
         }
