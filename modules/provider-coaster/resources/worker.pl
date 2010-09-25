@@ -249,7 +249,7 @@ sub reconnect() {
 }
 
 sub initlog() {
-        if (defined $ENV{"WORKER_LOGGING_ENABLED"}) {
+	if (defined $ENV{"WORKER_LOGGING_ENABLED"}) {
 		open(LOG, ">>$LOG") or die "Failed to open log file: $!";
 		my $b = select(LOG);
 		$| = 1;
@@ -754,14 +754,34 @@ sub workershellcmd {
 
 sub urisplit {
 	my ($name) = @_;
-
-	if (index($name, ":") == -1) {
-		return ("file", $name);
+	
+	# accepted forms:
+	#   <protocol>://<host>/<path>
+	#   <protocol>:<path>
+	#   <path>
+	#
+	if ($name =~ /(\w+):\/\/([^\/]+)\/(.*)/) {
+		return ($1, $2, $3);
 	}
+	if ($name =~ /(\w+):(.*)/) {
+		return ($1, "", $2);
+	}
+	return ("file", "", $name);
+}
 
-	my ($protocol, $path) = split(/:\/\//, $name, 2);
-
-	return ($protocol, $path);
+sub mkfdir {
+	my ($jobid, $file) = @_;
+	my $dir = dirname($file);
+	if (-f $dir) {
+		die "$jobid Cannot create directory $dir. A file with this name already exists";
+	}
+	if (!-d $dir) {
+		wlog DEBUG, "Creating directory $dir\n";
+		if (!mkpath($dir)) {
+			wlog WARN, "Cannot create directory $dir. $!\n";
+			die "Cannot create directory $dir. $!";
+		}
+	}
 }
 
 sub getFileCB {
@@ -776,15 +796,7 @@ sub getFileCB {
 
 	if (($protocol eq "file") || ($protocol eq "proxy")) {
 		wlog DEBUG, "Opening $dst...\n";
-		my $dir = dirname($dst);
-		if (-f $dir) {
-			die "$jobid Cannot create directory $dir. A file with this name already exists";
-		}
-		if (!-d $dir) {
-			if (!mkpath($dir)) {
-				die "Cannot create directory $dir. $!";
-			}
-		}
+		mkfdir($jobid, $dst);
 		# don't try open(DESC, ...) (as I did). It will use the same reference
 		# and concurrent operations will fail.
 		my $desc;
@@ -918,10 +930,12 @@ sub stagein {
 		}
 		wlog DEBUG, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
 		$JOBDATA{$jobid}{"stageindex"} =  $STAGEINDEX + 1;
-		my ($protocol, $path) = urisplit($$STAGE[$STAGEINDEX]);
+		my ($protocol, $host, $path) = urisplit($$STAGE[$STAGEINDEX]);
 		if ($protocol eq "sfs") {
-			if (!copy($path, $$STAGED[$STAGEINDEX])) {
-				wlog DEBUG, "$jobid Error staging in $path: $!\n";
+			my $dst = $$STAGED[$STAGEINDEX];
+			mkfdir($jobid, $dst);
+			if (!copy($path, $dst)) {
+				wlog DEBUG, "$jobid Error staging in $path to $dst: $!\n";
 				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));
 			}
 			else {
@@ -1057,12 +1071,14 @@ sub stageout {
 			my $rfile = $$STAGED[$STAGEINDEX];
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
 			wlog DEBUG, "$jobid Staging out $lfile.\n";
-			my ($protocol, $path) = urisplit($rfile);
+			my ($protocol, $host, $path) = urisplit($rfile);
 			if ($protocol eq "file" || $protocol eq "proxy") {
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
 			}
 			elsif ($protocol eq "sfs") {
+				mkfdir($jobid, $path);
 				if (!copy($lfile, $path)) {
+					wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
 					queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "528", "$!"));
 					return;
 				}
