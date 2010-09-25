@@ -77,7 +77,7 @@ public class ProxyIOProvider implements IOProvider {
         public void setLength(long len) throws IOException {
             try {
                 URI uri = new URI(dst);
-                cmd = new CustomPutFileCmd(src, uri.getPath().substring(1), len, this);
+                cmd = new CustomPutFileCmd(src, "file://localhost/" + uri.getPath().substring(1), len, this);
                 channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
                 cmd.executeAsync(channel, this);
             }
@@ -203,7 +203,7 @@ public class ProxyIOProvider implements IOProvider {
             this.cb = cb;
             this.src = src;
             URI uri = newURI(src);
-            cmd = new CustomGetFileCmd(uri.getPath().substring(1), dst, this);
+            cmd = new CustomGetFileCmd("file://localhost/" + uri.getPath().substring(1), dst, this);
             try {
                 channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
             }
