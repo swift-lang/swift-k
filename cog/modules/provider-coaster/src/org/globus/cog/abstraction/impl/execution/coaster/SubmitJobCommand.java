@@ -10,8 +10,11 @@
 package org.globus.cog.abstraction.impl.execution.coaster;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,6 +47,10 @@ public class SubmitJobCommand extends Command {
             IGNORED_ATTRIBUTES.add(Settings.NAMES[i].toLowerCase());
         }
     }
+    
+    public static final Set<String> ABSOLUTIZE = new HashSet<String>() {
+        {add("sfs");}
+    };
 
     private Task t;
     private String id;
@@ -117,13 +124,13 @@ public class SubmitJobCommand extends Command {
         i = iterator(spec.getStageIn());
         while (i.hasNext()) {
             StagingSetEntry e = (StagingSetEntry) i.next();
-            add(dos, "stagein", e.getSource() + '\n' + e.getDestination());
+            add(dos, "stagein", absolutize(e.getSource()) + '\n' + e.getDestination());
         }
         
         i = iterator(spec.getStageOut());
         while (i.hasNext()) {
             StagingSetEntry e = (StagingSetEntry) i.next();
-            add(dos, "stageout", e.getSource() + '\n' + e.getDestination());
+            add(dos, "stageout", e.getSource() + '\n' + absolutize(e.getDestination()));
         }
         
         i = iterator(spec.getCleanUpSet());
@@ -147,6 +154,22 @@ public class SubmitJobCommand extends Command {
         }
 
         addOutData(baos.toByteArray());
+    }
+
+    private String absolutize(String file) throws IOException {
+        try {
+            URI u = new URI(file);
+            if (ABSOLUTIZE.contains(u.getScheme())) {
+                return u.getScheme() + "://" + u.getHost() + 
+                    (u.getPort() != -1 ? ":" + u.getPort() : "") + "/" + new File(u.getPath().substring(1)).getAbsolutePath(); 
+            }
+            else {
+                return file;
+            }
+        }
+        catch (URISyntaxException e) {
+            throw new IOException("Invalid file specification: " + file);
+        }
     }
 
     private Iterator iterator(Collection c) {
