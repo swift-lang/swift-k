@@ -155,6 +155,8 @@ SCRIPTDIR=$( dirname $0 )
 
 SWIFTCOUNT=0
 
+echo "HTML_OUTPUT: $HTML"
+
 cd $TOPDIR
 mkdir -p $RUNDIR
 [ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
@@ -173,6 +175,12 @@ crash() {
   MSG=$1
   echo $MSG
   exit 1
+}
+
+verbose() {
+  MSG="${*}"
+  (( $VERBOSE )) && echo $MSG
+  return 0
 }
 
 header() {
@@ -426,8 +434,8 @@ test_log() {
   TEST_LOG="output_$LOGCOUNT.txt"
   banner "$LASTCMD" $RUNDIR/$TEST_LOG
   if [ -f $OUTPUT ]; then
-    cp -v $OUTPUT $RUNDIR/$TEST_LOG 2>>$LOG
-    cp -v $OUTPUT $RUNDIR/stdout.txt
+    cp $OUTPUT $RUNDIR/$TEST_LOG 2>>$LOG
+    cp $OUTPUT $RUNDIR/stdout.txt
   fi
   let "LOGCOUNT=$LOGCOUNT+1"
 }
@@ -477,7 +485,7 @@ result() {
 
 process_exec() {
   printf "\nExecuting: $@" >>$LOG
-  rm -fv $OUTPUT
+  rm -f $OUTPUT
 
   "$@" > $OUTPUT 2>&1 &
   EXEC_PID=$!
@@ -538,12 +546,13 @@ monitor() {
   V=$SWIFTCOUNT
 
   # Use background so kill/trap is immediate
-  sleep $TIMEOUT &
+  sleep $TIMEOUT > /dev/null 2>&1 &
   SLEEP_PID=$!
-  trap "monitor_trap $SLEEP_PID $V" SIGTERM
+  trap "monitor_trap $SLEEP_PID $V > /dev/null 2>&1" SIGTERM
   wait $SLEEP_PID
-  [ $? != 0 ] && echo "monitor($V) cancelled" && return 0
+  [ $? != 0 ] && verbose "monitor($V) cancelled" && return 0
 
+  echo "monitor($V): killing test process..."
   /bin/kill -TERM $PID
   KILLCODE=$?
   if [ $KILLCODE == 0 ]; then
@@ -553,14 +562,13 @@ monitor() {
   sleep 1
   MSG="nightly.sh: monitor($V): killed: exceeded $TIMEOUT seconds"
   echo "$MSG" >> $OUTPUT
-  trap
+  # trap
   return 1
 }
 
 monitor_trap() {
   SLEEP_PID=$1
   V=$2
-  echo "monitor_trap($V)"
   /bin/kill -9 $SLEEP_PID
 }
 
@@ -590,7 +598,7 @@ monitored_exec()
 
   # If EXITCODE != 0, monitor() may have work to do
   (( $EXITCODE != 0 )) && sleep 5
-  echo "Killing monitor..."
+  verbose "Killing monitor..."
   /bin/kill -TERM $MONITOR_PID
 
   echo "TOOK: $(( STOP-START ))"
@@ -706,9 +714,11 @@ group_sites_xml() {
   if [ -f $TEMPLATE ]; then
     sed "s@_WORK_@$PWD/work@;s@_HOST_@$GLOBUS_HOSTNAME@" < $TEMPLATE > sites.xml
     [ $? != 0 ] && crash "Could not create sites.xml!"
+    echo "Using: $GROUP/sites.template.xml"
   else
     sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
     [ $? != 0 ] && crash "Could not create sites.xml!"
+    echo "Using: $TESTDIR/sites/localhost.xml"
   fi
 }
 
@@ -716,6 +726,7 @@ group_tc_data() {
   if [ -f $GROUP/tc.template.data ]; then
     sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
     [ $? != 0 ] && crash "Could not create tc.data!"
+    echo "Using: $GROUP/tc.template.data"
   else
     cp -v $SWIFT_HOME/etc/tc.data .
     [ $? != 0 ] && crash "Could not copy tc.data!"
@@ -726,6 +737,7 @@ group_fs_data() {
   if [ -f $GROUP/fs.template.data ]; then
     sed "s@_PWD_@$PWD@" < $GROUP/fs.template.data > fs.data
     [ $? != 0 ] && crash "Could not create fs.data!"
+    echo "Using: $GROUP/fs.template.data"
   else
     rm -f fs.data
   fi
