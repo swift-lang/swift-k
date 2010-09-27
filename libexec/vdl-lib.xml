@@ -15,6 +15,7 @@
 	<export name="tofloat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="format"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="pad"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="sprintf"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Sprintf"/></export>
 	<export name="tostring"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="assert"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Assert"/></export>
 	<export name="trace"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>

@@ -224,6 +224,12 @@ public class ProcedureSignature {
 		strcat.addOutputArg(strcatOut1);
 		functionsMap.put(strcat.getName(), strcat);
 		
+		ProcedureSignature sprintf = new ProcedureSignature("sprintf");
+        sprintf.setAnyNumOfInputArgs();
+        FormalArgumentSignature sprintfOut1 = new FormalArgumentSignature("string");
+        sprintf.addOutputArg(sprintfOut1);
+        functionsMap.put(sprintf.getName(), sprintf);
+        
 		ProcedureSignature strcut = new ProcedureSignature("strcut");
 		FormalArgumentSignature strcutIn1 = new FormalArgumentSignature("string");
 		strcut.addInputArg(strcutIn1);
