@@ -1,13 +1,13 @@
 package org.griphyn.vdl.type;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public abstract class Types {
 
 	//TODO: check namespace references in type definitions
-	private static Map types = new HashMap();
+	private static Map<String, Type> types = 
+	    new HashMap<String, Type>();
 
 	public synchronized static Type getType(String name) throws NoSuchTypeException {
 		Type type = (Type) types.get(name);
@@ -61,14 +61,11 @@ public abstract class Types {
 	}
 
 	public synchronized static void resolveTypes() throws NoSuchTypeException {
-		Map typesCopy = new HashMap(types);
-		Iterator i = typesCopy.entrySet().iterator();
-		while (i.hasNext()) {
-			Map.Entry e = (Map.Entry) i.next();
+		Map<String, Type> typesCopy = 
+		    new HashMap<String, Type>(types);
+		for (Map.Entry<String, Type> e : typesCopy.entrySet()) {
 			Type type = (Type) e.getValue();
-			Iterator j = type.getFields().iterator();
-			while (j.hasNext()) {
-				Field field = (Field) j.next();
+			for (Field field : type.getFields()) {
 				Type resolved = getType(field.getType().getName());
 				field.setType(resolved);
 			}
