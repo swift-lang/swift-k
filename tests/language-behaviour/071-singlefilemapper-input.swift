@@ -1,9 +1,7 @@
 type messagefile;
 
-(messagefile o) write(messagefile i) { 
-    app {
-        echo @filename(i) stdout=@filename(o);
-    }
+app (messagefile o) write(messagefile i) {
+  echo @filename(i) stdout=@filename(o);
 }
 
 messagefile infile <"071-singlefilemapper-input.in">;
