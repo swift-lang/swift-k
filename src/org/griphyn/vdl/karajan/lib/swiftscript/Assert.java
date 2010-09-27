@@ -12,6 +12,7 @@ import org.griphyn.vdl.type.Types;
 
 /**
     Throw AssertionException if input is false or 0. 
+    Optional second argument is string message printed on failure. 
  */
 public class Assert extends VDLFunction {
 
@@ -32,8 +33,6 @@ public class Assert extends VDLFunction {
             DSHandle handle = args[i];
             VDLFunction.waitFor(stack, handle);
         }
-        
-        logger.debug("check: ");
         
         if (args.length == 2)
             if (args[1].getType() == Types.STRING)
