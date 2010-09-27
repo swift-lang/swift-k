@@ -56,6 +56,12 @@
 #   +-bin/swift
 #     +-java
 
+# FAILURE CASES
+# Some cases are designed to cause Swift to crash.  These
+# SwiftScripts contain the token THIS-SCRIPT-SHOULD-FAIL somewhere.
+# The response of nightly.sh to the exit code of these Swift
+# executions is reversed.
+
 printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""
@@ -486,6 +492,7 @@ process_exec() {
   if [ -f $OUTPUT ]; then
     cat $OUTPUT >> $LOG
   fi
+  (( $TEST_SHOULD_FAIL )) && EXITCODE=$(( ! $EXITCODE ))
   return $EXITCODE
 }
 
@@ -619,6 +626,8 @@ swift_test_case() {
   CHECKSCRIPT=${SWIFTSCRIPT%.swift}.check.sh
   CLEANSCRIPT=${SWIFTSCRIPT%.swift}.clean.sh
   TIMEOUTFILE=${SWIFTSCRIPT%.swift}.timeout
+
+  TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   fi
@@ -630,6 +639,9 @@ swift_test_case() {
 
   TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
 
+  grep THIS-SCRIPT-SHOULD-FAIL $SWIFTSCRIPT > /dev/null
+  TEST_SHOULD_FAIL=$(( ! $?  ))
+
   monitored_exec $TIMEOUT swift                         \
                        -wrapperlog.always.transfer true \
                        -config swift.properties         \
@@ -637,6 +649,7 @@ swift_test_case() {
                        -tc.file tc.data                 \
                        $CDM $SWIFTSCRIPT
 
+  TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   fi
@@ -819,15 +832,15 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 SKIP_COUNTER=0
 
-# GROUPLIST=( $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/ps $TESTDIR/cdm/ps/pinned )
+GROUPLIST=( $TESTDIR/functions $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/ps $TESTDIR/cdm/ps/pinned )
 
-GROUPLIST=( $TESTDIR/language-behaviour
-            $TESTDIR/language/working \
-            $TESTDIR/local \
-            $TESTDIR/language/should-not-work \
-            $TESTDIR/cdm \
-            $TESTDIR/cdm/ps \
-            $TESTDIR/cdm/ps/pinned )
+# GROUPLIST=( $TESTDIR/language-behaviour
+#             $TESTDIR/language/working \
+#             $TESTDIR/local \
+#             $TESTDIR/language/should-not-work \
+#             $TESTDIR/cdm \
+#             $TESTDIR/cdm/ps \
+#             $TESTDIR/cdm/ps/pinned )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do

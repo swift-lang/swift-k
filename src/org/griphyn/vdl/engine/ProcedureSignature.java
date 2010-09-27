@@ -143,6 +143,11 @@ public class ProcedureSignature {
 		tracef.setInvocationMode(INVOCATION_INTERNAL);
 		proceduresMap.put("tracef", tracef);
 		
+		ProcedureSignature assrt = new ProcedureSignature("assert");
+		assrt.setAnyNumOfInputArgs();
+		assrt.setInvocationMode(INVOCATION_INTERNAL);
+		proceduresMap.put("assert", assrt);
+		
 		ProcedureSignature writeData = new ProcedureSignature("writeData");
 		FormalArgumentSignature wdInputArg = new FormalArgumentSignature(true);
 		writeData.addInputArg(wdInputArg);
