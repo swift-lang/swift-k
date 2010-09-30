@@ -53,11 +53,16 @@ public class PBSExecutor extends AbstractExecutor {
 			String stderr) throws IOException {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
+		Properties properties = Properties.getProperties();
 		wr.write("#PBS -S /bin/sh\n");
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
-		writeAttr("count", "-l nodes=", wr);
+		if ("true".equals
+		        (properties.getProperty(Properties.USE_MPPWIDTH)))
+		    writeAttr("count", "-l mppwidth=", wr);
+		else
+		    writeAttr("count", "-l nodes=", wr);
 		writeWallTime(wr);
 		writeAttr("queue", "-q ", wr);
 		if (spec.getStdInput() != null) {
@@ -78,8 +83,8 @@ public class PBSExecutor extends AbstractExecutor {
 			logger.debug("Job type: " + type);
 		}
 		if (type != null) {
-			String wrapper = Properties.getProperties().getProperty(
-					"wrapper." + type);
+			String wrapper = 
+			    properties.getProperty("wrapper." + type);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Wrapper: " + wrapper);
 			}

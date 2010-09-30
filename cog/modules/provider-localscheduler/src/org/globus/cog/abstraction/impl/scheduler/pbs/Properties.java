@@ -9,11 +9,15 @@
  */
 package org.globus.cog.abstraction.impl.scheduler.pbs;
 
-import org.apache.log4j.Logger;
+// import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 
 public class Properties extends AbstractProperties {
-	private static Logger logger = Logger.getLogger(Properties.class);
+
+    private static final long serialVersionUID = 1L;
+
+    // private static Logger logger = 
+    // Logger.getLogger(Properties.class);
 
 	public static final String PROPERTIES = "provider-pbs.properties";
 	
@@ -21,6 +25,7 @@ public class Properties extends AbstractProperties {
 	public static final String QSUB = "qsub";
 	public static final String QSTAT = "qstat";
 	public static final String QDEL = "qdel";
+	public static final String USE_MPPWIDTH = "use.mppwidth";
 
 	private static Properties properties;
 
@@ -31,7 +36,6 @@ public class Properties extends AbstractProperties {
 		}
 		return properties;
 	}
-
 	
 	protected void setDefaults() {
 		setPollInterval(5);
