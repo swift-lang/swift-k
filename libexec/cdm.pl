@@ -73,7 +73,10 @@ while (<STDIN>)
 	$key    = shift(@tokens);
 	$rest   = join(' ', @tokens);
 	@keys   = (@keys, $key); 
-	$map{$key} = $rest;
+	if (! defined $map{$key}) 
+	{
+	    $map{$key} = $rest;
+	}
     }
     elsif ($type eq "property")
     {
