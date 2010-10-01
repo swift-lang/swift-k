@@ -70,11 +70,11 @@ while (<STDIN>)
     $type   = shift(@tokens); 
     if ($type eq "rule") 
     {
-	$key    = shift(@tokens);
-	$rest   = join(' ', @tokens);
-	@keys   = (@keys, $key); 
+	$key = shift(@tokens);
 	if (! defined $map{$key}) 
 	{
+	    $rest = join(' ', @tokens);
+	    @keys = (@keys, $key); 
 	    $map{$key} = $rest;
 	}
     }
