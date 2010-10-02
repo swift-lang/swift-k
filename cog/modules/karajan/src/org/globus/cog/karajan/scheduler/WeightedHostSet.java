@@ -19,11 +19,11 @@ import java.util.TreeSet;
 import org.globus.cog.karajan.util.BoundContact;
 
 public class WeightedHostSet {
-	private TreeSet scores;
-	private Map weightedHosts;
+	private TreeSet<WeightedHost> scores;
+	private Map<BoundContact, WeightedHost> weightedHosts;
 	private double sum;
 	private double scoreHighCap;
-	private Set overloaded;
+	private Set<WeightedHost> overloaded;
 	private OverloadedHostMonitor monitor;
 
 	public WeightedHostSet(double scoreHighCap) {
@@ -37,9 +37,9 @@ public class WeightedHostSet {
 	}
 
 	protected void init() {
-		scores = new TreeSet();
-		weightedHosts = new HashMap();
-		overloaded = new HashSet();
+		scores = new TreeSet<WeightedHost>();
+		weightedHosts = new HashMap<BoundContact, WeightedHost>();
+		overloaded = new HashSet<WeightedHost>();
 		sum = 0;
 	}
 
@@ -51,13 +51,15 @@ public class WeightedHostSet {
 	}
 
 	public void changeScore(WeightedHost wh, double newScore) {
-		scores.remove(wh);
-		sum -= wh.getTScore();
-		wh.setScore(newScore);
-		weightedHosts.put(wh.getHost(), wh);
-		scores.add(wh);
-		sum += wh.getTScore();
-		checkOverloaded(wh);
+		synchronized (scores) {
+			scores.remove(wh);
+			sum -= wh.getTScore();
+			wh.setScore(newScore);
+			weightedHosts.put(wh.getHost(), wh);
+			scores.add(wh);
+			sum += wh.getTScore();
+			checkOverloaded(wh);
+		}
 	}
 
 	public void changeLoad(WeightedHost wh, int dl) {
@@ -92,20 +94,37 @@ public class WeightedHostSet {
 	}
 
 	public WeightedHost findHost(BoundContact bc) {
-		return (WeightedHost) weightedHosts.get(bc);
+		return weightedHosts.get(bc);
+	}
+	
+	public WeightedHostSet constrain(ResourceConstraintChecker rcc, TaskConstraints tc) {
+        WeightedHostSet ns = new WeightedHostSet(scoreHighCap);
+        synchronized (scores) {
+        	for (WeightedHost wh : scores) {
+        		if (rcc.checkConstraints(wh.getHost(), tc)) {
+        			ns.add(wh);
+        		}
+        	}
+        	return ns;
+        }
 	}
 
-	public Iterator iterator() {
-		final Iterator it = scores.iterator();
-		return new Iterator() {
+	/**
+	 * Warning: objects returned by this method are not synchronized. It is
+	 * therefore possible for some hosts to be missed due to threads calling
+	 * changeScore() (which temporarily removes hosts from the set).
+	 */
+	public Iterator<WeightedHost> iterator() {
+		final Iterator<WeightedHost> it = scores.iterator();
+		return new Iterator<WeightedHost>() {
 			private WeightedHost last;
 
 			public boolean hasNext() {
 				return it.hasNext();
 			}
 
-			public Object next() {
-				return last = (WeightedHost) it.next();
+			public WeightedHost next() {
+				return last = it.next();
 			}
 
 			public void remove() {
@@ -117,7 +136,7 @@ public class WeightedHostSet {
 	}
 
 	public WeightedHost last() {
-		return (WeightedHost) scores.last();
+		return scores.last();
 	}
 
 	public int size() {
