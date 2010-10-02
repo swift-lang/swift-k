@@ -65,7 +65,7 @@ public class Job {
 				if (ticks == 5) {
 					listener
 							.processFailed(new ProcessException(
-									"Exitcode file not found 5 queue polls after the job was reported done"));
+									"Exitcode file (" + exitcodeFileName + ") not found 5 queue polls after the job was reported done"));
 					return true;
 				}
 				else {
@@ -230,5 +230,9 @@ public class Job {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getExitcodeFileName() {
+        return exitcodeFileName;
     }
 }
