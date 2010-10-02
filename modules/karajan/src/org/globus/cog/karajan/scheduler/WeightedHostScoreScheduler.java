@@ -93,11 +93,12 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	// and with submission parallelism
 	// What it means is that if submission time is exactly this much
 	// then a success should increase the score by successFactor
-	public final double BASE_SUBMISSION_TIME = 0.5;
+	public final double BASE_SUBMISSION_TIME = 0.1;
 
 	protected void updateInternal() {
 		if (maxSubmissionTime < BASE_SUBMISSION_TIME) {
-			throw new IllegalArgumentException("maxSubmissionTime must be > " + BASE_SUBMISSION_TIME);
+			throw new IllegalArgumentException("maxSubmissionTime must be > "
+					+ BASE_SUBMISSION_TIME);
 		}
 		submissionTimeFactor = -successFactor / (maxSubmissionTime - BASE_SUBMISSION_TIME);
 		submissionTimeBias = -BASE_SUBMISSION_TIME * submissionTimeFactor;
@@ -116,15 +117,15 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			double thisDelayBase = defaultDelayBase;
 			double thisInitialScore = 0;
 			// TODO constants instead of these literals
-			if(contact.hasProperty(JOB_THROTTLE)) {
+			if (contact.hasProperty(JOB_THROTTLE)) {
 				thisJobThrottle = floatThrottleValue(contact.getProperty(JOB_THROTTLE));
 			}
-			if(contact.hasProperty(DELAY_BASE)) {
-				thisDelayBase = Double.parseDouble((String)contact.getProperty(DELAY_BASE));
+			if (contact.hasProperty(DELAY_BASE)) {
+				thisDelayBase = Double.parseDouble((String) contact.getProperty(DELAY_BASE));
 			}
 			WeightedHost wh;
-			if(contact.hasProperty(INITIAL_SCORE)) {
-				thisInitialScore = Double.parseDouble((String)contact.getProperty(INITIAL_SCORE));
+			if (contact.hasProperty(INITIAL_SCORE)) {
+				thisInitialScore = Double.parseDouble((String) contact.getProperty(INITIAL_SCORE));
 			}
 			wh = new WeightedHost(contact, thisInitialScore, 0, thisJobThrottle, thisDelayBase);
 			addToSorted(wh);
@@ -174,7 +175,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		WeightedHost selected = null;
 
 		if (s.allOverloaded()) {
-			throw new NoFreeResourceException();
+			throw new NoFreeResourceException("All overloaded");
 		}
 
 		s = constrain(s, getConstraintChecker(), t);
@@ -198,58 +199,66 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (s.isEmpty()) {
 			throw new NoFreeResourceException();
 		}
-
-		double sum = s.getSum();
-		if (policy == POLICY_WEIGHTED_RANDOM) {
-			double rand = Math.random() * sum;
-			if (logger.isInfoEnabled() && !s.isEmpty()) {
-				logger.info("Sorted: " + s);
-			}
-			if (logger.isDebugEnabled()) {
-				logger.debug("Rand: " + rand + ", sum: " + sum);
-			}
-			Iterator i = s.iterator();
-
-			sum = 0;
-			while (i.hasNext()) {
-				WeightedHost wh = (WeightedHost) i.next();
-				sum += wh.getTScore();
-				if (sum >= rand) {
-					selected = wh;
-					break;
-				}
-			}
-			if (selected == null) {
-				selected = s.last();
-			}
-		}
-		else if (policy == POLICY_BEST_SCORE) {
-			selected = s.last();
+		else if (s.size() == 1) {
+			selected = (WeightedHost) s.iterator().next();
 		}
 		else {
-			throw new KarajanRuntimeException("Invalid policy number: " + policy);
+			double sum = s.getSum();
+			if (policy == POLICY_WEIGHTED_RANDOM) {
+				double rand = Math.random() * sum;
+				if (logger.isDebugEnabled() && !s.isEmpty()) {
+					logger.debug("Sorted: " + s);
+				}
+				if (logger.isDebugEnabled()) {
+					logger.debug("Rand: " + rand + ", sum: " + sum);
+				}
+				Iterator i = s.iterator();
+
+				sum = 0;
+				while (i.hasNext()) {
+					WeightedHost wh = (WeightedHost) i.next();
+					sum += wh.getTScore();
+					if (sum >= rand) {
+						selected = wh;
+						break;
+					}
+				}
+				if (selected == null) {
+					selected = s.last();
+				}
+			}
+			else if (policy == POLICY_BEST_SCORE) {
+				selected = s.last();
+			}
+			else {
+				throw new KarajanRuntimeException("Invalid policy number: " + policy);
+			}
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("Next contact: " + selected);
 		}
-		
+
 		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
 		selected.notifyUsed();
 		if (logger.isInfoEnabled()) {
-            logger.info("CONTACT_SELECTED host=" + selected.getHost() + ", score=" + WeightedHost.D4.format(selected.getTScore()));
-        }
+			logger.info("CONTACT_SELECTED host=" + selected.getHost() + ", score="
+					+ WeightedHost.D4.format(selected.getTScore()));
+		}
 		return selected.getHost();
 	}
 
-	public synchronized void releaseContact(Contact contact) {
+	public void releaseContact(Contact contact) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Releasing contact " + contact);
 		}
-		try {
-			BoundContact bc = this.resolveVirtualContact(contact);
-			super.releaseContact(contact);
+		BoundContact bc = this.getBoundContact(contact);
+		super.releaseContact(contact);
 
+		if (bc == null) {
+			logger.warn("Trying to release previously released contact: " + contact);
+		}
+		else {
 			WeightedHost wh = sorted.findHost(bc);
 			if (wh != null) {
 				change = true;
@@ -263,10 +272,6 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				logger.warn("ghost contact (" + contact + ") in releaseContact");
 			}
 		}
-		catch (NoFreeResourceException e) {
-			logger.warn("Failed to release contact " + contact, e);
-                        e.printStackTrace();
-		}
 	}
 
 	protected WeightedHostSet constrain(WeightedHostSet s, ResourceConstraintChecker rcc,
@@ -275,15 +280,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			return s;
 		}
 		else {
-			WeightedHostSet ns = new WeightedHostSet(scoreHighCap);
-			Iterator i = s.iterator();
-			while (i.hasNext()) {
-				WeightedHost wh = (WeightedHost) i.next();
-				if (rcc.checkConstraints(wh.getHost(), tc)) {
-					ns.add(wh);
-				}
-			}
-			return ns;
+			return s.constrain(rcc, tc);
 		}
 	}
 
@@ -353,7 +350,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				defaultJobThrottle = floatThrottleValue(value);
 			}
 			else if (DELAY_BASE.equals(name)) {
-				defaultDelayBase = Double.parseDouble((String)value);
+				defaultDelayBase = Double.parseDouble((String) value);
 			}
 			else {
 				double val = TypeUtil.toDouble(value);
@@ -493,7 +490,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			BoundContact bc = (BoundContact) contacts[i];
 			WeightedHost wh = sorted.findHost(bc);
 			if (wh != null) {
-				//factorScoreLater(wh, factor);
+				// factorScoreLater(wh, factor);
 				factorScore(wh, factor);
 			}
 		}
@@ -503,7 +500,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		sorted.removeOverloaded(wh);
 		raiseTasksFinished();
 	}
-	
+
 	protected synchronized void raiseTasksFinished() {
 		change = true;
 		super.raiseTasksFinished();
