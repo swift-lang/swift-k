@@ -64,7 +64,6 @@ public class LocalIOProvider implements IOProvider {
             this.cb = cb;
             URI destURI = newURI(dest);
             f = CoasterFileRequestHandler.normalize(destURI.getPath().substring(1));
-            f = CoasterFileRequestHandler.normalize(dest);
         }
         
         public String toString() {
