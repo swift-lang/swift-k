@@ -10,8 +10,7 @@
 package org.globus.cog.karajan.scheduler;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +28,6 @@ import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
-import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -64,7 +62,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	private static final Logger logger = Logger.getLogger(LateBindingScheduler.class);
 
-	private HashMap virtualContacts;
+	private Map<Contact, BoundContact> virtualContacts;
 	private boolean done, started;
 	private int running;
 
@@ -84,7 +82,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	private boolean tasksFinished;
 
 	public LateBindingScheduler() {
-		virtualContacts = new HashMap();
+		virtualContacts = Collections.synchronizedMap(new HashMap<Contact, BoundContact>());
 		executionHandlers = new HashMap();
 		taskContacts = new HashMap();
 		jobsPerCPU = DEFAULT_JOBS_PER_CPU;
@@ -112,20 +110,30 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return allocateContact(null);
 	}
 
-	public synchronized void releaseContact(Contact contact) {
+	public void releaseContact(Contact contact) {
 		virtualContacts.remove(contact);
 		tasksFinished = true;
 	}
+	
+	protected BoundContact getBoundContact(Contact contact) {
+	    if (contact instanceof BoundContact) {
+	        return (BoundContact) contact;
+	    }
+	    else {
+	    	return virtualContacts.get(contact);
+	    }
+	}
 
-	public synchronized BoundContact resolveVirtualContact(Contact contact)
+	public BoundContact resolveVirtualContact(Contact contact)
 			throws NoFreeResourceException {
 		if (contact.isVirtual()) {
 			BoundContact next;
 			if (getResources().size() == 0) {
 				throw new NoFreeResourceException("No service contacts available");
 			}
-			if (virtualContacts.containsKey(contact)) {
-				next = (BoundContact) virtualContacts.get(contact);
+			next = virtualContacts.get(contact);
+			if (next != null) {
+				next = virtualContacts.get(contact);
 				int index = getResources().indexOf(next);
 				if (!checkLoad(next)) {
 					throw new NoFreeResourceException("Contact " + next.getHost()
@@ -155,11 +163,11 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		}
 	}
 
-	public HashMap getVirtualContacts() {
+	public Map<Contact, BoundContact> getVirtualContacts() {
 		return this.virtualContacts;
 	}
 
-	public void setVirtualContacts(HashMap virtualContacts) {
+	public void setVirtualContacts(HashMap<Contact, BoundContact> virtualContacts) {
 		this.virtualContacts = virtualContacts;
 	}
 
@@ -210,6 +218,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected void checkTaskLoadConditions(Task t) throws NoFreeResourceException {
+		if (t.getType() == 0) {
+			return;
+		}
 		if (t.getType() == Task.FILE_OPERATION && (currentFileOperations >= maxFileOperations)) {
 			throw new NoFreeResourceException();
 		}
@@ -414,9 +425,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	public Service resolveService(BoundContact contact, int taskType) {
-		Iterator h = this.getTaskHandlerWrappers(getHandlerType(taskType)).iterator();
+		Iterator<TaskHandlerWrapper> h = this.getTaskHandlerWrappers(getHandlerType(taskType)).iterator();
 		while (h.hasNext()) {
-			TaskHandlerWrapper handler = (TaskHandlerWrapper) h.next();
+			TaskHandlerWrapper handler = h.next();
 			if (contact.hasService(handler)) {
 				return contact.getService(handler);
 			}
@@ -674,17 +685,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					+ (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + "M");
 		}
 		else if (logger.isInfoEnabled()) {
-			Specification spec = task.getSpecification();
-            if (spec instanceof JobSpecification) {
-            	JobSpecification jobspec = (JobSpecification) spec;
-            	logger.info("Complete: " +
-            			"in: " + jobspec.getDirectory() +
-            			" command: " + jobspec.getExecutable() +
-            			" " + jobspec.getArguments());
-            }
-            else {
-            	logger.info("Complete: " + spec);
-            }
 			logger.info("JobQueue: " + getJobQueue().size());
 		}
 	}
