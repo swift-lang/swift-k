@@ -15,7 +15,7 @@ import java.text.NumberFormat;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.util.BoundContact;
 
-public class WeightedHost implements Comparable {
+public class WeightedHost implements Comparable<WeightedHost> {
 
 	static final int MINWEIGHT = -10;
 
@@ -125,8 +125,7 @@ public class WeightedHost implements Comparable {
 				+ "/" + (int) (maxLoad()) + " overload: " + isOverloaded();
 	}
 
-	public int compareTo(Object o) {
-		WeightedHost other = (WeightedHost) o;
+	public int compareTo(WeightedHost other) {
 		int r = score.compareTo(other.score);
 		if (r == 0) {
 			// arbitrary ordering on the contact
@@ -154,7 +153,9 @@ public class WeightedHost implements Comparable {
 				logger.debug("In load mode. score = " + score + " tscore = " + tscore + ", maxload="
 						+ ml);
 			}
-			return load <= ml ? 0 : 1;
+			// the current load must be strictly smaller than the max load
+			// to permit any other jobs
+			return load < ml ? 0 : 1;
 		}
 		else {
 			// the site is mostly bad. allow either 1 or 0 jobs
