@@ -81,7 +81,7 @@ public abstract class AbstractQueuePoller implements Runnable {
             Exception exc = null;
             pollQueue();
             if (logger.isInfoEnabled()) {
-                logger.info("Active: " + jobs.size() + ", New: "
+                logger.info("Actively monitored: " + jobs.size() + ", New: "
                         + newjobs.size() + ", Done: " + donejobs.size());
             }
             removeDoneJobs();
@@ -224,4 +224,13 @@ public abstract class AbstractQueuePoller implements Runnable {
     protected abstract void processStdout(InputStream is) throws IOException;
 
     protected abstract void processStderr(InputStream is) throws IOException;
+
+    protected String parseToWhitespace(String s, int startindex) {
+    	for (int i = startindex; i < s.length(); i++) {
+    		if (Character.isWhitespace(s.charAt(i))) {
+    			return s.substring(startindex, i);
+    		}
+    	}
+    	return null;
+    }
 }

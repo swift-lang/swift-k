@@ -38,15 +38,6 @@ public class QueuePoller extends AbstractQueuePoller {
 		ticks = new HashMap();
 	}
 
-	protected String parseToWhitespace(String s, int startindex) {
-		for (int i = startindex; i < s.length(); i++) {
-			if (Character.isWhitespace(s.charAt(i))) {
-				return s.substring(startindex, i);
-			}
-		}
-		return null;
-	}
-
 	protected void processStdout(InputStream is) throws IOException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		String line;

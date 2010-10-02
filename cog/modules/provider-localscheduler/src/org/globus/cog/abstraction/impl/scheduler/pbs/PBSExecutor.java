@@ -49,6 +49,28 @@ public class PBSExecutor extends AbstractExecutor {
 		}
 	}
 
+	protected void writeCountAndPPN(Writer wr, Properties properties) throws IOException {
+	    Object count = getSpec().getAttribute("count");
+	    Object ppn = getSpec().getAttribute("ppn");
+	    if (count != null) {
+	        if ("true".equals
+                (properties.getProperty(Properties.USE_MPPWIDTH))) {
+	                writeAttr("count", "-l mppwidth=", wr);
+	        }
+	        else {
+	            wr.write("#PBS -l nodes=" + count + (ppn == null ? "" : ":ppn=" + ppn) + "\n");
+	        }
+	    }
+	    else if (ppn != null) {
+	        // I am unsure whether this is valid. However, I am also
+	        // unsure whether the alternatives:
+	        //   1. assuming count=1 when count is missing
+	        //   2. not specifying PPN when count is missing
+	        // ... are any better
+	        wr.write("#PBS -l ppn=" + ppn + "\n");
+	    }
+	}
+
 	protected void writeScript(Writer wr, String exitcodefile, String stdout,
 			String stderr) throws IOException {
 		Task task = getTask();
@@ -58,21 +80,12 @@ public class PBSExecutor extends AbstractExecutor {
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
-		if ("true".equals
-		        (properties.getProperty(Properties.USE_MPPWIDTH)))
-		    writeAttr("count", "-l mppwidth=", wr);
-		else
-		    writeAttr("count", "-l nodes=", wr);
+		writeCountAndPPN(wr, properties);
 		writeWallTime(wr);
 		writeAttr("queue", "-q ", wr);
-		if (spec.getStdInput() != null) {
-			throw new IOException("The PBSlocal provider cannot redirect STDIN");
-		}
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
-		Iterator i = spec.getEnvironmentVariableNames().iterator();
-		while (i.hasNext()) {
-			String name = (String) i.next();
+		for (String name : spec.getEnvironmentVariableNames()) {
 			wr.write(name);
 			wr.write('=');
 			wr.write(quote(spec.getEnvironmentVariable(name)));
@@ -82,6 +95,15 @@ public class PBSExecutor extends AbstractExecutor {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
 		}
+		boolean multiple = false; 
+		if ("multiple".equals(type)) {		    
+		    multiple = true;
+
+		}
+		
+		if (multiple) {
+		    writeMultiJobPreamble(wr, exitcodefile);
+        }
 		if (type != null) {
 			String wrapper = 
 			    properties.getProperty("wrapper." + type);
@@ -100,112 +122,42 @@ public class PBSExecutor extends AbstractExecutor {
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
+		
 		wr.write(quote(spec.getExecutable()));
-		List args = spec.getArgumentsAsList();
+		List<String> args = spec.getArgumentsAsList();
 		if (args != null && args.size() > 0) {
 			wr.write(' ');
-			i = args.iterator();
+			Iterator<String> i = args.iterator();
 			while (i.hasNext()) {
-				wr.write(quote((String) i.next()));
+				wr.write(quote(i.next()));
 				if (i.hasNext()) {
 					wr.write(' ');
 				}
 			}
 		}
-		wr.write('\n');
-
-		wr.write("/bin/echo $? >" + exitcodefile + '\n');
+		
+		if (spec.getStdInput() != null) {
+            wr.write(" < " + quote(spec.getStdInput()));
+        }
+		if (multiple) {
+		    writeMultiJobPostamble(wr);
+		}
+		else {
+		    wr.write('\n');
+		    wr.write("/bin/echo $? >" + exitcodefile + '\n');
+		}
 		wr.close();
 	}
-
-	private static final boolean[] TRIGGERS;
-
-	static {
-		TRIGGERS = new boolean[128];
-		TRIGGERS[' '] = true;
-		TRIGGERS['\n'] = true;
-		TRIGGERS['\t'] = true;
-		TRIGGERS['|'] = true;
-		TRIGGERS['\\'] = true;
-		TRIGGERS['>'] = true;
-		TRIGGERS['<'] = true;
-	}
-
-	protected String quote(String s) {
-		if ("".equals(s)) {
-			return "\"\"";
-		}
-		boolean quotes = false;
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-			if (c < 128 && TRIGGERS[c]) {
-				quotes = true;
-				break;
-			}
-		}
-		if (!quotes) {
-			return s;
-		}
-		StringBuffer sb = new StringBuffer();
-		if (quotes) {
-			sb.append('"');
-		}
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-			if (c == '"' || c == '\\') {
-				sb.append('\\');
-			}
-			sb.append(c);
-		}
-		if (quotes) {
-			sb.append('"');
-		}
-		return sb.toString();
-	}
-
-	protected String replaceVars(String str) {
-		StringBuffer sb = new StringBuffer();
-		boolean escaped = false;
-		for (int i = 0; i < str.length(); i++) {
-			char c = str.charAt(i);
-			if (c == '\\') {
-				if (escaped) {
-					sb.append('\\');
-				}
-				else {
-					escaped = true;
-				}
-			}
-			else {
-				if (c == '$' && !escaped) {
-					if (i == str.length() - 1) {
-						sb.append('$');
-					}
-					else {
-						int e = str.indexOf(' ', i);
-						if (e == -1) {
-							e = str.length();
-						}
-						String name = str.substring(i + 1, e);
-						Object attr = getSpec().getAttribute(name);
-						if (attr != null) {
-							sb.append(attr.toString());
-						}
-						else {
-							sb.append('$');
-							sb.append(name);
-						}
-						i = e;
-					}
-				}
-				else {
-					sb.append(c);
-				}
-				escaped = false;
-			}
-		}
-		return sb.toString();
-	}
+	
+	protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
+            throws IOException {
+        wr.write("NODES=`cat $PBS_NODEFILE`\n");
+        wr.write("ECF=" + exitcodefile + "\n");
+        wr.write("INDEX=0\n");
+        wr.write("for NODE in $NODES; do\n");
+        wr.write("  echo \"N\" >$ECF.$INDEX\n");
+        wr.write("  ssh $NODE /bin/bash -c \\\" \"");
+    }
 
 	protected String getName() {
 		return "PBS";
