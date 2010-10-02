@@ -6,9 +6,9 @@
 
 package org.globus.cog.karajan.scheduler;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
+import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
@@ -28,6 +29,7 @@ import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.Queue;
 import org.globus.cog.karajan.util.TaskHandlerWrapper;
 import org.globus.cog.karajan.util.TypeUtil;
+import org.globus.cog.util.CopyOnWriteArrayList;
 
 public abstract class AbstractScheduler extends Thread implements Scheduler {
 
@@ -35,37 +37,38 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	
 	public static final int THROTTLE_OFF = 100000000;
 
-	private List taskHandlers;
+	private List<TaskHandlerWrapper> taskHandlers;
 
-	private final Map handlerMap;
+	private final Map<Integer, Map<String, TaskHandlerWrapper>> handlerMap;
 
 	private int maxSimultaneousJobs;
 
 	private final Queue jobs;
 
-	private final Map listeners;
+	private final Map<ExecutableObject, CopyOnWriteArrayList<StatusListener>> listeners;
 
 	private ContactSet grid;
 
-	private final Map properties;
+	private final Map<String, Object> properties;
 
-	private final Map constraints;
+	private final Map<Task, Object> constraints;
 
-	private List taskTransformers, failureHandlers;
+	private List<TaskTransformer> taskTransformers;
+	private List<FailureHandler> failureHandlers;
 
 	private ResourceConstraintChecker constraintChecker;
 
 	public AbstractScheduler() {
 		super("Scheduler");
 		jobs = new Queue();
-		listeners = new HashMap();
-		handlerMap = new HashMap();
+		listeners = new HashMap<ExecutableObject, CopyOnWriteArrayList<StatusListener>>();
+		handlerMap = new HashMap<Integer, Map<String, TaskHandlerWrapper>>();
 		grid = new ContactSet();
 		maxSimultaneousJobs = 65536;
-		properties = new HashMap();
-		constraints = new HashMap();
-		taskTransformers = new LinkedList();
-		failureHandlers = new LinkedList();
+		properties = new HashMap<String, Object>();
+		constraints = new HashMap<Task, Object>();
+		taskTransformers = new LinkedList<TaskTransformer>();
+		failureHandlers = new LinkedList<FailureHandler>();
 
 		// We always have the local file provider
 		TaskHandlerWrapper local = new TaskHandlerWrapper();
@@ -76,46 +79,46 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 
 	public final void addTaskHandler(TaskHandlerWrapper taskHandler) {
 		if (taskHandlers == null) {
-			taskHandlers = new LinkedList();
+			taskHandlers = new LinkedList<TaskHandlerWrapper>();
 		}
 		taskHandlers.add(taskHandler);
-		Integer type = new Integer(taskHandler.getType());
-		Map ht = (Map) handlerMap.get(type);
+		Map<String, TaskHandlerWrapper> ht = handlerMap.get(taskHandler.getType());
 		if (ht == null) {
-			ht = new HashMap();
-			handlerMap.put(type, ht);
+			ht = new HashMap<String, TaskHandlerWrapper>();
+			handlerMap.put(taskHandler.getType(), ht);
 		}
 		ht.put(taskHandler.getProvider(), taskHandler);
 	}
 
-	public List getTaskHandlers() {
+	public List<TaskHandlerWrapper> getTaskHandlers() {
 		return taskHandlers;
 	}
 
-	public void setTaskHandlers(List taskHandlers) {
+	public void setTaskHandlers(List<TaskHandlerWrapper> taskHandlers) {
 		this.taskHandlers = taskHandlers;
 	}
 
 	public TaskHandlerWrapper getTaskHadlerWrapper(int index) {
-		return (TaskHandlerWrapper) getTaskHandlers().get(index);
+		return getTaskHandlers().get(index);
 	}
 
-	public Collection getTaskHandlerWrappers(int type) {
-		Integer itype = new Integer(type);
-		if (handlerMap.containsKey(itype)) {
-			return ((Map) handlerMap.get(itype)).values();
+	public Collection<TaskHandlerWrapper> getTaskHandlerWrappers(int type) {
+		if (handlerMap.containsKey(type)) {
+			return handlerMap.get(type).values();
 		}
 		else {
-			return new LinkedList();
+			return Collections.emptyList();
 		}
 	}
 
 	public TaskHandlerWrapper getTaskHandlerWrapper(int type, String provider) {
-		Integer itype = new Integer(type);
-		if (handlerMap.containsKey(itype)) {
-			return (TaskHandlerWrapper) ((Map) handlerMap.get(itype)).get(provider);
-		}
-		return null;
+	    Map<String, TaskHandlerWrapper> pm = handlerMap.get(type);
+	    if (pm == null) {
+	        return null;
+	    }
+	    else {
+	        return pm.get(provider);
+	    }
 	}
 
 	public void setResources(ContactSet grid) {
@@ -130,42 +133,43 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	}
 
 	public void addJobStatusListener(StatusListener l, Task task) {
-		List jobListeners;
+		CopyOnWriteArrayList<StatusListener> jobListeners;
 		synchronized (listeners) {
-			if (listeners.containsKey(task)) {
-				jobListeners = (List) listeners.get(task);
-			}
-			else {
-				jobListeners = new ArrayList();
+			jobListeners = listeners.get(task);
+			if (jobListeners == null) {
+				jobListeners = new CopyOnWriteArrayList<StatusListener>();
 				listeners.put(task, jobListeners);
 			}
-			jobListeners.add(l);
 		}
+		jobListeners.add(l);
 	}
 
 	public void removeJobStatusListener(StatusListener l, Task task) {
 		synchronized (listeners) {
-			if (listeners.containsKey(task)) {
-				List jobListeners = (List) listeners.get(task);
+			CopyOnWriteArrayList<StatusListener> jobListeners = listeners.get(task);
+			if (jobListeners != null) {
 				jobListeners.remove(l);
-				if (jobListeners.size() == 0) {
-					listeners.remove(task);
-				}
+			}
+			if (jobListeners.isEmpty()) {
+				listeners.remove(task);
 			}
 		}
 	}
 
 	public void fireJobStatusChangeEvent(StatusEvent e) {
-		List jobListeners = null;
+		CopyOnWriteArrayList<StatusListener> jobListeners = null;
 		synchronized (listeners) {
-			if (listeners.containsKey(e.getSource())) {
-				jobListeners = new ArrayList((List) listeners.get(e.getSource()));
-			}
+			jobListeners = listeners.get(e.getSource());
 		}
 		if (jobListeners != null) {
-			Iterator i = jobListeners.iterator();
-			while (i.hasNext()) {
-				((StatusListener) i.next()).statusChanged(e);
+			Iterator<StatusListener> i = jobListeners.iterator();
+			try {
+				while (i.hasNext()) {
+					i.next().statusChanged(e);
+				}
+			}
+			finally {
+				jobListeners.release();
 			}
 		}
 	}
@@ -255,22 +259,18 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		this.taskTransformers.add(taskTransformer);
 	}
 
-	public List getTaskTransformers() {
+	public List<TaskTransformer> getTaskTransformers() {
 		return taskTransformers;
 	}
 
 	protected void applyTaskTransformers(Task t, Contact[] contacts, Service[] services) {
-		List transformers = getTaskTransformers();
-		Iterator i = transformers.iterator();
-		while (i.hasNext()) {
-			((TaskTransformer) i.next()).transformTask(t, contacts, services);
+		for (TaskTransformer tt : getTaskTransformers()) {
+			tt.transformTask(t, contacts, services);
 		}
 	}
 
 	protected boolean runFailureHandlers(Task t) {
-		Iterator i = failureHandlers.iterator();
-		while (i.hasNext()) {
-			FailureHandler fh = (FailureHandler) i.next();
+		for (FailureHandler fh : failureHandlers) {
 			if (fh.handleFailure(t, this)) {
 				return true;
 			}
