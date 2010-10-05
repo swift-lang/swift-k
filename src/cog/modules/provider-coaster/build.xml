@@ -170,6 +170,8 @@
 			<arg value="${dist.dir}/lib"/>
 		</java>
 		<copy file="${build.dir}/coaster-bootstrap.list" tofile="${dist.dir}/lib/coaster-bootstrap.list"/>
+		<copy file="${build.dir}/worker.pl" tofile="${dist.dir}/bin/worker.pl"/>
+                <chmod file="${dist.dir}/bin/worker.pl" perm="ugo+rx"/>
 		<copy file="${build.dir}/coaster-bootstrap.list" tofile="${cog.dir}/modules/${module.name}/lib/coaster-bootstrap.list"/>
 		<copy file="${build.dir}/coaster-bootstrap.list" tofile="${cog.dir}/modules/${module.name}/resources/coaster-bootstrap.list"/>
 	</target>

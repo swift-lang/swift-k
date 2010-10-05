@@ -41,7 +41,7 @@ public class CoasterService extends GSSService {
     public static final Logger logger = Logger
             .getLogger(CoasterService.class);
 
-    public static final int IDLE_TIMEOUT = 120 * 1000;
+    public static final int IDLE_TIMEOUT = 120 * 1000 /* extend it: */ * 30 * 240;
 
     public static final RequestManager COASTER_REQUEST_MANAGER = new CoasterRequestManager();
 
