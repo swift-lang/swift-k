@@ -18,6 +18,20 @@ use POSIX ":sys_wait_h";
 use strict;
 use warnings;
 
+# Maintain a stack of job slot ids for auxiliary services:
+#   Each slot has a small integer id 0..n-1
+#   Obtain a slot from the stack when starting a job
+#   Return the slot to the stack (making it available) when a job ends
+#   Pass a slot id to launched jobs via env var SWIFT_JOB_SLOT;
+#   jobs can use this to reach a persistent process associated with the slot.
+#   Initial use is to send app() R eval requests to persistent R worker processes.
+
+use constant MAXJOBSLOTS => 128; # Arbitrary fixed limit on job slot stack.
+my @jobslots=();
+for( my $jobslot=MAXJOBSLOTS-1; $jobslot>=0; $jobslot--) {
+  push @jobslots, $jobslot;
+}
+
 # If ASYNC is on, the following will be done:
 #   1. Stageouts will be done in parallel
 #   2. The job status will be set to "COMPLETED" as soon as the last
@@ -62,7 +76,6 @@ use constant REPLYTIMEOUT => 180;
 use constant MAXFRAGS => 16;
 use constant MAX_RECONNECT_ATTEMPTS => 3;
 
-use constant IDLETIMEOUT => 4 * 60; #Seconds; 2 minutes
 my $LASTRECV = 0;
 my $JOBS_RUNNING = 0;
 
@@ -75,10 +88,29 @@ use constant BUFSZ => 2048;
 # "lost heartbeats".
 use constant HEARTBEAT_INTERVAL => 2 * 60;
 
+my $ID = "-";
+
+sub wlog {
+	my $msg;
+	my $level = shift;
+	if ($level >= $LOGLEVEL) {
+		foreach $msg (@_) {
+			my $timestamp = timestring();
+                        my $msgline = sprintf("%s %s %s %s",
+                                              $timestamp,
+                                              $LEVELS[$level],
+                                              $ID, $msg);
+			print LOG $msgline;
+		}
+	}
+	return 1;
+}
+
 # Command-line arguments:
 my $URISTR=$ARGV[0];
 my $BLOCKID=$ARGV[1];
 my $LOGDIR=$ARGV[2];
+my $IDLETIMEOUT = ( $#ARGV <= 2 ) ? (4 * 60) : $ARGV[3];
 
 
 # REQUESTS holds a map of incoming requests
@@ -98,8 +130,6 @@ my %HANDLERS = (
 );
 
 my @CMDQ = ();
-
-my $ID = "-";
 
 my @URIS = split(/,/, $URISTR);
 my @SCHEME;
@@ -162,22 +192,6 @@ sub file2hash() {
 	}
 	close FILE;
 	return %hash;
-}
-
-sub wlog {
-	my $msg;
-	my $level = shift;
-	if ($level >= $LOGLEVEL) {
-		foreach $msg (@_) {
-		        my $timestamp = timestring();
-			my $msgline = sprintf("%s %s %s %s",
-					      $timestamp,
-					      $LEVELS[$level],
-					      $ID, $msg);
-			print LOG $msgline;
-		}
-	}
-	return 1;
 }
 
 sub timestring() {
@@ -277,6 +291,7 @@ sub logsetup() {
 	wlog DEBUG, "host=$hosts\n";
 	wlog DEBUG, "port=$ports\n";
 	wlog DEBUG, "blockid=$BLOCKID\n";
+    wlog DEBUG, "idletimeout=$IDLETIMEOUT\n";
 }
 
 sub sendm {
@@ -590,7 +605,7 @@ sub checkTimeouts {
 	if ($LASTRECV != 0) {
 		my $dif = $time - $LASTRECV;
 		wlog TRACE, "time: $time, lastrecv: $LASTRECV, dif: $dif\n";
-		if ($dif >= IDLETIMEOUT && $JOBS_RUNNING == 0) {
+		if ($dif >= $IDLETIMEOUT && $JOBS_RUNNING == 0) {
 			wlog INFO, "Idle time exceeded (time=$time, LASTRECV=$LASTRECV, dif=$dif)\n";
 			die "Idle time exceeded";
 		}
@@ -1321,13 +1336,25 @@ sub forkjob {
 	my $JOB = $JOBDATA{$JOBID}{"job"};
 	my $JOBARGS = $JOBDATA{$JOBID}{"jobargs"};
 	my $JOBENV = $JOBDATA{$JOBID}{"jobenv"};
+	my $WORKERPID = $$;
+
+        # allocate a jobslot here because we know we are starting exactly one job here
+        # if we verify that we dont have more stageins than slots taking place at once,
+        # we can move this to where the rest of the job options are set. Or we can place
+        # the slot in the JOBWAITDATA. (FIXME: remove when validated)
+
+	my $JOBSLOT = pop(@jobslots);
+	if( ! defined($JOBSLOT) ) {
+		wlog DEBUG, "Job $JOBID has undefined jobslot\n";
+	}
+	$JOBDATA{$JOBID}{"jobslot"} = $JOBSLOT;
 
 	pipe(PARENT_R, CHILD_W);
 	$pid = fork();
 	if (defined($pid)) {
 		if ($pid == 0) {
 			close PARENT_R;
-			runjob(\*CHILD_W, $JOB, $JOBARGS, $JOBENV);
+			runjob(\*CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
 			close CHILD_W;
 		}
 		else {
@@ -1405,6 +1432,12 @@ sub checkJobStatus {
 	wlog DEBUG, "$JOBID Got output from child. Closing pipe.\n";
 	close $RD;
 	$JOBDATA{$JOBID}{"exitcode"} = $status;
+
+	my $JOBSLOT = $JOBDATA{$JOBID}{"jobslot"};
+	if ( defined $JOBSLOT ) {
+		push @jobslots,$JOBSLOT;
+	}
+
 	if (defined $s) {
 		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "$status", $s);
 	}
@@ -1418,7 +1451,7 @@ sub checkJobStatus {
 }
 
 sub runjob {
-	my ($WR, $JOB, $JOBARGS, $JOBENV) = @_;
+	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID) = @_;
 	my $executable = $$JOB{"executable"};
 	my $stdout = $$JOB{"stdout"};
 	my $stderr = $$JOB{"stderr"};
@@ -1433,6 +1466,8 @@ sub runjob {
 	foreach $ename (keys %$JOBENV) {
 		$ENV{$ename} = $$JOBENV{$ename};
 	}
+    $ENV{"SWIFT_JOB_SLOT"} = $JOBSLOT;
+    $ENV{"SWIFT_WORKER_PID"} = $WORKERPID;
 	wlog DEBUG, "Command: @$JOBARGS\n";
 	unshift @$JOBARGS, $executable;
 	if (defined $$JOB{directory}) {
