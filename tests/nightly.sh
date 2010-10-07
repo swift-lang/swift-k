@@ -216,7 +216,19 @@ html_a_href() {
 }
 
 html_table() {
-  html "<table border=\"0\">"
+  OPTS=""
+  while [[ ${#*} > 0 ]]
+  do
+    case $1 in
+      cellpadding)
+        OPTS+="cellpadding=\"$2\" "
+        shift 2;;
+      border)
+        OPTS+="border=\"$2\" "
+        shift 2;;
+      esac
+  done
+  html "<table $OPTS>"
 }
 
 html_~table() {
@@ -250,12 +262,25 @@ html_~th() {
 }
 
 html_td() {
-  ALIGN=$1
-  if [ -n $ALIGN ]; then
-    html "<td align=\"$ALIGN\">"
-  else
-    html "<td>"
-  fi
+  OPTS=""
+  while [[ ${#*} > 0 ]]
+  do
+    case $1 in
+      align)
+        OPTS+="align=\"$2\" "
+        shift 2;;
+      class)
+        OPTS+="class=\"$2\" "
+        shift 2;;
+      title)
+        OPTS+="title=\"$2\" "
+        shift 2;;
+      width)
+        OPTS+="width=\"$2\" "
+        shift 2;;
+    esac
+  done
+  html "<td $OPTS>"
 }
 
 html_~td() {
@@ -358,14 +383,16 @@ out() {
     CMD=$3    # Command issued (td title)
     RESULT=$4 # Passed or Failed
 
-    WIDTH=$( width "$LABEL" )
+    # WIDTH=$( width "$LABEL" )
     if [ "$RESULT" == "Passed" ]; then
-      html "<td class=\"success\" $WIDTH title=\"$CMD\">"
+      # html "<td class=\"success\" $WIDTH title=\"$CMD\">"
+      html_td class "success" width 25 title "$CMD"
       html_a_href $TEST_LOG "$LABEL"
     else
       echo "FAILED"
       cat $RUNDIR/$TEST_LOG < /dev/null
-      html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
+      # html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
+      html_td class "failure" width 25 title "$CMD"
       html_a_href $TEST_LOG $LABEL
     fi
     html_~td
@@ -381,11 +408,14 @@ start_test_results() {
   html_h1 "Test results"
   html_a_name "tests"
   html_a_href "tests.log" "Output log from tests"
-  html_table
+  html_table border 0 cellpadding 1
 }
 
 start_part() {
   PART=$1
+  echo
+  echo $PART
+  echo
   html_tr part
   html_th 3
   html "$PART"
@@ -395,15 +425,18 @@ start_part() {
 
 start_row() {
   html_tr testline
-  html_td right
+  html_td align right width 50
   html "<b>$SWIFTCOUNT</b>"
+  html "&nbsp;"
   html_~td
-  html_td right
+  html_td align right
+  html "&nbsp;"
   if [[ -n $TESTLINK ]]; then
     html_a_href $TESTLINK $TESTNAME
   else
     html $TESTNAME
   fi
+  html "&nbsp;"
   html_~td
   html_td
   html_table
@@ -511,7 +544,7 @@ process_exec_trap() {
   EXEC_PID=$1
   echo "process_exec_trap()"
   kill -KILL $EXEC_PID
-  killall -9 java
+  # killall -9 java
 }
 
 # Execute as part of test set
@@ -844,15 +877,16 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 SKIP_COUNTER=0
 
-GROUPLIST=( $TESTDIR/functions $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/ps $TESTDIR/cdm/ps/pinned )
+# GROUPLIST=( $TESTDIR/functions $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/star  )
+# $TESTDIR/cdm/ps/pinned
 
-# GROUPLIST=( $TESTDIR/language-behaviour
-#             $TESTDIR/language/working \
-#             $TESTDIR/local \
-#             $TESTDIR/language/should-not-work \
-#             $TESTDIR/cdm \
-#             $TESTDIR/cdm/ps \
-#             $TESTDIR/cdm/ps/pinned )
+GROUPLIST=( $TESTDIR/language-behaviour
+            $TESTDIR/language/working \
+            $TESTDIR/local \
+            $TESTDIR/language/should-not-work \
+            $TESTDIR/cdm \
+            $TESTDIR/cdm/ps \
+            $TESTDIR/cdm/ps/pinned )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
