@@ -23,6 +23,8 @@ public abstract class Policy {
             return new Broadcast();
         else if (token.compareToIgnoreCase("gather") == 0)
             return new Gather();
+        else if (token.compareToIgnoreCase("external") == 0)
+            return new External();
         return null;
     }
 }

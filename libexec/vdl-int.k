@@ -23,15 +23,15 @@ namespace("vdl"
 			)
 			dir:remove(dir, host=host)
 		)
-		
+
 		element(createdirs, [path, dir, host]
 			dc := dircat(dir, path)
 			log(LOG:INFO, "START path={path} dir={dir} - Creating directory structure")
 
 			dir:make(dc, host=host)
 		)
-		
-		
+
+
 		element(checkJobStatus, [rhost, wfdir, jobid, tr, jobdir]
 			log(LOG:DEBUG, "START jobid={jobid}")
 			try(
@@ -40,9 +40,9 @@ namespace("vdl"
 					 * This is a bit of optimization, but I'm not completely
 					 * sure of its correctness. The goal is to both detect
 					 * the presence of the success file and remove it, all
-					 * in one operation. It relies on file:remove() throwing 
-					 * an exception if the file is not there. 
-					 */ 
+					 * in one operation. It relies on file:remove() throwing
+					 * an exception if the file is not there.
+					 */
 					file:remove("{wfdir}/status/{jobdir}/{jobid}-success", host=rhost)
 					log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 				)
@@ -59,14 +59,14 @@ namespace("vdl"
 						)
 						throw(error)
 					)
-					else (	
+					else (
 						log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Both status files are missing")
-						throw("No status file was found. Check the shared filesystem on {rhost}")  
+						throw("No status file was found. Check the shared filesystem on {rhost}")
 					)
 				)
 			)
 		)
-		
+
 		element(initSharedDir, [rhost]
 			once(list(rhost, "shared")
 				vdl:setprogress("Initializing site shared directory")
@@ -97,7 +97,7 @@ namespace("vdl"
 				log(LOG:INFO, "END host={rhost} - Done initializing shared directory")
 			)
 		)
-		
+
 		element(initDDir, []
 			ddir := "{VDL:SCRIPTNAME}-{VDL:RUNID}.d"
 			once(ddir
@@ -107,11 +107,11 @@ namespace("vdl"
 			)
 			ddir
 		)
-				
+
 		element(inFiles, [stageins]
 			pathnames(stageins)
 		)
-				
+
 		element(fileDirs, [stageins, stageouts]
 			list(
 				unique(
@@ -120,7 +120,7 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(createDirSet, [jobid, destdir, host, dirs]
 			/*
 			 * Ideally this would be done by creating a tree of the directories
@@ -134,23 +134,23 @@ namespace("vdl"
 			)
 			log(LOG:INFO, "END jobid={jobid} - Done initializing directory structure")
 		)
-		
+
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "START dir={dir} host={host}")
 			cdmfile := cdm:file()
 			log(LOG:INFO, "cdmfile {cdmfile}")
 			if(cdmfile != "" then(
 				log(LOG:INFO, "submitting cdm_cleanup.sh to {dir}")
-				task:transfer(srcfile="cdm_cleanup.sh", 
+				task:transfer(srcfile="cdm_cleanup.sh",
 					      srcdir="{swift.home}/libexec",
 					      desthost=host, destdir=dir)
-				task:transfer(srcfile="cdm_lib.sh", 
+				task:transfer(srcfile="cdm_lib.sh",
 					      srcdir="{swift.home}/libexec",
 					      desthost=host, destdir=dir)
 			        log(LOG:INFO, "execute: cdm_cleanup.sh")
 				task:execute(
-					     executable="/bin/bash", 
-					     arguments=list("{dir}/cdm_cleanup.sh", 
+					     executable="/bin/bash",
+					     arguments=list("{dir}/cdm_cleanup.sh",
 					                     cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET")
 							     sys:uid() )
 					     host=host, batch=true, tcprofile(host))
@@ -158,7 +158,7 @@ namespace("vdl"
 			)
 			if(vdl:configProperty("sitedir.keep") == "false"
 				task:execute(
-					vdl:siteprofile(host, "swift:cleanupCommand"), 
+					vdl:siteprofile(host, "swift:cleanupCommand"),
 					arguments=list(
 						vdl:siteprofile(host, "swift:cleanupCommandOptions"),
 						dir
@@ -167,7 +167,7 @@ namespace("vdl"
 			)
 			log(LOG:INFO, "END dir={dir} host={host}")
 		)
-		
+
 		element(cleanups, [cleanup]
 			log(LOG:INFO, "START cleanups={cleanup}")
 			parallelFor(i, cleanup
@@ -182,7 +182,7 @@ namespace("vdl"
 			)
 			log(LOG:INFO, "END cleanups={cleanup}")
 		)
-		
+
 		element(cleanupFiles, [files, host]
 			uParallelFor(r, files
 				log(LOG:INFO, "Purging ", r, " on ", host)
@@ -190,7 +190,7 @@ namespace("vdl"
 				vdl:cacheFileRemoved(r, host)
 			)
 		)
-				
+
 
 		element(stageWrapperParams, [jobid, jobdir, wrapfile, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - staging in wrapper params")
@@ -216,14 +216,14 @@ namespace("vdl"
 			libexec := "{swift.home}/libexec"
 
 			if (cdmfile != "" then(
-				doStageinFile(provider="file", srchost="localhost", srcfile=basename(cdmfile), 
-					    	srcdir=vdl:dirname(cdmfile), desthost=host, destdir=dir, 
+				doStageinFile(provider="file", srchost="localhost", srcfile=basename(cdmfile),
+					    	srcdir=vdl:dirname(cdmfile), desthost=host, destdir=dir,
 						size=file:size(cdmfile), policy="DEFAULT")
-				doStageinFile(provider="file", srchost="localhost", srcfile="cdm.pl", 
-					    	srcdir=libexec, desthost=host, destdir=dir, 
+				doStageinFile(provider="file", srchost="localhost", srcfile="cdm.pl",
+					    	srcdir=libexec, desthost=host, destdir=dir,
 						size=file:size("{libexec}/cdm.pl}"), policy="DEFAULT")
-				doStageinFile(provider="file", srchost="localhost", srcfile="cdm_lib.sh", 
-					    	srcdir=libexec, desthost=host, destdir=dir, 
+				doStageinFile(provider="file", srchost="localhost", srcfile="cdm_lib.sh",
+					    	srcdir=libexec, desthost=host, destdir=dir,
 						size=file:size("{libexec}/cdm_lib.sh}"), policy="DEFAULT")
 			))
 
@@ -238,9 +238,9 @@ namespace("vdl"
 				policy := cdm:query(query=file)
 				log(LOG:DEBUG, "CDM: {file} : {policy}")
 
-				doStageinFile(provider=provider, srchost=srchost, srcfile=filename, 
+				doStageinFile(provider=provider, srchost=srchost, srcfile=filename,
 						srcdir=srcdir, desthost=host, destdir=destdir, size=size, policy=policy)
-			)			
+			)
 			log(LOG:INFO, "END jobid={jobid} - Staging in finished")
 		)
 
@@ -250,17 +250,21 @@ namespace("vdl"
 
 			log(LOG:DEBUG, "FILE_STAGE_IN_START file={srcfile} ",
                                         "srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
-					"desthost={desthost} destdir={destdir} provider={provider} ", 
+					"desthost={desthost} destdir={destdir} provider={provider} ",
                                         "policy={policy}")
-			if (policy == "DEFAULT" then( 
+			if (policy == "DEFAULT" then(
 				restartOnError(".*", 2
-					task:transfer(srcprovider=provider, srchost=srchost, srcfile=srcfile, 
-							srcdir=srcdir, desthost=desthost, destdir=destdir)))
+					task:transfer(srcprovider=provider, srchost=srchost, srcfile=srcfile,
+					              srcdir=srcdir, desthost=desthost, destdir=destdir)))
 			    policy == "BROADCAST" then(
 				log(LOG:DEBUG, "FILE_STAGE_IN_BROADCAST file={srcfile} policy={policy}")
 				cdm:broadcast(srcfile=srcfile, srcdir=srcdir))
+			    policy == "EXTERNAL" then(
+				log(LOG:DEBUG, "FILE_STAGE_IN_EXTERNAL file={srcfile} policy={policy}")
+				cdm:external(srcfile=srcfile, srcdir=srcdir,
+                                              desthost=desthost, destdir=destdir))
 			else(log(LOG:DEBUG, "FILE_STAGE_IN_SKIP file={srcfile} policy={policy}")))
-				log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} ",
+			log(LOG:DEBUG, "FILE_STAGE_IN_END file={srcfile} ",
 					"srchost={srchost} srcdir={srcdir} srcname={srcfile} ",
                                         "desthost={desthost} destdir={destdir} provider={provider}")
 			)
@@ -269,6 +273,7 @@ namespace("vdl"
 
 		element(doStageout, [jobid, stageouts, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - Staging out files")
+                        log(LOG:DEBUG, "stageouts: {stageouts}")
 			done := list(
 				uParallelFor(pv, stageouts
 					[path, var] := each(pv)
@@ -280,7 +285,7 @@ namespace("vdl"
 					ldir := vdl:dirname(file)
 					fullLocal := dircat(ldir, bname)
 					fullRemote := dircat(rdir, bname)
-										
+
 					log(LOG:DEBUG, "FILE_STAGE_OUT_START srcname={bname} srcdir={rdir} srchost={host} ",
 							"destdir={ldir} desthost={dhost} provider={provider}")
 					//make sure we do have the directory on the client side
@@ -289,13 +294,13 @@ namespace("vdl"
 					if (sys:or(policy == "DEFAULT", policy == "BROADCAST")
 						then(
 						restartOnError(".*", 2
-							task:transfer(srchost=host, srcfile=bname,srcdir=rdir, 
+							task:transfer(srchost=host, srcfile=bname,srcdir=rdir,
 								destdir=ldir, desthost=dhost, destprovider=provider)))
 					else(log(LOG:DEBUG, "FILE_STAGE_OUT_SKIP srcname={bname}"))
 					)
 					log(LOG:DEBUG, "FILE_STAGE_OUT_END srcname={bname} srcdir={rdir} srchost={host} ",
 						"destdir={ldir} desthost={dhost} provider={provider}")
-	
+
 					list(bname, rdir, host, file:size(fullLocal))
 				)
 			)
@@ -307,13 +312,13 @@ namespace("vdl"
 			)
 			log(LOG:INFO, "END jobid={jobid} - Staging out finished")
 		)
-		
+
 		element(graphStuff, [tr, stagein, stageout, err, optional(args)]
 			if(
 				vdl:configProperty("pgraph") != "false" then(
 					errprops := if(err ",color=lightsalmon" ",color=lightsteelblue1")
 					tp := vdl:threadPrefix()
-					to(graph, 
+					to(graph,
 						concat(str:quote(tp), " [label=", str:quote(tr), "{errprops}]")
 					)
 					for(si, stagein
@@ -329,7 +334,7 @@ namespace("vdl"
 						file := basename(file)
 						label := vdl:niceName(var, path = path)
 						to(graph
-							concat(str:quote(file), " [shape=parallelogram,label=", 
+							concat(str:quote(file), " [shape=parallelogram,label=",
 								str:quote(label), "]")
 							concat(str:quote(tp), " -> ", str:quote(file))
 						)
@@ -337,16 +342,16 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(fileSizes, [files]
 			math:sum(
 				for(f, files, file:size(file))
 			)
 		)
-		
+
 		element(transferStandardFiles, [rhost, tmpdir, jobid, stdout, stderr]
 			concat(
-				for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))	
+				for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))
 					[name, file] := each(f)
 					destfile := "{jobid}-{file}"
 					nl()
@@ -364,7 +369,7 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(transferKickstartRec, [rhost, wfdir, jobid, jobdir]
 			recfile := "{jobid}-kickstart.xml"
 			srcdir := dircat("{wfdir}/kickstart/", jobdir)
@@ -397,17 +402,17 @@ namespace("vdl"
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr, stagein=stagein)
-				
+
 				ddir := initDDir()
 				[wfdir, sharedDir] := try(
 					initSharedDir(rhost)
 					throw(exception("Could not initialize shared directory on {rhost}", exception))
 				)
-				
+
 				uid := uid()
 				jobdir := substring(uid, from=0, to=1)
 				jobid := "{tr}-{uid}"
-				
+
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
 
 				statusMode := configProperty("status.mode",host=rhost)
@@ -419,7 +424,7 @@ namespace("vdl"
 				stderr := try(stderr, "stderr.txt")
 				kickstart := vdl:kickstart(rhost)
 				fileDirs := fileDirs(stagein, stageout)
-				os := vdl:siteprofile(rhost, "SYSINFO:OS") 
+				os := vdl:siteprofile(rhost, "SYSINFO:OS")
 
 				if(wrapperMode == "files"
 					sequential(
@@ -443,12 +448,12 @@ namespace("vdl"
 
 				vdl:setprogress("Stage in")
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
-				
-				
-				
+
+
+
 				try(
 					sequential(
-						
+
 						createDirSet(jobid, sharedDir, rhost, fileDirs)
 						doStagein(jobid, stagein, sharedDir, rhost)
 						if(wrapperMode == "files"
@@ -457,7 +462,7 @@ namespace("vdl"
 
 
 						log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
-				
+
 						vdl:setprogress("Submitting")
 
 						if(wrapperMode == "files"
@@ -465,7 +470,7 @@ namespace("vdl"
 								vdl:siteprofile(rhost, "swift:wrapperInterpreter"),
 								list(
 									vdl:siteprofile(rhost, "swift:wrapperInterpreterOptions"),
-									dircat("shared", vdl:siteprofile(rhost, "swift:wrapperScript"), os=os), 
+									dircat("shared", vdl:siteprofile(rhost, "swift:wrapperScript"), os=os),
 									jobid, "-p", jobdir
 								)
 								directory=wfdir
@@ -486,12 +491,12 @@ namespace("vdl"
 								jobid,
 								"-jobdir", jobdir,
 								"-scratch", try(vdl:siteprofile(rhost, "scratch"), "")
-								"-e", vdl:executable(tr, rhost), 
-								"-out", stdout, 
-								"-err", stderr, 
+								"-e", vdl:executable(tr, rhost),
+								"-out", stdout,
+								"-err", stderr,
 								"-i", maybe(stdin),
 								"-d", flatten(each(fileDirs)),
-								"-if", flatten(infiles(stagein)), 
+								"-if", flatten(infiles(stagein)),
 								"-of", flatten(outfiles(stageout)),
 								"-k", kickstart,
 								"-cdmfile", cdm:file(),
@@ -519,11 +524,11 @@ namespace("vdl"
 
 						log(LOG:DEBUG, "STAGING_OUT jobid={jobid}")
 
-									
+
 						/* need to stage the files to upper scratch area in case they are not transfered to another site
 						   before all the files get cleaned out */
-					
-						
+
+
 						vdl:setprogress("Stage out")
 						doStageout(jobid, stageout, sharedDir, rhost)
 						doRestartlog(restartout)
@@ -555,9 +560,9 @@ namespace("vdl"
 						vdl:cacheUnlockFiles(stagein, sharedDir, rhost, force=false
 							cleanupFiles(cacheFilesToRemove, rhost)
 						)
-						
+
 						outs := transferStandardFiles(rhost, tmpdir, jobid, stdout, stderr)
-						
+
 						discard(maybe(transferWrapperLog(rhost, wfdir, jobid, jobdir)))
 
 						kickstartRec := if(
@@ -572,7 +577,7 @@ namespace("vdl"
 								)
 							)
 						)
-						
+
 						throw(
 							exception(
 								concat(
@@ -591,7 +596,7 @@ namespace("vdl"
 				)
 			)
 		)
-	
+
 		element(generateProvenanceGraph, [gdata]
 			pgraph := vdl:configProperty("pgraph")
 			gname := if(pgraph == "true" "{VDL:SCRIPTNAME}-{VDL:RUNID}.dot" pgraph)
@@ -599,7 +604,7 @@ namespace("vdl"
 				"digraph SwiftProvenance {{", nl()
 				"	graph [", vdl:configProperty("pgraph.graph.options"), "];", nl()
 				"	node [", vdl:configProperty("pgraph.node.options"), "];", nl()
-						
+
 				for(i, gdata
 					"	", i, nl()
 				)

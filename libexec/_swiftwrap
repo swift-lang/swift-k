@@ -352,7 +352,8 @@ for L in $INF ; do
 	if [ ! -z $CDM_FILE ]; then
 		CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
 	fi
-	if [ $CDM_POLICY != "DEFAULT" ]; then
+	if [ $CDM_POLICY != "DEFAULT" &&
+         $CDM_POLICY != "EXTERNAL" ]; then
 		log "CDM_POLICY: $L -> $CDM_POLICY"
     	        eval cdm_action $DIR "INPUT" $L $CDM_POLICY
 		continue
