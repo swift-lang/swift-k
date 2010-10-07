@@ -1,2 +1,5 @@
+
+// THIS-SCRIPT-SHOULD-FAIL
+
 }}}}
 

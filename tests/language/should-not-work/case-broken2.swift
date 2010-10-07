@@ -1,4 +1,6 @@
 
+// THIS-SCRIPT-SHOULD-FAIL
+
 switch(d)
 {
     case 1:
