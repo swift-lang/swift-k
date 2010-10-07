@@ -7,12 +7,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.globus.swift.data.policy.Policy;
 import org.globus.swift.data.policy.Broadcast;
 import org.globus.swift.data.util.LineReader;
-import org.griphyn.vdl.karajan.Loader;
 
 /**
  * Manages CDM policies for files based on pattern matching.
@@ -29,7 +26,8 @@ import org.griphyn.vdl.karajan.Loader;
  * */
 
 public class Director {
-    private static final Logger logger = Logger.getLogger(Director.class);
+    private static final Logger logger = 
+        Logger.getLogger(Director.class);
 
     /**
        Has a CDM policy file been provided?
@@ -44,12 +42,14 @@ public class Director {
     /**
        Maps from Patterns to Policies for fs.data rules
      */
-    static Map<Pattern,Policy> map = new LinkedHashMap();
+    static Map<Pattern,Policy> map = 
+        new LinkedHashMap<Pattern, Policy>();
 
     /**
        Maps from String names to String values for fs.data properties
     */
-    static Map<String,String> properties = new HashMap();
+    static Map<String,String> properties = 
+        new HashMap<String, String>();
 
     /**
        Remember the files we have broadcasted.
@@ -82,12 +82,9 @@ public class Director {
         logger.info("CDM file: " + policyFile);
         enabled = true;
         Director.policyFile = policyFile;
-        LineReader lines = new LineReader();
-        List list = lines.read(policyFile);
-        for (Iterator it = list.iterator(); it.hasNext(); ) {
-            String s = (String) it.next();
+        List<String> list = LineReader.read(policyFile);
+        for (String s : list)
             addLine(s);
-        }
     }
 
     /**
@@ -168,7 +165,8 @@ public class Director {
     /**
        Add a file to the list of files to be broadcasted.
     */
-    public static synchronized void addBroadcast(String srcdir, String srcfile) {
+    public static synchronized void addBroadcast(String srcdir, 
+                                                 String srcfile) {
         logger.debug("addBroadcast(): " + srcdir + " " + srcfile);
         String path = srcdir+"/"+srcfile;
         broadcastWork.add(path);
@@ -266,7 +264,6 @@ public class Director {
         }
 
         try {
-
             String name = args[0];
             File policyFile = new File(args[1]);
             if (! policyFile.exists()) {

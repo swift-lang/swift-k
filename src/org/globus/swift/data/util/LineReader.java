@@ -10,27 +10,26 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-
 public class LineReader {
 
     public LineReader()
     {}
 
-    public static List read(File file) throws FileNotFoundException {
+    public static List<String> read(File file) 
+    throws FileNotFoundException {
         BufferedReader reader =
             new BufferedReader(new FileReader(file));
         return read(reader);
     }
 
-    public static List read(String s) {
+    public static List<String> read(String s) {
         BufferedReader reader =
             new BufferedReader(new StringReader(s));
         return read(reader);
     }
 
-    public static List read(BufferedReader reader) {
-        List result = new ArrayList();
+    public static List<String> read(BufferedReader reader) {
+        List<String> result = new ArrayList<String>();
         try
         {
             String prevline = "";
@@ -65,7 +64,7 @@ public class LineReader {
     public static String[] tokenize(String line) {
         if (line == null)
             return null;
-        List words = new ArrayList();
+        List<String> words = new ArrayList<String>();
         String[] ws = line.split("\\s");
         for (int i = 0; i < ws.length; i++)
             if (ws[i].length() > 0)

@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.globus.swift.data.Director;
 
 public class Broadcast extends Policy {
