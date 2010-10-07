@@ -42,8 +42,6 @@
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
 # output_*.txt is the HTML-linked permanent output from a test
 
-# WARNING: On timeout, this script will call killall on java and sleep
-
 # All timeouts in this script are in seconds
 
 # PID TREE:
@@ -544,7 +542,22 @@ process_exec_trap() {
   EXEC_PID=$1
   echo "process_exec_trap()"
   kill -KILL $EXEC_PID
-  # killall -9 java
+  killall_swift
+}
+
+# Kill all subordinate swift/java processes
+killall_swift() {
+  echo "killing all swifts..."
+  set -x
+  echo $$
+  ps -f
+  kill_this $( ps -f | grep $$'.*'java  | grep -v grep )
+  set +x
+}
+
+# Kill a process given its line output from "ps -f"
+kill_this() {
+  [ -n $2 ] && /bin/kill -KILL $2
 }
 
 # Execute as part of test set
@@ -585,11 +598,15 @@ monitor() {
   wait $SLEEP_PID
   [ $? != 0 ] && verbose "monitor($V) cancelled" && return 0
 
-  echo "monitor($V): killing test process..."
-  /bin/kill -TERM $PID
-  KILLCODE=$?
-  if [ $KILLCODE == 0 ]; then
-    echo "monitor($V): killed process_exec (TERM)"
+  if ps | grep $PID
+  then
+    echo "monitor($V): killing test process..."
+    touch killed_test
+    /bin/kill -TERM $PID
+    KILLCODE=$?
+    if [ $KILLCODE == 0 ]; then
+      echo "monitor($V): killed process_exec (TERM)"
+    fi
   fi
 
   sleep 1
@@ -602,7 +619,8 @@ monitor() {
 monitor_trap() {
   SLEEP_PID=$1
   V=$2
-  /bin/kill -9 $SLEEP_PID
+  verbose "monitor_trap(): kill sleep"
+  /bin/kill -KILL $SLEEP_PID
 }
 
 # Execute given command line in background with monitor
@@ -629,8 +647,8 @@ monitored_exec()
 
   STOP=$( date +%s )
 
-  # If EXITCODE != 0, monitor() may have work to do
-  (( $EXITCODE != 0 )) && sleep 5
+  # If the test was killed, monitor() may have work to do
+  rm killed_test && sleep 5
   verbose "Killing monitor..."
   /bin/kill -TERM $MONITOR_PID
 
@@ -876,9 +894,6 @@ fi
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 SKIP_COUNTER=0
-
-# GROUPLIST=( $TESTDIR/functions $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/star  )
-# $TESTDIR/cdm/ps/pinned
 
 GROUPLIST=( $TESTDIR/language-behaviour
             $TESTDIR/language/working \
