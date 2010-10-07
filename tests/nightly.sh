@@ -901,16 +901,13 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 SKIP_COUNTER=0
 
-GROUPLIST=( $TESTDIR/language/should-not-work $TESTDIR/functions $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/star  )
-# $TESTDIR/cdm/ps/pinned
-
-# GROUPLIST=( $TESTDIR/language-behaviour \
-#             $TESTDIR/language/working \
-#             $TESTDIR/local \
-#             $TESTDIR/language/should-not-work \
-#             $TESTDIR/cdm \
-#             $TESTDIR/cdm/ps \
-#             $TESTDIR/cdm/ps/pinned )
+GROUPLIST=( $TESTDIR/language-behaviour \
+            $TESTDIR/language/working \
+            $TESTDIR/local \
+            $TESTDIR/language/should-not-work \
+            $TESTDIR/cdm \
+            $TESTDIR/cdm/ps \
+            $TESTDIR/cdm/ps/pinned )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
