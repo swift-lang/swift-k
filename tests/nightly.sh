@@ -11,7 +11,7 @@
 # useful HTML output and tests.log
 
 # Run nightly.sh -h for quick help
-# When something goes wrong, find and check tests.log
+# When something goes wrong, find and check tests.log or use -v
 # Code is checked out into TOPDIR
 # Swift is installed in its source tree
 # The run is executed in RUNDIR (TOPDIR/RUNDIRBASE)
@@ -37,6 +37,7 @@
 #      4) optionally a swift.properties
 #      5) optionally a title.txt
 #      6) preferably a README.txt
+# Edit GROUPLIST at the end of this script before running
 
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
@@ -69,6 +70,7 @@ printhelp() {
   printf "\t -g      Do not run grid tests           \n"
   printf "\t -h      This message                    \n"
   printf "\t -k <N>  Skip first N tests              \n"
+  printf "\t -n <N>  Run N tests and quit            \n"
   printf "\t -p      Do not build the package        \n"
   printf "\t -s      Do not do a fresh svn checkout  \n"
   printf "\t -x      Do not continue after a failure \n"
@@ -105,6 +107,9 @@ while [ $# -gt 0 ]; do
       exit 0;;
     -k)
       SKIP_TESTS=$2
+      shift 2;;
+    -n)
+      NUMBER_OF_TESTS=$2
       shift 2;;
     -p)
       BUILD_PACKAGE=0
@@ -833,6 +838,7 @@ test_group() {
     start_row
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
       swift_test_case $TESTNAME
+      (( $SWIFTCOUNT >= $NUMBER_OF_TESTS )) && return
     done
     end_row
   done
@@ -895,13 +901,16 @@ TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 SKIP_COUNTER=0
 
-GROUPLIST=( $TESTDIR/language-behaviour
-            $TESTDIR/language/working \
-            $TESTDIR/local \
-            $TESTDIR/language/should-not-work \
-            $TESTDIR/cdm \
-            $TESTDIR/cdm/ps \
-            $TESTDIR/cdm/ps/pinned )
+GROUPLIST=( $TESTDIR/language/should-not-work $TESTDIR/functions $TESTDIR/local $TESTDIR/cdm $TESTDIR/cdm/star  )
+# $TESTDIR/cdm/ps/pinned
+
+# GROUPLIST=( $TESTDIR/language-behaviour \
+#             $TESTDIR/language/working \
+#             $TESTDIR/local \
+#             $TESTDIR/language/should-not-work \
+#             $TESTDIR/cdm \
+#             $TESTDIR/cdm/ps \
+#             $TESTDIR/cdm/ps/pinned )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
@@ -910,6 +919,7 @@ for G in ${GROUPLIST[@]}; do
   start_part "Part $GROUPCOUNT: $TITLE"
   test_group
   (( GROUPCOUNT++ ))
+  (( $SWIFTCOUNT >= $NUMBER_OF_TESTS )) && break
 done
 
 if [ $GRID_TESTS == "0" ]; then
