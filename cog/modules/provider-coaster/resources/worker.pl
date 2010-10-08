@@ -223,7 +223,7 @@ sub hts {
 }
 
 sub reconnect() {
-	my $fail = 0;
+	my $fail;
 	my $success;
 	my $i;
 	my $j;
@@ -233,6 +233,7 @@ sub reconnect() {
 		$success = 0;
 		for ($j = 0; $j < $sz; $j++) {
 			wlog DEBUG, "Trying $HOSTNAME[$j]:$PORT[$j]...\n";
+			$fail = 0;
 			$SOCK = IO::Socket::INET->new(Proto=>'tcp', PeerAddr=>$HOSTNAME[$j], PeerPort=>$PORT[$j], Blocking=>1) || ($fail = 1);
 			if (!$fail) {
 				$success = 1;
