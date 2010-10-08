@@ -6,6 +6,8 @@
 #				will be tried in order
 #		<blockid> - some block id (the log file will be named based on this)
 #		<logdir> - some directory in which the logs should go
+#                  Set to "NOLOGGING" to turn off logging.
+#                  Env var ENABLE_WORKER_LOGGING also turns on logging.
 #
 
 use IO::Socket;
@@ -119,7 +121,7 @@ my %REQUESTS = ();
 # REPLIES stores the state of (outgoing) commands for which replies are expected
 my %REPLIES  = ();
 
-my $LOG = logfilename($LOGDIR, $BLOCKID);
+my $LOG;
 
 my %HANDLERS = (
 	"SHUTDOWN"  => \&shutdownw,
@@ -264,19 +266,30 @@ sub reconnect() {
 }
 
 sub initlog() {
-	if (defined $ENV{"WORKER_LOGGING_ENABLED"}) {
+	if (defined $ENV{"WORKER_LOGGING_ENABLED"} || ($LOGDIR ne "NOLOGGING") ) {
+		$LOG = logfilename($LOGDIR, $BLOCKID);
 		open(LOG, ">>$LOG") or die "Failed to open log file: $!";
 		my $b = select(LOG);
 		$| = 1;
 		select($b);
 		my $date = localtime;
 		wlog INFO, "$BLOCKID Logging started: $date\n";
+		my $level = `cat $LOGDIR/loglevel 2>/dev/null`;
+		chomp($level);
+		$level =~ s/^\s+//;
+		$level =~ s/\s+$//;
+		if($level ne "") {
+			$LOGLEVEL = $level + 0; # ensure numeric
+			wlog INFO, "Logging level set by loglevel file to $LOGLEVEL\n";
+		}
+		else {
+			wlog INFO, "No loglevel file present in LOGDIR $LOGDIR - Logging level set to $LOGLEVEL\n";
+		}
 	}
 	else {
 		$LOGLEVEL = 999;
 	}
 }
-
 
 sub init() {
         logsetup();
