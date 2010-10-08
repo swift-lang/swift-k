@@ -79,7 +79,15 @@ public class BlockTask extends TaskImpl {
         js.addArgument(block.getAllocationProcessor().getScript().getAbsolutePath());
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
-        js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
+
+        if (block.getWorkerCount() <= 16 ||
+            "force".equals(System.getProperty("coaster.worker.logging"))) {
+	    js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
+        }
+	else {
+	    js.addArgument("NOLOGGING");
+	}
+
         logger.debug("arguments: " + js.getArguments());
 
         js.setStdOutputLocation(FileLocation.MEMORY);
