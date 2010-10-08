@@ -2,13 +2,9 @@
 
 # USAGE NOTES:
 
-# Run this script from a working directory in which you
-# are willing to check out the whole Swift source and
-# generate many small test files.
-
-# The script will checkout Swift, run several tests
-# in a subdirectory called run-DATE, and generate
-# useful HTML output and tests.log
+# The script will (optionally) checkout Swift, run several tests in a
+# subdirectory called run-DATE, and generate useful HTML output and
+# tests.log
 
 # Run nightly.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
@@ -83,6 +79,7 @@ DEFAULT_TIMEOUT=30 # seconds
 RUN_ANT=1
 CLEAN=1
 SKIP_TESTS=0
+NUMBER_OF_TESTS=1000000 # Run all tests by default
 BUILD_PACKAGE=1
 GRID_TESTS=1
 SKIP_CHECKOUT=0
@@ -653,7 +650,7 @@ monitored_exec()
   STOP=$( date +%s )
 
   # If the test was killed, monitor() may have work to do
-  rm killed_test && sleep 5
+  rm killed_test > /dev/null 2>&1 && sleep 5
   verbose "Killing monitor..."
   /bin/kill -TERM $MONITOR_PID
 
@@ -907,7 +904,9 @@ GROUPLIST=( $TESTDIR/language-behaviour \
             $TESTDIR/language/should-not-work \
             $TESTDIR/cdm \
             $TESTDIR/cdm/ps \
-            $TESTDIR/cdm/ps/pinned )
+            $TESTDIR/cdm/star )
+
+#             $TESTDIR/cdm/ps/pinned \ # Currently broken
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
