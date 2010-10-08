@@ -68,7 +68,7 @@ public class TransformationCatalogEntry
     /**
      * The profiles associated with the transformation;
      */
-    private List profiles;
+    private List<Profile> profiles;
 
     /**
      * The System Info for the transformation.
@@ -121,7 +121,7 @@ public class TransformationCatalogEntry
     public TransformationCatalogEntry( String namespace, String name,
         String version,
         String resourceid, String physicalname, TCType type,
-        List profiles,
+        List<Profile> profiles,
         SysInfo sysinfo ) {
         this.namespace = namespace;
         this.version = version;
@@ -162,13 +162,10 @@ public class TransformationCatalogEntry
             "\n SysInfo           : " + ((this.sysinfo == null) ? "" : this.sysinfo.toString()) +
             "\n TYPE              : " + ((this.type == null) ? "" : type.toString());
         if(profiles != null){
-            for (Iterator i = profiles.listIterator(); i.hasNext(); ) {
-                st = st +
-                    "\n Profile           : " + ( (Profile) i.next()).toString();
-            }
+            for (Profile p : profiles)
+                st = st + "\n Profile           : " + p.toString();
         }
         return st;
-
     }
 
     /**
@@ -201,10 +198,8 @@ public class TransformationCatalogEntry
             + " sysinfo=\"" + this.getSysInfo() + "\"";
         if ( this.profiles != null ) {
             xml += " >\n";
-            for ( Iterator iter = this.profiles.iterator(); iter.hasNext(); ) {
-                Profile profile = ( Profile ) iter.next();
-                xml += "\t\t\t" + profile.toXML() + "\n";
-            }
+            for (Profile p : profiles)
+                xml += "\t\t\t" + p.toXML() + "\n";
             xml += "\t\t</pfn>\n";
         } else {
             xml += " />\n";
@@ -301,7 +296,7 @@ public class TransformationCatalogEntry
     public void setProfile( Profile profile ) {
         if ( profile != null ) {
             if ( this.profiles == null ) {
-                this.profiles = new ArrayList( 5 );
+                this.profiles = new ArrayList<Profile>( 5 );
             }
             this.profiles.add( profile );
         }
@@ -311,10 +306,11 @@ public class TransformationCatalogEntry
      * Allows you to add multiple profiles to the transformation.
      * @param profiles List of Profile objects containing the profile information.
      */
-    public void setProfiles( List profiles ) {
+    public void setProfiles( List<Profile> profiles ) {
         if ( profiles != null ) {
             if ( this.profiles == null ) {
-                this.profiles = new ArrayList( profiles.size() );
+                this.profiles = 
+                    new ArrayList<Profile>( profiles.size() );
             }
             this.profiles.addAll( profiles );
         }
@@ -388,7 +384,7 @@ public class TransformationCatalogEntry
      * Returns the list of profiles associated with the transformation.
      * @return List Returns null if no profiles associated.
      */
-    public List getProfiles() {
+    public List<Profile> getProfiles() {
         return this.profiles;
     }
 
@@ -397,14 +393,13 @@ public class TransformationCatalogEntry
      * @param namespace String The namespace of the profile
      * @return List   List of Profile objects. returns null if none are found.
      */
-    public List getProfiles( String namespace ) {
-        List results = null;
+    public List<Profile> getProfiles( String namespace ) {
+        List<Profile> results = null;
         if ( profiles != null ) {
-            for ( Iterator i = profiles.iterator(); i.hasNext(); ) {
-                Profile p = ( Profile ) i.next();
+            for ( Profile p : profiles ) {
                 if ( p.getProfileNamespace().equalsIgnoreCase( namespace ) ) {
                     if ( results == null ) {
-                        results = new ArrayList();
+                        results = new ArrayList<Profile>();
                     }
                     results.add( p );
                 }

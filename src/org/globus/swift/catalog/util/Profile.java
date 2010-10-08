@@ -122,8 +122,8 @@ public class Profile
      * Returns the Profile (namespace, value and key);
      * @return ArrayList
      */
-    public List getProfile() {
-        ArrayList m_profile = new ArrayList( 3 );
+    public List<String> getProfile() {
+        List<String> m_profile = new ArrayList<String>( 3 );
         m_profile.add( mNamespace );
         m_profile.add( mKey );
         m_profile.add( mValue );
