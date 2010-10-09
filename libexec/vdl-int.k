@@ -401,6 +401,7 @@ namespace("vdl"
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
+			
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr, stagein=stagein)
 
 				ddir := initDDir()
@@ -429,7 +430,7 @@ namespace("vdl"
 				if(wrapperMode == "files"
 					sequential(
 						sys:file:write(wrapfile,
-							"-scratch", try(vdl:siteprofile(rhost, "scratch"), "")
+							"-scratch", try(vdl:siteprofile(rhost, "scratch"), ""), nl(),
 							"-e ",vdl:executable(tr, rhost), nl(),
 							"-out ",stdout,nl(),
 							"-err ",stderr,nl(),
