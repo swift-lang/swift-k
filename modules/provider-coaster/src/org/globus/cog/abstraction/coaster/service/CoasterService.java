@@ -83,14 +83,23 @@ public class CoasterService extends GSSService {
         initializeLocalService();
     }
     
-    protected void initializeLocalService() throws IOException {
+    private RequestManager newLocalRequestManager() {
         RequestManager rm = new ServiceRequestManager();
         rm.addHandler("REGISTER", RegistrationHandler.class);
         rm.addHandler("JOBSTATUS", JobStatusHandler.class);
         rm.addHandler("GET", GetFileHandler.class);
         rm.addHandler("PUT", PutFileHandler.class);
-        localService = new LocalTCPService(rm);
+        return rm;
     }
+    
+    protected void initializeLocalService() throws IOException {
+        localService = new LocalTCPService(newLocalRequestManager());
+    }
+    
+    protected void initializeLocalService(int port) throws IOException {
+        localService = new LocalTCPService(newLocalRequestManager(), port);
+    }
+
 
     @Override
     protected void handleConnection(Socket sock) {
