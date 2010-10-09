@@ -37,7 +37,7 @@ public class Settings {
                     "maxNodes", "lowOverallocation", "highOverallocation",
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
                     "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
-                    "internalHostname", "hookClass", "workerManager" };
+                    "internalHostname", "hookClass", "workerManager", "workerLoggingLevel" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -117,6 +117,8 @@ public class Settings {
     private Hook hook;
     
     private String workerManager = "block";
+    
+    private String workerLoggingLevel = "NONE";
     
     public Settings() {
         hook = new Hook();
@@ -229,6 +231,29 @@ public class Settings {
 
     public String getInternalHostname() {
         return getCallbackURI().getHost();
+    }
+
+    public String getWorkerLoggingLevel() {
+        return workerLoggingLevel;
+    }
+
+    /**
+     * The following values are considered valid:
+     * <dl>
+     * <dt>"NONE"</dt><dd>disables worker logging completely (no files are created)</dd>
+     * <dt>"ERROR"</dt><dd>only log errors</dd>
+     * <dt>"WARN"</dt><dd>log errors and warnings</dd>
+     * <dt>"INFO"</dt><dd>log errors, warnings, and info messages (this should still produce minimal output)</dd>
+     * <dt>"DEBUG"</dt><dd>log errors, warnings, info messages and debugging messages. This typically results in
+     * lots of output</dd>
+     * <dt>"TRACE"</dt><dd>In addition to what "DEBUG" logs, also log detailed information such as network communication</dd>
+     * </dl>
+     */
+    public void setWorkerLoggingLevel(String workerLoggingLevel) {
+        if (workerLoggingLevel != null) {
+            workerLoggingLevel = workerLoggingLevel.toUpperCase();
+        }
+        this.workerLoggingLevel = workerLoggingLevel;
     }
 
     public void setInternalHostname(String internalHostname) {

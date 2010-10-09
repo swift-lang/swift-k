@@ -46,6 +46,7 @@ use constant {
 	INFO => 2,
 	WARN => 3,
 	ERROR => 4,
+	NONE => 999,
 };
 
 use constant {
@@ -53,9 +54,17 @@ use constant {
 	YIELD => 1,
 };
 
-my $LOGLEVEL = INFO;
+my $LOGLEVEL = NONE;
 
 my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR");
+my %LEVELMAP = (
+	"TRACE" => TRACE,
+	"DEBUG" => DEBUG,
+	"INFO" => INFO,
+	"WARN" => WARN,
+	"ERROR" => ERROR,
+	"NONE" => NONE,
+);
 
 use constant {
 	REPLY_FLAG => 0x00000001,
@@ -84,6 +93,7 @@ my $JOBS_RUNNING = 0;
 my $JOB_COUNT = 0;
 
 use constant BUFSZ => 2048;
+use constant IOBUFSZ => 32768;
 
 # 60 seconds by default. Note that since there is no configuration handshake
 # this would have to match the default interval in the service in order to avoid
@@ -121,7 +131,7 @@ my %REQUESTS = ();
 # REPLIES stores the state of (outgoing) commands for which replies are expected
 my %REPLIES  = ();
 
-my $LOG;
+my $LOG = logfilename($LOGDIR, $BLOCKID);
 
 my %HANDLERS = (
 	"SHUTDOWN"  => \&shutdownw,
@@ -266,28 +276,20 @@ sub reconnect() {
 }
 
 sub initlog() {
-	if (defined $ENV{"WORKER_LOGGING_ENABLED"} || ($LOGDIR ne "NOLOGGING") ) {
-		$LOG = logfilename($LOGDIR, $BLOCKID);
+	my $slevel = $ENV{"WORKER_LOGGING_LEVEL"};
+	if (defined $slevel) {
+		if (!defined $LEVELMAP{$slevel}) {
+			die "Invalid worker logging level requested: $slevel";
+		}
+		$LOGLEVEL = $LEVELMAP{$slevel};
+	}
+	if ($LOGLEVEL != NONE) {
 		open(LOG, ">>$LOG") or die "Failed to open log file: $!";
 		my $b = select(LOG);
 		$| = 1;
 		select($b);
 		my $date = localtime;
 		wlog INFO, "$BLOCKID Logging started: $date\n";
-		my $level = `cat $LOGDIR/loglevel 2>/dev/null`;
-		chomp($level);
-		$level =~ s/^\s+//;
-		$level =~ s/\s+$//;
-		if($level ne "") {
-			$LOGLEVEL = $level + 0; # ensure numeric
-			wlog INFO, "Logging level set by loglevel file to $LOGLEVEL\n";
-		}
-		else {
-			wlog INFO, "No loglevel file present in LOGDIR $LOGDIR - Logging level set to $LOGLEVEL\n";
-		}
-	}
-	else {
-		$LOGLEVEL = 999;
 	}
 }
 
@@ -399,7 +401,7 @@ sub nextFileData {
 	else {
 		my $handle = $$state{"handle"};
 		my $buffer;
-		my $sz = read($handle, $buffer, 8192);
+		my $sz = read($handle, $buffer, IOBUFSZ);
 		if (!defined $sz) {
 			wlog INFO, "Failed to read data from file: $!\n";
 			return (FINAL_FLAG + ERROR_FLAG, "$!", CONTINUE);
