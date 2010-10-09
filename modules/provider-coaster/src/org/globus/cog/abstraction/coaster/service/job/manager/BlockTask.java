@@ -57,10 +57,9 @@ public class BlockTask extends TaskImpl {
         if (settings.getAlcfbgpnat()) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
-        if (block.getWorkerCount() <= 16 ||
-            "force".equals(System.getProperty("coaster.worker.logging"))) {
-            spec.addEnvironmentVariable("WORKER_LOGGING_ENABLED", "true");
-            logger.info("Worker logging enabled");
+        spec.addEnvironmentVariable("WORKER_LOGGING_LEVEL", settings.getWorkerLoggingLevel());
+        if (logger.isInfoEnabled()) {
+            logger.info("Worker logging level: " + settings.getWorkerLoggingLevel());
         }
         setRequiredService(1);
         setService(0, buildService());
