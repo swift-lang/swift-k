@@ -64,6 +64,7 @@ my %LEVELMAP = (
 	"WARN" => WARN,
 	"ERROR" => ERROR,
 	"NONE" => NONE,
+	"OFF" => NONE,
 );
 
 use constant {
