@@ -37,6 +37,11 @@ public class LocalTCPService extends GSSService implements Registering {
         setRequestManager(rm);
     }
 
+    public LocalTCPService(RequestManager rm, int port) throws IOException {
+        super(false, port);
+        setRequestManager(rm);
+    }
+
     public String registrationReceived(String blockid, String url, KarajanChannel channel) throws ChannelException {
         if (logger.isInfoEnabled()) {
             logger.info("Received registration: blockid = " + blockid + ", url = " + url);
