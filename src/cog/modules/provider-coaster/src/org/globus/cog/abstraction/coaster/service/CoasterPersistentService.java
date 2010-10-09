@@ -44,6 +44,8 @@ public class CoasterPersistentService extends CoasterService {
         ap.setExecutableName("coaster-service");
         ap.addOption("port", "Specifies which port to start the service on", "port",
             ArgumentParser.OPTIONAL);
+        ap.addOption("localport", "Specifies which port to start the local service on",
+            "localport", ArgumentParser.OPTIONAL);
         ap.addAlias("port", "p");
         ap.addFlag("nosec", "Disables GSI security and uses plain TCP sockets instead");
         ap.addOption("proxy",
@@ -83,6 +85,11 @@ public class CoasterPersistentService extends CoasterService {
             if (ap.hasValue("port")) {
                 port = ap.getIntValue("port");
             }
+            int localport = 0;
+            if (ap.hasValue("localport")) {
+                localport = ap.getIntValue("localport");
+            }
+
 
             CoasterPersistentService s;
             if (!secure) {
@@ -92,7 +99,12 @@ public class CoasterPersistentService extends CoasterService {
                 s = new CoasterPersistentService(cred, port, bindTo);
             }
             s.setAuthorization(new SelfAuthorization());
-            s.initializeLocalService();
+            if (localport > 0) {
+              s.initializeLocalService(localport);
+            }
+            else {
+              s.initializeLocalService();
+            }
             s.setIgnoreIdleTime(true);
             s.start();
             System.out.println("Started coaster service: " + s);
