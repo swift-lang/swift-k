@@ -430,7 +430,7 @@ namespace("vdl"
 				if(wrapperMode == "files"
 					sequential(
 						sys:file:write(wrapfile,
-							"-scratch", try(vdl:siteprofile(rhost, "scratch"), ""), nl(),
+							"-scratch ", try(vdl:siteprofile(rhost, "scratch"), ""), nl(),
 							"-e ",vdl:executable(tr, rhost), nl(),
 							"-out ",stdout,nl(),
 							"-err ",stderr,nl(),
