@@ -138,8 +138,9 @@ namespace("vdl"
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "START dir={dir} host={host}")
 			cdmfile := cdm:file()
-			log(LOG:INFO, "cdmfile {cdmfile}")
-			if(cdmfile != "" then(
+			log(LOG:DEBUG, "cdmfile {cdmfile}")
+			if(cdmfile != "" &
+                           cdm:get("GATHER_DIR") != "UNSET" then(
 				log(LOG:INFO, "submitting cdm_cleanup.sh to {dir}")
 				task:transfer(srcfile="cdm_cleanup.sh",
 					      srcdir="{swift.home}/libexec",
