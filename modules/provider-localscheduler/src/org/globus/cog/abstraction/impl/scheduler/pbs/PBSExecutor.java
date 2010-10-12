@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.impl.scheduler.pbs;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -91,6 +92,7 @@ public class PBSExecutor extends AbstractExecutor {
 			wr.write(quote(spec.getEnvironmentVariable(name)));
 			wr.write('\n');
 		}
+		wr.write("#PBS -v " + makeList(spec.getEnvironmentVariableNames()) + '\n');
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
@@ -149,7 +151,19 @@ public class PBSExecutor extends AbstractExecutor {
 		wr.close();
 	}
 	
-	protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
+	private String makeList(Collection<String> names) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<String> i = names.iterator();
+        while (i.hasNext()) {
+        	sb.append(i.next());
+        	if (i.hasNext()) {
+        		sb.append(", ");
+        	}
+        }
+        return sb.toString();
+    }
+
+    protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
             throws IOException {
         wr.write("NODES=`cat $PBS_NODEFILE`\n");
         wr.write("ECF=" + exitcodefile + "\n");
