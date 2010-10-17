@@ -128,6 +128,16 @@ contains() {
 	return 1
 }
 
+genScripts() {
+	echo "#!/bin/bash" > run.sh
+	echo -n "\"$EXEC\" " >> run.sh
+	for CMDARG in "${CMDARGS[@]}"; do
+    	echo -n "\"$CMDARG\" " >> run.sh
+	done
+	echo "1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
+	chmod +x run.sh	
+}
+
 cdm_local_output()
 {
  	L=$1
@@ -273,7 +283,7 @@ elif [ "$PARAMFILE" != "" ] ; then
 			CMDARGS=("$line")
 			FIRST=0
 		else
-			CMDARGS=("${CMDARGS[*]}" "$line")
+			CMDARGS=("${CMDARGS[@]}" "$line")
 		fi
 	done < <(grep -E "^-a " $PARAMFILE | cut -d " " -f 2-)
 else
@@ -403,16 +413,12 @@ fi
 if [ "$KICKSTART" == "" ]; then
 	if [ "$STDIN" == "" ]; then
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
-			echo "#!/bin/bash" > run.sh
-			echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
-			chmod +x run.sh
+			genScripts
 		fi
 		"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
 	else
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
-			echo "#!/bin/bash" > run.sh
-			echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\" <\"$STDIN\"" >> run.sh
-			chmod +x run.sh
+			genScripts
 		fi
 		"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 	fi
