@@ -33,22 +33,24 @@ public class SetFieldValue extends VDLFunction {
 			
 			log(leaf, value);
 			    
-			synchronized (var.getRoot()) {
             // TODO want to do a type check here, for runtime type checking
             // and pull out the appropriate internal value from value if it
             // is a DSHandle. There is no need (I think? maybe numerical casting?)
             // for type conversion here; but would be useful to have
             // type checking.
-				synchronized (value.getRoot()) {
-					if (!value.isClosed()) {
-						throw new FutureNotYetAvailable(addFutureListener(stack, value));
-					}
-					deepCopy(leaf, value, stack);
+			synchronized (value.getRoot()) {
+				if (!value.isClosed()) {
+					throw new FutureNotYetAvailable(addFutureListener(stack, value));
 				}
+			}
+			synchronized (var.getRoot()) {
+				deepCopy(leaf, value, stack);
+				
 				if (var.getParent() != null && var.getParent().getType().isArray()) {
 				    markAsAvailable(stack, leaf.getParent(), leaf.getPathFromRoot().getLast());
 				}
 			}
+			
 			return null;
 		}
 		catch (FutureNotYetAvailable fnya) {
