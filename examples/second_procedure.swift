@@ -1,15 +1,11 @@
-type messagefile {} 
+type messagefile;
 
-(messagefile t) greeting (string s) {   
-    app {
-        echo s stdout=@filename(t);
-    }
+app (messagefile t) greeting (string s) {   
+    echo s stdout=@filename(t);
 }
 
-(messagefile o) capitalise(messagefile i) {   
-    app {
-        tr "[a-z]" "[A-Z]" stdin=@filename(i) stdout=@filename(o);
-    }
+app (messagefile o) capitalise(messagefile i) {   
+    tr "[a-z]" "[A-Z]" stdin=@filename(i) stdout=@filename(o);
 }
 
 messagefile hellofile <"hello.txt">;

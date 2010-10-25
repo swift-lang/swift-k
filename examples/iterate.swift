@@ -1,15 +1,11 @@
 type counterfile;  
   
-(counterfile t) echo(string m) {   
-  app {  
+app (counterfile t) echo(string m) {   
     echo m stdout=@filename(t);  
-  }  
 }  
   
-(counterfile t) countstep(counterfile i) {  
-  app {  
+app (counterfile t) countstep(counterfile i) {  
     wcl @filename(i) @filename(t);  
-  }  
 }  
   
 counterfile a[]  <simple_mapper;prefix="foldout">;  

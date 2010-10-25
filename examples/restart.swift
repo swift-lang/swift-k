@@ -1,27 +1,19 @@
 type file;  
   
-(file f) touch() {  
-  app {  
+app (file f) touch() {  
     touch @f;  
-  }  
 }  
   
-(file f) processL(file inp) {  
-  app {  
+app (file f) processL(file inp) {  
     echo "processL" stdout=@f;  
-  }  
 }  
   
-(file f) processR(file inp) {  
-  app {  
+app (file f) processR(file inp) {  
     broken "process" stdout=@f;  
-  }  
 }  
   
-(file f) join(file left, file right) {  
-  app {   
+app (file f) join(file left, file right) {  
     echo "join" @left @right stdout=@f;  
-  }   
 }  
   
 file f = touch();  
