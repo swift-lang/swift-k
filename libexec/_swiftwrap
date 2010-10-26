@@ -2,6 +2,9 @@
 # this script must be invoked inside of bash, not plain sh
 # note that this script modifies $IFS
 
+# Toggle debugging output from debug()
+DEBUG=1
+
 infosection() {
         echo >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
@@ -12,6 +15,8 @@ infosection() {
 }
 
 info() {
+	infosection "command line"
+	echo $COMMANDLINE 2>&1 >& "$INFO"
 	infosection "uname -a"
 	uname -a 2>&1 >& "$INFO"
 	infosection "id"
@@ -28,8 +33,6 @@ info() {
 		infosection "/proc/meminfo"
 		cat /proc/meminfo 2>&1 >& "$INFO"
 	fi
-	infosection "command line"
-	echo $COMMANDLINE 2>&1 >& "$INFO"
 	if [ -f "$STDOUT" ] ; then
 		infosection "stdout"
 		cat $STDOUT >& "$INFO"
@@ -46,6 +49,10 @@ logstate() {
 
 log() {
 	echo "$@" >& "$INFO"
+}
+
+debug() {
+	[ $DEBUG == 1 ] && echo "$@" >& "$INFO"
 }
 
 fail() {
@@ -135,7 +142,7 @@ genScripts() {
     	echo -n "\"$CMDARG\" " >> run.sh
 	done
 	echo "1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
-	chmod +x run.sh	
+	chmod +x run.sh
 }
 
 cdm_local_output()
@@ -222,8 +229,13 @@ checkEmpty "$JOBDIR" "Missing job directory prefix"
 mkdir -p $INFODIR
 closeinfo
 
-rm -f "$INFODIR/${ID}-info"
-openinfo "$INFODIR/${ID}-info"
+if [ -z $MPI_RANK ]; then
+	INFOFILE="$INFODIR/${ID}-info"
+else
+	INFOFILE="$INFODIR/${ID}-${MPI_RANK}-info"
+fi
+rm -f $INFOFILE
+openinfo "$INFOFILE"
 
 logstate "LOG_START"
 infosection "Wrapper"
@@ -328,6 +340,7 @@ if [ "X${EXEC:0:1}" != "X/" ] ; then
 	fi
 fi
 
+debug "PID=$$"
 log "PWD=$PWD"
 log "DIR=$DIR"
 log "EXEC=$EXEC"
@@ -348,6 +361,8 @@ logstate "CREATE_JOBDIR"
 mkdir -p $DIR
 checkError 254 "Failed to create job directory $DIR"
 log "Created job directory: $DIR"
+
+if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
 
 logstate "CREATE_INPUTDIR"
 for D in $DIRS ; do
@@ -400,9 +415,16 @@ if [ ! -z $CDM_FILE ]; then
 	done
 fi
 
-logstate "EXECUTE"
-cd $DIR
+fi # MPI_RANK==0
 
+debug "Moving to jobdir: $DIR"
+cd $DIR
+if [ $? != 0 ]; then
+	log "PWD: $PWD"
+	log $( find . )
+	fail 254 "Could not cd to: $DIR"
+fi
+logstate "EXECUTE"
 
 if [ ! -f "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not exist"
@@ -447,11 +469,16 @@ else
 	fi
 fi
 
-cd $WFDIR
-
 log "Moving back to workflow directory $WFDIR"
+cd $WFDIR
+if [ $? != 0 ]; then
+	fail 254 "Could not cd to workflow directory: $WFDIR"
+fi
+
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
+
+if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
 
 MISSING=
 for O in $OUTF ; do
@@ -464,6 +491,7 @@ for O in $OUTF ; do
 	fi
 done
 if [ "$MISSING" != "" ]; then
+	log $( find . )
 	fail 254 "The following output files were not created by the application: $MISSING"
 fi
 
@@ -487,12 +515,17 @@ if [ "$STATUSMODE" = "files" ]; then
 	touch $WFDIR/status/${JOBDIR}/${ID}-success
 fi
 
+else
+	# Allow rank 0 to write output
+	sleep 1
+fi # MPI_RANK==0
+
 logstate "END"
 
 closeinfo
 
 if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
-        mkdir -p "$WFDIR/info/$JOBDIR"
+	mkdir -p "$WFDIR/info/$JOBDIR"
 	mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
 fi
 
