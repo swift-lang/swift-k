@@ -20,7 +20,7 @@
 # and a *.timeout specifier
 # The scripts may setup and inspect files in RUNDIR including exec.out,
 # which must be accessed in stdout.txt, because the currently running
-# tested process writes to exec.out, stdout.txt is a copy
+# tested process writes to exec.out, stdout.txt is a copy.
 # The GROUP scripts can read the GROUP variable
 # The timeout number in the *.timeout file overrides the default
 # timeout
@@ -151,7 +151,7 @@ HTML=$TOPDIR/$HTMLPATH
 BRANCH=trunk
 #BRANCH="branches/tests-01"
 
-SCRIPTDIR=$( dirname $0 )
+SCRIPTDIR=$( cd $( dirname $0 ) ; /bin/pwd )
 
 SWIFTCOUNT=0
 
