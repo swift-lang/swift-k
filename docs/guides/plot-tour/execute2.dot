@@ -1,0 +1,14 @@
+digraph EXECUTE2 {
+THREAD_ASSOCIATION -> JOB_START -> STAGING_OUT -> JOB_END;
+JOB_START -> JOB_CANCELLED;
+STAGING_OUT -> JOB_CANCELLED;
+JOB_START -> APPLICATION_EXCEPTION;
+STAGING_OUT -> APPLICATION_EXCEPTION;
+
+THREAD_ASSOCIATION [shape=box,style=filled,color=green];
+JOB_START [shape=box,style=filled,color=green];
+STAGING_OUT [shape=box,style=filled,color=green];
+JOB_END [shape=box,style=filled,color=green];
+JOB_CANCELLED [shape=box,style=filled,color=red];
+APPLICATION_EXCEPTION [shape=box,style=filled,color=red];
+}

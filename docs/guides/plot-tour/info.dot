@@ -1,0 +1,16 @@
+digraph INFO {
+
+LOG_START -> CREATE_JOBDIR -> CREATE_INPUTDIR -> LINK_INPUTS -> EXECUTE -> EXECUTE_DONE -> COPYING_OUTPUTS -> RM_JOBDIR -> TOUCH_SUCCESS -> END;
+
+LOG_START [shape=box,style=filled,color=green];
+CREATE_JOBDIR [shape=box,style=filled,color=green];
+CREATE_INPUTDIR [shape=box,style=filled,color=green];
+LINK_INPUTS [shape=box,style=filled,color=green];
+EXECUTE [shape=box,style=filled,color=green];
+EXECUTE_DONE [shape=box,style=filled,color=green];
+COPYING_OUTPUTS [shape=box,style=filled,color=green];
+RM_JOBDIR [shape=box,style=filled,color=green];
+TOUCH_SUCCESS [shape=box,style=filled,color=green];
+END [shape=box,style=filled,color=green];
+
+}

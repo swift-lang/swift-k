@@ -1,0 +1,14 @@
+digraph EXECUTE {
+execute -> execute2;
+execute2 -> stagein -> karajan_FILE_TRANSFER;
+stagein -> karajan_FILE_OPERATION;
+execute2 -> karajan_JOB_SUBMISSION;
+execute2 -> stageout -> karajan_FILE_TRANSFER;
+stageout -> karajan_FILE_OPERATION;
+karajan_JOB_SUBMISSION -> info;
+subgraph cluster_KARAJAN {
+karajan_FILE_TRANSFER;
+karajan_FILE_OPERATION;
+karajan_JOB_SUBMISSION;
+}
+}

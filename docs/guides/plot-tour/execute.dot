@@ -1,0 +1,7 @@
+digraph EXECUTE {
+START -> END_SUCCESS;
+START -> END_FAILURE;
+START [shape=box,style=filled,color=green];
+END_SUCCESS [shape=box,style=filled,color=green];
+END_FAILURE [shape=box,style=filled,color=red];
+}
