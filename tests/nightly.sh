@@ -8,8 +8,8 @@
 
 # Run nightly.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
-# Code is checked out into TOPDIR
-# Swift is installed in its source tree
+# Code is checked out into TOPDIR (PWD by default) (PATH is not used)
+# Swift is compiled and installed in its source tree
 # The run is executed in RUNDIR (TOPDIR/RUNDIRBASE)
 # The build test is started in TOPDIR
 # Everything for a Swift test is written in its RUNDIR
