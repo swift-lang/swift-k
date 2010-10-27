@@ -760,8 +760,15 @@ build_package() {
   out package "swift-$DATE.tar.gz"
 }
 
-GLOBUS_HOSTNAME=$( ifconfig | grep inet | head -1 | cut -d ':' -f 2 | \
+if which ifconfig > /dev/null; then
+  IFCONFIG=ifconfig
+else
+  IFCONFIG=/sbin/ifconfig
+fi
+$IFCONFIG > /dev/null || crash "Cannot run ifconfig!"
+GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
                    awk '{print $1}' )
+[ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
 group_sites_xml() {
   TEMPLATE=$GROUP/sites.template.xml
   if [ -f $TEMPLATE ]; then
