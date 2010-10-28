@@ -381,7 +381,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			if (hash == null) {
 				hash = new WrapperMap();
 				stack.firstFrame().setVar(VDL_FUTURE_WRAPPER_MAP, hash);
-				InHook.install(new Monitor(hash));
+				//InHook.install(new Monitor(hash));
 			}
 			return hash;
 		}
@@ -485,7 +485,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 
 	protected static void closeShallow(VariableStack stack, DSHandle handle) throws ExecutionException {
-		synchronized(handle.getRoot()) {
+		synchronized (handle.getRoot()) {
 			handle.closeShallow();
 			getFutureWrapperMap(stack).close(handle);
 		}
