@@ -37,7 +37,7 @@ public class Settings {
                     "maxNodes", "lowOverallocation", "highOverallocation",
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
                     "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
-                    "internalHostname", "hookClass", "workerManager", "workerLoggingLevel" };
+                    "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -119,6 +119,11 @@ public class Settings {
     private String workerManager = "block";
     
     private String workerLoggingLevel = "NONE";
+    
+    /**
+     * A pass-through setting in case there is a need to mess with PBS' ppn setting
+     */
+    private String ppn;
     
     public Settings() {
         hook = new Hook();
@@ -420,6 +425,14 @@ public class Settings {
 
     public void setAlcfbgpnat(boolean alcfbgpnat) {
         this.alcfbgpnat = alcfbgpnat;
+    }
+    
+    public String getPpn() {
+        return ppn;
+    }
+
+    public void setPpn(String ppn) {
+        this.ppn = ppn;
     }
 
     public String getHookClass() {
