@@ -4,12 +4,12 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -267,36 +267,48 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         return sumend - sumstart;
     }
 
+    /**
+     * Suspends blocks while the total size left in the blocks is 
+     * larger than the amount of size needed.
+     * 
+     * Blocks with the least amount of size left are suspended first.
+     * 
+     * Blocks are only suspended if both the above size condition is true
+     * and they have not see any work withing a certain time interval. This
+     * is done to dampen the effects of transients in the submission
+     * pattern.
+     * 
+     * Once a block is suspended, it will finish its current tasks and then
+     * shut down.
+     * 
+     */
     protected void removeIdleBlocks() {
-        LinkedList<Block> sorted = new LinkedList<Block>();
-        LinkedList<Double> szleft = new LinkedList<Double>();
+        ArrayList<Block> sorted;
+        
         synchronized (blocks) {
-            for (Block b : blocks.values()) {
-                if (!b.isRunning() || b.isSuspended()) {
-                    continue;
-                }
-                Double szl = new Double(b.sizeLeft());
-                int ix = 0;
-                ListIterator<Double> is = szleft.listIterator();
-                ListIterator<Block> ib = sorted.listIterator();
-                while (is.hasNext()) {
-                    Double v = is.next();
-                    ib.next();
-                    if (szl.doubleValue() > v.doubleValue()) {
-                        break;
+            sorted = new ArrayList<Block>(blocks.values());
+            Collections.sort(sorted, new Comparator<Block>() {
+                public int compare(Block b1, Block b2) {
+                    double s1 = b1.sizeLeft();
+                    double s2 = b2.sizeLeft();
+                    if (s1 < s2) {
+                        return -1;
+                    }
+                    else {
+                        return 1;
                     }
                 }
-                is.add(szl);
-                ib.add(b);
-            }
+            });
         }
 
         double needed = queued.getJSize();
 
         double sum = 0;
         for (Block b : sorted) {
-            if (sum > needed
+            if (sum >= needed
+                    && !b.isSuspended()
                     && (System.currentTimeMillis() - b.getLastUsed()) > Block.SUSPEND_SHUTDOWN_DELAY) {
+                System.err.println("Suspending block " + b);
                 b.suspend();
             }
             sum += b.sizeLeft();
