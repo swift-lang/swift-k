@@ -308,7 +308,6 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             if (sum >= needed
                     && !b.isSuspended()
                     && (System.currentTimeMillis() - b.getLastUsed()) > Block.SUSPEND_SHUTDOWN_DELAY) {
-                System.err.println("Suspending block " + b);
                 b.suspend();
             }
             sum += b.sizeLeft();
