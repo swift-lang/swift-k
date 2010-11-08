@@ -42,6 +42,8 @@ public class CoasterService extends GSSService {
             .getLogger(CoasterService.class);
 
     public static final int IDLE_TIMEOUT = 120 * 1000;
+    
+    public static final int CONNECT_TIMEOUT = 2 * 60 * 1000;
 
     public static final RequestManager COASTER_REQUEST_MANAGER = new CoasterRequestManager();
 
@@ -254,9 +256,9 @@ public class CoasterService extends GSSService {
     public void shutdown() {
         try {
             startShutdownWatchdog();
+            unregister();
             super.shutdown();
             jobQueue.shutdown();
-            unregister();
         }
         finally {
             done = true;
@@ -319,7 +321,7 @@ public class CoasterService extends GSSService {
                 error(4, "Failed to connect after 2 minutes. Shutting down", null);
             }
         };
-        // watchdogs.schedule(tt, 2 * 60 * 1000);
+        watchdogs.schedule(tt, CONNECT_TIMEOUT);
         return tt;
     }
 
