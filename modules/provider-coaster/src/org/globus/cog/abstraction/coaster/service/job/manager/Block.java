@@ -453,6 +453,8 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public void suspend() {
         suspended = true;
+        // ensure we still shut down if no jobs are running
+        cpuIsClear(null);
     }
 
     public boolean isSuspended() {
