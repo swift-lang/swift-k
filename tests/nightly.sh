@@ -155,6 +155,7 @@ SCRIPTDIR=$( cd $( dirname $0 ) ; /bin/pwd )
 
 SWIFTCOUNT=0
 
+echo "RUNNING_IN:  $RUNDIR"
 echo "HTML_OUTPUT: $HTML"
 
 cd $TOPDIR
@@ -911,9 +912,9 @@ GROUPLIST=( $TESTDIR/language-behaviour \
             $TESTDIR/language/should-not-work \
             $TESTDIR/cdm \
             $TESTDIR/cdm/ps \
-            $TESTDIR/cdm/star )
-
-#             $TESTDIR/cdm/ps/pinned \ # Currently broken
+            $TESTDIR/cdm/star
+            $TESTDIR/cdm/ps/pinned
+          )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
