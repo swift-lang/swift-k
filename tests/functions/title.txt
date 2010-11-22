@@ -1,1 +1,1 @@
-Swift functions
+Swift Functions

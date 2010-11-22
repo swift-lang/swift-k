@@ -1,1 +1,1 @@
-CDM tests w/ "star"
+CDM Tests w/ "star"
