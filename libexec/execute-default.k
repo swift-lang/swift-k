@@ -47,6 +47,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 							else (
 								to(errors, exception)
 								log(LOG:INFO, exception)
+								echo(exception)
 								mark(restartout, err=true, mapping=false)
 								graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
 							)
