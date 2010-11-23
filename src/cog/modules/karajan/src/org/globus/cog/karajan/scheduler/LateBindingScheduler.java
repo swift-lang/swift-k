@@ -271,8 +271,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					submitUnbound(t);
 				}
 				catch (NoSuchResourceException e) {
-					failTask(t, "Could not find any valid host for task \"" + t
-							+ "\" with constraints " + getTaskConstraints(t), e);
+				    failTask(t, "The application \"" + getTaskConstraints(t).getConstraint("tr")
+							+ "\" is not available in your tc.data catalog ", e);
 				}
 				catch (NoFreeResourceException e) {
 					remove = false;
