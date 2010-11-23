@@ -555,6 +555,7 @@ namespace("vdl"
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
+						echo(exception)
 						if(matches(exception,".*executable bit.*")
      					           generateError(exception)
 						)
