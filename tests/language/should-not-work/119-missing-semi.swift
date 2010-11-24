@@ -1,10 +1,13 @@
+
+// THIS-SCRIPT-SHOULD-FAIL
+
 type file {};
-type student {  
-  file name;  
-  file age;  
-  file gpa;  
-}  
-app (file t) getname(string n) { 
+type student {
+  file name;
+  file age;
+  file gpa;
+}
+app (file t) getname(string n) {
         echo n stdout=@filename(t);
 }
 
