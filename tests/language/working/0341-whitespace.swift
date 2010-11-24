@@ -1,4 +1,9 @@
-                        int            a;
+
+// THIS-SCRIPT-SHOULD-FAIL
+// Hangs waiting for a,b
+// Same as 033-assign
+
+int            a;
 
 
 
