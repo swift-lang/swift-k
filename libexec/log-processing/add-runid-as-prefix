@@ -4,7 +4,7 @@ export RUNID=$(basename $LOG .log)
 
 export EVENTSTREAM=$(basename $1 .event)
 
-export WFID="tag:benc@ci.uchicago.edu,2008:swiftlogs:${EVENTSTREAM}:${RUNID}:"
+export WFID="${EVENTSTREAM}:${RUNID}:"
 
 while read one two thread rest; do
   echo $one $two ${WFID}$thread $thread $rest

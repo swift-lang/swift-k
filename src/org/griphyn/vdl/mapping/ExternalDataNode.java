@@ -22,7 +22,7 @@ public class ExternalDataNode implements DSHandle {
                 this.params = params;
 	}
 
-	static final String DATASET_URI_PREFIX = "tag:benc@ci.uchicago.edu,2008:swift:dataset:external:";
+	static final String DATASET_URI_PREFIX = "dataset:external:";
 
 	public static final Logger logger = Logger.getLogger(ExternalDataNode.class);
 	

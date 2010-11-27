@@ -25,7 +25,7 @@ import org.griphyn.vdl.util.VDL2Config;
 
 public abstract class AbstractDataNode implements DSHandle {
 
-    static final String DATASET_URI_PREFIX = "tag:benc@ci.uchicago.edu,2008:swift:dataset:";
+    static final String DATASET_URI_PREFIX = "dataset:";
 
     public static final Logger logger = Logger
     .getLogger(AbstractDataNode.class);

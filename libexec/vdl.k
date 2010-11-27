@@ -20,11 +20,18 @@ namespace("vdl"
 		log("info",sys:file:read("{swift.home}/libexec/version.txt"))
 		echo(sys:file:read("{swift.home}/libexec/version.txt"))
 
-		log("info","RUNID id=tag:benc@ci.uchicago.edu,2007:swift:run:{VDL:RUNID}")
+		log("info","RUNID id=run:{VDL:RUNID}")
 		echo("RunID: {VDL:RUNID}")
 	)
 
 	export(
+	
+		element(parameterlog, [direction, variable, id, thread], 
+			if( 
+				vdl:configProperty("provenance.log") == "true" 
+				log("info","PARAM thread={thread} direction={direction} variable={variable} provenanceid={id}") 
+			) 
+		) 
 		element(split, [var], each(str:split(vdl:getFieldValue(var), " ")))
 
 		element(quote, [var, optional(path)],
