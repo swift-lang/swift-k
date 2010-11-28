@@ -14,11 +14,11 @@ use IO::Socket;
 use File::Basename;
 use File::Path;
 use File::Copy;
-use Time::HiRes qw(time);
 use Cwd;
 use POSIX ":sys_wait_h";
 use strict;
 use warnings;
+eval "use Time::HiRes qw(time)";
 
 # Maintain a stack of job slot ids for auxiliary services:
 #   Each slot has a small integer id 0..n-1
@@ -88,7 +88,6 @@ use constant REPLYTIMEOUT => 180;
 use constant MAXFRAGS => 16;
 use constant MAX_RECONNECT_ATTEMPTS => 3;
 
-my $LASTRECV = 0;
 my $JOBS_RUNNING = 0;
 
 my $JOB_COUNT = 0;
@@ -123,7 +122,6 @@ sub wlog {
 my $URISTR=$ARGV[0];
 my $BLOCKID=$ARGV[1];
 my $LOGDIR=$ARGV[2];
-my $IDLETIMEOUT = ( $#ARGV <= 2 ) ? (4 * 60) : $ARGV[3];
 
 
 # REQUESTS holds a map of incoming requests
@@ -300,7 +298,7 @@ sub init() {
 }
 
 sub logsetup() {
-        my $schemes = join(", ", @SCHEME);
+    my $schemes = join(", ", @SCHEME);
 	my $hosts = join(", ", @HOSTNAME);
 	my $ports = join(", ", @PORT);
 	wlog DEBUG, "uri=$URISTR\n";
@@ -308,7 +306,6 @@ sub logsetup() {
 	wlog DEBUG, "host=$hosts\n";
 	wlog DEBUG, "port=$ports\n";
 	wlog DEBUG, "blockid=$BLOCKID\n";
-    wlog DEBUG, "idletimeout=$IDLETIMEOUT\n";
 }
 
 sub sendm {
@@ -553,7 +550,6 @@ sub process {
 		}
 	}
 	else {
-		$LASTRECV = time();
 		if (!exists($REQUESTS{$tag})) {
 			$REQUESTS{$tag} = [{"dataIn" => \&processRequest}, time()];
 			wlog DEBUG, "New request ($tag)\n";
@@ -619,23 +615,22 @@ sub checkTimeouts {
 	$LASTTIMEOUTCHECK = $time;
 	checkTimeouts2(\%REQUESTS);
 	checkTimeouts2(\%REPLIES);
-	if ($LASTRECV != 0) {
-		my $dif = $time - $LASTRECV;
-		wlog TRACE, "time: $time, lastrecv: $LASTRECV, dif: $dif\n";
-		if ($dif >= $IDLETIMEOUT && $JOBS_RUNNING == 0) {
-			wlog INFO, "Idle time exceeded (time=$time, LASTRECV=$LASTRECV, dif=$dif)\n";
-			die "Idle time exceeded";
-		}
-	}
 }
 
+my $DATA = "";
+
 sub recvOne {
-	my $data;
+	my $buf;
 	$SOCK->blocking(0);
-	$SOCK->recv($data, 12);
-	if (length($data) > 0) {
-		# wlog DEBUG, "Received " . unpackData($data) . "\n";
-		eval { process(unpackData($data)); } || (wlog ERROR, "Failed to process data: $@\n" && die "Failed to process data: $@");
+	$SOCK->recv($buf, 12 - length($DATA));
+	if (length($buf) > 0) {
+		$DATA = $DATA . $buf;
+		if (length($DATA) == 12) {
+			# wlog DEBUG, "Received " . unpackData($DATA) . "\n";
+			eval { process(unpackData($DATA)); } || (wlog ERROR, "Failed to process data: $@\n" && die "Failed to process data: $@");
+			$DATA = "";
+			return;
+		}
 	}
 	else {
 		#sleep 1ms
@@ -1387,7 +1382,6 @@ sub forkjob {
 	else {
 		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "512", "Could not fork child process");
 	}
-	$LASTRECV = time();
 }
 
 my $LASTJOBCHECK = 0;
