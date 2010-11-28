@@ -94,7 +94,7 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 		try {
 			if (!socket.isClosed()) {
 				socket.close();
-				logger.info(getContact() + ": Channel shut down", new Throwable());
+				logger.info(getContact() + ": Channel shut down");
 			}
 		}
 		catch (Exception e) {
