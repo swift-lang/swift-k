@@ -22,6 +22,10 @@ public class NullChannel extends AbstractKarajanChannel {
         super(null, null, false);
         this.sink = sink;
     }
+	
+	protected void configureHeartBeat() {
+		// override to do nothing
+	}
 
 	public void sendTaggedData(int i, int flags, byte[] bytes, SendCallback cb) {
 		if (!sink) {
