@@ -251,10 +251,15 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 					}
 					catch (IOException ex) {
 						logger.info("Channel IOException", ex);
-						synchronized (this) {
-							queue.addFirst(e);
+						try {
+							synchronized (this) {
+								queue.addFirst(e);
+							}
+							e.channel.handleChannelException(ex);
 						}
-						e.channel.handleChannelException(ex);
+						catch (Exception exx) {
+						    logger.warn("Channel threw exception while handling channel exception", exx);
+						}
 					}
 					catch (Exception ex) {
 						ex.printStackTrace();
