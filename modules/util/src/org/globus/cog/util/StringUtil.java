@@ -8,6 +8,8 @@
 
 package org.globus.cog.util;
 
+import java.util.List;
+
 /**
  * This class provides a string split function similar to jdk 1.4
  * String.split(). Be warned that the split() method in this class does not use
@@ -134,4 +136,53 @@ public class StringUtil {
 		}
 		return result;
 	}
+	
+	public static String concat(String[] tokens, int start) { 
+	    return concat(tokens, start, " ");
+	}
+	
+	public static String concat(String[] tokens, int start, 
+	                            String separator) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = start; i < tokens.length; i++) { 
+            sb.append(tokens[i]);
+            if (i < tokens.length-1)
+                sb.append(separator);
+        }
+        return sb.toString();
+    }
+	
+	public static String concat(String... strings) {
+	    return concat(' ', strings);
+	}
+	                            	
+	public static String concat(char c, String... strings) {
+	    StringBuilder sb = new StringBuilder();
+	    for (int i = 0; i < strings.length; i++) {
+	        sb.append(strings[i]);
+	        if (i < strings.length-1)
+	            sb.append(c);
+	    }
+	    return sb.toString();
+	}
+
+	/**
+	   Could be replaced by Arrays.copyOf in Java 1.6
+	 */
+    public static String[] subset(String[] tokens, int offset) {
+        int length = tokens.length - offset;
+        String[] result = new String[length];
+        for (int i = 0; i < length; i++)
+            result[i] = tokens[i+offset];
+        return result;
+    }
+
+    /** 
+       @see {@link Arrays.asList}
+     */
+    public static void addSome(List<String> dest, String[] src, 
+                               int i) {
+        for (int j = i; j < src.length; j++) 
+            dest.add(src[j]);
+    }
 }

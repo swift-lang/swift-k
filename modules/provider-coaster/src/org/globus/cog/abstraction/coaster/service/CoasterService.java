@@ -269,7 +269,7 @@ public class CoasterService extends GSSService {
     /**
      * This is needed if the service is running in local mode. The (client)
      * application may call System.exit before all the cleanup is done. This is
-     * fine in non-local mode, but not some much otherwise.
+     * fine in non-local mode, but not otherwise.
      */
     public void addLocalHook() {
         if (local) {

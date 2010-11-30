@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.impl.file.coaster.commands;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
@@ -19,15 +20,19 @@ import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class GetFileCommand extends Command implements WriteBufferCallback {
+    Logger logger = Logger.getLogger(GetFileCommand.class);
     public static final String NAME = "GET";
     private long len = -1;
     private WriteBuffer wt;
     private String dst;
     // private ProgressMonitor pm;
-
+    
     public GetFileCommand(String src, String dst, ProgressMonitor pm)
             throws IOException {
         super(NAME);
+        
+        logger.debug("GetFileCommand: " + src + " " + dst);
+        
         addOutData(src);
         addOutData(dst);
         this.dst = dst;

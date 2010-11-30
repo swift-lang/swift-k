@@ -150,7 +150,7 @@ public class ServiceManager implements StatusListener {
         localService.heardOf(id);
     }
 
-    private static final String[] STRING_ARRAY = new String[0];
+    // private static final String[] STRING_ARRAY = new String[0];
 
     protected String startService(ServiceContact contact, SecurityContext sc,
             TaskHandler bootHandler, String bootHandlerProvider) throws Exception {
@@ -407,15 +407,15 @@ public class ServiceManager implements StatusListener {
         }
 
         public void run() {
-            System.out.println("Cleaning up...");
+            logger.info("Cleaning up...");
             count = services.size();
             for (String url : services.values()) {
                 Object cred = credentials.get(url);
                 try {
-                    System.out.println("Shutting down service at " + url);
+                    logger.info("Shutting down service at " + url);
                     KarajanChannel channel =
                             ChannelManager.getManager().reserveChannel(url, (GSSCredential) cred);
-                    System.out.println("Got channel " + channel);
+                    logger.debug("Got channel " + channel);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();
                     ssc.setReplyTimeout(10000);
                     ssc.setMaxRetries(0);
@@ -436,17 +436,17 @@ public class ServiceManager implements StatusListener {
                     }
                 }
             }
-            System.out.println(" Done");
+            logger.debug(" Done");
         }
 
         public synchronized void errorReceived(Command cmd, String msg, Exception t) {
-            System.out.print("-");
+            logger.warn("error " + msg);
             count--;
             notifyAll();
         }
 
         public synchronized void replyReceived(Command cmd) {
-            System.out.print("+");
+            // System.out.print("+");
             count--;
             notifyAll();
         }

@@ -17,15 +17,17 @@ import org.globus.cog.abstraction.interfaces.Specification;
 public class FileOperationSpecificationImpl implements
         FileOperationSpecification {
 
+    private static final long serialVersionUID = 1L;
+    
     private int type;
     private String operation;
-    private Hashtable attributes;
-    private ArrayList arguments;
+    private Hashtable<String,Object> attributes;
+    private ArrayList<String> arguments;
 
     public FileOperationSpecificationImpl() {
         this.type = Specification.FILE_TRANSFER;
-        this.attributes = new Hashtable();
-        arguments = new ArrayList();
+        this.attributes = new Hashtable<String,Object>();
+        arguments = new ArrayList<String>();
     }
 
     public void setType(int type) {
@@ -99,4 +101,17 @@ public class FileOperationSpecificationImpl implements
         return operation + arguments;
     }
 
+    public Object clone() {
+        FileOperationSpecificationImpl result = null;
+        try {
+            result = (FileOperationSpecificationImpl) super.clone();
+            result.attributes = 
+                new Hashtable<String,Object>(attributes);
+            result.arguments = new ArrayList<String>(arguments);            
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

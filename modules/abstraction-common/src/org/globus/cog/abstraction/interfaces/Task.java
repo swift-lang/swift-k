@@ -21,7 +21,7 @@ import org.globus.cog.abstraction.xml.MarshalException;
  * status, task specification, remote service(s), task output, task submission-,
  * and completion-times.
  */
-public interface Task extends ExecutableObject {
+public interface Task extends ExecutableObject, Cloneable {
 
     /**
      * Represents a remote job submission task
@@ -122,7 +122,7 @@ public interface Task extends ExecutableObject {
     public void removeService(Collection<Service> collection);
 
     /**
-     * Returns the {@link Service}at the given index of the ordered list of
+     * Returns the {@link Service} at the given index of the ordered list of
      * services
      * 
      * @param index
@@ -296,4 +296,6 @@ public interface Task extends ExecutableObject {
      * @throws InterruptedException if the thread is interrupted while waiting
      */
     public void waitFor() throws InterruptedException;
+    
+    public Object clone();
 }

@@ -15,15 +15,18 @@ import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.WSInvocationSpecification;
 
 public class WSInvocationSpecificationImpl implements WSInvocationSpecification {
+
+    private static final long serialVersionUID = 1L;
+    
     private int type;
     private String method;
-    private Hashtable additionalAttributes;
-    private Vector arguments;
+    private Hashtable<String,Object> additionalAttributes;
+    private Vector<String> arguments;
 
     public WSInvocationSpecificationImpl() {
         this.type = Specification.WS_INVOCATION;
-        this.additionalAttributes = new Hashtable();
-        this.arguments = new Vector();
+        this.additionalAttributes = new Hashtable<String,Object>();
+        this.arguments = new Vector<String>();
     }
 
     public void setType(int type) {
@@ -69,16 +72,16 @@ public class WSInvocationSpecificationImpl implements WSInvocationSpecification 
         return (String) this.arguments.remove(index);
     }
 
-    public Vector getArgumentsAsVector() {
+    public Vector<String> getArgumentsAsVector() {
         return this.arguments;
     }
 
-    public void setArguments(Vector arguments) {
+    public void setArguments(Vector<String> arguments) {
         this.arguments = arguments;
     }
 
     public void setArguments(String arguments) {
-        this.arguments = new Vector();
+        this.arguments = new Vector<String>();
         StringTokenizer st = new StringTokenizer(arguments);
         while (st.hasMoreTokens()) {
             this.arguments.add(st.nextToken());
@@ -123,5 +126,18 @@ public class WSInvocationSpecificationImpl implements WSInvocationSpecification 
     public String getSpecification() {
 
         return null;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Object clone() {
+        WSInvocationSpecificationImpl result = null;
+        try {
+            result = (WSInvocationSpecificationImpl) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        result.arguments = (Vector<String>) arguments.clone();
+        return result;
     }
 }

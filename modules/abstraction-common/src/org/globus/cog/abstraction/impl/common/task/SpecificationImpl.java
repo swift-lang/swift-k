@@ -10,7 +10,9 @@ package org.globus.cog.abstraction.impl.common.task;
 
 import org.globus.cog.abstraction.interfaces.Specification;
 
-public class SpecificationImpl implements Specification {
+public class SpecificationImpl implements Specification, Cloneable {
+
+    private static final long serialVersionUID = 1L;
     private int type;
     private String specification;
 
@@ -37,5 +39,16 @@ public class SpecificationImpl implements Specification {
 
     public String getSpecification() {
         return this.specification;
+    }
+    
+    public Object clone() {
+        SpecificationImpl result = null;
+        try {
+            result = (SpecificationImpl) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        } 
+        return result;
     }
 }

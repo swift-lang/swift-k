@@ -13,6 +13,9 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
@@ -28,14 +31,15 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
         WorkerShellCommand wsc = new WorkerShellCommand(workerId, command);
         BlockQueueProcessor bqp = (BlockQueueProcessor) ((CoasterService) getChannel().getChannelContext().
                 getService()).getJobQueue().getCoasterQueueProcessor();
-        /*try {
-            KarajanChannel channel = ChannelManager.getManager()
-                        .reserveChannel(bqp.getChannelContext(workerId));
-            wsc.executeAsync(channel, this);
+        try {
+            ChannelManager manager = ChannelManager.getManager();
+            KarajanChannel worker = bqp.getWorkerChannel(workerId);
+            KarajanChannel reserved = manager.reserveChannel(worker);
+            wsc.executeAsync(reserved, this);
         }
         catch (ChannelException e) {
             sendError("Cannot contact worker", e);
-        }*/
+        }
     }
 
     public void errorReceived(Command cmd, String msg, Exception t) {

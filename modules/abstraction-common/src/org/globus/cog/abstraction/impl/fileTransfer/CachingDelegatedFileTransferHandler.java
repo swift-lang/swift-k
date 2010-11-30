@@ -40,9 +40,8 @@ public class CachingDelegatedFileTransferHandler extends
     }
 
     protected void doDestination(File localSource, Service service)
-            throws FileResourceException, IOException,
-            InvalidProviderException, ProviderMethodException,
-            InvalidSecurityContextException {
+    throws FileResourceException, InvalidProviderException, 
+    ProviderMethodException, InvalidSecurityContextException {
         try {
             super.doDestination(localSource, service);
         }

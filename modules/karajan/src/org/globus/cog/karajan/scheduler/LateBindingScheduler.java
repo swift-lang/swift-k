@@ -328,7 +328,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		fireJobStatusChangeEvent(t, s);
 	}
 
-	private List contactTran = new ArrayList();
+	private List<Contact> contactTran = new ArrayList<Contact>();
 
 	void submitUnbound(Task t) throws NoFreeResourceException {
 		try {

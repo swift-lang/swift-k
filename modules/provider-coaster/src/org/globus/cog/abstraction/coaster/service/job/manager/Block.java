@@ -43,13 +43,13 @@ public class Block implements StatusListener, Comparable<Block> {
         return submitter;
     }
 
-    private int workers, qt;
+    private int workers;
     private TimeInterval walltime;
     private Time endtime, starttime, deadline, creationtime;
     private SortedSet<Cpu> scpus;
     private List<Cpu> cpus;
     private List<Node> nodes;
-    private boolean running, failed, shutdown, suspended;
+    private boolean running = false, failed, shutdown, suspended;
     private BlockQueueProcessor bqp;
     private BlockTask task;
     private String id;
@@ -389,10 +389,10 @@ public class Block implements StatusListener, Comparable<Block> {
                 logger.info(id + " stderr: " + prettifyOut(task.getStdError()));
             }
             else if (s.getStatusCode() == Status.ACTIVE) {
-                running = true;
                 starttime = Time.now();
                 endtime = starttime.add(walltime);
                 deadline = starttime.add(bqp.getSettings().getReserve());
+                running = true;
                 bqp.getRLogger().log("BLOCK_ACTIVE id=" + getId());
                 bqp.getSettings().getHook().blockActive(event);
             }

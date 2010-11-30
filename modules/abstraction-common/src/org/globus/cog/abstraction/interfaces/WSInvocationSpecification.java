@@ -46,7 +46,7 @@ public interface WSInvocationSpecification extends Specification {
      *            a Vector representing the set of arguments for the remote
      *            method.
      */
-    public void setArguments(Vector arguments);
+    public void setArguments(Vector<String> arguments);
 
     /**
      * Returns the set of space-separated arguments supplied for the remote
@@ -104,11 +104,11 @@ public interface WSInvocationSpecification extends Specification {
      * method.
      *  
      */
-    public Vector getArgumentsAsVector();
+    public Vector<String> getArgumentsAsVector();
 
     public void setAttribute(String name, Object value);
 
     public Object getAttribute(String name);
 
-    public Enumeration getAllAttributes();
+    public Enumeration<String> getAllAttributes();
 }

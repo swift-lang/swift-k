@@ -74,7 +74,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    private Task startServiceTask;
+    // private Task startServiceTask;
     private SubmitJobCommand jsc;
     private GSSCredential cred;
     private String jobid;

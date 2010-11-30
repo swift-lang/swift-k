@@ -113,7 +113,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
     }
 
     private void prepareTransfer() throws IllegalSpecException,
-            InvalidSecurityContextException, InvalidServiceContactException,
+            InvalidServiceContactException,
             TaskSubmissionException {
 
         try {
@@ -188,9 +188,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
         if (isLocal(service)) {
             return new File(spec.getDestination());
         }
-        else {
-            return null;
-        }
+        return null;
     }
 
     protected FileResource prepareService(Service service)
@@ -309,8 +307,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
      * @throws InvalidSecurityContextException
      */
     protected void doDestination(File localSource, Service service)
-            throws FileResourceException, IOException,
-            InvalidProviderException, ProviderMethodException,
+            throws FileResourceException, InvalidProviderException, ProviderMethodException,
             InvalidSecurityContextException {
         if (isLocal(service)) {
             FileResource fr = AbstractionFactory.newFileResource("local");
