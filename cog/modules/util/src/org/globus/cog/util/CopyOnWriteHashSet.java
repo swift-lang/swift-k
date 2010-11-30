@@ -39,7 +39,7 @@ import java.util.Set;
  * 
  */
 
-public class CopyOnWriteHashSet<T> implements Set<T> {
+public class CopyOnWriteHashSet<T> implements Set<T>, Cloneable {
 	private Set<T> set = Collections.emptySet();
 	private int lock;	
 
@@ -186,5 +186,19 @@ public class CopyOnWriteHashSet<T> implements Set<T> {
 		return set.toString();
 	};
 	
-	
+	public Object clone() {
+	    Set<T> tmp = new HashSet<T>(size()*2);
+	    
+	    Iterator<T> it = iterator();
+	    while (it.hasNext()) {
+	        T o = it.next();
+	        tmp.add(o);
+	    }
+	    release();
+	    
+	    CopyOnWriteHashSet<T> result = new CopyOnWriteHashSet<T>();
+	    result.lock = 0;
+	    result.set = tmp;
+	    return result;
+	}
 }

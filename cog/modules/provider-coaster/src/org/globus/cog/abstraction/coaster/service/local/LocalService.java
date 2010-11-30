@@ -27,7 +27,6 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
-import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
 public class LocalService extends GSSService implements Registering {

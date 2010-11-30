@@ -129,24 +129,24 @@ public interface Service {
     public int getType();
 
     /**
-     * Sets the {@link ServiceContact}associated with this <code>Service</code>.
+     * Sets the {@link ServiceContact} associated with this <code>Service</code>.
      */
     public void setServiceContact(ServiceContact serviceContact);
 
     /**
-     * Returns the {@link ServiceContact}associated with this
+     * Returns the {@link ServiceContact} associated with this
      * <code>Service</code>.
      */
     public ServiceContact getServiceContact();
 
     /**
-     * Sets the {@link SecurityContext}associated with this
+     * Sets the {@link SecurityContext} associated with this
      * <code>Service</code>.
      */
     public void setSecurityContext(SecurityContext securityContext);
 
     /**
-     * Returns the {@link SecurityContext}associated with this
+     * Returns the {@link SecurityContext} ssociated with this
      * <code>Service</code>.
      */
     public SecurityContext getSecurityContext();
@@ -160,5 +160,5 @@ public interface Service {
      */
     public Enumeration getAllAttributes();
     
-    public Collection getAttributeNames();
+    public Collection<String> getAttributeNames();
 }

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -48,7 +47,7 @@ public class TaskImpl implements Task {
     private CopyOnWriteHashSet<StatusListener> statusListeners;
     private CopyOnWriteHashSet<OutputListener> outputListeners;
 
-    private Map attributes;
+    private Map<String,Object> attributes;
 
     private ArrayList<Service> serviceList;
     private int requiredServices = 0;
@@ -59,8 +58,8 @@ public class TaskImpl implements Task {
         this.id = new IdentityImpl();
         this.serviceList = new ArrayList<Service>(2);
         this.status = new StatusImpl();
-        statusListeners = new CopyOnWriteHashSet();
-        outputListeners = new CopyOnWriteHashSet();
+        statusListeners = new CopyOnWriteHashSet<StatusListener>();
+        outputListeners = new CopyOnWriteHashSet<OutputListener>();
     }
 
     public TaskImpl(String name, int type) {
@@ -256,7 +255,7 @@ public class TaskImpl implements Task {
 
     public void setAttribute(String name, Object value) {
         if (attributes == null) {
-            attributes = new HashMap();
+            attributes = new HashMap<String,Object>();
         }
         attributes.put(name.toLowerCase(), value);
     }
@@ -355,5 +354,24 @@ public class TaskImpl implements Task {
         while (!isFailed() && !isCompleted() && !isCanceled()) {
             wait();
         }
+    }
+    
+    public Object clone() {
+        TaskImpl task = null;
+        try {
+            task = (TaskImpl) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        task.specification = (Specification) specification.clone();
+        if (attributes != null)
+            task.attributes = new HashMap<String,Object>(attributes);
+        task.outputListeners = 
+            new CopyOnWriteHashSet<OutputListener>();
+        task.statusListeners = 
+            new CopyOnWriteHashSet<StatusListener>();
+        
+        return task;
     }
 }

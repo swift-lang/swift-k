@@ -15,8 +15,8 @@ import java.nio.ByteBuffer;
 
 public class InputStreamReadBuffer extends ReadBuffer {
     private InputStream is;
-    private long crt;
-    private Exception ex;
+    // private long crt;
+    // private Exception ex;
 
     protected InputStreamReadBuffer(Buffers buffers, InputStream is, long size,
             ReadBufferCallback cb) throws InterruptedException {

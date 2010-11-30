@@ -13,7 +13,10 @@ import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
 
 public class FileTransferSpecificationImpl implements FileTransferSpecification {
-	private int type;
+
+    private static final long serialVersionUID = 1L;
+    
+    private int type;
 	private String sourceDirectory;
 	private String destinationDirectory;
 	private String sourceFile;
@@ -23,11 +26,11 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	private boolean thirdparty, recursive;
 	private boolean thirdPartyIfPossible;
 	private long sourceFileOffset, destinationFileOffset, sourceFileLength;
-	private Hashtable attributes;
+	private Hashtable<String,Object> attributes;
 
 	public FileTransferSpecificationImpl() {
 		this.type = Specification.FILE_TRANSFER;
-		this.attributes = new Hashtable();
+		this.attributes = new Hashtable<String,Object>();
 		sourceFileLength = Long.MAX_VALUE;
 	}
 
@@ -174,6 +177,9 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 		return this.attributes.get(name);
 	}
 
+	/**
+	   @deprecated
+	 */
 	public Enumeration getAllAttributes() {
 		return this.attributes.keys();
 	}
@@ -212,5 +218,18 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 
 	public void setRecursive(boolean recursive) {
 		this.recursive = recursive;
+	}
+	
+    public Object clone() {
+	    FileTransferSpecificationImpl result = null;
+        try {
+            result = (FileTransferSpecificationImpl) super.clone();
+            result.attributes = 
+                new Hashtable<String,Object>(attributes);
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+	    return result;
 	}
 }

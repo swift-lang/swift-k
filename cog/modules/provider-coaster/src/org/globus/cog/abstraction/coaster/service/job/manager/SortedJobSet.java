@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -65,30 +66,47 @@ public class SortedJobSet implements Iterable<Job> {
         seq++;
     }
 
-    public synchronized Job removeOne(TimeInterval walltime) {
-        // remove largest job with a walltime smaller than the specified value
-        SortedMap<TimeInterval, LinkedList<Job>> sm2 = sm.headMap(walltime);
-        if (sm2.isEmpty()) {
-            return null;
+    /**
+       Remove and return largest job with a walltime smaller than the 
+       given walltime and less than or equal to the given cpu
+       Could be cleaned up using Java 1.6 functionality
+     */
+    public synchronized Job removeOne(TimeInterval walltime,
+                                      int cpus) {
+        Job result = null;
+        SortedMap<TimeInterval, LinkedList<Job>> smaller = 
+            sm.headMap(walltime);
+        
+        while (! smaller.isEmpty()) {
+            TimeInterval key = smaller.lastKey();
+            List<Job> jobs = smaller.get(key);
+            result = removeOne(key, jobs, cpus);
+            if (result != null) {
+                jsize -= metric.getSize(result);
+                if (--size == 0) jsize = 0;
+                return result;
+            }
+            smaller = smaller.headMap(key);
         }
-        else {
-            TimeInterval key = sm2.lastKey();
-            LinkedList<Job> jobs = sm2.get(key);
-            Job j = jobs.removeFirst();
-            if (jobs.isEmpty()) {
-                sm.remove(key);
-            }
-            if (j != null) {
-                jsize -= metric.getSize(j);
-                size--;
-            }
-            if (size == 0) {
-                jsize = 0;
-            }
-            return j;
-        }
+        return null;
     }
 
+    Job removeOne(TimeInterval key, List<Job> jobs, int cpus)
+    {
+        Job result = null;
+        for (Iterator<Job> it = jobs.iterator(); it.hasNext(); ) {
+            Job job = it.next();
+            if (job.cpus <= cpus) {
+                result = job;
+                it.remove();
+                break;
+            }
+        }
+        if (jobs.isEmpty())
+            sm.remove(key);
+        return result;
+    }
+    
     public double getJSize() {
         return jsize;
     }

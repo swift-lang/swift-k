@@ -774,14 +774,16 @@ sub workershellcmd {
 		sendReply($tag, ("OK", "$out"));
 	}
 	else {
+		wlog DEBUG, "workershellcmd: $cmd\n";
 		$out = `$cmd 2>&1`;
+		wlog TRACE, "result: $out\n";
 		sendReply($tag, ("OK", "$out"));
 	}
 }
 
 sub urisplit {
 	my ($name) = @_;
-	
+
 	# accepted forms:
 	#   <protocol>://<host>/<path>
 	#   <protocol>:<path>
@@ -816,8 +818,8 @@ sub getFileCB {
 
 	wlog DEBUG, "getFileCB($jobid, $src, $dst)\n";
 
+	$src =~ s/pinned://;
 	my ($protocol, $path) = urisplit($src);
-	$protocol =~ s/pinned://;
 
 	wlog DEBUG, "$jobid src: $src, protocol: $protocol, path: $path\n";
 
@@ -878,6 +880,7 @@ sub getFileCBDataIn {
 	my $jobid = $$state{"jobid"};
 	wlog DEBUG, "$jobid getFileCBDataIn jobid: $jobid, state: $s, tag: $tag, err: $err, fin: $fin\n";
 	if ($err) {
+		wlog DEBUG, "$jobid getFileCBDataIn FAILED 520 Error staging in file: $reply\n";
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "520", "Error staging in file: $reply"));
 		delete($JOBDATA{$jobid});
 		return;
@@ -958,7 +961,11 @@ sub stagein {
 		wlog DEBUG, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
 		$JOBDATA{$jobid}{"stageindex"} =  $STAGEINDEX + 1;
 		my ($protocol, $host, $path) = urisplit($$STAGE[$STAGEINDEX]);
-		if ($protocol eq "sfs") {
+		wlog DEBUG, "$jobid protocol: $protocol\n";
+		if ($$STAGE[$STAGEINDEX] =~ "pinned:.*") {
+			getPinnedFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
+		}
+		elsif ($protocol eq "sfs") {
 			my $dst = $$STAGED[$STAGEINDEX];
 			mkfdir($jobid, $dst);
 			if (!copy($path, $dst)) {
@@ -968,9 +975,6 @@ sub stagein {
 			else {
 				stagein($jobid);
 			}
-		}
-		elsif ($protocol =~ "pinned:") {
-			getPinnedFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
 		}
 		else {
 			getFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
@@ -1016,7 +1020,7 @@ sub getPinnedFile() {
 	}
 }
 
-sub mkPinnedDirectory() { 
+sub mkPinnedDirectory() {
 	my ($pinned_dir) = @_;
 	if (! $PINNED_READY) {
 		if (! -d $pinned_dir) {
@@ -1029,7 +1033,7 @@ sub mkPinnedDirectory() {
 	}
 }
 
-sub downloadPinnedFile() { 
+sub downloadPinnedFile() {
 	my ($jobid, $src, $dst, $rdst, $pinned_dir) = @_;
 	$PINNED{$rdst} = INFLIGHT;
 	getFile($jobid, $src, $dst);
@@ -1046,7 +1050,7 @@ sub linkToPinnedFile() {
 	my $dir = dirname($dst);
 	if (! -d $dir) {
 		wlog DEBUG, "mkpath: $dir\n";
-		mkpath($dir) || 
+		mkpath($dir) ||
 			die "getPinnedFile(): Could not mkdir: $dir\n";
 	}
 	link("$pinned_dir$rdst", $dst) ||

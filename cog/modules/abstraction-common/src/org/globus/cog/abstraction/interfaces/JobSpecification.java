@@ -77,7 +77,7 @@ public interface JobSpecification extends Specification {
      * 
      * @deprecated Moving to the new collection classes
      */
-    public void setArguments(Vector arguments);
+    // public void setArguments(Vector arguments);
 
     /**
      * Sets the command line arguments for the job
@@ -186,6 +186,8 @@ public interface JobSpecification extends Specification {
      */
     public void addEnvironmentVariable(String name, String value);
 
+    public void addEnvironmentVariable(String name, int i);
+    
     /**
      * Removes the environment variable with the given name from the remote
      * execution environment.

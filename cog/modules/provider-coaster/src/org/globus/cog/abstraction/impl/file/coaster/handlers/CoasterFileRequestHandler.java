@@ -16,7 +16,7 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public abstract class CoasterFileRequestHandler extends RequestHandler {
-    private static final String HOME = System.getProperty("user.home");
+    // private static final String HOME = System.getProperty("user.home");
     private static final String CWD = new File(".").getAbsolutePath();
 
     public static File normalize(String name) {

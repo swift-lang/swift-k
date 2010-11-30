@@ -25,6 +25,8 @@ import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
 
 public class JobSpecificationImpl implements JobSpecification {
+ 
+    private static final long serialVersionUID = 1L;
     private Boolean delegationEnabled;
     private int delegation;
     private String nativeSpecification;
@@ -34,7 +36,6 @@ public class JobSpecificationImpl implements JobSpecification {
     private boolean batchJob;
     private boolean redirected;
     private boolean localExecutable;
-    private boolean localInput;
     
     private int type;
     private Map<String, Object> attributes;
@@ -112,15 +113,18 @@ public class JobSpecificationImpl implements JobSpecification {
         return this.arguments.remove(index);
     }
 
-    public Vector getArgumentsAsVector() {
-        return new Vector(this.arguments);
+    public Vector<String> getArgumentsAsVector() {
+        return new Vector<String>(this.arguments);
     }
 
     public List<String> getArgumentsAsList() {
         return arguments;
     }
 
-    public void setArguments(Vector arguments) {
+    /** 
+       @deprecated
+     */
+    public void setArguments(Vector<String> arguments) {
         this.arguments = new ArrayList<String>(arguments);
     }
 
@@ -164,6 +168,12 @@ public class JobSpecificationImpl implements JobSpecification {
         environment.put(name, value);
     }
 
+
+    @Override
+    public void addEnvironmentVariable(String name, int i) {
+        addEnvironmentVariable(name, Integer.toString(i));
+    }
+    
     public String removeEnvironmentVariable(String name) {
         if (environment != null) {
             return environment.remove(name);
@@ -302,12 +312,12 @@ public class JobSpecificationImpl implements JobSpecification {
         }
     }
 
-    public Enumeration getAllAttributes() {
+    public Enumeration<String> getAllAttributes() {
         if (attributes != null) {
-            return new Vector(attributes.keySet()).elements();
+            return new Vector<String>(attributes.keySet()).elements();
         }
         else {
-            return new Vector().elements();
+            return new Vector<String>().elements();
         }
     }
 
@@ -415,5 +425,20 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void setCleanUpSet(CleanUpSet cleanUpSet) {
         this.cleanUpSet = cleanUpSet;
+    }
+    
+    public Object clone() {
+        JobSpecificationImpl result = null;
+        try {
+            result = (JobSpecificationImpl) super.clone();
+            result.attributes = 
+                new HashMap<String,Object>(attributes);
+            result.arguments = new ArrayList<String>(arguments);
+            
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }
