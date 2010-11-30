@@ -94,6 +94,9 @@ public abstract class Command extends RequestReply implements SendCallback {
 		this.dataReceived(fin, err, data);
 	}
 	
+	/** 
+	   @deprecated
+	 */
 	protected final void replyReceived(byte[] data) {
 		throw new RuntimeException("Do not use this");
 	}
@@ -109,7 +112,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 		if (logger.isInfoEnabled()) {
 			logger.info("Sending " + this + " on " + channel);
 		}
-		Collection outData = getOutData();
+		Collection<byte[]> outData = getOutData();
 		if (channel == null) {
 			throw new ProtocolException("Unregistered command");
 		}
@@ -128,9 +131,9 @@ public abstract class Command extends RequestReply implements SendCallback {
 			}
 			channel.sendTaggedData(id, fin, getOutCmd().getBytes(), fin ? this : null);
 			if (!fin) {
-				Iterator i = outData.iterator();
+				Iterator<byte[]> i = outData.iterator();
 				while (i.hasNext()) {
-					byte[] buf = (byte[]) i.next();
+					byte[] buf = i.next();
 					channel.sendTaggedData(id, !i.hasNext(), buf, !i.hasNext() ? this : null);
 				}
 			}

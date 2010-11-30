@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import org.globus.cog.abstraction.interfaces.Identity;
@@ -23,7 +24,7 @@ public class ServiceImpl implements Service {
     private String name = "";
     private ServiceContact serviceContact;
     private SecurityContext securityContext = null;
-    private Map attributes;
+    private Map<String,Object> attributes;
     private String provider = null;
     private int type = 0;
     private int totalCount = 0, failedCount = 0, activeCount = 0;
@@ -125,7 +126,7 @@ public class ServiceImpl implements Service {
 
     public void setAttribute(String name, Object value) {
         if (attributes == null) {
-            attributes = new HashMap();
+            attributes = new HashMap<String,Object>();
         }
         attributes.put(name, value);
     }
@@ -139,11 +140,16 @@ public class ServiceImpl implements Service {
         }
     }
 
+    /** 
+       @deprecated
+       @see org.globus.cog.abstraction.interfaces.Service#getAllAttributes()
+     */
     public Enumeration getAllAttributes() {
         return new Vector(getAttributeNames()).elements();
     }
 
-    public Collection getAttributeNames() {
+    @SuppressWarnings("unchecked")
+    public Collection<String> getAttributeNames() {
         if (attributes != null) {
             return attributes.keySet();
         }

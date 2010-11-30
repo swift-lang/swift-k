@@ -10,6 +10,9 @@
 package org.globus.cog.abstraction.impl.common.execution;
 
 public class JobException extends Exception {
+
+    private static final long serialVersionUID = 1L;
+    
     private int exitCode;
     
     public JobException(int exitCode) {

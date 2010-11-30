@@ -10,7 +10,6 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/j2ssh-common-0.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/j2ssh-core-0.2.2-patched.jar" sourcepath="/home/mike/work/sources/j2ssh-0.2.2/src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jglobus"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j-1.2.8"/>
 	<classpathentry kind="lib" path="/util/lib/log4j-1.2.8.jar"/>

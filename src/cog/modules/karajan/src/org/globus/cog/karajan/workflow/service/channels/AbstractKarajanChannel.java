@@ -14,8 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
@@ -35,7 +33,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
 	private RequestManager requestManager;
-	private final List registeredMaps;
+	// private final List registeredMaps;
 	private boolean localShutdown, closed;
 	private String name;
 	private Service callbackService;
@@ -47,7 +45,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			this.context = channelContext;
 		}
 		this.requestManager = requestManager;
-		registeredMaps = new LinkedList();
+		// registeredMaps = new LinkedList();
 		this.client = client;
 		configureHeartBeat();
 	}

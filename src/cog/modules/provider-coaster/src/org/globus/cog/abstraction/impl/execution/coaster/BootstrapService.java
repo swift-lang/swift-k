@@ -50,8 +50,8 @@ public class BootstrapService implements Runnable {
     private ServerSocketChannel channel;
     private ConnectionProcessor connectionProcessor;
     private String webDir;
-    private Set valid;
-    private Map checksums;
+    private Set<String> valid;
+    private Map<String,String> checksums;
     private boolean started;
 
     public BootstrapService() {
@@ -72,11 +72,11 @@ public class BootstrapService implements Runnable {
     }
 
     private void initList() {
-        valid = new HashSet();
+        valid = new HashSet<String>();
         valid.add("/" + ServiceManager.BOOTSTRAP_JAR);
         valid.add("/" + Bootstrap.BOOTSTRAP_LIST);
         valid.add("/index.html");
-        checksums = new HashMap();
+        checksums = new HashMap<String,String>();
         loadList();
     }
 
@@ -198,13 +198,13 @@ public class BootstrapService implements Runnable {
     }
 
     private class ConnectionProcessor implements Runnable {
-        private Map channels;
+        private Map<SocketChannel,ConnectionState> channels;
         private Selector selector;
-        private List newChannels;
+        private List<SocketChannel> newChannels;
 
         public ConnectionProcessor() throws IOException {
-            channels = new HashMap();
-            newChannels = new LinkedList();
+            channels = new HashMap<SocketChannel,ConnectionState>();
+            newChannels = new LinkedList<SocketChannel>();
             selector = SelectorProvider.provider().openSelector();
         }
 
@@ -224,22 +224,20 @@ public class BootstrapService implements Runnable {
         }
 
         public void run() {
-            List keys = new ArrayList();
+            List<SelectionKey> keys = new ArrayList<SelectionKey>();
             while (true) {
                 try {
                     keys.clear();
                     int n = selector.select();
-                    Set skeys;
+                    Set<SelectionKey> skeys;
                     synchronized (channels) {
                         skeys = selector.selectedKeys();
                         keys.addAll(skeys);
                     }
-                    Iterator i = keys.iterator();
-                    while (i.hasNext()) {
-                        SelectionKey key = (SelectionKey) i.next();
+                    
+                    for (SelectionKey key : keys) { 
                         if (key.isValid()) {
-                            ConnectionState s = (ConnectionState) channels
-                                    .get(key.channel());
+                            ConnectionState s = channels.get(key.channel());
                             s.process(key);
                         }
                     }
@@ -247,9 +245,9 @@ public class BootstrapService implements Runnable {
 
                     synchronized(channels) {
                         if (!newChannels.isEmpty()) {
-                            i = newChannels.iterator();
-                            while (i.hasNext()) {
-                                SocketChannel s = (SocketChannel) i.next();
+                            for (Iterator<SocketChannel> i = newChannels.iterator();
+                                 i.hasNext(); ) {
+                                SocketChannel s = i.next();
                                 s.register(selector, SelectionKey.OP_READ);
                                 i.remove();
                             }
@@ -281,11 +279,11 @@ public class BootstrapService implements Runnable {
 
         private SocketChannel channel;
         private int state;
-        private ByteBuffer rbuf, webuf, rcb, wbuf;
+        private ByteBuffer rbuf, rcb;
         private FileChannel fileChannel;
         private String cmd;
-        private Map headers;
-        private Iterator replies;
+        private Map<String,String> headers;
+        private Iterator<ByteBuffer> replies;
         private long sendPos, total;
         private int lastRead;
         private ConnectionProcessor processor;
@@ -295,7 +293,7 @@ public class BootstrapService implements Runnable {
             this.processor = processor;
             rbuf = ByteBuffer.allocate(8192);
             rcb = rbuf.asReadOnlyBuffer();
-            headers = new HashMap();
+            headers = new HashMap<String,String>();
             state = IDLE;
             lastRead = 0;
             cmd = null;
@@ -370,7 +368,7 @@ public class BootstrapService implements Runnable {
             }
         }
 
-        private void processCommand(String cmd, Map headers, SelectionKey key) {
+        private void processCommand(String cmd, Map<String,String> headers, SelectionKey key) {
             logger.info("[" + channel.socket().getRemoteSocketAddress() + "] "
                     + cmd);
             if (logger.isDebugEnabled()) {
@@ -379,7 +377,7 @@ public class BootstrapService implements Runnable {
             String[] tokens = cmd.split("\\s+");
             if (tokens[0].equals("GET")) {
                 String page = getPage(tokens[1]);
-                Map cgiParams = getCGIParams(tokens[1]);
+                Map<String,String> cgiParams = getCGIParams(tokens[1]);
                 String coasterId = (String) cgiParams.get("serviceId");
                 if (coasterId != null) {
                     ServiceManager.getDefault().serviceIsActive(coasterId);
@@ -405,7 +403,7 @@ public class BootstrapService implements Runnable {
 
         private void sendError(String error, String html) {
             state = SENDING_ERROR;
-            List l = new LinkedList();
+            List<ByteBuffer> l = new LinkedList<ByteBuffer>();
             addReply(l, "HTTP/1.1 " + error + "\n");
             addReply(l, "Date: " + new Date() + "\n");
             if (html != null) {
@@ -422,7 +420,7 @@ public class BootstrapService implements Runnable {
 
         private void sendHeader(File f) {
             state = SENDING_REPLY;
-            List l = new LinkedList();
+            List<ByteBuffer> l = new LinkedList<ByteBuffer>();
             addReply(l, "HTTP/1.1 200 OK\n");
             addReply(l, "Date: " + new Date() + "\n");
             addReply(l, "Content-Length: " + f.length() + "\n");
@@ -438,7 +436,7 @@ public class BootstrapService implements Runnable {
             replies = l.iterator();
         }
 
-        private void addReply(List l, String reply) {
+        private void addReply(List<ByteBuffer> l, String reply) {
             l.add(ByteBuffer.wrap(reply.getBytes()));
         }
 
@@ -469,13 +467,13 @@ public class BootstrapService implements Runnable {
             }
         }
         
-        private Map getCGIParams(String local) {
+        private Map<String,String> getCGIParams(String local) {
             int i = local.indexOf('?');
             if (i == -1) {
-                return Collections.EMPTY_MAP;
+                return Collections.emptyMap();
             }
             else {
-                Map m = new HashMap();
+                Map<String,String> m = new HashMap<String,String>();
                 String[] params = local.substring(i + 1).split("&");
                 for (int j = 0; j < params.length; j++) {
                     int k = params[j].indexOf('=');
@@ -483,7 +481,8 @@ public class BootstrapService implements Runnable {
                         //not valid, discard parameter
                     }
                     else {
-                        m.put(params[j].substring(0, k), params[j].substring(k + 1));
+                        m.put(params[j].substring(0, k), 
+                              params[j].substring(k + 1));
                     }
                 }
                 return m;

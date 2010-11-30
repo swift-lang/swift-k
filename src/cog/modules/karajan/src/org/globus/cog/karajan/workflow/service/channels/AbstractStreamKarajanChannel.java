@@ -95,7 +95,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		if (sc.getConfiguration().hasOption(RemoteConfiguration.CALLBACK)) {
 			callbackURI = getCallbackURI();
 		}
-		String remoteID = sc.getChannelID().getRemoteID();
+		// String remoteID = sc.getChannelID().getRemoteID();
 
 		ChannelConfigurationCommand ccc = new ChannelConfigurationCommand(sc.getConfiguration(),
 				callbackURI);
@@ -179,11 +179,12 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		outputStream.flush();
 	}
 
-	private static Map sender;
+	private static Map<Class<? extends KarajanChannel>, Sender> sender;
 
 	private static synchronized Sender getSender(KarajanChannel channel) {
 		if (sender == null) {
-			sender = new HashMap();
+			sender = 
+				new HashMap<Class<? extends KarajanChannel>, Sender>();
 		}
 
 		Sender s = (Sender) sender.get(channel.getClass());
@@ -210,12 +211,12 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	private static class Sender extends Thread {
-		private final LinkedList queue;
+		private final LinkedList<SendEntry> queue;
 		private final byte[] shdr;
 
 		public Sender() {
 			super("Sender");
-			queue = new LinkedList();
+			queue = new LinkedList<SendEntry>();
 			setDaemon(true);
 			shdr = new byte[HEADER_LEN];
 		}
@@ -281,7 +282,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		public void purge(KarajanChannel source, KarajanChannel channel) throws IOException {
 			SendEntry e;
 			synchronized (this) {
-				Iterator i = queue.iterator();
+				Iterator<SendEntry> i = queue.iterator();
 				while (i.hasNext()) {
 					e = (SendEntry) i.next();
 					if (e.channel == source) {
@@ -325,18 +326,19 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	protected static class Multiplexer extends Thread {
 		public static final Logger logger = Logger.getLogger(Multiplexer.class);
 
-		private Set channels;
-		private List remove, add;
+		private Set<KarajanChannel> channels;
+		private List<KarajanChannel> remove, add;
 		private boolean terminated;
 		private int id;
 
+		@SuppressWarnings("unchecked")
 		public Multiplexer(int id) {
 			super("Channel multiplexer " + id);
 			this.id = id;
 			setDaemon(true);
-			channels = new HashSet();
+			channels = new HashSet<KarajanChannel>();
 			remove = Collections.synchronizedList(new ArrayList());
-			add = Collections.synchronizedList(new ArrayList());
+			add = Collections.synchronizedList(new ArrayList<KarajanChannel>());
 		}
 
 		public synchronized void register(AbstractStreamKarajanChannel channel) {
@@ -360,9 +362,10 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 						savail = 0;
 						cnt = 0;
 					}
-					Iterator i = channels.iterator();
+					Iterator<KarajanChannel> i = channels.iterator();
 					while (i.hasNext()) {
-						AbstractStreamKarajanChannel channel = (AbstractStreamKarajanChannel) i.next();
+						AbstractStreamKarajanChannel channel = 
+							(AbstractStreamKarajanChannel) i.next();
 						if (channel.isClosed()) {
 							if (logger.isInfoEnabled()) {
 								logger.info("Channel is closed. Removing.");
@@ -390,7 +393,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 						}
 						i = add.iterator();
 						while (i.hasNext()) {
-							Object a = i.next();
+							KarajanChannel a = i.next();
 							channels.add(a);
 						}
 						remove.clear();

@@ -30,8 +30,8 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 
-import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
+// import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
+// import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 
 public class ProxyIOProvider implements IOProvider {
     public static final Logger logger = Logger.getLogger(ProxyIOProvider.class);
@@ -137,15 +137,15 @@ public class ProxyIOProvider implements IOProvider {
     }
 
     private static class CReadBuffer extends ReadBuffer {
-        private Exception error;
-        private BlockingQueue queue;
-        private boolean seenLast;
+        // private Exception error;
+        // private BlockingQueue queue;
+        // private boolean seenLast;
         private int crt;
         private LinkedList<Buffers.Allocation> alloc;
 
         protected CReadBuffer(Buffers buffers, ReadBufferCallback cb) {
             super(buffers, cb, -1);
-            queue = new LinkedBlockingQueue();
+            // queue = new LinkedBlockingQueue();
             alloc = new LinkedList<Buffers.Allocation>();
         }
 
@@ -159,9 +159,9 @@ public class ProxyIOProvider implements IOProvider {
             }
             crt++;
             alloc.add(buffers.request(1));
-            if (last) {
+            /* if (last) {
                 seenLast = true;
-            }
+            } */
             getCallback().dataRead(last, buf);
         }
 
@@ -179,6 +179,7 @@ public class ProxyIOProvider implements IOProvider {
         }
     }
 
+    /*
     private static class Entry {
         public final boolean last;
         public final ByteBuffer buf;
@@ -188,6 +189,7 @@ public class ProxyIOProvider implements IOProvider {
             this.buf = buf;
         }
     }
+    */
 
     private static class Reader implements IOReader, Callback {
         private CustomGetFileCmd cmd;

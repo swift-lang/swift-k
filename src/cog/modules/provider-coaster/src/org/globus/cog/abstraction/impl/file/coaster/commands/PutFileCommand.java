@@ -30,9 +30,9 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
 
     private String dest;
     private long size;
-    private int chunks;
+    // private int chunks;
     private ReadBuffer rbuf;
-    private Exception ex;
+    // private Exception ex;
     private String src;
     
     public PutFileCommand(String src, String dest) throws IOException, InterruptedException {

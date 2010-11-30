@@ -15,9 +15,14 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
-public class Job implements Comparable {
+public class Job implements Comparable<Job> {
     private int id;
     private Task task;
+    /** 
+       If not 1, number of MPI CPUs required
+       Set by JobSpecification attribute "hostcount" 
+     */
+    int cpus; 
     private TimeInterval walltime;
     private Time starttime, endtime;
     private boolean done;
@@ -27,20 +32,40 @@ public class Job implements Comparable {
     public Job() {
     }
 
-    public Job(Task t) {
-        this.task = t;
-        Object wt = ((JobSpecification) t.getSpecification()).getAttribute("maxwalltime");
-        if (wt == null) {
-            this.walltime = TimeInterval.fromSeconds(10 * 60);
-        }
-        else {
-            this.walltime = TimeInterval.fromSeconds(new WallTime(wt.toString()).getSeconds());
-        }
+    public Job(Task task) {
+        setTask(task);
+        JobSpecification spec = 
+            (JobSpecification) task.getSpecification();
+        Object tmp = spec.getAttribute("hostcount");
+        if (tmp == null)
+            cpus = 1;
+        else
+            cpus = Integer.parseInt((String) tmp);
         synchronized (Job.class) {
             id = sid++;
         }
     }
 
+    public Job(Task task, int cpus) {
+        setTask(task);
+        this.cpus = cpus;
+    }
+    
+    void setTask(Task task) {
+        this.task = task;
+       
+        JobSpecification spec = 
+            (JobSpecification) task.getSpecification();
+        Object tmp = spec.getAttribute("maxwalltime");
+        if (tmp == null) {
+            this.walltime = TimeInterval.fromSeconds(10 * 60);
+        }
+        else {
+            WallTime wt = new WallTime(tmp.toString());
+            this.walltime = TimeInterval.fromSeconds(wt.getSeconds());
+        }
+    }
+    
     public Time getEndTime() {
         if (endtime == null) {
             if (starttime == null) {
@@ -71,11 +96,11 @@ public class Job implements Comparable {
         return done;
     }
 
-    public int compareTo(Object obj) {
-        Job o = (Job) obj;
-        TimeInterval diff = walltime.subtract(o.walltime);
+    public int compareTo(Job other) {
+        // Job other = (Job) obj;
+        TimeInterval diff = walltime.subtract(other.walltime);
         if (diff.getMilliseconds() == 0) {
-            return id - o.id;
+            return id - other.id;
         }
         else {
             return (int) diff.getMilliseconds();
@@ -105,5 +130,9 @@ public class Job implements Comparable {
     
     public Task getTask() {
         return task;
+    }
+
+    public int getCpus() {
+        return cpus;
     }
 }

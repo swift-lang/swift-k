@@ -93,14 +93,14 @@ public class LocalIOProvider implements IOProvider {
         public void write(boolean last, byte[] data) throws IOException {
             try {
                 buf.write(last, data);
-                crt += data.length;
-                if (last && crt != len) {
-                    throw new IOException("File size mismatch. Expected " + len + " bytes, got "
-                            + crt);
-                }
             }
             catch (InterruptedException e) {
-                throw new IOException(e.toString());
+                throw new IOException("Interrupted!");
+            }
+            crt += data.length;
+            if (last && crt != len) {
+                throw new IOException("File size mismatch. Expected " + len + " bytes, got "
+                        + crt);
             }
         }
 
@@ -127,6 +127,7 @@ public class LocalIOProvider implements IOProvider {
         private FileChannel fc;
 
         public Reader(String src, ReadIOCallback cb) throws IOException {
+            logger.debug("LocalIOProvider.Reader " + src);
             URI srcURI = newURI(src);
             f = CoasterFileRequestHandler.normalize(srcURI.getPath().substring(1));
             this.cb = cb;

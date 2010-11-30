@@ -16,7 +16,7 @@ import java.io.Serializable;
  * specification is handler specific.
  */
 
-public interface Specification extends Serializable {
+public interface Specification extends Serializable, Cloneable {
     public static final int JOB_SUBMISSION = 1;
     public static final int FILE_TRANSFER = 2;
     public static final int FILE_OPERATION = 3;
@@ -29,4 +29,6 @@ public interface Specification extends Serializable {
     public void setSpecification(String specification);
 
     public String getSpecification();
+    
+    public Object clone();
 }
