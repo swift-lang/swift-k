@@ -45,7 +45,7 @@ if [ ! -d "$SWIFT_HOME" ] ; then
 		SWIFT_HOME=`dirname $MY_PATH`"/.."
 		if [ ! -f "$SWIFT_HOME/lib/cog-swift-svn.jar" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
 	    	echo "Error: SWIFT_HOME is not set, and all attempts at guessing it failed"
-	    	exit
+	    	exit 1
 		fi
     fi
 fi
