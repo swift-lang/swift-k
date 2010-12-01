@@ -29,7 +29,7 @@ public class JobQueue implements RegistrationManager {
     private LocalTCPService localService;
     private ChannelContext clientChannelContext;
 
-    public JobQueue(LocalTCPService localService) throws IOException {
+    public JobQueue(LocalTCPService localService) {
         settings = new Settings();
         this.localService = localService;
         Collection<URI> addrs = settings.getLocalContacts(localService.getPort());

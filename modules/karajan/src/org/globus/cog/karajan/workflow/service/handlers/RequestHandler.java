@@ -58,7 +58,7 @@ public abstract class RequestHandler extends RequestReply {
 	
 	public void send(boolean err) throws ProtocolException {
 		KarajanChannel channel = getChannel();
-		Collection outData = getOutData();
+		Collection<byte[]> outData = getOutData();
 		if (channel == null) {
 			throw new ProtocolException("Unregistered command");
 		}
@@ -67,9 +67,9 @@ public abstract class RequestHandler extends RequestReply {
 		}
 		boolean fin = (outData == null) || (outData.size() == 0);
 		if (!fin) {
-			Iterator i = outData.iterator();
+			Iterator<byte[]> i = outData.iterator();
 			while (i.hasNext()) {
-				byte[] buf = (byte[]) i.next();
+				byte[] buf = i.next();
 				channel.sendTaggedReply(getId(), buf, !i.hasNext(), err);
 			}
 		}
