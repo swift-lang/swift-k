@@ -50,7 +50,7 @@ public class CoasterService extends GSSService {
     private String registrationURL, id;
     private JobQueue jobQueue;
     private LocalTCPService localService;
-    private Exception e;
+    private Exception exceptionAtStop;
     private boolean done;
     private boolean suspended;
     private static Timer watchdogs = new Timer();
@@ -141,9 +141,8 @@ public class CoasterService extends GSSService {
             jobQueue = new JobQueue(localService);
             jobQueue.start();
             localService.setRegistrationManager(jobQueue);
-            logger
-                    .info("Started local service: "
-                            + localService.getContact());
+            logger.info("Started local service: "
+                        + localService.getContact());
             if (id != null) {
                 try {
                     logger.info("Reserving channel for registration");
@@ -192,12 +191,12 @@ public class CoasterService extends GSSService {
         return pcc;
     }
 
-    private void stop(Exception e) {
+    private void stop(Exception exception) {
         if (jobQueue != null) {
             jobQueue.shutdown();
         }
         synchronized (this) {
-            this.e = e;
+            this.exceptionAtStop = exception;
             done = true;
             notifyAll();
         }
@@ -210,14 +209,15 @@ public class CoasterService extends GSSService {
                 wait(10000);
                 checkIdleTime();
             }
-            if (e != null) {
-                throw e;
+            if (exceptionAtStop != null) {
+                throw exceptionAtStop;
             }
         }
     }
 
     @Override
     public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+        logger.warn("irrecoverable channel error!\n\t" + e);
         stop(e);
     }
 
@@ -234,7 +234,7 @@ public class CoasterService extends GSSService {
                 resume();
             }
             else {
-                logger.info("Idle time exceeded. Shutting down service.");
+                logger.warn("Idle time exceeded. Shutting down service.");
                 shutdown();
             }
         }

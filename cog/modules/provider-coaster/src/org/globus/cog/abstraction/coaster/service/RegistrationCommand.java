@@ -12,6 +12,9 @@ package org.globus.cog.abstraction.coaster.service;
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
+/**
+ * Informs the client that the CoasterService is ready  
+ * */
 public class RegistrationCommand extends Command {
 	public RegistrationCommand(String id, String url) {
 		super(RegistrationHandler.NAME);
