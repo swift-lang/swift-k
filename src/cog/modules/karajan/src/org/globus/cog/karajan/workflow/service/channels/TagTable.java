@@ -16,11 +16,11 @@ import java.util.Map;
 public class TagTable {
 	private static final long serialVersionUID = 1659255187618780167L;
 
-	private Map map;
+	private Map<MutableInteger,Object> map;
 	private MutableInteger mkey;
 	
 	public TagTable() {
-		map = new HashMap();
+		map = new HashMap<MutableInteger,Object>();
 		mkey = new MutableInteger();
 	}
 	
@@ -43,7 +43,7 @@ public class TagTable {
 		return map.get(mkey);
 	}
 	
-	public Collection values() {
+	public Collection<Object> values() {
 		return map.values();
 	}
 	
@@ -62,6 +62,7 @@ public class TagTable {
 			this.value = value;
 		}
 		
+		@SuppressWarnings("unused")
 		public int getValue() {
 			return value;
 		}
