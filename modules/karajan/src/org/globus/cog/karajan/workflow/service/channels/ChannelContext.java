@@ -10,8 +10,6 @@
 package org.globus.cog.karajan.workflow.service.channels;
 
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
 
@@ -31,7 +29,7 @@ import org.ietf.jgss.GSSName;
 public class ChannelContext {
 	private static final Logger logger = Logger.getLogger(ChannelContext.class);
 
-	private Map data;
+	private Map<String,Object> attributes;
 	private boolean initialized;
 	private RemoteConfiguration.Entry configuration;
 	private ChannelID channelID;
@@ -40,11 +38,11 @@ public class ChannelContext {
 	private int cmdseq;
 	private TagTable activeSenders;
 	private TagTable activeReceivers;
-	private Map reexecutionSet;
+	// private Map reexecutionSet;
 	private static Timer timer;
 	private ServiceContext serviceContext;
 	private GSSCredential cred;
-	private ChannelAttributes attr;
+	// private ChannelAttributes attr;
 	private int reconnectionAttempts;
 	private long lastHeartBeat;
 
@@ -53,10 +51,10 @@ public class ChannelContext {
 	}
 	
 	public ChannelContext(ServiceContext sc) {
-	    data = new HashMap();
+	    attributes = new HashMap<String,Object>();
 		activeSenders = new TagTable();
 		activeReceivers = new TagTable();
-		reexecutionSet = new Hashtable();
+		// reexecutionSet = new Hashtable();
 		channelID = new ChannelID();
 		this.serviceContext = sc;
 	}
@@ -171,10 +169,8 @@ public class ChannelContext {
 	}
 
 	private void notifyListeners(TagTable map, Exception t) {
-		Iterator i = map.values().iterator();
-		while (i.hasNext()) {
-			((RequestReply) i.next()).errorReceived(null, t);
-		}
+		for (Object o : map.values())
+			((RequestReply) o).errorReceived(null, t);
 	}
 
 	public Timer getTimer() {
@@ -211,14 +207,14 @@ public class ChannelContext {
 	}
 	
 	public Object getData(String name) {
-	    synchronized(data) {
-	        return data.get(name);
+	    synchronized(attributes) {
+	        return attributes.get(name);
 	    }
 	}
 	
-	public void addData(String name, Object o) {
-	    synchronized(data) {
-	        data.put(name, o);
+	public void setAttribute(String name, Object o) {
+	    synchronized(attributes) {
+	        attributes.put(name, o);
 	    }
 	}
 
@@ -239,6 +235,6 @@ public class ChannelContext {
 	}
 	
 	public String toString() {
-		return System.identityHashCode(this) + ": " + data.toString();
+		return System.identityHashCode(this) + ": " + attributes.toString();
 	}
 }
