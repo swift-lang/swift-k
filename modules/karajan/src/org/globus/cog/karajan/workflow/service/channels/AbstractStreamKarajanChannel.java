@@ -150,13 +150,16 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				state = STATE_IDLE;
 				boolean fin = (flags & FINAL_FLAG) != 0;
 				boolean error = (flags & ERROR_FLAG) != 0;
+				byte[] tdata = data;
+				// don't hold reference from the channel to the data
+				data = null;
 				if ((flags & REPLY_FLAG) != 0) {
 					// reply
-					handleReply(tag, fin, error, len, data);
+					handleReply(tag, fin, error, len, tdata);
 				}
 				else {
 					// request
-					handleRequest(tag, fin, error, len, data);
+					handleRequest(tag, fin, error, len, tdata);
 				}
 			}
 		}
