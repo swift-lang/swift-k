@@ -119,7 +119,7 @@ public class StartHandler extends RequestHandler {
 		Map imports = (Map) cc.getData(IMPORTS);
 		if (imports == null) {
 			imports = new HashMap();
-			cc.addData(IMPORTS, imports);
+			cc.setAttribute(IMPORTS, imports);
 		}
 		return getImport(imports, imp);
 	}
