@@ -298,9 +298,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		if (getCallbackService() != null) {
 			return getCallbackService().getContact();
 		}
-		else {
-		    return null;
-		}
+		return null;
 	}
 
 	public Service getCallbackService() {
