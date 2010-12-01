@@ -68,6 +68,7 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		}
 	}
     
+    @Override
     public synchronized void add(int index, T o) {
         if (lock > 0 || list.isEmpty()) {
             copyAndAdd(index, o);
@@ -101,6 +102,7 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		}
 	}
 	
+	@Override
     public synchronized T remove(int index) {
         if (lock > 0) {
             return copyAndRemove(index);
@@ -139,6 +141,7 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		}
 	}
 	
+	@Override
     public boolean addAll(int index, Collection<? extends T> c) {
         if (lock > 0 || list.isEmpty()) {
             return copyAndAddAll(index, c);
@@ -221,31 +224,40 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		return list.toString();
 	}
 
+    @Override
     public T get(int index) {
         return list.get(index);
     }
 
+    @Override
     public int indexOf(Object o) {
         return list.indexOf(o);
     }
 
+    @Override
     public int lastIndexOf(Object o) {
         return list.lastIndexOf(o);
     }
 
+    @Override
     public ListIterator<T> listIterator() {
     	throw new UnsupportedOperationException();
     }
 
+    @Override
     public ListIterator<T> listIterator(int index) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public T set(int index, T o) {
         return list.set(index, o);
     }
 
+    @Override
     public List<T> subList(int fromIndex, int toIndex) {
         throw new UnsupportedOperationException();
     };
+	
+	
 }
