@@ -1,34 +1,14 @@
 #!/bin/sh
 
-SWIFT_HOME=$( dirname $( dirname $0 ) )
-LOG=${SWIFT_HOME}/etc/cdm_broadcast.log
+# Called by org.globus.swift.data.policy.Broadcast
+# usage: cdm_broadcast.sh <MODE> <LOG> <DIR> <FILE> <DEST>
+# copies DIR/FILE to DEST via MODE with logging to LOG
 
-# For each given location, broadcast the given files to it
-# Input: bgp_broadcast [-l <location> <file>*]*
-bgp_broadcast()
-{
-  while [[ ${*} != "" ]]
-   do
-   L=$1 # -l
-   shift
-   ARGS=$1 # Location
-   shift
-   while true
-    do
-    if [[ $1 == "-l" || $1 == "" ]]
-      then
-      break
-    fi
-    ARGS="${ARGS} $1"
-    shift
-   done
-   bgp_broadcast_perform ${ARGS}
-  done
-}
+SWIFT_HOME=$( dirname $( dirname $0 ) )
 
 # Broadcast the given files to the given location
 # Input: bgp_broadcast_perform <location> <file>*
-bgp_broadcast_perform()
+bgp_broadcast()
 {
   LOCATION=$1
   shift
@@ -81,21 +61,48 @@ ssh_until_success()
 
 local_broadcast()
 {
-  DIR=$1
+  ALLOCATION=$1 # Ignored (LOCAL_FILE)
   FILE=$2
   DEST=$3
   cp -v ${FILE} ${DEST}/${FILE}
 }
 
-set -x
+MODE=$1
+LOG=$2
+shift 2
+
+[[ ${LOG} != /dev/null ]] && set -x
 {
   declare -p PWD LOG
 
-  if [[ $( uname -p ) == "ppc64" ]]
+  if [[ ${MODE} == "f2cn" ]]
     then
-    bgp_broadcast ${*}
+    BROADCAST="bgp_broadcast"
+  elif [[ ${MODE} == "file" ]]
+    then
+    BROADCAST="local_broadcast"
   else
-    bgp_local ${*}
+    echo "Unknown broadcast mode!"
+    exit 1
   fi
 
-} >> /tmp/cdm_broadcast.log 2>&1 # ${LOG} 2>&1
+  while [[ ${*} != "" ]]
+  do
+    L=$1 # -l
+    shift
+    ARGS=$1 # Location
+    shift
+    while true
+    do
+      if [[ $1 == "-l" || $1 == "" ]]
+      then
+        break
+      fi
+      ARGS="${ARGS} $1"
+      shift
+    done
+    ${BROADCAST} ${ARGS}
+  done
+} >> ${LOG} 2>&1
+
+exit 0

@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 import org.globus.swift.data.Director;
 
 public class Broadcast extends Policy {
+    
+    static Logger logger = Logger.getLogger(Broadcast.class);
     
     String destination = null; 
     
@@ -25,7 +29,7 @@ public class Broadcast extends Policy {
     */
     public static void perform(Map<String,List<String>> batch) {
         String[] line = commandLine(batch);
-        System.out.println("Broadcast.perform(): " + Arrays.toString(line));
+        logger.debug("arguments: " + Arrays.toString(line));
         Process process = null;
         try {
             process = Runtime.getRuntime().exec(line);
@@ -33,7 +37,8 @@ public class Broadcast extends Policy {
         }
         catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Could not launch external broadcast");
+            throw new RuntimeException
+            ("Could not launch external broadcast", e);
         }
         int code = process.exitValue();
         if (code != 0)
@@ -47,6 +52,11 @@ public class Broadcast extends Policy {
         String home = System.getProperties().getProperty("swift.home");
         List<String> line = new ArrayList<String>();
         line.add(home+"/libexec/cdm_broadcast.sh");
+        line.add(Director.broadcastMode);
+        if (logger.isDebugEnabled())
+            line.add(Director.logfile);
+        else 
+            line.add("/dev/null");
         for (Map.Entry<String,List<String>> entry : batch.entrySet()) {
             line.add("-l");
             String location = entry.getKey();
@@ -54,7 +64,7 @@ public class Broadcast extends Policy {
             line.add(location);
             for (String file : files) {
                 line.add(file);
-                line.add(getDestination(file)+"/"+file);
+                line.add(getDestination(file));
             }
         }
         String[] result = new String[line.size()];

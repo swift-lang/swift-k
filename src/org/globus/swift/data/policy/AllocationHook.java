@@ -12,15 +12,12 @@ import org.globus.swift.data.Director;
  * */
 public class AllocationHook extends Hook
 {
-    public void blockActive(StatusEvent e)
+    public void blockActive(StatusEvent e, String blockId)
     {
         if (!Director.isEnabled())
             return;
         
-        System.out.println("blockActive: " + e.getStatus().getMessage());
-        String msg = e.getStatus().getMessage();
-        String[] tokens = msg.split("=");
-        String allocation = tokens[1];
-        Director.addAllocation(allocation);
+        System.out.println("blockActive: " + blockId);
+        Director.addAllocation(blockId);
     }
 }

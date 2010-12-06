@@ -19,9 +19,11 @@ import org.apache.log4j.Logger;
 import org.globus.swift.data.policy.Policy;
 import org.globus.swift.data.policy.Broadcast;
 import org.globus.swift.data.util.LineReader;
+import org.griphyn.vdl.util.VDL2Config;
 
 /**
  * Manages CDM policies for files based on pattern matching.
+ * Initialized when given a CDM file to read. 
  * @author wozniak
  * */
 
@@ -54,6 +56,7 @@ public class Director {
     /**
        Remember the files we have broadcasted.
        Map from allocations to filenames.
+       The keys represent the list of known allocations.
        NOTE: must be accessed only using synchronized Director methods
      */
     private static Map<String,Set<String>> broadcasted =
@@ -65,28 +68,46 @@ public class Director {
     */
     private static Set<String> broadcastWork = new LinkedHashSet<String>();
 
-    /**
-       Remember all known allocations
-    */
-    private static List<String> allocations = new ArrayList<String>();
-
     public static boolean isEnabled()
     {
         return enabled;
     }
 
+    /** 
+       How to broadcast: either "file" or "f2cn"
+     */
+    public static String broadcastMode = null;
+    
+    /** 
+       Convenience reference to the Swift logfile name
+     */
+    public static String logfile = null;
+    
     /**
        Read in the user-supplied CDM policy file.
     */
     public static void load(File file) throws IOException {
-        logger.info("CDM file: " + file);
-        enabled = true;
+        logger.debug("CDM file: " + file);
         Director.policyFile = file;
         List<String> list = LineReader.read(file);
         for (String s : list)
             addLine(s);
+        init();
     }
 
+    static void init() throws IOException
+    {
+        VDL2Config config = VDL2Config.getConfig();
+        
+        broadcastMode = config.getProperty("cdm.broadcast.mode");
+        logfile = config.getProperty("logfile");
+        
+        if (broadcastMode.equals("file")) 
+            broadcasted.put("LOCAL_FILE", new HashSet<String>());
+        
+        enabled = true;
+    }
+    
     /**
        A line is either a rule or a property.
     */
@@ -173,13 +194,12 @@ public class Director {
     }
 
     /**
-       Add a location to the list of allocations.
+       Add a Coasters allocation to the list of allocations.
        If the location is added twice, the second addition
        is considered to be an empty allocation with no CDM state.
     */
-    public static synchronized void addBlock(String blockId) {
-        logger.debug("addBlock(): " + blockId);
-        allocations.add(blockId);
+    public static synchronized void addAllocation(String blockId) {
+        logger.debug("addAllocation(): " + blockId);
         broadcasted.put(blockId, new HashSet<String>());
         doBroadcast();
     }
@@ -195,7 +215,7 @@ public class Director {
             return;
         logger.debug("doBroadcast(): batch: " + batch);
         Broadcast.perform(batch);
-        markBroadcasts(batch);
+        noteBroadcasts(batch);
         logger.debug("marked: " + broadcasted);
     }
 
@@ -207,15 +227,18 @@ public class Director {
     */
     private static Map<String,List<String>> getBroadcastBatch() {
         logger.debug("getBroadcastBatch(): ");
-        Map<String,List<String>> batch = new LinkedHashMap<String,List<String>>();
+        Map<String,List<String>> batch = 
+            new LinkedHashMap<String,List<String>>();
         for (String file : broadcastWork) {
             logger.debug("file: " + file);
-            logger.debug("allocations: " + allocations);
-            for (String allocation : allocations) {
-                Set<String> files = broadcasted.get(allocation);
+            for (Map.Entry<String,Set<String>> entry : 
+                broadcasted.entrySet()) {
+                String allocation = entry.getKey();
+                Set<String> files = entry.getValue();
                 logger.debug("files: " + files);
                 if (! files.contains(file)) {
-                    logger.debug("adding: " + file + " to: " + allocation);
+                    logger.debug("adding: " + file + 
+                                 " to: " + allocation);
                     List<String> work = batch.get(allocation);
                     if (work == null) {
                         work = new ArrayList<String>();
@@ -229,18 +252,21 @@ public class Director {
     }
 
     /**
-       Mark that the files in the given batch have been successfully broadcasted.
+       Note that the files in the given batch have been successfully 
+       broadcasted by adding them to Set broadcasted.
        Should only be called by {@link doBroadcast}.
     */
-    private static void markBroadcasts(Map<String,List<String>> batch) {
+    private static void noteBroadcasts(Map<String,
+                                       List<String>> batch) {
         logger.debug("markBroadcasts: batch: " + batch);
-        for (Map.Entry<String,List<String>> entry : batch.entrySet()) {
+        for (Map.Entry<String,List<String>> entry : 
+            batch.entrySet()) {
             String location = entry.getKey();
             logger.debug("markBroadcasts: location: " + location);
             List<String> files = entry.getValue();
             for (String file : files) {
                 Set<String> contents = broadcasted.get(location);
-                assert (! contents.contains(file));
+                assert(! contents.contains(file));
                 logger.debug("markBroadcasts: add: " + file);
                 contents.add(file);
             }

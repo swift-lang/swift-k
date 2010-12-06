@@ -95,6 +95,8 @@ public class VDL2Config extends Properties {
 		put("status.mode", "files");
 		put("wrapper.parameter.mode", "args");
 		put("wrapper.invocation.mode", "absolute");
+		
+		put("cdm.broadcast.mode", "file");
 	}
 
 	private VDL2Config(VDL2Config other) {

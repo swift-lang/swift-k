@@ -1,7 +1,5 @@
 package org.globus.swift.data;
 
-import java.io.IOException;
-
 import org.apache.log4j.Logger;
 
 import org.globus.cog.karajan.arguments.Arg;

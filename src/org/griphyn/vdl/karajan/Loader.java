@@ -35,7 +35,6 @@ import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.PrintStreamChannel;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode;
-import org.globus.cog.karajan.workflow.service.channels.AbstractKarajanChannel;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 import org.globus.swift.data.Director;
@@ -93,9 +92,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
             if (ap.isPresent(ARG_MONITOR)) {
                 new Monitor().start();
             }
-            if (ap.isPresent(ARG_CDMFILE)) {
-                loadCDM(ap); 
-            }
             if (!ap.hasValue(ArgumentParser.DEFAULT)) {
                 error("No SwiftScript program specified");
             }
@@ -130,6 +126,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
             setupLogging(ap, projectName, runID);
             logger.debug("Max heap: " + Runtime.getRuntime().maxMemory());
 
+            if (ap.isPresent(ARG_CDMFILE)) {
+                loadCDM(ap); 
+            }
+            
             if (!(new File(project).exists())) {
                 logger.error("Input file " + project + " does not exist.");
                 System.exit(4);
@@ -454,6 +454,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             logfile = projectName + "-" + runID + ".log";
         }
 
+        VDL2Config config = VDL2Config.getConfig();
+        config.put("logfile", logfile);
+        
         File f = new File(logfile);
 
         FileAppender fa = (FileAppender) getAppender(FileAppender.class);
