@@ -10,12 +10,12 @@ bgp_broadcast()
   while [[ ${*} != "" ]]
    do
    L=$1 # -l
-   shift 
+   shift
    ARGS=$1 # Location
    shift
    while true
     do
-    if [[ $1 == "-l" || $1 == "" ]] 
+    if [[ $1 == "-l" || $1 == "" ]]
       then
       break
     fi
@@ -34,14 +34,14 @@ bgp_broadcast_perform()
   shift
   WORK=( ${*} )
 
-  IP=$( listip ${LOCATION} )  
+  IP=$( listip ${LOCATION} )
 
-  if [[ ${#WORK[@]} > 3 ]] 
+  if [[ ${#WORK[@]} > 3 ]]
     then
     SCRIPT=$( mktemp )
     {
       echo "#!/bin/sh"
-      while [[ ${*} != "" ]] 
+      while [[ ${*} != "" ]]
        do
        FILE=$1
        DEST=$2
@@ -52,7 +52,7 @@ bgp_broadcast_perform()
     scp ${SCRIPT} ${IP}:${SCRIPT}
     ssh ${IP} ${SCRIPT}
   else
-    while [[ ${*} != "" ]] 
+    while [[ ${*} != "" ]]
      do
      FILE=$1
      DEST=$2
@@ -65,12 +65,12 @@ bgp_broadcast_perform()
 # Repeat command N times until success
 ssh_until_success()
 {
-  N=$1 
-  shift 
+  N=$1
+  shift
   for (( i=0 ; i < N ; i++ ))
    do
    ssh -o PasswordAuthentication=no ${*}
-   if [[ $? == 0 ]]; 
+   if [[ $? == 0 ]];
      then
      break
    fi
@@ -86,16 +86,16 @@ local_broadcast()
   DEST=$3
   cp -v ${FILE} ${DEST}/${FILE}
 }
-  
+
 set -x
 {
   declare -p PWD LOG
-  
+
   if [[ $( uname -p ) == "ppc64" ]]
     then
     bgp_broadcast ${*}
-  else 
+  else
     bgp_local ${*}
   fi
-  
+
 } >> /tmp/cdm_broadcast.log 2>&1 # ${LOG} 2>&1
