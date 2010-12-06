@@ -5,7 +5,7 @@ import java.util.List;
 public class Local extends Policy {
 
     public String toString() {
-        return "PULL";
+        return "LOCAL";
     }
 
     @Override
