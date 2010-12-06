@@ -51,12 +51,16 @@ cdm_action() {
 			fi
 			;;
  		LOCAL)
- 			TOOL=${ARGS[0]}
- 			REMOTE_DIR=${ARGS[1]}
- 			FLAGS=${ARGS[3]}
- 			log "CDM[LOCAL]: Copying $DIRECT_DIR/$FILE to $JOBDIR/$FILE"
+ 			#TOOL=${ARGS[0]}
+ 			#REMOTE_DIR=${ARGS[1]}
+ 			#FLAGS=${ARGS[3]}
+			TOOL=$1
+			REMOTE_DIR=$2
+			FLAGS=$3
+			log "CDM[LOCAL]: TOOL=$TOOL FLAGS=$FLAGS REMOTE_DIR=$REMOTE_DIR ARGS=$ARGS"
+ 			log "CDM[LOCAL]: Copying $REMOTE_DIR/$FILE to $JOBDIR/$FILE"
  			if [ $MODE == "INPUT" ]; then
- 				[ -f "$DIRECT_DIR/$FILE" ]
+ 				[ -f "$REMOTE_DIR/$FILE" ]
  				checkError 254 "CDM[LOCAL]: $REMOTE_DIR/$FILE does not exist!"
  				$TOOL $FLAGS $REMOTE_DIR/$FILE $JOBDIR/$FILE
  				checkError 254 "CDM[LOCAL]: Tool failed!"
