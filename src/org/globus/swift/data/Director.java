@@ -78,11 +78,11 @@ public class Director {
     /**
        Read in the user-supplied CDM policy file.
     */
-    public static void load(File policyFile) throws IOException {
-        logger.info("CDM file: " + policyFile);
+    public static void load(File file) throws IOException {
+        logger.info("CDM file: " + file);
         enabled = true;
-        Director.policyFile = policyFile;
-        List<String> list = LineReader.read(policyFile);
+        Director.policyFile = file;
+        List<String> list = LineReader.read(file);
         for (String s : list)
             addLine(s);
     }
@@ -177,10 +177,10 @@ public class Director {
        If the location is added twice, the second addition
        is considered to be an empty allocation with no CDM state.
     */
-    public static synchronized void addAllocation(String allocation) {
-        logger.debug("addAllocation(): " + allocation);
-        allocations.add(allocation);
-        broadcasted.put(allocation, new HashSet<String>());
+    public static synchronized void addBlock(String blockId) {
+        logger.debug("addBlock(): " + blockId);
+        allocations.add(blockId);
+        broadcasted.put(blockId, new HashSet<String>());
         doBroadcast();
     }
 
