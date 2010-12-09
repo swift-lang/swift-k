@@ -34,7 +34,7 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     public void requestComplete() throws ProtocolException {
         String src = getInDataAsString(0);
         try {
-            logger.debug("request: " + src);
+            logger.debug("for: " + src);
             provider = IOProviderFactory.getDefault().instance(getProtocol(src));
             sendReply();
         }
