@@ -19,6 +19,7 @@ use POSIX ":sys_wait_h";
 use strict;
 use warnings;
 eval "use Time::HiRes qw(time)";
+# use Time::HiRes qw(time);
 
 # Maintain a stack of job slot ids for auxiliary services:
 #   Each slot has a small integer id 0..n-1
@@ -100,6 +101,11 @@ use constant IOBUFSZ => 32768;
 # "lost heartbeats".
 use constant HEARTBEAT_INTERVAL => 2 * 60;
 
+# If true, enable a profile result that is written to the log
+my $PROFILE = 1;
+# Contains tuples (EVENT, PID, TIMESTAMP) (flattened)
+my @PROFILE_EVENTS = ();
+
 my $ID = "-";
 
 sub wlog {
@@ -108,10 +114,10 @@ sub wlog {
 	if ($level >= $LOGLEVEL) {
 		foreach $msg (@_) {
 			my $timestamp = timestring();
-                        my $msgline = sprintf("%s %s %s %s",
-                                              $timestamp,
-                                              $LEVELS[$level],
-                                              $ID, $msg);
+			my $msgline = sprintf("%s %s %s %s",
+								  $timestamp,
+								  $LEVELS[$level],
+								  $ID, $msg);
 			print LOG $msgline;
 		}
 	}
@@ -283,7 +289,7 @@ sub initlog() {
 		$LOGLEVEL = $LEVELMAP{$slevel};
 	}
 	if ($LOGLEVEL != NONE) {
-		open(LOG, ">>$LOG") or die "Failed to open log file: $!";
+		open(LOG, ">>$LOG") or die "Failed to open log file ($LOG): $!";
 		my $b = select(LOG);
 		$| = 1;
 		select($b);
@@ -293,8 +299,11 @@ sub initlog() {
 }
 
 sub init() {
-        logsetup();
-        reconnect();
+	if ($PROFILE) {
+		push(@PROFILE_EVENTS, "START", "N/A", time());
+	}
+	logsetup();
+	reconnect();
 }
 
 sub logsetup() {
@@ -738,14 +747,32 @@ sub register {
 	sendReply($tag, ("OK"));
 }
 
+sub writeprofile {
+	if ($PROFILE) {
+		wlog(INFO, "PROFILE_INFO:\n");
+		while (scalar(@PROFILE_EVENTS)) { 
+			my $event     = shift(@PROFILE_EVENTS);
+			my $pid       = shift(@PROFILE_EVENTS);
+			my $timestamp = shift(@PROFILE_EVENTS);
+			wlog(INFO, sprintf("PROFILE: %-5s %6d %.3f\n", 
+                               $event, $pid, $timestamp));
+		}
+	}
+}
 
 sub shutdownw {
 	my ($tag, $timeout, $msgs) = @_;
 	wlog DEBUG, "Shutdown command received\n";
 	sendReply($tag, ("OK"));
-	select(undef, undef, undef, 1);
-	wlog INFO, "Acknowledged shutdown. Exiting\n";
+	wlog INFO, "Acknowledged shutdown.\n";
 	wlog INFO, "Ran a total of $JOB_COUNT jobs\n";
+	if ($PROFILE) { 
+		push(@PROFILE_EVENTS, "STOP", "N/A", time());
+	}
+	writeprofile();
+	select(undef, undef, undef, 1);
+	wlog INFO, "Exiting\n";
+
 	exit 0;
 }
 
@@ -1123,7 +1150,7 @@ sub stageout {
 			wlog DEBUG, "$jobid PUT sent.\n";
 		}
 		else {
-			wlog INFO, "$jobid Skipping stageout of missing file ($lfile)\n";
+			wlog DEBUG, "$jobid Skipping stageout of missing file ($lfile)\n";
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
 			stageout($jobid);
 		}
@@ -1308,7 +1335,7 @@ sub submitjob {
 sub checkJob() {
 	my ($tag, $JOBID, $JOB) = @_;
 
-	wlog INFO, "$JOBID Job info received (tag=$tag)\n";
+	wlog DEBUG, "$JOBID Job info received (tag=$tag)\n";
 	my $executable = $$JOB{"executable"};
 	if (!(defined $JOBID)) {
 		my $ds = hts($JOB);
@@ -1338,9 +1365,9 @@ sub checkJob() {
 		}
 		chdir $dir;
 		wlog DEBUG, "$JOBID Job check ok (dir: $dir)\n";
-		wlog INFO, "$JOBID Sending submit reply (tag=$tag)\n";
+		wlog DEBUG, "$JOBID Sending submit reply (tag=$tag)\n";
 		sendReply($tag, ("OK"));
-		wlog INFO, "$JOBID Submit reply sent (tag=$tag)\n";
+		wlog DEBUG, "$JOBID Submit reply sent (tag=$tag)\n";
 		return 1;
 	}
 }
@@ -1380,7 +1407,10 @@ sub forkjob {
 			$JOBWAITDATA{$JOBID} = {
 				pid => $pid,
 				pipe => \*PARENT_R
-			};
+				};
+			if ($PROFILE) { 
+				push(@PROFILE_EVENTS, "FORK", $pid, time());
+			}
 		}
 	}
 	else {
@@ -1388,7 +1418,7 @@ sub forkjob {
 	}
 }
 
-my $LASTJOBCHECK = 0;
+my $LASTJOBCHECK = 0.0;
 
 sub checkJobs {
 	my $time = time();
@@ -1447,6 +1477,10 @@ sub checkJobStatus {
 	wlog DEBUG, "$JOBID Got output from child. Closing pipe.\n";
 	close $RD;
 	$JOBDATA{$JOBID}{"exitcode"} = $status;
+
+	if ($PROFILE) {
+		push(@PROFILE_EVENTS, "TERM", $pid, time());
+	}
 
 	my $JOBSLOT = $JOBDATA{$JOBID}{"jobslot"};
 	if ( defined $JOBSLOT ) {
@@ -1517,6 +1551,8 @@ wlog(INFO, "Running on node $myhost\n");
 init();
 
 mainloop();
+
+# Code may not reach this point - see shutdownw()
 wlog INFO, "Worker finished. Exiting.\n";
 exit(0);
 
