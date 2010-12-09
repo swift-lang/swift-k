@@ -80,13 +80,10 @@ public class BlockTask extends TaskImpl {
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
 
-        if (block.getWorkerCount() <= 16 ||
-            "force".equals(System.getProperty("coaster.worker.logging"))) {
-            js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
-        }
-        else {
-            js.addArgument("NOLOGGING");
-        }
+        if (settings.getWorkerLoggingLevel().equals("NONE"))
+          js.addArgument("NOLOGGING");
+        else 
+          js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
 
         logger.debug("arguments: " + js.getArguments());
 
