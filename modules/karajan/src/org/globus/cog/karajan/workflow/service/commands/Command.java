@@ -109,8 +109,8 @@ public abstract class Command extends RequestReply implements SendCallback {
 		sendReqTime = System.currentTimeMillis();
 		cancelTimeout();
 		KarajanChannel channel = getChannel();
-		if (logger.isInfoEnabled()) {
-			logger.info("Sending " + this + " on " + channel);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Sending " + this + " on " + channel);
 		}
 		Collection<byte[]> outData = getOutData();
 		if (channel == null) {
@@ -146,14 +146,14 @@ public abstract class Command extends RequestReply implements SendCallback {
 	public void dataSent() {
 		sendTime = System.currentTimeMillis();
 		//when using the piped channels the reply will arrive before this method is called
-		if (!isInDataReceived()) {
-			setupReplyTimeoutChecker();
-		}
+		setupReplyTimeoutChecker();
 	}
 
 	protected synchronized void setupReplyTimeoutChecker() {
-		timeout = new Timeout();
-		timer.schedule(timeout, replyTimeout);
+		if (!isInDataReceived()) {
+			timeout = new Timeout();
+			timer.schedule(timeout, replyTimeout);
+		}
 	}
 
 	public byte[] execute(KarajanChannel channel) throws ProtocolException, IOException {
