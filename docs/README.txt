@@ -54,6 +54,10 @@ C) in general:
 
  5) Make sure perms are correct
 
+ 6) Create formatting/docbook link (see above) 
+
+ 7) Create fop link
+
 Once the links are set up, the buildguides.sh script will build all guides
 as php.  Run it with no parameters, like this:
 
