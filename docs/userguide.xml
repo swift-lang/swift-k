@@ -13,7 +13,7 @@
 		<para>
 This manual provides reference material for Swift: the SwiftScript language
 and the Swift runtime system. For introductory material, consult
-the <ulink url="http://www.ci.uchicago.edu/swift/guides/tutorial.php">Swift
+the <ulink url="./tutorial.php">Swift <!-- http://www.ci.uchicago.edu/swift/guides/ -->
 tutorial</ulink>.
 	</para>
 	<para>
