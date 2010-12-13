@@ -10,29 +10,29 @@
 
 	<!--<xsl:import href="http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl"/>-->
 	<!--
-	
+
 		testing: if you want to generate your own html without installing
-		stylesheets, substitute the following url for the import href above:                
+		stylesheets, substitute the following url for the import href above:
 		http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl
-                
+
 	-->
 	<!-- speed up the chunking process? -->
 	<xsl:param name="chunk.fast">1</xsl:param>
-	
+
 	<!--
-		Use graphics in admonitions? like 'warnings' 'important' 'note' etc 
+		Use graphics in admonitions? like 'warnings' 'important' 'note' etc
 	-->
 	<xsl:param name="admon.graphics">1</xsl:param>
 	<!-- Set path to admonition graphics  -->
 	<xsl:param name="admon.graphics.path">/docbook-images/</xsl:param>
 	<!--
-	
+
 		Set path to docbook graphics (testing)
-        <xsl:param name="admon.graphics.path">file:///Z:/testing/alliance/docbook-images/</xsl:param> 
-	
+        <xsl:param name="admon.graphics.path">file:///Z:/testing/alliance/docbook-images/</xsl:param>
+
 	-->
 	<!--
-		Again, if 1 above, what is the filename extension for admon graphics? 
+		Again, if 1 above, what is the filename extension for admon graphics?
 	-->
 	<xsl:param name="admon.graphics.extension" select="'.gif'"/>
 	<!-- Set path to callout graphics -->
@@ -42,10 +42,10 @@
 	<xsl:param name="chunk.section.depth">0</xsl:param>
 
 	<!--
-		
+
 		Are parts automatically enumerated?
-		<xsl:param name="part.autolabel">0</xsl:param> 
-	
+		<xsl:param name="part.autolabel">0</xsl:param>
+
 	-->
 	<!-- Are chapters automatically enumerated? -->
 	<xsl:param name="chapter.autolabel">0</xsl:param>
@@ -54,7 +54,7 @@
 	<!-- how deep should each toc be? (how many levels?) -->
 	<xsl:param name="toc.max.depth">2</xsl:param>
 	<!--
-		How deep should recursive sections appear in the TOC for chapters? 
+		How deep should recursive sections appear in the TOC for chapters?
 	-->
 	<xsl:param name="toc.section.depth">4</xsl:param>
 	<!--
@@ -62,18 +62,18 @@
 	-->
 	<xsl:param name="chunk.first.sections">1</xsl:param>
 	<!--
-	
-		Instead of using default filenames, use ids for filenames (dbhtml 	 	 	
+
+		Instead of using default filenames, use ids for filenames (dbhtml
 		directives take precedence) taking this out to avoid breaking any
 		current bookmarks
-			
+
                 <xsl:param name="use.id.as.filename">1</xsl:param>
-				
+
 	-->
 	<!-- custom toc - book only shows chapter -->
 	<xsl:template match="preface|chapter|appendix|article" mode="toc">
 		<xsl:param name="toc-context" select="."/>
-	
+
 		<xsl:choose>
 			<xsl:when test="local-name($toc-context) = 'book'">
 				<xsl:call-template name="subtoc">
@@ -99,49 +99,49 @@
 	<xsl:param name="glossentry.show.acronym">yes</xsl:param>
 
 	<!--
-	
+
 		Name of the glossary collection file
-        
+
 		<xsl:param name="glossary.collection" select="'glossary.xml'"></xsl:param>
-          
+
 	-->
 
 	<!--
 		Generate links from glossterm to glossentry automatically?
-        
+
 		<xsl:param name="glossterm.auto.link">1</xsl:param>
-                
+
 	-->
 
 	<!--
-		
+
 		if non-zero value for previous parameter, does automatic glossterm
 		linking only apply to firstterms?
-        
-		<xsl:param name="firstterm.only.link">1</xsl:param> 
+
+		<xsl:param name="firstterm.only.link">1</xsl:param>
 	-->
 
 	<!--
-		
+
 		permit wrapping of long lines of code
-		
-		<xsl:attribute-set name="monospace.verbatim.properties" 
+
+		<xsl:attribute-set name="monospace.verbatim.properties"
 			use-attribute-sets="verbatim.properties monospace.properties">
-            
+
 			<xsl:attribute name="wrap-option">wrap</xsl:attribute>
-		</xsl:attribute-set> 
+		</xsl:attribute-set>
 	-->
-	
+
 	<!-- INCORPORATING DOCBOOK PAGES INTO WEBSITE -->
 
 	<!--
-		make sure there's a DOCTYPE in the html output (otherwise, some css renders strangely 
+		make sure there's a DOCTYPE in the html output (otherwise, some css renders strangely
 	-->
 	<xsl:param name="chunker.output.doctype-public" select="'-//W3C//DTD HTML 4.01 Transitional//EN'"/>
 	<xsl:param name="chunker.output.doctype-system" select="'http://www.w3.org/TR/html4/loose.dtd'"/>
 	<!-- add elements to the HEAD tag -->
 
-	<xsl:template name="user.head.content"> 
+	<xsl:template name="user.head.content">
 		<link href="http://www.ci.uchicago.edu/swift/css/style1col.css" rel="stylesheet" type="text/css"/>
 		<script type="text/javascript" src="http://www.ci.uchicago.edu/swift/dhtml.js"></script>
 		<script type="text/javascript" src="http://www.ci.uchicago.edu/swift/shCoreu.js"></script>
@@ -165,7 +165,7 @@
 		<xsl:param name="content">
 			<xsl:apply-imports/>
 		</xsl:param>
-	
+
 		<xsl:call-template name="user.preroot"/>
 
 		<html>
@@ -186,9 +186,9 @@
       </xsl:call-template>
 
 				<xsl:call-template name="user.header.content"/>
-				<xsl:call-template name="breadcrumbs" />	
+				<xsl:call-template name="breadcrumbs" />
 				<xsl:copy-of select="$content"/>
-			
+
 				<xsl:call-template name="user.footer.content"/>
 
       <xsl:call-template name="footer.navigation">
@@ -213,7 +213,7 @@ pageTracker._trackPageview();
 	</xsl:template>
 
 	<!--
-		prevent h1 and h2 using clear: both - want to control in css, instead 
+		prevent h1 and h2 using clear: both - want to control in css, instead
 	-->
 
 	<xsl:template name="section.heading">
@@ -231,24 +231,26 @@ pageTracker._trackPageview();
 					</xsl:call-template>
 				</xsl:attribute>
 			</a>
-		
+
 			<xsl:copy-of select="$title"/>
 		</xsl:element>
 	</xsl:template>
-	
+
 	<xsl:template name="user.header.navigation">
 		<xsl:text disable-output-escaping="yes"><![CDATA[
-		
+
 		<!-- entire page container -->
 		<div id="container">
 			<!-- header -->
 			<div id="header">
-				<?php require('../../inc/header.php') ?>
+				<?php
+                                   set_include_path('.');
+                                   require('../../../inc/header.php') ?>
 			</div>
 			<!-- end header -->
 			<!-- nav -->
 			<div id="nav">
-				<?php require('../../inc/nav.php') ?>
+				<?php require('../../../inc/nav.php') ?>
 			</div>
 			<!-- end nav -->
 			<!-- content container -->
@@ -256,13 +258,13 @@ pageTracker._trackPageview();
 		]]>
 		</xsl:text>
 	</xsl:template>
-	
+
 	<xsl:template name="user.footer.content">
 		<xsl:text disable-output-escaping="yes"><![CDATA[
 			</div>
 			<!-- end content container-->
 			<!-- footer -->
-			<div id="footer"><?php require('../../inc/footer.php') ?></div> 
+			<div id="footer"><?php require('../../../inc/footer.php') ?></div>
 			<!-- end footer -->
 
 		</div>
