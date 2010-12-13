@@ -7,4 +7,5 @@ cp ../*.png .
 cp ../*.jpeg .
 
 xsltproc --nonet ../formatting/swiftsh_html_chunked.xsl ../userguide.xml
+chmod a+r *.php 
 
