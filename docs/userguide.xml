@@ -39,7 +39,7 @@ of program code.
 <section><title>Language basics</title>
 <para>
 A Swift script describes data, application components, invocations
-of applications components, and the inter-relations (data flow) 
+of applications components, and the inter-relations (data flow)
 between those invocations.
 </para>
 <para>
@@ -214,7 +214,7 @@ construct:
 
 <para>
 This fragment will initialise the 0-th element of the <literal>step</literal>
-array to some initial condition, and then repeatedly run the 
+array to some initial condition, and then repeatedly run the
 <literal>simulate</literal> procedure, using each execution's outputs as
 input to the next step.
 </para>
@@ -468,8 +468,8 @@ associated with a mapper. The mapper is used to
 identify which files belong to that DSHandle.
 		</para>
 		<para>
-A dataset's physical representation is declared by a mapping descriptor, 
-which defines how each element in the dataset's logical schema is 
+A dataset's physical representation is declared by a mapping descriptor,
+which defines how each element in the dataset's logical schema is
 stored in, and fetched from, physical structures such as directories,
 files, and remote servers.
 </para>
@@ -478,8 +478,8 @@ files, and remote servers.
 Mappers are parameterized to take into account properties such as
 varying dataset location.
 In order
-to access a dataset, we need to know three things: its type, 
-its mapping, and the value(s) of any parameter(s) associated 
+to access a dataset, we need to know three things: its type,
+its mapping, and the value(s) of any parameter(s) associated
 with the mapping descriptor. For example, if we want to describe a dataset,
 of type imagefile, and whose physical
 representation is a file called "file1.bin" located at "/home/yongzh/data/",
@@ -491,11 +491,11 @@ imagefile f1&lt;single_file_mapper;file="/home/yongzh/data/file1.bin"&gt;
 </programlisting>
 
 <para>
-The above example declares a dataset called f1, which uses a single 
+The above example declares a dataset called f1, which uses a single
 file mapper to map a file from a specific location.
 </para>
 <para>
-SwiftScript has a simplified syntax for this case, since single_file_mapper 
+SwiftScript has a simplified syntax for this case, since single_file_mapper
 is frequently used:
 
 <programlisting>
@@ -560,7 +560,7 @@ described in another section.</para>
 			<title>Assignment Statements</title>
 			<para>
 Assignment statements assign values to previously declared variables.
-Assignments may only be made to variables that have not already been 
+Assignments may only be made to variables that have not already been
 assigned. Assignment statements have the general form:
 
 <programlisting>
@@ -594,13 +594,13 @@ of the function name, and outputs are specified to the left. For example:
 (type3 out1, type4 out2) myproc (type1 in1, type2 in2)
 </programlisting>
 
-The above example declares a procedure called <literal>myproc</literal>, which 
+The above example declares a procedure called <literal>myproc</literal>, which
 has two inputs <literal>in1</literal> (of type <literal>type1</literal>)
-and <literal>in2</literal> (of type <literal>type2</literal>) 
+and <literal>in2</literal> (of type <literal>type2</literal>)
 and two outputs <literal>out1</literal> (of type <literal>type3</literal>)
 and <literal>out2</literal> (of type <literal>type4</literal>).
 			</para>
-	
+
 			<para>
 A procedure input parameter can be an <firstterm>optional
 parameter</firstterm> in which case it must be declared with a default
@@ -629,7 +629,7 @@ binaryfile mybf = myproc1 (1, s="bar");
 </programlisting>
 
 			</para>
-			
+
 <section id="procedures.atomic"><title>Atomic procedures</title>
 			<para>
 An atomic procedure specifies how to invoke an
@@ -642,7 +642,7 @@ Atomic procedures are defined with the <literal>app</literal> keyword:
 <programlisting>
 app (binaryfile bf) myproc (int i, string s="foo") {
 	myapp i s @filename(bf);
-}			
+}
 </programlisting>
 
 which specifies that <literal>myproc</literal> invokes an executable
@@ -666,7 +666,7 @@ A compound procedure contains a set of SwiftScript statements:
 		</para>
 
 		</section>
-</section>	
+</section>
 		<section>
 			<title>Control Constructs</title>
 			<para>
@@ -848,14 +848,14 @@ remote sites for execution or to pass to applications.</para>
 Swift provides a number of mappers that are useful in common cases. This
 section details those standard mappers. For more complex cases, it is
 possible to write application-specific mappers in Java and
-use them within a SwiftScript program. 
+use them within a SwiftScript program.
 		</para>
 
 		<section id="mapper.single_file_mapper"><title>The single file mapper</title>
 
 			<para>
 The <literal>single_file_mapper</literal> maps a single physical file to a dataset.
-			</para>		
+			</para>
 <para>
 		<screen>
 
@@ -882,7 +882,7 @@ The <literal>single_file_mapper</literal> maps a single physical file to a datas
   <row><entry>file</entry><entry>The location of the physical file including path and file name.</entry></row>
  </tbody>
 </tgroup>
-</table> 
+</table>
 
 <para>Example:
 			<programlisting>
@@ -920,7 +920,7 @@ contain <literal>foo</literal>. When this mapper is used to specify output
 filenames, <literal>pattern</literal> is ignored.</entry></row>
  </tbody>
 </tgroup>
-</table> 
+</table>
 
 
 
@@ -968,7 +968,7 @@ into the filename between the prefix and suffix.
 <programlisting>
 type messagefile;
 
-(messagefile t) greeting(string m) { 
+(messagefile t) greeting(string m) {
     app {
         echo m stdout=@filename(t);
     }
@@ -1006,7 +1006,7 @@ type mystruct {
   messagefile right;
 };
 
-(messagefile t) greeting(string m) { 
+(messagefile t) greeting(string m) {
     app {
         echo m stdout=@filename(t);
     }
@@ -1062,7 +1062,7 @@ filenames, <literal>pattern</literal> is ignored.</entry></row>
  </tbody>
 </tgroup>
 </table>
-  
+
 
 	<para>Example:
 		<programlisting>
@@ -1070,7 +1070,7 @@ filenames, <literal>pattern</literal> is ignored.</entry></row>
 	file f2 &lt;concurrent_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
 The above example would use concurrent mapper for <literal>f1</literal> and
-<literal>f2</literal>, and 
+<literal>f2</literal>, and
 generate <literal>f2</literal> filename with prefix <filename>&quot;foo&quot;</filename> and extension <filename>&quot;.txt&quot;</filename>
 	</para>
 	</section>
@@ -1078,8 +1078,8 @@ generate <literal>f2</literal> filename with prefix <filename>&quot;foo&quot;</f
 	<section id="mapper.filesys_mapper"><title>file system mapper</title>
 
 <para><literal>filesys_mapper</literal> is similar to the simple mapper,
-but maps a file or 
-a list of files to an array. Each of the filename is 
+but maps a file or
+a list of files to an array. Each of the filename is
 mapped as an element in the array. The order of files in the resulting
 array is not defined.
 	</para>
@@ -1088,7 +1088,7 @@ array is not defined.
 path wrt staging to remote location - as mihael said:
 It's because you specify that location in the mapper. Try location="."
 instead of location="/sandbox/..."</para>
- 
+
 <table frame="all">
 <tgroup cols='2' align='left' colsep='1' rowsep='1'>
  <thead>
@@ -1108,12 +1108,12 @@ contain <literal>foo</literal>.
  </tbody>
 </tgroup>
 </table>
-  
+
 	<para>Example:
 			<programlisting>
 	file texts[] &lt;filesys_mapper;prefix="foo", suffix=".txt"&gt;;
 			</programlisting>
-The above example would map all filenames that start with <filename>&quot;foo&quot;</filename> 
+The above example would map all filenames that start with <filename>&quot;foo&quot;</filename>
 and have an extension <filename>&quot;.txt&quot;</filename> into the array <literal>texts</literal>.
 For example, if the specified directory contains files: <filename>foo1.txt</filename>, <filename>footest.txt</filename>,
 <filename>foo__1.txt</filename>, then the mapping might be:
@@ -1220,7 +1220,7 @@ another using regular expression matching.</para>
     <row><entry>match</entry><entry>Regular expression pattern to match, use
 <literal>()</literal> to match whatever regular expression is inside the
 parentheses, and indicate the start and end of a group; the contents of a
-group can be retrieved with the <literal>\\number</literal> special sequence 
+group can be retrieved with the <literal>\\number</literal> special sequence
 (two backslashes are needed because the backslash is an escape sequence introducer)
 </entry></row>
     <row><entry>transform</entry><entry>The pattern of the file name to
@@ -1290,12 +1290,12 @@ etc.
  </tbody>
 </tgroup>
 </table>
- 
+
 	<para>Example:
 			<programlisting>
 	student stus[] &lt;csv_mapper;file="stu_list.txt"&gt;;
 			</programlisting>
-The above example would read a list of student info from file 
+The above example would read a list of student info from file
 <filename>&quot;stu_list.txt&quot;</filename> and map them into a student array. By default, the file should contain a header line specifying the names of the columns.
 If <filename>stu_list.txt</filename> contains the following:
 <screen>
@@ -1347,7 +1347,7 @@ executable prefixed with a <literal>-</literal> symbol</entry></row>
 </tgroup>
 </table>
 
-	<para>   
+	<para>
 The output of the executable should consist of two columns of data, separated
 by a space. The first column should be the path of the mapped variable,
 in SwiftScript syntax (for example <literal>[2]</literal> means the 2nd element of an
@@ -1425,44 +1425,44 @@ made available to the SwiftScript program through the
 
   <varlistentry><term>-monitor</term>
     <listitem><para>
-      Shows a graphical resource monitor 
+      Shows a graphical resource monitor
     </para></listitem>
   </varlistentry>
 
   <varlistentry><term>-resume <literal>file</literal></term>
     <listitem><para>
-      Resumes the execution using a log file 
+      Resumes the execution using a log file
     </para></listitem>
   </varlistentry>
 
   <varlistentry><term>-config <literal>file</literal></term>
     <listitem><para>
-      Indicates the Swift configuration file to be used for this run. 
-      Properties in this configuration file will override the default 
-      properties. If individual command line arguments are used for 
-      properties, they will override the contents of this file. 
+      Indicates the Swift configuration file to be used for this run.
+      Properties in this configuration file will override the default
+      properties. If individual command line arguments are used for
+      properties, they will override the contents of this file.
     </para></listitem>
   </varlistentry>
 
   <varlistentry><term>-verbose | -v</term>
     <listitem><para>
-      Increases the level of output that Swift produces on the console 
-      to include more detail about the execution 
+      Increases the level of output that Swift produces on the console
+      to include more detail about the execution
     </para></listitem>
   </varlistentry>
 
   <varlistentry><term>-debug | -d</term>
     <listitem><para>
-      Increases the level of output that Swift produces on the console 
-      to include lots of detail about the execution 
+      Increases the level of output that Swift produces on the console
+      to include lots of detail about the execution
     </para></listitem>
   </varlistentry>
 
   <varlistentry><term>-logfile <literal>file</literal></term>
     <listitem><para>
-      Specifies a file where log messages should go to. By default 
+      Specifies a file where log messages should go to. By default
       Swift uses the name of the program being run and a numeric index
-      (e.g. myworkflow.1.log) 
+      (e.g. myworkflow.1.log)
     </para></listitem>
   </varlistentry>
 
@@ -1670,16 +1670,16 @@ procedure workspace</firstterm>. This means:
 </para>
 
 <para>
-Each application procedure workspace will have an application workspace 
-directory.  (TODO: can collapse terms //application procedure workspace// 
+Each application procedure workspace will have an application workspace
+directory.  (TODO: can collapse terms //application procedure workspace//
 and //application workspace directory// ?
 </para>
 
 <para>
-This application workspace directory will not be shared with any other 
+This application workspace directory will not be shared with any other
 <firstterm>application procedure execution attempt</firstterm>; all
-application procedure 
-execution attempts will run with distinct application procedure 
+application procedure
+execution attempts will run with distinct application procedure
 workspaces. (for the avoidance of doubt:
  If a <firstterm>SwiftScript procedure invocation</firstterm> is subject
 to multiple application procedure execution attempts (due to Swift-level
@@ -1688,8 +1688,8 @@ execution attempts will be made in a different application procedure workspace.
 )</para>
 
 <para>
-The application workspace directory will be a directory on a POSIX 
-filesystem accessible throughout the application execution by the 
+The application workspace directory will be a directory on a POSIX
+filesystem accessible throughout the application execution by the
 application executable.
 </para>
 
@@ -1704,8 +1704,8 @@ The application workspace directory will exist.
 </para></listitem>
 
 <listitem><para>
-The <firstterm>input files</firstterm> will exist inside the application workspace 
-directory (but not necessarily as direct children; there may be 
+The <firstterm>input files</firstterm> will exist inside the application workspace
+directory (but not necessarily as direct children; there may be
 subdirectories within the application workspace directory).
 </para></listitem>
 
@@ -1719,21 +1719,21 @@ directory)
 
 <listitem><para>
 For each input file dataset, it will be the case that
-<literal>@filename</literal> or 
+<literal>@filename</literal> or
 <literal>@filenames</literal> invoked with that dataset as a parameter
-will return the path 
-relative to the application workspace directory for the file(s) that are 
-associated with that dataset. (In the example, that means that <literal>@i</literal> will 
+will return the path
+relative to the application workspace directory for the file(s) that are
+associated with that dataset. (In the example, that means that <literal>@i</literal> will
 evaluate to the path <filename>input.txt</filename>)
 </para></listitem>
 
 <listitem><para>
-For each <firstterm>file-bound</firstterm> parameter of the Swift procedure invocation, the 
+For each <firstterm>file-bound</firstterm> parameter of the Swift procedure invocation, the
 associated files (determined by data type?) will always exist.
 </para></listitem>
 
 <listitem><para>
-The input files must be treated as read only files. This may or may not 
+The input files must be treated as read only files. This may or may not
 be enforced by unix file system permissions. They may or may not be copies
 of the source file (conversely, they may be links to the actual source file).
 </para></listitem>
@@ -1747,22 +1747,22 @@ the following must be true:
 
 <itemizedlist>
 <listitem><para>
-If the application executable execution was successful (in the opinion 
-of the application executable), then the application executable should 
+If the application executable execution was successful (in the opinion
+of the application executable), then the application executable should
 exit with <firstterm>unix return code</firstterm> <literal>0</literal>;
-if the application executable execution 
-was unsuccessful (in the opinion of the application executable), then the 
-application executable should exit with unix return code not equal to 
+if the application executable execution
+was unsuccessful (in the opinion of the application executable), then the
+application executable should exit with unix return code not equal to
 <literal>0</literal>.
 </para></listitem>
 
 <listitem><para>
-Each file mapped from an output parameter of the SwiftScript procedure 
+Each file mapped from an output parameter of the SwiftScript procedure
 call must exist. Files will be mapped in the same way as for input files.
 </para>
 <para>
-(? Is it defined that output subdirectories will be precreated before 
-execution or should app executables expect to make them? That's probably 
+(? Is it defined that output subdirectories will be precreated before
+execution or should app executables expect to make them? That's probably
 determined by the present behaviour of wrapper.sh)
 </para></listitem>
 
@@ -1788,15 +1788,15 @@ anything about the path of the application workspace directory
 </para></listitem>
 
 <listitem><para>
-that either the application workspace directory will be deleted or will 
+that either the application workspace directory will be deleted or will
 continue to exist or will remain unmodified after execution has finished
 </para></listitem>
 
 <listitem><para>
-that files can be passed(?def) between application procedure invocations 
-through any mechanism except through files known to Swift through the 
+that files can be passed(?def) between application procedure invocations
+through any mechanism except through files known to Swift through the
 mapping mechanism (there is some exception here for <literal>external</literal>
-datasets - there are a separate set of assertions that hold for 
+datasets - there are a separate set of assertions that hold for
 <literal>external</literal> datasets)
 </para></listitem>
 
@@ -1831,30 +1831,30 @@ Each site consists of:
 <listitem><para>
 worker nodes. There is some <firstterm>execution mechanism</firstterm>
 through which the Swift client side executable can execute its
-<firstterm>wrapper script</firstterm> on those 
+<firstterm>wrapper script</firstterm> on those
 worker nodes. This is commonly GRAM or Falkon or coasters.
 </para></listitem>
 
 <listitem><para>
-a site-shared file system. This site shared filesystem is accessible 
+a site-shared file system. This site shared filesystem is accessible
 through some <firstterm>file transfer mechanism</firstterm> from the
-Swift client side 
-executable. This is commonly GridFTP or coasters. This site shared 
-filesystem is also accessible through the posix file system on all worker 
-nodes, mounted at the same location as seen through the file transfer 
-mechanism. Swift is configured with the location of some <firstterm>site working 
+Swift client side
+executable. This is commonly GridFTP or coasters. This site shared
+filesystem is also accessible through the posix file system on all worker
+nodes, mounted at the same location as seen through the file transfer
+mechanism. Swift is configured with the location of some <firstterm>site working
 directory</firstterm> on that site-shared file system.
 </para></listitem>
 </itemizedlist>
 
 <para>
-There is no assumption that the site shared file system for one site is 
+There is no assumption that the site shared file system for one site is
 accessible from another site.
 </para>
 
 <para>
-For each workflow run, on each site that is used by that run, a <firstterm>run 
-directory</firstterm> is created in the site working directory, by the Swift client 
+For each workflow run, on each site that is used by that run, a <firstterm>run
+directory</firstterm> is created in the site working directory, by the Swift client
 side.
 </para>
 
@@ -1868,7 +1868,7 @@ In that run directory are placed several subdirectories:
 </para></listitem>
 
 <listitem><para>
-<filename>kickstart/</filename> - when kickstart is used, kickstart record files 
+<filename>kickstart/</filename> - when kickstart is used, kickstart record files
 for each job that has generated a kickstart record.
 </para></listitem>
 
@@ -1882,7 +1882,7 @@ for each job that has generated a kickstart record.
 </para></listitem>
 
 <listitem><para>
-<filename>jobs/</filename> - application workspace directories (optionally placed here - 
+<filename>jobs/</filename> - application workspace directories (optionally placed here -
 see below)
 </para></listitem>
 </itemizedlist>
@@ -1896,34 +1896,34 @@ For each application procedure call:
 </para>
 
 <para>
-The Swift client side selects a site; copies the input files for that 
-procedure call to the site shared file cache if they are not already in 
-the cache, using the file transfer mechanism; and then invokes the wrapper 
+The Swift client side selects a site; copies the input files for that
+procedure call to the site shared file cache if they are not already in
+the cache, using the file transfer mechanism; and then invokes the wrapper
 script on that site using the execution mechanism.
 </para>
 
 <para>
-The wrapper script creates the application workspace directory; places the 
-input files for that job into the application workspace directory using 
-either <literal>cp</literal> or <literal>ln -s</literal> (depending on a configuration option); executes the 
-application unix executable; copies output files from the application 
-workspace directory to the site shared directory using <literal>cp</literal>; creates a 
+The wrapper script creates the application workspace directory; places the
+input files for that job into the application workspace directory using
+either <literal>cp</literal> or <literal>ln -s</literal> (depending on a configuration option); executes the
+application unix executable; copies output files from the application
+workspace directory to the site shared directory using <literal>cp</literal>; creates a
 status file under the <filename>status/</filename> directory; and exits, returning control to
-the Swift client side. Logs created during the execution of the wrapper 
+the Swift client side. Logs created during the execution of the wrapper
 script are stored under the <filename>info/</filename> directory.
 </para>
 
 <para>
-The Swift client side then checks for the presence of and deletes a status 
-file indicating success; and copies files from the site shared directory to 
+The Swift client side then checks for the presence of and deletes a status
+file indicating success; and copies files from the site shared directory to
 the appropriate client side location.
 </para>
 
 <para>
-The job directory is created (in the default mode) under the <filename>jobs/</filename> 
-directory. However, it can be created under an arbitrary other path, which 
-allows it to be created on a different file system (such as a worker node 
-local file system in the case that the worker node has a local file 
+The job directory is created (in the default mode) under the <filename>jobs/</filename>
+directory. However, it can be created under an arbitrary other path, which
+allows it to be created on a different file system (such as a worker node
+local file system in the case that the worker node has a local file
 system).
 </para>
 
@@ -1953,7 +1953,7 @@ Other options are available, and user provided code can also be plugged in.
 	<para>
 The <link linkend="kickstart">kickstart</link> utility can
 be used to capture environmental information at execution time
-to aid in debugging and provenance capture. 
+to aid in debugging and provenance capture.
 	</para>
 	</section>
 
@@ -2015,8 +2015,8 @@ language.
 		</para>
 		<section id="function.arg"><title>@arg</title>
 			<para>
-Takes a command line parameter name as a string parameter and an optional 
-default value and returns the value of that string parameter from the 
+Takes a command line parameter name as a string parameter and an optional
+default value and returns the value of that string parameter from the
 command line. If no default value is specified and the command line parameter
 is missing, an error is generated. If a default value is specified and the
 command line parameter is missing, <literal>@arg</literal> will return the default value.
@@ -2104,7 +2104,7 @@ trace(out);
 will output the message: <literal>Your name is John</literal>.
 			</para>
 		</section>
-		
+
 		<section id="function.strsplit"><title>@strsplit</title>
 			<para>
 <literal>@strsplit(input,pattern)</literal> will split the input string based on separators
@@ -2124,12 +2124,12 @@ foreach word in words {
 
 			<para>
 will output one word of the sentence on each line (though
-not necessarily in order, due to the fact that foreach 
+not necessarily in order, due to the fact that foreach
 iterations execute in parallel).
 			</para>
 		</section>
 
-		
+
 		<section id="function.toint"><title>@toint</title>
 			<para>
 <literal>@toint(input)</literal> will parse its input string into an integer. This can be
@@ -2186,29 +2186,29 @@ ext mapper.
 Input files should list, one per line, a path into a Swift structure, and
 the value for that position in the structure:
 				<screen>
-rows[0].columns[0] = 0                                                          
-rows[0].columns[1] = 2                                                          
-rows[0].columns[2] = 4                                                          
-rows[1].columns[0] = 1                                                          
-rows[1].columns[1] = 3                                                          
-rows[1].columns[2] = 5 
+rows[0].columns[0] = 0
+rows[0].columns[1] = 2
+rows[0].columns[2] = 4
+rows[1].columns[0] = 1
+rows[1].columns[1] = 3
+rows[1].columns[2] = 5
 				</screen>
 which can be read into a structure defined like this:
 				<programlisting>
-type vector {                                                                   
-        int columns[];                                                          
-}                                                                               
-                                                                                
-type matrix {                                                                   
-        vector rows[];                                                          
-}                                                                               
-                                                                                
-matrix m;                                                                       
-                                                                                
-m = readData2("readData2.in");    
+type vector {
+        int columns[];
+}
+
+type matrix {
+        vector rows[];
+}
+
+matrix m;
+
+m = readData2("readData2.in");
 				</programlisting>
 			</para>
-			
+
 			<para>
 (since Swift 0.7)
 			</para>
@@ -2229,12 +2229,12 @@ described for <literal>readData</literal>
 		</section>
 	</section>
 
-	<section id="engineconfiguration">	
-	
+	<section id="engineconfiguration">
+
 		<title>Swift configuration properties</title>
-		
+
 		<para>
-		
+
 			Various aspects of the behavior of the Swift Engine can be
 			configured through properties. The Swift Engine recognizes a global,
 			per installation properties file which can found in <filename
@@ -2248,91 +2248,91 @@ described for <literal>readData</literal>
 			some of the properties can be overridden directly using command line
 			arguments to the <link
 			linkend="swiftcommand"><command>swift</command> command</link>.
-		
+
 		</para>
-		
+
 			<para>
-			
+
 				Swift properties are specified in the following format:
-				
+
 <screen>
 &lt;name&gt;=&lt;value&gt;
 </screen>
-			
+
 				The value can contain variables which will be expanded when the
 				properties file is read. Expansion is performed when the name of
 				the variable is used inside the standard shell dereference
 				construct: <literal>${<varname>name</varname>}</literal>. The following variables
 				can be used in the Swift configuration file:
-				
+
 				<variablelist>
 					<title>Swift Configuration Variables</title>
-					
+
 					<varlistentry>
 						<term>
 							<varname>swift.home</varname>
 						</term>
 						<listitem>
 							<para>
-							
+
 								Points to the Swift installation directory
 								(<filename
 								class="directory"><envar>$SWIFT_HOME</envar></filename>). In general, this should not be set
 as Swift can find its own installation directory, and incorrectly setting it
 may impair the correct functionality of Swift.
-							
+
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<varname>user.name</varname>
 						</term>
 						<listitem>
 							<para>
-							
+
 								The name of the current logged in user.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<varname>user.home</varname>
-						</term>	
+						</term>
 						<listitem>
 							<para>
-							
+
 								The user's home directory.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
 				</variablelist>
-				
+
 				The following is a list of valid Swift properties:
-				
+
 				<variablelist>
 					<title>Swift Properties</title>
-		
+
 					<varlistentry id="property.caching.algorithm">
 						<term>
 							<property>caching.algorithm</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <literal>LRU</literal>
 							</para>
-							
+
 							<para>
 								Default value: <literal>LRU</literal>
 							</para>
-						
+
 							<para>
-							
+
 								Swift caches files that are staged in on remote
 								resources, and files that are produced remotely
 								by applications, such that they can be re-used
@@ -2341,7 +2341,7 @@ may impair the correct functionality of Swift.
 								to be used for caching can be limited using the
 								<link linkend="profile.swift.storagesize"><property>swift:storagesize</property></link> profile
 								entry in the sites.xml file. Example:
-								
+
 <screen>
 
 &lt;pool handle="example" sysinfo="INTEL32::LINUX"&gt;
@@ -2352,63 +2352,63 @@ may impair the correct functionality of Swift.
 &lt;/pool&gt;
 
 </screen>
-								
-								
+
+
 								The decision of which files to keep in the cache
 								and which files to remove is made considering
 								the value of the
-								<property>caching.algorithm</property> property. 							
-								Currently, the only available value for this 							
+								<property>caching.algorithm</property> property.
+								Currently, the only available value for this
 								property is <literal>LRU</literal>, which would
 								cause the least recently used files to be
 								deleted first.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
-				
+
 					<varlistentry id="property.clustering.enabled">
 						<term>
 							<property>clustering.enabled</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <literal>true</literal>, <literal>false</literal>
 							</para>
-							
+
 							<para>
 								Default value: <literal>false</literal>
 							</para>
-							
+
 							<para>
 								Enables <link linkend="clustering">clustering</link>.
 							</para>
-							
+
 						</listitem>
 					</varlistentry>
-						
+
 					<varlistentry id="property.clustering.min.time">
 						<term>
 							<property>clustering.min.time</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;int&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>60</literal>
 							</para>
-						
+
 							<para>
-							
+
 								Indicates the threshold wall time for
-								clustering, in seconds. Jobs that have a 
+								clustering, in seconds. Jobs that have a
 								wall time smaller than the value of this
 								property will be considered for clustering.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
@@ -2418,25 +2418,25 @@ may impair the correct functionality of Swift.
 							<property>clustering.queue.delay</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;int&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>4</literal>
 							</para>
-							
+
 							<para>
-							
+
 								This property indicates the interval, in
 								seconds, at which the clustering queue is
 								processed.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry id="property.execution.retries">
 						<term>execution.retries</term>
 						<listitem>
@@ -2453,7 +2453,7 @@ may impair the correct functionality of Swift.
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 
 					<varlistentry id="property.foreach.max.threads">
 						<term>foreach.max.threads</term>
@@ -2466,28 +2466,28 @@ may impair the correct functionality of Swift.
 							</para>
 							<para>
 Limits the number of concurrent iterations that each foreach statement
-can have at one time. This conserves memory for swift programs that 
+can have at one time. This conserves memory for swift programs that
 have large numbers of iterations (which would otherwise all be executed
 in parallel). (since Swift 0.9)
 							</para>
 						</listitem>
 					</varlistentry>
-	
+
 
 					<varlistentry>
 						<term>
 							<property>ip.address</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;ipaddress&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: N/A
 							</para>
-						
+
 							<para>
 								The Globus GRAM service uses a callback
 								mechanism to send notifications about the status
@@ -2509,23 +2509,23 @@ in parallel). (since Swift 0.9)
 							</para>
 						</listitem>
 					</varlistentry>
-		
+
 					<varlistentry>
 						<term>
 							<property>kickstart.always.transfer</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <literal>true</literal>, <literal>false</literal>
 							</para>
-							
+
 							<para>
 								Default value: <literal>false</literal>
 							</para>
-							
+
 							<para>
-							
+
 								This property controls when output from
 								Kickstart is transfered back to the submit site,
 								if Kickstart is enabled. When set to
@@ -2534,7 +2534,7 @@ in parallel). (since Swift 0.9)
 								<literal>true</literal>, Kickstart output is
 								transfered after every job is completed or
 								failed.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
@@ -2544,17 +2544,17 @@ in parallel). (since Swift 0.9)
 							<property>kickstart.enabled</property>
 						</term>
 						<listitem>
-							
+
 							<para>
 								Valid values: <literal>true</literal>, <literal>false</literal>, <literal>maybe</literal>
 							</para>
-							
+
 							<para>
 								Default value: <literal>maybe</literal>
 							</para>
-								
+
 							<para>
-								
+
 								This option allows controlling of
 								when Swift uses <link linkend="kickstart">Kickstart</link>. A value of
 								<literal>false</literal> disables the use of
@@ -2573,23 +2573,23 @@ in parallel). (since Swift 0.9)
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<property>lazy.errors</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <literal>true</literal>, <literal>false</literal>
 							</para>
-							
+
 							<para>
 								Default value: <literal>false</literal>
 							</para>
-						
+
 							<para>
-							
+
 								Swift can report application errors in two
 								modes, depending on the value of this property.
 								If set to <constant>false</constant>, Swift will
@@ -2609,31 +2609,31 @@ in parallel). (since Swift 0.9)
 							</para>
 						</listitem>
 					</varlistentry>
-				
+
 					<varlistentry>
 						<term>
 							<property>pgraph</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <literal>true</literal>, <literal>false</literal>, <parameter>&lt;file&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>false</literal>
 							</para>
-							
+
 							<para>
-							
-								Swift can generate a 
-<ulink url="http://www.graphviz.org/">Graphviz</ulink> file representing 
+
+								Swift can generate a
+<ulink url="http://www.graphviz.org/">Graphviz</ulink> file representing
 								the structure of the SwiftScript program it has run. If this
 								property is set to <literal>true</literal>,
 								Swift will save the provenance graph in a file
 								named by concatenating the program name and the
 								instance ID (e.g. <filename
-								class="file">helloworld-ht0adgi315l61.dot</filename>). 
+								class="file">helloworld-ht0adgi315l61.dot</filename>).
 							</para>
 							<para>
 								If set to <literal>false</literal>, no
@@ -2654,55 +2654,55 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 							</screen>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<property>pgraph.graph.options</property>
 						</term>
 						<listitem>
-							
+
 							<para>
 								Valid values: <parameter>&lt;string&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>splines="compound", rankdir="TB"</literal>
 							</para>
-						
+
 							<para>
-							
+
 								This property specifies a <ulink
 								url="http://www.graphviz.org">Graphviz</ulink>
 								specific set of parameters for the graph.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<property>pgraph.node.options</property>
 						</term>
 						<listitem>
-							
+
 							<para>
 								Valid values: <parameter>&lt;string&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>color="seagreen", style="filled"</literal>
 							</para>
-						
+
 							<para>
-							
+
 								Used to specify a set of <ulink
 								url="http://www.graphviz.org">Graphviz</ulink>
 								specific properties for the nodes in the graph.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
-	
+
 					<varlistentry>
 						<term>
 							<property>provenance.log</property>
@@ -2725,15 +2725,15 @@ $ <userinput>dot -ograph.png -Tpng graph1.dot</userinput>
 							<property>replication.enabled</property>
 						</term>
 						<listitem>
-							
+
 							<para>
 								Valid values: <literal>true</literal>, <literal>false</literal>
 							</para>
-							
+
 							<para>
 								Default value: <literal>false</literal>
 							</para>
-						
+
 							<para>
 Enables/disables replication. Replication is used to deal with jobs sitting
 in batch queues for abnormally large amounts of time. If replication is enabled
@@ -2748,21 +2748,21 @@ allows multiple instances of a job to compete.
 							<property>replication.limit</property>
 						</term>
 						<listitem>
-							
+
 							<para>
 								Valid values: positive integers
 							</para>
-							
+
 							<para>
 								Default value: 3
 							</para>
-						
+
 							<para>
 The maximum number of replicas that Swift should attempt.
 							</para>
 						</listitem>
 					</varlistentry>
-		
+
 					<varlistentry>
 						<term>
 							<property>sitedir.keep</property>
@@ -2783,28 +2783,28 @@ used to inspect the site working directory for debugging purposes.
 							</para>
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<property>sites.file</property>
 						</term>
 						<listitem>
-							
+
 							<para>
 								Valid values: <parameter>&lt;file&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: ${<varname>swift.home</varname>}<literal>/etc/sites.xml</literal>
 							</para>
-						
+
 							<para>
-							
+
 								Points to the location of the site
 								catalog, which contains a list of all sites that
 								Swift should use.
 
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
@@ -2848,24 +2848,24 @@ filesystem access. (since Swift 0.8)
 							<para>
 								Valid values: <parameter>&lt;file&gt;</parameter>
 							</para>
-							
+
 							<para>
 								Default value: ${<varname>swift.home</varname>}<literal>/etc/tc.data</literal>
 							</para>
-						
+
 							<para>
-							
+
 								Points to the location of the transformation
 								catalog file which contains information about
 								installed applications. Details about the format
 								of the transformation catalog can be found
 								<ulink
 								url="http://vds.uchicago.edu/vds/doc/userguide/html/H_TransformationCatalog.html">here</ulink>.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
-	
+
   					<varlistentry>
 						<term>
 							<property>tcp.port.range</property>
@@ -2874,11 +2874,11 @@ filesystem access. (since Swift 0.8)
 							<para>Valid values: <parameter>&lt;start></parameter>,<parameter>&lt;end></parameter> where start and end are integers</para>
 							<para>Default value: none</para>
 							<para>
-A TCP port range can be specified to restrict the ports on which 
+A TCP port range can be specified to restrict the ports on which
 GRAM callback services are started. This is likely needed if your
- submit host is behind a firewall, in which case the firewall 
-should be configured to allow incoming connections on ports in 
-the range. 
+ submit host is behind a firewall, in which case the firewall
+should be configured to allow incoming connections on ports in
+the range.
 							</para>
 						</listitem>
   </varlistentry>
@@ -2889,17 +2889,17 @@ the range.
 							<property>throttle.file.operations</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>8</literal>
 							</para>
-							
+
 							<para>
-							
+
 								Limits the total number of concurrent file
 								operations that can happen at any given time.
 								File operations (like transfers) require an
@@ -2911,35 +2911,35 @@ the range.
 								the number of concurrent file operations causes
 								Swift to use a small number of cached
 								connections and achieve better overall
-								performance. 
-								
+								performance.
+
 							</para>
 						</listitem>
 					</varlistentry>
-				
+
 					<varlistentry>
 						<term>
 							<property>throttle.host.submit</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>2</literal>
 							</para>
-							
+
 							<para>
-							
+
 								Limits the number of concurrent submissions for
 								any of the sites Swift will try to send jobs to.
 								In other words it guarantees that no more than
 								the  value of this throttle jobs sent to any
 								site will be concurrently in a state of being
 								submitted.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
@@ -2949,15 +2949,15 @@ the range.
 							<property>throttle.score.job.factor</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>4</literal>
 							</para>
-							
+
 							<para>
 								The Swift scheduler has the ability to limit
 								the number of concurrent jobs allowed on a
@@ -2971,14 +2971,14 @@ the range.
 								following formula:
 							</para>
 							<para>
-								2 + score*throttle.score.job.factor 
+								2 + score*throttle.score.job.factor
 							</para>
 							<para>
 								This means a site will always be allowed
 								at least two concurrent jobs and at most
 								2 + 100*throttle.score.job.factor. With a
 								default of 4 this means at least 2 jobs and
-								at most 402. 
+								at most 402.
 							</para>
 							<para>
 								This parameter can also be set per site
@@ -2993,17 +2993,17 @@ the range.
 							<property>throttle.submit</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
-							
+
 							<para>
 								Default value: <literal>4</literal>
 							</para>
-						
+
 							<para>
-							
+
 								Limits the number of concurrent submissions for
 								a run. This throttle only limits
 								the number of concurrent tasks (jobs) that are
@@ -3015,35 +3015,35 @@ the range.
 								submissions can overload either or both the
 								submit host CPU and the remote host/head node
 								causing degraded performance.
-								
+
 							</para>
-							
+
 						</listitem>
 					</varlistentry>
-					
+
 					<varlistentry>
 						<term>
 							<property>throttle.transfers</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <parameter>&lt;int&gt;</parameter>, <parameter>off</parameter>
 							</para>
-						
+
 							<para>
-								Default value: <literal>4</literal>	
+								Default value: <literal>4</literal>
 							</para>
-							
+
 							<para>
-							
+
 								Limits the total number of concurrent file
 								transfers that can happen at any given time.
 								File transfers consume bandwidth. Too many
 								concurrent transfers can cause the network to be
 								overloaded preventing various other signaling
 								traffic from flowing properly.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
@@ -3118,42 +3118,42 @@ job invocation.
 							<property>wrapperlog.always.transfer</property>
 						</term>
 						<listitem>
-						
+
 							<para>
 								Valid values: <literal>true</literal>, <literal>false</literal>
 							</para>
-							
+
 							<para>
 								Default value: <literal>false</literal>
 							</para>
-							
+
 							<para>
-							
+
 								This property controls when output from
 								the Swift remote wrapper is transfered
 								back to the submit site. When set to
-								<literal>false</literal>, wrapper logs are 
+								<literal>false</literal>, wrapper logs are
 								only transfered for jobs that fail. If set to
 								<literal>true</literal>, wrapper logs are
 								transfered after every job is completed or
 								failed.
-								
+
 							</para>
 						</listitem>
 					</varlistentry>
-										
+
 				</variablelist>
-				
+
 				Example:
-				
+
 <screen>
 sites.file=${vds.home}/etc/sites.xml
 tc.file=${vds.home}/etc/tc.data
 ip.address=192.168.0.1
 </screen>
-			
+
 			</para>
-		
+
 	</section>
 
 
@@ -3208,12 +3208,12 @@ Allows specifying additional options to the executable used to run the Swift wra
 are no options on Unix sites and "//Nologo" on Windows sites.
 			</para>
 			<para id="swift.wrapperScript"><literal>wrapperScript</literal>
-Specifies the name of the wrapper script to be used on a site. The defaults are "_swiftwrap" on 
-Unix sites and "_swiftwrap.vbs" on Windows sites. If you specify a custom wrapper script, it 
+Specifies the name of the wrapper script to be used on a site. The defaults are "_swiftwrap" on
+Unix sites and "_swiftwrap.vbs" on Windows sites. If you specify a custom wrapper script, it
 must be present in the "libexec" directory of the Swift installation.
 			</para>
 			<para id="swift.cleanupCommand"><literal>cleanupCommand</literal>
-Indicates the command to be run at the end of a Swift run to clean up the run directories on a 
+Indicates the command to be run at the end of a Swift run to clean up the run directories on a
 remote site. Defaults are "/bin/rm" on Unix sites and "cmd.exe" on Windows sites
 			</para>
 			<para id="swift.cleanupCommandOptions"><literal>cleanupCommandOptions</literal>
@@ -3253,7 +3253,7 @@ coaster worker maxwalltime, and which jobs will be sent to which workers.
 More information on this is available in the <link linkend="coasters">coasters
 section</link>.
 			</para>
-			<para id="profile.globus.queue"><literal>queue</literal> 
+			<para id="profile.globus.queue"><literal>queue</literal>
 is used by the PBS, GRAM2 and GRAM4 providers. This profile
 entry specifies which queue jobs will be submitted to. The valid queue names
 are site-specific.
@@ -3272,7 +3272,7 @@ specifies the maximum number of jobs/blocks that the coaster scheduler will have
 The default is 20.
 			</para>
 			<para id="profile.workersPerNode"><literal>workersPerNode</literal>
-This parameter determines how many coaster workers are 
+This parameter determines how many coaster workers are
 started one each compute node. The default value is 1.
 			</para>
 			<para id="profile.nodeGranularity"><literal>nodeGranularity</literal>
@@ -3288,7 +3288,7 @@ parameter specifies the maximum fraction of slots that are allocated in one sche
 			</para>
 			<para id="profile.lowOverallocation"><literal>lowOverallocation</literal>
 Overallocation is a function of the walltime of a job which determines how long (time-wise) a
-worker job will be. For example, if a number of 10s jobs are submitted to the coaster service, 
+worker job will be. For example, if a number of 10s jobs are submitted to the coaster service,
 and the overallocation for 10s jobs is 10, the coaster scheduler will attempt to start worker
 jobs that have a walltime of 100s. The overallocation is controlled by manipulating the end-points
 of an overallocation function. The low endpoint, specified by this parameter, is the overallocation
@@ -3308,16 +3308,16 @@ The decay factor for the overallocation curve. Default 0.001 (1e-3).
 			<para id="profile.spread"><literal>spread</literal>
 When a large number of jobs is submitted to the a coaster service, the work is divided into blocks. This
 parameter allows a rough control of the relative sizes of those blocks. A value of 0 indicates that all work
-should be divided equally between the blocks (and blocks will therefore have equal sizes). A value of 1 
+should be divided equally between the blocks (and blocks will therefore have equal sizes). A value of 1
 indicates the largest possible spread. The existence of the spread parameter is based on the assumption
 that smaller overall jobs will generally spend less time in the queue than larger jobs. By submitting
 blocks of different sizes, submitted jobs may be finished quicker by smaller blocks. Default: 0.9.
 			</para>
 			<para id="profile.reserve"><literal>reserve</literal>
-Reserve time is a time in the allocation of a worker that sits at the end of the worker time and 
-is useable only for critical operations. For example, a job will not be submitted to a worker if 
+Reserve time is a time in the allocation of a worker that sits at the end of the worker time and
+is useable only for critical operations. For example, a job will not be submitted to a worker if
 it overlaps its reserve time, but a job that (due to inaccurate walltime specification) runs into
-the reserve time will not be killed (note that once the worker exceeds its walltime, the queuing 
+the reserve time will not be killed (note that once the worker exceeds its walltime, the queuing
 system will kill the job anyway). Default 10 (s).
 			</para>
 			<para id="profile.maxnodes"><literal>maxnodes</literal>
@@ -3330,8 +3330,8 @@ Indicates the maximum walltime that a coaster block can have. Default: unlimited
 If set to "true", the client side will get a Swing window showing, graphically, the state of the
 coaster scheduler (blocks, jobs, etc.). Default: false
 			</para>
-<!--		
-			Reminds me this functionality should be added to the new coaster stuff		
+<!--
+			Reminds me this functionality should be added to the new coaster stuff
 			<para id="profile.globus.coasterInternalIP"><literal>coasterInternalIP</literal>
 specifies the internal address of the coaster head node, to be used by
 coaster workers to communicate with the coaster head node. This can be used
@@ -3339,10 +3339,10 @@ when the address determined automatically by the coaster provider
 is inaccessible from coaster workers (for example, when the workers
 reside on an unrouted internal network). (since Swift 0.9)
 			</para>
-			
+
 -->
 		</section>
-		
+
 		<section id="profile.env"><title>env namespace</title>
 			<para>
 Profile keys set in the env namespace will be set in the unix environment of the
@@ -3414,8 +3414,8 @@ and a remote working directory. Optionally, <link linkend="profiles">profile set
 <section><title>File transfer method</title>
 
 		<para>
-Transfer methods are specified with either 
-the <literal>&lt;gridftp&gt;</literal> element or the 
+Transfer methods are specified with either
+the <literal>&lt;gridftp&gt;</literal> element or the
 <literal>&lt;filesystem&gt;</literal> element.
 		</para>
 		<para>
@@ -3533,7 +3533,7 @@ www11.i2u2.org.passphrase=XXXX
 </screen>
 		</para>
 		<para>
-For execution using the 
+For execution using the
 <link linkend="coasters">CoG Coaster mechanism</link>, the <literal>coaster</literal> provider
 should be used:
 <screen>
@@ -3555,7 +3555,7 @@ stored.
 This file must be accessible through the transfer mechanism specified
 in the <literal>&lt;gridftp&gt;</literal> element and also mounted on all worker nodes that
 will be used for execution. A shared cluster scratch filesystem is
-appropriate for this. 
+appropriate for this.
 		</para>
 
 </section>
@@ -3681,7 +3681,7 @@ $ <userinput>ant -Dno-supporting=true redist</userinput>
 	<section id="kickstart"> <title>Kickstart</title>
 		<para>
 
-Kickstart is a tool that can be used to gather various information 
+Kickstart is a tool that can be used to gather various information
 about the remote execution environment for each job that Swift tries
 to run.
 		</para>
@@ -3794,7 +3794,7 @@ class="file">example.swift</filename></option>.
 </screen>
 
 		</para>
-	</section> 
+	</section>
 
 	<section id="replication"><title>Replication</title>
 		<para>
@@ -3852,13 +3852,13 @@ property.
 		<para>
 Two or more jobs are considered compatible if they share the same site
 and do not have conflicting profiles (e.g. different values for the same
-environment variable). 
+environment variable).
 		</para>
 
 		<para>
-When a submitted job is eligible for clustering, 
+When a submitted job is eligible for clustering,
 it will be put in a clustering queue rather than being submitted to
-a remote site. The clustering queue is processed at intervals 
+a remote site. The clustering queue is processed at intervals
 specified by the
 <link linkend="property.clustering.queue.delay"><property>clustering.queue.delay</property></link>
 property. The processing of the clustering queue consists of selecting
@@ -3867,7 +3867,7 @@ not exceed twice the value of the <property>clustering.min.time</property>
 property.
 		</para>
 
-		
+
 	</section>
 
 
@@ -3958,13 +3958,13 @@ section</link>:
    <row><entry>remoteMonitorEnabled</entry><entry>If true, show a graphical display of the status of the coaster service</entry></row>
   </tbody>
  </tgroup>
-</table> 
+</table>
 	</section>
 	<section id="localhowtos"><title>How-To Tips for Specific User Communities</title>
 		<section id="savinglogs"><title>Saving Logs - for UChicago CI Users</title>
 			<para>
-If you have a UChicago Computation Institute account, run this command in your 
-submit directory after each run. It will copy all your logs and kickstart 
+If you have a UChicago Computation Institute account, run this command in your
+submit directory after each run. It will copy all your logs and kickstart
 records into a directory at the CI for reporting, usage tracking, support and debugging.
 			</para>
 			<para>
@@ -3999,7 +3999,7 @@ files, and have two output files on stdout and stderr:
 <programlisting>
 type file;
 
-(file o, file e) p() { 
+(file o, file e) p() {
     app {
         mpi stdout=@filename(o) stderr=@filename(e);
     }
@@ -4022,7 +4022,7 @@ mpi.sh is a wrapper script that launches the MPI program. It must be installed
 on the remote site:
 <screen>
 #!/bin/bash
-mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
+mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out
 </screen>
 </para>
 <para>
@@ -4033,14 +4033,14 @@ mpirun command should be explicitly invoked.
 		</section>
 		<section id="tips.windows"><title>Running on Windows</title>
 			<para>
-			
+
 				Since 10/11/09, the development version of Swift has the
 ability to run on a Windows machine, as well as the ability to submit
-jobs to a Windows site (provided that an appropriate provider is used). 
-			
+jobs to a Windows site (provided that an appropriate provider is used).
+
 			</para>
 			<para>
-			
+
 In order to launch Swift on Windows, use the provided batch file
 (swift.bat). In certain cases, when a large number of jar libraries are
 present in the Swift lib directory and depending on the exact location
@@ -4051,9 +4051,9 @@ the root of the disk (say, c:\swift) or remove non-essential jar files
 from the Swift lib directory.
 
 			</para>
-			
+
 			<para>
-			
+
 Due to the large differences between Windows and Unix environments,
 Swift must use environment specific tools to achieve some of its goals.
 In particular, each Swift executable is launched using a wrapper script.
@@ -4062,11 +4062,11 @@ Bourne Shell interpreter installed by default, the Windows Scripting
 Host is used instead, and the wrapper script is written in VBScript.
 Similarly, when cleaning up after a run, the "/bin/rm" command available
 in typical Unix environments must be replaced by the "del" shell command.
-			
+
 			</para>
-			
+
 			<para>
-			
+
 It is important to note that in order to select the proper set of tools
 to use, Swift must know when a site runs under Windows. To inform Swift
 of this, specify the "sysinfo" attribute for the "pool" element in the
@@ -4077,7 +4077,7 @@ site catalog. For example:
 	...
 	&lt;/pool&gt;
 </programlisting>
-			
+
 			</para>
 		</section>
 	</section>
