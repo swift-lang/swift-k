@@ -243,12 +243,14 @@ pageTracker._trackPageview();
 		<div id="container">
 			<!-- header -->
 			<div id="header">
-				<?php require('../../inc/header.php') ?>
+				<?php
+                                   set_include_path('.');
+                                   require('../../../inc/header.php') ?>
 			</div>
 			<!-- end header -->
 			<!-- nav -->
 			<div id="nav">
-				<?php require('../../inc/nav.php') ?>
+				<?php require('../../../inc/nav.php') ?>
 			</div>
 			<!-- end nav -->
 			<!-- content container -->
@@ -262,7 +264,7 @@ pageTracker._trackPageview();
 			</div>
 			<!-- end content container-->
 			<!-- footer -->
-			<div id="footer"><?php require('../../inc/footer.php') ?></div>
+			<div id="footer"><?php require('../../../inc/footer.php') ?></div>
 			<!-- end footer -->
 
 		</div>
