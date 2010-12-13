@@ -15,8 +15,6 @@
 # Everything for a Swift test is written in its RUNDIR
 # The temporary output always goes to OUTPUT (TOPDIR/exec.out)
 
-# Note that some schedulers restrict your choice of RUNDIR
-
 # Each *.swift test may be accompanied by a
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
 # and a *.timeout specifier
@@ -30,12 +28,15 @@
 # Tests are GROUPed into directories
 # Each GROUP directory has:
 #      1) a list of *.swift tests (plus *.sh scripts)
-#      2) optionally a tc.template.data
-#      3) optionally a fs.template.data
-#      4) optionally a swift.properties
-#      5) optionally a title.txt
-#      6) preferably a README.txt
+#      2) optionally a sites.template.xml
+#      3) optionally a tc.template.data
+#      4) optionally a fs.template.data
+#      5) optionally a swift.properties
+#      6) optionally a title.txt
+#      7) preferably a README.txt
 # Edit GROUPLIST at the end of this script before running
+# template files are lightly processed by sed before use
+# Missing files will be pulled from swift/etc
 
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
@@ -61,6 +62,12 @@
 # SwiftScripts contain the token THIS-SCRIPT-SHOULD-FAIL somewhere.
 # The response of nightly.sh to the exit code of these Swift
 # executions is reversed.
+
+# SCHEDULERS
+# Environment must contain PROJECT, QUEUE, and WORK
+# These variables will be incorporated into the sites.xml 
+#   via make_sites_sed() -> group_sites_xml()
+# Note that some schedulers restrict your choice of RUNDIR
 
 printhelp() {
   echo "nightly.sh <options> <output>"
@@ -392,6 +399,7 @@ outecho() {
   echo "<$TYPE>$1|$2|$3|$4|$5|$6|$7|$8|$9|"
 }
 
+# Create HTML output
 out() {
         # echo $@
   TYPE=$1
@@ -534,6 +542,7 @@ result() {
   fi
 }
 
+# Execute process in the background
 process_exec() {
   printf "\nExecuting: $@" >>$LOG
   rm -f $OUTPUT
@@ -793,7 +802,7 @@ build_package() {
   out package "swift-$DATE.tar.gz"
 }
 
-# Environment must contain PROJECT, QUEUE, and WORK
+# Generate the sites.sed file
 make_sites_sed() {
   checkvars WORK QUEUE PROJECT
   { 
@@ -805,6 +814,7 @@ make_sites_sed() {
   return 0
 }
 
+# Setup coasters variables
 if which ifconfig > /dev/null; then
   IFCONFIG=ifconfig
 else
@@ -815,6 +825,7 @@ GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
                    awk '{print $1}' )
 [ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
 
+# Generate sites.xml
 group_sites_xml() {
   TEMPLATE=$GROUP/sites.template.xml
   if [ -f $TEMPLATE ]; then
@@ -828,6 +839,7 @@ group_sites_xml() {
   fi
 }
 
+# Generate tc.data
 group_tc_data() {
   if [ -f $GROUP/tc.template.data ]; then
     sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
@@ -839,6 +851,7 @@ group_tc_data() {
   fi
 }
 
+# Generate the CDM file, fs.data
 group_fs_data() {
   if [ -f $GROUP/fs.template.data ]; then
     sed "s@_PWD_@$PWD@" < $GROUP/fs.template.data > fs.data
@@ -849,6 +862,7 @@ group_fs_data() {
   fi
 }
 
+# Generate swift.properties
 group_swift_properties() {
   if [ -f $GROUP/swift.properties ]; then
     cp -v $GROUP/swift.properties .
@@ -859,6 +873,7 @@ group_swift_properties() {
   fi
 }
 
+# Obtain the group title
 group_title() {
   if [ -r $GROUP/title.txt ]; then
     cat $GROUP/title.txt
@@ -867,6 +882,7 @@ group_title() {
   fi
 }
 
+# Execute all tests in current GROUP
 test_group() {
 
   group_sites_xml
