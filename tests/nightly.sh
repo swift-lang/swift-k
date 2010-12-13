@@ -15,6 +15,8 @@
 # Everything for a Swift test is written in its RUNDIR
 # The temporary output always goes to OUTPUT (TOPDIR/exec.out)
 
+# Note that some schedulers restrict your choice of RUNDIR
+
 # Each *.swift test may be accompanied by a
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
 # and a *.timeout specifier
@@ -44,6 +46,9 @@
 # PID TREE:
 # Background processes are used so that hung Swift jobs can be killed
 # These are the background processes (PIDs are tracked)
+# Note that PID management has not yet been perfected.  Check ps 
+# in error cases. 
+# 
 # nightly.sh
 # +-monitor()
 #   +-sleep
@@ -170,6 +175,18 @@ checkfail() {
     echo "FAILED($ERR): $MSG"
     exit $ERR
   fi
+}
+
+# Ensure all given variables are set
+checkvars() {
+  while (( ${#*} ))
+   do
+   VAR=$1
+   V=$( eval "echo \${${VAR}+1}" )
+   [[ $V == 1 ]] || crash "Not set: $VAR"
+   shift
+  done
+  return 0
 }
 
 crash() {
@@ -568,7 +585,21 @@ kill_this() {
 test_exec() {
   banner "$TEST (part $SEQ)"
   echo "Executing $TEST (part $SEQ)"
-  process_exec "$@"
+  pwd
+  printf "\nExecuting: $@" >>$LOG
+
+  rm -f $OUTPUT
+  "$@" > $OUTPUT 2>&1 
+  EXITCODE=$?
+
+  if [ "$EXITCODE" == "127" ]; then
+    echo "Command not found: $@" > $OUTPUT
+  fi
+
+  if [ -f $OUTPUT ]; then
+    cat $OUTPUT >> $LOG
+  fi
+
   RESULT=$( result )
   test_log
   out test $SEQ "$LASTCMD" $RESULT $TEST_LOG
@@ -576,6 +607,7 @@ test_exec() {
   check_bailout
 
   let "SEQ=$SEQ+1"
+  return $EXITCODE
 }
 
 # Background process monitoring function
@@ -761,6 +793,18 @@ build_package() {
   out package "swift-$DATE.tar.gz"
 }
 
+# Environment must contain PROJECT, QUEUE, and WORK
+make_sites_sed() {
+  checkvars WORK QUEUE PROJECT
+  { 
+    echo "s@_WORK_@$WORK@"
+    echo "s@_HOST_@$GLOBUS_HOSTNAME@"
+    echo "s@_PROJECT_@$PROJECT@"
+    echo "s@_QUEUE_@$QUEUE@"
+  } > $RUNDIR/sites.sed
+  return 0
+}
+
 if which ifconfig > /dev/null; then
   IFCONFIG=ifconfig
 else
@@ -770,10 +814,11 @@ $IFCONFIG > /dev/null || crash "Cannot run ifconfig!"
 GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
                    awk '{print $1}' )
 [ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
+
 group_sites_xml() {
   TEMPLATE=$GROUP/sites.template.xml
   if [ -f $TEMPLATE ]; then
-    sed "s@_WORK_@$PWD/work@;s@_HOST_@$GLOBUS_HOSTNAME@" < $TEMPLATE > sites.xml
+    sed -f $RUNDIR/sites.sed < $TEMPLATE > sites.xml
     [ $? != 0 ] && crash "Could not create sites.xml!"
     echo "Using: $GROUP/sites.template.xml"
   else
@@ -851,6 +896,8 @@ test_group() {
 
 date > $LOG
 
+make_sites_sed
+
 header
 start_test_results
 cd $TOPDIR
@@ -914,6 +961,7 @@ GROUPLIST=( $TESTDIR/language-behaviour \
             $TESTDIR/cdm/ps \
             $TESTDIR/cdm/star
             $TESTDIR/cdm/ps/pinned
+	    # $TESTDIR/site/intrepid
           )
 
 GROUPCOUNT=1
