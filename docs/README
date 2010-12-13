@@ -37,6 +37,22 @@ $ sudo port install docbook-xsl
 $ cd formatting
 $ ln -s /opt/local/share/xsl/docbook-xsl/ docbook
 
+C) in general:
+
+ 1) Install Apache
+
+ 2) Install PHP (cf. http://dan.drydog.com/apache2php.html)
+
+ 3) Add these lines to Apache's httpd.conf:
+
+    AddHandler php5-script php
+    AddType text/html       php
+
+ 4) Update httpd.conf, adding index.php:
+
+    DirectoryIndex index.html index.php
+
+ 5) Make sure perms are correct
 
 Once the links are set up, the buildguides.sh script will build all guides
 as php.  Run it with no parameters, like this:
