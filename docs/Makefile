@@ -1,6 +1,6 @@
 
-FOP = fop
-# FOP = fop/fop.sh
+# FOP = fop
+FOP = fop/fop.sh
 
 all: phps pdfs
 
