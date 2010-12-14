@@ -304,7 +304,9 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void taskFailed(String msg, Exception e) {
-        logger.warn("Worker task failed: " + msg, e);
+        if (logger.isInfoEnabled()) {
+            logger.info("Worker task failed: " + msg, e);
+        }
         synchronized (cpus) {
             synchronized (scpus) {
                 failed = true;
@@ -459,6 +461,10 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public boolean isSuspended() {
         return suspended;
+    }
+    
+    public synchronized boolean isShutDown() {
+        return shutdown;
     }
 
     public void jobPulled() {
