@@ -35,9 +35,13 @@
 #      6) optionally a title.txt
 #      7) preferably a README.txt
 #      7) optionally a *.timeout
-# Edit GROUPLIST at the end of this script before running
 # template files are lightly processed by sed before use
 # Missing files will be pulled from swift/etc
+
+# The GROUPLIST is obtained from an external script in the
+# groups/ subdirectory by the name of GROUPLISTFILE.
+# The GROUPLISTFILE:
+#      1) sets the array
 
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
