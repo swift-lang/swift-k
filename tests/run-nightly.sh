@@ -9,7 +9,9 @@ cd $( dirname $0 ) || exit 1
 
 svn up || exit 1
 
-./nightly.sh -g -o /scratch/wozniak/nightly $GROUPLISTFILE
+# Work within, e.g., /home/wozniak/nightly/topdir
+rm -rf topdir
+./nightly.sh -g -o topdir $GROUPLISTFILE
 [ $? != 0 ] && exit 1
 
 exit 0
