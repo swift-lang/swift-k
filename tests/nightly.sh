@@ -34,6 +34,7 @@
 #      5) optionally a swift.properties
 #      6) optionally a title.txt
 #      7) preferably a README.txt
+#      7) optionally a *.timeout
 # Edit GROUPLIST at the end of this script before running
 # template files are lightly processed by sed before use
 # Missing files will be pulled from swift/etc
@@ -47,9 +48,9 @@
 # PID TREE:
 # Background processes are used so that hung Swift jobs can be killed
 # These are the background processes (PIDs are tracked)
-# Note that PID management has not yet been perfected.  Check ps 
-# in error cases. 
-# 
+# Note that PID management has not yet been perfected.  Check ps
+# in error cases.
+#
 # nightly.sh
 # +-monitor()
 #   +-sleep
@@ -65,7 +66,7 @@
 
 # SCHEDULERS
 # Environment must contain PROJECT, QUEUE, and WORK
-# These variables will be incorporated into the sites.xml 
+# These variables will be incorporated into the sites.xml
 #   via make_sites_sed() -> group_sites_xml()
 # Note that some schedulers restrict your choice of RUNDIR
 
@@ -73,17 +74,18 @@ printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""
   echo "usage:"
-  printf "\t -a      Do not run ant dist             \n"
-  printf "\t -c      Do not remove dist (clean)      \n"
-  printf "\t -g      Do not run grid tests           \n"
-  printf "\t -h      This message                    \n"
-  printf "\t -k <N>  Skip first N tests              \n"
-  printf "\t -n <N>  Run N tests and quit            \n"
-  printf "\t -p      Do not build the package        \n"
-  printf "\t -s      Do not do a fresh svn checkout  \n"
-  printf "\t -x      Do not continue after a failure \n"
-  printf "\t -v      Verbose (set -x, HTML comments) \n"
-  printf "\t output  Location for output (TOPDIR)    \n"
+  printf "\t -a         Do not run ant dist             \n"
+  printf "\t -c         Do not remove dist (clean)      \n"
+  printf "\t -g         Do not run grid tests           \n"
+  printf "\t -h         This message                    \n"
+  printf "\t -k <N>     Skip first N tests              \n"
+  printf "\t -n <N>     Run N tests and quit            \n"
+  printf "\t -p         Do not build the package        \n"
+  printf "\t -s         Do not do a fresh svn checkout  \n"
+  printf "\t -x         Do not continue after a failure \n"
+  printf "\t -v         Verbose (set -x, HTML comments) \n"
+  printf "\t -o output  Location for output (TOPDIR)    \n"
+  printf "\t <FILE>     GROUPLIST definition file       \n"
 }
 
 # Defaults:
@@ -120,6 +122,9 @@ while [ $# -gt 0 ]; do
     -n)
       NUMBER_OF_TESTS=$2
       shift 2;;
+    -o)
+      TOPDIR=$2
+      shift 2;;
     -p)
       BUILD_PACKAGE=0
       shift;;
@@ -133,7 +138,7 @@ while [ $# -gt 0 ]; do
       VERBOSE=1
       shift;;
     *)
-      TOPDIR=$1
+      GROUPLISTFILE=$1
       shift;;
   esac
 done
@@ -169,6 +174,12 @@ SWIFTCOUNT=0
 
 echo "RUNNING_IN:  $RUNDIR"
 echo "HTML_OUTPUT: $HTML"
+
+TESTDIR=$TOPDIR/cog/modules/swift/tests
+
+checkvars GROUPLISTFILE
+echo "GROUPLISTFILE: $GROUPLISTFILE"
+source $GROUPLISTFILE
 
 cd $TOPDIR
 mkdir -p $RUNDIR
@@ -598,7 +609,7 @@ test_exec() {
   printf "\nExecuting: $@" >>$LOG
 
   rm -f $OUTPUT
-  "$@" > $OUTPUT 2>&1 
+  "$@" > $OUTPUT 2>&1
   EXITCODE=$?
 
   if [ "$EXITCODE" == "127" ]; then
@@ -805,7 +816,7 @@ build_package() {
 # Generate the sites.sed file
 make_sites_sed() {
   checkvars WORK QUEUE PROJECT
-  { 
+  {
     echo "s@_WORK_@$WORK@"
     echo "s@_HOST_@$GLOBUS_HOSTNAME@"
     echo "s@_PROJECT_@$PROJECT@"
@@ -965,20 +976,7 @@ if [ $ALWAYS_EXITONFAILURE != "1" ]; then
   EXITONFAILURE=false
 fi
 
-TESTDIR=$TOPDIR/cog/modules/swift/tests
-
 SKIP_COUNTER=0
-
-GROUPLIST=( $TESTDIR/language-behaviour \
-            $TESTDIR/language/working \
-            $TESTDIR/local \
-            $TESTDIR/language/should-not-work \
-            $TESTDIR/cdm \
-            $TESTDIR/cdm/ps \
-            $TESTDIR/cdm/star
-            $TESTDIR/cdm/ps/pinned
-	    # $TESTDIR/site/intrepid
-          )
 
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
