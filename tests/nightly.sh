@@ -42,6 +42,7 @@
 # groups/ subdirectory by the name of GROUPLISTFILE.
 # The GROUPLISTFILE:
 #      1) sets the array
+#      2) checks any variables needed by make_sites_sed()
 
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
@@ -181,24 +182,6 @@ echo "HTML_OUTPUT: $HTML"
 
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 
-checkvars GROUPLISTFILE
-echo "GROUPLISTFILE: $GROUPLISTFILE"
-source $GROUPLISTFILE
-
-cd $TOPDIR
-mkdir -p $RUNDIR
-[ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
-
-checkfail() {
-  ERR=$?
-  shift
-  MSG=${*}
-  if [[ $ERR != 0 ]]; then
-    echo "FAILED($ERR): $MSG"
-    exit $ERR
-  fi
-}
-
 # Ensure all given variables are set
 checkvars() {
   while (( ${#*} ))
@@ -209,6 +192,16 @@ checkvars() {
    shift
   done
   return 0
+}
+
+checkfail() {
+  ERR=$?
+  shift
+  MSG=${*}
+  if [[ $ERR != 0 ]]; then
+    echo "FAILED($ERR): $MSG"
+    exit $ERR
+  fi
 }
 
 crash() {
@@ -819,7 +812,6 @@ build_package() {
 
 # Generate the sites.sed file
 make_sites_sed() {
-  checkvars WORK QUEUE PROJECT
   {
     echo "s@_WORK_@$WORK@"
     echo "s@_HOST_@$GLOBUS_HOSTNAME@"
@@ -924,6 +916,14 @@ test_group() {
     end_row
   done
 }
+
+checkvars GROUPLISTFILE
+echo "GROUPLISTFILE: $GROUPLISTFILE"
+source $GROUPLISTFILE || exit 1
+
+cd $TOPDIR
+mkdir -p $RUNDIR
+[ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
 
 date > $LOG
 
