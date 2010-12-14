@@ -1385,6 +1385,23 @@ would map
 
 	</section>
 
+	<section id="mapper.mapping_uris"><title>mapping URIs</title>
+		<para>
+The above mappers may be used to map files based on a URI which can be specified in the filename. This is useful for mapping files on remote machines.
+		</para>
+	<para>   
+
+	<para> Example:
+
+			<programlisting>
+	student st &lt;single_file_mapper;file="gsiftp://communicado.ci.uchicago.edu//tmp/student.txt"&gt;;
+			</programlisting>
+
+		</para>
+		</para>
+
+	</section>
+
 	</section>
 	<section id="commands"><title>Commands</title>
 		<para>
