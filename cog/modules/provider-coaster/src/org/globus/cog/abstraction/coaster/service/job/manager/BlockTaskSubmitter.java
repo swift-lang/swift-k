@@ -63,7 +63,9 @@ class BlockTaskSubmitter extends Thread {
                     logger.info("Submitting block " + b);
                 }
                 try {
-                    handler.submit(b.getTask());
+                    if (!b.isShutDown()) {
+                        handler.submit(b.getTask());
+                    }
                 }
                 catch (Exception e) {
                 	if (logger.isInfoEnabled()) {
