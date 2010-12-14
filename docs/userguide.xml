@@ -3611,12 +3611,15 @@ tabs. Spaces cannot be used to separate fields.
 		<para>Some example entries:
 <screen>
 localhost  echo    /bin/echo       INSTALLED       INTEL32::LINUX  null
+localhost  touch   /bin/touch      INSTALLED       INTEL32::LINUX  null
+
 TGUC       touch   /usr/bin/touch  INSTALLED       INTEL32::LINUX  GLOBUS::maxwalltime="0:1"
+TGUC       R       /usr/bin/R      INSTALLED       INTEL32::LINUX  env::R_LIBS=/home/skenny/R_libs
 </screen>
 		</para>
 		<para>
 The fields are: site, transformation name, executable path, installation
-status, platform, and profile entrys.
+status, platform, and profile entries.
 		</para>
 		<para>
 The site field should correspond to a site name listed in the sites
@@ -3637,7 +3640,29 @@ The installation status and platform fields are not used. Set them to
 The profiles field should be set to <literal>null</literal> if no profile entries are to be
 specified, or should contain the profile entries separated by semicolons.
 		</para>
+
+	<section id="transformationcatalog.shell_invocation"><title>shell invocation</title>
+		<para>
+Because the above implementation requires an entry for each executable on a given site, it is often preferable to simply have a single element for each site in the transformation catalog representing a wrapper that sets the environment and then invokes the shell to call a given application. This wrapper is installed on the site and can be used to set the <literal>PATH</literal> and other environment variables prior to invoking the shell so that each executable need not be entered in the <literal>tc.data</literal> file. 
+		</para>
+		<para>for example, the entries for <literal>TGUC</literal> and <literal>localhost</literal> can now each be collapsed into a single line:
+<screen>
+localhost  shell    /usr/local/bin/swiftshell       INSTALLED       INTEL32::LINUX  null
+TGUC       shell    /usr/local/bin/swiftshell       INSTALLED       INTEL32::LINUX  null
+</screen>
+where <literal>swiftshell</literal> sets up the users's environment so that all the installed applications are added to the <literal>PATH</literal> before the application is invoked. 
+		</para>
+<para>
+<literal>touch</literal> would now be called in the SwiftScript like this:
+<screen>
+app (file tout) shelltest(){
+    shell "touch" @filename(tout);
+}
+</screen>
+</para>
+		</section>
 	</section>
+
 	<section id="buildoptions"><title>Build options</title>
 		<para>
 See <ulink url="http://www.ci.uchicago.edu/swift/downloads/">the
