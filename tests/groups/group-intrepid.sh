@@ -4,3 +4,5 @@
 GROUPLIST=( $TESTDIR/local \
 	    $TESTDIR/site/intrepid
           )
+
+checkvars WORK QUEUE PROJECT
