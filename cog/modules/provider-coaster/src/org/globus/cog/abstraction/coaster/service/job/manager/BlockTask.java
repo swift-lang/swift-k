@@ -55,8 +55,8 @@ public class BlockTask extends TaskImpl {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
         spec.addEnvironmentVariable("WORKER_LOGGING_LEVEL", settings.getWorkerLoggingLevel());
-        if (logger.isInfoEnabled()) {
-            logger.info("Worker logging level: " + settings.getWorkerLoggingLevel());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Worker logging level: " + settings.getWorkerLoggingLevel());
         }
         setRequiredService(1);
         setService(0, buildService());
