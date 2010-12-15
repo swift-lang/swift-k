@@ -22,6 +22,7 @@ import java.util.zip.DeflaterOutputStream;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.SubmitJobHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
@@ -119,8 +120,10 @@ public class SubmitJobCommand extends Command {
             add(dos, "stageout", e.getSource() + '\n' + 
                 absolutize(e.getDestination()));
 
-        for (String cleanup : spec.getCleanUpSet())
-            add(dos, "cleanup", cleanup);
+        CleanUpSet set = spec.getCleanUpSet();
+        if (set != null)
+            for (String cleanup : spec.getCleanUpSet())
+                add(dos, "cleanup", cleanup);
 
         Service s = t.getService(0);
         add(dos, "contact", s.getServiceContact().toString());
