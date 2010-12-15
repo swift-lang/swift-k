@@ -102,7 +102,7 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	protected String ppInData(String prefix) {
-		return ppData(prefix+"< ", getInCmd(), getInDataChuncks());
+		return ppData(prefix+"< ", getInCmd(), getInDataChunks());
 	}
 	
 	public String toString() {

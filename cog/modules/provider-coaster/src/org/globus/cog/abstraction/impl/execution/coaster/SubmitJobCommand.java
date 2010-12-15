@@ -15,9 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 
@@ -32,8 +30,6 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
-import edu.emory.mathcs.backport.java.util.Collections;
-
 public class SubmitJobCommand extends Command {
     public static final Logger logger = Logger.getLogger(SubmitJobCommand.class);
 
@@ -41,6 +37,8 @@ public class SubmitJobCommand extends Command {
 
     public static final Set<String> IGNORED_ATTRIBUTES;
 
+    private String id;
+    
     static {
         IGNORED_ATTRIBUTES = new HashSet<String>();
         for (int i = 0; i < Settings.NAMES.length; i++) {
@@ -53,7 +51,6 @@ public class SubmitJobCommand extends Command {
     };
 
     private Task t;
-    private String id;
     private boolean compression = SubmitJobHandler.COMPRESSION;
 
     public boolean getCompression() {
@@ -101,42 +98,29 @@ public class SubmitJobCommand extends Command {
         add(dos, "stdout", spec.getStdOutput());
         add(dos, "stderr", spec.getStdError());
 
-        Iterator i;
-        i = spec.getArgumentsAsList().iterator();
-        while (i.hasNext()) {
-            add(dos, "arg", (String) i.next());
-        }
+        for (String arg : spec.getArgumentsAsList())
+            add(dos, "arg", arg);
 
-        i = spec.getEnvironmentVariableNames().iterator();
-        while (i.hasNext()) {
-            String name = (String) i.next();
-            add(dos, "env", name + "=" + spec.getEnvironmentVariable(name));
-        }
-
-        i = spec.getAttributeNames().iterator();
-        while (i.hasNext()) {
-            String name = (String) i.next();
-            if (!IGNORED_ATTRIBUTES.contains(name) || spec.isBatchJob()) {
-                add(dos, "attr", name + "=" + spec.getAttribute(name));
-            }
-        }
-
-        i = iterator(spec.getStageIn());
-        while (i.hasNext()) {
-            StagingSetEntry e = (StagingSetEntry) i.next();
-            add(dos, "stagein", absolutize(e.getSource()) + '\n' + e.getDestination());
-        }
+        for (String name : spec.getEnvironmentVariableNames())
+            add(dos, "env", 
+                name + "=" + spec.getEnvironmentVariable(name));
+    
+        for (String name : spec.getAttributeNames())
+            if (!IGNORED_ATTRIBUTES.contains(name) || 
+                    spec.isBatchJob()) 
+                add(dos, "attr", 
+                    name + "=" + spec.getAttribute(name));
+            
+        for (StagingSetEntry e : spec.getStageIn())
+            add(dos, "stagein", absolutize(e.getSource()) + '\n' + 
+                e.getDestination());
         
-        i = iterator(spec.getStageOut());
-        while (i.hasNext()) {
-            StagingSetEntry e = (StagingSetEntry) i.next();
-            add(dos, "stageout", e.getSource() + '\n' + absolutize(e.getDestination()));
-        }
-        
-        i = iterator(spec.getCleanUpSet());
-        while (i.hasNext()) {
-            add(dos, "cleanup", (String) i.next());
-        }
+        for (StagingSetEntry e : spec.getStageOut())
+            add(dos, "stageout", e.getSource() + '\n' + 
+                absolutize(e.getDestination()));
+
+        for (String cleanup : spec.getCleanUpSet())
+            add(dos, "cleanup", cleanup);
 
         Service s = t.getService(0);
         add(dos, "contact", s.getServiceContact().toString());
@@ -172,19 +156,11 @@ public class SubmitJobCommand extends Command {
         }
     }
 
-    private Iterator iterator(Collection c) {
-        if (c == null) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-        else {
-            return c.iterator();
-        }
-    }
-
     private void add(OutputStream baos, String key, boolean value) throws IOException {
         add(baos, key, String.valueOf(value));
     }
 
+    @SuppressWarnings("fallthrough")
     private void add(OutputStream baos, String key, String value) throws IOException {
         if (value != null) {
             baos.write(key.getBytes("UTF-8"));

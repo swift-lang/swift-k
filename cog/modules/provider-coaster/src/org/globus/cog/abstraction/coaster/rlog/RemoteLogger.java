@@ -32,7 +32,8 @@ public class RemoteLogger implements Callback {
             rlc.executeAsync(channel, this);
         }
         catch (Exception e) {
-            logger.warn("Failed to send remote log message", e);
+            logger.warn("Failed to send remote log message: " + msg, 
+                        e);
         }
     }
     

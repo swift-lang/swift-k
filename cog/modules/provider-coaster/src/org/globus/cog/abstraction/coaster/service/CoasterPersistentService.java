@@ -90,7 +90,6 @@ public class CoasterPersistentService extends CoasterService {
                 localport = ap.getIntValue("localport");
             }
 
-
             CoasterPersistentService s;
             if (!secure) {
                 s = new CoasterPersistentService(false, port, bindTo);
