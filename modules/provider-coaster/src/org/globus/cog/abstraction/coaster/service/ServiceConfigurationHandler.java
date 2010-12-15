@@ -30,7 +30,7 @@ public class ServiceConfigurationHandler extends RequestHandler {
         logger.debug(settings);
 
         try {
-            List l = getInDataChuncks();
+            List l = getInDataChunks();
             if (l != null) {
                 Iterator i = l.iterator();
                 while (i.hasNext()) {

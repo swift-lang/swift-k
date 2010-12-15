@@ -164,12 +164,12 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         running = job;
         running.start();
         if (job.cpus == 1)
-            launchSequential(job);
+            launchSequential();
         else
             launchMPICH(job);
     }
 
-    void launchSequential(Job job) {
+    void launchSequential() {
         running.getTask().addStatusListener(this);
         idleTime += timeDiff();
         timelast = running.getEndTime();
@@ -191,9 +191,10 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         mpiexec.launch();
     }  
   
+    @SuppressWarnings("hiding")
     private boolean checkSuspended(Block block) {
         if (block.isSuspended()) {
-            block.cpuIsClear(this);
+            block.shutdownIfEmpty(this);
             return true;
         }
         else {
@@ -202,7 +203,6 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     protected void submit(Job job) {
-        Block block = node.getBlock();
         Task task = job.getTask();
         if (logger.isDebugEnabled()) {
             logger.debug(block.getId() + ":" + getId() + 
@@ -230,6 +230,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void shutdown() {
+        @SuppressWarnings("hiding")
         Block block = node.getBlock();
         done.clear();
         if (running != null) {
@@ -276,7 +277,6 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void taskFailed(String msg, Exception e) {
-        Block block = node.getBlock();
         if (running == null) {
             if (starttime == null) {
                 starttime = Time.now();

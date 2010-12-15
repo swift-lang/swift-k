@@ -9,8 +9,8 @@
  */
 package org.globus.cog.abstraction.interfaces;
 
-public interface CleanUpSet extends java.util.Set {
-    void add(String e);
+public interface CleanUpSet extends java.util.Set<String> {
+    boolean add(String e);
     
     void remove(String e);
 }

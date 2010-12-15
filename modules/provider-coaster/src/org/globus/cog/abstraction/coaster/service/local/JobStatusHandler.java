@@ -39,7 +39,7 @@ public class JobStatusHandler extends RequestHandler {
             if (message != null && !message.equals("")) {
                 s.setMessage(message);
             }
-            if (getInDataChuncks().size() > 4) {
+            if (getInDataChunks().size() > 4) {
                 s.setTime(new Date(this.getInDataAsLong(4)));
             }
             NotificationManager.getDefault().notificationReceived(jobId, s);

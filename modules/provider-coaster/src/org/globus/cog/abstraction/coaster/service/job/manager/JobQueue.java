@@ -9,7 +9,6 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 

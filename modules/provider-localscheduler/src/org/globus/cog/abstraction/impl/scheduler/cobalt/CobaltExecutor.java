@@ -62,19 +62,19 @@ public class CobaltExecutor extends AbstractExecutor {
 			String stderr) throws IOException {
 	}
 
-	protected void addAttr(String attrName, String option, List l) {
+	protected void addAttr(String attrName, String option, List<String> l) {
 		addAttr(attrName, option, l, null);
 	}
 
-	protected void addAttr(String attrName, String option, List l, boolean round) {
+	protected void addAttr(String attrName, String option, List<String> l, boolean round) {
 		addAttr(attrName, option, l, null, round);
 	}
 
-	protected void addAttr(String attrName, String option, List l, String defval) {
+	protected void addAttr(String attrName, String option, List<String> l, String defval) {
 		addAttr(attrName, option, l, defval, false);
 	}
 
-	protected void addAttr(String attrName, String option, List l,
+	protected void addAttr(String attrName, String option, List<String> l,
 			String defval, boolean round) {
 		Object value = getSpec().getAttribute(attrName);
 		if (value != null) {
@@ -101,15 +101,15 @@ public class CobaltExecutor extends AbstractExecutor {
 
 	protected String[] buildCommandLine(File jobdir, File script,
 			String exitcode, String stdout, String stderr) throws IOException {
-		List l = new ArrayList();
+		List<String> l = new ArrayList<String>();
 		l.add(cqsub);
-		Collection names = getSpec().getEnvironmentVariableNames();
+		Collection<String> names = getSpec().getEnvironmentVariableNames();
 		if (names != null && names.size() > 0) {
 			l.add("-e");
 			StringBuffer sb = new StringBuffer();
-			Iterator i = names.iterator();
+			Iterator<String> i = names.iterator();
 			while (i.hasNext()) {
-				String name = (String) i.next();
+				String name = i.next();
 				sb.append(name);
 				sb.append('=');
 				sb.append(quote(getSpec().getEnvironmentVariable(name)));
@@ -141,7 +141,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		if (logger.isDebugEnabled()) {
 			logger.debug("cqsub command: " + l);
 		}
-		return (String[]) l.toArray(EMPTY_STRING_ARRAY);
+		return l.toArray(EMPTY_STRING_ARRAY);
 	}
 
 	protected String quote(String s) {

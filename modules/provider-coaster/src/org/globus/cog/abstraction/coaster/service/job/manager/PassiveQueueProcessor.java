@@ -66,6 +66,4 @@ public class PassiveQueueProcessor extends BlockQueueProcessor implements Regist
             return b;
         }
     }
-    
-    
 }
