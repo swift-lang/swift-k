@@ -9,7 +9,6 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -30,11 +29,10 @@ public class ServiceConfigurationHandler extends RequestHandler {
         logger.debug(settings);
 
         try {
-            List l = getInDataChunks();
+            List<byte[]> l = getInDataChunks();
             if (l != null) {
-                Iterator i = l.iterator();
-                while (i.hasNext()) {
-                    String s = new String((byte[]) i.next());
+                for (byte[] b : l) {
+                    String s = new String(b);
                     String[] p = s.split("=", 2);
                     settings.set(p[0], p[1]);
                 }
