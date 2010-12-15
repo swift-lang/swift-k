@@ -236,7 +236,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 	}
 
 	protected String ppInData(String prefix) {
-		return ppData(prefix + "< ", getOutCmd(), getInDataChuncks());
+		return ppData(prefix + "< ", getOutCmd(), getInDataChunks());
 	}
 
 	public void channelClosed() {

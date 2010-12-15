@@ -31,7 +31,7 @@ public class EventHandler extends RequestHandler {
 	
 
 	public void requestComplete() throws ProtocolException {
-		List data = this.getInDataChuncks();
+		List data = this.getInDataChunks();
 		String id = new String((byte[]) data.get(0));
 		ic = getChannel().getUserContext().getInstanceContext(id);
 		if (ic == null) {

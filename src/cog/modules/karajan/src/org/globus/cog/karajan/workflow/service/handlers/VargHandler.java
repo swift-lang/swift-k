@@ -24,7 +24,7 @@ public class VargHandler extends RequestHandler {
 	private Object data;
 
 	public void requestComplete() throws ProtocolException {
-		List data = getInDataChuncks();
+		List data = getInDataChunks();
 		id = new String((byte[]) data.get(0));
 		name = new String((byte[]) data.get(1));
 		InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(

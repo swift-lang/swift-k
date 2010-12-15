@@ -57,7 +57,8 @@ public abstract class RequestReply {
 	protected void setOutCmd(String outCmd) {
 		this.outCmd = outCmd;
 	}
-
+	
+	@SuppressWarnings("hiding") 
 	public void register(KarajanChannel channel) {
 		this.channel = channel;
 	}
@@ -132,9 +133,11 @@ public abstract class RequestReply {
 	
 	public abstract void send(boolean err) throws ProtocolException;
 
+	@SuppressWarnings("unused")
 	protected void dataReceived(boolean fin, boolean error, byte[] data) throws ProtocolException {
 	}
-
+	
+	@SuppressWarnings("unused")
 	protected synchronized void addInData(boolean fin, boolean err, byte[] data) {
 		if (inData == null) {
 			inData = new ArrayList<byte[]>(4);
@@ -142,6 +145,7 @@ public abstract class RequestReply {
 		inData.add(data);
 	}
 	
+	@SuppressWarnings("unused")
 	protected final void addInData(byte[] data) {
 		throw new RuntimeException("Should not be used");
 	}
@@ -153,7 +157,7 @@ public abstract class RequestReply {
 		}
 	}
 
-	public List<byte[]> getInDataChuncks() {
+	public List<byte[]> getInDataChunks() {
 		return inData;
 	}
 
@@ -180,12 +184,12 @@ public abstract class RequestReply {
 			return null;
 		}
 		try {
-			return (byte[]) inData.get(index);
+			return inData.get(index);
 		}
 		catch (IndexOutOfBoundsException e) {
 		    List<String> l = new ArrayList<String>();
 		    for (int i = 0; i < inData.size(); i++) {
-		        l.add(new String((byte[]) inData.get(i)));
+		        l.add(new String(inData.get(i)));
 		    }
 			throw new IllegalArgumentException("Missing command argument #" + (index + 1) + "; inData: " + l);
 		}
@@ -272,11 +276,11 @@ public abstract class RequestReply {
 	public void errorReceived() {
 		String msg = null;
 		Exception exception = null;
-		List<byte[]> data = getInDataChuncks();
+		List<byte[]> data = getInDataChunks();
 		if (data.size() > 0) {
-			msg = new String((byte[]) data.get(0));
+			msg = new String(data.get(0));
 			if (data.size() > 1) {
-				String ex = new String((byte[]) data.get(1));
+				String ex = new String(data.get(1));
 				exception = new RemoteException(msg, ex);
 			}
 		}
@@ -296,7 +300,7 @@ public abstract class RequestReply {
 			sb.append('(');
 			Iterator<byte[]> i = data.iterator();
 			while (i.hasNext()) {
-				byte[] buf = (byte[]) i.next();
+				byte[] buf = i.next();
 				sb.append(AbstractKarajanChannel.ppByteBuf(buf));
 				if (i.hasNext()) {
 					sb.append(", ");

@@ -12,8 +12,6 @@ package org.globus.cog.abstraction.coaster.service;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.GSSService;
@@ -28,9 +26,9 @@ public class LocalTCPService extends GSSService implements Registering {
     
     private RegistrationManager registrationManager;
     
-    private int idseq;
+    // private int idseq;
     
-    private static final NumberFormat IDF = new DecimalFormat("000000");
+    // private static final NumberFormat IDF = new DecimalFormat("000000");
 
     public LocalTCPService(RequestManager rm) throws IOException {
         super(false, 0);

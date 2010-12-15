@@ -14,11 +14,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
-import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
-import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Bootstrap;
@@ -38,8 +35,7 @@ public class BlockTask extends TaskImpl {
         this.settings = block.getAllocationProcessor().getSettings();
     }
 
-    public void initialize() throws InvalidServiceContactException, InvalidProviderException,
-            ProviderMethodException {
+    public void initialize() {
         setType(Task.JOB_SUBMISSION);
         JobSpecification spec = buildSpecification();
         setSpecification(spec);
@@ -105,8 +101,7 @@ public class BlockTask extends TaskImpl {
         return sb.toString();
     }
 
-    private ExecutionService buildService() throws InvalidServiceContactException,
-            InvalidProviderException, ProviderMethodException {
+    private ExecutionService buildService() {
         ExecutionService s = new ExecutionServiceImpl();
         s.setServiceContact(settings.getServiceContact());
         s.setProvider(settings.getProvider());

@@ -13,7 +13,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.net.Inet6Address;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URI;
@@ -480,7 +479,7 @@ public class Settings {
     
     void set(Method method, String value)
         throws InvocationTargetException, IllegalAccessException {
-        Class clazz = method.getParameterTypes()[0];
+        Class<?> clazz = method.getParameterTypes()[0];
         Object[] args = null;
         if (clazz.equals(String.class)) {
             args = new Object[] { value };

@@ -183,7 +183,7 @@ public class Block implements StatusListener, Comparable<Block> {
         }
     }
     
-    public void cpuIsClear(Cpu cpu) {
+    public void shutdownIfEmpty(Cpu cpu) {
         synchronized (scpus) {
             if (scpus.isEmpty()) {
                 shutdown(false);
@@ -456,7 +456,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public void suspend() {
         suspended = true;
         // ensure we still shut down if no jobs are running
-        cpuIsClear(null);
+        shutdownIfEmpty(null);
     }
 
     public boolean isSuspended() {

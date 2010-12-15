@@ -45,8 +45,8 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             }
             else if (len == -1) {
                 len = unpackLong(data);
-                if (logger.isInfoEnabled()) {
-                    logger.info(dst + " Size: " + len);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(dst + " Size: " + len);
                 }
             }
             else if (src == null) {

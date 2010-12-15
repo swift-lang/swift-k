@@ -13,10 +13,10 @@ import java.util.HashSet;
 
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
 
-public class CleanUpSetImpl extends HashSet implements CleanUpSet {
+public class CleanUpSetImpl extends HashSet<String> implements CleanUpSet {
 
-    public void add(String e) {
-        super.add(e);
+    public boolean add(String e) {
+        return super.add(e);
     }
 
     public void remove(String e) {
