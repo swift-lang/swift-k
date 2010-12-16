@@ -171,6 +171,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
         for (Block b : snapshot) {
             if (b.isDone()) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Cleaning done block " + b);
+                }
                 b.shutdown(false);
                 count++;
             }

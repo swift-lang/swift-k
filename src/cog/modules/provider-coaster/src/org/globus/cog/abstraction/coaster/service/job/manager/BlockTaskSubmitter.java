@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.ExecutionTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 class BlockTaskSubmitter extends Thread {
@@ -68,10 +69,17 @@ class BlockTaskSubmitter extends Thread {
                     }
                 }
                 catch (Exception e) {
-                	if (logger.isInfoEnabled()) {
-                		logger.info("Error submitting block task", e);
-                	}
-                    b.taskFailed("Error submitting block task", e);
+                    if (b.getTask().getStatus().getStatusCode() != Status.CANCELED) {
+                    	if (logger.isInfoEnabled()) {
+                    		logger.info("Error submitting block task", e);
+                    	}
+                        b.taskFailed("Error submitting block task", e);
+                    }
+                    else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Block task was canceled previously " + b);
+                        }
+                    }
                 }
             }
         }
