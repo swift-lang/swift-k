@@ -9,7 +9,6 @@
  */
 package org.globus.cog.karajan.workflow.service.handlers;
 
-import java.rmi.server.UID;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
