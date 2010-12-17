@@ -54,6 +54,9 @@ public class BlockTask extends TaskImpl {
         if (settings.getAlcfbgpnat()) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
+        String libraryPath = settings.getLdLibraryPath(); 
+        if (libraryPath != null)
+            spec.addEnvironmentVariable("LD_LIBRARY_PATH", libraryPath);
         spec.addEnvironmentVariable("WORKER_LOGGING_LEVEL", settings.getWorkerLoggingLevel());
         if (logger.isDebugEnabled()) {
             logger.debug("Worker logging level: " + settings.getWorkerLoggingLevel());
