@@ -31,12 +31,16 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
 public class Settings {
     public static final Logger logger = Logger.getLogger(Settings.class);
 
+    /** 
+       Coasters will only consider settings listed here: 
+     */
     public static final String[] NAMES =
             new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
                     "maxNodes", "lowOverallocation", "highOverallocation",
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
                     "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
-                    "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn" };
+                    "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn",
+                    "ldLibraryPath"};
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -118,6 +122,8 @@ public class Settings {
     private String workerManager = "block";
     
     private String workerLoggingLevel = "NONE";
+    
+    private String libraryPath = null;
     
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
@@ -452,11 +458,24 @@ public class Settings {
         }
     }
 
+    public String getLdLibraryPath() {
+        return libraryPath;
+    }
+    
+    /** 
+       Instructs the worker to set LD_LIBRARY_PATH to path 
+       in its and its children's environment
+     */
+    public void setLdLibraryPath(String path) {
+        libraryPath = path;
+    }
+    
     public void set(String name, String value)
         throws IllegalArgumentException {
         if (logger.isDebugEnabled()) {
             logger.debug("Setting " + name + " to " + value);
         }
+        boolean complete = false;
         Method[] methods = getClass().getMethods();
         String setterName = "set" +
             Character.toUpperCase(name.charAt(0)) + name.substring(1);
@@ -464,6 +483,7 @@ public class Settings {
             for (Method method : methods) {
                 if (method.getName().equals(setterName)) {
                     set(method, value);
+                    complete = true;
                     break;
                 }
             }
@@ -475,6 +495,8 @@ public class Settings {
         catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+        if (!complete)
+            throw new RuntimeException("Unknown setting: " + name);
     }
     
     void set(Method method, String value)
