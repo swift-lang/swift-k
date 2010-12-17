@@ -4216,7 +4216,7 @@ Local:
     * The user may specify cp or dd as the input transfer program.
 
     * The input files matching the pattern must already exist in the given directory, a GFS location.  Copies will be placed in the job directory.
-    * Argument list: <tool> <GFS directory> <tool arguments>*
+    * Argument list: [tool] [GFS directory] [tool arguments]*
 
 
 Gather:
