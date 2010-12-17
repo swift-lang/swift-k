@@ -27,7 +27,7 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
  *
  */
 public class BoundContact extends Contact {
-	private Map services;
+	private Map<TypeProviderPair,Service> services;
 
 	private String host;
 
@@ -35,13 +35,13 @@ public class BoundContact extends Contact {
 
 	private int activeTasks;
 	
-	private Map properties;
+	private Map<String,Object> properties;
 
 	public static final BoundContact LOCALHOST = new Localhost();
 
 	public BoundContact() {
 		super();
-		services = new HashMap();
+		services = new HashMap<TypeProviderPair, Service>();
 		cpus = 1;
 	}
 
@@ -84,7 +84,7 @@ public class BoundContact extends Contact {
 	}
 
 	public Service getService(int type, String provider) {
-		return (Service) services.get(new TypeProviderPair(type, provider));
+		return services.get(new TypeProviderPair(type, provider));
 	}
 
 	public Service getService(TaskHandlerWrapper handler) {
@@ -119,7 +119,7 @@ public class BoundContact extends Contact {
 		return Service.EXECUTION;
 	}
 
-	public Map getServices() {
+	public Map<TypeProviderPair, Service> getServices() {
 		return services;
 	}
 
@@ -235,11 +235,11 @@ public class BoundContact extends Contact {
 		}
 	}
 
-	public Map getProperties() {
+	public Map<String,Object> getProperties() {
 		return properties;
 	}
 
-	public void setProperties(Map properties) {
+	public void setProperties(Map<String,Object> properties) {
 		this.properties = properties;
 	}
 
