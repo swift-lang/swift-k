@@ -111,17 +111,20 @@ public class SubmitJobCommand extends Command {
                     spec.isBatchJob()) 
                 add(dos, "attr", 
                     name + "=" + spec.getAttribute(name));
-            
-        for (StagingSetEntry e : spec.getStageIn())
-            add(dos, "stagein", absolutize(e.getSource()) + '\n' + 
-                e.getDestination());
         
-        for (StagingSetEntry e : spec.getStageOut())
-            add(dos, "stageout", e.getSource() + '\n' + 
-                absolutize(e.getDestination()));
+        if (spec.getStageIn() != null) {
+            for (StagingSetEntry e : spec.getStageIn())
+                add(dos, "stagein", absolutize(e.getSource()) + '\n' + 
+                    e.getDestination());
+        }
+        
+        if (spec.getStageOut() != null) {
+            for (StagingSetEntry e : spec.getStageOut())
+                add(dos, "stageout", e.getSource() + '\n' + 
+                    absolutize(e.getDestination()));
+        }
 
-        CleanUpSet set = spec.getCleanUpSet();
-        if (set != null)
+        if (spec.getCleanUpSet() != null)
             for (String cleanup : spec.getCleanUpSet())
                 add(dos, "cleanup", cleanup);
 
