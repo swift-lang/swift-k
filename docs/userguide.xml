@@ -1389,7 +1389,7 @@ would map
 		<para>
 The above mappers may be used to map files based on a URI which can be specified in the filename. This is useful for mapping files on remote machines.
 		</para>
-	<para>   
+	<para>
 
 	<para> Example:
 
@@ -3643,14 +3643,14 @@ specified, or should contain the profile entries separated by semicolons.
 
 	<section id="transformationcatalog.shell_invocation"><title>shell invocation</title>
 		<para>
-Because the above implementation requires an entry for each executable on a given site, it is often preferable to simply have a single element for each site in the transformation catalog representing a wrapper that sets the environment and then invokes the shell to call a given application. This wrapper is installed on the site and can be used to set the <literal>PATH</literal> and other environment variables prior to invoking the shell so that each executable need not be entered in the <literal>tc.data</literal> file. 
+Because the above implementation requires an entry for each executable on a given site, it is often preferable to simply have a single element for each site in the transformation catalog representing a wrapper that sets the environment and then invokes the shell to call a given application. This wrapper is installed on the site and can be used to set the <literal>PATH</literal> and other environment variables prior to invoking the shell so that each executable need not be entered in the <literal>tc.data</literal> file.
 		</para>
 		<para>for example, the entries for <literal>TGUC</literal> and <literal>localhost</literal> can now each be collapsed into a single line:
 <screen>
 localhost  shell    /usr/local/bin/swiftshell       INSTALLED       INTEL32::LINUX  null
 TGUC       shell    /usr/local/bin/swiftshell       INSTALLED       INTEL32::LINUX  null
 </screen>
-where <literal>swiftshell</literal> sets up the users's environment so that all the installed applications are added to the <literal>PATH</literal> before the application is invoked. 
+where <literal>swiftshell</literal> sets up the users's environment so that all the installed applications are added to the <literal>PATH</literal> before the application is invoked.
 		</para>
 <para>
 <literal>touch</literal> would now be called in the SwiftScript like this:
@@ -4124,6 +4124,10 @@ site catalog. For example:
 		</section>
 	</section>
 
+  <section id="cdm">
+    <title>Collective Data Management</title>
 
+
+  </section>
 </article>
 
