@@ -498,10 +498,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         // Subtract elapsed time from existing allocation
         updateAllocatedSize();
 
-        // Move Jobs from jobs that fit to queued
+        // Move jobs that fit from holding to queued
         tmp = queueToExistingBlocks();
         
-        // Subtract these Jobs from jobs
+        // Subtract these Jobs from queued
         removeJobs(tmp);
 
         // int jss = jobs.size();
