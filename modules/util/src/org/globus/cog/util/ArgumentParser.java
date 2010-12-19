@@ -9,6 +9,11 @@
  */
 package org.globus.cog.util;
 
+import java.util.Scanner;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +22,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class ArgumentParser {
 	public static final int NORMAL = 0;
@@ -305,6 +317,32 @@ public class ArgumentParser {
 		}
 	}
 
+	public void version() {
+	    String shome = System.getProperty("swift.home","unknown version, can't determine SWIFT_HOME");
+		File file = new File(shome+"/libexec/version.txt");
+		FileInputStream fis = null;
+		BufferedInputStream bis = null;
+		DataInputStream dis = null;
+		try {
+		    fis = new FileInputStream(file);
+		    bis = new BufferedInputStream(fis);
+		    dis = new DataInputStream(bis);
+		    while (dis.available() != 0) {
+			System.out.println(dis.readLine());
+		    }
+		    fis.close();
+		    bis.close();
+		    dis.close();
+
+		} catch (FileNotFoundException e) {
+		    e.printStackTrace();
+		} catch (IOException e) {
+		    e.printStackTrace();
+   
+		}
+
+			System.out.println();
+	}
 	public void setArguments(boolean args) {
 		if (args) {
 			arguments = new ArrayList();
@@ -313,4 +351,5 @@ public class ArgumentParser {
 			arguments = null;
 		}
 	}
-}
+	}
+
