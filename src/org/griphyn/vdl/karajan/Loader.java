@@ -56,6 +56,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     private static final Logger logger = Logger.getLogger(Loader.class);
 
     public static final String ARG_HELP = "help";
+    public static final String ARG_VERSION = "version";
     public static final String ARG_MONITOR = "monitor";
     public static final String ARG_RESUME = "resume";
     public static final String ARG_INSTANCE_CONFIG = "config";
@@ -89,6 +90,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 ap.usage();
                 System.exit(0);
             }
+	    if (ap.isPresent(ARG_VERSION)){
+		ap.version();
+		System.exit(0);
+	    }
             if (ap.isPresent(ARG_MONITOR)) {
                 new Monitor().start();
             }
@@ -371,6 +376,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 ArgumentParser.OPTIONAL);
 
         ap.addFlag(ARG_HELP, "Display usage information");
+	ap.addFlag(ARG_VERSION, "Version:");
         ap.addAlias(ARG_HELP, "h");
 
         ap.addFlag(ARG_RECOMPILE, 
