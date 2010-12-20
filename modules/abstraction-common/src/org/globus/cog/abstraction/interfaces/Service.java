@@ -158,6 +158,7 @@ public interface Service {
     /**
      * @deprecated Use {@link getAttributeNames} 
      */
+    @SuppressWarnings("unchecked")
     public Enumeration getAllAttributes();
     
     public Collection<String> getAttributeNames();

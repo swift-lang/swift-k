@@ -15,6 +15,8 @@ import java.util.Enumeration;
  * Dependencies are specified as ("from","to") pairs, indicating that the
  * <code>ExecutableObject</code> representing "from" will be executed before
  * that representing "to".
+ * 
+ * @deprecated Not being maintained
  */
 public interface Dependency {
     /**

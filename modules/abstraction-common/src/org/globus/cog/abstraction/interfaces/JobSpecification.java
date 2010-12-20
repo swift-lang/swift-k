@@ -69,17 +69,6 @@ public interface JobSpecification extends Specification {
     public void setArguments(String arguments);
 
     /**
-     * Sets the comandline arguments for the remote executable.
-     * 
-     * @param arguments
-     *            a Vector representing the set of arguments for the remote
-     *            executable.
-     * 
-     * @deprecated Moving to the new collection classes
-     */
-    // public void setArguments(Vector arguments);
-
-    /**
      * Sets the command line arguments for the job
      * 
      * @param a
@@ -164,6 +153,7 @@ public interface JobSpecification extends Specification {
      * 
      * @deprecated Moving to the new collections classes
      */
+    @SuppressWarnings("unchecked")
     public Vector getArgumentsAsVector();
 
     /**
@@ -213,6 +203,7 @@ public interface JobSpecification extends Specification {
      * 
      * @deprecated use getEnvironmentVariableNames();
      */
+    @SuppressWarnings("unchecked")
     public Collection getEnvironment();
 
     /**
@@ -377,6 +368,7 @@ public interface JobSpecification extends Specification {
     /**
      * @deprecated use getAttributeNames()
      */
+    @SuppressWarnings("unchecked")
     public Enumeration getAllAttributes();
 
     /**

@@ -8,6 +8,8 @@ package org.globus.cog.abstraction.interfaces;
 
 /**
  * A {@link org.globus.cog.abstraction.interfaces.TaskGraphHandler} that manages <code>Task</code> queues.
+ * 
+ * @deprecated Not being maintained
  */
 public interface QueueHandler extends TaskGraphHandler {
 }
