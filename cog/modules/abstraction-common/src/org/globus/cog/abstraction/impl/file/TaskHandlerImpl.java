@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,18 +41,17 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
  * The base class for task handlers in all file providers
  */
 public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListener {
-    private Set tasks;
-    private Map handleMap = null;
-    private Map activeFileResources;
+    private Set<Task> tasks;
+    private Map<Identity, FileResource> activeFileResources;
     private Identity defaultSessionId = null;
 
-    private static final Set oneWordCommands, twoWordCommands,
+    private static final Set<String> oneWordCommands, twoWordCommands,
             threeWordCommands;
 
     static {
-        oneWordCommands = new HashSet();
-        twoWordCommands = new HashSet();
-        threeWordCommands = new HashSet();
+        oneWordCommands = new HashSet<String>();
+        twoWordCommands = new HashSet<String>();
+        threeWordCommands = new HashSet<String>();
 
         // Add all one word commands
         oneWordCommands.add(FileOperationSpecification.START);
@@ -90,10 +88,9 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
     static Logger logger = Logger.getLogger(TaskHandlerImpl.class.getName());
 
     public TaskHandlerImpl() {
-        this.handleMap = new HashMap();
         this.type = TaskHandler.FILE_OPERATION;
-        this.activeFileResources = new HashMap();
-        this.tasks = new HashSet();
+        this.activeFileResources = new HashMap<Identity, FileResource>();
+        this.tasks = new HashSet<Task>();
     }
 
     /** set type of task handler */
@@ -142,13 +139,11 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
                  */
                 Identity identity = (Identity) task.getAttribute("sessionID");
                 if (identity != null) {
-                    fileResource = (FileResource) this.activeFileResources
-                            .get(identity);
+                    fileResource = this.activeFileResources.get(identity);
                 }
                 else {
                     if (this.defaultSessionId != null) {
-                        fileResource = (FileResource) this.activeFileResources
-                                .get(this.defaultSessionId);
+                        fileResource = this.activeFileResources.get(this.defaultSessionId);
                     }
                     else {
                         throw new TaskSubmissionException(
@@ -186,6 +181,7 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
      * @throws FileNotFoundException
      * @throws DirectoryNotFoundException
      */
+    @SuppressWarnings("deprecation")
     public void submit(Task task, FileResource fileResource)
             throws TaskSubmissionException, IllegalSpecException,
             InvalidProviderException, ProviderMethodException,
@@ -210,9 +206,12 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
                         "Invalid security context or service contact");
             }
 
-            String provider = task.getProvider();
+            String provider = task.getService(0).getProvider();
             if (provider == null) {
-                throw new InvalidProviderException("Provider not available");
+                provider = task.getProvider();
+                if (provider == null) {
+                    throw new InvalidProviderException("Provider not available");
+                }
             }
             provider = provider.toLowerCase();
             fileResource = AbstractionFactory.newFileResource(provider);
@@ -443,7 +442,7 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
 
     /** remove a task completely */
     public void remove(Task task) throws ActiveTaskException {
-        if (!handleMap.containsKey(task)) {
+        if (!tasks.contains(task)) {
             return;
         }
         int status = task.getStatus().getStatusCode();
@@ -455,26 +454,23 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
             synchronized(tasks) {
             	this.tasks.remove(task);
             }
-            this.handleMap.remove(task);
         }
     }
 
     /** return a collection of all tasks submitted to the handler */
-    public Collection getAllTasks() {
+    public Collection<Task> getAllTasks() {
         try {
-            return new ArrayList(handleMap.keySet());
+            return new ArrayList<Task>(tasks);
         }
         catch (Exception e) {
             return null;
         }
     }
     
-    protected Collection getTasksWithStatus(int code) {
-        ArrayList l = new ArrayList();
+    protected Collection<Task> getTasksWithStatus(int code) {
+        ArrayList<Task> l = new ArrayList<Task>();
         synchronized(tasks) {
-            Iterator i = tasks.iterator();
-            while (i.hasNext()) {
-                Task t = (Task) i.next();
+            for (Task t : tasks) {
                 if (t.getStatus().getStatusCode() == code) {
                 	l.add(t);
                 }
@@ -484,32 +480,32 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
     }
 
     /** return a collection of active tasks */
-    public Collection getActiveTasks() {
+    public Collection<Task> getActiveTasks() {
         return getTasksWithStatus(Status.ACTIVE);
     }
 
     /** return a collection of failed tasks */
-    public Collection getFailedTasks() {
+    public Collection<Task> getFailedTasks() {
         return getTasksWithStatus(Status.FAILED);
     }
 
     /** return a collection of completed tasks */
-    public Collection getCompletedTasks() {
+    public Collection<Task> getCompletedTasks() {
         return getTasksWithStatus(Status.COMPLETED);
     }
 
     /** return a collection of suspended tasks */
-    public Collection getSuspendedTasks() {
+    public Collection<Task> getSuspendedTasks() {
         return getTasksWithStatus(Status.SUSPENDED);
     }
 
     /** return a collection of resumed tasks */
-    public Collection getResumedTasks() {
+    public Collection<Task> getResumedTasks() {
         return getTasksWithStatus(Status.RESUMED);
     }
 
     /** return a collection of canceled tasks */
-    public Collection getCanceledTasks() {
+    public Collection<Task> getCanceledTasks() {
         return getTasksWithStatus(Status.CANCELED);
     }
 
