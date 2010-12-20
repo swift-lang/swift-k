@@ -9,7 +9,6 @@ package org.globus.cog.abstraction.impl.fileTransfer;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Enumeration;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
@@ -409,9 +408,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                         + destination);
             }
 
-            Enumeration e = spec.getAllAttributes();
-            while (e.hasMoreElements()) {
-                String name = (String) e.nextElement();
+            for (String name : spec.getAttributeNames()) {
                 tspec.setAttribute(name, spec.getAttribute(name));
             }
 
