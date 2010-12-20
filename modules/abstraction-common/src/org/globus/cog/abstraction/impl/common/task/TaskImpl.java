@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -47,9 +49,9 @@ public class TaskImpl implements Task {
     private CopyOnWriteHashSet<StatusListener> statusListeners;
     private CopyOnWriteHashSet<OutputListener> outputListeners;
 
-    private Map<String,Object> attributes;
+    private Map<String, Object> attributes;
 
-    private ArrayList<Service> serviceList;
+    private List<Service> serviceList;
     private int requiredServices = 0;
 
     private boolean anythingWaiting;
@@ -59,7 +61,6 @@ public class TaskImpl implements Task {
         this.serviceList = new ArrayList<Service>(2);
         this.status = new StatusImpl();
         statusListeners = new CopyOnWriteHashSet<StatusListener>();
-        outputListeners = new CopyOnWriteHashSet<OutputListener>();
     }
 
     public TaskImpl(String name, int type) {
@@ -128,14 +129,14 @@ public class TaskImpl implements Task {
     }
 
     public Service removeService(int index) {
-        return (Service) serviceList.remove(index);
+        return serviceList.remove(index);
     }
 
     public Service getService(int index) {
         if (index >= serviceList.size()) {
             return null;
         }
-        return (Service) serviceList.get(index);
+        return serviceList.get(index);
     }
 
     public Collection<Service> removeAllServices() {
@@ -170,9 +171,14 @@ public class TaskImpl implements Task {
 
     public void setStdOutput(String output) {
         this.output = output;
+        if (outputListeners == null) {
+            return;
+        }
         OutputEvent event = new OutputEvent(this, this.output);
+        Iterator<OutputListener> i = outputListeners.iterator();
         try {
-            for (OutputListener listener : outputListeners) { 
+            while (i.hasNext()) {
+                OutputListener listener = i.next();
                 listener.outputChanged(event);
             }
         }
@@ -227,8 +233,10 @@ public class TaskImpl implements Task {
 
     protected void notifyListeners(Status status) {
         StatusEvent event = new StatusEvent(this, status);
+        Iterator<StatusListener> i = statusListeners.iterator();
         try {
-            for (StatusListener listener : statusListeners) {     
+            while (i.hasNext()) {
+                StatusListener listener = i.next();
                 listener.statusChanged(event);
             }
         }
@@ -255,7 +263,7 @@ public class TaskImpl implements Task {
 
     public void setAttribute(String name, Object value) {
         if (attributes == null) {
-            attributes = new HashMap<String,Object>();
+            attributes = new HashMap<String, Object>();
         }
         attributes.put(name.toLowerCase(), value);
     }
@@ -269,12 +277,12 @@ public class TaskImpl implements Task {
         }
     }
 
-    public Collection getAttributeNames() {
+    public Collection<String> getAttributeNames() {
         if (attributes != null) {
             return attributes.keySet();
         }
         else {
-            return Collections.EMPTY_MAP.keySet();
+            return Collections.emptyList();
         }
     }
 
@@ -287,6 +295,9 @@ public class TaskImpl implements Task {
     }
 
     public void addOutputListener(OutputListener listener) {
+        if (this.outputListeners == null) {
+            this.outputListeners = new CopyOnWriteHashSet<OutputListener>();
+        }
         this.outputListeners.add(listener);
     }
 

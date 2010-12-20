@@ -121,13 +121,6 @@ public class JobSpecificationImpl implements JobSpecification {
         return arguments;
     }
 
-    /** 
-       @deprecated
-     */
-    public void setArguments(Vector<String> arguments) {
-        this.arguments = new ArrayList<String>(arguments);
-    }
-
     public void setArguments(List<String> arguments) {
         this.arguments = arguments;
     }
@@ -434,8 +427,10 @@ public class JobSpecificationImpl implements JobSpecification {
         JobSpecificationImpl result = null;
         try {
             result = (JobSpecificationImpl) super.clone();
-            result.attributes = 
-                new HashMap<String,Object>(attributes);
+            if (attributes != null) {
+                result.attributes = 
+                    new HashMap<String,Object>(attributes);
+            }
             result.arguments = new ArrayList<String>(arguments);
             
         }

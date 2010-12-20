@@ -11,16 +11,16 @@ import java.util.HashMap;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 
 public class SecurityContextImpl implements SecurityContext {
-    private HashMap attributes = null;
-    private Object credentials = null;
-    private String alias = null;
+    private HashMap<String, Object> attributes;
+    private Object credentials;
+    private String alias;
 
     public SecurityContextImpl() {
-        this.attributes = new HashMap();
+        this.attributes = new HashMap<String, Object>();
     }
 
     public SecurityContextImpl(Object credentials, String alias) {
-        this.attributes = new HashMap();
+        this();
         this.credentials = credentials;
         this.alias = alias;
     }
