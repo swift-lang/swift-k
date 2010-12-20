@@ -8,8 +8,10 @@ package org.globus.cog.abstraction.impl.common.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.globus.cog.abstraction.interfaces.FileOperationSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
@@ -21,12 +23,11 @@ public class FileOperationSpecificationImpl implements
     
     private int type;
     private String operation;
-    private Hashtable<String,Object> attributes;
+    private Map<String, Object> attributes;
     private ArrayList<String> arguments;
 
     public FileOperationSpecificationImpl() {
         this.type = Specification.FILE_TRANSFER;
-        this.attributes = new Hashtable<String,Object>();
         arguments = new ArrayList<String>();
     }
 
@@ -65,8 +66,7 @@ public class FileOperationSpecificationImpl implements
     }
 
     public String getArgument(int n) {
-
-        return (String) this.arguments.get(n);
+        return this.arguments.get(n);
     }
 
     public int addArgument(String argument) {
@@ -75,7 +75,7 @@ public class FileOperationSpecificationImpl implements
         return this.arguments.size();
     }
 
-    public Collection getArguments() {
+    public Collection<String> getArguments() {
         return this.arguments;
 
     }
@@ -85,16 +85,38 @@ public class FileOperationSpecificationImpl implements
     }
 
     public void setAttribute(String name, Object value) {
-        this.attributes.put(name.toLowerCase(), value);
+        if (attributes == null) {
+            attributes = new HashMap<String, Object>();
+        }
+        attributes.put(name.toLowerCase(), value);
     }
 
     public Object getAttribute(String name) {
-        return this.attributes.get(name.toLowerCase());
+        if (attributes == null) {
+            return null;
+        }
+        else {
+            return attributes.get(name.toLowerCase());
+        }
     }
 
+    @SuppressWarnings("unchecked")
     public Enumeration getAllAttributes() {
-
-        return this.attributes.elements();
+        if (attributes == null) {
+            return Collections.enumeration(Collections.emptyList());
+        }
+        else {
+            return Collections.enumeration(attributes.keySet());
+        }
+    }
+    
+    public Collection<String> getAttributeNames() {
+        if (attributes == null) {
+            return Collections.emptyList();
+        }
+        else {
+            return attributes.keySet();
+        }
     }
 
     public String toString() {
@@ -105,8 +127,9 @@ public class FileOperationSpecificationImpl implements
         FileOperationSpecificationImpl result = null;
         try {
             result = (FileOperationSpecificationImpl) super.clone();
-            result.attributes = 
-                new Hashtable<String,Object>(attributes);
+            if (attributes != null) {
+                result.attributes = new HashMap<String, Object>(attributes);
+            }
             result.arguments = new ArrayList<String>(arguments);            
         }
         catch (CloneNotSupportedException e) {

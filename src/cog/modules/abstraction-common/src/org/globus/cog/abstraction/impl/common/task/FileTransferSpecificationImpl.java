@@ -6,8 +6,11 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
@@ -26,11 +29,10 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	private boolean thirdparty, recursive;
 	private boolean thirdPartyIfPossible;
 	private long sourceFileOffset, destinationFileOffset, sourceFileLength;
-	private Hashtable<String,Object> attributes;
+	private Map<String, Object> attributes;
 
 	public FileTransferSpecificationImpl() {
 		this.type = Specification.FILE_TRANSFER;
-		this.attributes = new Hashtable<String,Object>();
 		sourceFileLength = Long.MAX_VALUE;
 	}
 
@@ -170,18 +172,41 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	}
 
 	public void setAttribute(String name, Object value) {
-		this.attributes.put(name, value);
+	    if (attributes == null) {
+	        attributes = new HashMap<String, Object>();
+	    }
+		attributes.put(name, value);
 	}
 
 	public Object getAttribute(String name) {
-		return this.attributes.get(name);
+	    if (attributes == null) {
+	        return null;
+	    }
+	    else {
+	        return attributes.get(name);
+	    }
 	}
 
+	@SuppressWarnings("unchecked")
 	/**
-	   @deprecated
+	 * @deprecated
 	 */
-	public Enumeration getAllAttributes() {
-		return this.attributes.keys();
+    public Enumeration getAllAttributes() {
+	    if (this.attributes == null) {
+	        return Collections.enumeration(Collections.emptyList());
+	    }
+	    else {
+	        return Collections.enumeration(this.attributes.keySet());
+	    }
+	}
+	
+	public Collection<String> getAttributeNames() {
+	    if (attributes == null) {
+	        return Collections.emptyList();
+	    }
+	    else {
+	        return attributes.keySet();
+	    }
 	}
 
 	public String toString() {
@@ -224,8 +249,9 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	    FileTransferSpecificationImpl result = null;
         try {
             result = (FileTransferSpecificationImpl) super.clone();
-            result.attributes = 
-                new Hashtable<String,Object>(attributes);
+            if (attributes != null) {
+                result.attributes = new HashMap<String, Object>(attributes);
+            }
         }
         catch (CloneNotSupportedException e) {
             e.printStackTrace();
