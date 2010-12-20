@@ -22,6 +22,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
@@ -118,7 +119,8 @@ public class JobSubmission implements StatusListener {
              * will be piped on the remote machine.
              */
             if (redirected) {
-                spec.setRedirected(true);
+                spec.setStdOutputLocation(FileLocation.MEMORY);
+                spec.setStdErrorLocation(FileLocation.MEMORY);
             }
 
             /*
