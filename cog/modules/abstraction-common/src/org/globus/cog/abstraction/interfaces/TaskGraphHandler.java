@@ -17,6 +17,8 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
  * The <code>TaskGraph</code> enables remote execution of constituent
  * <code>ExecutableObject</code> s by maintaining the control dependencies
  * between them.
+ * 
+ * @deprecated Not being maintained
  */
 public interface TaskGraphHandler {
     /**

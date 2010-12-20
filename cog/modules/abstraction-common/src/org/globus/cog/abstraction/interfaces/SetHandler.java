@@ -9,6 +9,8 @@ package org.globus.cog.abstraction.interfaces;
 
 /**
  * A {@link org.globus.cog.abstraction.interfaces.TaskGraphHandler} that manages <code>Task</code> sets.
+ * 
+ * @deprecated Not being maintained
  */
 public interface SetHandler extends TaskGraphHandler {
 }

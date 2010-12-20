@@ -114,7 +114,7 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      */
-    public Collection list() throws FileResourceException;
+    public Collection<GridFile> list() throws FileResourceException;
 
     /**
      * Returns the list of files in the given directory as a
@@ -122,7 +122,7 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      */
-    public Collection list(String directoryName)
+    public Collection<GridFile> list(String directoryName)
             throws DirectoryNotFoundException, FileResourceException;
 
     /**
@@ -324,7 +324,7 @@ public interface FileResource extends GridResource {
      */
     public void setAttribute(String name, Object value);
 
-    public Collection getAttributeNames();
+    public Collection<String> getAttributeNames();
 
     /**
      * Returns attribute value for the given attribute name

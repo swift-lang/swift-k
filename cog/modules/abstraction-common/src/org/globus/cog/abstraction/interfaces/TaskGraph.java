@@ -24,6 +24,8 @@ import org.globus.cog.abstraction.xml.MarshalException;
  * A <code>TaskGraph</code> can theoretically contain infinite levels of
  * hierarchy. However, practically it is constrained with the availability of
  * resources (memory) on a particular system.
+ * 
+ * @deprecated Not being maintained
  */
 public interface TaskGraph extends ExecutableObject {
     /**

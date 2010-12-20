@@ -69,7 +69,7 @@ public interface Task extends ExecutableObject, Cloneable {
     public void setProvider(String provider);
 
     /**
-     * @deprecated Use {@link Service#setProvider(String)}instead.
+     * @deprecated Use {@link Service#getProvider()}instead.
      */
     public String getProvider();
 
@@ -230,7 +230,7 @@ public interface Task extends ExecutableObject, Cloneable {
      * @return an enumeration of all the attribute names. null if no attribute
      *         available
      */
-    public Collection getAttributeNames();
+    public Collection<String> getAttributeNames();
 
     /**
      * Adds a listener to recieve the output events associated with this

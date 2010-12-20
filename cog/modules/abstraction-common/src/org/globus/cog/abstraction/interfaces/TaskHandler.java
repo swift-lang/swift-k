@@ -164,7 +164,7 @@ public interface TaskHandler {
      * 
      * @return a collection of {@link Task}objects
      */
-    public Collection getAllTasks();
+    public Collection<Task> getAllTasks();
 
     /**
      * Returns a collection of all the <code>Tasks</code> submitted to this
@@ -173,7 +173,7 @@ public interface TaskHandler {
      * 
      * @return a collection of {@link Task}objects
      */
-    public Collection getActiveTasks();
+    public Collection<Task> getActiveTasks();
 
     /**
      * Returns a collection of all the <code>Tasks</code> submitted to this
@@ -182,7 +182,7 @@ public interface TaskHandler {
      * 
      * @return a collection of {@link Task}objects
      */
-    public Collection getFailedTasks();
+    public Collection<Task> getFailedTasks();
 
     /**
      * Returns a collection of all the <code>Tasks</code> submitted to this
@@ -191,7 +191,7 @@ public interface TaskHandler {
      * 
      * @return a collection of {@link Task}objects
      */
-    public Collection getCompletedTasks();
+    public Collection<Task> getCompletedTasks();
 
     /**
      * Returns a collection of all the <code>Tasks</code> submitted to this
@@ -200,7 +200,7 @@ public interface TaskHandler {
      * 
      * @return a collection of {@link Task}objects
      */
-    public Collection getSuspendedTasks();
+    public Collection<Task> getSuspendedTasks();
 
     /**
      * Returns a collection of all the <code>Tasks</code> submitted to this
@@ -209,7 +209,7 @@ public interface TaskHandler {
      * 
      * @return a collection of {@link Task}objects
      */
-    public Collection getResumedTasks();
+    public Collection<Task> getResumedTasks();
 
     /**
      * Returns a collection of all the <code>Tasks</code> submitted to this
@@ -218,5 +218,5 @@ public interface TaskHandler {
      * 
      * @return a collection of {@link Task}objects
      */
-    public Collection getCanceledTasks();
+    public Collection<Task> getCanceledTasks();
 }

@@ -8,6 +8,8 @@ package org.globus.cog.abstraction.interfaces;
 
 /**
  * A  <code>TaskGraph</code> with no dependencies. 
+ * 
+ * @deprecated Not being maintained
  */
 public interface Set extends TaskGraph {
 }
