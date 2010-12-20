@@ -331,4 +331,8 @@ public abstract class AbstractFileResource implements FileResource {
     public boolean supportsStreams() {
         return false;
     }
+
+    public String toString() {
+        return name;
+    }
 }
