@@ -9,6 +9,8 @@ package org.globus.cog.abstraction.interfaces;
 
 /**
  * A <code>TaskGraph</code> with first-in-first-out dependency.
+ * 
+ * @deprecated Not being maintained
  */
 public interface Queue extends TaskGraph {
 }

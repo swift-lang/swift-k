@@ -161,7 +161,7 @@ public interface FileOperationSpecification extends Specification {
     /**
      * Returns all the arguments for the file operation
      */
-    public Collection getArguments();
+    public Collection<String> getArguments();
 
     /**
      * Returns the nth argument for the file operation
@@ -179,13 +179,17 @@ public interface FileOperationSpecification extends Specification {
     public void setAttribute(String name, Object value);
 
     /**
-     * Get attribute value accociated with the given attribute name
+     * Get the attribute value associated with the given attribute name
      */
     public Object getAttribute(String name);
-
+    
     /**
      * Returns all the attributes
+     * @deprecated Use getAttributeNames
      */
+    @SuppressWarnings("unchecked")
     public Enumeration getAllAttributes();
+    
+    public Collection<String> getAttributeNames();
 
 }

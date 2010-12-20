@@ -6,6 +6,7 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.util.Collection;
 import java.util.Enumeration;
 
 /**
@@ -107,7 +108,13 @@ public interface FileTransferSpecification extends Specification {
     public void setAttribute(String name, Object value);
 
     public Object getAttribute(String name);
+    
+    public Collection<String> getAttributeNames();
 
+    /**
+     * @deprecated Use getAttributeNames
+     */
+    @SuppressWarnings("unchecked")
     public Enumeration getAllAttributes();
 
     /**
