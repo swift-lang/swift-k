@@ -13,11 +13,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
-
 public class ContactSet {
-	public Map contacts;
-	public List cl;
+	public Map<String,BoundContact> contacts;
+	public List<BoundContact> cl;
 
 	public ContactSet() {
 		contacts = new HashMap();
@@ -26,7 +24,7 @@ public class ContactSet {
 	public void addContact(BoundContact contact) {
 		contacts.put(contact.getHost(), contact);
 		if (cl == null) {
-			cl = new ArrayList();
+			cl = new ArrayList<BoundContact>();
 		}
 		cl.add(contact);
 	}
@@ -36,8 +34,8 @@ public class ContactSet {
 		cl.remove(contact);
 	}
 
-	public BoundContact getContact(String ip) {
-		return (BoundContact) contacts.get(ip);
+	public BoundContact getContact(String hostname) {
+		return contacts.get(hostname);
 	}
 
 	public int size() {
@@ -48,17 +46,17 @@ public class ContactSet {
 		if (cl == null) {
 			return null;
 		}
-		return (BoundContact) cl.get(index);
+		return cl.get(index);
 	}
-	
+
 	public int indexOf(BoundContact contact){
 		return cl.indexOf(contact);
 	}
-	
+
 	public List getContacts() {
 		return cl;
-	} 
-	
+	}
+
 	public void setContacts(List cl) {
 		this.cl = cl;
 		for (Iterator i = cl.iterator(); i.hasNext();) {
@@ -66,7 +64,7 @@ public class ContactSet {
 			contacts.put(contact.getHost(), contact);
 		}
 	}
-	
+
 	public String toString() {
 		return contacts.toString();
 	}
