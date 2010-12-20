@@ -8,9 +8,8 @@ package org.globus.cog.abstraction.impl.common.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -23,10 +22,12 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 public class ExecutionTaskHandler extends TaskHandlerSkeleton {
+    
+    private Map<String, TaskHandler> mapping;
     Logger logger = Logger.getLogger(ExecutionTaskHandler.class);
-    private Hashtable mapping;
+    
     public ExecutionTaskHandler() {
-        this.mapping = new Hashtable();
+        mapping = new HashMap<String, TaskHandler>();
         setType(TaskHandler.EXECUTION);
     }
 
@@ -41,8 +42,8 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
                 ("Execution handler can only handle job submission tasks");
         }
         String provider = task.getService(0).getProvider().toLowerCase();
-        logger.info("provider="+provider); 
-        TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
+        logger.info("provider=" + provider);
+        TaskHandler taskHandler = mapping.get(provider);
 
         if (taskHandler == null) {
             try {
@@ -62,7 +63,7 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
             throw new TaskSubmissionException("Execution handler can only handle job submission tasks");
         }
         String provider = task.getService(Service.DEFAULT_SERVICE).getProvider().toLowerCase();
-        TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
+        TaskHandler taskHandler = this.mapping.get(provider);
         if (taskHandler != null) {
             taskHandler.suspend(task);
         } else {
@@ -77,7 +78,7 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
             throw new TaskSubmissionException("Execution handler can only handle job submission tasks");
         }
         String provider = task.getService(Service.DEFAULT_SERVICE).getProvider().toLowerCase();
-        TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
+        TaskHandler taskHandler = this.mapping.get(provider);
         if (taskHandler != null) {
             taskHandler.resume(task);
         } else {
@@ -96,7 +97,7 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
             throw new TaskSubmissionException("Execution handler can only handle job submission tasks");
         }
         String provider = task.getService(Service.DEFAULT_SERVICE).getProvider().toLowerCase();
-        TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
+        TaskHandler taskHandler = this.mapping.get(provider);
         if (taskHandler != null) {
             taskHandler.cancel(task, message);
         } else {
@@ -106,94 +107,34 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
 
     public void remove(Task task) throws ActiveTaskException {
         String provider = task.getService(Service.DEFAULT_SERVICE).getProvider().toLowerCase();
-        TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
+        TaskHandler taskHandler = this.mapping.get(provider);
         if (taskHandler != null) {
             taskHandler.remove(task);
         }
     }
-
-    public Collection getAllTasks() {
-        // extract all the tasks from various TaskHandlers
-        List list = new ArrayList();
-        Enumeration e1 = this.mapping.elements();
-        TaskHandler handler;
-        while (e1.hasMoreElements()) {
-            handler = (TaskHandler) e1.nextElement();
-            list.addAll(handler.getAllTasks());
+    
+    public Collection<Task> getAllTasks() {
+        ArrayList<Task> l = new ArrayList<Task>();
+        synchronized(mapping) {
+            for (TaskHandler th : mapping.values()) {
+                l.addAll(th.getAllTasks());
+            }
         }
-        return list;
+        return l;
     }
-
-    public Collection getActiveTasks() {
-        // extract all the active tasks from various TaskHandlers
-        List list = new ArrayList();
-        Enumeration e1 = this.mapping.elements();
-        TaskHandler handler;
-        while (e1.hasMoreElements()) {
-            handler = (TaskHandler) e1.nextElement();
-            list.addAll(handler.getActiveTasks());
+    
+    protected Collection<Task> getTasksWithStatus(int code) {
+        ArrayList<Task> l = new ArrayList<Task>();
+        synchronized(mapping) {
+            for (TaskHandler th : mapping.values()) {
+                for (Task t : th.getAllTasks()) {
+                    if (t.getStatus().getStatusCode() == code) {
+                        l.add(t);
+                    }
+                }
+            }
         }
-        return list;
-    }
-
-    public Collection getFailedTasks() {
-        // extract all the failed tasks from various TaskHandlers
-        List list = new ArrayList();
-        Enumeration e1 = this.mapping.elements();
-        TaskHandler handler;
-        while (e1.hasMoreElements()) {
-            handler = (TaskHandler) e1.nextElement();
-            list.addAll(handler.getFailedTasks());
-        }
-        return list;
-    }
-
-    public Collection getCompletedTasks() {
-        // extract all the tasks from various TaskHandlers
-        List list = new ArrayList();
-        Enumeration e1 = this.mapping.elements();
-        TaskHandler handler;
-        while (e1.hasMoreElements()) {
-            handler = (TaskHandler) e1.nextElement();
-            list.addAll(handler.getCompletedTasks());
-        }
-        return list;
-    }
-
-    public Collection getSuspendedTasks() {
-        // extract all the tasks from various TaskHandlers
-        List list = new ArrayList();
-        Enumeration e1 = this.mapping.elements();
-        TaskHandler handler;
-        while (e1.hasMoreElements()) {
-            handler = (TaskHandler) e1.nextElement();
-            list.addAll(handler.getSuspendedTasks());
-        }
-        return list;
-    }
-
-    public Collection getResumedTasks() {
-        // extract all the tasks from various TaskHandlers
-        List list = new ArrayList();
-        Enumeration e1 = this.mapping.elements();
-        TaskHandler handler;
-        while (e1.hasMoreElements()) {
-            handler = (TaskHandler) e1.nextElement();
-            list.addAll(handler.getResumedTasks());
-        }
-        return list;
-    }
-
-    public Collection getCanceledTasks() {
-        // extract all the tasks from various TaskHandlers
-        List list = new ArrayList();
-        Enumeration e1 = this.mapping.elements();
-        TaskHandler handler;
-        while (e1.hasMoreElements()) {
-            handler = (TaskHandler) e1.nextElement();
-            list.addAll(handler.getCanceledTasks());
-        }
-        return list;
+        return l;
     }
 
     private TaskHandler createTaskHandler(String provider)
@@ -208,6 +149,36 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
         }
         this.mapping.put(provider, taskHandler);
         return taskHandler;
+    }
+    
+    /** return a collection of active tasks */
+    public Collection<Task> getActiveTasks() {
+        return getTasksWithStatus(Status.ACTIVE);
+    }
+
+    /** return a collection of failed tasks */
+    public Collection<Task> getFailedTasks() {
+        return getTasksWithStatus(Status.FAILED);
+    }
+
+    /** return a collection of completed tasks */
+    public Collection<Task> getCompletedTasks() {
+        return getTasksWithStatus(Status.COMPLETED);
+    }
+
+    /** return a collection of suspended tasks */
+    public Collection<Task> getSuspendedTasks() {
+        return getTasksWithStatus(Status.SUSPENDED);
+    }
+
+    /** return a collection of resumed tasks */
+    public Collection<Task> getResumedTasks() {
+        return getTasksWithStatus(Status.RESUMED);
+    }
+
+    /** return a collection of canceled tasks */
+    public Collection<Task> getCanceledTasks() {
+        return getTasksWithStatus(Status.CANCELED);
     }
     
     public String toString() {

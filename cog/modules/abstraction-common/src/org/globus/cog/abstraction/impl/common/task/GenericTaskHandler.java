@@ -114,9 +114,9 @@ public class GenericTaskHandler extends MultiplexingTaskHandler {
         }
     }
     
-    protected Collection getTasks(final TaskCollector collector) {
+    protected Collection<Task> getTasks(final TaskCollector collector) {
         // extract tasks from various TaskHandlers
-        ArrayList list = new ArrayList();
+        ArrayList<Task> list = new ArrayList<Task>();
         list.addAll(collector.collect(execHandler));
         list.addAll(collector.collect(transferHandler));
         list.addAll(collector.collect(fileHandler));
