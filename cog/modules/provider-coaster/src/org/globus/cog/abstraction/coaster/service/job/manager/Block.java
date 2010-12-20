@@ -29,8 +29,10 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 public class Block implements StatusListener, Comparable<Block> {
     public static final Logger logger = Logger.getLogger(Block.class);
 
+    /** milliseconds */
     public static final long SHUTDOWN_WATCHDOG_DELAY = 2 * 60 * 1000;
-    
+
+    /** milliseconds */
     public static final long SUSPEND_SHUTDOWN_DELAY = 30 * 1000;
 
     private static BlockTaskSubmitter submitter;
@@ -66,7 +68,7 @@ public class Block implements StatusListener, Comparable<Block> {
         cpus = new ArrayList<Cpu>();
         nodes = new ArrayList<Node>();
     }
-    
+
     public Block(int workers, TimeInterval walltime, BlockQueueProcessor ap) {
         this(ap.getBQPId() + "-" + IDF.format(sid++), workers, walltime, ap);
     }
@@ -182,7 +184,7 @@ public class Block implements StatusListener, Comparable<Block> {
             }
         }
     }
-    
+
     public void shutdownIfEmpty(Cpu cpu) {
         synchronized (scpus) {
             if (scpus.isEmpty()) {
@@ -284,6 +286,7 @@ public class Block implements StatusListener, Comparable<Block> {
         CoasterService.addWatchdog(new TimerTask() {
             public void run() {
                 if (running) {
+                    logger.info("Watchdog: forceShutdown: " + this);
                     forceShutdown();
                 }
             }
@@ -296,7 +299,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 getSubmitter().cancel(this);
             }
             catch (Exception e) {
-                logger.warn("Failed to shut down block", e);
+                logger.warn("Failed to shut down block: " + this, e);
             }
             bqp.blockTaskFinished(this);
         }
@@ -447,7 +450,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public boolean isRunning() {
         return running;
     }
-    
+
     public void setRunning(boolean running) {
         this.running = running;
     }
@@ -473,7 +476,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public void jobPulled() {
         lastUsed = System.currentTimeMillis();
     }
-    
+
     public long getLastUsed() {
         return lastUsed;
     }
