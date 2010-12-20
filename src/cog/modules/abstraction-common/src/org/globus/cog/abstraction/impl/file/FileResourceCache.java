@@ -44,23 +44,24 @@ public class FileResourceCache {
         return defaultFileResourceCache;
     }
 
-    private LinkedList order;
-    private Map releaseTimes;
-    private Map fileResources, services;
-    private Set invalid;
-    private Set inUse;
+    private LinkedList<FileResource> order;
+    private Map<FileResource, Long> releaseTimes;
+    private Map<Service, List<FileResource>> fileResources;
+    private Map<FileResource, Service> services;
+    private Set<FileResource> invalid;
+    private Set<FileResource> inUse;
     private Timer timer;
     private int maxIdleResources = DEFAULT_MAX_IDLE_RESOURCES;
     private long maxIdleTime = DEFAULT_MAX_IDLE_TIME;
     private ResourceStopper stopper;
 
     public FileResourceCache() {
-        fileResources = new HashMap();
-        services = new HashMap();
-        inUse = new HashSet();
-        invalid = new HashSet();
-        order = new LinkedList();
-        releaseTimes = new HashMap();
+        fileResources = new HashMap<Service, List<FileResource>>();
+        services = new HashMap<FileResource, Service>();
+        inUse = new HashSet<FileResource>();
+        invalid = new HashSet<FileResource>();
+        order = new LinkedList<FileResource>();
+        releaseTimes = new HashMap<FileResource, Long>();
         stopper = new ResourceStopper();
     }
 
@@ -75,10 +76,10 @@ public class FileResourceCache {
         synchronized (this) {
             checkTimer();
             if (fileResources.containsKey(service)) {
-                List resources = (List) fileResources.get(service);
-                Iterator i = resources.iterator();
+                List<FileResource> resources = fileResources.get(service);
+                Iterator<FileResource> i = resources.iterator();
                 while (i.hasNext()) {
-                    fileResource = (FileResource) i.next();
+                    fileResource = i.next();
                     if (!inUse.contains(fileResource)) {
                         inUse.add(fileResource);
                         order.remove(fileResource);
@@ -121,12 +122,12 @@ public class FileResourceCache {
                 .newFileResource(provider);
         fileResource.setServiceContact(service.getServiceContact());
         fileResource.setSecurityContext(securityContext);
-        List resources;
+        List<FileResource> resources;
         if (fileResources.containsKey(service)) {
-            resources = (List) fileResources.get(service);
+            resources = fileResources.get(service);
         }
         else {
-            resources = new LinkedList();
+            resources = new LinkedList<FileResource>();
             fileResources.put(service, resources);
         }
         resources.add(fileResource);
@@ -183,12 +184,12 @@ public class FileResourceCache {
 
     private void removeResource(FileResource resource) {
         synchronized (this) {
-            Service service = (Service) services.remove(resource);
+            Service service = services.remove(resource);
             if (service == null) {
                 return;
             }
             if (fileResources.containsKey(service)) {
-                List resources = (List) fileResources.get(service);
+                List<FileResource> resources = fileResources.get(service);
                 resources.remove(resource);
                 stopper.addResource(resource);
             }
@@ -203,7 +204,7 @@ public class FileResourceCache {
 
     private void checkIdleResourceCount() {
         while (order.size() > maxIdleResources) {
-            FileResource fileResource = (FileResource) order.removeFirst();
+            FileResource fileResource = order.removeFirst();
             if (logger.isDebugEnabled()) {
                 logger
                         .debug("Idle resource count exceeded. Removing resource for "
@@ -243,8 +244,8 @@ public class FileResourceCache {
             if (order.size() == 0) {
                 return;
             }
-            FileResource resource = (FileResource) order.getFirst();
-            last = ((Long) releaseTimes.get(resource)).longValue();
+            FileResource resource = order.getFirst();
+            last = releaseTimes.get(resource);
             if (last < threshold) {
                 order.removeFirst();
                 releaseTimes.remove(resource);
@@ -271,11 +272,11 @@ public class FileResourceCache {
     }
 
     public static class ResourceStopper implements Runnable {
-        private LinkedList resources;
+        private LinkedList<FileResource> resources;
         private boolean running;
 
         public ResourceStopper() {
-            resources = new LinkedList();
+            resources = new LinkedList<FileResource>();
             running = false;
         }
 
@@ -319,7 +320,7 @@ public class FileResourceCache {
                     return null;
                 }
                 else {
-                    return (FileResource) resources.removeFirst();
+                    return resources.removeFirst();
                 }
             }
         }

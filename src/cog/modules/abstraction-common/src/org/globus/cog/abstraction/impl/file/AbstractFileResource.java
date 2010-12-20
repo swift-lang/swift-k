@@ -27,7 +27,7 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 public abstract class AbstractFileResource implements FileResource {
     private String name;
-    private Map attributes;
+    private Map<String, Object> attributes;
     private ServiceContact serviceContact;
     private SecurityContext securityContext;
     private Identity identity;
@@ -41,7 +41,7 @@ public abstract class AbstractFileResource implements FileResource {
 
     protected AbstractFileResource(String name, String protocol,
             ServiceContact serviceContact, SecurityContext securityContext) {
-        attributes = new HashMap();
+        attributes = new HashMap<String, Object>();
         identity = new IdentityImpl();
         this.name = name;
         this.protocol = protocol;
@@ -112,7 +112,7 @@ public abstract class AbstractFileResource implements FileResource {
         this.attributes.put(name, value);
     }
 
-    public Collection getAttributeNames() {
+    public Collection<String> getAttributeNames() {
         return this.attributes.keySet();
     }
 
@@ -135,9 +135,9 @@ public abstract class AbstractFileResource implements FileResource {
             throw new DirectoryNotFoundException("Remote directory not found");
         }
 
-        for (Iterator iterator = list(remoteDirName).iterator(); iterator
+        for (Iterator<GridFile> iterator = list(remoteDirName).iterator(); iterator
                 .hasNext();) {
-            gridFile = (GridFile) iterator.next();
+            gridFile = iterator.next();
             if (gridFile.isFile()) {
                 getFile(remoteDirName + "/" + gridFile.getName(), localDirName
                         + File.separator + gridFile.getName());
