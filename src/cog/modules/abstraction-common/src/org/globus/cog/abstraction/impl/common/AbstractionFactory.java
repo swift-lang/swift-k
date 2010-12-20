@@ -9,7 +9,8 @@ package org.globus.cog.abstraction.impl.common;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.sandbox.Sandbox;
@@ -44,7 +45,7 @@ public class AbstractionFactory {
 
     private static Logger logger = Logger.getLogger(AbstractionFactory.class);
 
-    private static Hashtable sandboxes = new Hashtable();
+    private static Map<String, Sandbox> sandboxes = new HashMap<String, Sandbox>();
 
     private static boolean trapChecked;
 
@@ -208,7 +209,7 @@ public class AbstractionFactory {
             }
         }
         provider = provider.toLowerCase();
-        Sandbox sandbox = (Sandbox) sandboxes.get(provider);
+        Sandbox sandbox = sandboxes.get(provider);
         if (sandbox == null) {
             sandbox = new Sandbox(getLoader(provider, false), provider
                     + " sandbox");
@@ -274,7 +275,7 @@ public class AbstractionFactory {
             IllegalArgumentException, IllegalAccessException,
             InvocationTargetException {
         ClassLoader cl = getLoader(provider.toLowerCase());
-        Class c = cl.loadClass(className);
+        Class<?> c = cl.loadClass(className);
         Method m = c.getMethod("main", new Class[] { String[].class });
         m.invoke(null, new Object[] { args });
     }

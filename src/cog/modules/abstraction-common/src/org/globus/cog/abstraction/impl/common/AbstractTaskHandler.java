@@ -25,10 +25,10 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
  * Provides an abstract <code>TaskHandler</code>.
  */
 public abstract class AbstractTaskHandler extends TaskHandlerSkeleton {
-	private Map<Task,DelegatedTaskHandler> handleMap;
+	private Map<Task, DelegatedTaskHandler> handleMap;
 
 	public AbstractTaskHandler() {
-		this.handleMap = new HashMap<Task,DelegatedTaskHandler>();
+		this.handleMap = new HashMap<Task, DelegatedTaskHandler>();
 		setType(TaskHandler.GENERIC);
 	}
 

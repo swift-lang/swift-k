@@ -15,9 +15,10 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.WeakHashMap;
 
@@ -28,7 +29,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 
 	private static Logger logger = Logger.getLogger(AbstractionClassLoader.class);
 
-	private static Hashtable loaders = new Hashtable();
+	private static Map<String, ClassLoader> loaders = new HashMap<String, ClassLoader>();
 
 	private String[] prefixes;
 
@@ -38,7 +39,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 
 	private String name;
 
-	private WeakHashMap sysclasses;
+	private WeakHashMap<String, Class<?>> sysclasses;
 
 	private static ClassLoader extClassLoader = ClassLoader.getSystemClassLoader().getParent();
 
@@ -56,7 +57,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 		if (!loaders.containsKey(provider.toLowerCase())) {
 			throw new InvalidProviderException("Invalid provider: " + provider);
 		}
-		return (ClassLoader) loaders.get(provider);
+		return loaders.get(provider);
 	}
 
 	public static void setLoader(String provider, ClassLoader loader) {
@@ -91,9 +92,9 @@ public class AbstractionClassLoader extends URLClassLoader {
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						providerLibs.openStream()));
 
-				List jars = new ArrayList();
-				List pref = new ArrayList();
-				List excl = new ArrayList();
+				List<URL> jars = new ArrayList<URL>();
+				List<String> pref = new ArrayList<String>();
+				List<String> excl = new ArrayList<String>();
 				String line;
 				String relpath = null;
 				String ref = null;
@@ -162,8 +163,8 @@ public class AbstractionClassLoader extends URLClassLoader {
 				}
 
 				AbstractionClassLoader ccl = new AbstractionClassLoader(
-						(String[]) pref.toArray(new String[0]),
-						(String[]) excl.toArray(new String[0]), (URL[]) jars.toArray(new URL[0]),
+						pref.toArray(new String[0]),
+						excl.toArray(new String[0]), jars.toArray(new URL[0]),
 						prev, classpath, loaderName);
 				loaders.put(loaderName, ccl);
 				boot(ccl, bootClass);
@@ -182,7 +183,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 	private static void boot(ClassLoader cl, String bootClass) {
 		if (bootClass != null) {
 			try {
-				Class cls = cl.loadClass(bootClass);
+				Class<?> cls = cl.loadClass(bootClass);
 				Method method = cls.getMethod("boot", new Class[0]);
 				if (Modifier.isStatic(method.getModifiers())) {
 					method.invoke(null, new Object[0]);
@@ -196,7 +197,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 
 	private static URL[] getURLs(String classpath) {
 		StringTokenizer st = new StringTokenizer(classpath, ":");
-		List l = new LinkedList();
+		List<URL> l = new LinkedList<URL>();
 		while (st.hasMoreTokens()) {
 			try {
 				String path = st.nextToken();
@@ -212,7 +213,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 				logger.debug(e);
 			}
 		}
-		return (URL[]) l.toArray(new URL[0]);
+		return l.toArray(new URL[0]);
 	}
 
 	public AbstractionClassLoader(String[] prefixes, String[] excludes, URL[] urls,
@@ -222,7 +223,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 		this.excludes = excludes;
 		this.name = name;
 		helper = new HelperClassLoader(classpath, this);
-		sysclasses = new WeakHashMap();
+		sysclasses = new WeakHashMap<String, Class<?>>();
 	}
 
 	public URL getResource(String name) {
@@ -239,9 +240,9 @@ public class AbstractionClassLoader extends URLClassLoader {
 		}
 	}
 
-	protected synchronized Class loadClass(String name, boolean resolve)
+	protected synchronized Class<?> loadClass(String name, boolean resolve)
 			throws ClassNotFoundException {
-		Class c = null;
+		Class<?> c = null;
 		try {
 			c = extClassLoader.loadClass(name);
 			// boot or extension class
@@ -284,7 +285,7 @@ public class AbstractionClassLoader extends URLClassLoader {
 		}
 
 		if (!prefix && (getParent() != null) && !exclude) {
-			Class cls = (Class) sysclasses.get(name);
+			Class<?> cls = sysclasses.get(name);
 			if (cls == null) {
 				// logger.debug(this.name + ": sysclass " + name + " loaded.");
 				cls = getParent().loadClass(name);
@@ -318,15 +319,15 @@ public class AbstractionClassLoader extends URLClassLoader {
 			}
 		}
 
-		public Class loadClass2(String name) throws ClassNotFoundException {
-			Class c = findLoadedClass(name);
+		public Class<?> loadClass2(String name) throws ClassNotFoundException {
+			Class<?> c = findLoadedClass(name);
 			if (c == null) {
 				c = findClass(name);
 			}
 			return c;
 		}
 
-		public Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
+		public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 			return getParent().loadClass(name);
 		}
 	}

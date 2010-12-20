@@ -11,35 +11,37 @@ package org.globus.cog.abstraction.impl.common;
 
 import java.util.Collection;
 
+import org.globus.cog.abstraction.interfaces.Task;
+
 public abstract class MultiplexingTaskHandler extends TaskHandlerSkeleton {
 
-    protected abstract Collection getTasks(final TaskCollector collector);
+    protected abstract Collection<Task> getTasks(final TaskCollector collector);
     
-    public Collection getAllTasks() {
+    public Collection<Task> getAllTasks() {
         return getTasks(TaskCollector.COLLECTOR_ALL);
     }
 
-    public Collection getActiveTasks() {
+    public Collection<Task> getActiveTasks() {
         return getTasks(TaskCollector.COLLECTOR_ACTIVE);
     }
 
-    public Collection getFailedTasks() {
+    public Collection<Task> getFailedTasks() {
         return getTasks(TaskCollector.COLLECTOR_FAILED);
     }
 
-    public Collection getCompletedTasks() {
+    public Collection<Task> getCompletedTasks() {
         return getTasks(TaskCollector.COLLECTOR_COMPLETED);
     }
 
-    public Collection getSuspendedTasks() {
+    public Collection<Task> getSuspendedTasks() {
         return getTasks(TaskCollector.COLLECTOR_SUSPENDED);
     }
 
-    public Collection getResumedTasks() {
+    public Collection<Task> getResumedTasks() {
         return getTasks(TaskCollector.COLLECTOR_RESUMED);
     }
 
-    public Collection getCanceledTasks() {
+    public Collection<Task> getCanceledTasks() {
         return getTasks(TaskCollector.COLLECTOR_CANCELED);
     }
 
