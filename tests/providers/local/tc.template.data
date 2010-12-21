@@ -1,0 +1,8 @@
+local 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+local 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+local 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+local 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+local 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+local 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+local	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
+

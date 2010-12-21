@@ -1,0 +1,8 @@
+local-pbs 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+local-pbs 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+local-pbs 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+local-pbs 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+local-pbs 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+local-pbs 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+local-pbs	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
+

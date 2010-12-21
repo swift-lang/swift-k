@@ -1,0 +1,8 @@
+sge-local 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+sge-local 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+sge-local 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+sge-local 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+sge-local 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+sge-local 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+sge-local	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
+
