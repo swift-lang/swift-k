@@ -6,6 +6,8 @@
 # subdirectory called run-DATE, and generate useful HTML output and
 # tests.log
 
+# Usage: nightly.sh <options>* <GROUPLIST>
+
 # Run nightly.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
 # Code is checked out into TOPDIR (PWD by default) (PATH is not used)
@@ -54,7 +56,7 @@
 # Background processes are used so that hung Swift jobs can be killed
 # These are the background processes (PIDs are tracked)
 # Note that PID management has not yet been perfected.  Check ps
-# in error cases.
+# in error cases, especially if you kill nightly.sh .
 #
 # nightly.sh
 # +-monitor()
