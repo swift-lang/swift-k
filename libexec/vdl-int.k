@@ -402,7 +402,7 @@ namespace("vdl"
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
-			
+
 			allocateHost(rhost, constraints=vdl:jobConstraints(tr, stagein=stagein)
 
 				ddir := initDDir()
@@ -617,3 +617,9 @@ namespace("vdl"
 		)
 	)
 )
+
+// Local variables:
+// mode: scheme
+// tab-width: 4
+// indent-tabs-mode: t
+// End:
