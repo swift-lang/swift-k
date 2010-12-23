@@ -3,7 +3,7 @@
 # note that this script modifies $IFS
 
 # Toggle debugging output from debug()
-DEBUG=1
+DEBUG=0
 
 infosection() {
         echo >& "$INFO"
@@ -52,7 +52,7 @@ log() {
 }
 
 debug() {
-	[ $DEBUG == 1 ] && echo "$@" >& "$INFO"
+	[[ $DEBUG == 1 ]] && echo "$@" >& "$INFO"
 }
 
 fail() {
@@ -352,9 +352,9 @@ log "INF=$INF"
 log "OUTF=$OUTF"
 log "KICKSTART=$KICKSTART"
 log "CDM_FILE=$CDM_FILE"
+[ -z $MPI_RANK ] && log "MPI_RANK=$MPI_RANK"
 log "ARGS=$@"
 log "ARGC=$#"
-
 IFS="|"
 
 logstate "CREATE_JOBDIR"
@@ -425,6 +425,8 @@ if [ $? != 0 ]; then
 	fail 254 "Could not cd to: $DIR"
 fi
 logstate "EXECUTE"
+
+debug "Command line: $EXEC ${CMDARGS[@]}"
 
 if [ ! -f "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not exist"
