@@ -79,7 +79,7 @@ public abstract class AbstractFileOperation extends AbstractGridNode {
 		catch (Exception e) {
 			if (task.getStatus().getStatusCode() != Status.FAILED) {
 				logger.warn("Task handler threw exception but did not set status");
-				throw new ExecutionException("Could not sumbit task: " + e.getMessage(), e);
+				throw new ExecutionException("Could not submit task: " + e.getMessage(), e);
 			}
 			else {
 				// Handled by processing the status event
