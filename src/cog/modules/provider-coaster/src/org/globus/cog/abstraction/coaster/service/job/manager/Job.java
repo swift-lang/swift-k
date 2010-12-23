@@ -9,6 +9,8 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import org.apache.log4j.Logger;
+
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -16,25 +18,27 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
 public class Job implements Comparable<Job> {
+    public static final Logger logger = Logger.getLogger(Job.class);
+
     private int id;
     private Task task;
-    /** 
+    /**
        If not 1, number of MPI CPUs required
-       Set by JobSpecification attribute "hostcount" 
+       Set by JobSpecification attribute "hostcount"
      */
-    int cpus; 
+    int cpus;
     private TimeInterval walltime;
     private Time starttime, endtime;
     private boolean done;
 
     private static int sid;
-    
+
     public Job() {
     }
 
     public Job(Task task) {
         setTask(task);
-        JobSpecification spec = 
+        JobSpecification spec =
             (JobSpecification) task.getSpecification();
         Object tmp = spec.getAttribute("hostcount");
         if (tmp == null)
@@ -50,11 +54,11 @@ public class Job implements Comparable<Job> {
         setTask(task);
         this.cpus = cpus;
     }
-    
+
     void setTask(Task task) {
         this.task = task;
-       
-        JobSpecification spec = 
+
+        JobSpecification spec =
             (JobSpecification) task.getSpecification();
         Object tmp = spec.getAttribute("maxwalltime");
         if (tmp == null) {
@@ -65,7 +69,7 @@ public class Job implements Comparable<Job> {
             this.walltime = TimeInterval.fromSeconds(wt.getSeconds());
         }
     }
-    
+
     public Time getEndTime() {
         if (endtime == null) {
             if (starttime == null) {
@@ -79,15 +83,15 @@ public class Job implements Comparable<Job> {
             return endtime;
         }
     }
-    
+
     public void setEndTime(Time endtime) {
         this.endtime = endtime;
     }
-    
+
     public Time getStartTime() {
         return starttime;
     }
-    
+
     public void setStartTime(Time t) {
         this.starttime = t;
     }
@@ -106,28 +110,43 @@ public class Job implements Comparable<Job> {
             return (int) diff.getMilliseconds();
         }
     }
-    
+
     public TimeInterval getMaxWallTime() {
         return walltime;
     }
-    
+
     public void setMaxWallTime(TimeInterval walltime) {
         this.walltime = walltime;
     }
 
     public String toString() {
-        return id + ":" + walltime;
+        StringBuilder sb = new StringBuilder(128);
+        sb.append("Job(id:");
+        sb.append(id);
+        sb.append(" ");
+        sb.append(walltime);
+        if (cpus != 1) {
+            sb.append(" [");
+            sb.append(cpus);
+            sb.append("]");
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     public void start() {
         starttime = Time.now();
         endtime = Time.now().add(walltime);
+        if (logger.isDebugEnabled())
+            logger.debug(this.toString() + " start: " +
+                         starttime.getSeconds() + "-" +
+                         endtime.getSeconds());
     }
 
     public void fail(String message, Exception e) {
         task.setStatus(new StatusImpl(Status.FAILED, message, e));
     }
-    
+
     public Task getTask() {
         return task;
     }
