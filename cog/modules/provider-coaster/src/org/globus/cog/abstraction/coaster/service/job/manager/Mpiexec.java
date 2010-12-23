@@ -4,13 +4,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.impl.common.StatusEvent;
+import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
+import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.Status;
+import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.util.ProcessKiller;
+import org.globus.cog.util.ProcessListener;
+import org.globus.cog.util.ProcessMonitor;
 import org.globus.cog.util.StreamProcessor;
 import org.globus.cog.util.Streamer;
 import org.globus.cog.util.StringUtil;
@@ -19,63 +28,72 @@ import org.globus.cog.util.StringUtil;
  * Construct MPICH/Hydra proxies and submit them back to sleeping Cpus
  * @author wozniak
  */
-public class Mpiexec {
+public class Mpiexec implements ProcessListener, StatusListener {
 
-    Logger logger = Logger.getLogger(Mpiexec.class);
-
-    List<Job> proxies;
+    public static final Logger logger = 
+        Logger.getLogger(Mpiexec.class);
 
     /**
        The path to mpiexec
      */
-    public String MPIEXEC = "mpiexec";
+    public static String MPIEXEC = "mpiexec";
+    
+    private List<Job> proxies = null;
 
     /**
-       The user job
+       The original user job
      */
-    Job job;
+    private Job job;
 
+    /** 
+       Map from Status code to count of those codes received
+     */
+    private Map<Integer,Integer> statusCount = 
+        new HashMap<Integer,Integer>();
+    
     /**
        The Cpu that pulled this job
      */
-    Cpu cpu;
+    private Cpu cpu;
 
     /**
        The output from mpiexec
      */
-    String output;
+    private String output;
 
     /**
        The error from mpiexec
      */
-    String error;
+    private String error;
 
     Mpiexec(Cpu cpu, Job job) {
         this.cpu = cpu;
         this.job = job;
         proxies = new ArrayList<Job>(job.cpus);
+        logger.debug("start: " + cpu + " " + job);
     }
 
     boolean launch() {
         try {
             boolean result = runMpiexec();
+            logger.debug("Output from Hydra: \n" + output);
+            if (error.length() > 0)
+                logger.error("Errors from Hydra:\n" + error);
             if (!result)
                 return result;
         }
         catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
-        logger.debug("Output from Hydra: \n" + output);
-        if (error.length() > 0)
-            logger.error("Errors from Hydra: " + error);
+        
         List<String[]> lines = getProxyLines();
-
         for (int i = 0; i < job.cpus; i++) {
-            Job proxy = getProxyJob(job, lines.get(i));
+            Job proxy = getProxyJob(lines.get(i), i);
             proxies.add(proxy);
         }
 
-        launchProxies(proxies);
+        launchProxies();
         return true;
     }
 
@@ -93,13 +111,14 @@ public class Mpiexec {
         Object object = new Object();
         StreamProcessor sprocessor =
             new StreamProcessor(istream, ibytes, object,
-                                "HYDRA_NONE_DONE:");
+                                "HYDRA_NONE_END:");
         boolean result = waitForHydra(sprocessor, object);
+        monitor(process);
         output = ibytes.toString();
         error  = ebytes.toString();
         return result;
     }
-
+    
     private String[] commandLine(JobSpecification spec) {
         List<String> cmdl = new ArrayList<String>();
 
@@ -107,7 +126,8 @@ public class Mpiexec {
 
         cmdl.add(MPIEXEC);
         cmdl.add("-bootstrap");
-        cmdl.add("manual");
+        cmdl.add("none");
+        cmdl.add("-disable-hostname-propagation");
         cmdl.add("-n");
         cmdl.add(Integer.toString(job.cpus));
         cmdl.add("-hosts");
@@ -137,24 +157,31 @@ public class Mpiexec {
         return sb.toString();
     }
 
+    private static final int MAX_TRIES = 3;
+
     /**
        Wait until Hydra has reported the proxy command lines
        The process does not exit until the proxies exit
      */
     private boolean waitForHydra(StreamProcessor sprocessor,
                                  Object object) {
+        int tries = 0;
+        boolean result = false;
+
         synchronized (object) {
             try {
                 sprocessor.start();
-                while (!sprocessor.matched())
-                    object.wait(100000);
+                while (!sprocessor.matched() && tries++ < MAX_TRIES)
+                    object.wait(1000);
             }
             catch (InterruptedException e) {
                 logger.error(e.getStackTrace());
-                return false;
             }
         }
-        return true;
+        
+        result = sprocessor.matched();
+        logger.debug("waitForHydra complete: " + result);
+        return result;
     }
 
     /**
@@ -164,31 +191,36 @@ public class Mpiexec {
     private List<String[]> getProxyLines() {
         List<String[]> result = new ArrayList<String[]>();
 
-        String[] tokens = output.split("\\n");
-        for (String token : tokens)
-            if (token.startsWith("HYDRA_NONE_LINE:")) {
-                String[] args = token.split("\\s");
-                String[] line = StringUtil.subset(args, 2);
-                result.add(line);
+        String[] lines = output.split("\\n");
+        for (String line : lines)
+            if (line.startsWith("HYDRA_NONE_LINE:")) {
+                String[] tokens = line.split("\\s");
+                String[] args   = StringUtil.subset(tokens, 1);
+                result.add(args);
             }
-
+        
         return result;
     }
 
     /**
        Replace the user job with a Hydra proxy job
+       New Job.Task.Identity is appended with unique integer
      */
-    private Job getProxyJob(Job job, String[] line) {
+    private Job getProxyJob(String[] line, int i) {
+        // Set clone to notify this Mpiexec
         Task clone = (Task) job.getTask().clone();
-
+        clone.addStatusListener(this);
+        
+        // Update Task Identity and set Notification
+        Identity cloneID = new IdentityImpl(clone.getIdentity());
+        String value = cloneID.getValue() + ":" + i; 
+        cloneID.setValue(value);
+        clone.setIdentity(cloneID);
+        NotificationManager.getDefault().registerTask(value, clone);
+        
+        // Update Task Specification
         JobSpecification spec =
             (JobSpecification) clone.getSpecification();
-
-        /*
-        List<String> args = spec.getArgumentsAsList();
-        if (args.get(0).contains("_swiftwrap"))
-            setSwiftWrapArguments(spec, line);
-        else  */
         spec.setExecutable(line[0]);
         spec.setArguments(StringUtil.concat(line, 1));
 
@@ -200,85 +232,67 @@ public class Mpiexec {
         Job result = new Job(clone, 1);
         return result;
     }
-
-    /**
-       Set up the _swiftwrap command line in this JobSpecification
+    
+    /** 
+     * Set up threads to watch the external process 
+     * @param process
      */
-    /*
-    private void setSwiftWrapArguments(JobSpecification spec,
-                                       String[] line) {
-        List<String> tokens = spec.getArgumentsAsList();
-        int index;
-        index = tokens.indexOf("-e");
-        tokens.set(index+1, line[0]);
-        index = tokens.indexOf("-a");
-        List<String> args = tokens.subList(0, index+1);
-        StringUtil.addSome(args, line, 1);
-        spec.setArguments(args);
+    private void monitor(Process process) {
+        ProcessMonitor monitor = new ProcessMonitor(process, this);
+        monitor.start();
+        ProcessKiller killer = new ProcessKiller(process, 10000);
+        killer.start();
     }
-    */
-
-
-    /**
-       This job is not the first proxy sent to this Node
-       Modify its command line to prevent file staging operations
-     */
-    /*
-    private void setSwiftWrapSecondary(JobSpecification spec) {
-        List<String> tokens = spec.getArgumentsAsList();
-        List<String> args = new ArrayList<String>(tokens.size());
-        boolean b = true;
-        for (String token : tokens)
-        {
-            if (token.equals("-if") || token.equals("-of"))
-            {
-                // Copy token and suppress copies of file names
-                args.add(token);
-                b = false;
-            }
-            else if (token.startsWith("-"))
-            {
-                // Resume copies of tokens
-                args.add(token);
-                b = true;
-            }
-            else if (b)
-            {
-                // This is not a file name: copy it
-                args.add(token);
-            }
-        }
-        spec.setArguments(args);
+    
+    public void callback(ProcessMonitor monitor) {
+        logger.debug("mpiexec exitcode: " + monitor.getExitCode()); 
     }
-    */
 
     /**
        Launch proxies on this Cpu and several others
        (The LinkedList sleeping should already have enough Cpus)
      */
-    private void launchProxies(List<Job> proxies) {
+    private void launchProxies() {
         Block block = cpu.getBlock();
-        Set<Node> used = new HashSet<Node>(proxies.size());
         PullThread pthread = Cpu.getPullThread(block);
         int i;
         for (i = 0; i < proxies.size()-1; i++) {
             Job proxy = proxies.get(i);
             Cpu sleeper = pthread.getSleeper();
-            submitToCpu(sleeper, proxy, used, i);
+            submitToCpu(sleeper, proxy, i);
         }
-        submitToCpu(cpu, proxies.get(i), used, i);
+        submitToCpu(cpu, proxies.get(i), i);
     }
 
-    private void submitToCpu(Cpu cpu, Job proxy, Set<Node> used,
-                             int i) {
-        Node node = cpu.getNode();
+    private void submitToCpu(Cpu sleeper, Job proxy, int i) {
         JobSpecification spec =
             (JobSpecification) proxy.getTask().getSpecification();
-        if (! used.add(node))
-        {
-            // setSwiftWrapSecondary((JobSpecification) spec);
-        }
         spec.addEnvironmentVariable("MPI_RANK", i);
-        cpu.launch(proxy);
+        sleeper.launch(proxy);
+    }
+
+    /** 
+       Multiplex Hydra proxy StatusEvents into the StatusEvents for 
+       the original job  
+     */
+    public void statusChanged(StatusEvent event) {
+        logger.debug(event);
+        synchronized (statusCount) {
+            int code = event.getStatus().getStatusCode();
+            Integer count = statusCount.get(code);
+            if (count == null)
+                count = 1;
+            else 
+                count++;
+            statusCount.put(code, count);
+            if (count == proxies.size())
+                propagate(event);
+        }
+    }
+    
+    private void propagate(StatusEvent event) {
+        Status s = event.getStatus();
+        logger.debug("propagating: to: " + job + " " + s);
+        job.getTask().setStatus(s);
     }
 }
