@@ -51,9 +51,7 @@ cdm_action() {
 			fi
 			;;
  		LOCAL)
- 			#TOOL=${ARGS[0]}
- 			#REMOTE_DIR=${ARGS[1]}
- 			#FLAGS=${ARGS[3]}
+			# TODO: Can/should we use this as a cache?
 			TOOL=$1
 			REMOTE_DIR=$2
 			FLAGS=$3
@@ -62,10 +60,17 @@ cdm_action() {
  			if [ $MODE == "INPUT" ]; then
  				[ -f "$REMOTE_DIR/$FILE" ]
  				checkError 254 "CDM[LOCAL]: $REMOTE_DIR/$FILE does not exist!"
- 				$TOOL $FLAGS $REMOTE_DIR/$FILE $JOBDIR/$FILE
- 				checkError 254 "CDM[LOCAL]: Tool failed!"
+				if [ $TOOL == "cp" ]; then
+ 					$TOOL $FLAGS $REMOTE_DIR/$FILE $JOBDIR/$FILE
+					checkError 254 "CDM[LOCAL]: cp failed!"
+				elif [ $TOOL == "dd" ]; then
+					$TOOL $FLAGS if=$REMOTE_DIR/$FILE of=$JOBDIR/$FILE
+					checkError 254 "CDM[LOCAL]: dd failed!"
+				else
+					fail 254 "CDM[LOCAL]: Unknown TOOL: $TOOL"
+				fi
  			elif [ $MODE == "OUTPUT" ]; then
- 				log "CDM[LOCAL]..."
+ 				log "CDM[LOCAL]..." # This should probably be an error
  			else
  				fail 254 "Unknown MODE: $MODE"
  			fi
