@@ -40,7 +40,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private Time starttime, endtime, timelast, donetime;
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
-    
+
     public Cpu() {
         this.done = new ArrayList<Job>();
         this.timelast = Time.fromMilliseconds(0);
@@ -120,6 +120,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public synchronized void pull() {
+        boolean success = true;
         try {
             if (checkSuspended(block)) {
                 return;
@@ -137,7 +138,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 int cpus = 1 + pullThread.sleepers();
                 running = bqp.request(time, cpus);
                 if (running != null) {
-                    launch(running);       
+                    success = launch(running);
                 }
                 else {
                     if (block.getAllocationProcessor().getQueued().size() == 0) {
@@ -158,18 +159,22 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             e.printStackTrace();
             CoasterService.error(21, "Failed pull", e);
         }
+        if (! success) 
+            CoasterService.error(22, "Launch failed");
     }
-    
-    void launch(Job job) {
+
+    boolean launch(Job job) {
+        boolean result = false;
         running = job;
         running.start();
         if (job.cpus == 1)
-            launchSequential();
+            result = launchSequential();
         else
-            launchMPICH(job);
+            result = launchMPICH(job);
+        return result;
     }
 
-    void launchSequential() {
+    boolean launchSequential() {
         running.getTask().addStatusListener(this);
         idleTime += timeDiff();
         timelast = running.getEndTime();
@@ -177,20 +182,22 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             CoasterService.error(20, "Timelast is null", new Throwable());
         }
         block.add(this);
-        submit(running);   
+        submit(running);
+        return true;
     }
-    
-    /** 
-       Transform an MPI Job into an MPIEXEC job and a set of 
+
+    /**
+       Transform an MPI Job into an MPIEXEC job and a set of
        Hydra proxy jobs.  Then launch these individually.
-       Requires non-standard mpiexec with Hydra as modified by 
-       Justin Wozniak 
+       Requires non-standard mpiexec with Hydra as modified by
+       Justin Wozniak
      */
-    void launchMPICH(Job job) {
+    boolean launchMPICH(Job job) {
         Mpiexec mpiexec = new Mpiexec(this, job);
-        mpiexec.launch();
-    }  
-  
+        boolean result = mpiexec.launch();
+        return result;
+    }
+
     @SuppressWarnings("hiding")
     private boolean checkSuspended(Block block) {
         if (block.isSuspended()) {
@@ -205,14 +212,11 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     protected void submit(Job job) {
         Task task = job.getTask();
         if (logger.isDebugEnabled()) {
-            logger.debug(block.getId() + ":" + getId() + 
-                         " submitting " + task.getIdentity());
-        }
-        if (logger.isDebugEnabled()) { 
-            JobSpecification spec = 
-                (JobSpecification) task.getSpecification(); 
-            logger.debug(block.getId() + ":" + getId() + 
-                         " submitting " + spec.getArguments());
+            JobSpecification spec =
+                (JobSpecification) task.getSpecification();        
+            logger.debug(block.getId() + ":" + getId() +
+                " submitting " + task.getIdentity() + ": " + 
+                spec.getExecutable() + " " + spec.getArguments());
         }
         task.setStatus(Status.SUBMITTING);
         try {
@@ -285,6 +289,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 endtime = starttime.add(block.getWalltime());
             }
             TimeInterval time = endtime.subtract(Time.now());
+            assert(pullThread != null);
             int cpus = 1 + pullThread.sleepers();
             running = bqp.request(time, cpus);
         }
@@ -304,11 +309,12 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
      public synchronized void statusChanged(StatusEvent event) {
-        if (event.getStatus().isTerminal()) {
-            running.getTask().removeStatusListener(this);
-            running.setEndTime(Time.now());
-            jobTerminated();
-        }
+         logger.debug(event);
+         if (event.getStatus().isTerminal()) {
+             running.getTask().removeStatusListener(this);
+             running.setEndTime(Time.now());
+             jobTerminated();
+         }
     }
 
     public int getId() {
@@ -319,15 +325,16 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         this.id = id;
     }
 
-    public int getLastSeq() { 
+    public int getLastSeq() {
         return lastseq;
     }
-    
+
     public Block getBlock() {
         return block;
     }
-    
+
     public void setRunning(Job r) {
+        logger.debug("setRunning: " + r);
         this.running = r;
     }
 
