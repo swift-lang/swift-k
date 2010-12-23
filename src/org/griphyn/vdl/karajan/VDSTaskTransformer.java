@@ -19,7 +19,7 @@ import org.globus.cog.karajan.scheduler.TaskTransformer;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.swift.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2Config;
@@ -177,7 +177,7 @@ public class VDSTaskTransformer implements TaskTransformer {
 				}
 			}
 
-			TransformationCatalogEntry tce = (TransformationCatalogEntry) l.get(0);
+			TCEntry tce = (TCEntry) l.get(0);
 			spec.setExecutable(tce.getPhysicalTransformation());
 		}
 	}

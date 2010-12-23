@@ -19,7 +19,7 @@ import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
-import org.globus.swift.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.util.Profile;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.util.FQN;
@@ -62,7 +62,7 @@ public class TCProfile extends VDLFunction {
 		
 		attrs = attributesFromHost(bc, attrs, named);
 
-		TransformationCatalogEntry tce = null;
+		TCEntry tce = null;
 		if (tr != null) {
 		    tce = getTCE(tc, new FQN(tr), bc);
 		}
@@ -71,12 +71,9 @@ public class TCProfile extends VDLFunction {
 		if (tce != null) {
 			addEnvironment(env, tce);
 			addEnvironment(env, bc);
-			if (env.size() != 0) {
-				named.add(GridExec.A_ENVIRONMENT, env);
-			}
-
 			attrs = attributesFromTC(tce, attrs, named);
 		}
+		named.add(GridExec.A_ENVIRONMENT, env);
 		checkWalltime(tr, named);
 		addAttributes(named, attrs);
 		return null;
@@ -114,7 +111,7 @@ public class TCProfile extends VDLFunction {
     }
 
 	private void addEnvironment(Map<String,String> m, 
-	                            TransformationCatalogEntry tce) {
+	                            TCEntry tce) {
 		List<Profile> list = tce.getProfiles(Profile.ENV);
 		if (list != null) {
 			for (Profile p : list) {
@@ -130,7 +127,7 @@ public class TCProfile extends VDLFunction {
 	                            BoundContact bc) {
 		Map<String,Object> props = bc.getProperties();
 		for (Map.Entry<String,Object> e : props.entrySet()) {
-			String name = (String) e.getKey();
+			String name = e.getKey();
 			FQN fqn = new FQN(name); 
 			String value = (String) e.getValue();
 			if (Profile.ENV.equalsIgnoreCase(fqn.getNamespace())) {
@@ -151,7 +148,7 @@ public class TCProfile extends VDLFunction {
 	}
 
 	private Map<String,Object> 
-	attributesFromTC(TransformationCatalogEntry tce, 
+	attributesFromTC(TCEntry tce, 
 	                 Map<String,Object> attrs, 
 	                 NamedArguments named) {
 	    List<Profile> list = tce.getProfiles(Profile.GLOBUS);
@@ -172,6 +169,10 @@ public class TCProfile extends VDLFunction {
 		return attrs;
 	}
 	
+	/**
+	   Inserts namespace=globus attributes from BoundContact bc 
+	   into given attrs
+	 */
 	private Map<String,Object> 
 	attributesFromHost(BoundContact bc, 
 	                   Map<String,Object> attrs, 
@@ -179,9 +180,9 @@ public class TCProfile extends VDLFunction {
 		Map<String,Object> props = bc.getProperties();
 		if (props != null) {
 		    for (Map.Entry<String,Object> e : props.entrySet()) {
-		        FQN fqn = new FQN((String) e.getKey());
+		        FQN fqn = new FQN(e.getKey());
 		        if (Profile.GLOBUS.equalsIgnoreCase(fqn.getNamespace())) {
-		            Arg a = (Arg) PROFILE_T.get(fqn.getName());
+		            Arg a = PROFILE_T.get(fqn.getName());
 		            if (a == null) {
 		                if (attrs == null) {
 		                    attrs = new HashMap<String,Object>();

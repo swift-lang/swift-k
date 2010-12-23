@@ -10,6 +10,9 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
+/** 
+ * Obtain the DSHandle from within another DSHandle via the given PATH
+ * */
 public class GetField extends VDLFunction {
 	static {
 		setArguments(GetField.class, new Arg[] { OA_PATH, PA_VAR });
@@ -24,7 +27,6 @@ public class GetField extends VDLFunction {
 			try {
 				DSHandle var = (DSHandle) var1;
 
-
 				Path path = parsePath(OA_PATH.getValue(stack), stack);
 				DSHandle field = var.getField(path);
 				return field;
@@ -36,6 +38,4 @@ public class GetField extends VDLFunction {
 			throw new ExecutionException("was expecting a DSHandle, got: "+var1.getClass());
 		}
 	}
-
-
 }

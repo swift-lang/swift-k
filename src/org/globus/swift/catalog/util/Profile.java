@@ -57,16 +57,10 @@ public class Profile
 
     private String mValue;
 
-    /**
-     *
-     * C'tpr for the class;
-     * @throws java.lang.Exception
-     */
     public Profile() {
         mNamespace = null;
         mKey = null;
         mValue = null;
-
     }
 
     /**

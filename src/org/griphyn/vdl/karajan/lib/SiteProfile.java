@@ -20,7 +20,7 @@ import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
-import org.globus.swift.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.types.Os;
 import org.globus.swift.catalog.util.Profile;
 import org.griphyn.vdl.karajan.TCCache;
@@ -49,21 +49,22 @@ public class SiteProfile extends VDLFunction {
 	public static final FQN SWIFT_CLEANUP_COMMAND_OPTIONS = new FQN("swift:cleanupCommandOptions");
 	public static final FQN SYSINFO_OS = new FQN("SYSINFO:OS");
 	
-	private static final Map DEFAULTS;
+	private static final Map<Os, Map<FQN,Object>> DEFAULTS;
 	private static final Set<FQN> DEFAULTS_NAMES; 
 	
 	private static void addDefault(Os os, FQN fqn, Object value) {
 		DEFAULTS_NAMES.add(fqn);
-		Map osm = (Map) DEFAULTS.get(os);
+		Map<FQN,Object> osm = DEFAULTS.get(os);
 		if (osm == null) {
-			osm = new HashMap();
+			osm = new HashMap<FQN,Object>();
 			DEFAULTS.put(os, osm);
 		}
 		osm.put(fqn, value);
 	}
 	
+	@SuppressWarnings("unused")
 	private static boolean hasDefault(Os os, FQN fqn) {
-		Map osm = (Map) DEFAULTS.get(os);
+	    Map<FQN,Object> osm = DEFAULTS.get(os);
 		if (osm == null) {
 			return false;
 		}
@@ -73,15 +74,15 @@ public class SiteProfile extends VDLFunction {
 	}
 	
 	private static Object getDefault(Os os, FQN fqn) {
-		Map osm = (Map) DEFAULTS.get(os);
+	    Map<FQN,Object> osm = DEFAULTS.get(os);
 		if (osm == null) {
-			osm = (Map) DEFAULTS.get(null);
+			osm = DEFAULTS.get(null);
 		}
 		return osm.get(fqn);
 	}
 	
 	static {
-		DEFAULTS = new HashMap();
+		DEFAULTS = new HashMap<Os,Map<FQN,Object>>();
 		DEFAULTS_NAMES = new HashSet<FQN>();
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_INTERPRETER, "cscript.exe");
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_SCRIPT, "_swiftwrap.vbs");

@@ -19,9 +19,10 @@ package org.globus.swift.catalog.transformation;
 
 import org.apache.log4j.Logger;
 import org.globus.swift.catalog.TransformationCatalog;
-import org.globus.swift.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.types.SysInfo;
 import org.globus.swift.catalog.types.TCType;
+import org.globus.swift.catalog.util.Profile;
 import org.globus.swift.catalog.util.ProfileParser;
 import org.globus.swift.catalog.util.ProfileParserException;
 import org.globus.swift.catalog.util.Separator;
@@ -76,7 +77,7 @@ public class File
      * The Tree Map which stores the contents of the file.
      * The key is the transformationname.
      */
-    private Map mTreeMap;
+    private Map<String, Map<String, List<TCEntry>>> mTreeMap;
 
     /**
      * The path to the file based TC.
@@ -171,7 +172,8 @@ public class File
             throw new IllegalArgumentException("tc.data path cannot be null");
         }
         mTCFile = path;
-        mTreeMap = new TreeMap();
+        mTreeMap = 
+            new TreeMap<String, Map<String, List<TCEntry>>>();
     }
 
     /**
@@ -202,32 +204,32 @@ public class File
      *
      * @throws Exception
      * @see org.globus.swift.catalog.types.TCType
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      */
-    public List getTCEntries( String namespace, String name, String version,
+    public List<TCEntry> getTCEntries( String namespace, String name, String version,
         List resourceids, TCType type ) throws Exception {
         logMessage( "getTCEntries(String namespace,String name,String version," +
             "List resourceids, TCType type" );
         logMessage( "\tgetTCEntries(" + namespace + ", " + name + ", " +
             version + ", " +
             resourceids + ", " + type );
-        List results = null;
+        List<TCEntry> results = null;
         if ( resourceids != null ) {
             for ( Iterator i = resourceids.iterator(); i.hasNext(); ) {
-                List tempresults = getTCEntries( namespace, name, version,
+                List<TCEntry> tempresults = getTCEntries( namespace, name, version,
                     ( String ) i.next(), type );
                 if ( tempresults != null ) {
                     if ( results == null ) {
-                        results = new ArrayList();
+                        results = new ArrayList<TCEntry>();
                     }
                     results.addAll( tempresults );
                 }
             }
         } else {
-            List tempresults = getTCEntries( namespace, name, version, ( String )null,
+            List<TCEntry> tempresults = getTCEntries( namespace, name, version, ( String )null,
                 type );
             if ( tempresults != null ) {
-                results = new ArrayList( tempresults.size() );
+                results = new ArrayList<TCEntry>( tempresults.size() );
                 results.addAll( tempresults );
             }
 
@@ -253,9 +255,9 @@ public class File
      *
      * @throws Exception
      * @see org.globus.swift.catalog.types.TCType
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      */
-    public List getTCEntries( String namespace, String name, String version,
+    public List<TCEntry> getTCEntries( String namespace, String name, String version,
         String resourceid, TCType type ) throws Exception {
         logMessage(
             "getTCEntries(String namespace, String name, String version, " +
@@ -263,7 +265,7 @@ public class File
         logMessage( "\t getTCEntries(" + namespace + ", " + name + ", " +
             version +
             "," + resourceid + ", " + type );
-        List results = null;
+        List<TCEntry> results = null;
         String lfn = Separator.combine( namespace, name, version );
         if (logger.isDebugEnabled()) {
             logger.debug( "Trying to get TCEntries for " +
@@ -274,16 +276,15 @@ public class File
         }
         if ( resourceid != null ) {
             if ( mTreeMap.containsKey( resourceid ) ) {
-                Map lfnMap = ( Map ) mTreeMap.get( resourceid );
+                Map lfnMap = mTreeMap.get( resourceid );
                 if ( lfnMap.containsKey( lfn ) ) {
-                    List l = ( List ) lfnMap.get( lfn );
+                    List<TCEntry> l = ( List<TCEntry> ) lfnMap.get( lfn );
                     if ( type != null && l != null ) {
-                        for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                            TransformationCatalogEntry tc = (
-                                TransformationCatalogEntry ) i.next();
+                        for ( Iterator<TCEntry> i = l.iterator(); i.hasNext(); ) {
+                            TCEntry tc = i.next();
                             if ( tc.getType().equals( type ) ) {
                                 if ( results == null ) {
-                                    results = new ArrayList();
+                                    results = new ArrayList<TCEntry>();
                                 }
                                 results.add( tc );
                             }
@@ -297,18 +298,18 @@ public class File
             //since resourceid is null return entries for all sites
             if ( !mTreeMap.isEmpty() ) {
 
-                for ( Iterator j = mTreeMap.values().iterator(); j.hasNext(); ) {
+                for ( Iterator<Map<String, List<TCEntry>>> j = mTreeMap.values().iterator(); j.hasNext(); ) {
                     //check all maps for the executable.
-                    Map lfnMap = ( Map ) j.next();
+                    Map<String, List<TCEntry>> lfnMap = j.next();
                     if ( lfnMap.containsKey( lfn ) ) {
-                        List l = ( List ) lfnMap.get( lfn );
+                        List l = lfnMap.get( lfn );
                         if ( type != null && l != null ) {
                             for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                                TransformationCatalogEntry tc = (
-                                    TransformationCatalogEntry ) i.next();
+                                TCEntry tc = (
+                                    TCEntry ) i.next();
                                 if ( tc.getType().equals( type ) ) {
                                     if ( results == null ) {
-                                        results = new ArrayList();
+                                        results = new ArrayList<TCEntry>();
                                     }
                                     results.add( tc );
                                 }
@@ -317,7 +318,7 @@ public class File
                             //if the list returned is not empty keep adding to the result list.
                             if ( l != null ) {
                                 if ( results == null ) {
-                                    results = new ArrayList();
+                                    results = new ArrayList<TCEntry>();
                                 }
                                 results.addAll( l );
                             }
@@ -346,7 +347,7 @@ public class File
      * @throws Exception
      * @see org.globus.swift.catalog.types.TCType
      */
-    public List getTCResourceIds( String namespace, String name,
+    public List<String> getTCResourceIds( String namespace, String name,
         String version,
         TCType type ) throws Exception {
         logMessage(
@@ -355,12 +356,12 @@ public class File
         logMessage( "\t getTCResourceIds(" + namespace + ", " + name + ", " +
             version +
             ", " + type );
-        List results = null;
-        List lfnList = new ArrayList();
+        List<String> results = null;
+        List<Map> lfnList = new ArrayList<Map>();
         if ( name == null ) {
             if ( type == null ) {
                 //return all the resources only
-                results = new ArrayList( mTreeMap.keySet() );
+                results = new ArrayList<String>( mTreeMap.keySet() );
                 return results;
             }
         }
@@ -368,8 +369,8 @@ public class File
         lfnList.addAll( mTreeMap.values() );
 
         List entries = null;
-        for ( Iterator i = lfnList.iterator(); i.hasNext(); ) {
-            Map lfnMap = ( Map ) i.next();
+        for ( Iterator<Map> i = lfnList.iterator(); i.hasNext(); ) {
+            Map lfnMap = i.next();
             if ( entries == null ) {
                 entries = new ArrayList();
             }
@@ -387,12 +388,12 @@ public class File
                 }
             }
         }
-        TreeSet rset = null;
+        TreeSet<String> rset = null;
         for ( Iterator i = entries.iterator(); i.hasNext(); ) {
             if ( rset == null ) {
-                rset = new TreeSet();
+                rset = new TreeSet<String>();
             }
-            TransformationCatalogEntry entry = ( TransformationCatalogEntry ) i.
+            TCEntry entry = ( TCEntry ) i.
                 next();
             if ( type == null ) {
                 rset.add( entry.getResourceId() );
@@ -403,9 +404,9 @@ public class File
             }
         }
         if ( rset != null ) {
-            results = new ArrayList();
-            for ( Iterator i = rset.iterator(); i.hasNext(); ) {
-                results.add( ( String ) i.next() );
+            results = new ArrayList<String>();
+            for ( Iterator<String> i = rset.iterator(); i.hasNext(); ) {
+                results.add( i.next() );
             }
         }
         return results;
@@ -436,8 +437,9 @@ public class File
      *
      * @see org.globus.swift.catalog.types.TCType
      * @see org.globus.swift.catalog.types.SysInfo
+     * @deprecated
      */
-    public List getTCPhysicalNames( String namespace, String name,
+    public List<Object> getTCPhysicalNames( String namespace, String name,
         String version,
         String resourceid, TCType type ) throws
         Exception {
@@ -445,27 +447,28 @@ public class File
             "String version, String resourceid,TCType type)" );
         logMessage( "\t getTCPhysicalNames(" + namespace + ", " + name + ", " +
             version + ", " + resourceid + ", " + type + ")" );
-        List results = null;
-        List lfnMap = new ArrayList();
+        List<Object> results = null;
+        List<Map<String, List<TCEntry>>> lfnList = new ArrayList<Map<String, List<TCEntry>>>();
         int count[] = {0, 0, 0};
         if ( resourceid == null ) {
-            lfnMap.addAll( mTreeMap.values() );
+            lfnList.addAll( mTreeMap.values() );
         } else {
             if ( mTreeMap.containsKey( resourceid ) ) {
-                lfnMap.add( mTreeMap.get( resourceid ) );
+                lfnList.add( mTreeMap.get( resourceid ) );
             } else {
                 return null;
             }
         }
 
-        for ( Iterator i = lfnMap.iterator(); i.hasNext(); ) {
-            Map lMap = ( Map ) i.next();
+        // for ( Iterator<Map> i = lfnList.iterator(); i.hasNext(); ) {
+        //     Map lMap = i.next();
+        for (Map<String,List<TCEntry>> lMap : lfnList) {
             if ( lMap.containsKey( Separator.combine( namespace, name, version ) ) ) {
-                for ( Iterator j = ( ( List ) lMap.get( Separator.combine(
+                for ( Iterator j = lMap.get( Separator.combine(
                     namespace,
-                    name, version ) ) ).iterator(); j.hasNext(); ) {
-                    TransformationCatalogEntry entry = (
-                        TransformationCatalogEntry ) j.next();
+                    name, version ) ).iterator(); j.hasNext(); ) {
+                    TCEntry entry = (
+                        TCEntry ) j.next();
                     if ( type != null ) {
                         if ( !entry.getType().equals( type ) ) {
                             break;
@@ -477,7 +480,7 @@ public class File
                         entry.getSysInfo().toString()};
                     columnLength( s, count );
                     if ( results == null ) {
-                        results = new ArrayList();
+                        results = new ArrayList<Object>();
                     }
                     results.add( s );
                 }
@@ -506,31 +509,31 @@ public class File
      *                   specifying the column length for pretty print.
      *                   Returns <B>NULL</B> if no results found.
      */
-    public List getTCLogicalNames( String resourceid, TCType type ) throws
+    public List<Object> getTCLogicalNames( String resourceid, TCType type ) throws
         Exception {
         logMessage( "List getTCLogicalNames(String resourceid, TCType type)" );
         logMessage( "\t getTCLogicalNames(" + resourceid + "," + type + ")" );
-        List result = null;
+        List<Object> result = null;
         int[] length = {0, 0};
-        List lfnMap = new ArrayList();
+        List<Map> lfnMap = new ArrayList<Map>();
         String lfn = null, resource = null, tctype = null;
         if ( resourceid == null ) {
             lfnMap.addAll( mTreeMap.values() );
         } else {
             if ( mTreeMap.containsKey( resourceid ) ) {
-                lfnMap.add( ( Map ) mTreeMap.get( resourceid ) );
+                lfnMap.add( mTreeMap.get( resourceid ) );
             } else {
                 lfnMap = null;
             }
         }
         if ( lfnMap != null ) {
-            for ( Iterator i = lfnMap.iterator(); i.hasNext(); ) {
-                for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
+            for ( Iterator<Map> i = lfnMap.iterator(); i.hasNext(); ) {
+                for ( Iterator j = i.next().values().iterator();
                     j.hasNext(); ) {
                     for ( Iterator k = ( ( List ) j.next() ).iterator();
                         k.hasNext(); ) {
-                        TransformationCatalogEntry tc = (
-                            TransformationCatalogEntry ) k.next();
+                        TCEntry tc = (
+                            TCEntry ) k.next();
                         String l = null, r = null, t = null;
                         if ( type == null ) {
                             l = tc.getLogicalTransformation();
@@ -555,7 +558,7 @@ public class File
                                 String[] s = {l, r, t};
                                 columnLength( s, length );
                                 if ( result == null ) {
-                                    result = new ArrayList( 5 );
+                                    result = new ArrayList<Object>( 5 );
                                 }
                                 result.add( s );
                             }
@@ -614,16 +617,16 @@ public class File
             type + ")" );
 
         List result = null;
-        List lfnMap = new ArrayList();
+        List<Map> lfnMap = new ArrayList<Map>();
         if ( mTreeMap.containsKey( resourceid ) ) {
-            lfnMap.add( ( Map ) mTreeMap.get( resourceid ) );
+            lfnMap.add( mTreeMap.get( resourceid ) );
         }
-        for ( Iterator i = lfnMap.iterator(); i.hasNext(); ) {
-            for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
+        for ( Iterator<Map> i = lfnMap.iterator(); i.hasNext(); ) {
+            for ( Iterator j = i.next().values().iterator();
                 j.hasNext(); ) {
                 for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
-                    TransformationCatalogEntry tc = (
-                        TransformationCatalogEntry ) k.next();
+                    TCEntry tc = (
+                        TCEntry ) k.next();
                     List profiles = null;
                     if ( tc.getPhysicalTransformation().equals( pfn ) ) {
                         if ( type == null || tc.getType().equals( type ) ) {
@@ -653,14 +656,15 @@ public class File
      * @throws Exception
      */
 
-    public List getTC() throws Exception {
-        List result=new ArrayList();
-        for ( Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
-            for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
+    public List<TCEntry> getTC() throws Exception {
+        List<TCEntry> result=new ArrayList<TCEntry>();
+        for ( Iterator<Map<String, List<TCEntry>>> i = 
+            mTreeMap.values().iterator(); i.hasNext(); ) {
+            for ( Iterator j = i.next().values().iterator();
                 j.hasNext(); ) {
                 for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
-                    TransformationCatalogEntry tc = (
-                        TransformationCatalogEntry ) k.next();
+                    TCEntry tc = (
+                        TCEntry ) k.next();
                     result.add(tc);
                 }
 
@@ -703,18 +707,18 @@ public class File
      * Add multiple TCEntries to the Catalog. Exception is thrown when error
      * occurs.
      *
-     * @param entries list of {@link org.globus.swift.catalog.TransformationCatalogEntry}
+     * @param entries list of {@link org.globus.swift.catalog.TCEntry}
      * objects as input.
      *
      * @return boolean Return true if succesful, false if error.
      *
      * @throws Exception
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      */
     public boolean addTCEntry( List entries ) throws
         Exception {
         for ( int i = 0; i < entries.size(); i++ ) {
-            TransformationCatalogEntry entry = ( ( TransformationCatalogEntry )
+            TCEntry entry = ( ( TCEntry )
                 entries.get( i ) );
             this.addTCEntry( entry.getLogicalNamespace(),
                 entry.getLogicalName(), entry.getLogicalVersion(),
@@ -746,7 +750,7 @@ public class File
      *
      * @throws Exception
      *
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      * @see org.globus.swift.catalog.types.SysInfo
      * @see org.globus.swift.catalog.util.Profile
      */
@@ -754,11 +758,11 @@ public class File
         String version,
         String physicalname, TCType type,
         String resourceid,
-        List pfnprofiles, List lfnprofiles,
+        List<Profile> pfnprofiles, List<Profile> lfnprofiles,
         SysInfo system ) throws
         Exception {
 
-        TransformationCatalogEntry entry = new TransformationCatalogEntry();
+        TCEntry entry = new TCEntry();
         entry.setLogicalNamespace( namespace );
         entry.setLogicalName( name );
         entry.setLogicalVersion( version );
@@ -768,25 +772,25 @@ public class File
         entry.setProfiles( lfnprofiles );
         entry.setProfiles( pfnprofiles );
         entry.setSysInfo( system );
-
-        Map lfnMap = null;
+        
+        Map<String, List<TCEntry>> lfnMap = null;
         if ( mTreeMap.containsKey( resourceid ) ) {
-            lfnMap = ( Map ) mTreeMap.get( resourceid );
+            lfnMap = mTreeMap.get( resourceid );
         } else {
-            lfnMap = new TreeMap();
+            lfnMap = new TreeMap<String, List<TCEntry>>();
             mTreeMap.put( resourceid, lfnMap );
         }
 
-        List pfnList = null;
+        List<TCEntry> pfnList = null;
         if ( lfnMap.containsKey( entry.getLogicalTransformation() ) ) {
-            pfnList = ( List ) lfnMap.get( entry.getLogicalTransformation() );
+            pfnList = lfnMap.get( entry.getLogicalTransformation() );
         } else {
-            pfnList = new ArrayList( 2 );
+            pfnList = new ArrayList<TCEntry>( 2 );
             lfnMap.put( entry.getLogicalTransformation(), pfnList );
         }
         boolean add = true;
-        for ( Iterator i = pfnList.iterator(); i.hasNext(); ) {
-            TransformationCatalogEntry test = ( TransformationCatalogEntry ) i.
+        for ( Iterator<TCEntry> i = pfnList.iterator(); i.hasNext(); ) {
+            TCEntry test = i.
                 next();
             if ( test.equals( entry ) ) {
                 add = false;
@@ -968,19 +972,15 @@ public class File
                 "Unable to open TC File for writing\"" + mTCFile, e);
         }
         int count = 0;
-        for ( Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
+        for (Map<String,List<TCEntry>> map : 
+            mTreeMap.values()) {
             //get all the values from the main map
-            for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
-                j.hasNext(); ) {
+            for (List<TCEntry> list : map.values()) {
                 //for each resource and each logical transformatino get the arraylist.
-                for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
-                    //start printing each entry
-                    writer.println( ( ( TransformationCatalogEntry ) k.next() ).
-                        toTCString() );
+                for (TCEntry entry : list) {
+                    writer.println(entry.toTCString());
                     count++;
-
                 }
-
             }
         }
         if (logger.isDebugEnabled()) {
@@ -1037,16 +1037,12 @@ public class File
                 " was not found");
             logger.warn( "Considering it as Empty TC");
             return true;
-        } catch ( IOException e ) {
-            logger.error( "Unable to open the file " +
-                mTCFile, e);
-            return false;
-        }
+        } 
         return result;
     }
 
     /**
-     * Adds multiple entries into the TC.  Calls the above api multiple times.
+     * Adds multiple entries into the TC.  Calls the above API multiple times.
      *
      * @param reader  the input stream from where to read the contents of the
      *                transformation catalog.
@@ -1064,8 +1060,8 @@ public class File
                 linecount++;
                 if ( ! ( line.startsWith( "#" ) ||
                     line.trim().equalsIgnoreCase( "" ) ) ) {
-                    TransformationCatalogEntry tc = new
-                        TransformationCatalogEntry();
+                    TCEntry tc = new
+                        TCEntry();
                     String[] tokens = line.split( "[ \t]+", 6 );
                     for ( int i = 0; i < tokens.length; i++ ) {
                         switch ( i ) {
@@ -1122,17 +1118,17 @@ public class File
 
                     //   mLogger.logMessage("Loading line number" + linecount +
                     //                    " to the map", 1);
-                    Map lfnMap = null;
+                    Map<String, List<TCEntry>> lfnMap = null;
                     if ( !mTreeMap.containsKey( tc.getResourceId() ) ) {
-                        lfnMap = new TreeMap();
+                        lfnMap = new TreeMap<String, List<TCEntry>>();
                     } else {
-                        lfnMap = ( Map ) mTreeMap.get( tc.getResourceId() );
+                        lfnMap = mTreeMap.get( tc.getResourceId() );
                     }
-                    List entries = null;
+                    List<TCEntry> entries = null;
                     if ( !lfnMap.containsKey( tc.getLogicalTransformation() ) ) {
-                        entries = new ArrayList( 3 );
+                        entries = new ArrayList<TCEntry>( 3 );
                     } else {
-                        entries = ( List ) lfnMap.get( tc.
+                        entries = lfnMap.get( tc.
                             getLogicalTransformation() );
                     }
                     entries.add( tc );
@@ -1173,7 +1169,6 @@ public class File
      * @param msg  the message to be logged.
      */
     protected void logMessage( String msg ) {
-        //mLogger.logMessage("[Shishir] Transformation Catalog : " + msg);
+        logger.debug(msg);
     }
-
 }

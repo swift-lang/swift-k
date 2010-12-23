@@ -20,6 +20,7 @@ package org.globus.swift.catalog;
 
 import org.globus.swift.catalog.types.SysInfo;
 import org.globus.swift.catalog.types.TCType;
+import org.globus.swift.catalog.util.Profile;
 
 import java.util.List;
 
@@ -47,9 +48,9 @@ public interface TransformationCatalog
      * @return List Returns a list of TransformationCatalogEntry objects containing the corresponding entries from the TC. Returns null if no entry found.
      * @throws Exception
      * @see org.globus.swift.catalog.types.TCType
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      */
-    List getTCEntries( String namespace, String name, String version,
+    List<TCEntry> getTCEntries( String namespace, String name, String version,
         String resourceid, TCType type ) throws Exception;
 
     /**
@@ -62,10 +63,10 @@ public interface TransformationCatalog
      * @return List Returns a list of TransformationCatalogEntry objects containing the corresponding entries from the TC. Returns null if no entry found.
      * @throws Exception
      * @see org.globus.swift.catalog.types.TCType
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      */
-    List getTCEntries( String namespace, String name, String version,
-        List resourceids, TCType type ) throws Exception;
+    List<TCEntry> getTCEntries( String namespace, String name, String version,
+        List<String> resourceids, TCType type ) throws Exception;
 
     /**
      * Get the list of Resource ID's where a particular transformation may reside.
@@ -79,7 +80,7 @@ public interface TransformationCatalog
      * @throws  Exception NotImplementedException if not implemented
      * @see org.globus.swift.catalog.types.TCType
      */
-    List getTCResourceIds( String namespace, String name, String version,
+    List<String> getTCResourceIds( String namespace, String name, String version,
         TCType type ) throws Exception;
 
     /**
@@ -100,7 +101,7 @@ public interface TransformationCatalog
      * @see org.globus.swift.catalog.types.TCType
      * @see org.globus.swift.catalog.types.SysInfo
      */
-    List getTCPhysicalNames( String namespace, String name,
+    List<Object> getTCPhysicalNames( String namespace, String name,
         String version,
         String resourceid, TCType type ) throws
         Exception;
@@ -165,7 +166,7 @@ public interface TransformationCatalog
      * @param tcentry List Takes a list of TransformationCatalogEntry objects as input
      * @throws Exception
      * @return boolean Return true if succesful, false if error. Exception is thrown when error occurs.
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      */
     boolean addTCEntry( List tcentry ) throws Exception;
 
@@ -183,14 +184,14 @@ public interface TransformationCatalog
      * @param sysinfo     SysInfo  The System information associated with a physical transformation.
      * @throws Exception
      * @return boolean   Returns true if succesfully added, returns false if error and throws exception.
-     * @see org.globus.swift.catalog.TransformationCatalogEntry
+     * @see org.globus.swift.catalog.TCEntry
      * @see org.globus.swift.catalog.types.SysInfo
      * @see org.globus.swift.catalog.util.Profile
      */
     boolean addTCEntry( String namespace, String name, String version,
         String physicalname, TCType type,
         String resourceid,
-        List lfnprofiles, List pfnprofiles,
+        List<Profile> lfnprofiles, List<Profile> pfnprofiles,
         SysInfo sysinfo ) throws
         Exception;
 

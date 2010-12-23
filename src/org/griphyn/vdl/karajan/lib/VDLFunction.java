@@ -29,7 +29,7 @@ import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
-import org.globus.swift.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.InHook;
@@ -550,7 +550,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	private static Set warnset = new HashSet();
 
-	protected TransformationCatalogEntry getTCE(TCCache tc, FQN fqn, BoundContact bc) {
+	protected TCEntry getTCE(TCCache tc, FQN fqn, BoundContact bc) {
 		List l;
 		try {
 			l = tc.getTCEntries(fqn, bc.getHost(), TCType.INSTALLED);
@@ -573,7 +573,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 				}
 			}
 		}
-		return (TransformationCatalogEntry) l.get(0);
+		return (TCEntry) l.get(0);
 	}
 
 	public static final String TC = "vdl:TC";

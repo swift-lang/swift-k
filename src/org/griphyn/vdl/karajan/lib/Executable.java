@@ -8,7 +8,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.swift.catalog.TransformationCatalogEntry;
+import org.globus.swift.catalog.TCEntry;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.util.FQN;
 
@@ -24,7 +24,7 @@ public class Executable extends VDLFunction {
 		TCCache tc = getTC(stack);
 		String tr = TypeUtil.toString(PA_TR.getValue(stack));
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
-		TransformationCatalogEntry tce = getTCE(tc, new FQN(tr), bc);
+		TCEntry tce = getTCE(tc, new FQN(tr), bc);
 		if (tce == null) {
 			return tr;
 		}

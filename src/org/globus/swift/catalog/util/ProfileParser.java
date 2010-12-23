@@ -17,8 +17,6 @@ package org.globus.swift.catalog.util;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.Iterator;
 
 /**
@@ -104,11 +102,11 @@ public class ProfileParser
    * @throws ProfileParserException if the input cannot be recognized
    * @see #combine( List m )
    */
-  public static List parse( String s )
+  public static List<Profile> parse( String s )
     throws ProfileParserException
   {
     char ch = '?';
-    List result = new ArrayList();
+    List<Profile> result = new ArrayList<Profile>();
 
     // sanity check
     if ( s == null ) return result;
@@ -200,7 +198,7 @@ public class ProfileParser
    * empty (FIXME: should it be "null" or null?) for an empty list.
    * @see #parse( String s )
    */
-  public static String combine( List l )
+  public static String combine( List<Profile> l )
   {
     StringBuffer result = new StringBuffer();
 
@@ -245,8 +243,8 @@ public class ProfileParser
     // faster, shorter, less mem, retains ordering; alas, no minimal output
     boolean flag = false;
     String previous = "invalid namespace";
-    for ( Iterator i=l.iterator(); i.hasNext(); ) {
-      Profile p = (Profile) i.next();
+    for ( Iterator<Profile> i=l.iterator(); i.hasNext(); ) {
+      Profile p = i.next();
       String ns = p.getProfileNamespace();
       if ( ns.equals(previous) ) result.append(',');
       else {
@@ -278,12 +276,10 @@ public class ProfileParser
    */
   public static void main( String args[] )
   {
-    ProfileParser me = new ProfileParser();
-
     for ( int i=0; i<args.length; ++i ) {
       System.out.println( "input string in next line\n" + args[i] );
-      List l = null;
-      try { l = me.parse(args[i]); }
+      List<Profile> l = null;
+      try { l = ProfileParser.parse(args[i]); }
       catch ( ProfileParserException ppe ) {
 	for ( int x=1; x<ppe.getPosition(); ++x ) System.err.print(' ');
 	System.err.println( "^" );
@@ -292,7 +288,7 @@ public class ProfileParser
 	continue;
       }
       System.out.println( "output mappings in next line\n" + l.toString() );
-      String s = me.combine(l);
+      String s = ProfileParser.combine(l);
       System.out.println( "recombination in next line\n" + s );
       System.out.println();
     }
