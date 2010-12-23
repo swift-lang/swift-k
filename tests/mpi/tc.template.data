@@ -19,6 +19,4 @@ localhost 	cp 		/bin/cp	        INSTALLED	INTEL32::LINUX	null
 
 # hydra-tests-2
 
-coasterslocal 	mpi_cp 		_PWD_/mpi-cp    INSTALLED	INTEL32::LINUX	globus::hostCount=2
-
-# coasterslocal 	mpi_cp 		/bin/false    INSTALLED	INTEL32::LINUX	globus::hostCount=2
+coasterslocal 	mpi_cp 		_DIR_/mpi-cp    INSTALLED	INTEL32::LINUX	globus::hostCount=2

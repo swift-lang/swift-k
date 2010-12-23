@@ -1,5 +1,11 @@
-/*
+
+/**
  * Simple Hydra test
+ *
+ * usage: mpi-cp <input> <output>
+ *
+ * Rank 0 reads the input file and sends it to rank 1.
+ * Rank 1 recvs the data and writes the output.
  */
 
 #include <assert.h>
