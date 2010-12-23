@@ -396,20 +396,19 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     private String[] buildCmdArray(JobSpecification spec) {
-        List arguments = spec.getArgumentsAsList();
+        List<String> arguments = spec.getArgumentsAsList();
         String[] cmdarray = new String[arguments.size() + 1];
 
         cmdarray[0] = spec.getExecutable();
-        Iterator i = arguments.iterator();
         int index = 1;
-        while (i.hasNext()) {
-            cmdarray[index++] = (String) i.next();
-        }
+        for (String arg : arguments)
+            cmdarray[index++] = arg;
+        
         return cmdarray;
     }
 
     private String[] buildEnvp(JobSpecification spec) {
-        Collection names = spec.getEnvironmentVariableNames();
+        Collection<String> names = spec.getEnvironmentVariableNames();
         if (names.size() == 0) {
             /*
              * Questionable. An envp of null will cause the parent environment
@@ -420,12 +419,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             return null;
         }
         String[] envp = new String[names.size()];
-        Iterator i = names.iterator();
         int index = 0;
-        while (i.hasNext()) {
-            String name = (String) i.next();
-            envp[index++] = name + "=" + spec.getEnvironmentVariable(name);
-        }
+        for (String name : names) 
+            envp[index++] = name + "=" + 
+            spec.getEnvironmentVariable(name);
+        
         return envp;
     }
 
@@ -486,10 +484,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private class Processor implements Runnable {
         private Process p;
-        private List streamPairs;
+        private List<StreamPair> streamPairs;
         byte[] buf;
 
-        public Processor(Process p, List streamPairs) {
+        public Processor(Process p, List<StreamPair> streamPairs) {
             this.p = p;
             this.streamPairs = streamPairs;
         }
@@ -533,12 +531,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
         private boolean processPairs() throws IOException {
             boolean any = false;
-            Iterator i = streamPairs.iterator();
-            while (i.hasNext()) {
+         
+            for (StreamPair sp : streamPairs) {
                 if (buf == null) {
                     buf = new byte[BUFFER_SIZE];
                 }
-                StreamPair sp = (StreamPair) i.next();
                 
                 try {
                     int avail = sp.is.available();
@@ -575,9 +572,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         private void closePairs() throws IOException {
-            Iterator i = streamPairs.iterator();
-            while (i.hasNext()) {
-                StreamPair sp = (StreamPair) i.next();
+            for (StreamPair sp : streamPairs) { 
                 sp.os.close();
                 sp.is.close();
             }
