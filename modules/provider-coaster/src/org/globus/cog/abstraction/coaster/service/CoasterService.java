@@ -384,6 +384,10 @@ public class CoasterService extends GSSService {
         }
     }
 
+    public static void error(int code, String msg) { 
+        error(code, msg, null);
+    }
+    
     public static void error(int code, String msg, Throwable t) {
         if (msg != null) {
             System.err.println(msg);
