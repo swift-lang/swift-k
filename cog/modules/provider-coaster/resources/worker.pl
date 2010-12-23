@@ -102,7 +102,7 @@ use constant IOBUFSZ => 32768;
 use constant HEARTBEAT_INTERVAL => 2 * 60;
 
 # If true, enable a profile result that is written to the log
-my $PROFILE = 1;
+my $PROFILE = 0;
 # Contains tuples (EVENT, PID, TIMESTAMP) (flattened)
 my @PROFILE_EVENTS = ();
 
@@ -750,12 +750,13 @@ sub register {
 sub writeprofile {
 	if ($PROFILE) {
 		wlog(INFO, "PROFILE_INFO:\n");
-		while (scalar(@PROFILE_EVENTS)) { 
+		while (scalar(@PROFILE_EVENTS)) {
 			my $event     = shift(@PROFILE_EVENTS);
 			my $pid       = shift(@PROFILE_EVENTS);
 			my $timestamp = shift(@PROFILE_EVENTS);
-			wlog(INFO, sprintf("PROFILE: %-5s %6d %.3f\n", 
-                               $event, $pid, $timestamp));
+			my $pidnum    = ( $pid =~ /\d+/ ) ? $pid : 0;
+			wlog(INFO, sprintf("PROFILE: %-5s %6d %.3f\n",
+                               $event, $pidnum, $timestamp));
 		}
 	}
 }
@@ -766,7 +767,7 @@ sub shutdownw {
 	sendReply($tag, ("OK"));
 	wlog INFO, "Acknowledged shutdown.\n";
 	wlog INFO, "Ran a total of $JOB_COUNT jobs\n";
-	if ($PROFILE) { 
+	if ($PROFILE) {
 		push(@PROFILE_EVENTS, "STOP", "N/A", time());
 	}
 	writeprofile();
@@ -1408,7 +1409,7 @@ sub forkjob {
 				pid => $pid,
 				pipe => \*PARENT_R
 				};
-			if ($PROFILE) { 
+			if ($PROFILE) {
 				push(@PROFILE_EVENTS, "FORK", $pid, time());
 			}
 		}
@@ -1506,20 +1507,18 @@ sub runjob {
 	my $stderr = $$JOB{"stderr"};
 
 	my $cwd = getcwd();
-	wlog DEBUG, "CWD: $cwd\n";
-	wlog DEBUG, "Running $executable\n";
-	if (defined $$JOB{directory}) {
-		wlog DEBUG, "Directory: $$JOB{directory}\n";
-	}
+	# wlog DEBUG, "CWD: $cwd\n";
+	# wlog DEBUG, "Running $executable\n";
 	my $ename;
 	foreach $ename (keys %$JOBENV) {
 		$ENV{$ename} = $$JOBENV{$ename};
 	}
     $ENV{"SWIFT_JOB_SLOT"} = $JOBSLOT;
     $ENV{"SWIFT_WORKER_PID"} = $WORKERPID;
-	wlog DEBUG, "Command: @$JOBARGS\n";
 	unshift @$JOBARGS, $executable;
+	wlog DEBUG, "Command: @$JOBARGS\n";
 	if (defined $$JOB{directory}) {
+		wlog DEBUG, "chdir: $$JOB{directory}\n";
 	    chdir $$JOB{directory};
 	}
 	if (defined $stdout) {
@@ -1533,7 +1532,7 @@ sub runjob {
 		open STDERR, ">$stderr" or die "Cannot redirect STDERR";
 	}
 	close STDIN;
-	wlog DEBUG, "Command: @$JOBARGS\n";
+
 	exec { $executable } @$JOBARGS or print $WR "Could not execute $executable: $!\n";
 	die "Could not execute $executable: $!";
 }
