@@ -11,7 +11,6 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,8 @@ import org.globus.cog.abstraction.interfaces.Task;
  * coupled with a Task object based on the ID.
  */
 public class NotificationManager {
-    public static final Logger logger = Logger.getLogger(NotificationManager.class);
+    public static final Logger logger = 
+        Logger.getLogger(NotificationManager.class);
 
     private static NotificationManager def;
 
@@ -39,38 +39,37 @@ public class NotificationManager {
         return def;
     }
 
-    private Map tasks;
-    private Map pending;
+    private Map<String, Task> tasks;
+    private Map<String, List<Status>> pending;
     private long lastNotificationTime;
 
     public NotificationManager() {
-        tasks = new HashMap();
-        pending = new HashMap();
+        tasks = new HashMap<String, Task>();
+        pending = new HashMap<String, List<Status>>();
         lastNotificationTime = System.currentTimeMillis();
     }
 
     public void registerTask(String id, Task task) {
-        LinkedList p;
+        List<Status> p;
         synchronized (tasks) {
             tasks.put(id, task);
-            p = (LinkedList) pending.remove(id);
+            p = pending.remove(id);
         }
-        if (p != null) {
-            Iterator i = p.iterator();
-            while (i.hasNext()) {
-                setStatus(task, (Status) i.next());
-            }
-        }
+        if (p != null)
+            for (Status status : p)
+                setStatus(task, status);
     }
 
     public void notificationReceived(String id, Status s) {
+        if (logger.isDebugEnabled())
+            logger.debug("recvd: for: " + id + " " + s);
         Task task;
         synchronized (tasks) {
             if (s.isTerminal()) {
-                task = (Task) tasks.remove(id);
+                task = tasks.remove(id);
             }
             else {
-                task = (Task) tasks.get(id);
+                task = tasks.get(id);
             }
             lastNotificationTime = System.currentTimeMillis();
         }
@@ -117,28 +116,29 @@ public class NotificationManager {
     }
 
     private void addPending(String id, Status status) {
-        LinkedList p = (LinkedList) pending.get(id);
+        List<Status> p = pending.get(id);
         if (p == null) {
-            p = new LinkedList();
+            p = new LinkedList<Status>();
             pending.put(id, p);
         }
-        p.addLast(status);
+        p.add(status);
     }
 
-    public void serviceTaskEnded(ServiceContact contact, String msg) {
-        List ts;
+    public void serviceTaskEnded(ServiceContact contact1, 
+                                 String msg) {
+        List<Task> ts;
         synchronized (tasks) {
-            ts = new ArrayList(tasks.values());
+            ts = new ArrayList<Task>(tasks.values());
         }
-        Iterator i = ts.iterator();
-        logger.info(contact.toString());
-        while (i.hasNext()) {
-            Task t = (Task) i.next();
-            logger.info(t.getService(0).getServiceContact().toString());
-            if (t.getService(0).getServiceContact().equals(contact)) {
-                notificationReceived(t.getIdentity().toString(), new StatusImpl(Status.FAILED, msg,
-                    null));
-            }
+        logger.info(contact1.toString());
+        for (Task t : ts) {
+            ServiceContact contact2 = 
+                t.getService(0).getServiceContact();
+            logger.info(contact2.toString());
+            if (contact2.equals(contact1))
+                notificationReceived(t.getIdentity().toString(), 
+                                     new StatusImpl(Status.FAILED, 
+                                                    msg, null));
         }
     }
 }
