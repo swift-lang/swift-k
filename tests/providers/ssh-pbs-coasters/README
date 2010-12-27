@@ -1,0 +1,3 @@
+May need to edit sites.template.xml file if work directory contained in $WORK differs on local and remote machines
+Requires auth.defaults to be set up correctly in ~/.ssh
+Requires a valid proxy - run grid-proxy-init before running this test if you haven't already

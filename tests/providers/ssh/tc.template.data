@@ -1,0 +1,8 @@
+ssh 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+ssh 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+ssh 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+ssh 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+ssh 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+ssh 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+ssh	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
+

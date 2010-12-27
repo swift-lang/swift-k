@@ -1,0 +1,8 @@
+ssh-pbs-coasters 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+ssh-pbs-coasters 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+ssh-pbs-coasters 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+ssh-pbs-coasters 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+ssh-pbs-coasters 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+ssh-pbs-coasters 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+ssh-pbs-coasters	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
+
