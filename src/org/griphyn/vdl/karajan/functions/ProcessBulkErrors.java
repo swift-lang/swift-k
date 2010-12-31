@@ -90,31 +90,39 @@ public class ProcessBulkErrors extends AbstractFunction {
 	}
 
 	public static String getMessageChain(Throwable e) {
+	    Throwable orig = e;
 		StringBuffer sb = new StringBuffer();
 		String prev = null;
-        boolean first = true;
+		String lastmsg = null;
+		boolean first = true;
 		while (e != null) {
 			String msg;
 			if (e instanceof NullPointerException || e instanceof ClassCastException) {
 			    CharArrayWriter caw = new CharArrayWriter();
 			    e.printStackTrace(new PrintWriter(caw));
 			    msg = caw.toString();
+
 			}
 			else {
 			    msg = e.getMessage();
+			    if(msg != null){
+			    lastmsg = msg;
+			    }
+
 			}
 			if (msg != null && (prev == null || prev.indexOf(msg) == -1)) {
-                if (!first) {
-                    sb.append("\nCaused by:\n\t");
-                }
-                else {
-                    first = false;
-                }
-				sb.append(msg);
-                prev = msg;
+			    if (!first) {
+				sb.append("\nCaused by:\n\t");
+			    }
+			    else {
+				first = false;
+			    }
+			    sb.append(msg);
+			    lastmsg = msg;
+			    prev = msg;
 			}
-            e = e.getCause();
+			e = e.getCause();
 		}
-		return sb.toString();
+		return lastmsg;
 	}
 }
