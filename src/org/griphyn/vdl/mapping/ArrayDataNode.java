@@ -42,6 +42,24 @@ public class ArrayDataNode extends DataNode {
 			}
 		}
 	}
+	
+	/** Recursively closes arrays through a tree of arrays and complex
+        types. */
+    public void closeDeep() {
+        assert(this.getType().isArray());
+        if (!this.isClosed()) {
+            closeShallow();
+        }
+        Map handles = getHandles();
+        synchronized (handles) {
+            Iterator i = handles.entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                AbstractDataNode child = (AbstractDataNode) e.getValue();
+                child.closeDeep();
+            }
+        }
+    }
 
 	
 	public boolean isArray() {

@@ -179,7 +179,7 @@ public class Path {
 	}
 	
 	public String getLast() {
-	    return ((Entry) elements.get(elements.size() - 1)).name;
+		return ((Entry) elements.get(elements.size() - 1)).name;
 	}
 
 	public boolean isEmpty() {
