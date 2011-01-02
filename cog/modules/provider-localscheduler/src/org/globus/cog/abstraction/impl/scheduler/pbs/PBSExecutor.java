@@ -77,7 +77,8 @@ public class PBSExecutor extends AbstractExecutor {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
-		wr.write("#PBS -S /bin/sh\n");
+		
+		wr.write("#PBS -S /bin/bash\n");
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
@@ -86,14 +87,18 @@ public class PBSExecutor extends AbstractExecutor {
 		writeAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
+		
 		for (String name : spec.getEnvironmentVariableNames()) {
 			wr.write(name);
 			wr.write('=');
 			wr.write(quote(spec.getEnvironmentVariable(name)));
 			wr.write('\n');
 		}
-		if(spec.getEnvironmentVariableNames().size() > 0 )
+		
+		if (spec.getEnvironmentVariableNames().size() > 0) {
 		    wr.write("#PBS -v " + makeList(spec.getEnvironmentVariableNames()) + '\n');
+		}
+		
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
@@ -106,7 +111,8 @@ public class PBSExecutor extends AbstractExecutor {
 		
 		if (multiple) {
 		    writeMultiJobPreamble(wr, exitcodefile);
-        }
+		}
+		
 		if (type != null) {
 			String wrapper = 
 			    properties.getProperty("wrapper." + type);
@@ -163,8 +169,8 @@ public class PBSExecutor extends AbstractExecutor {
         }
         return sb.toString();
     }
-
-    protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
+	
+	protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
             throws IOException {
         wr.write("NODES=`cat $PBS_NODEFILE`\n");
         wr.write("ECF=" + exitcodefile + "\n");
@@ -173,6 +179,7 @@ public class PBSExecutor extends AbstractExecutor {
         wr.write("  echo \"N\" >$ECF.$INDEX\n");
         wr.write("  ssh $NODE /bin/bash -c \\\" \"");
     }
+
 
 	protected String getName() {
 		return "PBS";

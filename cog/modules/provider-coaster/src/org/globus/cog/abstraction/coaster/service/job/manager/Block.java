@@ -261,17 +261,20 @@ public class Block implements StatusListener, Comparable<Block> {
                     }
                     count++;
                 }
-                if (!failed) {
-                    addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
-                }
+				if (!failed) {
+					if (count < workers || now) {	
+	                    addForcedShutdownWatchdog(100);
+    	            }
+					else {
+	   					addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
+					}	
+				}
+
                 if (idleTotal > 0) {
                     double u = (busyTotal * 10000) / (busyTotal + idleTotal);
                     u /= 100;
                     logger.info("Average utilization: " + u + "%");
                     bqp.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
-                }
-                if ((count < workers || now) && !failed) {
-                    addForcedShutdownWatchdog(100);
                 }
             }
             else {
