@@ -40,6 +40,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private Time starttime, endtime, timelast, donetime;
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
+	private boolean shutdown;
 
     public Cpu() {
         this.done = new ArrayList<Job>();
@@ -129,6 +130,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             if (logger.isInfoEnabled()) {
                 logger.info(block.getId() + ":" + getId() + " pull");
             }
+			if (shutdown) {
+				return;
+			}
             if (!started()) {
                 sleep();
             }
@@ -235,7 +239,11 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     public void shutdown() {
         @SuppressWarnings("hiding")
-        Block block = node.getBlock();
+		if (shutdown) {
+			return;
+		}
+		shutdown = true;
+		Block block = node.getBlock();
         done.clear();
         if (running != null) {
             logger.info(block.getId() + "-" + id + ": Job still running while shutting down");
@@ -281,6 +289,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void taskFailed(String msg, Exception e) {
+		shutdown = true;
         if (running == null) {
             if (starttime == null) {
                 starttime = Time.now();
@@ -344,5 +353,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     Node getNode() {
         return node;
+    }
+    
+    public Block getBlock() {
+    	return block;
     }
 }
