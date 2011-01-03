@@ -237,8 +237,8 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         }
     }
 
+    @SuppressWarnings("hiding")
     public void shutdown() {
-        @SuppressWarnings("hiding")
 		if (shutdown) {
 			return;
 		}
@@ -288,7 +288,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         return done;
     }
 
-    public void taskFailed(String msg, Exception e) {
+    public synchronized void taskFailed(String msg, Exception e) {
 		shutdown = true;
         if (running == null) {
             if (starttime == null) {
@@ -353,9 +353,5 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     Node getNode() {
         return node;
-    }
-    
-    public Block getBlock() {
-    	return block;
     }
 }
