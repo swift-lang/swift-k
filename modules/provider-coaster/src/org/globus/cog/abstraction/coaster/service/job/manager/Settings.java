@@ -40,7 +40,7 @@ public class Settings {
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
                     "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
                     "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn",
-                    "ldLibraryPath"};
+                    "ldLibraryPath", "workerCopies"};
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -124,6 +124,8 @@ public class Settings {
     private String workerLoggingLevel = "NONE";
     
     private String workerLibraryPath = null;
+    
+    private String workerCopies = null;
     
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
@@ -468,6 +470,14 @@ public class Settings {
      */
     public void setLdLibraryPath(String path) {
         workerLibraryPath = path;
+    }
+    
+    public String getWorkerCopies() {
+        return workerCopies;
+    }
+    
+    public void setWorkerCopies(String copies) { 
+        workerCopies = copies;
     }
     
     public void set(String name, String value)
