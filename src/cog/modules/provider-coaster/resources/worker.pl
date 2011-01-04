@@ -174,6 +174,11 @@ use constant {
 };
 my %PINNED_WAITING = ();
 
+sub crash {
+	wlog ERROR, @_;
+	die @_;
+}
+
 sub logfilename {
 	$LOGDIR = shift;
 	$BLOCKID = shift;
@@ -315,6 +320,20 @@ sub logsetup() {
 	wlog DEBUG, "host=$hosts\n";
 	wlog DEBUG, "port=$ports\n";
 	wlog DEBUG, "blockid=$BLOCKID\n";
+}
+
+# Accepts colon-separated paths, e.g., "/d1/f1:/d2/f2:/d1/f3:/d4/g4"
+# Copies /d1/f1 to /d2/f2 and copies /d1/f3 to /d4/g4
+sub workerCopies {
+	my ($arg) = @_;
+	my @tokens = split(/:/, $arg);
+	for (my $i = 0; $i < scalar(@tokens); $i+=2) {
+		my $src = $tokens[$i];
+		my $dst = $tokens[$i+1];
+		wlog DEBUG, "workerCopies: $src -> $dst\n";
+		copy($src, $dst) or
+			crash "workerCopies: copy failed: $src -> $dst\n";
+	}
 }
 
 sub sendm {
@@ -1548,6 +1567,10 @@ wlog(INFO, "Running on node $myhost\n");
 # wlog(INFO, "New log name: $LOGNEW \n");
 
 init();
+
+if (defined $ENV{"WORKER_COPIES"}) {
+	workerCopies($ENV{"WORKER_COPIES"});
+}
 
 mainloop();
 
