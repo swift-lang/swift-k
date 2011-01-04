@@ -123,7 +123,7 @@ public class Settings {
     
     private String workerLoggingLevel = "NONE";
     
-    private String libraryPath = null;
+    private String workerLibraryPath = null;
     
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
@@ -459,7 +459,7 @@ public class Settings {
     }
 
     public String getLdLibraryPath() {
-        return libraryPath;
+        return workerLibraryPath;
     }
     
     /** 
@@ -467,7 +467,7 @@ public class Settings {
        in its and its children's environment
      */
     public void setLdLibraryPath(String path) {
-        libraryPath = path;
+        workerLibraryPath = path;
     }
     
     public void set(String name, String value)
