@@ -326,14 +326,20 @@ sub logsetup() {
 # Copies /d1/f1 to /d2/f2 and copies /d1/f3 to /d4/g4
 sub workerCopies {
 	my ($arg) = @_;
-	my @tokens = split(/:/, $arg);
+	my @tokens = split(/[ \t]*:[ \t]*|\n/, $arg);
 	for (my $i = 0; $i < scalar(@tokens); $i+=2) {
-		my $src = $tokens[$i];
-		my $dst = $tokens[$i+1];
+		my $src = trim($tokens[$i]);
+		my $dst = trim($tokens[$i+1]);
 		wlog DEBUG, "workerCopies: $src -> $dst\n";
 		copy($src, $dst) or
 			crash "workerCopies: copy failed: $src -> $dst\n";
 	}
+}
+
+sub trim {
+	my ($arg) = @_;
+	$arg =~ s/^\s+|\s+$//g ;
+	return $arg;
 }
 
 sub sendm {
