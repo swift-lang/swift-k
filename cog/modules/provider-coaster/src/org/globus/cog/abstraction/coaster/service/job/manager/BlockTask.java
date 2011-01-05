@@ -58,10 +58,13 @@ public class BlockTask extends TaskImpl {
         if (libraryPath != null)
             spec.addEnvironmentVariable("LD_LIBRARY_PATH", 
                                         libraryPath);
-        String workerCopies = settings.getWorkerCopies(); 
-        if (workerCopies != null)
+        String workerCopies = settings.getWorkerCopies();
+        if (workerCopies != null) {
+            String workerCopiesFixed = 
+                workerCopies.trim().replaceAll("\n", ":");
             spec.addEnvironmentVariable("WORKER_COPIES", 
-                                        workerCopies.trim());
+                                        workerCopiesFixed);
+        }
         spec.addEnvironmentVariable("WORKER_LOGGING_LEVEL", settings.getWorkerLoggingLevel());
         if (logger.isDebugEnabled()) {
             logger.debug("Worker logging level: " + settings.getWorkerLoggingLevel());
