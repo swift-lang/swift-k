@@ -220,9 +220,9 @@ public class ProxyIOProvider implements IOProvider {
 
         public void start() throws IOException {
             try {
-                logger.info("Sending proxy get");
+                logger.debug("Sending proxy get");
                 cmd.executeAsync(channel, this);
-                logger.info("Proxy get sent");
+                logger.debug("Proxy get sent");
             }
             catch (ProtocolException e) {
                 logger.warn("Error requesting file from " + channel, e);
