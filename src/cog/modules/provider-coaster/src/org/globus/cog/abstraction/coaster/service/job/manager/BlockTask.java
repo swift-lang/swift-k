@@ -61,7 +61,9 @@ public class BlockTask extends TaskImpl {
         String workerCopies = settings.getWorkerCopies();
         if (workerCopies != null) {
             String workerCopiesFixed = 
-                workerCopies.trim().replaceAll("\n", ":");
+              workerCopies.trim()
+              .replaceAll("\n", ",")
+              .replaceAll(" ", "");
             spec.addEnvironmentVariable("WORKER_COPIES", 
                                         workerCopiesFixed);
         }
