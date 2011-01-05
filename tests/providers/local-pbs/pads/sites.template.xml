@@ -1,5 +1,5 @@
 <config>
-<pool handle="local-pbs">
+<pool handle="pads-pbs">
   <execution jobmanager="local:pbs" provider="local" url="none" />
   <filesystem provider="local" url="none" />
   <profile key="jobThrottle" namespace="karajan">0</profile>
