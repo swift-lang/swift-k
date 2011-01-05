@@ -326,7 +326,8 @@ sub logsetup() {
 # Copies /d1/f1 to /d2/f2 and copies /d1/f3 to /d4/g4
 sub workerCopies {
 	my ($arg) = @_;
-	my @tokens = split(/[ \t]*:[ \t]*|\n/, $arg);
+	my @tokens = split(/:/, $arg);
+	wlog TRACE, "workerCopies: $arg\n";
 	for (my $i = 0; $i < scalar(@tokens); $i+=2) {
 		my $src = trim($tokens[$i]);
 		my $dst = trim($tokens[$i+1]);
@@ -1525,6 +1526,11 @@ sub checkJobStatus {
 	return 1;
 }
 
+sub chldHandler {
+	wlog INFO, "chldHandler\n";
+	checkJobs();
+}
+
 sub runjob {
 	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID) = @_;
 	my $executable = $$JOB{"executable"};
@@ -1577,6 +1583,8 @@ init();
 if (defined $ENV{"WORKER_COPIES"}) {
 	workerCopies($ENV{"WORKER_COPIES"});
 }
+
+use sigtrap 'handler' => \&chldHandler, 'CHLD';
 
 mainloop();
 
