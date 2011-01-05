@@ -205,10 +205,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
 
         if (runerror) {
-            logger.debug("Swift finished with errors");
+            logger.info("Swift finished with errors");
         }
         else {
-            logger.debug("Swift finished with no errors");
+            logger.info("Swift finished with no errors");
         }
         if (ap.isPresent(ARG_TUI)) {
             ma.close();
