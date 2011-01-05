@@ -919,6 +919,11 @@ test_group() {
   done
 }
 
+if [[ $WORK == "" ]]
+then
+  WORK=$TOPDIR/work
+fi
+
 checkvars GROUPLISTFILE
 echo "GROUPLISTFILE: $GROUPLISTFILE"
 source $GROUPLISTFILE || exit 1
