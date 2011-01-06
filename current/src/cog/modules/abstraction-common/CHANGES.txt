@@ -1,0 +1,265 @@
+(01/21/2010)
+
+*** Added stage-in, stage-out and cleanup fields to job
+    specifications.
+
+*** Added open(Input|Output)Stream methods to file resources
+
+*** Updated version to 2.4 due to major api changes
+
+(04/07/2008)
+
+*** SecurityContextImpl, ServiceImpl, and ServiceContactImpl now
+    properly implement equals() and hashCode()
+
+(03/26/2008)
+
+*** Made a few objects serializable.
+
+*** Removed heavy use of hashtables for things where fields
+    work much better.
+    
+*** Changed implementation of Identity to be more conservative
+    towards memory usage (i.e. removed the silly URI)
+
+(02/12/2008)
+
+*** Finally fixed the notification order. A task is now 
+    guaranteed to go through the complete status lifecycle
+    and that no out-of-order status events will occur (e.g.
+    no Active after Completed). 
+
+(11/23/2007)
+
+*** Fixed broken isDirectory file operation
+
+*** Caching of file resources happens on both host name, port and
+    provider rather than just the host name
+
+(08/23/2007)
+
+*** Added ability to query for a list of providers supporting
+    a certain type of task handler.
+    
+*** Deprecated Service.JOB_SUBMISSION. Use Service.EXECUTION.
+
+(08/20/2007)
+
+*** Made the way redirection works more consistent. As it was, a flag
+    (JobSpecification.setRedirected(true)) would be used to indicate
+    that redirection was desired. That, combined with whether the 
+    stdout files were null or not, would dictate, in twisted ways, whether 
+    the output would be redirected to a remote file, a local file, or an
+    in-memory object. The way it works now is that for each file (stdin, 
+    executable, stdout, stderr) a location can be specified. The location
+    can be either memory, local or remote, or an arbitrary combination
+    of these. So, for example, the stdout could be redirected to both
+    a remote file and an in-memory object, while the stderr would be 
+    redirected to a local file. Not all providers will support all
+    combinations of these (GT2 will probably only be able to redirect
+    to one thing at a time). A few things were also deprecated as a 
+    consequence: 
+       JobSpecification.setRedirected
+       JobSpecification.setLocalExecutable
+       JobSpecification.setLocatInput
+       
+*** Oh, and application failures caused by non-zero exit codes now have
+    their own exception (JobException), which can also be used to 
+    retrieve the exit code nicely.
+
+(07/28/2007)
+
+*** Added a thirdPartyIfPossible property to file transfer specifications.
+    The behavior of the existing thirdParty flag in implementations would
+    be to fail if the flag is set to true, but no actual third party transfer
+    is possible (due to, for example, the providers not supporting it).
+    The new flag allows a lenient request to be made. If this flag is set, 
+    implementations should attempt 3rd party transfers if possible, but
+    fall back to simulating it if necessary.
+
+(05/18/2007)
+
+*** Better (more consistent) way to specify delegation
+
+(03/11/2007)
+
+*** The file operation task handler used many cascading ifs with 
+    equalsIgnoreCase tests. Better to convert the string to lowercase
+	in the beginning
+	
+*** Cleaned up some of the task handlers. They kept lists or vectors
+    of tasks in various states and did O(n) operations for things that
+	they aren't even used for in general.
+
+(02/05/2007)
+
+*** Added two methods to FileResource to allow transfers that provide
+    progress information
+
+(01/28/2007)
+
+*** Changed IOExceptions in file resources to IrrecoverableResourceExcepion.
+    It's a sub-class of FileResourceException, it allows chaining, 
+	and it is more intuitive.
+	
+*** Added better handling of irrecoverable prblems for caching handlers.
+
+(12/30/2006)
+
+*** Added FILEINFO operation to the FileOperationSpecification. It
+    returns a GridFile which contains information about a file such
+	as size, permissions, etc.
+
+-------------------------------2.2----------------------------------
+
+(11/28/2006)
+
+*** Cleaned up file resources:
+      - removed GeneralException and replaced it with FileResourceExcepion
+	    and IOException (to distinguish between protocol level errors
+		and communication problems)
+	  - added an AbstractFileResource class and moved most of the common
+	    things in the implementations there.
+
+(10/18/2006)
+
+*** Added a MKDIRS file operation (it creates a full directory path)
+
+*** Asynchronously stop cached resources
+
+(10/05/2006)
+
+*** Cleaned up the JobSpecification interface and the implementation
+
+(08/29/2006)
+
+*** Merged with abstraction-examples
+
+
+(07/24/2006)
+
+*** Replaced the broken DeferredCommitHashSet.
+
+*** Added Status.isTerminal()
+
+-------------------------------2.1----------------------------------
+
+(04/18/2006)
+
+*** Added support for partial transfers
+
+*** Removed commons-logging.jar. It was not used here
+
+(04/06/2006)
+
+*** Made the file resource cache timer a daemon
+
+*** Added JobSpecification.isDelegationEnabled() and
+    setDelegationEnabled(boolean)
+	
+*** Fixed 3rd party transfers. The file name would be appended to
+    the host without the separating slash.
+
+(11/23/2005)
+
+*** Rewrote part of the generic transfer handler. It now covers a few more cases
+    such as ssh to gridftp and back transfers. It also avoids temporary files
+	when not needed
+	
+*** Added Task.waitFor(); it blocks until the task completes/failes/is canceled
+
+(09/30/2005) 	
+
+*** Removed the old sandboxing strategy. The new one allows for 
+    concurrent requests. The context class loader is changed before a call
+    then restored after a call to a sandboxed class.
+		
+*** Updated the caching file handler to always release resources
+    after being done.
+		
+*** Added the trap logic to the factory in order to detect possibly
+    improper class path settings.
+
+(09/08/2005)
+
+*** Updated the castor jar to version 0.9.6
+
+(08/27/2005)
+
+*** Improved the Javadoc comments of the abstractions interfaces 
+
+(08/23/2005)
+
+*** Fixed Bug: 
+    http://www.cogkit.org/bugzilla/show_bug.cgi?id=32 
+
+(06/24/2005)
+
+*** Updated the thirdparty file transfer logic to get proper 
+    status notification on transfer COMPLETE in 
+    org.globus.cog.abstraction.impl.fileTransfer.DelegatedFileTransferHandler.java
+
+(06/08/2005)
+
+*** Added support for service attributes in service.xsd schema and
+    org.globus.cog.abstraction.impl.xml package
+
+(06/08/2005)
+
+*** Added support for JobManager abstractions in 
+    org.globus.cog.abstraction.interfaces.ExecutionService.java and
+    org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl.java 
+
+(05/24/2005)
+
+*** Added support for environment variables in 
+    org.globus.cog.abstraction.interfaces.JobSpecification.java and 
+    org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl.java 
+
+(05/10/2005)
+
+*** Fixed the concurrent modification of the available Vector in 
+    org.globus.cog.abstraction.impl.common.taskgraph.TaskGraphHandlerImpl.java
+
+(05/03/2005)
+
+*** Committed fixes for http://www.cogkit.org/bugzilla/show_bug.cgi?id=90 
+
+(05/02/2005)
+
+*** Made the loadProviderProperties method in AbstractionProperties
+    synchronized, so multiple parallel requests to it will work as expected.
+		
+(04/18/2005)
+
+*** Renamed the module from "core-common" to 
+    "abstraction-common"
+
+-------------------------------2.0----------------------------------
+
+(04/08/2005)
+
+*** Updated config file deployment to not fail when individual
+    files are missing, but rather copy what is available. Such behaviour
+    is not intended to make it in to a release, but it's better for testing
+		
+(03/24/2005)
+
+*** Updated the implementation of 
+    org.globus.cog.core.impl.common.task.FileOperationSpecificationImpl.java
+    to make it compatible with the updated interfaces
+
+(03/24/2005)
+
+*** Cleaned the implementation of 
+    org.globus.cog.core.impl.file.TaskHandlerImpl.java
+    and made it compatible with the updated interfaces 
+
+(03/24/2005)
+
+*** Streamlined the interface definition for 
+    FileOperationSpecification, FileResource, and 
+    GridFile	
+
+-------------------------------1.0----------------------------------
+

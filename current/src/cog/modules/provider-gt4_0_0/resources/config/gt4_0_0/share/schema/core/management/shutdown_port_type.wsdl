@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="Shutdown"
+    targetNamespace="http://wsrf.globus.org/core/shutdown"
+    xmlns:tns="http://wsrf.globus.org/core/shutdown"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <types>
+        <xsd:schema 
+            targetNamespace="http://wsrf.globus.org/core/shutdown"
+            xmlns:tns="http://wsrf.globus.org/core/shutdown"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+            <xsd:element name="shutdownRequest" type="xsd:boolean"/>
+
+            <xsd:element name="shutdownResponse">
+                <xsd:complexType/>
+            </xsd:element>
+
+        </xsd:schema>
+    </types>
+
+    <message name="ShutdownRequest">
+        <part name="request" element="tns:shutdownRequest"/>
+    </message>
+
+    <message name="ShutdownResponse">
+        <part name="response" element="tns:shutdownResponse"/>
+    </message>
+
+    <portType name="ShutdownPortType">
+        <wsdl:operation name="shutdown">
+            <wsdl:input  message="tns:ShutdownRequest"/>
+            <wsdl:output message="tns:ShutdownResponse"/>
+        </wsdl:operation>
+    </portType>
+
+</definitions>

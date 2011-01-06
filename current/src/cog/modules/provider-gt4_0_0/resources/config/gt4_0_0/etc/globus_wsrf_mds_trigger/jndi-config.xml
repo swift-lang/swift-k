@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jndiConfig xmlns="http://wsrf.globus.org/jndi/config">
+    <global>
+         <resource 
+            name="triggerEntryHome"
+            type="org.globus.mds.trigger.impl.TriggerEntryHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>
+                        org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+        <resource 
+            name="triggerHome"
+            type="org.globus.mds.trigger.impl.TriggerHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>
+                        org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+                <parameter>
+                    <name>resourceClass</name>
+                    <value>org.globus.mds.trigger.impl.TriggerResource</value>
+                </parameter>
+                <parameter>
+                    <name>resourceKeyName</name>
+                    <value>{http://mds.globus.org/inmemoryservicegroup}ServiceGroupKey</value>
+                </parameter>
+
+            </resourceParams>
+        </resource>
+    </global>
+    <service name="TriggerService">
+       <resourceLink name="home" target="java:comp/env/triggerHome"/>
+       <resourceLink name="groupHome" target="java:comp/env/triggerHome"/>
+       <resourceLink name="entryHome" target="java:comp/env/triggerEntryHome"/>
+    </service>
+
+    <service name="TriggerServiceEntry">
+       <resourceLink name="home" target="java:comp/env/triggerEntryHome"/>
+       <resourceLink name="groupHome" target="java:comp/env/triggerHome"/>
+       <resourceLink name="entryHome" target="java:comp/env/triggerEntryHome"/>
+    </service>
+
+
+    <service name="TriggerFactoryService">
+       <resourceLink name="groupHome" target="java:comp/env/triggerHome"/>
+       <resourceLink name="entryHome" target="java:comp/env/triggerEntryHome"/>
+        <resource 
+            name="home"
+            type="org.globus.wsrf.impl.ServiceResourceHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>
+                        org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+    </service>
+
+
+
+
+
+
+
+   <service name="DefaultTriggerService">
+  <resource
+            name="home"
+            type="org.globus.mds.aggregator.impl.SingletonAggregatorHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>
+                        org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+                <parameter>
+                    <name>resourceClass</name>
+                    <value>org.globus.mds.trigger.impl.TriggerResource</value>
+                </parameter>
+            </resourceParams>
+        </resource>
+
+       <resourceLink name="groupHome" target="java:comp/env/services/DefaultTriggerService/home"/>
+       <resourceLink name="entryHome" target="java:comp/env/services/DefaultTriggerServiceEntry/home"/>
+   </service>
+
+    <service name="DefaultTriggerServiceEntry">
+
+         <resource
+            name="home"
+            type="org.globus.mds.trigger.impl.TriggerEntryHome">
+            <resourceParams>
+                <parameter>
+                    <name>
+                        factory
+                    </name>
+                    <value>
+                        org.globus.wsrf.jndi.BeanFactory
+                    </value>
+                </parameter>
+            </resourceParams>
+        </resource>
+
+       <resourceLink name="groupHome" target="java:comp/env/services/DefaultTriggerService/home"/>
+       <resourceLink name="entryHome" target="java:comp/env/services/DefaultTriggerServiceEntry/home"/>
+    </service>
+
+</jndiConfig>
+

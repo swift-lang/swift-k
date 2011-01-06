@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="Counter"
+    targetNamespace="http://counter.com"
+    xmlns:tns="http://counter.com"
+    xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" 
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:gtwsdl="http://www.globus.org/namespaces/2004/01/GTWSDLExtensions"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:wsrlw=
+    "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl"
+    xmlns:wsrp=
+    "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd"
+    xmlns:wsrpw=
+    "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl"
+    xmlns:wsntw=
+    "http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.wsdl"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <wsdl:import 
+        namespace=
+        "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl"
+        location="../../../wsrf/properties/WS-ResourceProperties.wsdl" />
+
+    <wsdl:import 
+        namespace=
+        "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl"
+        location="../../../wsrf/lifetime/WS-ResourceLifetime.wsdl" />
+
+    <wsdl:import 
+        namespace=
+        "http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.wsdl"
+        location="../../../wsrf/notification/WS-BaseN.wsdl" />
+
+    <types>
+        <xsd:schema targetNamespace="http://counter.com"
+            xmlns:tns="http://counter.com"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+            <xsd:import 
+                namespace=
+                "http://schemas.xmlsoap.org/ws/2004/03/addressing"
+                schemaLocation="../../../ws/addressing/WS-Addressing.xsd" 
+                />
+
+            <xsd:element name="createCounter">
+                <xsd:complexType/>
+            </xsd:element>
+
+            <xsd:element name="createCounterResponse">
+               <xsd:complexType>
+                 <xsd:sequence> 
+                   <xsd:element ref="wsa:EndpointReference"/>
+                 </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            
+            <xsd:element name="add" type="xsd:int"/>
+            <xsd:element name="addResponse" type="xsd:int"/>
+            
+            <xsd:element name="Value" type="xsd:int"/>
+            
+            <xsd:element name="CounterRP">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="tns:Value"        
+                            minOccurs="1" maxOccurs="1"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            
+        </xsd:schema>
+    </types>
+
+    <message name="CreateCounterRequest">
+        <part name="request" element="tns:createCounter"/>
+    </message>
+    <message name="CreateCounterResponse">
+        <part name="response" element="tns:createCounterResponse"/>
+    </message>
+
+    <message name="AddInputMessage">
+        <part name="parameters" element="tns:add"/>
+    </message>
+
+    <message name="AddOutputMessage">
+        <part name="parameters" element="tns:addResponse"/>
+    </message>
+
+    <portType name="CounterPortType"
+        gtwsdl:implements="wsntw:NotificationProducer 
+                           wsrlw:ImmediateResourceTermination
+                           wsrlw:ScheduledResourceTermination"
+        wsrp:ResourceProperties ="tns:CounterRP">
+        <operation name="createCounter">
+            <input message="tns:CreateCounterRequest"/>
+            <output message="tns:CreateCounterResponse"/>
+        </operation>
+        
+        <operation name="add">
+            <input message="tns:AddInputMessage"/>
+            <output message="tns:AddOutputMessage"/>
+        </operation>
+
+    </portType>
+
+</definitions>

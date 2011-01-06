@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+
+OASIS takes no position regarding the validity or scope of any intellectual property or other rights that might be claimed to pertain to the implementation or use of the technology described in this document or the extent to which any license under such rights might or might not be available; neither does it represent that it has made any effort to identify any such rights. Information on OASIS's procedures with respect to rights in OASIS specifications can be found at the OASIS website. Copies of claims of rights made available for publication and any assurances of licenses to be made available, or the result of an attempt made to obtain a general license or permission for the use of such proprietary rights by implementors or users of this specification, can be obtained from the OASIS Executive Director.
+
+OASIS invites any interested party to bring to its attention any copyrights, patents or patent applications, or other proprietary rights which may cover technology that may be required to implement this specification. Please address the information to the OASIS Executive Director.
+
+Copyright (C) OASIS Open (2004). All Rights Reserved.
+
+This document and translations of it may be copied and furnished to others, and derivative works that comment on or otherwise explain it or assist in its implementation may be prepared, copied, published and distributed, in whole or in part, without restriction of any kind, provided that the above copyright notice and this paragraph are included on all such copies and derivative works. However, this document itself may not be modified in any way, such as by removing the copyright notice or references to OASIS, except as needed for the purpose of developing OASIS specifications, in which case the procedures for copyrights defined in the OASIS Intellectual Property Rights document must be followed, or as required to translate it into languages other than English. 
+
+The limited permissions granted above are perpetual and will not be revoked by OASIS or its successors or assigns. 
+
+This document and the information contained herein is provided on an "AS IS" basis and OASIS DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+-->
+<wsdl:definitions name="WS-BaseNotification"
+  xmlns="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" 
+  xmlns:wsp="http://schemas.xmlsoap.org/ws/2002/12/policy" 
+  xmlns:wsnt=
+    "http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd"
+  xmlns:wsntw=
+    "http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.wsdl"
+  xmlns:wsrp=
+    "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd"
+  xmlns:wsrpw=
+    "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl"
+  xmlns:wsbf=
+  "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+  xmlns:wsrl=
+    "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd"
+  xmlns:wsrlw=
+    "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl"
+  targetNamespace=
+ "http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.wsdl">
+ 
+<!-- ========================== Imports =========================== --> 
+   <wsdl:import 
+       namespace=
+  "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" 
+       location="../properties/WS-ResourceProperties.wsdl" />
+       
+   <wsdl:import 
+       namespace=
+  "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl" 
+       location="../lifetime/WS-ResourceLifetime.wsdl" />
+       
+<!-- ===================== Types Definitions ====================== -->
+   <wsdl:types>
+      <xsd:schema 
+        targetNamespace=
+ "http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd" 
+       elementFormDefault="qualified"  
+       attributeFormDefault="unqualified">
+ 
+         <xsd:include schemaLocation="WS-BaseN.xsd" />
+          
+         <xsd:import 
+            namespace=
+            "http://schemas.xmlsoap.org/ws/2004/03/addressing"
+            schemaLocation="../../ws/addressing/WS-Addressing.xsd"/>
+
+       <xsd:import 
+          namespace=
+       "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+          schemaLocation="../faults/WS-BaseFaults.xsd"/>
+
+         <xsd:import namespace=
+  "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd" 
+              schemaLocation="../properties/WS-ResourceProperties.xsd"/>
+
+         <xsd:import 
+            namespace=
+  "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd"
+              schemaLocation="../lifetime/WS-ResourceLifetime.xsd"/>
+               
+<!-- =============== Resource Property Related  =================== -->
+<!-- ======== Resource Properties for NotificationProducer ======== -->
+         <xsd:element name="NotificationProducerRP" >
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:element ref="wsnt:Topic"        
+                               minOccurs="1" maxOccurs="unbounded" />
+                  <xsd:element ref="wsnt:FixedTopicSet"        
+                               minOccurs="1" maxOccurs="1" />
+                  <xsd:element ref="wsnt:TopicExpressionDialects"
+                               minOccurs="1" maxOccurs="unbounded" />
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+
+<!-- ======== Resource Properties for SubscriptionManager ========= -->       
+         <xsd:element name="SubscriptionManagerRP" >
+            <xsd:complexType>
+               <xsd:sequence>
+         <!-- From WS-ResourceLifetime ScheduledResourceTermination -->
+                  <xsd:element ref="wsrl:CurrentTime" 
+                               minOccurs="1" maxOccurs="1" />
+                  <xsd:element ref="wsrl:TerminationTime" 
+                               minOccurs="1" maxOccurs="1" />
+                               
+         <!-- SubscriptionManager specific  -->
+                  <xsd:element ref="wsnt:ConsumerReference"        
+                               minOccurs="1" maxOccurs="1" />
+                  <xsd:element ref="wsnt:TopicExpression"
+                               minOccurs="1" maxOccurs="1" />
+                  <xsd:element ref="wsnt:UseNotify"
+                               minOccurs="1" maxOccurs="1" />
+                  <xsd:element ref="wsnt:Precondition"
+                               minOccurs="0" maxOccurs="1" />
+                  <xsd:element ref="wsnt:Selector"
+                               minOccurs="0" maxOccurs="1" />
+                  <xsd:element ref="wsnt:SubscriptionPolicy" 
+                               minOccurs="0" maxOccurs="1" />
+                  <xsd:element ref="wsnt:CreationTime" 
+                               minOccurs="0" maxOccurs="1" />
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+
+<!-- ================== Message Helper Types  ===================== -->
+         <xsd:complexType name="NotificationMessageHolderType" >
+            <xsd:sequence>
+               <xsd:element name="Topic" 
+                            type="wsnt:TopicExpressionType" 
+                            minOccurs="1" maxOccurs="1" />
+               <xsd:element name="ProducerReference" 
+                            type="wsa:EndpointReferenceType" 
+                            minOccurs="0" maxOccurs="1" />
+               <xsd:element name="Message" type="xsd:anyType" 
+                            minOccurs="1" maxOccurs="1" />
+            </xsd:sequence>
+         </xsd:complexType>
+
+<!-- ========== Message Types for NotificationConsumer  =========== -->
+         <xsd:element name="Notify" >
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:element name="NotificationMessage"
+                            type="wsnt:NotificationMessageHolderType"
+                            minOccurs="1" maxOccurs="unbounded" />
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+
+<!-- ========== Message Types for NotificationProducer  =========== -->
+        
+         <xsd:element name="SubscribeResponse">
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:element name="SubscriptionReference" 
+                               type="wsa:EndpointReferenceType"
+                               minOccurs="0" maxOccurs="1" />
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+                  
+         <xsd:element name="GetCurrentMessage">
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:element name="Topic" 
+                           type="wsnt:TopicExpressionType" />
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+
+         <xsd:element name="GetCurrentMessageResponse">
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:any />
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+
+         <xsd:complexType name="ResourceUnknownFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="ResourceUnknownFault" 
+                      type="wsnt:ResourceUnknownFaultType"/>
+
+         <xsd:complexType name="SubscribeCreationFailedFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="SubscribeCreationFailedFault" 
+                      type="wsnt:SubscribeCreationFailedFaultType"/>
+
+         <xsd:complexType name="TopicPathDialectUnknownFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="TopicPathDialectUnknownFault" 
+                      type="wsnt:TopicPathDialectUnknownFaultType"/>
+
+         <xsd:complexType name="InvalidTopicExpressionFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="InvalidTopicExpressionFault" 
+                      type="wsnt:InvalidTopicExpressionFaultType"/>
+
+         <xsd:complexType name="TopicNotSupportedFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="TopicNotSupportedFault" 
+                      type="wsnt:TopicNotSupportedFaultType"/>
+
+         <xsd:complexType name="NoCurrentMessageOnTopicFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="NoCurrentMessageOnTopicFault" 
+                      type="wsnt:NoCurrentMessageOnTopicFaultType"/>
+
+
+<!-- ========== Message Types for SubscriptionManager  =========== -->
+
+         <xsd:element name="PauseSubscription">
+            <xsd:complexType/>
+         </xsd:element>
+
+         <xsd:element name="PauseSubscriptionResponse">
+            <xsd:complexType/>
+         </xsd:element>
+
+         <xsd:element name="ResumeSubscription">
+            <xsd:complexType/>
+         </xsd:element>
+
+         <xsd:element name="ResumeSubscriptionResponse">
+            <xsd:complexType/>
+         </xsd:element>
+
+         <xsd:complexType name="PauseFailedFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="PauseFailedFault" 
+                      type="wsnt:PauseFailedFaultType"/>
+
+         <xsd:complexType name="ResumeFailedFaultType">
+            <xsd:complexContent>
+               <xsd:extension base="wsbf:BaseFaultType"/>
+            </xsd:complexContent>
+         </xsd:complexType>
+         <xsd:element name="ResumeFailedFault" 
+                      type="wsnt:ResumeFailedFaultType"/>
+
+
+      </xsd:schema>
+   </wsdl:types>       
+
+<!-- ================ NotificationConsumer::Notify ================ 
+  Notify(
+    NotificationMessage
+      (TopicExpression, ProducerReference, Message)*
+  returns: n/a (one way)
+-->
+  <wsdl:message name="Notify">
+    <wsdl:part name="Notify" element="wsnt:Notify"/>
+  </wsdl:message>
+
+<!-- ============== NotificationProducer::Subscribe =============== 
+  Subscribe(
+   (ConsumerEndpointReference, TopicExpression, [UseNotify],
+   [Precondition], [Selector], [SubscriptionPolicy], 
+   [InitialTerminationTime])   
+  returns: WS-Resource qualified EPR to a Subscription
+-->
+   <wsdl:message name="SubscribeRequest" >
+     <wsdl:part name="SubscribeRequest" 
+                element="wsnt:Subscribe"/>
+   </wsdl:message>
+
+   <wsdl:message name="SubscribeResponse">
+      <wsdl:part name="SubscribeResponse" 
+                 element="wsnt:SubscribeResponse"/>
+   </wsdl:message>
+
+   <wsdl:message name="ResourceUnknownFault">
+      <part name="ResourceUnknownFault"
+            element="wsnt:ResourceUnknownFault" />
+   </wsdl:message> 
+
+   <wsdl:message name="SubscribeCreationFailedFault">
+      <part name="SubscribeCreationFailedFault"
+            element="wsnt:SubscribeCreationFailedFault" />
+   </wsdl:message> 
+
+   <wsdl:message name="TopicPathDialectUnknownFault">
+      <part name="TopicPathDialectUnknownFault"
+            element="wsnt:TopicPathDialectUnknownFault" />
+   </wsdl:message> 
+
+<!-- ========== NotificationProducer::GetCurrentMessage =========== 
+  GetCurrentMessage(topicExpression)
+  returns: a NotificationMessage (xsd:any)
+-->
+   <wsdl:message name="GetCurrentMessageRequest">
+      <wsdl:part name="GetCurrentMessageRequest" 
+            element="wsnt:GetCurrentMessage"/>
+   </wsdl:message>
+
+   <wsdl:message name="GetCurrentMessageResponse">
+      <wsdl:part name="GetCurrentMessageResponse" 
+            element="wsnt:GetCurrentMessageResponse"/>
+   </wsdl:message>
+
+   <wsdl:message name="InvalidTopicExpressionFault">
+      <part name="InvalidTopicExpressionFault"
+            element="wsnt:InvalidTopicExpressionFault" />
+   </wsdl:message> 
+
+   <wsdl:message name="TopicNotSupportedFault">
+      <part name="TopicNotSupportedFault"
+            element="wsnt:TopicNotSupportedFault" />
+   </wsdl:message> 
+
+   <wsdl:message name="NoCurrentMessageOnTopicFault">
+      <part name="NoCurrentMessageOnTopicFault"
+            element="wsnt:NoCurrentMessageOnTopicFault" />
+   </wsdl:message> 
+
+<!-- ========== SubscriptionManager::PauseSubscription ============
+   PauseSubscription()
+   returns: empty
+-->
+   <wsdl:message name="PauseSubscriptionRequest">
+      <wsdl:part name="PauseSubscriptionRequest" 
+                 element="wsnt:PauseSubscription"/>
+    </wsdl:message>
+
+   <wsdl:message name="PauseSubscriptionResponse">
+      <wsdl:part name="PauseSubscriptionResponse" 
+                 element="wsnt:PauseSubscriptionResponse"/>
+   </wsdl:message>
+
+   <wsdl:message name="PauseFailedFault">
+      <part name="PauseFailedFault"
+            element="wsnt:PauseFailedFault" />
+   </wsdl:message> 
+
+<!-- ========= SubscriptionManager::ResumeSubscription ============
+   ResumeSubscription()
+   returns: empty
+-->
+   <wsdl:message name="ResumeSubscriptionRequest">
+      <wsdl:part name="ResumeSubscriptionRequest" 
+                 element="wsnt:ResumeSubscription"/>
+   </wsdl:message>
+
+   <wsdl:message name="ResumeSubscriptionResponse">
+      <wsdl:part name="ResumeSubscriptionResponse" 
+                 element="wsnt:ResumeSubscriptionResponse"/>
+   </wsdl:message>
+
+   <wsdl:message name="ResumeFailedFault">
+      <part name="ResumeFailedFault"
+            element="wsnt:ResumeFailedFault" />
+   </wsdl:message> 
+      
+<!-- =================== PortType Definitions ===================== -->
+<!-- ========= NotificationConsumer PortType Definition =========== -->
+  <wsdl:portType name="NotificationConsumer">
+    <wsdl:operation name="Notify">
+      <wsdl:input message="wsntw:Notify" 
+                  wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/Notify"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  
+<!-- ========= NotificationProducer PortType Definition =========== -->
+  <wsdl:portType name="NotificationProducer"
+      wsrp:ResourceProperties ="wsnt:NotificationProducerRP">
+
+      <!-- ========== extends wsrpw:ResourceProperties ============= -->
+      <wsdl:operation name="GetResourceProperty">
+         <wsdl:input  name="GetResourcePropertyRequest" 
+                      message="wsrpw:GetResourcePropertyRequest" 
+                      wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourceProperty"/>
+         <wsdl:output name="GetResourcePropertyResponse" 
+                      message="wsrpw:GetResourcePropertyResponse" 
+                      wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourcePropertyResponse"/>
+         <wsdl:fault  name="ResourceUnknownFault" 
+                      message="wsrpw:ResourceUnknownFault" />
+         <wsdl:fault  name="InvalidResourcePropertyQNameFault" 
+                      message="wsrpw:InvalidResourcePropertyQNameFault" />     
+      </wsdl:operation>
+
+      <!-- =========== NotificationProducer Specific ============== -->
+      <wsdl:operation name="Subscribe">
+         <wsdl:input  message="wsntw:SubscribeRequest" 
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/Subscribe"/>
+         <wsdl:output message="wsntw:SubscribeResponse" 
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/SubscribeResponse"/>
+         <wsdl:fault  name="ResourceUnknownFault" 
+                      message="wsntw:ResourceUnknownFault" />
+         <wsdl:fault  name="SubscribeCreationFailedFault" 
+                      message="wsntw:SubscribeCreationFailedFault"/>
+         <wsdl:fault  name="TopicPathDialectUnknownFault" 
+                      message="wsntw:TopicPathDialectUnknownFault"/>
+      </wsdl:operation>
+
+      <wsdl:operation name="GetCurrentMessage">
+         <wsdl:input  message="wsntw:GetCurrentMessageRequest"
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/GetCurrentMessage"/>
+         <wsdl:output message="wsntw:GetCurrentMessageResponse"
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/GetCurrentMessageResponse"/>
+         <wsdl:fault  name="ResourceUnknownFault" 
+                      message="wsntw:ResourceUnknownFault" />
+         <wsdl:fault  name="InvalidTopicExpressionFault" 
+                      message="wsntw:InvalidTopicExpressionFault" />
+         <wsdl:fault  name="TopicNotSupportedFault" 
+                      message="wsntw:TopicNotSupportedFault" />
+         <wsdl:fault  name="NoCurrentMessageOnTopicFault" 
+                      message="wsntw:NoCurrentMessageOnTopicFault" />
+      </wsdl:operation>
+   </wsdl:portType>
+
+<!-- ========== SubscriptionManager PortType Definition =========== -->
+   <wsdl:portType name="SubscriptionManager"
+      wsrp:ResourceProperties ="wsnt:SubscriptionManagerRP">
+      <!-- ========== extends wsrpw:ResourceProperties ============= -->
+      <wsdl:operation name="GetResourceProperty">
+         <wsdl:input  name="GetResourcePropertyRequest" 
+                      message="wsrpw:GetResourcePropertyRequest" 
+                      wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourceProperty"/>
+         <wsdl:output name="GetResourcePropertyResponse" 
+                      message="wsrpw:GetResourcePropertyResponse" 
+                      wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourcePropertyResponse"/>
+         <wsdl:fault  name="ResourceUnknownFault" 
+                      message="wsrpw:ResourceUnknownFault" />
+         <wsdl:fault  name="InvalidResourcePropertyQNameFault" 
+                      message="wsrpw:InvalidResourcePropertyQNameFault" />     
+      </wsdl:operation>
+      
+      <!-- === extends wsrlw:ImmediateResourceTermination ========== -->
+      <wsdl:operation name="Destroy">
+         <wsdl:input message="wsrlw:DestroyRequest" 
+                     wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/Destroy"/>
+         <wsdl:output message="wsrlw:DestroyResponse" 
+                      wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/DestroyResponse"/>
+         <wsdl:fault name="ResourceUnknownFault" 
+                     message="wsrlw:ResourceUnknownFault" />
+         <wsdl:fault name="ResourceNotDestroyedFault" 
+                     message="wsrlw:ResourceNotDestroyedFault" />
+      </wsdl:operation>
+
+      <!-- === extends wsrl:ScheduledResourceTermination ========== -->
+      <wsdl:operation name="SetTerminationTime">
+         <wsdl:input message="wsrlw:SetTerminationTimeRequest" 
+                     wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTime"/>
+         <wsdl:output message="wsrlw:SetTerminationTimeResponse"
+                      wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTimeResponse"/>
+         <wsdl:fault name="ResourceUnknownFault" 
+                     message="wsrlw:ResourceUnknownFault" />
+         <wsdl:fault name="UnableToSetTerminationTimeFault" 
+                     message="wsrlw:UnableToSetTerminationTimeFault" />
+         <wsdl:fault name="TerminationTimeChangeRejectedFault" 
+                     message="wsrlw:TerminationTimeChangeRejectedFault" />
+      </wsdl:operation>
+
+      <!-- ========= SubscriptionManager specific operations ====== -->
+      <wsdl:operation name="PauseSubscription">
+         <wsdl:input  message="wsntw:PauseSubscriptionRequest"
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/PauseSubscription"/>
+         <wsdl:output message="wsntw:PauseSubscriptionResponse"
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/PauseSubscriptionResponse"/>
+         <wsdl:fault  name="ResourceUnknownFault" 
+                      message="wsntw:ResourceUnknownFault" />
+         <wsdl:fault  name="PauseFailedFault"
+                      message="wsntw:PauseFailedFault" />        
+
+      </wsdl:operation>
+      <wsdl:operation name="ResumeSubscription">
+         <wsdl:input  message="wsntw:ResumeSubscriptionRequest"
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/ResumeSubscription"/>
+         <wsdl:output message="wsntw:ResumeSubscriptionResponse"
+                      wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/ResumeSubscriptionResponse"/>
+         <wsdl:fault  name="ResourceUnknownFault" 
+                      message="wsntw:ResourceUnknownFault" />
+         <wsdl:fault  name="ResumeFailedFault"
+                      message="wsntw:ResumeFailedFault" />        
+      </wsdl:operation>        
+   </wsdl:portType>
+
+</wsdl:definitions>

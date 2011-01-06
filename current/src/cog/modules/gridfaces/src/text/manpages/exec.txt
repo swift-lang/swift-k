@@ -1,0 +1,55 @@
+NAME
+  exec - executes a command
+
+SYNOPIS
+  exec [OPTIONS] [services | command]
+
+DESCRIPTION
+  This command allows users to execute a command on a remote machine. Before
+  using this command a user must set the ipaddress in the cog.properties file
+  to the address that they wish the output to be redirected to. (See also
+  gnetconfig).
+
+OPTIONS
+  --service [value]
+     the machine location to perform service on
+  [--group]
+     should use group
+  --command [value]
+     the path and command to execute on service
+  [--help]
+     displays the options
+
+EXAMPLES
+  CORRECT USAGE
+    1) Execute the command "/bin/ls -la /home/" on the
+    machine hostname.com.  Quotes (" ") are needed whenever
+    there is whitespace involved with the a parameter
+    value. For more information type 'man getopt'. Before
+    using exec cog.properties must be updated as stated in
+    the description.
+
+      > exec --command "/bin/ls -la /home/"  --serivce "hostname.com"
+
+    2) Executes the command "/bin/ls -la /home/" on the
+    machines host.com and sub.domain.org
+
+      > exec --command "/bin/ls -la /home/"  --serivce "host.com sub.domain.org"
+
+    3) This example assumes the user has added the group
+    "groupId" (type "man group" to see how to add
+    groups). It then execetes the given command ("/bin/ls
+    -la /home/") on the host for each machine in the group.
+
+      > exec --command "/bin/ls -la /home/"  --serivce groupId --group
+
+WARNINGS
+  When exec is first used gcm (or some lower level
+  component) remembers the ip address found in
+  cog.properties. That means if the user forgets to set the
+  value before using exec, exec will fail until the user
+  restarts the gcm (ShellPanel) and sets the value of
+  ipaddress correctly in cog.properties file.
+
+SEE ALSO
+  group

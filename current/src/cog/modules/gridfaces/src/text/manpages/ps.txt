@@ -1,0 +1,58 @@
+NAME
+  ps - lists the processes that have been submitted to the Grid
+       Command Manager.
+
+SYNOPIS
+  ps [OPTIONS]
+
+DESCRIPTION
+  This command lists the processes that have been submitted in the
+  format [command command_id status]. Specifying no option displays
+  all commands.
+
+  This command can be used with the kill command.
+
+OPTIONS
+   [-u, --unsubmitted]
+     show unsubmitted commands
+   [-a, --active]
+     show active commands
+   [-z, --suspended]
+     show suspended commands
+   [-f, --failed]
+     show failed commands
+   [-c, --completed]
+     show completed commands
+   [-x, --canceled]
+     show canceled commands
+   [-s, --submitted]
+     show submited commands
+   [--help]
+     displays the options
+
+EXAMPLES
+
+  1) To output failed commands type:
+
+    > ps -f
+
+      exec	urn:cog-1091162384237	Failed
+      exec	urn:cog-1091162384239	Failed
+
+  2) To output active commands type:
+
+    > ps -a
+
+      exec	urn:cog-1091162384255	Active
+      exec	urn:cog-1091162384265	Active
+
+WARNINGS
+  Current implementation will only return the first found option's
+  result.
+
+TO DO
+  Allow for multiple options to be selected. Current implementation
+  will only return the first found option's result.
+
+SEE ALSO
+  kill

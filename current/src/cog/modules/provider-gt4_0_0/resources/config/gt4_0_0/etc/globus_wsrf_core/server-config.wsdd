@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="defaultServerConfig" 
+    xmlns="http://xml.apache.org/axis/wsdd/" 
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java" 
+    xmlns:wsrp=
+      "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd" 
+    xmlns:wsnt=
+      "http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd"
+    xmlns:wsa=
+      "http://schemas.xmlsoap.org/ws/2004/03/addressing"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <globalConfiguration>
+        <parameter name="usageStatisticsTargets"
+                   value="usage-stats.globus.org:4810"/>
+
+        <parameter name="sendXsiTypes" value="true"/>
+
+        <parameter 
+            name="containerSecDesc" 
+            value="etc/globus_wsrf_core/global_security_descriptor.xml"/>
+
+        <!-- OPERATION PROVIDERS -->
+
+        <parameter 
+            name="DestroyProvider" 
+            value="org.globus.wsrf.impl.lifetime.DestroyProvider"/>
+        <parameter 
+            name="SetTerminationTimeProvider"
+            value="org.globus.wsrf.impl.lifetime.SetTerminationTimeProvider"/>
+        <parameter 
+            name="GetRPProvider"
+            value="org.globus.wsrf.impl.properties.GetResourcePropertyProvider"/>
+        <parameter 
+            name="GetMRPProvider"
+            value="org.globus.wsrf.impl.properties.GetMultipleResourcePropertiesProvider"/>
+        <parameter 
+            name="SetRPProvider"
+            value="org.globus.wsrf.impl.properties.SetResourcePropertiesProvider"/>
+        <parameter 
+            name="QueryRPProvider"
+            value="org.globus.wsrf.impl.properties.QueryResourcePropertiesProvider"/>
+        <parameter 
+            name="SubscribeProvider"
+            value="org.globus.wsrf.impl.notification.SubscribeProvider"/>
+
+        <parameter
+            name="GetCurrentMessageProvider"
+            value="org.globus.wsrf.impl.notification.GetCurrentMessageProvider"/>
+
+        <parameter
+            name="PauseSubscriptionProvider"
+            value="org.globus.wsrf.impl.notification.PauseSubscriptionProvider"/>
+
+        <parameter
+            name="ResumeSubscriptionProvider"
+            value="org.globus.wsrf.impl.notification.ResumeSubscriptionProvider"/>
+
+        <parameter
+            name="NotificationConsumerProvider"
+            value="org.globus.wsrf.impl.notification.NotificationConsumerProvider"/>
+        <!-- WS Secure Conversation service -->
+        <parameter name="authenticationService" 
+            value="gsi/AuthenticationService"/>
+
+        <requestFlow>
+            <!-- The AddressingHandler must be first -->
+            <handler type="java:org.globus.wsrf.handlers.AddressingHandler"/>
+            <!-- The URLMapper must be second -->
+            <handler type="java:org.globus.wsrf.handlers.URLMapper"/>
+            <!-- @TOMCAT_SEC_HANDLER@ -->
+            <!-- The AuthenticationServiceHandler must be third -->
+            <handler type="AuthenticationServiceHandler"/>
+
+            <handler type="java:org.globus.wsrf.handlers.MessageLoggingHandler"/>
+            <handler type="java:org.apache.axis.handlers.JAXRPCHandler">
+		    <parameter name="className" value="org.globus.wsrf.impl.security.authentication.wssec.WSSecurityHandler"/>
+ 	    </handler>
+	    <handler type="java:org.globus.wsrf.impl.security.authentication.SecurityPolicyHandler"/>
+	    <handler type="java:org.globus.wsrf.impl.security.authorization.AuthorizationHandler"/>
+            <!-- The FaultHandler must be last -->
+            <handler type="java:org.globus.wsrf.handlers.FaultHandler"/>
+        </requestFlow>
+
+        <responseFlow>
+            <!-- The WSDLHandler must be first -->
+            <handler type="java:org.globus.wsrf.handlers.WSDLHandler"/>
+            <handler type="java:org.globus.wsrf.handlers.AddressingHandler"/>
+            <handler type="java:org.apache.axis.handlers.JAXRPCHandler">
+		<parameter name="className" value="org.globus.wsrf.impl.security.authentication.securemsg.X509EncryptHandler"/>
+ 	    </handler>
+            <handler type="java:org.apache.axis.handlers.JAXRPCHandler">
+		<parameter name="className" value="org.globus.wsrf.impl.security.authentication.securemsg.X509SignHandler"/>
+ 	    </handler>
+            <handler type="java:org.apache.axis.handlers.JAXRPCHandler">
+		<parameter name="className" value="org.globus.wsrf.impl.security.authentication.UsernameHandler"/>
+ 	    </handler>
+            <handler type="java:org.apache.axis.handlers.JAXRPCHandler">
+               <parameter name="className" value="org.globus.wsrf.impl.security.authentication.secureconv.GSSHandler"/>
+            </handler>
+            <handler 
+                type="java:org.globus.wsrf.handlers.MessageLoggingHandler"/>
+        </responseFlow>
+
+    </globalConfiguration>
+
+    <handler name="RPCDispatcher" 
+        type="java:org.apache.axis.providers.java.RPCProvider"/>
+    <handler name="URLMapper" 
+        type="java:org.apache.axis.handlers.http.URLMapper"/>
+    <handler name="MsgDispatcher" 
+        type="java:org.apache.axis.providers.java.MsgProvider"/>
+    <handler name="LocalRequester"
+        type="java:org.globus.axis.transport.local.LocalRequester"/>
+    <handler name="LocalResponder" 
+        type="java:org.apache.axis.transport.local.LocalResponder"/>
+    <handler name="logger" 
+        type="java:org.apache.axis.handlers.LogHandler"/>
+    <handler name="Authenticate" 
+        type="java:org.apache.axis.handlers.SimpleAuthenticationHandler"/>
+    <handler name="AuthenticationServiceHandler" 
+        type="java:org.globus.wsrf.impl.security.authentication.secureconv.service.AuthenticationServiceHandler"/>
+
+    <service name="AdminService" provider="java:MSG">
+        <namespace>http://xml.apache.org/axis/wsdd/</namespace>
+        <parameter name="allowedMethods" value="AdminService"/>
+        <parameter name="enableRemoteAdmin" value="false"/>
+        <parameter name="className" value="org.apache.axis.utils.Admin"/>
+    </service>
+ 
+    <service name="Version" provider="java:RPC">
+        <parameter name="allowedMethods" value="getVersion"/>
+        <parameter name="className" value="org.apache.axis.Version"/>
+    </service>
+
+    <service name="NotificationConsumerService" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="allowedMethods" value="*"/>
+        <parameter 
+            name="handlerClass" 
+            value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="className" 
+            value="org.globus.wsrf.impl.notification.NotificationConsumerProvider"/>
+        <wsdlFile>share/schema/core/notification/notification_consumer_service.wsdl</wsdlFile>
+        <typeMapping
+            deserializer=
+            "org.apache.axis.encoding.ser.ElementDeserializerFactory"
+            encodingStyle="" 
+            qname="xsd:anyType"
+            type="java:java.lang.Object"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
+        <typeMapping 
+            name="ResourcePropertyValueChangeNotificationElementType" 
+            qname="ns1:ResourcePropertyValueChangeNotificationElementType" 
+            xmlns:ns1="http://wsrf.globus.org/core/notification" 
+            type="java:org.globus.wsrf.core.notification.ResourcePropertyValueChangeNotificationElementType"
+            serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+            deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+            encodingStyle="" />
+    </service>
+
+
+    <service name="SubscriptionManagerService" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="scope" value="Application"/>
+        <parameter 
+            name="providers"
+            value="DestroyProvider SetTerminationTimeProvider
+            GetRPProvider PauseSubscriptionProvider"/>
+        <parameter 
+            name="handlerClass" 
+            value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="className" 
+            value="org.globus.wsrf.impl.notification.ResumeSubscriptionProvider"/>
+        <wsdlFile>share/schema/core/notification/subscription_manager_service.wsdl</wsdlFile>
+    </service>
+
+    <service name="gsi/AuthenticationService" provider="Handler" 
+        use="literal" style="document">
+        <parameter 
+            name="handlerClass" 
+            value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.wsrf.impl.security.authentication.secureconv.service.AuthenticationServiceImpl"/>
+        <wsdlFile>share/schema/core/security/secconv/secure_conversation_service.wsdl</wsdlFile>
+    </service>
+
+    <service name="ShutdownService" provider="java:RPC" 
+        use="literal" style="document">
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.wsrf.container.ShutdownService"/>
+        <wsdlFile>share/schema/core/management/shutdown_service.wsdl</wsdlFile>
+        <parameter name="securityDescriptor" value="org/globus/wsrf/impl/security/descriptor/gsi-security-config.xml"/>
+    </service>
+
+    <transport name="http">
+        <parameter name="qs:list"
+            value="org.apache.axis.transport.http.QSListHandler"/>
+        <parameter name="qs:method" 
+            value="org.apache.axis.transport.http.QSMethodHandler"/>
+        <parameter name="qs:wsdl" 
+            value="org.apache.axis.transport.http.QSWSDLHandler"/>
+        <requestFlow>
+            <handler
+            type="java:org.apache.axis.handlers.http.HTTPAuthHandler"/>
+        </requestFlow>
+    </transport>
+
+    <transport name="local">
+        <requestFlow>
+            <handler type="LocalRequester"/>
+        </requestFlow>
+        <responseFlow>
+            <handler type="LocalResponder"/>
+        </responseFlow>
+    </transport>
+
+    <transport name="SimpleHTTP">
+        <requestFlow/>
+    </transport>
+
+    <typeMapping 
+        name="DeleteType" 
+        qname="wsrp:DeleteType" 
+        type="java:org.oasis.wsrf.properties.DeleteType"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="" />
+
+    <typeMapping 
+        name="InsertType" 
+        qname="wsrp:InsertType" 
+        type="java:org.oasis.wsrf.properties.InsertType"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="" />
+
+    <typeMapping 
+        name="UpdateType" 
+        qname="wsrp:UpdateType" 
+        type="java:org.oasis.wsrf.properties.UpdateType"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="" />
+
+    <typeMapping 
+        name="TopicExpressionType" 
+        qname="wsnt:TopicExpressionType" 
+        type="java:org.oasis.wsn.TopicExpressionType"
+        deserializer="org.globus.wsrf.encoding.TopicExpressionDeserializerFactory"
+        serializer="org.globus.wsrf.encoding.TopicExpressionSerializerFactory"
+        encodingStyle="" />
+
+    <typeMapping 
+        name=">SetResourceProperties" 
+        qname="wsrp:>SetResourceProperties" 
+        type="java:org.oasis.wsrf.properties.SetResourceProperties_Element"
+        deserializer="org.globus.wsrf.encoding.AnyListDeserializerFactory"
+        serializer="org.globus.wsrf.encoding.AnyListSerializerFactory"
+        encodingStyle="" />
+
+    <typeMapping 
+        name="QueryExpressionType" 
+        qname="wsrp:QueryExpressionType" 
+        type="java:org.oasis.wsrf.properties.QueryExpressionType"
+        deserializer="org.globus.wsrf.encoding.QueryExpressionDeserializerFactory"
+        serializer="org.globus.wsrf.encoding.QueryExpressionSerializerFactory"
+        encodingStyle="" />
+
+    <!-- WS-Addressing Bits -->
+
+   <typeMapping 
+         encodingStyle="" 
+         qname="wsa:EndpointReferenceType" 
+         deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory" 
+         serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+         type="java:org.apache.axis.message.addressing.EndpointReferenceType" />
+
+   <typeMapping
+         encodingStyle=""
+         qname="wsa:ReferencePropertiesType"
+         deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+         serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+         type="java:org.apache.axis.message.addressing.ReferencePropertiesType" />
+
+   <typeMapping 
+        encodingStyle="" 
+        qname="wsa:AttributedURI" 
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        type="java:org.apache.axis.message.addressing.AttributedURI" />
+
+   <typeMapping 
+        encodingStyle=""
+        qname="wsa:AttributedQName" 
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        type="java:org.apache.axis.message.addressing.AttributedQName" />
+
+   <typeMapping
+        encodingStyle=""
+        qname="wsa:ServiceNameType"
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory"
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        type="java:org.apache.axis.message.addressing.ServiceNameType" />
+    
+    <!-- WS Trust and WS Secure Conversation -->
+    <typeMapping 
+        encodingStyle="" 
+        qname="ns1:SecurityContextTokenType" 
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory" 
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        type="java:org.globus.ws.sc.SecurityContextTokenType"
+        xmlns:ns1="http://schemas.xmlsoap.org/ws/2004/04/sc" />
+
+    <typeMapping 
+        encodingStyle="" 
+        qname="ns1:BinaryExchangeType" 
+        deserializer="org.apache.axis.encoding.ser.SimpleDeserializerFactory" 
+        serializer="org.apache.axis.encoding.ser.SimpleSerializerFactory"
+        type="java:org.globus.ws.trust.BinaryExchangeType"
+        xmlns:ns1="http://schemas.xmlsoap.org/ws/2004/04/trust" />
+</deployment>

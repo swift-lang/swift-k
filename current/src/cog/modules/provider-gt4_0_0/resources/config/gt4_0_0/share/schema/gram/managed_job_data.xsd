@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job"
+    xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job"
+    xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+    xmlns:wsbf="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+    xmlns:rdv="http://www.globus.org/namespaces/2004/09/rendezvous"
+    elementFormDefault="qualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="job_description.xsd"/>
+
+    <xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+                schemaLocation="../ws/addressing/WS-Addressing.xsd"/>
+
+    <xsd:import namespace="http://www.globus.org/namespaces/2004/09/rendezvous"
+                 schemaLocation="../rendezvous/rendezvous_data.xsd"/>
+
+    <!--==================================================-->
+    <!--            subscriptions/topic listeners         -->
+    <!--==================================================-->
+
+    <!-- identification of a listener and its associated topics -->
+    <xsd:complexType name="TopicListenerDescriptionType">
+        <xsd:sequence>
+
+            <xsd:element name="subscriptionHomeJNDILocation" type="xsd:string"/>
+
+            <!-- subscription resource key -->
+            <xsd:any namespace="##other" processContents="lax"/>
+
+            <!-- list of topics registered for by this listener-->
+            <xsd:element name="topicPath"
+                         type="tns:TopicPathType"
+                         minOccurs="1"
+                         maxOccurs="unbounded"/>
+
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Simpler than using the WS-Topics types-->
+    <xsd:complexType name="TopicPathType">
+        <xsd:sequence>
+            <xsd:element name="topicPathElement"
+                         type="xsd:QName"
+                         minOccurs="1"
+                         maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- meant to be referenced as 0 or more -->
+    <xsd:element name="topicListener"
+                 type="tns:TopicListenerDescriptionType"/>
+
+    <!--==================================================-->
+    <!--            job resource data elements            -->
+    <!--==================================================-->
+
+    <xsd:element name="handle" type="xsd:string"/>
+    <xsd:element name="started" type="xsd:boolean"/>
+    <xsd:element name="subscriptionEndpoint"
+                 type="wsa:EndpointReferenceType"/>
+    <xsd:element name="notificationConsumerEndpoint"
+                 type="wsa:EndpointReferenceType"/>
+
+
+    <xsd:complexType name="ManagedJobResourceDataType">
+        <xsd:sequence>
+            <xsd:element ref="tns:handle"/>
+            <xsd:element ref="tns:started"/>
+            <xsd:element ref="tns:notificationConsumerEndpoint"
+                         minOccurs="0"/>
+            <xsd:element ref="tns:topicListener"
+                         minOccurs="0"
+                         maxOccurs="unbounded"/>
+
+            <!-- internal data for Rendezvous -->
+            <xsd:element ref="rdv:internalRendezvousData"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

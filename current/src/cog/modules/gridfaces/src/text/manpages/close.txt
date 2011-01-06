@@ -1,0 +1,25 @@
+NAME
+  close - closes the most recent open object, close will
+          terminate all connections associated with the open command. 
+
+SYNOPIS
+  close
+
+DESCRIPTION
+  This will close the last connection associated with the previous
+  open. It terminates all conncetions associate with the last open.
+  If the last open has six connections, the close operation will 
+  close all of those connections. Mutiple connections may be 
+  established in different ways. For more information see "man open"
+
+OPTIONS
+  [--help]
+    displays the options
+
+EXAMPLES
+  1) Closes the current open object
+  
+  > close
+
+SEE ALSO
+  open, group

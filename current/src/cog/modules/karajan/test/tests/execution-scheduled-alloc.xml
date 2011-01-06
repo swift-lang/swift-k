@@ -1,0 +1,29 @@
+<karajan>
+	<!-- unscheduled task -->
+	<map>
+		<map:entry key="name" value="scheduled execution - allocateHost"/>
+		<map:entry key="test">
+			<element arguments="">
+				<scheduler type="default">
+					<property name="jobsPerCpu" value="1"/>
+
+					<resources>
+						<for name="res" in="{grid_resources}">
+							<variable>res</variable>
+						</for>
+					</resources>
+					<handler type="execution" provider="{default_provider}"/>
+					<handler type="file" provider="{default_provider}"/>
+				</scheduler>
+				
+				<parallelFor name="run">
+					<range from="1" to="{task_run_count}"/>	
+					<allocateHost name="host">
+						<task:execute executable="/bin/date" host="{host}"/>
+					</allocateHost>
+					<print message="{run}" nl="false"/>
+				</parallelFor>
+			</element>
+		</map:entry>
+	</map>
+</karajan>

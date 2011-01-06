@@ -1,0 +1,17 @@
+01/20/10
+
+*** Use one process per node
+
+*** Added staging
+
+09/12/01
+
+*** Use the event loop to avoid having a worker for
+    each core.
+    
+*** Automatically disable logging when many concurrent
+    workers are started
+
+09/05/24 
+
+*** Changed the allocation scheme to block allocations

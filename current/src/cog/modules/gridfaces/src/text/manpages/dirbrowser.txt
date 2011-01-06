@@ -1,0 +1,20 @@
+NAME
+  dirbrowser - bring up the directory browser
+
+SYNOPIS
+  dirbrowser
+
+DESCRIPTION
+  This command starts the visual directory browser
+
+OPTIONS
+  [--help]
+    displays the options
+
+EXAMPLES
+  1) To open the directory browser enter:
+
+  > dirbrowser
+
+TO DO
+  Allow a user to specify a start url for the directory browser

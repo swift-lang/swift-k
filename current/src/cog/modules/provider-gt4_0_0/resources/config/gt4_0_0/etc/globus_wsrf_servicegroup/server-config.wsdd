@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="defaultServerConfig" 
+    xmlns="http://xml.apache.org/axis/wsdd/" 
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java" 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<!-- TODO: fixup wsdlFile entries -->
+
+<!--
+<globalConfiguration>
+
+    <parameter name="ServiceGroupRegistrationProvider" value="org.globus.wsrf.impl.servicegroup.ServiceGroupRegistrationProvider"/>
+
+
+</globalConfiguration>
+-->
+
+    <service name="InMemoryServiceGroup" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="scope" value="Application"/> 
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.wsrf.impl.servicegroup.inmemory.InMemoryServiceGroupService"/>
+        <parameter name="providers" value="org.globus.wsrf.impl.servicegroup.ServiceGroupRegistrationProvider SetTerminationTimeProvider DestroyProvider"/>
+        <parameter name="handlerClass" value="org.globus.axis.providers.RPCProvider"/>
+
+        <wsdlFile>share/schema/inmemorysg/InMemoryServiceGroup_service.wsdl</wsdlFile>
+    </service>
+
+    <service name="InMemoryServiceGroupEntry" provider="Handler" 
+        use="literal" style="document">
+        <parameter name="handlerClass" value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="providers" value="SetTerminationTimeProvider DestroyProvider GetRPProvider GetMRPProvider "/>
+        <parameter name="scope" value="Application"/> 
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+            value="org.globus.wsrf.impl.lifetime.DestroyProvider"/>
+        <wsdlFile>share/schema/inmemorysg/InMemoryServiceGroupEntry_service.wsdl</wsdlFile>
+    </service>
+
+    <service name="InMemoryServiceGroupFactory" provider="java:RPC" 
+        use="literal" style="document">
+        <parameter name="scope" value="Application"/> 
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="className" 
+        value="org.globus.wsrf.impl.servicegroup.inmemory.InMemoryServiceGroupFactory"/>
+        <wsdlFile>share/schema/inmemorysg/BoringFactory_service.wsdl</wsdlFile>
+    </service>
+
+
+</deployment>
+

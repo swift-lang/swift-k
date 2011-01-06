@@ -1,0 +1,47 @@
+NAME
+    globus-personal-gatekeeper
+
+SYNOPSIS
+    globus-personal-gatekeeper [-version] [-help]
+            [-p port | -port port] [-d|-debug] 
+	    [-s service_file]
+	    [-l log_file]
+	    [-gridmap gridmap_file]
+	    [-proxy cretential]
+	    [-serverKey key]
+	    [-serverCert cert]
+	    [-caCertDir cadir]
+
+OPTIONS
+    -help | -usage
+		Displays usage
+    -p | -port
+		Port of the Gatekeeper
+    -d | -debug
+		Enable debug mode
+    -s | -services
+		Specifies services configuration file.
+    -l | -log
+		Specifies log file.
+    -gridmap
+		Specifies gridmap file.
+    -proxy
+		Proxy credentials to use.
+    -serverKey
+		Specifies private key (to be used with -serverCert.
+    -serverCert
+		Specifies certificate (to be used with -serverKey.
+    -caCertDir
+		Specifies locations (directory or files) of trusted 
+		CA certificates.
+
+SEE ALSO 
+    Gatekeeper
+
+BUGS
+
+    The name gatekeeper is incorrectly used in the Globus
+    Toolkit. This shoudl be called the term
+    execution-service should be used instead.
+
+    The parameters of this command must be reviewed.

@@ -1,0 +1,24 @@
+NAME
+  pwd - display the present working directory
+
+SYNOPIS
+  pwd
+
+DESCRIPTION
+  This command displays the present working directory. The user must
+  establish a connection using the open command first. Please see 
+  'man open' for more information.
+
+OPTIONS
+  [--help]
+     displays the options
+
+EXAMPLES
+  1) To print the present working directory type
+  
+    > pwd 
+
+      /usr/bin
+
+SEE ALSO
+  open, cd, mkdir, rmdir

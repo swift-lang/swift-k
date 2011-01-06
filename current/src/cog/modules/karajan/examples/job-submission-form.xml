@@ -1,0 +1,129 @@
+<project>
+  <include file="cogkit.xml"/>
+  <include file="forms.xml"/>
+  <include file="java.xml"/>
+  
+  <set name="providers">
+    <java:invokeMethod classname="org.globus.cog.abstraction.impl.common.AbstractionProperties" method="getProviders"/>
+  </set>
+  
+  <while>
+    <set name="formData">
+      <form:form title="test" id="IDForm" waitOn="IDSubmit, IDQuit">
+        <form:vbox>
+          <form:hbox>
+            <form:vbox homogenous="true">
+              <form:label text="Host: " halign="1"/>
+              <form:label text="Executable: " halign="1"/>
+              <form:label text="Arguments: " halign="1"/>
+              <form:label text="Stdout: " halign="1"/>
+              <form:label text="Stderr: " halign="1"/>
+            </form:vbox>
+            <form:vbox homogenous="true">
+              <form:textField id="IDHost" columns="10" halign="0"/>
+              <form:textField id="IDExec" columns="10" halign="0"/>
+              <form:textField id="IDArgs" columns="20" halign="0"/>
+              <form:textField id="IDSTDOUT" columns="10" halign="0"/>
+              <form:textField id="IDSTDERR" columns="10" halign="0"/>
+            </form:vbox>
+            <form:vbox homogenous="true">
+              <form:hbox>
+                <form:label text="Provider: "/>
+                <form:comboBox id="IDProvider">
+                  <for name="provider" in="{providers}">
+                    <form:comboItem text="{provider}"/>
+                  </for>
+                </form:comboBox>
+              </form:hbox>
+              <form:filler/>
+              <form:filler/>
+              <form:checkBox id="IDOutRedir" caption="Local"/>
+              <form:checkBox id="IDErrRedir" caption="Local"/>
+            </form:vbox>
+          </form:hbox>
+          <form:hbox>
+            <form:button id="IDSubmit" caption="Submit"/>
+            <form:button id="IDQuit" caption="Quit"/>
+          </form:hbox>
+        </form:vbox>
+      </form:form>
+    </set>
+    <if>
+      <or>
+        <isTrue>
+          <map:contains key="IDQuit" map="{formData}"/>
+        </isTrue>
+        <isTrue>
+          <!-- not very intuitive -->
+          <map:contains key="frameClosed" map="{formData}"/>
+        </isTrue>
+      </or>
+
+      <then>
+        <break/>
+      </then>
+      <else>
+        <choice>
+          <sequential>
+            <set names="host, provider, executable, arguments, stdout, stderr, outlocal, errlocal">
+              <map:get key="IDHost" map="{formData}"/>
+              <map:get key="IDProvider" map="{formData}"/>
+              <map:get key="IDExec" map="{formData}"/>
+              <map:get key="IDArgs" map="{formData}"/>
+              <map:get key="IDSTDOUT" map="{formData}"/>
+              <map:get key="IDSTDERR" map="{formData}"/>
+              <map:get key="IDOutRedir" map="{formData}"/>
+              <map:get key="IDErrRedir" map="{formData}"/>
+            </set>
+            <task:execute host="{host}" 
+                          executable="{executable}" 
+                          args="{arguments}" 
+                          stdout="{stdout}" 
+                          stderr="{stderr}"
+              			  provider="{provider}"/>
+            <set name="message">
+              <list>
+                <if>
+                  <isTrue value="{outlocal}"/>
+
+                  <then>
+                    <task:transfer srchost="{host}" 
+                                  desthost="localhost" 
+                                  srcfile="{stdout}" 
+                                  destfile="{stdout}"
+                      provider="{provider}"/>
+                    <string>Output:</string>
+                    <readFile file="{stdout}"/>
+                  </then>
+                </if>
+                <if>
+                  <isTrue value="{errlocal}"/>
+				  
+                  <then>
+                    <gridTransfer srchost="{host}" 
+                                  desthost="localhost" 
+                                  srcfile="{stderr}" 
+                                  destfile="{stderr}"
+                      provider="{provider}"/>
+					<string>Error:</string>
+                    <readFile file="{stderr}"/>
+                  </then>
+                </if>
+              </list>
+            </set>
+            <form:messageDialog title="Execution completed">
+				<argument name="message">
+	              <concat>
+    	            <for name="item" in="{message}">
+        	          <argument value="{item}"/>
+            	    </for>
+	              </concat>
+				</argument>
+    	    </form:messageDialog>
+          </sequential>
+          <form:messageDialog title="Execution failed" message="{trace}"/>
+        </choice>
+      </else>
+    </if>
+  </while>
+</project>

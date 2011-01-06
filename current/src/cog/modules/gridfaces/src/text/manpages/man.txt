@@ -1,0 +1,36 @@
+NAME
+  man - show the manpage for a designated command
+
+SYNOPIS
+  man [COMMAND]
+
+DESCRIPTION
+  This command allows users to read about a given command COMMAND.
+
+  ADDING MANPAGES
+    Currently adding a manpage is a matter of creating a text file
+    that is named class_name.txt (such that CLASS_NAME is the name of
+    the command's class) in modules\gridface\src\text\manpages. Then
+    simply add the text file to the jar file (easy as running ant dist
+    in gridfaces directory, see the gridface documentation for more
+    information). It is recommended the user follows the file
+    .man-template.txt to produce similar formatted man pages, although
+    not required.
+
+  READING MANPAGES
+    Each man page should have a similar format as the template
+    .man-template.txt describes.  Each manpage has a list of options,
+    to further understand how to read these options see "man getopt";
+    this man page can be helpful to understand how to pass parameters
+    for the examples section as well. Furthermore, examples may have
+    comments by using # followed by a comment.
+   
+OPTIONS
+   [--help]
+     displays the options
+
+EXAMPLES
+
+  1) To show the manpage for pwd (present working directory) enter:
+
+    > man pwd

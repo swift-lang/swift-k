@@ -1,0 +1,73 @@
+<project name="Launchers" default="create" basedir=".">
+  <target name="create">
+
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-gcm-execution-test"/>
+		<property name="class-name" value="org.globus.cog.gridface.examples.gcm.GCMExecutionTest"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-gcm-cancel-test"/>
+		<property name="class-name" value="org.globus.cog.gridface.examples.gcm.GCMCancelTest"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-gcm-xml-test"/>
+		<property name="class-name" value="org.globus.cog.gridface.examples.gcm.GCMXMLTest"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-gcm-file-test"/>
+		<property name="class-name" value="org.globus.cog.gridface.examples.gcm.GCMFileTest"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-gcm-dependency-test"/>
+		<property name="class-name" value="org.globus.cog.gridface.examples.gcm.GCMDependencyTest"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-gcm-karajan-test"/>
+		<property name="class-name" value="org.globus.cog.gridface.examples.gcm.GCMKarajanTest"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+	  <!--<ant antfile="${main.buildfile}" target="launcher">
+		<property name="launcher-name" value="cog-registration"/>
+		<property name="class-name" value="org.globus.cog.gridface.impl.util.RegistrationDialog"/>
+	  </ant>-->
+
+	  <ant antfile="${main.buildfile}" target="launcher">
+		<property name="launcher-name" value="cog-directory-browser"/>
+		<property name="class-name" value="org.globus.cog.gridface.impl.directorybrowser.DirectoryBrowserImplTest"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-image-viewer"/>
+		<property name="class-name" value="org.globus.cog.gridface.impl.imageviewer.imageViewerTest"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="launcher">
+		<property name="launcher-name" value="cog-shell"/>
+		<property name="class-name" value="org.globus.cog.gridface.impl.shell.ShellPanelMain"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="example.launcher">
+		<property name="launcher-name" value="cog-shell-history"/>
+		<property name="class-name" value="org.globus.cog.gridface.impl.shell.ShellHistoryImpl"/>
+		<property name="launcher-dir" value="experimental"/>
+	  </ant>
+	  <ant antfile="${main.buildfile}" target="launcher">
+		<property name="launcher-name" value="cog-desktop"/>
+		<property name="class-name" value="org.globus.cog.gridface.impl.desktop.GridDesktopContainer"/>
+	  </ant>
+
+	  <ant antfile="${main.buildfile}" target="launcher">
+	  	  <property name="launcher-name" value="cog-gridftp"/>
+	  	  <property name="class-name"	value="org.globus.cog.gridface.impl.gftpanel.GridFTPPanelImpl"/>
+	  </ant>
+   </target>
+   <target name="webstart"/>
+</project>

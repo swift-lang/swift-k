@@ -1,0 +1,50 @@
+NAME
+  open - open a new connection
+
+SYNOPIS
+  open [OPTIONS] [VALUES]
+
+DESCRIPTION
+  This command can have multiple connections associated with it. This
+  can be done in one of two ways. Using the group feature, or by
+  explicitly lising the commands with spaces after them.
+
+OPTIONS
+   [-p, --password [value]]
+     your password
+   [-g, --group [value]]
+     the group to open
+   [-u, --username [value]]
+     your username
+   [--help]
+     displays the options
+
+EXAMPLES
+  CORRECT USAGE
+    1) A basic open with one connection
+
+      > open gsiftp://hostname.com:1111/
+
+    2) A more advanced open with multiple connections (3
+    connections).
+
+      # This should be one line
+      > open gsiftp://hostname.com:1111/ gsiftp://sub.domain.org:2222/ 
+             gsiftp://domain.edu:1212/
+
+    3) To open a connection to the local file system use the command
+
+      > open file://localhost:0
+
+    3) The group feature being used with an open. This
+    example assumes the user has added the group "groupId"
+    (type "man group" to see how to add groups).
+
+      > open --group groupId
+
+SEE ALSO
+  group, ls
+
+BUGS 
+  Upon start of the shell no connection is open. before directory
+  specific commands can be issued, please use an open. 

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions
+    name="ManagedMultiJobState"
+    targetNamespace=
+        "http://www.globus.org/namespaces/2004/10/gram/job/multi/state"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+    <wsdl:import
+        namespace="http://www.globus.org/namespaces/2004/10/gram/job/exec"
+        location="../gram/managed_multi_job_port_type.wsdl" />
+
+    <wsdl:types>
+        <xsd:schema
+            targetNamespace=
+                "http://www.globus.org/namespaces/2004/10/gram/job/multi/state"
+            xmlns:tns=
+                "http://www.globus.org/namespaces/2004/10/gram/job/multi/state"
+            xmlns:multi=
+                "http://www.globus.org/namespaces/2004/10/gram/job/multi"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+            <xsd:import
+                namespace=
+                    "http://www.globus.org/namespaces/2004/10/gram/job/multi"
+                schemaLocation="managed_multi_job_data.xsd"/>
+
+            <xsd:complexType name="ManagedMultiJobResourceStateType">
+                <xsd:sequence>
+                    <!-- resource properties -->
+                    <xsd:element name="resourceProperties"
+                        type="multi:ManagedMultiJobResourcePropertiesType"/>
+
+                    <!-- resource data -->
+                    <xsd:element name="resourceData"
+                        type="multi:ManagedMultiJobResourceDataType"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+        </xsd:schema>
+
+    </wsdl:types>
+
+
+</wsdl:definitions>

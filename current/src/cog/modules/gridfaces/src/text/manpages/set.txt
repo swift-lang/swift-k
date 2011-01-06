@@ -1,0 +1,54 @@
+NAME
+  set - specify an environemental variable
+
+SYNOPIS
+  set envVarName [OPTIONS] [VALUES]
+
+DESCRIPTION
+  Allows a user to specify environmental variables such as font,
+  background, and foreground.
+
+OPTIONS
+   [--prompt [value]]
+     the prompt value
+   [--style [value]]
+     the style of the font
+   [--background [value]]
+     the background color
+   [--size [value]]
+     the font size
+   [--foreground [value]]
+     the foreground
+   [--face [value]]
+     the font face
+   [--help]
+     displays the options
+
+
+EXAMPLES
+
+  1) Example 1 allows the user to specify the foreground as
+  white and the background as black as a traditional shell
+  would look.
+
+    > set colors --foreground white --background black
+
+  2) Will set the prompt to " $ "
+
+    > set prompt " $ "
+
+WARNINGS
+  This Command is not working because it is being redone to interact with
+  the desktop too.
+
+TO DO
+  This command has a lot of room for improvement. For example, it is a
+  little cumbersome to type set colors and then --foreground
+  --background. The colors keyword should not need to be typed.
+
+  The prompt should be able to use %d for a directory being the
+  prompt. Other variables should be able to be inserted as the value
+  for the prompt.
+
+SEE ALSO
+  alias

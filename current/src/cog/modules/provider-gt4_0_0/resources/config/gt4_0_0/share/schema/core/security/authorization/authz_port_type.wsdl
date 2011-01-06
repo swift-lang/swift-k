@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="AuthorizationService"
+        xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.gridforum.org/namespaces/2004/03/ogsa-authz/saml"
+	xmlns:tns="http://www.gridforum.org/namespaces/2004/03/ogsa-authz/saml"
+        xmlns:wsrp="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd"
+        xmlns:wsrpw="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl">
+
+    <import namespace= "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" location="../../../wsrf/properties/WS-ResourceProperties.wsdl" />
+
+<types>
+  <xsd:schema targetNamespace="http://www.gridforum.org/namespaces/2004/03/ogsa-authz/saml"
+	xmlns:tns="http://www.gridforum.org/namespaces/2004/03/ogsa-authz/saml"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        elementFormDefault="qualified">
+
+	  <xsd:element name="SAMLRequest">
+	   <xsd:complexType>
+	    <xsd:sequence>
+	     <xsd:any namespace="##any"/>
+	    </xsd:sequence>
+	   </xsd:complexType>
+	  </xsd:element>
+
+	  <xsd:element name="SAMLRequestResponse">
+	   <xsd:complexType>
+	    <xsd:sequence>
+	     <xsd:any namespace="##any"/>
+	    </xsd:sequence>
+	   </xsd:complexType>
+         </xsd:element>
+
+        <xsd:element name="supportedPolicies" type="xsd:anyURI"/>
+
+        <xsd:element name="supportsIndeterminate" type="xsd:boolean"/>
+
+        <xsd:element name="signatureCapable" type="xsd:boolean"/>
+   
+        <xsd:element name="SAMLPortRP">
+          <xsd:complexType>
+             <xsd:sequence>
+               <xsd:element ref="tns:supportedPolicies"
+                            minOccurs="0" maxOccurs="unbounded"/>
+               <xsd:element ref="tns:supportsIndeterminate"
+                            minOccurs="1" maxOccurs="1"/>
+               <xsd:element ref="tns:signatureCapable"
+                            minOccurs="1" maxOccurs="1"/>
+             </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+  </xsd:schema>
+</types>
+
+    <message name="SAMLRequestInputMessage">
+	<part name="parameters" element="tns:SAMLRequest"/>
+    </message>
+
+    <message name="SAMLRequestOutputMessage">
+	<part name="parameters" element="tns:SAMLRequestResponse"/>
+    </message>
+
+    <!-- And the request-response protocol goes like this -->
+    <portType name="SAMLRequestPortType" 
+        wsrp:ResourceProperties = "tns:SAMLPortRP">
+	<operation name="SAMLRequest">
+	    <input message="tns:SAMLRequestInputMessage"/>
+	    <output message="tns:SAMLRequestOutputMessage"/>
+	</operation>
+
+        <operation name="GetResourceProperty">
+            <input  name="GetResourcePropertyRequest" 
+                message="wsrpw:GetResourcePropertyRequest" />
+            <output name="GetResourcePropertyResponse" 
+                message="wsrpw:GetResourcePropertyResponse" />
+            <fault  name="ResourceUnknownFault" 
+                message="wsrpw:ResourceUnknownFault" />
+            <fault  name="InvalidResourcePropertyQNameFault" 
+                message="wsrpw:InvalidResourcePropertyQNameFault" />     
+        </operation>
+
+        <operation name="SetResourceProperties">
+            <input  name="SetResourcePropertiesRequest" 
+                message="wsrpw:SetResourcePropertiesRequest" />
+            <output name="SetResourcePropertiesResponse" 
+                message="wsrpw:SetResourcePropertiesResponse" />
+            <fault  name="ResourceUnknownFault" 
+                message="wsrpw:ResourceUnknownFault" />
+            <fault
+                name="InvalidSetResourcePropertiesRequestContentFault"
+                message="wsrpw:InvalidSetResourcePropertiesRequestContentFault"
+                />     
+            <fault  name="UnableToModifyResourcePropertyFault" 
+                message="wsrpw:UnableToModifyResourcePropertyFault" />
+            <fault  name="InvalidResourcePropertyQNameFault" 
+                message="wsrpw:InvalidResourcePropertyQNameFault" />     
+            <fault  name="SetResourcePropertyRequestFailedFault" 
+                message="wsrpw:SetResourcePropertyRequestFailedFault" />
+        </operation>
+
+        <operation name="QueryResourceProperties">
+            <input  name="QueryResourcePropertiesRequest" 
+                message="wsrpw:QueryResourcePropertiesRequest" />
+            <output name="QueryResourcePropertiesResponse" 
+                message="wsrpw:QueryResourcePropertiesResponse" />
+            <fault  name="ResourceUnknownFault" 
+                message="wsrpw:ResourceUnknownFault" />
+            <fault  name="InvalidResourcePropertyQNameFault" 
+                message="wsrpw:InvalidResourcePropertyQNameFault" />     
+            <fault  name="UnknownQueryExpressionDialectFault" 
+                message="wsrpw:UnknownQueryExpressionDialectFault" />
+            <fault  name="InvalidQueryExpressionFault" 
+                message="wsrpw:InvalidQueryExpressionFault" />
+            <fault  name="QueryEvaluationErrorFault" 
+                message="wsrpw:QueryEvaluationErrorFault" />
+        </operation>
+    </portType>
+
+</definitions>

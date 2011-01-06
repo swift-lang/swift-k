@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="defaultServerConfig"
+    xmlns="http://xml.apache.org/axis/wsdd/"
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <service name="ManagedJobFactoryService" provider="Handler"
+        use="literal" style="document">
+        <parameter name="loadOnStartup" value="true"/>
+        <parameter name="handlerClass"
+                   value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="scope" value="Application"/>
+        <parameter name="allowedMethodsClass"
+                   value="org.globus.exec.generated.ManagedJobFactoryPortType"/>
+        <parameter name="className"
+            value="org.globus.exec.service.factory.ManagedJobFactoryService"/>
+        <wsdlFile>share/schema/gram/managed_job_factory_service.wsdl</wsdlFile>
+        <parameter name="providers" value="
+             GetRPProvider GetMRPProvider QueryRPProvider
+             SubscribeProvider GetCurrentMessageProvider"/>
+        <parameter
+            name="securityDescriptor"
+            value="etc/gram-service/managed-job-factory-security-config.xml"/>
+    </service>
+
+    <service name="ManagedExecutableJobService" provider="Handler"
+        use="literal" style="document">
+        <parameter name="handlerClass"
+                   value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="scope" value="Application"/>
+        <parameter name="allowedMethodsClass"
+                   value="org.globus.exec.generated.ManagedExecutableJobPortType"/>
+        <parameter name="className"
+            value="org.globus.exec.service.exec.ManagedExecutableJobService"/>
+        <wsdlFile>share/schema/gram/managed_executable_job_service.wsdl</wsdlFile>
+        <parameter name="providers" value="
+             DestroyProvider SetTerminationTimeProvider
+             GetRPProvider GetMRPProvider QueryRPProvider
+             SubscribeProvider GetCurrentMessageProvider 
+             org.globus.rendezvous.service.RegisterProvider"/>
+    </service>
+
+    <service name="ManagedMultiJobService" provider="Handler"
+        use="literal" style="document">
+        <parameter name="handlerClass"
+                   value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="scope" value="Application"/>
+        <parameter name="allowedMethodsClass"
+                   value="org.globus.exec.generated.ManagedMultiJobPortType"/>
+        <parameter name="className"
+            value="org.globus.exec.service.multi.ManagedMultiJobService"/>
+        <wsdlFile>share/schema/gram/managed_multi_job_service.wsdl</wsdlFile>
+        <parameter name="providers" value="
+             DestroyProvider SetTerminationTimeProvider
+             GetRPProvider GetMRPProvider QueryRPProvider
+             SubscribeProvider GetCurrentMessageProvider
+             NotificationConsumerProvider 
+             org.globus.rendezvous.service.RegisterProvider"/>
+    </service>
+
+    <typeMapping xmlns:ns="http://www.globus.org/namespaces/2004/10/gram/job/description"
+             qname="ns:MultiJobDescriptionType"
+             type="java:org.globus.exec.generated.MultiJobDescriptionType"
+             serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+             deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+             encodingStyle=""/>
+    <typeMapping xmlns:ns="http://www.globus.org/namespaces/2004/10/gram/job"
+             qname="ns:StateChangeNotificationMessageWrapperType"
+             type="java:org.globus.exec.generated.StateChangeNotificationMessageWrapperType"
+             serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+             deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+             encodingStyle=""/>
+</deployment>

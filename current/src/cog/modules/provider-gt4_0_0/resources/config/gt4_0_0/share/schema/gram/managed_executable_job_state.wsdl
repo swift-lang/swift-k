@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions
+    name="ManagedExecutableJobState"
+    targetNamespace=
+        "http://www.globus.org/namespaces/2004/10/gram/job/exec/state"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+    <wsdl:import
+        namespace="http://www.globus.org/namespaces/2004/10/gram/job/exec"
+        location="../gram/managed_executable_job_port_type.wsdl" />
+
+    <wsdl:types>
+        <xsd:schema
+            targetNamespace=
+                "http://www.globus.org/namespaces/2004/10/gram/job/exec/state"
+            xmlns:tns=
+                "http://www.globus.org/namespaces/2004/10/gram/job/exec/state"
+            xmlns:exec=
+                "http://www.globus.org/namespaces/2004/10/gram/job/exec"
+            xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+            <xsd:import
+                namespace=
+                    "http://www.globus.org/namespaces/2004/10/gram/job/exec"
+                schemaLocation="managed_executable_job_data.xsd"/>
+
+            <!--==================================================-->
+            <!--                 resource state                   -->
+            <!--==================================================-->
+
+            <xsd:complexType name="ManagedExecutableJobResourceStateType">
+                <xsd:sequence>
+                    <!-- resource properties -->
+                    <xsd:element name="resourceProperties"
+                        type="exec:ManagedExecutableJobResourcePropertiesType"/>
+
+                    <!-- resource data -->
+                    <xsd:element name="resourceData"
+                        type="exec:ManagedExecutableJobResourceDataType"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+        </xsd:schema>
+
+    </wsdl:types>
+
+
+</wsdl:definitions>

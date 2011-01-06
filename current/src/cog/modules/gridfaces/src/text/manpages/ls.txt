@@ -1,0 +1,60 @@
+NAME
+  ls - list directory contents
+
+SYNOPIS
+  ls [OPTION] [FILE]
+
+DESCRIPTION
+  This command needs to have a connection associated with it
+  (open). It works when open contains multiple connections and will
+  list the files after each machine name associated.
+
+
+OPTIONS
+   [-l, --long]
+     flag that says to display long
+   [--help]
+     displays the options
+
+
+
+EXAMPLES
+
+  CORRECT USAGE
+
+  1) listing the current directory
+
+    ls
+
+  2) listing the absolute path /usr/bin/
+
+    ls /usr/bin/
+
+  3) listing the long version of the current directory.
+
+    ls -l
+
+  4) listing the long version of the absolute path /usr/bin/
+
+    ls -l /usr/bin
+
+
+  INCORRECT USAGE
+
+    1) The below command will not work because currently the way the
+       cogkit works is it changes the interanal representation of the
+       directory to the path specified. Therefore, when you type
+       "ls /usr/b*" it is looking for a directory called "/usr/b*"
+       and does not match the wildcard, *, character.
+
+      > ls /usr/b*  
+
+    2) The below command will not work unless /usr/bin/ls is a directory
+       for the same reason as #1 will not work. An attept will be made to
+       change to the directory /usr/bin/ls and then it will perform an ls
+       on that directory. If ls is a file, the cd will fail.
+
+      > ls /usr/bin/ls
+
+SEE ALSO
+  open, close, cd, mkdir, rmdir

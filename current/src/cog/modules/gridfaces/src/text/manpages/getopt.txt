@@ -1,0 +1,380 @@
+NAME
+  getopt - This command is not a command used in the shell, it is a command
+           that developers will use to get values passed into shell commands
+
+SYNOPSIS
+  The explains all about command options and how to specify values to each
+  command.
+
+DESCRIPTION
+  This is an in depth discussion of how to use options. 
+
+  SHORT OPTION
+    A short option must be one letter in length and can be used in
+    many different ways. See USING OPTIONS for more information. This
+    is a quicker way of using options than using long options. It can,
+    however, become difficult to use short options when a large
+    variety of options exist.
+
+    A short option must be preceeded by a single "-". See USING
+    OPTIONS for more information.
+
+    Examples
+      1) An example of the command ls with the short option -l 
+
+        > ls -l
+
+  LONG 
+    Long options provide a more accurate representation of what the
+    option is doing than a short option.
+
+    A long option is more than one letter that must be preceeded by
+    "--". See USING OPTIONS for more information.
+
+    Examples
+      1) An example of the command ls with the long option --long
+
+        > ls --long
+
+  REQUIRED OPTIONS
+    An option that is required will be checked automatically by getopt
+    to ensure that a value has been set by the user in the command
+    line. If the value is not set a RuntimeException is thrown.
+
+    Options that are required will not have [] around them
+    whereas options that are not required will contain [] around them
+    when listed with command_name --help or in the man pages.
+
+  FLAG vs STORABLE OPTIONS
+    FLAG OPTION
+      This option is either true or not. It is like typing "ls -l" the
+      -l option states the user wishes to have all information
+      displayed for each item listed. When typing a flag option getopt
+      does not require a value following the option.
+
+    STORABLE OPTIONS
+      A storable option requires a value to be associated with it.
+      When a storable option is displayed it will have [value] after
+      it.
+
+      Example  
+        1) In this command --value is a storable option and stores the
+        value "hello".  The --print option is simply a flag option which
+        does not need a value.
+
+          > mycommand --print --value hello
+
+  VALUES
+    Values are anything that is not an option.
+
+    Example
+      1) In the command below mycommand, hello, "jon doe", and arg2 are 
+      values.
+
+        > mycommand --storable hello --flag "jon doe" arg2
+
+  ARGUMENTS
+    Any value that is not associated with an option becomes an
+    argument. That means that all arguments are values.
+
+    Example
+      1) In the command below mycommand, arg1, & arg2 are arguments
+      assuming --storable is a storable option and --flag is a flag
+      option. Realize that stored_value is not an argument since it
+      is associated with the storable option --storable.
+
+        > mycommand arg1 --storable stored_value --flag arg2
+
+VALUES
+  Values can be used in three different ways.  
+
+  1) The first method of specifying a value is to use no
+  whitespace (" ") in the value. To do this, the first
+  character of the value must not be a ' or a ".  In
+  addition the value must not contain a space. To terminate
+  the value, a space is required after the last character in
+  the value.
+
+  Examples:
+    1.1) The following statement would store the values
+    "mycommand", "value1", "value_2", "x'value'"
+
+      > mycommand value1 value_2 x'value'
+
+  2) The second method of specifying a value is to enclose
+  the value with single quotes (''). In order for this to be
+  used, the first character must be a single quote and
+  proceeded by a space (" "). The last character must be a
+  single quote and followed by a space. Note that if a
+  backslash ("\") immediately proceeds the single quote it
+  cannot terminate the value.
+
+  Examples:
+    2.1) The command below would store the values "mycommand", "hello",
+      "x'value", "a space", and "'last value'".
+
+      > mycommand x'value 'hello' 'a space' 'value with \'' '\'last value\''
+
+    It is important to know how Java strings work if you are WRITING
+    CODE that is using escape characters.
+
+    2.2) In this example, if commandLineValue were passed to getOpt it
+      would be WRONG!  That is because Java Strings may contain
+      escaped values also. In example two, the "\'" is interpreted as
+      an escaped single quote. In order to use with getOpt the
+      backslack ("\") must be escaped.
+
+      String commandLineValue = "mycommand 'value with \''"; // THIS IS WRONG!
+
+    2.3) In this example, if commandLineValue were passed to getOpt it
+      would work with getOpt. This is because the backslash is
+      escaped.
+
+      String commandLineValue = "mycommand 'value with \\''"; // THIS IS CORRECT!
+
+  3) The third method of specifying a value is by using the double
+  quote. It works in the exact same manner as the single quote, except
+  it uses the double quote to denote the bounds of the value instead
+  of a single quote. See Values Section 2.
+ 
+
+USING OPTIONS
+  FLAG OPTIONS
+    A flag option is used for a boolean value. Either yes or no, true
+    or false.  When a flag option is false it will return null. When
+    it is true, it returns the string "TRUE". Flag options should
+    never be required, because if they were they would only have one
+    value ("TRUE").
+
+    LONG OPTIONS
+      Long flag options are the easiest type of option to use, because
+      they can only be used in two ways. The first method is by not
+      doing anything. If you do not include a long flag option, its
+      value will be null and isSet will return false. The second
+      method is to include the long option, which will allow the value
+      to be true.
+
+      Examples:
+        1.1) In  this example the long flag option "verbose"
+        will be set to "TRUE". To make verbose false, remove "
+        --verbose" from the example.
+
+          > mycommand --verbose
+
+    SHORT OPTIONS
+      Short flag options are only slightly more complicated than using
+      long options, because they can be set to true in two different
+      ways. The first method is by specifying each option
+      individually.  The second method allows the options to be
+      grouped together. Specifying the options to be false is done by
+      not doing anything at all.
+
+      Examples:
+        2.1) In this example the short flag options v and d
+        will be set to true. To make the short flag option d
+        false remove " -d" from the example.
+
+          > mycommand -v -d
+
+        2.2) This statement is an alternative to Short Flag
+        Option's example one; both statements set the short
+        options v and d to true. To make the short, flag
+        option false remove the "d" from the example.
+
+          > mycommand -vd
+
+  STORABLE OPTIONS
+    In many cases a program needs to know more than if a value is true
+    or false, it needs a value. In that case, a storable option may be
+    used. Storable options require a value after them to be specified.
+    Values can be specified in three different manners.
+
+
+    LONG OPTIONS
+      The long storable option is easier to use than a short storable
+      option, because it is more limitted in the ways it can be
+      used. However, its advantage is that it is typically easier to
+      understand. A value for a long option can be specifed in any
+      manner that a Value (see VALUES) can be specifed and must
+      immediately follow the long option.
+
+      Examples:
+        3.1) In this example a non whitespace value, "value",
+        is stored into the storable long option
+        "storableOption".
+
+          > mycommand --storableOption value
+
+        3.2) In this example there are many types of values
+        being stored to storable long options.
+        "storableOption" will contain the value "hello World",
+        "directory" will conain the value "/var/www/", and
+        "myOption" will contain the value "hello 'John'"
+
+          # This should all be on one line
+          > mycommand --storableOption 'hello world' 
+            --directory /var/www/ --myOption "hello 'John'"
+
+        3.3) In example 3.3 an error will be produced assuming
+        that both "storableOption" and "directory" are
+        storable long options. This is because imediately
+        after a storable option a value is required; this
+        example contains another storable option.
+
+          # WRONG!
+          > mycommand --storableOption --directory 'hello world' /var/www 
+      
+    SHORT OPTIONS
+      Short storable options are slightly more difficult than long
+      storable options because they can be done in different ways. The
+      user may either enter the options seperately or all together.
+
+      Examples:
+        4.1) In this example the first short storable option,
+        "s", stores "hello World" and the next short storable
+        option, "d", stores "/var/www".
+
+          > mycommand -s 'hello world' -d /var/www
+
+        4.2) In example the first short storable option,
+        "s", store the first value, "hello world". The second
+        short storable option, "d", stores the second value
+        "/var/www".
+
+          > mycommand -sd 'hello world' /var/www
+
+        4.3) In this example the first short storable option,
+        "s", store the first value, "/var/www". The second
+        short storable option, "d", stores the second value
+        "hello world". Note that the order of the options and
+        value matters. If the command were to switch the order
+        of the short options ("-ds"), the short storable
+        option values would be the same as example 4.2.
+
+          > mycommand -sd /var/www 'hello world'
+
+        4.4) In this example an error will be produced. This is
+        because the storable short option "s" is expecting a
+        value and never finds one.
+
+          > mycommand -ds /var/www # WRONG! (assuming all options are storable)
+
+  MIXING STORABLE & FLAG OPTIONS
+    LONG OPTIONS
+      When mixing long flag options and long storable options, the
+      there is little to worry about. Since the sytax is strict,
+      nothing changes.
+
+    Examples:
+      5.1) In example 5.1 the long flag option "flagOption" is
+      set to true and the storable long option
+      "storableOption" contains the value "hello world".
+
+        > mycommand --flagOption --storableOption "hello world"
+
+    SHORT OPTIONS
+      Mixing short options can be tricky. Remember, the order that
+      matters when using storable short options.
+
+      Examples:
+        In all examples for this section, assume that the short options
+        "v" and "f" are flag options and "s" and "d" are storable options.    
+
+        6.1) In example 6.1 the all flags are set to true, "s"
+        contains the value "storable's value", and "d"
+        contains the value "/var/www".
+
+          > mycommand -sv "storable's Value" -fd /var/www
+
+        6.2) In example 6.2 the options are set to the same
+        value as 6.1.
+
+          > mycommand -svf "storable's Value" -d /var/www
+
+        6.3) Example 6.3 shows another way of specifying the
+        same values for example 6.1.
+
+          > mycommand -sfvd "storable's Value" /var/www
+
+        6.4) In example 6.4 the values for the stored options
+        are switched. Short option "d" contains the value
+        "storable's value" and "s" contains the value
+        "/var/www". The reason for this is that the option "d"
+        comes first, so it gets the first value and option "s"
+        comes second, so it gets the next value. The flag
+        options "f" and "v" are still set to true.
+
+          > mycommand -fdsv "storable's Value" /var/www
+
+    SHORT & LONG OPTIONS
+      Combining short and long options is trivial when a user understands 
+      each type of option seperately. this is because it does not change the
+      way in which they are typed.
+
+DEVELOPERS GUIDE
+  //Creating a GetOpt Object
+    // create an object. shouldAddHelp is a boolean to specify if you wish to 
+    // automatically add the help option
+    GetOpt getOpt = new GetOpt(shouldAddHelp); // assume shouldAddHelp is false
+
+  //Adding Options
+    getOpt.addOption(new GetOptOption("a",
+                                      "action",
+                                      "this can store",
+                                      true,
+                                      true));
+    getOpt.addOption(new GetOptOption("f",
+                                      "flag",
+                                      "this does not store",
+                                      false,
+                                      false));
+    getOpt.addOption(new GetOptOption("b",
+                                      "bin",
+                                      "this does store",
+                                      true,
+                                      true));
+    getOpt.addOption(new GetOptOption("v",
+                                      "verbose",
+                                      "this does not store",
+                                      false,
+                                      false));
+
+    getOpt.print(); // prints getOpt.toString()
+
+    /****** start output # 1 ******
+        -a, --action [value]
+        this can store
+        -b, --bin [value]
+        this does store
+        [-f, --flag]
+        this does not store
+        [-v, --verbose]
+        this does not store
+    ******** end output #1 ********/
+    //Processing the Command Line
+    getOpt.process("mycommand -afbv actionValue binValue args1 args2");
+    System.out.println(getOpt.getArgs().get(0).toString()
+                   + ", " 
+                   + getOpt.getArgs().get(1));
+    /******* start output #2 ******
+    mycommand, args1
+    ********* end output # 2 ******/
+    System.out.println("option (action/a): long="
+                   + getOpt.getLongOption("action").getValue() 
+                   + " short=" 
+                   + getOpt.getShortOption("a").getValue());
+    /******* start output #3 ******
+    option (action/a): long=actionValue short=actionValue
+    ********* end output # 3 ******/
+    System.out.println("option (f/flag): long="
+                   + getOpt.getLongOption("flag").getValue()
+                   + " short=" +getOpt.getShortOption("f").getValue());
+    /******* start output #4 ******
+    option (f/flag): long=TRUE short=TRUE
+    ********* end output # 4 ******/
+
+WARNINGS
+    Getopt has been shown to work, but has not been thoroughly tested.
+
+TO DO
+  Debug

@@ -1,0 +1,11 @@
+<project name="Project dependencies" default="deps" basedir=".">
+	<!-- project dependencies -->
+	<target name="deps">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="abstraction"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="setup"/>
+		</ant>
+	</target>
+</project>

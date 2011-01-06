@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    xml:lang="en"
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/description"
+    xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job/description"
+    xmlns:types="http://www.globus.org/namespaces/2004/10/gram/job/types"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+    xmlns:rft="http://www.globus.org/namespaces/2004/10/rft"
+    elementFormDefault="qualified">
+
+    <xsd:import 
+        namespace="http://www.globus.org/namespaces/2004/10/gram/job/types" 
+        schemaLocation="managed_job_types.xsd"/>
+
+    <xsd:annotation>
+        <xsd:documentation xmlns="http://www.w3.org/1999/xhtml">
+            <!-- Everyting until the end of xsd:documentation is html -->
+            <h3>RSL Variables</h3>
+            <p>The RSL Language includes support for system-specific variable
+               substitutions. These variables allow one to write an RSL without
+               specific knowledge of the execution host's local account or
+               directory configuration.
+            </p>
+
+            <h4>RSL Variable Syntax</h4>
+            <p>RSL variable references occur within the contents of
+               an xsd:string type RSL element.  The syntax for an RSL variable
+               reference is
+               <pre>
+                   DOLLAR-SIGN LEFT-BRACE variable-name RIGHT-BRACE
+                </pre>
+                As an example:
+                <pre>
+                    &lt;rsl:executable&gt;myJob&lt;/rsl:executable&gt;
+                    &lt;rsl:stdout&gt;stdout.${GLOBUS_USER_NAME}&lt;/rsl:stdout&gt;
+                </pre>
+                Which would get resolved (supposing the executable is being
+                run under the "user0001" account) to the job description:
+                <pre>
+                    &lt;rsl:executable&gt;myJob&lt;/rsl:executable&gt;
+                    &lt;rsl:stdout&gt;stdout.user0001&lt;/rsl:stdout&gt;
+                </pre>
+            </p>
+
+            <h4>RSL Attributes Which May Contain Variable References</h4>
+            <p>
+                RSL Variable substitutions may not occur in all RSL Job
+                Attributes. Their use is restricted to those which contain
+                arbitrary string data and which may be used to access the
+                local resource associated with a job. The list of attributes
+                which may contain RSL Variables is:
+                <ul>
+                    <li>executable</li>
+                    <li>directory</li>
+                    <li>argument</li>
+                    <li>environment</li>
+                    <li>stdin</li>
+                    <li>stdout</li>
+                    <li>stderr</li>
+                    <li>libraryPath</li>
+                    <li>fileStageIn</li>
+                    <li>fileStageOut</li>
+                    <li>fileCleanUp</li>
+                </ul>
+            </p>
+
+            <h4>RSL Variable Descriptions</h4>
+            <p>
+               <dl>
+                 <dt>GLOBUS_USER_HOME</dt>
+                 <dd>The path to the home directory for the local account/user
+                 </dd>
+                 <dt>GLOBUS_USER_NAME</dt>
+                 <dd>The local account the job is running under</dd>
+                 <dt>GLOBUS_SCRATCH_DIR</dt>
+                 <dd>An alternative directory where a file system is shared
+                 with the compute nodes that a user might want to use.
+                 Typically it will provide more space than the users default
+                 HOME dir. This directory's value may contain
+                 ${GLOBUS_USER_HOME}, which will be
+                 replaced with value of that substitution.
+                 </dd>
+                 <dt>GLOBUS_LOCATION</dt>
+                 <dd>Path to the Globus Toolkit installation</dd>
+                </dl>
+            </p>
+
+            <h4>Differences From Pre-WS GRAM and OGSA GRAM</h4>
+            <p>In both Pre-WS GRAM and OGSA-GRAM, applications could define
+               arbitrary RSL substitutions within an RSL document and rely
+               on the GRAM service to resolve them. This feature is no longer
+               present. Only those RSL variables described in this document
+               may be referenced in an RSL job description.
+            </p>
+            <p>
+               In both Prew-WS GRAM and OGSA-GRAM, RSL substitutions could be
+               used in arbitrary Job Description attributes. In an effort to
+               more strongly type RSL Job Description documents in WS-GRAM,
+               RSL substitutions are now restricted to be used only in certain
+               attribute contexts.
+            </p>
+            <p>
+               OGSA GRAM defines RSL Substitutions as separate XML elements
+               within an RSL Job Description document. With GT4 WS-GRAM, RSL
+               variable references are included with a special syntax within
+               certain RSL job description elements.
+
+               <!-- TODO: describe why we do this now? -->
+            </p>
+
+        </xsd:documentation>
+    </xsd:annotation>
+    <xsd:import
+        namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+        schemaLocation="../ws/addressing/WS-Addressing.xsd"/>
+
+    <xsd:import
+        namespace="http://www.globus.org/namespaces/2004/10/rft"
+        schemaLocation="../transfer/reliable/reliable_transfer_types.xsd"/>
+
+    <!--=====================================================================-->
+    <!--                  Utility types                                      -->
+    <!--=====================================================================-->
+    <xsd:complexType name="NameValuePairType">
+        <xsd:sequence>
+            <xsd:element name="name" type="xsd:string"/>
+            <xsd:element name="value" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="FilePairType">
+        <xsd:sequence>
+            <xsd:element name="sourceFile" type="xsd:string"/>
+            <xsd:element name="destinationFile" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="ExtensionsType">
+        <xsd:sequence>
+            <!-- extensibility -->
+            <xsd:any namespace="##other"
+                     minOccurs="0"
+                     maxOccurs="unbounded"
+                     processContents="lax"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!--=====================================================================-->
+    <!--                  GRAM job attribute definitions                     -->
+    <!--=====================================================================-->
+    <xsd:element name="factoryEndpoint" type="wsa:EndpointReferenceType">
+        <xsd:annotation>
+            <xsd:documentation>
+                The Managed Job Factory service endpoint to submit this
+                job description to.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="jobCredentialEndpoint"
+                  type="wsa:EndpointReferenceType">
+        <xsd:annotation>
+            <xsd:documentation>
+                An EPR which points to the delegated credential resource.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="stagingCredentialEndpoint"
+                  type="wsa:EndpointReferenceType">
+        <xsd:annotation>
+            <xsd:documentation>
+                An EPR which points to the delegated credential resource
+                used to make remote calls to RFT.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="executable" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                The name of the executable file to run on the remote
+                machine. If the value is a GASS URL, the file is
+                transferred to the remote gass cache before executing
+                the job and removed after the job has terminated.
+
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="directory" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                Specifies the path of the directory the jobmanager will
+                use as the default directory for the requested job.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="argument" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                A command line argument for the executable. Each argument
+                is a separate element within the job description. Spaces
+                and quotes within an argument will preserved literally.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="environment" type="tns:NameValuePairType">
+        <xsd:annotation>
+            <xsd:documentation>
+                The environment variables that will be defined for the
+                executable in addition to default set that is given to
+                the job by the jobmanager.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="stdin" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                The name of the file to be used as standard input for
+                the executable on the remote machine. If the value is
+                a GASS URL, the file is transferred to the remote gass
+                cache before executing the job and removed after the
+                job has terminated.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="stdout" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                The name of the remote file to store the standard
+                output from the job. The standard output from the
+                job is staged after the execution to the paths or
+                URLs specified as the values. Values which are
+                local paths will be staged relative to the users
+                home directory. Values which are absolute paths
+                will be staged simply as if 'file://' were
+                prepended to the path.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="stderr" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                The name of the remote file to store the standard
+                error from the job. The standard error from the
+                job is staged after the execution to the paths or
+                URLs specified as the values. Values which are
+                local paths will be staged relative to the users
+                home directory. Values which are absolute paths
+                will be staged simply as if 'file://' were
+                prepended to the path.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="count" type="xsd:positiveInteger" default="1">
+        <xsd:annotation>
+            <xsd:documentation>
+                The number of executions of the executable.
+                Default: 1 (if the element is empty or missing)
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="libraryPath" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                Specifies a list of paths to be appended to the
+                system-specific library path environment variables.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="hostCount" type="xsd:positiveInteger">
+        <xsd:annotation>
+            <xsd:documentation>
+                Only applies to clusters of SMP computers, such as
+                newer IBM SP systems. Defines the number of nodes
+                pizza boxes") to distribute the "count" processes
+                across.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="project" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                Target the job to be allocated to a project account as
+                defined by the scheduler at the defined (remote)
+                resource.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="queue" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                Target the job to a queue (class) name as defined by
+                the scheduler at the defined (remote) resource.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="maxTime" type="xsd:long">
+        <xsd:annotation>
+            <xsd:documentation>
+                The maximum walltime or cputime for a single execution
+                of the executable. Walltime or cputime is selected by
+                the GRAM scheduler being interfaced. The units is in
+                minutes. The value will go through an atoi() conversion
+                in order to get an integer.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="maxWallTime" type="xsd:long">
+        <xsd:annotation>
+            <xsd:documentation>
+                Explicitly set the maximum walltime for a single
+                execution of the executable. The units is in minutes.
+                The value will go through an atoi() conversion in order
+                to get an integer. If the GRAM scheduler cannot set
+                walltime, then an error will be returned.
+            </xsd:documentation>
+        </xsd:annotation>
+
+    </xsd:element>
+    <xsd:element name="maxCpuTime" type="xsd:long">
+        <xsd:annotation>
+            <xsd:documentation>
+                Explicitly set the maximum cputime for a single
+                execution of the executable. The units is in minutes.
+                The value will go through an atoi() conversion in order
+                to get an integer. If the GRAM scheduler cannot set
+                cputime, then an error will be returned.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="maxMemory" type="xsd:nonNegativeInteger">
+        <xsd:annotation>
+            <xsd:documentation>
+                Explicitly set the maximum amount of memory for a
+                single execution of the executable. The units is in
+                Megabytes. The value will go through an atoi()
+                conversion in order to get an integer. If the GRAM
+                scheduler cannot set maxMemory, then an error will be
+                returned.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="minMemory" type="xsd:nonNegativeInteger">
+        <xsd:annotation>
+            <xsd:documentation>
+                Explicitly set the minimum amount of memory for a
+                single execution of the executable. The units is in
+                Megabytes. The value will go through an atoi()
+                conversion in order to get an integer. If the GRAM
+                scheduler cannot set minMemory, then an error will be
+                returned.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+
+    <xsd:simpleType name="JobTypeEnumeration">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="mpi"/>
+            <xsd:enumeration value="single"/>
+            <xsd:enumeration value="multiple"/>
+            <xsd:enumeration value="condor"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:element name="jobType" type="tns:JobTypeEnumeration">
+        <xsd:annotation>
+            <xsd:documentation>
+                This specifies how the jobmanager should start the job.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="fileStageIn" type="rft:TransferRequestType">
+        <xsd:annotation>
+            <xsd:documentation>
+                Specifies a list of ("remote URL" "local file") pairs
+                which indicate files to be staged to the nodes which
+                will run the job.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="fileStageOut" type="rft:TransferRequestType">
+        <xsd:annotation>
+            <xsd:documentation>
+                Specifies a list of ("local file" "remote URL") pairs
+                which indicate files to be staged from the job to a
+                GridFTP-compatible file server.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="fileCleanUp" type="rft:DeleteRequestType">
+        <xsd:annotation>
+            <xsd:documentation>
+                Specifies a list of files local to the job
+                which indicate files to be removed via a
+                GridFTP-compatible file server.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="extensions" type="tns:ExtensionsType">
+        <xsd:annotation>
+            <xsd:documentation>
+                This section is currently used only to specify client-specific
+                data which the client wishes to associate with the job it is
+                controlling.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <!--=====================================================================-->
+    <!--               GRAM single-job content definition                    -->
+    <!--=====================================================================-->
+
+    <xsd:complexType name="JobDescriptionType">
+        <xsd:sequence>
+
+            <xsd:element ref="tns:factoryEndpoint"      minOccurs="0"/>
+
+            <xsd:element ref="tns:jobCredentialEndpoint"
+                                                        minOccurs="0"/>
+            <xsd:element ref="tns:stagingCredentialEndpoint"
+                                                        minOccurs="0"/>
+            <xsd:element ref="types:localUserId"        minOccurs="0"/>
+            <xsd:element ref="types:holdState"          minOccurs="0"/>
+
+            <!-- attributes directly related to running the executable -->
+            <xsd:element ref="tns:executable"           minOccurs="0"/>
+            <xsd:element ref="tns:directory"            minOccurs="0"/>
+            <xsd:element ref="tns:argument"             minOccurs="0"
+                                                        maxOccurs="unbounded"/>
+            <xsd:element ref="tns:environment"          minOccurs="0"
+                                                        maxOccurs="unbounded"/>
+            <xsd:element ref="tns:stdin"                minOccurs="0"/>
+            <xsd:element ref="tns:stdout"               minOccurs="0"/>
+            <xsd:element ref="tns:stderr"               minOccurs="0"/>
+            <xsd:element ref="tns:count"                minOccurs="0"/>
+            <xsd:element ref="tns:libraryPath"          minOccurs="0"
+                                                        maxOccurs="unbounded"/>
+
+            <!-- attributes related to SMP jobs -->
+            <xsd:element ref="tns:hostCount"            minOccurs="0"/>
+
+            <!-- attributes for interfacing with schedulers -->
+            <xsd:element ref="tns:project"              minOccurs="0"/>
+            <xsd:element ref="tns:queue"                minOccurs="0"/>
+            <xsd:element ref="tns:maxTime"              minOccurs="0"/>
+            <xsd:element ref="tns:maxWallTime"          minOccurs="0"/>
+            <xsd:element ref="tns:maxCpuTime"           minOccurs="0"/>
+            <xsd:element ref="tns:maxMemory"            minOccurs="0"/>
+            <xsd:element ref="tns:minMemory"            minOccurs="0"/>
+
+            <!-- attributes for specifying the type of job to run -->
+            <xsd:element ref="tns:jobType"              minOccurs="0"/>
+
+            <!-- attributes related to the staging of files in or out -->
+            <xsd:element ref="tns:fileStageIn"          minOccurs="0"/>
+            <xsd:element ref="tns:fileStageOut"         minOccurs="0"/>
+
+            <!-- attributes related to job clean up -->
+            <xsd:element ref="tns:fileCleanUp"          minOccurs="0"/>
+
+            <xsd:element ref="tns:extensions"           minOccurs="0"/>
+
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="MultiJobDescriptionType">
+        <xsd:annotation>
+            <xsd:documentation>
+                This type extends JobDescriptionType to allow generalities.
+                If a single job description element does not contain a
+                particular attribute, the outer-scope value will be assumed
+                if it is defined.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="tns:JobDescriptionType">
+                <xsd:sequence>
+                    <xsd:element name="job"     type="tns:JobDescriptionType"
+                                                maxOccurs="unbounded"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <!-- types and element used when either job description is allowed -->
+    <xsd:complexType name="ServiceLevelAgreementType">
+        <xsd:choice>
+            <xsd:element ref="tns:job"/>
+            <xsd:element ref="tns:multiJob"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <xsd:element name="serviceLevelAgreement"
+                 type="tns:ServiceLevelAgreementType"/>
+
+    <!--=====================================================================-->
+    <!--                Root element of a job description document           -->
+    <!--=====================================================================-->
+    <xsd:element name="job"                 type="tns:JobDescriptionType"/>
+    <xsd:element name="multiJob"            type="tns:MultiJobDescriptionType"/>
+
+</xsd:schema>

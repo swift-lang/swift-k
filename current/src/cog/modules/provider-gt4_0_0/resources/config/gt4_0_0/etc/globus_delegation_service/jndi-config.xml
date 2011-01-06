@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jndiConfig xmlns="http://wsrf.globus.org/jndi/config">
+    <service name="DelegationFactoryService">
+        <resource 
+            name="home"
+            type="org.globus.delegation.factory.DelegationFactoryHome">
+            <resourceParams>
+                <parameter>
+                    <name>factory</name>
+                    <value>org.globus.wsrf.jndi.BeanFactory</value>
+                </parameter>
+            </resourceParams>
+        </resource>
+    </service>
+    <service name="DelegationService">
+        <resource 
+            name="home"
+            type="org.globus.delegation.service.DelegationHome">
+            <resourceParams>
+                <parameter>
+                    <name>factory</name>
+                    <value>org.globus.wsrf.jndi.BeanFactory</value>
+                </parameter>
+                <parameter>
+                    <name>resourceClass</name>
+                    <value>org.globus.delegation.service.DelegationResource</value>
+                </parameter>
+                <parameter>
+                    <name>resourceKeyName</name>
+                    <value>{http://www.globus.org/08/2004/delegationService}DelegationKey</value>
+                </parameter>
+                <parameter>
+                    <name>resourceKeyType</name>
+                    <value>java.lang.String</value>
+                </parameter>
+                <parameter>
+                    <name>resourceDescPath</name>
+                    <value>etc/globus_delegation_service/service-security-config.xml</value>
+                </parameter>
+            </resourceParams>
+        </resource>
+    </service>
+</jndiConfig>

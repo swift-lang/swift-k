@@ -1,0 +1,39 @@
+NAME
+  rmdir - remove a directory
+
+SYNOPIS
+  rmdir [DIR_NAME]
+
+DESCRIPTION
+  This command allows a user to remove a directory DIR_NAME.
+
+OPTIONS
+  [-f, --force]
+     forces the removal of the directory
+  [--help]
+     displays the options
+
+EXAMPLES
+
+  1) Removes the directory "myEmtpyDirectory" if it exists
+  and if it is emtpy
+
+    > rmdir myEmptyDirectory
+
+  2) Removes the directory "myNonEmtpyDirectory" if it
+  exists. It does not matter if the folder contains
+  anything.
+
+    > rmdir --force myNonEmptyDirectory
+
+WARNINGS
+  This command is not enabled to work well with the group
+  command. If there are more than one connections associated
+  with the last open, then it uses the last connection.
+
+TO DO
+  Allow the user to choose which connection to perform the cd command
+  on when multiple connections are associated with the last open.
+
+SEE ALSO
+  open, cd, mkdir, putdir

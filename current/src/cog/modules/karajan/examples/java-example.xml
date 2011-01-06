@@ -1,0 +1,39 @@
+<project>
+  <include file="cogkit.xml"/>
+  
+  <!-- copies a java source file over to a remote host, compiles and runs it -->
+  <set name="host" value="arbat.mcs.anl.gov"/>
+  
+  <!-- copy file -->
+  <task:transfer srcfile="Test.java" desthost="{host}" provider="gridftp"/>
+  
+  <!-- compile -->
+  <task:execute host="{host}" provider="gt2"
+    executable="/homes/dsl/javapkgs/linux/j2sdk1.4.2_05/bin/javac"
+    arguments="Test.java"/>
+    
+  <!-- run -->
+  <task:execute host="{host}" provider="gt2"
+    executable="/homes/dsl/javapkgs/linux/j2sdk1.4.2_05/bin/java"
+    arguments="-cp . Test"
+    stdout="test.stdout" stderr="test.stderr"/>
+    
+  <!-- transfer back stdout and stderr -->
+  <task:transfer srchost="{host}" srcfile="test.stdout" provider="gridftp"/>
+  <task:transfer srchost="{host}" srcfile="test.stderr" provider="gridftp"/>
+  
+  <!-- print output and error -->
+  <echo>
+  	<concat>
+		<string>STDOUT: </string>
+	    <readFile file="test.stdout"/>
+	</concat>
+  </echo>
+  <echo>
+  	<concat>
+		<string>STDERR: </string>
+	    <readFile file="test.stderr"/>
+	</concat>
+  </echo>
+    
+</project>

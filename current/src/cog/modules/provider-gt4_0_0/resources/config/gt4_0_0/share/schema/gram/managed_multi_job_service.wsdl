@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="ManagedMultiJob" targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/multi/service" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://www.globus.org/namespaces/2004/10/gram/job/multi/bindings" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="http://www.globus.org/namespaces/2004/10/gram/job/multi/bindings" location="managed_multi_job_bindings.wsdl"/>
+  <wsdl:service name="ManagedMultiJobService">
+    <wsdl:port name="ManagedMultiJobPortTypePort" binding="binding:ManagedMultiJobPortTypeSOAPBinding">
+      <soap:address location="http://localhost:8080/wsrf/services/"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

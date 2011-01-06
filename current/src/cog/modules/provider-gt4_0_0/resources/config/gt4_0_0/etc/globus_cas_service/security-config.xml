@@ -1,0 +1,17 @@
+<securityConfig xmlns="http://www.globus.org">
+ <auth-method>
+   <GSITransport/>
+   <GSISecureMessage/>
+  <GSISecureConversation/>
+ </auth-method>
+ <method name="queryResourceProperties">
+ <auth-method>
+   <none/>
+ </auth-method>
+ </method>
+ <method name="getResourceProperty">
+ <auth-method>
+   <none/>
+ </auth-method>
+ </method>
+</securityConfig>

@@ -1,0 +1,51 @@
+NAME
+  cd - change the current working directory
+
+SYNOPIS
+  cd [DIRECTORY]
+
+DESCRIPTION
+  This command will change the current working directory to DIRECTORY
+
+OPTIONS
+  [--help]
+    displays the options
+
+
+EXAMPLES
+  1) To change the current working directory up one level type:
+
+     > cd ..
+
+  2) To change the current working directory to the absolute
+     path /usr/bin:
+
+     > cd /usr/bin
+
+  3) To change the current working directory to the relative 
+     path www/cgi-bin (so if the user was at /var and typed
+     the following command the current working directory would
+     be /var/www/cgi-bin)
+
+     > cd www/cgi-bin   
+
+WARNINGS
+   1) While many shells allow a user to simply type "cd" to
+   move to the home directory, currently ShellPanel must
+   have a path specified.
+
+   2)While many shells allow a user to type "cd -" to move
+   to the previous working directory, ShellPanel does not
+   support this.
+
+   3) This command is not enabled to work well with the
+   group command. If there are more than one connections
+   associated with the last open, then it uses the last
+   connection.
+
+TO DO
+  Allow the user to choose which connection to perform the cd command on when
+  multiple connections are associated with the last open.
+       
+SEE ALSO
+  open, ls, mkdir, rmdir

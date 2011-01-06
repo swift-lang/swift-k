@@ -1,0 +1,57 @@
+<html>
+<body>
+<h1>
+NRC-CNRC Host Certificate Request Tool
+</h1>
+
+<!--"CONVERTED_APPLET"-->
+<!-- HTML CONVERTER -->
+<OBJECT 
+    classid = "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"
+    codebase = "http://java.sun.com/update/1.4.2/jinstall-1_4-windows-i586.cab#Version=1,4,0,0"
+    WIDTH = "400" HEIGHT = "460" >
+    <PARAM NAME = CODE VALUE = "org.globus.cog.security.cert.management.CertReqApplet.class" >
+    <PARAM NAME = CODEBASE VALUE = "@CODEBASE@" >
+    <PARAM NAME = ARCHIVE VALUE = "@ARCHIVE@" >
+    <PARAM NAME = "type" VALUE = "application/x-java-applet;version=1.4">
+    <PARAM NAME = "scriptable" VALUE = "false">
+    <PARAM NAME = "backGroundColor" VALUE="0xFFFFFF"/>
+    <PARAM NAME = "emailAddressOfCA" VALUE="@CA_EMAIL_ADDRESS@"/>
+    <PARAM NAME = "certificateRequestType" VALUE="host"/>
+
+    <COMMENT>
+	<EMBED 
+            type = "application/x-java-applet;version=1.4" \
+            CODE = "org.globus.cog.security.cert.management.CertReqApplet.class" \
+            CODEBASE = "@CODEBASE@" \
+            ARCHIVE = "@ARCHIVE@" \
+            WIDTH = "400" \
+            HEIGHT = "460" \
+            backGroundColor ="0xFFFFFF"/ \
+            emailAddressOfCA ="@CA_EMAIL_ADDRESS@"/ \
+			certificateRequestType ="host"/ \
+	    scriptable = false \
+	    pluginspage = "http://java.sun.com/products/plugin/index.html#download">
+	    <NOEMBED>
+            
+            </NOEMBED>
+	</EMBED>
+    </COMMENT>
+</OBJECT>
+
+
+
+<br clear="ALL">
+Notes:<br>
+<br>
+This applet uses the same cog.properties files as the CoG kit.<br>
+If you have a cog.properties file it the keys will be generate according to those settings.<br>
+If you do not have a cog.properties file the keys will be generated in your home dir in a directory named ".globus".<br>
+<br>
+To prevent any accidents this applet does not overwrite any existing key files. It is up to the user to move or rename any existing keys.<br>
+<br>
+Jean-Claude Cote<br>
+<br>
+
+</body>
+</html>

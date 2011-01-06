@@ -1,0 +1,68 @@
+<project>
+  <include file="sys.xml"/>
+  <include file="forms.xml"/>
+  
+  <set name="formData"
+    _annotation="Input lastname, firstname, marrige status, and gender">
+    <form:form title="test" id="form" waitOn="IDOk">
+      <form:vbox>
+        <form:hbox>
+          <form:vbox>
+            <form:hbox>
+              <form:label text="First name: "/>
+              <form:textField id="IDFirst" columns="20"/>
+            </form:hbox>
+            <form:hbox>
+              <form:label text="Last name: "/>
+              <form:textField id="IDLast" columns="20"/>
+            </form:hbox>
+          </form:vbox>
+          <form:VSeparator/>
+          <form:vbox>
+            <form:checkBox caption="Married" id="IDMarried" halign="0"/>
+            <form:HSeparator/>
+            <form:radioBox caption="Sex" id="IDSex">
+              <form:radioButton caption="Male" id="IDMale"/>
+              <form:radioButton caption="Female" id="IDFemale"/>
+            </form:radioBox>
+          </form:vbox>
+        </form:hbox>
+        <form:button id="IDOk" caption="Ok"/>
+      </form:vbox>
+    </form:form>
+  </set>
+  
+  <echo _annotation= "Printing the first name">
+		<concat>
+			<string>The first name is </string>
+		    <map:get key="IDFirst" map="{formData}"/>
+		</concat>
+  </echo>
+  <echo _annotation= "Printing the last name">
+		<concat>
+			<string>The last name is </string>
+		    <map:get key="IDLast" map="{formData}"/>
+		</concat>
+  </echo>
+  <echo _annotation= "Printing the first and last name">
+		<concat>
+			<string>The person is </string>
+		    <if>
+		       <isTrue><map:get key="IDMarried" map="{formData}"/></isTrue>
+		       <then>
+		        	<string>married</string>
+		       </then>
+		       <else>
+		       		<string>not married</string>
+		       </else>
+		    </if>
+		</concat>
+  </echo>
+  
+  <echo _annotation= "Printing the sex">
+		<concat>
+			<string>The person is a </string>
+		    <map:get key="IDSex" map="{formData}"/>
+		</concat>
+  </echo>
+</project>

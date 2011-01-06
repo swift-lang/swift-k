@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="SecureConversation" 
+    targetNamespace="http://wsrf.globus.org/core/2004/07/security/secconv"
+    xmlns:tns="http://wsrf.globus.org/core/2004/07/security/secconv"
+    xmlns:gtwsdl="http://www.globus.org/namespaces/2004/01/GTWSDLExtensions"
+    xmlns:wsp="http://schemas.xmlsoap.org/ws/2002/12/policy"
+    xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+    xmlns:wst="http://schemas.xmlsoap.org/ws/2004/04/trust"
+    xmlns:wsc="http://schemas.xmlsoap.org/ws/2004/04/sc"    
+    xmlns="http://schemas.xmlsoap.org/wsdl/"> 
+    
+    <import 
+        namespace="http://schemas.xmlsoap.org/ws/2004/04/trust"
+        location="../../../ws/trust/ws-trust.wsdl"/>
+    
+    <types>
+        <xsd:schema targetNamespace="http://wsrf.globus.org/core/2004/07/security/secconv"
+            xmlns:tns="http://wsrf.globus.org/core/2004/07/security/secconv"
+            xmlns:wst="http://schemas.xmlsoap.org/ws/2004/04/trust"
+            xmlns:wsp="http://schemas.xmlsoap.org/ws/2002/12/policy"
+            xmlns:wsc="http://schemas.xmlsoap.org/ws/2004/04/sc"    
+            xmlns:wsbf="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd"
+    	    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+            <xsd:import 
+                namespace=
+                "http://schemas.xmlsoap.org/ws/2004/04/trust"
+                schemaLocation=
+                "../../../ws/trust/ws-trust.xsd"/>
+            <xsd:import 
+                namespace=
+                "http://schemas.xmlsoap.org/ws/2004/04/sc"
+                schemaLocation=
+                "../../../ws/secconv/ws-secureconversation.xsd"/>
+            <xsd:import 
+                namespace=
+                "http://schemas.xmlsoap.org/ws/2002/12/policy"
+                schemaLocation=
+                "../../../ws/policy/policy.xsd"/>
+            <xsd:import 
+                namespace=
+                "http://schemas.xmlsoap.org/ws/2004/03/addressing"
+                schemaLocation=
+                "../../../ws/addressing/WS-Addressing.xsd"/>
+         <xsd:import 
+                namespace=
+                "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-BaseFaults-1.2-draft-01.xsd" 
+                schemaLocation="../../../wsrf/faults/WS-BaseFaults.xsd"/>
+
+            <xsd:complexType name="InvalidContextIdFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="InvalidContextIdFault" 
+                type="tns:InvalidContextIdFaultType"/>
+
+            <xsd:complexType name="TokenTypeNotSupportedFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="TokenTypeNotSupportedFault" 
+                type="tns:TokenTypeNotSupportedFaultType"/>
+
+            <xsd:complexType name="RequestTypeNotSupportedFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="RequestTypeNotSupportedFault" 
+                type="tns:RequestTypeNotSupportedFaultType"/>
+
+            <xsd:complexType 
+                name="BinaryExchangeFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="BinaryExchangeFault" 
+                type="tns:BinaryExchangeFaultType"/>
+
+            <xsd:complexType 
+                name="ValueTypeNotSupportedFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="tns:BinaryExchangeFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="ValueTypeNotSupportedFault" 
+                type="tns:ValueTypeNotSupportedFaultType"/>
+
+            <xsd:complexType 
+                name="EncodingTypeNotSupportedFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="tns:BinaryExchangeFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="EncodingTypeNotSupportedFault" 
+                type="tns:EncodingTypeNotSupportedFaultType"/>
+
+            <xsd:complexType name="MalformedMessageFaultType">
+                <xsd:complexContent>
+                    <xsd:extension base="wsbf:BaseFaultType"/>
+                </xsd:complexContent>
+            </xsd:complexType>
+            <xsd:element name="MalformedMessageFault" 
+                type="tns:MalformedMessageFaultType"/>
+
+            <xsd:element name="ContextAddress" 
+                type="wsa:EndpointReferenceType"/>
+        </xsd:schema>
+    </types>
+
+    <message name="InvalidContextIdFault" >
+        <part name="Fault" element="tns:InvalidContextIdFault"/>
+    </message>
+
+    <message name="ValueTypeNotSupportedFault" >
+        <part name="Fault" element="tns:ValueTypeNotSupportedFault"/>
+    </message>
+
+    <message name="EncodingTypeNotSupportedFault" >
+        <part name="Fault" element="tns:EncodingTypeNotSupportedFault"/>
+    </message>
+
+    <message name="TokenTypeNotSupportedFault" >
+        <part name="Fault" element="tns:TokenTypeNotSupportedFault"/>
+    </message>
+
+    <message name="RequestTypeNotSupportedFault" >
+        <part name="Fault" element="tns:RequestTypeNotSupportedFault"/>
+    </message>
+
+    <message name="MalformedMessageFault" >
+        <part name="Fault" element="tns:MalformedMessageFault"/>
+    </message>
+
+    <message name="BinaryExchangeFault" >
+        <part name="Fault" element="tns:BinaryExchangeFault"/>
+    </message>
+
+    <portType name="SecureConversation">
+        <operation name="RequestSecurityToken">
+            <input message="wst:RequestSecurityTokenMsg"/>
+            <output message="wst:RequestSecurityTokenResponseMsg"/>
+            <fault name="ValueTypeNotSupportedFault" 
+                message="tns:ValueTypeNotSupportedFault"/>
+            <fault name="EncodingTypeNotSupportedFault" 
+                message="tns:EncodingTypeNotSupportedFault"/>
+            <fault name="RequestTypeNotSupportedFault" 
+                message="tns:RequestTypeNotSupportedFault"/>
+            <fault name="TokenTypeNotSupportedFault" 
+                message="tns:TokenTypeNotSupportedFault"/>
+            <fault name="MalformedMessageFault" 
+                message="tns:MalformedMessageFault"/>
+            <fault name="BinaryExchangeFault" 
+                message="tns:BinaryExchangeFault"/>
+        </operation>
+        <operation name="RequestSecurityTokenResponse">
+            <input message="wst:RequestSecurityTokenResponseMsg"/>
+            <output message="wst:RequestSecurityTokenResponseMsg"/>
+            <fault name="InvalidContextIdFault" 
+                message="tns:InvalidContextIdFault"/>
+            <fault name="ValueTypeNotSupportedFault" 
+                message="tns:ValueTypeNotSupportedFault"/>
+            <fault name="EncodingTypeNotSupportedFault" 
+                message="tns:EncodingTypeNotSupportedFault"/>
+            <fault name="RequestTypeNotSupportedFault" 
+                message="tns:RequestTypeNotSupportedFault"/>
+            <fault name="TokenTypeNotSupportedFault" 
+                message="tns:TokenTypeNotSupportedFault"/>
+            <fault name="MalformedMessageFault" 
+                message="tns:MalformedMessageFault"/>
+            <fault name="BinaryExchangeFault" 
+                message="tns:BinaryExchangeFault"/>
+        </operation>
+    </portType>
+
+</definitions>

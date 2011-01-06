@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/multi"
+    xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job/multi"
+    xmlns:job="http://www.globus.org/namespaces/2004/10/gram/job"
+    elementFormDefault="qualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import namespace="http://www.globus.org/namespaces/2004/10/gram/job"
+                schemaLocation="../gram/managed_job_data.xsd"/>
+
+    <!--==================================================-->
+    <!--                 resource data                    -->
+    <!--==================================================-->
+
+    <xsd:element name="destroyCalled"       type="xsd:boolean"/>
+    <xsd:element name="subJobCount"         type="xsd:int"/>
+    <xsd:element name="unsubmittedCount"    type="xsd:int"/>
+    <xsd:element name="stageInCount"        type="xsd:int"/>
+    <xsd:element name="pendingCount"        type="xsd:int"/>
+    <xsd:element name="activeCount"         type="xsd:int"/>
+    <xsd:element name="stageOutCount"       type="xsd:int"/>
+    <xsd:element name="cleanUpCount"        type="xsd:int"/>
+    <xsd:element name="suspendedCount"      type="xsd:int"/>
+    <xsd:element name="doneCount"           type="xsd:int"/>
+    <xsd:element name="failedCount"         type="xsd:int"/>
+    <xsd:element name="holdingCount"        type="xsd:int"/>
+
+    <xsd:complexType name="ManagedMultiJobResourceDataType">
+        <xsd:complexContent>
+            <xsd:extension base="job:ManagedJobResourceDataType">
+            <xsd:sequence>
+                <xsd:element ref="job:subscriptionEndpoint"
+                             minOccurs="0"
+                             maxOccurs="unbounded"/>
+
+                <xsd:element ref="tns:destroyCalled"/>
+
+                <!-- used for setting aggregated state -->
+                <xsd:element ref="tns:subJobCount"/>
+                <xsd:element ref="tns:stageInCount"/>
+                <xsd:element ref="tns:pendingCount"/>
+                <xsd:element ref="tns:activeCount"/>
+                <xsd:element ref="tns:stageOutCount"/>
+                <xsd:element ref="tns:cleanUpCount"/>
+                <xsd:element ref="tns:suspendedCount"/>
+                <xsd:element ref="tns:doneCount"/>
+                <xsd:element ref="tns:failedCount"/>
+                <xsd:element ref="tns:holdingCount"/>
+            </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+</xsd:schema>

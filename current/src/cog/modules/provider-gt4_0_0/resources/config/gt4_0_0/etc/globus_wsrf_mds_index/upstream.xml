@@ -1,0 +1,31 @@
+<ServiceGroupRegistrationParameters
+   xmlns="http://mds.globus.org/servicegroup/client" >
+
+
+   <!-- Specifies that the registration will be renewed every 600
+        seconds (= 10 minutes) -->
+   <RefreshIntervalSecs>600</RefreshIntervalSecs>
+
+
+   <Content xsi:type="agg:AggregatorContent"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:agg="http://mds.globus.org/aggregator/types">
+
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+         <agg:GetResourcePropertyPollType
+            xmlns:wssg= "http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ServiceGroup-1.2-draft-01.xsd" >
+            <!-- Specifies that the upstream index should refresh information
+                 every 10 minutes -->
+            <agg:PollIntervalMillis>600000</agg:PollIntervalMillis>
+
+            <!-- specified that the upstream index should collect the
+                 Entry resource properties from this index -->
+            <agg:ResourcePropertyName>wssg:Entry</agg:ResourcePropertyName>
+
+         </agg:GetResourcePropertyPollType>
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+</ServiceGroupRegistrationParameters>
+

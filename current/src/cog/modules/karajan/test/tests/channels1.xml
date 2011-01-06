@@ -1,0 +1,19 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="channels 1"/>
+		<map:entry key="test">
+			<element arguments="">
+				<set name="value">
+					<channel:from name="channel">
+						<channel:to name="channel">
+							<string>test</string>
+						</channel:to>
+					</channel:from>
+				</set>
+				<variable>value</variable>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result" value="test"/>
+		<map:entry key="comparison" value="{default_comparison}"/>
+	</map>
+</karajan>

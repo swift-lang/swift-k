@@ -1,0 +1,52 @@
+NAME
+    grid-info-search - TBD 
+
+SYNOPSIS
+    grid-info-search [ options ] <search filter> [attributes]
+
+DESCRIPTION
+    Searches the MDS server based on the search filter,
+    where some options are:
+
+OPTIONS
+    -help
+           Displays this message
+
+    -version
+           Displays the current version number
+
+    -mdshost host (-h)
+           The host name on which the MDS server is running
+           The default is ROBIN.
+
+    -mdsport port (-p)
+           The port number on which the MDS server is running
+           The default is 2135
+
+    -mdsbasedn branch-point (-b)
+           Location in DIT from which to start the search
+           The default is 'mds-vo-name=local, o=grid'
+
+    -mdstimeout seconds (-T)
+           The amount of time (in seconds) one should allow to
+           wait on an MDS request. The default is 30
+
+    -anonymous (-x)
+           Use anonymous binding instead of GSSAPI.
+
+     grid-info-search also supports some of the flags that are
+     defined in the LDAP v3 standard.
+     Supported flags:
+
+      -s scope   one of base, one, or sub (search scope)
+      -P version protocol version (default: 3)
+      -l limit   time limit (in seconds) for search
+      -z limit   size limit (in entries) for search
+      -Y mech    SASL mechanism
+      -D binddn  bind DN
+      -v         run in verbose mode (diagnostics to standard output)
+      -O props   SASL security properties (auth, auth-conf, auth-int)
+      -w passwd  bind password (for simple authentication)
+
+SEE ALSO
+    TBD

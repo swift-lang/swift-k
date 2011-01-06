@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+    <wsdl:types>
+        <xsd:schema
+            targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job"
+            xmlns:tns="http://www.globus.org/namespaces/2004/10/gram"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+            <xsd:include schemaLocation="file_system_map_config.xsd"/>
+
+        </xsd:schema>
+    </wsdl:types>
+</definitions>

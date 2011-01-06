@@ -1,0 +1,31 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="import"/>
+		<map:entry key="test">
+			<element arguments="">
+				<import>
+					<parallel>
+						<export name="one">
+							<element arguments="">
+								<number>1</number>
+							</element>
+						</export>
+						
+						<export name="two">
+							<element arguments="">
+								<number>2</number>
+							</element>
+						</export>
+					</parallel>
+				</import>
+				
+				<sum>
+					<one/>
+					<two/>
+				</sum>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result" value="3.0"/>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

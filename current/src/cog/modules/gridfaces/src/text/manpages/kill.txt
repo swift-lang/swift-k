@@ -1,0 +1,27 @@
+NAME
+  kill - kills a process
+
+SYNOPIS
+  kill [COG_ID]
+
+DESCRIPTION
+  This command, kill, will terminate a command given it's unique cog
+  id COG_ID.
+
+OPTIONS
+  [--help]
+     displays the options
+
+EXAMPLES
+  1) To kill the process associated with the id 
+     "urn:cog-1091205292112" type:
+
+    > kill urn:cog-1091205292112
+
+WARNINGS
+  Currently the Grid Command Manager only allows commands that have
+  been submitted to be killed. Unsubmitted commands should also be
+  able to be killed.
+
+SEE ALSO
+  ps

@@ -1,0 +1,58 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="another stress test"/>
+		<map:entry key="test">
+			<element arguments="">
+				<element name="bla" arguments="a, b, c, d">
+					<if>
+						<equals>
+							<variable>a</variable>
+							<list>
+								<variable>b</variable>
+								<variable>c</variable>
+								<variable>d</variable>
+							</list>
+						</equals>
+						
+						<number>1</number>
+						
+						<number>0</number>
+					</if>
+				</element>
+				<sum>
+					<for name="i">
+						<range from="1" to="20"/>
+						
+						<parallelFor name="j">
+							<range from="1" to="250"/>
+							
+							<bla>
+								<parallel>
+									<list>
+										<number>1</number>
+										<number>2</number>
+										<number>3</number>
+									</list>
+									<number>1</number>
+									<number>2</number>
+									<number>3</number>
+								</parallel>
+							</bla>
+						</parallelFor>
+						
+						<echo message="." nl="false"/>
+					</for>
+				</sum>
+				<echo/>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<product>
+				<number>20</number>
+				<number>250</number>
+				<number>1</number>
+			</product>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

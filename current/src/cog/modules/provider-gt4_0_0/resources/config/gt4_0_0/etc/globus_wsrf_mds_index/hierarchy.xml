@@ -1,0 +1,21 @@
+<config>
+
+<!-- <upstream> elements specify remote index services that the local index
+    will be registered to.
+
+    Set an upstream entry for each VO index that you wish to participate in.
+-->
+
+<!--    <upstream>https://vo-host:8443/wsrf/services/DefaultIndexService</upstream> -->
+
+
+
+<!-- <downstream> elements specify remote index service which will be 
+     registered into the local index. You do not need to configure 
+     <downstream> services unless you are building your own VO. -->
+
+<!--    <downstream>https://member-host:8443/wsrf/services/DefaultIndexService</downstream> -->
+
+</config>
+
+

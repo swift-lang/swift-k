@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="ManagedMultiJob" targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/multi" xmlns:wsrp="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.xsd" xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job/multi" xmlns:wsrpw="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" xmlns:wsrlw="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl" xmlns:wsdlpp="http://www.globus.org/namespaces/2004/10/WSDLPreprocessor" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:rdv="http://www.globus.org/namespaces/2004/09/rendezvous" xmlns:job="http://www.globus.org/namespaces/2004/10/gram/job" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsntw="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.wsdl" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="http://www.globus.org/namespaces/2004/10/gram/job" location="../gram/managed_job_port_type.wsdl"/>
+  <wsdl:import namespace="http://www.globus.org/namespaces/2004/09/rendezvous" location="../rendezvous/rendezvous_port_type.wsdl"/>
+  <wsdl:import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.wsdl" location="../wsrf/lifetime/WS-ResourceLifetime.wsdl"/>
+  <wsdl:import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties-1.2-draft-01.wsdl" location="../wsrf/properties/WS-ResourceProperties.wsdl"/>
+  <wsdl:import namespace="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.wsdl" location="../wsrf/notification/WS-BaseN.wsdl"/>
+  <wsdl:types>
+    <xsd:schema elementFormDefault="qualified" targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/multi" xmlns:desc="http://www.globus.org/namespaces/2004/10/gram/job/description" xmlns:rpns0="http://www.globus.org/namespaces/2004/10/gram/job/faults" xmlns:rpns1="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd" xmlns:rpns2="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd" xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job/multi" xmlns:types="http://www.globus.org/namespaces/2004/10/gram/job/types" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:import namespace="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime-1.2-draft-01.xsd" schemaLocation="../wsrf/lifetime/WS-ResourceLifetime.xsd"/>
+
+<xsd:import namespace="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification-1.2-draft-01.xsd" schemaLocation="../wsrf/notification/WS-BaseN.xsd"/>
+
+<xsd:import namespace="http://www.globus.org/namespaces/2004/10/gram/job/faults" schemaLocation="managed_job_faults.xsd"/>
+
+<xsd:import namespace="http://www.globus.org/namespaces/2004/09/rendezvous" schemaLocation="../rendezvous/rendezvous_types.xsd"/>
+
+
+            <xsd:import namespace="http://schemas.xmlsoap.org/ws/2004/03/addressing" schemaLocation="../ws/addressing/WS-Addressing.xsd"/>
+
+            <xsd:import namespace="http://www.globus.org/namespaces/2004/10/gram/job/types" schemaLocation="managed_job_types.xsd"/>
+
+            <xsd:import namespace="http://www.globus.org/namespaces/2004/10/gram/job/description" schemaLocation="job_description.xsd"/>
+
+            <!--==================================================-->
+            <!--               resource properties                -->
+            <!--==================================================-->
+
+            <xsd:element name="subJobEndpoint" type="wsa:EndpointReferenceType"/>
+
+            <xsd:complexType name="ManagedMultiJobResourcePropertiesType">
+                <xsd:sequence>
+
+                    <xsd:element maxOccurs="unbounded" ref="tns:subJobEndpoint"/>
+                
+            <xsd:element maxOccurs="1" minOccurs="1" ref="desc:serviceLevelAgreement"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rdv:Capacity"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="types:userSubject"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rpns0:fault"/>
+            <xsd:element maxOccurs="unbounded" minOccurs="1" ref="rpns1:TopicExpressionDialects"/>
+            <xsd:element maxOccurs="unbounded" minOccurs="1" ref="rpns1:Topic"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rpns2:TerminationTime"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="types:localUserId"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rpns2:CurrentTime"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="types:holding"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rdv:RegistrantData"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rdv:RendezvousCompleted"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="rpns1:FixedTopicSet"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="types:state"/>
+          </xsd:sequence>
+            </xsd:complexType>
+            <xsd:element name="managedMultiJobResourceProperties" type="tns:ManagedMultiJobResourcePropertiesType"/>
+        </xsd:schema>
+  </wsdl:types>
+  <wsdl:portType name="ManagedMultiJobPortType" wsrp:ResourceProperties="tns:managedMultiJobResourceProperties">
+    <wsdl:operation name="release">
+      <wsdl:input message="job:releaseInputMessage" wsa:Action="http://www.globus.org/namespaces/2004/10/gram/job/release"/>
+      <wsdl:output message="job:releaseOutputMessage" wsa:Action="http://www.globus.org/namespaces/2004/10/gram/job/releaseResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="register">
+      <wsdl:input message="rdv:RegisterInputMessage"/>
+      <wsdl:output message="rdv:RegisterOutputMessage"/>
+      <wsdl:fault name="rankTakenFault" message="rdv:rankTakenFaultMessage"/>
+      <wsdl:fault name="capacityReachedFault" message="rdv:capacityReachedFaultMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetResourceProperty">
+      <wsdl:input name="GetResourcePropertyRequest" message="wsrpw:GetResourcePropertyRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourceProperty"/>
+      <wsdl:output name="GetResourcePropertyResponse" message="wsrpw:GetResourcePropertyResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetResourcePropertyResponse"/>
+      <wsdl:fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="Subscribe">
+      <wsdl:input message="wsntw:SubscribeRequest" wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/Subscribe"/>
+      <wsdl:output message="wsntw:SubscribeResponse" wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/SubscribeResponse"/>
+      <wsdl:fault name="SubscribeCreationFailedFault" message="wsntw:SubscribeCreationFailedFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsntw:ResourceUnknownFault"/>
+      <wsdl:fault name="TopicPathDialectUnknownFault" message="wsntw:TopicPathDialectUnknownFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetCurrentMessage">
+      <wsdl:input message="wsntw:GetCurrentMessageRequest" wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/GetCurrentMessage"/>
+      <wsdl:output message="wsntw:GetCurrentMessageResponse" wsa:Action="http://docs.oasis-open.org/wsn/2004/06/wsn-WS-BaseNotification/GetCurrentMessageResponse"/>
+      <wsdl:fault name="TopicNotSupportedFault" message="wsntw:TopicNotSupportedFault"/>
+      <wsdl:fault name="InvalidTopicExpressionFault" message="wsntw:InvalidTopicExpressionFault"/>
+      <wsdl:fault name="NoCurrentMessageOnTopicFault" message="wsntw:NoCurrentMessageOnTopicFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsntw:ResourceUnknownFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="SetTerminationTime">
+      <wsdl:input message="wsrlw:SetTerminationTimeRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTime"/>
+      <wsdl:output message="wsrlw:SetTerminationTimeResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/SetTerminationTimeResponse"/>
+      <wsdl:fault name="UnableToSetTerminationTimeFault" message="wsrlw:UnableToSetTerminationTimeFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrlw:ResourceUnknownFault"/>
+      <wsdl:fault name="TerminationTimeChangeRejectedFault" message="wsrlw:TerminationTimeChangeRejectedFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="Destroy">
+      <wsdl:input message="wsrlw:DestroyRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/Destroy"/>
+      <wsdl:output message="wsrlw:DestroyResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceLifetime/DestroyResponse"/>
+      <wsdl:fault name="ResourceNotDestroyedFault" message="wsrlw:ResourceNotDestroyedFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrlw:ResourceUnknownFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="QueryResourceProperties">
+      <wsdl:input name="QueryResourcePropertiesRequest" message="wsrpw:QueryResourcePropertiesRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/QueryResourceProperties"/>
+      <wsdl:output name="QueryResourcePropertiesResponse" message="wsrpw:QueryResourcePropertiesResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/QueryResourcePropertiesResponse"/>
+      <wsdl:fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <wsdl:fault name="InvalidQueryExpressionFault" message="wsrpw:InvalidQueryExpressionFault"/>
+      <wsdl:fault name="QueryEvaluationErrorFault" message="wsrpw:QueryEvaluationErrorFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+      <wsdl:fault name="UnknownQueryExpressionDialectFault" message="wsrpw:UnknownQueryExpressionDialectFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetMultipleResourceProperties">
+      <wsdl:input name="GetMultipleResourcePropertiesRequest" message="wsrpw:GetMultipleResourcePropertiesRequest" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetMultipleResourceProperties"/>
+      <wsdl:output name="GetMultipleResourcePropertiesResponse" message="wsrpw:GetMultipleResourcePropertiesResponse" wsa:Action="http://docs.oasis-open.org/wsrf/2004/06/wsrf-WS-ResourceProperties/GetMultipleResourcePropertiesResponse"/>
+      <wsdl:fault name="InvalidResourcePropertyQNameFault" message="wsrpw:InvalidResourcePropertyQNameFault"/>
+      <wsdl:fault name="ResourceUnknownFault" message="wsrpw:ResourceUnknownFault"/>
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>

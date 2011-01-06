@@ -1,0 +1,201 @@
+//----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
+/*
+ * Created on Oct 11, 2005
+ */
+package org.globus.cog.abstraction.impl.scheduler.condor;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
+import org.globus.cog.abstraction.impl.scheduler.common.Job;
+import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.FileLocation;
+import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.Task;
+
+public class CondorExecutor extends AbstractExecutor {
+	public static final Logger logger = Logger.getLogger(CondorExecutor.class);
+
+	public CondorExecutor(Task task, ProcessListener listener) {
+		super(task, listener);
+	}
+
+	protected void writeAttr(String attrName, String arg, Writer wr)
+			throws IOException {
+		Object value = getSpec().getAttribute(attrName);
+		if (value != null) {
+			wr.write(arg + String.valueOf(value) + '\n');
+		}
+	}
+
+	protected void writeScript(Writer wr, String exitcodefile, String stdout,
+			String stderr) throws IOException {
+		boolean grid = false;
+		Task task = getTask();
+		JobSpecification spec = getSpec();
+		String type = (String) spec.getAttribute("jobType");
+		if (logger.isDebugEnabled()) {
+			logger.debug("Job type: " + type);
+		}
+		if ("MPI".equals(type)) {
+			wr.write("universe = MPI\n");
+		}
+		else if("grid".equals(type)) {
+			grid = true;
+			String gridResource = (String) spec.getAttribute("gridResource");
+			wr.write("universe = grid\n");
+			wr.write("grid_resource = "+gridResource+"\n");
+
+// the below two lines are needed to cause the gridmonitor to be used
+// which is the point of all this...
+			wr.write("stream_output = False\n");
+			wr.write("stream_error  = False\n");
+
+			wr.write("Transfer_Executable = false\n");
+		}
+		else {
+			wr.write("universe = vanilla\n");
+		}
+		if ("true".equals(spec.getAttribute("holdIsFailure"))) {
+			wr.write("periodic_remove = JobStatus == 5\n");
+		}
+		writeAttr("count", "machine_count = ", wr);
+		if (spec.getStdInput() != null) {
+			wr.write("input = " + quote(spec.getStdInput()) + "\n");
+		}
+		wr.write("output = " + quote(stdout) + '\n');
+		wr.write("error = " + quote(stderr) + '\n');
+		Iterator i = spec.getEnvironmentVariableNames().iterator();
+		if (i.hasNext()) {
+			wr.write("environment = ");
+		}
+		while (i.hasNext()) {
+			String name = (String) i.next();
+			wr.write(name);
+			wr.write('=');
+			wr.write(quote(spec.getEnvironmentVariable(name)));
+			wr.write(';');
+		}
+		wr.write("\n");
+
+		if (spec.getDirectory() != null) {
+			if(!grid) {
+				wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
+			} else {
+				wr.write("remote_initialdir = " + quote(spec.getDirectory()) + "\n");
+			}
+		}
+		wr.write("executable = " + quote(spec.getExecutable()) + "\n");
+		List args = spec.getArgumentsAsList();
+		if (args != null && args.size() > 0) {
+			wr.write("arguments = ");
+			i = args.iterator();
+			while (i.hasNext()) {
+				wr.write(quote((String) i.next()));
+				if (i.hasNext()) {
+					wr.write(' ');
+				}
+			}
+		}
+		wr.write('\n');
+		wr.write("notification = Never\n");
+		wr.write("leave_in_queue = TRUE\n");
+		wr.write("queue\n");
+		wr.close();
+	}
+
+	protected String getName() {
+		return "Condor";
+	}
+
+	protected AbstractProperties getProperties() {
+		return Properties.getProperties();
+	}
+
+	protected Job createJob(String jobid, String stdout,
+			FileLocation stdOutputLocation, String stderr,
+			FileLocation stdErrorLocation, String exitcode,
+			AbstractExecutor executor) {
+		return new Job(jobid, stdout, stdOutputLocation, stderr,
+				stdErrorLocation, null, executor);
+	}
+
+	private static QueuePoller poller;
+
+	protected AbstractQueuePoller getQueuePoller() {
+		synchronized (CondorExecutor.class) {
+			if (poller == null) {
+				poller = new QueuePoller(getProperties());
+				poller.start();
+			}
+			return poller;
+		}
+	}
+
+	protected String parseSubmitCommandOutput(String out) throws IOException {
+	    out = out.trim();
+		if (out.endsWith(".")) {
+			out = out.substring(0, out.length() - 1);
+		}
+		int index = out.lastIndexOf(" ");
+		return out.substring(index + 1);
+	}
+
+	public void cancel() throws TaskSubmissionException {
+		String jobid = getJobid();
+		try {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Marking job " + jobid
+						+ " as removable from queue");
+			}
+			Process p = Runtime.getRuntime().exec(
+					new String[] {
+							getProperties()
+									.getProperty(Properties.CONDOR_QEDIT),
+							jobid, "LeaveJobInQueue", "FALSE" });
+			int ec = p.waitFor();
+			if (ec == 0) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Successfully marked " + jobid
+							+ " as removable from queue");
+				}
+			}
+			else {
+				logger.warn("Failed makr job " + jobid
+						+ " as removable from queue: "
+						+ getOutput(p.getInputStream()));
+			}
+			if (logger.isDebugEnabled()) {
+				logger.debug("Cancelling job " + jobid);
+			}
+
+			p = Runtime.getRuntime().exec(
+					new String[] { getProperties().getRemoveCommand(), jobid });
+			ec = p.waitFor();
+			if (ec == 0) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Successfully cancelled job " + jobid);
+				}
+			}
+			else {
+				logger.warn("Failed to cancel job " + jobid + ": "
+						+ getOutput(p.getInputStream()));
+			}
+		}
+		catch (Exception e) {
+			logger.warn("Failed to cancel job " + jobid, e);
+		}
+	}
+}

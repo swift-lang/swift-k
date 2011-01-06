@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job/types"
+    xmlns:tns="http://www.globus.org/namespaces/2004/10/gram/job/types"
+    elementFormDefault="qualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+
+
+
+    <xsd:element name="state"           type="tns:StateEnumeration"/>
+    <xsd:element name="userSubject"     type="xsd:string"/>
+    <xsd:element name="holding"         type="xsd:boolean"/>
+    <xsd:element name="exitCode"        type="xsd:int"/>
+
+    <xsd:simpleType name="StateEnumeration">
+        <xsd:annotation>
+            <xsd:documentation>
+                external states for a Managed Job.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="Unsubmitted" />
+            <xsd:enumeration value="StageIn" />
+            <xsd:enumeration value="Pending" />
+            <xsd:enumeration value="Active"  />
+            <xsd:enumeration value="Suspended"  />
+            <xsd:enumeration value="StageOut" />
+            <xsd:enumeration value="CleanUp" />
+            <xsd:enumeration value="Done" />
+            <xsd:enumeration value="Failed" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:element name="holdState" type="tns:StateEnumeration">
+        <xsd:annotation>
+            <xsd:documentation>
+                The state before which a hold will be applied on the progression
+                of the state machine. Though any of the states will be allowed
+                by the interface, only the following hold states are supported:
+
+                    StageIn
+                    Pending
+                    StageOut
+                    CleanUp
+
+                Any unsupported hold state will generate an
+                UnsupportedFeatureFaultType fault and result in a Failed state.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:element name="localUserId" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                A string representing the local user ID on the machine that
+                the service is running on that the client would like the job
+                to run as.  This requires that there be a mapping in the
+                grid-mapfile between the callers proxy subject and this value.
+                This is optional field is intended for support of a
+                one-to-many mapping of proxy subject to multiple local user IDs.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+</xsd:schema>

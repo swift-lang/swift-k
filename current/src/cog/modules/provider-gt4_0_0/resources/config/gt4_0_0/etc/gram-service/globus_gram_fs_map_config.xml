@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fileSystemMaps targetNamespace="http://www.globus.org/namespaces/2004/10/gram/job">
+<ns1:map xmlns:ns1="http://www.globus.org/namespaces/2004/10/gram/job" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns1:FileSystemMapType">
+ <ns1:scheduler xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">Fork</ns1:scheduler>
+ <ns1:ftpServer xsi:type="ns1:FtpServerType">
+  <ns1:protocol xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">gsiftp</ns1:protocol>
+  <ns1:host xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">plussed.mcs.anl.gov</ns1:host>
+  <ns1:port xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:unsignedShort">2811</ns1:port>
+ </ns1:ftpServer>
+ <ns1:mapping xsi:type="ns1:FileSystemPathMappingType">
+  <ns1:jobPath xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">/</ns1:jobPath>
+  <ns1:ftpPath xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">/</ns1:ftpPath>
+ </ns1:mapping>
+</ns1:map><ns1:map xmlns:ns1="http://www.globus.org/namespaces/2004/10/gram/job" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns1:FileSystemMapType">
+ <ns1:scheduler xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">Multi</ns1:scheduler>
+ <ns1:ftpServer xsi:type="ns1:FtpServerType">
+  <ns1:protocol xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">gsiftp</ns1:protocol>
+  <ns1:host xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">plussed.mcs.anl.gov</ns1:host>
+  <ns1:port xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:unsignedShort">2811</ns1:port>
+ </ns1:ftpServer>
+ <ns1:mapping xsi:type="ns1:FileSystemPathMappingType">
+  <ns1:jobPath xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">/</ns1:jobPath>
+  <ns1:ftpPath xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:type="xsd:string">/</ns1:ftpPath>
+ </ns1:mapping>
+</ns1:map></fileSystemMaps>

@@ -1,0 +1,21 @@
+NAME
+  mkdir - create a new directory
+
+SYNOPIS
+  mkdir [NEW_DIRECTOR]
+
+DESCRIPTION
+  This command creates a new directory (NEW_DIRECTORY)
+
+OPTIONS
+   [--help]
+     displays the options
+
+EXAMPLES
+   1) To create a new directory called "myNewDirectory"
+      type:
+
+     > mkdir myNewDirectory
+
+SEE ALSO
+  cd, rmdir, pwd

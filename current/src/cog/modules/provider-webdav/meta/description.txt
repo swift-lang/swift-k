@@ -1,0 +1,3 @@
+The provider-webdav module is a component of the abstractions framework.
+It provides the implementation of the file-operation task handler
+supporting WEBDAV protocol. 

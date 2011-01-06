@@ -1,0 +1,43 @@
+#===================================================================
+# This code is developed as part of the Java CoG Kit project
+# The terms of the license can be found at http://www.cogkit.org/license
+# This message may not be removed or altered.
+#====================================================================
+#
+
+#Basic values -- user edits these:
+catalina-home	=/home/username/uPortal_2-4-1-quick-start/Tomcat_5-0-28/
+guss-home	=/home/username/src/cog/modules/monitor/
+axis-port	=8080
+axis-library	=lib/jars/
+junit-location  =lib/jars/
+
+#Database information -- edit these to match your database installation
+db-driver-class =org.postgresql.Driver
+db-url		=jdbc:postgresql://host:port/database
+db-gftptable	=gftp_packets
+db-metadatatable=logfile_metadata
+db-summarytable =gftp_summaries
+db-username	=yourname
+db-password	=yourpassword
+
+#Where to deploy GUSS Service:
+webappDir	=${catalina-home}/webapps/axis/WEB-INF
+axis-server	=http://localhost:${axis-port}/
+
+#Where to deploy GUSSPage.jsp:
+jsp-server      =${catalina-home}
+jsp-dir         =${jsp-server}/webapps/jsp-examples/
+jsp-lib-dir	=${jsp-server}/common/lib/
+
+#Where to deploy GUSS Portlet:
+uPortalbase	=/home/username/uPortal_2-4-1-quick-start/
+
+#Properties read by GUSS Service when it runs:
+temp-file-dir	=/home/username/uPortal_2-4-1-quick-start/Tomcat_5-0-28/webapps/ROOT/tempimages
+service-url	=http://localhost:8080/tempimages/
+logfile-url	=file:///path/to/a/gridftp/logfile.log
+
+#Properties read by GUSS client when it runs:
+service-hostname=usage-stats.globus.org
+service-port	=8080

@@ -1,0 +1,37 @@
+<ServiceGroupRegistrationParameters
+   xmlns:sgc="http://mds.globus.org/servicegroup/client" 
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+   xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
+   xmlns:agg="http://mds.globus.org/aggregator/types"
+   xmlns="http://mds.globus.org/servicegroup/client" >
+
+
+   <!-- Specifies that the registration will be renewed every 30
+        seconds -->
+   <RefreshIntervalSecs>30</RefreshIntervalSecs>
+
+
+   <!-- <Content> specifies registration specific information -->
+   <Content xsi:type="agg:AggregatorContent"
+      xmlns:agg="http://mds.globus.org/aggregator/types">
+
+      <agg:AggregatorConfig xsi:type="agg:AggregatorConfig">
+         <agg:GetResourcePropertyPollType
+            xmlns:rft="http://www.globus.org/namespaces/2004/10/rft" >
+            <!-- Specifies that the index should refresh information 
+                 every 5 minutes -->
+            <agg:PollIntervalMillis>300000</agg:PollIntervalMillis>
+
+            <!-- specifies the resource property that should be
+                 aggregated, which in this case is the sticky note
+                 message Resource Property -->
+            <agg:ResourcePropertyName>rft:ActiveResourceInstances</agg:ResourcePropertyName>
+
+         </agg:GetResourcePropertyPollType>
+      </agg:AggregatorConfig>
+      <agg:AggregatorData/>
+   </Content>
+
+</ServiceGroupRegistrationParameters>
+

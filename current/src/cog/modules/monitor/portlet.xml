@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<portlet-app xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_1_0.xsd"
+	     version="1.0"
+	     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	     xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_1_0.xsd
+				 http://java.sun.com/xml/ns/portlet/portlet-app_1_0.xsd">
+  <portlet>
+    <portlet-name>GussPortlet</portlet-name>
+    <portlet-class>org.globus.cog.monitor.guss.GUSSPortlet</portlet-class>
+    <init-param>
+      <name>service-hostname</name>
+    <value>localhost</value>
+    </init-param>
+    <init-param>
+      <name>service-port</name>
+      <value>8080</value>
+    </init-param>
+    
+    <expiration-cache>0</expiration-cache>
+    <supports>
+      <mime-type>text/html</mime-type>
+      <portlet-mode>help</portlet-mode>
+    </supports>
+    <supported-locale>en-US</supported-locale>
+    <portlet-info>
+      <title>Grid Usage Sensor Services Portlet</title>
+      <short-title>GUSS</short-title>
+      <keywords>grid gftp usage statistics monitor</keywords>
+    </portlet-info>
+  </portlet>
+</portlet-app>
