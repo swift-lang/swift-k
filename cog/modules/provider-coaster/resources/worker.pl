@@ -129,6 +129,9 @@ my $URISTR=$ARGV[0];
 my $BLOCKID=$ARGV[1];
 my $LOGDIR=$ARGV[2];
 
+defined $URISTR  || die "Not given: URI\n";
+defined $BLOCKID || die "Not given: BLOCKID\n";
+defined $LOGDIR  || die "Not given: LOGDIR\n";
 
 # REQUESTS holds a map of incoming requests
 my %REQUESTS = ();
