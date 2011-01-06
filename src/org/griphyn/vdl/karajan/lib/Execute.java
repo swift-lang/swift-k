@@ -15,6 +15,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
+import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
 import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
 import org.griphyn.vdl.karajan.lib.replication.CanceledReplicaException;
@@ -48,9 +49,7 @@ public class Execute extends GridExec {
 			registerReplica(stack, task);
 			log(task, stack);
 			scheduler.addJobStatusListener(this, task);
-			synchronized (tasks) {
-				tasks.put(task, stack);
-			}
+			setStack(task, stack);
 			scheduler.enqueue(task, constraints);
 		}
 		catch (CanceledReplicaException e) {
@@ -71,19 +70,6 @@ public class Execute extends GridExec {
 	    String jobid = (String) A_JOBID.getValue(stack,null);
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("jobid="+jobid+" task=" + task);
-	    }
-	    else if (logger.isInfoEnabled()) {
-	        Specification spec = task.getSpecification();
-	        if (spec instanceof JobSpecification) {
-	            JobSpecification jobspec = (JobSpecification) spec;
-	            logger.info("Submit: " +
-	                "in: " + jobspec.getDirectory() +
-	                " command: " + jobspec.getExecutable() + 
-	                " " + jobspec.getArguments());
-	        }
-	        else {
-	            logger.info("Submit: " + spec);
-	        }
 	    }
 	}
 
@@ -114,6 +100,9 @@ public class Execute extends GridExec {
 					RuntimeStats.setProgress(stack, "Active");
 					getReplicationManager(stack).active(task, e.getStatus().getTime());
 					((FutureVariableArguments) A_REPLICATION_CHANNEL.getValue(stack)).close();
+				}
+				else if (e.getStatus().isTerminal()) {
+				    getReplicationManager(stack).terminated(task);
 				}
 				else if (c == ReplicationManager.STATUS_NEEDS_REPLICATION) {
 					RuntimeStats.setProgress(stack, "Replicating");

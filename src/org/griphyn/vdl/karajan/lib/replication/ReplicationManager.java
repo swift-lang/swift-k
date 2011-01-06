@@ -5,7 +5,6 @@ package org.griphyn.vdl.karajan.lib.replication;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -30,7 +29,7 @@ public class ReplicationManager {
     private int n;
     private long s;
     private long s2;
-    private Map queued, running;
+    private Map<Task, Date> queued, running;
     private int minQueueTime, limit;
     private boolean enabled;
     private ReplicationGroups replicationGroups;
@@ -39,8 +38,8 @@ public class ReplicationManager {
     public ReplicationManager(Scheduler scheduler) {
         this.replicationGroups = new ReplicationGroups(scheduler);
         this.scheduler = scheduler;
-        queued = new HashMap();
-        running = new HashMap();
+        queued = new HashMap<Task, Date>();
+        running = new HashMap<Task, Date>();
         try {
             minQueueTime = Integer.parseInt(VDL2Config.getConfig().getProperty(
                     "replication.min.queue.time"));
@@ -80,7 +79,7 @@ public class ReplicationManager {
         if (enabled) {
             Date submitted;
             synchronized (this) {
-                submitted = (Date) queued.remove(task);
+                submitted = queued.remove(task);
                 registerRunning(task, time);
                 if (submitted != null) {
                     long delta = (time.getTime() - submitted.getTime()) / 1000;
@@ -104,7 +103,9 @@ public class ReplicationManager {
        		seconds = WallTime.timeToSeconds(walltime.toString());
         }
         Date deadline = new Date(time.getTime() + WALLTIME_DEADLINE_MULTIPLIER * seconds * 1000);
-        running.put(task, deadline);
+        synchronized (this) {
+            running.put(task, deadline);
+        }
     }
 
     public synchronized int getN() {
@@ -130,26 +131,21 @@ public class ReplicationManager {
     }
 
     public void checkTasks() {
-        Map m, r;
+        Map<Task, Date> m, r;
         synchronized (this) {
-            m = new HashMap(queued);
-            r = new HashMap(running);
+            m = new HashMap<Task, Date>(queued);
+            r = new HashMap<Task, Date>(running);
         }
-        Iterator i;
-        i = m.entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry) i.next();
-            Task t = (Task) e.getKey();
-            Date d = (Date) e.getValue();
+        for (Map.Entry<Task, Date> e : m.entrySet()) {
+            Task t = e.getKey();
+            Date d = e.getValue();
             if (shouldBeReplicated(t, d)) {
                 replicationGroups.requestReplica(t);
             }
         }
-        i = r.entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry) i.next();
-            Task t = (Task) e.getKey();
-            Date d = (Date) e.getValue();
+        for (Map.Entry<Task, Date> e : r.entrySet()) {
+            Task t = e.getKey();
+            Date d = e.getValue();
             if (isOverDeadline(t, d)) {
                 logger.info(t + ": deadline passed. Cancelling job.");
                 cancelTask(t);
@@ -183,5 +179,15 @@ public class ReplicationManager {
     
     private void cancelTask(Task t) {
         scheduler.cancelTask(t, "Walltime exceeded");
+        // prevent repeated cancelling in case the provider doesn't support cancel()
+        synchronized (this) {
+            running.remove(t);
+        }
+    }
+
+    public void terminated(Task task) {
+        synchronized (this) {
+            running.remove(task);
+        }
     }
 }
