@@ -1,2 +1,0 @@
-The "all" module is a dummy module that contains dependencies to the 
-default set of modules to be built.

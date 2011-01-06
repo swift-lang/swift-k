@@ -1,5 +1,0 @@
-***** Fix synchronization issues with multiple views on the same canvas
-****  Give some (if not all) control of the component/wrapper context menu to the view
-****  Develop the Passive Graph View a little more (this would be more scalable than the Graph View)
-****  Actually change the GraphView name to GraphEditorView or something like that
-****  Close button on the property list

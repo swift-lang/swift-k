@@ -1,9 +1,0 @@
-<securityConfig xmlns="http://www.globus.org">
- <auth-method>
-   <GSITransport/>
-   <GSISecureMessage/>
-   <GSISecureConversation/>
- </auth-method>
- <authz value="gridmap"/>
- <gridmap value="/etc/grid-security/grid-mapfile"/>
-</securityConfig>

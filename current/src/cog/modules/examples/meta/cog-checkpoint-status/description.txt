@@ -1,6 +1,0 @@
-This command allows the user to check the status of a long running
-task. The task is represented by the checkpoint file (created by
-the cogrun, cog-job-submit, or cog-task2xml commands). Upon
-submission, the client re-connects to the remote execution service and
-retreives the latest execution status.
-

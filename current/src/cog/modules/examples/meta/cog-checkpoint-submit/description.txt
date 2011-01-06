@@ -1,4 +1,0 @@
-This command allows the user to submit a checkpoint file (created by
-the cogrun, cog-job-submit, or cog-task2xml commands). Upon
-submission, the client re-connects to the remote execution service and
-actively monitors the status updates.
