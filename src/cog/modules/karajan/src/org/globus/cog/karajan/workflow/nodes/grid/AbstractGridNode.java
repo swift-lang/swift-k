@@ -52,11 +52,11 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 
 	public static final String HANDLER = "#task:handler";
 
-	protected Map tasks;
+	private Map<Task, VariableStack> tasks;
 	private Map dynamicHosts;
 
 	public AbstractGridNode() {
-		tasks = new HashMap();
+		tasks = new HashMap<Task, VariableStack>();
 		dynamicHosts = new HashMap();
 	}
 
@@ -190,14 +190,18 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 	}
 
+	protected final void setStack(Task task, VariableStack stack) {
+		synchronized (tasks) {
+			tasks.put(task, stack);
+		}
+	}
+
 	public void submitUnscheduled(TaskHandler handler, Task task, VariableStack stack)
 			throws ExecutionException {
 		setTaskIdentity(stack, task);
 		task.addStatusListener(this);
 		stack.setVar(HANDLER, handler);
-		synchronized (tasks) {
-			tasks.put(task, stack);
-		}
+		setStack(task, stack);
 		try {
 			new NonBlockingSubmit(handler, task, null).go();
 		}
@@ -223,9 +227,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			logger.debug("Submitting task " + task.getIdentity());
 		}
 		scheduler.addJobStatusListener(this, task);
-		synchronized (tasks) {
-			tasks.put(task, stack);
-		}
+		setStack(task, stack);
 		scheduler.enqueue(task, constraints);
 	}
 
