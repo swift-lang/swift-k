@@ -141,7 +141,7 @@ public abstract class AbstractExecutor implements ProcessListener {
         for (int i = 0; i < cmdline.length; i++) {
             sb.append(cmdline[i]);
             if (i < cmdline.length - 1) {
-                sb.append(", ");
+                sb.append(" ");
             }
         }
         logger.debug("Command line: " + sb.toString());
