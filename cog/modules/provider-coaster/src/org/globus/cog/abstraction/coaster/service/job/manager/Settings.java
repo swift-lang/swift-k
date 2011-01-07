@@ -40,7 +40,7 @@ public class Settings {
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
                     "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
                     "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn",
-                    "ldLibraryPath", "workerCopies", "directory"};
+                    "ldLibraryPath", "workerCopies", "directory", "useHashBang"};
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -128,6 +128,8 @@ public class Settings {
     private String workerCopies = null;
     
     private String directory = null;
+   
+    private String useHashBang = null;
     
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
@@ -488,6 +490,14 @@ public class Settings {
     
     public void setDirectory(String directory) {
         this.directory = directory;
+    }
+    
+    public String getUseHashBang() {
+        return useHashBang;
+    }
+    
+    public void setUseHashBang(String uhb) {
+        this.useHashBang = uhb;
     }
     
     public void set(String name, String value)
