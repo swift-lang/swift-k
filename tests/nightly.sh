@@ -77,6 +77,14 @@
 #   via make_sites_sed() -> group_sites_xml()
 # Note that some schedulers restrict your choice of RUNDIR
 
+# NAMING
+# Site-specific test groups are in providers/ .
+# These are named:
+# providers/<provider description>/
+# or:
+# providers/<provider description>/<site>
+# E.g., providers/local-pbs/PADS
+
 printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""

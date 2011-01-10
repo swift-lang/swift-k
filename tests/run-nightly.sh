@@ -14,4 +14,6 @@ rm -rf topdir
 ./nightly.sh -g -o topdir $GROUPLISTFILE
 [ $? != 0 ] && exit 1
 
+# Bundle results with tar cfz
+
 exit 0
