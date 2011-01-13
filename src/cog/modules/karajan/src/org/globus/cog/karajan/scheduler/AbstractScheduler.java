@@ -98,7 +98,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		this.taskHandlers = taskHandlers;
 	}
 
-	public TaskHandlerWrapper getTaskHadlerWrapper(int index) {
+	public TaskHandlerWrapper getTaskHandlerWrapper(int index) {
 		return getTaskHandlers().get(index);
 	}
 
