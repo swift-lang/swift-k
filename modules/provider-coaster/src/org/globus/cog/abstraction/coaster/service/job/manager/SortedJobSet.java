@@ -68,7 +68,7 @@ public class SortedJobSet implements Iterable<Job> {
 
     /**
        Remove and return largest job with a walltime smaller than the 
-       given walltime and less than or equal to the given cpu
+       given walltime and less than or equal to the given cpus
        Could be cleaned up using Java 1.6 functionality
      */
     public synchronized Job removeOne(TimeInterval walltime,

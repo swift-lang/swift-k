@@ -69,8 +69,8 @@ class PullThread extends Thread {
 
     private boolean awakeUseable() {
         int seq = bqp.getQueueSeq();
-        Iterator<Cpu> i = sleeping.iterator();
         int sz = sleeping.size();
+        Iterator<Cpu> i = sleeping.iterator();
         while (i.hasNext()) {
             Cpu cpu = i.next();
             if (cpu.getLastSeq() < seq) {
