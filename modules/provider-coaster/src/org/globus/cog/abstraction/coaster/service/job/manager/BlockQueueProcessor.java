@@ -250,7 +250,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private void computeSums() {
-        sums = new ArrayList<Integer>();
+        sums = new ArrayList<Integer>(holding.size());
         sums.add(0);
         int ps = 0;
         for (Job j : holding) {
@@ -260,14 +260,16 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private int computeTotalRequestSize() {
-        int sz = 0;
+        double sz = 0;
         for (Job j : holding) {
             sz += metric.desiredSize(j);
         }
         if (sz > 0) {
+            if (sz < 1)
+                sz = 1;
             logger.info("Required size: " + sz + " for " + holding.size() + " jobs");
         }
-        return sz;
+        return (int) sz;
     }
 
     public int overallocatedSize(Job j) {
@@ -410,7 +412,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private void removeJobs(Set<Job> r) {
         List<Job> old = holding;
-        holding = new ArrayList<Job>();
+        holding = new ArrayList<Job>(holding.size());
         for (Job j : old) {
             if (!r.contains(j)) {
                 holding.add(j);
@@ -489,7 +491,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
         long start = System.currentTimeMillis();
         
-        // Move all Jobs in add to jobs
+        // Move all incoming Jobs to holding
         commitNewJobs();
 
         // Shutdown Blocks that are done
@@ -501,11 +503,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         // Move jobs that fit from holding to queued
         tmp = queueToExistingBlocks();
         
-        // Subtract these Jobs from queued
+        // Subtract these Jobs from holding
         removeJobs(tmp);
 
         // int jss = jobs.size();
-        // If queued has too many Jobs, move some back to jobs
+        // If queued has too many Jobs, move some back to holding
         requeueNonFitting();
 
         updateSettings();
