@@ -162,51 +162,7 @@ public class CondorExecutor extends AbstractExecutor {
         }
         return sb.toString();
     }
-
-    protected String replaceVars(String str) {
-        StringBuffer sb = new StringBuffer();
-        boolean escaped = false;
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c == '\\') {
-                if (escaped) {
-                    sb.append('\\');
-                }
-                else {
-                    escaped = true;
-                }
-            }
-            else {
-                if (c == '$' && !escaped) {
-                    if (i == str.length() - 1) {
-                        sb.append('$');
-                    }
-                    else {
-                        int e = str.indexOf(' ', i);
-                        if (e == -1) {
-                            e = str.length();
-                        }
-                        String name = str.substring(i + 1, e);
-                        Object attr = getSpec().getAttribute(name);
-                        if (attr != null) {
-                            sb.append(attr.toString());
-                        }
-                        else {
-                            sb.append('$');
-                            sb.append(name);
-                        }
-                        i = e;
-                    }
-                }
-                else {
-                    sb.append(c);
-                }
-                escaped = false;
-            }
-        }
-        return sb.toString();
-    }
-
+    
 	protected String getName() {
 		return "Condor";
 	}
