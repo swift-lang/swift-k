@@ -267,7 +267,8 @@ public class Settings {
      */
     public void setWorkerLoggingLevel(String workerLoggingLevel) {
         if (workerLoggingLevel != null) {
-            workerLoggingLevel = workerLoggingLevel.toUpperCase();
+            workerLoggingLevel = 
+                workerLoggingLevel.trim().toUpperCase();
         }
         this.workerLoggingLevel = workerLoggingLevel;
     }
