@@ -24,6 +24,8 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 public class LocalTCPService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalTCPService.class);
     
+    public static final int TCP_BUFSZ = 32768;
+    
     private RegistrationManager registrationManager;
     
     // private int idseq;
@@ -67,8 +69,8 @@ public class LocalTCPService extends GSSService implements Registering {
 
     protected void handleConnection(Socket socket) {
         try {
-            socket.setReceiveBufferSize(16384);
-            socket.setSendBufferSize(16384);
+            socket.setReceiveBufferSize(TCP_BUFSZ);
+            socket.setSendBufferSize(TCP_BUFSZ);
             socket.setTcpNoDelay(true);
         }
         catch (SocketException e) {
