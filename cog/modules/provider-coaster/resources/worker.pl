@@ -19,6 +19,9 @@ use POSIX ":sys_wait_h";
 use strict;
 use warnings;
 eval "use Time::HiRes qw(time)";
+
+use POSIX qw(EWOULDBLOCK);
+
 # use Time::HiRes qw(time);
 
 # Maintain a stack of job slot ids for auxiliary services:
@@ -95,6 +98,7 @@ my $JOB_COUNT = 0;
 
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
+use constant IOBLOCKSZ => 8;
 
 # 60 seconds by default. Note that since there is no configuration handshake
 # this would have to match the default interval in the service in order to avoid
@@ -269,8 +273,8 @@ sub reconnect() {
 			}
 		}
 		if ($success) {
-			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 16384);
-			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768);
+			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 32768);
+			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768*8);
 			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);
 			queueCmd(registerCB(), "REGISTER", $BLOCKID, "");
@@ -353,10 +357,10 @@ sub sendm {
 
 	wlog(DEBUG, "OUT: len=$len, tag=$tag, flags=$flags\n");
 	wlog(TRACE, "$msg\n");
-
-	#($SOCK->send($buf) == length($buf)) || reconnect();
+	 
 	$SOCK->blocking(1);
-	eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
+	eval { defined($SOCK->send($buf)); } or wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
+	
 	#eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n");
 }
 
@@ -431,6 +435,7 @@ sub nextFileData {
 	elsif ($s == 3) {
 		$$state{"state"} = $s + 1;
 		$$state{"sent"} = 0;
+		$$state{"bindex"} = 0;
 		return ($$state{"size"} == 0 ? FINAL_FLAG : 0, $$state{"rname"}, CONTINUE);
 	}
 	else {
@@ -450,7 +455,14 @@ sub nextFileData {
 		if ($$state{"sent"} == $$state{"size"}) {
 			close $handle;
 		}
-		return (($$state{"sent"} < $$state{"size"}) ? 0 : FINAL_FLAG, $buffer, YIELD);
+		# try to send multiple buffers at a time
+		$$state{"chunk"} = ($$state{"bindex"} + 1) % IOBLOCKSZ;
+		if ($$state{"bindex"} == 0) {
+			return (($$state{"sent"} < $$state{"size"}) ? 0 : FINAL_FLAG, $buffer, YIELD);
+		}
+		else {
+			return (($$state{"sent"} < $$state{"size"}) ? 0 : FINAL_FLAG, $buffer, CONTINUE);
+		}
 	}
 }
 
