@@ -18,8 +18,7 @@ use Cwd;
 use POSIX ":sys_wait_h";
 use warnings;
 
-#unfortunately this doesn't actually work
-eval "use Time::HiRes qw(time); 1" or print "Hi res time not available. Log timestamps will have second granularity\n";
+BEGIN { eval "use Time::HiRes qw(time); 1" or print "Hi res time not available. Log timestamps will have second granularity\n"; }
 
 # Maintain a stack of job slot ids for auxiliary services:
 #   Each slot has a small integer id 0..n-1
