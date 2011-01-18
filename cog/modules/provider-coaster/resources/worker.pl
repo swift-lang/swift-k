@@ -16,13 +16,10 @@ use File::Path;
 use File::Copy;
 use Cwd;
 use POSIX ":sys_wait_h";
-use strict;
 use warnings;
-eval "use Time::HiRes qw(time)";
 
-use POSIX qw(EWOULDBLOCK);
-
-# use Time::HiRes qw(time);
+#unfortunately this doesn't actually work
+eval "use Time::HiRes qw(time); 1" or print "Hi res time not available. Log timestamps will have second granularity\n";
 
 # Maintain a stack of job slot ids for auxiliary services:
 #   Each slot has a small integer id 0..n-1
@@ -91,6 +88,8 @@ use constant RETRIES => 3;
 use constant REPLYTIMEOUT => 180;
 use constant MAXFRAGS => 16;
 use constant MAX_RECONNECT_ATTEMPTS => 3;
+
+use constant JOB_CHECK_SKIP => 32;
 
 my $JOBS_RUNNING = 0;
 
@@ -1459,14 +1458,13 @@ sub forkjob {
 	}
 }
 
-my $LASTJOBCHECK = 0.0;
+my $JOBCHECKCOUNT = 0;
 
 sub checkJobs {
-	my $time = time();
-	if ($time - $LASTJOBCHECK < 0.100) {
+	$JOBCHECKCOUNT = ($JOBCHECKCOUNT + 1) % JOB_CHECK_SKIP;
+	if ($JOBCHECKCOUNT != 0) {
 		return;
 	}
-	$LASTJOBCHECK = $time;
 	if (!%JOBWAITDATA) {
 		return;
 	}
