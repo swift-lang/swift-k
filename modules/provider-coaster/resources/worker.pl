@@ -18,8 +18,8 @@ use Cwd;
 use POSIX ":sys_wait_h";
 use strict;
 use warnings;
-eval "use Time::HiRes qw(time)";
-# use Time::HiRes qw(time);
+
+BEGIN { eval "use Time::HiRes qw(time); 1" or print "Hi res time not available. Log timestamps will have second granularity\n"; }
 
 # Maintain a stack of job slot ids for auxiliary services:
 #   Each slot has a small integer id 0..n-1
@@ -89,12 +89,15 @@ use constant REPLYTIMEOUT => 180;
 use constant MAXFRAGS => 16;
 use constant MAX_RECONNECT_ATTEMPTS => 3;
 
+use constant JOB_CHECK_SKIP => 32;
+
 my $JOBS_RUNNING = 0;
 
 my $JOB_COUNT = 0;
 
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
+use constant IOBLOCKSZ => 8;
 
 # 60 seconds by default. Note that since there is no configuration handshake
 # this would have to match the default interval in the service in order to avoid
@@ -129,6 +132,9 @@ my $URISTR=$ARGV[0];
 my $BLOCKID=$ARGV[1];
 my $LOGDIR=$ARGV[2];
 
+defined $URISTR  || die "Not given: URI\n";
+defined $BLOCKID || die "Not given: BLOCKID\n";
+defined $LOGDIR  || die "Not given: LOGDIR\n";
 
 # REQUESTS holds a map of incoming requests
 my %REQUESTS = ();
@@ -266,8 +272,8 @@ sub reconnect() {
 			}
 		}
 		if ($success) {
-			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 16384);
-			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768);
+			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 32768);
+			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768*8);
 			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);
 			queueCmd(registerCB(), "REGISTER", $BLOCKID, "");
@@ -350,10 +356,10 @@ sub sendm {
 
 	wlog(DEBUG, "OUT: len=$len, tag=$tag, flags=$flags\n");
 	wlog(TRACE, "$msg\n");
-
-	#($SOCK->send($buf) == length($buf)) || reconnect();
+	 
 	$SOCK->blocking(1);
-	eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
+	eval { defined($SOCK->send($buf)); } or wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
+	
 	#eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n");
 }
 
@@ -428,6 +434,7 @@ sub nextFileData {
 	elsif ($s == 3) {
 		$$state{"state"} = $s + 1;
 		$$state{"sent"} = 0;
+		$$state{"bindex"} = 0;
 		return ($$state{"size"} == 0 ? FINAL_FLAG : 0, $$state{"rname"}, CONTINUE);
 	}
 	else {
@@ -447,7 +454,14 @@ sub nextFileData {
 		if ($$state{"sent"} == $$state{"size"}) {
 			close $handle;
 		}
-		return (($$state{"sent"} < $$state{"size"}) ? 0 : FINAL_FLAG, $buffer, YIELD);
+		# try to send multiple buffers at a time
+		$$state{"chunk"} = ($$state{"bindex"} + 1) % IOBLOCKSZ;
+		if ($$state{"bindex"} == 0) {
+			return (($$state{"sent"} < $$state{"size"}) ? 0 : FINAL_FLAG, $buffer, YIELD);
+		}
+		else {
+			return (($$state{"sent"} < $$state{"size"}) ? 0 : FINAL_FLAG, $buffer, CONTINUE);
+		}
 	}
 }
 
@@ -1444,14 +1458,13 @@ sub forkjob {
 	}
 }
 
-my $LASTJOBCHECK = 0.0;
+my $JOBCHECKCOUNT = 0;
 
 sub checkJobs {
-	my $time = time();
-	if ($time - $LASTJOBCHECK < 0.100) {
+	$JOBCHECKCOUNT = ($JOBCHECKCOUNT + 1) % JOB_CHECK_SKIP;
+	if ($JOBCHECKCOUNT != 0) {
 		return;
 	}
-	$LASTJOBCHECK = $time;
 	if (!%JOBWAITDATA) {
 		return;
 	}
