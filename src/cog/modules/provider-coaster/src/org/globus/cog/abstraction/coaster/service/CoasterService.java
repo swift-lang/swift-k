@@ -78,6 +78,9 @@ public class CoasterService extends GSSService {
             throws IOException {
         super(!local, 0);
         this.local = local;
+        if (local) {
+            this.ignoreIdleTime = true;
+        }
         addLocalHook();
         this.registrationURL = registrationURL;
         this.id = id;
