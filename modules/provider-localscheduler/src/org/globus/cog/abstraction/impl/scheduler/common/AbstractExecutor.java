@@ -123,14 +123,18 @@ public abstract class AbstractExecutor implements ProcessListener {
             }
         }
 
-        jobid = parseSubmitCommandOutput(getOutput(process.getInputStream()));
+        String output = getOutput(process.getInputStream());
+        jobid = parseSubmitCommandOutput(output);
         if (logger.isDebugEnabled()) {
             logger.debug("Submitted job with id '" + jobid + "'");
         }
 
-        if (jobid.length() == 0)
+        if (jobid.length() == 0) {
+            String errorText = getOutput(process.getErrorStream());
             if (listener != null)
-                listener.processFailed("Received empty jobid!");
+                listener.processFailed("Received empty jobid!\n" +
+                                       output + "\n" + errorText);
+        }
         
         process.getInputStream().close();
 
