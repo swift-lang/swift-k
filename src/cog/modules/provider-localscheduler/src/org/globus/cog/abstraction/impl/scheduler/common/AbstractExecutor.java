@@ -26,6 +26,9 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.gsi.gssapi.auth.AuthorizationException;
 import org.ietf.jgss.GSSException;
 
+/** 
+ *   Set log level to DEBUG to not delete generated submit script
+ * */
 public abstract class AbstractExecutor implements ProcessListener {
     public static final Logger logger = Logger
         .getLogger(AbstractExecutor.class);
@@ -124,6 +127,11 @@ public abstract class AbstractExecutor implements ProcessListener {
         if (logger.isDebugEnabled()) {
             logger.debug("Submitted job with id '" + jobid + "'");
         }
+
+        if (jobid.length() == 0)
+            if (listener != null)
+                listener.processFailed("Received empty jobid!");
+        
         process.getInputStream().close();
 
         getQueuePoller().addJob(
@@ -250,7 +258,7 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected void cleanup() {
-        if (!getProperties().isDebugEnabled()) {
+        if (!logger.isDebugEnabled()) {
             script.delete();
             new File(exitcode).delete();
             if (spec.getStdOutput() == null && stdout != null) {
