@@ -67,9 +67,9 @@ public abstract class AbstractExecutor implements ProcessListener {
                     + scriptdir + ")");
         }
         script = File.createTempFile(getName(), ".submit", scriptdir);
-        if (!getProperties().isDebugEnabled()) {
-	    script.deleteOnExit();
-	}
+        if (!logger.isDebugEnabled()) {
+            script.deleteOnExit();
+        }
         stdout = spec.getStdOutput() == null ? script.getAbsolutePath()
                 + ".stdout" : spec.getStdOutput();
         stderr = spec.getStdError() == null ? script.getAbsolutePath()
