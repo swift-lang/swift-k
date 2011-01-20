@@ -298,8 +298,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 endtime = starttime.add(block.getWalltime());
             }
             TimeInterval time = endtime.subtract(Time.now());
-            if (pullThread != null);
-            {
+            if (pullThread != null) {
                 int cpus = 1 + pullThread.sleepers();
                 running = bqp.request(time, cpus);
             }
