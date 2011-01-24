@@ -49,27 +49,42 @@ public class PBSExecutor extends AbstractExecutor {
 					+ '\n');
 		}
 	}
+	
+	private int parseAndValidateInt(Object obj, String name) {
+	    try {
+	        return Integer.parseInt(obj.toString());
+	    }
+	    catch (NumberFormatException e) {
+	        throw new IllegalArgumentException("Illegal value for " + name + ". Must be an integer.");
+	    }
+	}
 
-	protected void writeCountAndPPN(Writer wr, Properties properties) throws IOException {
+	protected boolean writeCountAndPPN(Writer wr, Properties properties) throws IOException {
 	    Object count = getSpec().getAttribute("count");
 	    Object ppn = getSpec().getAttribute("ppn");
 	    if (count != null) {
+	        int icount = parseAndValidateInt(count, "count");
+	        boolean multiple = icount != 1;
+	        if (ppn != null) {
+	            int ippn = parseAndValidateInt(ppn, "ppn");
+	            if (icount % ippn != 0) {
+	                throw new IllegalArgumentException("Count is not a multiple of ppn.");
+	            }
+	            icount = icount / ippn;
+	        }
 	        if ("true".equals
                 (properties.getProperty(Properties.USE_MPPWIDTH))) {
-	                writeAttr("count", "-l mppwidth=", wr);
+	                wr.write("#PBS -l mppwidth=" + icount + (ppn == null ? "" : ":mppnppn=" + ppn) + "\n");
 	        }
 	        else {
-	            wr.write("#PBS -l nodes=" + count + (ppn == null ? "" : ":ppn=" + ppn) + "\n");
-	        }
+	            wr.write("#PBS -l nodes=" + icount + (ppn == null ? "" : ":ppn=" + ppn) + "\n");
+	        } 
+	        return multiple;
 	    }
 	    else if (ppn != null) {
-	        // I am unsure whether this is valid. However, I am also
-	        // unsure whether the alternatives:
-	        //   1. assuming count=1 when count is missing
-	        //   2. not specifying PPN when count is missing
-	        // ... are any better
-	        wr.write("#PBS -l ppn=" + ppn + "\n");
+	        throw new IllegalArgumentException("No count specified and ppn != 1");
 	    }
+	    return false;
 	}
 
 	protected void writeScript(Writer wr, String exitcodefile, String stdout,
@@ -82,7 +97,7 @@ public class PBSExecutor extends AbstractExecutor {
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
-		writeCountAndPPN(wr, properties);
+		boolean multiple = writeCountAndPPN(wr, properties);
 		writeWallTime(wr);
 		writeAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
@@ -102,11 +117,9 @@ public class PBSExecutor extends AbstractExecutor {
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
-		}
-		boolean multiple = false; 
+		} 
 		if ("multiple".equals(type)) {		    
 		    multiple = true;
-
 		}
 		
 		if (multiple) {
