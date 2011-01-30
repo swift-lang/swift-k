@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
@@ -200,10 +200,16 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		if(logger.isDebugEnabled()) {
 			logger.debug("Finish list existing paths for mapper "+this.hashCode()+" list="+l);
 		}
+		System.out.println(getVarName() + " (input): found " + l.size() + " files");
 		return l;
 	}
 
-	/** Returns the SwiftScript path for a supplied filename.
+	private String getVarName() {
+        AbstractDataNode var = (AbstractDataNode) getParam("handle");
+        return var == null ? "" : var.getDisplayableName();
+    }
+
+    /** Returns the SwiftScript path for a supplied filename.
 	  *
 	  * Splits the filename into components using the separator
 	  * supplied by the relevant FileNameElementMapper.

@@ -90,9 +90,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 				}
 				else {
 					Object[] array = (Object[]) value;
-					for (int i = 0; i < array.length; i++) {
-						vret.append(array[i]);
-					}
+                    for (int i = 0; i < array.length; i++) {
+                        vret.append(array[i]);
+                    }
 				}
 			}
 			else {

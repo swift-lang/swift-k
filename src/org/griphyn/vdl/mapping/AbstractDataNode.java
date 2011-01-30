@@ -535,7 +535,7 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
     
-    public synchronized Path getPathFromRoot() {
+    public Path getPathFromRoot() {
         if (pathFromRoot == null) {
             AbstractDataNode parent = (AbstractDataNode) this.getParent();
             Path myPath;

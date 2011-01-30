@@ -32,7 +32,7 @@ namespace("vdl"
 					major == "4" "GT4"
 					major == "2" "GT2"
 					throw("Unknown job manager version: major = {major}, minor = {minor}, patch = {patch}, url = {url}")
-				) 
+				)
 				service(type="execution", provider=provider, url=url)
 			)
 
@@ -89,7 +89,7 @@ namespace("vdl"
 			)
 			
 			element(surveyorCoasterParams, [optional(averageJobTime, blockSize)]
-				print("Setting Surveyor coaster params:")	
+				print("Setting Surveyor coaster params:")
 				p("scratch", "/scratch")
 				p("workersPerNode", "4")
 				p("kernelprofile", "zeptoos")

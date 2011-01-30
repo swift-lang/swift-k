@@ -65,7 +65,7 @@ public interface DSHandle {
 
     public void closeDeep();
 
-    public Collection getFringePaths() throws HandleOpenException;
+    public Collection<Path> getFringePaths() throws HandleOpenException;
 
     public Map getArrayValue();
 

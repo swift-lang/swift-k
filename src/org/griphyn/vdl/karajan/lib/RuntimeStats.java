@@ -1,10 +1,8 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.globus.cog.karajan.arguments.Arg;
@@ -13,6 +11,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.globus.cog.util.CopyOnWriteArrayList;
 import org.griphyn.vdl.util.VDL2Config;
 
 /** this is an icky class that does too much with globals, but is for
@@ -89,10 +88,9 @@ public class RuntimeStats extends FunctionsCollection {
 	public Object vdl_initprogressstate(VariableStack stack) throws ExecutionException {
 		RuntimeProgress rp = new RuntimeProgress();
 		ProgressTicker p = getTicker(stack);
-		synchronized (p.states) {
-			p.states.add(rp);
-		}
+		p.states.add(rp);
 		setProgress(stack, rp);
+		rp.status = "Initializing";
 		p.dumpState();
 		return null;
 	}
@@ -107,8 +105,10 @@ public class RuntimeStats extends FunctionsCollection {
 
 	static public class ProgressTicker extends Thread {
 
-		List states = new ArrayList();
+		CopyOnWriteArrayList<RuntimeProgress> states = 
+		    new CopyOnWriteArrayList<RuntimeProgress>();
 
+		long start;
 		long lastDumpTime = 0;
 		private boolean disabled;
 		private boolean shutdown;
@@ -124,6 +124,7 @@ public class RuntimeStats extends FunctionsCollection {
 			catch (IOException e) {
 				logger.debug("Could not read swift properties", e);
 			}
+			start = System.currentTimeMillis();
 		}
 
 		public void run() {
@@ -162,48 +163,51 @@ public class RuntimeStats extends FunctionsCollection {
 			printStates("Final status:");
 		}
 		
-		public Map getSummary() {
-			Map summary = new HashMap();
-			synchronized(states) {
-				Iterator stateIterator = states.iterator();
-
+		public Map<String, Integer> getSummary() {
+			Map<String, Integer> summary = new HashMap<String, Integer>();
+			Iterator<RuntimeProgress> stateIterator = states.iterator();
+			try {
 				// summarize details of known states into summary, with
 				// one entry per state type, storing the number of
 				// jobs in that state.
 				while(stateIterator.hasNext()) {
-					String key = ((RuntimeProgress)stateIterator.next()).status;
-					Integer count = (Integer) summary.get(key);
-					if(count == null) {
-						summary.put(key,new Integer(1));
-					} else {
-						summary.put(key,new Integer(count.intValue()+1));
+					String key = stateIterator.next().status;
+					Integer count = summary.get(key);
+					if (count == null) {
+						summary.put(key, 1);
+					} 
+					else {
+						summary.put(key, count + 1);
 					}
 				}
+			}
+			finally {
+			    states.release();
 			}
 			return summary;
 		}
 
 		void printStates(String header) {
-			Map summary = getSummary();
+			Map<String, Integer> summary = getSummary();
 			// output the results of summarization, in a relatively
 			// pretty form - first the preferred order listed elements,
 			// and then anything remaining
 			System.err.print(header);
+			System.err.print("  time:" + (System.currentTimeMillis() - start));
 
-			for(int pos = 0; pos < preferredOutputOrder.length; pos++) {
+			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
 				Object value = summary.get(key);
-				if(value != null)
-					System.err.print("  "+key+":"+value);
+				if(value != null) {
+				    System.err.print("  " + key + ":" + value);
+				}
 				summary.remove(key);
 			}
 
-			Iterator summaryIterator = summary.keySet().iterator();
-			while(summaryIterator.hasNext()) {
-				Object key = summaryIterator.next();
-				System.err.print(" "+key+":"+summary.get(key));
+			for (Map.Entry<String, Integer> s : summary.entrySet()) {
+				System.err.print(" " + s.getKey() + ":" + s.getValue());
 			}
-			System.err.println("");
+			System.err.println();
 		}
 
 	}
