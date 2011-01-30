@@ -20,17 +20,14 @@ import org.globus.cog.karajan.util.AdaptiveMap;
 import org.globus.cog.karajan.util.DefList;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.LoadListener;
-import org.globus.cog.karajan.workflow.events.Event;
-import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.events.EventListener;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.nodes.ExtendedFlowElement;
+import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.FlowNode;
 import org.globus.cog.karajan.workflow.nodes.user.UDEDefinition;
 import org.globus.cog.karajan.workflow.nodes.user.UDEWrapper;
 
-public final class FlowElementWrapper implements ExtendedFlowElement {
+public final class FlowElementWrapper implements FlowElement {
 	private FlowElement peer, parent;
 	private List<FlowElement> elements;
 	private Map<String, Object> properties;
@@ -207,27 +204,43 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 		return peer;
 	}
 
-	public void failImmediately(VariableStack stack, String message) throws ExecutionException {
+	public void failImmediately(VariableStack stack, ExecutionException e) throws ExecutionException {
 		if (peer == null) {
 			EventListener caller = stack.getCaller();
-			EventBus.post(caller, new FailureNotificationEvent(this, stack, message, null));
+			caller.failed(stack, e);
 		}
 		else {
-			peer.failImmediately(stack, message);
+			peer.failImmediately(stack, e);
 		}
 	}
 
 	public boolean acceptsInlineText() {
 		return true;
 	}
-
-	public void event(final Event e) throws ExecutionException {
+	
+	public void start(VariableStack stack) throws ExecutionException {
 		synchronized (this) {
 			if (peer == null) {
-				bind(e.getStack());
+				bind(stack);
 			}
 		}
-		peer.event(e);
+		peer.start(stack);
+	}
+	
+	public void abort(VariableStack stack) throws ExecutionException {
+		peer.abort(stack);
+	}
+
+	public void restart(VariableStack stack) throws ExecutionException {
+		peer.restart(stack);
+	}
+
+	public void completed(VariableStack stack) throws ExecutionException {
+		peer.completed(stack);
+	}
+
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		peer.failed(stack, e);
 	}
 
 	public synchronized boolean resolve(VariableStack stack) throws ExecutionException {
@@ -325,12 +338,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 
 	public boolean isSimple() {
 		if (peer != null) {
-			if (peer instanceof ExtendedFlowElement) {
-				return ((ExtendedFlowElement) peer).isSimple();
-			}
-			else {
-				return false;
-			}
+			return peer.isSimple();
 		}
 		else {
 			return false;
@@ -343,13 +351,7 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 				bind(stack);
 			}
 		}
-		if (peer instanceof ExtendedFlowElement) {
-			((ExtendedFlowElement) peer).executeSimple(stack);
-		}
-		else {
-			throw new ExecutionException(
-					"Internal error: executeDeterministic() called on standard element");
-		}
+		peer.executeSimple(stack);
 	}
 
 	public void setElements(List<FlowElement> elements) {
@@ -358,5 +360,9 @@ public final class FlowElementWrapper implements ExtendedFlowElement {
 
 	public void setProperties(Map<String, Object> properties) {
 		throw new UnsupportedOperationException("setProperties");
+	}
+
+	public void futureModified(Future f, VariableStack stack) {
+		peer.futureModified(f, stack);
 	}
 }

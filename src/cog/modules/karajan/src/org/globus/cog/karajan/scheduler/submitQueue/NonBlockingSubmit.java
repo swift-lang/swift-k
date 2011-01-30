@@ -18,6 +18,7 @@ import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.karajan.workflow.events.EventBus;
 
 /**
  * A class that makes <code>submit()</code> calls asynchronous. This is required
@@ -31,7 +32,8 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 public class NonBlockingSubmit implements Runnable {
 	private static final Logger logger = Logger.getLogger(NonBlockingSubmit.class);
 
-	private static ExecutorService pool = Executors.newCachedThreadPool(new DaemonThreadFactory(
+	private static ExecutorService pool = Executors.newFixedThreadPool(
+			EventBus.DEFAULT_WORKER_COUNT, new DaemonThreadFactory(
 					Executors.defaultThreadFactory()));
 
 	private final TaskHandler taskHandler;

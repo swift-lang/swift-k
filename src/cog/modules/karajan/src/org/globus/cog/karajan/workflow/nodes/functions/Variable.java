@@ -44,8 +44,8 @@ public class Variable extends AbstractFunction {
 				}
 			}
 		}
-
-		if (frame == -1) {
+		
+		if (frame == -1 || frame == VariableStack.NO_FRAME) {
 			if (stack.parentFrame().isDefined("#quoted")) {
 				Object value = new Identifier(name);
 				setSimple(value);
@@ -62,12 +62,12 @@ public class Variable extends AbstractFunction {
 					return value;
 				}
 				else {
-					return stack.getVarFromFrame(name, frame);
+					return stack.getFrameFromTop(frame).getVar(name);
 				}
 			}
 		}
 		else {
-			return stack.getVarFromFrame(name, frame);
+			return stack.getFrameFromTop(frame).getVar(name);
 		}
 	}
 }

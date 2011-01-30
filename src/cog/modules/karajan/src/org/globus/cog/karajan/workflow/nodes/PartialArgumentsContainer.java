@@ -15,6 +15,9 @@ import java.util.Set;
 import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.futures.Future;
+import org.globus.cog.karajan.workflow.futures.FutureFault;
+import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.nodes.functions.Argument;
 
 public class PartialArgumentsContainer extends AbstractSequentialWithArguments {
@@ -48,46 +51,58 @@ public class PartialArgumentsContainer extends AbstractSequentialWithArguments {
 			if (getQuotedArgs()) {
 				stack.currentFrame().deleteVar(QUOTED);
 			}
-			partialArgumentsEvaluated(stack);
+			try {
+                partialArgumentsEvaluated(stack);
+            }
+            catch (FutureFault e) {
+                e.getFuture().addModificationAction(new PartialResume(), stack);
+            }
 		}
 		else {
 			super.executeChildren(stack);
 		}
 	}
 
-	protected void executeSingle(VariableStack stack) throws ExecutionException {
-		if (argCount == 0) {
-			if (getQuotedArgs()) {
-				stack.currentFrame().deleteVar(QUOTED);
-			}
-			partialArgumentsEvaluated(stack);
-		}
-		else {
-			super.executeSingle(stack);
-		}
-	}
-
-	protected final void childCompleted(VariableStack stack) throws ExecutionException {
+	public void completed(VariableStack stack) throws ExecutionException {
 		if (!getArgsDone(stack)) {
-			int index = ArgUtil.getNamedArguments(stack).size();
+			int index = ArgUtil.getNamedArguments(stack).size() - this.getStaticArguments().size();
 			if (index < argCount) {
-				super.childCompleted(stack);
+				super.completed(stack);
 			}
 			else if (index >= argCount) {
 				if (getQuotedArgs()) {
 					stack.currentFrame().deleteVar(QUOTED);
 				}
 				processArguments(stack);
-				partialArgumentsEvaluated(stack);
+				try {
+					partialArgumentsEvaluated(stack);
+				}
+				catch (FutureFault e) {
+					e.getFuture().addModificationAction(new PartialResume(), stack);
+				}
 			}
 		}
 		else {
 			nonArgChildCompleted(stack);
 		}
 	}
+	
+	private class PartialResume implements FutureListener {
+		public void futureModified(Future f, VariableStack stack) {
+			try {
+				partialArgumentsEvaluated(stack);
+			}
+			catch (FutureFault e) {
+				e.getFuture().addModificationAction(new PartialResume(), stack);
+			}
+			catch (ExecutionException e) {
+				failImmediately(stack, e);
+			}
+		}	
+	}
 
 	protected void nonArgChildCompleted(VariableStack stack) throws ExecutionException {
-		super.childCompleted(stack);
+		super.completed(stack);
 	}
 
 	protected void startRest(VariableStack stack) throws ExecutionException {

@@ -47,7 +47,7 @@ public class CheckpointNode extends SequentialWithArguments {
 
 			boolean now = TypeUtil.toBoolean(A_NOW.getValue(stack));
 			if (now) {
-				cm.checkpoint(fileName);
+				//cm.checkpoint(fileName);
 			}
 			stack.setVar("#checkpointManager", cm);
 			stack.exportVar("#checkpointManager");

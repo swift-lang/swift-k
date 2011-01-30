@@ -9,7 +9,9 @@
  */
 package org.globus.cog.karajan.workflow.nodes;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -18,9 +20,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class SequentialChoice extends Sequential {
 	private static final Logger logger = Logger.getLogger(SequentialChoice.class);
@@ -35,14 +34,14 @@ public class SequentialChoice extends Sequential {
 		super.pre(stack);
 		initializeArgBuffers(stack);
 	}
-
-	protected void childCompleted(VariableStack stack) throws ExecutionException {
+	
+	public void completed(VariableStack stack) throws ExecutionException {
 		if (buffer) {
 			commitBuffers(stack);
 		}
 		super.post(stack);
 	}
-
+	
 	protected void commitBuffers(VariableStack stack) throws ExecutionException {
 		ArgUtil.getNamedReturn(stack).merge(ArgUtil.getNamedArguments(stack));
 		ArgUtil.getVariableReturn(stack).merge(ArgUtil.getVariableArguments(stack));
@@ -53,18 +52,11 @@ public class SequentialChoice extends Sequential {
 		}
 	}
 
-	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
-		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-			VariableStack stack = e.getStack();
-			FailureNotificationEvent fne = (FailureNotificationEvent) e;
-			stack.setVar(LAST_FAILURE, e);
-			stack.setVar("exception", fne.getException());
-			initializeArgBuffers(stack);
-			startNext(stack);
-		}
-		else {
-			super.notificationEvent(e);
-		}
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		stack.setVar(LAST_FAILURE, e);
+		stack.setVar("exception", e);
+		initializeArgBuffers(stack);
+		startNext(stack);
 	}
 
 	protected void initializeArgBuffers(VariableStack stack) throws ExecutionException {
@@ -76,7 +68,7 @@ public class SequentialChoice extends Sequential {
 	}
 
 	public void post(VariableStack stack) throws ExecutionException {
-		failImmediately(stack, (FailureNotificationEvent) stack.getVar(LAST_FAILURE));
+		failImmediately(stack, (ExecutionException) stack.getVar(LAST_FAILURE));
 	}
 
 	protected void initializeStatic() throws KarajanRuntimeException {

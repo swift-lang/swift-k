@@ -27,6 +27,10 @@ public class ExecutionException extends Exception {
 	public ExecutionException(VariableStack stack, String message) {
 		this(stack, message, null);
 	}
+	
+	public ExecutionException(VariableStack stack, Throwable cause) {
+        this(stack, null, cause);
+    }
 
 	public ExecutionException(VariableStack stack, String message, Throwable cause) {
 		this(message, cause);
@@ -93,5 +97,10 @@ public class ExecutionException extends Exception {
 			sb.append("\nCaused by: ");
 			appendJavaException(sb, cause.getCause());
 		}
+	}
+	
+	//TODO
+	public VariableStack getInitialStack() {
+		return null;
 	}
 }

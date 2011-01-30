@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.TaskHandlerWrapper;
@@ -35,7 +36,7 @@ public interface Scheduler {
 	Contact allocateContact() throws NoFreeResourceException;
 	
 	Contact allocateContact(Object constraints) throws NoFreeResourceException;
-
+	
 	/**
 	 * Can be used to tell the scheduler that a previously allocated contact
 	 * (using allocateContact()) is not used any more.

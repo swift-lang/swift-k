@@ -5,17 +5,12 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Feb 18, 2005
+ * Created on Aug 15, 2010
  */
-package org.globus.cog.karajan.debugger;
+package org.globus.cog.karajan.workflow.futures;
 
-import org.globus.cog.karajan.util.ThreadedElement;
+import org.globus.cog.karajan.stack.VariableStack;
 
-public interface BreakpointListener {
-
-	void breakpointReached(ThreadedElement te);
-
-	void stepReached(ThreadedElement te);
-
-	void resumed(ThreadedElement te);
+public interface FutureListener {
+	void futureModified(Future f, VariableStack stack);
 }

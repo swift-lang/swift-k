@@ -33,6 +33,12 @@ public class NamedArgumentsImpl implements NamedArguments {
 		this.valid = valid;
 		this.owner = owner;
 	}
+	
+	public NamedArgumentsImpl(Set valid, FlowElement owner, int size) {
+		this.valid = valid;
+		this.owner = owner;
+		named = new HashMap(size);
+	}
 
 	public NamedArgumentsImpl(Map map) {
 		named = new HashMap(map);
@@ -62,6 +68,10 @@ public class NamedArgumentsImpl implements NamedArguments {
 			Map.Entry entry = (Map.Entry) i.next();
 			add((String) entry.getKey(), entry.getValue());
 		}
+	}
+	
+	public void addInitial(String name, Object value) {
+		named.put(name, value);
 	}
 
 	public synchronized void add(String name, Object value) {
@@ -192,4 +202,8 @@ public class NamedArgumentsImpl implements NamedArguments {
 		}
 		ls.add(l);
 	}
+
+	public FlowElement getOwner() {
+		return owner;
+	}	
 }

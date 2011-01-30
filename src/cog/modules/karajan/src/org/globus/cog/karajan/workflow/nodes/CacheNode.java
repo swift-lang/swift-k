@@ -27,9 +27,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Cache;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class CacheNode extends PartialArgumentsContainer {
 	public static final Arg A_ON = new Arg.Optional("on");
@@ -49,28 +46,34 @@ public class CacheNode extends PartialArgumentsContainer {
 		cpre(A_ON.getValue(stack, getProperty(UID)), Boolean.valueOf(!A_ON.isPresent(stack)), stack);
 	}
 
-	protected void cpre(Object key, Boolean staticdef, VariableStack stack) throws ExecutionException {
+	protected void cpre(Object key, Boolean staticdef, VariableStack stack)
+			throws ExecutionException {
 		stack.setVar(KEY, key);
 		stack.setVar(STATICDEF, staticdef);
 		Cache cache = getCache(stack, staticdef);
+		Arguments cached = null;
 		synchronized (cache) {
 			if (cache.isCached(key)) {
-				returnCachedArguments(stack, (Arguments) cache.getCachedValue(key));
-				complete(stack);
-				return;
+				cached = (Arguments) cache.getCachedValue(key);
 			}
-
-			synchronized (instances) {
-				List inst = (List) instances.get(key);
-				if (inst == null) {
-					inst = new LinkedList();
-					instances.put(key, inst);
-				}
-				else {
-					inst.add(stack);
-					return;
-				}
+			else {
+    			synchronized (instances) {
+    				List inst = (List) instances.get(key);
+    				if (inst == null) {
+    					inst = new LinkedList();
+    					instances.put(key, inst);
+    				}
+    				else {
+    					inst.add(stack);
+    					return;
+    				}
+    			}
 			}
+		}
+		if (cached != null) {
+			returnCachedArguments(stack, cached);
+		    complete(stack);
+            return;
 		}
 		super.partialArgumentsEvaluated(stack);
 		addTrackingArguments(stack);
@@ -100,28 +103,25 @@ public class CacheNode extends PartialArgumentsContainer {
 		super.post(stack);
 	}
 
-	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
-		if (e.getType().equals(NotificationEventType.EXECUTION_FAILED)) {
-			Object key = e.getStack().currentFrame().getVar(KEY);
-			List l = null;
-			synchronized (instances) {
-				if (instances.containsKey(key)) {
-					l = (List) instances.remove(key);
-				}
-			}
-			if (l != null) {
-				failAll(l, (FailureNotificationEvent) e);
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		Object key = stack.currentFrame().getVar(KEY);
+		List l = null;
+		synchronized (instances) {
+			if (instances.containsKey(key)) {
+				l = (List) instances.remove(key);
 			}
 		}
-		super.notificationEvent(e);
+		if (l != null) {
+			failAll(l, e);
+		}
+		super.failed(stack, e);
 	}
 
-	protected void failAll(List l, FailureNotificationEvent e) throws ExecutionException {
+	protected void failAll(List l, ExecutionException e) throws ExecutionException {
 		Iterator i = l.iterator();
 		while (i.hasNext()) {
 			VariableStack stack = (VariableStack) i.next();
-			super.notificationEvent(new FailureNotificationEvent(e.getFlowElement(), stack,
-					e.getInitialStack(), e.getMessage(), e.getException()));
+			super.failed(stack, e);
 		}
 	}
 
@@ -171,7 +171,7 @@ public class CacheNode extends PartialArgumentsContainer {
 					(VariableArguments) ret.getChannels().get(channel));
 		}
 	}
-	
+
 	private static final Cache scache = new Cache();
 
 	protected Cache getCache(VariableStack stack, Boolean staticdef) throws ExecutionException {

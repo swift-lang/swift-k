@@ -17,17 +17,17 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
 /**
- * Utility class to deal with various aspects of argument manipulation
- * on the stack.
+ * Utility class to deal with various aspects of argument manipulation on the
+ * stack.
  * 
  * @author Mihael Hategan
- *
+ * 
  */
 public final class ArgUtil {
 	private final static Logger logger = Logger.getLogger(ArgUtil.class);
@@ -97,12 +97,12 @@ public final class ArgUtil {
 	}
 
 	/**
-     * Creates a channel on the current frame and adds it to the
-     * list of currently defined channels.
-     * 
-     * The list of currently defined channels is kept on a deep variable
-     * named "#channels". 
-     */
+	 * Creates a channel on the current frame and adds it to the list of
+	 * currently defined channels.
+	 * 
+	 * The list of currently defined channels is kept on a deep variable named
+	 * "#channels".
+	 */
 	public static void createChannel(VariableStack stack, Arg.Channel channel,
 			VariableArguments data) {
 		createChannelNL(stack, channel, data);
@@ -146,27 +146,38 @@ public final class ArgUtil {
 		}
 	}
 
-	public static Set getDefinedChannels(VariableStack stack) {
-		if (stack.isDefined(CHANNEL_LIST)) {
-			try {
-				return (Set) stack.getVar(CHANNEL_LIST);
-			}
-			catch (VariableNotFoundException e) {
-				throw new KarajanRuntimeException(
-						"Internal error: channels list was deleted. This should not be happening",
-						e);
-			}
+	public static Set<Arg.Channel> getDefinedChannels(VariableStack stack) {
+		try {
+			return (Set<Arg.Channel>) stack.getDeepVar(CHANNEL_LIST);
 		}
-		else {
-			return Collections.EMPTY_SET;
+		catch (VariableNotFoundException e) {
+			return Collections.emptySet();
 		}
 	}
 
 	public static void createChannels(VariableStack stack, Collection channels) {
+		Set dc = getDefinedChannels(stack);
+		Set newchans = null;
 		Iterator i = channels.iterator();
 		while (i.hasNext()) {
-			createChannel(stack, (Arg.Channel) i.next());
+			Arg.Channel channel = (Arg.Channel) i.next();
+			if (newchans != null || !dc.contains(channel)) {
+				if (newchans == null) {
+					newchans = new HashSet(dc);
+				}
+				newchans.add(channel);
+			}
+			stack.currentFrame().setVar(channel.getVariableName(),
+					new VariableArgumentsImpl(channel.isCommutative()));
 		}
+	}
+	
+	public static void removeLocalChannels(VariableStack stack, Collection<Arg.Channel> channels) {
+		StackFrame top = stack.currentFrame();
+		for (Arg.Channel channel : channels) {
+			top.deleteVar(channel.getVariableName());
+		}
+		top.deleteVar(CHANNEL_LIST);
 	}
 
 	public static void removeChannels(VariableStack stack, Collection channels) {
@@ -197,17 +208,17 @@ public final class ArgUtil {
 	}
 
 	/**
-	 * Channel buffers are used when writing to a non-commutative channel 
-	 * in parallel. The semantics are such that lexical order is preserved.
-	 * In other words, list(parallel(1, 2)) will always produce [1, 2]. 
-	 * The buffers are used to store values until it is determined exactly what
-	 * all the previous (lexically) values are, at which point the buffer is 
-	 * committed to the channel.
+	 * Channel buffers are used when writing to a non-commutative channel in
+	 * parallel. The semantics are such that lexical order is preserved. In
+	 * other words, list(parallel(1, 2)) will always produce [1, 2]. The buffers
+	 * are used to store values until it is determined exactly what all the
+	 * previous (lexically) values are, at which point the buffer is committed
+	 * to the channel.
 	 * 
 	 * In the above example, if "2" is produced first, it is stored in a buffer
 	 * until "1" is also produced. "1" is then committed to the channel after
 	 * which "2" is. The closeBuffers() method below is used to notify a buffer
-	 * when it is known that no more values will be added to it. 
+	 * when it is known that no more values will be added to it.
 	 */
 	public static void initializeChannelBuffers(VariableStack stack) throws ExecutionException {
 		Set channels = ArgUtil.getDefinedChannels(stack);
@@ -236,18 +247,13 @@ public final class ArgUtil {
 	}
 
 	public static void duplicateChannels(VariableStack stack) throws ExecutionException {
-		Set channels = ArgUtil.getDefinedChannels(stack);
-		synchronized (channels) {
-			Iterator i = channels.iterator();
-			while (i.hasNext()) {
-				Arg.Channel channel = (Arg.Channel) i.next();
-				VariableArguments dest = ArgUtil.getChannelReturn(stack, channel);
-				if (dest.isCommutative()) {
-					ArgUtil.createChannelNL(stack, channel, new CommutativeVariableArguments());
-				}
-				else {
-					ArgUtil.createChannelNL(stack, channel, new VariableArgumentsImpl());
-				}
+		StackFrame frame = stack.currentFrame();
+		for (Arg.Channel channel : ArgUtil.getDefinedChannels(stack)) {
+			if (channel.isCommutative()) {
+				frame.setVar(channel.getVariableName(), new CommutativeVariableArguments());
+			}
+			else {
+				frame.setVar(channel.getVariableName(), new VariableArgumentsImpl());
 			}
 		}
 	}

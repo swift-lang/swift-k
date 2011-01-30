@@ -12,6 +12,8 @@ package org.globus.cog.karajan.arguments;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.globus.cog.karajan.workflow.nodes.FlowElement;
+
 public interface NamedArguments {
 	void merge(NamedArguments args);
 
@@ -38,4 +40,6 @@ public interface NamedArguments {
 	int size();
 	
 	void addListener(String name, NamedArgumentsListener l);
+	
+	FlowElement getOwner();
 }
