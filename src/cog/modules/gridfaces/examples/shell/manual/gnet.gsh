@@ -1,1 +1,0 @@
-gnetconfig eth2
