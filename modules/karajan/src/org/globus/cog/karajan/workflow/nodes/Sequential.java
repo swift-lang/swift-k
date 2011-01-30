@@ -7,42 +7,21 @@
 package org.globus.cog.karajan.workflow.nodes;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.stack.Regs;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class Sequential extends FlowContainer {
 	private static final Logger logger = Logger.getLogger(Sequential.class);
 
 	protected void executeChildren(VariableStack stack) throws ExecutionException {
 		stack.setCaller(this);
-		if (isOptimizable() && (elementCount() == 1)) {
-			executeSingle(stack);
-		}
-		else {
-			setIndex(stack, 0);
-			startNext(stack);
-		}
+		setIndex(stack, 0);
+		startNext(stack);
 	}
 
-	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
-		if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
-			childCompleted(e.getStack());
-		}
-		else {
-			super.notificationEvent(e);
-		}
-	}
-
-	protected void childCompleted(VariableStack stack) throws ExecutionException {
-		if (isOptimizable() && (elementCount() == 1)) {
-			post(stack);
-		}
-		else {
-			startNext(stack);
-		}
+	public void completed(VariableStack stack) throws ExecutionException {
+		startNext(stack);
 	}
 
 	protected void startNext(VariableStack stack) throws ExecutionException {
@@ -51,34 +30,14 @@ public class Sequential extends FlowContainer {
 			return;
 		}
 		int index = preIncIndex(stack) - 1;
-		if (FlowNode.debug) {
-			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
-		}
 		startElement(getElement(index), stack);
-	}
-
-	protected void executeSingle(VariableStack stack) throws ExecutionException {
-		if (FlowNode.debug) {
-			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
-		}
-		FlowElement fn = getElement(0);
-		if (fn instanceof ExtendedFlowElement && ((ExtendedFlowElement) fn).isSimple()) {
-			((ExtendedFlowElement) fn).executeSimple(stack);
-			post(stack);
-		}
-		else {
-			super.startElement(fn, stack);
-		}
 	}
 
 	protected final void startElement(FlowElement fn, VariableStack stack)
 			throws ExecutionException {
-		if (FlowNode.debug) {
-			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
-		}
-		if (fn instanceof ExtendedFlowElement && ((ExtendedFlowElement) fn).isSimple()) {
-			((ExtendedFlowElement) fn).executeSimple(stack);
-			childCompleted(stack);
+		if (fn.isSimple()) {
+			fn.executeSimple(stack);
+			completed(stack);
 		}
 		else {
 			super.startElement(fn, stack);
@@ -104,12 +63,18 @@ public class Sequential extends FlowContainer {
 		stack.getRegs().setIA(Integer.MAX_VALUE);
 	}
 
-	protected final synchronized int preDecIndex(VariableStack stack) {
-		return stack.getRegs().preDecIA();
+	protected final int preDecIndex(VariableStack stack) {
+	    Regs r = stack.getRegs();
+	    synchronized (r) {
+	    	return r.preDecIA();
+	    }
 	}
 
-	protected final synchronized int preIncIndex(VariableStack stack) {
-		return stack.getRegs().preIncIA();
+	protected final int preIncIndex(VariableStack stack) {
+	    Regs r = stack.getRegs();
+        synchronized (r) {
+            return r.preIncIA();
+        }
 	}
 
 	protected final void setIndex(VariableStack stack, int value) {

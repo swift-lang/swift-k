@@ -9,9 +9,9 @@
  */
 package org.globus.cog.karajan.workflow.futures;
 
+import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.Event;
-import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public interface Future {
 
@@ -32,5 +32,5 @@ public interface Future {
 	/** 
 	 * When the future becomes available, send the event to the element.
 	 */
-	void addModificationAction(EventListener target, Event event);
+	void addModificationAction(FutureListener target, VariableStack event);
 }

@@ -6,6 +6,7 @@
 
 package org.globus.cog.karajan.workflow.nodes.grid;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,19 +38,18 @@ public class SchedulerNode extends SequentialWithArguments {
 	static {
 		setArguments(SchedulerNode.class, new Arg[] { A_TYPE, A_RESOURCES, A_PROPERTIES,
 				A_TASK_TRANSFORMERS, A_HANDLERS, A_SHARE_ID });
-		sharedInstances = new HashMap();
+		sharedInstances = new HashMap<String, Scheduler>();
 	}
 
-	private static Map schedulers;
-	private static Map sharedInstances;
+	private static Map<String, String> schedulers;
+	private static Map<String, Scheduler> sharedInstances;
 
 	private void initializeSchedulers(KarajanProperties properties) {
-		schedulers = new HashMap();
-		Iterator i = properties.keySet().iterator();
-		while (i.hasNext()) {
-			String name = (String) i.next();
+		schedulers = new HashMap<String, String>();
+		for (String name : properties.getPropertyNames()) {
 			if (name.startsWith("scheduler.")) {
-				schedulers.put(name.substring(10), properties.get(name));
+				schedulers.put(name.substring(10), 
+						TypeUtil.toString(properties.get(name)));
 			}
 		}
 	}
@@ -59,7 +59,7 @@ public class SchedulerNode extends SequentialWithArguments {
 		String shareID = TypeUtil.toString(A_SHARE_ID.getValue(stack, null));
 		if (shareID != null) {
 			synchronized(sharedInstances) {
-				s = (Scheduler) sharedInstances.get(shareID);
+				s = sharedInstances.get(shareID);
 				if (s == null) {
 					s = newScheduler(stack);
 					sharedInstances.put(shareID, s);
@@ -69,10 +69,11 @@ public class SchedulerNode extends SequentialWithArguments {
 		else {
 			s = newScheduler(stack);
 		}
-		stack.parentFrame().setVar(SCHEDULER, s);
+		stack.setGlobal(SCHEDULER, s);
 		super.post(stack);
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected Scheduler newScheduler(VariableStack stack) throws ExecutionException {
 		Scheduler s;
 		String type = TypeUtil.toString(A_TYPE.getValue(stack));
@@ -83,8 +84,8 @@ public class SchedulerNode extends SequentialWithArguments {
 		}
 		if (schedulers.containsKey(type)) {
 			try {
-				Class c = this.getClass().getClassLoader().loadClass((String) schedulers.get(type));
-				s = (Scheduler) c.newInstance();
+				Class<Scheduler> c = (Class<Scheduler>) this.getClass().getClassLoader().loadClass(schedulers.get(type));
+				s = c.newInstance();
 			}
 			catch (Exception e) {
 				throw new ExecutionException("Could not instantiate scheduler. " + e.getMessage(),

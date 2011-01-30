@@ -12,6 +12,14 @@ package org.globus.cog.karajan.workflow.futures;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.arguments.VariableArgumentsListener;
 
+/**
+ * This class allows splitting of a channel into multiple copies.
+ * This allows the split channels to be used independently (including
+ * removing objects from the channel).
+ * 
+ * @author Mihael Hategan
+ *
+ */
 public class ChannelSplitter implements VariableArgumentsListener {
 	private final FutureVariableArguments vargs;
 	private final FutureVariableArguments[] out;

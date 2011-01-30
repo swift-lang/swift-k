@@ -17,9 +17,6 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 	public static final Logger logger = Logger.getLogger(RestartOnErrorNode.class);
@@ -45,33 +42,29 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 		startRest(stack);
 	}
 
-	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
-		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-			VariableStack stack = e.getStack();
-
-			if (!matches(stack, (FailureNotificationEvent) e)) {
-				super.notificationEvent(e);
-				return;
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		if (!matches(stack, e)) {
+			super.failed(stack, e);
+			return;
+		}
+		int itimes = stack.currentFrame().preDecrementAtomic("#restartTimes");
+		if (itimes >= 0) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Restarting. " + itimes + " times left.");
+				logger.debug("Stack size: " + stack.frameCount());
 			}
-			int itimes = stack.currentFrame().preDecrementAtomic("#restartTimes");
-			if (itimes >= 0) {
-                if (logger.isDebugEnabled()) {
-                	logger.debug("Restarting. " + itimes + " times left.");
-                	logger.debug("Stack size: " + stack.frameCount());
-                }
-				this.startRest(stack);
-				return;
-			}
-			else {
-                if (logger.isDebugEnabled()) {
-                	logger.debug("Failed too many times.");
-                }
+			this.startRest(stack);
+			return;
+		}
+		else {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Failed too many times.");
 			}
 		}
-		super.notificationEvent(e);
 	}
 
-	protected boolean matches(VariableStack stack, FailureNotificationEvent e) {
+
+	protected boolean matches(VariableStack stack, ExecutionException e) {
 		if (!stack.currentFrame().isDefined(MATCH)) {
 			return false;
 		}

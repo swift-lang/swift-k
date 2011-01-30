@@ -10,6 +10,8 @@
 package org.globus.cog.karajan.util;
 
 import java.net.URL;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,6 +41,11 @@ public class KarajanProperties extends Properties {
 			restricted = parseRestrictedProperties();
 		}
 		return restricted;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Collection<String> getPropertyNames() {
+		return (Collection<String>) Collections.list(super.propertyNames());
 	}
 
 

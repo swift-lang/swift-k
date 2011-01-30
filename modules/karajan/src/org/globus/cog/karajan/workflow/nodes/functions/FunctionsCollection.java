@@ -11,8 +11,11 @@ package org.globus.cog.karajan.workflow.nodes.functions;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -24,15 +27,15 @@ import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 
 public abstract class FunctionsCollection extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(FunctionsCollection.class);
-	
+
 	public static final Arg PA_VALUE1 = new Arg.Positional("value1");
 	public static final Arg PA_VALUE2 = new Arg.Positional("value2");
-	
+
 	public static final Arg[] ARGS_2VALUES = new Arg[] { PA_VALUE1, PA_VALUE2 };
 
 	private static final Class[] sig = new Class[] { VariableStack.class };
 	private Method method;
-
+	
 	private static Set inlineText = new HashSet();
 
 	protected static void setAcceptsInlineText(String fname, boolean text) {
@@ -52,6 +55,7 @@ public abstract class FunctionsCollection extends AbstractFunction {
 		super.setElementType(type);
 		String methodName = type.replaceAll(":", "_").toLowerCase();
 		String alias = Aliases.getAlias(methodName);
+		final String mycls = this.getClass().getName();
 		if (alias != null) {
 			methodName = alias;
 		}
@@ -72,10 +76,10 @@ public abstract class FunctionsCollection extends AbstractFunction {
 	public String getCanonicalName() {
 		return method.getName();
 	}
-
+	
 	public Object function(VariableStack stack) throws ExecutionException {
 		try {
-			return method.invoke(this, new Object[] { stack });
+			return method.invoke(this, stack);
 		}
 		catch (InvocationTargetException e) {
 			if (e.getTargetException() instanceof ExecutionException) {
@@ -121,5 +125,11 @@ public abstract class FunctionsCollection extends AbstractFunction {
 		if (quotedArgs.contains(getCanonicalType())) {
 			this.setQuotedArgs(true);
 		}
+	}
+
+	public static interface FN {
+		void set(Object o);
+
+		Object function(VariableStack stack) throws ExecutionException;
 	}
 }

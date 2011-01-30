@@ -12,7 +12,6 @@ package org.globus.cog.karajan.workflow.nodes;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FlowEvent;
 
 public class GenerateErrorNode extends SequentialWithArguments {
 
@@ -38,11 +37,5 @@ public class GenerateErrorNode extends SequentialWithArguments {
 			else {
 				fail(stack, String.valueOf(exc));
 			}
-	}
-
-	protected boolean executeErrorHandler(VariableStack stack, FlowEvent error)
-			throws ExecutionException {
-		// No error handling for this
-		return false;
 	}
 }

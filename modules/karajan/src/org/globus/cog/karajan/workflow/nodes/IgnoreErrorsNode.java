@@ -12,13 +12,10 @@ package org.globus.cog.karajan.workflow.nodes;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class IgnoreErrorsNode extends AbstractRegexpFailureHandler {
 	public static final Arg A_MATCH = new Arg.Optional("match");
-	
+
 	private static final String MATCH = "##match";
 
 	static {
@@ -33,22 +30,18 @@ public class IgnoreErrorsNode extends AbstractRegexpFailureHandler {
 		startRest(stack);
 	}
 
-	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
-		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-			VariableStack stack = e.getStack();
-			if (!stack.currentFrame().isDefined(MATCH)) {
-				e = new NotificationEvent(e.getFlowElement(),
-						NotificationEventType.EXECUTION_COMPLETED, e.getStack());
-			}
-			else {
-				String match = (String) stack.currentFrame().getVar(MATCH);
-
-				if (matches(match, (FailureNotificationEvent) e)) {
-					e = new NotificationEvent(e.getFlowElement(),
-							NotificationEventType.EXECUTION_COMPLETED, e.getStack());
-				}
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		if (!stack.currentFrame().isDefined(MATCH)) {
+			super.completed(stack);
+			return;
+		}
+		else {
+			String match = (String) stack.currentFrame().getVar(MATCH);
+			if (matches(match, e)) {
+				super.completed(stack);
+				return;
 			}
 		}
-		super.notificationEvent(e);
+		super.failed(stack, e);
 	}
 }

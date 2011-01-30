@@ -18,9 +18,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ErrorHandler;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class ErrorHandlerNode extends PartialArgumentsContainer {
 	public static final String ERROR_HANDLERS = "#errorhandlers";
@@ -50,7 +47,7 @@ public class ErrorHandlerNode extends PartialArgumentsContainer {
 		post(stack);
 	}
 
-	public void handleError(FlowElement source, FailureNotificationEvent error)
+	public void handleError(FlowElement source, ExecutionException error)
 			throws ExecutionException {
 		VariableStack stack = error.getInitialStack();
 		if (stack.isDefined("#inhandler") && !stack.currentFrame().isDefined("#inhandler")) {
@@ -63,24 +60,13 @@ public class ErrorHandlerNode extends PartialArgumentsContainer {
 		stack.setVar("error", error.getMessage());
 		stack.setVar("trace", error.toString());
 		setArgsDone(stack);
-		if (error.getException() != null) {
-			stack.setVar("exception", error.getException());
-		}
-		else {
-			stack.setVar("exception", "No exception available");
-		}
+		stack.setVar("exception", error);
 		int errorcount = 1;
 		stack.currentFrame().setBooleanVar("#inhandler", true);
 		startRest(stack);
 	}
-
-	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
-		VariableStack stack = e.getStack();
-		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-			failImmediately(stack, (FailureNotificationEvent) e);
-		}
-		else {
-			super.notificationEvent(e);
-		}
+	
+	public void childFailed(VariableStack stack, Exception e) throws ExecutionException {
+		failImmediately(stack, e);
 	}
 }
