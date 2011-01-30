@@ -15,16 +15,14 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.arguments.VariableArgumentsImpl;
-import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventListener;
-import org.globus.cog.karajan.workflow.events.EventTargetPair;
 
 public class FutureVariableArguments extends VariableArgumentsImpl implements FutureList {
 	private static final Logger logger = Logger.getLogger(FutureVariableArguments.class);
 
 	private boolean closed;
-	private List actions;
+	private List<ListenerStackPair> actions;
 	private FutureEvaluationException exception;
 
 	public FutureVariableArguments() {
@@ -144,11 +142,12 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 		return buf.toString();
 	}
 
-	public synchronized void addModificationAction(EventListener target, Event event) {
+	public synchronized void addModificationAction(FutureListener target, VariableStack event) {
 		if (actions == null) {
-			actions = new LinkedList();
+			actions = new LinkedList<ListenerStackPair>();
 		}
-		EventTargetPair etp = new EventTargetPair(event, target);
+		
+		ListenerStackPair etp = new ListenerStackPair(target, event);
 		if (FuturesMonitor.debug) {
 			FuturesMonitor.monitor.add(etp, this);
 		}
@@ -167,14 +166,14 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 	private void actions() {
 		if (actions != null) {
 			synchronized (actions) {
-				java.util.Iterator i = actions.iterator();
+				java.util.Iterator<ListenerStackPair> i = actions.iterator();
 				while (i.hasNext()) {
-					EventTargetPair etp = (EventTargetPair) i.next();
+					ListenerStackPair etp = i.next();
 					if (FuturesMonitor.debug) {
 						FuturesMonitor.monitor.remove(etp);
 					}
 					i.remove();
-					EventBus.post(etp.getTarget(), etp.getEvent());
+					EventBus.post(etp);
 				}
 			}
 		}
@@ -248,7 +247,7 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 			return this;
 		}
 
-		public void addModificationAction(EventListener target, Event event) {
+		public void addModificationAction(FutureListener target, VariableStack event) {
 			vargs.addModificationAction(target, event);
 		}
 

@@ -9,17 +9,13 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
-import org.globus.cog.karajan.workflow.events.Event;
-import org.globus.cog.karajan.workflow.events.EventClass;
-import org.globus.cog.karajan.workflow.events.Priority;
 
-public class ReplyEvent extends Event {
+public class ReplyEvent {
 	private final int tag;
 	private final byte[] data;
 	private final boolean err, fin;
 	
 	public ReplyEvent(int tag, byte[] data, boolean fin, boolean err) {
-		super(EventClass.GENERIC_EVENT, null, Priority.HIGH);
 		this.tag = tag;
 		this.data = data;
 		this.err = err;

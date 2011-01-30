@@ -15,17 +15,14 @@ import org.globus.cog.karajan.util.Identifier;
 import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.FutureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
-import org.globus.cog.karajan.workflow.events.ProgressMonitoringEvent;
+import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureIteratorIncomplete;
+import org.globus.cog.karajan.workflow.futures.FutureListener;
 
-public abstract class AbstractSequentialIterator extends AbstractIterator {
+public abstract class AbstractSequentialIterator extends AbstractIterator implements FutureListener {
 	private static final Logger logger = Logger.getLogger(AbstractSequentialIterator.class);
 
-	public static final int SEQ_COMPLETED = 1;
+	public static final String SEQ_COMPLETED = "#seqCompleted";
 
 	public void iterate(VariableStack stack, Identifier var, KarajanIterator l)
 			throws ExecutionException {
@@ -40,10 +37,6 @@ public abstract class AbstractSequentialIterator extends AbstractIterator {
 			stack.setCaller(this);
 			setIndex(stack, getArgCount() + 1);
 
-			if (stack.getExecutionContext().isMonitoringEnabled()) {
-				fireMonitoringEvent(new ProgressMonitoringEvent(this,
-						ProgressMonitoringEvent.LOOP_PROGRESS, stack, l.count(), 0));
-			}
 			if (FlowNode.debug) {
 				threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 			}
@@ -57,8 +50,22 @@ public abstract class AbstractSequentialIterator extends AbstractIterator {
 		catch (FutureIteratorIncomplete fii) {
 			stack.setVar(VAR, var);
 			stack.setVar(ITERATOR, l);
-			fii.getFutureIterator().addModificationAction(this,
-					new FutureNotificationEvent(ITERATE, this, fii.getFutureIterator(), stack));
+			fii.getFutureIterator().addModificationAction(this, stack);
+		}
+	}
+
+	public void futureModified(Future f, VariableStack stack) {
+		try {
+			KarajanIterator it = (KarajanIterator) stack.currentFrame().getVar(ITERATOR);
+			if (stack.currentFrame().isDefined(SEQ_COMPLETED)) {
+				iterationCompleted(stack, it);
+			}
+			else {
+				iterate(stack, (Identifier) stack.currentFrame().getVar(VAR), it);
+			}
+		}
+		catch (ExecutionException e) {
+			failImmediately(stack, e);
 		}
 	}
 
@@ -66,9 +73,9 @@ public abstract class AbstractSequentialIterator extends AbstractIterator {
 			throws ExecutionException {
 		int childIndex = preIncIndex(stack) - 1;
 		if (childIndex > elementCount()) {
-			logger.debug(stack.toString());
-			logger.debug("Trace: ", new Throwable());
-			logger.debug(Thread.currentThread());
+			logger.warn(stack.toString());
+			logger.warn("Trace: ", new Throwable());
+			logger.warn(Thread.currentThread());
 		}
 		if (childIndex == elementCount()) {
 			KarajanIterator l = (KarajanIterator) stack.currentFrame().getVar(ITERATOR);
@@ -81,10 +88,6 @@ public abstract class AbstractSequentialIterator extends AbstractIterator {
 
 	protected final void iterationCompleted(VariableStack stack, KarajanIterator l)
 			throws ExecutionException {
-		if (stack.getExecutionContext().isMonitoringEnabled()) {
-			this.fireMonitoringEvent(new ProgressMonitoringEvent(this,
-					ProgressMonitoringEvent.LOOP_PROGRESS, stack, l.count(), l.current()));
-		}
 		try {
 			if (!l.hasNext()) {
 				complete(stack);
@@ -103,32 +106,11 @@ public abstract class AbstractSequentialIterator extends AbstractIterator {
 		catch (FutureIteratorIncomplete fii) {
 			stack.setVar(ITERATOR, l);
 			fii.getFutureIterator().addModificationAction(
-					this,
-					new FutureNotificationEvent(SEQ_COMPLETED, this, fii.getFutureIterator(), stack));
+					this, stack);
 		}
 	}
 
-	public final void notificationEvent(NotificationEvent e) throws ExecutionException {
-		if (FutureNotificationEvent.FUTURE_MODIFIED.equals(e.getType())) {
-			VariableStack stack = e.getStack();
-			FutureNotificationEvent fne = (FutureNotificationEvent) e;
-			if (fne.getSubtype() == SEQ_COMPLETED) {
-				iterationCompleted(stack, (KarajanIterator) stack.getVar(ITERATOR));
-				return;
-			}
-			else if (fne.getSubtype() == ITERATE) {
-				iterate(stack, (KarajanIterator) stack.getVar(ITERATOR));
-				return;
-			}
-			else {
-				throw new ExecutionException("Unknown future notification event subtype: "
-						+ fne.getSubtype());
-			}
-		}
-		else if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-			failImmediately(e.getStack(), (FailureNotificationEvent) e);
-			return;
-		}
-		super.notificationEvent(e);
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		failImmediately(stack, e);
 	}
 }

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -23,30 +22,15 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.LoadListener;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ErrorHandler;
+import org.globus.cog.karajan.workflow.AbortException;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.events.AbortEvent;
-import org.globus.cog.karajan.workflow.events.AbortNotificationEvent;
-import org.globus.cog.karajan.workflow.events.ControlEvent;
-import org.globus.cog.karajan.workflow.events.ControlEventType;
-import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventClass;
-import org.globus.cog.karajan.workflow.events.EventListener;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.FlowEvent;
-import org.globus.cog.karajan.workflow.events.MonitoringEvent;
-import org.globus.cog.karajan.workflow.events.MonitoringEventType;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEventType;
-import org.globus.cog.karajan.workflow.events.StatusMonitoringEvent;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
+import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 
-public class FlowNode implements ExtendedFlowElement, LoadListener {
+public class FlowNode implements FlowElement, LoadListener {
 	public static final Logger logger = Logger.getLogger(FlowNode.class);
 
 	public static final Arg A_INLINE_TEXT = new Arg.Optional(TEXT);
@@ -88,114 +72,37 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		staticArguments = Collections.emptyMap();
 	}
 
-	protected boolean executeErrorHandler(VariableStack stack, NotificationEvent error)
-			throws ExecutionException {
-		// TODO
-		/*
-		 * if (error instanceof ChainedFailureNotificationEvent) { return false; }
-		 */
-		FailureNotificationEvent evt = (FailureNotificationEvent) error;
-		List set = stack.getAllVars("#errorhandlers");
-		Iterator i = set.iterator();
-		while (i.hasNext()) {
-			List handlers = (List) i.next();
-			Iterator j = handlers.iterator();
-			while (j.hasNext()) {
-				ErrorHandler handler = (ErrorHandler) j.next();
-				if (handler.matches(evt.getMessage())) {
-					handler.handleError(this, evt);
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	public void failImmediately(VariableStack stack, FailureNotificationEvent fne) {
+	public void failImmediately(VariableStack stack, ExecutionException e) {
 		try {
 			if (FlowNode.debug) {
 				threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 			}
-			boolean errorHandler = false;
 			try {
 				_finally(stack);
 			}
-			catch (Exception e) {
-				fne = new FailureNotificationEvent(this, stack, e.getMessage(), e);
+			catch (ExecutionException ee) {
+				e = ee;
 			}
 			if (frame) {
 				stack.leave();
 			}
-			try {
-				errorHandler = executeErrorHandler(stack, fne);
-			}
-			catch (Exception e) {
-				fne = new FailureNotificationEvent(this, stack, e.getMessage(), e);
-			}
-			if (!errorHandler) {
-				fireNotificationEvent(fne, stack);
-				if (EventBus.MONITORING_ENABLED) {
-					fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack,
-						fne.getException());
-				}
-			}
+			stack.getCaller().failed(stack, e);
 		}
-		catch (ExecutionException e) {
-			logger.error("Could not fail element", e);
+		catch (ExecutionException ee) {
+			logger.error("Could not fail element", ee);
 		}
 	}
 
 	public void failImmediately(VariableStack stack, String message) {
-		failImmediately(stack, new FailureNotificationEvent(this, stack, message, null));
+		failImmediately(stack, new ExecutionException(stack, message, null));
 	}
 
 	public void failImmediately(VariableStack stack, Throwable exception) {
-		failImmediately(stack, new FailureNotificationEvent(this, stack, exception.getMessage(),
-				exception));
+		failImmediately(stack, new ExecutionException(stack, exception));
 	}
 
 	public void failImmediately(VariableStack stack, String message, Exception exception) {
-		failImmediately(stack, new FailureNotificationEvent(this, stack, message, exception));
-	}
-
-	/**
-	 * Notification events notify callers of the status of the execution
-	 * (completed, failed, aborted, ...)
-	 */
-	public void fireNotificationEvent(final NotificationEvent event, final VariableStack stack) {
-		EventListener caller = stack.getCaller();
-		if (caller == null) {
-			logger.error("Caller is null");
-			if (FlowNode.debug) {
-				stack.dumpAll();
-			}
-			EventListener parent = getParent();
-			EventBus.post(parent, new FailureNotificationEvent(this, stack,
-					"No #caller found on stack for " + this, null));
-		}
-		else {
-		    if (EventBus.MONITORING_ENABLED) {
-		    	EventBus.sendHooked(caller, event);
-		    }
-		    else {
-		        EventBus.send(caller, event);
-		    }
-		}
-	}
-
-	public final void fireControlEvent(final FlowElement target, final FlowEvent event) {
-		EventBus.post(target, event);
-	}
-
-	public final void fireMonitoringEvent(final MonitoringEvent event) {
-		EventBus.post(event.getStack().getExecutionContext(), event);
-	}
-
-	public final void fireStatusMonitoringEvent(final MonitoringEventType type,
-			final VariableStack stack, final Object detail) {
-		if (stack.getExecutionContext().isMonitoringEnabled()) {
-			fireMonitoringEvent(new StatusMonitoringEvent(this, type, stack, detail));
-		}
+		failImmediately(stack, new ExecutionException(stack, message, exception));
 	}
 
 	protected final void checkFailed(VariableStack stack) {
@@ -226,14 +133,8 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		}
 	}
 
-	public final void restart(final VariableStack stack) throws ExecutionException {
+	public void restart(final VariableStack stack) throws ExecutionException {
 		startCount++;
-		if (logger.isInfoEnabled()) {
-			logger.info("Executing " + this + "; thread: " + ThreadingContext.get(stack));
-			if (FlowNode.debug) {
-				checkStackReuse(stack);
-			}
-		}
 		try {
 			execute(stack);
 		}
@@ -244,8 +145,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 			if (FlowNode.debug) {
 				threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 			}
-			e.getFuture().addModificationAction(this,
-					new ControlEvent(this, ControlEventType.RESTART, stack));
+			e.getFuture().addModificationAction(this, stack);
 		}
 		catch (ExecutionException e) {
 			failImmediately(stack, e);
@@ -253,9 +153,23 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		catch (KarajanRuntimeException e) {
 			failImmediately(stack, e);
 		}
+		catch (RuntimeException ex) {
+			logger.warn("Ex098", ex);
+			failImmediately(stack, new ExecutionException(stack.copy(),
+					ex.getMessage(), ex));
+		}
+	}
+	
+	public void futureModified(Future f, VariableStack stack) {
+		try {
+			restart(stack);
+		}
+		catch (ExecutionException e) {
+			failImmediately(stack, e);
+		}
 	}
 
-	protected void abort(final VariableStack stack) throws ExecutionException {
+	public void abort(final VariableStack stack) throws ExecutionException {
 		abort(stack, null);
 	}
 
@@ -264,16 +178,13 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		if (frame) {
 			stack.leave();
 		}
-		if (EventBus.MONITORING_ENABLED) {
-			fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_FAILED, stack, message);
-		}
 		if (FlowNode.debug) {
 			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 		}
-		fireNotificationEvent(new AbortNotificationEvent(this, stack, message), stack);
+		stack.getCaller().failed(stack, new AbortException(stack, message));
 	}
 
-	public final void start(final VariableStack stack) throws ExecutionException {
+	public void start(final VariableStack stack) throws ExecutionException {
 		synchronized (this) {
 			if (!initialized) {
 				initializeStatic();
@@ -282,9 +193,6 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		}
 		if (frame) {
 			stack.enter();
-		}
-		if (EventBus.MONITORING_ENABLED) {
-			fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_STARTED, stack, null);
 		}
 		restart(stack);
 	}
@@ -303,11 +211,7 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		if (frame) {
 			stack.leave();
 		}
-		if (EventBus.MONITORING_ENABLED) {
-			fireStatusMonitoringEvent(StatusMonitoringEvent.EXECUTION_COMPLETED, stack, null);
-		}
-		fireNotificationEvent(new NotificationEvent(this,
-				NotificationEventType.EXECUTION_COMPLETED, stack), stack);
+		stack.getCaller().completed(stack);
 	}
 
 	protected void _finally(VariableStack stack) throws ExecutionException {
@@ -332,89 +236,13 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 		}
 		return null;
 	}
-
-	public void event(final Event e) throws ExecutionException {
-		try {
-			final EventClass cls = e.getEventClass();
-			if (EventClass.NOTIFICATION_EVENT.equals(cls)) {
-                notificationEvent((NotificationEvent) e);
-            }
-            else if (EventClass.CONTROL_EVENT.equals(cls)) {
-				controlEvent((ControlEvent) e);
-			}
-			else if (EventClass.MONITORING_EVENT.equals(cls)) {
-				monitoringEvent((MonitoringEvent) e);
-			}
-			else {
-				if (e.hasStack()) {
-					failImmediately(e.getStack(), "Unhandled event: " + e);
-				}
-				else {
-					logger.warn("Unhandled event " + e);
-				}
-			}
-		}
-		catch (FutureNotYetAvailable ex) {
-			ex.getFuture().addModificationAction(this, e);
-		}
-		catch (FutureEvaluationException ex) {
-			failImmediately(e.getStack(), ex.getFault());
-		}
-		catch (ExecutionException ex) {
-			if (ex.getStack() == null) {
-				ex.setStack(e.getStack().copy());
-			}
-			failImmediately(e.getStack(), ex);
-		}
-		catch (RuntimeException ex) {
-			logger.warn("Ex098", ex);
-			failImmediately(e.getStack(), new ExecutionException(e.getStack().copy(),
-					ex.getMessage(), ex));
-		}
+	
+	public void completed(VariableStack stack) throws ExecutionException {
+		stack.getCaller().completed(stack);
 	}
 
-	protected void notificationEvent(final NotificationEvent e) throws ExecutionException {
-		try {
-			if (FlowNode.debug) {
-				if (!this.equals(e.getStack().getCaller())) {
-					logger.warn("stack inconsistency detected");
-				}
-			}
-			if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
-				failImmediately(e.getStack(), (FailureNotificationEvent) e);
-			}
-			else {
-				e.getStack().leave();
-				fireNotificationEvent(e, e.getStack());
-			}
-		}
-		catch (FutureFault ex) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("FE: ", ex);
-			}
-			ex.getFuture().addModificationAction(this, e);
-		}
-	}
-
-	protected void controlEvent(final ControlEvent e) throws ExecutionException {
-		final ControlEventType type = e.getType();
-		if (ControlEventType.START.equals(type)) {
-			start(e.getStack());
-		}
-		else if (ControlEventType.RESTART.equals(type)) {
-			restart(e.getStack());
-		}
-		else if (AbortEvent.ABORT.equals(type)) {
-			abortEvent((AbortEvent) e);
-		}
-	}
-
-	protected void abortEvent(AbortEvent e) throws ExecutionException {
-		abort(e.getStack());
-	}
-
-	protected void monitoringEvent(MonitoringEvent e) throws ExecutionException {
-
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		failImmediately(stack, e);
 	}
 
 	public void fail(VariableStack stack, String message, Throwable cause)
@@ -462,15 +290,11 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	protected void startElement(final FlowElement c, final VariableStack stack)
 			throws ExecutionException {
-		final ControlEvent fee = new ControlEvent(this, ControlEventType.START, stack);
-		fee.setStack(stack);
-		fireControlEvent(c, fee);
+		EventBus.post(c, stack);
 	}
 
-	public void restartElement(final FlowElement c, final VariableStack stack) {
-		final ControlEvent fee = new ControlEvent(this, ControlEventType.RESTART, stack);
-		fee.setStack(stack);
-		fireControlEvent(c, fee);
+	public void restartElement(final FlowElement c, final VariableStack stack) throws ExecutionException {
+		c.restart(stack);
 	}
 
 	protected void ret(final VariableStack stack, final Object value) throws ExecutionException {
@@ -778,10 +602,10 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 	}
 
 	public static class FNTP {
-		public EventListener node;
+		public FlowElement node;
 		public ThreadingContext tc;
 
-		public FNTP(EventListener node, ThreadingContext tc) {
+		public FNTP(FlowElement node, ThreadingContext tc) {
 			this.node = node;
 			this.tc = tc;
 		}
@@ -809,5 +633,9 @@ public class FlowNode implements ExtendedFlowElement, LoadListener {
 
 	public void executeSimple(VariableStack stack) throws ExecutionException {
 		throw new KarajanRuntimeException("Internal error: default executeSimple() called");
+	}
+		
+	protected final void childCompleted(VariableStack stack) throws ExecutionException {
+		
 	}
 }

@@ -12,6 +12,7 @@ package org.globus.cog.karajan.workflow.service.commands;
 import org.globus.cog.karajan.util.DefinitionEnvironment;
 import org.globus.cog.karajan.util.serialization.KarajanSerializationContext;
 import org.globus.cog.karajan.util.serialization.UDEDefinitionConverter;
+import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.user.UDEDefinition;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
