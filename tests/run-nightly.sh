@@ -1,21 +1,23 @@
 #!/bin/bash
 
-# example file for setting up environment and running nightly.sh
+# sets up environment and runs nightly.sh
 # given a groupslistfile, will run nightly.sh on that site
 
 GROUPSLISTFILE=$1 # E.g., groups/group-all-local.sh
 
 # user-specific variables
 
-export WORK=/ci/projects/cnari/swift_work/skenny
-export QUEUE=short
-export PROJECT=CI-IBN000039
+export WORK=$2
+export QUEUE=$3
+export PROJECT=$4
 
 # branch testing
 
-export COG_VERSION=branches/4.1.8
-export SWIFT_VERSION=branches/release-0.92
+export COG_VERSION=$5
+export SWIFT_VERSION=$6
 
-/home/skenny/swift_runs/tests/nightly.sh -g $GROUPSLISTFILE
+#$2/nightly.sh -g $GROUPSLISTFILE
+
+$2/nightly.sh -g $GROUPSLISTFILE
 
 exit 0
