@@ -22,18 +22,20 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 public class Variable extends AbstractFunction {
 
 	public static final Arg A_NAME = new Arg.Positional("name");
-	
+
+	public static final int UNINITIALIZED = -999;
+
 	static {
 		setArguments(Variable.class, new Arg[] { A_NAME });
 	}
 
-	private int frame = -1;
+	private int frame = UNINITIALIZED;
 	private String name;
 
 	public Variable() {
 		this.setAcceptsInlineText(true);
 	}
-	
+
 	public Object function(VariableStack stack) throws ExecutionException {
 		synchronized (this) {
 			if (name == null) {
@@ -44,30 +46,36 @@ public class Variable extends AbstractFunction {
 				}
 			}
 		}
-		
-		if (frame == -1 || frame == VariableStack.NO_FRAME) {
-			if (stack.parentFrame().isDefined("#quoted")) {
-				Object value = new Identifier(name);
-				setSimple(value);
-				return value;
-			}
-			else {
-				frame = stack.getVarFrameFromTop(name);
-				if (frame == VariableStack.NO_FRAME) {
-					throw new VariableNotFoundException(name);
-				}
-				else if (frame == VariableStack.FIRST_FRAME) {
-					Object value = stack.firstFrame().getVar(name);
+
+		switch (frame) {
+			case UNINITIALIZED:
+			case VariableStack.NO_FRAME:
+				if (stack.parentFrame().isDefined("#quoted")) {
+					Object value = new Identifier(name);
 					setSimple(value);
 					return value;
 				}
 				else {
-					return stack.getFrameFromTop(frame).getVar(name);
+					frame = stack.getVarFrameFromTop(name);
+					switch (frame) {
+					    case VariableStack.NO_FRAME:
+					        throw new VariableNotFoundException(name);
+					    case VariableStack.FIRST_FRAME:
+					        Object value = stack.firstFrame().getVar(name);
+					        setSimple(value);
+					        return value;
+					    case VariableStack.DYNAMIC_FRAME:
+					        return stack.getVar(name);
+					    default:
+					        return stack.getFrameFromTop(frame).getVar(name);
+					}
 				}
-			}
-		}
-		else {
-			return stack.getFrameFromTop(frame).getVar(name);
+			case VariableStack.FIRST_FRAME:
+			    return stack.firstFrame().getVar(name);
+			case VariableStack.DYNAMIC_FRAME:
+			    return stack.getVar(name);
+			default:
+			    return stack.getFrameFromTop(frame).getVar(name);
 		}
 	}
 }
