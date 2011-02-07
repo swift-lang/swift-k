@@ -197,7 +197,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 				}
 				else {
 					throw new ExecutionException("Missing argument " + name + " for "
-							+ Info.ppDef(getElementType(), this));
+							+ stack.getVar("#trace:element"));
 				}
 			}
 		}
