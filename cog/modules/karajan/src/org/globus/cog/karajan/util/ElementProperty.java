@@ -120,8 +120,10 @@ public abstract class ElementProperty {
 	}
 
 	private static final class VariableElement extends ElementProperty {
+		public static final int UNINITIALIZED = -999;
+		
 		private final String name;
-		private int frame = -1;
+		private int frame = UNINITIALIZED;
 		private Object value;
 
 		public VariableElement(Identifier ident) {
@@ -129,24 +131,27 @@ public abstract class ElementProperty {
 		}
 
 		public Object getValue(VariableStack stack) throws VariableNotFoundException {
-			if (frame == -1 || frame == VariableStack.NO_FRAME) {
-				frame = stack.getVarFrameFromTop(name);
-				if (frame == VariableStack.NO_FRAME) {
-					throw new VariableNotFoundException(name);
-				}
-				else if (frame == VariableStack.FIRST_FRAME) {
-					value = stack.firstFrame().getVar(name);
+			switch (frame) {
+				case UNINITIALIZED:
+				case VariableStack.NO_FRAME:
+					frame = stack.getVarFrameFromTop(name);
+					switch (frame) {
+						case VariableStack.NO_FRAME:
+							throw new VariableNotFoundException(name);
+						case VariableStack.FIRST_FRAME:
+							value = stack.firstFrame().getVar(name);
+							return value;
+						case VariableStack.DYNAMIC_FRAME:
+							return stack.getVar(name);
+						default:
+							return stack.getFrameFromTop(frame).getVar(name);
+					}
+				case VariableStack.FIRST_FRAME:
 					return value;
-				}
-				else {
+				case VariableStack.DYNAMIC_FRAME:
+					return stack.getVar(name);
+				default:
 					return stack.getFrameFromTop(frame).getVar(name);
-				}
-			}
-			else if (frame == VariableStack.FIRST_FRAME) {
-			    return value;
-			}
-			else {
-				return stack.getFrameFromTop(frame).getVar(name);
 			}
 		}
 
