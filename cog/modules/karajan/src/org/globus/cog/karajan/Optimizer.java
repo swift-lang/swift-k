@@ -33,7 +33,7 @@ public class Optimizer {
 				&& e.elementCount() == 1) {
 			return optimize0(e.getElement(0));
 		}
-		if (e.getElementType().equals("try") || e.getClass().equals(SequentialChoice.class)) {
+		if ("try".equals(e.getElementType()) || e.getClass().equals(SequentialChoice.class)) {
 		    if (e.elementCount() == 2 && e.getElement(0).getElementType().equals("kernel:variable") && e.getElement(1).getElementType().startsWith("kernel:")) {
 		    	e.getStaticArguments().put("buffer", Boolean.FALSE);
 		    }
