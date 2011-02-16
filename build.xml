@@ -86,6 +86,7 @@
 		<chmod perm="+x" file="${dist.dir}/bin/swift-plot-log"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swiftconfig"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swiftrun"/>
+                <chmod perm="+x" file="${dist.dir}/bin/gensites"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/active-state-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/add-runid-as-prefix"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/affine-transform"/>

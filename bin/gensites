@@ -1,0 +1,193 @@
+#!/bin/sh
+
+# crash: Report a problem and exit
+crash()
+{
+    MSG=$1
+    echo ${MSG}
+    exit 1
+}
+
+# get_value: Return the right hand side of an equals
+# statment in swift.properties format: gensites.foo=bar
+# will return bar
+get_value()
+{
+   echo $1 |cut -d "=" -f2
+}
+
+# Verify an argument is not null
+verify_not_null()
+{
+   argname=$1; shift
+   if [ _$1 != _ ]; then
+      return 0;
+   else
+      echo $0: value for $argname can not be null
+      exit 1
+   fi
+}
+
+# Print usage information and exit
+usage()
+{
+   cat << END
+
+   usage: gensites template [-p properties.file] [-L template_directory] [-h]
+   
+   template		 Name of template to use
+   -p properties.file	 Specify a swift.properties to use
+   -L template_directory Specify a non-standard template directory
+   -T			 List all templates available
+   -h			 Help / usage information
+
+   Examples:
+
+   Create a site configuration file for sites.xml using default properties.file in current directory
+   	$ gensites pads > sites.xml
+
+   Use a specific properties file for a site
+        $ gensites -p sites.properties pads > sites.xml
+
+   Specify a non-standard directory where templates are located
+   	$ gensites -L template.dir pads > sites.xml
+
+
+END
+exit 0;
+}
+
+# Parse command line arguments
+while [ $# -gt 0 ]
+do
+   case "$1" in
+      -p) PROPERTIES_FILE=$2; verify_not_null properties_file $PROPERTIES_FILE; shift ;;
+      -L) TEMPLATE_DIRECTORY=$2; verify_not_null template_directory $TEMPLATE_DIRECTORY; shift ;;
+      -T) LIST_TEMPLATES=1 ;;
+      -h|-help) usage ;;
+       *) TEMPLATE=$1 ;;
+   esac
+   shift
+done
+
+# Determine SWIFT_HOME
+if [ -z "$SWIFT_HOME" ]; then
+   SWIFT_BIN_DIR=`which swift`
+
+   # From SVN
+   SWIFT_HOME=`dirname $SWIFT_BIN_DIR`"/../../../etc/sites"
+
+   # From a distribution
+   if [ ! -d "$SWIFT_HOME" ]; then
+      SWIFT_HOME=`dirname $SWIFT_BIN_DIR`"../../etc/sites"
+   fi
+ 
+   # Can't find swift path, give up
+   if [ ! -d "$SWIFT_HOME" ]; then
+      crash "Unable to determine SWIFT_HOME. Please set manually."
+   fi            
+fi
+
+# List templates
+if [ ! -z "$LIST_TEMPLATES" ]; then
+   ls -1 $SWIFT_HOME/* | xargs -n1 basename
+   ls -1 $HOME/.swift/sites/* | xargs -n1 basename
+   exit 0
+fi
+
+# Require template name to be specified by user
+if [ -z "$TEMPLATE" ]; then
+   crash "Not specified: TEMPLATE"
+fi
+
+# Use custom template directory if asked
+if [ -d "$TEMPLATE_DIRECTORY" ]; then
+   TEMPLATE_PATH="$TEMPLATE_DIRECTORY/$TEMPLATE"
+fi
+
+# Locate template
+if [ ! -f "$TEMPLATE_PATH" ]; then
+   if [ -f "$TEMPLATE" ]; then
+      $TEMPLATE_PATH = $TEMPLATE
+   elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
+   elif [ -f "$HOME/.swift/sites/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$HOME/.swift/sites/$TEMPLATE
+   fi
+   if [ ! -f "$TEMPLATE_PATH" ]; then
+     crash "Cannot find template for $TEMPLATE"
+   fi
+fi
+
+
+# Ensure a properties file exists
+if [ ! -f "$PROPERTIES_FILE" ]; then
+   PROPERTIES_FILE="swift.properties"
+   if [ ! -f "$PROPERTIES_FILE" ]; then
+      crash "Unable to find a valid properties file! Please specify a valid file with the -p option"
+   fi
+fi
+
+# Parse values into variables for later sed processing
+WORK=`pwd`"/work"
+while read line
+do
+   case "$line" in
+      $TEMPLATE".work="*) 
+         WORK=`get_value $line`
+         ;;
+      $TEMPLATE".globus_hostname="*) 
+         GLOBUS_HOSTNAME=`get_value $line`
+         ;;
+      $TEMPLATE".nodes="*)
+         NODES=`get_value $line`
+         ;;
+      $TEMPLATE".project="*)
+         PROJECT=`get_value $line`
+         ;;
+      $TEMPLATE".queue="*)
+         QUEUE=`get_value $line`
+         ;;
+      $TEMPLATE".n_gran="*)
+         N_GRAN=`get_value $line`
+         ;;
+      $TEMPLATE".n_max="*)
+         MAXTIME=`get_value $line`
+         ;;
+   esac
+done < $PROPERTIES_FILE
+
+# Test for mandatory variables
+[[ ${WORK}   == "" ]] && crash "Not specified: WORK"
+
+# Verify that the variables by the template are defined
+for TOKEN in PROJECT QUEUE N_GRAN N_MAX SLOTS
+ do
+ if grep _${TOKEN}_ ${TEMPLATE_PATH} > /dev/null
+   then
+   if ! declare -p ${TOKEN} > /dev/null
+     then
+     printenv
+     crash "Not specified: ${TOKEN}"
+   fi
+ fi
+done
+
+# Replace values
+SEDFILE=`mktemp`
+{
+  echo "s/_NODES_/${NODES}/"
+  echo "s/_HOST_/${GLOBUS_HOSTNAME}/"
+  echo "s@_WORK_@${WORK}@"
+  echo "s/_PROJECT_/${PROJECT}/"
+  echo "s/_QUEUE_/${QUEUE}/"
+  echo "s/_N_GRAN_/${N_GRAN}/"
+  echo "s/_N_MAX_/${N_MAX}/"
+  echo "s/_SLOTS_/${SLOTS}/"
+  echo "s/_MAXTIME_/${MAXTIME}/"
+  echo "s@_SERVICE_COASTERS_@${SERVICE_COASTERS:-NO_URL_GIVEN}@"
+  echo "s@_SERVICE_PORT_@${SERVICE_PORT:-NO_PORT_GIVEN}@"
+} > $SEDFILE
+
+sed -f $SEDFILE < ${TEMPLATE_PATH}
+rm $SEDFILE
