@@ -82,6 +82,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         timelast = donetime;
         busyTime += timeDiff();
         // done.add(running);
+        bqp.jobTerminated(running);
         running = null;
         if (!checkSuspended(block)) {
             pullLater();
