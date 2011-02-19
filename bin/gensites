@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # crash: Report a problem and exit
 crash()
@@ -13,7 +13,7 @@ crash()
 # will return bar
 get_value()
 {
-   echo $1 |cut -d "=" -f2
+   echo $2 |cut -d "=" -f2
 }
 
 # Verify an argument is not null
@@ -74,12 +74,8 @@ done
 if [ -z "$SWIFT_HOME" ]; then
    SWIFT_BIN_DIR=`which swift`
 
-   # From SVN
-   SWIFT_HOME=`dirname $SWIFT_BIN_DIR`"/../../../etc/sites"
-
-   # From a distribution
    if [ ! -d "$SWIFT_HOME" ]; then
-      SWIFT_HOME=`dirname $SWIFT_BIN_DIR`"../../etc/sites"
+      SWIFT_HOME=`dirname $SWIFT_BIN_DIR`"/../etc/sites"
    fi
  
    # Can't find swift path, give up
@@ -90,8 +86,16 @@ fi
 
 # List templates
 if [ ! -z "$LIST_TEMPLATES" ]; then
-   ls -1 $SWIFT_HOME/* | xargs -n1 basename
-   ls -1 $HOME/.swift/sites/* | xargs -n1 basename
+   # Templates in etc/sites
+   for file in `ls -1 $SWIFT_HOME/*`
+   do
+	basename $file
+   done
+   # Templates in .swift/sites
+   for file in `ls -1 $HOME/.swift/sites/*`
+   do
+       basename $file
+   done
    exit 0
 fi
 
@@ -133,25 +137,25 @@ WORK=`pwd`"/work"
 while read line
 do
    case "$line" in
-      $TEMPLATE".work="*) 
+      \#$TEMPLATE" work="*|'#gensites work='*) 
          WORK=`get_value $line`
          ;;
-      $TEMPLATE".globus_hostname="*) 
+      \#$TEMPLATE" globus_hostname="*|'#gensites globus_hostname=') 
          GLOBUS_HOSTNAME=`get_value $line`
          ;;
-      $TEMPLATE".nodes="*)
+      \#$TEMPLATE" nodes="*|'#gensites nodes='*)
          NODES=`get_value $line`
          ;;
-      $TEMPLATE".project="*)
+      \#$TEMPLATE" project="*|'#gensites project='*)
          PROJECT=`get_value $line`
          ;;
-      $TEMPLATE".queue="*)
+      \#$TEMPLATE" queue="*|'#gensites queue='*)
          QUEUE=`get_value $line`
          ;;
-      $TEMPLATE".n_gran="*)
+      \#$TEMPLATE" n_gran="*|'#gensites n_gran='*)
          N_GRAN=`get_value $line`
          ;;
-      $TEMPLATE".n_max="*)
+      \#$TEMPLATE" n_max="*|'#gensites n_max='*)
          MAXTIME=`get_value $line`
          ;;
    esac
@@ -167,7 +171,6 @@ for TOKEN in PROJECT QUEUE N_GRAN N_MAX SLOTS
    then
    if ! declare -p ${TOKEN} > /dev/null
      then
-     printenv
      crash "Not specified: ${TOKEN}"
    fi
  fi

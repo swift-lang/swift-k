@@ -1,0 +1,8 @@
+<config>
+<pool handle="ssh">
+  <execution provider="ssh" url="login1.pads.ci.uchicago.edu" />
+  <filesystem provider="ssh" url="login1.pads.ci.uchicago.edu" />
+  <profile key="jobThrottle" namespace="karajan">0</profile>
+  <workdirectory>_WORK_</workdirectory>
+</pool>
+</config>

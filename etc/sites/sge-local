@@ -1,0 +1,10 @@
+<config>
+<pool handle="sge-local">
+   <execution provider="sge" url="none" />
+   <profile namespace="globus" key="pe">threaded</profile>
+   <profile key="jobThrottle" namespace="karajan">.49</profile>
+   <profile namespace="karajan" key="initialScore">10000</profile>
+   <filesystem provider="local" url="none" />
+   <workdirectory>_WORK_</workdirectory>
+ </pool>
+</config>
