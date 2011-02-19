@@ -9,11 +9,12 @@ crash()
 }
 
 # get_value: Return the right hand side of an equals
-# statment in swift.properties format: gensites.foo=bar
+# statment in swift.properties format: #site sitename option=value
 # will return bar
 get_value()
 {
-   echo $2 |cut -d "=" -f2
+   for last; do true; done
+   eval echo $last |cut -d "=" -f2
 }
 
 # Verify an argument is not null
@@ -137,25 +138,25 @@ WORK=`pwd`"/work"
 while read line
 do
    case "$line" in
-      \#$TEMPLATE" work="*|'#gensites work='*) 
+      "#site $TEMPLATE work="*|'#site work='*) 
          WORK=`get_value $line`
          ;;
-      \#$TEMPLATE" globus_hostname="*|'#gensites globus_hostname=') 
+      "#site $TEMPLATE globus_hostname="*|'#site globus_hostname=') 
          GLOBUS_HOSTNAME=`get_value $line`
          ;;
-      \#$TEMPLATE" nodes="*|'#gensites nodes='*)
+      "#site $TEMPLATE nodes="*|'#site nodes='*)
          NODES=`get_value $line`
          ;;
-      \#$TEMPLATE" project="*|'#gensites project='*)
+      "#site $TEMPLATE project="*|'#site project='*)
          PROJECT=`get_value $line`
          ;;
-      \#$TEMPLATE" queue="*|'#gensites queue='*)
+      "#site $TEMPLATE queue="*|'#site queue='*)
          QUEUE=`get_value $line`
          ;;
-      \#$TEMPLATE" n_gran="*|'#gensites n_gran='*)
+      "#site $TEMPLATE n_gran="*|'#site n_gran='*)
          N_GRAN=`get_value $line`
          ;;
-      \#$TEMPLATE" n_max="*|'#gensites n_max='*)
+      "#site $TEMPLATE n_max="*|'#site n_max='*)
          MAXTIME=`get_value $line`
          ;;
    esac
