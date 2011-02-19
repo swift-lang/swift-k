@@ -34,7 +34,7 @@ usage()
 {
    cat << END
 
-   usage: gensites template [-p properties.file] [-L template_directory] [-h]
+   usage: gensites template [-p properties.file] [-L template_directory] [-h] [-T]
    
    template		 Name of template to use
    -p properties.file	 Specify a swift.properties to use
@@ -65,7 +65,7 @@ do
       -p) PROPERTIES_FILE=$2; verify_not_null properties_file $PROPERTIES_FILE; shift ;;
       -L) TEMPLATE_DIRECTORY=$2; verify_not_null template_directory $TEMPLATE_DIRECTORY; shift ;;
       -T) LIST_TEMPLATES=1 ;;
-      -h|-help) usage ;;
+      -h|-help|-?) usage ;;
        *) TEMPLATE=$1 ;;
    esac
    shift
@@ -88,12 +88,12 @@ fi
 # List templates
 if [ ! -z "$LIST_TEMPLATES" ]; then
    # Templates in etc/sites
-   for file in `ls -1 $SWIFT_HOME/*`
+   for file in `ls -1 $SWIFT_HOME/* 2>/dev/null`
    do
 	basename $file
    done
    # Templates in .swift/sites
-   for file in `ls -1 $HOME/.swift/sites/*`
+   for file in `ls -1 $HOME/.swift/sites/* 2>/dev/null`
    do
        basename $file
    done
@@ -123,7 +123,6 @@ if [ ! -f "$TEMPLATE_PATH" ]; then
      crash "Cannot find template for $TEMPLATE"
    fi
 fi
-
 
 # Ensure a properties file exists
 if [ ! -f "$PROPERTIES_FILE" ]; then
