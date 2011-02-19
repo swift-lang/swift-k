@@ -242,11 +242,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private void requeueNonFitting() {
         int count = 0;
-        double queuedSize = queued.getJSize();
         double runningSize = running.getSize();
-        logger.info("allocsize = " + allocsize + ", queuedsize = " + queuedSize + ", running = " + runningSize + ", qsz = "
+        logger.info("allocsize = " + allocsize + ", queuedsize = " + queued.getJSize() + ", running = " + runningSize + ", qsz = "
                 + queued.size());
-        while (allocsize - queuedSize - runningSize < 0) {
+        while (allocsize - queued.getJSize() - runningSize < 0) {
             Job j = queued.removeOne(TimeInterval.FOREVER, 
                                      Integer.MAX_VALUE);
             if (j == null) {
