@@ -334,7 +334,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             });
         }
 
-        double needed = queued.getJSize();
+        double needed = queued.getJSize() + running.getSize();
 
         double sum = 0;
         for (Block b : sorted) {
