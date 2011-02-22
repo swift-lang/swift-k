@@ -301,6 +301,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             TimeInterval time = endtime.subtract(Time.now());
             int cpus = 1 + getPullThread(node.getBlock()).sleepers();
             running = bqp.request(time, cpus);
+            // no listener is added to this task, so make sure 
+            // it won't linger in the BQP running set
+            bqp.jobTerminated(running);
         }
         if (running != null) {
             running.fail("Task failed: " + msg, e);
