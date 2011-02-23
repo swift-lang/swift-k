@@ -1,0 +1,8 @@
+local-sge-coasters 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+local-sge-coasters 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+local-sge-coasters 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+local-sge-coasters 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+local-sge-coasters 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+local-sge-coasters 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+local-sge-coasters	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
+
