@@ -4,7 +4,7 @@
 crash()
 {
     MSG=$1
-    echo ${MSG}
+    echo ${MSG}  >&2
     exit 1
 }
 
@@ -34,13 +34,14 @@ usage()
 {
    cat << END
 
-   usage: gensites template [-p properties.file] [-L template_directory] [-h] [-T]
+   usage: gensites template [-p properties.file] [-L template_directory] [-h] [-T] [-l]
    
    template		 Name of template to use
    -p properties.file	 Specify a swift.properties to use
    -L template_directory Specify a non-standard template directory
    -T			 List all templates available
    -h			 Help / usage information
+   -l                    List the contents of a specific template
 
    Examples:
 
@@ -64,6 +65,7 @@ do
    case "$1" in
       -p) PROPERTIES_FILE=$2; verify_not_null properties_file $PROPERTIES_FILE; shift ;;
       -L) TEMPLATE_DIRECTORY=$2; verify_not_null template_directory $TEMPLATE_DIRECTORY; shift ;;
+      -l) LIST_SPECIFIC_TEMPLATE=1 ;;
       -T) LIST_TEMPLATES=1 ;;
       -h|-help|-?) usage ;;
        *) TEMPLATE=$1 ;;
@@ -85,8 +87,8 @@ if [ -z "$SWIFT_HOME" ]; then
    fi            
 fi
 
-# List templates
-if [ ! -z "$LIST_TEMPLATES" ]; then
+# List all templates
+if [ ! -z $LIST_TEMPLATES ]; then
    # Templates in etc/sites
    for file in `ls -1 $SWIFT_HOME/* 2>/dev/null`
    do
@@ -120,15 +122,24 @@ if [ ! -f "$TEMPLATE_PATH" ]; then
       TEMPLATE_PATH=$HOME/.swift/sites/$TEMPLATE
    fi
    if [ ! -f "$TEMPLATE_PATH" ]; then
-     crash "Cannot find template for $TEMPLATE"
+      crash "Cannot find template for $TEMPLATE"
    fi
+fi
+
+# List a specific template
+if [ ! -z $LIST_SPECIFIC_TEMPLATE ]; then
+   cat $TEMPLATE_PATH
+   exit 0
 fi
 
 # Ensure a properties file exists
 if [ ! -f "$PROPERTIES_FILE" ]; then
    PROPERTIES_FILE="swift.properties"
    if [ ! -f "$PROPERTIES_FILE" ]; then
-      crash "Unable to find a valid properties file! Please specify a valid file with the -p option"
+      PROPERTIES_FILE="$HOME/.swift/swift.properties"
+      if [ ! -f "$PROPERTIES_FILE" ]; then
+         crash "Unable to find a valid properties file! Please specify a valid file with the -p option"
+      fi
    fi
 fi
 
@@ -166,14 +177,13 @@ done < $PROPERTIES_FILE
 
 # Verify that the variables by the template are defined
 for TOKEN in PROJECT QUEUE N_GRAN N_MAX SLOTS
- do
- if grep _${TOKEN}_ ${TEMPLATE_PATH} > /dev/null
-   then
-   if ! declare -p ${TOKEN} > /dev/null
-     then
-     crash "Not specified: ${TOKEN}"
+do
+   # Need but can't find, due
+   if grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
+      if [ -z "${!TOKEN}" ]; then
+            crash "Not specified: ${TOKEN}"
+      fi
    fi
- fi
 done
 
 # Replace values
@@ -192,5 +202,6 @@ SEDFILE=`mktemp`
   echo "s@_SERVICE_PORT_@${SERVICE_PORT:-NO_PORT_GIVEN}@"
 } > $SEDFILE
 
-sed -f $SEDFILE < ${TEMPLATE_PATH}
+
+sed -f $SEDFILE < $TEMPLATE_PATH
 rm $SEDFILE
