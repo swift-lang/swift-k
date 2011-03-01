@@ -6,8 +6,8 @@
   <profile namespace="globus" key="maxTime">7200</profile>
   <profile key="workersPerNode" namespace="globus">1</profile>
   <profile key="slots" namespace="globus">1</profile>
-  <profile key="nodeGranularity" namespace="globus">1</profile>
-  <profile key="maxNodes" namespace="globus">1</profile>
+  <profile key="nodeGranularity" namespace="globus">16</profile>
+  <profile key="maxNodes" namespace="globus">16</profile>
   <profile key="queue" namespace="globus">_QUEUE_</profile>
   <profile key="jobThrottle" namespace="karajan">5.99</profile>
   <profile key="initialScore" namespace="karajan">10000</profile>
