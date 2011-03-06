@@ -194,13 +194,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
             ec.setArguments(arguments);
             long start = System.currentTimeMillis();
+            new HangChecker(stack).start();
             ec.start(stack);
             ec.waitFor();
             if (ec.isFailed()) {
                 runerror = true;
             }
-            long end = System.currentTimeMillis();
-            System.out.println("Time: " + (end - start) / 1000.0 + ", rate: " + (16384 * 1000) / (end - start) + " j/s");
         }
         catch (Exception e) {
             logger.debug("Detailed exception:", e);

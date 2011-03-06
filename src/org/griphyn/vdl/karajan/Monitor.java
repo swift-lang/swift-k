@@ -209,8 +209,12 @@ public class Monitor implements ActionListener, MouseListener {
 	public void dumpVariables() {
 		dumpVariables(System.out);
 	}
-
+	
 	public void dumpVariables(PrintStream ps) {
+	    dumpVariables(map, ps);
+	}
+
+	public static void dumpVariables(WrapperMap map, PrintStream ps) {
 		ps.println("\nRegistered futures:");
 		synchronized (map) {
 			Iterator i = map.entrySet().iterator();
@@ -244,7 +248,7 @@ public class Monitor implements ActionListener, MouseListener {
 		dumpThreads(System.out);
 	}
 
-	public void dumpThreads(PrintStream pw) {
+	public static void dumpThreads(PrintStream pw) {
 		pw.println("\nWaiting threads:");
 		Collection c = WaitingThreadsMonitor.getAllThreads();
 		Iterator i = c.iterator();
