@@ -6,7 +6,7 @@ hereversion() {
     M=$(svn status | grep --invert-match '^\?' > /dev/null && echo "($1 modified locally)")
   elif [ -d ".git" ] && [ -x "$(which git)" ]; then
     R=$(git svn info | grep '^Revision' | sed "s/Revision: /$1-r/")
-    if git status -a >/dev/null ; then
+    if git status --porcelain | grep 'M ' >/dev/null ; then
       M="($1 modified locally)"
     fi 
   else
