@@ -7,6 +7,7 @@ import java.util.LinkedList;
 
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
@@ -66,9 +67,13 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 			return;
 		}
 		while (!listeners.isEmpty()) {
-			ListenerStackPair etp = listeners.removeFirst();
+			final ListenerStackPair etp = listeners.removeFirst();
 			WaitingThreadsMonitor.removeThread(etp.stack);
-			etp.listener.futureModified(this, etp.stack);
+			EventBus.post(new Runnable() {
+                public void run() {
+                    etp.listener.futureModified(DSHandleFutureWrapper.this, etp.stack);
+                }
+			});
 		}
 		listeners = null;
 	}
