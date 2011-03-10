@@ -27,6 +27,7 @@ public class LocalTCPService extends GSSService implements Registering {
     public static final int TCP_BUFSZ = 32768;
     
     private RegistrationManager registrationManager;
+    private TCPBufferManager buffMan;
     
     // private int idseq;
     
@@ -35,11 +36,13 @@ public class LocalTCPService extends GSSService implements Registering {
     public LocalTCPService(RequestManager rm) throws IOException {
         super(false, 0);
         setRequestManager(rm);
+        buffMan = new TCPBufferManager();
     }
 
     public LocalTCPService(RequestManager rm, int port) throws IOException {
         super(false, port);
         setRequestManager(rm);
+        buffMan = new TCPBufferManager();
     }
 
     public String registrationReceived(String blockid, String url, KarajanChannel channel) throws ChannelException {
@@ -69,13 +72,12 @@ public class LocalTCPService extends GSSService implements Registering {
 
     protected void handleConnection(Socket socket) {
         try {
-            socket.setReceiveBufferSize(TCP_BUFSZ);
-            socket.setSendBufferSize(TCP_BUFSZ);
+            buffMan.addSocket(socket);
             socket.setTcpNoDelay(true);
         }
         catch (SocketException e) {
             e.printStackTrace();
         }
-        super.handleConnection(socket);
+        super.handleConnection(buffMan.wrap(socket));
     }
 }
