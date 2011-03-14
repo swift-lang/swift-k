@@ -92,7 +92,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		handlers = new HashMap();
 		submitQueue = new InstanceSubmitQueue();
 		addFailureHandler(new SSHThrottlingFailureHandler());
-		addTaskTransformer(new TCPBufferSizeTransformer());
 	}
 
 	public Contact allocateContact(Object constraints) throws NoFreeResourceException {
