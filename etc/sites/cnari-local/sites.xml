@@ -1,7 +1,0 @@
-<pool handle="cnari-local">
-  <execution provider="local" />
-  <gridftp url="local://localhost" />
-  <profile namespace="karajan" key="initialScore">10000</profile>
-  <profile key="jobThrottle" namespace="karajan">.31</profile>
-  <workdirectory>$HOME/swiftwork</workdirectory>
-</pool>

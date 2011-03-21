@@ -1,20 +1,18 @@
 #!/bin/bash
 
-# Sketch of meta script
+# runs run-nightly.sh (wrapper for nightly.sh) on a given site based on login
 
-# Runs nightly.sh on various sites
+SITE_LOGIN=$1 # e.g. login.pads.ci.uchicago.edu
 
-DIR=$1 # E.g., /home/wozniak/nightly-tests
+DIR=$2 # e.g., /home/skenny/swift_runs/tests
 
-ssh intrepid.alcf.anl.gov $DIR/run-nightly.sh groups/group-intrepid.sh
+TEST=$3 # e.g. sites/pads-pbs-coasters.sh
 
-# Retrieve results
-# scp ...
+# run test and retrieve results
 
-# Repeat for other sites...
+RUNDIR=run-$( date +"%Y-%m-%d" )
 
+ssh $SITE_LOGIN $DIR/run-nightly.sh $DIR/$TEST
+scp -r $SITE_LOGIN:$RUNDIR .
 
-
-# Build nice HTML index of results from all sites
-
-return 0
+exit 0

@@ -1,6 +1,0 @@
-<pool handle="ssh">
-    <filesystem provider="ssh" url="login1.pads.ci.uchicago.edu" />
-    <execution provider="ssh" url="login1.pads.ci.uchicago.edu" />
-    <workdirectory>$HOME/swiftwork</workdirectory>
-    <profile namespace="karajan" key="jobThrottle">0</profile>
-</pool>

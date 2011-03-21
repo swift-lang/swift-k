@@ -101,6 +101,9 @@ public class Execute extends GridExec {
 					getReplicationManager(stack).active(task, e.getStatus().getTime());
 					((FutureVariableArguments) A_REPLICATION_CHANNEL.getValue(stack)).close();
 				}
+				else if (e.getStatus().isTerminal()) {
+				    getReplicationManager(stack).terminated(task);
+				}
 				else if (c == ReplicationManager.STATUS_NEEDS_REPLICATION) {
 					RuntimeStats.setProgress(stack, "Replicating");
 					((FutureVariableArguments) A_REPLICATION_CHANNEL.getValue(stack)).append(Boolean.TRUE);

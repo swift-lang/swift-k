@@ -11,6 +11,8 @@
 # Run nightly.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
 # Code is checked out into TOPDIR (PWD by default) (PATH is not used)
+# The variables COG_VERSION and SWIFT_VERSION must be set for code checkout
+# e.g. COG_VERSION=branches/4.1.8, SWIFT_VERSION=branches/release-0.92
 # Swift is compiled and installed in its source tree
 # The run is executed in RUNDIR (TOPDIR/RUNDIRBASE)
 # The build test is started in TOPDIR
@@ -269,10 +271,10 @@ html_table() {
   do
     case $1 in
       cellpadding)
-        OPTS+="cellpadding=\"$2\" "
+        OPTS="${OPTS}cellpadding=\"$2\" "
         shift 2;;
       border)
-        OPTS+="border=\"$2\" "
+        OPTS="${OPTS}border=\"$2\" "
         shift 2;;
       esac
   done
@@ -315,16 +317,16 @@ html_td() {
   do
     case $1 in
       align)
-        OPTS+="align=\"$2\" "
+        OPTS="${OPTS}align=\"$2\" "
         shift 2;;
       class)
-        OPTS+="class=\"$2\" "
+        OPTS="${OPTS}class=\"$2\" "
         shift 2;;
       title)
-        OPTS+="title=\"$2\" "
+        OPTS="${OPTS}title=\"$2\" "
         shift 2;;
       width)
-        OPTS+="width=\"$2\" "
+        OPTS="${OPTS}width=\"$2\" "
         shift 2;;
     esac
   done
@@ -1013,7 +1015,7 @@ if [ "$SKIP_CHECKOUT" != "1" ]; then
   TESTNAME="Checkout CoG"
   start_row
   test_exec rm -rf cog
-  COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/trunk/current/src/cog"
+  COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/$COG_VERSION/src/cog"
   test_exec svn co $COG
   end_row
 
@@ -1021,7 +1023,7 @@ if [ "$SKIP_CHECKOUT" != "1" ]; then
   start_row
   test_exec cd cog/modules
   test_exec rm -rf swift
-  test_exec svn co https://svn.ci.uchicago.edu/svn/vdl2/$BRANCH swift
+  test_exec svn co https://svn.ci.uchicago.edu/svn/vdl2/$SWIFT_VERSION swift
   end_row
 fi
 
