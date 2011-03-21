@@ -82,6 +82,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         timelast = donetime;
         busyTime += timeDiff();
         // done.add(running);
+        bqp.jobTerminated(running);
         running = null;
         if (!checkSuspended(block)) {
             pullLater();
@@ -163,7 +164,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             e.printStackTrace();
             CoasterService.error(21, "Failed pull", e);
         }
-        if (! success) 
+        if (! success)
             CoasterService.error(22, "Launch failed");
     }
 
@@ -217,9 +218,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         Task task = job.getTask();
         if (logger.isDebugEnabled()) {
             JobSpecification spec =
-                (JobSpecification) task.getSpecification();        
+                (JobSpecification) task.getSpecification();
             logger.debug(block.getId() + ":" + getId() +
-                " submitting " + task.getIdentity() + ": " + 
+                " submitting " + task.getIdentity() + ": " +
                 spec.getExecutable() + " " + spec.getArguments());
         }
         task.setStatus(Status.SUBMITTING);
@@ -302,6 +303,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 int cpus = 1 + pullThread.sleepers();
                 running = bqp.request(time, cpus);
             }
+            // no listener is added to this task, so make sure
+            // it won't linger in the BQP running set
+            bqp.jobTerminated(running);
         }
         if (running != null) {
             running.fail("Task failed: " + msg, e);

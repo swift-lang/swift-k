@@ -139,12 +139,18 @@ public class Block implements StatusListener, Comparable<Block> {
             return false;
         }
         if (!running) {
-            return j.getMaxWallTime().isGreaterThan(walltime);
+            // if the block isn't running then the job might fit if its walltime
+            // is smaller than the block's walltime
+            return j.getMaxWallTime().isLessThan(walltime);
         }
         else if (running && j.getMaxWallTime().isGreaterThan(endtime.subtract(Time.now()))) {
+            // if the block is running and the job's walltime is greater than
+            // the blocks remaining walltime, then the job doesn't fit
             return false;
         }
         else {
+            // if the simple tests before fail try to see if there is a
+            // cpu that can specifically fit this job.
             synchronized (cpus) {
                 for (Cpu cpu : cpus) {
                     Job running = cpu.getRunning();

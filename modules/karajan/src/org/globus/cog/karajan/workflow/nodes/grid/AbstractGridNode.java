@@ -179,7 +179,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			}
 		}
 	}
-	
+
 	protected final void setStack(Task task, VariableStack stack) {
 		synchronized (tasks) {
 			tasks.put(task, stack);
