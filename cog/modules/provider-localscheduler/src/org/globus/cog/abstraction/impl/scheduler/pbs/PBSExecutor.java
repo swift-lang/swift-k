@@ -49,9 +49,10 @@ public class PBSExecutor extends AbstractExecutor {
 					+ '\n');
 		}
 	}
-	
+
 	private int parseAndValidateInt(Object obj, String name) {
 	    try {
+	        assert(obj != null);
 	        return Integer.parseInt(obj.toString());
 	    }
 	    catch (NumberFormatException e) {
@@ -59,75 +60,135 @@ public class PBSExecutor extends AbstractExecutor {
 	    }
 	}
 
-	protected boolean writeCountAndPPN(Writer wr, Properties properties) throws IOException {
-	    Object count = getSpec().getAttribute("count");
-	    Object ppn = getSpec().getAttribute("ppn");
-	    if (count != null) {
-	        int icount = parseAndValidateInt(count, "count");
-	        boolean multiple = icount != 1;
-	        if (ppn != null) {
-	            int ippn = parseAndValidateInt(ppn, "ppn");
-	            if (icount % ippn != 0) {
-	                throw new IllegalArgumentException("Count is not a multiple of ppn.");
-	            }
-	            icount = icount / ippn;
-	        }
-	        if ("true".equals
-                (properties.getProperty(Properties.USE_MPPWIDTH))) {
-	                wr.write("#PBS -l mppwidth=" + icount + (ppn == null ? "" : ":mppnppn=" + ppn) + "\n");
-	        }
-	        else {
-	            wr.write("#PBS -l nodes=" + icount + (ppn == null ? "" : ":ppn=" + ppn) + "\n");
-	        } 
-	        return multiple;
+	/**
+	   Obtains profile settings regarding job size from
+	   JobSpecification and writes them into the PBS file.
+	   Looks for profiles count, ppn, ppts, and mpp
+	   count: mandatory, default 1 (number of cores)
+	   ppn: optional, default 1 (cores per node)
+	   pbs.mpp: output mppwidth/mppnppn instead of nodes/ppn
+	   pbs.properties: extra PBS properties
+
+	   Note that the semantics are different for the pbs.mpp setting:
+	   mppwidth is the total number of cores while nodes is the number
+	   of nodes.
+
+	   http://www.clusterresources.com/torquedocs/2.1jobsubmission.shtml
+	   @return true if this is a multi-core job
+	 */
+	protected boolean writeCountAndPPN(Writer wr) throws IOException {
+	    boolean result = false;
+
+	    Object o;
+
+	    int count = 1;
+	    o = getSpec().getAttribute("count");
+	    if (o != null)
+	        count = parseAndValidateInt(o, "count");
+	    if (count != 1)
+	        result = true;
+
+	    o = getSpec().getAttribute("ppn");
+	    int ppn = 1;
+	    if (o != null)
+	        ppn = parseAndValidateInt(o, "ppn");
+
+	    String pbsProperties =
+	        (String) getSpec().getAttribute("pbs.properties");
+
+	    boolean mpp = false;
+	    o = getSpec().getAttribute("pbs.mpp");
+	    if (o != null)
+	        mpp = parseAndValidateBool(o, "mpp");
+
+	    if (count % ppn != 0)
+	        throw new IllegalArgumentException
+	        ("Count is not a multiple of ppn.");
+	    int nodes = count / ppn;
+
+	    StringBuilder sb = new StringBuilder(512);
+	    sb.append("#PBS -l ");
+	    if (mpp) {
+	        sb.append("mppwidth=");
+	        sb.append(count);
+	        sb.append(":");
+	        sb.append("mppnppn=");
+	        sb.append(ppn);
 	    }
-	    else if (ppn != null) {
-	        throw new IllegalArgumentException("No count specified and ppn != 1");
+	    else {
+	        sb.append("nodes=");
+	        sb.append(nodes);
+	        sb.append(":");
+	        sb.append("ppn=");
+	        sb.append(ppn);
 	    }
-	    return false;
+
+	    if (pbsProperties != null &&
+	        pbsProperties.length() > 0 ) {
+	        sb.append(":");
+	        sb.append(pbsProperties);
+	    }
+
+	    sb.append('\n');
+
+	    wr.write(sb.toString());
+
+	    return result;
 	}
 
+	private boolean parseAndValidateBool(Object obj, String name)
+	{
+	    try {
+	        return Boolean.parseBoolean(obj.toString());
+	    }
+	    catch (NumberFormatException e) {
+	        throw new IllegalArgumentException
+	        ("Illegal value for " + name + ". Must be true/false.");
+	    }
+	}
+
+	@Override
 	protected void writeScript(Writer wr, String exitcodefile, String stdout,
 			String stderr) throws IOException {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
-		
+
 		wr.write("#PBS -S /bin/bash\n");
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
-		boolean multiple = writeCountAndPPN(wr, properties);
+		boolean multiple = writeCountAndPPN(wr);
 		writeWallTime(wr);
 		writeAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
-		
+
 		for (String name : spec.getEnvironmentVariableNames()) {
 			wr.write(name);
 			wr.write('=');
 			wr.write(quote(spec.getEnvironmentVariable(name)));
 			wr.write('\n');
 		}
-		
+
 		if (spec.getEnvironmentVariableNames().size() > 0) {
 		    wr.write("#PBS -v " + makeList(spec.getEnvironmentVariableNames()) + '\n');
 		}
-		
+
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
-		} 
-		if ("multiple".equals(type)) {		    
+		}
+		if ("multiple".equals(type)) {
 		    multiple = true;
 		}
-		
+
 		if (multiple) {
 		    writeMultiJobPreamble(wr, exitcodefile);
 		}
-		
+
 		if (type != null) {
-			String wrapper = 
+			String wrapper =
 			    properties.getProperty("wrapper." + type);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Wrapper: " + wrapper);
@@ -144,7 +205,7 @@ public class PBSExecutor extends AbstractExecutor {
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
-		
+
 		wr.write(quote(spec.getExecutable()));
 		List<String> args = spec.getArgumentsAsList();
 		if (args != null && args.size() > 0) {
@@ -157,7 +218,7 @@ public class PBSExecutor extends AbstractExecutor {
 				}
 			}
 		}
-		
+
 		if (spec.getStdInput() != null) {
             wr.write(" < " + quote(spec.getStdInput()));
         }
@@ -170,7 +231,7 @@ public class PBSExecutor extends AbstractExecutor {
 		}
 		wr.close();
 	}
-	
+
 	private String makeList(Collection<String> names) {
         StringBuilder sb = new StringBuilder();
         Iterator<String> i = names.iterator();
@@ -182,7 +243,7 @@ public class PBSExecutor extends AbstractExecutor {
         }
         return sb.toString();
     }
-	
+
 	protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
             throws IOException {
         wr.write("NODES=`cat $PBS_NODEFILE`\n");
@@ -194,25 +255,29 @@ public class PBSExecutor extends AbstractExecutor {
     }
 
 
-	protected String getName() {
+	@Override
+  protected String getName() {
 		return "PBS";
 	}
 
-	protected AbstractProperties getProperties() {
+	@Override
+  protected AbstractProperties getProperties() {
 		return Properties.getProperties();
 	}
 
-	protected Job createJob(String jobid, String stdout,
+	@Override
+  protected Job createJob(String jobid, String stdout,
 			FileLocation stdOutputLocation, String stderr,
 			FileLocation stdErrorLocation, String exitcode,
 			AbstractExecutor executor) {
 		return new Job(jobid, stdout, stdOutputLocation, stderr,
 				stdErrorLocation, exitcode, executor);
 	}
-	
+
 	private static QueuePoller poller;
 
-	protected AbstractQueuePoller getQueuePoller() {
+	@Override
+  protected AbstractQueuePoller getQueuePoller() {
 		synchronized(PBSExecutor.class) {
 			if (poller == null) {
 				poller = new QueuePoller(getProperties());
