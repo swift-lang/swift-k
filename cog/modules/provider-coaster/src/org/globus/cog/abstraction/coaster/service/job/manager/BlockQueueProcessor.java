@@ -50,6 +50,14 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
      */
     private SortedJobSet queued;
     
+    /* Need to keep an account of running jobs in order to correctly
+     * make sense of the allocated size. If running jobs are not
+     * considered, it can appear that the allocated size is much
+     * larger than the required size, and blocks get shut down
+     * inappropriately.
+     */
+    private JobSet running;
+    
     private List<Integer> sums;
     private Map<String, Block> blocks;
 
@@ -83,6 +91,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         incoming = new ArrayList<Job>();
         metric = new OverallocatedJobDurationMetric(settings);
         queued = new SortedJobSet(metric);
+        running = new JobSet(metric);
         rlogger = new RemoteLogger();
     }
 
@@ -217,9 +226,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private Set<Job> queueToExistingBlocks() {
+        double runningSize = running.getSize();
         Set<Job> remove = new HashSet<Job>();
         for (Job j : holding) {
-            if (allocsize - queued.getJSize() > metric.getSize(j) && fits(j)) {
+            if (allocsize - queued.getJSize() - runningSize > metric.getSize(j) && fits(j)) {
                 queue(j);
                 remove.add(j);
             }
@@ -232,9 +242,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private void requeueNonFitting() {
         int count = 0;
-        logger.info("allocsize = " + allocsize + ", queuedsize = " + queued.getJSize() + ", qsz = "
+        double runningSize = running.getSize();
+        logger.info("allocsize = " + allocsize + ", queuedsize = " + queued.getJSize() + ", running = " + runningSize + ", qsz = "
                 + queued.size());
-        while (allocsize - queued.getJSize() < 0) {
+        while (allocsize - queued.getJSize() - runningSize < 0) {
             Job j = queued.removeOne(TimeInterval.FOREVER, 
                                      Integer.MAX_VALUE);
             if (j == null) {
@@ -325,7 +336,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             });
         }
 
-        double needed = queued.getJSize();
+        double needed = queued.getJSize() + running.getSize();
 
         double sum = 0;
         for (Block b : sorted) {
@@ -532,7 +543,15 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     public Job request(TimeInterval ti, int cpus) {
-        return queued.removeOne(ti, cpus);
+        Job job = queued.removeOne(ti, cpus);
+        if (job != null) {
+            running.add(job);
+        }
+        return job;
+    }
+    
+    public void jobTerminated(Job job) {
+        running.remove(job);
     }
 
     private int round(int v, int g) {
