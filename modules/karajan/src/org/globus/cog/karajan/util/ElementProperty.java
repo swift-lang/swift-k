@@ -95,8 +95,9 @@ public abstract class ElementProperty {
 	public String getUnparsed() {
 		return toString();
 	}
-	
-	protected abstract String getValueAsString(VariableStack stack) throws VariableNotFoundException;
+
+	protected abstract String getValueAsString(VariableStack stack)
+			throws VariableNotFoundException;
 
 	private static final class StringElement extends ElementProperty {
 		private final String str;
@@ -108,7 +109,7 @@ public abstract class ElementProperty {
 		public Object getValue(VariableStack stack) {
 			return str;
 		}
-		
+
 		public String getValueAsString(VariableStack stack) {
 			return str;
 		}
@@ -119,22 +120,47 @@ public abstract class ElementProperty {
 	}
 
 	private static final class VariableElement extends ElementProperty {
-		private final Identifier ident;
+		public static final int UNINITIALIZED = -999;
+		
+		private final String name;
+		private int frame = UNINITIALIZED;
+		private Object value;
 
 		public VariableElement(Identifier ident) {
-			this.ident = ident;
+			this.name = ident.getName();
 		}
 
 		public Object getValue(VariableStack stack) throws VariableNotFoundException {
-			return ident.getValue(stack);
+			switch (frame) {
+				case UNINITIALIZED:
+				case VariableStack.NO_FRAME:
+					frame = stack.getVarFrameFromTop(name);
+					switch (frame) {
+						case VariableStack.NO_FRAME:
+							throw new VariableNotFoundException(name);
+						case VariableStack.FIRST_FRAME:
+							value = stack.firstFrame().getVar(name);
+							return value;
+						case VariableStack.DYNAMIC_FRAME:
+							return stack.getVar(name);
+						default:
+							return stack.getFrameFromTop(frame).getVar(name);
+					}
+				case VariableStack.FIRST_FRAME:
+					return value;
+				case VariableStack.DYNAMIC_FRAME:
+					return stack.getVar(name);
+				default:
+					return stack.getFrameFromTop(frame).getVar(name);
+			}
 		}
-		
+
 		public String getValueAsString(VariableStack stack) throws VariableNotFoundException {
-			return TypeUtil.toString(ident.getValue(stack));
+			return TypeUtil.toString(getValue(stack));
 		}
 
 		public String toString() {
-			return '{' + ident.getName() + '}';
+			return '{' + name + '}';
 		}
 	}
 
@@ -142,7 +168,7 @@ public abstract class ElementProperty {
 		public Object getValue(VariableStack stack) {
 			return "";
 		}
-		
+
 		public String getValueAsString(VariableStack stack) {
 			return "";
 		}
@@ -153,21 +179,20 @@ public abstract class ElementProperty {
 	}
 
 	private static final class Concatenator extends ElementProperty {
-		private final List l;
+		private final List<ElementProperty> l;
 
-		public Concatenator(List l) {
+		public Concatenator(List<ElementProperty> l) {
 			this.l = l;
 		}
 
 		public Object getValue(VariableStack stack) throws VariableNotFoundException {
-			final StringBuffer sb = new StringBuffer();
-			Iterator i = l.iterator();
-			while (i.hasNext()) {
-				sb.append(((ElementProperty) i.next()).getValueAsString(stack));
+			final StringBuilder sb = new StringBuilder();
+			for (ElementProperty p : l) {
+				sb.append(p.getValueAsString(stack));
 			}
 			return sb.toString();
 		}
-		
+
 		public String getValueAsString(VariableStack stack) throws VariableNotFoundException {
 			return (String) getValue(stack);
 		}

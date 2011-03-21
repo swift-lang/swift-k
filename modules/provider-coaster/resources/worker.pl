@@ -16,7 +16,6 @@ use File::Path;
 use File::Copy;
 use Cwd;
 use POSIX ":sys_wait_h";
-use strict;
 use warnings;
 
 BEGIN { eval "use Time::HiRes qw(time); 1" or print "Hi res time not available. Log timestamps will have second granularity\n"; }

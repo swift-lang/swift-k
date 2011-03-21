@@ -11,7 +11,6 @@ package org.globus.cog.karajan.workflow.nodes;
 
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.LoopNotificationEvent;
 
 public class Continue extends FlowNode {
 	public void execute(VariableStack stack) throws ExecutionException {
@@ -20,6 +19,6 @@ public class Continue extends FlowNode {
 
 	protected void continue_(VariableStack stack) throws ExecutionException {
 		stack.leave();
-		fireNotificationEvent(new LoopNotificationEvent(this, LoopNotificationEvent.CONTINUE, stack), stack);
+		throw new While.Continue();
 	}
 }

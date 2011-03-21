@@ -11,7 +11,6 @@ package org.globus.cog.karajan.workflow.service;
 
 import org.globus.cog.karajan.workflow.service.handlers.ChannelConfigurationHandler;
 import org.globus.cog.karajan.workflow.service.handlers.EchoHandler;
-import org.globus.cog.karajan.workflow.service.handlers.EventHandler;
 import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
 import org.globus.cog.karajan.workflow.service.handlers.ShutdownHandler;
 import org.globus.cog.karajan.workflow.service.handlers.StartGroupHandler;
@@ -31,7 +30,6 @@ public class ServiceRequestManager extends AbstractRequestManager {
 		addHandler("STARTGROUP", StartGroupHandler.class);
 		addHandler("ECHO", EchoHandler.class);
 		//addHandler("TEST", TestHandler.class);
-		addHandler("EVENT", EventHandler.class);
 		addHandler("VARG", VargHandler.class);
 		addHandler("SHUTDOWN", ShutdownHandler.class);
 		addHandler("STAT", StatHandler.class);

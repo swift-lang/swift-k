@@ -199,7 +199,7 @@ public final class LinkedStack implements VariableStack {
 			throws VariableNotFoundException {
 		return _getVarFromFrame(name, frameCount - index - 1);
 	}
-
+	
 	public Object getVar(final String name) throws VariableNotFoundException {
 		if (lastName != null) {
 			if (name.equals(lastName)) {
@@ -327,7 +327,7 @@ public final class LinkedStack implements VariableStack {
 	}
 
 	public Object getGlobal(final String name) {
-		return firstFrame().getVar(name);
+		return firstFrame().getVarNoSync(name);
 	}
 
 	public Regs getRegs() {

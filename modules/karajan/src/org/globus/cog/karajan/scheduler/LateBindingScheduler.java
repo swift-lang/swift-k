@@ -92,7 +92,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		handlers = new HashMap();
 		submitQueue = new InstanceSubmitQueue();
 		addFailureHandler(new SSHThrottlingFailureHandler());
-		addTaskTransformer(new TCPBufferSizeTransformer());
 	}
 
 	public Contact allocateContact(Object constraints) throws NoFreeResourceException {
@@ -302,7 +301,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	private boolean sleep() {
 		try {
-			wait(2000);
+			wait(500);
 			return true;
 		}
 		catch (InterruptedException e) {

@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.arguments;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
@@ -24,12 +25,12 @@ import org.globus.cog.karajan.workflow.nodes.FlowElement;
  */
 public class NameBindingVariableArguments extends VariableArgumentsImpl {
 	private final NamedArguments named;
-	private final String[] names;
+	private final List<String> names;
 	private int index;
 	private final boolean hasVargs;
 	private final FlowElement owner;
 
-	public NameBindingVariableArguments(NamedArguments named, String[] names, boolean hasVargs,
+	public NameBindingVariableArguments(NamedArguments named, List<String> names, boolean hasVargs,
 			FlowElement owner) {
 		this.named = named;
 		this.names = names;
@@ -38,49 +39,35 @@ public class NameBindingVariableArguments extends VariableArgumentsImpl {
 		this.owner = owner;
 	}
 
-	private static final String[] STRARRAY = new String[0];
-
-	public NameBindingVariableArguments(NamedArguments named, List names, boolean hasVargs,
-			FlowElement owner) {
-		this(named, (String[]) names.toArray(STRARRAY), hasVargs, owner);
-	}
-
 	public synchronized void append(Object value) {
-		while (index < names.length && named.hasArgument(names[index])) {
-			index++;
-		}
-		if (index < names.length) {
-			named.add(names[index++], value);
+	    for (String name : names) {
+	        if (!named.hasArgument(name)) {
+	            named.add(name, value);
+	            return;
+	        }
+	    }
+		
+		if (!hasVargs) {
+			System.out.println("" + value);
+			throw new KarajanRuntimeException("Illegal extra argument `" + value + "' to " + owner);
 		}
 		else {
-			if (!hasVargs) {
-				System.out.println("" + value);
-				throw new KarajanRuntimeException("Illegal extra argument `" + value + "' to " + owner);
-			}
-			else {
-				super.append(value);
-			}
+			super.append(value);
 		}
 	}
 
 	public void appendAll(List args) {
 		int i = 0;
-		while (index < names.length) {
-			while (index < names.length && named.hasArgument(names[index])) {
-				index++;
-			}
-			if (index < names.length) {
-				if (i < args.size()) {
-					named.add(names[index++], args.get(i++));
-				}
-				else {
-					return;
-				}
-			}
-			else {
-				break;
-			}
-		}
+		for (String name : names) {
+            if (!named.hasArgument(name)) {
+                if (i < args.size()) {
+                	named.add(name, args.get(i++));
+                }
+                else {
+                    return;
+                }
+            }
+        }
 		if (!args.isEmpty()) {
 			if (args.size() > i) {
 				if (!hasVargs) {
@@ -99,19 +86,17 @@ public class NameBindingVariableArguments extends VariableArgumentsImpl {
 
 	public void set(List args) {
 		int i = 0;
-		while (index < names.length) {
-			while (index < names.length && named.hasArgument(names[index])) {
-				index++;
-			}
-			if (index < names.length) {
-				named.add(names[index++], args.get(i++));
-			}
-			else {
-				super.set(args.subList(i, args.size() - 1));
-				return;
-			}
-		}
-		super.set(args.subList(i, args.size() - 1));
+        for (String name : names) {
+            if (!named.hasArgument(name)) {
+                if (i < args.size()) {
+                    named.add(name, args.get(i++));
+                }
+                else {
+                    return;
+                }
+            }
+        }
+        super.set(args.subList(i, args.size() - 1));
 	}
 
 	public void set(VariableArguments other) {

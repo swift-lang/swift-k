@@ -9,7 +9,6 @@
  */
 package org.globus.cog.karajan.workflow.service;
 
-import java.rmi.server.UID;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
@@ -19,8 +18,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
-import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.nodes.PartialArgumentsContainer;
 import org.globus.cog.karajan.workflow.service.channels.ChannelID;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
@@ -198,17 +195,15 @@ public class RemoteNode extends PartialArgumentsContainer implements Callback {
 			super.nonArgChildCompleted(stack);
 		}
 	}
+	
+	public void completed(VariableStack stack) throws ExecutionException {
+		if (stack.parentFrame().isDefined(REMOTE_FLAG)) {
+			super.completed(stack);
+		}
+	}
 
-	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
-		if (e.getStack().parentFrame().isDefined(REMOTE_FLAG)) {
-			super.notificationEvent(e);
-		}
-		else if (e instanceof FailureNotificationEvent) {
-			e.setFlowElement(this);
-			super.notificationEvent(e);
-		}
-		else {
-			super.notificationEvent(e);
-		}
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		//e.setFlowElement(this);
+		super.failed(stack, e);
 	}
 }

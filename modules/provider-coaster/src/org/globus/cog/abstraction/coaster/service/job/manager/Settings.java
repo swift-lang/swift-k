@@ -40,13 +40,14 @@ public class Settings {
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
                     "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
                     "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn",
-                    "ldLibraryPath", "workerCopies"};
+                    "ldLibraryPath", "workerCopies", "directory", "useHashBang"};
 
     /**
      * The maximum number of blocks that can be active at one time
      */
     private int slots = 20;
     private int workersPerNode = 1;
+ 
     /**
      * How many nodes to allocate at once
      */
@@ -66,22 +67,21 @@ public class Settings {
      * For example, with oe = 100, a bunch of jobs of walltime 1 will generate
      * blocks about 100 long.
      */
-
     private double lowOverallocation = 10, highOverallocation = 1;
 
     private double overallocationDecayFactor = 1.0 / 1000.0;
+
     /**
      * How to spread the size of blocks being allocated. 0 means no spread (all
      * blocks allocated in one iteration have the same size), and 1.0 is maximum
      * spread (first block will have minimal size, and the last block will be
      * twice the median).
      */
-
     private double spread = 0.9;
+    
     /**
      * Maximum idle time of a block
      */
-
     private int exponentialSpread = 0;
 
     private TimeInterval reserve = TimeInterval.fromSeconds(60);
@@ -126,6 +126,10 @@ public class Settings {
     private String workerLibraryPath = null;
     
     private String workerCopies = null;
+    
+    private String directory = null;
+   
+    private String useHashBang = null;
     
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
@@ -263,7 +267,8 @@ public class Settings {
      */
     public void setWorkerLoggingLevel(String workerLoggingLevel) {
         if (workerLoggingLevel != null) {
-            workerLoggingLevel = workerLoggingLevel.toUpperCase();
+            workerLoggingLevel = 
+                workerLoggingLevel.trim().toUpperCase();
         }
         this.workerLoggingLevel = workerLoggingLevel;
     }
@@ -478,6 +483,22 @@ public class Settings {
     
     public void setWorkerCopies(String copies) { 
         workerCopies = copies;
+    }
+    
+    public String getDirectory() {
+        return directory;
+    }
+    
+    public void setDirectory(String directory) {
+        this.directory = directory;
+    }
+    
+    public String getUseHashBang() {
+        return useHashBang;
+    }
+    
+    public void setUseHashBang(String uhb) {
+        this.useHashBang = uhb;
     }
     
     public void set(String name, String value)
