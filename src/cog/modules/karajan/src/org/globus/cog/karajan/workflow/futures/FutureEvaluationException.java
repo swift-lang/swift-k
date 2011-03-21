@@ -11,14 +11,13 @@ package org.globus.cog.karajan.workflow.futures;
 
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 
 
 public class FutureEvaluationException extends KarajanRuntimeException {
 	private Throwable fault;
 
-	public FutureEvaluationException(FailureNotificationEvent fne) {
-		this.fault = new ExecutionException(fne.getException());
+	public FutureEvaluationException(Exception fne) {
+		this.fault = new ExecutionException(fne);
 	}
 	
 	public FutureEvaluationException(Throwable fault) {

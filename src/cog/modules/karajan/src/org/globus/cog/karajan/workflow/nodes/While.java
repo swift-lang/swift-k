@@ -13,8 +13,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.Condition;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.Event;
-import org.globus.cog.karajan.workflow.events.LoopNotificationEvent;
 
 public class While extends Sequential {
 	public While() {
@@ -56,25 +54,25 @@ public class While extends Sequential {
 		}
 		startElement(fn, stack);
 	}
-
-	public void event(Event e) throws ExecutionException {
-		if (e instanceof LoopNotificationEvent) {
-			loopNotificationEvent((LoopNotificationEvent) e);
-		}
-		else {
-			super.event(e);
-		}
-	}
-
-	protected void loopNotificationEvent(LoopNotificationEvent e) throws ExecutionException {
-		if (e.getType() == LoopNotificationEvent.BREAK) {
+	
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+		if (e instanceof Break) {
 			complete(e.getStack());
 			return;
 		}
-		else if (e.getType() == LoopNotificationEvent.CONTINUE) {
+		if (e instanceof Continue) {
 			setIndex(e.getStack(), 0);
 			startNext(e.getStack());
 			return;
 		}
+		super.failed(stack, e);
+	}
+	
+	public static class Break extends ExecutionException {
+		
+	}
+	
+	public static class Continue extends ExecutionException {
+		
 	}
 }

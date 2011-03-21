@@ -52,7 +52,8 @@ public class OverallocatedJobDurationMetric implements Metric {
     }
 
     public double desiredSize(Job j) {
-        return pow(BlockQueueProcessor.overallocatedSize(j, settings), settings.getParallelism());
+        return pow(BlockQueueProcessor.overallocatedSize(j, settings),
+                   settings.getParallelism());
     }
 
     public double size(int w, int h) {

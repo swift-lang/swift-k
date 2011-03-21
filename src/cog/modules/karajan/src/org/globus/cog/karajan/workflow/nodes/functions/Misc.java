@@ -190,9 +190,11 @@ public class Misc extends FunctionsCollection {
 		if (OA_CONTEXT.isPresent(stack)) {
 			prefix = TypeUtil.toString(OA_CONTEXT.getValue(stack));
 		}
+		long index;
 		synchronized (Misc.class) {
-			return prefix + alphanum(UIDIndex++) + suffix;
+		    index = UIDIndex++;
 		}
+		return prefix + alphanum(index) + suffix;
 	}
 
 	public static final String codes = "0123456789abcdefghijklmnopqrstuvxyz";

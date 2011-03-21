@@ -12,6 +12,8 @@ package org.globus.cog.karajan.workflow.nodes;
 import java.util.Iterator;
 
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.arguments.ArgUtil;
+import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -25,8 +27,9 @@ public class Each extends AbstractSequentialWithArguments {
 
 	protected void post(VariableStack stack) throws ExecutionException {
 		Iterator i = TypeUtil.toIterator(A_ITEMS.getValue(stack));
+		VariableArguments vr = ArgUtil.getVariableReturn(stack);
 		while (i.hasNext()) {
-			ret(stack, i.next());
+			vr.append(i.next());
 		}
 		super.post(stack);
 	}

@@ -77,18 +77,29 @@ public class BlockTask extends TaskImpl {
 
     private JobSpecification buildSpecification() {
         JobSpecification js = new JobSpecificationImpl();
-        js.setExecutable("/usr/bin/perl");
+        String script = block.getAllocationProcessor()
+        .getScript().getAbsolutePath();
+        if (settings.getUseHashBang() != null && 
+            settings.getUseHashBang().equals("true")) {
+            js.setExecutable(script);
+        }
+        else {
+            js.setExecutable("/usr/bin/perl");
+            js.addArgument(script);
+        }
         // Cobalt on Intrepid, if no directory is specified, assumes $CWD for the
         // job directory.
         // If $CWD happens to be /scratch/something it has a filter in place
         // that rejects the job with the warning that /scratch/something is not accessible
-        // on the worker node. And we don't care about the $CWD for the worker.
-        js.setDirectory("/");
-
-        js.addArgument(block.getAllocationProcessor().getScript().getAbsolutePath());
+        // on the worker node. And we don't care about the $CWD for the worker.        
+        if (settings.getDirectory() == null)
+            js.setDirectory("/");
+        else
+            js.setDirectory(settings.getDirectory());
+        
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
-
+        
         if (settings.getWorkerLoggingLevel().equals("NONE"))
           js.addArgument("NOLOGGING");
         else 

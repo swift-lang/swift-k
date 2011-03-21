@@ -13,14 +13,10 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 
 public abstract class AbstractRegexpFailureHandler extends PartialArgumentsContainer {
 	public static final Logger logger = Logger.getLogger(AbstractRegexpFailureHandler.class);
 	
-	protected static boolean matches(String str, FailureNotificationEvent e) {
-		return matches(str, e.getMessage());
-	}
 	protected static boolean matches(String str, String msg) {
 		if (msg == null) {
 			msg = "";

@@ -17,11 +17,10 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.arguments.VariableArgumentsListener;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
+import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventListener;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 
 
@@ -85,12 +84,12 @@ public class ForwardArgumentFuture implements Future {
 		}
 	}
 
-	public synchronized void addModificationAction(EventListener target, Event event) {
+	public synchronized void addModificationAction(FutureListener target, VariableStack event) {
 		if (actions == null) {
 			actions = new LinkedList();
 		}
 		
-		EventTargetPair etp = new EventTargetPair(event, target);
+		ListenerStackPair etp = new ListenerStackPair(target, event);
 		if (FuturesMonitor.debug) {
 			FuturesMonitor.monitor.add(etp, this);
 		}
@@ -109,12 +108,12 @@ public class ForwardArgumentFuture implements Future {
 			synchronized (actions) {
 				Iterator i = actions.iterator();
 				while (i.hasNext()) {
-					EventTargetPair etp = (EventTargetPair) i.next();
+					ListenerStackPair etp = (ListenerStackPair) i.next();
 					if (FuturesMonitor.debug) {
 						FuturesMonitor.monitor.remove(etp);
 					}
 					i.remove();
-					EventBus.post(etp.getTarget(), etp.getEvent());
+					etp.listener.futureModified(this, etp.stack);
 				}
 			}
 		}

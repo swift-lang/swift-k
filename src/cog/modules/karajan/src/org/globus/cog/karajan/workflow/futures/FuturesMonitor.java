@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
+import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.FlowNode;
 
 public class FuturesMonitor extends Hashtable {
@@ -28,17 +29,17 @@ public class FuturesMonitor extends Hashtable {
 	public void remove(EventTargetPair etp) {
 		try {
 			FuturesMonitor.monitor.remove(new FlowNode.FNTP(etp.getTarget(),
-					ThreadingContext.get(etp.getEvent().getStack())));
+					ThreadingContext.get(etp.getEvent())));
 		}
 		catch (VariableNotFoundException e) {
 			logger.warn("No thread on the stack", e);
 		}
 	}
 	
-	public void add(EventTargetPair etp, Future f) {
+	public void add(ListenerStackPair etp, Future f) {
 		try {
-			FuturesMonitor.monitor.put(new FlowNode.FNTP(etp.getTarget(),
-					ThreadingContext.get(etp.getEvent().getStack())), f);
+			FuturesMonitor.monitor.put(new FlowNode.FNTP((FlowElement) etp.listener,
+					ThreadingContext.get(etp.stack)), f);
 		}
 		catch (VariableNotFoundException e) {
 			logger.warn("No thread on the stack", e);

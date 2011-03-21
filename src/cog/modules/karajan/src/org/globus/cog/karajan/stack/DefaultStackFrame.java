@@ -38,6 +38,10 @@ public final class DefaultStackFrame implements StackFrame {
 	public synchronized Object getVar(final String name) {
 		return map.get(name);
 	}
+	
+	public Object getVarNoSync(String name) {
+		return map.get(name);
+	}
 
 	public synchronized void setVar(final String name, final Object value) {
 		if (map.size() == 0) {

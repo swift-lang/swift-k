@@ -19,6 +19,12 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 	private boolean started;
 	private Exception startException;
 	private boolean closing;
+	
+	private static boolean logPerformanceData;
+	
+	static {
+		logPerformanceData = "true".equals(System.getProperty("tcp.channel.log.io.performance"));
+	}
 
 	public AbstractTCPChannel(RequestManager requestManager, ChannelContext channelContext,
 			boolean client) {
@@ -27,8 +33,14 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 
 	protected void setSocket(Socket socket) throws IOException {
 		this.socket = socket;
-		setInputStream(socket.getInputStream());
-		setOutputStream(socket.getOutputStream());
+		if (logPerformanceData) {
+			setInputStream(new PerformanceDiagnosticInputStream(socket.getInputStream()));
+			setOutputStream(new PerformanceDiagnosticOutputStream(socket.getOutputStream()));
+		}
+		else {
+			setInputStream(socket.getInputStream());
+			setOutputStream(socket.getOutputStream());
+		}
 	}
 
 	public synchronized void start() throws ChannelException {

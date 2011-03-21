@@ -58,8 +58,8 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			if (config.hasArg(RemoteConfiguration.HEARTBEAT)) {
 				heartBeatInterval = Integer.parseInt(config.getArg(RemoteConfiguration.HEARTBEAT));
 			}
-			heartBeatInterval *= 1000;
 		}
+		heartBeatInterval *= 1000;
 		if (!isOffline() && isClient()) {
 			heartBeatTask = new HeartBeatTask(this);
 			context.getTimer().schedule(heartBeatTask, heartBeatInterval, heartBeatInterval);

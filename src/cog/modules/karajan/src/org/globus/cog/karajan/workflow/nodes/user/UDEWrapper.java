@@ -21,12 +21,11 @@ import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.ControlEventType;
 import org.globus.cog.karajan.workflow.events.EventListener;
 import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
 
 public class UDEWrapper extends AbstractSequentialWithArguments implements EventListener {
-	public static final ControlEventType EXECUTE_DEF = new ControlEventType("EXECUTE_DEF", 3);
+	//public static final ControlEventType EXECUTE_DEF = new ControlEventType("EXECUTE_DEF", 3);
 
 	private static final Logger logger = Logger.getLogger(UDEWrapper.class);
 	private static int count = 0;
