@@ -366,7 +366,7 @@
 		<ant antfile="${main.buildfile}" target="module.package"/>
 	</target>
 
-	<target name="generateVersion">
+	<target name="generateVersion" unless="no.version">
 		<echo file="libexec/version.txt">Swift ${version} </echo>
 		<exec os="Linux, Mac OS X" executable="libexec/svn-revision" append="true" output="libexec/version.txt"/>
 		<exec os="Linux, Mac OS X" executable="libexec/generate-buildid" append="false" output="libexec/buildid.txt"/>

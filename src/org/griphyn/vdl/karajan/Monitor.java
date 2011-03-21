@@ -40,6 +40,7 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.griphyn.vdl.karajan.WrapperMap.FutureWrappers;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
@@ -208,8 +209,12 @@ public class Monitor implements ActionListener, MouseListener {
 	public void dumpVariables() {
 		dumpVariables(System.out);
 	}
-
+	
 	public void dumpVariables(PrintStream ps) {
+	    dumpVariables(map, ps);
+	}
+
+	public static void dumpVariables(WrapperMap map, PrintStream ps) {
 		ps.println("\nRegistered futures:");
 		synchronized (map) {
 			Iterator i = map.entrySet().iterator();
@@ -223,7 +228,7 @@ public class Monitor implements ActionListener, MouseListener {
 				else if (fw.arrayWrapper != null) {
 					f = fw.arrayWrapper;
 				}
-				DSHandle handle = (DSHandle) en.getKey();
+				AbstractDataNode handle = (AbstractDataNode) en.getKey();
 				String value = "-";
 				try {
 					if (handle.getValue() != null) {
@@ -233,8 +238,7 @@ public class Monitor implements ActionListener, MouseListener {
 				catch (DependentException e) {
 					value = "Dependent exception";
 				}
-				ps.println(handle.getType() + " " + handle + " " + value + " " + f + " "
-						+ (handle.isClosed() ? "Closed" : "Open"));
+				ps.println(handle.getType() + " " + handle.getDisplayableName() + " " + value + " " + f);
 			}
 			ps.println("----");
 		}
@@ -244,7 +248,7 @@ public class Monitor implements ActionListener, MouseListener {
 		dumpThreads(System.out);
 	}
 
-	public void dumpThreads(PrintStream pw) {
+	public static void dumpThreads(PrintStream pw) {
 		pw.println("\nWaiting threads:");
 		Collection c = WaitingThreadsMonitor.getAllThreads();
 		Iterator i = c.iterator();
@@ -290,10 +294,10 @@ public class Monitor implements ActionListener, MouseListener {
 			else {
 				EventTargetPair[] l = Monitor.this.getListeners(rowIndex);
 				if (l != null) {
-					ArrayList a = new ArrayList();
+					ArrayList<Object> a = new ArrayList<Object>();
 					for (int i = 0; i < l.length; i++) {
 						try {
-							a.add(ThreadingContext.get(l[i].getEvent().getStack()));
+							a.add(ThreadingContext.get(l[i].getEvent()));
 						}
 						catch (VariableNotFoundException e) {
 							a.add("unknown");
@@ -367,7 +371,7 @@ public class Monitor implements ActionListener, MouseListener {
 					try {
 						for (int i = 0; i < l.length; i++) {
 							displayPopup("Stack trace for " + t.getValueAt(row, 1),
-									Trace.get(l[i].getEvent().getStack()));
+									Trace.get(l[i].getEvent()));
 						}
 					}
 					catch (NullPointerException ex) {

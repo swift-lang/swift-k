@@ -6,18 +6,19 @@ package org.griphyn.vdl.karajan;
 import java.util.LinkedList;
 
 import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventListener;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
+import org.globus.cog.karajan.workflow.futures.FutureListener;
+import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DSHandleListener;
 
 public class DSHandleFutureWrapper implements Future, DSHandleListener {
 	private DSHandle handle;
-	private LinkedList listeners;
+	private LinkedList<ListenerStackPair> listeners;
 
 	public DSHandleFutureWrapper(DSHandle handle) {
 		this.handle = handle;
@@ -42,7 +43,7 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		}
 	}
 
-	public synchronized void addModificationAction(EventListener target, Event event) {
+	public synchronized void addModificationAction(FutureListener target, VariableStack stack) {
 		/**
 		 * TODO So, the strategy is the following: getValue() or something else
 		 * throws a future exception; then some entity catches that and calls
@@ -52,10 +53,10 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		 * this method and call notifyListeners().
 		 */
 		if (listeners == null) {
-			listeners = new LinkedList();
+			listeners = new LinkedList<ListenerStackPair>();
 		}
-		listeners.add(new EventTargetPair(event, target));
-		WaitingThreadsMonitor.addThread(event.getStack());
+		listeners.add(new ListenerStackPair(target, stack));
+		WaitingThreadsMonitor.addThread(stack);
 		if (handle.isClosed()) {
 			notifyListeners();
 		}
@@ -66,9 +67,13 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 			return;
 		}
 		while (!listeners.isEmpty()) {
-			EventTargetPair etp = (EventTargetPair) listeners.removeFirst();
-			WaitingThreadsMonitor.removeThread(etp.getEvent().getStack());
-			EventBus.post(etp.getTarget(), etp.getEvent());
+			final ListenerStackPair etp = listeners.removeFirst();
+			WaitingThreadsMonitor.removeThread(etp.stack);
+			EventBus.post(new Runnable() {
+                public void run() {
+                    etp.listener.futureModified(DSHandleFutureWrapper.this, etp.stack);
+                }
+			});
 		}
 		listeners = null;
 	}
@@ -92,7 +97,19 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 	}
 
 	public String toString() {
-		return "F/" + handle;
+		String l;
+        if (listeners == null) {
+            l = "no listeners";
+        }
+        else {
+            l = listeners.size() + " listeners";
+        }
+        if (!isClosed()) {
+            return "Open, " + l;
+        }
+        else {
+            return "Closed, " + l;
+        }
 	}
 
 	public void fail(FutureEvaluationException e) {

@@ -23,6 +23,9 @@ namespace("vdl"
 		log("info","RUNID id=run:{VDL:RUNID}")
 		echo("RunID: {VDL:RUNID}")
 	)
+	
+	export("stagein", elementDef(classname="org.griphyn.vdl.karajan.lib.Stagein"))
+	export("stageout", elementDef(classname="org.griphyn.vdl.karajan.lib.Stageout"))
 
 	export(
 	
@@ -56,72 +59,7 @@ namespace("vdl"
 				)
 			)
 		)
-
-		element(stagein, [var]
-			if(
-				vdl:isFileBound(var) try(
-					sequential(
-						fp := vdl:fringePaths(var)
-						try (
-							for(path, fp
-								vdl:waitFieldValue(path=path, var)
-							)
-// NOTE this string-based catch is messy, and needs to match with the string used in DataDependentException and VDLFunction
-							catch(".*errors in data dependencies.*"
-								log(LOG:DEBUG, exception)
-								deperror = true
-							)
-						)
-						channel:to(stagein,
-							for(path, fp
-								vdl:absFileName(vdl:getfield(var, path = path))
-							)
-						)
-					)
-					catch(".*not mapped.*"
-						log(LOG:DEBUG, exception)
-						mdeperror = true
-						deperror = true
-					)
-				)
-				else(
-					//we still wait until the primitive value is there
-					vdl:waitFieldValue(var)
-				)
-			)
-		)
-
-		element(stageout, [var]
-			try(
-				if(vdl:isFileBound(var) 
-					channel:to(stageout,
-						for(path, vdl:fringePaths(var)
-							list(path, var)
-						)
-					)
-				)
-				catch(".*not mapped.*"
-					log(LOG:DEBUG, exception)
-					mdeperror = true
-					deperror = true
-				)
-			)
-			try(
-				if(vdl:isRestartable(var) 
-					channel:to(restartout,
-						for(path, vdl:fringePaths(var)
-							list(path, var)
-						)
-					)
-				)
-				catch(".*not mapped.*"
-					log(LOG:DEBUG, exception)
-					mdeperror = true
-					deperror = true
-				)
-			)
-		)
-
+		
 		element(mapping, [descriptor, ...]
 			mapping=map(map:entry("descriptor", descriptor), each(...))
 		)

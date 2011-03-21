@@ -79,6 +79,19 @@
 #   via make_sites_sed() -> group_sites_xml()
 # Note that some schedulers restrict your choice of RUNDIR
 
+# NAMING
+# Site-specific test groups are in providers/ .
+# These are named:
+# providers/<provider description>/
+# or:
+# providers/<provider description>/<site>
+# E.g., providers/local-pbs/PADS
+
+# WARNINGS
+# nightly.sh uses shopt
+
+shopt -s nullglob
+
 printhelp() {
   echo "nightly.sh <options> <output>"
   echo ""
@@ -157,7 +170,7 @@ if (( VERBOSE )); then
   HTML_COMMENTS=1
 fi
 
-# Iterations
+# Iterations per test (may want to run each test multiple times?)
 ITERS_LOCAL=1
 
 LOGCOUNT=0
@@ -179,7 +192,7 @@ BRANCH=trunk
 
 SCRIPTDIR=$( cd $( dirname $0 ) ; /bin/pwd )
 
-SWIFTCOUNT=0
+TESTCOUNT=0
 
 echo "RUNNING_IN:  $RUNDIR"
 echo "HTML_OUTPUT: $HTML"
@@ -464,7 +477,7 @@ start_part() {
 start_row() {
   html_tr testline
   html_td align right width 50
-  html "<b>$SWIFTCOUNT</b>"
+  html "<b>$TESTCOUNT</b>"
   html "&nbsp;"
   html_~td
   html_td align right
@@ -645,7 +658,7 @@ monitor() {
   TIMEOUT=$2 # seconds
   OUTPUT=$3
 
-  V=$SWIFTCOUNT
+  V=$TESTCOUNT
 
   # Use background so kill/trap is immediate
   sleep $TIMEOUT > /dev/null 2>&1 &
@@ -750,7 +763,7 @@ swift_test_case() {
   CDM=
   [ -r fs.data ] && CDM="-cdm.file fs.data"
 
-  (( SWIFTCOUNT++ ))
+  (( TESTCOUNT++ ))
 
   TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
 
@@ -765,6 +778,40 @@ swift_test_case() {
                        $CDM $SWIFTSCRIPT
 
   TEST_SHOULD_FAIL=0
+  if [ -x $GROUP/$CHECKSCRIPT ]; then
+    script_exec $GROUP/$CHECKSCRIPT "&#8730;"
+  fi
+  if [ -x $GROUP/$CLEANSCRIPT ]; then
+    script_exec $GROUP/$CLEANSCRIPT "C"
+  fi
+}
+
+# Execute shell test case w/ setup, check, clean
+script_test_case() {
+  SHELLSCRIPT=$1
+  SETUPSCRIPT=${SHELLSCRIPT%.test.sh}.setup.sh
+  CHECKSCRIPT=${SHELLSCRIPT%.test.sh}.check.sh
+  CLEANSCRIPT=${SHELLSCRIPT%.test.sh}.clean.sh
+  TIMEOUTFILE=${SHELLSCRIPT%.test.sh}.timeout
+
+  TEST_SHOULD_FAIL=0
+  if [ -x $GROUP/$SETUPSCRIPT ]; then
+    script_exec $GROUP/$SETUPSCRIPT "S"
+  fi
+
+  (( TESTCOUNT++ ))
+
+  # Not using background for script tests yet
+  # TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
+
+  if [ -x $GROUP/$SETUPSCRIPT ]; then
+    script_exec $GROUP/$SETUPSCRIPT "S"
+  fi
+
+  if [ -x $GROUP/$SHELLSCRIPT ]; then
+    script_exec $SHELLSCRIPT "X"
+  fi
+
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   fi
@@ -826,12 +873,12 @@ make_sites_sed() {
 }
 
 # Setup coasters variables
-if which ifconfig > /dev/null; then
+if which ifconfig > /dev/null 2>&1; then
   IFCONFIG=ifconfig
 else
   IFCONFIG=/sbin/ifconfig
 fi
-$IFCONFIG > /dev/null || crash "Cannot run ifconfig!"
+$IFCONFIG > /dev/null 2>&1 || crash "Cannot run ifconfig!"
 GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
                    awk '{print $1}' )
 [ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
@@ -901,25 +948,48 @@ test_group() {
   group_fs_data
   group_swift_properties
 
-  SWIFTS=$( ls $GROUP/*.swift )
-  checkfail "Could not ls: $GROUP"
+  SWIFTS=$( echo $GROUP/*.swift )
+  checkfail "Could not list: $GROUP"
 
   for TEST in $SWIFTS; do
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
-    TESTNAME=$( basename $TEST)
+    TESTNAME=$( basename $TEST )
+    cp -v $GROUP/$TESTNAME .
+    TESTLINK=$TESTNAME
+
+    start_row
+    for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
+      swift_test_case $TESTNAME
+      (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
+    done
+    end_row
+  done
+
+  SCRIPTS=$( echo $GROUP/*.test.sh )
+  checkfail "Could not list: $GROUP"
+  for TEST in $SCRIPTS; do
+
+    (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
+
+    TESTNAME=$( basename $TEST )
     cp -v $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
 
     start_row
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
-      swift_test_case $TESTNAME
-      (( $SWIFTCOUNT >= $NUMBER_OF_TESTS )) && return
+      script_test_case $TESTNAME
+      (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
     done
     end_row
   done
 }
+
+if [[ $WORK == "" ]]
+then
+  WORK=$TOPDIR/work
+fi
 
 checkvars GROUPLISTFILE
 echo "GROUPLISTFILE: $GROUPLISTFILE"
@@ -993,7 +1063,7 @@ for G in ${GROUPLIST[@]}; do
   start_part "Part $GROUPCOUNT: $TITLE"
   test_group
   (( GROUPCOUNT++ ))
-  (( $SWIFTCOUNT >= $NUMBER_OF_TESTS )) && break
+  (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && break
 done
 
 if [ $GRID_TESTS == "0" ]; then

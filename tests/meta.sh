@@ -14,3 +14,5 @@ RUNDIR=run-$( date +"%Y-%m-%d" )
 
 ssh $SITE_LOGIN $DIR/run-nightly.sh $DIR/$TEST
 scp -r $SITE_LOGIN:$RUNDIR .
+
+exit 0

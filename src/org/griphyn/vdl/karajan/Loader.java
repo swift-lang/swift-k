@@ -128,9 +128,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
 
         try {
+            //Thread.sleep(20000);
             setupLogging(ap, projectName, runID);
             logger.debug("Max heap: " + Runtime.getRuntime().maxMemory());
-
+            
             if (ap.isPresent(ARG_CDMFILE)) {
                 loadCDM(ap); 
             }
@@ -192,7 +193,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
             }
             ec.setArguments(arguments);
-
+            long start = System.currentTimeMillis();
+            new HangChecker(stack).start();
             ec.start(stack);
             ec.waitFor();
             if (ec.isFailed()) {
@@ -205,10 +207,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
 
         if (runerror) {
-            logger.debug("Swift finished with errors");
+            logger.info("Swift finished with errors");
         }
         else {
-            logger.debug("Swift finished with no errors");
+            logger.info("Swift finished with no errors");
         }
         if (ap.isPresent(ARG_TUI)) {
             ma.close();

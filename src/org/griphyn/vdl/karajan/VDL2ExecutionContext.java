@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
-import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.functions.ProcessBulkErrors;
 
 public class VDL2ExecutionContext extends ExecutionContext {
@@ -24,14 +24,14 @@ public class VDL2ExecutionContext extends ExecutionContext {
 		this.scriptName = scriptName;
 	}
 
-	protected void printFailure(FailureNotificationEvent e) {
+	protected void printFailure(ExecutionException e) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(e.getFlowElement() + ": " + e.getMessage(), e.getException());
+			logger.debug(e.getMessage(), e);
 		}
 		String msg = e.getMessage();
 		if (!"Execution completed with errors".equals(msg)) {
-			if (msg == null && e.getException() != null) {
-				msg = getMeaningfulMessage(e.getException());
+			if (msg == null) {
+				msg = getMeaningfulMessage(e);
 			}
 			getStderr().append("Execution failed:\n\t");
 			String translation = VDL2ErrorTranslator.getDefault().translate(msg);
@@ -39,7 +39,7 @@ public class VDL2ExecutionContext extends ExecutionContext {
 				getStderr().append(translation);
 			}
 			else {
-				getStderr().append(ProcessBulkErrors.getMessageChain(e.getException()));
+				getStderr().append(ProcessBulkErrors.getMessageChain(e));
 			}
 			getStderr().append("\n");
 		}

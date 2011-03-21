@@ -238,7 +238,7 @@ rm -f $INFOFILE
 openinfo "$INFOFILE"
 
 logstate "LOG_START"
-infosection "Wrapper"
+infosection "Wrapper (_swiftwrap)"
 
 getarg "-e" "$@"
 EXEC=$VALUE

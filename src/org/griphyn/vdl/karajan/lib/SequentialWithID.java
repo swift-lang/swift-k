@@ -13,7 +13,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 public class SequentialWithID extends Sequential {
 
     protected void executeChildren(VariableStack stack) throws ExecutionException {
-        ThreadingContext tc = (ThreadingContext)stack.getVar("#thread");
+        ThreadingContext tc = (ThreadingContext) stack.getVar("#thread");
         stack.setVar("#thread", tc.split(1));
         super.executeChildren(stack);
     }

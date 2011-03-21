@@ -23,15 +23,12 @@ import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.Event;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventListener;
-import org.globus.cog.karajan.workflow.events.EventTargetPair;
-import org.globus.cog.karajan.workflow.events.FutureNotificationEvent;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureIteratorIncomplete;
+import org.globus.cog.karajan.workflow.futures.FutureListener;
+import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.globus.cog.karajan.workflow.nodes.AbstractParallelIterator;
 import org.griphyn.vdl.util.VDL2Config;
 
@@ -68,7 +65,6 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 			stack.setVar(VAR, var);
 			setChildFailed(stack, false);
 			stack.setCaller(this);
-			initializeChannelBuffers(stack);
 			initThreadCount(stack, TypeUtil.toBoolean(stack.currentFrame().getVar("selfclose")), i);
 			stack.currentFrame().deleteVar("selfclose");
 			citerate(stack, var, i);
@@ -81,7 +77,28 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 	protected void citerate(VariableStack stack, Identifier var,
 			KarajanIterator i) throws ExecutionException {
 		ThreadCount tc = getThreadCount(stack);
+		
+		// we can bulk operations at the start to avoid contention
+		// on the counter since at least as many
+		// threads as reported by available() are available
+		int available = tc.available();
 		try {
+		    int j = 0;
+		    try {
+    		    for (; j < available && i.hasNext(); j++) {
+    		        VariableStack copy = stack.copy();
+                    copy.enter();
+                    ThreadingContext.set(copy, ThreadingContext.get(copy).split(
+                            i.current()));
+                    setIndex(copy, getArgCount());
+                    setArgsDone(copy);
+                    copy.setVar(var.getName(), i.next());
+                    startElement(getArgCount(), copy);
+    		    }
+		    }
+		    finally {
+		        tc.add(j);
+		    }
 			while (i.hasNext()) {
 				Object value = tc.tryIncrement();
 				VariableStack copy = stack.copy();
@@ -91,7 +108,6 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 				setIndex(copy, getArgCount());
 				setArgsDone(copy);
 				copy.setVar(var.getName(), value);
-				addChannelBuffers(copy);
 				startElement(getArgCount(), copy);
 			}
 			
@@ -106,17 +122,24 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 			}
 		}
 		catch (FutureIteratorIncomplete fii) {
-			stack.setVar(ITERATOR, i);
-			fii.getFutureIterator().addModificationAction(
-					this,
-					new FutureNotificationEvent(ITERATE, this, fii
-							.getFutureIterator(), stack));
+			synchronized (stack.currentFrame()) {
+                stack.setVar(ITERATOR, i);
+            }
+            fii.getFutureIterator().addModificationAction(this, stack);
 		}
 	}
+	
+	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+        if (!testAndSetChildFailed(stack)) {
+            if (stack.parentFrame().isDefined(VAR)) {
+                stack.leave();
+            }
+            failImmediately(stack, e);
+        }
+    }
 
 	protected void iterationCompleted(VariableStack stack)
 			throws ExecutionException {
-		closeBuffers(stack);
 		stack.leave();
 		ThreadCount tc = getThreadCount(stack);
 		int running;
@@ -156,7 +179,7 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		private int maxThreadCount;
 		private int crt;
 		private boolean selfClose, closed;
-		private List listeners;
+		private List<ListenerStackPair> listeners;
 		private KarajanIterator i;
 
 		public ThreadCount(int maxThreadCount, boolean selfClose, KarajanIterator i) {
@@ -178,6 +201,14 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
         public boolean isSelfClose() {
 		    return selfClose;
 		}
+        
+        public synchronized int available() {
+            return maxThreadCount - crt;
+        }
+        
+        public synchronized void add(int count) {
+            crt += count;
+        }
 
 		public synchronized Object tryIncrement() {
 		    // there is no way that both crt == 0 and i has no values outside this critical section
@@ -199,11 +230,12 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 
 		private void notifyListeners() {
 			if (listeners != null) {
-				Iterator i = listeners.iterator();
+				Iterator<ListenerStackPair> i = listeners.iterator();
+				listeners = null;
 				while (i.hasNext()) {
-					EventTargetPair etp = (EventTargetPair) i.next();
+					ListenerStackPair etp = i.next();
 					i.remove();
-					EventBus.post(etp.getTarget(), etp.getEvent());
+					etp.listener.futureModified(this, etp.stack);
 				}
 			}
 		}
@@ -235,12 +267,12 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		public void remove() {
 		}
 
-		public synchronized void addModificationAction(EventListener target,
-				Event event) {
+		public synchronized void addModificationAction(FutureListener target,
+				VariableStack stack) {
 			if (listeners == null) {
-				listeners = new ArrayList();
+				listeners = new ArrayList<ListenerStackPair>();
 			}
-			listeners.add(new EventTargetPair(event, target));
+			listeners.add(new ListenerStackPair(target, stack));
 			if (crt < maxThreadCount) {
 				notifyListeners();
 			}

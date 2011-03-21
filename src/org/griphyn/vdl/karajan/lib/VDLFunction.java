@@ -90,9 +90,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 				}
 				else {
 					Object[] array = (Object[]) value;
-					for (int i = 0; i < array.length; i++) {
-						vret.append(array[i]);
-					}
+                    for (int i = 0; i < array.length; i++) {
+                        vret.append(array[i]);
+                    }
 				}
 			}
 			else {
@@ -376,7 +376,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final String VDL_FUTURE_WRAPPER_MAP = "#vdl:futureWrapperMap";
 
-	protected static WrapperMap getFutureWrapperMap(VariableStack stack) throws ExecutionException {
+	public static WrapperMap getFutureWrapperMap(VariableStack stack) throws ExecutionException {
 		synchronized (stack.getExecutionContext()) {
 			WrapperMap hash = (WrapperMap) stack.firstFrame().getVar(VDL_FUTURE_WRAPPER_MAP);
 			if (hash == null) {
