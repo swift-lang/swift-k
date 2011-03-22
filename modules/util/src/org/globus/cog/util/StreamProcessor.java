@@ -1,3 +1,10 @@
+
+// ----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
 package org.globus.cog.util;
 
 import java.io.BufferedOutputStream;
@@ -16,7 +23,8 @@ import org.apache.log4j.Logger;
  */
 public class StreamProcessor extends Streamer {
 
-    public static final Logger logger = Logger.getLogger(StreamProcessor.class);
+    public static final Logger logger =
+        Logger.getLogger(StreamProcessor.class);
 
     /**
        Object to notify when pattern is found
@@ -37,6 +45,7 @@ public class StreamProcessor extends Streamer {
         logger.debug(getName());
     }
 
+    @Override
     public void run() {
         status = Status.ACTIVE;
         matched = false;
@@ -49,6 +58,7 @@ public class StreamProcessor extends Streamer {
         String line = null;
         try {
             while ((line = reader.readLine()) != null) {
+                logger.debug("read: " + line);
                 if (line.contains(pattern)) {
                     writer.flush();
                     matched = true;
