@@ -6,13 +6,10 @@
 
 package org.globus.cog.abstraction.interfaces;
 
-import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
-import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
-import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.common.task.*;
 
 /**
- * Implements the semantics to execute the given {@link Task}in a seperate
+ * Implements the semantics to execute the given {@link Task} in a separate
  * thread, thereby not blocking the calls to the {@link TaskHandler}. The
  * <code>DelegatedTaskHandler</code> can handle only one task at a time.
  */
@@ -23,7 +20,7 @@ public interface DelegatedTaskHandler {
      * to the remote <code>Service</code> in compliance with the appropriate
      * provider. It executes in a seperate thread so that it doesnt block the
      * submission of other tasks.
-     * 
+     *
      * @param task
      *            the task to be executed
      * @throws IllegalSpecException
@@ -46,7 +43,7 @@ public interface DelegatedTaskHandler {
     /**
      * Suspends the currently active task. A suspended task can be resumed using
      * the {@link DelegatedTaskHandler#resume()}method
-     * 
+     *
      * @param task
      *            the <code>Task</code> to be suspended
      * @throws InvalidSecurityContextException
@@ -61,7 +58,7 @@ public interface DelegatedTaskHandler {
     /**
      * Resumes the execution of a task that was previously suspended by the
      * {@link DelegatedTaskHandler#suspend()}method.
-     * 
+     *
      * @param task
      *            the <code>Task</code> to be resumed
      * @throws InvalidSecurityContextException
@@ -77,7 +74,7 @@ public interface DelegatedTaskHandler {
      * Cancels the execution of a task that was previously submitted by the
      * {@link DelegatedTaskHandler#submit(Task)}method. Tasks once canceled
      * cannot be resumed for execution later.
-     * 
+     *
      * @param task
      *            the <code>Task</code> to be canceled
      * @throws InvalidSecurityContextException
@@ -88,7 +85,7 @@ public interface DelegatedTaskHandler {
      */
     public void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException;
-    
+
     public void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException;
 }
