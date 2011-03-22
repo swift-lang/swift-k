@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.coaster.service.local;
 
 import java.net.URI;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.AbstractStreamKarajanChannel;
@@ -19,12 +20,18 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public class RegistrationHandler extends RequestHandler {
+
+    Logger logger = Logger.getLogger(RegistrationHandler.class);
+
     public static final String NAME = "REGISTER";
 
     @Override
     public void requestComplete() throws ProtocolException {
         String id = this.getInDataAsString(0);
         String url = this.getInDataAsString(1);
+
+        logger.debug("registering: " + id + " " + url);
+
         KarajanChannel channel = getChannel();
         ChannelContext context = channel.getChannelContext();
         Registering ls = (Registering) context.getService();
