@@ -23,14 +23,14 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public class LocalTCPService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalTCPService.class);
-    
+
     public static final int TCP_BUFSZ = 32768;
-    
+
     private RegistrationManager registrationManager;
-    private TCPBufferManager buffMan;
-    
+    private final TCPBufferManager buffMan;
+
     // private int idseq;
-    
+
     // private static final NumberFormat IDF = new DecimalFormat("000000");
 
     public LocalTCPService(RequestManager rm) throws IOException {
@@ -45,16 +45,21 @@ public class LocalTCPService extends GSSService implements Registering {
         buffMan = new TCPBufferManager();
     }
 
-    public String registrationReceived(String blockid, String url, KarajanChannel channel) throws ChannelException {
+    public String registrationReceived(String blockid,
+                                       @SuppressWarnings("hiding") String url,
+                                       KarajanChannel channel)
+    throws ChannelException {
         if (logger.isInfoEnabled()) {
-            logger.info("Received registration: blockid = " + blockid + ", url = " + url);
+            logger.info("Received registration: blockid = " +
+                        blockid + ", url = " + url);
         }
         ChannelContext cc = channel.getChannelContext();
         cc.getChannelID().setLocalID(blockid);
         String wid = registrationManager.nextId(blockid);
         cc.getChannelID().setRemoteID(wid);
         ChannelManager.getManager().registerChannel(cc.getChannelID(), channel);
-        registrationManager.registrationReceived(blockid, wid, channel.getChannelContext());
+        registrationManager.registrationReceived(blockid, wid, url,
+                                                 cc);
         return wid;
     }
 
@@ -70,6 +75,7 @@ public class LocalTCPService extends GSSService implements Registering {
         this.registrationManager = workerManager;
     }
 
+    @Override
     protected void handleConnection(Socket socket) {
         try {
             buffMan.addSocket(socket);

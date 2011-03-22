@@ -122,8 +122,14 @@ public class JobQueue implements RegistrationManager {
         return ((RegistrationManager) coaster).nextId(id);
     }
 
-    public String registrationReceived(String id, String url, ChannelContext channelContext) {
-        return ((RegistrationManager) coaster).registrationReceived(id, url, channelContext);
+    public String registrationReceived(String blockID,
+                                       String workerID,
+                                       String workerHostname,
+                                       ChannelContext channelContext) {
+        RegistrationManager manager = ((RegistrationManager) coaster);
+        return manager.registrationReceived(blockID, workerID,
+                                            workerHostname,
+                                            channelContext);
     }
 
     public QueueProcessor getCoasterQueueProcessor() {

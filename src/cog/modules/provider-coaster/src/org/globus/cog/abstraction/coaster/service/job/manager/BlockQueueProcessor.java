@@ -30,36 +30,36 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private Settings settings;
 
-    private Map<Integer, List<Job>> tl;
-    
-    /** 
-       Jobs not yet moved to holding because the allocator was 
-       planning while it was enqueued 
+    private final Map<Integer, List<Job>> tl;
+
+    /**
+       Jobs not yet moved to holding because the allocator was
+       planning while it was enqueued
      */
-    private List<Job> incoming;
-    
-    /** 
-       Jobs not moved to queued - they may not fit into existing 
-       blocks   
+    private final List<Job> incoming;
+
+    /**
+       Jobs not moved to queued - they may not fit into existing
+       blocks
      */
     private List<Job> holding;
-    
-    /** 
-       Jobs that either fit into existing Blocks or were enqueued 
-       since the last updatePlan 
+
+    /**
+       Jobs that either fit into existing Blocks or were enqueued
+       since the last updatePlan
      */
-    private SortedJobSet queued;
-    
+    private final SortedJobSet queued;
+
     /* Need to keep an account of running jobs in order to correctly
      * make sense of the allocated size. If running jobs are not
      * considered, it can appear that the allocated size is much
      * larger than the required size, and blocks get shut down
      * inappropriately.
      */
-    private JobSet running;
-    
+    private final JobSet running;
+
     private List<Integer> sums;
-    private Map<String, Block> blocks;
+    private final Map<String, Block> blocks;
 
     private double allocsize;
 
@@ -77,7 +77,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private boolean done, planning;
 
-    private Metric metric;
+    private final Metric metric;
 
     private final RemoteLogger rlogger;
 
@@ -246,7 +246,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         logger.info("allocsize = " + allocsize + ", queuedsize = " + queued.getJSize() + ", running = " + runningSize + ", qsz = "
                 + queued.size());
         while (allocsize - queued.getJSize() - runningSize < 0) {
-            Job j = queued.removeOne(TimeInterval.FOREVER, 
+            Job j = queued.removeOne(TimeInterval.FOREVER,
                                      Integer.MAX_VALUE);
             if (j == null) {
                 CoasterService.error(19, "queuedsize > 0 but no job dequeued. Queued: " + queued,
@@ -303,23 +303,23 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     /**
-     * Suspends blocks while the total size left in the blocks is 
+     * Suspends blocks while the total size left in the blocks is
      * larger than the amount of size needed.
-     * 
+     *
      * Blocks with the least amount of size left are suspended first.
-     * 
+     *
      * Blocks are only suspended if both the above size condition is true
      * and they have not see any work withing a certain time interval. This
      * is done to dampen the effects of transients in the submission
      * pattern.
-     * 
+     *
      * Once a block is suspended, it will finish its current tasks and then
      * shut down.
-     * 
+     *
      */
     protected void removeIdleBlocks() {
         ArrayList<Block> sorted;
-        
+
         synchronized (blocks) {
             sorted = new ArrayList<Block>(blocks.values());
             Collections.sort(sorted, new Comparator<Block>() {
@@ -496,12 +496,12 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     public int updatePlan() throws PlanningException {
         Set<Job> tmp;
-        
+
         synchronized (incoming) {
             planning = true;
         }
         long start = System.currentTimeMillis();
-        
+
         // Move all incoming Jobs to holding
         commitNewJobs();
 
@@ -513,7 +513,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
         // Move jobs that fit from holding to queued
         tmp = queueToExistingBlocks();
-        
+
         // Subtract these Jobs from holding
         removeJobs(tmp);
 
@@ -549,7 +549,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
         return job;
     }
-    
+
     public void jobTerminated(Job job) {
         running.remove(job);
     }
@@ -607,11 +607,16 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
-    public String registrationReceived(String bid, String id, ChannelContext channelContext) {
-        return getBlock(bid).workerStarted(id, channelContext);
+    public String registrationReceived(String blockID,
+                                       String workerID,
+                                       String workerHostname,
+                                       ChannelContext channelContext) {
+        return getBlock(blockID).workerStarted(workerID,
+                                               workerHostname,
+                                               channelContext);
     }
 
-    public String nextId(String id) {
+    public String nextId(@SuppressWarnings("hiding") String id) {
         return getBlock(id).nextId();
     }
 
@@ -663,11 +668,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         return rlogger;
     }
 
-    /** 
+    /**
        Get the KarajanChannel for the worker with given id
      */
     public KarajanChannel getWorkerChannel(String id) {
-        
+
         return null;
     }
 }

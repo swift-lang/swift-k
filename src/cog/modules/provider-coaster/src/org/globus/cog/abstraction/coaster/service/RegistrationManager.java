@@ -12,7 +12,10 @@ package org.globus.cog.abstraction.coaster.service;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
 public interface RegistrationManager {
-    String registrationReceived(String id, String url, ChannelContext channelContext);
+
+    String registrationReceived(String blockID, String workerID,
+                                String workerHostname,
+                                ChannelContext channelContext);
 
     String nextId(String id);
 }

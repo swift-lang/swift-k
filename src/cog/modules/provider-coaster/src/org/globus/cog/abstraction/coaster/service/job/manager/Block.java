@@ -344,16 +344,20 @@ public class Block implements StatusListener, Comparable<Block> {
         return id;
     }
 
-    public String workerStarted(String sid, ChannelContext channelContext) {
+    public String workerStarted(String workerID,
+                                String workerHostname,
+                                ChannelContext channelContext) {
         synchronized (cpus) {
             synchronized (scpus) {
-                int id = Integer.parseInt(sid);
-                Node n = new Node(id, this, channelContext);
+                int wid = Integer.parseInt(workerID);
+                Node n = new Node(wid, this, workerHostname,
+                                  channelContext);
                 nodes.add(n);
-                for (int i = 0; i < bqp.getSettings().getJobsPerNode(); i++) {
+                int jobsPerNode = bqp.getSettings().getJobsPerNode();
+                for (int i = 0; i < jobsPerNode; i++) {
                     //this id scheme works out because the sid is based on the
                     //number of cpus already added (i.e. cpus.size()).
-                    Cpu cpu = new Cpu(id + i, n);
+                    Cpu cpu = new Cpu(wid + i, n);
                     scpus.add(cpu);
                     cpus.add(cpu);
                     n.add(cpu);
@@ -361,17 +365,17 @@ public class Block implements StatusListener, Comparable<Block> {
                     logger.info("Started CPU " + cpu);
                 }
                 if (logger.isInfoEnabled()) {
-                    logger.info("Started worker " + this.id + ":" + IDF.format(id));
+                    logger.info("Started worker " + this.id + ":" + IDF.format(wid));
                 }
-                return sid;
+                return workerID;
             }
         }
     }
 
     public String nextId() {
         synchronized (cpus) {
-            int id = cpus.size();
-            return IDF.format(id);
+            int n = cpus.size();
+            return IDF.format(n);
         }
     }
 
