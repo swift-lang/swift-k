@@ -164,10 +164,10 @@ public class Settings {
     }
 
     @Deprecated
-    public void setWorkersPerNode(@SuppressWarnings("unused")
-                                  int jobsPerNode) {
-        throw new RuntimeException
-        ("workersPerNode has been replaced by jobsPerNode!");
+    public void setWorkersPerNode(int jobsPerNode) {
+        this.jobsPerNode = jobsPerNode;
+        logger.warn("site setting workersPerNode has been replaced " +
+                    "with jobsPerNode!");
     }
 
     public int getNodeGranularity() {
