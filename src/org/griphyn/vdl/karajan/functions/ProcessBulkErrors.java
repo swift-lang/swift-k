@@ -123,6 +123,11 @@ public class ProcessBulkErrors extends AbstractFunction {
 			}
 			e = e.getCause();
 		}
-		return lastmsg;
+			if (logger.isDebugEnabled()) {
+			    return sb.toString();
+			}
+			else{
+			    return lastmsg;
+			}
 	}
 }
