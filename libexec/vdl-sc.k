@@ -72,7 +72,7 @@ namespace("vdl"
 			element(intrepidCoasterParams, [optional(averageJobTime, blockSize)]
 				print("Setting Intrepid coaster params:")
 				p("scratch", "/scratch")
-				p("workersPerNode", "4")
+				p("jobsPerNode", "4")
 				p("kernelprofile", "zeptoos")
 				p("alcfbgpnat", "true")
 				maybe(
@@ -91,7 +91,7 @@ namespace("vdl"
 			element(surveyorCoasterParams, [optional(averageJobTime, blockSize)]
 				print("Setting Surveyor coaster params:")
 				p("scratch", "/scratch")
-				p("workersPerNode", "4")
+				p("jobsPerNode", "4")
 				p("kernelprofile", "zeptoos")
 				p("alcfbgpnat", "true")
 				maybe(

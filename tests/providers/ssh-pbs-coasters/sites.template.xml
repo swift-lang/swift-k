@@ -3,7 +3,7 @@
   <execution jobmanager="ssh:pbs" provider="coaster" url="login1.pads.ci.uchicago.edu" />
   <filesystem provider="ssh" url="login1.pads.ci.uchicago.edu" />
   <profile key="maxtime" namespace="globus">3000</profile>
-  <profile key="workersPerNode" namespace="globus">8</profile>
+  <profile key="jobsPerNode" namespace="globus">8</profile>
   <profile key="slots" namespace="globus">1</profile>
   <profile key="nodeGranularity" namespace="globus">1</profile>
   <profile key="maxNodes" namespace="globus">10</profile>

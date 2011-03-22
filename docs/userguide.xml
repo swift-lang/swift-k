@@ -3288,14 +3288,14 @@ When using <link linkend="coasters">coasters</link>, this parameter
 specifies the maximum number of jobs/blocks that the coaster scheduler will have running at any given time.
 The default is 20.
 			</para>
-			<para id="profile.workersPerNode"><literal>workersPerNode</literal>
+			<para id="profile.jobsPerNode"><literal>jobsPerNode</literal>
 This parameter determines how many coaster workers are
 started one each compute node. The default value is 1.
 			</para>
 			<para id="profile.nodeGranularity"><literal>nodeGranularity</literal>
 When allocating a coaster worker block, this parameter
 restricts the number of nodes in a block to a multiple of this value. The total number of workers will
-then be a multiple of workersPerNode * nodeGranularity. The default value is 1.
+then be a multiple of jobsPerNode * nodeGranularity. The default value is 1.
 			</para>
 			<para id="profile.allocationStepSize"><literal>allocationStepSize</literal>
 Each time the coaster block scheduler computes a schedule, it will attempt to allocate a
@@ -3987,13 +3987,13 @@ section</link>:
   <thead><row><entry>profile key</entry><entry>brief description</entry></row></thead>
   <tbody>
    <row><entry>slots</entry><entry>How many maximum LRM jobs/worker blocks are allowed</entry></row>
-   <row><entry>workersPerNode</entry><entry>How many coaster workers to run per execution node</entry></row>
+   <row><entry>jobsPerNode</entry><entry>How many coaster workers to run per execution node</entry></row>
    <row><entry>nodeGranularity</entry><entry>Each worker block uses a number of nodes that is a multiple of this number</entry></row>
    <row><entry>lowOverallocation</entry><entry>How many times larger than the job walltime should a block's walltime be if all jobs are 1s long</entry></row>
    <row><entry>highOverallocation</entry><entry>How many times larger than the job walltime should a block's walltime be if all jobs are infinitely long</entry></row>
    <row><entry>overallocationDecayFactor</entry><entry>How quickly should the overallocation curve tend towards the highOverallocation as job walltimes get larger</entry></row>
    <row><entry>spread</entry><entry>By how much should worker blocks vary in worker size</entry></row>
-   <row><entry>workersPerNode</entry><entry>How many coaster workers to run per execution node</entry></row>
+   <row><entry>jobsPerNode</entry><entry>How many coaster workers to run per execution node</entry></row>
    <row><entry>reserve</entry><entry>How many seconds to reserve in a block's walltime for starting/shutdown operations</entry></row>
    <row><entry>maxnodes</entry><entry>The maximum number of nodes allowed in a block</entry></row>
    <row><entry>maxtime</entry><entry>The maximum number of walltime allowed for a block</entry></row>

@@ -10,7 +10,7 @@
     <profile namespace="globus"  key="alcfbgpnat">true</profile>
     <profile namespace="karajan" key="jobthrottle">21</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
-    <profile namespace="globus"  key="workersPerNode">1</profile>
+    <profile namespace="globus"  key="jobsPerNode">1</profile>
     <profile namespace="globus"  key="workerLoggingLevel">DEBUG</profile>
     <profile namespace="globus"  key="slots">1</profile>
     <profile namespace="globus"  key="maxTime">900</profile> <!-- seconds -->
