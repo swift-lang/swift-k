@@ -28,17 +28,34 @@ public class Node implements Callback {
     private Block block;
     private final ChannelContext channelContext;
     private boolean shutdown;
+    private final String hostname;
 
+    public Node(int id, Block block, String workerHostname,
+                ChannelContext channelContext) {
+        this.id = id;
+        this.block = block;
+        this.hostname = workerHostname;
+        this.channelContext = channelContext;
+        Settings settings = block.getAllocationProcessor().getSettings();
+        cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
+
+        logger.debug("new: " + this);
+    }
+
+    @Deprecated
     public Node(int id, Block block, ChannelContext channelContext) {
         this.id = id;
         this.block = block;
+        this.hostname = null;
         this.channelContext = channelContext;
         Settings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
     }
 
+    @Deprecated
     public Node(int id, int jobsPerNode, ChannelContext channelContext) {
     	this.id = id;
+    	this.hostname = null;
     	this.channelContext = channelContext;
     	cpus = new ArrayList<Cpu>(jobsPerNode);
     }
@@ -87,6 +104,6 @@ public class Node implements Callback {
 
     @Override
     public String toString() {
-        return "Node " + id;
+        return "Node [" + hostname + "] " + id;
     }
 }
