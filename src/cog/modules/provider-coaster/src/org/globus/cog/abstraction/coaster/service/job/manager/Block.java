@@ -48,13 +48,13 @@ public class Block implements StatusListener, Comparable<Block> {
     private int workers;
     private TimeInterval walltime;
     private Time endtime, starttime, deadline, creationtime;
-    private SortedSet<Cpu> scpus;
-    private List<Cpu> cpus;
-    private List<Node> nodes;
+    private final SortedSet<Cpu> scpus;
+    private final List<Cpu> cpus;
+    private final List<Node> nodes;
     private boolean running = false, failed, shutdown, suspended;
     private BlockQueueProcessor bqp;
     private BlockTask task;
-    private String id;
+    private final String id;
     private int doneJobCount;
     private long lastUsed;
 
@@ -268,12 +268,12 @@ public class Block implements StatusListener, Comparable<Block> {
                     count++;
                 }
 				if (!failed) {
-					if (count < workers || now) {	
+					if (count < workers || now) {
 	                    addForcedShutdownWatchdog(100);
     	            }
 					else {
 	   					addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
-					}	
+					}
 				}
 
                 if (idleTotal > 0) {
@@ -293,6 +293,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     private void addForcedShutdownWatchdog(long delay) {
         CoasterService.addWatchdog(new TimerTask() {
+            @Override
             public void run() {
                 if (running) {
                     logger.info("Watchdog: forceShutdown: " + this);
@@ -349,7 +350,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 int id = Integer.parseInt(sid);
                 Node n = new Node(id, this, channelContext);
                 nodes.add(n);
-                for (int i = 0; i < bqp.getSettings().getWorkersPerNode(); i++) {
+                for (int i = 0; i < bqp.getSettings().getJobsPerNode(); i++) {
                     //this id scheme works out because the sid is based on the
                     //number of cpus already added (i.e. cpus.size()).
                     Cpu cpu = new Cpu(id + i, n);
@@ -374,6 +375,7 @@ public class Block implements StatusListener, Comparable<Block> {
         }
     }
 
+    @Override
     public String toString() {
         return "Block " + id + " (" + workers + "x" + walltime + ")";
     }
@@ -477,7 +479,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public boolean isSuspended() {
         return suspended;
     }
-    
+
     public synchronized boolean isShutDown() {
         return shutdown;
     }
