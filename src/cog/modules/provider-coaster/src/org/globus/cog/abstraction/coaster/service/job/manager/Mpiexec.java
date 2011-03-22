@@ -30,31 +30,31 @@ import org.globus.cog.util.StringUtil;
  */
 public class Mpiexec implements ProcessListener, StatusListener {
 
-    public static final Logger logger = 
+    public static final Logger logger =
         Logger.getLogger(Mpiexec.class);
 
     /**
        The path to mpiexec
      */
     public static String MPIEXEC = "mpiexec";
-    
+
     private List<Job> proxies = null;
 
     /**
        The original user job
      */
-    private Job job;
+    private final Job job;
 
-    /** 
+    /**
        Map from Status code to count of those codes received
      */
-    private Map<Integer,Integer> statusCount = 
+    private final Map<Integer,Integer> statusCount =
         new HashMap<Integer,Integer>();
-    
+
     /**
        The Cpu that pulled this job
      */
-    private Cpu cpu;
+    private final Cpu cpu;
 
     /**
        The output from mpiexec
@@ -86,7 +86,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
             e.printStackTrace();
             return false;
         }
-        
+
         List<String[]> lines = getProxyLines();
         for (int i = 0; i < job.cpus; i++) {
             Job proxy = getProxyJob(lines.get(i), i);
@@ -111,14 +111,14 @@ public class Mpiexec implements ProcessListener, StatusListener {
         Object object = new Object();
         StreamProcessor sprocessor =
             new StreamProcessor(istream, ibytes, object,
-                                "HYDRA_NONE_END:");
-        boolean result = waitForHydra(sprocessor, object);
+                                "HYDRA_LAUNCH_END");
         monitor(process);
+        boolean result = waitForHydra(sprocessor, object);
         output = ibytes.toString();
         error  = ebytes.toString();
         return result;
     }
-    
+
     private String[] commandLine(JobSpecification spec) {
         List<String> cmdl = new ArrayList<String>();
 
@@ -157,7 +157,10 @@ public class Mpiexec implements ProcessListener, StatusListener {
         return sb.toString();
     }
 
-    private static final int MAX_TRIES = 3;
+    /**
+       Time to wait for MPICH output; seconds
+     */
+    private static final int MPICH_TIMEOUT = 3;
 
     /**
        Wait until Hydra has reported the proxy command lines
@@ -171,14 +174,15 @@ public class Mpiexec implements ProcessListener, StatusListener {
         synchronized (object) {
             try {
                 sprocessor.start();
-                while (!sprocessor.matched() && tries++ < MAX_TRIES)
+                while (!sprocessor.matched() &&
+                        tries++ < MPICH_TIMEOUT)
                     object.wait(1000);
             }
             catch (InterruptedException e) {
                 logger.error(e.getStackTrace());
             }
         }
-        
+
         result = sprocessor.matched();
         logger.debug("waitForHydra complete: " + result);
         return result;
@@ -193,12 +197,12 @@ public class Mpiexec implements ProcessListener, StatusListener {
 
         String[] lines = output.split("\\n");
         for (String line : lines)
-            if (line.startsWith("HYDRA_NONE_LINE:")) {
+            if (line.startsWith("HYDRA_LAUNCH:")) {
                 String[] tokens = line.split("\\s");
                 String[] args   = StringUtil.subset(tokens, 1);
                 result.add(args);
             }
-        
+
         return result;
     }
 
@@ -210,14 +214,14 @@ public class Mpiexec implements ProcessListener, StatusListener {
         // Set clone to notify this Mpiexec
         Task clone = (Task) job.getTask().clone();
         clone.addStatusListener(this);
-        
+
         // Update Task Identity and set Notification
         Identity cloneID = new IdentityImpl(clone.getIdentity());
-        String value = cloneID.getValue() + ":" + i; 
+        String value = cloneID.getValue() + ":" + i;
         cloneID.setValue(value);
         clone.setIdentity(cloneID);
         NotificationManager.getDefault().registerTask(value, clone);
-        
+
         // Update Task Specification
         JobSpecification spec =
             (JobSpecification) clone.getSpecification();
@@ -232,9 +236,9 @@ public class Mpiexec implements ProcessListener, StatusListener {
         Job result = new Job(clone, 1);
         return result;
     }
-    
-    /** 
-     * Set up threads to watch the external process 
+
+    /**
+     * Set up threads to watch the external process
      * @param process
      */
     private void monitor(Process process) {
@@ -243,9 +247,9 @@ public class Mpiexec implements ProcessListener, StatusListener {
         ProcessKiller killer = new ProcessKiller(process, 10000);
         killer.start();
     }
-    
+
     public void callback(ProcessMonitor monitor) {
-        logger.debug("mpiexec exitcode: " + monitor.getExitCode()); 
+        logger.debug("mpiexec exitcode: " + monitor.getExitCode());
     }
 
     /**
@@ -271,9 +275,9 @@ public class Mpiexec implements ProcessListener, StatusListener {
         sleeper.launch(proxy);
     }
 
-    /** 
-       Multiplex Hydra proxy StatusEvents into the StatusEvents for 
-       the original job  
+    /**
+       Multiplex Hydra proxy StatusEvents into the StatusEvents for
+       the original job
      */
     public void statusChanged(StatusEvent event) {
         logger.debug(event);
@@ -282,14 +286,14 @@ public class Mpiexec implements ProcessListener, StatusListener {
             Integer count = statusCount.get(code);
             if (count == null)
                 count = 1;
-            else 
+            else
                 count++;
             statusCount.put(code, count);
             if (count == proxies.size())
                 propagate(event);
         }
     }
-    
+
     private void propagate(StatusEvent event) {
         Status s = event.getStatus();
         logger.debug("propagating: to: " + job + " " + s);
