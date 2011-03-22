@@ -23,23 +23,24 @@ import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 public class Node implements Callback {
     public static final Logger logger = Logger.getLogger(Node.class);
 
-    private int id;
-    private List<Cpu> cpus;
+    private final int id;
+    private final List<Cpu> cpus;
     private Block block;
-    private ChannelContext channelContext;
+    private final ChannelContext channelContext;
     private boolean shutdown;
 
     public Node(int id, Block block, ChannelContext channelContext) {
         this.id = id;
         this.block = block;
         this.channelContext = channelContext;
-        cpus = new ArrayList<Cpu>(block.getAllocationProcessor().getSettings().getWorkersPerNode());
+        Settings settings = block.getAllocationProcessor().getSettings();
+        cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
     }
-    
-    public Node(int id, int workersPerNode, ChannelContext channelContext) {
+
+    public Node(int id, int jobsPerNode, ChannelContext channelContext) {
     	this.id = id;
     	this.channelContext = channelContext;
-    	cpus = new ArrayList<Cpu>(workersPerNode);
+    	cpus = new ArrayList<Cpu>(jobsPerNode);
     }
 
     public void add(Cpu cpu) {
@@ -75,7 +76,7 @@ public class Node implements Callback {
         logger.info("Failed to shut down " + this + ": " + msg, t);
         block.forceShutdown();
     }
-    
+
     public void replyReceived(Command cmd) {
         logger.info(this + " shut down successfully");
     }
@@ -83,7 +84,8 @@ public class Node implements Callback {
     public ChannelContext getChannelContext() {
         return channelContext;
     }
-    
+
+    @Override
     public String toString() {
         return "Node " + id;
     }

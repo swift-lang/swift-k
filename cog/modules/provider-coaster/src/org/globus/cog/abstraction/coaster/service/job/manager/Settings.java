@@ -31,14 +31,15 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
 public class Settings {
     public static final Logger logger = Logger.getLogger(Settings.class);
 
-    /** 
-       Coasters will only consider settings listed here: 
+    /**
+       Coasters will only consider settings listed here.
+       workersPerNode is only included for its error message
      */
     public static final String[] NAMES =
-            new String[] { "slots", "workersPerNode", "nodeGranularity", "allocationStepSize",
+            new String[] { "slots", "jobsPerNode", "workersPerNode", "nodeGranularity", "allocationStepSize",
                     "maxNodes", "lowOverallocation", "highOverallocation",
                     "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
-                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat", 
+                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat",
                     "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn",
                     "ldLibraryPath", "workerCopies", "directory", "useHashBang"};
 
@@ -46,8 +47,8 @@ public class Settings {
      * The maximum number of blocks that can be active at one time
      */
     private int slots = 20;
-    private int workersPerNode = 1;
- 
+    private int jobsPerNode = 1;
+
     /**
      * How many nodes to allocate at once
      */
@@ -63,7 +64,7 @@ public class Settings {
      * How long (timewise) the request should be based on the job walltime. os
      * is a factor for 1s jobs, and oe is a factor for +Inf jobs. Things
      * in-between are derived using x * ((os - oe) / x + oe.
-     * 
+     *
      * For example, with oe = 100, a bunch of jobs of walltime 1 will generate
      * blocks about 100 long.
      */
@@ -78,7 +79,7 @@ public class Settings {
      * twice the median).
      */
     private double spread = 0.9;
-    
+
     /**
      * Maximum idle time of a block
      */
@@ -86,7 +87,7 @@ public class Settings {
 
     private TimeInterval reserve = TimeInterval.fromSeconds(60);
 
-    // this would cause bad things for workersPerNode > 1024
+    // this would cause bad things for jobsPerNode > 1024
     private int maxNodes = Integer.MAX_VALUE / 1024;
 
     private int maxtime = Integer.MAX_VALUE;
@@ -114,28 +115,28 @@ public class Settings {
     private double parallelism = 0.01;
 
     private TimeInterval maxWorkerIdleTime = TimeInterval.fromSeconds(120);
-    
+
     private String hookClass;
-    
+
     private Hook hook;
-    
+
     private String workerManager = "block";
-    
+
     private String workerLoggingLevel = "NONE";
-    
+
     private String workerLibraryPath = null;
-    
+
     private String workerCopies = null;
-    
+
     private String directory = null;
-   
+
     private String useHashBang = null;
-    
+
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
      */
     private String ppn;
-    
+
     public Settings() {
         hook = new Hook();
         callbackURIs = new TreeSet<URI>();
@@ -149,12 +150,24 @@ public class Settings {
         this.slots = slots;
     }
 
-    public int getWorkersPerNode() {
-        return workersPerNode;
+    public int getJobsPerNode() {
+        return jobsPerNode;
     }
 
-    public void setWorkersPerNode(int workersPerNode) {
-        this.workersPerNode = workersPerNode;
+    public void setJobsPerNode(int jobsPerNode) {
+        this.jobsPerNode = jobsPerNode;
+    }
+
+    @Deprecated
+    public int getWorkersPerNode() {
+        return jobsPerNode;
+    }
+
+    @Deprecated
+    public void setWorkersPerNode(@SuppressWarnings("unused")
+                                  int jobsPerNode) {
+        throw new RuntimeException
+        ("workersPerNode has been replaced by jobsPerNode!");
     }
 
     public int getNodeGranularity() {
@@ -236,7 +249,7 @@ public class Settings {
     public void setMaxtime(int maxtime) {
         this.maxtime = maxtime;
     }
-    
+
     public String getWorkerManager() {
         return workerManager;
     }
@@ -267,7 +280,7 @@ public class Settings {
      */
     public void setWorkerLoggingLevel(String workerLoggingLevel) {
         if (workerLoggingLevel != null) {
-            workerLoggingLevel = 
+            workerLoggingLevel =
                 workerLoggingLevel.trim().toUpperCase();
         }
         this.workerLoggingLevel = workerLoggingLevel;
@@ -277,7 +290,7 @@ public class Settings {
       logger.debug("setInternalHostname: " + internalHostname);
         if (internalHostname != null) { // override automatically determined
             try {
-                URI original = getCallbackURI(); 
+                URI original = getCallbackURI();
                 setCallbackURI(new URI(original.getScheme(), original.getUserInfo(),
                             internalHostname, original.getPort(), original.getPath(),
                             original.getQuery(), original.getFragment()));
@@ -292,7 +305,7 @@ public class Settings {
             // TODO nasty exception in the line above
         }
     }
-    
+
     public Collection<URI> getLocalContacts(int port) {
         List<URI> l = new ArrayList<URI>();
         try {
@@ -303,7 +316,7 @@ public class Settings {
                 while (e2.hasMoreElements()) {
                     InetAddress addr = e2.nextElement();
                     if (addr instanceof Inet6Address)
-                        continue; 
+                        continue;
                     if (!"127.0.0.1".equals(addr.getHostAddress())) {
                         l.add(new URI("http://" + addr.getHostAddress() + ":" + port));
                     }
@@ -323,7 +336,7 @@ public class Settings {
             return null;
         }
     }
-    
+
     public URI getCallbackURI() {
         if (callbackURIs.isEmpty()) {
             return null;
@@ -337,12 +350,12 @@ public class Settings {
         callbackURIs.clear();
         callbackURIs.add(callbackURI);
     }
-    
+
     public void setCallbackURIs(Collection<URI> callbackURIs) {
         this.callbackURIs.clear();
         this.callbackURIs.addAll(callbackURIs);
     }
-    
+
     public Collection<URI> getCallbackURIs() {
         return callbackURIs;
     }
@@ -438,7 +451,7 @@ public class Settings {
     public void setAlcfbgpnat(boolean alcfbgpnat) {
         this.alcfbgpnat = alcfbgpnat;
     }
-    
+
     public String getPpn() {
         return ppn;
     }
@@ -450,7 +463,7 @@ public class Settings {
     public String getHookClass() {
         return hookClass;
     }
-    
+
     public Hook getHook() {
     	return hook;
     }
@@ -468,39 +481,39 @@ public class Settings {
     public String getLdLibraryPath() {
         return workerLibraryPath;
     }
-    
-    /** 
-       Instructs the worker to set LD_LIBRARY_PATH to path 
+
+    /**
+       Instructs the worker to set LD_LIBRARY_PATH to path
        in its and its children's environment
      */
     public void setLdLibraryPath(String path) {
         workerLibraryPath = path;
     }
-    
+
     public String getWorkerCopies() {
         return workerCopies;
     }
-    
-    public void setWorkerCopies(String copies) { 
+
+    public void setWorkerCopies(String copies) {
         workerCopies = copies;
     }
-    
+
     public String getDirectory() {
         return directory;
     }
-    
+
     public void setDirectory(String directory) {
         this.directory = directory;
     }
-    
+
     public String getUseHashBang() {
         return useHashBang;
     }
-    
+
     public void setUseHashBang(String uhb) {
         this.useHashBang = uhb;
     }
-    
+
     public void set(String name, String value)
         throws IllegalArgumentException {
         if (logger.isDebugEnabled()) {
@@ -529,7 +542,7 @@ public class Settings {
         if (!complete)
             throw new RuntimeException("Unknown setting: " + name);
     }
-    
+
     void set(Method method, String value)
         throws InvocationTargetException, IllegalAccessException {
         Class<?> clazz = method.getParameterTypes()[0];
@@ -556,7 +569,7 @@ public class Settings {
         }
         method.invoke(this, args);
     }
-    
+
     private static final Object[] NO_ARGS = new Object[0];
 
     private Object get(String name) throws IllegalArgumentException, IllegalAccessException,
@@ -571,6 +584,7 @@ public class Settings {
         return null;
     }
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("Settings {\n");
