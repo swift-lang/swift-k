@@ -31,7 +31,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private static PullThread pullThread;
 
     private int id;
-    private List<Job> done;
+    private final List<Job> done;
     private Job running;
     private Block block;
     BlockQueueProcessor bqp;
@@ -281,6 +281,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         }
     }
 
+    @Override
     public String toString() {
         return id + ":" + timelast;
     }
