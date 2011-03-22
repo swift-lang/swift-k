@@ -24,8 +24,8 @@ public class JobQueue implements RegistrationManager {
     public static final Logger logger = Logger.getLogger(JobQueue.class);
 
     private QueueProcessor local, coaster;
-    private Settings settings;
-    private LocalTCPService localService;
+    private final Settings settings;
+    private final LocalTCPService localService;
     private ChannelContext clientChannelContext;
 
     public JobQueue(LocalTCPService localService) {
@@ -103,7 +103,8 @@ public class JobQueue implements RegistrationManager {
 
     public void shutdown() {
         local.shutdown();
-        coaster.shutdown();
+        if (coaster != null)
+            coaster.shutdown();
     }
 
     public void setClientChannelContext(ChannelContext channelContext) {
