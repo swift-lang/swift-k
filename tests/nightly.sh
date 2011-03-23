@@ -194,6 +194,13 @@ SCRIPTDIR=$( cd $( dirname $0 ) ; /bin/pwd )
 
 TESTCOUNT=0
 
+# PIDs to kill if nightly.sh is killed:
+PROCESS_PID=
+MONITOR_PID=
+
+# When true, we should exit:
+SHUTDOWN=0
+
 echo "RUNNING_IN:  $RUNDIR"
 echo "HTML_OUTPUT: $HTML"
 
@@ -231,6 +238,14 @@ verbose() {
   MSG="${*}"
   (( $VERBOSE )) && echo $MSG
   return 0
+}
+
+shutdown_trap() {
+  SHUTDOWN=1
+  printf "\n\nshutdown_trap... $MONITOR_PID $PROCESS_PID\n\n"
+  ps -f
+  kill -INT $MONITOR_PID
+  kill -INT $PROCESS_PID
 }
 
 header() {
@@ -575,7 +590,7 @@ process_exec() {
   "$@" > $OUTPUT 2>&1 &
   EXEC_PID=$!
 
-  trap "process_exec_trap $EXEC_PID" SIGTERM
+  trap "process_exec_trap $EXEC_PID" SIGTERM SIGINT
 
   wait $EXEC_PID
   EXITCODE=$?
@@ -594,9 +609,11 @@ process_exec() {
 # Rationale: Killing bin/swift does not kill the Swift java process
 process_exec_trap() {
   EXEC_PID=$1
-  echo "process_exec_trap()"
-  kill -KILL $EXEC_PID
-  killall_swift
+  ps -f
+  echo "process_exec_trap($EXEC_PID)"
+  kill -TERM $EXEC_PID
+  ps -f
+  # killall_swift
 }
 
 # Kill all subordinate swift/java processes
@@ -663,15 +680,15 @@ monitor() {
   # Use background so kill/trap is immediate
   sleep $TIMEOUT > /dev/null 2>&1 &
   SLEEP_PID=$!
-  trap "monitor_trap $SLEEP_PID $V > /dev/null 2>&1" SIGTERM
+  trap "monitor_trap $SLEEP_PID" SIGTERM SIGINT
   wait $SLEEP_PID
   [ $? != 0 ] && verbose "monitor($V) cancelled" && return 0
 
   if ps | grep $PID
   then
-    echo "monitor($V): killing test process..."
+    echo "monitor($V): killing test process $PID"
     touch killed_test
-    /bin/kill -TERM $PID
+    /bin/kill -INT $PID
     KILLCODE=$?
     if [ $KILLCODE == 0 ]; then
       echo "monitor($V): killed process_exec (TERM)"
@@ -687,9 +704,8 @@ monitor() {
 
 monitor_trap() {
   SLEEP_PID=$1
-  V=$2
-  verbose "monitor_trap(): kill sleep"
-  /bin/kill -KILL $SLEEP_PID
+  echo "monitor_trap(SLEEP_PID)..."
+  /bin/kill -INT $SLEEP_PID
 }
 
 # Execute given command line in background with monitor
@@ -707,9 +723,11 @@ monitored_exec()
 
   process_exec "$@" &
   PROCESS_PID=$!
+  echo PROCESS_PID: $PROCESS_PID
 
   monitor $PROCESS_PID $TIMEOUT $OUTPUT &
   MONITOR_PID=$!
+  echo MONITOR_PID: $MONITOR_PID
 
   wait $PROCESS_PID
   EXITCODE=$?
@@ -718,8 +736,8 @@ monitored_exec()
 
   # If the test was killed, monitor() may have work to do
   rm killed_test > /dev/null 2>&1 && sleep 5
-  verbose "Killing monitor..."
-  /bin/kill -TERM $MONITOR_PID
+  echo "Killing monitor..."
+  /bin/kill -INT $MONITOR_PID
 
   echo "TOOK: $(( STOP-START ))"
 
@@ -963,6 +981,7 @@ test_group() {
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
       swift_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
+      (( $SHUTDOWN )) && return
     done
     end_row
   done
@@ -981,6 +1000,7 @@ test_group() {
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
       script_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
+      (( $SHUTDOWN )) && return
     done
     end_row
   done
@@ -1054,6 +1074,8 @@ if [ $ALWAYS_EXITONFAILURE != "1" ]; then
   EXITONFAILURE=false
 fi
 
+trap "shutdown_trap" SIGINT SIGTERM
+
 SKIP_COUNTER=0
 
 GROUPCOUNT=1
@@ -1064,6 +1086,7 @@ for G in ${GROUPLIST[@]}; do
   test_group
   (( GROUPCOUNT++ ))
   (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && break
+  (( $SHUTDOWN )) && break
 done
 
 if [ $GRID_TESTS == "0" ]; then
