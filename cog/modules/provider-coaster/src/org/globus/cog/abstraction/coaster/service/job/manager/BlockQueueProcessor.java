@@ -349,7 +349,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
-    private Set<Job> allocateBlocks(double tsum) {
+    private Set<Job> allocateBlocks(@SuppressWarnings("hiding")
+                                    double tsum) {
         Set<Job> remove = new HashSet<Job>();
         int cslots =
                 (int) Math.ceil((settings.getSlots() - blocks.size())
@@ -362,7 +363,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         double size = metric.blockSize(slot, cslots, tsum);
 
         while (i <= holding.size() && slot < cslots) {
-            int granularity = settings.getNodeGranularity() * settings.getWorkersPerNode();
+            int granularity = settings.getNodeGranularity() * settings.getJobsPerNode();
             boolean granularityFit = (i - last) % granularity == 0;
             boolean lastChunk = i == holding.size() - 1;
             boolean sizeFit = false;
@@ -379,7 +380,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
                 int w =
                         Math.min(round(metric.width(msz, h), granularity), settings.getMaxNodes()
-                                * settings.getWorkersPerNode());
+                                * settings.getJobsPerNode());
                 int r = (i - last) % w;
                 if (logger.isInfoEnabled()) {
                     logger.info("h: " + h + ", jj: " + lastwalltime + ", x-last: " + ", r: " + r
