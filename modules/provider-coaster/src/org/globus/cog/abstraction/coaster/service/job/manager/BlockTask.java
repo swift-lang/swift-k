@@ -27,8 +27,8 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class BlockTask extends TaskImpl {
     public static final Logger logger = Logger.getLogger(BlockTask.class);
 
-    private Block block;
-    private Settings settings;
+    private final Block block;
+    private final Settings settings;
 
     public BlockTask(Block block) {
         this.block = block;
@@ -44,7 +44,7 @@ public class BlockTask extends TaskImpl {
         setAttribute(spec, "queue", settings.getQueue());
         setAttribute(spec, "project", settings.getProject());
         setAttribute(spec, "ppn", settings.getPpn());
-        int count = block.getWorkerCount() / settings.getWorkersPerNode();
+        int count = block.getWorkerCount() / settings.getJobsPerNode();
         if (count > 1) {
             setAttribute(spec, "jobType", "multiple");
         }
@@ -54,17 +54,17 @@ public class BlockTask extends TaskImpl {
         if (settings.getAlcfbgpnat()) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
-        String libraryPath = settings.getLdLibraryPath(); 
+        String libraryPath = settings.getLdLibraryPath();
         if (libraryPath != null)
-            spec.addEnvironmentVariable("LD_LIBRARY_PATH", 
+            spec.addEnvironmentVariable("LD_LIBRARY_PATH",
                                         libraryPath);
         String workerCopies = settings.getWorkerCopies();
         if (workerCopies != null) {
-            String workerCopiesFixed = 
+            String workerCopiesFixed =
               workerCopies.trim()
               .replaceAll("\n", ",")
               .replaceAll(" ", "");
-            spec.addEnvironmentVariable("WORKER_COPIES", 
+            spec.addEnvironmentVariable("WORKER_COPIES",
                                         workerCopiesFixed);
         }
         spec.addEnvironmentVariable("WORKER_LOGGING_LEVEL", settings.getWorkerLoggingLevel());
@@ -79,7 +79,7 @@ public class BlockTask extends TaskImpl {
         JobSpecification js = new JobSpecificationImpl();
         String script = block.getAllocationProcessor()
         .getScript().getAbsolutePath();
-        if (settings.getUseHashBang() != null && 
+        if (settings.getUseHashBang() != null &&
             settings.getUseHashBang().equals("true")) {
             js.setExecutable(script);
         }
@@ -91,18 +91,18 @@ public class BlockTask extends TaskImpl {
         // job directory.
         // If $CWD happens to be /scratch/something it has a filter in place
         // that rejects the job with the warning that /scratch/something is not accessible
-        // on the worker node. And we don't care about the $CWD for the worker.        
+        // on the worker node. And we don't care about the $CWD for the worker.
         if (settings.getDirectory() == null)
             js.setDirectory("/");
         else
             js.setDirectory(settings.getDirectory());
-        
+
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
-        
+
         if (settings.getWorkerLoggingLevel().equals("NONE"))
           js.addArgument("NOLOGGING");
-        else 
+        else
           js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
 
         logger.debug("arguments: " + js.getArguments());
