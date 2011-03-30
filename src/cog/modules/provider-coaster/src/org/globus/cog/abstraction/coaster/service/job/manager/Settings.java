@@ -36,12 +36,18 @@ public class Settings {
        workersPerNode is only included for its error message
      */
     public static final String[] NAMES =
-            new String[] { "slots", "jobsPerNode", "workersPerNode", "nodeGranularity", "allocationStepSize",
-                    "maxNodes", "lowOverallocation", "highOverallocation",
-                    "overallocationDecayFactor", "spread", "reserve", "maxtime", "project",
-                    "queue", "remoteMonitorEnabled", "kernelprofile", "alcfbgpnat",
-                    "internalHostname", "hookClass", "workerManager", "workerLoggingLevel", "ppn",
-                    "ldLibraryPath", "workerCopies", "directory", "useHashBang"};
+            new String[] { "slots", "jobsPerNode", "workersPerNode",
+                           "nodeGranularity", "allocationStepSize",
+                           "maxNodes", "lowOverallocation",
+                           "highOverallocation",
+                           "overallocationDecayFactor",
+                           "spread", "reserve", "maxtime", "project",
+                           "queue", "remoteMonitorEnabled",
+                           "kernelprofile", "alcfbgpnat",
+                           "internalHostname", "hookClass",
+                           "workerManager", "workerLoggingLevel",
+                           "ppn", "ldLibraryPath", "workerCopies",
+                           "directory", "useHashBang"};
 
     /**
      * The maximum number of blocks that can be active at one time
