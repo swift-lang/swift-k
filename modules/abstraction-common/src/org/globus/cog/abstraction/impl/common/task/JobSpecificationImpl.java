@@ -6,26 +6,15 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
 
-import org.globus.cog.abstraction.interfaces.CleanUpSet;
-import org.globus.cog.abstraction.interfaces.Delegation;
-import org.globus.cog.abstraction.interfaces.FileLocation;
-import org.globus.cog.abstraction.interfaces.JobSpecification;
-import org.globus.cog.abstraction.interfaces.Specification;
-import org.globus.cog.abstraction.interfaces.StagingSet;
+import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.interfaces.*;
 
 public class JobSpecificationImpl implements JobSpecification {
- 
+
+    Logger logger = Logger.getLogger(JobSpecificationImpl.class);
+
     private static final long serialVersionUID = 1L;
     private Boolean delegationEnabled;
     private int delegation;
@@ -36,8 +25,8 @@ public class JobSpecificationImpl implements JobSpecification {
     private boolean batchJob;
     private boolean redirected;
     private boolean localExecutable;
-    
-    private int type;
+
+    private final int type;
     private Map<String, Object> attributes;
     private List<String> arguments;
     private Map<String, String> environment;
@@ -166,7 +155,7 @@ public class JobSpecificationImpl implements JobSpecification {
     public void addEnvironmentVariable(String name, int i) {
         addEnvironmentVariable(name, Integer.toString(i));
     }
-    
+
     public String removeEnvironmentVariable(String name) {
         if (environment != null) {
             return environment.remove(name);
@@ -296,6 +285,25 @@ public class JobSpecificationImpl implements JobSpecification {
         attributes.put(name.toLowerCase(), value);
     }
 
+    /**
+       Set attribute pair formatted as "key=value" or "key"
+       The latter form sets the value to the empty String
+       @param pair May not be null or the empty String
+     */
+    void setAttribute(String pair)
+    {
+        if (pair == null)
+            throw new NullPointerException();
+        if (pair.length() == 0)
+            throw new IllegalArgumentException
+            ("Attempted to set blank attribute!");
+        String[] tokens = pair.split("=", 2);
+        if (tokens.length == 1)
+            setAttribute(tokens[0], "");
+        else
+            setAttribute(tokens[0], tokens[1]);
+    }
+
     public Object getAttribute(String name) {
         if (attributes != null) {
             return attributes.get(name.toLowerCase());
@@ -325,7 +333,7 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public boolean isDelegationEnabled() {
         if (delegationEnabled != null) {
-            return delegationEnabled.booleanValue(); 
+            return delegationEnabled.booleanValue();
         }
         else {
             return delegation != Delegation.NO_DELEGATION;
@@ -344,6 +352,7 @@ public class JobSpecificationImpl implements JobSpecification {
         this.delegation = delegation;
     }
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("Job: ");
@@ -359,7 +368,7 @@ public class JobSpecificationImpl implements JobSpecification {
         sb.append("\n\tenv:");
         sb.append(environment);
         sb.append('\n');
-        
+
         return sb.toString();
     }
 
@@ -422,21 +431,36 @@ public class JobSpecificationImpl implements JobSpecification {
     public void setCleanUpSet(CleanUpSet cleanUpSet) {
         this.cleanUpSet = cleanUpSet;
     }
-    
+
+    @Override
     public Object clone() {
         JobSpecificationImpl result = null;
         try {
             result = (JobSpecificationImpl) super.clone();
             if (attributes != null) {
-                result.attributes = 
+                result.attributes =
                     new HashMap<String,Object>(attributes);
             }
             result.arguments = new ArrayList<String>(arguments);
-            
+
         }
         catch (CloneNotSupportedException e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    @Override
+    public void unpackProviderAttributes() {
+        String attrs = (String) getAttribute("providerAttributes");
+
+        if (attrs == null)
+            return;
+
+        logger.debug("unpacking: " + attrs);
+        String[] tokens = attrs.split("[;\n]");
+        for (String token : tokens)
+            if (token.length() > 0)
+                setAttribute(token);
     }
 }
