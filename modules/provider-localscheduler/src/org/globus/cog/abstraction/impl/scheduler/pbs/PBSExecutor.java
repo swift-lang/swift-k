@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
@@ -220,17 +219,8 @@ public class PBSExecutor extends AbstractExecutor {
 		             ppn + " -F exclusive /bin/sh -c '");
 
 		wr.write(quote(spec.getExecutable()));
-		List<String> args = spec.getArgumentsAsList();
-		if (args != null && args.size() > 0) {
-			wr.write(' ');
-			Iterator<String> i = args.iterator();
-			while (i.hasNext()) {
-				wr.write(quote(i.next()));
-				if (i.hasNext()) {
-					wr.write(' ');
-				}
-			}
-		}
+		writeQuotedList(wr, spec.getArgumentsAsList());
+
 		if (aprun)
             wr.write("'");
 
