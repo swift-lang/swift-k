@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
@@ -26,7 +28,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.gsi.gssapi.auth.AuthorizationException;
 import org.ietf.jgss.GSSException;
 
-/** 
+/**
  *   Set log level to DEBUG to not delete generated submit script
  * */
 public abstract class AbstractExecutor implements ProcessListener {
@@ -48,9 +50,9 @@ public abstract class AbstractExecutor implements ProcessListener {
 
     private File script;
     private String stdout, stderr, exitcode, jobid;
-    private JobSpecification spec;
-    private Task task;
-    private ProcessListener listener;
+    private final JobSpecification spec;
+    private final Task task;
+    private final ProcessListener listener;
     private Job job;
 
     protected AbstractExecutor(Task task, ProcessListener listener) {
@@ -90,7 +92,7 @@ public abstract class AbstractExecutor implements ProcessListener {
             logCommandLine(cmdline);
         }
         Process process = Runtime.getRuntime().exec(cmdline, null, null);
-		
+
         try {
             process.getOutputStream().close();
         }
@@ -135,7 +137,7 @@ public abstract class AbstractExecutor implements ProcessListener {
                 listener.processFailed("Received empty jobid!\n" +
                                        output + "\n" + errorText);
         }
-        
+
         process.getInputStream().close();
 
         getQueuePoller().addJob(
@@ -373,6 +375,24 @@ public abstract class AbstractExecutor implements ProcessListener {
             sb.append('"');
         }
         return sb.toString();
+    }
+
+    /**
+       @param list May be null or empty
+       @throws IOException
+    */
+    protected void writeQuotedList(Writer writer, List<String> list)
+    throws IOException
+    {
+        if (list != null && list.size() > 0) {
+            writer.write(' ');
+            Iterator<String> it = list.iterator();
+            while (it.hasNext()) {
+                writer.write(quote(it.next()));
+                if (it.hasNext())
+                    writer.write(' ');
+            }
+        }
     }
 
     protected String replaceVars(String str) {
