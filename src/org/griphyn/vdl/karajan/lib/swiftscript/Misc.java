@@ -1,8 +1,6 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,9 +52,10 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_length", new Arg[] { Arg.VARGS });
 	}
 
-	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
-	public DSHandle swiftscript_trace(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-			InvalidPathException {
+	private static final Logger traceLogger = 
+	    Logger.getLogger("org.globus.swift.trace");
+	public DSHandle swiftscript_trace(VariableStack stack) 
+	throws ExecutionException {
 
 		DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
 
@@ -72,8 +71,8 @@ public class Misc extends FunctionsCollection {
 		return null;
 	}
   
-	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-			InvalidPathException {
+	public DSHandle swiftscript_strcat(VariableStack stack) 
+	throws ExecutionException {
 		Object[] args = SwiftArg.VARGS.asArray(stack);
 		int provid = VDLFunction.nextProvenanceID();
 		StringBuffer buf = new StringBuffer();
@@ -87,7 +86,7 @@ public class Misc extends FunctionsCollection {
 			if(VDL2Config.getConfig().getProvenanceLog()) {
 				DSHandle[] provArgs = SwiftArg.VARGS.asDSHandleArray(stack);
 				for (int i = 0; i < provArgs.length; i++) {
-					VDLFunction.logProvenanceParameter(provid, (DSHandle)provArgs[i], ""+i);
+					VDLFunction.logProvenanceParameter(provid, provArgs[i], ""+i);
 				}
 				VDLFunction.logProvenanceResult(provid, handle, "strcat");
 			}
@@ -97,8 +96,8 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle swiftscript_strcut(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-			InvalidPathException {
+	public DSHandle swiftscript_strcut(VariableStack stack) 
+	throws ExecutionException {
 		int provid = VDLFunction.nextProvenanceID();
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
@@ -131,9 +130,8 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 	
-    public DSHandle swiftscript_strstr(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-            InvalidPathException {
-        
+    public DSHandle swiftscript_strstr(VariableStack stack) 
+    throws ExecutionException {
         String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
         String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
         if (logger.isDebugEnabled()) {
@@ -147,8 +145,9 @@ public class Misc extends FunctionsCollection {
         return handle;
     }
 	
-	public DSHandle swiftscript_strsplit(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-		InvalidPathException {
+	public DSHandle swiftscript_strsplit(VariableStack stack) 
+	throws ExecutionException, InvalidPathException {
+	    
 		String str = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
 
@@ -167,8 +166,8 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle swiftscript_regexp(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-			InvalidPathException {
+	public DSHandle swiftscript_regexp(VariableStack stack) 
+	throws ExecutionException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
 		String transform = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
@@ -204,8 +203,8 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle swiftscript_toint(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-			InvalidPathException {
+	public DSHandle swiftscript_toint(VariableStack stack) 
+	throws ExecutionException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		int i = inputString.indexOf(".");
 		if( i >= 0 )
@@ -230,8 +229,8 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle swiftscript_tofloat(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-			InvalidPathException {
+	public DSHandle swiftscript_tofloat(VariableStack stack) 
+	throws ExecutionException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		DSHandle handle = new RootDataNode(Types.FLOAT);
 		
@@ -253,8 +252,8 @@ public class Misc extends FunctionsCollection {
 	/*
 	 * Takes in a float and formats to desired precision and returns a string
 	 */
-	public DSHandle swiftscript_format(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-    InvalidPathException {
+	public DSHandle swiftscript_format(VariableStack stack) 
+	throws ExecutionException {
 	    String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 	    String inputFormat = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
 	    DSHandle handle = new RootDataNode(Types.STRING);
@@ -273,8 +272,8 @@ public class Misc extends FunctionsCollection {
 	/*
 	 * Takes in an int and pads zeros to the left and returns a string
 	 */
-	public DSHandle swiftscript_pad(VariableStack stack) throws ExecutionException, NoSuchTypeException,
-	        InvalidPathException {
+	public DSHandle swiftscript_pad(VariableStack stack) 
+	throws ExecutionException {
 	    String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 	    String inputFormat = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
 	    DSHandle handle = new RootDataNode(Types.STRING);  
@@ -283,7 +282,8 @@ public class Misc extends FunctionsCollection {
 	    int zeros_to_pad = Integer.parseInt(inputFormat);
 	    zeros_to_pad += num_length;
 	    
-	    String output = String.format("%0"+zeros_to_pad+"d", Integer.parseInt(inputString));
+	    String output = String.format("%0"+zeros_to_pad+"d", 
+	                                  Integer.parseInt(inputString));
 	    handle.setValue(output);
 	    handle.closeShallow();
 	        
@@ -295,17 +295,16 @@ public class Misc extends FunctionsCollection {
 	}
 	
 	public DSHandle swiftscript_tostring(VariableStack stack)
-                throws ExecutionException, NoSuchTypeException,
-                InvalidPathException {
-                Object input = PA_INPUT.getValue(stack);
-                DSHandle handle = new RootDataNode(Types.STRING);
-                handle.setValue(""+input);
-                handle.closeShallow();
-                return handle;
+	throws ExecutionException {
+	    Object input = PA_INPUT.getValue(stack);
+	    DSHandle handle = new RootDataNode(Types.STRING);
+	    handle.setValue(""+input);
+	    handle.closeShallow();
+	    return handle;
 	}
 
 	public DSHandle swiftscript_dirname(VariableStack stack) 
-	throws ExecutionException, NoSuchTypeException, InvalidPathException {
+	throws ExecutionException {
 	    DSHandle handle;
 	    try
 	    {
@@ -326,12 +325,14 @@ public class Misc extends FunctionsCollection {
 	}
 	
 	/*
-	 * This is copied from swiftscript_dirname. Both the functions could be changed to be more readable.
+	 * This is copied from swiftscript_dirname. 
+	 * Both the functions could be changed to be more readable.
 	 * Returns length of an array.
-	 * Good for debugging because array needs to be closed before the length is determined
+	 * Good for debugging because array needs to be closed 
+	 *   before the length is determined
 	 */
 	public DSHandle swiftscript_length(VariableStack stack) 
-	throws ExecutionException, NoSuchTypeException, InvalidPathException {
+	throws ExecutionException {
 	    DSHandle handle;
 	    DSHandle[] args = SwiftArg.VARGS.asDSHandleArray( stack );
 	    DSHandle arg = args[0];
@@ -339,7 +340,8 @@ public class Misc extends FunctionsCollection {
 	        
 	    if( !( adn.isClosed() ) )
 	    {
-	        throw new FutureNotYetAvailable( VDLFunction.addFutureListener( stack, adn ) );
+	        throw new FutureNotYetAvailable
+	        (VDLFunction.addFutureListener(stack, adn));
 	    }
 	        
 	    int result = adn.size();
