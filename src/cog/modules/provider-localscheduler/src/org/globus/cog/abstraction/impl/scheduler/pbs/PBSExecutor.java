@@ -29,6 +29,9 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class PBSExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(PBSExecutor.class);
 
+	int count = 1;
+	int ppn = 1;
+
 	public PBSExecutor(Task task, ProcessListener listener) {
 		super(task, listener);
 	}
@@ -63,7 +66,7 @@ public class PBSExecutor extends AbstractExecutor {
 	/**
 	   Obtains profile settings regarding job size from
 	   JobSpecification and writes them into the PBS file.
-	   Looks for profiles count, ppn, ppts, and mpp
+	   Looks for profiles count, ppn, ppts, and pbs.mpp
 	   count: mandatory, default 1 (number of cores)
 	   ppn: optional, default 1 (cores per node)
 	   pbs.mpp: output mppwidth/mppnppn instead of nodes/ppn
@@ -81,7 +84,8 @@ public class PBSExecutor extends AbstractExecutor {
 
 	    Object o;
 
-	    int count = 1;
+	    getSpec().unpackProviderAttributes();
+
 	    o = getSpec().getAttribute("count");
 	    if (o != null)
 	        count = parseAndValidateInt(o, "count");
@@ -89,7 +93,6 @@ public class PBSExecutor extends AbstractExecutor {
 	        result = true;
 
 	    o = getSpec().getAttribute("ppn");
-	    int ppn = 1;
 	    if (o != null)
 	        ppn = parseAndValidateInt(o, "ppn");
 
@@ -98,8 +101,9 @@ public class PBSExecutor extends AbstractExecutor {
 
 	    boolean mpp = false;
 	    o = getSpec().getAttribute("pbs.mpp");
+	    logger.debug("pbs.mpp: " + o);
 	    if (o != null)
-	        mpp = parseAndValidateBool(o, "mpp");
+	        mpp = parseAndValidateBool(o, "pbs.mpp");
 
 	    if (count % ppn != 0)
 	        throw new IllegalArgumentException
@@ -206,6 +210,15 @@ public class PBSExecutor extends AbstractExecutor {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
 
+		// aprun option specifically for Cray Beagle, Franklin
+		boolean aprun = false;
+		if (spec.getAttribute("pbs.aprun") != null)
+		    aprun = true;
+
+		if (aprun)
+		    wr.write("aprun -n " + count + " -N 1 -cc none -d " +
+		             ppn + " -F exclusive /bin/sh -c '");
+
 		wr.write(quote(spec.getExecutable()));
 		List<String> args = spec.getArgumentsAsList();
 		if (args != null && args.size() > 0) {
@@ -218,6 +231,8 @@ public class PBSExecutor extends AbstractExecutor {
 				}
 			}
 		}
+		if (aprun)
+            wr.write("'");
 
 		if (spec.getStdInput() != null) {
             wr.write(" < " + quote(spec.getStdInput()));
