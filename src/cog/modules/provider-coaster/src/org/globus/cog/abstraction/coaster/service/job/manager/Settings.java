@@ -36,18 +36,19 @@ public class Settings {
        workersPerNode is only included for its error message
      */
     public static final String[] NAMES =
-            new String[] { "slots", "jobsPerNode", "workersPerNode",
-                           "nodeGranularity", "allocationStepSize",
-                           "maxNodes", "lowOverallocation",
-                           "highOverallocation",
-                           "overallocationDecayFactor",
-                           "spread", "reserve", "maxtime", "project",
-                           "queue", "remoteMonitorEnabled",
-                           "kernelprofile", "alcfbgpnat",
-                           "internalHostname", "hookClass",
-                           "workerManager", "workerLoggingLevel",
-                           "ppn", "ldLibraryPath", "workerCopies",
-                           "directory", "useHashBang"};
+        new String[] { "slots", "jobsPerNode", "workersPerNode",
+                       "nodeGranularity", "allocationStepSize",
+                       "maxNodes", "lowOverallocation",
+                       "highOverallocation",
+                       "overallocationDecayFactor",
+                       "spread", "reserve", "maxtime", "project",
+                       "queue", "remoteMonitorEnabled",
+                       "kernelprofile", "alcfbgpnat",
+                       "internalHostname", "hookClass",
+                       "workerManager", "workerLoggingLevel",
+                       "ppn", "ldLibraryPath", "workerCopies",
+                       "directory", "useHashBang",
+                       "providerAttributes" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -137,6 +138,8 @@ public class Settings {
     private String directory = null;
 
     private String useHashBang = null;
+
+    private String providerAttributes = null;
 
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
@@ -270,6 +273,14 @@ public class Settings {
 
     public String getWorkerLoggingLevel() {
         return workerLoggingLevel;
+    }
+
+    public String getProviderAttributes() {
+        return providerAttributes;
+    }
+
+    public void setProviderAttributes(String options) {
+        providerAttributes = options;
     }
 
     /**
