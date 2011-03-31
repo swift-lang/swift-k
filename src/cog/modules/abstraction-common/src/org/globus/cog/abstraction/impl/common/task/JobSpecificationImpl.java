@@ -240,21 +240,21 @@ public class JobSpecificationImpl implements JobSpecification {
 
     protected FileLocation inferStreamType(boolean redir, boolean isSet,
             boolean mem) {
-        FileLocation type = FileLocation.NONE;
+        FileLocation location = FileLocation.NONE;
         if (redir) {
             if (mem) {
-                type = type.and(FileLocation.MEMORY);
+                location = location.and(FileLocation.MEMORY);
             }
             if (isSet) {
-                type = type.and(FileLocation.LOCAL);
+                location = location.and(FileLocation.LOCAL);
             }
         }
         else {
             if (isSet) {
-                type = type.and(FileLocation.REMOTE);
+                location = location.and(FileLocation.REMOTE);
             }
         }
-        return type;
+        return location;
     }
 
     public boolean isRedirected() {
