@@ -51,6 +51,7 @@ public class BlockTask extends TaskImpl {
         setAttribute(spec, "count", String.valueOf(count));
         setAttribute(spec, "hostCount", String.valueOf(count));
         setAttribute(spec, "kernelprofile", settings.getKernelprofile());
+        setAttribute(spec, "providerAttributes", settings.getProviderAttributes());
         if (settings.getAlcfbgpnat()) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
