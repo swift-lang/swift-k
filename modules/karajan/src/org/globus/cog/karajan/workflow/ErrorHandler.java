@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.workflow;
 
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
 import org.globus.cog.karajan.workflow.nodes.ErrorHandlerNode;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
@@ -37,7 +38,7 @@ public class ErrorHandler {
 		return error.matches(type);
 	}
 
-	public void handleError(FlowElement source, ExecutionException error)
+	public void handleError(FlowElement source, FailureNotificationEvent error)
 			throws ExecutionException {
 		((ErrorHandlerNode) handler).handleError(source, error);
 	}

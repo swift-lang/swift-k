@@ -161,7 +161,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 					// request
 					handleRequest(tag, fin, error, len, tdata);
 				}
-				data = null;
 			}
 		}
 		return any;

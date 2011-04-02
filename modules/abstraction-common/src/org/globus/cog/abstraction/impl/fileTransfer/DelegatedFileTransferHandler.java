@@ -566,13 +566,6 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
         if (spec.getSourceLength() != FileTransferSpecification.LENGTH_ENTIRE_FILE) {
             urlCopy.setSourceFileLength(spec.getSourceLength());
         }
-        Object tcpBuffSz = spec.getAttribute("TCPBufferSize"); 
-        if (tcpBuffSz instanceof String) {
-        	urlCopy.setTCPBufferSize(Integer.parseInt((String) tcpBuffSz));
-        }
-        else if (tcpBuffSz instanceof Number) {
-        	urlCopy.setTCPBufferSize(((Number) tcpBuffSz).intValue());
-        }
         urlCopy.setUseThirdPartyCopy(true);
         urlCopy.addUrlCopyListener(this);
         urlCopy.run();

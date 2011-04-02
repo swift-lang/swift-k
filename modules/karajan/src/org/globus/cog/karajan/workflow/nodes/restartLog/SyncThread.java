@@ -17,7 +17,7 @@ public class SyncThread extends Thread {
 	public static final Logger logger = Logger.getLogger(SyncThread.class);
 
 	private FlushableLockedFileWriter writer;
-	private volatile boolean flushing;
+	private boolean flushing;
 
 	public SyncThread(FlushableLockedFileWriter writer) {
 		super("Restart Log Sync");
@@ -31,11 +31,9 @@ public class SyncThread extends Thread {
 		});
 	}
 
-	public void flush() {
+	public synchronized void flush() {
 		if (!flushing) {
-			synchronized(this) {
-				this.notifyAll();
-			}
+			this.notifyAll();
 		}
 	}
 

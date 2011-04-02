@@ -17,22 +17,14 @@ import org.globus.cog.karajan.util.Identifier;
 import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.Future;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.FutureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.futures.FutureIteratorIncomplete;
 
 public abstract class AbstractParallelIterator extends AbstractIterator {
 	public static final Logger logger = Logger.getLogger(AbstractParallelIterator.class);
-	
-	public void futureModified(Future f, VariableStack stack) {
-		KarajanIterator iter = (KarajanIterator) stack.currentFrame().getVar(ITERATOR);
-		try {
-			citerate(stack, (Identifier) stack.currentFrame().getVar(VAR), iter);
-		}
-		catch (ExecutionException e) {
-			failImmediately(stack, e);
-		}
-	}
-
 
 	public void iterate(VariableStack stack, Identifier var, KarajanIterator i)
 			throws ExecutionException {
@@ -51,7 +43,7 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 			complete(stack);
 		}
 	}
-
+	
 	protected void executeChildren(VariableStack stack) throws ExecutionException {
 		if (elementCount() == 0) {
 			return;
@@ -84,11 +76,9 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 			}
 		}
 		catch (FutureIteratorIncomplete fii) {
-			synchronized (stack.currentFrame()) {
-				// if this is defined, then resume from iterate
-				stack.setVar(ITERATOR, i);
-			}
-			fii.getFutureIterator().addModificationAction(this, stack);
+			stack.setVar(ITERATOR, i);
+			fii.getFutureIterator().addModificationAction(this,
+					new FutureNotificationEvent(ITERATE, this, fii.getFutureIterator(), stack));
 		}
 	}
 
@@ -137,13 +127,31 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 		}
 	}
 
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		if (!testAndSetChildFailed(stack)) {
-			if (stack.parentFrame().isDefined(VAR)) {
-				closeBuffers(stack);
-				stack.leave();
+	public void notificationEvent(NotificationEvent e) throws ExecutionException {
+		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
+			VariableStack stack = e.getStack();
+			if (!testAndSetChildFailed(stack)) {
+				if (stack.parentFrame().isDefined(VAR)) {
+					closeBuffers(stack);
+					stack.leave();
+				}
+				failImmediately(stack, (FailureNotificationEvent) e);
 			}
-			failImmediately(stack, e);
+		}
+		else if (FutureNotificationEvent.FUTURE_MODIFIED.equals(e.getType())) {
+			VariableStack stack = e.getStack();
+			FutureNotificationEvent fne = (FutureNotificationEvent) e;
+			if (fne.getSubtype() == ITERATE) {
+				citerate(stack, (Identifier) stack.getVar(VAR),
+						(KarajanIterator) stack.getVar(ITERATOR));
+			}
+			else {
+				throw new ExecutionException("Unknown future notification event subtype: "
+						+ fne.getSubtype());
+			}
+		}
+		else {
+			super.notificationEvent(e);
 		}
 	}
 }

@@ -42,9 +42,7 @@ public class SequentialImplicitExecutionUDE extends UserDefinedElement {
 		wrapper.setNestedArgs(hasNestedArgs());
 		wrapper.setHasVargs(hasVargs());
 		wrapper.initializeArgs(stack);
-		if (hasChannels()) {
-			ArgUtil.createChannels(stack, getChannels());
-		}
+		ArgUtil.createChannels(stack, getChannels());
 		wrapper.executeWrapper(stack);
 	}
 
@@ -52,9 +50,7 @@ public class SequentialImplicitExecutionUDE extends UserDefinedElement {
 		Arguments args = getUDEArguments(stack);
 		ArgUtil.removeNamedArguments(stack);
 		ArgUtil.removeVariableArguments(stack);
-		if (hasChannels()) {
-			ArgUtil.removeLocalChannels(stack, getChannels());
-		}
+		ArgUtil.removeChannels(stack, getChannels());
 		stack.setVar(DefUtil.ENV, env);
 		startBody(stack, args);
 	}
@@ -78,15 +74,15 @@ public class SequentialImplicitExecutionUDE extends UserDefinedElement {
 		}
 		return fnargs;
 	}
-	
-	public void completed(VariableStack stack) throws ExecutionException {
+
+	protected void childCompleted(VariableStack stack) throws ExecutionException {
 		if (stack.currentFrame().isDefined(ARGUMENTS_THREAD)) {
 			DefinitionEnvironment env = (DefinitionEnvironment) stack.currentFrame().getVarAndDelete(
 					ARGUMENTS_THREAD);
 			this.startBody(stack, env);
 		}
 		else {
-			super.completed(stack);
+			super.childCompleted(stack);
 		}
 	}
 }

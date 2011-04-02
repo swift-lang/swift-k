@@ -27,6 +27,9 @@ import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.MonitoringEvent;
+import org.globus.cog.karajan.workflow.events.ProgressMonitoringEvent;
+import org.globus.cog.karajan.workflow.events.ProgressMonitoringEventType;
 import org.globus.cog.karajan.workflow.nodes.FlowNode;
 
 public class GridTransfer extends AbstractGridNode implements StatusListener {
@@ -262,6 +265,9 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 					return;
 				}
 				long total = TypeUtil.toNumber(attrtotal).longValue();
+				MonitoringEvent me = new ProgressMonitoringEvent(element,
+						ProgressMonitoringEventType.TRANSFER_PROGRESS, stack, crt, total);
+				element.fireMonitoringEvent(me);
 			}
 			catch (Exception e) {
 				logger.warn("Exception caught while sending monitoring event", e);

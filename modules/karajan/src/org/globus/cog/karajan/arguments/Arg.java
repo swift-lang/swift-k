@@ -57,7 +57,6 @@ public abstract class Arg {
 	protected final NamedArguments getNamed(VariableStack stack) throws ExecutionException {
 		NamedArguments args = ArgUtil.getNamedArguments(stack);
 		if (args == null) {
-		    args = ArgUtil.getNamedArguments(stack);
 			throw new ExecutionException("No named arguments on current frame");
 		}
 		return args;
@@ -312,7 +311,9 @@ public abstract class Arg {
 		}
 
 		public String getVariableName() {
-			assert variableName != null;
+			if (variableName == null) {
+				variableName = variableName(getName());
+			}
 			return variableName;
 		}
 

@@ -18,6 +18,8 @@ import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Identifier;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class SetVarK extends SequentialWithArguments {
 
@@ -89,8 +91,10 @@ public class SetVarK extends SequentialWithArguments {
 		return stack.parentFrame();
 	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
-		stack.currentFrame().deleteVar("#quoted");
-		super.completed(stack);
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		if (e.getType().equals(NotificationEventType.EXECUTION_COMPLETED)) {
+			e.getStack().currentFrame().deleteVar("#quoted");
+		}
+		super.notificationEvent(e);
 	}
 }

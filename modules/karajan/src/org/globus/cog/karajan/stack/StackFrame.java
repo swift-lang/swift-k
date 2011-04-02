@@ -44,6 +44,4 @@ public interface StackFrame {
 	int preDecrementAtomic(String name) throws VariableNotFoundException;
 	
 	Regs getRegs();
-
-	Object getVarNoSync(String name);
 }

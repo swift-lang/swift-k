@@ -23,6 +23,8 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.nodes.user.UDEDefinition;
 import org.globus.cog.karajan.workflow.nodes.user.UserDefinedElement;
 
@@ -52,18 +54,18 @@ public class ExecuteElement extends SequentialWithArguments {
 			startDef(stack, (UDEDefinition) element);
 		}
 		else if (element instanceof FlowElement) {
-			FlowElement fe = (FlowElement) element;
 			stack.leave();
 			if (logger.isDebugEnabled()) {
 				threadTracker.remove(ThreadingContext.get(stack));
 			}
 			ThreadingContext.set(stack, ThreadingContext.get(stack).split(getIntProperty(UID)));
-			if (fe.isSimple()) {
-				fe.executeSimple(stack);
-				stack.getCaller().completed(stack);
+			if (element instanceof ExtendedFlowElement && ((ExtendedFlowElement) element).isSimple()) {
+				((ExtendedFlowElement) element).executeSimple(stack);
+				fireNotificationEvent(new NotificationEvent(this,
+						NotificationEventType.EXECUTION_COMPLETED, stack), stack);
 			}
 			else {
-				startElement(fe, stack);
+				startElement((FlowElement) element, stack);
 			}
 		}
 		else {

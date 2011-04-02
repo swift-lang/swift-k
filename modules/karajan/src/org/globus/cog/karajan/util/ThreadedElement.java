@@ -9,12 +9,27 @@
  */
 package org.globus.cog.karajan.util;
 
+import org.globus.cog.karajan.stack.VariableNotFoundException;
+import org.globus.cog.karajan.workflow.events.FlowEvent;
+import org.globus.cog.karajan.workflow.events.StatusMonitoringEvent;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public class ThreadedElement {
 	private FlowElement element;
 
 	private ThreadingContext thread;
+
+	public ThreadedElement(FlowEvent event) throws VariableNotFoundException {
+		this(event.getFlowElement(), ThreadingContext.get(event.getStack()));
+	}
+
+	public ThreadedElement(FlowElement e, FlowEvent event) throws VariableNotFoundException {
+		this(e, ThreadingContext.get(event.getStack()));
+	}
+
+	public ThreadedElement(StatusMonitoringEvent e) {
+		this(e.getFlowElement(), e.getThread());
+	}
 
 	public ThreadedElement(FlowElement element, ThreadingContext thread) {
 		this.element = element;

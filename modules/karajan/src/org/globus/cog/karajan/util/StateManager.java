@@ -9,7 +9,13 @@
  */
 package org.globus.cog.karajan.util;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,8 +28,12 @@ import java.util.TimerTask;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.serialization.XMLConverter;
 import org.globus.cog.karajan.workflow.ExecutionContext;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.AbortEvent;
+import org.globus.cog.karajan.workflow.events.ControlEvent;
+import org.globus.cog.karajan.workflow.events.ControlEventType;
+import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.ProjectNode;
@@ -37,7 +47,7 @@ public class StateManager {
 	private static Timer timer;
 	private boolean restartComplete = true;
 	private String fileName = "checkpoint.xml";
-	private int checkpointInterval = 120; // seconds
+	private int checkpointInterval = 120; //seconds
 	private Map executing;
 
 	private Integer interval;
@@ -58,9 +68,9 @@ public class StateManager {
 		checkpointsEnabled = false;
 		checkpoints = new HashSet();
 	}
-
+	
 	private Timer getTimer() {
-		synchronized (StateManager.class) {
+		synchronized(StateManager.class) {
 			if (timer == null) {
 				timer = new Timer(true);
 			}
@@ -84,7 +94,7 @@ public class StateManager {
 		executing.remove(new ThreadedElement(el, ThreadingContext.get(stack)));
 	}
 
-	public void abortContext(ThreadingContext context) throws ExecutionException {
+	public void abortContext(ThreadingContext context) {
 		Iterator i;
 		synchronized (this) {
 			i = new HashSet(executing.keySet()).iterator();
@@ -94,8 +104,8 @@ public class StateManager {
 			if (te.getThread().isSubContext(context)) {
 				VariableStack stack = (VariableStack) executing.get(te);
 				if (stack != null) {
-					te.getElement().abort(stack.copy());
-					synchronized (this) {
+					EventBus.post(te.getElement(), new AbortEvent(null, context, stack.copy()));
+					synchronized(this) {
 						executing.remove(te);
 					}
 				}
@@ -110,6 +120,54 @@ public class StateManager {
 	public void setWaitTime(long l) {
 		counter = 0;
 		waitTime = l;
+	}
+
+	public void actionPerformed() {
+		last++;
+		if (checkpointsEnabled) {
+			counter++;
+			if (counter > checkpointInterval) {
+				counter = 0;
+				if (timestamped) {
+					try {
+						int extindex = fileName.lastIndexOf('.');
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+						String fn;
+						if (extindex > 0) {
+							fn = fileName.substring(0, extindex) + sdf.format(new Date())
+									+ fileName.substring(extindex);
+						}
+						else {
+							fn = fileName + sdf.format(new Date());
+						}
+						checkpoint(fn);
+					}
+					catch (Exception e) {
+						logger.error("Failed to create checkpoint: ", e);
+					}
+				}
+				else {
+					checkpoint(fileName + "0");
+					File oldCheckpoint = new File(fileName);
+					File newCheckpoint = new File(fileName + "0");
+					try {
+						if (oldCheckpoint.exists()) {
+							if (!oldCheckpoint.delete()) {
+								logger.warn("Could not delete old checkpoint. New checkpoint is "
+										+ newCheckpoint.getAbsolutePath());
+								return;
+							}
+						}
+						newCheckpoint.renameTo(oldCheckpoint);
+					}
+					catch (Exception ex) {
+						logger.warn("Could not rename checkpoint. New checkpoint is "
+								+ newCheckpoint.getAbsolutePath());
+						logger.debug("Detailed exception: ", ex);
+					}
+				}
+			}
+		}
 	}
 
 	public boolean request() {
@@ -130,9 +188,39 @@ public class StateManager {
 		restartComplete = b;
 	}
 
+	public void checkpoint(String fileName) {
+		if (request()) {
+			logger.info("Suspending event bus");
+			EventBus.suspendAll();
+			logger.info("Waiting for events to be processed");
+			if (!EventBus.waitForEvents()) {
+				logger.warn("Could not get a stable state of the event bus. The checkpoint may be invalid");
+			}
+			synchronized (checkpoints) {
+				checkpoints.add(fileName);
+			}
+			FileWriter fw;
+			try {
+				logger.info("Checkpointing to " + fileName + "...");
+				fw = new FileWriter(fileName);
+				XMLConverter.checkpoint(ec, fw);
+				fw.close();
+			}
+			catch (IOException e) {
+				logger.error("Exception caught while checkpointing. Checkpoint was NOT created", e);
+			}
+			finally {
+				logger.info("Resuming event bus");
+				EventBus.resumeAll();
+			}
+		}
+	}
+
+	public Collection getEvents() {
+		return EventBus.getAllEvents();
+	}
 	
-	
-	private static final String[] EMPTY_STRING_ARRAY = new String[0];
+	private static final String[] EMPTY_STRING_ARRAY = new String[0]; 
 
 	public String[] getCheckpoints() {
 		synchronized (checkpoints) {
@@ -175,7 +263,7 @@ public class StateManager {
 			task = null;
 		}
 	}
-
+	
 	public synchronized void stop() {
 		if (task != null) {
 			task.cancel();
@@ -183,6 +271,22 @@ public class StateManager {
 		}
 	}
 
+	public static void resume(_Checkpoint checkpoint) {
+		logger.info("Resuming from checkpoint...");
+		EventBus.suspendAll();
+		Iterator i;
+		i = checkpoint.state.events.iterator();
+		while (i.hasNext()) {
+			EventTargetPair etp = (EventTargetPair) i.next();
+			EventBus.post(etp.getTarget(), etp.getEvent());
+		}
+		i = checkpoint.state.runningElements.iterator();
+		while (i.hasNext()) {
+			_RunningElement re = (_RunningElement) i.next();
+			EventBus.post(re._element, new ControlEvent(null, ControlEventType.RESTART, re._stack));
+		}
+		EventBus.resumeAll();
+	}
 
 	public Map getExecuting() {
 		return this.executing;
@@ -204,7 +308,7 @@ public class StateManager {
 		}
 
 		public void run() {
-			//cm.actionPerformed();
+			cm.actionPerformed();
 		}
 	}
 

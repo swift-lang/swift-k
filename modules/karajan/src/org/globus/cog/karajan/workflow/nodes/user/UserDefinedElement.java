@@ -35,6 +35,8 @@ import org.globus.cog.karajan.util.NonCacheable;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
+import org.globus.cog.karajan.workflow.events.ControlEvent;
+import org.globus.cog.karajan.workflow.events.ControlEventType;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.Info;
@@ -52,6 +54,8 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 	public static final Arg A_NAMED = new Arg.Positional("named");
 	public static final Arg A_CHANNELS = new Arg.Positional("channels");
 	public static final Arg A_OPTARGS = new Arg.Positional("optargs");
+
+	public static final ControlEventType START_BODY = new ControlEventType("START_INSTANCE", 2);
 
 	private static final Logger logger = Logger.getLogger(UserDefinedElement.class);
 
@@ -197,7 +201,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 				}
 				else {
 					throw new ExecutionException("Missing argument " + name + " for "
-							+ stack.getVar("#trace:element"));
+							+ Info.ppDef(getElementType(), this));
 				}
 			}
 		}
@@ -251,7 +255,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		}
 	}
 
-	/*protected void controlEvent(ControlEvent e) throws ExecutionException {
+	protected void controlEvent(ControlEvent e) throws ExecutionException {
 		if (START_BODY.equals(e.getType())) {
 			Arguments fnargs = (Arguments) e.getStack().getVar(FNARGS);
 			e.getStack().currentFrame().deleteVar(FNARGS);
@@ -260,9 +264,9 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 		else {
 			super.controlEvent(e);
 		}
-	}*/
+	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
+	protected void childCompleted(VariableStack stack) throws ExecutionException {
 		if (kmode && skip == 0) {
 			int index = getIndex(stack);
 			if (index == 1) {
@@ -271,7 +275,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 				 * the second. Otherwise it's an anonymous element
 				 */
 				if (!checkFirstArg(stack)) {
-					super.completed(stack);
+					super.childCompleted(stack);
 				}
 			}
 			else if (index == 2) {
@@ -283,7 +287,7 @@ public abstract class UserDefinedElement extends AbstractSequentialWithArguments
 			}
 		}
 		else {
-			super.completed(stack);
+			super.childCompleted(stack);
 		}
 	}
 

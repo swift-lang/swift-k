@@ -14,10 +14,9 @@ import java.util.Map;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.EventListener;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
 
 
-public interface FlowElement extends EventListener, FutureListener {
+public interface FlowElement extends EventListener {
 	public static final String UID = "_uid";
 	public static final String LINE = "_line";
 	public static final String FILENAME = "_filename";
@@ -133,7 +132,7 @@ public interface FlowElement extends EventListener, FutureListener {
 	 * Provides means to cause the execution of this element under the
 	 * given context (<code>stack</code>) to fail
 	 */
-	void failImmediately(VariableStack stack, ExecutionException e) throws ExecutionException;
+	void failImmediately(VariableStack stack, String string) throws ExecutionException;
 
 	/**
 	 * Returns <code>true</code> if the implementation of this element makes use
@@ -142,14 +141,4 @@ public interface FlowElement extends EventListener, FutureListener {
 	 * not be relevant, depending on the context).
 	 */
 	boolean acceptsInlineText();
-	
-	void start(VariableStack stack) throws ExecutionException;
-	
-	void restart(VariableStack stack) throws ExecutionException;
-	
-	void abort(VariableStack stack) throws ExecutionException;
-	
-	boolean isSimple();
-	
-	void executeSimple(VariableStack stack) throws ExecutionException;
 }

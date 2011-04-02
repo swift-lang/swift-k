@@ -33,12 +33,6 @@ public class Export extends Define {
 		return definer;
 	}
 
-	public void restart(VariableStack stack) throws ExecutionException {
-		super.restart(stack);
-	}
-
-
-
 	public static class Definer extends Define.Definer {
 		protected void define(VariableStack stack, String name, String nsprefix, Object def)
 				throws ExecutionException {

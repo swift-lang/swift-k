@@ -24,10 +24,13 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class ParallelChoice extends Parallel {
 	private static final Logger logger = Logger.getLogger(ParallelChoice.class);
-
+	
 	public static final Arg A_BUFFER = new Arg.Optional("buffer", Boolean.TRUE);
 
 	public static final String COMPLETED = "##choice:completed";
@@ -72,58 +75,65 @@ public class ParallelChoice extends Parallel {
 		}
 	}
 
-	public synchronized void completed(VariableStack stack) throws ExecutionException {
-		NamedArguments named = null;
-		VariableArguments vargs = null;
-		Map channels = null;
+	protected synchronized void notificationEvent(NotificationEvent e) throws ExecutionException {
+		VariableStack stack = e.getStack();
+		if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
+			NamedArguments named = null;
+			VariableArguments vargs = null;
+			Map channels = null;
+			
 
-		if (buffer) {
-			named = ArgUtil.getNamedArguments(stack);
-			vargs = ArgUtil.getVariableArguments(stack);
-			Set dchannels = ArgUtil.getDefinedChannels(stack);
-			channels = new Hashtable();
-			Iterator i = dchannels.iterator();
-			while (i.hasNext()) {
-				Arg.Channel channel = (Arg.Channel) i.next();
-				channels.put(channel, ArgUtil.getChannelArguments(stack, channel));
-			}
-		}
-
-		stack.leave();
-		if (this != stack.getCaller()) {
-			logger.error("Stack inconsistency detected");
-			System.err.println(this);
-			stack.dumpAll();
-			failImmediately(stack, "Stack inconsistency");
-			return;
-		}
-		boolean complete = stack.currentFrame().getBooleanVar(COMPLETED);
-		stack.setVar(COMPLETED, true);
-		if (!complete) {
 			if (buffer) {
-				VariableArguments ret = ArgUtil.getVariableReturn(stack);
-				ArgUtil.getNamedReturn(stack).merge(named);
-				ArgUtil.getVariableReturn(stack).merge(vargs);
-				Iterator i = channels.keySet().iterator();
+				named = ArgUtil.getNamedArguments(stack);
+				vargs = ArgUtil.getVariableArguments(stack);
+				Set dchannels = ArgUtil.getDefinedChannels(stack);
+				channels = new Hashtable();
+				Iterator i = dchannels.iterator();
 				while (i.hasNext()) {
 					Arg.Channel channel = (Arg.Channel) i.next();
-					channel.getReturn(stack).merge((VariableArguments) channels.get(channel));
+					channels.put(channel, ArgUtil.getChannelArguments(stack, channel));
 				}
 			}
-			// singnal an abort to all sub-threads. They are not needed
-			// any more
-			stack.setVar("#abort", true);
-			stack.getExecutionContext().getStateManager().abortContext(
-						ThreadingContext.get(stack));
-			post(stack);
-		}
-	}
 
-	public synchronized void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		stack.leave();
-		if (!stack.currentFrame().getBooleanVar(COMPLETED)) {
+			stack.leave();
+			if (this != stack.getCaller()) {
+				logger.error("Stack inconsistency detected");
+				logger.error("Event came from " + e.getFlowElement());
+				System.err.println(this);
+				stack.dumpAll();
+				failImmediately(stack, "Stack inconsistency");
+				return;
+			}
+			boolean complete = stack.currentFrame().getBooleanVar(COMPLETED);
 			stack.setVar(COMPLETED, true);
-			failImmediately(stack, e);
+			if (!complete) {
+				if (buffer) {
+					VariableArguments ret = ArgUtil.getVariableReturn(stack);
+					ArgUtil.getNamedReturn(stack).merge(named);
+					ArgUtil.getVariableReturn(stack).merge(vargs);
+					Iterator i = channels.keySet().iterator();
+					while (i.hasNext()) {
+						Arg.Channel channel = (Arg.Channel) i.next();
+						channel.getReturn(stack).merge((VariableArguments) channels.get(channel));
+					}
+				}
+				// singnal an abort to all sub-threads. They are not needed
+				// any more
+                stack.setVar("#abort", true);
+				stack.getExecutionContext().getStateManager().abortContext(
+						ThreadingContext.get(stack));
+				post(stack);
+			}
+		}
+		else if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
+			stack.leave();
+			if (!stack.currentFrame().getBooleanVar(COMPLETED)) {
+				stack.setVar(COMPLETED, true);
+				failImmediately(stack, (FailureNotificationEvent) e);
+			}
+		}
+		else {
+			super.notificationEvent(e);
 		}
 	}
 }

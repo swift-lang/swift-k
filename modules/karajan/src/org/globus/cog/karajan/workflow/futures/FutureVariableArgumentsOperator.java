@@ -15,10 +15,10 @@ import java.util.List;
 
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.arguments.VariableArgumentsListener;
-import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.events.EventListener;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public abstract class FutureVariableArgumentsOperator implements VariableArguments, Future {
 	private boolean closed;
@@ -68,7 +68,7 @@ public abstract class FutureVariableArgumentsOperator implements VariableArgumen
 		}
 	}
 
-	public synchronized void addModificationAction(FlowElement target, VariableStack event) {
+	public synchronized void addModificationAction(EventListener target, Event event) {
 		if (actions == null) {
 			actions = new LinkedList();
 		}

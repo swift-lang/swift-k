@@ -24,10 +24,7 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 public class LocalTCPService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalTCPService.class);
     
-    public static final int TCP_BUFSZ = 32768;
-    
     private RegistrationManager registrationManager;
-    private TCPBufferManager buffMan;
     
     // private int idseq;
     
@@ -36,13 +33,11 @@ public class LocalTCPService extends GSSService implements Registering {
     public LocalTCPService(RequestManager rm) throws IOException {
         super(false, 0);
         setRequestManager(rm);
-        buffMan = new TCPBufferManager();
     }
 
     public LocalTCPService(RequestManager rm, int port) throws IOException {
         super(false, port);
         setRequestManager(rm);
-        buffMan = new TCPBufferManager();
     }
 
     public String registrationReceived(String blockid, String url, KarajanChannel channel) throws ChannelException {
@@ -72,12 +67,13 @@ public class LocalTCPService extends GSSService implements Registering {
 
     protected void handleConnection(Socket socket) {
         try {
-            buffMan.addSocket(socket);
+            socket.setReceiveBufferSize(16384);
+            socket.setSendBufferSize(16384);
             socket.setTcpNoDelay(true);
         }
         catch (SocketException e) {
             e.printStackTrace();
         }
-        super.handleConnection(buffMan.wrap(socket));
+        super.handleConnection(socket);
     }
 }

@@ -39,7 +39,12 @@ import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.AbortEvent;
 import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.FlowEvent;
+import org.globus.cog.karajan.workflow.nodes.FlowNode;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 
 public abstract class AbstractGridNode extends SequentialWithArguments implements StatusListener {
@@ -69,7 +74,12 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 	protected abstract void submitTask(VariableStack stack) throws ExecutionException;
 
 	public Scheduler getScheduler(VariableStack stack) throws ExecutionException {
-		return (Scheduler) stack.getGlobal(SchedulerNode.SCHEDULER);
+		try {
+			return (Scheduler) stack.getDeepVar(SchedulerNode.SCHEDULER);
+		}
+		catch (VariableNotFoundException e) {
+			return null;
+		}
 	}
 
 	protected Contact getHost(VariableStack stack, Arg hostarg, Scheduler scheduler, String provider)
@@ -153,15 +163,15 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 	}
 
-	public void abort(VariableStack stack) throws ExecutionException {
-		Set<Task> t;
+	public void abortEvent(AbortEvent e) throws ExecutionException {
+		Set t;
 		synchronized (tasks) {
-			t = new HashSet<Task>(tasks.keySet());
+			t = new HashSet(tasks.keySet());
 		}
 		for (Iterator i = t.iterator(); i.hasNext();) {
 			Task task = (Task) i.next();
-			VariableStack vs = tasks.get(task);
-			if (ThreadingContext.get(vs).isSubContext(ThreadingContext.get(stack))) {
+			VariableStack vs = (VariableStack) tasks.get(task);
+			if (ThreadingContext.get(vs).isSubContext(e.getContext())) {
 				Scheduler scheduler;
 				try {
 					TaskHandler th = (TaskHandler) vs.currentFrame().getVar(HANDLER);
@@ -173,7 +183,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 					}
 				}
 				catch (VariableNotFoundException ex) {
-					scheduler = (Scheduler) vs.getGlobal(SchedulerNode.SCHEDULER);
+					scheduler = (Scheduler) vs.getDeepVar(SchedulerNode.SCHEDULER);
 					scheduler.cancelTask(task);
 				}
 			}
@@ -230,9 +240,9 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 	}
 
-	protected final VariableStack getStack(Task t) {
+	protected VariableStack getStack(Task t) {
 		synchronized (tasks) {
-			return tasks.get(t);
+			return (VariableStack) tasks.get(t);
 		}
 	}
 
@@ -296,36 +306,22 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 	}
 
-	protected void taskFailed(StatusEvent e, final VariableStack stack) throws ExecutionException {
+	protected void taskFailed(StatusEvent e, VariableStack stack) throws ExecutionException {
 		if (logger.isDebugEnabled()) {
 			Task t = (Task) e.getSource();
 			logger.debug("Failed task: " + t.getSpecification() + " on " + t.getAllServices());
 		}
-		final Exception ex = e.getStatus().getException();
-		EventBus.post(new Runnable() {
-			public void run() {
-				if (ex != null) {
-					failImmediately(stack, ex);
-				}
-				else {
-					failImmediately(stack, "Task failed");
-				}
-			}
-		});
+		Exception ex = e.getStatus().getException();
+		if (ex != null) {
+			failImmediately(stack, ex);
+		}
+		else {
+			failImmediately(stack, "Task failed");
+		}
 	}
 
-	protected void taskCompleted(StatusEvent e, final VariableStack stack)
-			throws ExecutionException {
-		EventBus.post(new Runnable() {
-			public void run() {
-				try {
-					complete(stack);
-				}
-				catch (ExecutionException e) {
-					failImmediately(stack, e);
-				}
-			}
-		});
+	protected void taskCompleted(StatusEvent e, VariableStack stack) throws ExecutionException {
+		complete(stack);
 	}
 
 	protected void setSecurityContextIfNotLocal(Service service, SecurityContext sc) {
@@ -345,6 +341,26 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 		else {
 			return AbstractionFactory.newSecurityContext(provider);
+		}
+	}
+
+	/**
+	 * Overriden to release the notification threads as soon as possible.
+	 */
+	public void fireNotificationEvent(final FlowEvent event, final VariableStack stack) {
+		EventListener caller = stack.getCaller();
+		if (caller == null) {
+			logger.error("Caller is null");
+			stack.dumpAll();
+			if (FlowNode.debug) {
+				stack.dumpAll();
+			}
+			EventListener parent = getParent();
+			EventBus.post(parent, new FailureNotificationEvent(this, stack,
+					"No #caller found on stack for " + this, null));
+		}
+		else {
+			EventBus.post(caller, event);
 		}
 	}
 }

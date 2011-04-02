@@ -26,6 +26,8 @@ import org.globus.cog.karajan.stack.VariableUtil;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.DefinitionEnvironment;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureNameBindingVariableArguments;
 import org.globus.cog.karajan.workflow.futures.FutureNamedArgument;
@@ -59,7 +61,7 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 	private void removeReturns(VariableStack stack) {
 		ArgUtil.removeVariableArguments(stack);
 		ArgUtil.removeNamedArguments(stack);
-		ArgUtil.removeLocalChannels(stack, getChannels());
+		ArgUtil.removeChannels(stack, getChannels());
 	}
 
 	protected void prepareArguments(VariableStack stack, UDEWrapper wrapper)
@@ -88,7 +90,7 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 		}
 
 		Iterator i = getChannels().iterator();
-		while (i.hasNext()) {
+		while(i.hasNext()) {
 			ArgUtil.createChannel(stack, (Arg.Channel) i.next(), new FutureVariableArguments());
 		}
 	}
@@ -103,7 +105,7 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 			((FutureVariableArguments) Arg.VARGS.get(stack)).close();
 		}
 		Iterator i = getChannels().iterator();
-		while (i.hasNext()) {
+		while(i.hasNext()) {
 			Arg.Channel channel = (Arg.Channel) i.next();
 			((FutureVariableArguments) ArgUtil.getChannelArguments(stack, channel)).close();
 		}
@@ -122,7 +124,7 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 		}
 
 		Iterator i = getChannels().iterator();
-		while (i.hasNext()) {
+		while(i.hasNext()) {
 			Arg.Channel channel = (Arg.Channel) i.next();
 			fnargs.addChannel(channel, ArgUtil.getChannelArguments(stack, channel));
 		}
@@ -136,13 +138,19 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 		ArgUtil.getVariableReturn(stack).appendAll(ret.getVargs().getAll());
 	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
-		if (stack.currentFrame().isDefined(ARGUMENTS_THREAD)) {
-			stack.currentFrame().deleteVar(ARGUMENTS_THREAD);
-			closeArgs(stack);
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
+			VariableStack stack = e.getStack();
+			if (stack.currentFrame().isDefined(ARGUMENTS_THREAD)) {
+				stack.currentFrame().deleteVar(ARGUMENTS_THREAD);
+				closeArgs(stack);
+			}
+			else {
+				super.notificationEvent(e);
+			}
 		}
 		else {
-			super.completed(stack);
+			super.notificationEvent(e);
 		}
 	}
 
@@ -184,7 +192,7 @@ public class ParallelImplicitExecutionUDE extends UserDefinedElement {
 		}
 
 		Iterator i = getChannels().iterator();
-		while (i.hasNext()) {
+		while(i.hasNext()) {
 			Arg.Channel channel = (Arg.Channel) i.next();
 			stack.setVar(channel.getName(), fnargs.getChannels().get(channel));
 		}

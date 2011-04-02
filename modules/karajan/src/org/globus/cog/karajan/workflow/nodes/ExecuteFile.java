@@ -24,6 +24,9 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.util.serialization.XMLConverter;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class ExecuteFile extends AbstractSequentialWithArguments {
 	public static final Logger logger = Logger.getLogger(ExecuteFile.class);
@@ -149,22 +152,22 @@ public class ExecuteFile extends AbstractSequentialWithArguments {
 			}
 		}
 	}
-	
-	public void completed(VariableStack stack) throws ExecutionException {
-		if (!stack.currentFrame().isDefined(ARGSDONE)) {
-			super.completed(stack);
-		}
-		else {
-			complete(stack);
-		}
-	}
 
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		VariableStack stack = e.getStack();
 		if (!stack.currentFrame().isDefined(ARGSDONE)) {
-			super.failed(stack, e);
+			super.notificationEvent(e);
 		}
 		else {
-			failImmediately(stack, e);
+			if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
+				complete(stack);
+			}
+			else if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
+				failImmediately(stack, (FailureNotificationEvent) e);
+			}
+			else {
+				super.notificationEvent(e);
+			}
 		}
 	}
 }

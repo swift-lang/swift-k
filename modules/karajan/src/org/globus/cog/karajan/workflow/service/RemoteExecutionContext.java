@@ -14,8 +14,14 @@ import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.ControlEvent;
+import org.globus.cog.karajan.workflow.events.ControlEventType;
+import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
+import org.globus.cog.karajan.workflow.nodes.FlowNode;
 
 public class RemoteExecutionContext extends ExecutionContext {
 	private final transient FlowElement caller;
@@ -34,26 +40,26 @@ public class RemoteExecutionContext extends ExecutionContext {
 		defineKernel(stack);
 		stack.setCaller(this);
 		ThreadingContext.set(stack, new ThreadingContext());
-		EventBus.post(fe, stack);
+		EventBus.post(fe, new ControlEvent(null, ControlEventType.START, stack));
 	}
 
 	public void start(VariableStack stack) {
 		start(stack, stack.getExecutionContext().getTree().getRoot());
 	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
-		caller.completed(stack);
-		stop();
+	public void event(Event e) throws ExecutionException {
+		caller.event(e);
+		if (e instanceof NotificationEvent) {
+			notificationEvent((NotificationEvent) e);
+		}
 	}
 
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		caller.failed(stack, e);
-		stop();
-	}
-
-	private void stop() {
-		setDone();
-		getStateManager().stop();
-		ic.unregisterExecutionContext(this);
+	private void notificationEvent(NotificationEvent e) {
+		if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())
+				|| NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
+			setDone();
+			getStateManager().stop();
+			ic.unregisterExecutionContext(this);
+		}
 	}
 }
