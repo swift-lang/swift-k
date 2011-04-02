@@ -16,6 +16,7 @@ use File::Path;
 use File::Copy;
 use Cwd;
 use POSIX ":sys_wait_h";
+use strict;
 use warnings;
 
 BEGIN { eval "use Time::HiRes qw(time); 1" or print "Hi res time not available. Log timestamps will have second granularity\n"; }
@@ -93,8 +94,6 @@ use constant JOB_CHECK_SKIP => 32;
 my $JOBS_RUNNING = 0;
 
 my $JOB_COUNT = 0;
-
-my $myhost = "UNIDENTIFIED_HOST";
 
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
@@ -277,7 +276,7 @@ sub reconnect() {
 			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768*8);
 			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);
-			queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost);
+			queueCmd(registerCB(), "REGISTER", $BLOCKID, "");
 			last;
 		}
 		else {
@@ -357,10 +356,10 @@ sub sendm {
 
 	wlog(DEBUG, "OUT: len=$len, tag=$tag, flags=$flags\n");
 	wlog(TRACE, "$msg\n");
-
+	 
 	$SOCK->blocking(1);
 	eval { defined($SOCK->send($buf)); } or wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
-
+	
 	#eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n");
 }
 
@@ -1580,7 +1579,7 @@ initlog();
 
 my $MSG="0";
 
-$myhost=`hostname`;
+my $myhost=`hostname`;
 $myhost =~ s/\s+$//;
 
 wlog(INFO, "Running on node $myhost\n");
