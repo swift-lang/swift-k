@@ -28,12 +28,9 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.stack.VariableUtil;
 import org.globus.cog.karajan.util.AdaptiveArrayList;
 import org.globus.cog.karajan.util.ArgumentsMap;
-import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.globus.cog.karajan.workflow.nodes.FlowNode.FNTP;
 
 public abstract class AbstractSequentialWithArguments extends Sequential {
 
@@ -137,6 +134,7 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 	}
 
 	public void pre(VariableStack stack) throws ExecutionException {
+		super.pre(stack);
 		initializeArgs(stack);
 		if (elementCount() == 0) {
 			argumentsEvaluated(stack);
@@ -152,13 +150,12 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 		}
 		boolean vargsInitialized = false;
 		if (nestedArgs) {
-			Map<String, Object> sa = getStaticArguments();
-			NamedArgumentsImpl nargs = new NamedArgumentsImpl(getArgumentNames(), this, sa.size());
+			NamedArgumentsImpl nargs = new NamedArgumentsImpl(getArgumentNames(), this);
 			// add arguments from properties
-			final Iterator<Map.Entry<String, Object>> i = sa.entrySet().iterator();
+			final Iterator i = getStaticArguments().entrySet().iterator();
 			while (i.hasNext()) {
-				Map.Entry<String, Object> e = i.next();
-				nargs.addInitial(e.getKey(), VariableUtil.expand(e.getValue(), stack));
+				Map.Entry e = (Map.Entry) i.next();
+				nargs.add((String) e.getKey(), VariableUtil.expand(e.getValue(), stack));
 			}
 			if (nonpropargs.size() > 0 && elementCount() > 0) {
 				VariableArguments args = newNameBindingVariableArguments(nargs, nonpropargs,
@@ -185,32 +182,17 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 		return new NameBindingVariableArguments(nargs, nonpropargs, hasVargs, this);
 	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
-		if (getIndex(stack) == elementCount()) {
+	protected void childCompleted(VariableStack stack) throws ExecutionException {
+		if (elementCount() == 1 || getIndex(stack) == elementCount()) {
 			processArguments(stack);
 			argumentsEvaluated(stack);
 			if (quotedArgs) {
 				stack.currentFrame().deleteVar(QUOTED);
 			}
-			try {
-				post(stack);
-			}
-			catch (FutureFault e) {
-				e.getFuture().addModificationAction(this, stack);
-			}
-		}
-		else {
-			int index = preIncIndex(stack) - 1;
-			startElement(getElement(index), stack);
-		}
-	}
-
-	public void futureModified(Future f, VariableStack stack) {
-		try {
 			post(stack);
 		}
-		catch (ExecutionException e) {
-			failImmediately(stack, e);
+		else {
+			super.childCompleted(stack);
 		}
 	}
 
@@ -371,7 +353,6 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 
 	protected void checkArguments() {
 		Map args = (Map) ArgumentsMap.getMap().getValidArgs().get(getCanonicalType());
-		optimizeNamed(args);
 		for (Iterator i = getStaticArguments().keySet().iterator(); i.hasNext();) {
 			String name = (String) i.next();
 			if (args == null || !args.containsKey(name)) {
@@ -382,20 +363,6 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 				else {
 					throw new KarajanRuntimeException(this + ": Unsupported argument: " + name
 							+ ". This element does not support any arguments.");
-				}
-			}
-		}
-	}
-
-	private void optimizeNamed(Map args) {
-		for (int i = 0; i < elementCount(); i++) {
-			FlowElement fe = getElement(i);
-			if (fe.getElementType().equals("kernel:named") && fe.elementCount() == 0) {
-				String name = (String) fe.getStaticArguments().get("name");
-				if (args.containsKey(fe.getStaticArguments().get("name"))) {
-					getStaticArguments().put(name, fe.getStaticArguments().get("value"));
-					this.removeElement(i);
-					i--;
 				}
 			}
 		}

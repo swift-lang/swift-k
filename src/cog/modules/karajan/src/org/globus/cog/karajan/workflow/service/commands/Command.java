@@ -152,12 +152,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 	protected synchronized void setupReplyTimeoutChecker() {
 		if (!isInDataReceived()) {
 			timeout = new Timeout();
-			try {
-				timer.schedule(timeout, replyTimeout);
-			}
-			catch (IllegalStateException e) {
-				logger.info("Timer cancelled due to JVM shutting down. Going without timeouts.");
-			}
+			timer.schedule(timeout, replyTimeout);
 		}
 	}
 

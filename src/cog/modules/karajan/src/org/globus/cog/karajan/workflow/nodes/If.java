@@ -25,7 +25,7 @@ public class If extends Sequential {
 		ArgUtil.setVariableArguments(stack, new SingleValueVariableArguments());
 	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
+	protected void childCompleted(VariableStack stack) throws ExecutionException {
 		if (stack.currentFrame().isDefined(COMPLETE)) {
 			complete(stack);
 			return;

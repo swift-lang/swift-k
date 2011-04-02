@@ -10,25 +10,24 @@
 package org.globus.cog.karajan.workflow.events;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public final class EventTargetPair implements Runnable {
     public static final Logger logger = Logger.getLogger(EventTargetPair.class);
     
-	private final FlowElement target;
-	private final VariableStack event;
+	private final EventListener target;
+	private final Event event;
+	public long start;
 
-	public EventTargetPair(VariableStack event, FlowElement target) {
+	public EventTargetPair(Event event, EventListener target) {
 		this.target = target;
 		this.event = event;
 	}
 
-	public VariableStack getEvent() {
+	public Event getEvent() {
 		return event;
 	}
 
-	public FlowElement getTarget() {
+	public EventListener getTarget() {
 		return target;
 	}
 
@@ -37,6 +36,15 @@ public final class EventTargetPair implements Runnable {
 	}
 
 	public void run() {
-		EventBus.start(target, event);
+		start = System.currentTimeMillis();
+		if (EventBus.MONITORING_ENABLED) {
+			EventBus.sendHooked(target, event);
+		}
+		else {
+		    EventBus.send(target, event);
+		}
+		EventBus.cummulativeEventTime += System.currentTimeMillis() - start;
+		start = Long.MAX_VALUE;
+		EventBus.eventsDispatched++;
 	}
 }

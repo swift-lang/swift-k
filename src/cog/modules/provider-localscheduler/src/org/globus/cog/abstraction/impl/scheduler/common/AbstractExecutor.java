@@ -26,9 +26,6 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.gsi.gssapi.auth.AuthorizationException;
 import org.ietf.jgss.GSSException;
 
-/** 
- *   Set log level to DEBUG to not delete generated submit script
- * */
 public abstract class AbstractExecutor implements ProcessListener {
     public static final Logger logger = Logger
         .getLogger(AbstractExecutor.class);
@@ -70,9 +67,9 @@ public abstract class AbstractExecutor implements ProcessListener {
                     + scriptdir + ")");
         }
         script = File.createTempFile(getName(), ".submit", scriptdir);
-        if (!logger.isDebugEnabled()) {
-            script.deleteOnExit();
-        }
+        if (!getProperties().isDebugEnabled()) {
+	    script.deleteOnExit();
+	}
         stdout = spec.getStdOutput() == null ? script.getAbsolutePath()
                 + ".stdout" : spec.getStdOutput();
         stderr = spec.getStdError() == null ? script.getAbsolutePath()
@@ -123,19 +120,10 @@ public abstract class AbstractExecutor implements ProcessListener {
             }
         }
 
-        String output = getOutput(process.getInputStream());
-        jobid = parseSubmitCommandOutput(output);
+        jobid = parseSubmitCommandOutput(getOutput(process.getInputStream()));
         if (logger.isDebugEnabled()) {
             logger.debug("Submitted job with id '" + jobid + "'");
         }
-
-        if (jobid.length() == 0) {
-            String errorText = getOutput(process.getErrorStream());
-            if (listener != null)
-                listener.processFailed("Received empty jobid!\n" +
-                                       output + "\n" + errorText);
-        }
-        
         process.getInputStream().close();
 
         getQueuePoller().addJob(
@@ -153,7 +141,7 @@ public abstract class AbstractExecutor implements ProcessListener {
         for (int i = 0; i < cmdline.length; i++) {
             sb.append(cmdline[i]);
             if (i < cmdline.length - 1) {
-                sb.append(" ");
+                sb.append(", ");
             }
         }
         logger.debug("Command line: " + sb.toString());
@@ -262,7 +250,7 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected void cleanup() {
-        if (!logger.isDebugEnabled()) {
+        if (!getProperties().isDebugEnabled()) {
             script.delete();
             new File(exitcode).delete();
             if (spec.getStdOutput() == null && stdout != null) {

@@ -35,7 +35,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 
 	private static final Logger logger = Logger.getLogger(AbstractScheduler.class);
 	
-	public static final int THROTTLE_OFF = Integer.MAX_VALUE;
+	public static final int THROTTLE_OFF = 100000000;
 
 	private List<TaskHandlerWrapper> taskHandlers;
 
@@ -98,7 +98,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		this.taskHandlers = taskHandlers;
 	}
 
-	public TaskHandlerWrapper getTaskHandlerWrapper(int index) {
+	public TaskHandlerWrapper getTaskHadlerWrapper(int index) {
 		return getTaskHandlers().get(index);
 	}
 

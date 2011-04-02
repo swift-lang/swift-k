@@ -167,7 +167,7 @@ public class EventWait extends SequentialWithArguments implements ActionListener
 	public void windowOpened(WindowEvent e) {
 	}
 
-	public synchronized void abort(VariableStack stack) throws ExecutionException {
+	protected synchronized void abort(VariableStack stack) throws ExecutionException {
 		stack.getExecutionContext().getStateManager().unregisterElement(this, stack);
 		Object group = rstacks.get(stack);
 		groups.remove(group);

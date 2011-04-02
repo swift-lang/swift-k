@@ -125,9 +125,6 @@ public class BDP extends AbstractSequentialWithArguments {
 	protected Map parseBDP() throws ExecutionException {
 		try {
 			URL bdp = BDP.class.getClassLoader().getResource("bdp.conf");
-			if (bdp == null) {
-				throw new ExecutionException("bdp.conf not found in classpath");
-			}
 			BufferedReader br = new BufferedReader(new InputStreamReader(bdp.openStream()));
 			String line = br.readLine();
 			Map map = new HashMap();

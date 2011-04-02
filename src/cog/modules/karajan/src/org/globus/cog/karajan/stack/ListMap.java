@@ -17,19 +17,20 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An implementation of {@link java.util.Map} backed by an array with sequential
- * access and a fixed size of 4 entries. It has a smaller memory consumption
- * than {@link java.util.HashMap}, but O(n) put/lookup time.
+ * An implementation of {@link java.util.Map} backed by an array 
+ * with sequential access and a fixed size of 4 entries. It has a 
+ * smaller memory consumption than {@link java.util.HashMap}, but 
+ * O(n) put/lookup time. 
  * 
  * @author Mihael Hategan
- * 
+ *
  */
 public final class ListMap implements Map {
-	private Object s1, s2, s3, s4;
-	private Object o1, o2, o3, o4;
+	private final Map.Entry[] map;
 	private int next;
 
 	public ListMap() {
+		map = new Map.Entry[4];
 	}
 
 	public void clear() {
@@ -41,35 +42,21 @@ public final class ListMap implements Map {
 	}
 
 	private int keyIndex(Object key) {
-		switch (next) {
-			case 4:
-				if (key.equals(s4)) {
-					return 3;
-				}
-			case 3:
-				if (key.equals(s3)) {
-					return 2;
-				}
-			case 2:
-				if (key.equals(s2)) {
-					return 1;
-				}
-			case 1:
-				if (key.equals(s1)) {
-					return 0;
-				}
-			default:
-				return -1;
+		for (int i = 0; i < next; i++) {
+			if (map[i].getKey().equals(key)) {
+				return i;
+			}
 		}
+		return -1;
 	}
 
 	public boolean containsValue(Object value) {
-		if (value == null) {
-			return o1 == null || o2 == null || o3 == null || o4 == null;
+		for (int i = 0; i < next; i++) {
+			if ((value == null && map[i].getValue() == null) || map[i].getValue().equals(value)) {
+				return true;
+			}
 		}
-		else {
-			return value.equals(o1) || value.equals(o2) || value.equals(o3) || value.equals(o4);
-		}
+		return false;
 	}
 
 	public Set entrySet() {
@@ -78,22 +65,13 @@ public final class ListMap implements Map {
 			public Iterator iterator() {
 				return new Iterator() {
 					private int n;
-
+					
 					public boolean hasNext() {
 						return n < next;
 					}
 
 					public Object next() {
-						switch (n++) {
-							case 0:
-								return new Entry(s1, o1);
-							case 1:
-								return new Entry(s2, o2);
-							case 2:
-								return new Entry(s3, o3);
-							default:
-								return new Entry(s4, o4);
-						}
+						return map[n++];
 					}
 
 					public void remove() {
@@ -105,23 +83,17 @@ public final class ListMap implements Map {
 			public int size() {
 				return next;
 			}
-
+			
 		};
 	}
 
 	public synchronized Object get(Object key) {
 		int ki = keyIndex(key);
-		switch (ki) {
-			case 0:
-				return o1;
-			case 1:
-				return o2;
-			case 2:
-				return o3;
-			case 3:
-				return o4;
-			default:
-				return null;
+		if (ki != -1) {
+			return map[ki].getValue();
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -135,22 +107,13 @@ public final class ListMap implements Map {
 			public Iterator iterator() {
 				return new Iterator() {
 					private int n;
-
+					
 					public boolean hasNext() {
 						return n < next;
 					}
 
 					public Object next() {
-						switch (n++) {
-							case 0:
-								return s1;
-							case 1:
-								return s2;
-							case 2:
-								return s3;
-							default:
-								return s4;
-						}
+						return map[n++].getKey();
 					}
 
 					public void remove() {
@@ -167,35 +130,16 @@ public final class ListMap implements Map {
 
 	public synchronized Object put(Object key, Object value) {
 		int ki = keyIndex(key);
-		Object old = null;
-		switch (ki) {
-			case -1:
-				ki = next++;
-			default:
-				switch (ki) {
-					case 0:
-						old = o1;
-						s1 = key;
-						o1 = value;
-						break;
-					case 1:
-						old = o2;
-						s2 = key;
-						o2 = value;
-						break;
-					case 2:
-						old = o3;
-						s3 = key;
-						o3 = value;
-						break;
-					case 3:
-						old = o4;
-						s4 = key;
-						o4 = value;
-						break;
-				}
+		if (ki == -1) {
+			if (next < map.length) {
+				map[next] = new Entry(key, value);
+				next++;
+			}
+			return null;
 		}
-		return old;
+		else {
+			return map[ki].setValue(value);
+		}
 	}
 
 	public void putAll(Map t) {
@@ -212,36 +156,9 @@ public final class ListMap implements Map {
 			return null;
 		}
 		else {
-			Object old = null;
-			switch (ki) {
-				case 0:
-					old = o1;
-					o1 = o2;
-					o2 = o3;
-					o3 = o4;
-					o4 = null;
-					s1 = s2;
-					s2 = s3;
-					s3 = s4;
-					break;
-				case 1:
-					old = o2;
-					o2 = o3;
-					o3 = o4;
-					o4 = null;
-					s2 = s3;
-					s3 = s4;
-					break;
-				case 2:
-					old = o3;
-					o3 = o4;
-					o4 = null;
-					s3 = s4;
-					break;
-				case 3:
-					old = o4;
-					o4 = null;
-					break;
+			Object old = map[ki].getValue();
+			for (int i = ki; i < next - 1; i++) {
+				map[i] = map[i + 1];
 			}
 			next--;
 			return old;
@@ -255,16 +172,7 @@ public final class ListMap implements Map {
 	public Collection values() {
 		return new AbstractList() {
 			public Object get(int index) {
-				switch (index) {
-					case 0:
-						return o1;
-					case 1:
-						return o2;
-					case 2:
-						return o3;
-					default:
-						return o4;
-				}
+				return map[index].getValue();
 			}
 
 			public int size() {
@@ -276,7 +184,7 @@ public final class ListMap implements Map {
 	private static class Entry implements Map.Entry {
 		private final Object key;
 		private Object value;
-
+		
 		public Entry(Object key, Object value) {
 			this.key = key;
 			this.value = value;

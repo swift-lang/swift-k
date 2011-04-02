@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,17 @@ import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.karajan.util.StateManager;
 import org.globus.cog.karajan.util.ThreadingContext;
+import org.globus.cog.karajan.workflow.events.ControlEvent;
+import org.globus.cog.karajan.workflow.events.ControlEventType;
+import org.globus.cog.karajan.workflow.events.Event;
 import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.events.EventClass;
 import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.FlowEvent;
+import org.globus.cog.karajan.workflow.events.MonitoringEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.nodes.CacheNode;
 import org.globus.cog.karajan.workflow.nodes.Define;
 import org.globus.cog.karajan.workflow.nodes.ElementDefNode;
@@ -63,15 +73,15 @@ public class ExecutionContext implements EventListener {
 	private final transient ElementTree tree;
 	private transient boolean done, failed;
 	private boolean dumpState;
-	private transient List<EventListener> eventListeners;
+	private transient List eventListeners;
 	private transient KarajanProperties properties;
-	private List<String> arguments;
+	private List arguments;
 	private transient Throwable failure;
 	private transient VariableArguments stdout, stderr;
 	private int id;
 	private long startTime, endTime;
 	private String cwd;
-	private Map<String, Object> attributes;
+	private Map attributes;
 	private Cache cache;
 
 	public Cache getCache() {
@@ -92,7 +102,7 @@ public class ExecutionContext implements EventListener {
 		}
 		stateManager = new StateManager(this);
 		this.tree = tree;
-		eventListeners = new LinkedList<EventListener>();
+		eventListeners = new LinkedList();
 		this.properties = properties;
 		cwd = new File(".").getAbsolutePath();
 		cache = new Cache();
@@ -114,7 +124,7 @@ public class ExecutionContext implements EventListener {
 		return tree;
 	}
 
-	protected void define(VariableStack stack, String name, Class<?> cls) {
+	protected void define(VariableStack stack, String name, Class cls) {
 		DefUtil.addDef(stack, stack.firstFrame(), "kernel", name, new JavaElement(cls.getName()));
 	}
 
@@ -126,7 +136,7 @@ public class ExecutionContext implements EventListener {
 		EventBus.initialize();
 		startTime = System.currentTimeMillis();
 		if (arguments == null) {
-			arguments = Collections.emptyList();
+			arguments = Collections.EMPTY_LIST;
 		}
 		setGlobals(stack);
 		defineKernel(stack);
@@ -143,7 +153,7 @@ public class ExecutionContext implements EventListener {
 		stack.setCaller(this);
 		ThreadingContext.set(stack, new ThreadingContext());
 		stack.setVar("...", arguments);
-		EventBus.post(tree.getRoot(), stack);
+		EventBus.post(tree.getRoot(), new ControlEvent(null, ControlEventType.START, stack));
 	}
 
 	protected void setGlobals(VariableStack stack) {
@@ -173,13 +183,46 @@ public class ExecutionContext implements EventListener {
 		stack.firstFrame().setVar("true", Boolean.TRUE);
 	}
 
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		printFailure(e);
+	public void event(Event e) throws ExecutionException {
+		if (e.getEventClass().equals(EventClass.NOTIFICATION_EVENT)) {
+			notificationEvent((NotificationEvent) e);
+		}
+		else if (e.getEventClass().equals(EventClass.MONITORING_EVENT)) {
+			monitoringEvent((MonitoringEvent) e);
+		}
+	}
+
+	private void notificationEvent(NotificationEvent e) {
+		if (this.done) {
+			return;
+		}
+		if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
+			failed(e);
+		}
+		else if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
+			completed(e);
+		}
+	}
+
+	protected void failed(NotificationEvent e) {
+		if (dumpState) {
+			try {
+				DateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
+				String name = "state" + df.format(new Date()) + ".xml";
+				e.getStack().getExecutionContext().getStateManager().checkpoint(name);
+			}
+			catch (Exception ex) {
+				logger.warn("Exception caught while dumping state");
+				logger.debug("Detailed exception is ", ex);
+			}
+		}
+		FailureNotificationEvent fe = (FailureNotificationEvent) e;
+		printFailure(fe);
 		if (logger.isInfoEnabled()) {
-			logger.info("Detailed exception: ", e);
+			logger.info("Detailed exception: ", fe.getException());
 		}
 		stateManager.stop();
-		notifyFailed(stack, e);
+		fireNotificationEvent(new NotificationEvent(null, NotificationEventType.EXECUTION_FAILED, null), null);
 		synchronized(this) {
 			if (failed) {
 				return;
@@ -191,16 +234,16 @@ public class ExecutionContext implements EventListener {
 		}
 	}
 	
-	protected void printFailure(ExecutionException e) {
+	protected void printFailure(FailureNotificationEvent e) {
 		stderr.append("\nExecution failed:\n");
-		stderr.append(e.toString());
+		stderr.append(e.getException().toString());
 		stderr.append("\n");
 	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
+	protected void completed(NotificationEvent e) {
 		stateManager.stop();
 		setDone();
-		notifyCompleted(stack);
+		fireNotificationEvent(new NotificationEvent(null, NotificationEventType.EXECUTION_COMPLETED, null), null);
 	}
 
 	protected synchronized void setDone() {
@@ -246,29 +289,24 @@ public class ExecutionContext implements EventListener {
 	public KarajanProperties getProperties() {
 		return properties;
 	}
-	
-	public void notifyCompleted(VariableStack stack) {
+
+	public void fireNotificationEvent(FlowEvent event, VariableStack stack) {
 		if (eventListeners != null) {
-			for (EventListener l : eventListeners) {
-				try {
-					l.completed(stack);
-				}
-				catch (Exception e) {
-					logger.warn("Notification failed", e);
-				}
+			Iterator i = eventListeners.iterator();
+			while (i.hasNext()) {
+				EventBus.post((EventListener) i.next(), event);
 			}
 		}
 	}
-	
-	public void notifyFailed(VariableStack stack, ExecutionException e) {
-		if (eventListeners != null) {
-			for (EventListener l : eventListeners) {
-				try {
-					l.failed(stack, e);
-				}
-				catch (Exception ee) {
-					logger.warn("Notification failed", ee);
-				}
+
+	protected void monitoringEvent(MonitoringEvent e) {
+		Iterator i = eventListeners.iterator();
+		while (i.hasNext()) {
+			try {
+				((EventListener) i.next()).event(e);
+			}
+			catch (Exception ex) {
+				logger.warn("Listener threw exception ", ex);
 			}
 		}
 	}
@@ -283,13 +321,13 @@ public class ExecutionContext implements EventListener {
 		eventListeners.remove(listener);
 	}
 
-	public void setArguments(List<String> arguments) {
+	public void setArguments(List arguments) {
 		this.arguments = arguments;
 	}
 	
 	public void addArgument(String arg) {
 		if (this.arguments == null) {
-			this.arguments = new ArrayList<String>();
+			this.arguments = new ArrayList();
 		}
 		this.arguments.add(arg);
 	}
@@ -388,7 +426,7 @@ public class ExecutionContext implements EventListener {
 	
 	public synchronized void setAttribute(String name, Object value) {
 	    if (attributes == null) {
-	        attributes = new HashMap<String, Object>();
+	        attributes = new HashMap();
 	    }
 	    attributes.put(name, value);
 	}

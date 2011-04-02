@@ -7,12 +7,9 @@
 
 package org.globus.cog.karajan.workflow.events;
 
-import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 
 
 public interface EventListener {
-	void completed(VariableStack stack) throws ExecutionException;
-	
-	void failed(VariableStack stack, ExecutionException e) throws ExecutionException;
+	void event(Event e) throws ExecutionException;
 }

@@ -261,7 +261,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private void computeSums() {
-        sums = new ArrayList<Integer>(holding.size());
+        sums = new ArrayList<Integer>();
         sums.add(0);
         int ps = 0;
         for (Job j : holding) {
@@ -271,16 +271,14 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private int computeTotalRequestSize() {
-        double sz = 0;
+        int sz = 0;
         for (Job j : holding) {
             sz += metric.desiredSize(j);
         }
         if (sz > 0) {
-            if (sz < 1)
-                sz = 1;
             logger.info("Required size: " + sz + " for " + holding.size() + " jobs");
         }
-        return (int) sz;
+        return sz;
     }
 
     public int overallocatedSize(Job j) {
@@ -423,7 +421,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private void removeJobs(Set<Job> r) {
         List<Job> old = holding;
-        holding = new ArrayList<Job>(holding.size());
+        holding = new ArrayList<Job>();
         for (Job j : old) {
             if (!r.contains(j)) {
                 holding.add(j);
@@ -502,7 +500,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
         long start = System.currentTimeMillis();
         
-        // Move all incoming Jobs to holding
+        // Move all Jobs in add to jobs
         commitNewJobs();
 
         // Shutdown Blocks that are done
@@ -514,11 +512,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         // Move jobs that fit from holding to queued
         tmp = queueToExistingBlocks();
         
-        // Subtract these Jobs from holding
+        // Subtract these Jobs from queued
         removeJobs(tmp);
 
         // int jss = jobs.size();
-        // If queued has too many Jobs, move some back to holding
+        // If queued has too many Jobs, move some back to jobs
         requeueNonFitting();
 
         updateSettings();

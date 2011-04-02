@@ -38,9 +38,6 @@ public class Argument extends SequentialWithArguments {
 			catch (UnsupportedArgumentException e) {
 				throw new ExecutionException(e.getMessage());
 			}
-			catch (NullPointerException e) {
-				ArgUtil.getNamedReturn(stack).add(name.toLowerCase(), value);
-			}
 		}
 		else {
 			ArgUtil.getVariableReturn(stack).append(value);

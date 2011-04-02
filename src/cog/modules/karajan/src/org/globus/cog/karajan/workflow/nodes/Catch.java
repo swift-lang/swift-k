@@ -13,6 +13,7 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
 
 public class Catch extends AbstractRegexpFailureHandler {
 	public static final Arg A_MATCH = new Arg.Positional("match", 0);
@@ -29,7 +30,8 @@ public class Catch extends AbstractRegexpFailureHandler {
 			startRest(stack);
 		}
 		else {
-			failImmediately(stack, (ExecutionException) stack.getVar(SequentialChoice.LAST_FAILURE));
+			fireNotificationEvent((NotificationEvent) stack.getVar(SequentialChoice.LAST_FAILURE),
+					stack);
 		}
 	}
 }

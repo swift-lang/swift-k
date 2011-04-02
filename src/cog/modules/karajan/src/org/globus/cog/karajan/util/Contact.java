@@ -25,9 +25,7 @@ public abstract class Contact {
 	private TaskConstraints constraints;
 	
 	public Contact() {
-		synchronized(Contact.class) {
-			id = idcounter++;
-		}
+		id = idcounter++;
 	}
 	
 	public boolean equals(Object obj){

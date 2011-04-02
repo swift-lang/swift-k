@@ -12,6 +12,8 @@ import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class Parallel extends FlowContainer {
 
@@ -45,11 +47,11 @@ public class Parallel extends FlowContainer {
 				startElement(fe, copy);
 				index++;
 			}
-			// Check if all children are done
-			if (preDecRunning(stack) == 0) {
-				if (!getChildFailed(stack)) {
-					post(stack);
-				}
+		}
+		// Check if all children are done
+		if (preDecRunning(stack) == 0) {
+			if (!getChildFailed(stack)) {
+				post(stack);
 			}
 		}
 	}
@@ -70,7 +72,7 @@ public class Parallel extends FlowContainer {
 		stack.getRegs().setIB(running);
 	}
 
-	protected final int preDecRunning(VariableStack stack) {
+	protected final synchronized int preDecRunning(VariableStack stack) {
 		return stack.getRegs().preDecIB();
 	}
 
@@ -78,9 +80,13 @@ public class Parallel extends FlowContainer {
 		return stack.getRegs().preIncIB();
 	}
 
-	public void completed(VariableStack stack) throws ExecutionException {
-		synchronized(this) {
+	protected synchronized void notificationEvent(NotificationEvent e) throws ExecutionException {
+		VariableStack stack = e.getStack();
+		if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())
+				|| NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
 			closeBuffers(stack);
+		}
+		if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
 			stack.leave();
 			if (preDecRunning(stack) == 0) {
 				if (!getChildFailed(stack)) {
@@ -88,16 +94,15 @@ public class Parallel extends FlowContainer {
 				}
 			}
 		}
-	}
-
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		closeBuffers(stack);
-		stack.leave();
-		synchronized(this) {
+		else if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
+			stack.leave();
 			if (!getChildFailed(stack)) {
 				setChildFailed(stack, true);
-				super.failed(stack, e);
+				super.notificationEvent(e);
 			}
+		}
+		else {
+			super.notificationEvent(e);
 		}
 	}
 }

@@ -15,9 +15,14 @@ import java.util.Map;
 
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.Future;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.ProjectNode;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.commands.EventCommand;
 
 public class RemoteCaller implements FlowElement {
 	private final InstanceContext instanceContext;
@@ -89,7 +94,7 @@ public class RemoteCaller implements FlowElement {
 	}
 
 	public void failImmediately(VariableStack stack, String message) throws ExecutionException {
-		//TODO
+		event(new FailureNotificationEvent(this, stack, message, null));
 	}
 
 	public ProjectNode getProjectNode() {
@@ -99,51 +104,38 @@ public class RemoteCaller implements FlowElement {
 	public boolean acceptsInlineText() {
 		throw new UnsupportedOperationException();
 	}
-	
-	public void abort(VariableStack stack) throws ExecutionException {
+
+	public void event(Event e) throws ExecutionException {
+		try {
+			KarajanChannel channel = ChannelManager.getManager().reserveChannel(
+					instanceContext.getChannelContext());
+			// after this it should be empty
+			((NotificationEvent) e).setStack(null);
+			e.setFlowElement(null);
+			EventCommand cmd = new EventCommand(instanceContext, uid, e);
+			cmd.executeAsync(channel);
+			ChannelManager.getManager().releaseChannel(channel);
+		}
+		catch (Exception ex) {
+			throw new ExecutionException(ex);
+		}
 	}
 
-	public void failImmediately(VariableStack stack, ExecutionException e)
-			throws ExecutionException {
-	}
-
-	public void restart(VariableStack stack) throws ExecutionException {
-	}
-
-	public void start(VariableStack stack) throws ExecutionException {
-	}
-
-	public void completed(VariableStack stack) throws ExecutionException {
-	}
-
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-	}
-
-	public Map getStaticArguments() {
+	public void setElements(List elements) {
 		throw new UnsupportedOperationException();
 	}
 
-	public void setElements(List<FlowElement> elements) {
-	}
-
-	public void setProperties(Map<String, Object> properties) {
-	}
-
-	public void setStaticArguments(Map<String, Object> args) {
-	}
-
-	public void futureModified(Future f, VariableStack stack) {
+	public void setProperties(Map properties) {
+		throw new UnsupportedOperationException();
 	}
 
 	public void addStaticArgument(String name, Object value) {
 	}
 
-	public void executeSimple(VariableStack stack) throws ExecutionException {
+	public void setStaticArguments(Map args) {
 	}
 
-	public boolean isSimple() {
-		return false;
+	public Map getStaticArguments() {
+		throw new UnsupportedOperationException();
 	}
-	
-	
 }

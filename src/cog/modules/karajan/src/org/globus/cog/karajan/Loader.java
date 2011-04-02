@@ -20,6 +20,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.debugger.DebuggerFrame;
 import org.globus.cog.karajan.translator.KarajanTranslator;
 import org.globus.cog.karajan.util.Cache;
 import org.globus.cog.karajan.util.Monitor;
@@ -35,18 +36,11 @@ import org.globus.cog.karajan.workflow.nodes.FlowNode;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 
-/**
- * This is the main entry point into running a Karajan script. It handles
- * the loading and parsing of both .xml and .k files, processes command
- * line arguments, sets up the stack/context and runs the script.
- * 
- * @author Mihael Hategan
- *
- */
 public class Loader {
 	private static final Logger logger = Logger.getLogger(Loader.class);
 
 	public static final String ARG_SHOWSTATS = "showstats";
+	public static final String ARG_DEBUGGER = "debugger";
 	public static final String ARG_HELP = "help";
 	public static final String ARG_DEBUG = "debug";
 	public static final String ARG_MONITOR = "monitor";
@@ -71,6 +65,9 @@ public class Loader {
 			}
 			if (ap.isPresent(ARG_SHOWSTATS)) {
 				Configuration.getDefault().set(Configuration.SHOW_STATISTICS, true);
+			}
+			if (ap.isPresent(ARG_DEBUGGER)) {
+				Configuration.getDefault().set(Configuration.DEBUGGER, true);
 			}
 			if (ap.isPresent(ARG_DEBUG)) {
 				FlowNode.debug = true;
@@ -140,26 +137,32 @@ public class Loader {
 			}
 			tree.setName(project);
 			tree.getRoot().setProperty(FlowElement.FILENAME, project);
-		
-			ExecutionContext ec = new ExecutionContext(tree);
-			ec.setDumpState(Configuration.getDefault().getFlag(
-					Configuration.DUMP_STATE_ON_ERROR));
-			if (ap.isPresent(ARG_CSTDOUT)) {
-				ec.setStdout(new PrintStreamChannel(System.out, true));
+			if (Configuration.getDefault().getFlag(Configuration.DEBUGGER)) {
+				DebuggerFrame debugger = new DebuggerFrame(tree);
+				debugger.pack();
+				debugger.setVisible(true);
+				debugger.waitFor();
 			}
-			ec.setArguments(ap.getArguments());
-			ec.setCache(cc);
-			ec.start();
-			/*
-			 * Strange thing here. For even slightly not so short programs,
-			 * by the time control flow reaches this point. the execution is
-			 * already done.
-			 */
-			ec.waitFor();
-			if (ec.isFailed()) {
-				runerror = true;
+			else {
+				ExecutionContext ec = new ExecutionContext(tree);
+				ec.setDumpState(Configuration.getDefault().getFlag(
+						Configuration.DUMP_STATE_ON_ERROR));
+				if (ap.isPresent(ARG_CSTDOUT)) {
+					ec.setStdout(new PrintStreamChannel(System.out, true));
+				}
+				ec.setArguments(ap.getArguments());
+				ec.setCache(cc);
+				ec.start();
+				/*
+				 * Strange thing here. For even slightly not so short programs,
+				 * by the time control flow reaches this point. the execution is
+				 * already done.
+				 */
+				ec.waitFor();
+				if (ec.isFailed()) {
+					runerror = true;
+				}
 			}
-		
 			if (cache) {
 				try {
 					FileWriter fw = new FileWriter(project + ".cache");
@@ -188,6 +191,9 @@ public class Loader {
 			System.out.println("Avarage event rate: "
 					+ (int) ((double) EventBus.eventCount * 1000 / (end - start))
 					+ " events/second");
+			System.out.println("Cummulative event time: " + EventBus.cummulativeEventTime + " ms");
+			System.out.println("Average event time: " + (double) EventBus.cummulativeEventTime
+					/ EventBus.eventCount * 1000 + " us");
 			System.out.println("Total future faults: " + FutureFault.count);
 			System.out.println("Memory in use at termination: "
 					+ (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
@@ -215,6 +221,7 @@ public class Loader {
 			if (!EventBus.isInitialized()) {
 				EventBus.initialize();
 			}
+			EventBus.suspendAll();
 			ElementTree source;
 			if (xml) {
 				source = XMLConverter.readSourceNoUIDs(reader, name);
@@ -223,6 +230,7 @@ public class Loader {
 				source = XMLConverter.readSourceNoUIDs(new KarajanTranslator(reader, name).translate(),
 						name, false);
 			}
+			EventBus.resumeAll();
 			return source;
 		}
 		catch (Exception e) {
@@ -245,6 +253,7 @@ public class Loader {
 				"Enable debugging. This will enable a number of internal tests at the "
 						+ "expense of speed. You should not use this since it is useful only "
 						+ "for catching subtle consistency issues with the interpreter.");
+		ap.addFlag(ARG_DEBUGGER, "EXPERIMENTAL and BUGGY. Starts the internal graphical debugger");
 		ap.addFlag(ARG_MONITOR, "Shows resource monitor");
 		ap.addFlag(ARG_DUMPSTATE, "If specified, in case of a fatal error, the interpreter will "
 				+ "dump the state in a file");

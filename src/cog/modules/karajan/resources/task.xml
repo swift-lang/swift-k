@@ -111,8 +111,15 @@
 				</element>
 			</export>
 			
+			<elementDef type="BDP" className="org.globus.cog.karajan.workflow.nodes.grid.BDP"/>
+			
 			<export name="transferParams">
-				<elementDef className="org.globus.cog.karajan.workflow.nodes.grid.BDP"/>
+				<element arguments="srchost, desthost, provider">
+					<argument name="srchost" value="{srchost}"/>
+					<argument name="desthost" value="{desthost}"/>
+					<argument name="provider" value="{provider}"/>
+					<BDP srchost="{srchost}" desthost="{desthost}" provider="{provider}"/>
+				</element>
 			</export>
 			
 			<export name="envVar">

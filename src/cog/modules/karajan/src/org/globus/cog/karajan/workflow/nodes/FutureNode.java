@@ -15,6 +15,9 @@ import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.FailureNotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.futures.ForwardArgumentFuture;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
@@ -35,10 +38,15 @@ public class FutureNode extends SequentialWithArguments {
 		super.executeChildren(copy);
 		complete(stack);
 	}
-	
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		FutureVariableArguments fva = (FutureVariableArguments) ArgUtil.getVariableArguments(e.getStack());
-        fva.fail(new FutureEvaluationException(e));
+
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		if (e.getType().equals(NotificationEventType.EXECUTION_FAILED)) {
+			FutureVariableArguments fva = (FutureVariableArguments) ArgUtil.getVariableArguments(e.getStack()); 
+			fva.fail(new FutureEvaluationException(((FailureNotificationEvent) e)));
+		}
+		else {
+			super.notificationEvent(e);
+		}
 	}
 
 	public void post(VariableStack stack) throws ExecutionException {

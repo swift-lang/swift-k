@@ -11,6 +11,8 @@ package org.globus.cog.karajan.workflow.nodes;
 
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class Guard extends Sequential {
 	public static final String FAILED_EVENT = "##failed-event";
@@ -21,25 +23,32 @@ public class Guard extends Sequential {
 		}
 		super.pre(stack);
 	}
-
-	public void completed(VariableStack stack) throws ExecutionException {
-		if (getChildFailed(stack)) {
-			super.failed(stack, (ExecutionException) stack.getVar(FAILED_EVENT));
+	
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		if (NotificationEventType.EXECUTION_COMPLETED.equals(e.getType())) {
+			VariableStack stack = e.getStack();
+			if (getChildFailed(stack)) {
+				super.notificationEvent((NotificationEvent) stack.getVar(FAILED_EVENT));
+			}
+			else {
+				super.notificationEvent(e);
+			}
+		}
+		else if (NotificationEventType.EXECUTION_FAILED.equals(e.getType())) {
+			VariableStack stack = e.getStack();
+			if (this.getIndex(stack) == 1) {
+				stack.setVar(FAILED_EVENT, e);
+				this.setChildFailed(stack, true);
+				startNext(stack);
+				return;
+			}
+			else {
+				super.notificationEvent(e);
+			}
 		}
 		else {
-			super.completed(stack);
+			super.notificationEvent(e);
 		}
 	}
-
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		if (this.getIndex(stack) == 1) {
-			stack.setVar(FAILED_EVENT, e);
-			this.setChildFailed(stack, true);
-			startNext(stack);
-			return;
-		}
-		else {
-			super.failed(stack, e);
-		}
-	}
+	
 }

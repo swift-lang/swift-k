@@ -23,4 +23,8 @@ public class RemoteContainer extends Sequential {
 		DefinitionEnvironment env = (DefinitionEnvironment) stack.parentFrame().getVar(DEF_ENV);
 		env.setStack(stack.copy());
 	}
+
+	protected void childCompleted(VariableStack stack) throws ExecutionException {
+		super.childCompleted(stack);
+	}
 }
