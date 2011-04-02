@@ -7,12 +7,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 
 public class File implements Future {
 	private String path;
@@ -20,7 +21,7 @@ public class File implements Future {
 	private long size, lastAccess;
 	private int locked;
 	private boolean processingLock;
-	private List<ListenerStackPair> listeners;
+	private List listeners;
 
 	public File(String file, String dir, Object host, long size) {
 		if (dir.endsWith("/")) {
@@ -150,20 +151,20 @@ public class File implements Future {
 
 	public void notifyListeners() {
 		if (listeners != null) {
-			Iterator<ListenerStackPair> i = listeners.iterator();
+			Iterator i = listeners.iterator();
 			while (i.hasNext()) {
-				ListenerStackPair etp = i.next();
+				EventTargetPair etp = (EventTargetPair) i.next();
 				i.remove();
-				etp.listener.futureModified(this, etp.stack);
+				EventBus.post(etp.getTarget(), etp.getEvent());
 			}
 		}
 	}
 
-	public synchronized void addModificationAction(FutureListener target, VariableStack stack) {
+	public synchronized void addModificationAction(EventListener target, Event event) {
 		if (listeners == null) {
-			listeners = new LinkedList<ListenerStackPair>();
+			listeners = new LinkedList();
 		}
-		listeners.add(new ListenerStackPair(target, stack));
+		listeners.add(new EventTargetPair(event, target));
 		if (isClosed()) {
 			notifyListeners();
 		}

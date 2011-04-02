@@ -5,10 +5,11 @@ package org.griphyn.vdl.karajan;
 
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.EventListener;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureIteratorIncomplete;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 
 public class FuturePairIterator implements FutureIterator {
@@ -93,9 +94,9 @@ public class FuturePairIterator implements FutureIterator {
 		return this;
 	}
 
-	public synchronized void addModificationAction(FutureListener target, VariableStack stack) {
-		WaitingThreadsMonitor.addThread(stack);
-		array.addModificationAction(target, stack);
+	public synchronized void addModificationAction(EventListener target, Event event) {
+		WaitingThreadsMonitor.addThread(event.getStack());
+		array.addModificationAction(target, event);
 	}
 	
 	private static volatile int cnt = 0;

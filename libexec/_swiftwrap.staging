@@ -1,20 +1,5 @@
 # this script must be invoked inside of bash, not plain sh
 
-openinfo() {
-	exec 3<> $1
-	INFO=3
-}
-
-closeinfo() {
-	exec 3>&-
-}
-
-# Clobbered by SWIFTWRAP_FAST
-log() {
-	echo "$@" >& "$INFO"
-}
-
-# Clobbered by SWIFTWRAP_FAST
 infosection() {
 	echo >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
@@ -53,9 +38,12 @@ info() {
 	fi
 }
 
-# Clobbered by SWIFTWRAP_FAST
 logstate() {
 	echo "Progress " `date +"%Y-%m-%d %H:%M:%S.%N%z"` " $@" >& "$INFO"
+}
+
+log() {
+	echo "$@" >& "$INFO"
 }
 
 fail() {
@@ -89,32 +77,13 @@ checkEmpty() {
 	fi
 }
 
-# Clobbered by SWIFTWRAP_FAST
-checkMissing() {
-	MISSING=
-	for O in $OUTF ; do
-		if [ ! -f "$O" ]; then
-			if [ "$MISSING" == "" ]; then
-				MISSING=$O
-			else
-				MISSING="$MISSING, $O"
-			fi
-		fi
-	done
-	if [ "$MISSING" != "" ]; then
-		fail 254 "The following output files were not created by the application: $MISSING"
-	fi
-}
-
 checkparamfile() {
 	log "checking for paramfile"
 	if [ "$1" == "-p" ]; then
 		JOBDIR=$2
 		PARAMFILE=${WFDIR}/parameters/${JOBDIR}/param-${ID}
-		log "paramfile is: $PARAMFILE"
-	else
-		log "no paramfile: using command line arguments"
 	fi
+	log "paramfile is: $PARAMFILE"
 }
 
 getarg() {
@@ -138,6 +107,15 @@ getarg() {
 	fi
 }
 
+openinfo() {
+	exec 3<> $1
+	INFO=3
+}
+
+closeinfo() {
+	exec 3>&-
+}
+
 COMMANDLINE=$@
 
 # make the WFDIR absolute
@@ -147,23 +125,12 @@ openinfo "wrapper.log"
 
 checkparamfile "$@"
 
-# # SWIFTWRAP_FAST: Turn things off for speed
-if [[ $SWIFTWRAP_FAST == "1" ]]; then
-	shopt -s expand_aliases
-	alias infosection=:
-	alias logstate=:
-	alias log=:
-	alias checkMissing=:
-fi
-
 if [ "X$INFODIR" == "X" ]; then
 	INFODIR="."
 fi
 
 logstate "LOG_START"
-infosection "Wrapper (_swiftwrap.staging)"
-
-log $COMMANDLINE
+infosection "Wrapper"
 
 getarg "-e" "$@"
 EXEC=$VALUE
@@ -286,6 +253,7 @@ fi
 
 logstate "EXECUTE"
 
+#ls >>$WRAPPERLOG
 if [ ! -f "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not exist"
 fi
@@ -322,7 +290,19 @@ fi
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
 
-checkMissing
+MISSING=
+for O in $OUTF ; do
+	if [ ! -f "$O" ]; then
+		if [ "$MISSING" == "" ]; then
+			MISSING=$O
+		else
+			MISSING="$MISSING, $O"
+		fi
+	fi
+done
+if [ "$MISSING" != "" ]; then
+	fail 254 "The following output files were not created by the application: $MISSING"
+fi
 
 logstate "END"
 

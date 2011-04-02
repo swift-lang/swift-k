@@ -9,14 +9,14 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.Arrays;
 import java.util.List;
 
-import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ThreadingContext;
+import org.globus.cog.karajan.workflow.nodes.*;
+import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.Condition;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
-import org.globus.cog.karajan.workflow.nodes.Sequential;
-import org.globus.cog.karajan.workflow.nodes.While;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.LoopNotificationEvent;
 
 public class InfiniteCountingWhile extends Sequential {
 	public static final String VAR = "##infinitecountingwhile:var";
@@ -59,10 +59,10 @@ public class InfiniteCountingWhile extends Sequential {
 		if (index >= elementCount()) {
 			// starting new iteration
 			setIndex(stack, 1);
-			fn = getElement(0);
+			fn = (FlowElement) getElement(0);
 
 			String counterName = (String) stack.getVar(VAR);
-			List l = (List) stack.getVar(counterName);
+			List l = (List)stack.getVar(counterName);
 			Integer wrappedi = (Integer)l.get(0);
 			int i = wrappedi.intValue();
 			i++;
@@ -71,22 +71,30 @@ public class InfiniteCountingWhile extends Sequential {
 			stack.setVar(counterName, Arrays.asList(new Integer[] {new Integer(i)}));
 		}
 		else {
-			fn = getElement(index++);
+			fn = (FlowElement) getElement(index++);
 			setIndex(stack, index);
 		}
 		startElement(fn, stack);
 	}
-	
-    public void failed(VariableStack stack, ExecutionException e)
-            throws ExecutionException {
-        if (e instanceof While.Break) {
-        	complete(stack);
-        	return;
-        }
-        if (e instanceof While.Continue) {
-        	setIndex(e.getStack(), 0);
-            startNext(e.getStack());
-            return;
-        }
-    }
+
+	public void event(Event e) throws ExecutionException {
+		if (e instanceof LoopNotificationEvent) {
+			loopNotificationEvent((LoopNotificationEvent) e);
+		}
+		else {
+			super.event(e);
+		}
+	}
+
+	protected void loopNotificationEvent(LoopNotificationEvent e) throws ExecutionException {
+		if (e.getType() == LoopNotificationEvent.BREAK) {
+			complete(e.getStack());
+			return;
+		}
+		else if (e.getType() == LoopNotificationEvent.CONTINUE) {
+			setIndex(e.getStack(), 0);
+			startNext(e.getStack());
+			return;
+		}
+	}
 }

@@ -60,6 +60,6 @@ public class ArrayFileMapper extends AbstractMapper {
 	}
 
 	public boolean isStatic() {
-		return true;
+		return false;
 	}
 }

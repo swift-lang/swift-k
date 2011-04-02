@@ -88,6 +88,7 @@ namespace("vdl"
 				stdout := try(stdout, "stdout.txt")
 				stderr := try(stderr, "stderr.txt")
 
+				vdl:setprogress("Stage in")
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 				cdmfile := cdm:file()
@@ -168,7 +169,7 @@ namespace("vdl"
 									"Host: {rhost}", nl(),
 									"Directory: {tmpdir}",
 									"TODO: outs", nl(),
-									"- - -", nl()
+									"----", nl()
 								)
 								exception
 							)

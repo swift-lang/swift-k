@@ -7,6 +7,9 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.lib.cache.CacheReturn;
 import org.griphyn.vdl.karajan.lib.cache.File;
@@ -59,12 +62,18 @@ public class CacheAddAndLockFile extends CacheFunction {
 		cache.unlockFromProcessing(f);
 		super.post(stack);
 	}
-	
-	
-    public void failed(VariableStack stack, ExecutionException e)
-            throws ExecutionException {
-    	VDLFileCache cache = CacheFunction.getCache(stack);
-        cache.entryRemoved((File) stack.currentFrame().getVar(PFILE));
-        super.failed(stack, e);
-    }
+
+	public void event(Event e) throws ExecutionException {
+		super.event(e);
+	}
+
+	protected void notificationEvent(NotificationEvent e) throws ExecutionException {
+		VariableStack stack = e.getStack();
+		if (e.getType().equals(NotificationEventType.EXECUTION_FAILED)
+				&& stack.currentFrame().isDefined(PFILE)) {
+			VDLFileCache cache = CacheFunction.getCache(stack);
+			cache.entryRemoved((File) stack.currentFrame().getVar(PFILE));
+		}
+		super.notificationEvent(e);
+	}
 }

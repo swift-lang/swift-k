@@ -15,11 +15,14 @@ import javax.swing.JPanel;
 import org.globus.cog.karajan.Loader;
 import org.globus.cog.karajan.arguments.AbstractWriteOnlyVariableArguments;
 import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.EventClass;
 import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.events.NotificationEvent;
+import org.globus.cog.karajan.workflow.events.NotificationEventType;
 
 public class ScalabilityTest {
 	private static volatile int jobsSubmitted, jobsFailed, jobsCompleted, workflowsStarted,
@@ -108,14 +111,17 @@ public class ScalabilityTest {
 	}
 
 	public static class Listener implements EventListener {
-        public void completed(VariableStack stack) throws ExecutionException {
-        	workflowsCompleted++;
-        }
-
-        public void failed(VariableStack stack, ExecutionException e)
-                throws ExecutionException {
-        	workflowsFailed++;
-        }
+		public void event(Event e) throws ExecutionException {
+			if (e.getEventClass().equals(EventClass.NOTIFICATION_EVENT)) {
+				NotificationEvent ne = (NotificationEvent) e;
+				if (ne.getType().equals(NotificationEventType.EXECUTION_COMPLETED)) {
+					workflowsCompleted++;
+				}
+				else if (ne.getType().equals(NotificationEventType.EXECUTION_FAILED)) {
+					workflowsFailed++;
+				}
+			}
+		}
 	}
 
 	public static class Monitor {

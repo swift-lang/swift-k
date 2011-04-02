@@ -11,5 +11,3 @@ GROUPLIST=( $TESTDIR/language-behaviour \
             $TESTDIR/cdm/ps/pinned
 	    # $TESTDIR/site/intrepid
           )
-
-checkvars WORK

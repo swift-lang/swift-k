@@ -12,13 +12,13 @@ import java.util.Set;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.EventListener;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
 import org.globus.cog.karajan.workflow.futures.FutureList;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.globus.cog.util.CopyOnWriteArrayList;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DSHandleListener;
@@ -27,7 +27,7 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
     private ArrayList<Object> keys;
     private Map values;
     private boolean closed;
-    private CopyOnWriteArrayList<ListenerStackPair> listeners;
+    private CopyOnWriteArrayList<EventTargetPair> listeners;
     private FutureEvaluationException exception;
 
     public ArrayIndexFutureList(DSHandle handle, Map values) {
@@ -90,13 +90,13 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
         return this;
     }
 
-    public synchronized void addModificationAction(FutureListener target,
-            VariableStack stack) {
+    public synchronized void addModificationAction(EventListener target,
+            Event event) {
         if (listeners == null) {
-            listeners = new CopyOnWriteArrayList<ListenerStackPair>();
+            listeners = new CopyOnWriteArrayList<EventTargetPair>();
         }
 
-        listeners.add(new ListenerStackPair(target, stack));
+        listeners.add(new EventTargetPair(event, target));
         if (closed) {
             notifyListeners();
         }
@@ -107,12 +107,17 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
             return;
         }
 
-        Iterator<ListenerStackPair> i = listeners.iterator();
+        Iterator<EventTargetPair> i = listeners.iterator();
         try {
             while (i.hasNext()) {
-                ListenerStackPair etp = i.next();
-                i.remove();
-                etp.listener.futureModified(this, etp.stack);
+                try {
+                    EventTargetPair etp = i.next();
+                    i.remove();
+                    etp.getTarget().event(etp.getEvent());
+                }
+                catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
         }
         finally {

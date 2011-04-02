@@ -3,19 +3,19 @@
  */
 package org.griphyn.vdl.karajan;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
+import org.globus.cog.karajan.workflow.events.Event;
+import org.globus.cog.karajan.workflow.events.EventListener;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class VDL2FutureException extends RuntimeException {
 	private final DSHandle handle;
-	private FlowElement listener;
-	private VariableStack stack;
+	private EventListener listener;
+	private Event event;
 
-	public VDL2FutureException(DSHandle handle, FlowElement listener, VariableStack stack) {
+	public VDL2FutureException(DSHandle handle, EventListener listener, Event event) {
 		this.handle = handle;
 		this.listener = listener;
-		this.stack = stack;
+		this.event = event;
 	}
 
 	public VDL2FutureException(DSHandle handle) {
@@ -26,19 +26,19 @@ public class VDL2FutureException extends RuntimeException {
 		return handle;
 	}
 
-	public VariableStack getStack() {
-		return stack;
+	public Event getEvent() {
+		return event;
 	}
 
-	public FlowElement getListener() {
+	public EventListener getListener() {
 		return listener;
 	}
 
-	public void setStack(VariableStack stack) {
-		this.stack = stack;
+	public void setEvent(Event event) {
+		this.event = event;
 	}
 
-	public void setListener(FlowElement listener) {
+	public void setListener(EventListener listener) {
 		this.listener = listener;
 	}
 }

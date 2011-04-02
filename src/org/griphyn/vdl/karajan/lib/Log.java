@@ -69,7 +69,7 @@ public class Log extends AbstractSequentialWithArguments {
 		else {
 			cls = "unknown";
 		}
-		Level lvl = getLevel((String) LEVEL.getValue(stack));
+		Level lvl = getLevel(TypeUtil.toString(LEVEL.getValue(stack)));
 		Logger logger = getLogger(cls);
 		if (logger.isEnabledFor(lvl)) {
 		    Object smsg = MESSAGE.getValue(stack);
@@ -78,7 +78,7 @@ public class Log extends AbstractSequentialWithArguments {
 		    }
 		    else {
 		        Object[] msg = Arg.VARGS.asArray(stack);
-		        StringBuilder sb = new StringBuilder();
+		        StringBuffer sb = new StringBuffer();
 		        for (int i = 0; i < msg.length; i++) {
 		            sb.append(TypeUtil.toString(msg[i]));
 		        }

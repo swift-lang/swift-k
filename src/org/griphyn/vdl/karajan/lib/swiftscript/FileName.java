@@ -20,8 +20,8 @@ public class FileName extends VDLFunction {
 			String s = argList(filename(stack), true);
 			DSHandle result = RootDataNode.newNode(Types.STRING, s);
 			int provid = VDLFunction.nextProvenanceID();
-			//VDLFunction.logProvenanceParameter(provid, (DSHandle) PA_VAR.getValue(stack), "input");
-			//VDLFunction.logProvenanceResult(provid, result, "filename");
+			VDLFunction.logProvenanceParameter(provid, (DSHandle) PA_VAR.getValue(stack), "input");
+			VDLFunction.logProvenanceResult(provid, result, "filename");
 			return result;
 		} catch(VDL2FutureException ve) {
 			synchronized(ve.getHandle().getRoot()) {
