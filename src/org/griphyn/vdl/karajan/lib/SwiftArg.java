@@ -188,7 +188,6 @@ public abstract class SwiftArg extends Arg {
 			return ret;
 		}
 
-
 		public List asList(VariableStack stack) throws ExecutionException {
 			VariableArguments args = get(stack);
 			List ret = new ArrayList();
