@@ -8,7 +8,7 @@ import org.griphyn.vdl.type.Type;
 /** A DSHandle refers to a (possibly complex) piece of SwiftScript
  *  data.
  *
- * A DSHandles has a type.
+ * A DSHandle has a type.
  *
  * A DSHandle may have a value that is accessible
  * as a Java object through the getValue() method, however that is
