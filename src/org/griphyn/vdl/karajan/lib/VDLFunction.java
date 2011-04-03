@@ -32,8 +32,6 @@ import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
-import org.griphyn.vdl.karajan.InHook;
-import org.griphyn.vdl.karajan.Monitor;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.karajan.WrapperMap;
