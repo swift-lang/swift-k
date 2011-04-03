@@ -1063,12 +1063,12 @@ if [ $BUILD_PACKAGE = "1" ]; then
   build_package
 fi
 
+end_row
+
 PATH=$SWIFT_HOME/bin:$PATH
 cd $TOPDIR
-which swift
+echo "USING: $( which swift )"
 cd $RUNDIR
-
-end_row
 
 if [ $ALWAYS_EXITONFAILURE != "1" ]; then
   EXITONFAILURE=false
