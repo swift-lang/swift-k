@@ -2,14 +2,7 @@
 
 set -x
 
-# FILES=( $( ls 400-fprintf-*.out ) )
-# (( ${#FILES[@]} == 3 )) || exit 1
-
-# grep hello 400-fprintf-1.out || exit 1
-
-# LINES=$( wc -l 400-fprintf-2.out | cut -d ' ' -f 1 )
-# (( ${LINES} == 3 )) || exit 1
-
-# grep "hello: 32" 400-fprintf-3.out || exit 1
+grep "file.txt: true"          stdout.txt || exit 1
+grep "file-missing.txt: false" stdout.txt || exit 1
 
 exit 0
