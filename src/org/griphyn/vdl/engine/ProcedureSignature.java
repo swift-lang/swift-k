@@ -307,11 +307,11 @@ public class ProcedureSignature {
 		java.addOutputArg(output);
 		functionsMap.put(java.getName(), java);
 
-		ProcedureSignature exists_file = new ProcedureSignature("exists_file");
-		exists_file.setAnyNumOfInputArgs();
-		FormalArgumentSignature exists_fileOut1 = new FormalArgumentSignature("boolean");
-		exists_file.addOutputArg(exists_fileOut1);
-		functionsMap.put(exists_file.getName(), exists_file);
+		ProcedureSignature exists = new ProcedureSignature("exists");
+		exists.setAnyNumOfInputArgs();
+		FormalArgumentSignature existsOut1 = new FormalArgumentSignature("boolean");
+		exists.addOutputArg(existsOut1);
+		functionsMap.put(exists.getName(), exists);
 
 		return functionsMap;
 	}

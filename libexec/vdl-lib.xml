@@ -7,7 +7,6 @@
 	<export name="readdata2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData2"/></export>
 	<export name="writedata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
-	<export name="exists_file"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strstr"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strsplit"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
@@ -28,6 +27,7 @@
 	<export name="fileNames"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileNames"/></export>
 	<export name="dirname"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="length"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="exists"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="arg">
 		<import file="sys.xml"/>
 		<if>

@@ -38,7 +38,7 @@ public class Misc extends FunctionsCollection {
 	static {
 		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcat",  new Arg[] { Arg.VARGS });
-		setArguments("swiftscript_exists_file", new Arg[] { Arg.VARGS });
+		setArguments("swiftscript_exists", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
@@ -98,7 +98,7 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle swiftscript_exists_file(VariableStack stack)
+	public DSHandle swiftscript_exists(VariableStack stack)
 	throws ExecutionException {
 		logger.debug(stack);
 		Object[] args = SwiftArg.VARGS.asArray(stack);
@@ -106,13 +106,13 @@ public class Misc extends FunctionsCollection {
 
 		if (args.length != 1)
 		    throw new ExecutionException
-			("Wrong number of arguments to @exists_file()");
+			("Wrong number of arguments to @exists()");
 
 		String filename = TypeUtil.toString(args[0]);
 
 		DSHandle handle = new RootDataNode(Types.BOOLEAN);
 		AbsFile file = new AbsFile(filename);
-		logger.debug("exists_file: " + file);
+		logger.debug("exists: " + file);
 		handle.setValue(file.exists());
 		handle.closeShallow();
 
@@ -125,11 +125,11 @@ public class Misc extends FunctionsCollection {
 					    (provid, provArgs[i], ""+i);
 				}
 				VDLFunction.logProvenanceResult
-				    (provid, handle, "exists_file");
+				    (provid, handle, "exists");
 			}
 		} catch (IOException ioe) {
 			throw new ExecutionException
-			    ("When logging provenance for exists_file",
+			    ("When logging provenance for exists",
 			     ioe);
 		}
 
