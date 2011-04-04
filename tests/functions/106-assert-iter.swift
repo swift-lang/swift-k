@@ -1,6 +1,4 @@
 
-// Swift does not support this yet
-
 // THIS-SCRIPT-SHOULD-FAIL
 
 iterate i
