@@ -194,6 +194,8 @@ SCRIPTDIR=$( cd $( dirname $0 ) ; /bin/pwd )
 
 TESTCOUNT=0
 
+MASTER_PID=$$
+
 # PIDs to kill if nightly.sh is killed:
 PROCESS_PID=
 MONITOR_PID=
@@ -242,10 +244,9 @@ verbose() {
 
 shutdown_trap() {
   SHUTDOWN=1
-  printf "\n\nshutdown_trap... $MONITOR_PID $PROCESS_PID\n\n"
-  ps -f
-  kill -INT $MONITOR_PID
-  kill -INT $PROCESS_PID
+  verbose "shutdown_trap... $PROCESS_PID\n\n"
+  verbose "kill: process: $PROCESS_PID"
+  kill $PROCESS_PID
 }
 
 header() {
@@ -587,13 +588,9 @@ process_exec() {
   printf "\nExecuting: $@" >>$LOG
   rm -f $OUTPUT
 
-  "$@" > $OUTPUT 2>&1 &
-  EXEC_PID=$!
-
-  trap "process_exec_trap $EXEC_PID" SIGTERM SIGINT
-
-  wait $EXEC_PID
+  "$@" > $OUTPUT 2>&1
   EXITCODE=$?
+
   if [ "$EXITCODE" == "127" ]; then
     echo "Command not found: $@" > $OUTPUT
   fi
@@ -602,33 +599,6 @@ process_exec() {
   fi
   (( $TEST_SHOULD_FAIL )) && EXITCODE=$(( ! $EXITCODE ))
   return $EXITCODE
-}
-
-# Ensure we kill the tested process and any subordinate java processes
-# in case of monitor() timeout
-# Rationale: Killing bin/swift does not kill the Swift java process
-process_exec_trap() {
-  EXEC_PID=$1
-  ps -f
-  echo "process_exec_trap($EXEC_PID)"
-  kill -TERM $EXEC_PID
-  ps -f
-  # killall_swift
-}
-
-# Kill all subordinate swift/java processes
-killall_swift() {
-  echo "killing all swifts..."
-  set -x
-  echo $$
-  ps -f
-  kill_this $( ps -f | grep $$'.*'java  | grep -v grep )
-  set +x
-}
-
-# Kill a process given its line output from "ps -f"
-kill_this() {
-  [ -n $2 ] && /bin/kill -KILL $2
 }
 
 # Execute as part of test set
@@ -668,6 +638,9 @@ test_exec() {
 # If monitor() kills the process, it returns 0
 # Otherwise, return non-zero (as would result from killing
 # this function)
+
+# sleep can be hard to kill:
+SLEEP_PID=
 monitor() {
   (( $VERBOSE )) && set -x
 
@@ -677,35 +650,33 @@ monitor() {
 
   V=$TESTCOUNT
 
-  # Use background so kill/trap is immediate
-  sleep $TIMEOUT > /dev/null 2>&1 &
+  sleep $TIMEOUT &
   SLEEP_PID=$!
-  trap "monitor_trap $SLEEP_PID" SIGTERM SIGINT
-  wait $SLEEP_PID
+  trap trap_sleep SIGINT SIGQUIT SIGTERM
+  wait
   [ $? != 0 ] && verbose "monitor($V) cancelled" && return 0
 
   if ps | grep $PID
   then
-    echo "monitor($V): killing test process $PID"
+    verbose "monitor: killing test process $PID"
     touch killed_test
     /bin/kill -INT $PID
     KILLCODE=$?
     if [ $KILLCODE == 0 ]; then
-      echo "monitor($V): killed process_exec (TERM)"
+      verbose "monitor: killed process_exec (INT)"
     fi
   fi
 
   sleep 1
-  MSG="nightly.sh: monitor($V): killed: exceeded $TIMEOUT seconds"
+  MSG="nightly.sh: monitor: killed: exceeded $TIMEOUT seconds"
   echo "$MSG" >> $OUTPUT
-  # trap
+
   return 1
 }
 
-monitor_trap() {
-  SLEEP_PID=$1
-  echo "monitor_trap(SLEEP_PID)..."
-  /bin/kill -INT $SLEEP_PID
+trap_sleep() {
+  verbose "killing sleep: $SLEEP_PID"
+  kill $SLEEP_PID
 }
 
 # Execute given command line in background with monitor
@@ -723,11 +694,9 @@ monitored_exec()
 
   process_exec "$@" &
   PROCESS_PID=$!
-  echo PROCESS_PID: $PROCESS_PID
 
   monitor $PROCESS_PID $TIMEOUT $OUTPUT &
   MONITOR_PID=$!
-  echo MONITOR_PID: $MONITOR_PID
 
   wait $PROCESS_PID
   EXITCODE=$?
@@ -736,8 +705,8 @@ monitored_exec()
 
   # If the test was killed, monitor() may have work to do
   rm killed_test > /dev/null 2>&1 && sleep 5
-  echo "Killing monitor..."
-  /bin/kill -INT $MONITOR_PID
+  verbose "killing monitor: $MONITOR_PID..."
+  kill $MONITOR_PID
 
   echo "TOOK: $(( STOP-START ))"
 
