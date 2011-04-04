@@ -1,4 +1,4 @@
-import testimport2;
+import "testimport2";
 
 type file;
 

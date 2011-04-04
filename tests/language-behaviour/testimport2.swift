@@ -1,4 +1,4 @@
-import testimport;
+import "testimport";
 
 type F;
 
