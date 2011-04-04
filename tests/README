@@ -1,13 +1,13 @@
-nightly.sh:
-	See nightly.sh for usage
+suite.sh:
+	See suite.sh for usage
 
-run-nightly.sh:
-	wrapper for nightly.sh
+run-suite.sh:
+	wrapper for suite.sh
 	env variables set may be customized by user
 
 meta.sh:
-	wrapper for run-nightly.sh
-	used to execute run-nightly/nightly.sh from a remote site using ssh
+	wrapper for run-suite.sh
+	used to execute run-suite/suite.sh from a remote site using ssh
 	example usage:
 		 meta.sh login.pads.ci.uchicago.edu /home/skenny/swift_runs/tests sites/pads-pbs-coasters.sh
 

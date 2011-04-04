@@ -3,10 +3,10 @@
 import commands
 import os
 
-# the workdir for a given site needs to exist on the site you're testing 
-# and should contain run-nightly & nightly.sh
-# this script will ssh onto the site, pass run-nightly the necesary variables
-# for running nightly.sh
+# the workdir for a given site needs to exist on the site you're testing
+# and should contain run-suite & suite.sh
+# this script will ssh onto the site, pass run-suite the necesary variables
+# for running suite.sh
 
 class Site:
 
@@ -18,15 +18,15 @@ class Site:
         self.project = project
 
     def testSite(self,cogv,swiftv,test_type):
-            cmdline = self.logintype+" "+self.login+" "+self.workdir+"/run-nightly.sh "+self.workdir+"/"+test_type+" "+self.workdir+" "+self.queue+" "+self.project+" "+cogv+" "+swiftv
+            cmdline = self.logintype+" "+self.login+" "+self.workdir+"/run-suite.sh "+self.workdir+"/"+test_type+" "+self.workdir+" "+self.queue+" "+self.project+" "+cogv+" "+swiftv
             print "running......"+cmdline
             res = commands.getoutput(cmdline)
             print res
             cmdline2 =  "scp -r "+s+":"+rundir+" ."
             res2 = commands.getoutput(cmdline)
-    
 
-        
+
+
 
 #---------------------main--------------------------------------------------------
 
@@ -51,7 +51,7 @@ for idx,s in enumerate(s_logins):
 # loop over all or run single
 
 sites[1].testSite(cogv,swiftv,test_type)
-sites[2].testSite(cogv,swiftv,test_type)    
+sites[2].testSite(cogv,swiftv,test_type)
 
 
 

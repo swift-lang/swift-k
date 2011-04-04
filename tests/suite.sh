@@ -6,9 +6,9 @@
 # subdirectory called run-DATE, and generate useful HTML output and
 # tests.log
 
-# Usage: nightly.sh <options>* <GROUPLIST>
+# Usage: suite.sh <options>* <GROUPLIST>
 
-# Run nightly.sh -h for quick help
+# Run suite.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
 # Code is checked out into TOPDIR (PWD by default) (PATH is not used)
 # The variables COG_VERSION and SWIFT_VERSION must be set for code checkout
@@ -58,9 +58,9 @@
 # Background processes are used so that hung Swift jobs can be killed
 # These are the background processes (PIDs are tracked)
 # Note that PID management has not yet been perfected.  Check ps
-# in error cases, especially if you kill nightly.sh .
+# in error cases, especially if you kill suite.sh .
 #
-# nightly.sh
+# suite.sh
 # +-monitor()
 #   +-sleep
 # +-process_exec()
@@ -70,7 +70,7 @@
 # FAILURE CASES
 # Some cases are designed to cause Swift to crash.  These
 # SwiftScripts contain the token THIS-SCRIPT-SHOULD-FAIL somewhere.
-# The response of nightly.sh to the exit code of these Swift
+# The response of suite.sh to the exit code of these Swift
 # executions is reversed.
 
 # SCHEDULERS
@@ -88,12 +88,12 @@
 # E.g., providers/local-pbs/PADS
 
 # WARNINGS
-# nightly.sh uses shopt
+# suite.sh uses shopt
 
 shopt -s nullglob
 
 printhelp() {
-  echo "nightly.sh <options> <output>"
+  echo "suite.sh <options> <output>"
   echo ""
   echo "usage:"
   printf "\t -a         Do not run ant dist             \n"
@@ -196,7 +196,7 @@ TESTCOUNT=0
 
 MASTER_PID=$$
 
-# PIDs to kill if nightly.sh is killed:
+# PIDs to kill if suite.sh is killed:
 PROCESS_PID=
 MONITOR_PID=
 
@@ -668,7 +668,7 @@ monitor() {
   fi
 
   sleep 1
-  MSG="nightly.sh: monitor: killed: exceeded $TIMEOUT seconds"
+  MSG="suite.sh: monitor: killed: exceeded $TIMEOUT seconds"
   echo "$MSG" >> $OUTPUT
 
   return 1

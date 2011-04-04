@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is just a sanity check for the nightly.sh shell script test
+# This is just a sanity check for the suite.sh shell script test
 # mechanics
 
 echo sane
