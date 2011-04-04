@@ -12,16 +12,15 @@ package org.globus.cog.karajan.workflow;
 import java.io.File;
 import java.rmi.server.UID;
 
-import org.globus.cog.karajan.util.Cache;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.UIDMap;
 
 public class ElementTree {
-	private UIDMap UIDMap;
+	private final UIDMap UIDMap;
 	private FlowElement root;
 	private String name;
 	private transient String basedir;
-	
+
 	public ElementTree() {
 		this(new UIDMap());
 	}
