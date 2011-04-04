@@ -11,25 +11,24 @@ package org.globus.cog.karajan.workflow.futures;
 
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public interface Future {
 
 	void close();
-	
+
 	boolean isClosed();
-	
+
 	Object getValue() throws ExecutionException;
-	
+
 	/**
-	 * Signal to any threads waiting on this future that the 
+	 * Signal to any threads waiting on this future that the
 	 * evaluation of the future has failed. The exception
 	 * passed through this method should be thrown by all
 	 * sub-sequent calls to getValue();
 	 */
 	void fail(FutureEvaluationException e);
 
-	/** 
+	/**
 	 * When the future becomes available, send the event to the element.
 	 */
 	void addModificationAction(FutureListener target, VariableStack event);
