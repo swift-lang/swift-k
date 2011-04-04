@@ -10,12 +10,13 @@
 package org.globus.cog.karajan.stack;
 
 import org.globus.cog.karajan.workflow.events.EventListener;
+import org.globus.cog.karajan.workflow.nodes.FlowNode;
 
 /**
  * A class to hold commonly used variables on a stack frame.
  * This is used in order to avoid {@link java.util.HashMap}
  * lookups for such frequently used variables.
- * 
+ *
  * @author Mihael Hategan
  *
  */
@@ -26,7 +27,7 @@ public final class Regs {
 	public static final int NBA = 0xfffffffe;
 	public static final int NBB = 0xfffffffd;
 	public static final int NBARRIER = 0xfffffffb;
-	
+
 	private int iA, iB;
 	private int b;
 	private EventListener caller;
@@ -56,7 +57,7 @@ public final class Regs {
 			b &= NBB;
 		}
 	}
-	
+
 	public boolean getBarrier() {
 		return (b & BARRIER) != 0;
 	}
@@ -89,7 +90,7 @@ public final class Regs {
 	public int preIncIA() {
 		return ++iA;
 	}
-	
+
 	public int postIncIA() {
 		return iA++;
 	}
@@ -97,7 +98,7 @@ public final class Regs {
 	public int preIncIB() {
 		return ++iB;
 	}
-	
+
 	public int preDecIA() {
 		return --iA;
 	}
@@ -105,9 +106,19 @@ public final class Regs {
 	public int preDecIB() {
 		return --iB;
 	}
-	
+
+	@Override
 	public String toString() {
-		return "[iA = " + iA + ", iB = " + iB + ", bA = " + getBA() + ", bB = " + getBB() + "]";
+		StringBuilder sb =
+			new StringBuilder("[iA = " + iA + ", iB = " + iB +
+		                      ", bA = " + getBA() +
+		                      ", bB = " + getBB() + "]");
+		if (caller instanceof FlowNode) {
+			sb.append('\n');
+			sb.append("caller: ");
+			sb.append(((FlowNode) caller).toString());
+		}
+		return sb.toString();
 	}
 
 	public synchronized EventListener getCaller() {
