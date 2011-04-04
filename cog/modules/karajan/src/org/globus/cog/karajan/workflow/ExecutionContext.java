@@ -10,11 +10,8 @@
 package org.globus.cog.karajan.workflow;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,11 +45,11 @@ import org.globus.cog.karajan.workflow.nodes.functions.Variable;
 /**
  * An execution context is a structure that is considered static for the duration of
  * one execution of an entire tree. It should not be re-used for multiple runs. Instead
- * different instances 
+ * different instances
  */
 public class ExecutionContext implements EventListener {
 	private static final Logger logger = Logger.getLogger(ExecutionContext.class);
-	
+
 	public static final Arg.Channel STDOUT = new Arg.Channel("stdout");
 	public static final Arg.Channel STDERR = new Arg.Channel("stderr");
 
@@ -63,8 +60,8 @@ public class ExecutionContext implements EventListener {
 	private final transient ElementTree tree;
 	private transient boolean done, failed;
 	private boolean dumpState;
-	private transient List<EventListener> eventListeners;
-	private transient KarajanProperties properties;
+	private transient final List<EventListener> eventListeners;
+	private transient final KarajanProperties properties;
 	private List<String> arguments;
 	private transient Throwable failure;
 	private transient VariableArguments stdout, stderr;
@@ -77,7 +74,7 @@ public class ExecutionContext implements EventListener {
 	public Cache getCache() {
 		return cache;
 	}
-	
+
 	public void setCache(Cache cache) {
 		this.cache = cache;
 	}
@@ -173,11 +170,28 @@ public class ExecutionContext implements EventListener {
 		stack.firstFrame().setVar("true", Boolean.TRUE);
 	}
 
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+	public void failed(VariableStack stack, ExecutionException e)
+	throws ExecutionException {
+		// User-readable output
 		printFailure(e);
 		if (logger.isInfoEnabled()) {
 			logger.info("Detailed exception: ", e);
 		}
+		// Actually propagate the failure
+		failedQuietly(stack, e);
+	}
+
+	protected void printFailure(ExecutionException e) {
+		stderr.append("\nExecution failed:\n");
+		stderr.append(e.toString());
+		stderr.append("\n");
+	}
+
+	/**
+	   Like failed() but allow caller to control output
+	 */
+	public void failedQuietly(VariableStack stack,
+			                  ExecutionException e) {
 		stateManager.stop();
 		notifyFailed(stack, e);
 		synchronized(this) {
@@ -189,12 +203,6 @@ public class ExecutionContext implements EventListener {
 			}
 			setDone();
 		}
-	}
-	
-	protected void printFailure(ExecutionException e) {
-		stderr.append("\nExecution failed:\n");
-		stderr.append(e.toString());
-		stderr.append("\n");
 	}
 
 	public void completed(VariableStack stack) throws ExecutionException {
@@ -246,7 +254,7 @@ public class ExecutionContext implements EventListener {
 	public KarajanProperties getProperties() {
 		return properties;
 	}
-	
+
 	public void notifyCompleted(VariableStack stack) {
 		if (eventListeners != null) {
 			for (EventListener l : eventListeners) {
@@ -259,7 +267,7 @@ public class ExecutionContext implements EventListener {
 			}
 		}
 	}
-	
+
 	public void notifyFailed(VariableStack stack, ExecutionException e) {
 		if (eventListeners != null) {
 			for (EventListener l : eventListeners) {
@@ -286,7 +294,7 @@ public class ExecutionContext implements EventListener {
 	public void setArguments(List<String> arguments) {
 		this.arguments = arguments;
 	}
-	
+
 	public void addArgument(String arg) {
 		if (this.arguments == null) {
 			this.arguments = new ArrayList<String>();
@@ -294,6 +302,7 @@ public class ExecutionContext implements EventListener {
 		this.arguments.add(arg);
 	}
 
+	@Override
 	public String toString() {
 		return tree.getName();
 	}
@@ -326,11 +335,11 @@ public class ExecutionContext implements EventListener {
 		}
 		return messages.toString();
 	}
-	
+
 	public boolean isFailed() {
 		return failed;
 	}
-	
+
 	public Throwable getFailure() {
 		return failure;
 	}
@@ -350,7 +359,7 @@ public class ExecutionContext implements EventListener {
 	public void setStdout(VariableArguments stdout) {
 		this.stdout = stdout;
 	}
-	
+
 	public int getId() {
 		return id;
 	}
@@ -385,14 +394,14 @@ public class ExecutionContext implements EventListener {
 	    }
 		this.cwd = cwd;
 	}
-	
+
 	public synchronized void setAttribute(String name, Object value) {
 	    if (attributes == null) {
 	        attributes = new HashMap<String, Object>();
 	    }
 	    attributes.put(name, value);
 	}
-	
+
 	public synchronized Object getAttribute(String name) {
 		if (attributes == null) {
 		    return null;
