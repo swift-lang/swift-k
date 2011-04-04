@@ -2,6 +2,6 @@
 
 set -x
 
-grep AssertFailedException stdout.txt || exit 1
+grep "assert failed" stdout.txt || exit 1
 
 exit 0
