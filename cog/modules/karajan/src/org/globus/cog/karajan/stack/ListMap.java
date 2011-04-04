@@ -20,9 +20,9 @@ import java.util.Set;
  * An implementation of {@link java.util.Map} backed by an array with sequential
  * access and a fixed size of 4 entries. It has a smaller memory consumption
  * than {@link java.util.HashMap}, but O(n) put/lookup time.
- * 
+ *
  * @author Mihael Hategan
- * 
+ *
  */
 public final class ListMap implements Map {
 	private Object s1, s2, s3, s4;
@@ -40,6 +40,7 @@ public final class ListMap implements Map {
 		return keyIndex(key) != -1;
 	}
 
+	@SuppressWarnings("fallthrough")
 	private int keyIndex(Object key) {
 		switch (next) {
 			case 4:
@@ -75,6 +76,7 @@ public final class ListMap implements Map {
 	public Set entrySet() {
 		return new AbstractSet() {
 
+			@Override
 			public Iterator iterator() {
 				return new Iterator() {
 					private int n;
@@ -102,6 +104,7 @@ public final class ListMap implements Map {
 				};
 			}
 
+			@Override
 			public int size() {
 				return next;
 			}
@@ -132,6 +135,7 @@ public final class ListMap implements Map {
 	public Set keySet() {
 		return new AbstractSet() {
 
+			@Override
 			public Iterator iterator() {
 				return new Iterator() {
 					private int n;
@@ -159,12 +163,14 @@ public final class ListMap implements Map {
 				};
 			}
 
+			@Override
 			public int size() {
 				return next;
 			}
 		};
 	}
 
+	@SuppressWarnings("fallthrough")
 	public synchronized Object put(Object key, Object value) {
 		int ki = keyIndex(key);
 		Object old = null;
@@ -254,6 +260,7 @@ public final class ListMap implements Map {
 
 	public Collection values() {
 		return new AbstractList() {
+			@Override
 			public Object get(int index) {
 				switch (index) {
 					case 0:
@@ -267,10 +274,27 @@ public final class ListMap implements Map {
 				}
 			}
 
+			@Override
 			public int size() {
 				return next;
 			}
 		};
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(512);
+
+		sb.append("{ ");
+		for (Object o : entrySet()) {
+			Entry entry = (Entry) o;
+			sb.append("  ");
+			sb.append(entry.toString());
+			sb.append('\n');
+		}
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 	private static class Entry implements Map.Entry {
@@ -294,6 +318,11 @@ public final class ListMap implements Map {
 			Object old = this.value;
 			this.value = value;
 			return old;
+		}
+
+		@Override
+		public String toString() {
+			return "" + key + "=" + value;
 		}
 	}
 }
