@@ -6,23 +6,17 @@
 
 /*
  * Created on Jun 6, 2003
- *  
+ *
  */
 package org.globus.cog.karajan.workflow.nodes;
 
-import java.io.PrintStream;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
 
 public class ProjectNode extends SequentialWithArguments {
 	public static final Logger logger = Logger.getLogger(ProjectNode.class);
-	
-	public static final Arg A_NAME = new Arg.Positional("name");
 
-	private PrintStream out;
+	public static final Arg A_NAME = new Arg.Positional("name");
 
 	static {
 		setArguments(ProjectNode.class, new Arg[] { A_NAME });
