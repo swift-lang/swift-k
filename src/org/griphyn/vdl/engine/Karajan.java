@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,24 +44,26 @@ import org.globus.swift.language.TypesDocument.Types.Type;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
-import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
 
 public class Karajan {
 	public static final Logger logger = Logger.getLogger(Karajan.class);
 
+	Map<String,String> stringInternMap = new HashMap<String,String>();
+	Map<Integer,String> intInternMap = new HashMap<Integer,String>();
+	Map<Float,String> floatInternMap = new HashMap<Float,String>();
+	Map<String,ProcedureSignature> proceduresMap = 
+	    new HashMap<String,ProcedureSignature>();
+	Map<String,ProcedureSignature> functionsMap = 
+	    new HashMap<String,ProcedureSignature>();
+	Map<String,Type> typesMap = new HashMap<String,Type>();
+
 	public static final String TEMPLATE_FILE_NAME = "Karajan.stg";
 
-	Map stringInternMap = new HashMap();
-	Map intInternMap = new HashMap();
-	Map floatInternMap = new HashMap();
-	Map proceduresMap = new HashMap();
-	Map functionsMap = new HashMap();
-	Map typesMap = new HashMap();
 
-	LinkedList importList = new LinkedList();
-	Set importedNames = new HashSet();
+	LinkedList<Program> importList = new LinkedList<Program>();
+	Set<String> importedNames = new HashSet<String>();
 
 	int internedIDCounter = 17000;
 
@@ -99,12 +100,7 @@ public class Karajan {
 		}
 
 		Program prog = programDoc.getProgram();
-
-		try {
-			me.setTemplateGroup(templates);
-		} catch(IOException ioe) {
-			throw new CompilationException("Unable to set source templates",ioe);
-		}
+		me.setTemplateGroup(templates);
 		StringTemplate code = me.program(prog);
 		out.println(code.toString());
 	}
@@ -113,7 +109,7 @@ public class Karajan {
 		throws XmlException, IOException {
 
 		XmlOptions options = new XmlOptions();
-		Collection errors = new ArrayList();
+		Collection<XmlError> errors = new ArrayList<XmlError>();
 		options.setErrorListener(errors);
 		options.setValidateOnSet();
 		options.setLoadLineNumbers();
@@ -126,11 +122,8 @@ public class Karajan {
 		} else {
 			logger.warn("Validation of XML intermediate file failed.");
 			logger.warn("Validation errors:");
-			Iterator i = errors.iterator();
-			while(i.hasNext()) {
-				XmlError error = (XmlError) i.next();
+			for (XmlError error : errors)
 				logger.warn(error.toString());
-			}
 			System.exit(3);
 		}
 		return programDoc;
@@ -143,7 +136,7 @@ public class Karajan {
 		functionsMap = ProcedureSignature.makeFunctionSignatures();
 	}
 
-	void setTemplateGroup(StringTemplateGroup tempGroup) throws IOException {
+	void setTemplateGroup(StringTemplateGroup tempGroup) {
 		m_templates = tempGroup;
 	}
 
@@ -270,28 +263,15 @@ public class Karajan {
 		importList.addFirst(prog);
 		processImports(prog);
 
-		Iterator it;
-
-		it=importList.iterator();
-		while(it.hasNext()) {
-			processTypes((Program)it.next(), scope);
-		}
-
-		it=importList.iterator();
-		while(it.hasNext()) {
-			statementsForSymbols((Program)it.next(), scope);
-		}
-
-		it=importList.iterator();
-		while(it.hasNext()) {
-			processProcedures((Program)it.next(), scope);
-		}
-
-		it=importList.iterator();
-		while(it.hasNext()) {
-			statements((Program)it.next(), scope);
-		}
-
+		for (Program program : importList)
+		    processTypes(program, scope);
+		for (Program program : importList)
+            statementsForSymbols(program, scope);
+        for (Program program : importList)
+            processProcedures(program, scope);
+        for (Program program : importList)
+            statements(program, scope);
+			
 		generateInternedConstants(scope.bodyTemplate);
 
 		return scope.bodyTemplate;
@@ -547,26 +527,31 @@ public class Karajan {
 	}
 
 
-	public StringTemplate call(Call call, VariableScope scope, boolean inhibitOutput) throws CompilationException {
+	public StringTemplate call(Call call, VariableScope scope, boolean inhibitOutput) 
+	throws CompilationException {
 		try {
 			// Check is called procedure declared previously
 			String procName = call.getProc().getLocalPart();
 			if (proceduresMap.get(procName) == null)
-				throw new CompilationException("Procedure " + procName + " is not declared.");
+				throw new CompilationException
+				("Procedure " + procName + " is not declared.");
 
 			// Check procedure arguments
 			int noOfOptInArgs = 0;
-			Map inArgs = new HashMap();
-			Map outArgs = new HashMap();
+			Map<String, FormalArgumentSignature> inArgs = 
+			    new HashMap<String, FormalArgumentSignature>();
+			Map<String, FormalArgumentSignature> outArgs = 
+			    new HashMap<String, FormalArgumentSignature>();
 
-			ProcedureSignature proc = (ProcedureSignature)proceduresMap.get(procName);
+			ProcedureSignature proc = proceduresMap.get(procName);
 			StringTemplate callST;
 			if(proc.getInvocationMode() == ProcedureSignature.INVOCATION_USERDEFINED) {
 				callST = template("callUserDefined");
 			} else if(proc.getInvocationMode() == ProcedureSignature.INVOCATION_INTERNAL) {
 				callST = template("callInternal");
 			} else {
-				throw new CompilationException("Unknown procedure invocation mode "+proc.getInvocationMode());
+				throw new CompilationException
+				("Unknown procedure invocation mode "+proc.getInvocationMode());
 			}
 			callST.setAttribute("func", call.getProc().getLocalPart());
 			/* Does number of input arguments match */
@@ -574,8 +559,9 @@ public class Karajan {
 				if (proc.getInputArray(i).isOptional())
 					noOfOptInArgs++;
 				inArgs.put(proc.getInputArray(i).getName(), proc.getInputArray(i));
-			}
+			}				
 			if (!proc.getAnyNumOfInputArgs() && (call.sizeOfInputArray() < proc.sizeOfInputArray() - noOfOptInArgs ||
+
 				                                 call.sizeOfInputArray() > proc.sizeOfInputArray()))
 				throw new CompilationException("Wrong number of procedure input arguments: specified " + call.sizeOfInputArray() +
 						" and should be " + proc.sizeOfInputArray());
@@ -613,7 +599,7 @@ public class Karajan {
 
 					if (!inArgs.containsKey(input.getBind()))
 						throw new CompilationException("Formal argument " + input.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = (FormalArgumentSignature)inArgs.get(input.getBind());
+					FormalArgumentSignature formalArg = inArgs.get(input.getBind());
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -632,7 +618,7 @@ public class Karajan {
 					StringTemplate argST = actualParameter(input, scope);
 					callST.setAttribute("inputs", argST);
 
-					FormalArgumentSignature formalArg = ((ProcedureSignature)proceduresMap.get(procName)).getInputArray(i);
+					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -648,7 +634,7 @@ public class Karajan {
 					String formalName = input.getBind();
 					if (!inArgs.containsKey(formalName))
 						throw new CompilationException("Formal argument " + formalName + " doesn't exist");
-					FormalArgumentSignature formalArg = (FormalArgumentSignature)inArgs.get(formalName);
+					FormalArgumentSignature formalArg = inArgs.get(formalName);
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -683,7 +669,7 @@ public class Karajan {
 
 					if (!outArgs.containsKey(output.getBind()))
 						throw new CompilationException("Formal argument " + output.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = (FormalArgumentSignature)outArgs.get(output.getBind());
+					FormalArgumentSignature formalArg = outArgs.get(output.getBind());
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -699,7 +685,7 @@ public class Karajan {
 					StringTemplate argST = actualParameter(output, scope);
 					callST.setAttribute("outputs", argST);
 
-					FormalArgumentSignature formalArg =((ProcedureSignature)proceduresMap.get(procName)).getOutputArray(i);
+					FormalArgumentSignature formalArg =proceduresMap.get(procName).getOutputArray(i);
 					String formalType = formalArg.getType();
 
 					/* type check positional output args */
@@ -741,11 +727,8 @@ public class Karajan {
 		iterateST.setAttribute("cond", condST);
 
 		Object statementID = new Integer(callID++);
-		Iterator scopeIterator = innerScope.getVariableIterator();
-		while(scopeIterator.hasNext()) {
-			String v=(String) scopeIterator.next();
+		for (String v : innerScope.getVariables()) 
 			scope.addWriter(v, statementID, true);
-		}
 		scope.appendStatement(iterateST);
 	}
 
@@ -778,13 +761,10 @@ public class Karajan {
 
 			String inVar = (String) inST.getAttribute("var");
 			Object statementID = new Integer(callID++);
-			Iterator scopeIterator = innerScope.getVariableIterator();
-			while(scopeIterator.hasNext()) {
-				String v=(String) scopeIterator.next();
-				scope.addWriter(v, statementID, true);
-				if (v.equals(inVar) && !innerScope.isVariableLocallyDefined(v)) {
-				    foreachST.setAttribute("selfClose", "true");
-				}
+			for (String v : innerScope.getVariables()) { 
+			    scope.addWriter(v, statementID, true);
+			    if (v.equals(inVar) && !innerScope.isVariableLocallyDefined(v)) 
+			        foreachST.setAttribute("selfClose", "true");
 			}
 			scope.appendStatement(foreachST);
 		} catch(CompilationException re) {
@@ -812,11 +792,8 @@ public class Karajan {
 
 		Object statementID = new Integer(callID++);
 
-		Iterator thenScopeIterator = innerThenScope.getVariableIterator();
-		while(thenScopeIterator.hasNext()) {
-			String v=(String) thenScopeIterator.next();
+		for (String v : innerThenScope.getVariables())
 			scope.addWriter(v, statementID, true);
-		}
 
 		if (elsestat != null) {
 
@@ -827,11 +804,8 @@ public class Karajan {
 			statementsForSymbols(elsestat, innerElseScope);
 			statements(elsestat, innerElseScope);
 
-			Iterator elseScopeIterator = innerElseScope.getVariableIterator();
-			while(elseScopeIterator.hasNext()) {
-				String v=(String) elseScopeIterator.next();
+			for (String v : innerElseScope.getVariables()) 
 				scope.addWriter(v, statementID, true);
-			}
 		}
 		scope.appendStatement(ifST);
 	}
@@ -855,12 +829,8 @@ public class Karajan {
 
 			caseStat(casestat, caseScope);
 
-			Iterator caseScopeIterator = caseScope.getVariableIterator();
-			while(caseScopeIterator.hasNext()) {
-				String v=(String) caseScopeIterator.next();
+			for (String v : caseScope.getVariables())
 				scope.addWriter(v, statementID, true);
-			}
-
 		}
 		Default defaultstat = switchstat.getDefault();
 		if (defaultstat != null) {
@@ -869,11 +839,8 @@ public class Karajan {
 			switchST.setAttribute("sdefault", defaultScope.bodyTemplate);
 			statementsForSymbols(defaultstat, defaultScope);
 			statements(defaultstat, defaultScope);
-			Iterator defaultScopeIterator = defaultScope.getVariableIterator();
-			while(defaultScopeIterator.hasNext()) {
-				String v=(String) defaultScopeIterator.next();
+			for (String v : defaultScope.getVariables())
 				scope.addWriter(v, statementID, true);
-			}
 		}
 	}
 
@@ -942,7 +909,7 @@ public class Karajan {
 	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", func.getName());
-		ProcedureSignature funcSignature =  (ProcedureSignature) functionsMap.get(func.getName());
+		ProcedureSignature funcSignature =  functionsMap.get(func.getName());
 		if(funcSignature == null) {
 			throw new CompilationException("Unknown function: @"+func.getName());
 		}
@@ -1047,7 +1014,7 @@ public class Karajan {
 				internedID = "swift#int#" + i;
 				intInternMap.put(iobj, internedID);
 			} else {
-				internedID = (String)intInternMap.get(iobj);
+				internedID = intInternMap.get(iobj);
 			}
 			StringTemplate st = template("id");
 			st.setAttribute("var", internedID);
@@ -1062,7 +1029,7 @@ public class Karajan {
 				internedID = "swift#float#" + (internedIDCounter++);
 				floatInternMap.put(fobj, internedID);
 			} else {
-				internedID = (String)floatInternMap.get(fobj);
+				internedID = floatInternMap.get(fobj);
 			}
 			StringTemplate st = template("id");
 			st.setAttribute("var",internedID);
@@ -1076,7 +1043,7 @@ public class Karajan {
 				internedID = "swift#string#" + (internedIDCounter++);
 				stringInternMap.put(s,internedID);
 			} else {
-				internedID = (String)stringInternMap.get(s);
+				internedID = stringInternMap.get(s);
 			}
 			StringTemplate st = template("id");
 			st.setAttribute("var",internedID);
@@ -1175,7 +1142,7 @@ public class Karajan {
 			// if the parent is an array, then check against
 			// the base type of the array
 
-boolean arrayMode = false;
+			boolean arrayMode = false;
 			if(parentType.endsWith("[]")) {
 				arrayMode=true;
 				parentType = parentType.substring(0, parentType.length() - 2);
@@ -1184,7 +1151,7 @@ boolean arrayMode = false;
 			String actualType = null;
 			// TODO this should be a map lookup of some kind?
 
-			Type t = (Type)typesMap.get(parentType);
+			Type t = typesMap.get(parentType);
 
 			TypeStructure ts = t.getTypestructure();
 			int j = 0;
@@ -1264,7 +1231,7 @@ boolean arrayMode = false;
 			StringTemplate st = function(f, scope);
 			/* Set function output type */
 			String name = f.getName();
-			ProcedureSignature funcSignature = (ProcedureSignature) functionsMap.get(name);
+			ProcedureSignature funcSignature = functionsMap.get(name);
 			if (funcSignature != null) {
 				/* Functions have only one output parameter */
 				st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
@@ -1279,7 +1246,7 @@ boolean arrayMode = false;
 		    ref.setVariableReference("swift#callintermediate");
 		    c.getOutputArray(0).set(ref);
 		    String name = c.getProc().getLocalPart();
-		    ProcedureSignature funcSignature = (ProcedureSignature) proceduresMap.get(name);
+		    ProcedureSignature funcSignature = proceduresMap.get(name);
 
 		    if (funcSignature == null) {
                 throw new CompilationException("Procedure " + name + " is not defined.");
@@ -1383,23 +1350,18 @@ boolean arrayMode = false;
 
 	public void generateInternedConstants(StringTemplate programTemplate) {
 
-		Iterator i;
-		i = stringInternMap.keySet().iterator();
-		while(i.hasNext()) {
-			String str = (String)i.next();
-			String variableName = (String)stringInternMap.get(str);
+		for (String key : stringInternMap.keySet()) {
+			String variableName = stringInternMap.get(key);
 			StringTemplate st = template("sConst");
-			st.setAttribute("innervalue",escapeQuotes(str));
+			st.setAttribute("innervalue",escapeQuotes(key));
 			StringTemplate vt = template("globalConstant");
 			vt.setAttribute("name",variableName);
 			vt.setAttribute("expr",st);
 			programTemplate.setAttribute("constants",vt);
 		}
-
-		i = intInternMap.keySet().iterator();
-		while(i.hasNext()) {
-			Integer key = (Integer)i.next();
-			String variableName = (String)intInternMap.get(key);
+	    
+	    for (Integer key : intInternMap.keySet()) {
+			String variableName = intInternMap.get(key);
 			StringTemplate st = template("iConst");
 			st.setAttribute("value",key);
 			StringTemplate vt = template("globalConstant");
@@ -1408,10 +1370,8 @@ boolean arrayMode = false;
 			programTemplate.setAttribute("constants",vt);
 		}
 
-		i = floatInternMap.keySet().iterator();
-		while(i.hasNext()) {
-			Float key = (Float)i.next();
-			String variableName = (String)floatInternMap.get(key);
+	    for (Float key : floatInternMap.keySet()) {
+			String variableName = floatInternMap.get(key);
 			StringTemplate st = template("fConst");
 			st.setAttribute("value",key);
 			StringTemplate vt = template("globalConstant");
@@ -1419,8 +1379,6 @@ boolean arrayMode = false;
 			vt.setAttribute("expr",st);
 			programTemplate.setAttribute("constants",vt);
 		}
-
-
 	}
 
 	String escapeQuotes(String in) {

@@ -2,6 +2,8 @@ package org.griphyn.vdl.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.globus.swift.language.FormalParameter;
 
@@ -9,8 +11,8 @@ import org.globus.swift.language.FormalParameter;
 public class ProcedureSignature {
 
 	private String name;
-	private ArrayList inputArgs;
-	private ArrayList outputArgs;
+	private List<FormalArgumentSignature> inputArgs;
+	private List<FormalArgumentSignature> outputArgs;
 	private boolean anyNumOfInputArgs;
 	private boolean anyNumOfOutputArgs; /* this is maybe unnecessary*/
 	private int invocationMode;
@@ -23,8 +25,8 @@ public class ProcedureSignature {
 
 	public ProcedureSignature(String name) {
 		this.name = name;
-		inputArgs = new ArrayList();
-		outputArgs = new ArrayList();
+		inputArgs = new ArrayList<FormalArgumentSignature>();
+		outputArgs = new ArrayList<FormalArgumentSignature>();
 		anyNumOfInputArgs = false;
 		anyNumOfOutputArgs = false;
 		invocationMode = INVOCATION_USERDEFINED;
@@ -70,27 +72,26 @@ public class ProcedureSignature {
 	    new FormalArgumentSignature[0];
 
 	public FormalArgumentSignature[] getInputArray() {
-		return (FormalArgumentSignature[])
-		    inputArgs.toArray(FORMAL_ARGUMENT_SIGNATURE_ARRAY);
+		return inputArgs.toArray(FORMAL_ARGUMENT_SIGNATURE_ARRAY);
 	}
 
 	public FormalArgumentSignature[] getOutputArray() {
-		return (FormalArgumentSignature[])
-		    outputArgs.toArray(FORMAL_ARGUMENT_SIGNATURE_ARRAY);
+		return outputArgs.toArray(FORMAL_ARGUMENT_SIGNATURE_ARRAY);
 	}
 
 	public FormalArgumentSignature getInputArray(int i) {
-		return (FormalArgumentSignature) inputArgs.get(i);
+		return inputArgs.get(i);
 	}
 
 	public FormalArgumentSignature getOutputArray(int i) {
-		return (FormalArgumentSignature) outputArgs.get(i);
+		return outputArgs.get(i);
 	}
 
 	public void setInputArgs(FormalParameter[] fp) {
 		for (int i = 0; i < fp.length; i++) {
-			FormalArgumentSignature fas = new FormalArgumentSignature(fp[i].getType().getLocalPart(),
-					                                                  fp[i].getName());
+			FormalArgumentSignature fas = 
+			    new FormalArgumentSignature(fp[i].getType().getLocalPart(),
+			        fp[i].getName());
 			fas.setOptional(!fp[i].isNil());
 			this.addInputArg(fas);
 		}
@@ -114,8 +115,10 @@ public class ProcedureSignature {
 		return this.invocationMode;
 	}
 
-	public static HashMap makeProcedureSignatures() {
-		HashMap proceduresMap = new HashMap();
+	public static Map<String,ProcedureSignature>
+	makeProcedureSignatures() {
+		Map<String,ProcedureSignature> proceduresMap = 
+		    new HashMap<String,ProcedureSignature>();
 
 		ProcedureSignature readData = new ProcedureSignature("readData");
 		FormalArgumentSignature rdInputArg = new FormalArgumentSignature(true);
@@ -164,8 +167,10 @@ public class ProcedureSignature {
 		return proceduresMap;
 	}
 
-	public static HashMap makeFunctionSignatures () {
-		HashMap functionsMap = new HashMap();
+	public static Map<String,ProcedureSignature> 
+	makeFunctionSignatures() {
+		Map<String,ProcedureSignature> functionsMap = 
+		    new HashMap<String,ProcedureSignature>();
 
 		ProcedureSignature arg = new ProcedureSignature("arg");
 		FormalArgumentSignature argIn1 = new FormalArgumentSignature("string");

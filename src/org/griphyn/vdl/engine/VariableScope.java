@@ -80,13 +80,13 @@ public class VariableScope {
 
 	/** Set of variables (String token names) that are declared in
 	    this scope - not variables in parent scopes, though. */
-	Set variables = new HashSet();
-	Map varTypes = new HashMap();
+	Set<String> variables = new HashSet<String>();
+	Map<String, String> varTypes = new HashMap<String, String>();
 
 	/** Set of variables (String token names) which are global and
 	    declared in this scope (which must be a root scope). Variables
 	    in this set must also appear in the variables set. */
-	Set globals = new HashSet();
+	Set<String> globals = new HashSet<String>();
 
 	/** Asserts that a named variable is declared in this scope.
 	    Might also eventually contain more information about the
@@ -189,9 +189,9 @@ public class VariableScope {
 
 	/** List of templates to be executed in sequence after the present
 	    in-preparation statement is outputted. */
-	List presentStatementPostStatements =  Collections.synchronizedList(new ArrayList());
+	List<StringTemplate> presentStatementPostStatements =  Collections.synchronizedList(new ArrayList<StringTemplate>());
 
-	Map variableUsage = Collections.synchronizedMap(new HashMap());
+	Map<String, Variable> variableUsage = Collections.synchronizedMap(new HashMap<String, Variable>());
 
 	/** indicates that the present in-preparation statement writes to the
 	    named variable. If the variable is declared in the local scope,
@@ -224,18 +224,18 @@ public class VariableScope {
 // variable or we find an upwards assignment prohibition or we run
 // out of scopes
 
-// TODO so far this should find undelcared variables at compile time
+// TODO so far this should find undeclared variables at compile time
 // so perhaps worth making this into a separate patch if it actually
 // works
 
 			if(isVariableWriteable(variableName, partialWriter)) {
-				Variable variable = (Variable) variableUsage.get(variableName);
+				Variable variable = variableUsage.get(variableName);
 				if(variable == null) {
 					variable = new Variable();
 					variableUsage.put(variableName, variable);
 				}
 
-				List statementList = variable.writingStatements;
+				List<Object> statementList = variable.writingStatements;
 				if(!statementList.contains(closeID)) {
 					statementList.add(closeID);
 				}
@@ -264,24 +264,25 @@ public class VariableScope {
 				logger.debug("thats the declaration for "+name);
 				return declST;
 			}
-		} else { // assume its a List
-			Iterator it = ((List) decls).iterator();
-			while(it.hasNext()) {
-				StringTemplate declST = (StringTemplate) it.next();
-				logger.debug("looking at declaration "+declST);
-try {
-				if(declST.getAttribute("name").equals(name)) {
-					logger.debug("thats the declaration for "+name);
-					return declST;
-				}
-} catch(java.util.NoSuchElementException nse) {
-					logger.debug("it so definitely wasn't in that one, we got an exception.");
-// TODO this is not a nice use of exceptions...
-
-}
-			}
+		} else { // assume its a List of StringTemplate
+		     @SuppressWarnings("unchecked")
+		     List<StringTemplate> list = (List<StringTemplate>) decls;
+		     for (StringTemplate declST : list) { 
+		         logger.debug("looking at declaration "+declST);
+		         try {
+		             if(declST.getAttribute("name").equals(name)) {
+		                 logger.debug("thats the declaration for "+name);
+		                 return declST;
+		             }
+		         } catch(java.util.NoSuchElementException nse) {
+		             logger.debug
+		             ("it so definitely wasn't in that one, we got an exception.");
+		             // TODO this is not a nice use of exceptions...
+		         }
+		     }
 		}
-logger.info("UH OH - couldn't find local definition for "+name);
+		
+		logger.info("UH OH - couldn't find local definition for "+name);
 		return null;
 	}
 
@@ -293,23 +294,27 @@ logger.info("UH OH - couldn't find local definition for "+name);
 		StringTemplate wrapperST = compiler.template("sequential");
 		bodyTemplate.setAttribute("statements", wrapperST);
 		wrapperST.setAttribute("statements",statementST);
-		Iterator it = presentStatementPostStatements.iterator();
+		Iterator<StringTemplate> it = presentStatementPostStatements.iterator();
 		while(it.hasNext()) {
 			wrapperST.setAttribute("statements", it.next());
 		}
-		presentStatementPostStatements =  Collections.synchronizedList(new ArrayList());
+		presentStatementPostStatements =  Collections.synchronizedList(new ArrayList<StringTemplate>());
 	}
 
 	/** Stores information about a variable that is referred to in this
 	    scope. Should probably get used for dataset marking eventually. */
 	class Variable {
-		List writingStatements =  Collections.synchronizedList(new ArrayList());
+		List<Object> writingStatements =  Collections.synchronizedList(new ArrayList<Object>());
 	}
 
-	Iterator getVariableIterator() {
+	Iterator<String> getVariableIterator() {
 		return variableUsage.keySet().iterator();
 	}
 
+	Set<String> getVariables() {
+	    return variableUsage.keySet();
+	}
+	
 	public VariableScope getRootScope() {
 		return rootScope;
 	}
