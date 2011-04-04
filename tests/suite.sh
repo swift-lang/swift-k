@@ -13,10 +13,12 @@
 # have the conventional cog/modules/swift configuration,
 # and you have done an ant dist, you can run
 # suite.sh -a -c -g -p -s -o /tmp tests/groups/group-all-local.sh
+# or cd into /tmp and run
+# suite.sh -a -c -g -p -s cog/modules/swift/tests/groups/group-all-local.sh
 
 # Run suite.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
-# Code is checked out into TOPDIR (PWD by default) (PATH is not used)
+# Code is checked out into TOPDIR (PWD by default) (PATH is overridden)
 # The variables COG_VERSION and SWIFT_VERSION must be set for code checkout
 # e.g. COG_VERSION=branches/4.1.8, SWIFT_VERSION=branches/release-0.92
 # Swift is compiled and installed in its source tree
@@ -991,8 +993,10 @@ echo "GROUPLISTFILE: $GROUPLISTFILE"
 source $GROUPLISTFILE || exit 1
 
 cd $TOPDIR
+[ $? != 0 ] && crash "Could not use given TOPDIR: $TOPDIR"
+
 mkdir -p $RUNDIR
-[ $? != 0 ] && echo "Could not mkdir: $RUNDIR" && exit 1
+[ $? != 0 ] && crash "Could not mkdir: $RUNDIR"
 
 date > $LOG
 
@@ -1024,6 +1028,15 @@ fi
 
 TESTNAME="Compile"
 start_row
+
+# Exit early if the Swift directory is not there
+if [[ ! -d $TOPDIR/cog/modules/swift ]]
+then
+  echo "Could not find swift source directory"
+  echo "TOPDIR: $TOPDIR"
+  echo "Looked for $TOPDIR/cog/modules/swift"
+  crash
+fi
 
 test_exec cd $TOPDIR/cog/modules/swift
 if (( $CLEAN )); then
