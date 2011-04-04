@@ -593,7 +593,7 @@ result() {
 
 # Execute process in the background
 process_exec() {
-  printf "\nExecuting: $@" >>$LOG
+  printf "\nExecuting: $@\n" >>$LOG
   rm -f $OUTPUT
 
   "$@" > $OUTPUT 2>&1
