@@ -8,6 +8,12 @@
 
 # Usage: suite.sh <options>* <GROUPLIST>
 
+# PRIMARY USAGE MODE
+# Assuming your code is in /tmp/cog, where you
+# have the conventional cog/modules/swift configuration,
+# and you have done an ant dist, you can run
+# suite.sh -a -c -g -p -s -o /tmp tests/groups/group-all-local.sh
+
 # Run suite.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
 # Code is checked out into TOPDIR (PWD by default) (PATH is not used)
