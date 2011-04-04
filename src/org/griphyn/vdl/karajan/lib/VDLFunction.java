@@ -32,6 +32,7 @@ import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
+import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.karajan.WrapperMap;
@@ -50,7 +51,6 @@ import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 
-
 public abstract class VDLFunction extends SequentialWithArguments {
 	public static final Logger logger = Logger.getLogger(VDLFunction.class);
 
@@ -58,7 +58,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final Arg OA_PATH = new Arg.Optional("path", "");
 	public static final Arg PA_PATH = new Arg.Positional("path");
-	public static final Arg PA_VAR = new Arg.Positional("var");
+	public static final Arg PA_VAR = new Arg.Positional("var"); 
 	public static final Arg OA_ISARRAY = new Arg.Optional("isArray", Boolean.FALSE);
 
 	public final void post(VariableStack stack) throws ExecutionException {
@@ -68,6 +68,10 @@ public abstract class VDLFunction extends SequentialWithArguments {
 				ret(stack, o);
 			}
 			super.post(stack);
+		}
+		catch (AssertFailedException e) { 
+		    logger.fatal("swift: assert failed: " + e.getMessage());
+		    stack.getExecutionContext().failedQuietly(stack, e);
 		}
 		catch (HandleOpenException e) {
 			throw new FutureNotYetAvailable(VDLFunction.addFutureListener(stack, e.getSource()));
