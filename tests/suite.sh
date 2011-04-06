@@ -278,6 +278,11 @@ html_h1() {
   html "<h1>$TEXT</h1>"
 }
 
+html_b() {
+  TEXT=$1
+  html "<b>$TEXT</b>"
+}
+
 html_a_name() {
   NAME=$1
   html "<a name=\"$NAME\">"
@@ -370,67 +375,16 @@ html_~html() {
 }
 
 html_comment() {
-  COMMENT=$1
+  COMMENT="$1"
   (( HTML_COMMENTS == 1 )) && html "<!-- $COMMENT -->"
 }
 
 footer() {
-  html "</tr></table></tr></table>"
-  html_comment "End of tests"
-
-  MONTHS=("" "Jan" "Feb" "Mar" "Apr" "May" "Jun" \
-    "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
-
-  if [ "$BINPACKAGE" != "" ]; then
-    FBP=$RUNDIR/$BINPACKAGE
-    SIZE=`ls -hs $FBP`
-    SIZE=${SIZE/$FBP}
-    cat <<DOH >>$HTML
-	<h1>Binary packages</h1>
-	<a name="#packages">
-	<a href="$BINPACKAGE">$BINPACKAGE</a> ($SIZE)<br>
-DOH
-  fi
-
-  LASTYR="00"
-  LASTMO="00"
-  html "<h1>Older tests</h1>"
-  html '<a name="older">'
-  html "<table><tr>"
-  for OLDER in `ls $OUTDIR/tests-*.html|sort`; do
-    O=`basename $OLDER`
-    YR=${O:6:2}
-    MO=${O:8:2}
-    DY=${O:10:2}
-    if echo "$DY$MO$YR"|egrep -v "[0-9]{6}"; then
-      YR=${O#tests-}
-      YR=${YR%.html}
-      MO=0
-      DY=$YR
-    else
-      YR="20$YR"
-    fi
-    if [ $LASTYR != $YR ]; then
-      html "</tr></table>"
-      html "<h2>$YR</h2>"
-      LASTYR=$YR
-    fi
-    if [ $LASTMO != $MO ]; then
-      html "</tr></table>"
-      html "<h3>${MONTHS[$MO]}</h3>"
-      html "<table border=\"0\"><tr>"
-      LASTMO=$MO
-    fi
-    SUCCESS=`grep 'class="success"' $OLDER|wc -l`
-    FAILURE=`grep 'class="failure"' $OLDER|wc -l`
-    if [ "$SUCCESS$FAILURE" == "00" ]; then
-      COLOR="#e0e0e0"
-    else
-      COLOR=`perl -e "printf \"#%02x%02x%02x\", $FAILURE/($SUCCESS+$FAILURE)*220+35, $SUCCESS/($SUCCESS+$FAILURE)*220+35, 40;"`
-    fi
-    html "<td bgcolor=\"$COLOR\"><a href=\"$O\">$DY</a></td>"
-  done
-  html "</tr></table><br><br>"
+  html_~tr
+  html_~table
+  html_~tr
+  html_~table
+  html_b "End of tests."
   html_~body
   html_~html
 }
@@ -666,12 +620,12 @@ monitor() {
 
   if ps | grep $PID
   then
-    verbose "monitor: killing test process $PID"
+    echo "monitor: killing test process $PID"
     touch killed_test
-    /bin/kill -INT $PID
+    kill $PID
     KILLCODE=$?
     if [ $KILLCODE == 0 ]; then
-      verbose "monitor: killed process_exec (INT)"
+      echo "monitor: killed test process"
     fi
   fi
 
@@ -1078,6 +1032,7 @@ for G in ${GROUPLIST[@]}; do
 done
 
 if [ $GRID_TESTS == "0" ]; then
+  footer
   exit 0
 fi
 
