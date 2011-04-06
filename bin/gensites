@@ -169,6 +169,9 @@ do
       "#site $TEMPLATE n_max="*|'#site n_max='*)
          MAXTIME=`get_value $line`
          ;;
+      "#site $TEMPLATE slots="*|'#site slots='*)
+         SLOTS=`get_value $line`
+         ;;
    esac
 done < $PROPERTIES_FILE
 
