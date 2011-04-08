@@ -9,6 +9,7 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 
@@ -44,15 +45,29 @@ public class CoasterPersistentService extends CoasterService {
         ap.setExecutableName("coaster-service");
         ap.addOption("port", "Specifies which port to start the service on", "port",
             ArgumentParser.OPTIONAL);
-        ap.addOption("localport", "Specifies which port to start the local service on",
-            "localport", ArgumentParser.OPTIONAL);
+        ap.addOption("localport", "Specifies which port to start the local service on " +
+        		"(workers connect to the local service)",
+        		"localport", ArgumentParser.OPTIONAL);
         ap.addAlias("port", "p");
+        ap.addOption("portfile", "Specifies a file to write the service port to. " +
+        		"If this option is specified, the service port will be chosen automatically. " +
+        		"-portfile (-S) and -port (-p) are mutually exclusive.", 
+        		"file", ArgumentParser.OPTIONAL);
+        ap.addAlias("portfile", "S");
+        ap.addOption("localportfile", "Specifies a file to write the local port to. " +
+        		"If this option is specified, the local port will be chosen automatically. " +
+        		"-localportfile (-W) and -localport are mutually exclusive.", 
+        		"file", ArgumentParser.OPTIONAL);
+        ap.addAlias("localportfile", "W");
         ap.addFlag("nosec", "Disables GSI security and uses plain TCP sockets instead");
         ap.addOption("proxy",
             "Specifies the location of a proxy credential that will be used for authentication. " +
                     "If not specified, the default proxy will be used.",
             "file", ArgumentParser.OPTIONAL);
         ap.addFlag("local", "Binds the service to the loopback interface");
+        ap.addFlag("passive",
+            "Initialize the passive worker service and " +
+                    "set the passive worker manager to be the default");
         ap.addFlag("help", "Displays usage information");
         ap.addAlias("help", "h");
         try {
@@ -83,11 +98,30 @@ public class CoasterPersistentService extends CoasterService {
 
             int port = 1984;
             if (ap.hasValue("port")) {
+                if (ap.hasValue("portfile")) {
+                    throw new ArgumentParserException("-portfile (-S) and -port are mutually exclusive");
+                }
                 port = ap.getIntValue("port");
             }
+            
+            String portFile = null;
+            if (ap.hasValue("portfile")) {
+                portFile = ap.getStringValue("portfile");
+                port = 0;
+            }
+            
             int localport = 0;
             if (ap.hasValue("localport")) {
+                if (ap.hasValue("localportfile")) {
+                    throw new ArgumentParserException("-localportfile (-W) and -localport are mutually exclusive");
+                }
                 localport = ap.getIntValue("localport");
+            }
+            
+            String localPortFile = null;
+            if (ap.hasValue("localportfile")) {
+                localPortFile = ap.getStringValue("localportfile");
+                localport = 0;
             }
 
             CoasterPersistentService s;
@@ -99,11 +133,14 @@ public class CoasterPersistentService extends CoasterService {
             }
             s.setAuthorization(new SelfAuthorization());
             if (localport > 0) {
-              s.initializeLocalService(localport);
+                s.initializeLocalService(localport);
             }
             else {
-              s.initializeLocalService();
+                s.initializeLocalService();
             }
+            
+            writePorts(s, portFile, localPortFile);
+            
             s.setIgnoreIdleTime(true);
             s.start();
             System.out.println("Started coaster service: " + s);
@@ -127,6 +164,19 @@ public class CoasterPersistentService extends CoasterService {
             System.out.println("Error starting coaster service: " + e.getMessage());
             logger.info("Error starting coaster service", e);
             System.exit(2);
+        }
+    }
+
+    private static void writePorts(CoasterPersistentService s, String portFile, String localPortFile) throws IOException {
+        writePort(s.getPort(), portFile);
+        writePort(s.getLocalService().getPort(), localPortFile);
+    }
+
+    private static void writePort(int port, String f) throws IOException {
+        if (f != null) {
+            FileWriter fw = new FileWriter(f);
+            fw.write(String.valueOf(port));
+            fw.close();
         }
     }
 }
