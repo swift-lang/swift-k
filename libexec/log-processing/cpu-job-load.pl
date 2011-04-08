@@ -8,7 +8,6 @@
 # OUTPUT: lines formatted as "timestamp load"
 #         where timestamp and load are numbers
 
-$time = 0.0;
 $load = 0;
 
 sub report() {
