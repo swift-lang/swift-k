@@ -8,9 +8,9 @@ if [ "X$LOG" != "X" ] ; then
   head $LOG | iso-to-secs >> tmp-extract-starttime2
 fi
 
-for e in *.event ; do
-  head -n 1 $e >> tmp-extract-starttime2
-done
+# for e in *.event ; do
+#   head -n 1 $e >> tmp-extract-starttime2
+# done
 
 sort -n < tmp-extract-starttime2 >tmp-extract-starttime
 
