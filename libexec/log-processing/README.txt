@@ -9,34 +9,47 @@ Make sure log4.properties contains:
 log4j.logger.swift=DEBUG
 --------------------------------------
 
-To make a basic load plot:
-
-* Generate the log (may set log4j.logger.swift=INFO for this one)
+Make a basic load plot from Coasters Cpu log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+. Generate the log (may set log4j.logger.swift=INFO for this one)
 (assuming the log is titled swift-run.log)
 
-* Make the execute transitions file:
+. Convert the log times to Unix time
 ------------------------------------------
-make LOG=swift-run.log execute.transitions
-------------------------------------------
-These transitions are relative to the Unix epoch
+./iso-to-secs < swift-run.log > tmp.log
 
-* Make the start time file (this contains the earliest timestamp)
+. Make the start time file (this contains the earliest timestamp)
 ------------------------------------------
-make LOG=swift-run.log start-time.tmp
+make LOG=tmp.log start-time.tmp
 ------------------------------------------
 
-* Normalize the transition times
+. Normalize the transition times
 ------------------------------------------
-./normalise-event-start-time < execute.transitions > execute.norm
-------------------------------------------
-
-* Build up a load data file:
-------------------------------------------
-./accumulate-load.pl < execute.norm > load.data
+./normalise-event-start-time < tmp.log > tmp.norm
 ------------------------------------------
 
-* Plot with the JFreeChart-based plotter in usertools/plotter:
+. Build up a load data file:
+------------------------------------------
+./cpu-job-load.pl < tmp.norm > load.data
+------------------------------------------
+
+. Plot with the JFreeChart-based plotter in usertools/plotter:
 ------------------------------------------
 lines.zsh load.cfg load.eps load.data
 ------------------------------------------
 
+Make a basic job completion plot from Coasters Cpu log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Same as above, but:
+
+[start=5]
+. Build up a completed data file:
+------------------------------------------
+./cpu-job-completed.pl < tmp.norm > completed.data
+------------------------------------------
+
+. Plot with the JFreeChart-based plotter in usertools/plotter:
+------------------------------------------
+lines.zsh completed.cfg completed.eps completed.data
+------------------------------------------
