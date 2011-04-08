@@ -405,4 +405,8 @@ public class CoasterService extends GSSService {
     public boolean isLocal() {
         return local;
     }
+    
+    protected LocalTCPService getLocalService() {
+        return localService;
+    }
 }
