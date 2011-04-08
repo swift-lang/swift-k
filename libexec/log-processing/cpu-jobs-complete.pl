@@ -5,25 +5,21 @@
 #                  timestamp ... Cpu ... submitting ...
 #                  timestamp ... Cpu ... jobTerminated ...
 #         where timestamp is a number
-# OUTPUT: lines formatted as "timestamp load"
-#         where timestamp and load are numbers
+# OUTPUT: lines formatted as "timestamp count"
+#         where timestamp and count are numbers,
+#          count being the number of completed jobs at that point
 
-$time = 0.0;
-$load = 0;
+$count = 0;
 
 sub report() {
     @tokens = split;
-    printf("$tokens[0] $load\n");
+    printf("$tokens[0] $count\n");
 }
 
 while (<STDIN>) {
     if (/Cpu/) {
-	if (/submitting/) {
-	    $load++;
-	    report;
-	}
-	elsif (/jobTerminated/) {
-	    $load--;
+	if (/jobTerminated/) {
+	    $count++;
 	    report;
 	}
     }
