@@ -16,21 +16,25 @@ Make a basic load plot from Coasters Cpu log lines
 
 . Convert the log times to Unix time
 ------------------------------------------
-./iso-to-secs < swift-run.log > tmp.log
+./iso-to-secs < swift-run.log > swift-run.time
 
 . Make the start time file (this contains the earliest timestamp)
 ------------------------------------------
-make LOG=tmp.log start-time.tmp
+make LOG=swift-run.log start-time.tmp
+------------------------------------------
+or 
+------------------------------------------
+extract-start-time swift-run.log > start-time.tmp
 ------------------------------------------
 
 . Normalize the transition times
 ------------------------------------------
-./normalise-event-start-time < tmp.log > tmp.norm
+./normalise-event-start-time < swift-run.time > swift-run.norm
 ------------------------------------------
 
 . Build up a load data file:
 ------------------------------------------
-./cpu-job-load.pl < tmp.norm > load.data
+./cpu-job-load.pl < swift-run.norm > load.data
 ------------------------------------------
 
 . Plot with the JFreeChart-based plotter in usertools/plotter:
@@ -46,10 +50,26 @@ Same as above, but:
 [start=5]
 . Build up a completed data file:
 ------------------------------------------
-./cpu-job-completed.pl < tmp.norm > completed.data
+./cpu-job-completed.pl < swift-run.norm > completed.data
 ------------------------------------------
 
 . Plot with the JFreeChart-based plotter in usertools/plotter:
 ------------------------------------------
 lines.zsh completed.cfg completed.eps completed.data
+------------------------------------------
+
+Make a basic Block allocation plot from Coasters Block log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Same as above, but:
+
+[start=5]
+. Build up a block allocation data file:
+------------------------------------------
+./block-level.pl < swift-run.norm > blocks.data
+------------------------------------------
+
+. Plot with the JFreeChart-based plotter in usertools/plotter:
+------------------------------------------
+lines.zsh blocks.{cfg,eps,data}
 ------------------------------------------

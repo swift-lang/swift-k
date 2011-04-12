@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 # Accumulate the load level at each point in time
+#
 # INPUT:  A Swift log file with Coasters messages:
 #                  timestamp ... Cpu ... submitting ...
 #                  timestamp ... Cpu ... jobTerminated ...

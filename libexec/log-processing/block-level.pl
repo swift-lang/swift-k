@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 
-# Accumulate the load level at each point in time
+# Accumulate the worker allocation level at each point in time
 # INPUT:  A Swift log file with Coasters messages:
 #                  timestamp ... Block Starting block: workers=24 ...
 #                  timestamp ... Block Shutting down ... (24x ...
 #         where timestamp is a number
-# OUTPUT: lines formatted as "timestamp level"
-#         where timestamp and load are numbers,
-#          level being the number of Coasters Cpus available
+# OUTPUT: lines formatted as "timestamp workers"
+#         where timestamp and workers are numbers,
+#          workers being the number of Coasters Cpus available
 
 $level = 0;
 
