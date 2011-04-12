@@ -4,8 +4,15 @@
 
 rm -f tmp-extract-starttime2
 
+if [[ $LOG == "" ]] ; then 
+  LOG=$1
+fi
+
 if [ "X$LOG" != "X" ] ; then
   head $LOG | iso-to-secs >> tmp-extract-starttime2
+else 
+  echo "No LOG given!"
+  exit 1
 fi
 
 # for e in *.event ; do
