@@ -1,0 +1,7 @@
+beagle-pbs 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+beagle-pbs 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+beagle-pbs 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+beagle-pbs 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+beagle-pbs 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+beagle-pbs 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+beagle-pbs	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
