@@ -3,7 +3,7 @@
 # given a filename chxml will ensure it is well-formed xml and
 # contains essential swift attributes
 
-import xml.parsers.expat,sys
+import xml.parsers.expat,sys,os,commands
 from glob import glob
 
 def parsefile(file):
@@ -19,20 +19,45 @@ def end_element(name):
     print 'End element:', name
     endTags.append(name)
 
-for arg in sys.argv[1:]:
-    for filename in glob(arg):
-        try:
-            parsefile(filename)
-            print "%s is well-formed" % filename
-        except Exception, e:
-            print "Error: there is a problem with your sites file"
-            print "%s is %s" % (filename, e)
-            sys.exit()
+# parse args to find sites.xml file
+
+sites_file = ""
+argstr = sys.argv
+
+if len(argstr)<2:
+    print "please specify a sites file"
+    sys.exit()
+i = 0
+for o in argstr:
+    if o == "'-sites.file'":
+        sites_file = argstr[i+1].split("'")[1]
+    elif o == "'-config'":
+        config_file = open(argstr[i+1].split("'")[1],"r")
+        for line in config_file.readlines():
+            if line.strip().startswith('#'):
+                continue
+            if line.find("sites.file")>-1:
+                print "line is "+line
+                sites_file = line.split("=")[1].strip()
+    i = i+1                    
+if (sites_file == ""):
+        swift_loc = commands.getoutput("which swift")
+        swift_home = swift_loc.split("bin")[0]
+        sites_file = swift_home+"etc/sites.xml"
+        print "no sites file specified, setting to default: "+sites_file
+
+try:
+    parsefile(sites_file)
+    print "%s is well-formed" % sites_file
+except Exception, e:
+    print "Error: there is a problem with your sites file"
+    print "%s is %s" % (sites_file, e)
+    sys.exit()
                                                            
-        p = xml.parsers.expat.ParserCreate()
-        p.StartElementHandler = start_element
-        p.EndElementHandler = end_element
-        p.ParseFile(open(filename,"r"))
+p = xml.parsers.expat.ParserCreate()
+p.StartElementHandler = start_element
+p.EndElementHandler = end_element
+p.ParseFile(open(sites_file,"r"))
 
 config = 0
 pool = 0
