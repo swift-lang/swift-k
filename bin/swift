@@ -61,6 +61,10 @@ LOCALCLASSPATH=$LOCALCLASSPATH$CPDELIM$CLASSPATH
 
 CMDLINE=`fixCommandLine "$@"`
 
+# make sure sites.xml file is well-formed
+
+chxml $CMDLINE
+
 ### SETUP OTHER ENV VARIABLES ####
 
 USERID=`id | awk '{printf("%s\n", substr($1, 5, index($1, "(")-5 ) ) }'`
