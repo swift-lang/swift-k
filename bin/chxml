@@ -16,7 +16,6 @@ endTags=[]
 def start_element(name, attrs):
     startTags.append(name)
 def end_element(name):
-    print 'End element:', name
     endTags.append(name)
 
 # parse args to find sites.xml file
@@ -48,7 +47,6 @@ if (sites_file == ""):
 
 try:
     parsefile(sites_file)
-    print "%s is well-formed" % sites_file
 except Exception, e:
     print "Error: there is a problem with your sites file"
     print "%s is %s" % (sites_file, e)
