@@ -55,7 +55,7 @@ public class Stageout extends VDLFunction {
             if (!isPrimitive(var)) {
                 retPaths(STAGEOUT, stack, var);
             }
-            else if (var.isRestartable()) {
+            if (var.isRestartable()) {
                 retPaths(RESTARTOUT, stack, var);
             }
         }
