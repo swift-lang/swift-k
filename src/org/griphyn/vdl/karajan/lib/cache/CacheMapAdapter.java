@@ -61,4 +61,8 @@ public class CacheMapAdapter implements Map {
 	public Collection values() {
 		throw new UnsupportedOperationException();
 	}
+	
+	public String toString() {
+	    return cache.toString();
+	}
 }

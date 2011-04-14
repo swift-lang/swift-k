@@ -74,4 +74,8 @@ public class LRUFileCache implements VDLFileCache {
 			}
 		}
 	}
+	
+	public String toString() {
+		return "LRU File Cache";
+	}
 }
