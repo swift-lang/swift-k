@@ -11,6 +11,10 @@ global(LOG:WARN, "warn")
 global(LOG:ERROR, "error")
 global(LOG:FATAL, "fatal")
 
+global(WRAPPER_TRANSFER_MODE,
+	if(vdl:configProperty("wrapperlog.always.transfer") == "true", 
+		STAGING_MODE:IF_PRESENT, STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT))
+
 namespace("vdl"
 	export(
 		element(initDDir, []
@@ -142,7 +146,8 @@ namespace("vdl"
 
 							appStageins(jobid, stagein, ".", stagingMethod)
 
-							stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info")
+							stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info", 
+								mode = WRAPPER_TRANSFER_MODE)
 							//stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
 							//stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
 							appStageouts(jobid, stageout, ".", stagingMethod)
@@ -166,8 +171,7 @@ namespace("vdl"
 									"Exception in {tr}:", nl(),
 									maybe("Arguments: {arguments}", nl()),
 									"Host: {rhost}", nl(),
-									"Directory: {tmpdir}",
-									"TODO: outs", nl(),
+									"Directory: {tmpdir}", nl(),
 									"- - -", nl()
 								)
 								exception
