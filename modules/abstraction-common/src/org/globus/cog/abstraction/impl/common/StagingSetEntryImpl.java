@@ -9,12 +9,19 @@
  */
 package org.globus.cog.abstraction.impl.common;
 
+import java.util.EnumSet;
+
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 
 public class StagingSetEntryImpl implements StagingSetEntry {
     private final String source, destination;
-
+    private final EnumSet<Mode> mode;
+    
     public StagingSetEntryImpl(String source, String destination) {
+        this(source, destination, EnumSet.of(Mode.IF_PRESENT));
+    }
+
+    public StagingSetEntryImpl(String source, String destination, EnumSet<Mode> mode) {
         if (source == null) {
             throw new NullPointerException("Source cannot be null");
         }
@@ -23,6 +30,7 @@ public class StagingSetEntryImpl implements StagingSetEntry {
         }
         this.source = source;
         this.destination = destination;
+        this.mode = mode;
     }
 
     public String getDestination() {
@@ -31,6 +39,10 @@ public class StagingSetEntryImpl implements StagingSetEntry {
 
     public String getSource() {
         return source;
+    }
+    
+    public EnumSet<Mode> getMode() {
+        return mode;
     }
 
     public boolean equals(Object obj) {
@@ -49,6 +61,6 @@ public class StagingSetEntryImpl implements StagingSetEntry {
     }
 
     public String toString() {
-        return source + " -> " + destination;
+        return source + " -> " + destination + "(" + mode + ")";
     }
 }
