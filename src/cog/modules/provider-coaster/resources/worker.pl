@@ -51,6 +51,13 @@ use constant {
 };
 
 use constant {
+	MODE_ALWAYS => 1,
+	MODE_IF_PRESENT => 2,
+	MODE_ON_ERROR => 4,
+	MODE_ON_SUCCESS => 8,
+};
+
+use constant {
 	CONTINUE => 0,
 	YIELD => 1,
 };
@@ -1150,6 +1157,8 @@ sub stageout {
 	wlog DEBUG, "$jobid Staging out\n";
 	my $STAGE = $JOBDATA{$jobid}{"stageout"};
 	my $STAGED = $JOBDATA{$jobid}{"stageoutd"};
+	# staging mode
+	my $STAGEM = $JOBDATA{$jobid}{"stageoutm"};
 	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"};
 
 	my $sz = scalar @$STAGE;
@@ -1161,14 +1170,28 @@ sub stageout {
 	}
 	else {
 		my $lfile = $$STAGE[$STAGEINDEX];
-		if (-e $lfile) {
-			if ($STAGEINDEX == 0) {
+		my $mode = $$STAGEM[$STAGEINDEX];
+		my $skip = 0;
+		
+		# it's supposed to be bitwise
+		if (($mode & MODE_IF_PRESENT) &&  (! -e $lfile)) {
+			$skip = 1;
+		}
+		if (($mode & MODE_ON_ERROR) && ($JOBDATA{$jobid}{"exitcode"} == 0)) {
+			$skip = 2;
+		}  
+		if (($mode & MODE_ON_SUCCESS) && ($JOBDATA{$jobid}{"exitcode"} != 0)) {
+			$skip = 3;
+		}
+		if (!$skip) {
+			if (!defined($JOBDATA{$jobid}{"stagoutStatusSent"})) {
 				wlog DEBUG, "$jobid Sending STAGEOUT status\n";
 				sendCmd((nullCB(), "JOBSTATUS", $jobid, STAGEOUT, "0", "workerid=$ID"));
+				$JOBDATA{$jobid}{"jobStatusSent"} = 1;
 			}
 			my $rfile = $$STAGED[$STAGEINDEX];
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
-			wlog DEBUG, "$jobid Staging out $lfile.\n";
+			wlog DEBUG, "$jobid Staging out $lfile (mode = $mode).\n";
 			my ($protocol, $host, $path) = urisplit($rfile);
 			if ($protocol eq "file" || $protocol eq "proxy") {
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
@@ -1190,7 +1213,15 @@ sub stageout {
 			wlog DEBUG, "$jobid PUT sent.\n";
 		}
 		else {
-			wlog DEBUG, "$jobid Skipping stageout of missing file ($lfile)\n";
+			if ($skip == 1) { 
+				wlog DEBUG, "$jobid Skipping stageout of missing file ($lfile)\n";
+			}
+			elsif ($skip == 2) {
+				wlog DEBUG, "$jobid Skipping stageout of file ($lfile) (ON_ERROR mode and job succeeded)\n";
+			}
+			elsif ($skip == 3) {
+				wlog DEBUG, "$jobid Skipping stageout of file ($lfile) (ON_SUCCESS mode and job failed)\n";
+			}
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
 			stageout($jobid);
 		}
@@ -1306,10 +1337,11 @@ sub submitjob {
 	my @STAGEIND = ();
 	my @STAGEOUT = ();
 	my @STAGEOUTD = ();
+	my @STAGEOUTM = ();
 	my @CLEANUP = ();
 	foreach $line (@lines) {
-		$line =~ s/\\n/\n/;
-		$line =~ s/\\\\/\\/;
+		$line =~ s/\\n/\n/g;
+		$line =~ s/\\\\/\\/g;
 		my @pair = split(/=/, $line, 2);
 		if ($pair[0] eq "arg") {
 			push @JOBARGS, $pair[1];
@@ -1322,7 +1354,7 @@ sub submitjob {
 			$JOBID = $pair[1];
 		}
 		elsif ($pair[0] eq "stagein") {
-			my @pp = split(/\n/, $pair[1], 2);
+			my @pp = split(/\n/, $pair[1], 3);
 			push @STAGEIN, $pp[0];
 			if (isabsolute($pp[1])) {
 				push @STAGEIND, $pp[1];
@@ -1334,7 +1366,7 @@ sub submitjob {
 			}
 		}
 		elsif ($pair[0] eq "stageout") {
-			my @pp = split(/\n/, $pair[1], 2);
+			my @pp = split(/\n/, $pair[1], 3);
 			if (isabsolute($pp[0])) {
 				push @STAGEOUT, $pp[0];
 			}
@@ -1342,6 +1374,7 @@ sub submitjob {
 				push @STAGEOUT, $JOB{directory}."/".$pp[0];
 			}
 			push @STAGEOUTD, $pp[1];
+			push @STAGEOUTM, $pp[2];
 		}
 		elsif ($pair[0] eq "cleanup") {
 			if (isabsolute($pair[1])) {
@@ -1365,6 +1398,7 @@ sub submitjob {
 			jobenv => \%JOBENV,
 			stageout => \@STAGEOUT,
 			stageoutd => \@STAGEOUTD,
+			stageoutm => \@STAGEOUTM,
 			cleanup => \@CLEANUP,
 		};
 
@@ -1527,7 +1561,8 @@ sub checkJobStatus {
 	}
 
 	if (defined $s) {
-		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "$status", $s);
+		#queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "$status", $s);
+		stageout($JOBID);
 	}
 	else {
 		#queueCmd(nullCB(), "JOBSTATUS", $JOBID, COMPLETED, "$status", "");

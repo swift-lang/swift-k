@@ -12,6 +12,9 @@ package org.globus.cog.abstraction.coaster.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.zip.InflaterInputStream;
 
 import org.globus.cog.abstraction.coaster.service.job.manager.TaskNotifier;
@@ -28,6 +31,8 @@ import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
@@ -101,7 +106,9 @@ public class SubmitJobHandler extends RequestHandler {
             if (ss == null) {
                 ss = new StagingSetImpl();
             }
-            ss.add(new StagingSetEntryImpl(getSource(s), getDestination(s)));
+            List<String> split = splitNL(s);
+            ss.add(new StagingSetEntryImpl(
+            		getSource(split), getDestination(split), getMode(split)));
         }
         if (ss != null) {
             spec.setStageIn(ss);
@@ -112,7 +119,9 @@ public class SubmitJobHandler extends RequestHandler {
             if (ss == null) {
                 ss = new StagingSetImpl();
             }
-            ss.add(new StagingSetEntryImpl(getSource(s), getDestination(s)));
+            List<String> split = splitNL(s);
+            ss.add(new StagingSetEntryImpl(
+            		getSource(split), getDestination(split), getMode(split)));
         }
         if (ss != null) {
             spec.setStageOut(ss);
@@ -158,15 +167,35 @@ public class SubmitJobHandler extends RequestHandler {
         }
         s.setServiceContact(new ServiceContactImpl(contact));
     }
-
-    private String getSource(String s) {
-        int i = s.indexOf('\n');
-        return makeAbsolute(s.substring(0, i));
+    
+    private List<String> splitNL(String s) {
+    	List<String> l = new ArrayList<String>(3);
+    	int last = -1;
+    	int i = s.indexOf('\n');
+    	while (i != -1) {
+    	    l.add(s.substring(last + 1, i));
+    	    last = i;
+    	    i = s.indexOf('\n', i + 1);
+    	}
+    	l.add(s.substring(last + 1));
+    	return l;
     }
 
-    private String getDestination(String s) {
-        int i = s.indexOf('\n');
-        return makeAbsolute(s.substring(i + 1));
+    private String getSource(List<String> s) {
+        return makeAbsolute(s.get(0));
+    }
+
+    private String getDestination(List<String> s) {
+        return makeAbsolute(s.get(1));
+    }
+    
+    private EnumSet<Mode> getMode(List<String> s) {
+        if (s.size() == 3) {
+            return StagingSetEntry.Mode.fromId(Integer.parseInt(s.get(2)));
+        }
+        else {
+            return EnumSet.of(Mode.IF_PRESENT);
+        }
     }
 
     private String makeAbsolute(String path) {
