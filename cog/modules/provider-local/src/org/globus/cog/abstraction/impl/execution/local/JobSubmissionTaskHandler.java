@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
@@ -201,8 +203,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 return;
             }
 
+            stageOut(spec, dir, exitCode == 0);
             if (exitCode == 0) {
-                stageOut(spec, dir);
                 cleanUp(spec, dir);
                 getTask().setStatus(Status.COMPLETED);
             }
@@ -255,21 +257,21 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    private void stageOut(JobSpecification spec, File dir) throws Exception {
+    private void stageOut(JobSpecification spec, File dir, boolean jobSucceeded) throws Exception {
         StagingSet s = spec.getStageOut();
         if (s == null || s.isEmpty()) {
             return;
         }
 
         getTask().setStatus(Status.STAGE_OUT);
-        stage(s, dir);
+        stage(s, dir, jobSucceeded);
     }
 
-    private void stage(StagingSet s, File dir) throws Exception {
+    private void stage(StagingSet s, File dir, boolean jobSucceeded) throws Exception {
         Iterator i = s.iterator();
         while (i.hasNext()) {
             StagingSetEntry e = (StagingSetEntry) i.next();
-            copy(e.getSource(), e.getDestination(), dir);
+            copy(e.getSource(), e.getDestination(), dir, e.getMode(), jobSucceeded);
         }
     }
 
@@ -280,10 +282,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         getTask().setStatus(Status.STAGE_IN);
-        stage(s, dir);
+        // job is considered successful before it runs as far as
+        // staging modes are concerned
+        stage(s, dir, true);
     }
 
-    private void copy(String src, String dest, File dir) throws Exception {
+    private void copy(String src, String dest, File dir, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
         src = dropCDMPrefix(src);
         URI suri = new URI(src);
         URI duri = new URI(dest);
@@ -291,6 +295,19 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         String srcScheme = defaultToLocal(suri.getScheme());
         String dstScheme = defaultToLocal(duri.getScheme());
         FileResource sres = AbstractionFactory.newFileResource(srcScheme);
+        
+        String srcPath = getPath(suri, dir);
+        
+        if (mode.contains(Mode.IF_PRESENT) && !sres.exists(srcPath)) {
+            return;
+        }
+        if (mode.contains(Mode.ON_SUCCESS) && !jobSucceeded) {
+            return;
+        }
+        if (mode.contains(Mode.ON_ERROR) && jobSucceeded) {
+            return;
+        }
+        
         FileResource dres = AbstractionFactory.newFileResource(dstScheme);
         sres.setServiceContact(getServiceContact(suri));
         sres.start();
@@ -298,7 +315,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         dres.setServiceContact(getServiceContact(duri));
         dres.start();
 
-        InputStream is = sres.openInputStream(getPath(suri, dir));
+        InputStream is = sres.openInputStream(srcPath);
         OutputStream os = dres.openOutputStream(getPath(duri, dir));
         byte[] buffer = new byte[BUFFER_SIZE];
 
