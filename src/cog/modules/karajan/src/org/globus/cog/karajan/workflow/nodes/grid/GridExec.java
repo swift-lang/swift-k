@@ -8,6 +8,7 @@ package org.globus.cog.karajan.workflow.nodes.grid;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.StagingSet;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
@@ -253,13 +255,17 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 			throws ExecutionException {
 		VariableArguments s = channel.get(stack);
 		StagingSet ss = new StagingSetImpl();
-		Iterator j = s.iterator();
+		Iterator<?> j = s.iterator();
 		while (j.hasNext()) {
 			Object v = j.next();
 			try {
-				List e = (List) v;
+				List<?> e = (List<?>) v;
+				EnumSet<Mode> mode = EnumSet.of(Mode.IF_PRESENT, Mode.ON_SUCCESS);
+				if (e.size() > 2) {
+					mode = Mode.fromId(TypeUtil.toInt(e.get(2)));
+				}
 				ss.add(new StagingSetEntryImpl(TypeUtil.toString(e.get(0)),
-						TypeUtil.toString(e.get(1))));
+						TypeUtil.toString(e.get(1)), mode));
 			}
 			catch (ClassCastException e) {
 				throw new ExecutionException("Invalid stagein entry: " + v);
