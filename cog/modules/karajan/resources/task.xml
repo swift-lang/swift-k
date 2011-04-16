@@ -40,6 +40,12 @@
 			<global name="FILETYPE:SOFTLINK" value="3"/>
 			<global name="FILETYPE:DEVICE" value="4"/>
 			
+			<global name="STAGING_MODE:ALWAYS" value="1"/>
+			<global name="STAGING_MODE:IF_PRESENT" value="2"/>
+			<global name="STAGING_MODE:ON_ERROR" value="4"/>
+			<global name="STAGING_MODE:ON_SUCCESS" value="8"/>
+			<global name="STAGING_MODE:DEFAULT" value="10"/>
+			
 			
 			<import file="java.xml"/>
 			
@@ -135,11 +141,15 @@
 			</export>
 			
 			<export name="stageOut">
-				<element arguments="source, destination">
+				<element arguments="source, destination" optargs="mode">
 					<channel:to name="stageout">
 						<list>
 							<variable name="source"/>
 							<variable name="destination"/>
+							<try>
+								<variable>mode</variable>
+								<variable>STAGING_MODE:DEFAULT</variable>
+							</try>
 						</list>
 					</channel:to>
 				</element>
