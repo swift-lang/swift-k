@@ -42,9 +42,6 @@ public class SetFieldValue extends VDLFunction {
 				if (!value.isClosed()) {
 					throw new FutureNotYetAvailable(addFutureListener(stack, value));
 				}
-				if (var.getParent() != null && var.getParent().getType().isArray()) {
-				    markAsAvailable(stack, leaf.getParent(), leaf.getPathFromRoot().getLast());
-				}
 			}
 			synchronized (var.getRoot()) {
 				deepCopy(leaf, value, stack);
