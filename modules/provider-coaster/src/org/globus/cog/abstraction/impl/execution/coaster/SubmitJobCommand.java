@@ -22,11 +22,11 @@ import java.util.zip.DeflaterOutputStream;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.SubmitJobHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
-import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.commands.Command;
@@ -108,20 +108,20 @@ public class SubmitJobCommand extends Command {
     
         for (String name : spec.getAttributeNames())
             if (!IGNORED_ATTRIBUTES.contains(name) || 
-                    spec.isBatchJob()) 
+                    spec.isBatchJob())
                 add(dos, "attr", 
                     name + "=" + spec.getAttribute(name));
         
         if (spec.getStageIn() != null) {
             for (StagingSetEntry e : spec.getStageIn())
                 add(dos, "stagein", absolutize(e.getSource()) + '\n' + 
-                    e.getDestination());
+                    e.getDestination() + '\n' + Mode.getId(e.getMode()));
         }
         
         if (spec.getStageOut() != null) {
             for (StagingSetEntry e : spec.getStageOut())
                 add(dos, "stageout", e.getSource() + '\n' + 
-                    absolutize(e.getDestination()));
+                    absolutize(e.getDestination()) + '\n' + Mode.getId(e.getMode()));
         }
 
         if (spec.getCleanUpSet() != null)
