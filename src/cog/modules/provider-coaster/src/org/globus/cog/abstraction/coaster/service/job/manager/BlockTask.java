@@ -48,6 +48,7 @@ public class BlockTask extends TaskImpl {
         if (count > 1) {
             setAttribute(spec, "jobType", "multiple");
         }
+        // Here, count means number of worker script invocations
         setAttribute(spec, "count", String.valueOf(count));
         setAttribute(spec, "hostCount", String.valueOf(count));
         setAttribute(spec, "kernelprofile", settings.getKernelprofile());
