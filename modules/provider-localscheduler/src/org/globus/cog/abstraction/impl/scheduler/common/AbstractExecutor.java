@@ -189,13 +189,13 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     public void cancel() throws TaskSubmissionException {
-        if (jobid == null) {
+        if (jobid == null || jobid.length() == 0) {
             throw new TaskSubmissionException("Can only cancel an active task");
         }
         String[] cmdline = new String[] { getProperties().getRemoveCommand(),
                 jobid };
         try {
-            System.out.println("Canceling job " + jobid);
+            logger.debug("Canceling job: jobid=" + jobid);
             Process process = Runtime.getRuntime().exec(cmdline, null, null);
             int ec = process.waitFor();
             if (ec != 0) {
