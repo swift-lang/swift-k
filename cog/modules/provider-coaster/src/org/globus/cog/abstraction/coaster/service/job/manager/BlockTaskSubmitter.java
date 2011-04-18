@@ -20,17 +20,17 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 class BlockTaskSubmitter extends Thread {
     public static final Logger logger = Logger.getLogger(BlockTaskSubmitter.class);
-    
-    private LinkedList<Block> queue;
-    private TaskHandler handler;
-    
+
+    private final LinkedList<Block> queue;
+    private final TaskHandler handler;
+
     public BlockTaskSubmitter() {
         setDaemon(true);
         setName("Block Submitter");
         queue = new LinkedList<Block>();
         handler = new ExecutionTaskHandler();
     }
-    
+
     public void submit(Block block) {
         if (logger.isInfoEnabled()) {
             logger.info("Queuing block " + block + " for submission");
@@ -40,11 +40,13 @@ class BlockTaskSubmitter extends Thread {
             queue.notify();
         }
     }
-    
-    public void cancel(Block block) throws InvalidSecurityContextException, TaskSubmissionException {
+
+    public void cancel(Block block)
+    throws InvalidSecurityContextException, TaskSubmissionException {
         handler.cancel(block.getTask());
     }
-    
+
+    @Override
     public void run() {
         while(true) {
             Block b = null;
@@ -68,6 +70,12 @@ class BlockTaskSubmitter extends Thread {
                         handler.submit(b.getTask());
                     }
                 }
+                catch (TaskSubmissionException e) {
+                    if (b.getTask().getStatus().getStatusCode() != Status.CANCELED)
+                        logger.info("Error submitting block task: " + e.getMessage());
+                    else
+                        logger.info("Block task was canceled previously: " + b);
+                }
                 catch (Exception e) {
                     if (b.getTask().getStatus().getStatusCode() != Status.CANCELED) {
                     	if (logger.isInfoEnabled()) {
@@ -77,7 +85,7 @@ class BlockTaskSubmitter extends Thread {
                     }
                     else {
                         if (logger.isInfoEnabled()) {
-                            logger.info("Block task was canceled previously " + b);
+                            logger.debug("Block task was canceled previously " + b);
                         }
                     }
                 }
