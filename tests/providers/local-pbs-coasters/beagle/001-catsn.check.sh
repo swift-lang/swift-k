@@ -2,8 +2,8 @@
 
 # Pseudo-code for now
 
-# for f in *.out.expected 
+# for f in *.out.expected
 # do
-#   assert *.out exists 
-#   assert *.out.expected == *.out
+#   assert *.out exists
+#   assert *.out == data.txt
 # done
