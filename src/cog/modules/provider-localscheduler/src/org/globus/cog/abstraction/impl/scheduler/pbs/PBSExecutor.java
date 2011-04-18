@@ -28,7 +28,14 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class PBSExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(PBSExecutor.class);
 
+	/**
+	   Number of cores to allocate
+	 */
 	int count = 1;
+
+	/**
+	   PBS processes-per-node
+	 */
 	int ppn = 1;
 
 	public PBSExecutor(Task task, ProcessListener listener) {
