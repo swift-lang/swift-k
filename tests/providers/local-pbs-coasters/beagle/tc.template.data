@@ -1,8 +1,7 @@
-local-pbs-coasters 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
-local-pbs-coasters 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
-local-pbs-coasters 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
-local-pbs-coasters 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
-local-pbs-coasters 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
-local-pbs-coasters 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
-local-pbs-coasters	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
-
+beagle-pbs 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+beagle-pbs 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+beagle-pbs 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+beagle-pbs 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+beagle-pbs 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+beagle-pbs 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+beagle-pbs	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX

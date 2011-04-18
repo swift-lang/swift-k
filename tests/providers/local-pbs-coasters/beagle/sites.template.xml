@@ -4,7 +4,7 @@
 <set name="wdir" value="/lustre/beagle/{user.name}/work"/>
 <echo message="setting workDirectory to: {wdir}"/>
 
-<pool handle="local-pbs-coasters">
+<pool handle="pbs-beagle">
   <execution jobmanager="local:pbs" provider="coaster" url="none"/>
   <filesystem provider="local" url="none" />
   <profile namespace="globus" key="maxWallTime">1</profile>
