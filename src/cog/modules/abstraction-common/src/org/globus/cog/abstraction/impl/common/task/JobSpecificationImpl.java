@@ -6,10 +6,24 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.interfaces.*;
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
+import org.globus.cog.abstraction.interfaces.Delegation;
+import org.globus.cog.abstraction.interfaces.FileLocation;
+import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.Specification;
+import org.globus.cog.abstraction.interfaces.StagingSet;
 
 public class JobSpecificationImpl implements JobSpecification {
 
@@ -299,9 +313,9 @@ public class JobSpecificationImpl implements JobSpecification {
             ("Attempted to set blank attribute!");
         String[] tokens = pair.split("=", 2);
         if (tokens.length == 1)
-            setAttribute(tokens[0], "");
+            setAttribute(tokens[0].trim(), "");
         else
-            setAttribute(tokens[0], tokens[1]);
+            setAttribute(tokens[0].trim(), tokens[1].trim());
     }
 
     public Object getAttribute(String name) {
@@ -459,8 +473,10 @@ public class JobSpecificationImpl implements JobSpecification {
 
         logger.debug("unpacking: " + attrs);
         String[] tokens = attrs.split("[;\n]");
-        for (String token : tokens)
+        for (String token : tokens) {
+            token = token.trim();
             if (token.length() > 0)
                 setAttribute(token);
+        }
     }
 }
