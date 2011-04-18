@@ -115,8 +115,8 @@ public class PBSExecutor extends AbstractExecutor {
 	    sb.append("#PBS -l ");
 	    if (mpp) {
 	        sb.append("mppwidth=");
-	        sb.append(count*ppn);
-	        sb.append(":");
+	        sb.append(count);
+	        sb.append(",");
 	        sb.append("mppnppn=");
 	        sb.append(ppn);
 	    }
