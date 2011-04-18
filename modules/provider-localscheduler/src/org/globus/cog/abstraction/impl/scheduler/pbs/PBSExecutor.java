@@ -29,7 +29,7 @@ public class PBSExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(PBSExecutor.class);
 
 	/**
-	   Number of cores to allocate
+	   Number of program invocations
 	 */
 	int count = 1;
 
@@ -73,10 +73,11 @@ public class PBSExecutor extends AbstractExecutor {
 	   Obtains profile settings regarding job size from
 	   JobSpecification and writes them into the PBS file.
 	   Looks for profiles count, ppn, ppts, and pbs.mpp
-	   count: mandatory, default 1 (number of cores)
-	   ppn: optional, default 1 (cores per node)
+	   count: mandatory, default 1 (number of processes)
+	   ppn: optional, default 1 (processes per node)
 	   pbs.mpp: output mppwidth/mppnppn instead of nodes/ppn
 	   pbs.properties: extra PBS properties
+	   pbs.resource_list: extra PBS -l line
 
 	   Note that the semantics are different for the pbs.mpp setting:
 	   mppwidth is the total number of cores while nodes is the number
@@ -92,6 +93,7 @@ public class PBSExecutor extends AbstractExecutor {
 
 	    Object o;
 
+	    // Number of program invocations
 	    o = getSpec().getAttribute("count");
 	    if (o != null)
 	        count = parseAndValidateInt(o, "count");
@@ -109,23 +111,18 @@ public class PBSExecutor extends AbstractExecutor {
         if (spec.getAttribute("pbs.mpp") != null)
             mpp = true;
 
-	    if (count % ppn != 0)
-	        throw new IllegalArgumentException
-	        ("Count is not a multiple of ppn.");
-	    int nodes = count / ppn;
-
 	    StringBuilder sb = new StringBuilder(512);
 	    sb.append("#PBS -l ");
 	    if (mpp) {
 	        sb.append("mppwidth=");
-	        sb.append(count);
+	        sb.append(count*ppn);
 	        sb.append(":");
 	        sb.append("mppnppn=");
 	        sb.append(ppn);
 	    }
 	    else {
 	        sb.append("nodes=");
-	        sb.append(nodes);
+	        sb.append(count);
 	        sb.append(":");
 	        sb.append("ppn=");
 	        sb.append(ppn);
