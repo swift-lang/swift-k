@@ -107,7 +107,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             while (!done) {
                 logger.debug("Plan: holding.size(): " + holding.size());
                 planTime = updatePlan();
-                logger.info("Plan time: " + planTime);
+                logger.debug("Plan time: " + planTime);
                 if (holding.size() + incoming.size() == 0) {
                     planTime = 100;
                 }
@@ -180,15 +180,15 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
         for (Block b : snapshot) {
             if (b.isDone()) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Cleaning done block " + b);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Cleaning done block " + b);
                 }
                 b.shutdown(false);
                 count++;
             }
         }
         if (count > 0) {
-            logger.info("Cleaned " + count + " done blocks");
+            logger.debug("Cleaned " + count + " done blocks");
         }
     }
 
@@ -201,7 +201,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 allocsize += b.sizeLeft();
             }
             if (allocsize != lastAllocSize) {
-                logger.info("Updated allocsize: " + allocsize);
+                logger.debug("Updated allocsize: " + allocsize);
             }
             lastAllocSize = allocsize;
         }
@@ -235,7 +235,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             }
         }
         if (remove.size() > 0) {
-            logger.info("Queued " + remove.size() + " jobs to existing blocks");
+            logger.debug("Queued " + remove.size() + " jobs to existing blocks");
         }
         return remove;
     }
@@ -243,8 +243,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private void requeueNonFitting() {
         int count = 0;
         double runningSize = running.getSize();
-        logger.info("allocsize = " + allocsize + ", queuedsize = " + queued.getJSize() + ", running = " + runningSize + ", qsz = "
-                + queued.size());
+        logger.debug("allocsize = " + allocsize +
+                     ", queuedsize = " + queued.getJSize() +
+                     ", running = " + runningSize +
+                     ", qsz = " + queued.size());
         while (allocsize - queued.getJSize() - runningSize < 0) {
             Job j = queued.removeOne(TimeInterval.FOREVER,
                                      Integer.MAX_VALUE);
@@ -598,7 +600,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         this.settings = settings;
     }
 
-    protected Block getBlock(String id) {
+    protected Block getBlock(@SuppressWarnings("hiding") String id) {
         synchronized (blocks) {
             Block b = blocks.get(id);
             if (b != null) {
@@ -672,8 +674,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     /**
        Get the KarajanChannel for the worker with given id
      */
-    public KarajanChannel getWorkerChannel(String id) {
-
+    public KarajanChannel
+    getWorkerChannel(@SuppressWarnings({ "unused", "hiding" })
+                     String id) {
         return null;
     }
 }
