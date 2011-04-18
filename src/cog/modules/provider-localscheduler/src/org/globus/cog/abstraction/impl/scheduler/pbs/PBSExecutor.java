@@ -180,6 +180,14 @@ public class PBSExecutor extends AbstractExecutor {
 		    wr.write("#PBS -v " + makeList(spec.getEnvironmentVariableNames()) + '\n');
 		}
 
+		String resources =
+		    (String) spec.getAttribute("pbs.resource_list");
+		if (resources != null && resources.length() > 0) {
+		    if (logger.isDebugEnabled())
+		        logger.debug("pbs.resource_list:" + resources);
+		    wr.write("#PBS -l " + resources + '\n');
+		}
+
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
