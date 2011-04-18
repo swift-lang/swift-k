@@ -184,7 +184,7 @@ public class PBSExecutor extends AbstractExecutor {
 		    (String) spec.getAttribute("pbs.resource_list");
 		if (resources != null && resources.length() > 0) {
 		    if (logger.isDebugEnabled())
-		        logger.debug("pbs.resource_list:" + resources);
+		        logger.debug("pbs.resource_list: " + resources);
 		    wr.write("#PBS -l " + resources + '\n');
 		}
 
