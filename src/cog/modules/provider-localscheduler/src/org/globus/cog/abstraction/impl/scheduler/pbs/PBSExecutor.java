@@ -78,12 +78,12 @@ public class PBSExecutor extends AbstractExecutor {
 	   http://www.clusterresources.com/torquedocs/2.1jobsubmission.shtml
 	   @return true if this is a multi-core job
 	 */
-	protected boolean writeCountAndPPN(Writer wr) throws IOException {
+	protected boolean writeCountAndPPN(JobSpecification spec,
+	                                   Writer wr)
+	throws IOException {
 	    boolean result = false;
 
 	    Object o;
-
-	    getSpec().unpackProviderAttributes();
 
 	    o = getSpec().getAttribute("count");
 	    if (o != null)
@@ -91,7 +91,7 @@ public class PBSExecutor extends AbstractExecutor {
 	    if (count != 1)
 	        result = true;
 
-	    o = getSpec().getAttribute("ppn");
+	    o = spec.getAttribute("ppn");
 	    if (o != null)
 	        ppn = parseAndValidateInt(o, "ppn");
 
@@ -99,10 +99,8 @@ public class PBSExecutor extends AbstractExecutor {
 	        (String) getSpec().getAttribute("pbs.properties");
 
 	    boolean mpp = false;
-	    o = getSpec().getAttribute("pbs.mpp");
-	    logger.debug("pbs.mpp: " + o);
-	    if (o != null)
-	        mpp = parseAndValidateBool(o, "pbs.mpp");
+        if (spec.getAttribute("pbs.mpp") != null)
+            mpp = true;
 
 	    if (count % ppn != 0)
 	        throw new IllegalArgumentException
@@ -139,6 +137,7 @@ public class PBSExecutor extends AbstractExecutor {
 	    return result;
 	}
 
+	/*
 	private boolean parseAndValidateBool(Object obj, String name)
 	{
 	    try {
@@ -149,6 +148,7 @@ public class PBSExecutor extends AbstractExecutor {
 	        ("Illegal value for " + name + ". Must be true/false.");
 	    }
 	}
+	*/
 
 	@Override
 	protected void writeScript(Writer wr, String exitcodefile, String stdout,
@@ -157,11 +157,13 @@ public class PBSExecutor extends AbstractExecutor {
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
 
+        getSpec().unpackProviderAttributes();
+
 		wr.write("#PBS -S /bin/bash\n");
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
-		boolean multiple = writeCountAndPPN(wr);
+		boolean multiple = writeCountAndPPN(spec, wr);
 		writeWallTime(wr);
 		writeAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
