@@ -393,7 +393,7 @@ namespace("vdl"
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
 					maybe(file:remove(recfile))
-					log(LOG:WARN, "Failed to transfer wrapper log from {srcdir} on {rhost}")
+					log(LOG:WARN, "Failed to write to {srcdir} on {rhost}. Verify that all directories specified in your sites file exist and are writable!")
 					log(LOG:DEBUG, "Exception for wrapper log failure from {srcdir} on {rhost}: ", exception)
 				)
 			)
