@@ -1,0 +1,11 @@
+Changes in Swift Version 0.92.1
+
+    * fixed duplicate submission bug in foreach
+    * Added 'wc' to Swift's default tc.data file (which is used by the tutorial examples)
+    * gensites now lists specific templates
+    * gensites now uses pbs style directives in swift.properties. user has the ability to use a default value across all templates
+    * fixed 'timer cancelled' errors during shutdown
+    * fixed broken job-fitting-in-non-running-block logic
+    * keeps track of running jobs when doing things based on aggregate sizes
+    * coaster service no longer shuts down when idle and in local mode
+    * fixed npe which was artificially failing a job when a block task failed without having ever started due to the pull thread not being initialized
