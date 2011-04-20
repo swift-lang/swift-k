@@ -36,7 +36,6 @@ for o in argstr:
             if line.strip().startswith('#'):
                 continue
             if line.find("sites.file")>-1:
-                print "line is "+line
                 sites_file = line.split("=")[1].strip()
     i = i+1                    
 if (sites_file == ""):
