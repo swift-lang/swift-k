@@ -19,6 +19,7 @@
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
+void print_help(void);
 void read_input(const char *restrict filename, char** data, int* size);
 void write_output(const char *restrict filename, char* data, int size);
 void startup(void);
@@ -43,7 +44,11 @@ int main(int argc, char* argv[])
   char* data;
   int size;
 
-  assert(argc == 3);
+  if (argc != 3)
+  {
+    print_help();
+    return 1;
+  }
 
   if (mpi_rank == 0)
   {
@@ -69,6 +74,7 @@ int main(int argc, char* argv[])
 
     write_output(argv[2], data, size);
   }
+  free(data);
 
   MPI_Finalize();
   return EXIT_SUCCESS;
@@ -84,6 +90,9 @@ void startup()
   fflush(NULL);
 }
 
+/**
+   Allocates memory for *data
+*/
 void read_input(const char* restrict filename, char** data, int* size)
 {
   char* result;
@@ -138,4 +147,9 @@ void write_output(const char* restrict filename,
   }
 
   fclose(file);
+}
+
+void print_help()
+{
+  printf("usage: <input> <output>\n");
 }
