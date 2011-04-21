@@ -38,6 +38,11 @@ public class PBSExecutor extends AbstractExecutor {
 	 */
 	int ppn = 1;
 
+        /**
+           PBS mppdepth: number of available threads per node
+        */
+        int depth = 1;
+
 	public PBSExecutor(Task task, ProcessListener listener) {
 		super(task, listener);
 	}
@@ -74,6 +79,7 @@ public class PBSExecutor extends AbstractExecutor {
 	   JobSpecification and writes them into the PBS file.
 	   Looks for profiles count, ppn, ppts, and pbs.mpp
 	   count: mandatory, default 1 (number of processes)
+	   depth: default 1 (number of threads per node)
 	   ppn: optional, default 1 (processes per node)
 	   pbs.mpp: output mppwidth/mppnppn instead of nodes/ppn
 	   pbs.properties: extra PBS properties
@@ -104,6 +110,10 @@ public class PBSExecutor extends AbstractExecutor {
 	    if (o != null)
 	        ppn = parseAndValidateInt(o, "ppn");
 
+            o = spec.getAttribute("depth");
+            if (o != null)
+                depth = parseAndValidateInt(o, "depth");
+
 	    String pbsProperties =
 	        (String) getSpec().getAttribute("pbs.properties");
 
@@ -114,11 +124,11 @@ public class PBSExecutor extends AbstractExecutor {
 	    StringBuilder sb = new StringBuilder(512);
 	    sb.append("#PBS -l ");
 	    if (mpp) {
-	        sb.append("mppwidth=");
-	        sb.append(count);
+	        sb.append("mppwidth=").append(count);
 	        sb.append(",");
-	        sb.append("mppnppn=");
-	        sb.append(ppn);
+	        sb.append("mppnppn=").append(ppn);
+                sb.append(",");
+                sb.append("mppdepth=").append(depth);
 	    }
 	    else {
 	        sb.append("nodes=");
@@ -230,7 +240,7 @@ public class PBSExecutor extends AbstractExecutor {
 
 		if (aprun)
 		    wr.write("aprun -n " + count + " -N 1 -cc none -d " +
-		             ppn + " -F exclusive /bin/sh -c '");
+		             depth + " -F exclusive /bin/sh -c '");
 
 		wr.write(quote(spec.getExecutable()));
 		writeQuotedList(wr, spec.getArgumentsAsList());
