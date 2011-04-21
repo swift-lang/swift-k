@@ -6,7 +6,7 @@
 # subdirectory called run-DATE, and generate useful HTML output and
 # tests.log
 
-# Usage: suite.sh <options>* <GROUPLIST>
+# Usage: suite.sh <options>* <GROUPLISTFILE|GROUP>
 
 # PRIMARY USAGE MODE
 # Assuming your code is in /tmp/cog, where you
@@ -50,11 +50,14 @@
 # template files are lightly processed by sed before use
 # Missing files will be pulled from swift/etc
 
-# The GROUPLIST is obtained from an external script in the
-# groups/ subdirectory by the name of GROUPLISTFILE.
-# The GROUPLISTFILE:
-#      1) sets the array
-#      2) checks any variables needed by make_sites_sed()
+# The GROUPLIST is obtained from the GROUPARG
+# 1) The GROUPARG can be an external script in the
+#    groups/ subdirectory by the name of GROUPLISTFILE.
+#    The GROUPLISTFILE:
+#       1) sets the array
+#       2) checks any variables needed by make_sites_sed()
+# 2) Or, the GROUPARG can just be a directory name that is
+#    the name of the singleton GROUP
 
 # OUTPUT is the stdout of the current test
 # stdout.txt retains stdout from the previous test (for *.clean.sh)
@@ -168,7 +171,7 @@ while [ $# -gt 0 ]; do
       VERBOSE=1
       shift;;
     *)
-      GROUPLISTFILE=$1
+      GROUPARG=$1
       shift;;
   esac
 done
@@ -942,9 +945,17 @@ then
   WORK=$TOPDIR/work
 fi
 
-checkvars GROUPLISTFILE
-echo "GROUPLISTFILE: $GROUPLISTFILE"
-source $GROUPLISTFILE || exit 1
+checkvars GROUPARG
+echo "GROUP ARGUMENT: $GROUPARG"
+if [[ -f $GROUPARG ]]; then
+  GROUPLISTFILE=$GROUPARG
+  source $GROUPLISTFILE || exit 1
+elif [[ -d $GROUPARG
+  GROUPLIST=( $GROUPARG )
+else
+  echo "Unusable GROUP argument: $GROUPARG"
+  exit 1
+fi
 
 cd $TOPDIR
 [ $? != 0 ] && crash "Could not use given TOPDIR: $TOPDIR"
