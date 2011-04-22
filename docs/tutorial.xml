@@ -708,6 +708,7 @@ $ <userinput>swift -pgraph graph.dot first.swift</userinput>
 $ <userinput>dot -ograph.png -Tpng graph.dot</userinput>
 </screen>
 graph.png can then be viewed using your favourite image viewer.
+Dot is a utility for drawing directed graphs. It is a part of the graphViz package and must be installed separately. More information about graphViz can be found at http://www.graphviz.org.
 </para>
 </section>
 
@@ -828,7 +829,7 @@ like this:
 <programlisting>
 type file;
 
-file f &lt;my_first_mapper;&gt;;
+file f &lt;my_first_mapper&gt;;
 </programlisting>
 
 <para>
@@ -922,7 +923,7 @@ type messagefile;
     }
 }
 
-messagefile outfile &lt;my_first_mapper;&gt;;
+messagefile outfile &lt;my_first_mapper&gt;;
 
 outfile = greeting();
 </programlisting>
