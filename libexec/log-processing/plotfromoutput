@@ -1,0 +1,70 @@
+#!/bin/bash
+
+#bash script to plot the production rate of run from output data's arrival times
+if [ $# -ne 1  ]
+then
+echo "usage: $0 pathofoutputfolder "
+fi
+
+outputfolderpath=$1
+
+if [ -f output_times.txt ]
+then
+	rm -f output_times.txt
+fi
+
+if [ -f plot.dat ]
+then
+	rm -f plot.dat
+fi
+
+ls -ltr ${outputfolderpath} | tail +2 | cut -d" " -f6-7 | cut -c 9-16 | tr ' ' ':' > output_times.txt
+
+counter=0
+
+fline=`head -1 output_times.txt`
+
+initmin=`echo ${fline} | cut -d':' -f3`
+inithour=`echo  ${fline} | cut -d':' -f2`
+initday=`echo  ${fline} | cut -d':' -f1`
+indexhr=0
+hourchange="false"
+
+for line in `cat output_times.txt` 
+do
+
+day=`echo  ${line} | cut -d':' -f1`
+hour=`echo  ${line} | cut -d':' -f2`
+min=`echo  ${line} | cut -d':' -f3`
+
+diff=`expr ${min} - ${initmin}`
+ 
+if [ ${day} -eq ${initday} ]
+then
+	if [ ${hour} -eq ${inithour} ]
+	then	
+		if [ ${diff} -ge 15 ]  || [ ${hourchange} == "true" ] 
+		then
+		#	15 minutes elapsed
+			echo ${indexhr} " " ${counter} >> plot.dat
+			indexhr=`expr ${indexhr} + 1`
+			counter=0
+			initmin=${min}
+			if [ ${hourchange} == "true" ]; then hourchange="false"; fi
+		else #fifteen minutes not over
+			counter=`expr ${counter} + 1`
+		fi
+	else #hour changes
+		hourchange="true"
+		inithour=${hour}
+		
+	fi
+else #day changes
+	echo ${day}
+	echo "day has changed"
+	daychange="true"
+	initday=${day}
+fi
+
+done
+
