@@ -4,6 +4,10 @@ Log Processing
 
 To properly generate log plots, you must enable VDL/Karajan logging.
 
+You should check the scripts that you intend to use to determine 
+what log lines they require and ensure that you are generating 
+those lines via log4j.properties
+
 Make sure log4.properties contains:
 --------------------------------------
 log4j.logger.swift=DEBUG
@@ -72,4 +76,25 @@ Same as above, but:
 . Plot with the JFreeChart-based plotter in usertools/plotter:
 ------------------------------------------
 lines.zsh blocks.{cfg,eps,data}
+------------------------------------------
+
+Make a job runtime distribution plot from Coasters Cpu log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Same as above, but:
+
+[start=5]
+. Build up a job runtime file: 
+------------------------------------------
+./extract-times.pl < swift-run.norm > times.data
+------------------------------------------
+
+. Put the job runtimes into 1-second buckets: 
+------------------------------------------
+./ buckets.pl 1 times.data > buckets.data
+------------------------------------------
+
+. Plot with the JFreeChart-based plotter in usertools/plotter:
+------------------------------------------
+lines.zsh buckets.cfg buckets.eps buckets.data
 ------------------------------------------
