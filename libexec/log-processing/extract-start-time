@@ -1,26 +1,16 @@
 #!/bin/sh
 
-/bin/pwd 1>&2
+# Extract start time in unix time from original Swift log
 
-rm -f tmp-extract-starttime2
-
-if [[ $LOG == "" ]] ; then 
+if [[ $LOG == "" ]] ; then
   LOG=$1
 fi
 
-if [ "X$LOG" != "X" ] ; then
-  head $LOG | iso-to-secs >> tmp-extract-starttime2
-else 
-  echo "No LOG given!"
+if [ "X$LOG" == "X" ] ; then
+  echo "extract-start-time: no LOG given!" 1>&2
   exit 1
 fi
 
-# for e in *.event ; do
-#   head -n 1 $e >> tmp-extract-starttime2
-# done
+start=$( head $LOG | iso-to-secs | cut -f 1 -d ' ' | sort -n | head -1 )
 
-sort -n < tmp-extract-starttime2 >tmp-extract-starttime
-
-read st rest < tmp-extract-starttime
-
-echo $st
+echo $start
