@@ -216,10 +216,10 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     protected void submit(Job job) {
         Task task = job.getTask();
-        if (logger.isDebugEnabled()) {
+        if (logger.isInfoEnabled()) {
             JobSpecification spec =
                 (JobSpecification) task.getSpecification();
-            logger.debug(block.getId() + ":" + getId() +
+            logger.info(block.getId() + ":" + getId() +
                 " submitting " + task.getIdentity() + ": " +
                 spec.getExecutable() + " " + spec.getArguments());
         }
