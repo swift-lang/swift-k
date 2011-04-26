@@ -950,7 +950,7 @@ echo "GROUP ARGUMENT: $GROUPARG"
 if [[ -f $GROUPARG ]]; then
   GROUPLISTFILE=$GROUPARG
   source $GROUPLISTFILE || exit 1
-elif [[ -d $GROUPARG
+elif [[ -d $GROUPARG ]]; then
   GROUPLIST=( $GROUPARG )
 else
   echo "Unusable GROUP argument: $GROUPARG"
