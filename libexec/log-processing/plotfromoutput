@@ -4,6 +4,7 @@
 if [ $# -ne 1  ]
 then
 echo "usage: $0 pathofoutputfolder "
+exit
 fi
 
 outputfolderpath=$1
@@ -20,7 +21,7 @@ fi
 
 ls -ltr ${outputfolderpath} | tail +2 | cut -d" " -f6-7 | cut -c 9-16 | tr ' ' ':' > output_times.txt
 
-counter=0
+counter=1
 
 fline=`head -1 output_times.txt`
 
