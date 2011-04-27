@@ -20,7 +20,8 @@
   <profile key="queue" namespace="globus">batch</profile>
   <profile key="jobThrottle" namespace="karajan">5.99</profile>
   <profile key="initialScore" namespace="karajan">10000</profile>
-  <profile namespace="globus" key="project">CI-MCB000021</profile>
+  <profile namespace="globus" key="project">_PROJECT_</profile>
+  <profile namespace="globus" key="project">_QUEUE_</profile>
   <workdirectory>{wdir}</workdirectory>
 </pool>
 </config>
