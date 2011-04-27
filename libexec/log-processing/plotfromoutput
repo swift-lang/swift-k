@@ -21,14 +21,14 @@ fi
 
 ls -ltr ${outputfolderpath} | tail +2 | cut -d" " -f6-7 | cut -c 9-16 | tr ' ' ':' > output_times.txt
 
-counter=1
+counter=0
 
 fline=`head -1 output_times.txt`
 
 initmin=`echo ${fline} | cut -d':' -f3`
 inithour=`echo  ${fline} | cut -d':' -f2`
 initday=`echo  ${fline} | cut -d':' -f1`
-indexhr=0
+indexhr=1
 hourchange="false"
 
 for line in `cat output_times.txt` 
