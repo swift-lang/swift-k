@@ -271,7 +271,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				}
 				catch (NoSuchResourceException e) {
 				    failTask(t, "The application \"" + getTaskConstraints(t).getConstraint("tr")
-							+ "\" is not available in your tc.data catalog ", e);
+							+ "\" is not available in the given site/pool in your tc.data catalog ", e);
 				}
 				catch (NoFreeResourceException e) {
 					remove = false;
