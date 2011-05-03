@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.text.SimpleDateFormat;
 
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
@@ -189,11 +190,14 @@ public class RuntimeStats extends FunctionsCollection {
 
 		void printStates(String header) {
 			Map<String, Integer> summary = getSummary();
+			SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+
 			// output the results of summarization, in a relatively
 			// pretty form - first the preferred order listed elements,
 			// and then anything remaining
 			System.err.print(header);
-			System.err.print("  time:" + (System.currentTimeMillis() - start));
+			//System.err.print("  time:" + (System.currentTimeMillis() - start));
+			System.err.print("  time: " + formatter.format(System.currentTimeMillis()));
 
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
