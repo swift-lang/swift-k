@@ -51,6 +51,7 @@ public class Execute extends GridExec {
 			scheduler.addJobStatusListener(this, task);
 			setStack(task, stack);
 			scheduler.enqueue(task, constraints);
+			System.out.println("Task is "+ task.getAttributeNames().toString() +" and constraints are "+constraints.toString());
 		}
 		catch (CanceledReplicaException e) {
 			if (logger.isDebugEnabled()) {
