@@ -1,13 +1,14 @@
 #!/bin/bash
 
 #bash script to plot the production rate of run from output data's arrival times
-if [ $# -ne 1  ]
+if [ $# -ne 2  ]
 then
-echo "usage: $0 pathofoutputfolder "
+echo "usage: $0 pathofoutputfolder time-interval"
 exit
 fi
 
 outputfolderpath=$1
+interval=$2
 
 if [ -f output_times.txt ]
 then
@@ -44,7 +45,7 @@ if [ ${day} -eq ${initday} ]
 then
 	if [ ${hour} -eq ${inithour} ]
 	then	
-		if [ ${diff} -ge 15 ]  || [ ${hourchange} == "true" ] 
+		if [ ${diff} -ge $interval ]  || [ ${hourchange} == "true" ] 
 		then
 		#	15 minutes elapsed
 			echo ${indexhr} " " ${counter} >> plot.dat
@@ -61,11 +62,13 @@ then
 		
 	fi
 else #day changes
-	echo ${day}
-	echo "day has changed"
+	# ${day}
+	# "day has changed"
 	daychange="true"
 	initday=${day}
 fi
 
 done
 
+#gnuplot dataplot-ketan.gnu
+ 
