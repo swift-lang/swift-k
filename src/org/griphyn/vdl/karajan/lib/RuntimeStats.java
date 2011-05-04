@@ -24,6 +24,7 @@ public class RuntimeStats extends FunctionsCollection {
 	public static final String PROGRESS = "#swift-runtime-progress";
 
 	public static final Arg PA_STATE = new Arg.Positional("state");
+	public static final SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 	public static final int MIN_PERIOD_MS=1000;
 	public static final int MAX_PERIOD_MS=30000;
 
@@ -190,7 +191,7 @@ public class RuntimeStats extends FunctionsCollection {
 
 		void printStates(String header) {
 			Map<String, Integer> summary = getSummary();
-			SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+		//	SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 
 			// output the results of summarization, in a relatively
 			// pretty form - first the preferred order listed elements,
