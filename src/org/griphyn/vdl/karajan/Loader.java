@@ -193,7 +193,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
             }
             ec.setArguments(arguments);
-            long start = System.currentTimeMillis();
+            // long start = System.currentTimeMillis();
             new HangChecker(stack).start();
             ec.start(stack);
             ec.waitFor();
