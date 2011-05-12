@@ -20,7 +20,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 public class AppStageins extends AbstractSequentialWithArguments {
 
     static Logger logger = Logger.getLogger(AppStageins.class);
-
+    
     public static final Arg JOBID = new Arg.Positional("jobid");
     public static final Arg FILES = new Arg.Positional("files");
     public static final Arg DIR = new Arg.Positional("dir");
@@ -50,7 +50,9 @@ public class AppStageins extends AbstractSequentialWithArguments {
                 .getDir()
                     + "/" + file.getName();
             String relpath = path.startsWith("/") ? path.substring(1) : path;
-            logger.debug("will stage in: " + relpath + " via: " + protocol);
+            if (logger.isDebugEnabled()) {
+                logger.debug("will stage in: " + relpath + " via: " + protocol);
+            }
             ArgUtil.getChannelReturn(stack, STAGEIN).append(
                 makeList(protocol + "://" + file.getHost() + "/" + path,
                     TypeUtil.toString(DIR.getValue(stack)) + "/" + relpath));
