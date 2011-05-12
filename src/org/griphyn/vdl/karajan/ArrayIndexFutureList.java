@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
@@ -19,18 +18,17 @@ import org.globus.cog.karajan.workflow.futures.FutureList;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
-import org.globus.cog.util.CopyOnWriteArrayList;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DSHandleListener;
 
 public class ArrayIndexFutureList implements FutureList, DSHandleListener {
     private ArrayList<Object> keys;
-    private Map values;
+    private Map<?, ?> values;
     private boolean closed;
-    private CopyOnWriteArrayList<ListenerStackPair> listeners;
+    private ArrayList<ListenerStackPair> listeners;
     private FutureEvaluationException exception;
 
-    public ArrayIndexFutureList(DSHandle handle, Map values) {
+    public ArrayIndexFutureList(DSHandle handle, Map<?, ?> values) {
         this.values = values;
         keys = new ArrayList<Object>();
         handle.addListener(this);
@@ -93,7 +91,7 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
     public synchronized void addModificationAction(FutureListener target,
             VariableStack stack) {
         if (listeners == null) {
-            listeners = new CopyOnWriteArrayList<ListenerStackPair>();
+            listeners = new ArrayList<ListenerStackPair>();
         }
 
         listeners.add(new ListenerStackPair(target, stack));
@@ -102,21 +100,19 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
         }
     }
 
-    private synchronized void notifyListeners() {
-        if (listeners == null) {
-            return;
+    private void notifyListeners() {
+        ArrayList<ListenerStackPair> l;
+        synchronized (this) {
+            if (listeners == null) {
+                return;
+            }
+            
+            l = listeners;
+            listeners = null;
         }
 
-        Iterator<ListenerStackPair> i = listeners.iterator();
-        try {
-            while (i.hasNext()) {
-                ListenerStackPair etp = i.next();
-                i.remove();
-                etp.listener.futureModified(this, etp.stack);
-            }
-        }
-        finally {
-            listeners.release();
+        for (ListenerStackPair lsp : l) {
+            lsp.listener.futureModified(this, lsp.stack);
         }
     }
 

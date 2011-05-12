@@ -4,10 +4,10 @@
 package org.griphyn.vdl.karajan;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
@@ -62,20 +62,21 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		}
 	}
 
-	private synchronized void notifyListeners() {
-		if (listeners == null) {
-			return;
+	private void notifyListeners() {
+	    List<ListenerStackPair> l;
+	    synchronized(this) {
+	        if (listeners == null) {
+	            return;
+	        }
+	        
+	        l = listeners;
+	        listeners = null;
+	    }
+	    
+	    for (ListenerStackPair lsp : l) {
+			WaitingThreadsMonitor.removeThread(lsp.stack);
+			lsp.listener.futureModified(DSHandleFutureWrapper.this, lsp.stack);
 		}
-		while (!listeners.isEmpty()) {
-			final ListenerStackPair etp = listeners.removeFirst();
-			WaitingThreadsMonitor.removeThread(etp.stack);
-			EventBus.post(new Runnable() {
-                public void run() {
-                    etp.listener.futureModified(DSHandleFutureWrapper.this, etp.stack);
-                }
-			});
-		}
-		listeners = null;
 	}
 
 	public synchronized int listenerCount() {

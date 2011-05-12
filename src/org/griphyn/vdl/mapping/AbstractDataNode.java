@@ -3,23 +3,18 @@
  */
 package org.griphyn.vdl.mapping;
 
-import org.griphyn.vdl.karajan.Loader;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.griphyn.vdl.karajan.Loader;
+import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
-
-import org.griphyn.vdl.karajan.VDL2FutureException;
-
 import org.griphyn.vdl.util.VDL2Config;
 
 
@@ -573,16 +568,24 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    protected synchronized void notifyListeners() {
-        if (listeners != null) {
-            for (DSHandleListener listener : listeners) {  
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Notifying listener \"" + listener
-                        + "\" about \"" + getIdentifyingString() + "\"");
-                }
-                listener.handleClosed(this);
+    protected void notifyListeners() {
+        List<DSHandleListener> l;
+        
+        synchronized(this) {
+            if (listeners == null) {
+                return;
             }
+            
+            l = listeners;
             listeners = null;
+        }
+        
+        for (DSHandleListener listener : l) {  
+            if (logger.isDebugEnabled()) {
+                logger.debug("Notifying listener \"" + listener
+                    + "\" about \"" + getIdentifyingString() + "\"");
+            }
+            listener.handleClosed(this);
         }
     }
 
