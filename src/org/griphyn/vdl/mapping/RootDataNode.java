@@ -45,7 +45,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		while(i.hasNext()) {
 			Map.Entry entry = (Map.Entry) i.next();
 			Object v = entry.getValue();
-			if(v instanceof DSHandle && !( (DSHandle)v).isClosed()) {
+			if(v instanceof DSHandle && !((DSHandle) v).isClosed()) {
 				waitingMapperParam = (DSHandle) v;
                 waitingMapperParam.addListener(this);
 				return;
