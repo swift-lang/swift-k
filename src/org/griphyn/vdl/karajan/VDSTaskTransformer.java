@@ -132,10 +132,10 @@ public class VDSTaskTransformer implements TaskTransformer {
 				String s  = spec.getDirectory()+"/"+executable;
 				l.set(0,s);
 				}
-			} catch(IOException ioe) {
+			} 
+			catch(IOException ioe) {
 				throw new KarajanRuntimeException("Could not determine wrapper invocation mode", ioe);
 			}
-
 		}
 
 		protected abstract void applyTCEntry(Task task, Contact[] contacts);
