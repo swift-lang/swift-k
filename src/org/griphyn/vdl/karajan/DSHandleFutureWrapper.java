@@ -33,7 +33,7 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		return handle.isClosed();
 	}
 
-	public synchronized Object getValue() throws VariableNotFoundException {
+	public synchronized Object getValue() {
 		Object value = handle.getValue();
 		if (value instanceof RuntimeException) {
 			throw (RuntimeException) value;

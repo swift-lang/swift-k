@@ -106,7 +106,7 @@ public class FileCopier implements Future, StatusListener {
         actions();
     }
 
-    public Object getValue() throws ExecutionException {
+    public Object getValue() {
         return null;
     }
 

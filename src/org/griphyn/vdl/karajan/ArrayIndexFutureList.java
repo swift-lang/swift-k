@@ -84,7 +84,7 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
         return closed;
     }
 
-    public Object getValue() throws VariableNotFoundException {
+    public Object getValue() {
         return this;
     }
 

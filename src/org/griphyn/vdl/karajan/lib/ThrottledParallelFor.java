@@ -285,7 +285,7 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		public void fail(FutureEvaluationException e) {
 		}
 
-		public Object getValue() throws ExecutionException {
+		public Object getValue() {
 			return null;
 		}
 

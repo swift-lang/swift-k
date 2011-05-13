@@ -89,7 +89,7 @@ public class FuturePairIterator implements FutureIterator {
 		return array.isClosed();
 	}
 
-	public Object getValue() throws VariableNotFoundException {
+	public Object getValue() {
 		return this;
 	}
 

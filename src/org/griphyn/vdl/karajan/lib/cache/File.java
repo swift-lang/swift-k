@@ -175,7 +175,7 @@ public class File implements Future {
 	public void fail(FutureEvaluationException e) {
 	}
 
-	public Object getValue() throws ExecutionException {
+	public Object getValue() {
 		return null;
 	}
 
