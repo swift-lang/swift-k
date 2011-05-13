@@ -58,12 +58,7 @@ public abstract class AbstractEvaluator implements Evaluator {
 			obj = children[index];
 		}
 		if (obj instanceof Future) {
-			try {
-				obj = ((Future) obj).getValue();
-			}
-			catch (ExecutionException e) {
-				throw new EvaluationException(e);
-			}
+			obj = ((Future) obj).getValue();
 		}
 		return obj;
 	}

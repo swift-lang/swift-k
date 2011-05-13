@@ -16,12 +16,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.arguments.VariableArgumentsListener;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventTargetPair;
 
 
 public class ForwardArgumentFuture implements Future {
@@ -30,7 +26,7 @@ public class ForwardArgumentFuture implements Future {
 	private final int index;
 	private final VariableArguments vargs;
 	private boolean closed;
-	private List actions;
+	private List<ListenerStackPair> actions;
 	private FutureEvaluationException exception;
 
 	public ForwardArgumentFuture(VariableArguments vargs, int index) {
@@ -48,7 +44,7 @@ public class ForwardArgumentFuture implements Future {
 		return closed;
 	}
 
-	public Object getValue() throws ExecutionException {
+	public Object getValue() {
 		if (exception != null) {
 			throw exception;
 		}
@@ -59,7 +55,7 @@ public class ForwardArgumentFuture implements Future {
 			}
 			else {
 				if (f.isClosed()) {
-					throw new VariableNotFoundException("Variable not found");
+					throw new KarajanRuntimeException("Variable not found");
 				}
 				throw new FutureNotYetAvailable(this);
 			}
@@ -69,10 +65,9 @@ public class ForwardArgumentFuture implements Future {
 				return vargs.get(index);
 			}
 			else {
-				throw new VariableNotFoundException("Invalid forward argument {" + index + "}");
+				throw new KarajanRuntimeException("Invalid forward argument {" + index + "}");
 			}
 		}
-
 	}
 
 	public boolean available() {
@@ -104,18 +99,20 @@ public class ForwardArgumentFuture implements Future {
 	}
 
 	private void actions() {
-		if (actions != null) {
-			synchronized (actions) {
-				Iterator i = actions.iterator();
-				while (i.hasNext()) {
-					ListenerStackPair etp = (ListenerStackPair) i.next();
-					if (FuturesMonitor.debug) {
-						FuturesMonitor.monitor.remove(etp);
-					}
-					i.remove();
-					etp.listener.futureModified(this, etp.stack);
-				}
+		List<ListenerStackPair> l;
+		synchronized(this) {
+			if (actions == null) {
+				return;
 			}
+			
+			l = actions;
+			actions = null;
+		}
+		for (ListenerStackPair lsp : l) {
+			if (FuturesMonitor.debug) {
+				FuturesMonitor.monitor.remove(lsp);
+			}
+			lsp.listener.futureModified(this, lsp.stack);
 		}
 	}
 
@@ -123,12 +120,7 @@ public class ForwardArgumentFuture implements Future {
 		if (!available()) {
 			return super.hashCode();
 		}
-		try {
-			return getValue().hashCode();
-		}
-		catch (ExecutionException e) {
-			throw new KarajanRuntimeException(e);
-		}
+		return getValue().hashCode();
 	}
 
 	public String toString() {
@@ -136,12 +128,7 @@ public class ForwardArgumentFuture implements Future {
 			return "ForwardArgumentFuture(" + index + ")";
 		}
 		else {
-			try {
-				return "ForwardArgumentFuture(" + index + "): " + getValue();
-			}
-			catch (ExecutionException e) {
-				return "ForwardArgumentFuture(" + index + "): ?";
-			}
+			return "ForwardArgumentFuture(" + index + "): " + getValue();
 		}
 	}
 

@@ -28,12 +28,10 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.stack.VariableUtil;
 import org.globus.cog.karajan.util.AdaptiveArrayList;
 import org.globus.cog.karajan.util.ArgumentsMap;
-import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.globus.cog.karajan.workflow.nodes.FlowNode.FNTP;
 
 public abstract class AbstractSequentialWithArguments extends Sequential {
 
@@ -208,6 +206,9 @@ public abstract class AbstractSequentialWithArguments extends Sequential {
 	public void futureModified(Future f, VariableStack stack) {
 		try {
 			post(stack);
+		}
+		catch (FutureFault e) {
+			e.getFuture().addModificationAction(this, stack);
 		}
 		catch (ExecutionException e) {
 			failImmediately(stack, e);
