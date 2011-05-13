@@ -44,7 +44,7 @@ public class MappingParam {
 		if (value instanceof DSHandle) {
 			DSHandle handle = (DSHandle) value;
 			checkHandle(handle);
-			return handle.toString();
+			return handle.getValue().toString();
 		}
 		else if (value == null) {
 			if (!defSet) {
@@ -65,7 +65,7 @@ public class MappingParam {
         if (value instanceof DSHandle) {
             DSHandle handle = (DSHandle) value;
             checkHandle(handle);
-            return handle.toString();
+            return handle.getValue().toString();
         }
         else if (value == null) {
             if (!defSet) {
@@ -102,15 +102,17 @@ public class MappingParam {
 	    converted to a String as appropriate. */
 	public String getStringValue(Mapper mapper) {
 		Object value = getValue(mapper);
-		if (value == null)
+		if (value == null) {
 			return null;
+		}
 		return String.valueOf(value);
 	}
 	
 	public String getStringValue(Map params) {
         Object value = getValue(params);
-        if (value == null)
+        if (value == null) {
             return null;
+        }
         return String.valueOf(value);
     }
 

@@ -85,24 +85,36 @@ public abstract class AbstractDataNode implements DSHandle {
      * text description.
      */
     public String toString() {
-        if (this.value != null && !(this.value instanceof Exception)) {
-            // special handling for ints...
-            if (this.getType().equals(Types.INT)) {
-                try {
-                    Number n = (Number) this.getValue();
-                    return String.valueOf(n.intValue());
-                }
-                catch (ClassCastException e) {
-                    throw new RuntimeException(
-                        "Internal type error. Value is not a Number for "
-                        + getDisplayableName() + getPathFromRoot());
-                }
-            }
-            else {
-                return this.value.toString();
-            }
+        return toDisplayableString();
+    }
+
+    private String toDisplayableString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getDisplayableName());
+        Path p = getPathFromRoot();
+        if (!p.isEmpty()) {
+            sb.append(".");
+            sb.append(p.toString());
         }
-        return getIdentifyingString();
+        sb.append(":");
+        sb.append(getType());
+        sb.append(" = ");
+        if (value == null) {
+            sb.append("?");
+        }
+        else if (value instanceof Throwable) {
+            sb.append(value.getClass().getName());
+        }
+        else {
+            sb.append(value);
+        }
+        if (closed) {
+            sb.append(" - Closed");
+        }
+        else {
+            sb.append(" - Open");
+        }
+        return sb.toString();
     }
 
     public String getIdentifyingString() {
@@ -152,7 +164,7 @@ public abstract class AbstractDataNode implements DSHandle {
             prefix = getRoot().getParam("prefix");
         }
         if (prefix == null) {
-            prefix = "unnamed SwiftScript value";
+            prefix = "?";
         }
         return prefix;
     }

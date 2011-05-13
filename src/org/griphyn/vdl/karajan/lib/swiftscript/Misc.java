@@ -65,22 +65,27 @@ public class Misc extends FunctionsCollection {
 		for (int i = 0; i < args.length; i++) {
 			DSHandle handle = args[i];
 			VDLFunction.waitFor(stack, handle);
-			if(i!=0) buf.append(", ");
+			if (i != 0) {
+			    buf.append(", ");
+			}
 			buf.append(args[i]);
 		}
 		traceLogger.warn(buf);
 		return null;
 	}
 
-	public DSHandle swiftscript_strcat(VariableStack stack)
-	throws ExecutionException {
-	    logger.debug(stack);
+	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException {
+	    if (logger.isDebugEnabled()) {
+	        logger.debug(stack);
+	    }
 		Object[] args = SwiftArg.VARGS.asArray(stack);
 		int provid = VDLFunction.nextProvenanceID();
 		StringBuffer buf = new StringBuffer();
+		
 		for (int i = 0; i < args.length; i++) {
 			buf.append(TypeUtil.toString(args[i]));
 		}
+		
 		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(buf.toString());
 		handle.closeShallow();

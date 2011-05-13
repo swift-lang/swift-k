@@ -22,7 +22,7 @@ import org.griphyn.vdl.type.Types;
 
 public abstract class SwiftArg extends Arg {
 	public static final Logger logger = Logger.getLogger(SwiftArg.class);
-
+	
 	public SwiftArg(String name, int index) {
 		super(name, index);
 	}
