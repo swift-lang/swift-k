@@ -49,12 +49,7 @@ public class Variable extends AbstractAtom {
 			Object value = variables.get(name);
 
 			if (value instanceof Future) {
-				try {
-					value = ((Future) value).getValue();
-				}
-				catch (ExecutionException e) {
-					throw new EvaluationException(e);
-				}
+				value = ((Future) value).getValue();
 			}
 			return value;
 		}

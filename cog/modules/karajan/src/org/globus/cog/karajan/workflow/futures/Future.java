@@ -18,7 +18,7 @@ public interface Future {
 
 	boolean isClosed();
 
-	Object getValue() throws ExecutionException;
+	Object getValue();
 
 	/**
 	 * Signal to any threads waiting on this future that the

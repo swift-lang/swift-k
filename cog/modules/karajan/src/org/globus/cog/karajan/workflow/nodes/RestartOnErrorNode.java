@@ -60,6 +60,8 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Failed too many times.");
 			}
+			super.failed(stack, e);
+			return;
 		}
 	}
 
