@@ -58,9 +58,13 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		}
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
-			checkInputs();
 			getField().setName(PARAM_PREFIX.getStringValue(mapper));
-			initialized();
+			// initialized means that this data has its mapper initialized
+			// this should be called before checkInputs because the latter
+			// may trigger calls to things that try to access this data node's
+			// mapper
+            initialized();
+			checkInputs();
 		}
 		catch (InvalidMapperException e) {
 			throw new RuntimeException("InvalidMapperException caught in mapper initialization", e);
@@ -202,10 +206,11 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
 
 	public Mapper getMapper() {
-		if(initialized) {
+		if (initialized) {
 			return mapper;
-		} else {
-			assert(waitingMapperParam != null);
+		} 
+		else {
+			assert (waitingMapperParam != null);
             throw new VDL2FutureException(waitingMapperParam);
 		}
 	}
@@ -220,6 +225,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	}
 
 	private void initialized() {
-		initialized=true;
+		initialized = true;
+		waitingMapperParam = null;
 	}
 }
