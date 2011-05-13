@@ -45,11 +45,12 @@ public class Sequential extends FlowContainer {
 	}
 
 	protected boolean moreToExecute(VariableStack stack) throws ExecutionException {
-		if (elementCount() == 0) {
+	    int ec = elementCount();
+		if (ec == 0) {
 			return false;
 		}
 		int index = getIndex(stack);
-		if (index == elementCount() || index == Integer.MAX_VALUE) {
+		if (index == ec || index == Integer.MAX_VALUE) {
 			return false;
 		}
 		return true;
@@ -59,7 +60,9 @@ public class Sequential extends FlowContainer {
 	 * Aborts the execution of any further sub-elements
 	 */
 	protected void exit(VariableStack stack) throws ExecutionException {
-		logger.debug(this + " exit");
+	    if (logger.isDebugEnabled()) {
+	    	logger.debug(this + " exit");
+	    }
 		stack.getRegs().setIA(Integer.MAX_VALUE);
 	}
 

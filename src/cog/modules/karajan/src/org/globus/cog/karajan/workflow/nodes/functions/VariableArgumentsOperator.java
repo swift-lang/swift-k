@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.globus.cog.karajan.arguments.AbstractWriteOnlyVariableArguments;
 import org.globus.cog.karajan.arguments.VariableArguments;
+import org.globus.cog.karajan.workflow.futures.Future;
 
 public abstract class VariableArgumentsOperator extends AbstractWriteOnlyVariableArguments {
 	private Object value;
@@ -35,6 +36,9 @@ public abstract class VariableArgumentsOperator extends AbstractWriteOnlyVariabl
 	}
 
 	public synchronized void append(Object value) {
+		if (value instanceof Future) {
+			value = ((Future) value).getValue();
+		}
 		this.value = update(this.value, value);
 	}
 

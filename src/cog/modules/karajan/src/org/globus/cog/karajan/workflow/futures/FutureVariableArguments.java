@@ -164,18 +164,20 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 	}
 
 	private void actions() {
-		if (actions != null) {
-			synchronized (actions) {
-				java.util.Iterator<ListenerStackPair> i = actions.iterator();
-				while (i.hasNext()) {
-					ListenerStackPair etp = i.next();
-					if (FuturesMonitor.debug) {
-						FuturesMonitor.monitor.remove(etp);
-					}
-					i.remove();
-					EventBus.post(etp);
-				}
+		List<ListenerStackPair> l;
+		synchronized(this) {
+			if (actions == null) {
+				return;
 			}
+			l = actions;
+			actions = null;
+		}
+		
+		for (ListenerStackPair lsp : l) {
+			if (FuturesMonitor.debug) {
+				FuturesMonitor.monitor.remove(lsp);
+			}
+			EventBus.post(lsp);
 		}
 	}
 

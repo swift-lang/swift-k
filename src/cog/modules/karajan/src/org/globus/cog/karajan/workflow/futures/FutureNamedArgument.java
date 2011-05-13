@@ -15,12 +15,8 @@ import java.util.Set;
 
 import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.arguments.NamedArgumentsListener;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventTargetPair;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
+import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
 public class FutureNamedArgument implements Future, NamedArgumentsListener {
 	private boolean closed;
@@ -43,7 +39,7 @@ public class FutureNamedArgument implements Future, NamedArgumentsListener {
 		return closed;
 	}
 	
-	private Object notYetAvailable() throws ExecutionException {
+	private Object notYetAvailable() {
 		//there should be an abstract future
 		if (exception != null) {
 			throw exception;
@@ -53,11 +49,11 @@ public class FutureNamedArgument implements Future, NamedArgumentsListener {
 		}
 	}
 
-	public synchronized Object getValue() throws ExecutionException {
+	public synchronized Object getValue() {
 		Object value = named.getArgument(name);
 		if (value == null) {
 			if (closed) {
-				throw new VariableNotFoundException(name);
+				throw new KarajanRuntimeException(name);
 			}
 			else {
 				return notYetAvailable();
