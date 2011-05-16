@@ -5,8 +5,6 @@ package org.griphyn.vdl.karajan.lib;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
-import org.globus.cog.abstraction.interfaces.Specification;
-import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.arguments.Arg;
@@ -15,7 +13,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
 import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
 import org.griphyn.vdl.karajan.lib.replication.CanceledReplicaException;
