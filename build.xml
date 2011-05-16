@@ -55,6 +55,8 @@
 
 		fixeol:
 			change newlines to the unix standard.
+                docs:
+			Build Swift documentation from asciidoc txt files
 		</echo>
 	</target>
 
@@ -87,7 +89,6 @@
 		<chmod perm="+x" file="${dist.dir}/bin/swiftconfig"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swiftrun"/>
                 <chmod perm="+x" file="${dist.dir}/bin/gensites"/>
-                <chmod perm="+x" file="${dist.dir}/bin/chxml"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/active-state-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/add-runid-as-prefix"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/affine-transform"/>
@@ -261,6 +262,15 @@
 	</target>
 
 
+	<!-- ================================================ -->
+	<!-- Docs					      -->
+	<!-- ================================================ -->
+	<target name="docs">
+                <property name="docs.out" value="docs/"></property>
+		<exec executable="docs/build_docs.sh">
+			<arg value="${docs.out}"></arg>
+		</exec>
+	</target>
 
 	<!-- ================================================ -->
 	<!-- Compile                                          -->
@@ -367,7 +377,7 @@
 		<ant antfile="${main.buildfile}" target="module.package"/>
 	</target>
 
-	<target name="generateVersion" unless="no.version">
+	<target name="generateVersion">
 		<echo file="libexec/version.txt">Swift ${version} </echo>
 		<exec os="Linux, Mac OS X" executable="libexec/svn-revision" append="true" output="libexec/version.txt"/>
 		<exec os="Linux, Mac OS X" executable="libexec/generate-buildid" append="false" output="libexec/buildid.txt"/>
