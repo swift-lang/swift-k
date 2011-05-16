@@ -4,7 +4,7 @@
 
 # The script will (optionally) checkout Swift, run several tests in a
 # subdirectory called run-DATE, and generate useful HTML output and
-# tests.log
+# tests.log .  Tests are grouped into test GROUPs.
 
 # Usage: suite.sh <options>* <GROUPLISTFILE|GROUP>
 
@@ -12,13 +12,16 @@
 # Assuming your code is in /tmp/cog, where you
 # have the conventional cog/modules/swift configuration,
 # and you have done an ant dist, you can run
-# suite.sh -a -c -g -p -s -o /tmp tests/groups/group-all-local.sh
+# suite.sh -t -o /tmp tests/groups/group-all-local.sh
 # or cd into /tmp and run
-# suite.sh -a -c -g -p -s cog/modules/swift/tests/groups/group-all-local.sh
+# suite.sh -t cog/modules/swift/tests/groups/group-all-local.sh
+# The -t option is "Tree mode"- as in, "test my existing source tree"
 
 # Run suite.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
-# Code is checked out into TOPDIR (PWD by default) (PATH is overridden)
+
+# The TOPDIR (PWD by default) is set with the -o option.
+# Code is checked out into this directory or must already exist there.
 # The variables COG_VERSION and SWIFT_VERSION must be set for code checkout
 # e.g. COG_VERSION=branches/4.1.8, SWIFT_VERSION=branches/release-0.92
 # Swift is compiled and installed in its source tree
@@ -107,18 +110,19 @@ printhelp() {
   echo "suite.sh <options> <output>"
   echo ""
   echo "usage:"
-  printf "\t -a         Do not run ant dist             \n"
-  printf "\t -c         Do not remove dist (clean)      \n"
-  printf "\t -g         Do not run grid tests           \n"
-  printf "\t -h         This message                    \n"
-  printf "\t -k <N>     Skip first N tests              \n"
-  printf "\t -n <N>     Run N tests and quit            \n"
-  printf "\t -p         Do not build the package        \n"
-  printf "\t -s         Do not do a fresh svn checkout  \n"
-  printf "\t -x         Do not continue after a failure \n"
-  printf "\t -v         Verbose (set -x, HTML comments) \n"
-  printf "\t -o output  Location for output (TOPDIR)    \n"
-  printf "\t <FILE>     GROUPLIST definition file       \n"
+  printf "\t -a         Do not run ant dist                \n"
+  printf "\t -c         Do not remove dist (clean)         \n"
+  printf "\t -g         Do not run grid tests              \n"
+  printf "\t -h         This message                       \n"
+  printf "\t -k <N>     Skip first N tests                 \n"
+  printf "\t -n <N>     Run N tests and quit               \n"
+  printf "\t -p         Do not build the package           \n"
+  printf "\t -s         Do not do a svn checkout           \n"
+  printf "\t -t         Tree mode (alias: -a,-c,-g,-p,-s)  \n"
+  printf "\t -x         Do not continue after a failure    \n"
+  printf "\t -v         Verbose (set -x, HTML comments)    \n"
+  printf "\t -o output  Location for cog and output        \n"
+  printf "\t <GROUP>    GROUP argument                     \n"
 }
 
 # Defaults:
@@ -164,6 +168,13 @@ while [ $# -gt 0 ]; do
     -s)
       SKIP_CHECKOUT=1
       shift;;
+    -t)
+      # "Tree mode"
+      RUN_ANT=0
+      CLEAN=0
+      GRID_TESTS=0
+      BUILD_PACKAGE=0
+      SKIP_CHECKOUT=1
     -x)
       ALWAYS_EXITONFAILURE=1
       shift;;
@@ -978,7 +989,6 @@ EXITONFAILURE=true
 if [ "$SKIP_CHECKOUT" != "1" ]; then
   TESTNAME="Checkout CoG"
   start_row
-  test_exec rm -rf cog
   COG="https://cogkit.svn.sourceforge.net/svnroot/cogkit/$COG_VERSION/src/cog"
   test_exec svn co $COG
   end_row
@@ -986,7 +996,6 @@ if [ "$SKIP_CHECKOUT" != "1" ]; then
   TESTNAME="Checkout Swift"
   start_row
   test_exec cd cog/modules
-  test_exec rm -rf swift
   test_exec svn co https://svn.ci.uchicago.edu/svn/vdl2/$SWIFT_VERSION swift
   end_row
 fi
