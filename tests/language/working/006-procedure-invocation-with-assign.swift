@@ -4,6 +4,5 @@ type file;
 app { echo i stdout=@f; }
 }
 
-int greetings;
-file hw=echo(greetings);
-
+int greetings = 2;
+file hw = echo(greetings);
