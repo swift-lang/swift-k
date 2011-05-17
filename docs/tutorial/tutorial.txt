@@ -40,15 +40,15 @@ into a file called hello.txt.
 
 .first.swift
 ************
-[java]
-source~~~~
+ 
+----
 include::../../examples/first.swift[]
-source~~~~
+----
 ************
 
 We can run this program as follows:
-[java]
-source~~~~
+ 
+----
 $ cd examples/swift/
 $ swift first.swift
 Swift svn swift-r3334 (swift modified locally) cog-r2752
@@ -58,16 +58,16 @@ Progress:
 Final status:  Finished successfully:1
 $ cat hello.txt
 Hello, world!
-source~~~~
+----
 
 The basic structure of this program is a type definition, an
 application procedure definition, a variable definition and then a
 call to the procedure:
 
-[java]
-source~~~~
+ 
+----
 type messagefile;  
-source~~~~
+----
 
 First we define a new type, called messagefile. In this example, we will
 use this messagefile type as the type for our output message.
@@ -77,12 +77,12 @@ All data in SwiftScript must be typed, whether it is stored in memory or
 on disk. This example defines a very simple type. Later on we will see
 more complex type examples.
 
-[java]
-source~~~~
+ 
+----
 app (messagefile t) greeting() {   
     echo "Hello, world!" stdout=@filename(t);  
 }  
-source~~~~
+----
 
 Next we define a procedure called greeting. This procedure will write
 out the "hello world" message to a file.
@@ -121,10 +121,10 @@ to the greeting function.
 
 The code changes from first.swift are highlighted below.
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/parameter.swift[]
-source~~~~
+----
 
 We have modified the signature of the greeting procedure to indicate
 that it takes a single parameter, s, of type 'string'.
@@ -142,20 +142,20 @@ supplied.
 The code for this section can be found in parameter.swift. It can be
 invoked using the swift command, with output appearing in hello2.txt:
 
-[java]
-source~~~~
+ 
+----
 $ swift parameter.swift
-source~~~~
+----
 
 Now that we can choose our greeting text, we can call the same procedure
 with different parameters to generate several output files with
 different greetings. The code is in manyparam.swift and can be run as
 before using the swift command.
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/manyparam.swift[]
-source~~~~
+----
 
 Note that we can intermingle definitions of variables with invocations
 of procedures.
@@ -175,11 +175,11 @@ will capitalise all the words in the input file.
 To do this, we'll use the unix tr (translate) utility. Here is an
 example of using tr on the unix command line, not using Swift:
 
-[java]
-source~~~~
+ 
+----
 $ echo hello | tr '[a-z]' '[A-Z]'
 HELLO
-source~~~~
+----
 
 .There are several steps
 - transformation catalog
@@ -192,10 +192,10 @@ where programs can be found. Add a new line to the file, specifying
 where *tr* can be found (usually in /usr/bin/tr but it may differ on
 your system), like this:
 
-[java]
-source~~~~
+ 
+----
 localhost       tr      /usr/bin/tr     INSTALLED       INTEL32::LINUX  null  
-source~~~~
+----
 
 For now, ignore all of the fields except the second and the third. The
 second field tr specifies a logical application name and the third
@@ -205,38 +205,38 @@ Now that we have defined where to find tr, we can use it in SwiftScript.
 
 We can define a new procedure, capitalise, which calls tr.
 
-[java]
-source~~~~
+ 
+----
 (messagefile o) capitalise(messagefile i) {     
     app {  
         tr "[a-z]" "[A-Z]" stdin=@filename(i) stdout=@filename(o);  
     }  
 }  
-source~~~~
+----
 We can call capitalise like this:
 
-[java]
-source~~~~
+ 
+----
 messagefile final <"capitals.txt">;  
 final = capitalise(hellofile);  
-source~~~~
+----
 
 So a full program based on the first exercise might look like this:
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/second_procedure.swift[]
-source~~~~
+----
 
 We can use the swift command to run it like this.
 
-[java]
-source~~~~
+ 
+----
 $ swift second_procedure.swift
 ...
 $ cat capitals.txt
 HELLO FROM SWIFT
-source~~~~
+----
 
 Anonymous files
 ~~~~~~~~~~~~~~~
@@ -246,10 +246,10 @@ for the file, and we can let Swift choose the name.
 
 To do that, omit the mapping entirely when declaring outfile:
 
-[java]
-source~~~~
+ 
+----
 messagefile outfile;  
-source~~~~
+----
 
 Swift will choose a filename, which in the present version will be in a
 subdirectory called _concurrent.
@@ -272,28 +272,28 @@ languages.
 It is also possible to create user defined types with more structure,
 for example:
 
-[java]
-source~~~~
+ 
+----
 type details {  
     string name;  
     int pies;  
 }  
-source~~~~
+----
 
 Each element of the structured type can be accessed using a . like this:
 
-[java]
-source~~~~
+ 
+----
 person.name = "john";  
-source~~~~
+----
 
 The following complete program, types.swift, outputs a greeting using a
 user-defined structure type to hold parameters for the message:
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/types.swift[]
-source~~~~
+----
 
 Structured types can be comprised of marker types for files. See the
 later section on mappers for more information about this.
@@ -304,17 +304,17 @@ Arrays
 
 We can define arrays using the [] suffix in a variable declaration:
 
-[java]
-source~~~~
+ 
+----
 messagefile m[];  
-source~~~~
+----
 
 This program, q5.swift, will declare an array of message files.
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/q5.swift[]
-source~~~~
+----
 
 Observe that the type of the parameter to greeting is now an array of
 strings, string s[], instead of a single string, string s, that
@@ -331,10 +331,10 @@ data can be referred to on disk through variables in a very similar
 fashion to data in memory. For example, in the above examples we have
 seen a variable definition like this:
 
-[java]
-source~~~~
+ 
+----
 messagefile outfile <"q13greeting.txt">;  
-source~~~~
+----
 
 This means that outfile is a dataset variable, which is mapped to a
 file on disk called g13greeting.txt. This variable can be assigned to
@@ -349,10 +349,10 @@ The two forms of mapping seen so far are:
 simple named mapping - the name of the file that a variable is mapped to
 is explictly listed. Like this:
 
-[java]
-source~~~~
+ 
+----
 messagefile outfile <"greeting.txt">;  
-source~~~~
+----
 
 This is useful when you want to explicitly name input and output files
 for your program. For example, outfile in exercise HELLOWORLD.
@@ -363,10 +363,10 @@ files that are only referenced through SwiftScript, such as outfile in
 exercise ANONYMOUSFILE. A variable declaration is mapped anonymously by
 ommitting any mapper definition, like this:
 
-[java]
-source~~~~
+ 
+----
 messagefile outfile;  
-source~~~~
+----
 
 Later exercises will introduce other ways of mapping from disk files to
 SwiftScript variables.
@@ -391,8 +391,8 @@ procedure to work correctly, add the wc utility (usually found in
 
 The important bit of regexp.swift is:
 
-[java]
-source~~~~
+ 
+----
 messagefile inputfile <"q16.txt">;  
   
 countfile c <regexp_mapper;  
@@ -400,7 +400,7 @@ countfile c <regexp_mapper;
              match="(.*)txt",  
              transform="\\1count"  
             >;  
-source~~~~
+----
 
 fixed_array_mapper
 ^^^^^^^^^^^^^^^^^^
@@ -408,10 +408,10 @@ The fixed array mapper maps a list of files into an array - each
 element of the array is mapped into one file in the specified directory.
 See fixedarray.swift.
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/fixedarray.swift[]
-source~~~~
+----
 
 foreach
 ~~~~~~~
@@ -427,23 +427,23 @@ output files: one.count, two.count and three.count, each
 containing the word count for the corresponding input file. We combine
 the use of the fixed_array_mapper and the regexp_mapper.
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/foreach.swift[]
-source~~~~
+----
 
 If
 ~~
 Decisions can be made using 'if', like this:
 
-[java]
-source~~~~
+ 
+----
 if(morning) {  
   outfile = greeting("good morning");  
 } else {  
   outfile = greeting("good afternoon");  
 }  
-source~~~~
+----
 
 if.swift contains a simple example of this. Compile and run if.swift
 and see that it outputs "good morning". Changing the morning variable
@@ -462,18 +462,18 @@ reaches zero.
 
 Here's the program:
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/iterate.swift[]
-source~~~~
+----
 
 echo is the standard unix echo.
 
 wcl is our application code - it counts the number of bytes in the one
 file and writes that count out to another, like this:
 
-[java]
-source~~~~
+ 
+----
 $ cat ../wcl
 #!/bin/bash
 echo -n $(wc -c < $1) > $2
@@ -482,13 +482,13 @@ $ echo -n hello > a
 $ wcl a b
 $ cat b
 5
-source~~~~
+----
 
 Install the above wcl script somewhere and add a transformation catalog
 entry for it. Then run the example program like this:
 
-[java]
-source~~~~
+ 
+----
 $ swift iterate.swift
 Swift svn swift-r3334 cog-r2752
 
@@ -501,7 +501,7 @@ Final status:  Finished successfully:4
 
 $ ls foldout*
 foldout0000  foldout0001  foldout0002  foldout0003
-source~~~~
+----
 
 Runtime features
 ----------------
@@ -512,11 +512,11 @@ Visualising the workflow as a graph
 When running a workflow, its possible to generate a provenance graph at
 the same time:
 
-[java]
-source~~~~~
+ 
+-----
 $ swift -pgraph graph.dot first.swift
 $ dot -ograph.png -Tpng graph.dot
-source~~~~
+----
 
 graph.png can then be viewed using your favourite image viewer. The dot application is part of the graphViz project. More information can be found at http://www.graphviz.org.
 
@@ -621,11 +621,11 @@ myfile.txt, like this:
 We should be able to use the mapper we write in a SwiftScript program
 like this:
 
-[java]
-source~~~~
+ 
+----
 type file;  
 file f <my_first_mapper;>;  
-source~~~~
+----
 
 First we must choose a base class - AbstractMapper or
 AbstractFileMapper. We aren't going to use a directory listing to decide
@@ -640,8 +640,8 @@ Here is the code implementing this mapper. Put this in your source
 vdsk directory, make a directory src/tutorial/|and put this file in
 src/tutorial/MyFirstMapper.java.
 
-[java]
-source~~~~
+ 
+----
 package tutorial;  
   
 import java.util.Arrays;  
@@ -675,17 +675,17 @@ public class MyFirstMapper extends AbstractMapper {
       return null;  
   }  
 }  
-source~~~~
+----
 
 Now we need to inform the Swift engine about the existence of this
 mapper. We do that by editing the MapperFactory class definition, in
 src/org/griphyn/vdl/mapping/MapperFactory.java and adding a
 registerMapper call alongside the existing registerMapper calls, like this:
 
-[java]
-source~~~~
+ 
+----
 registerMapper("my_first_mapper", tutorial.MyFirstMapper.class);  
-source~~~~
+----
 
 The first parameter is the name of the mapper that will be used in
 SwiftScript program. The second parameter is the new Mapper class that
@@ -696,8 +696,8 @@ Now rebuild Swift using the "ant redist" target.
 This new Swift build will be aware of your new mapper. We can test it
 out with a hello world program:
 
-[java]
-source~~~~
+ 
+----
 type messagefile;  
   
 (messagefile t) greeting() {  
@@ -709,16 +709,16 @@ type messagefile;
 messagefile outfile <my_first_mapper;>;  
   
 outfile = greeting();  
-source~~~~
+----
 
 Run this program, and hopefully you will find the "hello" string has
 been output into the hard coded output file myfile.txt:
 
-[java]
-source~~~~
+ 
+----
 $ cat myfile.txt
 hello
-source~~~~
+----
 
 So that's a first very simple mapper implemented. Compare the source
 code to the single_file_mapper in
@@ -736,30 +736,30 @@ problem so that Swift can continue with the workflow.
 
 First we have the program in working form, restart.swift.
 
-[java]
-source~~~~
+ 
+----
 include::../../examples/restart.swift[]
-source~~~~
+----
 
 We must define some transformation catalog entries:
 
-[java]
-source~~~~
+ 
+----
 localhost   touch   /usr/bin/touch  INSTALLED   INTEL32::LINUX  null  
 localhost   broken  /bin/true   INSTALLED   INTEL32::LINUX  null  
-source~~~~
+----
 
 Now we can run the program:
 
-[java]
-source~~~~
+ 
+----
 $ swift restart.swift    
 Swift 0.9 swift-r2860 cog-r2388  
   
 RunID: 20100526-1119-3kgzzi15  
 Progress:  
 Final status:  Finished successfully:4  
-source~~~~
+----
 
 Four jobs run - touch, echo, broken and a final echo. (note that broken
 isn't actually broken yet).
@@ -767,15 +767,15 @@ isn't actually broken yet).
 Now we will break the broken job and see what happens. Replace the
 definition in tc.data for broken with this:
 
-[java]
-source~~~~
+ 
+----
 localhost    broken     /bin/false   INSTALLED       INTEL32::LINUX  null  
-source~~~~
+----
 
 Now when we run the workflow, the broken task fails:
 
-[java]
-source~~~~
+ 
+----
 $ swift restart.swift   
   
 Swift 0.9 swift-r2860 cog-r2388  
@@ -790,26 +790,26 @@ Host: localhost
 Directory: restart-20100526-1121-tssdcljg/jobs/1/broken-1i6ufisj  
 stderr.txt:   
 stdout.txt:   
-source~~~~
+----
 
 From the output we can see that touch and the first echo completed, but
 then broken failed and so swift did not attempt to execute the final echo.
 
 There will be a restart log with the same name as the RunID:
 
-[java]
-source~~~~
+ 
+----
 $ ls *20100526-1121-tssdcljg*rlog  
 restart-20100526-1121-tssdcljg.0.rlog  
-source~~~~
+----
 
 This restart log contains enough information for swift to know which
 parts of the workflow were executed successfully.
 
 We can try to rerun it immediately, like this:
 
-[java]
-source~~~~
+ 
+----
 $ swift -resume restart-20100526-1121-tssdcljg.0.rlog restart.swift   
   
 Swift 0.9 swift-r2860 cog-r2388  
@@ -824,11 +824,9 @@ Directory: restart-20100526-1125-7yx0zi6d/jobs/m/broken-msn1gisj
 stderr.txt:   
 stdout.txt:   
   
-----  
-  
 Caused by:  
     Exit code 1  
-source~~~~
+----
 
 Swift tried to resume the workflow by executing "broken" again. It did
 not try to run the touch or first echo jobs, because the restart log
@@ -842,15 +840,15 @@ tc.data line that works.
 Remove the existing "broken" line and replace it with the successful
 tc.data entry above:
 
-[java]
-source~~~~
+ 
+----
 localhost       broken          /bin/true   INSTALLED       INTEL32::LINUX  null  
-source~~~~
+----
 
 Now run again:
 
-[java]
-source~~~~
+ 
+----
 $ swift -resume restart-20100526-1121-tssdcljg.0.rlog restart.swift  
   
 Swift 0.9 swift-r2860 cog-r2388  
@@ -858,7 +856,7 @@ Swift 0.9 swift-r2860 cog-r2388
 RunID: 20100526-1128-a2gfuxhg  
 Progress:  
 Final status:  Initializing:2  Finished successfully:2  
-source~~~~
+----
 
 Swift tries to run "broken" again. This time it works, and so Swift
 continues on to execute the final piece of the workflow as if nothing
@@ -871,30 +869,29 @@ bits
 Named and optional parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-anchor:named_parameters
 In addition to specifying parameters positionally, parameters can be
 named, and if desired a default value can be specified:
 
-[java]
-source~~~~
+ 
+----
 (messagefile t) greeting (string s="hello") {  
     app {  
         echo s stdout=@filename(t);  
     }  
 }  
-source~~~~
+----
 
 When we invoke the procedure, we can specify values for the parameters
 by name. The following code can be found in q21.swift.
 
-[java]
-source~~~~
+ 
+----
 french = greeting(s="bonjour");  
-source~~~~
+----
 
 or we can let the default value apply:
 
-[java]
-source~~~~
+ 
+----
 english = greeting();  
-source~~~~
+----

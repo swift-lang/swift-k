@@ -59,12 +59,11 @@ Mapped type and composite type variable declarations can be annotated
 with a mapping descriptor indicating the file(s) that make up that
 dataset. For example, the following line declares a variable named
 photo with type image. It additionally declares that the data for
-this variable is stored in a single file named shane.jpeg.
+this variable is stored in a single file named shane.jpg.
 
-[java]
-source~~~~
-image photo <"shane.jpeg">;  
-source~~~~
+----
+image photo <"shane.jpg">;  
+----
 
 Component programs of scripts are declared in an app declaration, with
 the description of the command line syntax for that program and a list
@@ -75,19 +74,17 @@ For example, the following example lists a procedure which makes use of
 the ImageMagick <http://www.imagemagick.org/> convert command to
 rotate a supplied image by a specified angle:
 
-[java]
-source~~~~
+----
 app (image output) rotate(image input) {  
   convert "-rotate" angle @input @output;  
 }  
-source~~~~
+----
 
 A procedure is invoked using the familiar syntax:
 
-[java]
-source~~~~
+----
 rotated = rotate(photo, 180);  
-source~~~~
+----
 
 While this looks like an assignment, the actual unix level execution
 consists of invoking the command line specified in the app
@@ -99,10 +96,9 @@ The examples above have used the type image without any definition of
 that type. We can declare it as a marker type which has no structure
 exposed to SwiftScript:
 
-[java]
-source~~~~
+----
 type image;  
-source~~~~
+----
 
 This does not indicate that the data is unstructured; but it indicates
 that the structure of the data is not exposed to SwiftScript. Instead,
@@ -112,39 +108,37 @@ With mechanisms to declare types, map variables to data files, and
 declare and invoke procedures, we can build a complete (albeit simple)
 script:
 
-[java]
-source~~~~
+----
 type image;  
-image photo <"shane.jpeg">;  
-image rotated <"rotated.jpeg">;  
+image photo <"shane.jpg">;  
+image rotated <"rotated.jpg">;  
   
 app (image output) rotate(image input, int angle) {  
    convert "-rotate" angle @input @output;  
 }  
   
 rotated = rotate(photo, 180);  
-source~~~~
+----
 
 This script can be invoked from the command line:
-[txt]
-source~~~~
-  $ ls *.jpeg
-  shane.jpeg
+----
+  $ ls *.jpg
+  shane.jpg
   $ swift example.swift
   ...
-  $ ls *.jpeg
-  shane.jpeg rotated.jpeg
-source~~~~
+  $ ls *.jpg
+  shane.jpg rotated.jpg
+----
 
 This executes a single convert command, hiding from the user features
 such as remote multisite execution and fault tolerance that will be
 discussed in a later section.
 
-.Figure 1. shane.jpeg
-image:userguide-shane.jpeg[]
+.Figure 1. shane.jpg
+image:userguide-shane.jpg[]
 
-.Figure 2. rotated.jpeg
-image:userguide-rotated.jpeg[]
+.Figure 2. rotated.jpg
+image:userguide-rotated.jpg[]
 
 
 Arrays and Parallel Execution
@@ -155,30 +149,26 @@ mapped to a collection of files, one element per file, by using a
 different form of mapping expression. For example, the filesys_mapper 
 maps all files matching a particular unix glob pattern into an array:
 
-[java]
-source~~~~
-file frames[] <filesys_mapper; pattern="*.jpeg">;  
-source~~~~
+----
+file frames[] <filesys_mapper; pattern="*.jpg">;  
+----
 
 The foreach construct can be used to apply the same block of code to
 each element of an array:
 
-[java]
-source~~~~
+----
 foreach f,ix in frames {  
   output[ix] = rotate(frames, 180);  
-}  
-source~~~~
+----
 
 Sequential iteration can be expressed using the iterate construct:
 
-[java]
-source~~~~
+----
 step[0] = initialCondition();  
 iterate ix {  
   step[ix] = simulate(step[ix-1]);  
 }  
-source~~~~
+----
 
 This fragment will initialise the 0-th element of the step array to
 some initial condition, and then repeatedly run the simulate
@@ -199,20 +189,18 @@ can proceed in parallel.
 In this fragment, execution of procedures p and q can happen in
 parallel:
 
-[java]
-source~~~~
+----
 y=p(x);  
 z=q(x);  
-source~~~~
+----
 
 while in this fragment, execution is serialised by the variable y,
 with procedure p executing before q.
 
-[java]
-source~~~~
+----
 y=p(x);  
 z=q(y);  
-source~~~~
+----
 
 Arrays in SwiftScript are more monotonic - a generalisation of being
 assignment. Knowledge about the content of an array increases during
@@ -228,8 +216,7 @@ statement will apply its body to elements of an array as they become
 known. It will not wait until the array is closed.
 
 Consider this script:
-[java]
-source~~~~
+----
 file a[];  
 file b[];  
 foreach v,i in a {  
@@ -237,7 +224,7 @@ foreach v,i in a {
 }  
 a[0] = r();  
 a[1] = s();  
-source~~~~
+----
 
 Initially, the foreach statement will have nothing to execute, as the
 array a has not been assigned any values. The procedures r and s
@@ -255,8 +242,7 @@ SwiftScript code can be defined. These differ from the previously
 mentioned procedures declared with the app keyword, as they invoke
 other SwiftScript procedures rather than a component program.
 
-[java]
-source~~~~
+----
 (file output) process (file input) {  
   file intermediate;  
   intermediate = first(input);  
@@ -266,7 +252,7 @@ source~~~~
 file x <"x.txt">;  
 file y <"y.txt">;  
 y = process(x);  
-source~~~~
+----
 
 This will invoke two procedures, with an intermediate data file named
 anonymously connecting the first and second procedures.
@@ -274,8 +260,7 @@ anonymously connecting the first and second procedures.
 Ordering of execution is generally determined by execution of app
 procedures, not by any containing compound procedures. In this code block:
 
-[java]
-source~~~~
+----
 (file a, file b) A() {  
   a = A1();  
   b = A2();  
@@ -284,7 +269,7 @@ file x, y, s, t;
 (x,y) = A();  
 s = S(x);  
 t = S(y);  
-source~~~~
+----
 
 then a valid execution order is: A1 S(x) A2 S(y). The compound
 procedure A does not have to have fully completed for its return
@@ -320,23 +305,21 @@ There are a number of primitive types:
 
 Complex types may be defined using the type keyword:
 
-[java]
-source~~~~
+----
 type headerfile;  
 type voxelfile;  
 type volume {  
   headerfile h;  
   voxelfile v;  
 }  
-source~~~~
+----
 
 Members of a complex type can be accessed using the . operator:
 
-[java]
-source~~~~
+----
 volume brain;  
 o = p(brain.h);  
-source~~~~
+----
 
 Sometimes data may be stored in a form that does not fit with Swift's
 file-and-site model; for example, data might be stored in an RDBMS on
@@ -350,8 +333,7 @@ substantial responsibility to component programs, in exchange for
 allowing arbitrary data storage and access methods to be plugged in to
 scripts.
 
-[java]
-source~~~~
+----
 type file;  
   
 app (external o) populateDatabase() {  
@@ -367,7 +349,7 @@ file result <"results.txt">;
   
 database = populateDatabase();  
 result = analyseDatabase(database);  
-source~~~~
+----
 
 Some external database is represented by the database variable. The
 populateDatabase procedure populates the database with some data, and
@@ -404,10 +386,9 @@ want to describe a dataset, of type imagefile, and whose physical
 representation is a file called "file1.bin" located at
 "/home/yongzh/data/", then the dataset might be declared as follows:
 
-[java]
-source~~~~
+----
 imagefile f1<single_file_mapper;file="/home/yongzh/data/file1.bin">  
-source~~~~
+----
 
 The above example declares a dataset called f1, which uses a single file
 mapper to map a file from a specific location.
@@ -415,10 +396,9 @@ mapper to map a file from a specific location.
 SwiftScript has a simplified syntax for this case, since
 single_file_mapper is frequently used:
 
-[java]
-source~~~~
+----
 binaryfile f1<"/home/yongzh/data/file1.bin">  
-source~~~~
+----
 
 Swift comes with a number of mappers that handle common mapping
 patterns. These are documented in the mappers section of this
@@ -454,10 +434,9 @@ optionally assign a value to them or map those variables to on-disk files.
 
 Declaration statements have the general form:
 
-[java]
-source~~~~
+----
 typename variablename (<mapping> | = initialValue ) ;  
-source~~~~
+----
 
 The format of the mapping expression is defined in the Mappers section.
 initialValue may be either an expression or a procedure call that
@@ -473,10 +452,9 @@ Assignment statements assign values to previously declared variables.
 Assignments may only be made to variables that have not already been
 assigned. Assignment statements have the general form:
 
-[java]
-source~~~~
+----
 variable = value;  
-source~~~~
+----
 
 where value can be either an expression or a procedure call that returns
 a single value.
@@ -496,10 +474,9 @@ and output parameters. SwiftScript procedures can take multiple inputs
 and produce multiple outputs. Inputs are specified to the right of the
 function name, and outputs are specified to the left. For example:
 
-[java]
-source~~~~
+----
 (type3 out1, type4 out2) myproc (type1 in1, type2 in2)  
-source~~~~
+----
 
 The above example declares a procedure called myproc, which has two
 inputs in1 (of type type1) and in2 (of type type2) and two
@@ -512,23 +489,20 @@ provided that all optional parameters are declared after the required
 parameters and any optional parameter is bound using keyword parameter
 passing. For example, if myproc1 is defined as:
 
-[java]
-source~~~~
+----
 (binaryfile bf) myproc1 (int i, string s="foo")  
-source~~~~
+----
 
 Then that procedure can be called like this, omitting the optional
-[java]
-source~~~~
+----
 parameter s:
 binaryfile mybf = myproc1(1);  
-source~~~~
+----
 
 or like this supplying a value for the optional parameter s:
-[java]
-source~~~~
+----
 binaryfile mybf = myproc1 (1, s="bar");  
-source~~~~
+----
 
 Atomic procedures
 ^^^^^^^^^^^^^^^^^
@@ -537,12 +511,11 @@ program, and how logical data types are mapped to command line arguments.
 
 Atomic procedures are defined with the app keyword:
 
-[java]
-source~~~~
+----
 app (binaryfile bf) myproc (int i, string s="foo") {  
     myapp i s @filename(bf);  
 }             
-source~~~~
+----
 
 which specifies that myproc invokes an executable called myapp,
 passing the values of i, s and the filename of bf as command line
@@ -553,14 +526,13 @@ Compound procedures
 ^^^^^^^^^^^^^^^^^^^
 A compound procedure contains a set of SwiftScript statements:
 
-[java]
-source~~~~
+----
 (type2 b) foo_bar (type1 a) {  
     type3 c;  
     c = foo(a);    // c holds the result of foo  
     b = bar(c);    // c is an input to bar  
 }  
-source~~~~
+----
 
 Control Constructs
 ~~~~~~~~~~~~~~~~~~
@@ -574,23 +546,21 @@ foreach
 The foreach construct is used to apply a block of statements to each
 element in an array. For example:
 
-[java]
-source~~~~
+----
 check_order (file a[]) {  
     foreach f in a {  
         compute(f);  
     }  
 }  
-source~~~~
+----
 
 foreach statements have the general form:
 
-[java]
-source~~~~
+----
 foreach controlvariable (,index) in expression {  
     statements  
 }  
-source~~~~
+----
 
 The block of statements is evaluated once for each element in
 expression which must be an array, with controlvariable set to the
@@ -604,14 +574,13 @@ The if statement allows one of two blocks of statements to be
 executed, based on a boolean predicate. if statements generally have
 the form:
 
-[java]
-source~~~~
+----
 if(predicate) {  
     statements  
 } else {  
     statements  
 }  
-source~~~~
+----
 
 where predicate is a boolean expression.
 
@@ -623,8 +592,7 @@ switch expressions allow one of a selection of blocks to be chosen
 based on the value of a numerical control expression. switch
 statements take the general form:
 
-[java]
-source~~~~
+----
 switch(controlExpression) {  
     case n1:  
         statements2  
@@ -634,7 +602,7 @@ switch(controlExpression) {
     default:  
         statements  
 }  
-source~~~~
+----
 
 The control expression is evaluated, the resulting numerical value used
 to select a corresponding case, and the statements belonging to that
@@ -654,12 +622,11 @@ condition holds.
 
 The general form is:
 
-[java]
-source~~~~
+----
 iterate var {  
     statements;  
 } until (terminationExpression);  
-source~~~~
+----
 
 with the variable var starting at 0 and increasing by one in each
 iteration. That variable is in scope in the statements block and when
@@ -701,18 +668,16 @@ SwiftScript file. (since Swift 0.10)
 
 For example, a SwiftScript program might contain this:
 
-[java]
-source~~~~
+----
 import defs;  
 file f;  
-source~~~~    
+----
 
 which would import the content of defs.swift in the current directory:
 
-[java]
-source~~~~
+----
 type file;  
-source~~~~    
+----
 
 Imported files are read from the current working directory.
 
@@ -754,16 +719,14 @@ The single_file_mapper maps a single physical file to a dataset.
 |=================
 
 Example:
-[java]
-source~~~~
+----
 file f <single_file_mapper;file="plot_outfile_param">;  
-source~~~~
+----
 
 There is a simplified syntax for this mapper:
-[java]
-source~~~~
+----
 file f <"plot_outfile_param">;  
-source~~~~
+----
 
 The simple mapper
 ~~~~~~~~~~~~~~~~~
@@ -782,11 +745,10 @@ all file names that contain foo. When this mapper is used to specify
 output filenames, pattern is ignored.
 |====================
 
-[java]
-source~~~~
+----
 type file;  
 file f <simple_mapper;prefix="foo", suffix=".txt">;  
-source~~~~          
+----
 
 The above maps all filenames that start with foo and have an extension
 .txt into file f.
@@ -796,8 +758,7 @@ The above maps all filenames that start with foo and have an extension
 |Swift variable|Filename
 |f|foo.txt
 |=================
-[java]
-source~~~~
+----
 type messagefile;  
   
 (messagefile t) greeting(string m) {.  
@@ -809,15 +770,14 @@ type messagefile;
 messagefile outfile <simple_mapper;prefix="foo",suffix=".txt">;  
   
 outfile = greeting("hi");  
-source~~~~      
+----
 
 This will output the string 'hi' to the file foo.txt.
 
 The simple_mapper can be used to map arrays. It will map the array
 index into the filename between the prefix and suffix.
 
-[java]
-source~~~~
+----
 type messagefile;  
   
 (messagefile t) greeting(string m) {   
@@ -831,7 +791,7 @@ messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt">;
 outfile[0] = greeting("hello");  
 outfile[1] = greeting("middle");  
 outfile[2] = greeting("goodbye");  
-source~~~~  
+----
 
 [options="header"]
 |=======================
@@ -844,8 +804,7 @@ source~~~~
 simple_mapper can be used to map structures. It will map the name of
 the structure member into the filename, between the prefix and the suffix.
 
-[java]
-source~~~~
+----
 type messagefile;  
   
 type mystruct {  
@@ -863,7 +822,7 @@ mystruct out <simple_mapper;prefix="qux",suffix=".txt">;
   
 out.left = greeting("hello");  
 out.right = greeting("goodbye");  
-source~~~~      
+----
 
 This will output the string "hello" into the file qux.left.txt and the
 string "goodbye" into the file qux.right.txt.
@@ -895,12 +854,10 @@ output filenames, pattern is ignored.
 |=================
 
 Example:
-[java]
-source~~~~
+----
 file f1;  
 file f2 <concurrent_mapper;prefix="foo", suffix=".txt">;  
-source~~~~          
-
+----
 The above example would use concurrent mapper for f1 and f2, and
 generate f2 filename with prefix "foo" and extension ".txt"
 
@@ -927,10 +884,9 @@ all file names that contain foo.
 |======================
 
 Example:
-[java]
-source~~~~
+----
 file texts[] <filesys_mapper;prefix="foo", suffix=".txt">;  
-source~~~~          
+----
 
 The above example would map all filenames that start with "foo" and
 have an extension ".txt" into the array texts. For example, if the
@@ -961,10 +917,9 @@ comma or colon
 
 Example:
 
-[java]
-source~~~~
+----
 file texts[] <fixed_array_mapper;files="file1.txt, fileB.txt, file3.txt">;  
-source~~~~          
+----          
 
 would cause a mapping like this:
 
@@ -987,12 +942,11 @@ The array_mapper maps from an array of strings into a file
 |==============
 
 Example:
-[java]
-source~~~~
+----
 string s[] = [ "a.txt", "b.txt", "c.txt" ];  
   
 file f[] <array_mapper;files=s>;  
-source~~~~
+----
 
 This will establish the mapping:
 
@@ -1023,14 +977,13 @@ reference the group matched.
 |==========
 
 Example:
-[java]
-source~~~~
+----
 string s = "picture.gif";  
 file f <regexp_mapper;  
   source=s,  
   match="(.*)gif",  
   transform="\\1jpg">;   
-source~~~~
+----
 
 This example transforms a string ending gif into one ending jpg and
 maps that to a file.
@@ -1050,14 +1003,13 @@ defined to conform to the column names in the file. For instance, if the
 file contains columns: name age GPA then the type needs to have member
 elements like this:
 
-[java]
-source~~~~
+----
 type student {  
   file name;  
   file age;  
   file GPA;  
 }  
-source~~~~
+----
 
 If the file does not contain a header with column info, then the column
 names are assumed as column1, column2, etc.
@@ -1074,23 +1026,21 @@ default is 0.
 |=============
 
 Example:
-[java]
-source~~~~
+----
 student stus[] <csv_mapper;file="stu_list.txt">;  
-source~~~~
+----
 
 The above example would read a list of student info from file
 "stu_list.txt" and map them into a student array. By default, the file
 should contain a header line specifying the names of the columns. If
 stu_list.txt contains the following:
 
-[java]
-source~~~~
+----
 name,age,gpa
 101-name.txt, 101-age.txt, 101-gpa.txt
 name55.txt, age55.txt, age55.txt
 q, r, s
-source~~~~
+----
 
 then some of the mappings produced by this example would be:
 
@@ -1130,20 +1080,18 @@ variable.
 
 Example: With the following in mapper.sh,
 
-[shell]
-source~~~~
+----
 #!/bin/bash
 echo "[2] qux"
 echo "[0] foo"
 echo "[1] bar"
-source~~~~
+----
 			
 then a mapping statement:
 
-[java]
-source~~~~~
+----
 student stus[] <ext;exec="mapper.sh">;  
-source~~~~
+----
 
 would map
 
@@ -1355,8 +1303,7 @@ in the next section.
 
 In this section, this example SwiftScript program is used for reference:
 
-[java]
-source~~~~~
+----
 type file;  
   
 app (file o) count(file i) {  
@@ -1365,7 +1312,7 @@ app (file o) count(file i) {
   
 file q <"input.txt">;  
 file r <"output.txt">;  
-source~~~~
+----
 
 The executable for wc will be looked up in tc.data.
 
@@ -1616,21 +1563,19 @@ hyphen and need to be positioned after the script name.
 
 For example:
 
-[java]
-source~~~~
+----
 trace(@arg("myparam"));  
 trace(@arg("optionalparam", "defaultvalue"));  
-source~~~~              
+----              
 
-[java]
-source~~~~
+----
 $ swift arg.swift -myparam=hello
 Swift v0.3-dev r1674 (modified locally)
 
 RunID: 20080220-1548-ylc4pmda
 SwiftScript trace: defaultvalue
 SwiftScript trace: hello
-source~~~~			
+----			
 
 @extractint
 ~~~~~~~~~~~
@@ -1659,10 +1604,9 @@ substitution using the Java java.util.regexp API
 <http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html>.
 For example:
 
-[java]
-source~~~~
+----
 string v =  @regexp("abcdefghi", "c(def)g","monkey");  
-source~~~~
+----
 
 will assign the value "abmonkeyhi" to the variable v.
 
@@ -1682,13 +1626,12 @@ pattern parameter against the supplied input string and return the
 section that matches the first matching parenthesised group.
 
 For example:
-[java]
-source~~~~
+----
 string t = "my name is John and i like puppies.";  
 string name = @strcut(t, "my name is ([^ ]*) ");  
 string out = @strcat("Your name is ",name);  
 trace(out);
-source~~~~  
+----  
               
 will output the message: Your name is John.
 
@@ -1699,14 +1642,13 @@ separators that match the given pattern and return a string array.
 (since Swift 0.9)
 
 Example:
-[java]
-source~~~~
+----
 string t = "my name is John and i like puppies.";  
 string words[] = @strsplit(t, "\\s");  
 foreach word in words {  
     trace(word);  
 }  
-source~~~~              
+----              
 
 will output one word of the sentence on each line (though not
 necessarily in order, due to the fact that foreach iterations execute in
@@ -1757,20 +1699,18 @@ ext mapper.
 Input files should list, one per line, a path into a Swift structure,
 and the value for that position in the structure:
 
-[java]
-source~~~~
+----
 rows[0].columns[0] = 0                                                          
 rows[0].columns[1] = 2                                                          
 rows[0].columns[2] = 4                                                          
 rows[1].columns[0] = 1                                                          
 rows[1].columns[1] = 3                                                          
 rows[1].columns[2] = 5
-source~~~~			
+----			
 
 which can be read into a structure defined like this:
 
-[java]
-source~~~~
+----
 type vector {                                                                     
         int columns[];                                                            
 }                                                                                 
@@ -1782,7 +1722,7 @@ type matrix {
 matrix m;                                                                         
                                                                                   
 m = readData2("readData2.in");      
-source~~~~                  
+----                  
 
 (since Swift 0.7)
 
@@ -1855,15 +1795,14 @@ caching.algorithm
     amount of remote file system space to be used for caching can be
     limited using the swift:storagesize profile entry in the sites.xml file. Example:
 
-[xml]
-source~~~~
+----
 <pool handle="example" sysinfo="INTEL32::LINUX">
 <gridftp url="gsiftp://example.org" storage="/scratch/swift" major="2" minor="4" patch="3"/>
 <jobmanager universe="vanilla" url="example.org/jobmanager-pbs" major="2" minor="4" patch="3"/>
 <workdirectory>/scratch/swift</workdirectory>
 <profile namespace="SWIFT" key="storagesize">20000000</profile>
 </pool>
-source~~~~
+----
 
     The decision of which files to keep in the cache and which files to
     remove is made considering the value of the caching.algorithm
@@ -2002,11 +1941,10 @@ pgraph
     Graphviz <http://www.graphviz.org/>, for example with a command-line
     such as:
 
-[shell]
-source~~~~
+----
 $ swift -pgraph graph1.dot q1.swift
 $ dot -ograph.png -Tpng graph1.dot
-source~~~~						
+----						
 
 pgraph.graph.options
 
@@ -2241,10 +2179,11 @@ wrapperlog.always.transfer
 
 Example:
 
-[source,xml]
+----
 sites.file=${vds.home}/etc/sites.xml
 tc.file=${vds.home}/etc/tc.data
 ip.address=192.168.0.1
+----
 
 Profiles
 --------
@@ -2263,8 +2202,9 @@ Karajan namespace
 maxSubmitRate limits the maximum rate of job submission, in jobs per
 second. For example:
 
-[source,xml]
+----
 <profile namespace="karajan" key="maxSubmitRate">0.2</profile>
+----
 
 will limit job submission to 0.2 jobs per second (or equivalently, one
 job every five seconds).
@@ -2326,8 +2266,9 @@ The following formats are recognized:
     * Hours:Minutes:Seconds
 
 Example:
-[source,java]
+----
 localhost	echo	/bin/echo	INSTALLED	INTEL32::LINUX	GLOBUS::maxwalltime="00:20:00"
+----
 
 When replication is enabled (see replication), then
 walltime will also be enforced at the Swift client side: when a job has
@@ -2353,9 +2294,9 @@ used by the GRAM2 and GRAM4 providers.
 condor_requirements allows a requirements string to be specified when
 Condor is used as an LRM behind GRAM2. Example: 
 
-[source,xml]
-<profile
-namespace="globus" key="condor_requirements">Arch == "X86_64" || Arch="INTEL"</profile>
+----
+<profile namespace="globus" key="condor_requirements">Arch == "X86_64" || Arch="INTEL"</profile>
+----
 
 slots When using coasters, this parameter specifies the
 maximum number of jobs/blocks that the coaster scheduler will have
@@ -2485,8 +2426,9 @@ the <filesystem> element.
 
 To use gridftp or local filesystem copy, use the <gridftp> element:
 
-[source,xml]
+----
 <gridftp  url="gsiftp://evitable.ci.uchicago.edu" />
+----
 
 The url attribute may specify a GridFTP server, using the gsiftp URI
 scheme; or it may specify that filesystem copying will be used (which
@@ -2496,8 +2438,9 @@ submitting machine) using the URI local://localhost.
 Filesystem access using scp (the SSH copy protocol) can be specified
 using the <filesystem> element:
 
-[source,xml]
+----
 <filesystem url="www11.i2u2.org" provider="ssh"/>
+----
 
 For additional ssh configuration information, see the ssh execution
 provider documentation below.
@@ -2514,9 +2457,9 @@ Execution methods may be specified either with the <jobmanager> or
 The <jobmanager> element can be used to specify execution through
 GRAM2. For example,
 
-[source,xml]
+----
 <jobmanager universe="vanilla" url="evitable.ci.uchicago.edu/jobmanager-fork" major="2" />
-
+----
 The universe attribute should always be set to vanilla. The url
 attribute should specify the name of the GRAM2 gatekeeper host, and the
 name of the jobmanager to use. The major attribute should always be set
@@ -2527,21 +2470,24 @@ execution providers:
 
 To use GRAM4, specify the gt4 provider. For example:
 
-[source,xml]
+----
 <execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" />
+----
 
 The url attribute should specify the GRAM4 submission site. The
 jobmanager attribute should specify which GRAM4 jobmanager will be used.
 
 For local execution, the local provider should be used, like this:
 
-[source,xml]
+----
 <execution provider="local" url="none" />
+----
 
 For PBS execution, the pbs provider should be used:
 
-[source,xml]
+----
 <execution provider="pbs" url="none" />
+----
 
 The GLOBUS::queue profile key can be used to
 specify which PBS queue jobs will be submitted to.
@@ -2552,37 +2498,41 @@ universe, or can use Condor-G to run jobs on remote sites.
 
 When running locally, only the <execution> element needs to be specified:
 
-[source,xml]
+----
 <execution provider="condor" url="none" />
+----
 
 When running with Condor-G, it is necessary to specify the Condor grid
 universe and the contact string for the remote site. For example:
 
-[source,xml]
+----
  <execution provider="condor" />
  <profile namespace="globus" key="jobType">grid</profile>
  <profile namespace="globus" key="gridResource">gt2 belhaven-1.renci.org/jobmanager-fork</profile>
+----
 
 For execution through SSH, the ssh provider should be used:
 
-[source,xml]
+----
 <execution url="www11.i2u2.org" provider="ssh"/>
-
+----
 with configuration made in ~/.ssh/auth.defaults with the string
 'www11.i2u2.org' changed to the appropriate host name:
 
-[source,shell]
+----
 www11.i2u2.org.type=key
 www11.i2u2.org.username=hategan
 www11.i2u2.org.key=/home/mike/.ssh/i2u2portal
 www11.i2u2.org.passphrase=XXXX
+----
 
 For execution using the CoG Coaster mechanism, the coaster
 provider should be used:
 
-[source,xml]
+----
 <execution provider="coaster" url="tg-grid.uc.teragrid.org"
     jobmanager="gt2:gt2:pbs" />
+----
 
 More details about configuration of coasters can be found in the section
 on coasters.
@@ -2592,8 +2542,9 @@ Work directory
 The workdirectory element specifies where on the site files can be
 stored.
 
-[source,xml]
+----
 <workdirectory>/home/benc</workdirectory>
+----
 
 This file must be accessible through the transfer mechanism specified in
 the <gridftp> element and also mounted on all worker nodes that will
@@ -2605,8 +2556,9 @@ Profiles
 Profile keys can be specified using the <profile> element.
 For example:
 
-[source,xml]
+----
 <profile namespace="globus" key="queue">fast</profile>
+----
 
 The site catalog format is an evolution of the VDS site catalog format
 which is documented here
@@ -2626,9 +2578,10 @@ The format is one line per executable per site, with fields separated by
 tabs. Spaces cannot be used to separate fields.
 
 Some example entries:
-[source,shell]
+----
 localhost  echo    /bin/echo       INSTALLED       INTEL32::LINUX  null
 TGUC       touch   /usr/bin/touch  INSTALLED       INTEL32::LINUX  GLOBUS::maxwalltime="0:1"
+----
 
 The fields are: site, transformation name, executable path, installation
 status, platform, and profile entrys.
@@ -2665,11 +2618,12 @@ with-provider-deef - build with Falkon provider deef. In order for
 this option to work, it is necessary to check out the provider-deef code
 in the cog/modules directory alongside swift:
 
-[source,shell]
+----
 $ cd cog/modules
 $ svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-deef
 $ cd ../swift
 $ ant -Dwith-provider-deef=true redist
+----
 			
 with-provider-wonky - build with provider-wonky, an execution provider
 that provides delays and unreliability for the purposes of testing
@@ -2677,11 +2631,12 @@ Swift's fault tolerance mechanisms. In order for this option to work, it
 is necessary to check out the provider-wonky code in the |cog/modules|
 directory alongside swift:
 
-[source,shell]
+----
 $ cd cog/modules
 $ svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-wonky
-$ cd ../swift|*
+$ cd ../swift
 $ ant -Dwith-provider-wonky=true redist
+----
 			
 no-supporting - produces a distribution without supporting commands
 such as grid-proxy-init. This is intended for when the Swift
@@ -2692,8 +2647,9 @@ as grid-proxy-init from the Swift distribution in the path will mask the
 presence of those commands from their true distribution package such as
 a Globus Toolkit package.
 
-[source,shell]
+----
 $ ant -Dno-supporting=true redist
+----
 
 Kickstart
 ---------
@@ -2718,10 +2674,11 @@ Now configure the gridlaunch attribute of the sites catalog to point to
 that path, by adding a gridlaunch attribute to the pool element in
 the site catalog:
 
-[source,xml]
+----
 <pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX">
 ...
 </pool>
+----
 
 There are various kickstat.* properties, which have sensible default
 values. These are documented in the properties section.
@@ -2768,8 +2725,9 @@ point before the failure occurred. In order to restart from a restart
 log file, the -resume logfile argument can be used after the
 SwiftScript program file name. Example:
 
-[source,shell]
+----
 $ swift -resume example-ht0adgi315l61.0.rlog example.swift.
+----
 
 Replication
 ~~~~~~~~~~~
@@ -2850,8 +2808,9 @@ file transfer.
 
 To use for job execution, specify a sites.xml execution element like this:
 
-[source,xml]
+----
 <execution provider="coaster" jobmanager="gt2:gt2:pbs" url="grid.myhost.org">
+----
 
 The jobmanager string contains more detail than with other providers. It
 contains either two or three colon separated fields: 1:the provider to
@@ -2865,9 +2824,9 @@ job using the provider specified in field 2.
 
 To use for file transfer, specify a sites.xml filesystem element like this:
 
-[source,xml]
+----
 <filesystem provider="coaster" url="gt2://grid.myhost.org" />
-
+----
 The url parameter should be a pseudo-URI formed with the URI scheme
 being the name of the provider to use to submit the coaster head job,
 and the hostname portion being the hostname to be used to execute the
@@ -2911,8 +2870,9 @@ in your submit directory after each run. It will copy all your logs and
 kickstart records into a directory at the CI for reporting, usage
 tracking, support and debugging.
 
-[source,shell]
+----
 rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/disks/ci-gpfs/swift/swift-logs/ --verbose
+----
 
 Specifying TeraGrid allocations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2920,8 +2880,9 @@ TeraGrid users with no default project or with several project
 allocations can specify a project allocation using a profile key in the
 site catalog entry for a TeraGrid site:
 
-[source,xml]
+----
 <profile namespace="globus" key="project">TG-CCR080002N</profile>
+----
 
 More information on the TeraGrid allocations process can be found here
 <http://www.teragrid.org/userinfo/access/allocations.php>.
@@ -2934,8 +2895,7 @@ In SwiftScript, we make an invocation that does not look any different
 from any other invocation. In the below code, we do not have any input
 files, and have two output files on stdout and stderr:
 
-[java]
-source~~~~
+----
 type file;  
   
 (file o, file e) p() {   
@@ -2948,18 +2908,20 @@ file mpiout <"mpi.out">;
 file mpierr <"mpi.err">;  
   
 (mpiout, mpierr) = p();  
-source~~~~
+----
 
 Now we define how 'mpi' will run in tc.data:
-[source,shell]
+----
 tguc    mpi             /home/benc/mpi/mpi.sh   INSTALLED       INTEL32::LINUX GLOBUS::host_xcount=3
+----
 
 mpi.sh is a wrapper script that launches the MPI program. It must be
 installed on the remote site:
 
-[source,shell]
+----
 #!/bin/bash
 mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
+----
 
 Because of the way that Swift runs its server side code,
 provider-specific MPI modes (such as GRAM jobType=mpi) should not be
@@ -2994,7 +2956,8 @@ to use, Swift must know when a site runs under Windows. To inform Swift
 of this, specify the "sysinfo" attribute for the "pool" element in the
 site catalog. For example:
 
-[source,xml]
+----
 <pool handle="localhost" sysinfo="INTEL32::WINDOWS">  
 ...  
 </pool>  
+----

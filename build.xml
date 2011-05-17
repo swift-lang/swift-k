@@ -55,8 +55,6 @@
 
 		fixeol:
 			change newlines to the unix standard.
-                docs:
-			Build Swift documentation from asciidoc txt files
 		</echo>
 	</target>
 
@@ -259,17 +257,6 @@
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/jsr173_1.0_api.jar"/>
 			</classpath>
 		</java>
-	</target>
-
-
-	<!-- ================================================ -->
-	<!-- Docs					      -->
-	<!-- ================================================ -->
-	<target name="docs">
-                <property name="docs.out" value="docs/"></property>
-		<exec executable="docs/build_docs.sh">
-			<arg value="${docs.out}"></arg>
-		</exec>
 	</target>
 
 	<!-- ================================================ -->
