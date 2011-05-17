@@ -108,16 +108,16 @@ namespace("vdl"
 								vdl:siteprofile(rhost, "swift:wrapperInterpreterOptions"),
 								wrapper,
 								"-e", vdl:executable(tr, rhost),
-								"-out", stdout,
-								"-err", stderr,
-								"-i", maybe(stdin),
+								"-out", getFieldValue(stdout),
+								"-err", getFieldValue(stderr),
+								"-i", maybe(getFieldValue(stdin)),
 								"-d", flatten(unique(outFileDirs(stageout))),
 								"-if", flatten(infiles(stagein)),
 								"-of", flatten(outfiles(stageout)),
 								"-k",
 								"-cdmfile", cdmfile,
 								"-status", "provider"
-								"-a", maybe(each(arguments))
+								"-a", maybe(unwrapClosedList(arguments))
 							)
 							directory = "{wfdir}-{jobdir}-{jobid}"
 							redirect = false

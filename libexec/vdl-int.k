@@ -435,17 +435,18 @@ namespace("vdl"
 						sys:file:write(wrapfile,
 							"-scratch ", try(vdl:siteprofile(rhost, "scratch"), ""), nl(),
 							"-e ",vdl:executable(tr, rhost), nl(),
-							"-out ",stdout,nl(),
-							"-err ",stderr,nl(),
-							"-i ",maybe(stdin),nl(),
-							"-d ",flatten(each(fileDirs)),nl(),
-							"-if ",flatten(infiles(stagein)),nl(),
-							"-of ",flatten(outfiles(stageout)),nl(),
-							"-k ",kickstart,nl(),
-							"-cdmfile ",cdm:file(),nl(),
-							"-status ",statusMode,nl())
-						for(argiterator, arguments
-							sys:file:write(wrapfile,append=true,"-a ",argiterator,nl())
+							"-out ", getFieldValue(stdout), nl(),
+							"-err ", getFieldValue(stderr), nl(),
+							"-i ", maybe(getFieldValue(stdin)), nl(),
+							"-d ", flatten(each(fileDirs)), nl(),
+							"-if ", flatten(infiles(stagein)), nl(),
+							"-of ", flatten(outfiles(stageout)), nl(),
+							"-k ", kickstart, nl(),
+							"-cdmfile ", cdm:file(), nl(),
+							"-status ", statusMode, nl(),
+							"-a ", each(unwrapClosedList(arguments)), nl())
+						for(a, unwrapClosedList(arguments)
+							sys:file:write(wrapfile, append = true, a, nl())
 						)
 					)
 				)
@@ -496,16 +497,16 @@ namespace("vdl"
 								"-jobdir", jobdir,
 								"-scratch", try(vdl:siteprofile(rhost, "scratch"), "")
 								"-e", vdl:executable(tr, rhost),
-								"-out", stdout,
-								"-err", stderr,
-								"-i", maybe(stdin),
+								"-out", getFieldValue(stdout),
+								"-err", getFieldValue(stderr),
+								"-i", maybe(getFieldValue(stdin)),
 								"-d", flatten(each(fileDirs)),
 								"-if", flatten(infiles(stagein)),
 								"-of", flatten(outfiles(stageout)),
 								"-k", kickstart,
 								"-cdmfile", cdm:file(),
 								"-status", statusMode,
-								"-a", maybe(each(arguments))
+								"-a", maybe(unwrapClosedList(arguments))
 							)
 							directory=wfdir
 							redirect=false

@@ -120,6 +120,7 @@
 	<export name="outFileDirs"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFileDirs"/></export>
 	<export name="outFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFiles"/></export>
 	<export name="doRestartLog"><elementDef classname="org.griphyn.vdl.karajan.lib.DoRestartLog"/></export>
+	<export name="unwrapClosedList"><elementDef classname="org.griphyn.vdl.karajan.lib.UnwrapClosedList"/></export>
   </namespace>
 
   <namespace prefix="cdm">
