@@ -12,7 +12,7 @@
 # Assuming your code is in /tmp/cog, where you
 # have the conventional cog/modules/swift configuration,
 # and you have done an ant dist, you can run
-# suite.sh -t -o /tmp tests/groups/group-all-local.sh
+# suite.sh -t -o /tmp $PWD/tests/groups/group-all-local.sh
 # or cd into /tmp and run
 # suite.sh -t cog/modules/swift/tests/groups/group-all-local.sh
 # The -t option is "Tree mode"- as in, "test my existing source tree"
@@ -117,7 +117,7 @@ printhelp() {
   printf "\t -k <N>     Skip first N tests                 \n"
   printf "\t -n <N>     Run N tests and quit               \n"
   printf "\t -p         Do not build the package           \n"
-  printf "\t -s         Do not do a svn checkout           \n"
+  printf "\t -s         Do not do a fresh svn checkout     \n"
   printf "\t -t         Tree mode (alias: -a,-c,-g,-p,-s)  \n"
   printf "\t -x         Do not continue after a failure    \n"
   printf "\t -v         Verbose (set -x, HTML comments)    \n"
@@ -175,6 +175,7 @@ while [ $# -gt 0 ]; do
       GRID_TESTS=0
       BUILD_PACKAGE=0
       SKIP_CHECKOUT=1
+      shift;;
     -x)
       ALWAYS_EXITONFAILURE=1
       shift;;
@@ -266,8 +267,7 @@ verbose() {
 
 shutdown_trap() {
   SHUTDOWN=1
-  verbose "shutdown_trap... $PROCESS_PID\n\n"
-  verbose "kill: process: $PROCESS_PID"
+  printf "\nshutdown_trap: kill: process: $PROCESS_PID\n"
   kill $PROCESS_PID
 }
 
@@ -559,18 +559,33 @@ result() {
   fi
 }
 
+# Note that killing Swift/Coasters may result in a delay as
+# Coasters shuts down: cf. CoasterService.addLocalHook()
+process_trap() {
+  PROCESS_INTERNAL_PID=$1
+  echo "process_trap: killing: $PROCESS_INTERNAL_PID"
+  # ps -H
+  kill -TERM $PROCESS_INTERNAL_PID
+}
+
 # Execute process in the background
 process_exec() {
-  printf "\nExecuting: $@\n" >>$LOG
+  printf "\nExecuting: $@\n" | tee -a $LOG
+
   rm -f $OUTPUT
 
-  "$@" > $OUTPUT 2>&1
+  "$@" > $OUTPUT 2>&1 &
+  PROCESS_INTERNAL_PID=$!
+  echo PROCESS_INTERNAL_PID=$PROCESS_INTERNAL_PID
+  trap "process_trap $PROCESS_INTERNAL_PID" SIGTERM
+  wait
   EXITCODE=$?
 
   if [ "$EXITCODE" == "127" ]; then
     echo "Command not found: $@" > $OUTPUT
   fi
   if [ -f $OUTPUT ]; then
+    cat $OUTPUT
     cat $OUTPUT >> $LOG
   fi
   (( $TEST_SHOULD_FAIL )) && EXITCODE=$(( ! $EXITCODE ))
@@ -958,6 +973,10 @@ fi
 
 checkvars GROUPARG
 echo "GROUP ARGUMENT: $GROUPARG"
+if [[ $GROUPARG != /* ]]; then
+  # Adjust relative path
+  GROUPARG=$PWD/$GROUPARG
+fi
 if [[ -f $GROUPARG ]]; then
   GROUPLISTFILE=$GROUPARG
   source $GROUPLISTFILE || exit 1
@@ -1043,6 +1062,8 @@ SKIP_COUNTER=0
 GROUPCOUNT=1
 for G in ${GROUPLIST[@]}; do
   export GROUP=$G
+  echo "GROUP: $GROUP"
+  [ -d $GROUP ] || crash "Could not find GROUP: $GROUP"
   TITLE=$( group_title )
   start_part "Part $GROUPCOUNT: $TITLE"
   test_group
