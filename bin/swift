@@ -151,23 +151,15 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
     $BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH -1 0 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
 fi
 
-trap_swift() {
-	sleep 1
-	SWIFT_JAVA_PID=$( ps --ppid $SWIFT_EVAL_PID | tail -n 1 | cut -d ' ' -f 1 )
-	kill $SWIFT_JAVA_PID
-}
-
 ### EXECUTE ############
+# Note: killing Swift may be briefly delayed due to Coasters shutdown
 if test -n "$CYGWIN"; then
     set CLASSPATHSAVE=$CLASSPATH
     export CLASSPATH="$LOCALCLASSPATH"
     eval java ${OPTIONS} ${COG_OPTS} ${EXEC} ${CMDLINE}
     export CLASSPATH=$CLASSPATHSAVE
 else
-	trap trap_swift SIGINT SIGTERM SIGQUIT
-    eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE} &
-	SWIFT_EVAL_PID=$!
-	wait
+    eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE}
 fi
 return_code=$?
 
