@@ -1,3 +1,15 @@
+
+# All new intermediate files will contain ".plot."
+# Original logs are assumed to end with ".log"
+
+# Known file types:
+# NAME.log  : The original log.
+# NAME.plot.iso : A Swift log with the timestamps transformed
+#             to unix time format
+# NAME.plot.start : A simple file containing the unix start time
+# NAME.plot.norm : Swift log with the timestamps relative to the
+#                  first event time
+
 %.lastsummary: %.last
 	cat $< | sed 's/^\([^ ]*\) \([^ ]*\) \([^ ]*\)\(.*\)/\3/' | sort | uniq -c > $@
 
@@ -43,3 +55,11 @@
 %.eip: %.event
 	events-in-progress < $< > $@
 
+%.plot.time: %.log
+	iso-to-secs < $(<) > $(@)
+
+%.plot.start: %.log
+	extract-start-time $(<) > $(@)
+
+%.plot.norm: %.plot.start %.plot.time
+	normalize-log.pl $(^) > $(@)
