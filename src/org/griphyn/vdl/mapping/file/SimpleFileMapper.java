@@ -30,7 +30,8 @@ public class SimpleFileMapper extends AbstractFileMapper {
 		this.isinput = (String)params.get("input");
 	}
 
-	
+    //all input filesnames will be parsed as strings and given numeric index
+
 	public Path rmap(String name) {
 	    if(this.isinput == null){
 		return super.rmap(name);
