@@ -20,6 +20,7 @@
 # Run suite.sh -h for quick help
 # When something goes wrong, find and check tests.log or use -v
 
+# SWIFT LOCATION
 # The TOPDIR (PWD by default) is set with the -o option.
 # Code is checked out into this directory or must already exist there.
 # The variables COG_VERSION and SWIFT_VERSION must be set for code checkout
@@ -30,6 +31,7 @@
 # Everything for a Swift test is written in its RUNDIR
 # The temporary output always goes to OUTPUT (TOPDIR/exec.out)
 
+# HELPER SCRIPTS
 # Each *.swift test may be accompanied by a
 # *.setup.sh, *.check.sh, and/or *.clean.sh script
 # and a *.timeout specifier
@@ -40,6 +42,7 @@
 # The timeout number in the *.timeout file overrides the default
 # timeout
 
+# TEST STRUCTURE
 # Tests are GROUPed into directories
 # Each GROUP directory has:
 #      1) a list of *.swift tests (plus *.sh scripts)
@@ -53,7 +56,10 @@
 # template files are lightly processed by sed before use
 # Missing files will be pulled from swift/etc
 
-# The GROUPLIST is obtained from the GROUPARG
+# WHAT TESTS ARE RUN
+# Each *.swift file is a test.
+# suite.sh launches all tests in each GROUP in the GROUPLIST.
+# The GROUPLIST is obtained from the GROUPARG.
 # 1) The GROUPARG can be an external script in the
 #    groups/ subdirectory by the name of GROUPLISTFILE.
 #    The GROUPLISTFILE:
@@ -71,8 +77,6 @@
 # PID TREE:
 # Background processes are used so that hung Swift jobs can be killed
 # These are the background processes (PIDs are tracked)
-# Note that PID management has not yet been perfected.  Check ps
-# in error cases, especially if you kill suite.sh .
 #
 # suite.sh
 # +-monitor()
@@ -80,6 +84,11 @@
 # +-process_exec()
 #   +-bin/swift
 #     +-java
+#
+# PID management is now pretty good, but you may want to check ps
+#  from time to time and keep xload running.
+# Note that Coasters may temporarily prevent Swift from exiting upon
+#  receiving a signal (cf. CoasterService.addLocalHook()).
 
 # FAILURE CASES
 # Some cases are designed to cause Swift to crash.  These
@@ -100,6 +109,45 @@
 # or:
 # providers/<provider description>/<site>
 # E.g., providers/local-pbs/PADS
+
+# ADDING TESTS TO EXISTING GROUPS
+# Simply add a *.swift file to a GROUP directory.
+# That script will be launched when the GROUP is tested.
+# Optionally, you may add helper scripts (see above) to setup,
+# check, and clean up after tests.
+# The helper scripts are launched from the RUNDIR and have access
+# to files in RUNDIR and environment variables from suite.sh
+# such as $GROUP.  Thus, you can:
+#   bring in input files: cp $GROUP/input-file.txt .
+#   check output:         grep TEXT1 exec.out
+#                         grep TEXT2 output-file.txt
+#   clean up (optional):  rm output-file.txt
+# The results are added to the HTML output, etc., automatically.
+# The prefix number on each test is simply for sorting
+#   (e.g., ls *.swift)
+
+# ADDING TEST GROUPS
+# If no existing group has the sites, tc, etc. that you need to test,
+# you will need to add a test group.  Simply create a new directory.
+# Add files from TEST STRUCTURE if necessary; missing files will be
+# filled in with defaults.
+
+# IMPROVING THIS TEST SUITE
+# This is a work in progress.  Here are some things you can do:
+#   * Run it!  Report problems to swift-devel
+#   * Fix broken tests
+#   * Break down test GROUPs into smaller, meaningful GROUPs.
+#     It would be good to limit GROUP sizes to 20 or so tests.
+#   * Current work has focused on the HTML and stdout output,
+#     which is intended to be high-level and clean. Using -v
+#     results in extremely verbose output.
+#     Some happy medium could be achieved by improving the use of
+#     the LOG (tests.log).
+
+# PROBLEMS
+# If you have a problem:
+#   * Use -v to get the set -x output.
+#   * Use ps -H to get the PID tree.
 
 # WARNINGS
 # suite.sh uses shopt
