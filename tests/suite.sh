@@ -618,7 +618,15 @@ process_trap() {
 
 # Execute process in the background
 process_exec() {
-  printf "\nExecuting: $@ \n\n" | tee -a $LOG
+  PROG=$( basename $1 )
+  if [[ $PROG == "swift" ]]; then
+    # Get SwiftScript name
+    PROG=$( echo $@ | sed 's/.*\( [^ ]*.swift\)/\1/' )
+    PROG=$( basename $PROG )
+  fi
+
+  echo -e "\nExecuting: $PROG"
+  echo -e "\nExecuting: $@\n" >> $LOG
 
   rm -f $OUTPUT
 
@@ -748,7 +756,7 @@ monitored_exec()
   verbose "killing monitor: $MONITOR_PID..."
   kill $MONITOR_PID
 
-  echo "TOOK: $(( STOP-START ))"
+  echo "TOOK (seconds): $(( STOP-START ))"
 
   RESULT=$( result )
   test_log
