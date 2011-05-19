@@ -618,13 +618,12 @@ process_trap() {
 
 # Execute process in the background
 process_exec() {
-  printf "\nExecuting: $@\n" | tee -a $LOG
+  printf "\nExecuting: $@ \n\n" | tee -a $LOG
 
   rm -f $OUTPUT
 
   "$@" > $OUTPUT 2>&1 &
   PROCESS_INTERNAL_PID=$!
-  echo PROCESS_INTERNAL_PID=$PROCESS_INTERNAL_PID
   trap "process_trap $PROCESS_INTERNAL_PID" SIGTERM
   wait
   EXITCODE=$?
@@ -632,8 +631,10 @@ process_exec() {
   if [ "$EXITCODE" == "127" ]; then
     echo "Command not found: $@" > $OUTPUT
   fi
-  if [ -f $OUTPUT ]; then
+  if [ $EXITCODE != 0 ]; then
     cat $OUTPUT
+  fi
+  if [ -f $OUTPUT ]; then
     cat $OUTPUT >> $LOG
   fi
   (( $TEST_SHOULD_FAIL )) && EXITCODE=$(( ! $EXITCODE ))
@@ -646,7 +647,7 @@ test_exec() {
   banner "$TEST (part $SEQ)"
   echo "Executing $TEST (part $SEQ)"
   pwd
-  printf "\nExecuting: $@" >>$LOG
+  printf "\nExecuting: $@\n" >>$LOG
 
   rm -f $OUTPUT
   "$@" > $OUTPUT 2>&1
@@ -798,6 +799,7 @@ swift_test_case() {
 
   monitored_exec $TIMEOUT swift                         \
                        -wrapperlog.always.transfer true \
+                       -sitedir.keep true               \
                        -config swift.properties         \
                        -sites.file sites.xml            \
                        -tc.file tc.data                 \
