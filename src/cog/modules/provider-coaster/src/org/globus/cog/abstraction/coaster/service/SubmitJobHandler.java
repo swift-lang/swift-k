@@ -17,6 +17,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.zip.InflaterInputStream;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.TaskNotifier;
 import org.globus.cog.abstraction.impl.common.CleanUpSetImpl;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
@@ -40,25 +41,28 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public class SubmitJobHandler extends RequestHandler {
+    
+    Logger logger = Logger.getLogger(SubmitJobHandler.class);
+    
     public static final boolean COMPRESSION = true;
     
     private CoasterService service;
 
     public void requestComplete() throws ProtocolException {
-        Task t;
+        Task task;
         try {
             ChannelContext channelContext = getChannel().getChannelContext();
             service = (CoasterService) channelContext.getService();
             if (COMPRESSION) {
-                t = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
+                task = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
                 // t = read(new ByteArrayInputStream(getInData(0)));
             }
             else {
-                t = read(new ByteArrayInputStream(getInData(0)));
+                task = read(new ByteArrayInputStream(getInData(0)));
             }
-            new TaskNotifier(t, channelContext);
+            new TaskNotifier(task, channelContext);
             service.getJobQueue().setClientChannelContext(channelContext);
-            service.getJobQueue().enqueue(t);
+            service.getJobQueue().enqueue(task);
             // make sure we'll have something to send notifications to
             ChannelManager.getManager().reserveLongTerm(getChannel());
         }
@@ -66,43 +70,43 @@ public class SubmitJobHandler extends RequestHandler {
             e.printStackTrace();
             throw new ProtocolException("Could not deserialize job description", e);
         }
-        sendReply(t.getIdentity().toString());
+        sendReply(task.getIdentity().toString());
     }
 
     private Task read(InputStream is) throws IOException, ProtocolException, IllegalSpecException {
-        Helper h = new Helper(is);
+        Helper helper = new Helper(is);
 
-        Task t = new TaskImpl();
-        t.setType(Task.JOB_SUBMISSION);
+        Task task = new TaskImpl();
+        task.setType(Task.JOB_SUBMISSION);
         JobSpecification spec = new JobSpecificationImpl();
-        t.setSpecification(spec);
+        task.setSpecification(spec);
 
-        String clientId = h.read("identity");
+        String clientId = helper.read("identity");
         if (clientId == null) {
             throw new IllegalSpecException("Missing job identity");
         }
-        t.setIdentity(new IdentityImpl(clientId + "-" + new IdentityImpl().getValue()));
-        spec.setExecutable(h.read("executable").intern());
-        spec.setDirectory(h.read("directory"));
-        spec.setBatchJob(h.readBool("batch"));
-        spec.setStdInput(h.read("stdin"));
-        spec.setStdOutput(h.read("stdout"));
-        spec.setStdError(h.read("stderr"));
+        task.setIdentity(new IdentityImpl(clientId + "-" + new IdentityImpl().getValue()));
+        spec.setExecutable(helper.read("executable").intern());
+        spec.setDirectory(helper.read("directory"));
+        spec.setBatchJob(helper.readBool("batch"));
+        spec.setStdInput(helper.read("stdin"));
+        spec.setStdOutput(helper.read("stdout"));
+        spec.setStdError(helper.read("stderr"));
         String s;
-        while ((s = h.read("arg")) != null) {
+        while ((s = helper.read("arg")) != null) {
             spec.addArgument(s);
         }
 
-        while ((s = h.read("env")) != null) {
+        while ((s = helper.read("env")) != null) {
             spec.addEnvironmentVariable(getKey(s), getValue(s));
         }
 
-        while ((s = h.read("attr")) != null) {
+        while ((s = helper.read("attr")) != null) {
             spec.setAttribute(getKey(s), getValue(s));
         }
 
         StagingSet ss = null;
-        while ((s = h.read("stagein")) != null) {
+        while ((s = helper.read("stagein")) != null) {
             if (ss == null) {
                 ss = new StagingSetImpl();
             }
@@ -115,7 +119,7 @@ public class SubmitJobHandler extends RequestHandler {
         }
 
         ss = null;
-        while ((s = h.read("stageout")) != null) {
+        while ((s = helper.read("stageout")) != null) {
             if (ss == null) {
                 ss = new StagingSetImpl();
             }
@@ -129,7 +133,7 @@ public class SubmitJobHandler extends RequestHandler {
         
         CleanUpSet cs = null;
         
-        while ((s = h.read("cleanup")) != null) {
+        while ((s = helper.read("cleanup")) != null) {
             if (cs == null) {
                 cs = new CleanUpSetImpl();
             }
@@ -142,14 +146,14 @@ public class SubmitJobHandler extends RequestHandler {
 
         ExecutionService service = new ExecutionServiceImpl();
 
-        setServiceParams(service, h.read("contact"), h.read("provider"), h.read("jm").intern());
-        t.setService(0, service);
-
-        return t;
+        setServiceParams(service, helper.read("contact"), helper.read("provider"), helper.read("jm").intern());
+        task.setService(0, service);
+        
+        return task;
     }
 
-    protected void setServiceParams(ExecutionService s, String contact, String provider, String jm)
-            throws IllegalSpecException {
+    protected void setServiceParams(ExecutionService s, String contact, 
+                                    String provider, String jm) {
         if (jm == null) {
             jm = "fork";
         }
