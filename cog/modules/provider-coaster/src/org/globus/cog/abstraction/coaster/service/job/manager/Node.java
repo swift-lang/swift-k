@@ -102,6 +102,10 @@ public class Node implements Callback {
         return channelContext;
     }
 
+    public String getHostname() {
+        return hostname;
+    }
+
     @Override
     public String toString() {
         return "Node [" + hostname + "] " + id;

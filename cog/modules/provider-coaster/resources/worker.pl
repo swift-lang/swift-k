@@ -118,6 +118,9 @@ my @PROFILE_EVENTS = ();
 
 my $ID = "-";
 
+my $myhost=`hostname`;
+$myhost =~ s/\s+$//;
+
 sub wlog {
 	my $msg;
 	my $level = shift;
@@ -283,7 +286,8 @@ sub reconnect() {
 			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768*8);
 			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);
-			queueCmd(registerCB(), "REGISTER", $BLOCKID, "");
+			# myhost is used by the CoasterService for MPI tasks
+			queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost);
 			last;
 		}
 		else {
@@ -363,10 +367,10 @@ sub sendm {
 
 	wlog(DEBUG, "OUT: len=$len, tag=$tag, flags=$flags\n");
 	wlog(TRACE, "$msg\n");
-	 
+
 	$SOCK->blocking(1);
 	eval { defined($SOCK->send($buf)); } or wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
-	
+
 	#eval {defined($SOCK->send($buf))} or wlog(WARN, "Send failed: $!\n");
 }
 
@@ -1172,14 +1176,14 @@ sub stageout {
 		my $lfile = $$STAGE[$STAGEINDEX];
 		my $mode = $$STAGEM[$STAGEINDEX];
 		my $skip = 0;
-		
+
 		# it's supposed to be bitwise
 		if (($mode & MODE_IF_PRESENT) &&  (! -e $lfile)) {
 			$skip = 1;
 		}
 		if (($mode & MODE_ON_ERROR) && ($JOBDATA{$jobid}{"exitcode"} == 0)) {
 			$skip = 2;
-		}  
+		}
 		if (($mode & MODE_ON_SUCCESS) && ($JOBDATA{$jobid}{"exitcode"} != 0)) {
 			$skip = 3;
 		}
@@ -1213,7 +1217,7 @@ sub stageout {
 			wlog DEBUG, "$jobid PUT sent.\n";
 		}
 		else {
-			if ($skip == 1) { 
+			if ($skip == 1) {
 				wlog DEBUG, "$jobid Skipping stageout of missing file ($lfile)\n";
 			}
 			elsif ($skip == 2) {
@@ -1613,9 +1617,6 @@ sub runjob {
 initlog();
 
 my $MSG="0";
-
-my $myhost=`hostname`;
-$myhost =~ s/\s+$//;
 
 wlog(INFO, "Running on node $myhost\n");
 # wlog(INFO, "New log name: $LOGNEW \n");

@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
+import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -25,7 +26,8 @@ import org.globus.cog.util.Streamer;
 import org.globus.cog.util.StringUtil;
 
 /**
- * Construct MPICH/Hydra proxies and submit them back to sleeping Cpus
+ * Construct MPICH/Hydra proxies and submit them back to sleeping Cpu
+ * There is one Mpiexec instance for each Job that requires MPI
  * @author wozniak
  */
 public class Mpiexec implements ProcessListener, StatusListener {
@@ -52,9 +54,15 @@ public class Mpiexec implements ProcessListener, StatusListener {
         new HashMap<Integer,Integer>();
 
     /**
-       The Cpu that pulled this job
+       The Block containing the Cpus that will run this Job
+       TODO: Use this to ensure all Cpus are in this Block
      */
-    private final Cpu cpu;
+    private final Block block;
+
+    /**
+       The Cpus that will run this Job
+    */
+    private final List<Cpu> cpus;
 
     /**
        The output from mpiexec
@@ -66,11 +74,25 @@ public class Mpiexec implements ProcessListener, StatusListener {
      */
     private String error;
 
-    Mpiexec(Cpu cpu, Job job) {
-        this.cpu = cpu;
+    /**
+       The provider on which this task will be run
+       Essentially, there is the local SMP mode and the remote
+       host/TCP mode (currently, only local SMP works)
+     */
+    private String provider;
+
+    Mpiexec(List<Cpu> cpus, Job job) {
+        this.cpus = cpus;
         this.job = job;
+        assert(cpus.size() > 0);
+        this.block = cpus.get(0).getBlock();
         proxies = new ArrayList<Job>(job.cpus);
-        logger.debug("start: " + cpu + " " + job);
+
+        // Get the provider
+        String p = job.getTask().getService(0).getProvider();
+        provider = p.toLowerCase();
+
+        logger.debug("start: " + job + " provider: " + provider);
     }
 
     boolean launch() {
@@ -98,9 +120,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
     }
 
     private boolean runMpiexec() throws IOException {
-        JobSpecification spec =
-            (JobSpecification) job.getTask().getSpecification();
-        String[] cmd = commandLine(spec);
+        Task task = job.getTask();
+        String[] cmd = commandLine(task);
         Process process = Runtime.getRuntime().exec(cmd);
         InputStream istream = process.getInputStream();
         InputStream estream = process.getErrorStream();
@@ -119,10 +140,14 @@ public class Mpiexec implements ProcessListener, StatusListener {
         return result;
     }
 
-    private String[] commandLine(JobSpecification spec) {
+    private String[] commandLine(Task task) {
+        JobSpecification spec =
+            (JobSpecification) task.getSpecification();
         List<String> cmdl = new ArrayList<String>();
 
-        String hosts = getHydraHostList(job.cpus);
+        logger.debug(spec.toString());
+
+        String hosts = getHydraHostList(task);
 
         cmdl.add(MPIEXEC);
         cmdl.add("-bootstrap");
@@ -147,13 +172,45 @@ public class Mpiexec implements ProcessListener, StatusListener {
         return result;
     }
 
-    private String getHydraHostList(int cpus) {
-        StringBuilder sb = new StringBuilder(cpus*5);
-        for (int i = 0; i < cpus; i++) {
+    private String getHydraHostList(Task task) {
+        String result = null;
+
+        ExecutionService service =
+            (ExecutionService) task.getService(0);
+        String jobManager = service.getJobManager();
+        // logger.debug("jobmanager: " + jobManager);
+
+        if (jobManager.equals("local:local"))
+            result = getHydraHostListLocal();
+        else
+            result = getHydraHostListHostnames();
+        return result;
+    }
+
+    private String getHydraHostListLocal() {
+        int count = cpus.size();
+        StringBuilder sb = new StringBuilder(count*4);
+        for (int i = 0; i < count; i++) {
             sb.append(i);
-            if (i < cpus-1)
-                sb.append(",");
+            if (i < count-1)
+                sb.append(',');
         }
+        String result = sb.toString();
+        // logger.trace("getHydraHostListLocal: " + result);
+        return result;
+    }
+
+    private String getHydraHostListHostnames() {
+        StringBuilder sb = new StringBuilder(cpus.size()*16);
+
+        for (int i = 0; i < cpus.size(); i++) {
+            Cpu cpu = cpus.get(i);
+            Node node = cpu.getNode();
+            sb.append(node.getHostname());
+            if (i < cpus.size()-1)
+                sb.append(',');
+        }
+
         return sb.toString();
     }
 
@@ -257,18 +314,12 @@ public class Mpiexec implements ProcessListener, StatusListener {
        (The LinkedList sleeping should already have enough Cpus)
      */
     private void launchProxies() {
-        Block block = cpu.getBlock();
-        PullThread pthread = Cpu.getPullThread(block);
-        int i;
-        for (i = 0; i < proxies.size()-1; i++) {
-            Job proxy = proxies.get(i);
-            Cpu sleeper = pthread.getSleeper();
-            submitToCpu(sleeper, proxy, i);
-        }
-        submitToCpu(cpu, proxies.get(i), i);
+        for (int i = 0; i < proxies.size(); i++)
+            submitToCpu(cpus.get(i), proxies.get(i), i);
     }
 
     private void submitToCpu(Cpu sleeper, Job proxy, int i) {
+        assert(sleeper != null);
         JobSpecification spec =
             (JobSpecification) proxy.getTask().getSpecification();
         spec.addEnvironmentVariable("MPI_RANK", i);
@@ -280,7 +331,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
        the original job
      */
     public void statusChanged(StatusEvent event) {
-        logger.debug(event);
+        logger.trace(event);
         synchronized (statusCount) {
             int code = event.getStatus().getStatusCode();
             Integer count = statusCount.get(code);
