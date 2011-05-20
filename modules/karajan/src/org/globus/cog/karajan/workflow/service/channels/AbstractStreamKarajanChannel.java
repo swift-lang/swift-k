@@ -81,12 +81,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	protected synchronized void handleChannelException(Exception e) {
 		logger.info("Channel config: " + getChannelContext().getConfiguration());
 		ChannelManager.getManager().handleChannelException(this, e);
-		try {
-			getSender(this).purge(this, new NullChannel(true));
-		}
-		catch (IOException e1) {
-			logger.warn("Failed to purge queued messages", e1);
-		}
+		getSender(this).purge(this, new NullChannel(true));
 	}
 
 	protected void configure() throws Exception {
@@ -103,6 +98,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		logger.info("Channel configured");
 	}
 
+	@SuppressWarnings("hiding")
 	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
 		getSender(this).enqueue(tag, flags, data, this, cb);
 	}
@@ -191,7 +187,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				new HashMap<Class<? extends KarajanChannel>, Sender>();
 		}
 
-		Sender s = (Sender) sender.get(channel.getClass());
+		Sender s = sender.get(channel.getClass());
 		if (s == null) {
 			sender.put(channel.getClass(), s = new Sender());
 			s.start();
@@ -241,7 +237,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 						while (queue.isEmpty()) {
 							wait();
 						}
-						e = (SendEntry) queue.removeFirst();
+						e = queue.removeFirst();
 						if (now - last > 10000) {
 							logger.info("Sender " + System.identityHashCode(this) + " queue size: "
 									+ queue.size());
@@ -283,12 +279,12 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 			}
 		}
 
-		public void purge(KarajanChannel source, KarajanChannel channel) throws IOException {
+		public void purge(KarajanChannel source, KarajanChannel channel) {
 			SendEntry e;
 			synchronized (this) {
 				Iterator<SendEntry> i = queue.iterator();
 				while (i.hasNext()) {
-					e = (SendEntry) i.next();
+					e = i.next();
 					if (e.channel == source) {
 						channel.sendTaggedData(e.tag, e.flags, e.data);
 						i.remove();
@@ -328,6 +324,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	protected static class Multiplexer extends Thread {
+		@SuppressWarnings("hiding")
 		public static final Logger logger = Logger.getLogger(Multiplexer.class);
 
 		private Set<KarajanChannel> channels;
@@ -341,7 +338,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 			this.id = id;
 			setDaemon(true);
 			channels = new HashSet<KarajanChannel>();
-			remove = Collections.synchronizedList(new ArrayList());
+			remove = Collections.synchronizedList(new ArrayList<KarajanChannel>());
 			add = Collections.synchronizedList(new ArrayList<KarajanChannel>());
 		}
 
