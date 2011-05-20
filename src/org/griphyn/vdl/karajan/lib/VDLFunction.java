@@ -463,18 +463,17 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 
 	private void closeDeep(VariableStack stack, DSHandle handle,
-            WrapperMap hash) throws InvalidPathException, ExecutionException {
+	                       WrapperMap wrapperMap)  
+	throws InvalidPathException, ExecutionException {
 	    handle.closeShallow();
-	    hash.close(handle);
+	    wrapperMap.close(handle);
 	    try {
-            // Mark all leaves
-            Iterator it = handle.getFields(Path.CHILDREN).iterator();
-            while (it.hasNext()) {
-                closeDeep(stack, (DSHandle) it.next(), hash);
-            }
+            // Mark all children	
+            for (DSHandle child : handle.getFields(Path.CHILDREN))
+                 closeDeep(stack, child, wrapperMap);
         }
         catch (HandleOpenException e) {
-            throw new ExecutionException("Handle open in closeChildren",e);
+            throw new ExecutionException("Handle open in closeChildren", e);
         }
     }
 

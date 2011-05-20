@@ -48,7 +48,7 @@ public interface DSHandle {
      *
      *  @return a Collection of DSHandle objects
      */
-    public Collection getFields(Path path) throws InvalidPathException, HandleOpenException;
+    public Collection<DSHandle> getFields(Path path) throws InvalidPathException, HandleOpenException;
 
     public Object getValue();
 
