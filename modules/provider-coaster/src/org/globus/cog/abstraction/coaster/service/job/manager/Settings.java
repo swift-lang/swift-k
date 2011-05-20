@@ -46,6 +46,7 @@ public class Settings {
                        "kernelprofile", "alcfbgpnat",
                        "internalHostname", "hookClass",
                        "workerManager", "workerLoggingLevel",
+                       "workerLoggingDirectory",
                        "ppn", "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
                        "providerAttributes" };
@@ -130,6 +131,8 @@ public class Settings {
     private String workerManager = "block";
 
     private String workerLoggingLevel = "NONE";
+
+    private String workerLoggingDirectory = "DEFAULT";
 
     private String workerLibraryPath = null;
 
@@ -273,6 +276,14 @@ public class Settings {
 
     public String getWorkerLoggingLevel() {
         return workerLoggingLevel;
+    }
+
+    public void setWorkerLoggingDirectory(String directory) {
+        workerLoggingDirectory = directory;
+    }
+
+    public String getWorkerLoggingDirectory() {
+        return workerLoggingDirectory;
     }
 
     public String getProviderAttributes() {
