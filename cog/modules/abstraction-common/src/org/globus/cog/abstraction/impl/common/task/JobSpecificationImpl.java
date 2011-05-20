@@ -368,7 +368,7 @@ public class JobSpecificationImpl implements JobSpecification {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("Job: ");
         sb.append("\n\texecutable: " + getExecutable());
         sb.append("\n\targuments:  " + getArguments());
