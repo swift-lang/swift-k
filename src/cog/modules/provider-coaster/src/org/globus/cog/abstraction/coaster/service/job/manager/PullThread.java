@@ -1,18 +1,27 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.log4j.Logger;
 
 class PullThread extends Thread {
-    
+
     Logger logger = Logger.getLogger(PullThread.class);
-    
-    private LinkedList<Cpu> queue, sleeping;
+
+    /** 
+       Cpus actively looking for work and not sleeping
+     */
+    private final LinkedList<Cpu> queue;
+    /** 
+       Cpus sleeping (tried to pull but found no work)
+     */
+    private final LinkedList<Cpu> sleeping;
     private long sleepTime, runTime, last;
-    private BlockQueueProcessor bqp;
+    private final BlockQueueProcessor bqp;
 
     public PullThread(BlockQueueProcessor bqp) {
         this.bqp = bqp;
@@ -28,24 +37,45 @@ class PullThread extends Thread {
     }
 
     public synchronized void sleep(Cpu cpu) {
+        logger.trace("sleep: " + cpu);
         sleeping.add(cpu);
     }
 
     public synchronized int sleepers() {
         return sleeping.size();
     }
-    
+
     public synchronized Cpu getSleeper() {
         Cpu result = null;
-        try { 
+        try {
             result = sleeping.remove();
         }
-        catch (NoSuchElementException e) { 
+        catch (NoSuchElementException e) {
             return null;
         }
-        return result; 
+        return result;
     }
-    
+
+    /**
+       Used to obtain Cpus for MPI jobs 
+     */
+    public synchronized List<Cpu> getSleepers(int count) {
+        
+        logger.trace("getSleepers");
+        
+        // Allocate space for count sleepers plus the one active Cpu
+        List<Cpu> result = new ArrayList<Cpu>(count+1);
+
+        while (result.size() < count) {
+            Cpu sleeper = getSleeper();
+            assert(sleeper != null);
+            result.add(sleeper);
+        }
+
+        return result;
+    }
+
+    @Override
     public void run() {
         last = System.currentTimeMillis();
         while (true) {
