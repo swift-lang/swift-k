@@ -53,6 +53,7 @@ public class BlockTask extends TaskImpl {
         setAttribute(spec, "hostCount", String.valueOf(count));
         setAttribute(spec, "kernelprofile", settings.getKernelprofile());
         setAttribute(spec, "providerAttributes", settings.getProviderAttributes());
+        logger.debug("providerAttributes: " + settings.getProviderAttributes());
         if (settings.getAlcfbgpnat()) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
         }
@@ -103,9 +104,17 @@ public class BlockTask extends TaskImpl {
         js.addArgument(block.getId());
 
         if (settings.getWorkerLoggingLevel().equals("NONE"))
+        {
           js.addArgument("NOLOGGING");
+        }
         else
-          js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
+        {
+        	String logDir = settings.getWorkerLoggingDirectory();
+        	if (logDir.equals("DEFAULT"))
+        		js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
+        	else
+        		js.addArgument(logDir);
+        }
 
         logger.debug("arguments: " + js.getArguments());
 
