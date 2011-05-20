@@ -212,6 +212,9 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		return i;
 	}
 
+	/**
+	   Pretty-print byte buffer 
+	 */
 	public static String ppByteBuf(byte[] data) {
 		byte[] buf = new byte[Math.min(data.length, 256)];
 		for (int i = 0; i < buf.length; i++) {
