@@ -12,3 +12,7 @@
   <workdirectory>{wdir}</workdirectory>
 </pool>
 </config>
+
+<!-- RESERVATIONS:
+Add something like this to your globus namespace:
+pbs.resources=advres=modFTDock.47 -->
