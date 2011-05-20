@@ -174,6 +174,7 @@ public class PBSExecutor extends AbstractExecutor {
         getSpec().unpackProviderAttributes();
 
 		wr.write("#PBS -S /bin/bash\n");
+                // TODO: This causes a problem on crow.cray.com
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeAttr("project", "-A ", wr);
@@ -202,16 +203,21 @@ public class PBSExecutor extends AbstractExecutor {
 		    wr.write("#PBS -l " + resources + '\n');
 		}
 
+		// aprun option specifically for Cray Beagle, Franklin
+		boolean aprun = false;
+		if (spec.getAttribute("pbs.aprun") != null)
+		    aprun = true;
+
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
 		}
-		if ("multiple".equals(type)) {
+		if ("multiple".equals(type) && !aprun) {
 		    multiple = true;
 		}
 
 		if (multiple) {
-		    writeMultiJobPreamble(wr, exitcodefile);
+            writeMultiJobPreamble(wr, exitcodefile);
 		}
 
 		if (type != null) {
@@ -232,11 +238,6 @@ public class PBSExecutor extends AbstractExecutor {
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
-
-		// aprun option specifically for Cray Beagle, Franklin
-		boolean aprun = false;
-		if (spec.getAttribute("pbs.aprun") != null)
-		    aprun = true;
 
 		if (aprun)
 		    wr.write("aprun -n " + count + " -N 1 -cc none -d " +
