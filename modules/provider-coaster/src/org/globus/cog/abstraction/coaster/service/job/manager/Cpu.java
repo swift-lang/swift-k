@@ -36,7 +36,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private Block block;
     BlockQueueProcessor bqp;
 
-    private Node node;
+    private Node node = null;
     private Time starttime, endtime, timelast, donetime;
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
@@ -57,6 +57,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void workerStarted() {
+        logger.debug("workerStarted: " + getFullId());
         node.getBlock().remove(this);
         starttime = Time.now();
         endtime = starttime.add(node.getBlock().getWalltime());
@@ -97,6 +98,10 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         sleep(this);
     }
 
+    PullThread getPullThread() {
+        return getPullThread(block);
+    }
+
     static PullThread getPullThread(Block block) {
         if (pullThread == null) {
             pullThread = new PullThread(block.getAllocationProcessor());
@@ -121,6 +126,10 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         return starttime != null;
     }
 
+    /**
+       The Cpu requests work from the BlockQueueProcessor
+       The Cpu is awake when calling this (not in PullThread.sleeping)
+     */
     public synchronized void pull() {
         boolean success = true;
         try {
@@ -131,16 +140,16 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             if (logger.isInfoEnabled()) {
                 logger.info(block.getId() + ":" + getId() + " pull");
             }
-			if (shutdown) {
-				return;
-			}
+            if (shutdown) {
+                return;
+            }
             if (!started()) {
                 sleep();
             }
             else if (running == null) {
                 lastseq = bqp.getQueueSeq();
                 TimeInterval time = endtime.subtract(Time.now());
-                int cpus = 1 + pullThread.sleepers();
+                int cpus = pullThread.sleepers()+1;
                 running = bqp.request(time, cpus);
                 if (running != null) {
                     success = launch(running);
@@ -196,9 +205,14 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
        Hydra proxy jobs.  Then launch these individually.
        Requires non-standard mpiexec with Hydra as modified by
        Justin Wozniak
+
+       This Cpu is awake but n-1 others must be obtained via
+       PullThread.getSleepers()
      */
     boolean launchMPICH(Job job) {
-        Mpiexec mpiexec = new Mpiexec(this, job);
+        List<Cpu> cpus = getPullThread().getSleepers(job.cpus-1);
+        cpus.add(this);
+        Mpiexec mpiexec = new Mpiexec(cpus, job);
         boolean result = mpiexec.launch();
         return result;
     }
@@ -359,5 +373,11 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     Node getNode() {
         return node;
+    }
+
+    String getFullId() {
+        return block.getId() + ":" +
+               getNode().getHostname() + ":" +
+               getId();
     }
 }
