@@ -112,7 +112,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                     planTime = 100;
                 }
                 synchronized (incoming) {
-                    incoming.wait(Math.min(planTime * 20, 10000) + 200);
+                    incoming.wait(Math.min(planTime * 20, 10000) + 1000);
                 }
             }
         }
@@ -226,7 +226,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private Set<Job> queueToExistingBlocks() {
-        double runningSize = running.getSize();
+        double runningSize = running.getSizeLeft();
         Set<Job> remove = new HashSet<Job>();
         for (Job j : holding) {
             if (allocsize - queued.getJSize() - runningSize > metric.getSize(j) && fits(j)) {
