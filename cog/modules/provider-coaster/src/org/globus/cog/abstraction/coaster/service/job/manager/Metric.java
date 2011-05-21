@@ -16,6 +16,8 @@ public interface Metric {
     double blockSize(int slot, int cslots, double tsum);
 
     double getSize(Job j);
+    
+    double getSizeLeft(Job j);
 
     double desiredSize(Job j);
 
@@ -33,6 +35,10 @@ public interface Metric {
         }
 
         public double getSize(Job j) {
+            return 0;
+        }
+        
+        public double getSizeLeft(Job j) {
             return 0;
         }
 
