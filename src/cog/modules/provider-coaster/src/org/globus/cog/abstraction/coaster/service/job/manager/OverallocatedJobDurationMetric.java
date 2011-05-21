@@ -50,6 +50,15 @@ public class OverallocatedJobDurationMetric implements Metric {
     public double getSize(Job j) {
         return pow(j.getMaxWallTime().getSeconds(), settings.getParallelism());
     }
+    
+    public double getSizeLeft(Job j) {
+        TimeInterval timeLeft = j.getMaxWallTime();
+        Time startTime = j.getStartTime();
+        if (startTime != null) {
+            timeLeft = timeLeft.subtract(Time.now().subtract(startTime));
+        }
+        return pow(timeLeft.getSeconds(), settings.getParallelism());
+    }
 
     public double desiredSize(Job j) {
         return pow(BlockQueueProcessor.overallocatedSize(j, settings),
