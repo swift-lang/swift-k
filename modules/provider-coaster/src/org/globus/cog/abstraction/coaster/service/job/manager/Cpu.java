@@ -36,7 +36,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private Block block;
     BlockQueueProcessor bqp;
 
-    private Node node = null;
+    private Node node;
     private Time starttime, endtime, timelast, donetime;
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
@@ -57,7 +57,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void workerStarted() {
-        logger.debug("workerStarted: " + getFullId());
+	 if (logger.isDebugEnabled()) {
+	        logger.debug("workerStarted: " + getFullId());
+	 }
         node.getBlock().remove(this);
         starttime = Time.now();
         endtime = starttime.add(node.getBlock().getWalltime());
@@ -98,7 +100,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         sleep(this);
     }
 
-    PullThread getPullThread() {
+    private PullThread getPullThread() {
         return getPullThread(block);
     }
 
@@ -136,7 +138,6 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             if (checkSuspended(block)) {
                 return;
             }
-            block.jobPulled();
             if (logger.isInfoEnabled()) {
                 logger.info(block.getId() + ":" + getId() + " pull");
             }
@@ -149,9 +150,10 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             else if (running == null) {
                 lastseq = bqp.getQueueSeq();
                 TimeInterval time = endtime.subtract(Time.now());
-                int cpus = pullThread.sleepers()+1;
+                int cpus = pullThread.sleepers() + 1;
                 running = bqp.request(time, cpus);
                 if (running != null) {
+                    block.jobPulled();
                     success = launch(running);
                 }
                 else {
@@ -232,9 +234,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         Task task = job.getTask();
         if (logger.isInfoEnabled()) {
             JobSpecification spec =
-                (JobSpecification) task.getSpecification();
+                (JobSpecification) task.getSpecification();        
             logger.info(block.getId() + ":" + getId() +
-                " submitting " + task.getIdentity() + ": " +
+                " submitting " + task.getIdentity() + ": " + 
                 spec.getExecutable() + " " + spec.getArguments());
         }
         task.setStatus(Status.SUBMITTING);
@@ -314,11 +316,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 endtime = starttime.add(block.getWalltime());
             }
             TimeInterval time = endtime.subtract(Time.now());
-            if (pullThread != null) {
-                int cpus = 1 + pullThread.sleepers();
-                running = bqp.request(time, cpus);
-            }
-            // no listener is added to this task, so make sure
+            int cpus = 1 + getPullThread(node.getBlock()).sleepers();
+            running = bqp.request(time, cpus);
+            // no listener is added to this task, so make sure 
             // it won't linger in the BQP running set
             bqp.jobTerminated(running);
         }
@@ -363,7 +363,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void setRunning(Job r) {
-        logger.debug("setRunning: " + r);
+        if (logger.isDebugEnabled()) {
+            logger.debug("setRunning: " + r);
+        }
         this.running = r;
     }
 
@@ -376,8 +378,8 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     String getFullId() {
-        return block.getId() + ":" +
-               getNode().getHostname() + ":" +
+        return block.getId() + ":" + 
+               getNode().getHostname() + ":" + 
                getId();
     }
 }
