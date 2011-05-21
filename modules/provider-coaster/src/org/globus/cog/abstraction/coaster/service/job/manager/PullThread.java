@@ -37,7 +37,9 @@ class PullThread extends Thread {
     }
 
     public synchronized void sleep(Cpu cpu) {
-        logger.trace("sleep: " + cpu);
+        if (logger.isDebugEnabled()) {
+            logger.debug("sleep: " + cpu);
+        }
         sleeping.add(cpu);
     }
 
@@ -61,7 +63,7 @@ class PullThread extends Thread {
      */
     public synchronized List<Cpu> getSleepers(int count) {
         
-        logger.trace("getSleepers");
+        logger.debug("getSleepers");
         
         // Allocate space for count sleepers plus the one active Cpu
         List<Cpu> result = new ArrayList<Cpu>(count+1);
