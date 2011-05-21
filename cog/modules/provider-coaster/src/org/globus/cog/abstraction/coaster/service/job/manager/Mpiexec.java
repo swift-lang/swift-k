@@ -331,7 +331,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
        the original job
      */
     public void statusChanged(StatusEvent event) {
-        logger.trace(event);
+        logger.debug(event);
         synchronized (statusCount) {
             int code = event.getStatus().getStatusCode();
             Integer count = statusCount.get(code);
