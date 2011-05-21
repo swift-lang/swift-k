@@ -49,7 +49,7 @@ public class Settings {
                        "workerLoggingDirectory",
                        "ppn", "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
-                       "providerAttributes" };
+                       "providerAttributes", "parallelism" };
 
     /**
      * The maximum number of blocks that can be active at one time
