@@ -625,7 +625,7 @@ process_exec() {
   "$@" > $OUTPUT 2>&1 &
   PROCESS_INTERNAL_PID=$!
   trap "process_trap $PROCESS_INTERNAL_PID" SIGTERM
-  wait
+  wait $PROCESS_INTERNAL_PID
   EXITCODE=$?
 
   if [ "$EXITCODE" == "127" ]; then
