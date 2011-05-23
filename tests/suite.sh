@@ -465,7 +465,7 @@ outecho() {
 }
 
 # Create HTML output
-out() {
+output_html() {
         # echo $@
   TYPE=$1
   if [ "$TYPE" == "test" ]; then
@@ -671,7 +671,7 @@ test_exec() {
 
   RESULT=$( result )
   test_log
-  out test $SEQ "$LASTCMD" $RESULT $TEST_LOG
+  output_html test $SEQ "$LASTCMD" $RESULT $TEST_LOG
 
   check_bailout
 
@@ -761,7 +761,7 @@ monitored_exec()
   RESULT=$( result )
   test_log
   LASTCMD="$@"
-  out test $SEQ "$LASTCMD" $RESULT $TEST_LOG
+  output_html test $SEQ "$LASTCMD" $RESULT $TEST_LOG
 
   check_bailout
 
@@ -777,7 +777,7 @@ script_exec() {
   RESULT=$( result )
 
   test_log
-  out test "$SYMBOL" "$LASTCMD" $RESULT
+  output_html test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
 }
@@ -894,7 +894,7 @@ build_package() {
   test_exec rm -f castor*.jar *gt2ft*.jar ant.jar
   test_exec cd $TOPDIR
   test_exec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
-  out package "swift-$DATE.tar.gz"
+  output_html package "swift-$DATE.tar.gz"
 }
 
 # Generate the sites.sed file
