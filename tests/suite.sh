@@ -502,14 +502,14 @@ start_test_results() {
   html_table border 0 cellpadding 1
 }
 
-start_part() {
-  PART=$1
+start_group() {
+  G=$1
   echo
-  echo $PART
+  echo $G
   echo
-  html_tr part
+  html_tr group
   html_th 3
-  html "$PART"
+  html "$G"
   html_~th
   html_~tr
 }
@@ -649,11 +649,9 @@ process_exec() {
   return $EXITCODE
 }
 
-# Execute as part of test set
+# Execute as part of test case
 # Equivalent to monitored_exec() (but w/o monitoring)
 test_exec() {
-  # banner "$TEST (part $SEQ)"
-  # echo "Executing $TEST (part $SEQ)"
 
   printf "\nExecuting: $@\n" >>$LOG
 
@@ -870,8 +868,8 @@ ssexec() {
   SEQSAVE=$SEQ
   SEQ=$1
   shift
-  banner "$TEST (part $SEQ)"
-  echo "Executing $TEST (part $SEQ)"
+  banner "$TEST (group $SEQ)"
+  echo "Executing $TEST (group $SEQ)"
   aexec "$@"
   ptest
   SEQ=$SEQSAVE
@@ -1059,7 +1057,7 @@ header
 start_test_results
 cd $TOPDIR
 
-start_part "Prolog: Build"
+start_group "Build"
 
 TESTLINK=
 EXITONFAILURE=true
@@ -1123,7 +1121,7 @@ for G in ${GROUPLIST[@]}; do
   echo "GROUP: $GROUP"
   [ -d $GROUP ] || crash "Could not find GROUP: $GROUP"
   TITLE=$( group_title )
-  start_part "Part $GROUPCOUNT: $TITLE"
+  start_group "Group $GROUPCOUNT: $TITLE"
   test_group
   (( GROUPCOUNT++ ))
   (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && break
@@ -1135,7 +1133,7 @@ if [ $GRID_TESTS == "0" ]; then
   exit 0
 fi
 
-TESTPART="Appendix G: Grid Tests"
+TEST="Appendix G: Grid Tests"
 
 for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
   BN=`basename $TEST`
