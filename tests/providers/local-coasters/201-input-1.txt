@@ -1,2 +1,0 @@
-Linux wozniak-desktop 2.6.32-30-generic #59-Ubuntu SMP Tue Mar 1 21:30:46 UTC 2011 x86_64 GNU/Linux
-Tue Mar 22 14:02:02 CDT 2011
