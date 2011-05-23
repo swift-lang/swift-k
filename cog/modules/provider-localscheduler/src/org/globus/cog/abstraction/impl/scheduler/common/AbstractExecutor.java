@@ -63,6 +63,9 @@ public abstract class AbstractExecutor implements ProcessListener {
 
     public void start() throws AuthorizationException, GSSException,
             IOException, ProcessException {
+    	
+    	validate(task);
+    	
         File scriptdir = new File(System.getProperty("user.home")
                 + File.separatorChar + ".globus" + File.separatorChar
                 + "scripts");
@@ -82,7 +85,7 @@ public abstract class AbstractExecutor implements ProcessListener {
         exitcode = script.getAbsolutePath() + ".exitcode";
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Wrote " + getName() + " script to " + script);
+            logger.debug("Writing " + getName() + " script to " + script);
         }
 
         String[] cmdline = buildCommandLine(scriptdir, script, exitcode,
@@ -145,6 +148,15 @@ public abstract class AbstractExecutor implements ProcessListener {
                 spec.getStdErrorLocation(), exitcode, this));
     }
 
+    /**
+       Ensure this task is valid 
+       @param task May be inspected by implementing executor 
+       @throws ProcessException Thrown by implementing executor 
+                                if task is invalid 
+     */
+    protected void validate(Task task) 
+    throws ProcessException {};
+    
     protected abstract Job createJob(String jobid, String stdout,
             FileLocation stdOutputLocation, String stderr,
             FileLocation stdErrorLocation, String exitcode,
@@ -162,7 +174,9 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected String[] buildCommandLine(File jobdir, File script,
-            String exitcode, String stdout, String stderr) throws IOException {
+            String exitcode, String stdout, String stderr) 
+    throws IOException {
+    	
         writeScript(new BufferedWriter(new FileWriter(script)), exitcode,
             stdout, stderr);
         if (logger.isDebugEnabled()) {
@@ -253,7 +267,8 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected abstract void writeScript(Writer wr, String exitcode,
-            String stdout, String stderr) throws IOException;
+                                        String stdout, String stderr) 
+    throws IOException;
 
     protected JobSpecification getSpec() {
         return spec;

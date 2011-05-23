@@ -20,6 +20,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
+import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -48,6 +49,18 @@ public class PBSExecutor extends AbstractExecutor {
 		super(task, listener);
 	}
 
+	/** 
+	    The job name is limited to 15 characters: 
+		http://doesciencegrid.org/public/pbs/qsub.html
+	 */
+	protected void validate(Task task)
+	throws ProcessException {
+		String taskName = task.getName();
+		if (taskName.length() > 15)
+			throw new ProcessException
+			("PBS job name exceeds 15 characters: " + taskName);
+	}
+	
 	/** 
        Write attribute if non-null
        @throws IOException
@@ -186,7 +199,8 @@ public class PBSExecutor extends AbstractExecutor {
 
 	@Override
 	protected void writeScript(Writer wr, String exitcodefile, String stdout,
-			String stderr) throws IOException {
+	                           String stderr) 
+	throws IOException {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
@@ -196,7 +210,6 @@ public class PBSExecutor extends AbstractExecutor {
         writeHeader(wr);
         
 		wr.write("#PBS -S /bin/bash\n");
-                // TODO: This causes a problem on crow.cray.com
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeNonEmptyAttr("project", "-A ", wr);
