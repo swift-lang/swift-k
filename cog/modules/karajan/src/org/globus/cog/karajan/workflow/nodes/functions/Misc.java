@@ -232,6 +232,17 @@ public class Misc extends FunctionsCollection {
 		return TypeUtil.toDouble(PA_VALUE.getValue(stack));
 	}
 
+	static {
+		setArguments("sys_getenv", new Arg[] { PA_NAME });
+	}
+
+	public String sys_getenv(VariableStack stack) throws ExecutionException {
+		String name = TypeUtil.toString(PA_NAME.getValue(stack));
+		String value = System.getenv(name);
+		System.out.println(name + " " + value);
+		return value;
+	}
+	
 	public static final Arg PA_TYPE = new Arg.Positional("type");
 
 	static {
