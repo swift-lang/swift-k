@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Pseudo-code for now
+set -x
 
-# for f in *.out.expected
-# do
-#   assert *.out exists
-#   assert *.out == data.txt
-# done
+COUNT=$( ls catsn.*.out | wc -l )
+[[ $COUNT == 10 ]] || exit 1
+
+exit 0
