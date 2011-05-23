@@ -460,7 +460,7 @@ outecho() {
 
 # Create HTML output
 output_html() {
-        # echo $@
+
   TYPE=$1
   if [ "$TYPE" == "test" ]; then
 
@@ -470,13 +470,11 @@ output_html() {
 
     # WIDTH=$( width "$LABEL" )
     if [ "$RESULT" == "Passed" ]; then
-      # html "<td class=\"success\" $WIDTH title=\"$CMD\">"
       html_td class "success" width 25 title "$CMD"
       html_a_href $TEST_LOG "$LABEL"
     else
       echo "FAILED"
       cat $RUNDIR/$TEST_LOG < /dev/null
-      # html "<td class=\"failure\" $WIDTH title=\"$CMD\">"
       html_td class "failure" width 25 title "$CMD"
       html_a_href $TEST_LOG $LABEL
     fi
