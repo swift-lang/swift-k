@@ -579,7 +579,7 @@ banner() {
   if [ "$FILE" == "" ]; then
     BANNER_OUTPUT=$LOG
   else
-    BANNER_OUTPUT=$2
+    BANNER_OUTPUT=$FILE
   fi
   {
     echo ""
@@ -652,9 +652,9 @@ process_exec() {
 # Execute as part of test set
 # Equivalent to monitored_exec() (but w/o monitoring)
 test_exec() {
-  banner "$TEST (part $SEQ)"
-  echo "Executing $TEST (part $SEQ)"
-  pwd
+  # banner "$TEST (part $SEQ)"
+  # echo "Executing $TEST (part $SEQ)"
+
   printf "\nExecuting: $@\n" >>$LOG
 
   rm -f $OUTPUT
@@ -734,9 +734,6 @@ monitored_exec()
 {
   TIMEOUT=$1
   shift
-
-  banner "$TEST (part $SEQ)"
-  echo "Executing $TEST (part $SEQ)"
 
   START=$( date +%s )
 
@@ -820,6 +817,7 @@ swift_test_case() {
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
   fi
+  echo
 }
 
 # Execute shell test case w/ setup, check, clean
@@ -992,6 +990,8 @@ test_group() {
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
     TESTNAME=$( basename $TEST )
+
+    echo -e "\nTest case: $TESTNAME"
     cp -v $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
 
