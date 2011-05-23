@@ -619,7 +619,7 @@ process_exec() {
     PROG=$( basename $PROG )
   fi
 
-  echo -e "\nExecuting: $PROG"
+  echo -e "Executing: $PROG"
   echo -e "\nExecuting: $@\n" >> $LOG
 
   rm -f $OUTPUT
