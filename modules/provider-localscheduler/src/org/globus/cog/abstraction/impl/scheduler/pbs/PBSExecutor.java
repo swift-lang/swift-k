@@ -48,14 +48,33 @@ public class PBSExecutor extends AbstractExecutor {
 		super(task, listener);
 	}
 
+	/** 
+       Write attribute if non-null
+       @throws IOException
+	 */
 	protected void writeAttr(String attrName, String arg, Writer wr)
-			throws IOException {
+	throws IOException {
 		Object value = getSpec().getAttribute(attrName);
 		if (value != null) {
 			wr.write("#PBS " + arg + String.valueOf(value) + '\n');
 		}
 	}
 
+	/** 
+       Write attribute if non-null and non-empty
+       @throws IOException
+	 */
+	protected void writeNonEmptyAttr(String attrName, String arg, 
+	                                 Writer wr)
+	throws IOException {
+		Object value = getSpec().getAttribute(attrName);
+		if (value != null) {
+			String v = String.valueOf(value);
+			if (v.length() > 0 )
+				wr.write("#PBS " + arg + v + '\n');
+		}
+	}
+	
 	protected void writeWallTime(Writer wr) throws IOException {
 		Object walltime = getSpec().getAttribute("maxwalltime");
 		if (walltime != null) {
@@ -180,10 +199,10 @@ public class PBSExecutor extends AbstractExecutor {
                 // TODO: This causes a problem on crow.cray.com
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
-		writeAttr("project", "-A ", wr);
+		writeNonEmptyAttr("project", "-A ", wr);
 		boolean multiple = writeCountAndPPN(spec, wr);
 		writeWallTime(wr);
-		writeAttr("queue", "-q ", wr);
+		writeNonEmptyAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
 
