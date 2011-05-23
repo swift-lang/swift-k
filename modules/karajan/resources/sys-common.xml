@@ -55,6 +55,7 @@
     <export name="readFile" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
 	<export name="file:read" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
 	<export name="property"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
+	<export name="getenv"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
 	<export name="outputStream" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
 	<export name="closeStream" restricted="true"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
 	<export name="isDefined"><elementDef classname="org.globus.cog.karajan.workflow.nodes.functions.Misc"/></export>
