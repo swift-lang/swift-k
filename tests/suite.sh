@@ -160,7 +160,6 @@ printhelp() {
   echo "usage:"
   printf "\t -a         Do not run ant dist                \n"
   printf "\t -c         Do not remove dist (clean)         \n"
-  printf "\t -g         Do not run grid tests              \n"
   printf "\t -h         This message                       \n"
   printf "\t -k <N>     Skip first N tests                 \n"
   printf "\t -n <N>     Run N tests and quit               \n"
@@ -180,7 +179,6 @@ CLEAN=1
 SKIP_TESTS=0
 NUMBER_OF_TESTS=1000000 # Run all tests by default
 BUILD_PACKAGE=1
-GRID_TESTS=1
 SKIP_CHECKOUT=0
 ALWAYS_EXITONFAILURE=0
 VERBOSE=0
@@ -194,9 +192,6 @@ while [ $# -gt 0 ]; do
       shift;;
     -c)
       CLEAN=0
-      shift;;
-    -g)
-      GRID_TESTS=0
       shift;;
     -h)
       printhelp
@@ -220,7 +215,6 @@ while [ $# -gt 0 ]; do
       # "Tree mode"
       RUN_ANT=0
       CLEAN=0
-      GRID_TESTS=0
       BUILD_PACKAGE=0
       SKIP_CHECKOUT=1
       shift;;
@@ -1126,29 +1120,6 @@ for G in ${GROUPLIST[@]}; do
   (( GROUPCOUNT++ ))
   (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && break
   (( $SHUTDOWN )) && break
-done
-
-if [ $GRID_TESTS == "0" ]; then
-  footer
-  exit 0
-fi
-
-TEST="Appendix G: Grid Tests"
-
-for TEST in `ls $TESTDIR/*.dtm $TESTDIR/*.swift`; do
-  BN=`basename $TEST`
-  echo $BN
-  cp $TESTDIR/$BN .
-
-  TESTNAME=${BN%.dtm}
-  TESTNAME=${TESTNAME%.swift}
-  TEST="<a href=\"$RUNDIRBASE/$BN\">$TESTNAME</a>"
-
-  ssexec "Compile" vdlc $BN
-  for ((i=0; $i<9; i=$i+1)); do
-    test_exec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
-  done
-  test_exec swift -sites.file ~/.vdl2/sites-grid.xml $TESTNAME.kml
 done
 
 footer
