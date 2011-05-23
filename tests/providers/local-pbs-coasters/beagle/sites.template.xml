@@ -11,13 +11,15 @@
   <profile namespace="globus" key="maxTime">7200</profile>
 
   <profile namespace="globus" key="providerAttributes">
-    pbs.aprun;pbs.mpp;depth=24;pbs.resources=advres=modFTDock.47
+    pbs.aprun;pbs.mpp;depth=24
   </profile>
   <profile key="jobsPerNode" namespace="globus">24</profile>
   <profile key="slots" namespace="globus">1</profile>
   <profile key="nodeGranularity" namespace="globus">1</profile>
   <profile key="maxNodes" namespace="globus">1</profile>
   <profile key="queue" namespace="globus">batch</profile>
+  <profile key="workerLoggingLevel" namespace="globus">DEBUG</profile>
+  <profile key="workerLoggingDirectory" namespace="globus">{wdir}</profile>
   <profile key="jobThrottle" namespace="karajan">5.99</profile>
   <profile key="initialScore" namespace="karajan">10000</profile>
   <profile namespace="globus" key="project">_PROJECT_</profile>
@@ -26,4 +28,6 @@
 </pool>
 </config>
 
-<!-- ;pbs.mpp;pbs.resources=advres=modFTDock.47 -->
+<!-- RESERVATIONS:
+Add something like this to your providerAttributes:
+pbs.resources=advres=modFTDock.47 -->
