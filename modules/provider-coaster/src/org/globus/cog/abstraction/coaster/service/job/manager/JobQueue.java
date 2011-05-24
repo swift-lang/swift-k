@@ -81,7 +81,9 @@ public class JobQueue implements RegistrationManager {
     public synchronized QueueProcessor getQueueProcessor(String name) {
         if (coaster == null) {
             coaster = newQueueProcessor(name);
-            coaster.setClientChannelContext(clientChannelContext);
+            if (clientChannelContext != null) {
+                coaster.setClientChannelContext(clientChannelContext);
+            }
             coaster.start();
         }
         return coaster;
