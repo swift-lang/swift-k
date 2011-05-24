@@ -47,7 +47,7 @@ public class CoasterService extends GSSService {
 
     public static final RequestManager COASTER_REQUEST_MANAGER = new CoasterRequestManager();
 
-    private String registrationURL, id;
+    private String registrationURL, id, defaultQP;
     private JobQueue jobQueue;
     private LocalTCPService localService;
     private Exception exceptionAtStop;
@@ -144,6 +144,9 @@ public class CoasterService extends GSSService {
             jobQueue = new JobQueue(localService);
             jobQueue.start();
             localService.setRegistrationManager(jobQueue);
+            if (defaultQP != null) {
+                jobQueue.ensureQueueProcessorInitialized(defaultQP);
+            }
             logger.info("Started local service: "
                         + localService.getContact());
             if (id != null) {
@@ -409,4 +412,14 @@ public class CoasterService extends GSSService {
     protected LocalTCPService getLocalService() {
         return localService;
     }
+
+    public String getDefaultQP() {
+        return defaultQP;
+    }
+
+    public void setDefaultQP(String defaultQP) {
+        this.defaultQP = defaultQP;
+    }
+    
+    
 }
