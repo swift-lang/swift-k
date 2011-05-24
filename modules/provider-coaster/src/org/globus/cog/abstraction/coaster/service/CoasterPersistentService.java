@@ -142,6 +142,7 @@ public class CoasterPersistentService extends CoasterService {
             writePorts(s, portFile, localPortFile);
             
             s.setIgnoreIdleTime(true);
+            s.getJobQueue().ensureQueueProcessorInitialized("passive");
             s.start();
             System.out.println("Started coaster service: " + s);
             s.waitFor();
