@@ -3,6 +3,7 @@ package org.griphyn.vdl.mapping;
 import java.util.Map;
 
 import org.griphyn.vdl.karajan.VDL2FutureException;
+import org.griphyn.vdl.type.Types;
 
 /** The MappingParam class provides helper methods to deal with
   * parameters to mappers. The basic usage pattern is to
@@ -44,7 +45,12 @@ public class MappingParam {
 		if (value instanceof DSHandle) {
 			DSHandle handle = (DSHandle) value;
 			checkHandle(handle);
-			return handle.getValue().toString();
+			if (handle.getType().equals(Types.INT)) {
+			    return Integer.valueOf(((Number) handle.getValue()).intValue());
+			}
+			else {
+			    return handle.getValue().toString();
+			}
 		}
 		else if (value == null) {
 			if (!defSet) {
