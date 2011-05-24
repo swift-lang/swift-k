@@ -27,6 +27,7 @@ public class JobQueue implements RegistrationManager {
     private final Settings settings;
     private final LocalTCPService localService;
     private ChannelContext clientChannelContext;
+    private String defaultQueueProcessor;
 
     public JobQueue(LocalTCPService localService) {
         settings = new Settings();
@@ -72,14 +73,22 @@ public class JobQueue implements RegistrationManager {
         }
         qp.enqueue(t);
     }
+    
+    public synchronized void setQueueProcessor(QueueProcessor qp) {
+        coaster = qp;
+    }
 
-    protected synchronized QueueProcessor getQueueProcessor(String name) {
+    public synchronized QueueProcessor getQueueProcessor(String name) {
         if (coaster == null) {
             coaster = newQueueProcessor(name);
             coaster.setClientChannelContext(clientChannelContext);
             coaster.start();
         }
         return coaster;
+    }
+    
+    public void ensureQueueProcessorInitialized(String name) {
+        getQueueProcessor(name);
     }
 
     private QueueProcessor newQueueProcessor(String name) {
