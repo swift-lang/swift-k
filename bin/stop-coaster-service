@@ -1,0 +1,23 @@
+#!/bin/bash
+
+pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
+
+PID_FILE=".coaster-service-pids"
+
+echo Ending coaster processes..
+if [ -f "$PID_FILE" ]; then
+   for pid in `cat $PID_FILE`
+   do
+      #echo "$pid"
+      for i in `ps -ef| awk '$3 == '$pid' { print $2 }'`
+      do
+         #echo "$i"
+         kill $i > /dev/null 2>&1
+      done
+      kill $pid > /dev/null 2>&1
+   done
+   rm $PID_FILE > /dev/null 2>&1
+fi
+echo Done
+
+popd > /dev/null 2>&1

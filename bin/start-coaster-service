@@ -1,0 +1,159 @@
+#!/bin/bash
+
+# crash: Report a problem and exit
+crash()
+{
+   MSG=$1
+   echo ${MSG} >&2
+   exit 1
+}
+
+# Start SSH workers
+start-workers-ssh()
+{ 
+   PORT=$1
+   EXECUTION_URL=http://$IPADDR:$PORT
+   if [ -z "$PORT" ]; then
+      crash "start-workers-ssh: Port number not specified, giving up"
+   fi
+   for MACHINE in $WORKER_HOSTS
+   do
+      scp $SWIFT_BIN/$WORKER $MACHINE:$WORKER_WORK > /dev/null 2>&1
+      echo Starting worker on $MACHINE
+      ssh $MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
+      echo $! >> $PID_FILE
+   done
+   return 0
+}
+
+# Start local workers
+start-workers-local() 
+{
+ echo foo
+}
+
+# Start cobalt workers
+start-workers-cobalt()
+{
+  echo foo
+}
+
+PID_FILE=".coaster-service-pids"
+RUN_DIR=`pwd`
+pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
+
+# Import settings
+CONFIG_FILE="../etc/coaster-service.conf"
+if [ -f "$CONFIG_FILE" ]; then
+   source "$CONFIG_FILE"
+else
+   crash "Cannot find coaster-service.conf!"
+fi
+
+# Determine information needed about this machine
+if [ -z "$IPADDR" ]; then
+   if [ -x "/sbin/ifconfig" ]; then
+      IPADDR=$( /sbin/ifconfig | grep inet | head -1 | cut -d ':' -f 2 | awk '{print $1}' )
+   else
+      crash "Unable to determine IP address of system. Please add to coaster-service.conf"
+   fi
+fi
+
+# Find swift
+if [ ! -x "$SWIFT" ]; then
+   SWIFT=`which swift`
+   if [ ! -x "$SWIFT" ]; then
+      crash "Unable to find swift! Please either add to your $PATH or specify the path in coaster-service.conf"
+   fi
+fi
+
+SWIFT_BIN=`dirname $SWIFT`
+WORKER=worker.pl
+
+# Verify worker script is there
+if [ ! -x "$SWIFT_BIN/$WORKER" ]; then
+   crash "Error: Unable to find worker at $SWIFT_BIN/$WORKER!"
+fi
+
+# Try to create $LOG_DIR if needed, relative to $RUN_DIR
+if [ ! -d "$RUN_DIR/$LOG_DIR" ]; then
+   mkdir -p "$RUN_DIR/$LOG_DIR" > /dev/null 2>&1
+   if [ ! -d "$RUN_DIR/$LOG_DIR" ]; then
+      crash "Unable to make directory $RUN_DIR/$LOG_DIR!"
+   fi
+fi
+
+# Set paths to log files
+SWIFT_LOG="$RUN_DIR/$LOG_DIR"/swift.out
+COASTER_LOG="$RUN_DIR/$LOG_DIR"/coaster.log
+
+# Verify we can find coaster service
+if [ ! -x "$SWIFT_BIN/coaster-service" ]; then
+   crash "Unable to find $SWIFT_BIN/coaster-service!"
+fi
+
+# Create files for storing port info, if needed
+if [ -z "$LOCAL_PORT" ]; then
+   LOCAL_PORT_FILE=`mktemp`
+fi
+
+if [ -z "$SERVICE_PORT" ]; then
+   SERVICE_PORT_FILE=`mktemp`
+fi
+
+# Check values in configuration file to determine how we should start coaster-service
+echo Starting coaster-service
+if [ -z "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
+   $SWIFT_BIN/coaster-service -nosec -portfile $SERVICE_PORT_FILE -localportfile $LOCAL_PORT_FILE -passive > $COASTER_LOG 2>&1 &
+elif [ -n "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
+   $SWIFT_BIN/coaster-service -nosec -port $SERVICE_PORT -localportfile $LOCAL_PORT_FILE -passive > $COASTER_LOG 2>&1 &
+elif [ -z "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
+   $SWIFT_BIN/coaster-service -nosec -portfile $SERVICE_PORT_FILE --localport $LOCAL_PORT -passive > $COASTER_LOG 2>&1 &
+elif [ -n  "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
+   $SWIFT_BIN/coaster-service -nosec -port $SERVICE_PORT -localport $LOCAL_PORT -passive > $COASTER_LOG 2>&1 &
+else 
+   crash "Unknown SERVICE_PORT type specified!"
+fi
+
+echo $! > $PID_FILE
+sleep 5
+
+# Determine SERVICE_PORT
+if [ -z "$SERVICE_PORT" ]; then
+   if [ ! -f "$SERVICE_PORT_FILE" ]; then
+      crash "Unable to determine SERVICE_PORT!"
+   fi
+   SERVICE_PORT=`cat $SERVICE_PORT_FILE`
+   rm $SERVICE_PORT_FILE
+fi
+
+# Determine LOCAL_PORT
+if [ -z "$LOCAL_PORT" ]; then
+   if [ ! -f "$LOCAL_PORT_FILE" ]; then
+      crash "Unable to determine LOCAL_PORT!"
+   fi
+   LOCAL_PORT=`cat $LOCAL_PORT_FILE`
+   rm $LOCAL_PORT_FILE
+fi
+
+echo Service port: $SERVICE_PORT
+echo Local port: $LOCAL_PORT
+
+# Start workers
+case $WORKER_MODE in
+   ssh)
+      start-workers-ssh $LOCAL_PORT
+      ;;
+   local)
+      start-workers-local $LOCAL_PORT
+      ;;
+   cobalt)
+      start-workers-cobalt $LOCAL_PORT
+      ;;
+esac
+
+# Generate sites.xml
+export EXECUTION_URL="http:\/\/$IPADDR:$SERVICE_PORT"
+echo Generating sites.xml..
+gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
+

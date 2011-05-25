@@ -172,6 +172,9 @@ do
       "#site $TEMPLATE slots="*|'#site slots='*)
          SLOTS=`get_value $line`
          ;;
+      "#site $TEMPLATE execution_url="*|'#site slots='*)
+        EXECUTION_URL=`get_value $line`
+        ;;
    esac
 done < $PROPERTIES_FILE
 
@@ -201,6 +204,7 @@ SEDFILE=`mktemp`
   echo "s/_N_MAX_/${N_MAX}/"
   echo "s/_SLOTS_/${SLOTS}/"
   echo "s/_MAXTIME_/${MAXTIME}/"
+  echo "s/_EXECUTION_URL_/${EXECUTION_URL}/"
   echo "s@_SERVICE_COASTERS_@${SERVICE_COASTERS:-NO_URL_GIVEN}@"
   echo "s@_SERVICE_PORT_@${SERVICE_PORT:-NO_PORT_GIVEN}@"
 } > $SEDFILE

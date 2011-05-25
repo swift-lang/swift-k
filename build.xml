@@ -88,6 +88,8 @@
 		<chmod perm="+x" file="${dist.dir}/bin/swiftrun"/>
                 <chmod perm="+x" file="${dist.dir}/bin/gensites"/>
                 <chmod perm="+x" file="${dist.dir}/bin/chxml"/>
+                <chmod perm="+x" file="${dist.dir}/bin/start-coaster-service"/>
+                <chmod perm="+x" file="${dist.dir}/bin/stop-coaster-service"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/active-state-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/add-runid-as-prefix"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/affine-transform"/>
