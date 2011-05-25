@@ -20,7 +20,7 @@ public interface Mapper {
         entry is a Path object. The data files mapped to each Path object
         do not necessarily have to exist.
      */
-    Collection existing();
+    Collection<Path> existing();
 
     /**
      * Returns true if data mapped by this mapper cannot
@@ -38,7 +38,7 @@ public interface Mapper {
      */
     boolean isStatic();
 
-    void setParams(Map params);
+    void setParams(Map<String, Object> params);
 
     void setParam(String name, Object value);
 

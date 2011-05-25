@@ -15,11 +15,11 @@ public abstract class AbstractMapper implements Mapper {
 
 	public static final Logger logger = Logger.getLogger(AbstractMapper.class);
 	public static final MappingParam PARAM_INPUT = new MappingParam("input", Boolean.FALSE);
-	protected Map params;
+	protected Map<String, Object> params;
 
 	public synchronized void setParam(String name, Object value) {
 		if (params == null) {
-			params = new HashMap();
+			params = new HashMap<String, Object>();
 		}
 		params.put(name, value);
 	}
@@ -33,7 +33,7 @@ public abstract class AbstractMapper implements Mapper {
 		}
 	}
 
-	public void setParams(Map params) {
+	public void setParams(Map<String, Object> params) {
 		this.params = params;
 	}
 

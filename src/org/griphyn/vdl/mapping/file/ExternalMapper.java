@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,15 +23,16 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 public class ExternalMapper extends AbstractMapper {
 	public static final Logger logger = Logger.getLogger(ExternalMapper.class);
 
-	private Map map, rmap = new HashMap();
+	private Map<Path, AbsFile> map;
+	private Map<String, Path> rmap;
 
 	public static final MappingParam PARAM_EXEC = new MappingParam("exec");
 	public static final MappingParam PARAM_BASEDIR = new MappingParam("#basedir", null);
 
-	private static Set ignored;
+	private static Set<String> ignored;
 
 	static {
-		ignored = new HashSet();
+		ignored = new HashSet<String>();
 		ignored.add("exec");
 		ignored.add("input");
 		ignored.add("dbgname");
@@ -44,21 +44,18 @@ public class ExternalMapper extends AbstractMapper {
 
 	private static final String[] STRING_ARRAY = new String[0];
 
-	public void setParams(Map params) {
+	public void setParams(Map<String, Object> params) {
 		super.setParams(params);
-		map = new HashMap();
-		rmap = new HashMap();
+		map = new HashMap<Path, AbsFile>();
+		rmap = new HashMap<String, Path>();
 		String exec = PARAM_EXEC.getStringValue(this);
 		String bdir = PARAM_BASEDIR.getStringValue(this);
 		if (bdir != null && !exec.startsWith("/")) {
 			exec = bdir + File.separator + exec;
 		}
-		List cmd = new ArrayList();
+		List<String> cmd = new ArrayList<String>();
 		cmd.add(exec);
-		Iterator i = params.entrySet().iterator();
-		while (i.hasNext()) {
-			Map.Entry e = (Map.Entry) i.next();
-			String name = e.getKey().toString();
+		for (String name : params.keySet()) {
 			if (!ignored.contains(name)) {
 				MappingParam tp = new MappingParam(name);
 				cmd.add('-' + name);
@@ -66,8 +63,14 @@ public class ExternalMapper extends AbstractMapper {
 			}
 		}
 		try {
-			Process p = Runtime.getRuntime().exec((String[]) cmd.toArray(STRING_ARRAY));
-			List lines = fetchOutput(p.getInputStream());
+		    if (logger.isDebugEnabled()) {
+		        logger.debug("invoking external mapper for " + getParam("dbgname") + ": " + cmd);
+		    }
+			Process p = Runtime.getRuntime().exec(cmd.toArray(STRING_ARRAY));
+			List<String> lines = fetchOutput(p.getInputStream());
+			if (logger.isDebugEnabled()) {
+			    logger.debug("external mapper for " + getParam("dbgname") + " output: " + lines);
+			}
 			int ec = p.waitFor();
 			if (ec != 0) {
 				throw new RuntimeException("External executable failed. Exit code: " + ec + "\n\t"
@@ -83,19 +86,18 @@ public class ExternalMapper extends AbstractMapper {
 		}
 	}
 
-	private String join(List l) {
+	private String join(List<?> l) {
 		StringBuffer sb = new StringBuffer();
-		Iterator i = l.iterator();
-		while (i.hasNext()) {
-			sb.append(i.next());
+		for (Object o : l) {
+			sb.append(o);
 			sb.append('\n');
 			sb.append('\t');
 		}
 		return sb.toString();
 	}
 
-	private List fetchOutput(InputStream is) throws IOException {
-		ArrayList lines = new ArrayList();
+	private List<String> fetchOutput(InputStream is) throws IOException {
+		ArrayList<String> lines = new ArrayList<String>();
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		String line = br.readLine();
 		while (line != null) {
@@ -105,10 +107,8 @@ public class ExternalMapper extends AbstractMapper {
 		return lines;
 	}
 
-	private void processLines(List lines) {
-		Iterator i = lines.iterator();
-		while (i.hasNext()) {
-			String line = (String) i.next();
+	private void processLines(List<String> lines) {
+		for (String line : lines) {
 			int s = line.indexOf(' ');
 			int t = line.indexOf('\t');
 			int m = Math.min(s == -1 ? t : s, t == -1 ? s : t);
@@ -123,7 +123,7 @@ public class ExternalMapper extends AbstractMapper {
 		}
 	}
 
-	public Collection existing() {
+	public Collection<Path> existing() {
 		return map.keySet();
 	}
 
@@ -131,11 +131,11 @@ public class ExternalMapper extends AbstractMapper {
 		if (name == null || name.equals("")) {
 			return null;
 		}
-		return (Path) rmap.get(name);
+		return rmap.get(name);
 	}
 
 	public PhysicalFormat map(Path path) {
-		return (AbsFile) map.get(path);
+		return map.get(path);
 	}
 
 	public boolean isStatic() {
