@@ -1101,10 +1101,8 @@ public class File
                                             i ] ) );
                                     } catch ( ProfileParserException ppe ) {
                                         logger.warn(
-                                            "Parsing profiles on line " +
-                                            linecount + " " + ppe.getMessage() +
-                                            "at position " +
-                                            ppe.getPosition(), ppe);
+                                            "Warning: malformed tc.data file on line " +
+                                            linecount);
 
                                     }
                                 }
