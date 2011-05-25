@@ -68,7 +68,8 @@ public class Misc extends FunctionsCollection {
 			if (i != 0) {
 			    buf.append(", ");
 			}
-			buf.append(args[i]);
+			Object v = args[i].getValue();
+			buf.append(v == null ? args[i] : v);
 		}
 		traceLogger.warn(buf);
 		return null;
