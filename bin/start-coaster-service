@@ -29,13 +29,37 @@ start-workers-ssh()
 # Start local workers
 start-workers-local() 
 {
- echo foo
+   PORT=$1
+   EXECUTION_URL=http://$IPADDR:$PORT
+   if [ -z "$PORT" ]; then
+      crash "start-workers-local: Port number not specified, giving up"
+   fi
+   echo Starting worker on local machine
+   $WORKER $EXECUTION_URL LOCAL $LOG_DIR &
+   echo $! >> $PID_FILE
+   return 0
 }
 
 # Start cobalt workers
 start-workers-cobalt()
 {
-  echo foo
+  PORT=$1
+  EXECUTION_URL=http://$IPADDR:$PORT
+  local TIMESTAMP=$(date "+%Y.%m%d.%H%M%S")
+  local -Z 5 R=${RANDOM}
+  ID="${TIMESTAMP}.${R}"
+  echo cqsub -q ${QUEUE}   \
+        -k zeptoos    \
+        -t ${MAXTIME} \ # minutes
+        -n ${NODES}   \
+        --cwd ${LOGDIR} \
+        -E ${LOGDIR}/cobalt.${$}.stderr \
+        -o ${LOGDIR}/cobalt.${$}.stdout \
+        -e "WORKER_LOGGING_LEVEL=DEBUG:ZOID_ENABLE_NAT=true" \
+        $WORKER $EXECUTION_URL $ID $LOG_DIR
+
+  echo $! >> $PID_FILE
+  return 0
 }
 
 PID_FILE=".coaster-service-pids"
@@ -153,7 +177,6 @@ case $WORKER_MODE in
 esac
 
 # Generate sites.xml
-export EXECUTION_URL="http:\/\/$IPADDR:$SERVICE_PORT"
+export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
 echo Generating sites.xml..
 gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
-
