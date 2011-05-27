@@ -892,6 +892,7 @@ make_sites_sed() {
     echo "s@_HOST_@$GLOBUS_HOSTNAME@"
     echo "s@_PROJECT_@$PROJECT@"
     echo "s@_QUEUE_@$QUEUE@"
+    echo "s@_EXECUTION_URL_@$EXECUTION_URL@"
   } > $RUNDIR/sites.sed
   return 0
 }

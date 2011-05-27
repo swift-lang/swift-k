@@ -1,0 +1,7 @@
+persistent-coasters 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+persistent-coasters 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+persistent-coasters 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+persistent-coasters 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+persistent-coasters 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+persistent-coasters 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+persistent-coasters	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
