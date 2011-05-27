@@ -40,7 +40,7 @@ public class VDL2Config extends Properties {
 		return config.check();
 	}
 
-	private static synchronized VDL2Config getDefaultConfig() throws IOException {
+	public static synchronized VDL2Config getDefaultConfig() throws IOException {
 		if (config == null) {
 			config = new VDL2Config();
 			for (int i = 0; i < CONFIG_FILE_SEARCH_PATH.length; i++) {

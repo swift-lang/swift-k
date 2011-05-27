@@ -33,6 +33,7 @@ import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
+import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.karajan.WrapperMap;
@@ -608,6 +609,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			TCCache tc = (TCCache) stack.firstFrame().getVar(TC);
 			if (tc == null) {
 				String prop = ConfigProperty.getProperty(VDL2ConfigProperties.TC_FILE, stack);
+				Loader.debugText("TC", new java.io.File(prop));
 				tc = new TCCache(File.getNonSingletonInstance(prop));
 				stack.firstFrame().setVar(TC, tc);
 			}

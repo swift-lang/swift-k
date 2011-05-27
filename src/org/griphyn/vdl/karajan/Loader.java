@@ -37,6 +37,7 @@ import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
+import org.globus.cog.util.TextFileLoader;
 import org.globus.swift.data.Director;
 import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
@@ -90,10 +91,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 ap.usage();
                 System.exit(0);
             }
-	    if (ap.isPresent(ARG_VERSION)){
-		ap.version();
-		System.exit(0);
-	    }
+            if (ap.isPresent(ARG_VERSION)){
+            	ap.version();
+            	System.exit(0);
+            }
             if (ap.isPresent(ARG_MONITOR)) {
                 new Monitor().start();
             }
@@ -175,7 +176,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
             VariableStack stack = new LinkedStack(ec);
             VDL2Config config = loadConfig(ap, stack);
             addCommandLineProperties(config, ap);
-
+            debugSitesText(config);
+            
             if (ap.isPresent(ARG_DRYRUN)) {
                 stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_DRYRUN);
             }
@@ -226,7 +228,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         String cdmString = null;
         try { 
             cdmString = ap.getStringValue(ARG_CDMFILE);
-            File cdmFile = new File(cdmString); 
+            File cdmFile = new File(cdmString);
+            debugText("CDM FILE", cdmFile);
             Director.load(cdmFile); 
         }
         catch (IOException e) { 
@@ -246,6 +249,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ParsingException, IncorrectInvocationException,
             CompilationException, IOException {
         File swiftscript = new File(project);
+        debugText("SWIFTSCRIPT", swiftscript);
         String projectBase = project.substring(0, project.lastIndexOf('.'));
         File xml = new File(projectBase + ".xml");
         File kml = new File(projectBase + ".kml");
@@ -328,7 +332,44 @@ public class Loader extends org.globus.cog.karajan.Loader {
         return kml.getAbsolutePath();
     }
 
-    private static void loadBuildVersion() {
+    /**
+       Enter the text content of given files into the log
+       @throws IOException
+     */
+    public static void debugText(String name, File file) {
+    	Logger textLogger = Logger.getLogger("swift.textfiles");
+    	try {
+    		if (textLogger.isDebugEnabled()) {
+    			String text = TextFileLoader.loadFromFile(file);
+    			textLogger.debug("BEGIN " + name + ":\n" + text + "\n");
+    			textLogger.debug("END " + name + ":");
+    		}
+    	}
+    	catch (IOException e) { 
+    		logger.warn("Could not open: " + file);
+    	}
+	}
+
+    static void debugSitesText(VDL2Config config) {
+    	VDL2Config defaultConfig = null;
+    	try {
+			defaultConfig = VDL2Config.getDefaultConfig(); 
+			
+		} catch (IOException e) {
+			logger.warn("Could not log sites file text");			
+		}
+		String poolFile = config.getPoolFile();
+		String defaultPoolFile = defaultConfig.getPoolFile();
+		if (poolFile.equals(defaultPoolFile)) {
+			Logger textLogger = Logger.getLogger("swift.textfiles");
+			textLogger.debug("using default sites file");
+		}
+		else {
+			debugText("SITES", new File(poolFile));
+		}
+    }
+    
+	private static void loadBuildVersion() {
         try {
             File f = new File(System.getProperty("swift.home")
                     + "/libexec/buildid.txt");
@@ -363,7 +404,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             Map.Entry e = (Map.Entry) i.next();
             String name = (String) e.getKey();
             if (ap.isPresent(name)) {
-                config.setProperty(name, ap.getStringValue(name));
+            	String value = ap.getStringValue(name);
+            	logger.debug("setting: " + name + " to: " + value);
+            	config.setProperty(name, value);
             }
         }
     }
