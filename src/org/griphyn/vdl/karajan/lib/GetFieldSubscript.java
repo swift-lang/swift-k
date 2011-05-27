@@ -37,7 +37,7 @@ public class GetFieldSubscript extends VDLFunction {
 				path = parsePath("["+((Double)index).intValue()+"]", stack);
 			else
 				throw new RuntimeException("Cannot handle array index of Java type "+index.getClass());
-			Collection fields = var.getFields(path);
+			Collection<DSHandle> fields = var.getFields(path);
 			if(fields.size() == 1)
 				return fields.iterator().next();
 			else
