@@ -4,8 +4,7 @@
 // The terms of the license can be found at http://www.cogkit.org/license
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
-
-    
+  
 package org.globus.cog.util;
 
 import java.io.BufferedReader;
@@ -28,17 +27,27 @@ public class TextFileLoader {
 	 * @return a String with the contents of the file
 	 * @throws IOException
 	 */
-	public String loadFromFile(String fileName) throws IOException {
+	public static String loadFromFile(String fileName) throws IOException {
 		return loadFromStream(new FileInputStream(fileName));
 	}
 
+	/**
+	 * Loads text from a file
+	 * @param file the file to be loaded
+	 * @return a String with the contents of the file
+	 * @throws IOException
+	 */
+	public static String loadFromFile(File file) throws IOException {
+		return loadFromStream(new FileInputStream(file));
+	}
+	
 	/**
 	 * Reads text from an input stream
 	 * @param is the input stream to read the text from
 	 * @return a String with the loaded text
 	 * @throws IOException
 	 */
-	public String loadFromStream(InputStream is) throws IOException {
+	public static String loadFromStream(InputStream is) throws IOException {
 		String Text = "";
 
 		BufferedReader bis = new BufferedReader(new InputStreamReader(is));
@@ -59,10 +68,10 @@ public class TextFileLoader {
 	 * @param resName the name of the resource
 	 * @return a String with the loaded text
 	 */
-	public String loadFromResource(String resName) {
+	public static String loadFromResource(String resName) {
 		//return loadFromStream(ResName.getClass().getResourceAsStream(ResName));
-
-		URL FileURL = getClass().getClassLoader().getResource(resName);
+		
+		URL FileURL = TextFileLoader.class.getClassLoader().getResource(resName);
 		try {
 			if (FileURL != null) {
 				return loadFromStream(FileURL.openStream());
@@ -76,8 +85,8 @@ public class TextFileLoader {
 		}
 	}
 	
-	public boolean exists(String resName) {
-		URL FileURL = getClass().getClassLoader().getResource(resName);
+	public static boolean exists(String resName) {
+		URL FileURL = TextFileLoader.class.getClassLoader().getResource(resName);
 		if (FileURL != null) {
 			return true;
 		}
