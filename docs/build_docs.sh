@@ -49,14 +49,8 @@ do
       mkdir $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to create directory $INSTALLATION_DIRECTORY/$VERSION/$directory"
    fi
 
-   # Copy HTML output
-   for copyfile in `ls *.html 2>/dev/null`
-   do
-      cp $copyfile $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to copy $copyfile to $INSTALLATION_DIRECTORY/$VERSION/$directory"
-   done
-
-   # Copy PDF output
-   for copyfile in `ls *.pdf 2>/dev/null`
+   # Copy all files to destination (may include graphics, etc)
+   for copyfile in `ls * 2>/dev/null`
    do
       cp $copyfile $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to copy $copyfile to $INSTALLATION_DIRECTORY/$VERSION/$directory"
    done
