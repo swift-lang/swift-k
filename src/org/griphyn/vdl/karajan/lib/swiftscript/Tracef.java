@@ -37,12 +37,7 @@ public class Tracef extends VDLFunction {
             VDLFunction.waitFor(stack, handle);
         }
 
-        String spec = args[0].toString(); 
-        DSHandle[] vars = Sprintf.copyArray(args, 1, args.length-1);
-        
-        StringBuilder output = new StringBuilder();
-        Sprintf.format(spec, vars, output);
-        String msg = output.toString();
+        String msg = Sprintf.format(args);
         logger.info(msg);
         System.out.print(msg);
         return null;

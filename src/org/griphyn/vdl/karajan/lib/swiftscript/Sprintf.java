@@ -55,13 +55,14 @@ public class Sprintf extends VDLFunction {
         return result;
     }
 
-    private String format(DSHandle[] args) 
+    public static String format(DSHandle[] args) 
     throws ExecutionException {
         if (! (args[0].getType() == Types.STRING))
             throw new ExecutionException
             ("First argument to sprintf() must be a string!"); 
 
-        String spec = args[0].toString(); 
+        String spec = (String) args[0].getValue(); 
+        logger.debug("spec: " + spec);
         DSHandle[] vars = copyArray(args, 1, args.length-1);
         
         StringBuilder output = new StringBuilder();
@@ -71,7 +72,7 @@ public class Sprintf extends VDLFunction {
     }
 
     public static DSHandle[] copyArray(DSHandle[] src, 
-                                int offset, int length)
+                                       int offset, int length)
     {
         DSHandle[] result = new DSHandle[length];
         
@@ -99,7 +100,7 @@ public class Sprintf extends VDLFunction {
             }
             else if (c == '\\') {
                 char d = spec.charAt(++i);
-                escape(d, output); 
+                escape(i, spec, d, output); 
             }
             else {
                 output.append(c);
@@ -107,7 +108,7 @@ public class Sprintf extends VDLFunction {
             i++;
         }
     }
-    
+       
     private static int append(char c, int arg, DSHandle[] vars, 
                        StringBuilder output) 
     throws ExecutionException {
@@ -147,7 +148,7 @@ public class Sprintf extends VDLFunction {
         return arg+1;
     }
 
-    private static void append_M(DSHandle arg, StringBuilder output) 
+    private static void append_M(DSHandle arg, StringBuilder output)
     throws ExecutionException {
         try {
             synchronized (arg.getRoot()) { 
@@ -167,7 +168,7 @@ public class Sprintf extends VDLFunction {
     private static void append_f(DSHandle arg, StringBuilder output) 
     throws ExecutionException {
         if (arg.getType() == Types.FLOAT) {
-            output.append(arg).toString();
+            output.append(arg.getValue());
         }
         else {
             throw new ExecutionException
@@ -178,7 +179,8 @@ public class Sprintf extends VDLFunction {
     private static void append_i(DSHandle arg, StringBuilder output) 
     throws ExecutionException {
         if (arg.getType() == Types.INT) {
-            output.append(arg).toString();
+        	Double d = (Double) arg.getValue();
+            output.append(new Integer(d.intValue()));
         }
         else {
             throw new ExecutionException
@@ -197,7 +199,7 @@ public class Sprintf extends VDLFunction {
                     String entry = ""+i; 
                     DSHandle handle = 
                         node.getField(Path.parse(entry));
-                    output.append(handle);
+                    output.append(handle.getValue());
                     if (i < size-1)
                         output.append(",");
                 }
@@ -218,7 +220,7 @@ public class Sprintf extends VDLFunction {
     private static void append_s(DSHandle arg, StringBuilder output) 
     throws ExecutionException {
         if (arg.getType() == Types.STRING) {
-            output.append(arg).toString();
+            output.append(arg.getValue());
         }
         else {
             throw new ExecutionException
@@ -226,7 +228,12 @@ public class Sprintf extends VDLFunction {
         }
     }
     
-    private static void escape(char c, StringBuilder output) 
+    /**      
+     * @param i Only used for error messages
+     * @param spec Only used for error messages
+     */
+    private static void escape(int i, String spec, 
+    		                   char c, StringBuilder output) 
     throws ExecutionException {
         if (c == '\\') {
             output.append('\\');
@@ -239,7 +246,9 @@ public class Sprintf extends VDLFunction {
         }
         else {
             throw new ExecutionException
-            ("tracef(): unknown backslash escape sequence!");
+            ("tracef(): unknown backslash escape sequence! " + 
+            		    "(\\" + c + ")\n" + 
+            		    "\t in " + spec + " character: " + i);
         }
     }
 }
