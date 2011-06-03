@@ -21,21 +21,22 @@ if [ ! -d "$INSTALLATION_DIRECTORY" ]; then
 fi
 
 # Gather version information
+pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
 pushd .. > /dev/null 2>&1
 VERSION=`svn info |grep URL|awk -F / '{print $NF}'`
 popd > /dev/null 2>&1
 echo Installing docs into $INSTALLATION_DIRECTORY
 
 # Convert files
-DIRECTORIES=*/
+DIRECTORIES=`ls -d */ 2>/dev/null`
 for directory in $DIRECTORIES
 do
    pushd $directory > /dev/null 2>&1
-   FILES=*.txt
+   FILES=`ls -1 *.txt 2>/dev/null`
    for file in $FILES
    do
       echo Converting $directory"$file" to HTML
-      asciidoc -a toc $file
+      asciidoc -a toc -a max-width=750px $file
       echo Converting $directory"$file" to PDF
       a2x --format=pdf --no-xmllint $file 
    done
@@ -47,7 +48,19 @@ do
    if [ ! -d "$INSTALLATION_DIRECTORY/$VERSION/$directory" ]; then
       mkdir $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to create directory $INSTALLATION_DIRECTORY/$VERSION/$directory"
    fi
-   cp *.html $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to copy html files to $INSTALLATION_DIRECTORY/$VERSION/$directory"
-   cp *.pdf $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to copy pdf files to $INSTALLATION_DIRECTORY/$VERSION/$directory"
+
+   # Copy HTML output
+   for copyfile in `ls *.html 2>/dev/null`
+   do
+      cp $copyfile $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to copy $copyfile to $INSTALLATION_DIRECTORY/$VERSION/$directory"
+   done
+
+   # Copy PDF output
+   for copyfile in `ls *.pdf 2>/dev/null`
+   do
+      cp $copyfile $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to copy $copyfile to $INSTALLATION_DIRECTORY/$VERSION/$directory"
+   done
+
    popd > /dev/null 2>&1
 done
+popd > /dev/null 2>&1
