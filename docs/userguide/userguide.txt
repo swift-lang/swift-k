@@ -1661,7 +1661,6 @@ parallel).
 used with @arg to pass input parameters to a SwiftScript program as
 integers.
 
-
 Built-in procedure reference
 ----------------------------
 This section details built-in procedures that are available for use in
@@ -1732,6 +1731,38 @@ trace will log its parameters. By default these will appear on both
 stdout and in the run log file. Some formatting occurs to produce the
 log message. The particular output format should not be relied upon.
 (since Swift 0.4)
+
+tracef
+~~~~~~
+
++tracef(_spec_, _variable list_)+ will log its parameters as formatted
+by the formatter _spec_.  _spec_ must be a string. Checks the type of
+the specifiers arguments against the variable list and allows for
+certain escape characters.
+
+Example:
+----
+int i = 3;
+tracef("%s: %i\n", "the value is", i);
+----
+
+Specifiers:
+
++%s+:: Format a string.
++%i+:: Format a number as an integer.
++%f+:: Format a number as a floating point number.
++%q+:: Format an array.
++%M+:: Format a mapped variable's filename.
++%k+:: Wait for the given variable but do not format it.
++%p+:: Format variable according to an internal format.
+
+Escape sequences:
+
++\n+:: Produce a newline.
++\t+:: Produce a tab.
+
+Known issues: :: Swift does not correctly scan certain backslash
+sequences such as +\\+.
 
 writeData
 ~~~~~~~~~
