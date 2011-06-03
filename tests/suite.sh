@@ -119,7 +119,7 @@
 # to files in RUNDIR and environment variables from suite.sh
 # such as $GROUP.  Thus, you can:
 #   bring in input files: cp $GROUP/input-file.txt .
-#   check output:         grep TEXT1 exec.out
+#   check output:         grep TEXT1 stdout.txt
 #                         grep TEXT2 output-file.txt
 #   clean up (optional):  rm output-file.txt
 # The results are added to the HTML output, etc., automatically.
