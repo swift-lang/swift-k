@@ -175,6 +175,9 @@ do
       "#site $TEMPLATE execution_url="*|'#site slots='*)
         EXECUTION_URL=`get_value $line`
         ;;
+      "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
+         INTERNALHOSTNAME=`get_value $line`
+         ;;
    esac
 done < $PROPERTIES_FILE
 
@@ -182,7 +185,7 @@ done < $PROPERTIES_FILE
 [[ ${WORK}   == "" ]] && crash "Not specified: WORK"
 
 # Verify that the variables by the template are defined
-for TOKEN in PROJECT QUEUE N_GRAN N_MAX SLOTS
+for TOKEN in PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME
 do
    # Need but can't find, due
    if grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
@@ -203,6 +206,7 @@ SEDFILE=`mktemp`
   echo "s/_N_GRAN_/${N_GRAN}/"
   echo "s/_N_MAX_/${N_MAX}/"
   echo "s/_SLOTS_/${SLOTS}/"
+  echo "s/_INTERNALHOSTNAME_/${INTERNALHOSTNAME}/"
   echo "s/_MAXTIME_/${MAXTIME}/"
   echo "s@_EXECUTION_URL_@${EXECUTION_URL}@"
   echo "s@_SERVICE_COASTERS_@${SERVICE_COASTERS:-NO_URL_GIVEN}@"
