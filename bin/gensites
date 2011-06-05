@@ -172,7 +172,7 @@ do
       "#site $TEMPLATE slots="*|'#site slots='*)
          SLOTS=`get_value $line`
          ;;
-      "#site $TEMPLATE execution_url="*|'#site slots='*)
+      "#site $TEMPLATE execution_url="*|'#site execution_url='*)
         EXECUTION_URL=`get_value $line`
         ;;
       "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
@@ -185,7 +185,7 @@ done < $PROPERTIES_FILE
 [[ ${WORK}   == "" ]] && crash "Not specified: WORK"
 
 # Verify that the variables by the template are defined
-for TOKEN in PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME
+for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL
 do
    # Need but can't find, due
    if grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
