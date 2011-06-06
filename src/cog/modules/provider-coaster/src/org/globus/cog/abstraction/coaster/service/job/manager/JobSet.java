@@ -44,4 +44,16 @@ public class JobSet {
         
         return sum;
     }
+
+    public double getSizeLeft() {
+        double sum = 0;
+        
+        synchronized(jobs) {
+            for (Job job : jobs) {
+                sum += metric.getSizeLeft(job);
+            }
+        }
+        
+        return sum;
+    }
 }

@@ -226,7 +226,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private Set<Job> queueToExistingBlocks() {
-        double runningSize = running.getSize();
+        double runningSize = running.getSizeLeft();
         Set<Job> remove = new HashSet<Job>();
         for (Job j : holding) {
             if (allocsize - queued.getJSize() - runningSize > metric.getSize(j) && fits(j)) {
@@ -242,7 +242,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private void requeueNonFitting() {
         int count = 0;
-        double runningSize = running.getSize();
+        double runningSize = running.getSizeLeft();
         logger.info("allocsize = " + allocsize + ", queuedsize = " + queued.getJSize() + ", running = " + runningSize + ", qsz = "
                 + queued.size());
         while (allocsize - queued.getJSize() - runningSize < 0) {
