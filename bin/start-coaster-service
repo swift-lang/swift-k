@@ -227,17 +227,16 @@ esac
 
 # Generate sites.xml
 export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
-echo Generating sites.xml..
+echo Generating sites.xml
 gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
 
 # Generate config file
 if [ $SHARED_FILESYSTEM == "no" ]; then
+echo Generating config file
 cat > $RUN_DIR/cf << EOF
 use.provider.staging=true
 wrapperlog.always.transfer=false
 execution.retries=0
 provider.staging.pin.swiftfiles=false
 EOF
-else
-   echo > $RUN_DIR/cf
 fi
