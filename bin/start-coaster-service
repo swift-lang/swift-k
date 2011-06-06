@@ -8,6 +8,46 @@ crash()
    exit 1
 }
 
+# Start futuregrid workers
+start-workers-futuregrid()
+{
+   PORT=$1
+   EXECUTION_URL=http://localhost:$PORT
+
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/bootit.sh" ]; then
+      crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
+   fi
+
+   echo Starting virtual machines.. please wait
+   #$SWIFTVMBOOT_DIR/bin/bootit.sh
+   SWIFTVMBOOT_OUTPUT=$SWIFTVMBOOT_DIR/output.json
+
+   if [ ! -f "$SWIFTVMBOOT_OUTPUT" ]; then
+      crash "Error: Swift VM output file $SWIFTVMBOOT_OUTPUT does not exist!"
+   fi
+
+   SWIFTVM_INSTANCES=`grep instance_id $SWIFTVMBOOT_OUTPUT |awk '{print $2}'|sed 's/\"//g;s/,//g;s/null//g'`
+   echo $SWIFTVM_INSTANCES > .swiftvm_instances
+
+   WORKER_HOSTS=`grep hostname $SWIFTVMBOOT_OUTPUT |awk '{print $2}'|sed 's/\"//g;s/,//g;s/null//g'`
+
+   # Start worker script
+   for MACHINE in $WORKER_HOSTS
+   do
+      # Enable ssh tunneling if needed
+      if [ $SSH_TUNNELING == "yes" ]; then
+         ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
+         echo $! >> $PID_FILE
+      fi
+
+      # Copy and start worker script
+      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
+      echo "Starting worker on $MACHINE"
+      ssh $WORKER_USERNAME@$MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
+      echo $! >> $PID_FILE 
+   done
+}
+
 # Start SSH workers
 start-workers-ssh()
 { 
@@ -44,6 +84,9 @@ start-workers-local()
 start-workers-cobalt()
 {
   PORT=$1
+  if [ -z "$PORT" ]; then
+      crash "start-workers-cobalt: Port number not specified, giving up"
+  fi
   EXECUTION_URL=http://$IPADDR:$PORT
   local TIMESTAMP=$(date "+%Y.%m%d.%H%M%S")
   local -Z 5 R=${RANDOM}
@@ -77,7 +120,7 @@ fi
 # Determine information needed about this machine
 if [ -z "$IPADDR" ]; then
    if [ -x "/sbin/ifconfig" ]; then
-      IPADDR=$( /sbin/ifconfig | grep inet | head -1 | cut -d ':' -f 2 | awk '{print $1}' )
+      IPADDR=$( /sbin/ifconfig | grep 'inet addr' | grep -v 127.0.0.1 | cut -d ':' -f 2 | awk '{print $1}' |head -1)
    else
       crash "Unable to determine IP address of system. Please add to coaster-service.conf"
    fi
@@ -174,9 +217,27 @@ case $WORKER_MODE in
    cobalt)
       start-workers-cobalt $LOCAL_PORT
       ;;
+   futuregrid)
+      start-workers-futuregrid $LOCAL_PORT
+      ;;
+   *) 
+      crash "Unknown WORKER_MODE. Please modify coaster-service.conf"
+      ;;
 esac
 
 # Generate sites.xml
 export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
 echo Generating sites.xml..
 gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
+
+# Generate config file
+if [ $SHARED_FILESYSTEM == "no" ]; then
+cat > $RUN_DIR/cf << EOF
+use.provider.staging=true
+wrapperlog.always.transfer=false
+execution.retries=0
+provider.staging.pin.swiftfiles=false
+EOF
+else
+   echo > $RUN_DIR/cf
+fi

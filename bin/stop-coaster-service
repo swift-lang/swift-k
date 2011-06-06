@@ -1,8 +1,26 @@
 #!/bin/bash
 
+# Files relative to location of this script
+PID_FILE=".coaster-service-pids"
+SWIFTVM_INSTANCES=".swiftvm_instances"
+CONFIG_FILE="../etc/coaster-service.conf"
+
+# crash: Report a problem and exit
+crash()
+{
+   MSG=$1
+   echo ${MSG} >&2
+   exit 1
+}
+
 pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
 
-PID_FILE=".coaster-service-pids"
+# Read config file to determine worker mode
+if [ -f "$CONFIG_FILE" ]; then
+   source "$CONFIG_FILE"
+else
+   crash "Cannot find coaster-service.conf!"
+fi
 
 echo Ending coaster processes..
 if [ -f "$PID_FILE" ]; then
@@ -19,5 +37,14 @@ if [ -f "$PID_FILE" ]; then
    rm $PID_FILE > /dev/null 2>&1
 fi
 echo Done
+
+if [ $WORKER_MODE == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   for INSTANCE in `cat $SWIFTVM_INSTANCES`
+   do
+      $SWIFTVMBOOT_DIR/ve/bin/cloudinitd terminate $INSTANCE
+   done
+   rm $SWIFTVM_INSTANCES > /dev/null 2>&1
+fi
+
 
 popd > /dev/null 2>&1
