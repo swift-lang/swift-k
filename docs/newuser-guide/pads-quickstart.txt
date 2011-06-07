@@ -39,7 +39,7 @@ to look like this:
 @default
 -----
 
-Downloading and building swift
+Downloading and building Swift
 ------------------------------
 The most recent versions of Swift can be found at 
 http://www.ci.uchicago.edu/swift/downloads/index.php. Follow the instructions
