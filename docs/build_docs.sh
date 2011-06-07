@@ -8,6 +8,9 @@ crash()
     exit 1
 }
 
+# Change file permissions to values set below
+CHMOD_VALUE="664"
+
 # Verify correct arguments
 if [ -n "$1" ]; then
    INSTALLATION_DIRECTORY=$1
@@ -53,6 +56,7 @@ do
    for copyfile in `ls * 2>/dev/null`
    do
       cp $copyfile $INSTALLATION_DIRECTORY/$VERSION/$directory || crash "Unable to copy $copyfile to $INSTALLATION_DIRECTORY/$VERSION/$directory"
+      chmod $CHMOD_VALUE $INSTALLATION_DIRECTORY/$VERSION/$directory/$copyfile > /dev/null 2>&1
    done
 
    popd > /dev/null 2>&1
