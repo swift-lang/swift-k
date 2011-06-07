@@ -1,0 +1,32 @@
+bits
+----
+
+Named and optional parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to specifying parameters positionally, parameters can be
+named, and if desired a default value can be specified:
+
+ 
+----
+(messagefile t) greeting (string s="hello") {  
+    app {  
+        echo s stdout=@filename(t);  
+    }  
+}  
+----
+
+When we invoke the procedure, we can specify values for the parameters
+by name. The following code can be found in q21.swift.
+
+ 
+----
+french = greeting(s="bonjour");  
+----
+
+or we can let the default value apply:
+
+ 
+----
+english = greeting();  
+----

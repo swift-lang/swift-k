@@ -1,0 +1,67 @@
+Reliability mechanisms
+----------------------
+This section details reliabilty mechanisms in Swift: retries, restarts
+and replication.
+
+Retries
+~~~~~~~
+If an application procedure execution fails, Swift will attempt that
+execution again repeatedly until it succeeds, up until the limit defined
+in the execution.retries configuration property.
+
+Site selection will occur for retried jobs in the same way that it
+happens for new jobs. Retried jobs may run on the same site or may run
+on a different site.
+
+If the retry limit execution.retries is reached for an application
+procedure, then that application procedure will fail. This will cause
+the entire run to fail - either immediately (if the lazy.errors
+property is false) or after all other possible work has been attempted
+(if the lazy.errors property is true).
+
+Restarts
+~~~~~~~~
+If a run fails, Swift can resume the program from the point of failure.
+When a run fails, a restart log file will be left behind in a file named
+using the unique job ID and a .rlog extension. This restart log can
+then be passed to a subsequent Swift invocation using the -resume
+parameter. Swift will resume execution, avoiding execution of
+invocations that have previously completed successfully. The SwiftScript
+source file and input data files should not be modified between runs.
+
+Every run creates a restart log file with a named composed of the file
+name of the workflow being executed, an invocation ID, a numeric ID, and
+the .rlog extension. For example, example.swift, when executed,
+could produce the following restart log file:
+example-ht0adgi315l61.0.rlog. Normally, if the run completes
+successfully, the restart log file is deleted. If however the workflow
+fails, swift can use the restart log file to continue execution from a
+point before the failure occurred. In order to restart from a restart
+log file, the -resume logfile argument can be used after the
+SwiftScript program file name. Example:
+
+----
+$ swift -resume example-ht0adgi315l61.0.rlog example.swift.
+----
+
+Replication
+~~~~~~~~~~~
+When an execution job has been waiting in a site queue for a certain
+period of time, Swift can resubmit replicas of that job (up to the limit
+defined in the replication.limit configuration property). When any of
+those jobs moves from queued to active state, all of the other replicas
+will be cancelled.
+
+This is intended to deal with situations where some sites have a
+substantially longer (sometimes effectively infinite) queue time than
+other sites. Selecting those slower sites can cause a very large delay
+in overall run time.
+
+Replication can be enabled by setting the replication.enabled
+configuration property to true. The maximum number of replicas that
+will be submitted for a job is controlled by the replication.limit
+configuration property.
+
+When replication is enabled, Swift will also enforce the maxwalltime
+profile setting for jobs as documented in the profiles section.
+

@@ -1,0 +1,397 @@
+Language features
+-----------------
+
+Parameters
+~~~~~~~~~~
+
+Procedures can have parameters. Input parameters specify inputs to the
+procedure and output parameters specify outputs. Our helloworld greeting
+procedure already uses an output parameter, t, which indicates where the
+greeting output will go. In this section, we will add an input parameter
+to the greeting function.
+
+The code changes from first.swift are highlighted below.
+
+ 
+----
+include::../../examples/parameter.swift[]
+----
+
+We have modified the signature of the greeting procedure to indicate
+that it takes a single parameter, s, of type 'string'.
+
+We have modified the invocation of the 'echo' utility so that it takes
+the value of s as a parameter, instead of the string literal "Hello,
+world!".
+
+We have modified the output file definition to point to a different file
+on disk.
+
+We have modified the invocation of greeting so that a greeting string is
+supplied.
+
+The code for this section can be found in parameter.swift. It can be
+invoked using the swift command, with output appearing in hello2.txt:
+
+ 
+----
+$ swift parameter.swift
+----
+
+Now that we can choose our greeting text, we can call the same procedure
+with different parameters to generate several output files with
+different greetings. The code is in manyparam.swift and can be run as
+before using the swift command.
+
+ 
+----
+include::../../examples/manyparam.swift[]
+----
+
+Note that we can intermingle definitions of variables with invocations
+of procedures.
+
+When this program has been run, there should be three new files in the
+working directory (english.txt, francais.txt and nihongo.txt) each
+containing a greeting in a different language.
+
+In addition to specifying parameters positionally, parameters can be
+named, and if desired a default value can be specified - see <<named_parameters, Named and Optional Parameters>>.
+
+Adding another application
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Now we'll define a new application procedure. The procedure we define
+will capitalise all the words in the input file.
+
+To do this, we'll use the unix tr (translate) utility. Here is an
+example of using tr on the unix command line, not using Swift:
+
+ 
+----
+$ echo hello | tr '[a-z]' '[A-Z]'
+HELLO
+----
+
+.There are several steps
+- transformation catalog
+- application block
+
+First we need to modify the transformation catalog to define a logical
+transformation for the tc utility. The transformation catalog can be
+found in etc/tc.data. There are already several entries specifying
+where programs can be found. Add a new line to the file, specifying
+where *tr* can be found (usually in /usr/bin/tr but it may differ on
+your system), like this:
+
+ 
+----
+localhost       tr      /usr/bin/tr     INSTALLED       INTEL32::LINUX  null  
+----
+
+For now, ignore all of the fields except the second and the third. The
+second field tr specifies a logical application name and the third
+specifies the location of the application executable.
+
+Now that we have defined where to find tr, we can use it in SwiftScript.
+
+We can define a new procedure, capitalise, which calls tr.
+
+ 
+----
+(messagefile o) capitalise(messagefile i) {     
+    app {  
+        tr "[a-z]" "[A-Z]" stdin=@filename(i) stdout=@filename(o);  
+    }  
+}  
+----
+We can call capitalise like this:
+
+ 
+----
+messagefile final <"capitals.txt">;  
+final = capitalise(hellofile);  
+----
+
+So a full program based on the first exercise might look like this:
+
+ 
+----
+include::../../examples/second_procedure.swift[]
+----
+
+We can use the swift command to run it like this.
+
+ 
+----
+$ swift second_procedure.swift
+...
+$ cat capitals.txt
+HELLO FROM SWIFT
+----
+
+Anonymous files
+~~~~~~~~~~~~~~~
+In the previous section, the file greeting.txt is used only to store
+an intermediate result. We don't really care about which name is used
+for the file, and we can let Swift choose the name.
+
+To do that, omit the mapping entirely when declaring outfile:
+
+ 
+----
+messagefile outfile;  
+----
+
+Swift will choose a filename, which in the present version will be in a
+subdirectory called _concurrent.
+
+
+Datatypes
+~~~~~~~~~
+All data in variables and files has a data type. So far, we've seen two
+types:
+
+    - string - this is a built-in type for storing strings of text in
+      memory, much like in other programming languages
+    - messagefile - this is a user-defined type used to mark files as
+      containing messages
+
+SwiftScript has the additional built-in types: boolean, integer and
+float that function much like their counterparts in other programming
+languages.
+
+It is also possible to create user defined types with more structure,
+for example:
+
+ 
+----
+type details {  
+    string name;  
+    int pies;  
+}  
+----
+
+Each element of the structured type can be accessed using a . like this:
+
+ 
+----
+person.name = "john";  
+----
+
+The following complete program, types.swift, outputs a greeting using a
+user-defined structure type to hold parameters for the message:
+
+ 
+----
+include::../../examples/types.swift[]
+----
+
+Structured types can be comprised of marker types for files. See the
+later section on mappers for more information about this.
+
+
+Arrays
+~~~~~~
+
+We can define arrays using the [] suffix in a variable declaration:
+
+ 
+----
+messagefile m[];  
+----
+
+This program, q5.swift, will declare an array of message files.
+
+ 
+----
+include::../../examples/q5.swift[]
+----
+
+Observe that the type of the parameter to greeting is now an array of
+strings, string s[], instead of a single string, string s, that
+elements of the array can be referenced numerically, for example s[0],
+and that the array is initialised using an array literal,
+["how","are","you"].
+
+
+Mappers
+~~~~~~~
+
+A significant difference between SwiftScript and other languages is that
+data can be referred to on disk through variables in a very similar
+fashion to data in memory. For example, in the above examples we have
+seen a variable definition like this:
+
+ 
+----
+messagefile outfile <"q13greeting.txt">;  
+----
+
+This means that outfile is a dataset variable, which is mapped to a
+file on disk called g13greeting.txt. This variable can be assigned to
+using = in a similar fashion to an in-memory variable. We can say that
+outfile is mapped onto the disk file q13greeting.txt by a mapper.
+
+There are various ways of mapping in SwiftScript. Two forms have already
+been seen in this tutorial. Later exercises will introduce more forms.
+
+The two forms of mapping seen so far are:
+
+simple named mapping - the name of the file that a variable is mapped to
+is explictly listed. Like this:
+
+ 
+----
+messagefile outfile <"greeting.txt">;  
+----
+
+This is useful when you want to explicitly name input and output files
+for your program. For example, outfile in exercise HELLOWORLD.
+
+anonymous mapping - no name is specified in the source code. A name is
+automatically generated for the file. This is useful for intermediate
+files that are only referenced through SwiftScript, such as outfile in
+exercise ANONYMOUSFILE. A variable declaration is mapped anonymously by
+ommitting any mapper definition, like this:
+
+ 
+----
+messagefile outfile;  
+----
+
+Later exercises will introduce other ways of mapping from disk files to
+SwiftScript variables.
+
+TODO: introduce @v syntax.
+
+
+The Regexp Mapper
+^^^^^^^^^^^^^^^^^
+In this exercise, we introduce the regexp mapper. This mapper
+transforms a string expression using a regular expression, and uses the
+result of that transformation as the filename to map.
+
+regexp.swift demonstrates the use of this by placing output into a
+file that is based on the name of the input file: our input file is
+mapped to the inputfile variable using the simple named mapper, and then
+we use the regular expression mapper to map the output file. Then we use
+the countwords() procedure to count the works in the input file and
+store the result in the output file. In order for the countwords()
+procedure to work correctly, add the wc utility (usually found in
+/usr/bin/wc) to tc.data.
+
+The important bit of regexp.swift is:
+
+ 
+----
+messagefile inputfile <"q16.txt">;  
+  
+countfile c <regexp_mapper;  
+             source=@inputfile,  
+             match="(.*)txt",  
+             transform="\\1count"  
+            >;  
+----
+
+fixed_array_mapper
+^^^^^^^^^^^^^^^^^^
+The fixed array mapper maps a list of files into an array - each
+element of the array is mapped into one file in the specified directory.
+See fixedarray.swift.
+
+ 
+----
+include::../../examples/fixedarray.swift[]
+----
+
+foreach
+~~~~~~~
+SwiftScript provides a control structure, foreach, to operate on each
+element of an array.
+
+In this example, we will run the previous word counting example over
+each file in an array without having to explicitly list the array
+elements. The source code for this example is in foreach.swift. The
+three input files: one.txt, two.txt and three.txt are supplied.
+After you have run the workflow, you should see that there are three
+output files: one.count, two.count and three.count, each
+containing the word count for the corresponding input file. We combine
+the use of the fixed_array_mapper and the regexp_mapper.
+
+ 
+----
+include::../../examples/foreach.swift[]
+----
+
+If
+~~
+Decisions can be made using 'if', like this:
+
+ 
+----
+if(morning) {  
+  outfile = greeting("good morning");  
+} else {  
+  outfile = greeting("good afternoon");  
+}  
+----
+
+if.swift contains a simple example of this. Compile and run if.swift
+and see that it outputs "good morning". Changing the morning variable
+from true to false will cause the program to output "good afternoon".
+
+Sequential iteration
+~~~~~~~~~~~~~~~~~~~~
+
+A development version of Swift after 0.2 (revision 1230) introduces a
+sequential iteration construct.
+
+The following example demonstrates a simple application: each step of
+the iteration is a string representation of the byte count of the
+previous step's output, with iteration terminating when the byte count
+reaches zero.
+
+Here's the program:
+
+ 
+----
+include::../../examples/iterate.swift[]
+----
+
+echo is the standard unix echo.
+
+wcl is our application code - it counts the number of bytes in the one
+file and writes that count out to another, like this:
+
+ 
+----
+$ cat ../wcl
+#!/bin/bash
+echo -n $(wc -c < $1) > $2
+
+$ echo -n hello > a
+$ wcl a b
+$ cat b
+5
+----
+
+Install the above wcl script somewhere and add a transformation catalog
+entry for it. Then run the example program like this:
+
+ 
+----
+$ swift iterate.swift
+Swift svn swift-r3334 cog-r2752
+
+RunID: 20100526-2259-gtlz8zf4
+Progress:
+SwiftScript trace: extract int value , 16.0
+SwiftScript trace: extract int value , 2.0
+SwiftScript trace: extract int value , 1.0
+Final status:  Finished successfully:4
+
+$ ls foldout*
+foldout0000  foldout0001  foldout0002  foldout0003
+----
+
+

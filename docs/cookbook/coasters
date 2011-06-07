@@ -1,0 +1,110 @@
+Coasters
+--------
+Coasters were introduced in Swift v0.6 as an experimental feature. In many
+applications, Swift performance can be greatly enhanced by the use of CoG
+coasters. CoG coasters provide a low-overhead job submission and file transfer
+mechanism suited for the execution of short jobs (on the order of a few
+seconds). A detailed information on coasters can be found at http://www.ci.uchicago.edu/swift/guides/userguide.php#coasters.
+//**Include neat diagrams.**
+
+Following is a coasters setup case-study for a PBS underlying provider where sites.xml coaster settings were:
+
+[xml]
+source~~~~
+<execution provider="coaster" jobmanager="local:pbs"/>
+<profile namespace="globus" key="project">CI-CCR000013</profile>
+
+<!-- Note that the following is going to be defunct in the new version (0.93+) and replaced by
+"ProviderAttributes" key and may not work in the future Swift versions-->
+
+<!--<profile namespace="globus" key="ppn">24:cray:pack</profile>-->
+
+<profile namespace="globus" key="providerAttributes">
+pbs.aprun
+pbs.mpp=true
+</profile> 
+
+<profile namespace="globus" key="workersPerNode">24</profile>
+<profile namespace="globus" key="maxTime">100000</profile>
+
+<profile namespace="globus" key="lowOverallocation">100</profile>
+<profile namespace="globus" key="highOverallocation">100</profile>
+
+<profile namespace="globus" key="slots">20</profile>
+<profile namespace="globus" key="nodeGranularity">5</profile>
+<profile namespace="globus" key="maxNodes">5</profile>
+<profile namespace="karajan" key="jobThrottle">20.00</profile>
+<profile namespace="karajan" key="initialScore">10000</profile>
+source~~~~
+
+The following table briefly describes the elements on the coasters setup:
+[width="70%", cols="^3,10", options="header"]
+|=============================================================================================
+|profile key | brief description
+|slots |  How many maximum LRM jobs/worker blocks are allowed
+|workersPerNode | How many coaster workers to run per execution node
+|nodeGranularity | Each worker block uses a number of nodes that is a multiple of this number
+|lowOverallocation |  How many times larger than the job walltime should a block's walltime be if all jobs are 1s long
+|highOverallocation | How many times larger than the job walltime should a block's walltime be if all jobs are infinitely long
+|workersPerNode | How many coaster workers to run per execution node reserve How many seconds to reserve in a block's walltime for starting/shutdown operations
+|maxnodes |   The maximum number of nodes allowed in a block
+|maxtime | The maximum number of walltime allowed for a block coaster service
+|jobThrottle |the number of concurrent jobs allowed on a site
+|==============================================================================================
+
+//
+//For Beginners
+//~~~~~~~~~~~~~~
+//Coasters for beginners. Usage of existing, prebuilt templates.
+//
+//For Intermediate Users
+//~~~~~~~~~~~~~~~~~~~~~~~
+//Coasters for intermediate users. 
+//
+//Using gensites
+//^^^^^^^^^^^^^^^
+//Usage of gensites to generate your own sites
+//configurations.
+//
+//
+//
+
+For Advanced Users
+~~~~~~~~~~~~~~~~~~
+
+//Coasters for advanced users. Getting your hands dirty.
+
+One of the main reason that one would initially deviate from coaster
+defaults into more complex pool entries is to force jobs to fit into some
+site-imposed constraint. For instance a typical submission to the experimental
+queue requires a user to request upto 3 nodes for under 1 hour. This setup
+could be achieved with a careful tuning of coaters parameters.
+
+//How to run Swift under different Coasters configurations
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+//Manual
+//^^^^^^^
+//Todo
+//
+//Passive
+//^^^^^^^^
+//Todo
+//
+//Persistent
+//^^^^^^^^^^^
+//Todo
+//
+//Summary of Differences Between different Coaster types
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//A tabular representations of highlights of different coaster setups
+//
+//
+//Data Management 
+//
+
+Coaster providers: local, ssh, pbs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Settings and examples for different coaster providers mechanisms.
+

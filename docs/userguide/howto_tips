@@ -1,0 +1,101 @@
+How-To Tips for Specific User Communities
+-----------------------------------------
+
+Saving Logs - for UChicago CI Users
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you have a UChicago Computation Institute account, run this command
+in your submit directory after each run. It will copy all your logs and
+kickstart records into a directory at the CI for reporting, usage
+tracking, support and debugging.
+
+----
+rsync --ignore-existing *.log *.d login.ci.uchicago.edu:/disks/ci-gpfs/swift/swift-logs/ --verbose
+----
+
+Specifying TeraGrid allocations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TeraGrid users with no default project or with several project
+allocations can specify a project allocation using a profile key in the
+site catalog entry for a TeraGrid site:
+
+----
+<profile namespace="globus" key="project">TG-CCR080002N</profile>
+----
+
+More information on the TeraGrid allocations process can be found here
+<http://www.teragrid.org/userinfo/access/allocations.php>.
+
+Launching MPI jobs from Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Here is an example of running a simple MPI program.
+
+In SwiftScript, we make an invocation that does not look any different
+from any other invocation. In the below code, we do not have any input
+files, and have two output files on stdout and stderr:
+
+----
+type file;  
+  
+(file o, file e) p() {   
+    app {  
+        mpi stdout=@filename(o) stderr=@filename(e);  
+    }  
+}  
+  
+file mpiout <"mpi.out">;  
+file mpierr <"mpi.err">;  
+  
+(mpiout, mpierr) = p();  
+----
+
+Now we define how 'mpi' will run in tc.data:
+----
+tguc    mpi             /home/benc/mpi/mpi.sh   INSTALLED       INTEL32::LINUX GLOBUS::host_xcount=3
+----
+
+mpi.sh is a wrapper script that launches the MPI program. It must be
+installed on the remote site:
+
+----
+#!/bin/bash
+mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
+----
+
+Because of the way that Swift runs its server side code,
+provider-specific MPI modes (such as GRAM jobType=mpi) should not be
+used. Instead, the mpirun command should be explicitly invoked.
+
+Running on Windows
+~~~~~~~~~~~~~~~~~~
+Since 10/11/09, the development version of Swift has the ability to run
+on a Windows machine, as well as the ability to submit jobs to a Windows
+site (provided that an appropriate provider is used).
+
+In order to launch Swift on Windows, use the provided batch file
+(swift.bat). In certain cases, when a large number of jar libraries are
+present in the Swift lib directory and depending on the exact location
+of the Swift installation, the classpath environment variable that the
+Swift batch launcher tries to create may be larger than what Windows can
+handle. In such a case, either install Swift in a directory closer to
+the root of the disk (say, c:\swift) or remove non-essential jar files
+from the Swift lib directory.
+
+Due to the large differences between Windows and Unix environments,
+Swift must use environment specific tools to achieve some of its goals.
+In particular, each Swift executable is launched using a wrapper script.
+This script is a Bourne Shell script. On Windows machines, which have no
+Bourne Shell interpreter installed by default, the Windows Scripting
+Host is used instead, and the wrapper script is written in VBScript.
+Similarly, when cleaning up after a run, the "/bin/rm" command available
+in typical Unix environments must be replaced by the "del" shell command.
+
+It is important to note that in order to select the proper set of tools
+to use, Swift must know when a site runs under Windows. To inform Swift
+of this, specify the "sysinfo" attribute for the "pool" element in the
+site catalog. For example:
+
+----
+<pool handle="localhost" sysinfo="INTEL32::WINDOWS">  
+...  
+</pool>  
+----
