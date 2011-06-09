@@ -178,6 +178,13 @@ remoteMonitorEnabled - If set to "true", the client side will get a
 Swing window showing, graphically, the state of the coaster scheduler
 (blocks, jobs, etc.). Default: false
 
+internalhostname - If the head node has multiple network interfaces, 
+only one of which is visible from the worker nodes. The choice of 
+which interface is the one that worker nodes can connect to is a 
+matter of the particular cluster. This must be set in the your 
+sites file to clarify to the workers which exact interface on the 
+head node they are to try to connect to.
+
 env namespace
 ~~~~~~~~~~~~~
 Profile keys set in the env namespace will be set in the unix
@@ -204,3 +211,8 @@ is intended to allow software version and other arbitrary information
 about the remote site to be gathered and returned to the submit side.
 (since Swift 0.9)
 
+SWIFT_GEN_SCRIPTS - set in the env namespace profiles. This variable 
+just needs to be set, it doesn't matter what it is set to. If set, then Swift
+will keep the script that was used to execute the job in the job directory.
+The script will be called run.sh and will have the command line that Swift
+tried to execute with.
