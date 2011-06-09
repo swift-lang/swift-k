@@ -93,20 +93,26 @@ public abstract class AbstractDataNode implements DSHandle {
         sb.append(getDisplayableName());
         Path p = getPathFromRoot();
         if (!p.isEmpty()) {
-            sb.append(".");
+            if (!p.isArrayIndex(0)) {
+                sb.append(".");
+            }
             sb.append(p.toString());
         }
         sb.append(":");
-        sb.append(getType());
-        sb.append(" = ");
-        if (value == null) {
-            sb.append("?");
+        Type type = getType();
+        String strtype = type.toString();
+        if (type.isArray() && closed) {
+            strtype = strtype.replace("[]", "[" + this.getHandles().size() + "]");
         }
-        else if (value instanceof Throwable) {
-            sb.append(value.getClass().getName());
-        }
-        else {
-            sb.append(value);
+        sb.append(strtype);
+        if (value != null) {
+            sb.append(" = ");
+            if (value instanceof Throwable) {
+                sb.append(value.getClass().getName());
+            }
+            else {
+                sb.append(value);
+            }
         }
         if (closed) {
             sb.append(" - Closed");
@@ -256,7 +262,6 @@ public abstract class AbstractDataNode implements DSHandle {
             else {
                 handle = createDSHandle(name);
             }
-
         }
         return handle;
     }
