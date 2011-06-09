@@ -9,17 +9,15 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.arguments.Arg.Channel;
 import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.arguments.NamedArguments;
-import org.globus.cog.karajan.arguments.Arg.Channel;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
@@ -40,8 +38,8 @@ public class Stageout extends VDLFunction {
             .isPrimitive());
     }
     
-    private List list(Path p, DSHandle var) {
-        ArrayList l = new ArrayList(2);
+    private List<?> list(Path p, DSHandle var) {
+        ArrayList<Object> l = new ArrayList<Object>(2);
         l.add(p);
         l.add(var);
         return l;
@@ -51,6 +49,19 @@ public class Stageout extends VDLFunction {
         DSHandle var = (DSHandle) VAR.getValue(stack);
         boolean deperr = false;
         boolean mdeperr = false;
+        // currently only static arrays are supported as app returns
+        // however, previous to this, there was no code to check
+        // if these arrays had their sizes closed, which could lead to 
+        // race conditions (e.g. if this array's mapper had some parameter
+        // dependencies that weren't closed at the time the app was started).
+        if (var.getType().isArray()) {
+            if (!var.isClosed()) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Waiting for array size from " + var);
+                }
+                throw new FutureNotYetAvailable(addFutureListener(stack, var));
+            }
+        }
         try {
             if (!isPrimitive(var)) {
                 retPaths(STAGEOUT, stack, var);
@@ -76,15 +87,12 @@ public class Stageout extends VDLFunction {
         try {
             Collection<Path> fp = var.getFringePaths();
             for (Path p : fp) {
-                channel.ret(stack, list(p, var.getField(p)));
+                channel.ret(stack, list(p, var));
             }
         }
         catch (HandleOpenException e) {
             throw new FutureNotYetAvailable(addFutureListener(stack, e
                 .getSource()));
-        }
-        catch (InvalidPathException e) {
-            throw new ExecutionException(e);
         }
     }
 }
