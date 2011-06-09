@@ -13,13 +13,6 @@ public class ArrayDataNode extends DataNode {
 	protected ArrayDataNode(Field field, DSHandle root, DSHandle parent) {
 		super(field, root, parent);
 	}
-
-	public String toString() {
-		String prefix = getDisplayableName();
-		//return getType() + " " + prefix + "." + getPathFromRoot() + "[]/" + getHandles().size()
-			//	+ ": " + getValue();
-		return prefix + "." + getPathFromRoot() + "[]/" + getHandles().size();
-	}
 	
 	public void getFringePaths(List list, Path parentPath) throws HandleOpenException {
 		checkMappingException();
