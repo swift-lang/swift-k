@@ -176,7 +176,7 @@ public class Path {
 
 	public String getFirst() {
 		return ((Entry) elements.get(0)).name;
-	}
+	} 
 	
 	public String getLast() {
 		return ((Entry) elements.get(elements.size() - 1)).name;
@@ -248,7 +248,7 @@ public class Path {
 	 * Returns a human readable string representation of this path. The string
 	 * returned by this method <strong>will not</strong> correctly be parsed
 	 * into the same path by {@link Path.parse}. In other words no guarantee is
-	 * made that <code>Path.parse(somePath.stringForm()).equals(somePath)</code>.
+	 * made that <code>Path.parse(somePath.toString()).equals(somePath)</code>.
 	 * For a consistent such representation of this path use {@link stringForm}.
 	 */
 	public synchronized String toString() {
