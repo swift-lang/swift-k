@@ -87,7 +87,6 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			closeShallow();
 			return;
 		}
-		initialized();
 	}
 
 	public void handleClosed(DSHandle handle) {
@@ -117,6 +116,11 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			checkConsistency(root);
 		}
 		else if (mapper.isStatic()) {
+		    if (root.isClosed()) {
+		        // this means that code that would have used this variable is already done
+		        // which can happen in cases such as if(false) {a = ...}
+		        return;
+		    }
 			// Static mappers are (array) mappers which know the size of
 			// an array statically. A good example is the fixed array mapper
 			Iterator i = mapper.existing().iterator();
@@ -227,5 +231,5 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	private void initialized() {
 		initialized = true;
 		waitingMapperParam = null;
-	}
+	}    
 }
