@@ -10,6 +10,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.karajan.PairIterator;
+import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
@@ -43,12 +44,16 @@ public class SetFieldValue extends VDLFunction {
 					throw new FutureNotYetAvailable(addFutureListener(stack, value));
 				}
 			}
-			synchronized (var.getRoot()) {
-				deepCopy(leaf, value, stack);
-				
-				if (var.getParent() != null && var.getParent().getType().isArray()) {
-				    markAsAvailable(stack, leaf.getParent(), leaf.getPathFromRoot().getLast());
-				}
+			try {
+    			synchronized (var.getRoot()) {
+    				deepCopy(leaf, value, stack);
+    				if (var.getParent() != null && var.getParent().getType().isArray()) {
+    				    markAsAvailable(stack, leaf.getParent(), leaf.getPathFromRoot().getLast());
+    				}
+    			}
+			}
+			catch (VDL2FutureException e) {
+			    throw new FutureNotYetAvailable(addFutureListener(stack, e.getHandle()));
 			}
 			
 			return null;
@@ -85,7 +90,14 @@ public class SetFieldValue extends VDLFunction {
 			dest.setValue(source.getValue());
 		}
 		else if (source.getType().isArray()) {
-			PairIterator it = new PairIterator(source.getArrayValue());
+			PairIterator it;
+			if (stack.isDefined("it")) {
+			    it = (PairIterator) stack.getVar("it");
+			}
+			else {
+			    it = new PairIterator(source.getArrayValue());
+			    stack.setVar("it", it);
+			}
 			while (it.hasNext()) {
 				Pair pair = (Pair) it.next();
 				Object lhs = pair.get(0);
@@ -100,7 +112,7 @@ public class SetFieldValue extends VDLFunction {
 				DSHandle field;
 				try {
 					field = dest.getField(memberPath);
-				} 
+				}
 				catch (InvalidPathException ipe) {
 					throw new ExecutionException("Could not get destination field",ipe);
 				}
@@ -128,6 +140,7 @@ public class SetFieldValue extends VDLFunction {
 		                    throw new ExecutionException("Failed to copy " + source + " to " + dest, fc.getException());
 		                }
 		            }
+		            dest.closeShallow();
 		        }
 		        else {
 		            FileCopier fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
