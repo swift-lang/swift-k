@@ -1,7 +1,7 @@
 package org.griphyn.vdl.mapping;
 
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
@@ -50,9 +50,9 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		}
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
-			checkInputs();
 			getField().setName(PARAM_PREFIX.getStringValue(mapper));
 			initialized();
+			checkInputs();
 		}
 		catch (InvalidMapperException e) {
 			throw new RuntimeException(e);
@@ -73,7 +73,6 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 			setValue(new MappingDependentException(this, e));
 			closeShallow();
 		}
-		initialized();
 	}
 
 	public void handleClosed(DSHandle handle) {
