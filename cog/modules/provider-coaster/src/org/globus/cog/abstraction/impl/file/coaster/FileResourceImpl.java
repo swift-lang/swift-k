@@ -132,9 +132,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public void getFile(FileFragment remote, FileFragment local, ProgressMonitor progressMonitor)
             throws FileResourceException {
-        if (local.isFragment() || remote.isFragment()) {
-            throw new UnsupportedOperationException("The coaster provider does not support partial transfers");
-        }
+        checkNoPartialTransfers(remote, local, "coaster");
         try {
             run(new GetFileCommand(remote.getFile(), local.getFile(), progressMonitor));
         }
@@ -179,6 +177,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public void putFile(FileFragment local, FileFragment remote, 
             ProgressMonitor progressMonitor) throws FileResourceException {
+        checkNoPartialTransfers(local, remote, "coaster");
         try {
             run(new PutFileCommand(local.getFile(), remote.getFile()));
         }
