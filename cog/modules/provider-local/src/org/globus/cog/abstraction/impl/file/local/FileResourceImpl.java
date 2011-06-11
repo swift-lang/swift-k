@@ -29,6 +29,7 @@ import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
@@ -52,7 +53,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     public FileResourceImpl(String name) {
-        super(name, FileResource.Local, null, null);
+        super(name, "local", null, null);
     }
 
     /** set user's home directory as the current directory */
@@ -211,55 +212,57 @@ public class FileResourceImpl extends AbstractFileResource {
         }
     }
 
-    public void getFile(String remoteFileName, String localFileName)
-            throws FileResourceException {
-        getFile(remoteFileName, localFileName, null);
-    }
-
     /** copy a file */
-    public void getFile(String remoteFileName, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             ProgressMonitor progressMonitor) throws FileResourceException {
 
         try {
-            File src = resolve(remoteFileName);
+            File src = resolve(remote.getFile());
             if (!src.exists()) {
                 throw new FileNotFoundException("File not found: "
                         + src.getAbsolutePath());
             }
-            File dst = resolve(localFileName);
+            File dst = resolve(local.getFile());
             // silently ignore requests for which source == destination
             if (dst.getCanonicalPath().equals(src.getCanonicalPath())) {
                 return;
             }
-            FileInputStream remoteStream = new FileInputStream(src);
-            FileOutputStream localStream = new FileOutputStream(dst);
-            long crt = 0;
-            long total = src.length();
-            byte[] buf = new byte[16384];
-            int read;
-            while ((read = remoteStream.read(buf)) != -1) {
-                localStream.write(buf, 0, read);
-                crt += read;
-                if (progressMonitor != null) {
-                    progressMonitor.progress(crt, total);
+            FileInputStream remoteStream = null;
+            FileOutputStream localStream = null;
+            try {
+                remoteStream = new FileInputStream(src);
+                localStream = new FileOutputStream(dst);
+                remoteStream.skip(remote.getOffset());
+                
+                long crt = 0;
+                long total = Math.min(src.length(), remote.getLength());
+                byte[] buf = new byte[16384];
+                int read;
+                while ((read = remoteStream.read(buf, 0, Math.max(buf.length, (int) (total - crt)))) != -1) {
+                    localStream.write(buf, 0, read);
+                    crt += read;
+                    if (progressMonitor != null) {
+                        progressMonitor.progress(crt, total);
+                    }
                 }
             }
-            remoteStream.close();
-            localStream.close();
-        } catch (IOException e) {
+            finally {
+                if (remoteStream != null) {
+                    remoteStream.close();
+                }
+                if (localStream != null) {
+                    localStream.close();
+                }
+            }
+        } 
+        catch (IOException e) {
             throw new FileResourceException(e);
         }
     }
 
-    public void putFile(String localFileName, String remoteFileName,
+    public void putFile(FileFragment local, FileFragment remote,
             ProgressMonitor progressMonitor) throws FileResourceException {
-        getFile(localFileName, remoteFileName, progressMonitor);
-    }
-
-    /** copy a file */
-    public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException {
-        getFile(localFileName, remoteFileName);
+        getFile(local, remote, progressMonitor);
     }
 
     /** copy a directory */
@@ -431,5 +434,15 @@ public class FileResourceImpl extends AbstractFileResource {
     @Override
     public boolean supportsStreams() {
         return true;
+    }
+
+    @Override
+    public boolean supportsPartialTransfers() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsThirdPartyTransfers() {
+        return false;
     }
 }
