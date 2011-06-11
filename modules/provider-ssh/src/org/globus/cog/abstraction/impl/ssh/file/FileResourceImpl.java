@@ -14,7 +14,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -33,6 +32,7 @@ import org.globus.cog.abstraction.impl.ssh.SSHChannel;
 import org.globus.cog.abstraction.impl.ssh.SSHChannelManager;
 import org.globus.cog.abstraction.impl.ssh.execution.Exec;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
@@ -127,15 +127,15 @@ public class FileResourceImpl extends AbstractFileResource {
         return cwd;
     }
 
-    public Collection list() throws FileResourceException {
+    public Collection<GridFile> list() throws FileResourceException {
         return list("");
     }
 
-    public Collection list(String directory) throws FileResourceException {
+    public Collection<GridFile> list(String directory) throws FileResourceException {
         try {
             String absPath = absPath(directory);
             SftpFile f = new SftpFile(absPath, sftp.getAttributes(absPath));
-            List l = new ArrayList();
+            List<?> l = new ArrayList<Object>();
             sftp.listChildren(f, l);
             return translateList(l);
         }
@@ -144,11 +144,10 @@ public class FileResourceImpl extends AbstractFileResource {
         }
     }
 
-    protected List translateList(List l) {
-        List t = new ArrayList(l.size());
-        Iterator i = l.iterator();
-        while (i.hasNext()) {
-            SftpFile f = (SftpFile) i.next();
+    protected List<GridFile> translateList(List<?> l) {
+        List<GridFile> t = new ArrayList<GridFile>(l.size());
+        for (Object o : l) {
+            SftpFile f = (SftpFile) o;
             GridFile g = new GridFileImpl();
             g.setAbsolutePathName(f.getAbsolutePath());
             g.setName(f.getFilename());
@@ -203,7 +202,6 @@ public class FileResourceImpl extends AbstractFileResource {
     public void deleteDirectory(String directory, boolean force)
             throws FileResourceException {
         directory = absPath(directory);
-        GridFile gridFile = null;
 
         if (!isDirectory(directory)) {
             throw new DirectoryNotFoundException(directory
@@ -212,15 +210,12 @@ public class FileResourceImpl extends AbstractFileResource {
 
         try {
             if (force) {
-                for (Iterator iterator = list(directory).iterator(); iterator
-                        .hasNext();) {
-                    gridFile = (GridFile) (iterator.next());
-                    if (gridFile.isFile()) {
-                        sftp.removeFile(directory + "/" + gridFile.getName());
+                for (GridFile f : list(directory)) {
+                    if (f.isFile()) {
+                        sftp.removeFile(directory + "/" + f.getName());
                     }
                     else {
-                        deleteDirectory(directory + "/" + gridFile.getName(),
-                                force);
+                        deleteDirectory(directory + "/" + f.getName(), force);
                     }
 
                 }
@@ -242,16 +237,14 @@ public class FileResourceImpl extends AbstractFileResource {
         }
     }
 
-    public void getFile(String remoteFilename, String localFileName)
-            throws FileResourceException {
-        getFile(remoteFilename, localFileName, null);
-    }
-
-    public void getFile(String remoteFilename, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             final ProgressMonitor progressMonitor) throws FileResourceException {
-        File localFile = new File(localFileName);
+        if (remote.isFragment() || local.isFragment()) {
+            throw new UnsupportedOperationException("The SSH provider does not support partial transfers");
+        }
+        File localFile = new File(local.getFile());
         try {
-            SftpFile file = sftp.openFile(absPath(remoteFilename),
+            SftpFile file = sftp.openFile(absPath(remote.getFile()),
                     SftpSubsystemClient.OPEN_READ);
             long total = file.getAttributes().getSize().longValue();
             byte[] buffer = new byte[65535];
@@ -273,20 +266,18 @@ public class FileResourceImpl extends AbstractFileResource {
             out.close();
         }
         catch (Exception e) {
-            throw translateException("Cannot transfer \"" + remoteFilename
-                    + "\" to \"" + localFileName + "\"", e);
+            throw translateException("Cannot transfer \"" + remote.getFile()
+                    + "\" to \"" + local.getFile() + "\"", e);
         }
     }
 
-    public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException {
-        putFile(localFileName, remoteFileName, null);
-    }
-
     /** Copy a local file to a remote file. Default option 'overwrite' */
-    public void putFile(String localFileName, String remoteFileName,
+    public void putFile(FileFragment local, FileFragment remote,
             final ProgressMonitor progressMonitor) throws FileResourceException {
-        File localFile = new File(localFileName);
+        if (local.isFragment() || remote.isFragment()) {
+            throw new UnsupportedOperationException("The SSH provider does not support partial transfers");
+        }
+        File localFile = new File(local.getFile());
         try {
             FileAttributes attrs = new FileAttributes();
             // Open with rw as setting all permissiosn does not work untill we
@@ -294,7 +285,7 @@ public class FileResourceImpl extends AbstractFileResource {
             //
             attrs.setPermissions("rw");
 
-            SftpFile file = sftp.openFile(absPath(remoteFileName),
+            SftpFile file = sftp.openFile(absPath(remote.getFile()),
                     SftpSubsystemClient.OPEN_WRITE
                             | SftpSubsystemClient.OPEN_CREATE
                             | SftpSubsystemClient.OPEN_TRUNCATE, attrs);
@@ -320,8 +311,8 @@ public class FileResourceImpl extends AbstractFileResource {
             out.close();
         }
         catch (Exception e) {
-            throw translateException("Cannot transfer \"" + localFileName
-                    + "\" to \"" + remoteFileName + "\"", e);
+            throw translateException("Cannot transfer \"" + local.getFile()
+                    + "\" to \"" + remote.getFile() + "\"", e);
         }
     }
 
@@ -365,7 +356,7 @@ public class FileResourceImpl extends AbstractFileResource {
     public void changeMode(GridFile newGridFile) throws FileResourceException {
         String newPermissions = newGridFile.getUserPermissions().toString()
                 + newGridFile.getGroupPermissions().toString()
-                + newGridFile.getAllPermissions().toString();
+                + newGridFile.getWorldPermissions().toString();
 
         changeMode(newGridFile.getAbsolutePathName(), Integer
                 .parseInt(newPermissions));
@@ -396,4 +387,13 @@ public class FileResourceImpl extends AbstractFileResource {
         throw new TaskSubmissionException("Not implemented");
     }
 
+    @Override
+    public boolean supportsPartialTransfers() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsThirdPartyTransfers() {
+        return false;
+    }
 }
