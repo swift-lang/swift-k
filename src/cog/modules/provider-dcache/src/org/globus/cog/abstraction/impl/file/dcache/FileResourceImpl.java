@@ -10,6 +10,7 @@ import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 
 /**
@@ -69,20 +70,20 @@ public class FileResourceImpl extends
         super(name);
     }
 
-    public void getFile(String remoteFileName, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             ProgressMonitor progressMonitor) throws FileResourceException {
         try {
             String[] opts = getDCCPCmd();
             String[] cmd = new String[opts.length + 2];
             System.arraycopy(opts, 0, cmd, 0, opts.length);
-            cmd[cmd.length - 2] = resolve(remoteFileName).getAbsolutePath();
-            cmd[cmd.length - 1] = resolve(localFileName).getAbsolutePath();
+            cmd[cmd.length - 2] = resolve(remote.getFile()).getAbsolutePath();
+            cmd[cmd.length - 1] = resolve(local.getFile()).getAbsolutePath();
             Process p = Runtime.getRuntime().exec(cmd);
             String stderr = consumeOutput(p);
             int exitcode = p.waitFor();
             if (exitcode != 0) {
                 throw new FileResourceException("Failed to copy \""
-                        + remoteFileName + "\" to \"" + localFileName
+                        + remote.getFile() + "\" to \"" + local.getFile()
                         + "\". dccp failed with an exit code of " + exitcode
                         + ": " + stderr);
             }
