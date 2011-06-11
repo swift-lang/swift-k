@@ -27,7 +27,7 @@ import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
-import org.globus.cog.abstraction.interfaces.FileResource;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
@@ -51,7 +51,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public FileResourceImpl(String name, ServiceContact serviceContact,
             SecurityContext securityContext) {
-        super(name, FileResource.WebDAV, serviceContact, securityContext);
+        super(name, "http", serviceContact, securityContext);
     }
 
     public void start() throws IllegalHostException,
@@ -75,13 +75,13 @@ public class FileResourceImpl extends AbstractFileResource {
         return cwd;
     }
 
-    public Collection list() throws FileResourceException {
+    public Collection<GridFile> list() throws FileResourceException {
         return list(cwd);
     }
 
-    public Collection list(String directory) throws FileResourceException {
+    public Collection<GridFile> list(String directory) throws FileResourceException {
         // hmm
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     public void createDirectory(String directory) throws FileResourceException {
@@ -97,20 +97,16 @@ public class FileResourceImpl extends AbstractFileResource {
         throw new UnsupportedOperationException("deleteFile");
     }
 
-    public void getFile(String remoteFilename, String localFileName)
-            throws FileResourceException {
-        getFile(remoteFilename, localFileName, null);
-    }
-
-    public void getFile(String remoteFilename, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             ProgressMonitor progressMonitor) throws FileResourceException {
-        GetMethod m = new GetMethod(contact + '/' + remoteFilename);
+        checkNoPartialTransfers(remote, local, "http");
+        GetMethod m = new GetMethod(contact + '/' + remote.getFile());
         try {
             int code = client.executeMethod(m);
             try {
                 if (code != HttpStatus.SC_OK) {
                     throw new FileResourceException("Failed to get "
-                            + remoteFilename + " from " + contact
+                            + remote.getFile() + " from " + contact
                             + ". Server returned " + code + " ("
                             + HttpStatus.getStatusText(code) + ").");
                 }
@@ -121,7 +117,7 @@ public class FileResourceImpl extends AbstractFileResource {
                 }
                 boolean pm = (progressMonitor != null) && total != -1;
                 InputStream is = m.getResponseBodyAsStream();
-                FileOutputStream fos = new FileOutputStream(localFileName);
+                FileOutputStream fos = new FileOutputStream(local.getFile());
                 byte buf[] = new byte[16384];
                 long crt = 0;
                 int read = 0;
@@ -154,13 +150,10 @@ public class FileResourceImpl extends AbstractFileResource {
         }
     }
 
-    public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException {
 
-    }
-
-    public void putFile(String localFileName, String remoteFileName,
+    public void putFile(FileFragment local, FileFragment remote,
             ProgressMonitor progressMonitor) throws FileResourceException {
+        throw new UnsupportedOperationException("putFile");
     }
 
     public void rename(String remoteFileName1, String remoteFileName2)
@@ -234,5 +227,15 @@ public class FileResourceImpl extends AbstractFileResource {
     public void submit(ExecutableObject commandWorkflow)
             throws IllegalSpecException, TaskSubmissionException {
         throw new UnsupportedOperationException("submit");
+    }
+
+    @Override
+    public boolean supportsPartialTransfers() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsThirdPartyTransfers() {
+        return false;
     }
 }

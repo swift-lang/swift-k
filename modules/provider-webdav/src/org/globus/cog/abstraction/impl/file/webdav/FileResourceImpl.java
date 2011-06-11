@@ -9,9 +9,10 @@ package org.globus.cog.abstraction.impl.file.webdav;
 import java.io.File;
 import java.io.IOException;
 import java.net.PasswordAuthentication;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Vector;
+import java.util.List;
 
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.URIException;
@@ -28,7 +29,7 @@ import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.impl.file.IrrecoverableResourceException;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
-import org.globus.cog.abstraction.interfaces.FileResource;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
@@ -52,7 +53,7 @@ public class FileResourceImpl extends AbstractFileResource {
     /** constructor to be used normally */
     public FileResourceImpl(String name, ServiceContact serviceContact,
             SecurityContext securityContext) {
-        super(name, FileResource.WebDAV, serviceContact, securityContext);
+        super(name, "http", serviceContact, securityContext);
     }
 
     /**
@@ -114,30 +115,30 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** Equivalent to ls command in the current directory */
-    public Collection list() throws FileResourceException {
-        Vector listVector = new Vector();
+    public Collection<GridFile> list() throws FileResourceException {
+        List<GridFile> l = new ArrayList<GridFile>();
 
         if (davClient.isCollection() == true) {
             String[] listArray = davClient.list();
             for (int i = 0; i < listArray.length; i++) {
                 String fileName = getCurrentDirectory() + "/" + listArray[i];
-                listVector.add(createGridFile(fileName));
+                l.add(createGridFile(fileName));
             }
         }
         else {
-            listVector.add(createGridFile(davClient.getName()));
+            l.add(createGridFile(davClient.getName()));
         }
-        return listVector;
+        return l;
     }
 
     /** Equivalent to ls command on the given directory */
-    public Collection list(String directory) throws FileResourceException {
+    public Collection<GridFile> list(String directory) throws FileResourceException {
         // Store currentDir
         String currentDirectory = getCurrentDirectory();
         // Change directory
         setCurrentDirectory(directory);
 
-        Collection list = list();
+        Collection<GridFile> list = list();
         // Come back to original directory
         setCurrentDirectory(currentDirectory);
 
@@ -165,7 +166,7 @@ public class FileResourceImpl extends AbstractFileResource {
     public void deleteDirectory(String directory, boolean force)
             throws FileResourceException {
         try {
-            Collection list = list(directory);
+            Collection<GridFile> list = list(directory);
             if (list == null || force == true) {
                 davClient.deleteMethod(directory);
             }
@@ -185,34 +186,27 @@ public class FileResourceImpl extends AbstractFileResource {
         }
     }
 
-    public void getFile(String remoteFilename, String localFileName)
-            throws FileResourceException {
-        getFile(remoteFilename, localFileName, null);
-    }
 
     /** Equivalent to cp/copy command */
-    public void getFile(String remoteFilename, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             ProgressMonitor progressMonitor) throws FileResourceException {
+        checkNoPartialTransfers(remote, local, "webdav");
         try {
-            File localFile = new File(localFileName);
-            davClient.getMethod(remoteFilename, localFile);
+            File localFile = new File(local.getFile());
+            davClient.getMethod(remote.getFile(), localFile);
         }
         catch (IOException e) {
             throw new IrrecoverableResourceException(e);
         }
     }
 
-    public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException {
-        putFile(localFileName, remoteFileName, null);
-    }
-
     /** Copy a local file to a remote file. Default option 'overwrite' */
-    public void putFile(String localFileName, String remoteFileName,
+    public void putFile(FileFragment local, FileFragment remote,
             ProgressMonitor progressMonitor) throws FileResourceException {
+        checkNoPartialTransfers(remote, local, "webdav");
         try {
-            File localFile = new File(localFileName);
-            davClient.putMethod(remoteFileName, localFile);
+            File localFile = new File(local.getFile());
+            davClient.putMethod(remote.getFile(), localFile);
         }
         catch (IOException e) {
             throw new IrrecoverableResourceException(e);
@@ -336,4 +330,13 @@ public class FileResourceImpl extends AbstractFileResource {
         tempFile.delete();
     }
 
+    @Override
+    public boolean supportsPartialTransfers() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsThirdPartyTransfers() {
+        return false;
+    }
 }
