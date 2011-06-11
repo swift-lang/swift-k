@@ -30,7 +30,6 @@ import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileFragment;
-import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
