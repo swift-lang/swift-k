@@ -72,6 +72,7 @@ public class FileResourceImpl extends
 
     public void getFile(FileFragment remote, FileFragment local,
             ProgressMonitor progressMonitor) throws FileResourceException {
+        checkNoPartialTransfers(remote, local, "dcache");
         try {
             String[] opts = getDCCPCmd();
             String[] cmd = new String[opts.length + 2];
