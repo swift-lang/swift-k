@@ -26,8 +26,10 @@ import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
+import org.globus.cog.abstraction.impl.file.FileFragmentImpl;
 import org.globus.cog.abstraction.impl.file.FileNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
@@ -143,23 +145,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
         }
 
         if (spec.isThirdParty() || spec.isThirdPartyIfPossible()) {
-            if ((sourceService.getProvider().equalsIgnoreCase("gridftp")
-                    || sourceService.getProvider().equalsIgnoreCase("gsiftp") || sourceService
-                    .getProvider().equalsIgnoreCase("gridftp-old"))
-                    && (destinationService.getProvider().equalsIgnoreCase(
-                            "gridftp")
-                            || destinationService.getProvider()
-                                    .equalsIgnoreCase("gsiftp") || destinationService
-                            .getProvider().equalsIgnoreCase("gridftp-old"))) {
-                this.thirdparty = true;
-            }
-            else if (spec.isThirdParty()) {
-                throw new IllegalSpecException(
-                        "Third party transfers between providers "
-                                + sourceService.getProvider() + " and "
-                                + destinationService.getProvider()
-                                + " is not supported");
-            }
+            this.thirdparty = true;
         }
 
         if (!this.thirdparty
@@ -265,8 +251,8 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                     if (logger.isDebugEnabled()) {
                         logger.debug("File transfer with resource remote->tmp");
                     }
-                    this.sourceResource.getFile(spec.getSource(),
-                            localDestination.getAbsolutePath(),
+                    this.sourceResource.getFile(new FileFragmentImpl(spec.getSource()),
+                            new FileFragmentImpl(localDestination.getAbsolutePath()),
                             new ProgressMonitor() {
                                 public void progress(long current, long total) {
                                     getTask().setStdOutput(current + "/" + total);
@@ -325,8 +311,8 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                         logger
                                 .debug("Directory transfer with resource local->local");
                     }
-                    fr.putFile(localSource.getAbsolutePath(), spec
-                            .getDestination());
+                    fr.putFile(new FileFragmentImpl(localSource.getAbsolutePath()), 
+                        new FileFragmentImpl(spec.getDestination()));
                 }
             }
             finally {
@@ -348,8 +334,8 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                         logger
                                 .debug("File transfer with resource local->remote");
                     }
-                    this.destinationResource.putFile(localSource
-                            .getAbsolutePath(), spec.getDestination(),
+                    this.destinationResource.putFile(new FileFragmentImpl(localSource
+                            .getAbsolutePath()), new FileFragmentImpl(spec.getDestination()),
                             new ProgressMonitor() {
                                 public void progress(long current, long total) {
                                     getTask().setStdOutput(current + "/" + total);
@@ -461,23 +447,35 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
     public void run() {
         getTask().setStatus(Status.ACTIVE);
         // todo retreive progress markers
-        if (this.thirdparty) {
-            doThirdPartyTransfer();
-        }
-        else {
-            try {
-                /*
-                 * The preparations are for detecting general problems with the
-                 * services before anything time-costly is done. There is no
-                 * point in transfering source->local if the destination service
-                 * has issues
-                 */
-                Service sourceService = getTask()
-                        .getService(Service.FILE_TRANSFER_SOURCE_SERVICE);
-                Service destinationService = getTask()
-                        .getService(Service.FILE_TRANSFER_DESTINATION_SERVICE);
-                this.sourceResource = prepareService(sourceService);
-                this.destinationResource = prepareService(destinationService);
+        try {
+            /*
+             * The preparations are for detecting general problems with the
+             * services before anything time-costly is done. There is no
+             * point in transfering source->local if the destination service
+             * has issues
+             */
+            Service sourceService = getTask()
+                    .getService(Service.FILE_TRANSFER_SOURCE_SERVICE);
+            Service destinationService = getTask()
+                    .getService(Service.FILE_TRANSFER_DESTINATION_SERVICE);
+            this.sourceResource = prepareService(sourceService);
+            this.destinationResource = prepareService(destinationService);
+
+            boolean canDoThirdParty = this.sourceResource.supportsThirdPartyTransfers() &&
+                this.sourceResource.getProtocol().equals(this.destinationResource.getProtocol());
+            if (spec.isThirdParty()) {
+                if (!canDoThirdParty) {
+                    throw new TaskSubmissionException("Cannot do third party transfer between " + 
+                        this.sourceResource.getName() + " and " + this.getDestinationResource().getName());
+                }
+                else {
+                    doThirdPartyTransfer();
+                }
+            }
+            else if (spec.isThirdPartyIfPossible() && canDoThirdParty) {
+                doThirdPartyTransfer();
+            }
+            else {
                 // TODO clean temporary files if doSource() fails somewhere
                 // after they have been created
                 File intermediate = doSource(sourceService,
@@ -490,92 +488,63 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                         cleanTemporaries(intermediate);
                     }
                 }
-                stopResources();
-                transferCompleted();
             }
-            catch (Exception e) {
-                logger.debug("Exception in transfer", e);
-                stopResources();
-                transferFailed(e);
-            }
+            transferCompleted();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            logger.debug("Exception in transfer", e);
+            transferFailed(e);
+        }
+        finally {
+            stopResources();
         }
     }
 
     private void doThirdPartyTransfer() {
-        UrlCopy urlCopy = new UrlCopy();
-        GlobusURL sourceURL = null;
-        GlobusURL destinationURL = null;
-
-        logger.debug("Performing third party transfer");
-        try {
-            String url = getTask().getService(
-                    Service.FILE_TRANSFER_SOURCE_SERVICE).getServiceContact()
-                    .getContact()
-                    + "/" + spec.getSource();
-            if (!url.startsWith("gsiftp://")) {
-                url = "gsiftp://" + url;
-            }
-            logger.debug("Source URL: " + url);
-            sourceURL = new GlobusURL(url);
-
-            url = getTask().getService(
-                    Service.FILE_TRANSFER_DESTINATION_SERVICE)
-                    .getServiceContact().getContact()
-                    + "/" + spec.getDestination();
-            if (!url.startsWith("gsiftp://")) {
-                url = "gsiftp://" + url;
-            }
-            logger.debug("Destination URL: " + url);
-            destinationURL = new GlobusURL(url);
-        }
-        catch (MalformedURLException mue) {
-            transferFailed(mue);
-            return;
-        }
-        try {
-            urlCopy.setSourceUrl(sourceURL);
-            urlCopy.setDestinationUrl(destinationURL);
-        }
-        catch (UrlCopyException uce) {
-            transferFailed(uce);
-            return;
-        }
-        SecurityContext securityContext = getTask().getService(
-                Service.FILE_TRANSFER_SOURCE_SERVICE).getSecurityContext();
-        try {
-            urlCopy.setCredentials((GSSCredential) securityContext
-                    .getCredentials());
-            Authorization authorization = (Authorization) securityContext
-                    .getAttribute("authorization");
-            if (authorization == null) {
-                authorization = HostAuthorization.getInstance();
-            }
-            urlCopy.setSourceAuthorization(authorization);
-            urlCopy.setDestinationAuthorization(authorization);
-        }
-        catch (Exception se) {
-            transferFailed(se);
-            return;
-        }
-        if (spec.getSourceOffset() != FileTransferSpecification.OFFSET_FILE_START) {
-            urlCopy.setSourceFileOffset(spec.getSourceOffset());
-        }
-        if (spec.getDestinationOffset() != FileTransferSpecification.OFFSET_FILE_START) {
-            urlCopy.setDestinationOffset(spec.getDestinationOffset());
-        }
-        if (spec.getSourceLength() != FileTransferSpecification.LENGTH_ENTIRE_FILE) {
-            urlCopy.setSourceFileLength(spec.getSourceLength());
+        int buffsz = -1;
+        if (System.getProperty("tcp.buffer.size") != null) {
+            buffsz = Integer.parseInt(System.getProperty("tcp.buffer.size"));
         }
         Object tcpBuffSz = spec.getAttribute("TCPBufferSize"); 
         if (tcpBuffSz instanceof String) {
-        	urlCopy.setTCPBufferSize(Integer.parseInt((String) tcpBuffSz));
+            buffsz = Integer.parseInt((String) tcpBuffSz);
         }
         else if (tcpBuffSz instanceof Number) {
-        	urlCopy.setTCPBufferSize(((Number) tcpBuffSz).intValue());
+            buffsz = ((Number) tcpBuffSz).intValue();
         }
-        urlCopy.setUseThirdPartyCopy(true);
-        urlCopy.addUrlCopyListener(this);
-        urlCopy.run();
+        
+        if (buffsz != -1) {
+            this.destinationResource.setAttribute("tcp.buffer.size", buffsz);
+        }
+        logger.debug("Performing third party transfer");
+        
+        try {
+            this.destinationResource.thirdPartyTransfer(this.sourceResource, 
+                makeFragment(spec.getSource(), spec.getSourceOffset(), spec.getSourceLength()), 
+                makeFragment(spec.getDestination(), spec.getDestinationOffset(), spec.getSourceLength()));
+        }
+        catch (Exception se) {
+            transferFailed(se);
+        }
+    }
+
+    private FileFragment makeFragment(String file,
+            long poffset, long plen) {
+        long offset, len;
+        if (poffset == FileTransferSpecification.OFFSET_FILE_START) {
+            offset = FileFragment.FILE_START;
+        }
+        else {
+            offset = poffset;
+        }
+        if (plen == FileTransferSpecification.LENGTH_ENTIRE_FILE) {
+            len = FileFragment.MAX_LENGTH;
+        }
+        else {
+            len = plen;
+        }
+        return new FileFragmentImpl(file, offset, len);
     }
 
     private void transferFailed(Exception e) {

@@ -44,9 +44,13 @@ import org.globus.cog.abstraction.impl.file.IllegalHostException;
  */
 public interface FileResource extends GridResource {
 
+	@Deprecated 
     public static final String FTP = "ftp";
+	@Deprecated
     public static final String GridFTP = "gridftp";
+	@Deprecated
     public static final String WebDAV = "webdav";
+	@Deprecated
     public static final String Local = "local";
 
     /**
@@ -163,8 +167,12 @@ public interface FileResource extends GridResource {
      * name it as <code>localFileName</code> on the local machine
      * 
      * @throws FileResourceException
+     * @deprecated Use {@link #getFile(FileFragment, FileFragment)}
      */
     public void getFile(String remoteFileName, String localFileName)
+            throws FileResourceException;
+    
+    public void getFile(FileFragment remote, FileFragment local) 
             throws FileResourceException;
 
     /**
@@ -182,8 +190,12 @@ public interface FileResource extends GridResource {
      * 
      * @throws FileResourceException
      *             in case a problems occurs during the transfer
+     * @deprecated use {@link #getFile(FileFragment, FileFragment, ProgressMonitor)}
      */
     public void getFile(String remoteFileName, String localFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException;
+    
+    public void getFile(FileFragment remote, FileFragment local, 
             ProgressMonitor progressMonitor) throws FileResourceException;
 
     /**
@@ -191,10 +203,15 @@ public interface FileResource extends GridResource {
      * <code>remoteFileName</code> on the file resource
      * 
      * @throws FileResourceException
+     * 
+     * @deprecated use {@link #putFile(FileFragment, FileFragment)}
      */
     public void putFile(String localFileName, String remoteFileName)
             throws FileResourceException;
-
+    
+    public void putFile(FileFragment local, FileFragment remote) 
+            throws FileResourceException;
+    
     /**
      * Transfer a local file to the remote resource while providing transfer
      * progress updates. Progress updates are done on a best effort basis, and
@@ -207,9 +224,16 @@ public interface FileResource extends GridResource {
      * @param progressMonitor
      *            the progress monitor to use for progress updates. Can be
      *            <code>null</code>
+     *            
+     * @deprecated use {@link #putFile(FileFragment, FileFragment, ProgressMonitor)}
      */
     public void putFile(String localFileName, String remoteFileName,
             ProgressMonitor progressMonitor) throws FileResourceException;
+
+    
+    public void putFile(FileFragment local, FileFragment remote, 
+            ProgressMonitor progressMonitor) throws FileResourceException;
+
 
     /**
      * Transfer the entire directory <code>remoteDirectoryName</code> from the
@@ -336,4 +360,11 @@ public interface FileResource extends GridResource {
     public OutputStream openOutputStream(String name) throws FileResourceException;
     
     boolean supportsStreams();
+    
+    boolean supportsPartialTransfers();
+    
+    boolean supportsThirdPartyTransfers();
+    
+    void thirdPartyTransfer(FileResource sourceResource, FileFragment source, FileFragment destination) 
+            throws FileResourceException;
 }
