@@ -12,8 +12,7 @@ package org.globus.cog.abstraction.impl.file.gridftp;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
@@ -63,19 +62,29 @@ public class FileResourceImpl extends
         }
     }
 
-    public Collection list() throws FileResourceException {
+    public Collection<GridFile> list(String directory) throws FileResourceException {
         if (old) {
-            return super.list();
+            if (directory != null) {
+                return super.list(directory);
+            }
+            else {
+                return super.list();
+            }
         }
         else {
             try {
                 initializeDataChannel(RETRIEVE);
-                Vector v = this.getGridFTPClient().mlsd();
-                ArrayList list = new ArrayList();
-                Iterator i = v.iterator();
+                List<?> v;
+                if (directory != null) {
+                    v = this.getGridFTPClient().mlsd(directory);
+                }
+                else {
+                    v = this.getGridFTPClient().mlsd();
+                }
+                List<GridFile> list = new ArrayList<GridFile>();
                 String cwd = getCurrentDirectory() + "/";
-                while (i.hasNext()) {
-                    GridFile entry = convertEntry((MlsxEntry) i.next(), cwd);
+                for (Object e : v) {
+                    GridFile entry = convertEntry((MlsxEntry) e, cwd);
                     if (entry != null) {
                         //assert entry.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
                         //assert entry.getName() != null : "convertEntry returned an entry with null name";
@@ -124,34 +133,8 @@ public class FileResourceImpl extends
         return gfi;
     }
 
-    public Collection list(String directory) throws FileResourceException {
-        if (old) {
-            return super.list(directory);
-        }
-        else {
-            try {
-                initializeDataChannel(RETRIEVE);
-                Vector v = this.getGridFTPClient().mlsd(directory);
-                ArrayList list = new ArrayList();
-                Iterator i = v.iterator();
-                while (i.hasNext()) {
-                    String absPath = directory;
-                    //assert absPath.startsWith("/") : "absPath does not start with / - absPath = "+absPath;
-                    GridFile gf = convertEntry((MlsxEntry) i.next(), absPath);
-                    if (gf != null) {
-                        //assert gf.getAbsolutePathName() != null : "convertEntry returned an entry with null absolute path";
-                        //assert gf.getName() != null : "convertEntry returned an entry with null name";
-                        list.add(gf);
-                    }
-                }
-                return list;
-            }
-            catch (Exception e) {
-                throw translateException(
-                        "Could not get list of files in " + directory
-                                + " from server", e);
-            }
-        }
+    public Collection<GridFile> list() throws FileResourceException {
+        return list(null);
     }
 
     public boolean isDirectory(String dirName) throws FileResourceException {

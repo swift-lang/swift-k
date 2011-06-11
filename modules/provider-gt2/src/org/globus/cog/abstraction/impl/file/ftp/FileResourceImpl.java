@@ -13,10 +13,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.PasswordAuthentication;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -28,6 +28,7 @@ import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
@@ -51,6 +52,8 @@ import org.globus.ftp.vanilla.TransferState;
  * absolute path names.
  */
 public class FileResourceImpl extends AbstractFTPFileResource {
+    public static final String PROTOCOL = "ftp";
+    
     private FTPClient ftpClient;
     public static final Logger logger = Logger.getLogger(FileResource.class
         .getName());
@@ -58,13 +61,13 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     /** throws invalidprovider exception */
     public FileResourceImpl() throws Exception {
         this(null, new ServiceContactImpl(), AbstractionFactory
-            .newSecurityContext("FTP"));
+            .newSecurityContext("ftp"));
     }
 
     /** the constructor to be used normally */
     public FileResourceImpl(String name, ServiceContact serviceContact,
             SecurityContext securityContext) {
-        super(name, FileResource.FTP, serviceContact, securityContext);
+        super(name, PROTOCOL, serviceContact, securityContext);
     }
 
     /**
@@ -151,21 +154,20 @@ public class FileResourceImpl extends AbstractFTPFileResource {
      * @throws IOException
      * @throws FileResourceException
      */
-    public Collection list() throws FileResourceException {
-        Vector gridFileList = new Vector();
+    public Collection<GridFile> list() throws FileResourceException {
+        List<GridFile> gridFileList = new ArrayList<GridFile>();
         try {
             ftpClient.setPassive();
             ftpClient.setLocalActive();
             ftpClient.setType(Session.TYPE_ASCII);
 
-            Enumeration list = ftpClient.list().elements();
+            Enumeration<?> list = ftpClient.list().elements();
             ftpClient.setType(Session.TYPE_IMAGE);
 
             while (list.hasMoreElements()) {
                 gridFileList.add(createGridFile(list.nextElement()));
             }
             return gridFileList;
-
         }
         catch (Exception e) {
             throw translateException(
@@ -178,13 +180,13 @@ public class FileResourceImpl extends AbstractFTPFileResource {
      * 
      * @throws FileResourceException
      */
-    public Collection list(String directory) throws FileResourceException {
+    public Collection<GridFile> list(String directory) throws FileResourceException {
 
         // Store currentDir
         String currentDirectory = getCurrentDirectory();
         // Change directory
         setCurrentDirectory(directory);
-        Collection list = null;
+        Collection<GridFile> list = null;
         try {
             ftpClient.setType(Session.TYPE_ASCII);
             list = list();
@@ -216,8 +218,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void deleteDirectory(String directory, boolean force)
             throws FileResourceException {
 
-        GridFile gridFile = null;
-
         if (!isDirectory(directory)) {
             throw new DirectoryNotFoundException(directory
                     + " is not a valid directory");
@@ -225,21 +225,16 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         try {
             if (force) {
-                for (Iterator iterator = list(directory).iterator(); iterator
-                    .hasNext();) {
-                    gridFile = (GridFile) (iterator.next());
-                    if (gridFile.isFile()) {
-                        ftpClient.deleteFile(directory + "/"
-                                + gridFile.getName());
+                for (GridFile f : list(directory)) {
+                    if (f.isFile()) {
+                        ftpClient.deleteFile(directory + "/" + f.getName());
                     }
                     else {
-                        deleteDirectory(directory + "/" + gridFile.getName(),
-                            force);
+                        deleteDirectory(directory + "/" + f.getName(), force);
                     }
-
                 }
             }
-            if (!list(directory).iterator().hasNext()) {
+            if (list(directory).isEmpty()) {
                 ftpClient.deleteDir(directory);
             }
         }
@@ -258,16 +253,19 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
     }
 
-    public void getFile(String remoteFilename, String localFileName)
+    public void getFile(FileFragment remote, FileFragment local)
             throws FileResourceException {
-        getFile(remoteFilename, localFileName, null);
+        getFile(remote, local, null);
     }
 
     /** Equivalent to cp/copy command */
-    public void getFile(String remoteFilename, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             final ProgressMonitor progressMonitor) throws FileResourceException {
+        if (remote.isFragment() || local.isFragment()) {
+            throw new UnsupportedOperationException("The FTP provider does not support partial transfers");
+        }
         String currentDirectory = getCurrentDirectory();
-        File localFile = new File(localFileName);
+        File localFile = new File(local.getFile());
         try {
             ftpClient.setPassive();
             ftpClient.setLocalActive();
@@ -285,23 +283,26 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             else {
                 sink = new DataSinkStream(new FileOutputStream(localFile));
             }
-            ftpClient.get(remoteFilename, sink, null);
+            ftpClient.get(remote.getFile(), sink, null);
         }
         catch (Exception e) {
             throw translateException("Cannot retrieve the given file", e);
         }
     }
 
-    public void putFile(String localFileName, String remoteFileName)
+    public void putFile(FileFragment local, FileFragment remote)
             throws FileResourceException {
-        putFile(localFileName, remoteFileName, null);
+        putFile(local, remote, null);
     }
 
     /** Copy a local file to a remote file. Default option 'overwrite' */
-    public void putFile(String localFileName, String remoteFileName,
+    public void putFile(FileFragment local, FileFragment remote,
             final ProgressMonitor progressMonitor) throws FileResourceException {
+        if (local.isFragment() || remote.isFragment()) {
+            throw new UnsupportedOperationException("The FTP provider does not support partial transfers");
+        }
         String currentDirectory = getCurrentDirectory();
-        File localFile = new File(localFileName);
+        File localFile = new File(local.getFile());
         try {
             ftpClient.setPassive();
             ftpClient.setLocalActive();
@@ -318,7 +319,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             else {
                 source = new DataSourceStream(new FileInputStream(localFile));
             }
-            ftpClient.put(remoteFileName, source, null, false);
+            ftpClient.put(remote.getFile(), source, null, false);
         }
         catch (Exception e) {
             throw translateException("Cannot transfer the given file", e);
@@ -365,12 +366,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             fileName = fileName.substring(endIndex + 1, fileName.length());
         }
 
-        Collection gridFiles = list(directory);
-        Iterator iterator = gridFiles.iterator();
-        while (iterator.hasNext()) {
-            GridFile gridFile = (GridFile) iterator.next();
-            if (gridFile.getName().equals(fileName)) {
-                return gridFile;
+        for (GridFile f : list(directory)) {
+            if (f.getName().equals(fileName)) {
+                return f;
             }
         }
         return null;
@@ -381,7 +379,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         String newPermissions = newGridFile.getUserPermissions().toString()
                 + newGridFile.getGroupPermissions().toString()
-                + newGridFile.getAllPermissions().toString();
+                + newGridFile.getWorldPermissions().toString();
 
         logger.error(newGridFile.getAbsolutePathName());
 
@@ -467,7 +465,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         Permissions userPermissions = gridFile.getUserPermissions();
         Permissions groupPermissions = gridFile.getGroupPermissions();
-        Permissions allPermissions = gridFile.getAllPermissions();
+        Permissions allPermissions = gridFile.getWorldPermissions();
 
         userPermissions.setRead(fileInfo.userCanRead());
         userPermissions.setWrite(fileInfo.userCanWrite());
@@ -483,7 +481,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         gridFile.setUserPermissions(userPermissions);
         gridFile.setGroupPermissions(groupPermissions);
-        gridFile.setAllPermissions(allPermissions);
+        gridFile.setWorldPermissions(allPermissions);
 
         return gridFile;
     }
@@ -563,5 +561,15 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     
     public boolean supportsStreams() {
         return true;
+    }
+
+    @Override
+    public boolean supportsPartialTransfers() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsThirdPartyTransfers() {
+        return false;
     }
 }
