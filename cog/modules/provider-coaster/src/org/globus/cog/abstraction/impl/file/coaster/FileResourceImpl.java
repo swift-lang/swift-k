@@ -36,6 +36,7 @@ import org.globus.cog.abstraction.impl.file.coaster.commands.PutFileCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.RenameCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.RmdirCommand;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
@@ -125,15 +126,17 @@ public class FileResourceImpl extends AbstractFileResource {
         throw new UnsupportedOperationException();
     }
 
-    public void getFile(String remoteFileName, String localFileName)
-            throws FileResourceException {
-        getFile(remoteFileName, localFileName, null);
+    public void getFile(FileFragment remote, FileFragment local) throws FileResourceException {
+        getFile(remote, local, null);
     }
 
-    public void getFile(String remoteFileName, String localFileName,
-            ProgressMonitor progressMonitor) throws FileResourceException {
+    public void getFile(FileFragment remote, FileFragment local, ProgressMonitor progressMonitor)
+            throws FileResourceException {
+        if (local.isFragment() || remote.isFragment()) {
+            throw new UnsupportedOperationException("The coaster provider does not support partial transfers");
+        }
         try {
-            run(new GetFileCommand(remoteFileName, localFileName, progressMonitor));
+            run(new GetFileCommand(remote.getFile(), local.getFile(), progressMonitor));
         }
         catch (IOException e) {
             throw new FileResourceException(e);
@@ -168,21 +171,21 @@ public class FileResourceImpl extends AbstractFileResource {
             throw new FileResourceException(e);
         }
     }
-
-    public void putFile(String localFileName, String remoteFileName)
+    
+    public void putFile(FileFragment local, FileFragment remote) 
             throws FileResourceException {
+        putFile(local, remote, null);
+    }
+
+    public void putFile(FileFragment local, FileFragment remote, 
+            ProgressMonitor progressMonitor) throws FileResourceException {
         try {
-            run(new PutFileCommand(localFileName, remoteFileName));
+            run(new PutFileCommand(local.getFile(), remote.getFile()));
         }
         catch (Exception e) {
             throw new FileResourceException(e);
         }
 
-    }
-
-    public void putFile(String localFileName, String remoteFileName,
-            ProgressMonitor progressMonitor) throws FileResourceException {
-        putFile(localFileName, remoteFileName);
     }
 
     public void rename(String oldFileName, String newFileName)
@@ -237,5 +240,13 @@ public class FileResourceImpl extends AbstractFileResource {
     public void submit(ExecutableObject commandWorkflow)
             throws IllegalSpecException, TaskSubmissionException {
         throw new UnsupportedOperationException();
+    }
+
+    public boolean supportsPartialTransfers() {
+        return false;
+    }
+
+    public boolean supportsThirdPartyTransfers() {
+        return false;
     }
 }
