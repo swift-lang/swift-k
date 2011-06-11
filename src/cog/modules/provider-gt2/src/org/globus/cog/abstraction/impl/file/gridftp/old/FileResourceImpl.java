@@ -12,10 +12,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -27,13 +29,13 @@ import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
-import org.globus.cog.abstraction.impl.file.IrrecoverableResourceException;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.impl.file.ftp.AbstractFTPFileResource;
 import org.globus.cog.abstraction.impl.file.gridftp.DataChannelAuthenticationType;
 import org.globus.cog.abstraction.impl.file.gridftp.DataChannelProtectionType;
 import org.globus.cog.abstraction.impl.file.gridftp.GridFTPSecurityContext;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
@@ -49,12 +51,16 @@ import org.globus.ftp.DataSourceStream;
 import org.globus.ftp.FileInfo;
 import org.globus.ftp.GridFTPClient;
 import org.globus.ftp.GridFTPSession;
+import org.globus.ftp.HostPort;
 import org.globus.ftp.InputStreamDataSink;
+import org.globus.ftp.Marker;
 import org.globus.ftp.MarkerListener;
 import org.globus.ftp.MlsxEntry;
 import org.globus.ftp.OutputStreamDataSource;
+import org.globus.ftp.PerfMarker;
 import org.globus.ftp.Session;
 import org.globus.ftp.exception.ClientException;
+import org.globus.ftp.exception.PerfMarkerException;
 import org.globus.ftp.exception.ServerException;
 import org.globus.ftp.vanilla.Reply;
 import org.globus.ftp.vanilla.TransferState;
@@ -64,7 +70,7 @@ import org.ietf.jgss.GSSCredential;
  * Implements FileResource API for accessing gridftp server Supports relative
  * and absolute path names
  */
-public class FileResourceImpl extends AbstractFTPFileResource {
+public class FileResourceImpl extends AbstractFTPFileResource implements MarkerListener {
     public static final Logger logger = Logger
         .getLogger(FileResourceImpl.class);
 
@@ -81,6 +87,9 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     private boolean dataChannelReuse;
     private boolean dataChannelInitialized;
     private boolean dataChannelDirection;
+    
+    private int tcpBufferSize;
+    private boolean bufferSizeChanged;
 
     /** throws InvalidProviderException */
     public FileResourceImpl() throws Exception {
@@ -91,7 +100,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     /** constructor be used normally */
     public FileResourceImpl(String name, ServiceContact serviceContact,
             SecurityContext securityContext) {
-        super(name, FileResource.GridFTP, serviceContact, securityContext);
+        super(name == null ? serviceContact.toString() : name, "gsiftp", serviceContact, securityContext);
     }
 
     /**
@@ -103,12 +112,17 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void start() throws IllegalHostException,
             InvalidSecurityContextException, FileResourceException {
 
+        String host = getServiceContact().getHost();
+        int port = getServiceContact().getPort();
+        if (port == -1) {
+            port = 2811;
+        }
+        
+        if (getName() == null) {
+            setName(host + ":" + port);
+        }
+        
         try {
-            String host = getServiceContact().getHost();
-            int port = getServiceContact().getPort();
-            if (port == -1) {
-                port = 2811;
-            }
             gridFTPClient = new GridFTPClient(host, port);
             Reply r = gridFTPClient.getLastReply();
 
@@ -141,7 +155,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
         catch (Exception e) {
             throw translateException(
-                "Error communicating with the GridFTP server", e);
+                "Error communicating with the GridFTP server at " + host + ":" + port, e);
         }
     }
 
@@ -208,6 +222,23 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
     }
 
+    @Override
+    public void setAttribute(String name, Object value) {
+        if ("tcp.buffer.size".equals(name)) {
+            if (value instanceof Number) {
+                tcpBufferSize = ((Number) value).intValue();
+            }
+            else if (value instanceof String) {
+                tcpBufferSize = Integer.parseInt((String) value);
+            }
+            else if (value == null) {
+                tcpBufferSize = 0;
+            }
+            bufferSizeChanged = true;
+        }
+        super.setAttribute(name, value);
+    }
+
     /**
      * Stop the gridFTPClient from connecting to the server
      * 
@@ -250,12 +281,12 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     }
 
     /** Equivalent to ls command in the current directory */
-    public Collection list() throws FileResourceException {
+    public Collection<GridFile> list() throws FileResourceException {
 
-        Vector gridFileList = new Vector();
+        List<GridFile> gridFileList = new ArrayList<GridFile>();
         try {
             this.initializeDataChannel(RETRIEVE);
-            Enumeration list = gridFTPClient.list().elements();
+            Enumeration<?> list = gridFTPClient.list().elements();
             while (list.hasMoreElements()) {
                 gridFileList.add(createGridFile((FileInfo) list.nextElement()));
             }
@@ -269,17 +300,19 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     }
 
     /** Equivalent to ls command on the given directory */
-    public Collection list(String directory) throws FileResourceException {
+    public Collection<GridFile> list(String directory) throws FileResourceException {
         // Store currentDir
         String currentDirectory = getCurrentDirectory();
         // Change directory
         setCurrentDirectory(directory);
-
-        Collection list = list();
-        // restore original directory
-        setCurrentDirectory(currentDirectory);
-
-        return list;
+        
+        try {
+            return list();
+        }
+        finally {
+            // restore original directory
+            setCurrentDirectory(currentDirectory);
+        }
     }
 
     /** Equivalent to mkdir */
@@ -302,8 +335,6 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public void deleteDirectory(String directory, boolean force)
             throws DirectoryNotFoundException, FileResourceException {
 
-        GridFile gridFile = null;
-
         if (!isDirectory(directory)) {
             throw new DirectoryNotFoundException(directory
                     + " is not a valid directory");
@@ -311,18 +342,14 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         try {
             if (force == true) {
-                for (Iterator iterator = list(directory).iterator(); iterator
-                    .hasNext();) {
-                    gridFile = (GridFile) iterator.next();
-                    if (gridFile.isFile()) {
-                        gridFTPClient.deleteFile(directory + "/"
-                                + gridFile.getName());
+                for (GridFile f : list(directory)) {
+                    if (f.isFile()) {
+                        gridFTPClient.deleteFile(directory + "/" + f.getName());
                     }
                     else {
-                        if (!(gridFile.getName().equals(".") || gridFile
-                            .getName().equals(".."))) {
+                        if (!(f.getName().equals(".") || f.getName().equals(".."))) {
                             deleteDirectory(directory + "/"
-                                    + gridFile.getName(), force);
+                                    + f.getName(), force);
                         }
                     }
 
@@ -370,18 +397,17 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         }
     }
 
-    public void getFile(String remoteFileName, String localFileName)
-            throws FileResourceException {
-        getFile(remoteFileName, localFileName, null);
-    }
 
     /** Equivalent to cp/copy command */
-    public void getFile(String remoteFileName, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             final ProgressMonitor progressMonitor) throws FileResourceException {
-        File localFile = new File(localFileName);
+        if (local.isFragment()) {
+            throw new UnsupportedOperationException("The local file cannot be a fragment");
+        }
+        File localFile = new File(local.getFile());
         try {
             DataSink sink;
-            final long size = getGridFile(remoteFileName).getSize();
+            final long size = getGridFile(remote.getFile()).getSize();
             if (progressMonitor != null) {
                 // The sink is used to follow progress
                 sink = new DataSinkStream(new FileOutputStream(localFile)) {
@@ -394,80 +420,80 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             else {
                 sink = new DataSinkStream(new FileOutputStream(localFile));
             }
+            setBufferSize();
             initializeDataChannel(RETRIEVE);
-            gridFTPClient.get(remoteFileName, sink, null);
+            if (remote.isFragment()) {
+                gridFTPClient.extendedGet(remote.getFile(), remote.getOffset(), remote.getLength(), sink, null);
+            }
+            else {
+                gridFTPClient.get(remote.getFile(), sink, null);
+            }
         }
         catch (Exception e) {
             throw translateException("Exception in getFile", e);
         }
     }
 
-    public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException {
-        putFile(localFileName, remoteFileName, null);
-    }
-
     /** Copy a local file to a remote file. Default option 'overwrite' */
-    public void putFile(String localFileName, String remoteFileName,
+    public void putFile(FileFragment local, FileFragment remote,
             final ProgressMonitor progressMonitor) throws FileResourceException {
-
-        final File localFile = new File(localFileName);
+        
+        final File localFile = new File(local.getFile());
         try {
-            final long size = localFile.length();
+            final long size;
             DataSource source;
+            FileInputStream fis = new FileInputStream(localFile);
+            if (local.isFragment()) {
+                fis.skip(local.getOffset());
+                if (local.getLength() == FileFragment.MAX_LENGTH) {
+                    size = localFile.length();
+                }
+                else {
+                    size = local.getLength();
+                }
+            }
+            else {
+                size = localFile.length();
+            }
             if (progressMonitor != null) {
-                source = new DataSourceStream(new FileInputStream(localFile)) {
+                source = new DataSourceStream(fis) {
                     public Buffer read() throws IOException {
                         progressMonitor.progress(totalRead, size);
                         return super.read();
                     }
 
                     public long totalSize() {
-                        return localFile.length();
+                        return size;
                     }
                 };
             }
             else {
-                source = new DataSourceStream(new FileInputStream(localFile)) {
+                source = new DataSourceStream(fis) {
                     public long totalSize() {
-                        return localFile.length();
+                        return size;
                     }
                 };
             }
+            setBufferSize();
             initializeDataChannel(STORE);
-            gridFTPClient.put(remoteFileName, source, null, false);
+            if (remote.isFragment()) {
+                gridFTPClient.extendedPut(remote.getFile(), remote.getOffset(), source, null);
+            }
+            else {
+                gridFTPClient.put(remote.getFile(), source, null, false);
+            }
         }
         catch (Exception e) {
             throw translateException(e);
         }
     }
-
-    /** put a local file into remote resource */
-    public void put(File localFile, String remoteFileName, boolean append)
-            throws FileResourceException {
-
-        try {
-            initializeDataChannel(STORE);
-            gridFTPClient.put(localFile, remoteFileName, append);
-        }
-        catch (Exception e) {
-            throw translateException("Cannot transfer " + localFile + " to "
-                    + remoteFileName, e);
-        }
-    }
-
-    /**
-     * put the input from a stream into a remote resource. unique to gridftp
-     * file resource.
-     */
-    public void put(DataSource source, String remoteFileName,
-            MarkerListener mListener) throws FileResourceException {
-        try {
-            initializeDataChannel(STORE);
-            gridFTPClient.put(remoteFileName, source, mListener);
-        }
-        catch (Exception e) {
-            throw translateException("Cannot transfer to " + remoteFileName, e);
+    
+    private void setBufferSize() throws ServerException, IOException {
+        if (bufferSizeChanged) {
+            if (tcpBufferSize != 0) {
+                gridFTPClient.setTCPBufferSize(tcpBufferSize);
+            }
+            bufferSizeChanged = false;
         }
     }
 
@@ -557,7 +583,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
 
         String newPermissions = newGridFile.getUserPermissions().toString()
                 + newGridFile.getGroupPermissions().toString()
-                + newGridFile.getAllPermissions().toString();
+                + newGridFile.getWorldPermissions().toString();
 
         logger.error(newGridFile.getAbsolutePathName());
 
@@ -608,7 +634,7 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             .userCanWrite(), fi.userCanExecute()));
         gridFile.setGroupPermissions(getPermissions(fi.groupCanRead(), fi
             .groupCanWrite(), fi.groupCanExecute()));
-        gridFile.setAllPermissions(getPermissions(fi.allCanRead(), fi
+        gridFile.setWorldPermissions(getPermissions(fi.allCanRead(), fi
             .allCanWrite(), fi.allCanExecute()));
 
         return gridFile;
@@ -728,4 +754,99 @@ public class FileResourceImpl extends AbstractFTPFileResource {
     public boolean supportsStreams() {
         return true;
     }
+
+    @Override
+    public boolean supportsPartialTransfers() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsThirdPartyTransfers() {
+        return true;
+    }
+
+    @Override
+    public void thirdPartyTransfer(FileResource sourceResource,
+            FileFragment source, FileFragment destination)
+            throws FileResourceException {
+        if (!(sourceResource instanceof FileResourceImpl)) {
+            throw new IllegalArgumentException("The source resource must be " + getName());
+        }
+        FileResourceImpl srcr = (FileResourceImpl) sourceResource;
+        try {
+            srcr.gridFTPClient.setType(Session.TYPE_IMAGE);
+            this.gridFTPClient.setType(Session.TYPE_IMAGE);
+            
+            srcr.gridFTPClient.setMode(GridFTPSession.MODE_EBLOCK);
+            this.gridFTPClient.setMode(GridFTPSession.MODE_EBLOCK);
+            
+            setBufferSize();
+            if (tcpBufferSize != 0) {
+                srcr.gridFTPClient.setTCPBufferSize(tcpBufferSize);
+            }
+            
+            lastBytesTransfered = new ArrayList<Long>();
+            
+            HostPort hp = this.gridFTPClient.setPassive();
+            srcr.gridFTPClient.setActive(hp);
+            
+            srcr.gridFTPClient.extendedTransfer(source.getFile(),
+                source.getOffset(), source.getLength(), this.gridFTPClient,
+                destination.getFile(), destination.getOffset(), logger.isDebugEnabled() ? this : null);
+        }
+        catch (Exception e) {
+            throw translateException("Transfer failed", e);
+        }
+    }
+    
+    private List<Long> lastBytesTransfered = new ArrayList<Long>();
+    private static long lastBytes = 0, crtBytes = 0;
+    private static long lastTime = 0, firstTime = System.currentTimeMillis();
+
+    public synchronized void markerArrived(Marker m) {
+        if (m instanceof PerfMarker) {
+            PerfMarker pm = (PerfMarker) m;
+            int stripe = 0;
+            try {
+                if (pm.hasStripeIndex()) {
+                    stripe = (int) pm.getStripeIndex();
+                }
+                while (lastBytesTransfered.size() <= stripe) {
+                    lastBytesTransfered.add(0L);
+                }
+                if (pm.hasStripeBytesTransferred()) {
+                    long crt = pm.getStripeBytesTransferred();
+                    crtBytes += crt - lastBytesTransfered.get(stripe);
+                    lastBytesTransfered.set(stripe, crt);
+                }
+                long now = System.currentTimeMillis();
+                if (now - lastTime > 1000) {
+                    String msg = "[GridFTP bandwidth] running average: " + units((crtBytes - lastBytes) / (now - lastTime) * 1000) + 
+                            "B/s, average: " + units(crtBytes / (now - firstTime + 1) * 1000) + 
+                            "B/s, total: " + units(crtBytes) + "B, per window: " + units(crtBytes - lastBytes) +
+                            "B, window: " + (now - lastTime) / 1000 + 
+                            "s, time: " + (now - firstTime) / 1000 + "s";
+                    logger.debug(msg);
+                    lastTime = now;
+                    lastBytes = crtBytes;
+                }
+            }
+            catch (PerfMarkerException e) {
+                logger.info("Cannot get performance marker information", e);
+            }
+        }
+    }
+    
+    private static final String[] U = { "", "K", "M", "G" };
+    private static final NumberFormat NF = new DecimalFormat("###.##");
+
+    public static String units(long v) {
+        double dv = v;
+        int index = 0;
+        while (dv > 1024 && index < U.length - 1) {
+            dv = dv / 1024;
+            index++;
+        }
+        return NF.format(dv) + " " + U[index];
+    }    
 }
