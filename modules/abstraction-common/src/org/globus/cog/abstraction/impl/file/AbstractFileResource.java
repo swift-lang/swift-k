@@ -380,4 +380,10 @@ public abstract class AbstractFileResource implements FileResource {
             throws FileResourceException {
         throw new UnsupportedOperationException("The " + getName() + " provider does not support third party transfers");
     }
+    
+    protected void checkNoPartialTransfers(FileFragment f1, FileFragment f2, String name) {
+        if (f1.isFragment() || f2.isFragment()) {
+            throw new UnsupportedOperationException("The " + name + " provider does not support partial transfers");
+        }
+    }
 }
