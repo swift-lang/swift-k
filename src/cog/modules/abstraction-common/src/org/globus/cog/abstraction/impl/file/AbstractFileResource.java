@@ -18,10 +18,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.GridResource;
 import org.globus.cog.abstraction.interfaces.Identity;
+import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
@@ -119,6 +121,42 @@ public abstract class AbstractFileResource implements FileResource {
     /** get attribute */
     public Object getAttribute(String name) {
         return this.attributes.get(name);
+    }
+
+    @Override
+    public void getFile(String remoteFileName, String localFileName)
+            throws FileResourceException {
+        getFile(new FileFragmentImpl(remoteFileName), new FileFragmentImpl(localFileName));
+    }
+
+    @Override
+    public void getFile(String remoteFileName, String localFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException {
+        getFile(new FileFragmentImpl(remoteFileName), new FileFragmentImpl(localFileName), progressMonitor);
+    }
+
+    @Override
+    public void getFile(FileFragment remote, FileFragment local)
+            throws FileResourceException {
+        getFile(remote, local, null);
+    }
+
+    @Override
+    public void putFile(String localFileName, String remoteFileName)
+            throws FileResourceException {
+        putFile(new FileFragmentImpl(localFileName), new FileFragmentImpl(remoteFileName));
+    }
+
+    @Override
+    public void putFile(String localFileName, String remoteFileName,
+            ProgressMonitor progressMonitor) throws FileResourceException {
+        putFile(new FileFragmentImpl(localFileName), new FileFragmentImpl(remoteFileName), progressMonitor);
+    }
+
+    @Override
+    public void putFile(FileFragment local, FileFragment remote)
+            throws FileResourceException {
+        putFile(local, remote, null);
     }
 
     /** Equivalent to the cp -r command for copying directories */
@@ -333,6 +371,13 @@ public abstract class AbstractFileResource implements FileResource {
     }
 
     public String toString() {
-        return name;
+        return "FileResource: " + name;
+    }
+
+    @Override
+    public void thirdPartyTransfer(FileResource sourceResource,
+            FileFragment source, FileFragment destination)
+            throws FileResourceException {
+        throw new UnsupportedOperationException("The " + getName() + " provider does not support third party transfers");
     }
 }
