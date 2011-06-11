@@ -26,6 +26,7 @@ import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
+import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
@@ -36,6 +37,8 @@ import org.globus.cog.abstraction.interfaces.ProgressMonitor;
  * Supports absolute and relative path names
  */
 public class FileResourceImpl extends AbstractFileResource {
+    public static final String PROTOCOL = "local";
+    
     public static final Logger logger = Logger
             .getLogger(FileResourceImpl.class);
 
@@ -44,7 +47,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     public FileResourceImpl(String name) {
-        super(name, FileResource.Local, null, null);
+        super(name, PROTOCOL, null, null);
     }
 
     /** set user's home directory as the current directory */
@@ -72,8 +75,8 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** list the contents of the current directory */
-    public Collection list() {
-        List files = new ArrayList();
+    public Collection<GridFile> list() {
+        List<GridFile> files = new ArrayList<GridFile>();
         File[] f = new File[] { new File("a.txt"), new File("b.txt") };
         for (int i = 0; i < f.length; i++) {
             files.add(createGridFile(f[i]));
@@ -82,7 +85,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     /** list contents of the given directory */
-    public Collection list(String directory) throws FileResourceException {
+    public Collection<GridFile> list(String directory) throws FileResourceException {
         return list();
     }
 
@@ -109,26 +112,17 @@ public class FileResourceImpl extends AbstractFileResource {
     public void deleteFile(String fileName) throws FileResourceException {
     }
 
-    public void getFile(String remoteFileName, String localFileName)
-            throws FileResourceException {
-    }
-
     /** copy a file */
-    public void getFile(String remoteFileName, String localFileName,
+    public void getFile(FileFragment remote, FileFragment local,
             ProgressMonitor progressMonitor) throws FileResourceException {
         if (progressMonitor != null) {
             progressMonitor.progress(1024, 1024);
         }
     }
 
-    public void putFile(String localFileName, String remoteFileName,
+    public void putFile(FileFragment local, FileFragment remote,
             ProgressMonitor progressMonitor) throws FileResourceException {
-        getFile(localFileName, remoteFileName, progressMonitor);
-    }
-
-    /** copy a file */
-    public void putFile(String localFileName, String remoteFileName)
-            throws FileResourceException {
+        getFile(local, remote, progressMonitor);
     }
 
     /** copy a directory */
@@ -224,7 +218,7 @@ public class FileResourceImpl extends AbstractFileResource {
         Permissions allPermissions = new PermissionsImpl();
         gridFile.setUserPermissions(userPermissions);
         gridFile.setGroupPermissions(groupPermissions);
-        gridFile.setAllPermissions(allPermissions);
+        gridFile.setWorldPermissions(allPermissions);
 
         return gridFile;
     }
@@ -239,5 +233,15 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public boolean supportsStreams() {
         return true;
+    }
+
+    @Override
+    public boolean supportsPartialTransfers() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsThirdPartyTransfers() {
+        return false;
     }
 }
