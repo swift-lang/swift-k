@@ -239,9 +239,8 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public void getFile(FileFragment remote, FileFragment local,
             final ProgressMonitor progressMonitor) throws FileResourceException {
-        if (remote.isFragment() || local.isFragment()) {
-            throw new UnsupportedOperationException("The SSH provider does not support partial transfers");
-        }
+        checkNoPartialTransfers(remote, local, "ssh");
+        
         File localFile = new File(local.getFile());
         try {
             SftpFile file = sftp.openFile(absPath(remote.getFile()),
