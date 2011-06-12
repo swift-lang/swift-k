@@ -22,11 +22,7 @@ import org.globus.ftp.exception.ServerException;
 
 public abstract class AbstractFTPFileResource extends AbstractFileResource {
 
-    public AbstractFTPFileResource() {
-        super();   
-    }
-
-    public AbstractFTPFileResource(String name, String protocol, ServiceContact serviceContact, SecurityContext securityContext) {
+    protected AbstractFTPFileResource(String name, String protocol, ServiceContact serviceContact, SecurityContext securityContext) {
         super(name, protocol, serviceContact, securityContext);        
     }
 

@@ -9,18 +9,11 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.persistent;
 
-import org.globus.cog.abstraction.interfaces.SecurityContext;
-import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 
 public class FileResourceImpl extends org.globus.cog.abstraction.impl.file.coaster.FileResourceImpl {
 
     public FileResourceImpl() {
         super(false);
-    }
-
-    public FileResourceImpl(String name, String protocol, ServiceContact serviceContact,
-            SecurityContext securityContext) {
-        super(name, protocol, serviceContact, securityContext, false);
     }
 }

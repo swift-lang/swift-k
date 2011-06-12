@@ -42,7 +42,7 @@ public class FileResourceImpl extends AbstractFileResource {
             .getLogger(FileResourceImpl.class);
 
     public FileResourceImpl() {
-        super();
+        this(null);
     }
 
     public FileResourceImpl(String name) {

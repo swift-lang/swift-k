@@ -48,11 +48,15 @@ public class FileResourceImpl extends AbstractFileResource {
     private static Object mkdirsLock = new Object();
 
     public FileResourceImpl() {
-        super();
+        this(null);
     }
 
     public FileResourceImpl(String name) {
         super(name, "local", null, null);
+    }
+    
+    protected FileResourceImpl(String name, String protocol) {
+        super(name, protocol, null, null);
     }
 
     /** set user's home directory as the current directory */

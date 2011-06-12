@@ -59,12 +59,8 @@ public class FileResourceImpl extends AbstractFileResource {
     }
     
     public FileResourceImpl(boolean autostart) {
+        super(null, "coaster", null, null);
         this.autostart = autostart;
-    }
-    
-    public FileResourceImpl(String name, String protocol,
-            ServiceContact serviceContact, SecurityContext securityContext) {
-        this(name, protocol, serviceContact, securityContext, true);
     }
 
     public FileResourceImpl(String name, String protocol,
