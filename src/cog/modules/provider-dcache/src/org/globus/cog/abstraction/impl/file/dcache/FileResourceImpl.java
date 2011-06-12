@@ -63,11 +63,11 @@ public class FileResourceImpl extends
     }
 
     public FileResourceImpl() {
-        this("dcache");
+        super(null);
     }
 
     public FileResourceImpl(String name) {
-        super(name);
+        super(name, "dcache");
     }
 
     public void getFile(FileFragment remote, FileFragment local,

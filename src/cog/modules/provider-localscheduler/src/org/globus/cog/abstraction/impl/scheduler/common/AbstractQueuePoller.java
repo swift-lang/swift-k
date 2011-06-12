@@ -90,6 +90,7 @@ public abstract class AbstractQueuePoller implements Runnable {
                 Thread.sleep(sleepTime);
             }
             catch (InterruptedException e) {
+                return;
             }
         }
     }

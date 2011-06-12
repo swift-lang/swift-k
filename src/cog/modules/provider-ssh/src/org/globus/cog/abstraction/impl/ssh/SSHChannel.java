@@ -33,6 +33,4 @@ public class SSHChannel {
     public SSHConnectionBundle getBundle() {
         return bundle;
     }
-    
-    
 }
