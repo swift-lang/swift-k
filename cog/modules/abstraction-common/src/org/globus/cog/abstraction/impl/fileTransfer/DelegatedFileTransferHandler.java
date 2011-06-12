@@ -461,8 +461,11 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
             this.sourceResource = prepareService(sourceService);
             this.destinationResource = prepareService(destinationService);
 
-            boolean canDoThirdParty = this.sourceResource.supportsThirdPartyTransfers() &&
-                this.sourceResource.getProtocol().equals(this.destinationResource.getProtocol());
+            boolean canDoThirdParty = false;
+            if (this.sourceResource != null && this.destinationResource != null) {
+                canDoThirdParty = this.sourceResource.supportsThirdPartyTransfers() &&
+                    this.sourceResource.getProtocol().equals(this.destinationResource.getProtocol());
+            }
             if (spec.isThirdParty()) {
                 if (!canDoThirdParty) {
                     throw new TaskSubmissionException("Cannot do third party transfer between " + 

@@ -36,16 +36,15 @@ public abstract class AbstractFileResource implements FileResource {
     private final int type = GridResource.FILE;
     private String protocol;
     private boolean started;
-
-    protected AbstractFileResource() {
-        this(null, null, null, null);
-    }
-
+    
     protected AbstractFileResource(String name, String protocol,
             ServiceContact serviceContact, SecurityContext securityContext) {
         attributes = new HashMap<String, Object>();
         identity = new IdentityImpl();
         this.name = name;
+        if (protocol == null) {
+            throw new NullPointerException();
+        }
         this.protocol = protocol;
         this.serviceContact = serviceContact;
         this.securityContext = securityContext;
