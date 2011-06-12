@@ -18,7 +18,7 @@ representation is a file called "file1.bin" located at
 "/home/yongzh/data/", then the dataset might be declared as follows:
 
 ----
-imagefile f1<single_file_mapper;file="/home/yongzh/data/file1.bin">  
+imagefile f1<single_file_mapper;file="/home/yongzh/data/file1.bin">
 ----
 
 The above example declares a dataset called f1, which uses a single file
@@ -28,7 +28,7 @@ SwiftScript has a simplified syntax for this case, since
 single_file_mapper is frequently used:
 
 ----
-binaryfile f1<"/home/yongzh/data/file1.bin">  
+binaryfile f1<"/home/yongzh/data/file1.bin">
 ----
 
 Swift comes with a number of mappers that handle common mapping
@@ -66,7 +66,7 @@ optionally assign a value to them or map those variables to on-disk files.
 Declaration statements have the general form:
 
 ----
-typename variablename (<mapping> | = initialValue ) ;  
+typename variablename (<mapping> | = initialValue ) ;
 ----
 
 The format of the mapping expression is defined in the Mappers section.
@@ -84,7 +84,7 @@ Assignments may only be made to variables that have not already been
 assigned. Assignment statements have the general form:
 
 ----
-variable = value;  
+variable = value;
 ----
 
 where value can be either an expression or a procedure call that returns
@@ -106,7 +106,7 @@ and produce multiple outputs. Inputs are specified to the right of the
 function name, and outputs are specified to the left. For example:
 
 ----
-(type3 out1, type4 out2) myproc (type1 in1, type2 in2)  
+(type3 out1, type4 out2) myproc (type1 in1, type2 in2)
 ----
 
 The above example declares a procedure called myproc, which has two
@@ -121,18 +121,18 @@ parameters and any optional parameter is bound using keyword parameter
 passing. For example, if myproc1 is defined as:
 
 ----
-(binaryfile bf) myproc1 (int i, string s="foo")  
+(binaryfile bf) myproc1 (int i, string s="foo")
 ----
 
 Then that procedure can be called like this, omitting the optional
 ----
 parameter s:
-binaryfile mybf = myproc1(1);  
+binaryfile mybf = myproc1(1);
 ----
 
 or like this supplying a value for the optional parameter s:
 ----
-binaryfile mybf = myproc1 (1, s="bar");  
+binaryfile mybf = myproc1 (1, s="bar");
 ----
 
 Atomic procedures
@@ -143,9 +143,9 @@ program, and how logical data types are mapped to command line arguments.
 Atomic procedures are defined with the app keyword:
 
 ----
-app (binaryfile bf) myproc (int i, string s="foo") {  
-    myapp i s @filename(bf);  
-}             
+app (binaryfile bf) myproc (int i, string s="foo") {
+    myapp i s @filename(bf);
+}
 ----
 
 which specifies that myproc invokes an executable called myapp,
@@ -158,11 +158,11 @@ Compound procedures
 A compound procedure contains a set of SwiftScript statements:
 
 ----
-(type2 b) foo_bar (type1 a) {  
-    type3 c;  
-    c = foo(a);    // c holds the result of foo  
-    b = bar(c);    // c is an input to bar  
-}  
+(type2 b) foo_bar (type1 a) {
+    type3 c;
+    c = foo(a);    // c holds the result of foo
+    b = bar(c);    // c is an input to bar
+}
 ----
 
 Control Constructs
@@ -178,19 +178,19 @@ The foreach construct is used to apply a block of statements to each
 element in an array. For example:
 
 ----
-check_order (file a[]) {  
-    foreach f in a {  
-        compute(f);  
-    }  
-}  
+check_order (file a[]) {
+    foreach f in a {
+        compute(f);
+    }
+}
 ----
 
 foreach statements have the general form:
 
 ----
-foreach controlvariable (,index) in expression {  
-    statements  
-}  
+foreach controlvariable (,index) in expression {
+    statements
+}
 ----
 
 The block of statements is evaluated once for each element in
@@ -206,11 +206,11 @@ executed, based on a boolean predicate. if statements generally have
 the form:
 
 ----
-if(predicate) {  
-    statements  
-} else {  
-    statements  
-}  
+if(predicate) {
+    statements
+} else {
+    statements
+}
 ----
 
 where predicate is a boolean expression.
@@ -224,15 +224,15 @@ based on the value of a numerical control expression. switch
 statements take the general form:
 
 ----
-switch(controlExpression) {  
-    case n1:  
-        statements2  
-    case n2:  
-        statements2  
-    [...]  
-    default:  
-        statements  
-}  
+switch(controlExpression) {
+    case n1:
+        statements2
+    case n2:
+        statements2
+    [...]
+    default:
+        statements
+}
 ----
 
 The control expression is evaluated, the resulting numerical value used
@@ -254,9 +254,9 @@ condition holds.
 The general form is:
 
 ----
-iterate var {  
-    statements;  
-} until (terminationExpression);  
+iterate var {
+    statements;
+} until (terminationExpression);
 ----
 
 with the variable var starting at 0 and increasing by one in each
@@ -300,17 +300,38 @@ SwiftScript file. (since Swift 0.10)
 For example, a SwiftScript program might contain this:
 
 ----
-import defs;  
-file f;  
+import "defs";
+file f;
 ----
 
-which would import the content of defs.swift in the current directory:
+which would import the content of defs.swift:
 
 ----
-type file;  
+type file;
 ----
 
-Imported files are read from the current working directory.
+Imported files are read from two places. They are either read from
+the path that is specified from the import command, such as:
+----
+import "definitions/file/defs";
+----
+
+or they are read from the environment variable SWIFT_LIB. This
+environment variable is used just like the PATH environment
+variable. For example, if the command below was issued to the bash
+shell:
+----
+export SWIFT_LIB=${HOME}/Swift/defs:${HOME}/Swift/functions
+----
+then the import command will check for the file defs.swift in both
+"$\{HOME}/Swift/defs" and "$\{HOME}/Swift/functions" first before trying
+the path that was specified in the import command.
+
+Other valid imports:
+----
+import "../functions/func"
+import "/home/user/Swift/definitions/defs"
+----
 
 There is no requirement that a module is imported only once. If a module
 is imported multiple times, for example in different files, then Swift
@@ -342,7 +363,7 @@ The single_file_mapper maps a single physical file to a dataset.
 |f[0]|INVALID
 |f.bar|INVALID
 |=======================
-		
+
 [options="header, autowidth"]
 |=================
 |parameter|meaning
@@ -351,12 +372,12 @@ The single_file_mapper maps a single physical file to a dataset.
 
 Example:
 ----
-file f <single_file_mapper;file="plot_outfile_param">;  
+file f <single_file_mapper;file="plot_outfile_param">;
 ----
 
 There is a simplified syntax for this mapper:
 ----
-file f <"plot_outfile_param">;  
+file f <"plot_outfile_param">;
 ----
 
 The simple mapper
@@ -377,8 +398,8 @@ output filenames, pattern is ignored.
 |====================
 
 ----
-type file;  
-file f <simple_mapper;prefix="foo", suffix=".txt">;  
+type file;
+file f <simple_mapper;prefix="foo", suffix=".txt">;
 ----
 
 The above maps all filenames that start with foo and have an extension
@@ -390,17 +411,17 @@ The above maps all filenames that start with foo and have an extension
 |f|foo.txt
 |=================
 ----
-type messagefile;  
-  
-(messagefile t) greeting(string m) {.  
-    app {  
-        echo m stdout=@filename(t);  
-    }  
-}  
-  
-messagefile outfile <simple_mapper;prefix="foo",suffix=".txt">;  
-  
-outfile = greeting("hi");  
+type messagefile;
+
+(messagefile t) greeting(string m) {.
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+messagefile outfile <simple_mapper;prefix="foo",suffix=".txt">;
+
+outfile = greeting("hi");
 ----
 
 This will output the string 'hi' to the file foo.txt.
@@ -409,19 +430,19 @@ The simple_mapper can be used to map arrays. It will map the array
 index into the filename between the prefix and suffix.
 
 ----
-type messagefile;  
-  
-(messagefile t) greeting(string m) {   
-    app {  
-        echo m stdout=@filename(t);  
-    }  
-}  
+type messagefile;
 
-messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt">;  
-  
-outfile[0] = greeting("hello");  
-outfile[1] = greeting("middle");  
-outfile[2] = greeting("goodbye");  
+(messagefile t) greeting(string m) {
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt">;
+
+outfile[0] = greeting("hello");
+outfile[1] = greeting("middle");
+outfile[2] = greeting("goodbye");
 ----
 
 [options="header, autowidth"]
@@ -431,28 +452,28 @@ outfile[2] = greeting("goodbye");
 |outfile[1]|baz0001.txt
 |outfile[2]|baz0002.txt
 |=======================
-		
+
 simple_mapper can be used to map structures. It will map the name of
 the structure member into the filename, between the prefix and the suffix.
 
 ----
-type messagefile;  
-  
-type mystruct {  
-  messagefile left;  
-  messagefile right;  
-};  
-  
-(messagefile t) greeting(string m) {   
-    app {  
-        echo m stdout=@filename(t);  
-    }  
-}  
-  
-mystruct out <simple_mapper;prefix="qux",suffix=".txt">;  
-  
-out.left = greeting("hello");  
-out.right = greeting("goodbye");  
+type messagefile;
+
+type mystruct {
+  messagefile left;
+  messagefile right;
+};
+
+(messagefile t) greeting(string m) {
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+mystruct out <simple_mapper;prefix="qux",suffix=".txt">;
+
+out.left = greeting("hello");
+out.right = greeting("goodbye");
 ----
 
 This will output the string "hello" into the file qux.left.txt and the
@@ -464,7 +485,7 @@ string "goodbye" into the file qux.right.txt.
 |out.left|quxleft.txt
 |out.right|quxright.txt
 |=======================
-		
+
 concurrent mapper
 ~~~~~~~~~~~~~~~~~
 concurrent_mapper is almost the same as the simple mapper, except that
@@ -486,8 +507,8 @@ output filenames, pattern is ignored.
 
 Example:
 ----
-file f1;  
-file f2 <concurrent_mapper;prefix="foo", suffix=".txt">;  
+file f1;
+file f2 <concurrent_mapper;prefix="foo", suffix=".txt">;
 ----
 The above example would use concurrent mapper for f1 and f2, and
 generate f2 filename with prefix "foo" and extension ".txt"
@@ -516,7 +537,7 @@ all file names that contain foo.
 
 Example:
 ----
-file texts[] <filesys_mapper;prefix="foo", suffix=".txt">;  
+file texts[] <filesys_mapper;prefix="foo", suffix=".txt">;
 ----
 
 The above example would map all filenames that start with "foo" and
@@ -531,7 +552,7 @@ foo__1.txt, then the mapping might be:
 |texts[1]|foo1.txt
 |texts[2]|foo__1.txt
 |=================
-		
+
 
 
 fixed array mapper
@@ -549,8 +570,8 @@ comma or colon
 Example:
 
 ----
-file texts[] <fixed_array_mapper;files="file1.txt, fileB.txt, file3.txt">;  
-----          
+file texts[] <fixed_array_mapper;files="file1.txt, fileB.txt, file3.txt">;
+----
 
 would cause a mapping like this:
 
@@ -574,9 +595,9 @@ The array_mapper maps from an array of strings into a file
 
 Example:
 ----
-string s[] = [ "a.txt", "b.txt", "c.txt" ];  
-  
-file f[] <array_mapper;files=s>;  
+string s[] = [ "a.txt", "b.txt", "c.txt" ];
+
+file f[] <array_mapper;files=s>;
 ----
 
 This will establish the mapping:
@@ -609,11 +630,11 @@ reference the group matched.
 
 Example:
 ----
-string s = "picture.gif";  
-file f <regexp_mapper;  
-  source=s,  
-  match="(.*)gif",  
-  transform="\\1jpg">;   
+string s = "picture.gif";
+file f <regexp_mapper;
+  source=s,
+  match="(.*)gif",
+  transform="\\1jpg">;
 ----
 
 This example transforms a string ending gif into one ending jpg and
@@ -623,7 +644,7 @@ maps that to a file.
 |===========
 |Swift variable|Filename
 |f|picture.jpg
-|=============		
+|=============
 
 
 csv mapper
@@ -635,11 +656,11 @@ file contains columns: name age GPA then the type needs to have member
 elements like this:
 
 ----
-type student {  
-  file name;  
-  file age;  
-  file GPA;  
-}  
+type student {
+  file name;
+  file age;
+  file GPA;
+}
 ----
 
 If the file does not contain a header with column info, then the column
@@ -658,7 +679,7 @@ default is 0.
 
 Example:
 ----
-student stus[] <csv_mapper;file="stu_list.txt">;  
+student stus[] <csv_mapper;file="stu_list.txt">;
 ----
 
 The above example would read a list of student info from file
@@ -686,7 +707,7 @@ then some of the mappings produced by this example would be:
 |stus[2].name|q
 |stus[2].age|r
 |stus[2].gpa|s
-|=========		
+|=========
 
 external mapper
 ~~~~~~~~~~~~~~~
@@ -715,11 +736,11 @@ echo "[2] qux"
 echo "[0] foo"
 echo "[1] bar"
 ----
-			
+
 then a mapping statement:
 
 ----
-student stus[] <ext;exec="mapper.sh">;  
+student stus[] <ext;exec="mapper.sh">;
 ----
 
 would map
