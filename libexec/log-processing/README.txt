@@ -11,6 +11,8 @@ those lines via log4j.properties
 Make sure log4.properties contains:
 --------------------------------------
 log4j.logger.swift=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Block=DEBUG
 --------------------------------------
 
 Normalize event times in the log to the run start time
