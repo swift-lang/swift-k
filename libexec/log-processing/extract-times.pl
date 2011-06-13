@@ -12,6 +12,7 @@
 
 BEGIN
 {
+    # Map from Cpu id to job start time on that Cpu
     %cpus = ();
 }
 
