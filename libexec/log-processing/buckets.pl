@@ -28,7 +28,7 @@ my $file = $ARGV[1];
 
 open FILE, "<", $file or die "could not open: $file\n";
 
-my %b = ();
+my %bucket = ();
 while (<FILE>)
 {
   # Round up to nearest bucket
@@ -36,18 +36,18 @@ while (<FILE>)
   while (($v % $width) != 0) {
     $v++;
   }
-  if (exists $b{$v}) {
-    $b{$v} = $b{$v} + 1;
+  if (exists $bucket{$v}) {
+    $bucket{$v} = $bucket{$v} + 1;
   }
   else {
-    $b{$v} = 1;
+    $bucket{$v} = 1;
   }
 }
 
-@s = sort { $a <=> $b } keys %b;
+@s = sort { $a <=> $b } keys %bucket;
 
 for (@s) {
-  print "$_ $b{$_}\n";
+  print "$_ $bucket{$_}\n";
 }
 
 print "\n";
