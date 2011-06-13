@@ -64,9 +64,7 @@ public abstract class AbstractExecutor implements ProcessListener {
     public void start() throws AuthorizationException, GSSException,
             IOException, ProcessException {
     	
-    	validate(task);
-    	
-        File scriptdir = new File(System.getProperty("user.home")
+    	File scriptdir = new File(System.getProperty("user.home")
                 + File.separatorChar + ".globus" + File.separatorChar
                 + "scripts");
         scriptdir.mkdirs();
@@ -148,15 +146,6 @@ public abstract class AbstractExecutor implements ProcessListener {
                 spec.getStdErrorLocation(), exitcode, this));
     }
 
-    /**
-       Ensure this task is valid 
-       @param task May be inspected by implementing executor 
-       @throws ProcessException Thrown by implementing executor 
-                                if task is invalid 
-     */
-    protected void validate(Task task) 
-    throws ProcessException {};
-    
     protected abstract Job createJob(String jobid, String stdout,
             FileLocation stdOutputLocation, String stderr,
             FileLocation stdErrorLocation, String exitcode,
