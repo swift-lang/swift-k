@@ -1,0 +1,111 @@
+2011-06-03 11:40:08,649-0500 DEBUG Loader Max heap: 238616576
+2011-06-03 11:40:08,650-0500 DEBUG textfiles BEGIN SWIFTSCRIPT:
+type messagefile;
+
+app (messagefile t) greeting() { 
+        echo "hello" stdout=@filename(t);
+}
+
+messagefile outfile <"0011-echo.out">;
+
+outfile = greeting();
+
+
+
+2011-06-03 11:40:08,650-0500 DEBUG textfiles END SWIFTSCRIPT:
+2011-06-03 11:40:08,650-0500 INFO  Loader 0011-echo.swift: source file is new. Recompiling.
+2011-06-03 11:40:09,279-0500 INFO  Karajan Validation of XML intermediate file was successful
+2011-06-03 11:40:09,475-0500 DEBUG Loader setting: tc.file to: ./tc.data
+2011-06-03 11:40:09,475-0500 DEBUG textfiles using default sites file
+2011-06-03 11:40:09,493-0500 INFO  VDL2ExecutionContext Stack dump:
+Level 1
+[iA = 0, iB = 0, bA = false, bB = false]
+	vdl:instanceconfig = Swift configuration []
+	vdl:operation = run
+	PATH_SEPARATOR = /
+	swift.home = /home/Alberto/Swift/cog/modules/swift/dist/swift-svn/bin/..
+	#vdl:futureWrapperMap = org.griphyn.vdl.karajan.WrapperMap@171f189
+
+
+2011-06-03 11:40:10,075-0500 INFO  unknown Using sites file: /home/Alberto/Swift/cog/modules/swift/dist/swift-svn/bin/../etc/sites.xml
+2011-06-03 11:40:10,112-0500 INFO  unknown Using tc.data: ./tc.data
+2011-06-03 11:40:10,212-0500 INFO  AbstractScheduler Setting resources to: {localhost=localhost}
+2011-06-03 11:40:10,702-0500 INFO  unknown Swift svn swift-r4543 cog-r3143
+
+2011-06-03 11:40:10,703-0500 INFO  unknown RUNID id=run:20110603-1140-rr21aum3
+2011-06-03 11:40:10,767-0500 DEBUG greeting PROCEDURE line=3 thread=0-1 name=greeting
+2011-06-03 11:40:10,774-0500 INFO  vdl:execute START thread=0-1 tr=echo
+2011-06-03 11:40:10,798-0500 INFO  WeightedHostScoreScheduler CONTACT_SELECTED host=localhost, score=1.000
+2011-06-03 11:40:10,802-0500 INFO  GlobalSubmitQueue No global submit throttle set. Using default (1024)
+2011-06-03 11:40:10,805-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,873-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,876-0500 INFO  vdl:initshareddir START host=localhost - Initializing shared directory
+2011-06-03 11:40:10,880-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,899-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,902-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,904-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,908-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,912-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:10,914-0500 INFO  vdl:initshareddir END host=localhost - Done initializing shared directory
+2011-06-03 11:40:10,917-0500 DEBUG vdl:execute2 THREAD_ASSOCIATION jobid=echo-1geu42bk thread=0-1-1 host=localhost replicationGroup=0geu42bk
+2011-06-03 11:40:10,925-0500 INFO  vdl:createdirset START jobid=echo-1geu42bk host=localhost - Initializing directory structure
+2011-06-03 11:40:10,926-0500 INFO  vdl:createdirset END jobid=echo-1geu42bk - Done initializing directory structure
+2011-06-03 11:40:10,926-0500 INFO  vdl:dostagein START jobid=echo-1geu42bk - Staging in files
+2011-06-03 11:40:10,932-0500 INFO  vdl:dostagein END jobid=echo-1geu42bk - Staging in finished
+2011-06-03 11:40:10,934-0500 DEBUG vdl:execute2 JOB_START jobid=echo-1geu42bk tr=echo arguments=[?:string = hello - Closed] tmpdir=0011-echo-20110603-1140-rr21aum3/jobs/1/echo-1geu42bk host=localhost
+2011-06-03 11:40:10,937-0500 DEBUG textfiles BEGIN TC:
+#This is the transformation catalog.
+#
+#It comes pre-configured with a number of simple transformations with
+#paths that are likely to work on a linux box. However, on some systems,
+#the paths to these executables will be different (for example, sometimes
+#some of these programs are found in /usr/bin rather than in /bin)
+#
+#NOTE WELL: fields in this file must be separated by tabs, not spaces; and
+#there must be no trailing whitespace at the end of each line.
+#
+# sitename  transformation  path   INSTALLED  platform  profiles
+localhost 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+localhost 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+localhost 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+localhost 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+localhost 	cp 		/bin/cp         INSTALLED	INTEL32::LINUX	null
+localhost	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
+localhost	wc	/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
+localhost	touch	/bin/touch	INSTALLED	INTEL32::LINUX	null
+localhost	sleep	/bin/sleep	INSTALLED	INTEL32::LINUX	null
+localhost	delayedcat	/home/Alberto/Swift/cog/modules/swift/tests/language-behaviour/delayedcat.sh	INSTALLED	INTEL32::LINUX	null
+
+
+2011-06-03 11:40:10,937-0500 DEBUG textfiles END TC:
+2011-06-03 11:40:10,946-0500 INFO  GridExec TASK_DEFINITION: Task(type=JOB_SUBMISSION, identity=urn:0-1-1-1307119210103) is /bin/bash shared/_swiftwrap echo-1geu42bk -jobdir 1 -scratch  -e /bin/echo -out 0011-echo.out -err stderr.txt -i -d  -if  -of 0011-echo.out -k  -cdmfile  -status files -a hello
+2011-06-03 11:40:10,952-0500 INFO  JobSubmissionTaskHandler Submit: in: /var/tmp/0011-echo-20110603-1140-rr21aum3 command: /bin/bash /var/tmp/0011-echo-20110603-1140-rr21aum3/shared/_swiftwrap echo-1geu42bk -jobdir 1 -scratch  -e /bin/echo -out 0011-echo.out -err stderr.txt -i -d  -if  -of 0011-echo.out -k  -cdmfile  -status files -a hello
+2011-06-03 11:40:11,045-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:11,048-0500 DEBUG vdl:checkjobstatus START jobid=echo-1geu42bk
+2011-06-03 11:40:11,051-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:11,052-0500 INFO  vdl:checkjobstatus SUCCESS jobid=echo-1geu42bk - Success file found
+2011-06-03 11:40:11,053-0500 DEBUG vdl:execute2 STAGING_OUT jobid=echo-1geu42bk
+2011-06-03 11:40:11,055-0500 INFO  vdl:dostageout START jobid=echo-1geu42bk - Staging out files
+2011-06-03 11:40:11,056-0500 DEBUG vdl:dostageout stageouts: [[$, outfile:messagefile = ? - Open]]
+2011-06-03 11:40:11,064-0500 DEBUG vdl:dostageout FILE_STAGE_OUT_START srcname=0011-echo.out srcdir=0011-echo-20110603-1140-rr21aum3/shared/ srchost=localhost destdir= desthost=localhost provider=file
+2011-06-03 11:40:11,065-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:11,077-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:11,078-0500 DEBUG vdl:dostageout FILE_STAGE_OUT_END srcname=0011-echo.out srcdir=0011-echo-20110603-1140-rr21aum3/shared/ srchost=localhost destdir= desthost=localhost provider=file
+2011-06-03 11:40:11,083-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:11,092-0500 INFO  vdl:dostageout END jobid=echo-1geu42bk - Staging out finished
+2011-06-03 11:40:11,097-0500 DEBUG vdl:execute2 JOB_END jobid=echo-1geu42bk
+2011-06-03 11:40:11,098-0500 INFO  vdl:execute END_SUCCESS thread=0-1 tr=echo
+2011-06-03 11:40:11,100-0500 DEBUG greeting PROCEDURE_END line=3
+2011-06-03 11:40:11,113-0500 DEBUG vdl:mains Starting cleanups
+2011-06-03 11:40:11,116-0500 INFO  vdl:cleanups START cleanups=[[0011-echo-20110603-1140-rr21aum3, localhost]]
+2011-06-03 11:40:11,118-0500 INFO  vdl:cleanup START dir=0011-echo-20110603-1140-rr21aum3 host=localhost
+2011-06-03 11:40:11,119-0500 DEBUG vdl:cleanup cdmfile 
+2011-06-03 11:40:11,123-0500 INFO  GridExec TASK_DEFINITION: Task(type=JOB_SUBMISSION, identity=urn:0-1-1307119210114) is /bin/rm -rf 0011-echo-20110603-1140-rr21aum3
+2011-06-03 11:40:11,123-0500 INFO  JobSubmissionTaskHandler Submit: in: /var/tmp command: /bin/rm -rf 0011-echo-20110603-1140-rr21aum3
+2011-06-03 11:40:11,123-0500 INFO  LateBindingScheduler JobQueue: 0
+2011-06-03 11:40:11,130-0500 INFO  vdl:cleanup END dir=0011-echo-20110603-1140-rr21aum3 host=localhost
+2011-06-03 11:40:11,131-0500 INFO  vdl:cleanups END cleanups=[[0011-echo-20110603-1140-rr21aum3, localhost]]
+2011-06-03 11:40:11,132-0500 DEBUG vdl:mains Ending cleanups
+2011-06-03 11:40:11,158-0500 INFO  Loader Swift finished with no errors
