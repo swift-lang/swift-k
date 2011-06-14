@@ -444,9 +444,7 @@ namespace("vdl"
 							"-k ", kickstart, nl(),
 							"-cdmfile ", cdm:file(), nl(),
 							"-status ", statusMode, nl(),
-							"-a ", each(unwrapClosedList(arguments)), nl())
-						for(a, unwrapClosedList(arguments)
-							sys:file:write(wrapfile, append = true, a, nl())
+							for(a, unwrapClosedList(arguments), "-a ", a, nl())
 						)
 					)
 				)
