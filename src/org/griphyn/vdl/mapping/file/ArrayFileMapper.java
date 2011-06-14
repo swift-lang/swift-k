@@ -18,8 +18,8 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 public class ArrayFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_FILES = new MappingParam("files");
 
-	public Collection existing() {
-		List l = new ArrayList();
+	public Collection<Path> existing() {
+		List<Path> l = new ArrayList<Path>();
 		DSHandle dn = (DSHandle) PARAM_FILES.getRawValue(this);
 		if (dn == null) {
 		    throw new RuntimeException("Missing 'files' mapper attribute");
