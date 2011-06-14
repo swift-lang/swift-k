@@ -240,14 +240,14 @@ public class FileResourceImpl extends AbstractFileResource {
                 long crt = 0;
                 long total = Math.min(src.length(), remote.getLength());
                 byte[] buf = new byte[16384];
-                int read;
-                while ((read = remoteStream.read(buf, 0, Math.max(buf.length, (int) (total - crt)))) != -1) {
+                do {
+                    int read = remoteStream.read(buf, 0, Math.min(buf.length, (int) (total - crt)));
                     localStream.write(buf, 0, read);
                     crt += read;
                     if (progressMonitor != null) {
                         progressMonitor.progress(crt, total);
                     }
-                }
+                } while (crt < total);
             }
             finally {
                 if (remoteStream != null) {
