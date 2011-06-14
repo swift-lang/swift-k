@@ -21,7 +21,7 @@ Normalize event times in the log to the run start time
 * Generate the log, assuming the log is titled +swift-run.log+
 
 ------------------------------------------
-make -f libexec/log-processing/makefile.implicit swift-run.plot.norm
+./normalize-log.pl file.contains.start.time swift-run.log > swift-run.norm
 ------------------------------------------
 
 Make a basic load plot from Coasters Cpu log lines
