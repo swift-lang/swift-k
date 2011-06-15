@@ -45,8 +45,8 @@
 		<property name="maxFileOperations" value="{maxFileOperations}"/>
 		<property name="jobThrottle" value="{jobThrottle}"/>
 		
-		<task:availableHandlers type="execution"/>
-		<task:availableHandlers type="file"/>
+		<task:availableHandlers type="execution" includeAliases="true"/>
+		<task:availableHandlers type="file" includeAliases="true"/>
 		
 		<vdl:siteCatalog file="{sites}"/>
 	</scheduler>
