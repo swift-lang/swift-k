@@ -504,7 +504,7 @@ namespace("vdl"
 								"-k", kickstart,
 								"-cdmfile", cdm:file(),
 								"-status", statusMode,
-								"-a", maybe(unwrapClosedList(arguments))
+								"-a", maybe(each(unwrapClosedList(arguments)))
 							)
 							directory=wfdir
 							redirect=false
@@ -586,7 +586,7 @@ namespace("vdl"
 							exception(
 								concat(
 									"Exception in {tr}:", nl(),
-									maybe("Arguments: {arguments}", nl()),
+									maybe("Arguments: ", unwrapClosedList(arguments), nl()),
 									"Host: {rhost}", nl(),
 									"Directory: {tmpdir}",
 									"{outs}", nl(),
