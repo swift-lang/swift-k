@@ -9,7 +9,6 @@
  */
 package org.globus.cog.karajan.workflow.nodes.grid;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -25,37 +24,43 @@ public class AvailableTaskHandlers extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(AvailableTaskHandlers.class);
 
 	public static final Arg A_TYPE = new Arg.Optional("type");
+	public static final Arg A_ALIASES = new Arg.Optional("includeAliases", Boolean.FALSE);
 
 	static {
-		setArguments(AvailableTaskHandlers.class, new Arg[] { A_TYPE });
+		setArguments(AvailableTaskHandlers.class, new Arg[] { A_TYPE, A_ALIASES });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
-		List providers;
+		boolean aliases = TypeUtil.toBoolean(A_ALIASES.getValue(stack)); 
 		if (A_TYPE.isPresent(stack)) {
-			getHandlers(stack, TypeUtil.toString(A_TYPE.getValue(stack)));
+			getHandlers(stack, TypeUtil.toString(A_TYPE.getValue(stack)), aliases);
 		}
 		else {
-			getHandlers(stack, "execution");
-			getHandlers(stack, "file");
-			getHandlers(stack, "file-transfer");
+			getHandlers(stack, "execution", aliases);
+			getHandlers(stack, "file", aliases);
+			getHandlers(stack, "file-transfer", aliases);
 		}
 		return null;
 	}
 
-	protected void getHandlers(VariableStack stack, String type) throws ExecutionException {
+	protected void getHandlers(VariableStack stack, String type, boolean includeAliases) throws ExecutionException {
 		String atype = TaskHandlerNode.karajanToAbstractionType(type);
 		int itype = TaskHandlerNode.abstractionToHandlerType(atype);
 
-		List providers = AbstractionProperties.getProviders(atype);
-		Iterator i = providers.iterator();
-		while (i.hasNext()) {
-			String provider = (String) i.next();
+		List<String> providers = AbstractionProperties.getProviders(atype);
+		for (String provider : providers) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Available task handler: " + type + ", " + provider);
 			}
 			TaskHandlerNode.HANDLERS_CHANNEL.ret(stack, new TaskHandlerWrapper(provider,
 					itype));
+			if (includeAliases) {
+				List<String> aliases = AbstractionProperties.getAliases(provider);
+				for (String alias : aliases) {
+					TaskHandlerNode.HANDLERS_CHANNEL.ret(stack, new TaskHandlerWrapper(alias,
+							itype));
+				}
+			}
 		}
 	}
 }
