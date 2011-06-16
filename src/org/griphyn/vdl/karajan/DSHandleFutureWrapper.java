@@ -6,7 +6,6 @@ package org.griphyn.vdl.karajan;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
@@ -43,7 +42,7 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		}
 	}
 
-	public synchronized void addModificationAction(FutureListener target, VariableStack stack) {
+	public void addModificationAction(FutureListener target, VariableStack stack) {
 		/**
 		 * TODO So, the strategy is the following: getValue() or something else
 		 * throws a future exception; then some entity catches that and calls
@@ -52,14 +51,18 @@ public class DSHandleFutureWrapper implements Future, DSHandleListener {
 		 * check if the future was closed or modified at the time of the call of
 		 * this method and call notifyListeners().
 		 */
-		if (listeners == null) {
-			listeners = new LinkedList<ListenerStackPair>();
-		}
-		listeners.add(new ListenerStackPair(target, stack));
-		WaitingThreadsMonitor.addThread(stack);
-		if (handle.isClosed()) {
-			notifyListeners();
-		}
+	    synchronized(this) {
+    		if (listeners == null) {
+    			listeners = new LinkedList<ListenerStackPair>();
+    		}
+    		listeners.add(new ListenerStackPair(target, stack));
+    		WaitingThreadsMonitor.addThread(stack);
+    		if (!handle.isClosed()) {
+    		    return;
+    		}
+	    }
+	    // handle.isClosed();
+		notifyListeners();
 	}
 
 	private void notifyListeners() {

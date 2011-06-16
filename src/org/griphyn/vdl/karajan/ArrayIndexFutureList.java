@@ -5,11 +5,9 @@ package org.griphyn.vdl.karajan;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
@@ -71,12 +69,14 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
         return new FuturePairIterator(this, stack);
     }
 
-    public synchronized void close() {
-        closed = true;
-        Set<Object> allkeys = new HashSet<Object>(values.keySet());
-        allkeys.removeAll(keys);
-        // remaining keys must be added
-        keys.addAll(allkeys);
+    public void close() {
+        synchronized(this) {
+            closed = true;
+            Set<Object> allkeys = new HashSet<Object>(values.keySet());
+            allkeys.removeAll(keys);
+            // remaining keys must be added
+            keys.addAll(allkeys);
+        }
         notifyListeners();
     }
 
@@ -88,16 +88,20 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
         return this;
     }
 
-    public synchronized void addModificationAction(FutureListener target,
+    public void addModificationAction(FutureListener target,
             VariableStack stack) {
-        if (listeners == null) {
-            listeners = new ArrayList<ListenerStackPair>();
+        synchronized(this) {
+            if (listeners == null) {
+                listeners = new ArrayList<ListenerStackPair>();
+            }
+    
+            listeners.add(new ListenerStackPair(target, stack));
+            if (!closed) {
+                return;
+            }
         }
-
-        listeners.add(new ListenerStackPair(target, stack));
-        if (closed) {
-            notifyListeners();
-        }
+        // closed
+        notifyListeners();
     }
 
     private void notifyListeners() {
