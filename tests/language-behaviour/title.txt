@@ -1,1 +1,1 @@
-Language-Behaviour Tests
+Language-Behavior Tests
