@@ -1,157 +1,4 @@
 #!/bin/bash
-
-# USAGE NOTES:
-
-# The script will (optionally) checkout Swift, run several tests in a
-# subdirectory called run-DATE, and generate useful HTML output and
-# tests.log .  Tests are grouped into test GROUPs.
-
-# Usage: suite.sh <options>* <GROUPLISTFILE|GROUP>
-
-# PRIMARY USAGE MODE
-# Assuming your code is in /tmp/cog, where you
-# have the conventional cog/modules/swift configuration,
-# and you have done an ant dist, you can run
-# suite.sh -t -o /tmp $PWD/tests/groups/group-all-local.sh
-# or cd into /tmp and run
-# suite.sh -t cog/modules/swift/tests/groups/group-all-local.sh
-# The -t option is "Tree mode"- as in, "test my existing source tree"
-
-# Run suite.sh -h for quick help
-# When something goes wrong, find and check tests.log or use -v
-
-# SWIFT LOCATION
-# The TOPDIR (PWD by default) is set with the -o option.
-# Code is checked out into this directory or must already exist there.
-# The variables COG_VERSION and SWIFT_VERSION must be set for code checkout
-# e.g. COG_VERSION=branches/4.1.8, SWIFT_VERSION=branches/release-0.92
-# Swift is compiled and installed in its source tree
-# The run is executed in RUNDIR (TOPDIR/RUNDIRBASE)
-# The build test is started in TOPDIR
-# Everything for a Swift test is written in its RUNDIR
-# The temporary output always goes to OUTPUT (TOPDIR/exec.out)
-
-# HELPER SCRIPTS
-# Each *.swift test may be accompanied by a
-# *.setup.sh, *.check.sh, and/or *.clean.sh script
-# and a *.timeout specifier
-# The scripts may setup and inspect files in RUNDIR including exec.out,
-# which must be accessed in stdout.txt, because the currently running
-# tested process writes to exec.out, stdout.txt is a copy.
-# The GROUP scripts can read the GROUP variable
-# The timeout number in the *.timeout file overrides the default
-# timeout
-
-# TEST STRUCTURE
-# Tests are GROUPed into directories
-# Each GROUP directory has:
-#      1) a list of *.swift tests (plus *.sh scripts)
-#      2) optionally a sites.template.xml
-#      3) optionally a tc.template.data
-#      4) optionally a fs.template.data
-#      5) optionally a swift.properties
-#      6) optionally a title.txt
-#      7) preferably a README.txt
-#      7) optionally a *.timeout
-# template files are lightly processed by sed before use
-# Missing files will be pulled from swift/etc
-
-# WHAT TESTS ARE RUN
-# Each *.swift file is a test.
-# suite.sh launches all tests in each GROUP in the GROUPLIST.
-# The GROUPLIST is obtained from the GROUPARG.
-# 1) The GROUPARG can be an external script in the
-#    groups/ subdirectory by the name of GROUPLISTFILE.
-#    The GROUPLISTFILE:
-#       1) sets the array
-#       2) checks any variables needed by make_sites_sed()
-# 2) Or, the GROUPARG can just be a directory name that is
-#    the name of the singleton GROUP
-
-# OUTPUT is the stdout of the current test
-# stdout.txt retains stdout from the previous test (for *.clean.sh)
-# output_*.txt is the HTML-linked permanent output from a test
-
-# All timeouts in this script are in seconds
-
-# PID TREE:
-# Background processes are used so that hung Swift jobs can be killed
-# These are the background processes (PIDs are tracked)
-#
-# suite.sh
-# +-monitor()
-#   +-sleep
-# +-process_exec()
-#   +-bin/swift
-#     +-java
-#
-# PID management is now pretty good, but you may want to check ps
-#  from time to time and keep xload running.
-# Note that Coasters may temporarily prevent Swift from exiting upon
-#  receiving a signal (cf. CoasterService.addLocalHook()).
-
-# FAILURE CASES
-# Some cases are designed to cause Swift to crash.  These
-# SwiftScripts contain the token THIS-SCRIPT-SHOULD-FAIL somewhere.
-# The response of suite.sh to the exit code of these Swift
-# executions is reversed.
-
-# SCHEDULERS
-# Environment must contain PROJECT, QUEUE, and WORK
-# These variables will be incorporated into the sites.xml
-#   via make_sites_sed() -> group_sites_xml()
-# Note that some schedulers restrict your choice of RUNDIR
-
-# NAMING
-# Site-specific test groups are in providers/ .
-# These are named:
-# providers/<provider description>/
-# or:
-# providers/<provider description>/<site>
-# E.g., providers/local-pbs/PADS
-
-# ADDING TESTS TO EXISTING GROUPS
-# Simply add a *.swift file to a GROUP directory.
-# That script will be launched when the GROUP is tested.
-# Optionally, you may add helper scripts (see above) to setup,
-# check, and clean up after tests.
-# The helper scripts are launched from the RUNDIR and have access
-# to files in RUNDIR and environment variables from suite.sh
-# such as $GROUP.  Thus, you can:
-#   bring in input files: cp $GROUP/input-file.txt .
-#   check output:         grep TEXT1 stdout.txt
-#                         grep TEXT2 output-file.txt
-#   clean up (optional):  rm output-file.txt
-# The results are added to the HTML output, etc., automatically.
-# The prefix number on each test is simply for sorting
-#   (e.g., ls *.swift)
-
-# ADDING TEST GROUPS
-# If no existing group has the sites, tc, etc. that you need to test,
-# you will need to add a test group.  Simply create a new directory.
-# Add files from TEST STRUCTURE if necessary; missing files will be
-# filled in with defaults.
-
-# IMPROVING THIS TEST SUITE
-# This is a work in progress.  Here are some things you can do:
-#   * Run it!  Report problems to swift-devel
-#   * Fix broken tests
-#   * Break down test GROUPs into smaller, meaningful GROUPs.
-#     It would be good to limit GROUP sizes to 20 or so tests.
-#   * Current work has focused on the HTML and stdout output,
-#     which is intended to be high-level and clean. Using -v
-#     results in extremely verbose output.
-#     Some happy medium could be achieved by improving the use of
-#     the LOG (tests.log).
-
-# PROBLEMS
-# If you have a problem:
-#   * Use -v to get the set -x output.
-#   * Use ps -H to get the PID tree.
-
-# WARNINGS
-# suite.sh uses shopt
-
 shopt -s nullglob
 
 printhelp() {
@@ -160,6 +7,7 @@ printhelp() {
   echo "usage:"
   printf "\t -a         Do not run ant dist                \n"
   printf "\t -c         Do not remove dist (clean)         \n"
+  printf "\t -f         Generate plain text output file    \n"
   printf "\t -h         This message                       \n"
   printf "\t -k <N>     Skip first N tests                 \n"
   printf "\t -n <N>     Run N tests and quit               \n"
@@ -173,6 +21,7 @@ printhelp() {
 }
 
 # Defaults:
+TEXTREPORT=0
 DEFAULT_TIMEOUT=30 # seconds
 RUN_ANT=1
 CLEAN=1
@@ -192,6 +41,9 @@ while [ $# -gt 0 ]; do
       shift;;
     -c)
       CLEAN=0
+      shift;;
+    -f)
+      TEXTREPORT=1
       shift;;
     -h)
       printhelp
@@ -249,6 +101,11 @@ LOGBASE=$RUNDIRBASE/tests.log
 LOG=$TOPDIR/$LOGBASE
 OUTPUT=$RUNDIR/exec.out
 
+#Specifying the Path for the plain Text File.
+REPORT_PATH=$RUNDIRBASE/tests-$DATE.txt
+REPORT=$TOPDIR/$REPORT_PATH
+
+#Specifying the path for the HTML output file
 HTMLPATH=$RUNDIRBASE/tests-$DATE.html
 HTML=$TOPDIR/$HTMLPATH
 
@@ -256,9 +113,11 @@ BRANCH=trunk
 #BRANCH="branches/tests-01"
 
 SCRIPTDIR=$( cd $( dirname $0 ) ; /bin/pwd )
+touch /home/Alberto/$SCRIPTDIR
 
 TESTCOUNT=0
-
+TESTSFAILED=0
+TESTSPASSED=0
 MASTER_PID=$$
 
 # PIDs to kill if suite.sh is killed:
@@ -269,7 +128,7 @@ MONITOR_PID=
 SHUTDOWN=0
 
 echo "RUNNING_IN:  $RUNDIR"
-echo "HTML_OUTPUT: $HTML"
+echo "HTML_OUTPUT: $REPORT"
 
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 
@@ -314,14 +173,21 @@ shutdown_trap() {
 }
 
 header() {
-  CURRENT=$SCRIPTDIR/html/current.html
-  sed "s@_HTMLBASE_@$HTMLPATH@" < $CURRENT > $TOPDIR/current.html
-
-  HEADER=$SCRIPTDIR/html/header.html
-  HOST=$( hostname )
-  SEDCMD="s/_DATE_/$DATE/;s/_TIME_/$TIME/;s/_HOST_/$HOST"/
-  sed $SEDCMD < $HEADER > $HTML
-  FIRSTTEST=1
+	if [ $TEXTREPORT == 1 ]; then
+		HEADER=$SCRIPTDIR/html/header.txt
+  		HOST=$( hostname )
+  		SEDCMD="s/_DATE_/$DATE/;s/_TIME_/$TIME/;s/_HOST_/$HOST"/
+  		sed $SEDCMD < $HEADER > $REPORT
+  		FIRSTTEST=1
+	else
+		CURRENT=$SCRIPTDIR/html/current.html
+		sed "s@_HTMLBASE_@$HTMLPATH@" < $CURRENT > $TOPDIR/current.html
+  		HEADER=$SCRIPTDIR/html/header.html
+  		HOST=$( hostname )
+  		SEDCMD="s/_DATE_/$DATE/;s/_TIME_/$TIME/;s/_HOST_/$HOST"/
+  		sed $SEDCMD < $HEADER > $HTML
+  		FIRSTTEST=1
+	fi
 }
 
 html() {
@@ -451,42 +317,14 @@ printlist() {
     shift
   done
 }
-
+ 
 outecho() {
   TYPE=$1
   shift
   echo "<$TYPE>$1|$2|$3|$4|$5|$6|$7|$8|$9|"
 }
 
-# Create HTML output
-output_html() {
-
-  TYPE=$1
-  if [ "$TYPE" == "test" ]; then
-
-    LABEL="$2"  # Text on link to output
-    CMD=$3    # Command issued (td title)
-    RESULT=$4 # Passed or Failed
-
-    # WIDTH=$( width "$LABEL" )
-    if [ "$RESULT" == "Passed" ]; then
-      html_td class "success" width 25 title "$CMD"
-      html_a_href $TEST_LOG "$LABEL"
-    else
-      echo "FAILED"
-      cat $RUNDIR/$TEST_LOG < /dev/null
-      html_td class "failure" width 25 title "$CMD"
-      html_a_href $TEST_LOG $LABEL
-    fi
-    html_~td
-
-  elif [ "$TYPE" == "package" ]; then
-    BINPACKAGE=$2
-  else
-    html $@
-  fi
-}
-
+#Create the table, and the links for the test results HTML output
 start_test_results() {
   html_h1 "Test results"
   html_a_name "tests"
@@ -494,57 +332,118 @@ start_test_results() {
   html_table border 0 cellpadding 1
 }
 
+# Create either HTML or plain text report.
+# $TEXTREPORT monitor whether the report will be plain text or HTML
+output_report() {
+	TYPE=$1
+	if [ $TEXTREPORT == 1 ]; then	
+		if [ "$TYPE" == "test" ]; then
+	
+			LABEL="$2"  # Text on link to output
+			CMD=$3    # Command issued (td title)
+			RESULT=$4 # Passed or Failed
+	
+			if [ "$RESULT" == "Passed" ]; then
+				printf %-10.10s "success">>$REPORT
+			else
+				echo "FAILED"
+				cat $RUNDIR/$TEST_LOG < /dev/null
+				printf %-10.10s "failure">>$REPORT
+			fi
+		
+		elif [ "$TYPE" == "package" ]; then
+			BINPACKAGE=$2
+		else
+			printf $@>>$REPORT
+		fi
+	else
+		if [ "$TYPE" == "test" ]; then
+			
+	    	LABEL="$2"  # Text on link to output
+	    	CMD=$3    # Command issued (td title)
+	    	RESULT=$4 # Passed or Failed
+	
+	    	# WIDTH=$( width "$LABEL" )
+	    	if [ "$RESULT" == "Passed" ]; then
+	      		html_td class "success" width 25 title "$CMD"
+	      		html_a_href $TEST_LOG "$LABEL"
+	    	else
+	      		echo "FAILED"
+	      		cat $RUNDIR/$TEST_LOG < /dev/null
+	      		html_td class "failure" width 25 title "$CMD"
+	      		html_a_href $TEST_LOG $LABEL
+	    	fi
+	    	html_~td
+	    	
+	  	elif [ "$TYPE" == "package" ]; then
+	    	BINPACKAGE=$2
+	  	else
+		    html $@
+	  	fi
+	fi
+}
+
 start_group() {
   G=$1
   echo
   echo $G
   echo
-  html_tr group
-  html_th 3
-  html "$G"
-  html_~th
-  html_~tr
+  if [ $TEXTREPORT == 1 ]; then
+  	  stars
+	  printf "$G\n">>$REPORT
+	  printf %-5.5s "#">>$REPORT
+	  printf %-60.60s "Filename">>$REPORT
+	  printf %-10.10s "Test">>$REPORT
+	  printf %-10.10s "Setup.sh" "Check.sh" "Clean.sh">>$REPORT
+	  printf "\n">>$REPORT
+  else
+	  html_tr group
+	  html_th 3
+	  html "$G"
+	  html_~th
+	  html_~tr
+  fi
 }
 
 start_row() {
-  html_tr testline
-  html_td align right width 50
-  html "<b>$TESTCOUNT</b>"
-  html "&nbsp;"
-  html_~td
-  html_td align right
-  html "&nbsp;"
-  if [[ -n $TESTLINK ]]; then
-    html_a_href $TESTLINK $TESTNAME
-  else
-    html $TESTNAME
-  fi
-  html "&nbsp;"
-  html_~td
-  html_td
-  html_table
-  html_tr
-  SEQ=1
+	if [ $TEXTREPORT == 1 ]; then
+		printf %-5.5s "$TESTCOUNT">>$REPORT
+		printf %-60.60s "$TESTNAME">>$REPORT
+	else
+		html_tr testline
+	  	html_td align right width 50
+	    html "<b>$TESTCOUNT</b>"
+	    html "&nbsp;"
+	    html_~td
+	    html_td align right
+	    html "&nbsp;"
+	    if [[ -n $TESTLINK ]]; then
+	      html_a_href $TESTLINK $TESTNAME
+	    else
+	      html $TESTNAME
+	    fi
+	    html "&nbsp;"
+	    html_~td
+	    html_td
+	    html_table
+	    html_tr		
+	fi
+    SEQ=1
 }
 
 end_row() {
-  html_~tr
-  html_~table
-  html_~td
-  html_~tr
+	if [ $TEXTREPORT == 1 ]; then
+		printf "\n">>$REPORT
+	else
+		html_~tr
+		html_~table
+		html_~td
+		html_~tr
+	fi
 }
 
-# HTML width of label (for alignment)
-width() {
-  LABEL="$1"
-  if [ ${#LABEL} -gt 2 ]; then
-    WIDTH=""
-  else
-    WIDTH="width=\"20\""
-  fi
-  echo $WIDTH
-}
-
+# Create test output_*.txt file and copy to stdout.txt
+# Rename to copy_output? 
 # TEST_LOG = test log
 test_log() {
   TEST_LOG="output_$LOGCOUNT.txt"
@@ -557,10 +456,11 @@ test_log() {
 }
 
 stars() {
-  for i in {1..90}
+  for i in {1..120}
   do
-    printf "*"
+    printf "*">>$REPORT
   done
+  printf "\n">>$REPORT
   echo
 }
 
@@ -661,7 +561,7 @@ test_exec() {
 
   RESULT=$( result )
   test_log
-  output_html test $SEQ "$LASTCMD" $RESULT $TEST_LOG
+  output_report test $SEQ "$LASTCMD" $RESULT $TEST_LOG
 
   check_bailout
 
@@ -746,9 +646,21 @@ monitored_exec()
   echo "TOOK (seconds): $(( STOP-START ))"
 
   RESULT=$( result )
+  NOPASO="Failed"
+  
+#Verifies the value of $RESULT, if the test was successful
+#increases $TESTSPASSED by 1, if the test Failed
+#increases $TESTSFAILED by 1.
+  if [ "$RESULT" != "Passed" ]; then
+  	let TESTSFAILED=$TESTSFAILED+1
+  else
+  	let TESTSPASSED=$TESTSPASSED+1
+  fi
+
+
   test_log
   LASTCMD="$@"
-  output_html test $SEQ "$LASTCMD" $RESULT $TEST_LOG
+  output_report test $SEQ "$LASTCMD" $RESULT $TEST_LOG
 
   check_bailout
 
@@ -764,7 +676,7 @@ script_exec() {
   RESULT=$( result )
 
   test_log
-  output_html test "$SYMBOL" "$LASTCMD" $RESULT
+  output_report test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
 }
@@ -882,7 +794,7 @@ build_package() {
   test_exec rm -f castor*.jar *gt2ft*.jar ant.jar
   test_exec cd $TOPDIR
   test_exec tar -pczf $RUNDIR/swift-$DATE.tar.gz $SWIFT_HOME
-  output_html package "swift-$DATE.tar.gz"
+  output_report package "swift-$DATE.tar.gz"
 }
 
 # Generate the sites.sed file
@@ -965,6 +877,32 @@ group_title() {
   fi
 }
 
+# Print the number of tests run, failed and passed.
+# Revision:001
+group_statistics(){
+	if [ $TEXTREPORT == 1 ]; then
+		printf "\n $TESTCOUNT Tests run\t$TESTSFAILED Tests failed\t$TESTSPASSED Tests succeeded. \n\n">>$REPORT
+	else
+#		html_tr group
+#		html_td neutral
+#		html "$TESTCOUNT Tests run"
+#		html_~td
+#		html_td success
+#		html "$TESTSPASSED Tests succeeded"
+#		html_~td
+#		html_td failure
+#		html "$TESTSFAILED Tests failed"
+#		html_~td
+#		html_~tr
+		 printf "<tr class=\"group\">">>$HTML
+		 printf "<td class=\"neutral\"> $TESTCOUNT Tests run. </td>">>$HTML
+		 printf "<td class=\"success\"> $TESTSPASSED Tests succeeded. </td>">>$HTML
+  		 printf "<td class=\"failure\"> $TESTSFAILED Tests failed. </td>">>$HTML
+		 printf "</tr>">>$HTML
+		# printf "\n $TESTCOUNT Tests run\t$TESTSFAILED Tests failed\t$TESTSPASSED Tests succeeded. \n\n">>$HTML
+	fi	
+}
+
 # Execute all tests in current GROUP
 test_group() {
 
@@ -985,15 +923,19 @@ test_group() {
     echo -e "\nTest case: $TESTNAME"
     cp -v $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
-
     start_row
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
       swift_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
     done
-    end_row
+     end_row
   done
+    group_statistics
+    TESTCOUNT=0
+    TESTSPASSED=0
+    TESTSFAILED=0
+    
 
   SCRIPTS=$( echo $GROUP/*.test.sh )
   checkfail "Could not list: $GROUP"
@@ -1013,7 +955,9 @@ test_group() {
     done
     end_row
   done
+ 
 }
+
 
 if [[ $WORK == "" ]]
 then
@@ -1046,12 +990,16 @@ date > $LOG
 
 make_sites_sed
 
+# Here the report starts.
+# Call to function header()
 header
-start_test_results
+if [ $TEXTREPORT == 1 ]; then
+	printf "Test Results\n\n">>$REPORT
+else
+	start_test_results
+fi
 cd $TOPDIR
-
 start_group "Build"
-
 TESTLINK=
 EXITONFAILURE=true
 if [ "$SKIP_CHECKOUT" != "1" ]; then
@@ -1120,8 +1068,6 @@ for G in ${GROUPLIST[@]}; do
   (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && break
   (( $SHUTDOWN )) && break
 done
-
-footer
 
 exit 0
 
