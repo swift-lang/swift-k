@@ -1,15 +1,7 @@
-suite.sh:
-	See suite.sh for usage
+USAGENOTES contains instructions on how to operate the test suite.
+It is an asciidoc document, in order to properly build it run the following command:
+$ asciidoc -a toc USAGENOTES
+It will generate an HTML file called USAGENOTES. 
 
-run-suite.sh:
-	wrapper for suite.sh
-	env variables set may be customized by user
-
-meta.sh:
-	wrapper for run-suite.sh
-	used to execute run-suite/suite.sh from a remote site using ssh
-	example usage:
-		 meta.sh login.pads.ci.uchicago.edu /home/skenny/swift_runs/tests sites/pads-pbs-coasters.sh
-
-
-
+Warning:
+asciidoc must be installed.
