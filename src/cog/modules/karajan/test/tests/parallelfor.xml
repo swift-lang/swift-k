@@ -45,7 +45,7 @@
 									</equals>
 
 									<then>
-										<generateError message="Kaboom"/>
+										<generateError exception="Kaboom"/>
 									</then>
 								</if>
 							</parallelfor>
