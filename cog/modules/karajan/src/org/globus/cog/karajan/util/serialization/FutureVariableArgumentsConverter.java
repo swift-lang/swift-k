@@ -12,8 +12,8 @@ package org.globus.cog.karajan.util.serialization;
 import java.util.Iterator;
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.VariableArgumentsListener;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
+import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
@@ -35,7 +35,6 @@ public class FutureVariableArgumentsConverter extends AbstractKarajanConverter {
 		FutureVariableArguments fva = (FutureVariableArguments) source;
 		marshalObject(writer, context, "list", fva.getBackingList());
 		marshalObject(writer, context, "closed", fva.isClosed());
-		marshalObject(writer, context, "listeners", fva.getListeners());
 		marshalObject(writer, context, "actions", fva.getModificationActions());
 		
 	}
@@ -45,17 +44,12 @@ public class FutureVariableArgumentsConverter extends AbstractKarajanConverter {
 		String name = reader.getNodeName();
 		List list = (List) unmarshalObject(reader, context, List.class, fva);
 		Boolean closed = (Boolean) unmarshalObject(reader, context, Boolean.class, fva);
-		List listeners = (List) unmarshalObject(reader, context, List.class, fva);
 		List actions = (List) unmarshalObject(reader, context, List.class, fva);
 		fva.appendAll(list);
 		if (closed.booleanValue()) {
 			fva.close();
 		}
-		Iterator i = listeners.iterator();
-		while (i.hasNext()) {
-			fva.addListener((VariableArgumentsListener) i.next());
-		}
-		i = actions.iterator();
+		Iterator i = actions.iterator();
 		while (i.hasNext()) {
 			EventTargetPair etp = (EventTargetPair) i.next();
 			fva.addModificationAction(etp.getTarget(), etp.getEvent());
