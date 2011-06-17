@@ -248,7 +248,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 			Task task = (Task) e.getSource();
 			VariableStack stack = getStack(task);
 			if (stack == null) {
-				logger.warn("Received status event from unknown task " + e.getSource());
+				logger.warn("Received status event from unknown task " + e);
 				return;
 			}
 			try {
