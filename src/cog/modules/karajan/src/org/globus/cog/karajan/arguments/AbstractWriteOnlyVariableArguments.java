@@ -52,14 +52,6 @@ public abstract class AbstractWriteOnlyVariableArguments implements VariableArgu
 		throw new UnsupportedOperationException("removeFirst" + WRO);
 	}
 
-	public final void addListener(VariableArgumentsListener l) {
-		throw new UnsupportedOperationException("addListener" + WRO);
-	}
-
-	public final void removeListener(VariableArgumentsListener l) {
-		throw new UnsupportedOperationException("removeListener" + WRO);
-	}
-
 	public final boolean isEmpty() {
 		throw new UnsupportedOperationException("isEmpty" + WRO);
 	}

@@ -11,12 +11,10 @@ package org.globus.cog.karajan.arguments;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.ListKarajanIterator;
@@ -37,8 +35,6 @@ public class VariableArgumentsImpl implements VariableArguments {
 	private final int id = cid++;
 	
 	private final boolean commutative;
-
-	private Set listeners;
 
 	public VariableArgumentsImpl() {
 		this(false);
@@ -72,7 +68,6 @@ public class VariableArgumentsImpl implements VariableArguments {
 			vargs = new LinkedList();
 		}
 		vargs.add(value);
-		modified();
 	}
 
 	public void appendAll(List args) {
@@ -83,7 +78,6 @@ public class VariableArgumentsImpl implements VariableArguments {
 			vargs = new ArrayList();
 		}
 		vargs.addAll(args);
-		modified();
 	}
 
 	public List getAll() {
@@ -95,7 +89,6 @@ public class VariableArgumentsImpl implements VariableArguments {
 
 	public void set(List vargs) {
 		this.vargs = vargs;
-		modified();
 	}
 
 	public Object get(int index) {
@@ -216,7 +209,6 @@ public class VariableArgumentsImpl implements VariableArguments {
 
 	public void set(VariableArguments other) {
 		this.vargs = other.getAll();
-		modified();
 	}
 
 	public Object removeFirst() {
@@ -224,36 +216,6 @@ public class VariableArgumentsImpl implements VariableArguments {
 			throw new IndexOutOfBoundsException("0");
 		}
 		return vargs.remove(0);
-	}
-
-	public synchronized void addListener(VariableArgumentsListener l) {
-		if (listeners == null) {
-			listeners = new HashSet();
-		}
-		listeners.add(l);
-	}
-
-	public synchronized void removeListener(VariableArgumentsListener l) {
-		if (listeners != null) {
-			listeners.remove(l);
-		}
-	}
-
-	protected synchronized void modified() {
-		if (listeners != null) {
-			Iterator i = listeners.iterator();
-			while (i.hasNext()) {
-				((VariableArgumentsListener) i.next()).variableArgumentsChanged(this);
-			}
-		}
-	}
-
-	public Set getListeners() {
-		return listeners;
-	}
-
-	public synchronized void setListeners(Set listeners) {
-		this.listeners = listeners;
 	}
 
 	public boolean isCommutative() {

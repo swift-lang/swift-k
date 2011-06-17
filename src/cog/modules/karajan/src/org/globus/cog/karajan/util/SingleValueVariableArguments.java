@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.arguments.VariableArgumentsListener;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
 /**
@@ -95,14 +94,6 @@ public class SingleValueVariableArguments implements VariableArguments {
 		Object val = get(0);
 		value = null;
 		return val;
-	}
-
-	public void addListener(VariableArgumentsListener l) {
-		throw new UnsupportedOperationException("addListener");
-	}
-
-	public void removeListener(VariableArgumentsListener l) {
-		throw new UnsupportedOperationException("removeListener");
 	}
 
 	public String toString() {

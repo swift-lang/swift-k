@@ -9,30 +9,27 @@
  */
 package org.globus.cog.karajan.workflow.futures;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.arguments.VariableArgumentsListener;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
 
-public class ForwardArgumentFuture implements Future {
+public class ForwardArgumentFuture implements Future, FutureListener {
 	private static final Logger logger = Logger.getLogger(ForwardArgumentFuture.class);
 	
 	private final int index;
-	private final VariableArguments vargs;
+	private final FutureVariableArguments vargs;
 	private boolean closed;
 	private List<ListenerStackPair> actions;
 	private FutureEvaluationException exception;
 
-	public ForwardArgumentFuture(VariableArguments vargs, int index) {
+	public ForwardArgumentFuture(FutureVariableArguments vargs, int index) {
 		this.vargs = vargs;
 		this.index = index;
-		vargs.addListener(new Listener());
+		vargs.addModificationAction(this, null);
 	}
 
 	public void close() {
@@ -48,40 +45,25 @@ public class ForwardArgumentFuture implements Future {
 		if (exception != null) {
 			throw exception;
 		}
-		if (vargs instanceof FutureVariableArguments) {
-			FutureVariableArguments f = (FutureVariableArguments) vargs;
-			if (index <= f.available()) {
-				return vargs.get(index);
-			}
-			else {
-				if (f.isClosed()) {
-					throw new KarajanRuntimeException("Variable not found");
-				}
-				throw new FutureNotYetAvailable(this);
-			}
+
+		if (index <= vargs.available()) {
+			return vargs.get(index);
 		}
 		else {
-			if (index <= vargs.size()) {
-				return vargs.get(index);
+			if (vargs.isClosed()) {
+				throw new KarajanRuntimeException("Variable not found");
 			}
-			else {
-				throw new KarajanRuntimeException("Invalid forward argument {" + index + "}");
-			}
+			throw new FutureNotYetAvailable(this);
 		}
 	}
 
 	public boolean available() {
-		if (vargs instanceof FutureVariableArguments) {
-			return index <= ((FutureVariableArguments) vargs).available();
-		}
-		else {
-			return index <= vargs.size();
-		}
+		return index <= vargs.available();
 	}
 
 	public synchronized void addModificationAction(FutureListener target, VariableStack event) {
 		if (actions == null) {
-			actions = new LinkedList();
+			actions = new LinkedList<ListenerStackPair>();
 		}
 		
 		ListenerStackPair etp = new ListenerStackPair(target, event);
@@ -131,26 +113,25 @@ public class ForwardArgumentFuture implements Future {
 			return "ForwardArgumentFuture(" + index + "): " + getValue();
 		}
 	}
-
-	public class Listener implements VariableArgumentsListener {
-		public void variableArgumentsChanged(VariableArguments source) {
-			synchronized (vargs) {
-				try {
-					vargs.get(index);
-					actions();
-				}
-				catch (FutureFault e) {
-					if (((Future) vargs).isClosed()) {
-						close();
-					}
-				}
-				catch (IndexOutOfBoundsException e) {
+	
+	@Override
+	public void futureModified(Future f, VariableStack stack) {
+		synchronized (vargs) {
+			try {
+				vargs.get(index);
+				actions();
+			}
+			catch (FutureFault e) {
+				if (((Future) vargs).isClosed()) {
 					close();
 				}
 			}
+			catch (IndexOutOfBoundsException e) {
+				close();
+			}
 		}
 	}
-	
+
 	public void fail(FutureEvaluationException e) {
 		this.exception = e;
 		actions();

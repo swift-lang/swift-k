@@ -30,7 +30,7 @@ public class FutureNode extends SequentialWithArguments {
 
 	public void executeChildren(VariableStack stack) throws ExecutionException {
 		VariableStack copy = stack.copy();
-		VariableArguments vargs = ArgUtil.getVariableArguments(stack);
+		FutureVariableArguments vargs = (FutureVariableArguments) ArgUtil.getVariableArguments(stack);
 		ret(stack, new ForwardArgumentFuture(vargs, 0));
 		super.executeChildren(copy);
 		complete(stack);
