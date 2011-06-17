@@ -9,8 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.futures;
 
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.arguments.VariableArgumentsListener;
+import org.globus.cog.karajan.stack.VariableStack;
 
 /**
  * This class allows splitting of a channel into multiple copies.
@@ -20,13 +19,13 @@ import org.globus.cog.karajan.arguments.VariableArgumentsListener;
  * @author Mihael Hategan
  *
  */
-public class ChannelSplitter implements VariableArgumentsListener {
+public class ChannelSplitter implements FutureListener {
 	private final FutureVariableArguments vargs;
 	private final FutureVariableArguments[] out;
 	
 	public ChannelSplitter(FutureVariableArguments vargs, int count) {
 		this.vargs = vargs;
-		vargs.addListener(this);
+		vargs.addModificationAction(this, null);
 		out = new FutureVariableArguments[count];
 		for (int i = 0; i < count; i++) {
 			out[i] = new FutureVariableArguments();
@@ -36,9 +35,12 @@ public class ChannelSplitter implements VariableArgumentsListener {
 	public FutureVariableArguments[] getOuts() {
 		return out;
 	}
+	
+	
 
-	public void variableArgumentsChanged(VariableArguments source) {
-		FutureVariableArguments in = (FutureVariableArguments) source;
+	@Override
+	public void futureModified(Future f, VariableStack stack) {
+		FutureVariableArguments in = (FutureVariableArguments) f;
 		while(in.available() > 0) {
 			Object o = in.removeFirst();
 			for (int i = 0; i < out.length; i++) {

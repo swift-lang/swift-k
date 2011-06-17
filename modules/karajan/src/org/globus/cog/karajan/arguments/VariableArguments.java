@@ -36,10 +36,6 @@ public interface VariableArguments {
 	void set(VariableArguments other);
 
 	Object removeFirst();
-	
-	void addListener(VariableArgumentsListener l);
-	
-	void removeListener(VariableArgumentsListener l);
 
 	boolean isEmpty();
 	

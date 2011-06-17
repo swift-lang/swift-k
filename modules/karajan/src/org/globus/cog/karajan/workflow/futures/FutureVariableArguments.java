@@ -29,12 +29,12 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 		super();
 	}
 
-	public synchronized void append(Object value) {
+	public void append(Object value) {
 		super.append(value);
 		actions();
 	}
 
-	public synchronized void appendAll(List args) {
+	public void appendAll(List args) {
 		super.appendAll(args);
 		actions();
 	}
@@ -46,7 +46,6 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 
 	public void close() {
 		closed = true;
-		modified();
 		actions();
 	}
 
@@ -142,21 +141,22 @@ public class FutureVariableArguments extends VariableArgumentsImpl implements Fu
 		return buf.toString();
 	}
 
-	public synchronized void addModificationAction(FutureListener target, VariableStack event) {
-		if (actions == null) {
-			actions = new LinkedList<ListenerStackPair>();
-		}
-		
-		ListenerStackPair etp = new ListenerStackPair(target, event);
-		if (FuturesMonitor.debug) {
-			FuturesMonitor.monitor.add(etp, this);
-		}
-		synchronized (actions) {
+	public void addModificationAction(FutureListener target, VariableStack event) {
+		synchronized(this) {
+			if (actions == null) {
+				actions = new LinkedList<ListenerStackPair>();
+			}
+			
+			ListenerStackPair etp = new ListenerStackPair(target, event);
+			if (FuturesMonitor.debug) {
+				FuturesMonitor.monitor.add(etp, this);
+			}
 			actions.add(etp);
+			if (available() == 0 && !closed) {
+				return;
+			}
 		}
-		if (available() > 0 || closed) {
-			actions();
-		}
+		actions();
 	}
 
 	public List getModificationActions() {
