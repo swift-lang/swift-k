@@ -400,11 +400,14 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    public synchronized void closeShallow() {
-        if (this.closed) {
-            return;
+    public void closeShallow() {
+        synchronized(this) {
+            if (this.closed) {
+                return;
+            }
+            this.closed = true;
         }
-        this.closed = true;
+        // closed
         notifyListeners();
         if (logger.isInfoEnabled()) {
             logger.debug("closed " + this.getIdentifyingString());
@@ -571,18 +574,22 @@ public abstract class AbstractDataNode implements DSHandle {
         return handles;
     }
 
-    public synchronized void addListener(DSHandleListener listener) {
+    public void addListener(DSHandleListener listener) {
         if (logger.isDebugEnabled()) {
             logger.debug("Adding handle listener \"" + listener + 
                 "\" to \"" + getIdentifyingString() + "\"");
         }
-        if (listeners == null) {
-            listeners = new ArrayList<DSHandleListener>();
+        synchronized(this) {
+            if (listeners == null) {
+                listeners = new ArrayList<DSHandleListener>();
+            }
+            listeners.add(listener);
+            if (!closed) {
+                return;
+            }
         }
-        listeners.add(listener);
-        if (closed) {
-            notifyListeners();
-        }
+        // listeners != null, closed
+        notifyListeners();
     }
 
     protected void notifyListeners() {
