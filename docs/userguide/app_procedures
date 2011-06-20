@@ -375,6 +375,18 @@ parallel).
 used with @arg to pass input parameters to a SwiftScript program as
 integers.
 
+@tofloat
+~~~~~~
+@tofloat(input) will parse its input string into a floating point number. This can be
+used with @arg to pass input parameters to a SwiftScript program as
+floating point numbers.
+
+@length
+~~~~~~
+@length(array) will return the length of an array in Swift. This function will wait for all elements in the array to be written before returning the lennth.
+
+
+
 Built-in procedure reference
 ----------------------------
 This section details built-in procedures that are available for use in
