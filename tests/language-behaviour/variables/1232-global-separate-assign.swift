@@ -1,15 +1,11 @@
 type messagefile;
-
-
-(messagefile t) greeting() { 
-    app {
+app (messagefile t) greeting() { 
         echo m stdout=@filename(t);
-    }
 }
 
 global string m;
 m = "hi";
-messagefile outfile <"1232-global-separate-assign.aout">;
+messagefile outfile <"1232-global-separate-assign.out">;
 
 outfile = greeting();
 

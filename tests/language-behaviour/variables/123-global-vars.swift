@@ -1,10 +1,8 @@
 type messagefile;
 
 
-(messagefile t) greeting() { 
-    app {
+app (messagefile t) greeting() { 
         echo m stdout=@filename(t);
-    }
 }
 
 global string m = "hello";

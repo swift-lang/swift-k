@@ -1,9 +1,7 @@
 type messagefile;
 
-(messagefile a, messagefile b) greeting(string m) { 
-    app {
+app (messagefile a, messagefile b) greeting(string m) { 
         echo m stdout=@filename(a) stderr=@filename(b);
-    }
 }
 
 messagefile firstfile <"121-multi-return-vars.first.out">;
