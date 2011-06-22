@@ -1,9 +1,7 @@
 type messagefile {}
 
-(messagefile t) greeting(string a, string b, string c, string d) { 
-    app {
+app (messagefile t) greeting(string a, string b, string c, string d) { 
         echo a "," b "," c "," d stdout=@filename(t);
-    }
 }
 
 messagefile outfile <"0054-strsplit.out">;

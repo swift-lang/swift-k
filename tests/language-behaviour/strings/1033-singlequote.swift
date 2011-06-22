@@ -1,9 +1,7 @@
 type messagefile;
 
-(messagefile t) greeting() { 
-    app {
+app (messagefile t) greeting() { 
         echo "'" stdout=@filename(t);
-    }
 }
 
 messagefile outfile <"1033-singlequote.out">;

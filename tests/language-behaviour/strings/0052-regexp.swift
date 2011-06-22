@@ -1,9 +1,7 @@
 type messagefile {}
 
-(messagefile t) greeting(string m) { 
-    app {
+app (messagefile t) greeting(string m) { 
         echo m stdout=@filename(t);
-    }
 }
 
 messagefile outfile <"0052-regexp.out">;

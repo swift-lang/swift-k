@@ -4,10 +4,8 @@
 
 type messagefile;
 
-(messagefile t) p() { 
-    app {
+app (messagefile t) p() { 
        touch @filename(t);
-    }
 }
 
 messagefile outfile <"142-space-and-quotes.out">;
