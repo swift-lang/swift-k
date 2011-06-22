@@ -722,11 +722,21 @@ an absolute path is not specified)
 |*|Other parameters are passed to the executable prefixed with a - symbol
 |==============
 
-The output of the executable should consist of two columns of data,
+The output (stdout) of the executable should consist of two columns of data,
 separated by a space. The first column should be the path of the mapped
 variable, in SwiftScript syntax (for example [2] means the 2nd element
 of an array) or the symbol $ to represent the root of the mapped
-variable.
+variable. The following table shows the symbols that should appear in the first column corresponding to the mapping of different types of swift constructs such as scalars, arrays and structs.
+
+[option="header, autowidth"]
+|=============
+|Swift construct|first column|second column
+|scalar|$|file_name
+|anarray[]|[]|file_name
+|2dimarray[][]|[][]|file_name
+|astruct.fld|fld|file_name
+|astructarray[].fldname|[].fldname|file_name
+|==============
 
 Example: With the following in mapper.sh,
 
