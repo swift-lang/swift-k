@@ -1,9 +1,7 @@
 type messagefile {}
 
-(messagefile t) greeting(int m) { 
-    app {
+app (messagefile t) greeting(int m) { 
         echo m stdout=@filename(t);
-    }
 }
 
 messagefile outfile <"022-array-with-exprs.out">;

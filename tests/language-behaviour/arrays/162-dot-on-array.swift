@@ -1,9 +1,7 @@
 type messagefile;
 
-(messagefile t) greeting(string s) { 
-    app {
+app (messagefile t) greeting(string s) { 
         echo s stdout=@filename(t);
-    }
 }
 
 messagefile outfile <"162-dot-on-array.out">;
