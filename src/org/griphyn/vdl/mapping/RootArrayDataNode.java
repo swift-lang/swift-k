@@ -3,15 +3,18 @@ package org.griphyn.vdl.mapping;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
 public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener {
 
+    Logger logger = Logger.getLogger(RootArrayDataNode.class);
+    
 	private boolean initialized = false;
 	private Mapper mapper;
-	private Map params;
+	private Map<String, Object> params;
 	private DSHandle waitingMapperParam;
 
 	/**
@@ -22,7 +25,7 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		getField().setType(type);
 	}
 
-	public void init(Map params) {
+	public void init(Map<String, Object> params) {
 		this.params = params;
 		if (this.params == null) {
 			initialized();
@@ -33,6 +36,7 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 	}
 
 	private synchronized void innerInit() {
+	    logger.debug("innerInit: " + this);
 		Iterator i = params.entrySet().iterator();
 		while(i.hasNext()) {
 			Map.Entry entry = (Map.Entry) i.next();
@@ -98,10 +102,8 @@ public class RootArrayDataNode extends ArrayDataNode implements DSHandleListener
 		if (initialized) {
 			return mapper;
 		}
-		else {
-		    assert(waitingMapperParam != null);
-		    throw new VDL2FutureException(waitingMapperParam);
-		}
+        assert(waitingMapperParam != null);
+        throw new VDL2FutureException(waitingMapperParam);
 	}
 
 	public boolean isArray() {

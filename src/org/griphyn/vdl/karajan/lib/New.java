@@ -41,12 +41,14 @@ public class New extends VDLFunction {
 	public Object function(VariableStack stack) throws ExecutionException {
 		String typename = TypeUtil.toString(OA_TYPE.getValue(stack));
 		Object value = OA_VALUE.getValue(stack);
-		Map mapping = (Map) OA_MAPPING.getValue(stack);
+		@SuppressWarnings("unchecked")
+        Map<String,Object> mapping = 
+		    (Map<String,Object>) OA_MAPPING.getValue(stack);
 		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
 		String waitfor = (String) OA_WAITFOR.getValue(stack);
 
 		if (mapping == null) {
-			mapping = new HashMap();
+			mapping = new HashMap<String,Object>();
 		}
 
 		if (dbgname != null) {
@@ -55,26 +57,26 @@ public class New extends VDLFunction {
 
 		mapping.put("swift#restartid", getThreadPrefix(stack) + ":" + dbgname);
 
-		if(waitfor != null) {
+		if (waitfor != null) {
 			mapping.put("waitfor", waitfor);
 		}
 
 		if (typename == null && value == null) {
 			throw new ExecutionException("You must specify either a type or a value");
 		}
-		if (mapping != null) {
-			String mapper = (String) mapping.get("descriptor");
-			if ("concurrent_mapper".equals(mapper)) {
-				String threadPrefix = getThreadPrefix(stack);
-				ConcurrentMapper.PARAM_THREAD_PREFIX.setValue(mapping, threadPrefix);
-			}
-			mapping.put("#basedir", stack.getExecutionContext().getBasedir());
+	
+		String mapper = (String) mapping.get("descriptor");
+		if ("concurrent_mapper".equals(mapper)) {
+		    String threadPrefix = getThreadPrefix(stack);
+		    ConcurrentMapper.PARAM_THREAD_PREFIX.setValue(mapping, threadPrefix);
 		}
+		mapping.put("#basedir", stack.getExecutionContext().getBasedir());
+		
 		try {
 			Type type;
 			if (typename == null) {
-				throw new ExecutionException("vdl:new requires a type specification for value "
-						+ value);
+				throw new ExecutionException
+				("vdl:new requires a type specification for value: " + value);
 			}
 			else {
 				type = Types.getType(typename);
@@ -91,8 +93,9 @@ public class New extends VDLFunction {
 					}
 					else {
 						if (!(value instanceof List)) {
-							throw new ExecutionException(
-									"An array variable can only be initialized with a list of values");
+							throw new ExecutionException
+							("An array variable can only be initialized " +
+							 "with a list of values");
 						}
 						int index = 0;
 						Iterator i = ((List) value).iterator();
@@ -114,14 +117,12 @@ public class New extends VDLFunction {
 					closeShallow(stack, handle);
 				}
 
-				if (mapping != null) {
-					handle.init(mapping);
-				}
+				handle.init(mapping);
 			}
 			else if (value instanceof DSHandle) {
 				handle = (DSHandle) value;
 			}
-			else if (type != null) {
+			else {
 				handle = new RootDataNode(type);
 				handle.init(mapping);
 				if (value != null) {
@@ -129,11 +130,7 @@ public class New extends VDLFunction {
 					closeShallow(stack, handle);
 				}
 			}
-			else {
-				// TODO when do we hit this case?
-				throw new ExecutionException("vdl:new requires a type specification for value "
-						+ value);
-			}
+			
 			logger.debug("NEW id="+handle.getIdentifier());
 			return handle;
 		}
@@ -141,5 +138,4 @@ public class New extends VDLFunction {
 			throw new ExecutionException(e);
 		}
 	}
-
 }

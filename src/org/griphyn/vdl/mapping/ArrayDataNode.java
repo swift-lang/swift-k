@@ -19,7 +19,7 @@ public class ArrayDataNode extends DataNode {
 		if (!isClosed()) {
 			throw new HandleOpenException(this);
 		}
-		Map handles = getHandles();
+		Map<String,DSHandle> handles = getHandles();
 		synchronized (handles) {
 			Iterator i = handles.entrySet().iterator();
 			while (i.hasNext()) {

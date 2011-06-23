@@ -20,7 +20,8 @@ import org.griphyn.vdl.mapping.file.SingleFileMapper;
 import org.griphyn.vdl.mapping.file.StructuredRegularExpressionMapper;
 
 public class MapperFactory {
-	private static Map mappers = new HashMap();
+	private static Map<String,Class<Mapper>> mappers = 
+	    new HashMap<String,Class<Mapper>>();
 
 	static {
 
@@ -42,13 +43,15 @@ public class MapperFactory {
 		registerMapper("ext", ExternalMapper.class);
 	}
 
-	public synchronized static Mapper getMapper(String type, Map params) throws InvalidMapperException {
-		Class cls = (Class) mappers.get(type);
+	public synchronized static Mapper getMapper(String type, 
+	                                            Map<String,Object> params) 
+	throws InvalidMapperException {
+		Class<Mapper> cls = mappers.get(type);
 		if (cls == null) {
 			throw new InvalidMapperException("no such mapper: "+type);
 		}
 		try {
-			Mapper mapper = (Mapper) cls.newInstance();
+			Mapper mapper = cls.newInstance();
 			mapper.setParams(params);
 			return mapper;
 		}
@@ -57,12 +60,14 @@ public class MapperFactory {
 		}
 	}
 
-	public static void registerMapper(String type, String cls) throws ClassNotFoundException {
-		registerMapper(type, MapperFactory.class.getClassLoader().loadClass(cls));
+    public static void registerMapper(String type, String cls) 
+	throws ClassNotFoundException {
+	    registerMapper(type, MapperFactory.class.getClassLoader().loadClass(cls));
 	}
 
-	public synchronized static void registerMapper(String type, Class cls) {
-		mappers.put(type, cls);
+	@SuppressWarnings("unchecked")
+    public synchronized static void registerMapper(String type, 
+	                                               Class<?> cls) {
+		mappers.put(type, (Class<Mapper>) cls);
 	}
-
 }

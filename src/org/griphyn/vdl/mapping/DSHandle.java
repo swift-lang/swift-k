@@ -30,7 +30,7 @@ public interface DSHandle {
      */
     public Type getType();
 
-    public void init(Map params);
+    public void init(Map<String,Object> params);
 
     public DSHandle getRoot();
 

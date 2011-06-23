@@ -15,27 +15,27 @@ import java.util.ArrayList;
 public class PartialCloseDataset extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(CloseDataset.class);
 
-	public static final Arg OA_STATEMENTID = new Arg.Optional("closeID", null);
+	public static final Arg OA_CLOSE_ID = new Arg.Optional("closeID", null);
 
 	static {
-		setArguments(PartialCloseDataset.class, new Arg[] { PA_VAR, OA_STATEMENTID });
+		setArguments(PartialCloseDataset.class, new Arg[] { PA_VAR, OA_CLOSE_ID });
 	}
 
 
 	/** Map from DSHandles (as keys) to lists of what we have seen
 	    already. TODO this may end up growing too much when a program
-	    has lots of objects. consider alternative ways of doing this. */
-	static Map pendingDatasets = new HashMap();
-
+	    has lots of objects. Consider alternative ways of doing this. */
+	static Map<DSHandle,List<String>> pendingDatasets = 
+	    new HashMap<DSHandle,List<String>>();
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		boolean hasUnseenToken = false;
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
-		String statementID = (String) OA_STATEMENTID.getValue(stack);
+		String closeID = (String) OA_CLOSE_ID.getValue(stack);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Partially closing " + var +
                                      " hash: " + var.hashCode() +
-                                     " for statement " + statementID);
+                                     " for statement " + closeID);
 		}
 
 		if(var.isClosed()) {
@@ -45,17 +45,17 @@ public class PartialCloseDataset extends VDLFunction {
 
 		synchronized(pendingDatasets) {
 
-			List c = (List) pendingDatasets.get(var);
-			if(c==null) {
-				c=new ArrayList();
-				pendingDatasets.put(var,c);
+			List<String> c = pendingDatasets.get(var);
+			if (c == null) {
+				c = new ArrayList<String>();
+				pendingDatasets.put(var, c);
 			}
 
-			c.add(statementID);
-			logger.debug("Adding token "+statementID+" with hash "+statementID.hashCode());
+			c.add(closeID);
+			logger.debug("Adding token "+closeID+" with hash "+closeID.hashCode());
 
-			String needToWaitFor = (String) var.getParam("waitfor");
-			logger.debug("need to wait for "+needToWaitFor);
+			String needToWaitFor = var.getParam("waitfor");
+			logger.debug("need to wait for " + needToWaitFor);
 			StringTokenizer stok = new StringTokenizer(needToWaitFor, " ");
 			while(stok.hasMoreTokens()) {
 				String s = stok.nextToken();
@@ -65,16 +65,17 @@ public class PartialCloseDataset extends VDLFunction {
 					// then we have a required element that we have not
 					// seen yet, so...
 					hasUnseenToken = true;
-					logger.debug("Container does not contain token "+s);
+					logger.debug("Container does not contain token " + s);
 				} else {
-					logger.debug("Container does contain token "+s);
+					logger.debug("Container does contain token " + s);
 				}
 			}
 		}
 		logger.debug("hasUnseenToken = "+hasUnseenToken);
 		if(!hasUnseenToken) {
 			if(logger.isDebugEnabled()) {
-				logger.debug("All partial closes for " + var + " have happened. Closing fully.");
+				logger.debug("All partial closes for " + var + 
+				             " have happened. Closing fully.");
 			}
 			var.closeDeep();
 			pendingDatasets.remove(var);

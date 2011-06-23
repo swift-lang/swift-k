@@ -58,8 +58,7 @@ public abstract class AbstractDataNode implements DSHandle {
         handles = new HashMap<String,DSHandle>();
     }
 
-    public void init(Map params) {
-
+    public void init(Map<String,Object> params) {
     }
 
     public Type getType() {
@@ -183,11 +182,11 @@ public abstract class AbstractDataNode implements DSHandle {
             if (path.size() > 1) {
                 return handle.getField(path.butFirst());
             }
-            else {
-                return handle;
-            }
+            return handle;
         }
         catch (NoSuchFieldException e) {
+            logger.warn("could not find variable: " + field.getName() + 
+                               " " + path);
             throw new InvalidPathException(path, this);
         }
     }
@@ -240,9 +239,7 @@ public abstract class AbstractDataNode implements DSHandle {
              */
             throw new RuntimeException("Can't set root data node!");
         }
-        else {
-            ((AbstractDataNode) getParent()).setField(field.getName(), handle);
-        }
+        ((AbstractDataNode) getParent()).setField(field.getName(), handle);
     }
 
     protected void setField(String name, DSHandle handle) {
@@ -258,16 +255,14 @@ public abstract class AbstractDataNode implements DSHandle {
             if (closed) {
                 throw new NoSuchFieldException(name);
             }
-            else {
-                handle = createDSHandle(name);
-            }
+            handle = createDSHandle(name);
         }
         return handle;
     }
 
     protected DSHandle getHandle(String name) {
         synchronized (handles) {
-            return (DSHandle) handles.get(name);
+            return handles.get(name);
         }
     }
 
@@ -326,9 +321,7 @@ public abstract class AbstractDataNode implements DSHandle {
         if (field.getType().isArray()) {
             return handles;
         }
-        else {
-            return value;
-        }
+        return value;
     }
 
     public Map<String, DSHandle> getArrayValue() {

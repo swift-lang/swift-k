@@ -6,21 +6,25 @@ package org.griphyn.vdl.mapping;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
 public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 
+    static Logger logger = Logger.getLogger(RootDataNode.class); 
+    
 	private boolean initialized=false;
 	private Mapper mapper;
-	private Map params;
+	private Map<String, Object> params;
 	private DSHandle waitingMapperParam;
 
 	public static DSHandle newNode(Type type, Object value) {
 		DSHandle handle = new RootDataNode(type);
 		handle.setValue(value);
 		handle.closeShallow();
+		logger.debug("newNode");
 		return handle;
 	}
 
@@ -29,7 +33,7 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		getField().setType(type);
 	}
 
-	public void init(Map params) {
+	public void init(Map<String,Object> params) {
 		this.params = params;
 		if(this.params == null) { 
 			initialized();
@@ -41,12 +45,11 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 	/** must have this.params set to the appropriate parameters before
 	    being called. */
 	private synchronized void innerInit() {
-		Iterator i = params.entrySet().iterator();
-		while(i.hasNext()) {
-			Map.Entry entry = (Map.Entry) i.next();
-			Object v = entry.getValue();
+	    logger.debug("innerInit: " + this);
+	    for (Object v : params.values()) {
 			if(v instanceof DSHandle && !((DSHandle) v).isClosed()) {
-				waitingMapperParam = (DSHandle) v;
+			    logger.debug("addListener: " + this + " " + v);
+			    waitingMapperParam = (DSHandle) v;
                 waitingMapperParam.addListener(this);
 				return;
 			}
@@ -67,7 +70,8 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 			checkInputs();
 		}
 		catch (InvalidMapperException e) {
-			throw new RuntimeException("InvalidMapperException caught in mapper initialization", e);
+			throw new RuntimeException
+			("InvalidMapperException caught in mapper initialization", e);
 		}
 		if (isClosed()) {
 		    notifyListeners();
@@ -123,19 +127,21 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		    }
 			// Static mappers are (array) mappers which know the size of
 			// an array statically. A good example is the fixed array mapper
-			Iterator i = mapper.existing().iterator();
-			while (i.hasNext()) {
-				Path p = (Path) i.next();
+		    logger.debug("mapper: " + mapper);
+			for (Path p : mapper.existing()) {
 				try {
-					// Try to get the path in order to check that the path is valid - we'll get an exception if not
+					// Try to get the path in order to check that the 
+				    // path is valid - we'll get an exception if not
 					root.getField(p);
 					if (logger.isInfoEnabled()) {
 						logger.info("Found mapped data " + root + "." + p);
 					}
 				}
 				catch (InvalidPathException e) {
-					throw new IllegalStateException("mapper.existing() returned a path " + p
-							+ " that it cannot subsequently map");
+					throw new IllegalStateException
+					("mapper.existing() returned a path " + 
+					" that it cannot subsequently map: " + 
+					" root: " + root + " path: " + p);
 				}
 			}
 			if (root.isArray()) {
@@ -207,16 +213,12 @@ public class RootDataNode extends AbstractDataNode implements DSHandleListener {
 		return null;
 	}
 
-
-
 	public Mapper getMapper() {
 		if (initialized) {
 			return mapper;
-		} 
-		else {
-			assert (waitingMapperParam != null);
-            throw new VDL2FutureException(waitingMapperParam);
 		}
+        assert (waitingMapperParam != null);
+        throw new VDL2FutureException(waitingMapperParam);
 	}
 
 	public boolean isArray() {
