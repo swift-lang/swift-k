@@ -128,7 +128,7 @@ MONITOR_PID=
 SHUTDOWN=0
 
 echo "RUNNING_IN:  $RUNDIR"
-echo "HTML_OUTPUT: $REPORT"
+echo "HTML_OUTPUT: $HTML"
 
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 
