@@ -1,7 +1,7 @@
 Runtime features
 ----------------
 
-Visualising the workflow as a graph
+Visualizing the workflow as a graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When running a workflow, its possible to generate a provenance graph at

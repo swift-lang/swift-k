@@ -12,7 +12,7 @@ include::../../examples/first.swift[]
 ************
 
 We can run this program as follows:
- 
+note: Make sure the bin directory of swift-installation is in your path.
 ----
 $ cd examples/swift/
 $ swift first.swift

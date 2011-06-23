@@ -11,7 +11,7 @@ greeting output will go. In this section, we will add an input parameter
 to the greeting function.
 
 The code changes from first.swift are highlighted below.
-
+ToDo: Highlight the differences!
  
 ----
 include::../../examples/parameter.swift[]
@@ -57,6 +57,7 @@ containing a greeting in a different language.
 
 In addition to specifying parameters positionally, parameters can be
 named, and if desired a default value can be specified - see <<named_parameters, Named and Optional Parameters>>.
+ToDo: link not working.
 
 Adding another application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,11 +74,13 @@ HELLO
 ----
 
 .There are several steps
-- transformation catalog
-- application block
+- Updating the transformation catalog
+- Updating the application block
+
+ToDo: What is transformation catalog? One line explanation.
 
 First we need to modify the transformation catalog to define a logical
-transformation for the tc utility. The transformation catalog can be
+transformation for the tr utility. The transformation catalog can be
 found in etc/tc.data. There are already several entries specifying
 where programs can be found. Add a new line to the file, specifying
 where *tr* can be found (usually in /usr/bin/tr but it may differ on
@@ -153,7 +156,7 @@ types:
 
     - string - this is a built-in type for storing strings of text in
       memory, much like in other programming languages
-    - messagefile - this is a user-defined type used to mark files as
+    - messagefile - this is a user-defined type used to mark disc resident files as
       containing messages
 
 SwiftScript has the additional built-in types: boolean, integer and
@@ -306,8 +309,8 @@ include::../../examples/fixedarray.swift[]
 
 foreach
 ~~~~~~~
-SwiftScript provides a control structure, foreach, to operate on each
-element of an array.
+SwiftScript provides a control structure, foreach, to  operate on each
+element of an array in parallel.
 
 In this example, we will run the previous word counting example over
 each file in an array without having to explicitly list the array
@@ -327,6 +330,7 @@ If
 ~~
 Decisions can be made using 'if', like this:
 
+TODO: More examples of if required.
  
 ----
 if(morning) {  
@@ -343,8 +347,7 @@ from true to false will cause the program to output "good afternoon".
 Sequential iteration
 ~~~~~~~~~~~~~~~~~~~~
 
-A development version of Swift after 0.2 (revision 1230) introduces a
-sequential iteration construct.
+A serial execution of instructions can be carried out using the sequential iteration construct.
 
 The following example demonstrates a simple application: each step of
 the iteration is a string representation of the byte count of the
@@ -358,11 +361,10 @@ Here's the program:
 include::../../examples/iterate.swift[]
 ----
 
-echo is the standard unix echo.
+Where, echo is the standard unix echo utility.
 
-wcl is our application code - it counts the number of bytes in the one
+_wcl_ is our application code - it counts the number of bytes in the one
 file and writes that count out to another, like this:
-
  
 ----
 $ cat ../wcl
@@ -376,8 +378,9 @@ $ cat b
 ----
 
 Install the above wcl script somewhere and add a transformation catalog
-entry for it. Then run the example program like this:
+(tc) entry for it. Then run the example program like this:
 
+TODO: Show the tc entry.
  
 ----
 $ swift iterate.swift
