@@ -317,7 +317,7 @@ printlist() {
     shift
   done
 }
- 
+
 outecho() {
   TYPE=$1
   shift
@@ -336,13 +336,13 @@ start_test_results() {
 # $TEXTREPORT monitor whether the report will be plain text or HTML
 output_report() {
 	TYPE=$1
-	if [ $TEXTREPORT == 1 ]; then	
+	if [ $TEXTREPORT == 1 ]; then
 		if [ "$TYPE" == "test" ]; then
-	
+
 			LABEL="$2"  # Text on link to output
 			CMD=$3    # Command issued (td title)
 			RESULT=$4 # Passed or Failed
-	
+
 			if [ "$RESULT" == "Passed" ]; then
 				printf %-10.10s "success">>$REPORT
 			else
@@ -350,7 +350,7 @@ output_report() {
 				cat $RUNDIR/$TEST_LOG < /dev/null
 				printf %-10.10s "failure">>$REPORT
 			fi
-		
+
 		elif [ "$TYPE" == "package" ]; then
 			BINPACKAGE=$2
 		else
@@ -358,11 +358,11 @@ output_report() {
 		fi
 	else
 		if [ "$TYPE" == "test" ]; then
-			
+
 	    	LABEL="$2"  # Text on link to output
 	    	CMD=$3    # Command issued (td title)
 	    	RESULT=$4 # Passed or Failed
-	
+
 	    	# WIDTH=$( width "$LABEL" )
 	    	if [ "$RESULT" == "Passed" ]; then
 	      		html_td class "success" width 25 title "$CMD"
@@ -374,7 +374,7 @@ output_report() {
 	      		html_a_href $TEST_LOG $LABEL
 	    	fi
 	    	html_~td
-	    	
+
 	  	elif [ "$TYPE" == "package" ]; then
 	    	BINPACKAGE=$2
 	  	else
@@ -426,7 +426,7 @@ start_row() {
 	    html_~td
 	    html_td
 	    html_table
-	    html_tr		
+	    html_tr
 	fi
     SEQ=1
 }
@@ -443,7 +443,7 @@ end_row() {
 }
 
 # Create test output_*.txt file and copy to stdout.txt
-# Rename to copy_output? 
+# Rename to copy_output?
 # TEST_LOG = test log
 test_log() {
   TEST_LOG="output_$LOGCOUNT.txt"
@@ -647,7 +647,7 @@ monitored_exec()
 
   RESULT=$( result )
   NOPASO="Failed"
-  
+
 #Verifies the value of $RESULT, if the test was successful
 #increases $TESTSPASSED by 1, if the test Failed
 #increases $TESTSFAILED by 1.
@@ -900,7 +900,7 @@ group_statistics(){
   		 printf "<td class=\"failure\"> $TESTSFAILED Tests failed. </td>">>$HTML
 		 printf "</tr>">>$HTML
 		# printf "\n $TESTCOUNT Tests run\t$TESTSFAILED Tests failed\t$TESTSPASSED Tests succeeded. \n\n">>$HTML
-	fi	
+	fi
 }
 
 # Execute all tests in current GROUP
@@ -935,7 +935,7 @@ test_group() {
     TESTCOUNT=0
     TESTSPASSED=0
     TESTSFAILED=0
-    
+
 
   SCRIPTS=$( echo $GROUP/*.test.sh )
   checkfail "Could not list: $GROUP"
@@ -955,7 +955,7 @@ test_group() {
     done
     end_row
   done
- 
+
 }
 
 
