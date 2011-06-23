@@ -113,7 +113,6 @@ BRANCH=trunk
 #BRANCH="branches/tests-01"
 
 SCRIPTDIR=$( cd $( dirname $0 ) ; /bin/pwd )
-touch /home/Alberto/$SCRIPTDIR
 
 TESTCOUNT=0
 TESTSFAILED=0
