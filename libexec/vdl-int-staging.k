@@ -117,7 +117,7 @@ namespace("vdl"
 								"-k",
 								"-cdmfile", cdmfile,
 								"-status", "provider"
-								"-a", maybe(unwrapClosedList(arguments))
+								"-a", maybe(each(unwrapClosedList(arguments)))
 							)
 							directory = "{wfdir}-{jobdir}-{jobid}"
 							redirect = false
