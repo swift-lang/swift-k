@@ -78,7 +78,7 @@ public class SetFieldValue extends VDLFunction {
 	            if (p.equals("$"))
 	                p = "";
 	            String name = data.getDisplayableName() + p;
-	            logger.info("Set: " + name + "=" + value);
+	            logger.info("Set: " + name + "=" + value.getValue());
 	        }
 	    }
     }
