@@ -15,7 +15,10 @@ import java.io.InputStream;
 import org.apache.log4j.Logger;
 
 public abstract class AbstractProperties extends java.util.Properties {
-    public static final Logger logger = Logger.getLogger(AbstractProperties.class);
+
+	private static final long serialVersionUID = 1L;
+
+	public static final Logger logger = Logger.getLogger(AbstractProperties.class);
     
     public static final String POLL_INTERVAL = "poll.interval";
     
