@@ -1,9 +1,7 @@
 type messagefile;
 
-(messagefile t) greeting() { 
-    app {
-        echo "hello" stdout=@filename(t);
-    }
+app (messagefile t) greeting() {
+  echo "hello" stdout=@filename(t);
 }
 
 iterate i {
