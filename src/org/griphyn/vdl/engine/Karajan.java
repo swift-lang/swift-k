@@ -60,7 +60,6 @@ public class Karajan {
 
 	public static final String TEMPLATE_FILE_NAME = "Karajan.stg";
 
-
 	LinkedList<Program> importList = new LinkedList<Program>();
 	Set<String> importedNames = new HashSet<String>();
 
@@ -451,7 +450,7 @@ public class Karajan {
 			scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(assign.getAbstractExpressionArray(0)));
 			scope.appendStatement(assignST);
 		} catch(CompilationException re) {
-			throw new CompilationException("Compile error in assigment at "+assign.getSrc()+": "+re.getMessage(),re);
+			throw new CompilationException("Compile error in assignment at "+assign.getSrc()+": "+re.getMessage(),re);
 		}
 	}
 
