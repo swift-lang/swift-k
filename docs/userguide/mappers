@@ -392,7 +392,7 @@ the file names will be mapped as a subelement of the dataset.
 |location|A directory that the files are located.
 |prefix|The prefix of the files
 |suffix|The suffix of the files, for instance: ".txt"
-|pattern|A UNIX glob style pattern, for instance: "*foo*" would match
+|pattern|A UNIX glob style pattern, for instance: "\*foo*" would match
 all file names that contain foo. When this mapper is used to specify
 output filenames, pattern is ignored.
 |====================
@@ -500,7 +500,7 @@ mapper for variables when no mapper is specified.
 |location|A directory that the files are located.
 |prefix|The prefix of the files
 |suffix|The suffix of the files, for instance: ".txt"
-pattern	A UNIX glob style pattern, for instance: "*foo*" would match
+pattern	A UNIX glob style pattern, for instance: "\*foo*" would match
 all file names that contain foo. When this mapper is used to specify
 output filenames, pattern is ignored.
 |=================
@@ -531,7 +531,7 @@ location="/sandbox/..."
 |location|The directory where the files are located.
 |prefix|The prefix of the files
 |suffix|The suffix of the files, for instance: ".txt"
-|pattern|A UNIX glob style pattern, for instance: "*foo*" would match
+|pattern|A UNIX glob style pattern, for instance: "\*foo*" would match
 all file names that contain foo.
 |======================
 

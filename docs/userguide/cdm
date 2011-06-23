@@ -1,0 +1,203 @@
+Collective Data Management
+--------------------------
+
+Overview
+~~~~~~~~ 
+. The user specifies a CDM policy in a file, customarily fs.data.  
+. fs.data is given to Swift on the command line.  
+. The Swift data module (org.globus.swift.data) is informed of the CDM policy.  
+. At job launch time, the VDL Karajan code queries the CDM policy,  
+   .. altering the file staging phase, and  
+   .. sending fs.data to the compute site.  
+. At job run time, the Swift wrapper script  
+   .. consults a Perl script to obtain policy, and  
+   .. uses wrapper extensions to modify data movement.  
+. Similarly, stage out can be changed.  
+  
+  
+.Command line
+----- 
+$ swift -sites.file sites.xml -tc.file tc.data -cdm.file fs.data stream.swift  
+-----
+  
+CDM policy file format
+~~~~~~~~~~~~~~~~~~~~~~
+.Example
+-----  
+# Describe CDM for my job  
+property GATHER_LIMIT 1  
+rule .*input.txt DIRECT /gpfs/homes/wozniak/data  
+rule .*xfile*.data BROADCAST /dev/shm  
+rule .* DEFAULT  
+-----
+  
+The lines contain:  
+  
+. A directive, either rule or property  
+. A rule has:  
+   .. A regular expression  
+   .. A policy token  
+   .. Additional policy-specific arguments  
+. A property has  
+   .. A policy property token  
+   .. The token value  
+. Comments with # .  
+. Blank lines are ignored.  
+  
+  
+.Notes
+  
+. The policy file is used as a lookup database by Swift and Perl methods.  
+. For example, a lookup with the database above given the argument input.txt would result in the Direct policy.  
+. If the lookup does not succeed, the result is DEFAULT.  
+ . Policies are listed as subclasses of org.globus.swift.data.policy.Policy .  
+  
+  
+Policy Descriptions
+~~~~~~~~~~~~~~~~~~~
+.Default  
+  
+* Just use file staging as provided by Swift/CoG.  Identical to behavior if no CDM file is given.  
+  
+  
+.Broadcast
+-----  
+rule .*xfile*.data BROADCAST /dev/shm  
+-----  
+* The input files matching the pattern will be stored in the given directory, an LFS location, with links in the job directory.  
+* On the BG/P, this will make use of the f2cn tool.  
+* On machines not implementing an efficient broadcast, we will just ensure correctness.  For example, on a workstation, the location could be in a /tmp RAM FS.  
+  
+  
+.Direct
+-----  
+rule .*input.txt DIRECT /gpfs/scratch/wozniak/  
+-----  
+* Allows for direct I/O to the parallel FS without staging.  
+* The input files matching the pattern must already exist in the given directory, a GFS location.  Links will be placed in the job directory.  
+* The output files matching the pattern will be stored in the given directory, with links in the job directory.  
+* Example: In the rule above, the Swift-generated file name ./data/input.txt would be accessed by the user job in /gpfs/homes/wozniak/data/input.txt .  
+  
+  
+.Local 
+-----  
+rule .*input.txt LOCAL dd /gpfs/homes/wozniak/data obs=64K  
+-----  
+* Allows for client-directed input copy to the compute node.  
+* The user may specify cp or dd as the input transfer program.  
+* The input files matching the pattern must already exist in the given directory, a GFS location.  Copies will be placed in the job directory.  
+* Argument list: [tool] [GFS directory] [tool arguments]*  
+  
+  
+.Gather
+----- 
+property GATHER_LIMIT 500000000 # 500 MB  
+property GATHER_DIR /dev/shm/gather  
+property GATHER_TARGET /gpfs/wozniak/data/gather_target  
+rule .*.output.txt GATHER  
+-----
+  
+* The output files matching the pattern will be present to tasks in the job directory as usual but noted in a _swiftwrap shell array GATHER_OUTPUT.  
+* The GATHER_OUTPUT files will be cached in the GATHER_DIR, an LFS location.  
+* The cache will be flushed when a job ends if a du on GATHER_DIR exceeds GATHER_LIMIT.  
+* As the cache fills or on stage out, the files will be bundled into randomly named tarballs in GATHER_TARGET, a GFS location.  
+* If the compute node is an SMP, GATHER_DIR is a shared resource.  It is protected by the link file GATHER_DIR/.cdm.lock .  
+* Unpacking the tarballs in GATHER_TARGET will produce the user-specified filenames.  
+  
+.Summary
+  
+. Files created by application  
+. Acquire lock  
+. Move files to cache  
+. Check cache size  
+. If limit exceeded, move all cache files to outbox  
+. Release lock  
+. If limit was exceeded, stream outbox as tarball to target  
+  
+.Notes
+  
+* Gather required quite a bit of shell functionality to manage the lock, etc. This is placed in cdm_lib.sh .  
+* vdl_int.k needed an additional task submission (cdm_cleanup.sh) to perform the final flush at workflow completion time .  This task also uses cdm_lib.sh .  
+  
+  
+VDL/Karajan processing
+~~~~~~~~~~~~~~~~~~~~~~
+. CDM functions are available in Karajan via the cdm namespace.  
+. These functions are defined in org.globus.swift.data.Query .  
+. If CDM is enabled, VDL skips file staging for files unless the policy is DEFAULT.  
+  
+  
+Swift wrapper CDM routines  
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+. The cdm.pl script is shipped to the compute node if CDM is enabled.  
+. When linking in inputs, CDM is consulted by _swiftwrap:cdm_lookup().  
+. The cdm_action() shell function handles CDM methods, typically just producing a link.  
+  
+  
+Test cases  
+~~~~~~~~~~
+  
+. Simple test cases are in:  
+      https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/scripts/cdm-direct and  
+      https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/scripts/all-pairs  
+. Do a:  
+      mkdir cdm  
+      cd cdm  
+      svn co https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/scripts  
+. In cdm-direct, run:  
+      source ./setup.sh local local local  
+. Run workflow:  
+      swift -sites.file sites.xml -tc.file tc.data -cdm.file fs.data stream.swift  
+. Note that staging is skipped for input.txt  
+      policy: file://localhost/input.txt : DIRECT  
+      FILE_STAGE_IN_START file=input.txt ...  
+      FILE_STAGE_IN_SKIP file=input.txt policy=DIRECT  
+      FILE_STAGE_IN_END file=input.txt ...  
+. In the wrapper output, the input file is handled by CDM functionality:  
+      Progress  2010-01-21 13:50:32.466572727-0600  LINK_INPUTS  
+      CDM_POLICY: DIRECT /homes/wozniak/cdm/scripts/cdm-direct  
+      CDM: jobs/t/cp_sh-tkul4nmj input.txt DIRECT /homes/wozniak/cdm/scripts/cdm-direct  
+      CDM[DIRECT]: Linking jobs/t/cp_sh-tkul4nmj/input.txt to /homes/wozniak/cdm/scripts/cdm-direct/input.txt  
+      Progress  2010-01-21 13:50:32.486016708-0600  EXECUTE  
+. all-pairs is quite similar but uses more policies.  
+  
+  
+PTMap case
+^^^^^^^^^^  
+. Start with vanilla PTMap:  
+   .. cd cdm  
+   .. mkdir apps  
+   .. cd apps  
+   .. https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/apps/ptmap  
+. Source setup.sh  
+. Use start.sh, which  
+   .. applies CDM policy from fs.local.data  
+  
+  
+CDM site-aware policy file format
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+Example
+
+-----
+#Describe CDM for my job  
+#Use DIRECT and BROADCAST if on cluster1, else use DEFAULT behavior  
+property GATHER_LIMIT 1  
+rule cluster1 .*input.txt DIRECT /gpfs/homes/wozniak/data  
+rule cluster1 .*xfile*.data BROADCAST /dev/shm  
+rule ANYWHERE .* DEFAULT  
+-----
+  
+The lines contain:
+  
+. A directive, either rule or property  
+. A rule has:  
+   .. A regular expression for site matchin  
+   .. A regular expression for filename matching  
+   .. A policy token  
+   .. Additional policy-specific arguments  
+. A property has  
+   .. A policy property token  
+   .. The token value  
+. Comments with # .  
+. Blank lines are ignored.  

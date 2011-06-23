@@ -128,7 +128,7 @@ each element of an array:
 
 ----
 foreach f,ix in frames {  
-  output[ix] = rotate(frames, 180);  
+  output[ix] = rotate(f, 180);  
 ----
 
 Sequential iteration can be expressed using the iterate construct:

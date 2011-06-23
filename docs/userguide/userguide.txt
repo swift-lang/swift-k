@@ -35,3 +35,5 @@ include::clustering[]
 include::coasters[]
 
 include::howto_tips[]
+
+include::cdm[]
