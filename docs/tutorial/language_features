@@ -80,9 +80,9 @@ HELLO
 ToDo: What is transformation catalog? One line explanation.
 
 First we need to modify the transformation catalog to define a logical
-transformation for the tr utility. The transformation catalog can be
-found in etc/tc.data. There are already several entries specifying
-where programs can be found. Add a new line to the file, specifying
+transformation for the tr utility. A transformation catalog lists where executables are located on computational sites. 
+The transformation catalog can be found in etc/tc.data. There are already several entries specifying
+where executables can be found. Add a new line to the file, specifying
 where *tr* can be found (usually in /usr/bin/tr but it may differ on
 your system), like this:
 
@@ -330,8 +330,6 @@ If
 ~~
 Decisions can be made using 'if', like this:
 
-TODO: More examples of if required.
- 
 ----
 if(morning) {  
   outfile = greeting("good morning");  
@@ -378,9 +376,14 @@ $ cat b
 ----
 
 Install the above wcl script somewhere and add a transformation catalog
-(tc) entry for it. Then run the example program like this:
+(tc) entry for it (see an example below, note that you will need to change the path in third column to the path where wcl is located on your localhost).
 
-TODO: Show the tc entry.
+----
+localhost wcl /home/ketan/bin/wcl  INSTALLED  INTEL32::LINUX  null
+----
+
+Then run the example program like this:
+
  
 ----
 $ swift iterate.swift

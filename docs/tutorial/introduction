@@ -1,15 +1,15 @@
 Introduction
 ------------
-This tutorial is intended to introduce new users to the basics of Swift.
+This is an introductory tutorial describing the use of Swift and its programming
+language SwiftScript. It is intended to introduce new users to the basics of Swift.
 It is structured as a series of simple exercises/examples which you can
 try for yourself as you read along. After the first 'hello world'
 example, there are two tracks - the language track (which introduces the SwiftScript language) and the runtime track (which introduces features of the Swift runtime environment, such as running
 jobs on different computational 'sites').
 
 For information on getting an installation of Swift running, consult the
-Swift Quickstart Guide <http://www.ci.uchicago.edu/swift/guides/quickstartguide.php>, and
-return to this document when you have successfully run the test
-SwiftScript program mentioned there. _suggest_ _which_ _version_. 
+Swift Quickstart Guide <http://www.ci.uchicago.edu/swift/guides/quickstartguide.php>. We advise you to install the latest stable release of Swift. 
+Return to this document when you have successfully run the test SwiftScript program mentioned there. 
 
 There is also a Swift User's Guide
 <http://www.ci.uchicago.edu/swift/guides/userguide.php> which contains

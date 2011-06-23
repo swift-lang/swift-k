@@ -6,8 +6,6 @@ A Swift Tutorial
 :website: http://www.ci.uchicago.edu/swift/guides/tutorial.php
 :numbered:
 
-include::abstract[]
-
 include::introduction[]
 
 include::hello_world[]
