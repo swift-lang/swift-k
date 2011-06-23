@@ -62,8 +62,9 @@ public class InfiniteCountingWhile extends Sequential {
 			fn = getElement(0);
 
 			String counterName = (String) stack.getVar(VAR);
-			List l = (List) stack.getVar(counterName);
-			Integer wrappedi = (Integer)l.get(0);
+			@SuppressWarnings("unchecked")
+            List<Integer> l = (List<Integer>) stack.getVar(counterName);
+			Integer wrappedi = l.get(0);
 			int i = wrappedi.intValue();
 			i++;
 			ThreadingContext tc = (ThreadingContext)stack.getVar("#iteratethread");
