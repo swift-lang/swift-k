@@ -3,6 +3,9 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -66,7 +69,8 @@ public class SetFieldValue extends VDLFunction {
 		}
 	}
 
-	private void log(DSHandle leaf, DSHandle value) {
+	@SuppressWarnings("unchecked")
+    private void log(DSHandle leaf, DSHandle value) {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Setting " + leaf + " to " + value);
 	    }
@@ -78,11 +82,33 @@ public class SetFieldValue extends VDLFunction {
 	            if (p.equals("$"))
 	                p = "";
 	            String name = data.getDisplayableName() + p;
-	            logger.info("Set: " + name + "=" + value.getValue());
+	            Object v = value.getValue();
+	            if (! (v instanceof Map))
+	                logger.info("Set: " + name + "=" + v);
+	            else
+	                logger.info("Set: " + name + "=" + 
+	                            unpackHandles((Map<String, DSHandle>) v));
 	        }
 	    }
     }
 
+	String unpackHandles(Map<String,DSHandle> handles) { 
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("{");
+	    Iterator<Map.Entry<String,DSHandle>> it = 
+	        handles.entrySet().iterator();
+	    while (it.hasNext()) { 
+	        Map.Entry<String,DSHandle> entry = it.next();
+	        sb.append(entry.getKey());
+	        sb.append('=');
+	        sb.append(entry.getValue().getValue());
+	        if (it.hasNext())
+	            sb.append(", ");
+	    }
+	    sb.append("}");
+	    return sb.toString();
+	}
+	
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
 	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack) throws ExecutionException {
