@@ -641,8 +641,9 @@ monitored_exec()
   rm killed_test > /dev/null 2>&1 && sleep 5
   verbose "killing monitor: $MONITOR_PID..."
   kill $MONITOR_PID
+  INDIVIDUAL_TEST_TIME=$(( STOP-START ))
 
-  echo "TOOK (seconds): $(( STOP-START ))"
+  echo "TOOK (seconds): $INDIVIDUAL_TEST_TIME"
 
   RESULT=$( result )
   NOPASO="Failed"
@@ -950,6 +951,7 @@ test_group() {
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
       script_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
+
       (( $SHUTDOWN )) && return
     done
     end_row
@@ -1064,7 +1066,7 @@ for G in ${GROUPLIST[@]}; do
   start_group "Group $GROUPCOUNT: $TITLE"
   test_group
   (( GROUPCOUNT++ ))
-  (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && break
+  (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && end_row | html_~tr | group_statistics && break
   (( $SHUTDOWN )) && break
 done
 
