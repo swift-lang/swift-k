@@ -67,7 +67,7 @@ public interface DSHandle {
 
     public Collection<Path> getFringePaths() throws HandleOpenException;
 
-    public Map getArrayValue();
+    public Map<String, DSHandle> getArrayValue();
 
     public Path getPathFromRoot();
 

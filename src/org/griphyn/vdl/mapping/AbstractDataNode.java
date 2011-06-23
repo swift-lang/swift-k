@@ -14,7 +14,6 @@ import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
-import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
 
 
@@ -332,7 +331,7 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    public Map<String,DSHandle> getArrayValue() {
+    public Map<String, DSHandle> getArrayValue() {
         checkDataException();
         if (!field.getType().isArray()) {
             throw new RuntimeException
