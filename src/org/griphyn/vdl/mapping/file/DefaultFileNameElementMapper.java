@@ -36,7 +36,7 @@ public class DefaultFileNameElementMapper implements FileNameElementMapper {
 	}
 
 	public String mapIndex(int index) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder(indexWidth);
 		String num = String.valueOf(index);
 		for (int i = 0; i < indexWidth - num.length(); i++) {
 			sb.append('0');
