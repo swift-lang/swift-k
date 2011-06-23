@@ -5,6 +5,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -28,7 +29,15 @@ public class UnwrapClosedList extends VDLFunction {
 		List<Object> r = new ArrayList<Object>(l.size());
 		
 		for (DSHandle h : l) {
-		    r.add(h.getValue());
+		    if (h.getType().isArray()) {
+		        Map<String, DSHandle> m = h.getArrayValue();
+		        for (DSHandle h2 : m.values()) {
+		            r.add(h2.getValue());
+		        }
+		    }
+		    else {
+		        r.add(h.getValue());
+		    }
 		}
 		
 		return r;
