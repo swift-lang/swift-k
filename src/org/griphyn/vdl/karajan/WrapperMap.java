@@ -10,10 +10,10 @@ import java.util.Set;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class WrapperMap {
-	private Map map;
+	private Map<DSHandle, FutureWrappers> map;
 
 	public WrapperMap() {
-		this.map = new HashMap();
+		this.map = new HashMap<DSHandle, FutureWrappers>();
 	}
 
 	public static class FutureWrappers {
@@ -21,30 +21,41 @@ public class WrapperMap {
 		public ArrayIndexFutureList arrayWrapper;
 	}
 
-	public synchronized void close(DSHandle handle) {
-		FutureWrappers fw = (FutureWrappers) map.get(handle);
-		if (fw != null) {
-			if (fw.nodeWrapper != null) {
-				fw.nodeWrapper.close();
-			}
-			if (fw.arrayWrapper != null) {
-				fw.arrayWrapper.close();
-			}
+	public void close(DSHandle handle) {
+	    DSHandleFutureWrapper nodeWrapper;
+	    ArrayIndexFutureList arrayWrapper;
+	    synchronized(this) {
+	        FutureWrappers fw = map.get(handle);
+	        if (fw == null) {
+	            return;
+	        }
+	        nodeWrapper = fw.nodeWrapper;
+	        arrayWrapper = fw.arrayWrapper;
+	    }
+		if (nodeWrapper != null) {
+			nodeWrapper.close();
+		}
+		if (arrayWrapper != null) {
+			arrayWrapper.close();
 		}
 	}
 
-	public synchronized boolean isClosed(DSHandle handle) {
-		FutureWrappers fw = (FutureWrappers) map.get(handle);
-		if (fw != null) {
-			if (fw.nodeWrapper != null) {
-				return fw.nodeWrapper.isClosed();
-			}
-			else if (fw.arrayWrapper != null) {
-				return fw.arrayWrapper.isClosed();
-			}
-			else {
-				return false;
-			}
+	public boolean isClosed(DSHandle handle) {
+	    DSHandleFutureWrapper nodeWrapper;
+        ArrayIndexFutureList arrayWrapper;
+        synchronized(this) {
+            FutureWrappers fw = map.get(handle);
+            if (fw == null) {
+                return false;
+            }
+            nodeWrapper = fw.nodeWrapper;
+            arrayWrapper = fw.arrayWrapper;
+        }
+		if (nodeWrapper != null) {
+			return nodeWrapper.isClosed();
+		}
+		else if (arrayWrapper != null) {
+			return arrayWrapper.isClosed();
 		}
 		else {
 			return false;
@@ -52,7 +63,7 @@ public class WrapperMap {
 	}
 
 	public synchronized DSHandleFutureWrapper addNodeListener(DSHandle handle) {
-		FutureWrappers fw = (FutureWrappers) map.get(handle);
+		FutureWrappers fw = map.get(handle);
 		if (fw == null) {
 			map.put(handle, fw = new FutureWrappers());
 		}
@@ -63,8 +74,8 @@ public class WrapperMap {
 		return fw.nodeWrapper;
 	}
 
-	public synchronized ArrayIndexFutureList addFutureListListener(DSHandle handle, Map value) {
-		FutureWrappers fw = (FutureWrappers) map.get(handle);
+	public synchronized ArrayIndexFutureList addFutureListListener(DSHandle handle, Map<?, ?> value) {
+		FutureWrappers fw = map.get(handle);
 		if (fw == null) {
 			map.put(handle, fw = new FutureWrappers());
 		}
@@ -81,13 +92,13 @@ public class WrapperMap {
 	}
 
 	public synchronized void markAsAvailable(DSHandle handle, Object key) {
-		FutureWrappers fw = (FutureWrappers) map.get(handle);
+		FutureWrappers fw = map.get(handle);
 		if (fw != null && fw.arrayWrapper != null) {
 			fw.arrayWrapper.addKey(key);
 		}
 	}
 
-	public Set entrySet() {
+	public Set<Map.Entry<DSHandle, FutureWrappers>> entrySet() {
 		return map.entrySet();
 	}
 }
