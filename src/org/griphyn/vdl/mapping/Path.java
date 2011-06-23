@@ -14,17 +14,20 @@ public class Path {
 	public static final Path EMPTY_PATH = new EmptyPath();
 	public static final Path CHILDREN = Path.parse("*");
 
-	/** A list of Path.Entry objects that represent the path. */
-	private List elements;
+	/** A list of Path.Entry that represents the path. */
+	private List<Path.Entry> entries;
 
 	/** True if any element of the Path contains a wildcard. */
 	private boolean wildcard;
 	
+	/** Cached string representation
+	    @see toString 
+	 */
 	private String tostrcached;
 
 	public static class EmptyPath extends Path {
 		public EmptyPath() {
-			super(Collections.EMPTY_LIST);
+			super();
 		}
 
 		public String toString() {
@@ -81,9 +84,7 @@ public class Path {
 				Entry other = (Entry) obj;
 				return name.equals(other.name) && (index == other.index);
 			}
-			else {
-				return false;
-			}
+            return false;
 		}
 
 		public int hashCode() {
@@ -94,9 +95,7 @@ public class Path {
 			if (index) {
 				return '[' + name + ']';
 			}
-			else {
-				return name;
-			}
+            return name;
 		}
 	}
 
@@ -104,8 +103,8 @@ public class Path {
 		if (path == null || path.equals("") || path.equals("$")) {
 			return Path.EMPTY_PATH;
 		}
-		ArrayList list = new ArrayList();
-		StringBuffer sb = new StringBuffer();
+		ArrayList<Entry> list = new ArrayList<Entry>();
+		StringBuilder sb = new StringBuilder();
 		Entry e = new Entry();
 		boolean wildcard = false;
 		for (int i = 0; i < path.length(); i++) {
@@ -122,7 +121,7 @@ public class Path {
 					e.name = sb.toString();
 					list.add(e);
 					e = new Entry();
-					sb = new StringBuffer();
+					sb.setLength(0);
 					break;
 				}
 				case ']': {
@@ -144,16 +143,14 @@ public class Path {
 		return new Path(list, wildcard);
 	}
 
-	private Path(List elements, boolean wildcard) {
-		this.elements = elements;
+	private Path(List<Entry> entries, boolean wildcard) {
+		this.entries = entries;
 		this.wildcard = wildcard;
 	}
 
-	private Path(List elements) {
-		this(elements, false);
-		Iterator i = elements.iterator();
-		while (i.hasNext()) {
-			Entry e = (Entry) i.next();
+	private Path(List<Entry> entries) {
+		this(entries, false);
+		for (Entry e : entries) {
 			if (e.isWildcard()) {
 				this.wildcard = true;
 				return;
@@ -162,28 +159,35 @@ public class Path {
 	}
 
 	private Path(Path other) {
-		this.elements = new ArrayList(other.elements);
+		this.entries = new ArrayList<Entry>(other.entries);
 		this.wildcard = other.wildcard;
 	}
 
+	/** 
+	   Create an empty Path
+	 */
+	private Path() { 
+	    this.entries = Collections.emptyList();
+	}
+	
 	public String getElement(int index) {
-		return ((Entry) elements.get(index)).name;
+		return entries.get(index).name;
 	}
 
 	public int size() {
-		return elements == null ? 0 : elements.size();
+		return entries == null ? 0 : entries.size();
 	}
 
 	public String getFirst() {
-		return ((Entry) elements.get(0)).name;
+		return entries.get(0).name;
 	} 
 	
 	public String getLast() {
-		return ((Entry) elements.get(elements.size() - 1)).name;
+		return entries.get(entries.size() - 1).name;
 	}
 
 	public boolean isEmpty() {
-		return elements == null || elements.size() == 0;
+		return entries == null || entries.size() == 0;
 	}
 
 	public Path butFirst() {
@@ -191,17 +195,17 @@ public class Path {
 	}
 
 	public Path subPath(int fromIndex) {
-		return subPath(fromIndex, elements.size());
+		return subPath(fromIndex, entries.size());
 	}
 
 	public Path subPath(int fromIndex, int toIndex) {
-		return new Path(elements.subList(fromIndex, toIndex));
+		return new Path(entries.subList(fromIndex, toIndex));
 	}
 
 	public Path addFirst(String element, boolean index) {
 		Path p = new Path(this);
 		Entry e;
-		p.elements.add(0, e = new Entry(element, index));
+		p.entries.add(0, e = new Entry(element, index));
 		if (e.isWildcard()) {
 			this.wildcard = true;
 		}
@@ -214,8 +218,8 @@ public class Path {
 
 	public Path addLast(String element, boolean index) {
 		Path p = new Path(this);
-		Entry e;
-		p.elements.add(e = new Entry(element, index));
+		Entry e = new Entry(element, index);
+		p.entries.add(e);
 		if (e.isWildcard()) {
 			p.wildcard = true;
 		}
@@ -233,10 +237,10 @@ public class Path {
 	 * <code>someString.equals(Path.parse(someString).stringForm())</code>.
 	 */
 	public String stringForm() {
-		StringBuffer sb = new StringBuffer();
-		Iterator i = elements.iterator();
+		StringBuilder sb = new StringBuilder();
+		Iterator<Entry> i = entries.iterator();
 		while (i.hasNext()) {
-			sb.append(((Entry) i.next()).name);
+			sb.append(i.next().name);
 			if (i.hasNext()) {
 				sb.append('.');
 			}
@@ -256,9 +260,9 @@ public class Path {
 	        return tostrcached;
 	    }
 		StringBuffer sb = new StringBuffer();
-		Iterator i = iterator();
-		while (i.hasNext()) {
-			Path.Entry e = (Path.Entry) i.next();
+		
+		for (Entry e : entries) {
+			
 			if (e.isIndex()) {
 				sb.append('[');
 				sb.append(e.getName());
@@ -272,17 +276,17 @@ public class Path {
 		return tostrcached = sb.toString();
 	}
 
-	public Iterator iterator() {
-		return elements.iterator();
+	public Iterator<Entry> iterator() {
+		return entries.iterator();
 	}
 
 	public boolean isArrayIndex(int pathIndex) {
-		Entry e = (Entry) elements.get(pathIndex);
+		Entry e = entries.get(pathIndex);
 		return e.index;
 	}
 
 	public boolean isWildcard(int pathIndex) {
-		Entry e = (Entry) elements.get(pathIndex);
+		Entry e = entries.get(pathIndex);
 		return e.isWildcard();
 	}
 
@@ -293,11 +297,11 @@ public class Path {
 	public boolean equals(Object obj) {
 		if (obj instanceof Path) {
 			Path other = (Path) obj;
-			if (elements.size() != other.size()) {
+			if (entries.size() != other.size()) {
 				return false;
 			}
-			Iterator i = elements.iterator();
-			Iterator o = other.elements.iterator();
+			Iterator<Entry> i = entries.iterator();
+			Iterator<Entry> o = other.entries.iterator();
 			while (i.hasNext()) {
 				if (!i.next().equals(o.next())) {
 					return false;
@@ -305,24 +309,21 @@ public class Path {
 			}
 			return true;
 		}
-		else {
-			return false;
-		}
+        return false;
 	}
 
 	public int hashCode() {
 		int hash = 0;
-		Iterator i = elements.iterator();
-		while (i.hasNext()) {
-			hash <<= 1;
-			hash += i.next().hashCode();
+		for (Entry e : entries) { 
+		    hash <<= 1;
+			hash += e.hashCode();
 		}
 		return hash;
 	}
 
 	public Path append(Path path) {
 		Path p = new Path(this);
-		p.elements.addAll(path.elements);
+		p.entries.addAll(path.entries);
 		return p;
 	}
 
