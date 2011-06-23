@@ -762,3 +762,64 @@ would map
 |stus[1]|bar
 |stus[2]|qux
 |===========
+
+Advanced Example: The following mapper.sh is an advanced example of an external mapper that maps a two-dimensional array to a directory of files. The files in the said directory are identified by their names appended by a number between 000 and 099. The first index of the array maps to the first part of the filename while the second index of the array maps to the second part of the filename.
+
+----
+#!/bin/sh
+
+#take care of the mapper args
+while [ $# -gt 0 ]; do
+  case $1 in
+    -location)          location=$2;;
+    -padding)           padding=$2;;
+    -prefix)            prefix=$2;;
+    -suffix)            suffix=$2;;
+    -mod_index)         mod_index=$2;;
+    -outer_index)       outer_index=$2;;
+    *) echo "$0: bad mapper args" 1>&2
+       exit 1;;
+  esac
+  shift 2
+done
+
+for i in `seq 0 ${outer_index}`
+do
+ for j in `seq -w 000 ${mod_index}`
+ do
+  fj=`echo ${j} | awk '{print $1 +0}'` #format j by removing leading zeros
+  echo "["${i}"]["${fj}"]" ${location}"/"${prefix}${j}${suffix}
+ done
+done
+----
+
+The mapper definition is as follows:
+
+----
+file_dat dat_files[][] < ext;
+                              exec="mapper.sh",
+                              padding=3,
+                              location="output",
+                              prefix=@strcat( str_root, "_" ),
+                              suffix=".dat",
+                              outer_index=pid,
+                              mod_index=n >;
+
+----
+
+Assuming there are 4 files with name aaa, bbb, ccc, ddd and a mod_index of 10, we will have 4x10=40 files mapped to a two-dimensional array in the following pattern:
+
+[options="header, autowidth"]
+|============
+|Swift variable|Filename
+|stus[0][0]|output/aaa_000.dat
+|stus[0][1]|output/aaa_001.dat
+|stus[0][2]|output/aaa_002.dat
+|stus[0][3]|output/aaa_003.dat
+|...|...
+|stus[0][9]|output/aaa_009.dat
+|stus[1][0]|output/bbb_000.dat
+|stus[1][1]|output/bbb_001.dat
+|...|...
+|stus[3][10]|output/ddd_009.dat
+|===========
