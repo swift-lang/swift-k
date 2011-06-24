@@ -21,7 +21,7 @@ stay. (say, +$ mkdir swift-lab+, followed by, +$ cd swift-lab+)
 *step 4.*  In the sites file: +sites.xml+ make the following two
 changes:
 
- 1. change the path of the +$$<workdirectory>$$+ element to your preferred location (say to +/lustre/beagle/<yourname>/swift-lab/swift.workdir+), and
+ 1. change the path of the +$$<workdirectory>$$+ element to your preferred location (this location is *required* to be on /lustre, say to +/lustre/beagle/<yourname>/swift-lab/swift.workdir+), and
 
   2. Change the project name to your project (for instance, +CI-CCR000013+) . The workdirectory will contain
   execution data related to each run, e.g. wrapper scripts, system information, inputs and outputs.
