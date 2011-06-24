@@ -397,6 +397,21 @@ start_group() {
 	  html "$G"
 	  html_~th
 	  html_~tr
+	
+	 html_tr group
+	 html_td
+	 html "#"
+	 html_~td
+	 html_td
+	 html "Test name"
+	 html_~td
+	 html_td
+	 html "Helper Scripts"
+	 html_~td
+	 html_td
+	 html "Execution Time"
+	 html_~td
+	 html_~tr
   fi
 }
 
@@ -410,7 +425,7 @@ start_row() {
 	    html "<b>$TESTCOUNT</b>"
 	    html "&nbsp;"
 	    html_~td
-	    html_td align right
+	    html_td align left
 	    html "&nbsp;"
 	    if [[ -n $TESTLINK ]]; then
 	      html_a_href $TESTLINK $TESTNAME
@@ -433,8 +448,8 @@ end_row() {
 		html_~tr
 		html_~table
 		html_~td
-   	        html_td align left
-   	        html "Execution Time: $INDIVIDUAL_TEST_TIME seconds"
+   	        html_td align right
+   	        html "$INDIVIDUAL_TEST_TIME seconds"
    	        html_~td
 		html_~tr
 	fi
@@ -691,8 +706,8 @@ swift_test_case() {
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td  width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 
@@ -718,16 +733,16 @@ swift_test_case() {
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 }
@@ -744,8 +759,8 @@ script_test_case() {
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 
@@ -757,32 +772,32 @@ script_test_case() {
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 
   if [ -x $GROUP/$SHELLSCRIPT ]; then
     script_exec $SHELLSCRIPT "X"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
   else
-   html_td class "neutral" width 25
-   html "NP"
+   html_td width 25
+   html "&nbsp;&nbsp;"
    html_~td
   fi
 }
@@ -958,12 +973,10 @@ test_group() {
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
     done
-#     html_td align right width 50
-#     html $INDIVIDUAL_TEST_TIME
-#     html_~td
      end_row
   done
     group_statistics
+    TOTAL_TIME=0
     TESTCOUNT=0
     TESTSPASSED=0
     TESTSFAILED=0
