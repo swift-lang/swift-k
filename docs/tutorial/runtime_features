@@ -24,9 +24,9 @@ program. These have been run on the local system (the same computer on
 which you ran swift). We can also make our computations run on a
 remote resource.
 
-WARNING: This example is necessarily more vague than previous examples,
-because its requires access to remote resources. You should ensure that
-you can submit a job using the globus-job-run (or globusrun-ws?)
+WARNING: This example is necessarily more vague than previous ones,
+because it requires access to remote resources. You should ensure that
+you can submit a job using the globus-job-run (or globusrun-ws)
 command(s).
 
 We do not need to modify any SwiftScript code to run on another
