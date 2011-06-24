@@ -26,21 +26,21 @@ changes:
   2. Change the project name to your project (for instance, +CI-CCR000013+) . The workdirectory will contain
   execution data related to each run, e.g. wrapper scripts, system information, inputs and outputs.
 
-  *step 5.* Run the example using following commandline (also found in run.sh):
+*step 5.* Run the example using following commandline (also found in run.sh):
 
-  ----
-  $ swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
-  ----
+----
+$ swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
+----
 
-  You can further change the value of +-n+ to any arbitrary number to run that
-  many number of concurrent +cat+
+You can further change the value of +-n+ to any arbitrary number to run that
+many number of concurrent +cat+
 
-  *step 6.* Check the output in the generated +outdir+ directory (+ls outdir+)
+*step 6.* Check the output in the generated +outdir+ directory (+ls outdir+)
 
-  Note: Running from sandbox node or requesting 1 hour walltime for upto 3 nodes
-  will get fast prioritized execution. Good for small tests
-  Swift supports a coasters based computing environment for Beagle. A detailed version of Swift documentation is maintained
-  http://www.ci.uchicago.edu/swift/docs/index.php[here].
+Note: Running from sandbox node or requesting 1 hour walltime for upto 3 nodes
+will get fast prioritized execution. Good for small tests
+Swift supports a coasters based computing environment for Beagle. A detailed version of Swift documentation is maintained
+http://www.ci.uchicago.edu/swift/docs/index.php[here].
 
 //
 //Intrepid-BG/P
