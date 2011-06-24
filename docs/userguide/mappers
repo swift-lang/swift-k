@@ -821,5 +821,5 @@ Assuming there are 4 files with name aaa, bbb, ccc, ddd and a mod_index of 10, w
 |stus[1][0]|output/bbb_000.dat
 |stus[1][1]|output/bbb_001.dat
 |...|...
-|stus[3][10]|output/ddd_009.dat
+|stus[3][9]|output/ddd_009.dat
 |===========
