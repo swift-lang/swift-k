@@ -31,6 +31,8 @@ BUILD_PACKAGE=1
 SKIP_CHECKOUT=0
 ALWAYS_EXITONFAILURE=0
 VERBOSE=0
+TOTAL_TIME=0
+INDIVIDUAL_TEST_TIME=0
 # The directory in which to start:
 TOPDIR=$PWD
 
@@ -334,14 +336,14 @@ start_test_results() {
 # Create either HTML or plain text report.
 # $TEXTREPORT monitor whether the report will be plain text or HTML
 output_report() {
+
 	TYPE=$1
+	LABEL="$2"  # Text on link to output
+	CMD=$3    # Command issued (td title)
+	RESULT=$4 # Passed or Failed
+
 	if [ $TEXTREPORT == 1 ]; then
 		if [ "$TYPE" == "test" ]; then
-
-			LABEL="$2"  # Text on link to output
-			CMD=$3    # Command issued (td title)
-			RESULT=$4 # Passed or Failed
-
 			if [ "$RESULT" == "Passed" ]; then
 				printf %-10.10s "success">>$REPORT
 			else
@@ -357,11 +359,6 @@ output_report() {
 		fi
 	else
 		if [ "$TYPE" == "test" ]; then
-
-	    	LABEL="$2"  # Text on link to output
-	    	CMD=$3    # Command issued (td title)
-	    	RESULT=$4 # Passed or Failed
-
 	    	# WIDTH=$( width "$LABEL" )
 	    	if [ "$RESULT" == "Passed" ]; then
 	      		html_td class "success" width 25 title "$CMD"
@@ -373,7 +370,6 @@ output_report() {
 	      		html_a_href $TEST_LOG $LABEL
 	    	fi
 	    	html_~td
-
 	  	elif [ "$TYPE" == "package" ]; then
 	    	BINPACKAGE=$2
 	  	else
@@ -397,7 +393,7 @@ start_group() {
 	  printf "\n">>$REPORT
   else
 	  html_tr group
-	  html_th 3
+	  html_th 4
 	  html "$G"
 	  html_~th
 	  html_~tr
@@ -437,6 +433,9 @@ end_row() {
 		html_~tr
 		html_~table
 		html_~td
+   	        html_td align left
+   	        html "Execution Time: $INDIVIDUAL_TEST_TIME seconds"
+   	        html_~td
 		html_~tr
 	fi
 }
@@ -641,12 +640,11 @@ monitored_exec()
   rm killed_test > /dev/null 2>&1 && sleep 5
   verbose "killing monitor: $MONITOR_PID..."
   kill $MONITOR_PID
+  
   INDIVIDUAL_TEST_TIME=$(( STOP-START ))
-
+  TOTAL_TIME=$(( INDIVIDUAL_TEST_TIME+TOTAL_TIME ))
   echo "TOOK (seconds): $INDIVIDUAL_TEST_TIME"
-
   RESULT=$( result )
-  NOPASO="Failed"
 
 #Verifies the value of $RESULT, if the test was successful
 #increases $TESTSPASSED by 1, if the test Failed
@@ -692,6 +690,10 @@ swift_test_case() {
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
 
   CDM=
@@ -715,11 +717,19 @@ swift_test_case() {
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
+
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
-  echo
 }
 
 # Execute shell test case w/ setup, check, clean
@@ -733,6 +743,10 @@ script_test_case() {
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
 
   (( TESTCOUNT++ ))
@@ -742,17 +756,34 @@ script_test_case() {
 
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
 
   if [ -x $GROUP/$SHELLSCRIPT ]; then
     script_exec $SHELLSCRIPT "X"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
 
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
+
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
+  else
+   html_td class "neutral" width 25
+   html "NP"
+   html_~td
   fi
 }
 
@@ -881,25 +912,22 @@ group_title() {
 # Revision:001
 group_statistics(){
 	if [ $TEXTREPORT == 1 ]; then
-		printf "\n $TESTCOUNT Tests run\t$TESTSFAILED Tests failed\t$TESTSPASSED Tests succeeded. \n\n">>$REPORT
+		printf "\n $TESTCOUNT Tests run\t$TESTSFAILED Tests failed\t$TESTSPASSED Tests succeeded.\tTotal time: $TOTAL_TIME seconds \n\n">>$REPORT
 	else
-#		html_tr group
-#		html_td neutral
-#		html "$TESTCOUNT Tests run"
-#		html_~td
-#		html_td success
-#		html "$TESTSPASSED Tests succeeded"
-#		html_~td
-#		html_td failure
-#		html "$TESTSFAILED Tests failed"
-#		html_~td
-#		html_~tr
-		 printf "<tr class=\"group\">">>$HTML
-		 printf "<td class=\"neutral\"> $TESTCOUNT Tests run. </td>">>$HTML
-		 printf "<td class=\"success\"> $TESTSPASSED Tests succeeded. </td>">>$HTML
-  		 printf "<td class=\"failure\"> $TESTSFAILED Tests failed. </td>">>$HTML
-		 printf "</tr>">>$HTML
-		# printf "\n $TESTCOUNT Tests run\t$TESTSFAILED Tests failed\t$TESTSPASSED Tests succeeded. \n\n">>$HTML
+	 	 html_tr class "group"
+		 html_td class "neutral"
+	 	 html "$TESTCOUNT Tests run"
+		 html_~td
+		 html_td class "success"
+		 html "$TESTSPASSED Tests succeeded."
+		 html_~td
+		 html_td class "failure"
+		 html "$TESTSFAILED Tests failed."
+		 html_~td
+		 html_td class "neutral" align left
+		 html "Total Time: $TOTAL_TIME seconds"
+		 html_~td
+		 html_~tr
 	fi
 }
 
@@ -921,6 +949,7 @@ test_group() {
     TESTNAME=$( basename $TEST )
 
     echo -e "\nTest case: $TESTNAME"
+
     cp -v $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
     start_row
@@ -929,6 +958,9 @@ test_group() {
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
     done
+#     html_td align right width 50
+#     html $INDIVIDUAL_TEST_TIME
+#     html_~td
      end_row
   done
     group_statistics
