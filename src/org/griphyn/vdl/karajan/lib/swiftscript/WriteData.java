@@ -4,15 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -118,12 +113,11 @@ public class WriteData extends VDLFunction {
 
 	private void writePrimitiveArray(BufferedWriter br, DSHandle src) throws IOException,
 			ExecutionException {
-		Map m = ((AbstractDataNode) src).getArrayValue();
-		Map c = new TreeMap(new ArrayIndexComparator());
+		Map<String, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
+		Map<String, DSHandle> c = new TreeMap<String, DSHandle>(new ArrayIndexComparator());
 		c.putAll(m);
-		Iterator i = c.values().iterator();
-		while(i.hasNext()) {
-			br.write(((DSHandle)i.next()).toString());
+		for (DSHandle h : c.values()) {
+			br.write(h.getValue().toString());
 			br.newLine();
 		}
 	}
@@ -131,34 +125,29 @@ public class WriteData extends VDLFunction {
 	private void writeStructArray(BufferedWriter br, DSHandle src) throws IOException,
 			ExecutionException {
 		writeStructHeader(src.getType().itemType(), br);
-		Map m = ((AbstractDataNode) src).getArrayValue();
-		Map c = new TreeMap(new ArrayIndexComparator());
+		Map<String, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
+		Map<String, DSHandle> c = new TreeMap<String, DSHandle>(new ArrayIndexComparator());
 		c.putAll(m);
-		Iterator i = c.values().iterator();
-		while(i.hasNext()) {
-			writeStruct(br, (DSHandle)i.next());
+		for (DSHandle h : c.values()) {
+			writeStruct(br, h);
 		}
 	}
 
 
 	private void writeStructHeader(Type type, BufferedWriter br) throws ExecutionException,
 			IOException {
-		List l = type.getFieldNames();
-		Iterator i = l.iterator();
-		while(i.hasNext()) {
-			br.write(i.next().toString());
+		for (String name : type.getFieldNames()) {
+			br.write(name);
 			br.write(" ");
 		}
 		br.newLine();
 	}
 
 	private void writeStruct(BufferedWriter br, DSHandle struct) throws IOException, ExecutionException {
-		List l = struct.getType().getFieldNames();
-		Iterator i = l.iterator();
 		try {
-			while(i.hasNext()) {
-				DSHandle child = struct.getField(Path.EMPTY_PATH.addLast((String)i.next()));
-				br.write(child.toString());
+		    for (String name : struct.getType().getFieldNames()) {
+				DSHandle child = struct.getField(Path.EMPTY_PATH.addLast(name));
+				br.write(child.getValue().toString());
 				br.write(" ");
 			}
 			br.newLine();
@@ -167,10 +156,10 @@ public class WriteData extends VDLFunction {
 		}
 	}
 
-	class ArrayIndexComparator implements Comparator {
-		public int compare(Object o1, Object o2) {
-			int i1 = Integer.parseInt((String)o1);
-			int i2 = Integer.parseInt((String)o2);
+	class ArrayIndexComparator implements Comparator<String> {
+		public int compare(String o1, String o2) {
+			int i1 = Integer.parseInt(o1);
+			int i2 = Integer.parseInt(o2);
 			if(i1 < i2) return -1;
 			if(i1 > i2) return 1;
 			return 0;

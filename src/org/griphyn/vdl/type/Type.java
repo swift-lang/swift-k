@@ -101,7 +101,7 @@ public interface Type {
 	 * 
 	 * @return a list of strings
 	 */
-	public List getFieldNames();
+	public List<String> getFieldNames();
 
 	/**
 	 * get all the fields in this type
