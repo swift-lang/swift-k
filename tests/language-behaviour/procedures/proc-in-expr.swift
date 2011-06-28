@@ -1,4 +1,3 @@
-
 (int r) mynum(int p) {
  r = p;
 }

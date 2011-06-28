@@ -1,9 +1,7 @@
 type file {} 
 
-(file t) echo (string s = "default greeting") {   
-    app {
+app (file t) echo (string s = "default greeting") {   
         echo s stdout=@filename(t);
-    }
 }
 
 file hw = echo();

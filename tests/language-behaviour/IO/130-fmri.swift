@@ -1,4 +1,3 @@
-
 # attempt to emulate the workflow patterns of the fMRI workflow that
 # I often fiddle with.
 
@@ -28,28 +27,22 @@ foreach inp, i in inputs {
   aligned[i] = align(inputs[i], template);
 }
 
-(volume o) align(volume candidate, volume template) {
-  app {
+app (volume o) align(volume candidate, volume template) {
     touch @o.v @o.h;
-  }
 }
 
 // take average of all 4 (or 5?) volumes
 
-(volume avg) average(volume candidates[]) {
-  app {
+app (volume avg) average(volume candidates[]) {
     touch @avg.v @avg.h;
-  }
 }
 
 volume brainatlas = average(aligned);
 
 // make 3 slices of the average volume, along x, y, z axes
 
-(slice s) slicer(volume atlas, string axis) {
-  app {
+app (slice s) slicer(volume atlas, string axis) {
     touch @s;
-  }
 }
 
 slice slices[];
@@ -64,10 +57,8 @@ foreach axis, i in axes {
 
 jpeg final[] <simple_mapper;prefix="130-fmri.",suffix=".jpeg">;
 
-(jpeg j) convert(slice s) {
-  app {
+app (jpeg j) convert(slice s) {
     touch @j;
-  }
 }
 
 foreach j,i in slices {

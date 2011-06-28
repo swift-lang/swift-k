@@ -1,9 +1,7 @@
 type messagefile {}
 
-(messagefile t) greeting(string m) { 
-    app {
+app (messagefile t) greeting(string m) { 
         echo m stdout=@filename(t);
-    }
 }
 
 messagefile outfile <"090-case.out">;
@@ -24,4 +22,3 @@ switch(8) {
 
 trace(message);
 outfile = greeting(message);
-

@@ -1,9 +1,7 @@
 type file;
 
-(file t) greeting(string m) { 
-    app {
+app (file t) greeting(string m) { 
         echo m stdout=@filename(t);
-    }
 }
 
 (file first) compound() {

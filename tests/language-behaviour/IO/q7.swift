@@ -1,12 +1,10 @@
 type file {} 
 
-(file t) echo (string s) {   
-    app {
+app (file t) echo (string s) {   
         echo s stdout=@filename(t);
-    }
 }
 
-string outputNames = "one two three";
+string outputNames[]= ["one", "two", "three"];
 
 file outputFiles[] <array_mapper;files=outputNames>;
 

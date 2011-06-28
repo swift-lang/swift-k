@@ -1,10 +1,8 @@
 type messagefile {} 
 type countfile {} 
 
-(countfile t) countwords (messagefile f) {   
-    app {
+app (countfile t) countwords (messagefile f) {   
         wc "-w" @filename(f) stdout=@filename(t);
-    }
 }
 
 string inputNames = "one.txt two.txt three.txt";

@@ -1,9 +1,7 @@
-type messagefile {} 
+type messagefile; 
 
-(messagefile t) greeting (string s="hello") {   
-    app {
+app (messagefile t) greeting (string s="hello") {   
         echo s stdout=@filename(t);
-    }
 }
 
 messagefile english <"english2.txt">;

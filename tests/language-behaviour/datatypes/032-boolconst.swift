@@ -1,9 +1,7 @@
 type messagefile;
 
-(messagefile t) p(boolean b) { 
-    app {
+app (messagefile t) p(boolean b) { 
         echo b stdout=@filename(t);
-    }
 }
 
 messagefile tfile <"032-boolconst.t.out">;

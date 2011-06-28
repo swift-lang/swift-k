@@ -8,10 +8,8 @@ type matrix {
 
 type file;
 
-(file o) echo(int s) {
-  app {
+app (file o) echo(int s) {
     echo s stdout=@o;
-  }
 }
 
 

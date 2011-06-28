@@ -4,10 +4,8 @@ type mystruct {
   int first, second;
 }
 
-(messagefile t) greeting(mystruct m) { 
-    app {
+app (messagefile t) greeting(mystruct m) { 
         echo m.first m.second stdout=@filename(t);
-    }
 }
 
 messagefile outfile <"0231-complex-type.out">;

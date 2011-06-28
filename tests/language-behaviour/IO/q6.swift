@@ -1,9 +1,7 @@
 type file {} 
 
-(file t) echo (string s) {   
-    app {
+app (file t) echo (string s) {   
         echo s stdout=@filename(t);
-    }
 }
 
 string greetings[] = ["how","are","you"];

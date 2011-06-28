@@ -1,15 +1,11 @@
 type file;
 
-(external o) a() {
-    app {
+app (external o) a() {
         touch "foo";
-    }
 }
 
-b(external o) {
-    app {
+app b(external o) {
         touch "bar";
-    }
 }
 
 external sync;

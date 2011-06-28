@@ -7,23 +7,17 @@ type circle {
 	string name;
 }
 
-(file f) createInt() {
-	app{
+app (file f) createInt() {
 		echo "77777" stdout=@filename(f);
-	}
 }
 
-(file f) createFloat() {
-	app{
+app (file f) createFloat() {
 		echo "3.1400001" stdout=@filename(f);
-	}
 }
 
 
-(file f) write(string data) {
-	app{
+app (file f) write(string data) {
 		echo data stdout=@filename(f);
-	}
 }
 
 int i;
