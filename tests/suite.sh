@@ -746,7 +746,6 @@ swift_test_case() {
    html_~td
   fi
 }
-
 # Execute shell test case w/ setup, check, clean
 script_test_case() {
   SHELLSCRIPT=$1
