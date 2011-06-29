@@ -646,6 +646,35 @@ maps that to a file.
 |f|picture.jpg
 |=============
 
+structured regular expression mapper
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The structured_regexp_mapper is similar to the regexp_mapper. The
+structured_regexp_mapper can be applied to lists while the regexp_mapper cannot.
+
+[options="header, autowidth"]
+|==========
+|parameter|meaning
+|source|The source file name
+|match|Regular expression pattern to match, use |()| to match whatever
+regular expression is inside the parentheses, and indicate the start and
+end of a group; the contents of a group can be retrieved with the
+|\\number|special sequence (two backslashes are needed because the
+backslash is an escape sequence introducer)
+|transform|The pattern of the file name to transform to, use \number to
+reference the group matched.
+|==========
+
+Example:
+----
+string s[] = ["picture.gif", "hello.gif", "world.gif"];
+file f[] <structured_regexp_mapper;
+          source=s,
+          match="(.*)gif",
+          transform="\\1jpg">;
+----
+
+This example transforms all strings in a list that end in gif to end in jpg and maps
+the list to those files.
 
 csv mapper
 ~~~~~~~~~~
