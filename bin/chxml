@@ -1,74 +1,86 @@
 #!/usr/bin/env python
 
-# given a filename chxml will ensure it is well-formed xml and
-# contains essential swift attributes
+# ensures that that there is a sites file specified and that it contains
+# well-formed xml as well as essential attributes for the specified provider
 
 import xml.parsers.expat,sys,os,commands
 from glob import glob
 
-def parsefile(file):
-    parser = xml.parsers.expat.ParserCreate()
-    parser.ParseFile(open(file, "r"))
+class siteProps:
 
-startTags= []
-endTags=[]
+    def __init__(self,argstr):
+        self.sites_file = ""
+        self.startTags= []
+        self.endTags=[]
+        self.globusParams = 0
+        self.execProvider = ""
+        
+        if len(argstr)<2:
+            print "please specify a sites file"
+            sys.exit()
+        i = 0
+        for o in argstr:
+            if o == "'-sites.file'":
+                self.sites_file = argstr[i+1].split("'")[1]
+            elif o == "'-config'":
+                config_file = open(argstr[i+1].split("'")[1],"r")
+                for line in config_file.readlines():
+                    if line.strip().startswith('#'):
+                        continue
+                    if line.find("sites.file")>-1:
+                        self.sites_file = line.split("=")[1].strip()
+            i = i+1                    
+        if (self.sites_file == ""):
+            swift_loc = commands.getoutput("which swift")
+            swift_home = swift_loc.split("bin")[0]
+            self.sites_file = swift_home+"etc/sites.xml"
+            print "no sites file specified, setting to default: "+self.sites_file
 
-def start_element(name, attrs):
-    startTags.append(name)
-def end_element(name):
-    endTags.append(name)
 
-# parse args to find sites.xml file
+    def parsefile(self):
+        parser = xml.parsers.expat.ParserCreate()
+        parser.ParseFile(open(self.sites_file, "r"))
 
-sites_file = ""
-argstr = sys.argv
+    def start_element(self, name, attrs):
+        self.startTags.append(name)
+        for x, y in attrs.iteritems():
+            if (name=="execution" and x=="provider" and y=="local"):
+                self.execProvider = "local"
+            if (y=="globus"):
+                self.globusParams = 1
 
-if len(argstr)<2:
-    print "please specify a sites file"
-    sys.exit()
-i = 0
-for o in argstr:
-    if o == "'-sites.file'":
-        sites_file = argstr[i+1].split("'")[1]
-    elif o == "'-config'":
-        config_file = open(argstr[i+1].split("'")[1],"r")
-        for line in config_file.readlines():
-            if line.strip().startswith('#'):
-                continue
-            if line.find("sites.file")>-1:
-                sites_file = line.split("=")[1].strip()
-    i = i+1                    
-if (sites_file == ""):
-        swift_loc = commands.getoutput("which swift")
-        swift_home = swift_loc.split("bin")[0]
-        sites_file = swift_home+"etc/sites.xml"
-        print "no sites file specified, setting to default: "+sites_file
+    def end_element(self, name):
+        self.endTags.append(name)
 
+        
+#------------------------main----------------------------------
+
+mysite = siteProps(sys.argv)
 try:
-    parsefile(sites_file)
+    mysite.parsefile()
 except Exception, e:
     print "Error: there is a problem with your sites file"
-    print "%s is %s" % (sites_file, e)
+    print "%s is %s" % (mysite.sites_file, e)
     sys.exit()
-                                                           
+
 p = xml.parsers.expat.ParserCreate()
-p.StartElementHandler = start_element
-p.EndElementHandler = end_element
-p.ParseFile(open(sites_file,"r"))
+p.StartElementHandler = mysite.start_element
+p.EndElementHandler = mysite.end_element
+p.ParseFile(open(mysite.sites_file,"r"))
 
 config = 0
 pool = 0
 
-for tag in startTags:
+for tag in mysite.startTags:
     if tag=="config":
         config = 1
     else:
         if tag=="pool":
             pool= 1
 
-if (pool and config):
-    pass
-else:
-    print "Error: there is a problem with your sites file "+sys.argv[1]
-
-        
+if (pool<1 or config<1):
+    print "Error: there is a problem with your sites file "+mysite.sites_file
+if (mysite.globusParams == 1 and mysite.execProvider == "local"):
+    print "Error: "+mysite.sites_file+" contains parameters that do not apply to the selected execution provider"
+    sys.exit()
+    
