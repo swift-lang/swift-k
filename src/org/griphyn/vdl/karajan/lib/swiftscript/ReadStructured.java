@@ -20,15 +20,15 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Types;
 
-public class ReadData2 extends VDLFunction {
-	public static final Logger logger = Logger.getLogger(ReadData2.class);
+public class ReadStructured extends VDLFunction {
+	public static final Logger logger = Logger.getLogger(ReadStructured.class);
 
 	public static final Arg DEST = new Arg.Positional("dest");
 	public static final Arg SRC = new Arg.Positional("src");
 	public static boolean warning;
 
 	static {
-		setArguments(ReadData2.class, new Arg[] { DEST, SRC });
+		setArguments(ReadStructured.class, new Arg[] { DEST, SRC });
 	}
 
 	protected Object function(VariableStack stack) throws ExecutionException, HandleOpenException {

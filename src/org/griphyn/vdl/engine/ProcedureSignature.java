@@ -136,6 +136,14 @@ public class ProcedureSignature {
 		readData2.setInvocationMode(INVOCATION_INTERNAL);
 		proceduresMap.put("readData2", readData2);
 
+		ProcedureSignature readStructured = new ProcedureSignature("readStructured");
+		FormalArgumentSignature rStInputArg = new FormalArgumentSignature(true);
+		readStructured.addInputArg(rStInputArg);
+		FormalArgumentSignature rStOutputArg = new FormalArgumentSignature(true);
+		readStructured.addOutputArg(rStOutputArg);
+		readStructured.setInvocationMode(INVOCATION_INTERNAL);
+		proceduresMap.put("readStructured", readStructured);
+
 		ProcedureSignature trace = new ProcedureSignature("trace");
 		trace.setAnyNumOfInputArgs();
 		trace.setInvocationMode(INVOCATION_INTERNAL);
