@@ -50,7 +50,7 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
 		setArguments("swiftscript_dirname", new Arg[] { Arg.VARGS });
 		setArguments("swiftscript_length", new Arg[] { Arg.VARGS });
-		setArguments("swiftscript_exists", new Arg[] { Arg.VARGS });
+		setArguments("swiftscript_existsfile", new Arg[] { Arg.VARGS });
 	}
 
 	private static final Logger traceLogger =
