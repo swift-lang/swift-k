@@ -18,14 +18,14 @@ in the next section.
 In this section, this example SwiftScript program is used for reference:
 
 ----
-type file;  
-  
-app (file o) count(file i) {  
-  wc @i stdout=@o;  
-}  
-  
-file q <"input.txt">;  
-file r <"output.txt">;  
+type file;
+
+app (file o) count(file i) {
+  wc @i stdout=@o;
+}
+
+file q <"input.txt">;
+file r <"output.txt">;
 ----
 
 The executable for wc will be looked up in tc.data.
@@ -278,9 +278,9 @@ hyphen and need to be positioned after the script name.
 For example:
 
 ----
-trace(@arg("myparam"));  
-trace(@arg("optionalparam", "defaultvalue"));  
-----              
+trace(@arg("myparam"));
+trace(@arg("optionalparam", "defaultvalue"));
+----
 
 ----
 $ swift arg.swift -myparam=hello
@@ -289,7 +289,7 @@ Swift v0.3-dev r1674 (modified locally)
 RunID: 20080220-1548-ylc4pmda
 SwiftScript trace: defaultvalue
 SwiftScript trace: hello
-----			
+----
 
 @extractint
 ~~~~~~~~~~~
@@ -319,7 +319,7 @@ substitution using the Java java.util.regexp API
 For example:
 
 ----
-string v =  @regexp("abcdefghi", "c(def)g","monkey");  
+string v =  @regexp("abcdefghi", "c(def)g","monkey");
 ----
 
 will assign the value "abmonkeyhi" to the variable v.
@@ -341,12 +341,12 @@ section that matches the first matching parenthesised group.
 
 For example:
 ----
-string t = "my name is John and i like puppies.";  
-string name = @strcut(t, "my name is ([^ ]*) ");  
-string out = @strcat("Your name is ",name);  
+string t = "my name is John and i like puppies.";
+string name = @strcut(t, "my name is ([^ ]*) ");
+string out = @strcat("Your name is ",name);
 trace(out);
-----  
-              
+----
+
 will output the message: Your name is John.
 
 @strsplit
@@ -357,12 +357,12 @@ separators that match the given pattern and return a string array.
 
 Example:
 ----
-string t = "my name is John and i like puppies.";  
-string words[] = @strsplit(t, "\\s");  
-foreach word in words {  
-    trace(word);  
-}  
-----              
+string t = "my name is John and i like puppies.";
+string words[] = @strsplit(t, "\\s");
+foreach word in words {
+    trace(word);
+}
+----
 
 will output one word of the sentence on each line (though not
 necessarily in order, due to the fact that foreach iterations execute in
@@ -415,9 +415,9 @@ for each element of the array, with structure member elements listed in
 the same order as the header row and separated by whitespace. (since
 Swift 0.4)
 
-readData2
-~~~~~~~~~
-readData2 will read data from a specified file, like readdata, but
+readStructured
+~~~~~~~~~~~~~~
+readStructured will read data from a specified file, like readdata, but
 using a different file format more closely related to that used by the
 ext mapper.
 
@@ -425,31 +425,31 @@ Input files should list, one per line, a path into a Swift structure,
 and the value for that position in the structure:
 
 ----
-rows[0].columns[0] = 0                                                          
-rows[0].columns[1] = 2                                                          
-rows[0].columns[2] = 4                                                          
-rows[1].columns[0] = 1                                                          
-rows[1].columns[1] = 3                                                          
+rows[0].columns[0] = 0
+rows[0].columns[1] = 2
+rows[0].columns[2] = 4
+rows[1].columns[0] = 1
+rows[1].columns[1] = 3
 rows[1].columns[2] = 5
-----			
+----
 
 which can be read into a structure defined like this:
 
 ----
-type vector {                                                                     
-        int columns[];                                                            
-}                                                                                 
-                                                                                  
-type matrix {                                                                     
-        vector rows[];                                                            
-}                                                                                 
-                                                                                  
-matrix m;                                                                         
-                                                                                  
-m = readData2("readData2.in");      
-----                  
+type vector {
+        int columns[];
+}
 
-(since Swift 0.7)
+type matrix {
+        vector rows[];
+}
+
+matrix m;
+
+m = readStructured("readStructured.in");
+----
+
+(since Swift 0.7, was readData2(deprecated))
 
 trace
 ~~~~~
