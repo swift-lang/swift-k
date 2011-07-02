@@ -1,2 +1,2 @@
 type myfile;
-myfile v<simple_mapper;pattern="*">;
+myfile v[] <simple_mapper;pattern="*">;
