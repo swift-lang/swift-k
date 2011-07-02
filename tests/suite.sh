@@ -33,8 +33,9 @@ ALWAYS_EXITONFAILURE=0
 VERBOSE=0
 TOTAL_TIME=0
 INDIVIDUAL_TEST_TIME=0
+COLORIZE=0
 # The directory in which to start:
-TOPDIR=$PWD
+TOPDIR=`readlink -f $PWD/../../../..`
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -78,6 +79,9 @@ while [ $# -gt 0 ]; do
     -v)
       VERBOSE=1
       shift;;
+    -l)
+      COLORIZE=1
+      shift;;
     *)
       GROUPARG=$1
       shift;;
@@ -88,6 +92,19 @@ if (( VERBOSE )); then
   set -x
   HTML_COMMENTS=1
 fi
+
+if [ $COLORIZE ]; then
+	LGREEN="\033[1;32m"
+	YELLOW="\033[1;33m"
+	RED="\033[1;31m"
+	GRAY="\033[0;37m"
+else
+	LGREEN=""
+	YELLOW=""
+	RED=""
+	GRAY=""
+fi
+
 
 # Iterations per test (may want to run each test multiple times?)
 ITERS_LOCAL=1
@@ -347,7 +364,7 @@ output_report() {
 			if [ "$RESULT" == "Passed" ]; then
 				printf %-10.10s "success">>$REPORT
 			else
-				echo "FAILED"
+				echo -e "${RED}FAILED${GRAY}"
 				cat $RUNDIR/$TEST_LOG < /dev/null
 				printf %-10.10s "failure">>$REPORT
 			fi
@@ -364,7 +381,7 @@ output_report() {
 	      		html_td class "success" width 25 title "$CMD"
 	      		html_a_href $TEST_LOG "$LABEL"
 	    	else
-	      		echo "FAILED"
+	      		echo -e "${RED}FAILED${GRAY}"
 	      		cat $RUNDIR/$TEST_LOG < /dev/null
 	      		html_td class "failure" width 25 title "$CMD"
 	      		html_a_href $TEST_LOG $LABEL
@@ -381,8 +398,12 @@ output_report() {
 start_group() {
   G=$1
   echo
-  echo $G
-  echo
+  echo -e "${LGREEN}/----------------------------------------------------"
+  echo "|"
+  echo "| $G"
+  echo "|"
+  echo -e "\\----------------------------------------------------${GRAY}"
+  echo 
   if [ $TEXTREPORT == 1 ]; then
   	  stars
 	  printf "$G\n">>$REPORT
@@ -658,7 +679,7 @@ monitored_exec()
   
   INDIVIDUAL_TEST_TIME=$(( STOP-START ))
   TOTAL_TIME=$(( INDIVIDUAL_TEST_TIME+TOTAL_TIME ))
-  echo "TOOK (seconds): $INDIVIDUAL_TEST_TIME"
+  echo -e "${YELLOW}TOOK (seconds): $INDIVIDUAL_TEST_TIME${GRAY}"
   RESULT=$( result )
 
 #Verifies the value of $RESULT, if the test was successful
@@ -889,6 +910,11 @@ group_tc_data() {
     cp -v $SWIFT_HOME/etc/tc.data .
     [ $? != 0 ] && crash "Could not copy tc.data!"
   fi
+  if [ -f $GROUP/tc.template.mix.data ]; then
+    sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.mix.data >> tc.data
+    [ $? != 0 ] && crash "Could not create tc.data!"
+    echo "Mixing: $GROUP/tc.template.mix.data"
+  fi
 }
 
 # Generate the CDM file, fs.data
@@ -962,9 +988,14 @@ test_group() {
 
     TESTNAME=$( basename $TEST )
 
-    echo -e "\nTest case: $TESTNAME"
+	echo
+	echo
+	echo "/--------------------------------------------------------------"
+    echo -e "|   Test case: $LGREEN$TESTNAME$GRAY"
+    echo "\--------------------------------------------------------------"
+    echo
 
-    cp -v $GROUP/$TESTNAME .
+    cp $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
     start_row
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
