@@ -6,7 +6,7 @@ type file {}
     }
 }
 
-string outputNames = "one two three";
+string outputNames[] = ["one", "two", "three"];
 
 file outputFiles[] <array_mapper;files=outputNames>;
 

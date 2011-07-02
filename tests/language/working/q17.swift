@@ -7,7 +7,7 @@ type countfile {}
     }
 }
 
-string inputNames = "one.txt two.txt three.txt";
+string inputNames[] = ["one.txt", "two.txt", "three.txt"];
 
 messagefile inputfiles[] <array_mapper;files=inputNames>;
 

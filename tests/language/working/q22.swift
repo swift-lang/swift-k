@@ -7,8 +7,8 @@ type countfile {}
     }
 }
 
-string inputNames = "one.txt two.txt three.txt";
-string outputNames = "one.count two.count three.count";
+string inputNames[] = ["one.txt", "two.txt", "three.txt"];
+string outputNames[] = ["one.count", "two.count", "three.count"];
 
 messagefile inputfiles[] <array_mapper;files=inputNames>;
 countfile outputfiles[] <array_mapper;files=outputNames>;
