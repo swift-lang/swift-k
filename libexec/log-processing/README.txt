@@ -3,6 +3,8 @@ Log Processing
 ==============
 
 To properly generate log plots, you must enable VDL/Karajan logging.
+TODO:How?
+
 
 You should check the scripts that you intend to use to determine
 what log lines they require and ensure that you are generating
@@ -14,6 +16,7 @@ log4j.logger.swift=DEBUG
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Block=DEBUG
 --------------------------------------
+TODO: Does it work for coasters-based runs only?
 
 Normalize event times in the log to the run start time
 ------------------------------------------------------
@@ -23,6 +26,8 @@ Normalize event times in the log to the run start time
 ------------------------------------------
 ./normalize-log.pl file.contains.start.time swift-run.log > swift-run.norm
 ------------------------------------------
+TODO:In what format does the start time be in 'file.contains.start.time'
+
 
 Make a basic load plot from Coasters Cpu log lines
 --------------------------------------------------
@@ -38,6 +43,8 @@ Make a basic load plot from Coasters Cpu log lines
 ------------------------------------------
 swift_plotter.zsh -s load.cfg load.eps load.data
 ------------------------------------------
+Note: Th load.cfg is available from swift/libexec/log-processing/
+
 
 Make a basic job completion plot from Coasters Cpu log lines
 ------------------------------------------------------------
