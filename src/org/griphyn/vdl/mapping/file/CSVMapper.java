@@ -61,7 +61,7 @@ public class CSVMapper extends AbstractMapper {
 		}
 	}
 
-	private void readFile() {
+	private synchronized void readFile() {
 		if (read) {
 			return;
 		}
