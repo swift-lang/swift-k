@@ -225,7 +225,8 @@
 			optimize="${optimize}"
 			deprecation="${deprecation}"
 			source="${force.java.version}"
-			target="${force.java.version}"/>
+			target="${force.java.version}"
+			includeAntRuntime="false"/>
                 
 		<copy todir="${build.dir}" >
 			<fileset dir="src" includes="**/*.properties" />
