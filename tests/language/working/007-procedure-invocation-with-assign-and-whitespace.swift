@@ -15,6 +15,6 @@ stdout=@a;
 
 }}
 
-int greetings;
+int greetings = 1;
 file hw = echo(greetings);
 
