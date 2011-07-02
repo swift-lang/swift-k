@@ -722,6 +722,7 @@ swift_test_case() {
   CHECKSCRIPT=${SWIFTSCRIPT%.swift}.check.sh
   CLEANSCRIPT=${SWIFTSCRIPT%.swift}.clean.sh
   TIMEOUTFILE=${SWIFTSCRIPT%.swift}.timeout
+  ARGSFILE=${SWIFTSCRIPT%.swift}.args
 
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$SETUPSCRIPT ]; then
@@ -730,6 +731,11 @@ swift_test_case() {
    html_td  width 25
    html "&nbsp;&nbsp;"
    html_~td
+  fi
+  
+  ARGS=""
+  if [ -f $GROUP/$ARGSFILE ]; then
+  	ARGS=`cat $GROUP/$ARGSFILE`
   fi
 
   CDM=
@@ -748,7 +754,7 @@ swift_test_case() {
                        -config swift.properties         \
                        -sites.file sites.xml            \
                        -tc.file tc.data                 \
-                       $CDM $SWIFTSCRIPT
+                       $CDM $SWIFTSCRIPT $ARGS
 
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$CHECKSCRIPT ]; then
