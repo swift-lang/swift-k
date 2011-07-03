@@ -7,10 +7,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -30,8 +31,6 @@ import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 import org.apache.xmlbeans.XmlString;
 import org.globus.swift.language.*;
-import org.globus.swift.language.Variable.Mapping;
-import org.globus.swift.language.Variable.Mapping.Param;
 import org.globus.swift.language.If.Else;
 import org.globus.swift.language.If.Then;
 import org.globus.swift.language.ImportsDocument.Imports;
@@ -40,8 +39,10 @@ import org.globus.swift.language.Switch.Case;
 import org.globus.swift.language.Switch.Default;
 import org.globus.swift.language.TypesDocument.Types;
 import org.globus.swift.language.TypesDocument.Types.Type;
-import org.griphyn.vdl.karajan.Loader;
+import org.globus.swift.language.Variable.Mapping;
+import org.globus.swift.language.Variable.Mapping.Param;
 import org.griphyn.vdl.karajan.CompilationException;
+import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
@@ -57,6 +58,9 @@ public class Karajan {
 	Map<String,ProcedureSignature> functionsMap = 
 	    new HashMap<String,ProcedureSignature>();
 	Map<String,Type> typesMap = new HashMap<String,Type>();
+	
+	List<StringTemplate> variables = new ArrayList<StringTemplate>();
+	Set<String> usedVariables = new HashSet<String>();
 
 	public static final String TEMPLATE_FILE_NAME = "Karajan.stg";
 
@@ -269,13 +273,35 @@ public class Karajan {
             processProcedures(program, scope);
         for (Program program : importList)
             statements(program, scope);
-			
+		
+        checkUninitializedVariables();
 		generateInternedConstants(scope.bodyTemplate);
+		
 
 		return scope.bodyTemplate;
 	}
 
-	public void procedure(Procedure proc, VariableScope containingScope) throws CompilationException {
+	private void checkUninitializedVariables() throws CompilationException { 
+	    for (StringTemplate var : variables) {
+	        String name = (String) var.getAttribute("name");
+	        if (var.getAttribute("waitfor") == null) {
+	            if (usedVariables.contains(name)) {
+    	            if (org.griphyn.vdl.type.Types.isPrimitive((String) var.getAttribute("type"))) {
+    	                throw new CompilationException("Uninitalized variable: " + name);
+    	            }
+	            }
+	            else {
+	                logger.info("Unused variable " + name);
+	            }
+	        }
+	    }
+    }
+	
+	private void setVariableUsed(String s) {
+	    usedVariables.add(s);
+    }
+
+    public void procedure(Procedure proc, VariableScope containingScope) throws CompilationException {
 		VariableScope outerScope = new VariableScope(this, containingScope, VariableScope.ENCLOSURE_PROCEDURE);
 		VariableScope innerScope = new VariableScope(this, outerScope, VariableScope.ENCLOSURE_NONE);
 		StringTemplate procST = template("procedure");
@@ -340,6 +366,7 @@ public class Karajan {
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
 		variableST.setAttribute("isGlobal", Boolean.valueOf(var.getIsGlobal()));
+		variables.add(variableST);
 
 		if(!var.isNil()) {
 
@@ -1095,6 +1122,8 @@ public class Karajan {
 			if(!scope.isVariableDefined(s)) {
 				throw new CompilationException("Variable " + s + " is undefined.");
 			}
+			
+			setVariableUsed(s);
 			StringTemplate st = template("id");
 			st.setAttribute("var", s);
 			String actualType;
@@ -1272,7 +1301,7 @@ public class Karajan {
 		// which shows Compiler Exception and line number of error
 	}
 
-	void checkTypesInCondExpr(String op, String left, String right, StringTemplate st)
+    void checkTypesInCondExpr(String op, String left, String right, StringTemplate st)
 			throws CompilationException {
 		if (left.equals(right))
 			st.setAttribute("datatype", "boolean");
