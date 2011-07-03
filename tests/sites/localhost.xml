@@ -7,6 +7,8 @@
     <gridftp url="local://localhost" />
     <execution provider="local" url="none" />
     <workdirectory>_WORK_</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0.08</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
   </pool>
 
 </config>
