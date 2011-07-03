@@ -4,7 +4,7 @@ f(int g) { app { echo g; }}
 int d = 5;
 int j,uuu;
 string s;
-int g, t, e;
+int g = 1, t, e;
 
 switch(d)
 {

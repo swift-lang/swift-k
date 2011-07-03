@@ -4,9 +4,9 @@
 f(int i) { int f=i;}
 
 int d=99;
-int g;
+int g = 1;
 int j;
-int t,uuu,e;
+int t= 2,uuu,e =5;
 string s;
 
 switch(d)

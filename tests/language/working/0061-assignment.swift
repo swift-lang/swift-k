@@ -3,5 +3,5 @@
 r=3;
 }
 
-int s;
+int s = 1;
 int a=echo(s);
