@@ -31,8 +31,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	}
 
 	public RootDataNode(Type type) {
-		super(Field.Factory.newInstance());
-		getField().setType(type);
+		super(Field.Factory.createField(null, type));
 	}
 
 	public void init(Map<String,Object> params) {

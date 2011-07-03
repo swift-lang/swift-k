@@ -5,6 +5,7 @@ package org.griphyn.vdl.mapping;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.util.VDL2Config;
+
 
 
 public abstract class AbstractDataNode implements DSHandle {
@@ -61,7 +63,12 @@ public abstract class AbstractDataNode implements DSHandle {
 
     protected AbstractDataNode(Field field) {
         this.field = field;
-        handles = new HashMap<Comparable<?>, DSHandle>();
+        if (field.getType().isComposite()) {
+            handles = new HashMap<Comparable<?>, DSHandle>();
+        }
+        else {
+            handles = Collections.emptyMap();
+        }
     }
 
     public void init(Map<String, Object> params) {

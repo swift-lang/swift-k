@@ -23,8 +23,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	 * Instantiate a root array data node with specified type.
 	 */
 	public RootArrayDataNode(Type type) {
-		super(Field.Factory.newInstance(), null, null);
-		getField().setType(type);
+		super(Field.Factory.createField(null, type), null, null);
 	}
 
 	public void init(Map<String, Object> params) {
