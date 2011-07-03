@@ -716,14 +716,50 @@ script_exec() {
   check_bailout
 }
 
+stage_files() {
+	GROUP=$1
+	NAME=$2
+	
+	if [ -f $GROUP/$NAME.in ]; then
+		echo "Copying input: $NAME.in"
+		cp $GROUP/$NAME.in .
+	fi
+	for INPUT in $GROUP/$NAME.*.in; do
+		IN=`basename $INPUT`
+		echo "Copying input: $IN"
+		cp $INPUT .
+	done
+}
+
+check_outputs() {
+	GROUP=$1
+	NAME=$2
+	
+	for EXPECTED in $GROUP/$NAME.*.expected; do
+		BNE=`basename $EXPECTED .expected`
+		echo -n "Checking output: $BNE "
+		diff $BNE $EXPECTED 2>&1 >> $OUTPUT
+		if [ "$?" != "0" ]; then
+			RESULT="Failed"
+			echo -e "${RED}Failed${GRAY}"
+		else
+			echo -e "${LGREEN}OK${GRAY}"
+		fi
+	done
+}
+
 # Execute Swift test case w/ setup, check, clean
 swift_test_case() {
   SWIFTSCRIPT=$1
-  SETUPSCRIPT=${SWIFTSCRIPT%.swift}.setup.sh
-  CHECKSCRIPT=${SWIFTSCRIPT%.swift}.check.sh
-  CLEANSCRIPT=${SWIFTSCRIPT%.swift}.clean.sh
-  TIMEOUTFILE=${SWIFTSCRIPT%.swift}.timeout
-  ARGSFILE=${SWIFTSCRIPT%.swift}.args
+  NAME=${SWIFTSCRIPT%.swift}
+  
+  stage_files $GROUP $NAME
+  
+  SETUPSCRIPT=$NAME.setup.sh
+  CHECKSCRIPT=$NAME.check.sh
+  CLEANSCRIPT=$NAME.clean.sh
+  TIMEOUTFILE=$NAME.timeout
+  ARGSFILE=$NAME.args
 
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$SETUPSCRIPT ]; then
@@ -738,7 +774,7 @@ swift_test_case() {
   if [ -f $GROUP/$ARGSFILE ]; then
   	ARGS=`cat $GROUP/$ARGSFILE`
   fi
-
+  
   CDM=
   [ -r fs.data ] && CDM="-cdm.file fs.data"
 
@@ -764,6 +800,8 @@ swift_test_case() {
    html_td width 25
    html "&nbsp;&nbsp;"
    html_~td
+   
+   check_outputs $GROUP $NAME
   fi
 
   if [ -x $GROUP/$CLEANSCRIPT ]; then
@@ -777,10 +815,14 @@ swift_test_case() {
 # Execute shell test case w/ setup, check, clean
 script_test_case() {
   SHELLSCRIPT=$1
-  SETUPSCRIPT=${SHELLSCRIPT%.test.sh}.setup.sh
-  CHECKSCRIPT=${SHELLSCRIPT%.test.sh}.check.sh
-  CLEANSCRIPT=${SHELLSCRIPT%.test.sh}.clean.sh
-  TIMEOUTFILE=${SHELLSCRIPT%.test.sh}.timeout
+  NAME=${SWIFTSCRIPT%.swift}
+  
+  stage_files $GROUP $NAME
+  
+  SETUPSCRIPT=$NAME.setup.sh
+  CHECKSCRIPT=$NAME.check.sh
+  CLEANSCRIPT=$NAME.clean.sh
+  TIMEOUTFILE=$NAME.timeout
 
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$SETUPSCRIPT ]; then
