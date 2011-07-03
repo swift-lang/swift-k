@@ -393,7 +393,7 @@ namespace("vdl"
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
 					maybe(file:remove(recfile))
-					log(LOG:WARN, "Failed to write to {srcdir} on {rhost}. Verify that all directories specified in your sites file exist and are writable!")
+					log(LOG:WARN, "Failed to transfer wrapper log for job {jobid}")
 					log(LOG:DEBUG, "Exception for wrapper log failure from {srcdir} on {rhost}: ", exception)
 				)
 			)
@@ -424,8 +424,8 @@ namespace("vdl"
 
 				wrapfile := "{ddir}/param-{jobid}"
 
-				stdout := try(stdout, "stdout.txt")
-				stderr := try(stderr, "stderr.txt")
+				stdout := try(getFieldValue(stdout), "stdout.txt")
+				stderr := try(getFieldValue(stderr), "stderr.txt")
 				kickstart := vdl:kickstart(rhost)
 				fileDirs := fileDirs(stagein, stageout)
 				os := vdl:siteprofile(rhost, "SYSINFO:OS")
@@ -435,8 +435,8 @@ namespace("vdl"
 						sys:file:write(wrapfile,
 							"-scratch ", try(vdl:siteprofile(rhost, "scratch"), ""), nl(),
 							"-e ",vdl:executable(tr, rhost), nl(),
-							"-out ", getFieldValue(stdout), nl(),
-							"-err ", getFieldValue(stderr), nl(),
+							"-out ", stdout, nl(),
+							"-err ", stderr, nl(),
 							"-i ", maybe(getFieldValue(stdin)), nl(),
 							"-d ", flatten(each(fileDirs)), nl(),
 							"-if ", flatten(infiles(stagein)), nl(),
@@ -444,7 +444,7 @@ namespace("vdl"
 							"-k ", kickstart, nl(),
 							"-cdmfile ", cdm:file(), nl(),
 							"-status ", statusMode, nl(),
-							for(a, unwrapClosedList(arguments), "-a ", a, nl())
+							for(a, arguments, "-a ", a, nl())
 						)
 					)
 				)
@@ -495,8 +495,8 @@ namespace("vdl"
 								"-jobdir", jobdir,
 								"-scratch", try(vdl:siteprofile(rhost, "scratch"), "")
 								"-e", vdl:executable(tr, rhost),
-								"-out", getFieldValue(stdout),
-								"-err", getFieldValue(stderr),
+								"-out", stdout,
+								"-err", stderr,
 								"-i", maybe(getFieldValue(stdin)),
 								"-d", flatten(each(fileDirs)),
 								"-if", flatten(infiles(stagein)),
@@ -504,7 +504,7 @@ namespace("vdl"
 								"-k", kickstart,
 								"-cdmfile", cdm:file(),
 								"-status", statusMode,
-								"-a", maybe(each(unwrapClosedList(arguments)))
+								"-a", maybe(each(arguments))
 							)
 							directory=wfdir
 							redirect=false
@@ -556,7 +556,7 @@ namespace("vdl"
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
-						echo(exception)
+
 						if(matches(exception,".*executable bit.*")
      					           generateError(exception)
 						)
@@ -586,7 +586,7 @@ namespace("vdl"
 							exception(
 								concat(
 									"Exception in {tr}:", nl(),
-									maybe("Arguments: ", unwrapClosedList(arguments), nl()),
+									maybe("Arguments: ", arguments, nl()),
 									"Host: {rhost}", nl(),
 									"Directory: {tmpdir}",
 									"{outs}", nl(),

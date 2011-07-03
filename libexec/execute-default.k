@@ -20,7 +20,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 							parallelFor(i, replicationChannel
 								ignoreErrors(match = "^Abort$"
 									execute2(
-										tr, maybe(arguments=arguments), 
+										tr, maybe(arguments=unwrapClosedList(arguments)), 
 										maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
 										stagein, stageout, restartout, replicationGroup, replicationChannel
 									)

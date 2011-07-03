@@ -89,8 +89,8 @@ namespace("vdl"
 				wrapper := "_swiftwrap.staging"
 				wrapfile := "{ddir}/param-{jobid}"
 
-				stdout := try(stdout, "stdout.txt")
-				stderr := try(stderr, "stderr.txt")
+				stdout := try(getFieldValue(stdout), "stdout.txt")
+				stderr := try(getFieldValue(stderr), "stderr.txt")
 
 				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
@@ -108,8 +108,8 @@ namespace("vdl"
 								vdl:siteprofile(rhost, "swift:wrapperInterpreterOptions"),
 								wrapper,
 								"-e", vdl:executable(tr, rhost),
-								"-out", getFieldValue(stdout),
-								"-err", getFieldValue(stderr),
+								"-out", stdout,
+								"-err", stderr,
 								"-i", maybe(getFieldValue(stdin)),
 								"-d", flatten(unique(outFileDirs(stageout))),
 								"-if", flatten(infiles(stagein)),
@@ -117,7 +117,7 @@ namespace("vdl"
 								"-k",
 								"-cdmfile", cdmfile,
 								"-status", "provider"
-								"-a", maybe(each(unwrapClosedList(arguments)))
+								"-a", maybe(each(arguments))
 							)
 							directory = "{wfdir}-{jobdir}-{jobid}"
 							redirect = false
