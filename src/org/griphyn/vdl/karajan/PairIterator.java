@@ -9,11 +9,11 @@ import java.util.Map;
 import org.globus.cog.karajan.util.KarajanIterator;
 
 public class PairIterator implements KarajanIterator {
-	private Iterator it;
+	private Iterator<?> it;
 	private int crt, count;
 	private Pair crto;
 	
-	public PairIterator(Map map) {
+	public PairIterator(Map<?, ?> map) {
 		this.it = map.entrySet().iterator();
 		this.count = map.size();
 	}
@@ -54,7 +54,7 @@ public class PairIterator implements KarajanIterator {
 	}
 	
 	private Pair convert(Object o) {
-		Map.Entry e = (Map.Entry) o;
+		Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
 		return new Pair(e.getKey(), e.getValue());
 	}
 	
