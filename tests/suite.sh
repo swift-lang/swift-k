@@ -36,6 +36,7 @@ INDIVIDUAL_TEST_TIME=0
 COLORIZE=0
 # The directory in which to start:
 TOPDIR=`readlink -f $PWD/../../../..`
+CRTDIR=`pwd`
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -950,7 +951,14 @@ group_title() {
   if [ -r $GROUP/title.txt ]; then
     cat $GROUP/title.txt
   else
-    echo "untitled"
+  	G=$GROUP
+	PIECES=""
+	while [ "$G" != "$CRTDIR" ]; do
+		PIECE=`basename $G`
+		PIECES="$PIECE $PIECES"
+		G=`dirname $G`
+	done
+	echo $PIECES
   fi
 }
 
@@ -967,7 +975,11 @@ group_statistics(){
 		 html_td class "success"
 		 html "$TESTSPASSED Tests succeeded."
 		 html_~td
-		 html_td class "failure"
+		 if [ "$TESTSFAILED" == "0" ]; then
+		 	html_td class "success"
+		 else
+		 	html_td class "failure"
+		 fi
 		 html "$TESTSFAILED Tests failed."
 		 html_~td
 		 html_td class "neutral" align left
@@ -1144,6 +1156,7 @@ for G in ${GROUPLIST[@]}; do
   echo "GROUP: $GROUP"
   [ -d $GROUP ] || crash "Could not find GROUP: $GROUP"
   TITLE=$( group_title )
+
   start_group "Group $GROUPCOUNT: $TITLE"
   test_group
   (( GROUPCOUNT++ ))
