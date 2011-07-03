@@ -42,9 +42,8 @@ public class SetFieldValue extends VDLFunction {
             // is a DSHandle. There is no need (I think? maybe numerical casting?)
             // for type conversion here; but would be useful to have
             // type checking.
-			value.waitFor();
 			
-   			deepCopy(leaf, value, stack);
+   			deepCopy(leaf, value, stack, 0);
 			
 			return null;
 		}
@@ -98,18 +97,19 @@ public class SetFieldValue extends VDLFunction {
 	
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
-	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack) throws ExecutionException {
+	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
+	    ((AbstractDataNode) source).waitFor();
 		if (source.getType().isPrimitive()) {
 			dest.setValue(source.getValue());
 		}
 		else if (source.getType().isArray()) {
 			PairIterator it;
-			if (stack.isDefined("it")) {
-			    it = (PairIterator) stack.getVar("it");
+			if (stack.isDefined("it" + level)) {
+			    it = (PairIterator) stack.getVar("it" + level);
 			}
 			else {
 			    it = new PairIterator(source.getArrayValue());
-			    stack.setVar("it", it);
+			    stack.setVar("it" + level, it);
 			}
 			while (it.hasNext()) {
 				Pair pair = (Pair) it.next();
@@ -129,8 +129,9 @@ public class SetFieldValue extends VDLFunction {
 				catch (InvalidPathException ipe) {
 					throw new ExecutionException("Could not get destination field",ipe);
 				}
-				deepCopy(field, rhs, stack);
+				deepCopy(field, rhs, stack, level + 1);
 			}
+			stack.currentFrame().deleteVar("it" + level);
 			dest.closeShallow();
 		} 
 		else if (!source.getType().isComposite()) {
@@ -161,14 +162,11 @@ public class SetFieldValue extends VDLFunction {
 		            stack.setVar("fc", fc);
 		            try {
 		                fc.start();
-		                throw new FutureNotYetAvailable(fc);
-		            }
-		            catch (FutureNotYetAvailable e) {
-		                throw e;
 		            }
 		            catch (Exception e) {
 		                throw new ExecutionException("Failed to start file copy", e);
 		            }
+		            throw new FutureNotYetAvailable(fc);
 		        }
 		    }
 		}
