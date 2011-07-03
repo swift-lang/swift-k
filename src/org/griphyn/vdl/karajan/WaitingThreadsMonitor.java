@@ -14,7 +14,9 @@ public class WaitingThreadsMonitor {
 	private static Set threads;
 	
 	public synchronized static void addThread(VariableStack stack) {
-		getThreads().add(stack);
+	    if (stack != null) {
+	        getThreads().add(stack);
+	    }
 	}
 	
 	private static synchronized Set getThreads() {
