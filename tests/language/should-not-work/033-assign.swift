@@ -1,6 +1,6 @@
 
 // THIS-SCRIPT-SHOULD-FAIL
-// Hangs waiting for a,b
+// ... because a is uninitialized (and so is b)
 
 int a,b;
 int i=(a + b) * 5;
