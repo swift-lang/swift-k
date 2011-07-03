@@ -114,7 +114,7 @@ public class New extends VDLFunction {
 							index++;
 						}
 					}
-					closeShallow(stack, handle);
+					handle.closeShallow();
 				}
 
 				handle.init(mapping);
@@ -127,7 +127,6 @@ public class New extends VDLFunction {
 				handle.init(mapping);
 				if (value != null) {
 					handle.setValue(internalValue(type, value));
-					closeShallow(stack, handle);
 				}
 			}
 			

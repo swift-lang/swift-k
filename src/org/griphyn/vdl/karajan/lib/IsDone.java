@@ -21,8 +21,7 @@ public class IsDone extends VDLFunction {
     }
 
     @Override
-    protected Object function(VariableStack stack) throws ExecutionException,
-            HandleOpenException {
+    protected Object function(VariableStack stack) throws ExecutionException {
         List files = TypeUtil.toList(STAGEOUT.getValue(stack));
         for (Object f : files) { 
             List pv = TypeUtil.toList(f);

@@ -17,6 +17,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
@@ -36,10 +37,10 @@ public class ReadData extends VDLFunction {
 		setArguments(ReadData.class, new Arg[] { DEST, SRC });
 	}
 
-	protected Object function(VariableStack stack) throws ExecutionException, HandleOpenException {
+	protected Object function(VariableStack stack) throws ExecutionException {
 		DSHandle dest = (DSHandle) DEST.getValue(stack);
-		DSHandle src = (DSHandle) SRC.getValue(stack);
-		waitFor(stack, src);
+		AbstractDataNode src = (AbstractDataNode) SRC.getValue(stack);
+		src.waitFor();
 		if (src.getType().equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
 		}

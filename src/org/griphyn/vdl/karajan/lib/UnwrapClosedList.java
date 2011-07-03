@@ -30,7 +30,7 @@ public class UnwrapClosedList extends VDLFunction {
 		
 		for (DSHandle h : l) {
 		    if (h.getType().isArray()) {
-		        Map<String, DSHandle> m = h.getArrayValue();
+		        Map<?, DSHandle> m = h.getArrayValue();
 		        for (DSHandle h2 : m.values()) {
 		            r.add(h2.getValue());
 		        }

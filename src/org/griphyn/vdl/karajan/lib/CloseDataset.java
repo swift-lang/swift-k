@@ -8,6 +8,7 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -31,10 +32,10 @@ public class CloseDataset extends VDLFunction {
 			var = var.getField(path);
 			
 			if (TypeUtil.toBoolean(OA_CHILDREN_ONLY.getValue(stack))) {
-			    closeChildren(stack, var);
+			    closeChildren(stack, (AbstractDataNode) var);
 			}
 			else {
-			    closeDeep(stack, var);
+			    var.closeDeep();
 			}
 		}
 		catch (InvalidPathException e) {

@@ -1,7 +1,6 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,19 +12,16 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
-
-import org.griphyn.vdl.mapping.AbsFile;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-
-import org.griphyn.vdl.mapping.ArrayDataNode;
 
 public class Misc extends FunctionsCollection {
 
@@ -34,6 +30,8 @@ public class Misc extends FunctionsCollection {
 	public static final SwiftArg PA_INPUT = new SwiftArg.Positional("input");
 	public static final SwiftArg PA_PATTERN = new SwiftArg.Positional("regexp");
 	public static final SwiftArg PA_TRANSFORM = new SwiftArg.Positional("transform");
+	public static final SwiftArg PA_FILE = new SwiftArg.Positional("file");
+	public static final SwiftArg PA_ARRAY = new SwiftArg.Positional("array");
 
 	static {
 		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
@@ -48,9 +46,9 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_format", new Arg[] { PA_INPUT, PA_TRANSFORM });
 		setArguments("swiftscript_pad", new Arg[] { PA_INPUT, PA_TRANSFORM });
 		setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
-		setArguments("swiftscript_dirname", new Arg[] { Arg.VARGS });
-		setArguments("swiftscript_length", new Arg[] { Arg.VARGS });
-		setArguments("swiftscript_existsfile", new Arg[] { Arg.VARGS });
+		setArguments("swiftscript_dirname", new Arg[] { PA_FILE });
+		setArguments("swiftscript_length", new Arg[] { PA_ARRAY });
+		setArguments("swiftscript_existsfile", new Arg[] { PA_FILE });
 	}
 
 	private static final Logger traceLogger =
@@ -58,24 +56,37 @@ public class Misc extends FunctionsCollection {
 	public DSHandle swiftscript_trace(VariableStack stack)
 	throws ExecutionException {
 
-		DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
+		AbstractDataNode[] args = VDLFunction.waitForAllVargs(stack);
 
 		StringBuffer buf = new StringBuffer();
 		buf.append("SwiftScript trace: ");
 		for (int i = 0; i < args.length; i++) {
 			DSHandle handle = args[i];
-			VDLFunction.waitFor(stack, handle);
 			if (i != 0) {
 			    buf.append(", ");
 			}
 			Object v = args[i].getValue();
-			buf.append(v == null ? args[i] : v);
+			//buf.append(v == null ? args[i] : v);
+			prettyPrint(buf, args[i]);
 		}
 		traceLogger.warn(buf);
 		return null;
 	}
 
-	public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException {
+	private void prettyPrint(StringBuffer buf, DSHandle h) {
+	    Object o = h.getValue();
+	    if (o == null) {
+	        buf.append(h);
+	    }
+	    else {
+    	    if (h.getType().isPrimitive()) {
+    	        buf.append(o);
+    	    }
+    	    
+	    }
+    }
+
+    public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug(stack);
 	    }
@@ -344,30 +355,18 @@ public class Misc extends FunctionsCollection {
 	throws ExecutionException {
 	    Object input = PA_INPUT.getValue(stack);
 	    DSHandle handle = new RootDataNode(Types.STRING);
-	    handle.setValue(""+input);
+	    handle.setValue(String.valueOf(input));
 	    handle.closeShallow();
 	    return handle;
 	}
 
 	public DSHandle swiftscript_dirname(VariableStack stack)
 	throws ExecutionException {
-	    DSHandle handle;
-	    try
-	    {
-	        DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
-	        DSHandle arg = args[0];
-	        String[] input = VDLFunction.filename(arg);
-	        String name = input[0];
-	        String result = new AbsFile(name).getDir();
-	        handle = new RootDataNode(Types.STRING);
-	        handle.setValue(result);
-	        handle.closeShallow();
-	    }
-	    catch (HandleOpenException e) {
-	        throw new FutureNotYetAvailable
-	        (VDLFunction.addFutureListener(stack, e.getSource()));
-	    }
-	    return handle;
+	    AbstractDataNode n = (AbstractDataNode) PA_FILE.getValue(stack);
+	    n.waitFor();
+        String name = VDLFunction.filename(n)[0];
+        String result = new AbsFile(name).getDir();
+        return RootDataNode.newNode(Types.STRING, result);
 	}
 
 	/*
@@ -379,23 +378,11 @@ public class Misc extends FunctionsCollection {
 	 */
 	public DSHandle swiftscript_length(VariableStack stack)
 	throws ExecutionException {
-	    DSHandle handle;
-	    DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
-	    DSHandle arg = args[0];
-	    ArrayDataNode adn = (ArrayDataNode)arg;
+	    AbstractDataNode n = (AbstractDataNode) PA_ARRAY.getValue(stack);
+	    n.waitFor();
+	    ArrayDataNode adn = (ArrayDataNode) n;
 
-	    if( !( adn.isClosed() ) )
-	    {
-	        throw new FutureNotYetAvailable
-	        (VDLFunction.addFutureListener(stack, adn));
-	    }
-
-	    int result = adn.size();
-	    handle = new RootDataNode(Types.INT);
-	    handle.setValue(result);
-	    handle.closeShallow();
-
-	    return handle;
+	    return RootDataNode.newNode(Types.INT, Integer.valueOf(adn.size()));
 	}
 
 	public DSHandle swiftscript_existsfile(VariableStack stack)

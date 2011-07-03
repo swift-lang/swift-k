@@ -27,12 +27,12 @@ public class ArrayFileMapper extends AbstractMapper {
 		if (dn == null) {
 		    throw new RuntimeException("Missing 'files' mapper attribute");
 		}
-		Map<String,DSHandle> m = dn.getArrayValue();
-		Set<String> s = m.keySet();
-		Iterator<String> i = s.iterator();
+		Map<?, DSHandle> m = dn.getArrayValue();
+		Set<?> s = m.keySet();
+		Iterator<?> i = s.iterator();
 		while(i.hasNext()) {
 			String nextKey = i.next().toString();
-			l.add(Path.EMPTY_PATH.addLast(nextKey,true));
+			l.add(Path.EMPTY_PATH.addLast(nextKey, true));
 		}
 		return l;
 	}

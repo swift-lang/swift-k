@@ -1,12 +1,11 @@
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.PairIterator;
+import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -34,18 +33,16 @@ public class GetArrayIterator extends VDLFunction {
 			}
 			else {
 				var = var.getField(path);
-				if (var.getType().isArray()) {
-					Map value = var.getArrayValue();
+				if (!var.getType().isArray()) {
+				    throw new RuntimeException("Cannot get array iterator for non-array");
+				}
+				synchronized(var) {
 					if (var.isClosed()) {
-						return new PairIterator(value);
+						return new PairIterator(var.getArrayValue());
 					}
 					else {
-						synchronized(var.getRoot()) {
-							return addFutureListListener(stack, var, value);
-						}
+						return ((ArrayDataNode) var).getFutureList().futureIterator();
 					}
-				} else {
-					throw new RuntimeException("Cannot get array iterator for non-array");
 				}
 			}
 		}

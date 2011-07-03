@@ -5,25 +5,16 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.grid.GridExec;
-import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.types.Os;
-import org.globus.swift.catalog.util.Profile;
-import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.util.FQN;
 
 public class SiteProfile extends VDLFunction {

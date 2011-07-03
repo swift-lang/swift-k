@@ -8,8 +8,8 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.type.Types;
 
@@ -35,13 +35,8 @@ public class Fprintf extends VDLFunction {
     @Override
     protected Object function(VariableStack stack) 
     throws ExecutionException {
-        DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
-
-        for (int i = 0; i < args.length; i++) {
-            DSHandle handle = args[i];
-            VDLFunction.waitFor(stack, handle);
-        }
-
+        AbstractDataNode[] args = waitForAllVargs(stack);
+        
         check(args);
         
         String filename = args[0].toString();

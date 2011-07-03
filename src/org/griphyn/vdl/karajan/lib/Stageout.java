@@ -14,10 +14,9 @@ import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
+import org.griphyn.vdl.mapping.DataNode;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
@@ -46,7 +45,7 @@ public class Stageout extends VDLFunction {
     }
 
     protected Object function(VariableStack stack) throws ExecutionException {
-        DSHandle var = (DSHandle) VAR.getValue(stack);
+        AbstractDataNode var = (AbstractDataNode) VAR.getValue(stack);
         boolean deperr = false;
         boolean mdeperr = false;
         // currently only static arrays are supported as app returns
@@ -55,12 +54,7 @@ public class Stageout extends VDLFunction {
         // race conditions (e.g. if this array's mapper had some parameter
         // dependencies that weren't closed at the time the app was started).
         if (var.getType().isArray()) {
-            if (!var.isClosed()) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Waiting for array size from " + var);
-                }
-                throw new FutureNotYetAvailable(addFutureListener(stack, var));
-            }
+            var.waitFor();
         }
         try {
             if (!isPrimitive(var)) {
@@ -90,9 +84,8 @@ public class Stageout extends VDLFunction {
                 channel.ret(stack, list(p, var));
             }
         }
-        catch (HandleOpenException e) {
-            throw new FutureNotYetAvailable(addFutureListener(stack, e
-                .getSource()));
+        catch (Exception e) {
+            throw new ExecutionException(e);
         }
     }
 }

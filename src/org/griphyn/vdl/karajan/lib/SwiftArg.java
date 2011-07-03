@@ -6,7 +6,6 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -14,9 +13,10 @@ import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.griphyn.vdl.karajan.PairIterator;
+import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
@@ -33,31 +33,16 @@ public abstract class SwiftArg extends Arg {
 
 	protected Object unwrap(VariableStack stack, Object val) throws ExecutionException {
 		if (val instanceof DSHandle) {
-			DSHandle handle = (DSHandle) val;
-			if (handle.getType().isArray()) {
-				Map value = handle.getArrayValue();
-				synchronized(handle.getRoot()) {
-					if (handle.isClosed()) {
-						return new PairIterator(value);
-					}
-					else {
-						return VDLFunction.addFutureListListener(stack, handle, value);
-					}
-				}
-			}
+			AbstractDataNode handle = (AbstractDataNode) val;
 			if (logger.isDebugEnabled()) {
-				logger.debug("SwiftArg.getValue(" + handle + ")");
+                logger.debug("SwiftArg.getValue(" + handle + ")");
+            }
+			if (handle.getType().isArray()) {
+				return handle;
 			}
-			synchronized (handle.getRoot()) {
-				if (!handle.isClosed()) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Waiting for " + handle);
-					}
-					throw new FutureNotYetAvailable(VDLFunction.addFutureListener(stack, handle));
-				}
-				else {
-					return handle.getValue();
-				}
+			else {
+			    handle.waitFor();
+			    return handle.getValue();
 			}
 		}
 		else {
@@ -187,6 +172,15 @@ public abstract class SwiftArg extends Arg {
 			}
 			return ret;
 		}
+		
+		public AbstractDataNode[] asDataNodeArray(VariableStack stack) throws ExecutionException {
+            VariableArguments args = get(stack);
+            AbstractDataNode[] ret = new AbstractDataNode[args.size()];
+            for (int i = 0; i < ret.length; i++) {
+                ret[i] = (AbstractDataNode) args.get(i);
+            }
+            return ret;
+        }
 
 		public List asList(VariableStack stack) throws ExecutionException {
 			VariableArguments args = get(stack);

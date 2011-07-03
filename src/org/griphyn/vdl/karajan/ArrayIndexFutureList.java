@@ -5,6 +5,8 @@ package org.griphyn.vdl.karajan;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,39 +18,33 @@ import org.globus.cog.karajan.workflow.futures.FutureList;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
-import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.DSHandleListener;
+import org.griphyn.vdl.mapping.ArrayDataNode;
 
-public class ArrayIndexFutureList implements FutureList, DSHandleListener {
+public class ArrayIndexFutureList implements FutureList, FutureWrapper {
     private ArrayList<Object> keys;
     private Map<?, ?> values;
-    private boolean closed;
-    private ArrayList<ListenerStackPair> listeners;
-    private FutureEvaluationException exception;
+    private List<ListenerStackPair> listeners;
+    private ArrayDataNode node;
 
-    public ArrayIndexFutureList(DSHandle handle, Map<?, ?> values) {
+    public ArrayIndexFutureList(ArrayDataNode node, Map<?, ?> values) {
+        this.node = node;
         this.values = values;
         keys = new ArrayList<Object>();
-        handle.addListener(this);
-    }
-
-    private RuntimeException notYetAvailable() {
-        if (exception != null) {
-            return exception;
-        }
-        return new FutureNotYetAvailable(this);
     }
 
     public Object get(int index) {
-        if (exception != null) {
-            throw exception;
-        }
-        if (!closed && index >= keys.size()) {
-            throw notYetAvailable();
-        }
-        else {
-            Object key = keys.get(index);
-            return new Pair(key, values.get(key));
+        synchronized(node) {
+            Object v = node.getValue();
+            if (v instanceof RuntimeException) {
+                throw (RuntimeException) v;
+            }
+            if (!node.isClosed() && index >= keys.size()) {
+                throw new FutureNotYetAvailable(this);
+            }
+            else {
+                Object key = keys.get(index);
+                return new Pair(key, values.get(key));
+            }
         }
     }
 
@@ -70,43 +66,47 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
     }
 
     public void close() {
-        synchronized(this) {
-            closed = true;
-            Set<Object> allkeys = new HashSet<Object>(values.keySet());
-            allkeys.removeAll(keys);
-            // remaining keys must be added
-            keys.addAll(allkeys);
+        synchronized(node) {
+            purge();
         }
         notifyListeners();
     }
 
-    public synchronized boolean isClosed() {
-        return closed;
+    private void purge() {
+        Set<Object> allkeys = new HashSet<Object>(values.keySet());
+        allkeys.removeAll(keys);
+        // remaining keys must be added
+        keys.addAll(allkeys);
+    }
+
+    public boolean isClosed() {
+        synchronized(node) {
+            return node.isClosed();
+        }
     }
 
     public Object getValue() {
         return this;
     }
 
-    public void addModificationAction(FutureListener target,
-            VariableStack stack) {
-        synchronized(this) {
+    public void addModificationAction(FutureListener target, VariableStack stack) {
+        synchronized(node) {
             if (listeners == null) {
-                listeners = new ArrayList<ListenerStackPair>();
+                listeners = new LinkedList<ListenerStackPair>();
             }
-    
             listeners.add(new ListenerStackPair(target, stack));
-            if (!closed) {
+            WaitingThreadsMonitor.addThread(stack);
+            if (!node.isClosed()) {
                 return;
             }
         }
-        // closed
+        // closed == true;
         notifyListeners();
     }
 
-    private void notifyListeners() {
-        ArrayList<ListenerStackPair> l;
-        synchronized (this) {
+    public void notifyListeners() {
+        List<ListenerStackPair> l;
+        synchronized(node) {
             if (listeners == null) {
                 return;
             }
@@ -114,22 +114,35 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
             l = listeners;
             listeners = null;
         }
-
+        
         for (ListenerStackPair lsp : l) {
+            WaitingThreadsMonitor.removeThread(lsp.stack);
             lsp.listener.futureModified(this, lsp.stack);
         }
     }
 
     public EventTargetPair[] getListenerEvents() {
-        return listeners.toArray(new EventTargetPair[0]);
+        synchronized(node) {
+            if (listeners != null) {
+                return listeners.toArray(new EventTargetPair[0]);
+            }
+            else {
+                return null;
+            }
+        }
     }
 
     public int size() {
-        if (closed) {
-            return keys.size();
-        }
-        else {
-            throw notYetAvailable();
+        synchronized(node) {
+            if (node.isClosed()) {
+                if (node.getValue() instanceof RuntimeException) {
+                    throw (RuntimeException) node.getValue();
+                }
+                return keys.size();
+            }
+            else {
+                throw new FutureNotYetAvailable(this);
+            }
         }
     }
 
@@ -141,7 +154,7 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
         else {
             l = listeners.size() + " listeners";
         }
-        if (!closed) {
+        if (!isClosed()) {
             return "Open, " + keys.size() + " elements, " + l;
         }
         else {
@@ -153,15 +166,31 @@ public class ArrayIndexFutureList implements FutureList, DSHandleListener {
     }
 
     public void fail(FutureEvaluationException e) {
-        this.exception = e;
-        notifyListeners();
+        synchronized(node) {
+            node.setValue(e);
+        }
     }
 
     public FutureEvaluationException getException() {
-        return exception;
+        synchronized(node) {
+            Object v = node.getValue();
+            if (v instanceof FutureEvaluationException) {
+                return (FutureEvaluationException) v;
+            }
+            else {
+                return null;
+            }
+        }
     }
 
-    public void handleClosed(DSHandle handle) {
-        close();
+    public int listenerCount() {
+        synchronized(node) {
+            if (listeners == null) {
+                return 0;
+            }
+            else {
+                return listeners.size();
+            }
+        }
     }
 }

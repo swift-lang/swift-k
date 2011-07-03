@@ -40,7 +40,6 @@ public class SetFutureFault extends VDLFunction {
 				else {
 					leaf.setValue(new DataDependentException(leaf, (Exception) value));
 				}
-				closeShallow(stack, leaf);
 			}
 		}
 		catch (Exception e) {

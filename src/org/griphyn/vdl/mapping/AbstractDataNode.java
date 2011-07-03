@@ -10,8 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.futures.Future;
+import org.globus.cog.karajan.workflow.futures.FutureFault;
+import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
+import org.griphyn.vdl.karajan.FutureTracker;
+import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.karajan.Loader;
-import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.util.VDL2Config;
@@ -46,19 +51,21 @@ public abstract class AbstractDataNode implements DSHandle {
     private static final String datasetIDPartialID = Loader.getUUID();
 
     private Field field;
-    private Map<String,DSHandle> handles;
+    private Map<Comparable<?>, DSHandle> handles;
     private Object value;
     private boolean closed;
-    private List<DSHandleListener> listeners;
     final String identifierURI = makeIdentifierURIString();
     private Path pathFromRoot;
+    
+    protected FutureWrapper wrapper;
 
     protected AbstractDataNode(Field field) {
         this.field = field;
-        handles = new HashMap<String,DSHandle>();
+        handles = new HashMap<Comparable<?>, DSHandle>();
     }
 
-    public void init(Map<String,Object> params) {
+    public void init(Map<String, Object> params) {
+        throw new UnsupportedOperationException();
     }
 
     public Type getType() {
@@ -191,15 +198,13 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    public Collection<DSHandle> getFields(Path path) 
-    throws InvalidPathException, HandleOpenException {
+    public Collection<DSHandle> getFields(Path path) throws InvalidPathException {
         List<DSHandle> fields = new ArrayList<DSHandle>();
         getFields(fields, path);
         return fields;
     }
 
-    private void getFields(List<DSHandle> fields, Path path) 
-    throws InvalidPathException, HandleOpenException {
+    protected void getFields(List<DSHandle> fields, Path path) throws InvalidPathException {
         if (path.isEmpty()) {
             fields.add(this);
         }
@@ -207,7 +212,7 @@ public abstract class AbstractDataNode implements DSHandle {
             Path rest = path.butFirst();
             if (path.isWildcard(0)) {
                 if (isArray() && !closed) {
-                    throw new HandleOpenException(this);
+                    throw new FutureNotYetAvailable(getFutureWrapper());
                 }
                 for (DSHandle handle : handles.values()) {
                     ((AbstractDataNode) handle).getFields(fields, rest);
@@ -324,11 +329,10 @@ public abstract class AbstractDataNode implements DSHandle {
         return value;
     }
 
-    public Map<String, DSHandle> getArrayValue() {
+    public Map<Comparable<?>, DSHandle> getArrayValue() {
         checkDataException();
         if (!field.getType().isArray()) {
-            throw new RuntimeException
-            ("getArrayValue called on a struct: " + this);
+            throw new RuntimeException("getArrayValue called on a non-array: " + this);
         }
         return handles;
     }
@@ -448,7 +452,7 @@ public abstract class AbstractDataNode implements DSHandle {
             try {
                 m = this.getMapper();
             }
-            catch (VDL2FutureException fe) {
+            catch (FutureFault fe) {
                 m = null; // no mapping info if mapper isn't initialised yet
             }
             if (m != null) {
@@ -562,49 +566,10 @@ public abstract class AbstractDataNode implements DSHandle {
         return ((AbstractDataNode) getRoot()).getMapper();
     }
 
-    protected Map<String,DSHandle> getHandles() {
+    protected Map<Comparable<?>, DSHandle> getHandles() {
         return handles;
     }
-
-    public void addListener(DSHandleListener listener) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Adding handle listener \"" + listener + 
-                "\" to \"" + getIdentifyingString() + "\"");
-        }
-        synchronized(this) {
-            if (listeners == null) {
-                listeners = new ArrayList<DSHandleListener>();
-            }
-            listeners.add(listener);
-            if (!closed) {
-                return;
-            }
-        }
-        // listeners != null, closed
-        notifyListeners();
-    }
-
-    protected void notifyListeners() {
-        List<DSHandleListener> l;
-        
-        synchronized(this) {
-            if (listeners == null) {
-                return;
-            }
-            
-            l = listeners;
-            listeners = null;
-        }
-        
-        for (DSHandleListener listener : l) {  
-            if (logger.isDebugEnabled()) {
-                logger.debug("Notifying listener \"" + listener
-                    + "\" about \"" + getIdentifyingString() + "\"");
-            }
-            listener.handleClosed(this);
-        }
-    }
-
+    
     public String getIdentifier() {
         return identifierURI;
     }
@@ -612,5 +577,48 @@ public abstract class AbstractDataNode implements DSHandle {
     String makeIdentifierURIString() {
         datasetIDCounter++;
         return DATASET_URI_PREFIX + datasetIDPartialID + ":" + datasetIDCounter;
+    }
+       
+    public synchronized void waitFor() {
+        if (!closed) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Waiting for " + this);
+            }
+            throw new FutureNotYetAvailable(getFutureWrapper());
+        }
+        else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Do not need to wait for " + this);
+            }
+            if (value instanceof RuntimeException) {
+                throw (RuntimeException) value;
+            }
+        }
+    }
+    
+    public void addListener(DSHandleListener listener) {
+        throw new UnsupportedOperationException();
+    }
+    
+    protected synchronized Future getFutureWrapper() {
+    	if (wrapper == null) {
+    		wrapper = new DSHandleFutureWrapper(this);
+    		FutureTracker.get().add(this, wrapper);
+    	}
+    	return wrapper;
+    }
+    
+    protected void notifyListeners() {
+    	FutureWrapper wrapper;
+    	synchronized(this) {
+    		wrapper = this.wrapper;
+    		if (closed) {
+    		    FutureTracker.get().remove(this);
+    		    this.wrapper = null;
+    		}
+    	}
+    	if (wrapper != null) {
+    		wrapper.notifyListeners();
+    	}
     }
 }

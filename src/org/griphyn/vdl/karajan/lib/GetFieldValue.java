@@ -7,10 +7,9 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.globus.cog.karajan.workflow.futures.FutureFault;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
 public class GetFieldValue extends VDLFunction {
@@ -29,41 +28,27 @@ public class GetFieldValue extends VDLFunction {
 		if (!(var1 instanceof DSHandle)) {
 			return var1;
 		}
-		DSHandle var = (DSHandle) var1;
-		DSHandle root = var.getRoot();
-		synchronized(root) {
-			try {
-				Path path = parsePath(OA_PATH.getValue(stack), stack);
-				if (path.hasWildcards()) {
-					try {
-						return var.getFields(path).toArray();
-					}
-					catch (HandleOpenException e) {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Waiting for var=" + var + " path=" + path);
-						}
-						throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-					}
-				}
-				else {
-					var = var.getField(path);
-					if (var.getType().isArray()) {
-						throw new RuntimeException("Getting value for array "+var+" which is not permitted.");
-					}
-					if (!var.isClosed()) {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Waiting for " + var);
-						}
-						throw new FutureNotYetAvailable(addFutureListener(stack, var));
-					}
-					else {
-						return var.getValue();
-					}
-				}
+		AbstractDataNode var = (AbstractDataNode) var1;
+
+		try {
+			Path path = parsePath(OA_PATH.getValue(stack), stack);
+			if (path.hasWildcards()) {
+			    return var.getFields(path).toArray();
 			}
-			catch (InvalidPathException e) {
-				throw new ExecutionException(e);
+			else {
+				var = (AbstractDataNode) var.getField(path);
+				if (var.getType().isArray()) {
+					throw new RuntimeException("Getting value for array " + var + " which is not permitted.");
+				}
+				var.waitFor();
+				return var.getValue();
 			}
+		}
+		catch (FutureFault f) {
+		    throw f;
+		}
+		catch (Exception e) {
+			throw new ExecutionException(e);
 		}
 	}
 }

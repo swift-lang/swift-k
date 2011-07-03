@@ -5,13 +5,11 @@ import java.lang.reflect.Method;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
@@ -21,14 +19,8 @@ public class Java extends VDLFunction {
         setArguments(Java.class, new Arg[] { Arg.VARGS });
     }
     
-    protected Object function(VariableStack stack) throws ExecutionException,
-            HandleOpenException {
-        DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
-     
-        for (int i = 0; i < args.length; i++) {
-            DSHandle handle = args[i];
-            VDLFunction.waitFor(stack, handle);
-        }
+    protected Object function(VariableStack stack) throws ExecutionException {
+        AbstractDataNode[] args = waitForAllVargs(stack);
         
         Method method = getMethod(args); 
         Object[] p = convertInputs(method, args);

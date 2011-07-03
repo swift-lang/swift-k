@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -36,14 +35,14 @@ public class WriteData extends VDLFunction {
 		setArguments(WriteData.class, new Arg[] { DEST, SRC });
 	}
 
-	protected Object function(VariableStack stack) throws ExecutionException, HandleOpenException {
+	protected Object function(VariableStack stack) throws ExecutionException {
 		// dest needs to be mapped to a file, or a string
 		DSHandle dest = (DSHandle) DEST.getValue(stack);
 
 		// src can be any of several forms of value
-		DSHandle src = (DSHandle) SRC.getValue(stack);
+		AbstractDataNode src = (AbstractDataNode) SRC.getValue(stack);
 
-		waitFor(stack, src);
+		src.waitFor();
 
 		if (dest.getType().equals(Types.STRING)) {
 			writeData((String)dest.getValue(), src);
@@ -113,8 +112,9 @@ public class WriteData extends VDLFunction {
 
 	private void writePrimitiveArray(BufferedWriter br, DSHandle src) throws IOException,
 			ExecutionException {
-		Map<String, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
-		Map<String, DSHandle> c = new TreeMap<String, DSHandle>(new ArrayIndexComparator());
+	    // this scheme currently only works properly if the keys are strings
+		Map<Comparable<?>, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
+		Map<Comparable<?>, DSHandle> c = new TreeMap<Comparable<?>, DSHandle>(new ArrayIndexComparator());
 		c.putAll(m);
 		for (DSHandle h : c.values()) {
 			br.write(h.getValue().toString());
@@ -125,8 +125,8 @@ public class WriteData extends VDLFunction {
 	private void writeStructArray(BufferedWriter br, DSHandle src) throws IOException,
 			ExecutionException {
 		writeStructHeader(src.getType().itemType(), br);
-		Map<String, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
-		Map<String, DSHandle> c = new TreeMap<String, DSHandle>(new ArrayIndexComparator());
+		Map<Comparable<?>, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
+		Map<Comparable<?>, DSHandle> c = new TreeMap<Comparable<?>, DSHandle>(new ArrayIndexComparator());
 		c.putAll(m);
 		for (DSHandle h : c.values()) {
 			writeStruct(br, h);
@@ -156,10 +156,10 @@ public class WriteData extends VDLFunction {
 		}
 	}
 
-	class ArrayIndexComparator implements Comparator<String> {
-		public int compare(String o1, String o2) {
-			int i1 = Integer.parseInt(o1);
-			int i2 = Integer.parseInt(o2);
+	class ArrayIndexComparator implements Comparator<Comparable<?>> {
+		public int compare(Comparable<?> o1, Comparable<?> o2) {
+			int i1 = Integer.parseInt(String.valueOf(o1));
+			int i2 = Integer.parseInt(String.valueOf(o2));
 			if(i1 < i2) return -1;
 			if(i1 > i2) return 1;
 			return 0;

@@ -39,7 +39,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
-import org.griphyn.vdl.karajan.WrapperMap.FutureWrappers;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -55,10 +54,7 @@ public class Monitor implements ActionListener, MouseListener {
 	private List wr, wt;
 	private int crtdisp;
 
-	private WrapperMap map;
-
-	public Monitor(WrapperMap map) {
-		this.map = map;
+	public Monitor() {
 		Service s = new Service();
 		new Thread(s, "network debugger").start();
 	}
@@ -99,20 +95,12 @@ public class Monitor implements ActionListener, MouseListener {
 			crtdisp = VARS;
 			ArrayList al = new ArrayList();
 			wr = new ArrayList();
+			Map<DSHandle, Future> map = FutureTracker.get().getMap();
 			synchronized (map) {
-				Iterator i = map.entrySet().iterator();
-				while (i.hasNext()) {
+			    for (Map.Entry<DSHandle, Future> en : map.entrySet()) {
 					List entry = new ArrayList();
-					Map.Entry en = (Map.Entry) i.next();
-					FutureWrappers fw = (FutureWrappers) en.getValue();
-					Future f = null;
-					if (fw.nodeWrapper != null) {
-						f = fw.nodeWrapper;
-					}
-					else if (fw.arrayWrapper != null) {
-						f = fw.arrayWrapper;
-					}
-					DSHandle handle = (DSHandle) en.getKey();
+					Future f = en.getValue();
+					DSHandle handle = en.getKey();
 					String value = "-";
 					Object v;
 					try {
@@ -143,8 +131,8 @@ public class Monitor implements ActionListener, MouseListener {
 					entry.add(f.isClosed() ? "Closed" : "Open");
 					entry.add(sz);
 					String fs;
-					if (f instanceof DSHandleFutureWrapper) {
-						fs = String.valueOf(((DSHandleFutureWrapper) f).listenerCount());
+					if (f instanceof FutureWrapper) {
+						fs = String.valueOf(((FutureWrapper) f).listenerCount());
 					}
 					else {
 						fs = f.toString();
@@ -209,25 +197,13 @@ public class Monitor implements ActionListener, MouseListener {
 	public void dumpVariables() {
 		dumpVariables(System.out);
 	}
-	
-	public void dumpVariables(PrintStream ps) {
-	    dumpVariables(map, ps);
-	}
 
-	public static void dumpVariables(WrapperMap map, PrintStream ps) {
+	public static void dumpVariables(PrintStream ps) {
 		ps.println("\nRegistered futures:");
+		Map<DSHandle, Future> map = FutureTracker.get().getMap();
 		synchronized (map) {
-			Iterator i = map.entrySet().iterator();
-			while (i.hasNext()) {
-				Map.Entry en = (Map.Entry) i.next();
-				FutureWrappers fw = (FutureWrappers) en.getValue();
-				Future f = null;
-				if (fw.nodeWrapper != null) {
-					f = fw.nodeWrapper;
-				}
-				else if (fw.arrayWrapper != null) {
-					f = fw.arrayWrapper;
-				}
+			for (Map.Entry<DSHandle, Future> en : map.entrySet()) {
+				Future f = en.getValue();
 				AbstractDataNode handle = (AbstractDataNode) en.getKey();
 				String value = "-";
 				try {
@@ -395,13 +371,12 @@ public class Monitor implements ActionListener, MouseListener {
 
 	public EventTargetPair[] getListeners(int wrindex) {
 		Object o = wr.get(wrindex);
-		if (o instanceof DSHandleFutureWrapper) {
-			return ((DSHandleFutureWrapper) o).getListenerEvents();
+		if (o instanceof FutureWrapper) {
+			return ((FutureWrapper) o).getListenerEvents();
 		}
-		else if (o instanceof ArrayIndexFutureList) {
-			return ((ArrayIndexFutureList) o).getListenerEvents();
+		else {
+		    return null;
 		}
-		return null;
 	}
 
 	public void mousePressed(MouseEvent e) {

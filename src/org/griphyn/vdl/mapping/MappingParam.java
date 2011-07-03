@@ -2,7 +2,6 @@ package org.griphyn.vdl.mapping;
 
 import java.util.Map;
 
-import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.type.Types;
 
 /** The MappingParam class provides helper methods to deal with
@@ -42,9 +41,9 @@ public class MappingParam {
 	  */
 	public Object getValue(Mapper mapper) {
 		Object value = mapper.getParam(name);
-		if (value instanceof DSHandle) {
-			DSHandle handle = (DSHandle) value;
-			checkHandle(handle);
+		if (value instanceof AbstractDataNode) {
+			AbstractDataNode handle = (AbstractDataNode) value;
+			handle.waitFor();
 			if (handle.getType().equals(Types.INT)) {
 			    return Integer.valueOf(((Number) handle.getValue()).intValue());
 			}
@@ -66,11 +65,11 @@ public class MappingParam {
 		}
 	}
 	
-	public Object getValue(Map params) {
+	public Object getValue(Map<String, Object> params) {
         Object value = params.get(name);
-        if (value instanceof DSHandle) {
-            DSHandle handle = (DSHandle) value;
-            checkHandle(handle);
+        if (value instanceof AbstractDataNode) {
+            AbstractDataNode handle = (AbstractDataNode) value;
+            handle.waitFor();
             return handle.getValue().toString();
         }
         else if (value == null) {
@@ -94,15 +93,6 @@ public class MappingParam {
 	public Object getRawValue(Mapper mapper) {
 		return mapper.getParam(name);
 	}
-
-
-	private void checkHandle(DSHandle handle) {
-		if (!handle.isClosed()) {
-			throw new VDL2FutureException(handle);
-		}
-		handle.getValue();
-		// try to get value, so that the appropriate exceptions are thrown for futures
-	}	
 
 	/** Returns the mapper parameter as a String. Other data types will be
 	    converted to a String as appropriate. */

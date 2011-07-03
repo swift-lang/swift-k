@@ -75,7 +75,7 @@ public class CreateArray extends VDLFunction {
 				logger.info("CREATEARRAY MEMBER array="+handle.getIdentifier()+" index="+index+" member="+n.getIdentifier());
 				index++;
 			}
-			closeShallow(stack, handle);
+			handle.closeShallow();
 			logger.info("CREATEARRAY COMPLETED array="+handle.getIdentifier());
 
 			return handle;
@@ -84,5 +84,4 @@ public class CreateArray extends VDLFunction {
 			throw new ExecutionException(e);
 		}
 	}
-
 }

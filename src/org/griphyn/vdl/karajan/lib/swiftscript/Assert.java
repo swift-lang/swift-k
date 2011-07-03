@@ -5,8 +5,8 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.AssertFailedException;
-import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.type.Types;
 
@@ -26,13 +26,8 @@ public class Assert extends VDLFunction {
     @Override
     protected Object function(VariableStack stack) 
     throws ExecutionException {
-        DSHandle[] args = SwiftArg.VARGS.asDSHandleArray(stack);
+        AbstractDataNode[] args = waitForAllVargs(stack);
         String message = "";
-        
-        for (int i = 0; i < args.length; i++) {
-            DSHandle handle = args[i];
-            VDLFunction.waitFor(stack, handle);
-        }
         
         if (args.length == 2)
             if (args[1].getType() == Types.STRING)

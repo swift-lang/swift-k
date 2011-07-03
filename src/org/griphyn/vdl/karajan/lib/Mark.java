@@ -25,8 +25,7 @@ public class Mark extends VDLFunction {
     }
 
     @Override
-    protected Object function(VariableStack stack) throws ExecutionException,
-            HandleOpenException {
+    protected Object function(VariableStack stack) throws ExecutionException {
         try {
             if (TypeUtil.toBoolean(ERR.getValue(stack))) {
                 boolean mapping = TypeUtil.toBoolean(MAPPING.getValue(stack));
@@ -43,7 +42,7 @@ public class Mark extends VDLFunction {
                         else {
                             leaf.setValue(new DataDependentException(leaf, null));
                         }
-                        closeShallow(stack, leaf);
+                        leaf.closeShallow();
                     }
                 }
             }

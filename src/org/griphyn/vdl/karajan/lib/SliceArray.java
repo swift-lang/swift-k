@@ -6,10 +6,9 @@ package org.griphyn.vdl.karajan.lib;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.karajan.PairIterator;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -47,12 +46,8 @@ public class SliceArray extends VDLFunction {
 		if(var1 instanceof DSHandle) {
 
 			try {
-				DSHandle sourceArray = (DSHandle) var1;
-				synchronized(sourceArray.getRoot()) {
-					if(!sourceArray.isClosed()) {
-                        			throw new FutureNotYetAvailable(VDLFunction.addFutureListener(stack, sourceArray));
-					}
-				}
+				AbstractDataNode sourceArray = (AbstractDataNode) var1;
+				sourceArray.waitFor();
 
 				Type sourceType = sourceArray.getType();
 

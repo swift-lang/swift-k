@@ -10,10 +10,10 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.karajan.PairIterator;
-import org.griphyn.vdl.karajan.VDL2FutureException;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
@@ -33,7 +33,7 @@ public class SetFieldValue extends VDLFunction {
 		try {
 		    Path path = parsePath(OA_PATH.getValue(stack), stack);
 			DSHandle leaf = var.getField(path);
-			DSHandle value = (DSHandle) PA_VALUE.getValue(stack);
+			AbstractDataNode value = (AbstractDataNode) PA_VALUE.getValue(stack);
 			
 			log(leaf, value);
 			    
@@ -42,27 +42,14 @@ public class SetFieldValue extends VDLFunction {
             // is a DSHandle. There is no need (I think? maybe numerical casting?)
             // for type conversion here; but would be useful to have
             // type checking.
-			synchronized (value.getRoot()) {
-				if (!value.isClosed()) {
-					throw new FutureNotYetAvailable(addFutureListener(stack, value));
-				}
-			}
-			try {
-    			synchronized (var.getRoot()) {
-    				deepCopy(leaf, value, stack);
-    				if (var.getParent() != null && var.getParent().getType().isArray()) {
-    				    markAsAvailable(stack, leaf.getParent(), leaf.getPathFromRoot().getLast());
-    				}
-    			}
-			}
-			catch (VDL2FutureException e) {
-			    throw new FutureNotYetAvailable(addFutureListener(stack, e.getHandle()));
-			}
+			value.waitFor();
+			
+   			deepCopy(leaf, value, stack);
 			
 			return null;
 		}
-		catch (FutureNotYetAvailable fnya) {
-			throw fnya;
+		catch (FutureFault f) {
+			throw f;
 		}
 		catch (Exception e) { // TODO tighten this
 			throw new ExecutionException(e);
@@ -144,7 +131,7 @@ public class SetFieldValue extends VDLFunction {
 				}
 				deepCopy(field, rhs, stack);
 			}
-			closeShallow(stack, dest);
+			dest.closeShallow();
 		} 
 		else if (!source.getType().isComposite()) {
 		    Path dpath = dest.getPathFromRoot();

@@ -7,17 +7,15 @@ import java.util.Collection;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.arguments.Arg.Channel;
 import org.globus.cog.karajan.arguments.ArgUtil;
 import org.globus.cog.karajan.arguments.NamedArguments;
-import org.globus.cog.karajan.arguments.Arg.Channel;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
@@ -37,31 +35,8 @@ public class Stagein extends VDLFunction {
             .isPrimitive());
     }
 
-    private void waitFor(DSHandle var, VariableStack stack)
-            throws ExecutionException {
-        synchronized (var) {
-            if (!var.isClosed()) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Waiting for " + var);
-                }
-                throw new FutureNotYetAvailable(addFutureListener(stack, var));
-            }
-            else {
-                Object v = var.getValue();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Do not need to wait for " +
-                            var + " as it is closed and has value " + v +
-                            (v != null ? " with class " + v.getClass() : ""));
-                }
-                if (v != null && v instanceof RuntimeException) {
-                    throw (RuntimeException) v;
-                }
-            }
-        }
-    }
-
     protected Object function(VariableStack stack) throws ExecutionException {
-        DSHandle var = (DSHandle) VAR.getValue(stack);
+        AbstractDataNode var = (AbstractDataNode) VAR.getValue(stack);
         if (!isPrimitive(var)) {
             boolean deperr = false;
             boolean mdeperr = false;
@@ -69,7 +44,7 @@ public class Stagein extends VDLFunction {
                 Collection<Path> fp = var.getFringePaths();
                 try {
                     for (Path p : fp) {
-                        waitFor(var.getField(p), stack);
+                    	((AbstractDataNode) var.getField(p)).waitFor();
                     }
                 }
                 catch (DependentException e) {
@@ -79,15 +54,15 @@ public class Stagein extends VDLFunction {
                     STAGEIN.ret(stack, filename(stack, var.getField(p))[0]);
                 }
             }
+            catch (FutureFault f) {
+                throw f;
+            }
             catch (MappingDependentException e) {
             	logger.debug(e);
                 deperr = true;
                 mdeperr = true;
             }
-            catch (HandleOpenException e) {
-                throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-            }
-            catch (InvalidPathException e) {
+            catch (Exception e) {
                 throw new ExecutionException(e);
             }
             if (deperr || mdeperr) {
@@ -98,7 +73,7 @@ public class Stagein extends VDLFunction {
         }
         else {
             // we still wait until the primitive value is there
-            waitFor(var, stack);
+            var.waitFor();
         }
         return null;
     }

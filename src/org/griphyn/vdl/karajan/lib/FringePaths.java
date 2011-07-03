@@ -8,6 +8,7 @@ import java.util.Collection;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
@@ -34,9 +35,7 @@ public class FringePaths extends VDLFunction {
 			throw new ExecutionException(e);
 		}
 		catch (HandleOpenException e) {
-			synchronized(root) {
-				throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-			}
+			throw new FutureNotYetAvailable((Future) e.getSource());
 		}
 	}
 }

@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +23,6 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureIterator;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.globus.swift.catalog.TCEntry;
@@ -35,10 +31,9 @@ import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.TCCache;
-import org.griphyn.vdl.karajan.VDL2FutureException;
-import org.griphyn.vdl.karajan.WrapperMap;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
@@ -74,9 +69,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		    logger.fatal("swift: assert failed: " + e.getMessage());
 		    stack.getExecutionContext().failedQuietly(stack, e);
 		}
-		catch (HandleOpenException e) {
-			throw new FutureNotYetAvailable(VDLFunction.addFutureListener(stack, e.getSource()));
-		}
 		catch (DependentException e) {
 			// This would not be the primal fault so in non-lazy errors mode it
 			// should not matter
@@ -104,8 +96,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected abstract Object function(VariableStack stack) throws ExecutionException,
-			HandleOpenException;
+	protected abstract Object function(VariableStack stack) throws ExecutionException;
 
 	/*
 	 * This will likely break if the engine changes in fundamental ways. It also
@@ -115,11 +106,11 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	public static String getThreadPrefix(VariableStack stack) throws ExecutionException {
 		stack = stack.copy();
 		ThreadingContext last = ThreadingContext.get(stack);
-		Stack s = new Stack();
+		Stack<Object> s = new Stack<Object>();
 		while (stack.frameCount() > 1) {
 			StackFrame frame = stack.currentFrame();
 			if (frame.isDefined("$")) {
-				List itv = (List) frame.getVar("$");
+				List<?> itv = (List<?>) frame.getVar("$");
 				s.push(itv.get(0));
 				stack.leave();
 				last = ThreadingContext.get(stack);
@@ -168,9 +159,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		else if (Types.BOOLEAN.equals(type)) {
 			return new Boolean(TypeUtil.toBoolean(value));
 		}
-		else if (value instanceof String) {
-			return (String) value;
-		}
 		else {
 			return value;
 		}
@@ -184,18 +172,10 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 	
 	public static String[] filename(VariableStack stack, DSHandle handle) throws ExecutionException {
-        try {
-            return filename(handle);
-        }
-        catch(VDL2FutureException ve) {
-            throw new FutureNotYetAvailable(addFutureListener(stack, ve.getHandle()));
-        }
-        catch (HandleOpenException e) {
-            throw new FutureNotYetAvailable(addFutureListener(stack, e.getSource()));
-        }
+        return filename(handle);
 	}
 
-	public static String[] filename(DSHandle var) throws ExecutionException, HandleOpenException {
+	public static String[] filename(DSHandle var) throws ExecutionException {
 		try {
 			if (var.getType().isArray()) {
 				return leavesFileNames(var);
@@ -210,6 +190,9 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		catch (DependentException e) {
 			return new String[0];
 		}
+        catch (HandleOpenException e) {
+            throw new ExecutionException("The current implementation should not throw this exception", e);
+        }
 	}
 
 	private static String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
@@ -217,34 +200,30 @@ public abstract class VDLFunction extends SequentialWithArguments {
         synchronized (var.getRoot()) {
             mapper = var.getMapper();
         }
-		List l = new ArrayList();
-		Iterator i;
+		List<String> l = new ArrayList<String>();
 		try {
-			Collection fp = var.getFringePaths();
-			List src;
+			Collection<Path> fp = var.getFringePaths();
+			List<Path> src;
 			if (fp instanceof List) {
-				src = (List) fp;
+				src = (List<Path>) fp;
 			}
 			else {
-				src = new ArrayList(fp);
+				src = new ArrayList<Path>(fp);
 			}
 			Collections.sort(src, new PathComparator());
-			i = src.iterator();
-			while (i.hasNext()) {
-				Path p = (Path) i.next();
+			
+			for (Path p : src) {
 				l.add(leafFileName(var.getField(p), mapper));
 			}
 		}
 		catch (InvalidPathException e) {
 			throw new ExecutionException("DSHandle is lying about its fringe paths");
 		}
-		return (String[]) l.toArray(EMPTY_STRING_ARRAY);
+		return l.toArray(EMPTY_STRING_ARRAY);
 	}
 	
-	private static class PathComparator implements Comparator {
-		public int compare(Object o1, Object o2) {
-			Path p1 = (Path) o1;
-			Path p2 = (Path) o2;
+	private static class PathComparator implements Comparator<Path> {
+		public int compare(Path p1, Path p2) {
 			for (int i = 0; i < Math.min(p1.size(), p2.size()); i++) {
 				int d; 
 				d = indexOrder(p1.isArrayIndex(i), p2.isArrayIndex(i));
@@ -288,11 +267,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 	
 	private static String leafFileName(DSHandle var) throws ExecutionException {
-	    Mapper mapper;
-	    synchronized (var.getRoot()) {
-	        mapper = var.getMapper();
-	    }
-	    return leafFileName(var, mapper);
+	    return leafFileName(var, var.getMapper());
 	}
 
 	private static String leafFileName(DSHandle var, Mapper mapper) throws ExecutionException {
@@ -377,20 +352,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	public static final String VDL_FUTURE_WRAPPER_MAP = "#vdl:futureWrapperMap";
-
-	public static WrapperMap getFutureWrapperMap(VariableStack stack) throws ExecutionException {
-		synchronized (stack.getExecutionContext()) {
-			WrapperMap hash = (WrapperMap) stack.firstFrame().getVar(VDL_FUTURE_WRAPPER_MAP);
-			if (hash == null) {
-				hash = new WrapperMap();
-				stack.firstFrame().setVar(VDL_FUTURE_WRAPPER_MAP, hash);
-				//InHook.install(new Monitor(hash));
-			}
-			return hash;
-		}
-	}
-
 	protected static Map getLogData(VariableStack stack) throws ExecutionException {
 		try {
 			return (Map) stack.getDeepVar(RestartLog.LOG_DATA);
@@ -426,112 +387,24 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected void closeChildren(VariableStack stack, DSHandle handle) throws ExecutionException,
+	protected void closeChildren(VariableStack stack, AbstractDataNode handle) throws ExecutionException,
 			InvalidPathException {
-		WrapperMap hash = getFutureWrapperMap(stack);
 		// Close the future
-		boolean closed;
-		synchronized(handle.getRoot()) {
-			closed = handle.isClosed();
-			if (!closed) {
-				handle.closeShallow();
-				hash.close(handle);
-			}
+		handle.closeShallow();
+		// Mark all leaves
+		for (DSHandle child : handle.getFields(Path.CHILDREN)) {
+			child.closeShallow();
 		}
-		try {
-			// Mark all leaves
-			Iterator it = handle.getFields(Path.CHILDREN).iterator();
-			while (it.hasNext()) {
-				DSHandle child = (DSHandle) it.next();
-				child.closeShallow();
-				hash.close(child);
-			}
-		}
-		catch (HandleOpenException e) {
-			throw new ExecutionException("Handle open in closeChildren",e);
-		}
+	}
 		
-		if (!closed) {
-			markToRoot(stack, handle);
-		}
-	}
-	
-	protected void closeDeep(VariableStack stack, DSHandle handle) 
-	    throws ExecutionException, InvalidPathException {
-	    synchronized(handle.getRoot()) {
-	        closeDeep(stack, handle, getFutureWrapperMap(stack));
-	    }
-	}
+	public static AbstractDataNode[] waitForAllVargs(VariableStack stack) throws ExecutionException {
+	    AbstractDataNode[] args = SwiftArg.VARGS.asDataNodeArray(stack);
 
-	private void closeDeep(VariableStack stack, DSHandle handle,
-	                       WrapperMap wrapperMap)  
-	throws InvalidPathException, ExecutionException {
-	    handle.closeShallow();
-	    wrapperMap.close(handle);
-	    try {
-            // Mark all children	
-            for (DSHandle child : handle.getFields(Path.CHILDREN))
-                 closeDeep(stack, child, wrapperMap);
+        for (int i = 0; i < args.length; i++) {
+            args[i].waitFor();
         }
-        catch (HandleOpenException e) {
-            throw new ExecutionException("Handle open in closeChildren", e);
-        }
-    }
-
-    private void markToRoot(VariableStack stack, DSHandle handle) throws ExecutionException {
-		// Also mark all arrays from root
-		Path fullPath = handle.getPathFromRoot();
-		DSHandle root = handle.getRoot();
-		synchronized(root) {
-			for (int i = 0; i < fullPath.size(); i++) {
-				if (fullPath.isArrayIndex(i)) {
-					try {
-						markAsAvailable(stack, root.getField(fullPath.subPath(0, i)),
-								fullPath.getElement(i));
-					}
-					catch (InvalidPathException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-	}
-
-	/** Returns the DSHandle that it is passed, but ensuring that it
-	    is closed. If the handle is not closed, then execution will
-	    be deferred/retried until it is.
-	*/
-	static public DSHandle waitFor(VariableStack stack, DSHandle handle) throws ExecutionException {
-		synchronized(handle.getRoot()) {
-			if (!handle.isClosed()) {
-				throw new FutureNotYetAvailable(addFutureListener(stack, handle));
-			}
-		}
-		return handle;
-	}
-
-	protected static void closeShallow(VariableStack stack, DSHandle handle) throws ExecutionException {
-		synchronized (handle.getRoot()) {
-			handle.closeShallow();
-			getFutureWrapperMap(stack).close(handle);
-		}
-	}
-
-        public static Future addFutureListener(VariableStack stack, DSHandle handle)
-			throws ExecutionException {
-		assert Thread.holdsLock(handle.getRoot());
-		return getFutureWrapperMap(stack).addNodeListener(handle);
-	}
-
-	protected static FutureIterator addFutureListListener(VariableStack stack, DSHandle handle,
-			Map value) throws ExecutionException {
-		assert Thread.holdsLock(handle.getRoot());
-		return getFutureWrapperMap(stack).addFutureListListener(handle, value).futureIterator(stack);
-	}
-
-	protected void markAsAvailable(VariableStack stack, DSHandle handle, Object key)
-			throws ExecutionException {
-		getFutureWrapperMap(stack).markAsAvailable(handle, key);
+        
+        return args;
 	}
 
 	public static Path parsePath(Object o, VariableStack stack) throws ExecutionException {
