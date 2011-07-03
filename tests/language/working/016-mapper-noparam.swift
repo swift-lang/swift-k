@@ -1,2 +1,2 @@
 type myfile;
-myfile v[] <simple_mapper;>;
+myfile v[] <filesys_mapper;>;
