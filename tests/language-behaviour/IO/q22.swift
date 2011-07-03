@@ -5,8 +5,8 @@ app (countfile t) countwords (messagefile f) {
         wc "-w" @filename(f) stdout=@filename(t);
 }
 
-string inputNames = "one.txt two.txt three.txt";
-string outputNames = "one.count two.count three.count";
+string inputNames[] = ["one.txt", "two.txt", "three.txt"];
+string outputNames[] = ["one.count", "two.count", "three.count"];
 
 messagefile inputfiles[] <array_mapper;files=inputNames>;
 countfile outputfiles[] <array_mapper;files=outputNames>;

@@ -16,8 +16,8 @@ type jpeg;
 
 // inputs: 4 volumes and a reference volume
 
-volume inputs[] <simple_mapper;prefix="130-fmri.",suffix=".in">;
-volume template <simple_mapper;prefix="130-fmri.",suffix=".template">;
+volume inputs[] <simple_mapper;prefix="130-fmri.",suffix=".input.in">;
+volume template <simple_mapper;prefix="130-fmri.",suffix=".template.in">;
 
 // align 4 volumes to reference volume
 
