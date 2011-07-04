@@ -381,6 +381,10 @@ output_report() {
 	    	if [ "$RESULT" == "Passed" ]; then
 	      		html_td class "success" width 25 title "$CMD"
 	      		html_a_href $TEST_LOG "$LABEL"
+	      	elif [ "$RESULT" == "None" ]; then
+	      		html_td width 25
+		   		html "&nbsp;&nbsp;"
+   				html_~td
 	    	else
 	      		echo -e "${RED}FAILED${GRAY}"
 	      		cat $RUNDIR/$TEST_LOG < /dev/null
@@ -693,8 +697,8 @@ monitored_exec()
   fi
 
 
-  test_log
   LASTCMD="$@"
+  test_log
   output_report test $SEQ "$LASTCMD" $RESULT $TEST_LOG
 
   check_bailout
@@ -710,7 +714,6 @@ script_exec() {
   process_exec $SCRIPT
   RESULT=$( result )
 
-  test_log
   output_report test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
@@ -720,40 +723,68 @@ stage_files() {
 	GROUP=$1
 	NAME=$2
 	
+	RESULT="None"
+		
 	if [ -f $GROUP/$NAME.in ]; then
 		echo "Copying input: $NAME.in"
-		cp $GROUP/$NAME.in .
+		cp -v $GROUP/$NAME.in . 2>&1 >> $OUTPUT
+		if [ "$?" != 0 ]; then
+			RESULT="Failed"
+		fi
+		if [ "$RESULT" == "None" ]; then
+			RESULT="Passed"
+		fi
 	fi
 	for INPUT in $GROUP/$NAME.*.in; do
 		IN=`basename $INPUT`
 		echo "Copying input: $IN"
-		cp $INPUT .
+		cp -v $INPUT . 2>&1 >> $OUTPUT
+		if [ "$?" != 0 ]; then
+			RESULT="Failed"
+		fi
+		if [ "$RESULT" == "None" ]; then
+			RESULT="Passed"
+		fi
 	done
+	
+	output_report test "s" "setup" $RESULT
+	
+	check_bailout
 }
 
 check_outputs() {
 	GROUP=$1
 	NAME=$2
 	
+	RESULT="None"
+		
 	for EXPECTED in $GROUP/$NAME.*.expected; do
 		BNE=`basename $EXPECTED .expected`
 		echo -n "Checking output: $BNE "
 		diff $BNE $EXPECTED 2>&1 >> $OUTPUT
 		if [ "$?" != "0" ]; then
 			RESULT="Failed"
-			echo -e "${RED}Failed${GRAY}"
-		else
-			echo -e "${LGREEN}OK${GRAY}"
+		fi
+		if [ "$RESULT" == "None" ]; then
+			RESULT="Passed"
 		fi
 	done
+	
+	if [ "$RESULT" == "None" ]; then
+		html_td width 25
+   		html "&nbsp;&nbsp;"
+   		html_~td
+	fi
+	
+	output_report test "&#8730;" "check" $RESULT
+	
+	check_bailout
 }
 
 # Execute Swift test case w/ setup, check, clean
 swift_test_case() {
   SWIFTSCRIPT=$1
   NAME=${SWIFTSCRIPT%.swift}
-  
-  stage_files $GROUP $NAME
   
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
@@ -765,9 +796,7 @@ swift_test_case() {
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   else
-   html_td  width 25
-   html "&nbsp;&nbsp;"
-   html_~td
+    stage_files $GROUP $NAME
   fi
   
   ARGS=""
@@ -795,13 +824,10 @@ swift_test_case() {
 
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$CHECKSCRIPT ]; then
+  	export OUTPUT
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   else
-   html_td width 25
-   html "&nbsp;&nbsp;"
-   html_~td
-   
-   check_outputs $GROUP $NAME
+    check_outputs $GROUP $NAME
   fi
 
   if [ -x $GROUP/$CLEANSCRIPT ]; then
