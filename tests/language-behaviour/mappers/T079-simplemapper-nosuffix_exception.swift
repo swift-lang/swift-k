@@ -1,3 +1,5 @@
+// THIS-SCRIPT-SHOULD-FAIL
+
 // this one is like test T078-simplemapper-nosuffix, but demonstrates the 
 // mapping exception on invalid values
 type messagefile;

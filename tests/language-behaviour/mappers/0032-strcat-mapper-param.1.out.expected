@@ -1,4 +1,1 @@
-#!/bin/bash
-set -x
-cat 0032-strcat-mapper-param.1.out | grep 0032-strcat-mapper-param.1 || exit 1
-exit 0
+0032-strcat-mapper-param.1

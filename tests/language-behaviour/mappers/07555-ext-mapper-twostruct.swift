@@ -17,7 +17,7 @@ type struct {
     }
 }
 
-struct outfiles <ext; exec="./07555-ext-mapper-twostruct.sh">;
+struct outfiles <ext; exec="./07555-ext-mapper-twostruct.sh.in">;
 
 outfiles.eerste = write("1st");
 outfiles.twede = write("2nd");

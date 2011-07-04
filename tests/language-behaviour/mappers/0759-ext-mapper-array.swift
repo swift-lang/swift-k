@@ -6,7 +6,7 @@ type file;
     }
 }
 
-file outfile[] <ext; exec="./0759-ext-mapper-array.sh">;
+file outfile[] <ext; exec="./0759-ext-mapper-array.sh.in">;
 
 outfile = write();
 

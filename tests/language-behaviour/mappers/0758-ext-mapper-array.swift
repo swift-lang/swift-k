@@ -6,7 +6,7 @@ type messagefile;
     }
 }
 
-messagefile outfile[] <ext; exec="./0758-ext-mapper-array.sh">;
+messagefile outfile[] <ext; exec="./0758-ext-mapper-array.sh.in">;
 
 foreach f,i in [0:2] {
  outfile[i] = write("slot X");

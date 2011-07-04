@@ -1,4 +1,1 @@
-#!/bin/bash
-set -x
-cat 070-singlefilemapper.out | grep 070-singlefilemapper.out || exit 1
-exit 0
+070-singlefilemapper.out

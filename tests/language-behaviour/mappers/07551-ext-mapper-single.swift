@@ -6,7 +6,7 @@ type messagefile;
     }
 }
 
-messagefile outfile <ext; exec="./07551-ext-mapper-single.sh">;
+messagefile outfile <ext; exec="./07551-ext-mapper-single.sh.in">;
 
 outfile = write("slot 0");
 

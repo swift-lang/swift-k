@@ -11,7 +11,7 @@ type cols {
     }
 }
 
-cols outfile[] <csv_mapper; file="0752-csv-mapper.csv">;
+cols outfile[] <csv_mapper; file="0752-csv-mapper.csv.in">;
 
 outfile[0].l = write("slot 0");
 outfile[1].r = write("slot 1");

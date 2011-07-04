@@ -11,7 +11,7 @@ type cols {
     }
 }
 
-cols outfile[] <ext; exec="./0756-ext-mapper-slow.sh">;
+cols outfile[] <ext; exec="./0756-ext-mapper-slow.sh.in">;
 
 outfile[0].l = write("slot 0");
 outfile[1].r = write("slot 1");
