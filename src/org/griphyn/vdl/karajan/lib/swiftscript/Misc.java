@@ -363,7 +363,7 @@ public class Misc extends FunctionsCollection {
 
 	public DSHandle swiftscript_dirname(VariableStack stack)
 	throws ExecutionException {
-	    AbstractDataNode n = (AbstractDataNode) PA_FILE.getValue(stack);
+	    AbstractDataNode n = (AbstractDataNode) PA_FILE.getRawValue(stack);
 	    n.waitFor();
         String name = VDLFunction.filename(n)[0];
         String result = new AbsFile(name).getDir();
