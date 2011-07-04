@@ -1,6 +1,7 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -378,11 +379,8 @@ public class Misc extends FunctionsCollection {
 	 */
 	public DSHandle swiftscript_length(VariableStack stack)
 	throws ExecutionException {
-	    AbstractDataNode n = (AbstractDataNode) PA_ARRAY.getValue(stack);
-	    n.waitFor();
-	    ArrayDataNode adn = (ArrayDataNode) n;
-
-	    return RootDataNode.newNode(Types.INT, Integer.valueOf(adn.size()));
+	    Map<?, ?> n = (Map<?, ?>) PA_ARRAY.getValue(stack);
+	    return RootDataNode.newNode(Types.INT, Integer.valueOf(n.size()));
 	}
 
 	public DSHandle swiftscript_existsfile(VariableStack stack)
