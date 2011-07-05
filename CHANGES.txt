@@ -1,4 +1,16 @@
+(07/05/11)
 
+*** Provenance tracking in the compiled file is now disabled by default.
+    Enable with swift -enable.provenance <script>
+
+(07/01/11)
+
+*** Uninitialized variables are detected at compile time instead of causing
+    a run to hang
+    
+*** A previous commit to deal with future faults occurring in the middle of
+    a deep copy would incorrectly handle multi-dimensional arrays. This is
+    now fixed.
 
 (02/17/10)
 
