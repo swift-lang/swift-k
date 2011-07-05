@@ -33,6 +33,11 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	public RootDataNode(Type type) {
 		super(Field.Factory.createField(null, type));
 	}
+	
+	public RootDataNode(Type type, Object value) {
+	    this(type);
+	    setValue(value);
+	}
 
 	public void init(Map<String,Object> params) {
 		this.params = params;

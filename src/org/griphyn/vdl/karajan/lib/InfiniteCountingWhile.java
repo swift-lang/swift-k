@@ -6,33 +6,34 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.Condition;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
 import org.globus.cog.karajan.workflow.nodes.Sequential;
 import org.globus.cog.karajan.workflow.nodes.While;
+import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.type.Types;
 
 public class InfiniteCountingWhile extends Sequential {
-	public static final String VAR = "##infinitecountingwhile:var";
+    
+    public static final String COUNTER_NAME = "$";
+    public static final Arg.Positional VAR = new Arg.Positional("var");
 
 	public InfiniteCountingWhile() {
 		setOptimize(false);
 	}
 
 	public void pre(VariableStack stack) throws ExecutionException {
-		stack.setVar("#condition", new Condition());
 		ThreadingContext tc = (ThreadingContext)stack.getVar("#thread");
 		stack.setVar("#iteratethread", tc);
 		stack.setVar("#thread", tc.split(0));
-		stack.setVar(VAR, "$");
-		String counterName = (String)stack.getVar(VAR);
-		stack.setVar(counterName, Arrays.asList(new Integer[] {new Integer(0)}));
+		stack.setVar(COUNTER_NAME, Collections.singletonList(0));
+		stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, 0.0));
 		super.pre(stack);
 	}
 
@@ -48,28 +49,23 @@ public class InfiniteCountingWhile extends Sequential {
 		}
 		FlowElement fn = null;
 
-		Condition condition = (Condition) stack.getVar("#condition");
-		if (condition.getValue() != null) {
-			boolean cond = TypeUtil.toBoolean(condition.getValue());
-			if (!cond) {
-				post(stack);
-				return;
-			}
+		if (index == elementCount() - 1) {
+		    // the condition is always compiled as the last thing in the loop
+		    // but the increment needs to happen before the condition is
+		    // evaluated
+		    @SuppressWarnings("unchecked")
+		    List<Integer> c = (List<Integer>) stack.getVar(COUNTER_NAME);
+            int i = c.get(0).intValue();
+            i++;
+            ThreadingContext tc = (ThreadingContext)stack.getVar("#iteratethread");
+            stack.setVar("#thread", tc.split(i));
+            stack.setVar(COUNTER_NAME, Collections.singletonList(i));
+            stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, Double.valueOf(i)));
 		}
 		if (index >= elementCount()) {
 			// starting new iteration
 			setIndex(stack, 1);
 			fn = getElement(0);
-
-			String counterName = (String) stack.getVar(VAR);
-			@SuppressWarnings("unchecked")
-            List<Integer> l = (List<Integer>) stack.getVar(counterName);
-			Integer wrappedi = l.get(0);
-			int i = wrappedi.intValue();
-			i++;
-			ThreadingContext tc = (ThreadingContext)stack.getVar("#iteratethread");
-			stack.setVar("#thread", tc.split(i));
-			stack.setVar(counterName, Arrays.asList(new Integer[] {new Integer(i)}));
 		}
 		else {
 			fn = getElement(index++);

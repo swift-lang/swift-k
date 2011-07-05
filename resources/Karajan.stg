@@ -186,13 +186,7 @@ function(name, args, datatype) ::= <<
 
 iterate(declarations,statements,cond,var,cleanups) ::= <<
 
-<vdl:infinitecountingwhile>
-  <set names="\$\$">
-    <each items="{\$}"/>
-  </set>
-  <set name="$var$">
-    <vdl:new type="int" value="{\$\$}" />
-  </set>
+<vdl:infinitecountingwhile var="$var$">
   $sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
   <sys:if>
     <vdl:getfieldvalue>$cond$</vdl:getfieldvalue>
