@@ -350,6 +350,7 @@ public class Karajan {
 			compoundScope.bodyTemplate = procST;
 			statementsForSymbols(proc, compoundScope);
 			statements(proc, compoundScope);
+			procST.setAttribute("cleanups", compoundScope.getCleanups());
 		}
 	}
 
@@ -765,6 +766,7 @@ public class Karajan {
 		for (String v : innerScope.getVariables()) 
 			scope.addWriter(v, statementID, true);
 		scope.appendStatement(iterateST);
+		iterateST.setAttribute("cleanups", innerScope.getCleanups());
 	}
 
 	public void foreachStat(Foreach foreach, VariableScope scope) throws CompilationException {
@@ -802,6 +804,7 @@ public class Karajan {
 			        foreachST.setAttribute("selfClose", "true");
 			}
 			scope.appendStatement(foreachST);
+			foreachST.setAttribute("cleanups", innerScope.getCleanups());
 		} catch(CompilationException re) {
 			throw new CompilationException("Compile error in foreach statement at "+foreach.getSrc()+": "+re.getMessage(),re);
 		}
@@ -824,6 +827,7 @@ public class Karajan {
 
 		statementsForSymbols(thenstat, innerThenScope);
 		statements(thenstat, innerThenScope);
+		innerThenScope.bodyTemplate.setAttribute("cleanups", innerThenScope.getCleanups());
 
 		Object statementID = new Integer(callID++);
 
@@ -841,6 +845,8 @@ public class Karajan {
 
 			for (String v : innerElseScope.getVariables()) 
 				scope.addWriter(v, statementID, true);
+			
+			innerElseScope.bodyTemplate.setAttribute("cleanups", innerElseScope.getCleanups());
 		}
 		scope.appendStatement(ifST);
 	}

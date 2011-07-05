@@ -318,5 +318,15 @@ public class VariableScope {
 	public VariableScope getRootScope() {
 		return rootScope;
 	}
+
+    public List<String> getCleanups() {
+        List<String> cleanups = new ArrayList<String>();
+        cleanups.addAll(variables);
+        return cleanups;
+    }
+    
+    public String toString() {
+        return variables.toString();
+    }
 }
 

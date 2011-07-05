@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -60,10 +61,27 @@ public class ConcurrentMapper extends AbstractFileMapper {
         return true;
     }
 
-    public synchronized void remap(Path path, PhysicalFormat file) {
+    public synchronized void remap(Path path, Mapper sourceMapper, Path sourcePath) {
         if (remappedPaths == null) {
             remappedPaths = new HashMap();
         }
-        remappedPaths.put(path, file);
+        PhysicalFormat pf = sourceMapper.map(sourcePath);
+        remappedPaths.put(path, pf);
+        ensureCollectionConsistency(sourceMapper, sourcePath);
+    }
+
+    @Override
+    public void clean(Path path) {
+        PhysicalFormat pf = map(path);
+        logger.info("Cleaning file " + pf);
+        FileGarbageCollector.getDefault().decreaseUsageCount(pf);
+    }
+
+    @Override
+    public boolean isPersistent(Path path) {
+        // if the path has been remapped to a persistent file, then
+        // that actual file would already be marked as persistent in the
+        // garbage collector
+        return false;
     }
 }

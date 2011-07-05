@@ -55,7 +55,7 @@ memberdefinition(type,name,sourcelocation) ::= <<
    <xs:element name="$name$" type="$type$"/>
 >>
 
-procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config,line) ::= <<
+procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config,line,cleanups) ::= <<
 <element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$>
   $optargs:default_arg();separator="\n"$
   $inputs:vdl_log_input();separator="\n"$
@@ -63,19 +63,20 @@ procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,
 $if(binding)$
   $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
 $else$
-  $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements,name=name)$
+  $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements,name=name,cleanups=cleanups)$
 $endif$
 </element>
 
 >>
 
-compound(outputs,inputs,declarations,statements,config,name) ::= <<
+compound(outputs,inputs,declarations,statements,config,name,cleanups) ::= <<
 <log level="info"><string>STARTCOMPOUND thread={#thread} name=$name$</string></log>
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
 $endif$
 $outputs:vdl_closedataset();separator="\n"$
+$cleanups:vdl_cleandataset();separator="\n"$
 <log level="info"><string>ENDCOMPOUND thread={#thread}</string></log>
 >>
 
@@ -137,6 +138,10 @@ vdl_closedataset() ::= <<
 <vdl:closedataset var="{$it.name$}"/>
 >>
 
+vdl_cleandataset() ::= <<
+<vdl:cleandataset var="{$it$}"/>
+>>
+
 vdl_arguments(arguments,stdin,stdout,stderr) ::= <<
 <vdl:arguments>
   $arguments;separator="\n"$
@@ -179,7 +184,7 @@ function(name, args, datatype) ::= <<
 </swiftscript:$name$>
 >>
 
-iterate(declarations,statements,cond,var) ::= <<
+iterate(declarations,statements,cond,var,cleanups) ::= <<
 
 <vdl:infinitecountingwhile>
   <set names="\$\$">
@@ -188,7 +193,7 @@ iterate(declarations,statements,cond,var) ::= <<
   <set name="$var$">
     <vdl:new type="int" value="{\$\$}" />
   </set>
-  $sub_comp(declarations=declarations, statements=statements)$
+  $sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
   <sys:if>
     <vdl:getfieldvalue>$cond$</vdl:getfieldvalue>
     <sys:break/>
@@ -197,7 +202,7 @@ iterate(declarations,statements,cond,var) ::= <<
 </vdl:infinitecountingwhile>
 >>
 
-foreach(var,in,indexVar,declarations,statements,line,selfClose) ::= <<
+foreach(var,in,indexVar,declarations,statements,line,selfClose,cleanups) ::= <<
 <vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$>
   <getarrayiterator>$in$</getarrayiterator>
   <set names="\$\$, $var$">
@@ -214,6 +219,7 @@ $endif$
     $declarations;separator="\n"$
     $if(statements)$
       $parallel(statements=statements)$
+      $cleanups:vdl_cleandataset();separator="\n"$
     $endif$
     <log level="debug" message="FOREACH_IT_END line=$line$ thread={#thread}"/>
 </vdl:tparallelFor>
@@ -430,10 +436,11 @@ if(condition,vthen,velse) ::= <<
 </if>
 >>
 
-sub_comp(declarations,statements) ::= <<
+sub_comp(declarations,statements,cleanups) ::= <<
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
+$cleanups:vdl_cleandataset();separator="\n"$
 $endif$
 >>
 

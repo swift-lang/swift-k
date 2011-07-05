@@ -18,6 +18,7 @@ import org.griphyn.vdl.mapping.file.RegularExpressionMapper;
 import org.griphyn.vdl.mapping.file.SimpleFileMapper;
 import org.griphyn.vdl.mapping.file.SingleFileMapper;
 import org.griphyn.vdl.mapping.file.StructuredRegularExpressionMapper;
+import org.griphyn.vdl.mapping.file.TestMapper;
 
 public class MapperFactory {
 	private static Map<String,Class<Mapper>> mappers = 
@@ -41,6 +42,7 @@ public class MapperFactory {
 		registerMapper("airsn_mapper", AirsnMapper.class);
 		registerMapper("roi_mapper", ROIMapper.class);
 		registerMapper("ext", ExternalMapper.class);
+		registerMapper("test_mapper", TestMapper.class);
 	}
 
 	public synchronized static Mapper getMapper(String type, 

@@ -140,7 +140,9 @@ public class SetFieldValue extends VDLFunction {
 		        if (logger.isDebugEnabled()) {
 		            logger.debug("Remapping " + dest + " to " + source);
 		        }
-		        dest.getMapper().remap(dpath, source.getMapper().map(source.getPathFromRoot()));
+		        
+		        dest.getMapper().remap(dpath, source.getMapper(), source.getPathFromRoot());
+
 		        dest.closeShallow();
 		    }
 		    else {

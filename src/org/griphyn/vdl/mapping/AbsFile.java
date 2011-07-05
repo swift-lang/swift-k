@@ -169,4 +169,14 @@ public class AbsFile implements GeneralizedFileFormat {
 	public String toString() {
 		return getURIAsString();
 	}
+
+    @Override
+    public void clean() {
+        try {
+            getFileResource().deleteFile(path);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -5,4 +5,6 @@ package org.griphyn.vdl.mapping;
 
 public interface PhysicalFormat {
 	String getType();
+	
+	void clean();
 }

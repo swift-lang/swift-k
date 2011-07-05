@@ -50,5 +50,18 @@ public interface Mapper {
      */
     boolean canBeRemapped(Path path);
     
-    void remap(Path path, PhysicalFormat file);
+    /**
+     * If this mapper supports remapping then remap the given path to
+     * whatever the source mapper maps the sourcePath to
+     */
+    void remap(Path path, Mapper sourceMapper, Path sourcePath);
+
+    /**
+     * Clean the specified path. A temporary mapper may remove the
+     * corresponding file after this call. 
+     */
+    void clean(Path path);
+    
+    
+    boolean isPersistent(Path path);
 }

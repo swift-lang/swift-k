@@ -628,4 +628,15 @@ public abstract class AbstractDataNode implements DSHandle {
     		wrapper.notifyListeners();
     	}
     }
+
+    public synchronized void clean() {
+        Mapper mapper = getMapper();
+        if (mapper != null) {
+            mapper.clean(getPathFromRoot());
+        }
+        field = null;
+        handles = null;
+        value = null;
+        pathFromRoot = null;
+    }
 }
