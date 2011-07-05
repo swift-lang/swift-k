@@ -206,7 +206,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         catch (Exception e) {
             logger.debug("Detailed exception:", e);
-            error("Could not start execution.\n\t" + e.getMessage());
+            error("Could not start execution" + getMessages(e));
         }
 
         if (runerror) {
@@ -219,6 +219,16 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ma.close();
         }
         System.exit(runerror ? 2 : 0);
+    }
+
+    private static String getMessages(Throwable e) {
+        StringBuilder sb = new StringBuilder();
+        while (e != null) {
+            sb.append(":\n\t");
+            sb.append(e.getMessage());
+            e = e.getCause();
+        }
+        return sb.toString();
     }
 
     private static void shortUsage() {
