@@ -21,7 +21,7 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/language-behaviour/strings \
 	    $TESTDIR/language-behaviour/variables \
 	    $TESTDIR/language-behaviour/cleanup \
-	    $TESTDIR/documentation/ \
+	    # $TESTDIR/documentation/ \
 	    # $TESTDIR/cdm/ps/pinned
 	    # $TESTDIR/site/intrepid
           )
