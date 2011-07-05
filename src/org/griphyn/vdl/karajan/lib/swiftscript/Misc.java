@@ -81,9 +81,16 @@ public class Misc extends FunctionsCollection {
 	    }
 	    else {
     	    if (h.getType().isPrimitive()) {
-    	        buf.append(o);
+    	        if (h.getType().equals(Types.INT)) {
+    	            buf.append(((Number) o).intValue());
+    	        }
+    	        else {
+    	            buf.append(o);
+    	        }
     	    }
-    	    
+    	    else {
+    	        buf.append(h);
+    	    }
 	    }
     }
 
