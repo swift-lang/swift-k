@@ -492,6 +492,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         		"information and low-level task messages");
         ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
                  "reports warnings only");
+        
+        ap.addFlag(ARG_PROVENANCE, "Enables provenance tracking.");
 
         Map desc = VDL2ConfigProperties.getPropertyDescriptions();
         Iterator i = desc.entrySet().iterator();
