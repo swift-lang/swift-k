@@ -35,6 +35,7 @@ public class FileGarbageCollector implements Runnable {
     private Thread thread;
     private Map<PhysicalFormat, Integer> usageCount;
     private Set<PhysicalFormat> persistent;
+    private boolean shutdown, done;
     
     public FileGarbageCollector() {
         queue = new LinkedList<PhysicalFormat>();
@@ -93,8 +94,12 @@ public class FileGarbageCollector implements Runnable {
             while (true) {
                 PhysicalFormat pf;
                 synchronized(this) {
-                    while (queue.isEmpty()) {
+                    while (queue.isEmpty() && !shutdown) {
                         this.wait();
+                    }
+                    if (shutdown) {
+                        done = true;
+                        break;
                     }
                     pf = queue.remove();
                 }
@@ -107,6 +112,16 @@ public class FileGarbageCollector implements Runnable {
             }
         }
         catch (InterruptedException e) {
+        }
+    }
+
+    public void waitFor() throws InterruptedException {
+        shutdown = true;
+        while (!done) {
+            synchronized(this) {
+                notify();
+            }
+            Thread.sleep(1);
         }
     }
 }

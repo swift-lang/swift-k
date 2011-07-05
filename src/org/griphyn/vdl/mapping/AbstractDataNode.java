@@ -632,7 +632,12 @@ public abstract class AbstractDataNode implements DSHandle {
     public synchronized void clean() {
         Mapper mapper = getMapper();
         if (mapper != null) {
-            mapper.clean(getPathFromRoot());
+            try {
+                mapper.clean(getFringePaths());
+            }
+            catch (HandleOpenException e) {
+                logger.warn("Unexpected exception", e);
+            }
         }
         field = null;
         handles = null;

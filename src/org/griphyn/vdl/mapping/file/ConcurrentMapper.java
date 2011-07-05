@@ -71,10 +71,12 @@ public class ConcurrentMapper extends AbstractFileMapper {
     }
 
     @Override
-    public void clean(Path path) {
-        PhysicalFormat pf = map(path);
-        logger.info("Cleaning file " + pf);
-        FileGarbageCollector.getDefault().decreaseUsageCount(pf);
+    public void clean(Collection<Path> paths) {
+        for (Path path : paths) {
+            PhysicalFormat pf = map(path);
+            logger.info("Cleaning file " + pf);
+            FileGarbageCollector.getDefault().decreaseUsageCount(pf);
+        }
     }
 
     @Override

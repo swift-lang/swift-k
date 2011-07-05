@@ -287,6 +287,7 @@ public class Karajan {
         checkUninitializedVariables();
 		generateInternedConstants(scope.bodyTemplate);
 		
+		scope.bodyTemplate.setAttribute("cleanups", scope.getCleanups());
 
 		return scope.bodyTemplate;
 	}

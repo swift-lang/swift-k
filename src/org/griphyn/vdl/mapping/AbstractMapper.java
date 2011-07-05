@@ -1,5 +1,6 @@
 package org.griphyn.vdl.mapping;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public abstract class AbstractMapper implements Mapper {
     }
 
     @Override
-    public void clean(Path path) {
+    public void clean(Collection<Path> path) {
         // no cleaning by default
     }
 

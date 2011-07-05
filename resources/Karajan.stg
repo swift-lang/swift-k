@@ -3,7 +3,7 @@ group Karajan;
 // TODO can move progress ticker start into vdl:mains so karajan files
 // are smaller
 
-program(types,procedures,declarations,statements,constants,buildversion) ::= <<
+program(types,procedures,declarations,statements,constants,buildversion,cleanups) ::= <<
 <project><!-- CACHE ID $buildversion$ -->
   <import file="sys.xml"/>
   <import file="scheduler.xml"/>
@@ -28,8 +28,10 @@ program(types,procedures,declarations,statements,constants,buildversion) ::= <<
 		</vdl:mainp>
 		<vdl:stopprogressticker />
 	</vdl:mains>
-  </restartLog>  
+  </restartLog>
   $endif$
+  $cleanups:vdl_cleandataset();separator="\n"$
+  <vdl:cleandataset shutdown="true"/>
 </project>
 >>
 
