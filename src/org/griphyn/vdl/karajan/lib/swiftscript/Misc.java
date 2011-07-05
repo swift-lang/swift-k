@@ -59,7 +59,7 @@ public class Misc extends FunctionsCollection {
 
 		AbstractDataNode[] args = VDLFunction.waitForAllVargs(stack);
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append("SwiftScript trace: ");
 		for (int i = 0; i < args.length; i++) {
 			DSHandle handle = args[i];
@@ -74,7 +74,7 @@ public class Misc extends FunctionsCollection {
 		return null;
 	}
 
-	private void prettyPrint(StringBuffer buf, DSHandle h) {
+	private void prettyPrint(StringBuilder buf, DSHandle h) {
 	    Object o = h.getValue();
 	    if (o == null) {
 	        buf.append(h);
@@ -363,7 +363,14 @@ public class Misc extends FunctionsCollection {
 	throws ExecutionException {
 	    Object input = PA_INPUT.getValue(stack);
 	    DSHandle handle = new RootDataNode(Types.STRING);
-	    handle.setValue(String.valueOf(input));
+	    if (input instanceof DSHandle) {
+	        StringBuilder sb = new StringBuilder();
+	        prettyPrint(sb, (DSHandle) input);
+	        handle.setValue(sb.toString());
+	    }
+	    else {
+	        handle.setValue(String.valueOf(input));
+	    }
 	    handle.closeShallow();
 	    return handle;
 	}
