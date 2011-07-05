@@ -824,7 +824,7 @@ swift_test_case() {
 
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$CHECKSCRIPT ]; then
-  	export OUTPUT
+  	export TEST_LOG
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   else
     check_outputs $GROUP $NAME
