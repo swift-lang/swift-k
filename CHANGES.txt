@@ -2,6 +2,13 @@
 
 *** Provenance tracking in the compiled file is now disabled by default.
     Enable with swift -enable.provenance <script>
+    
+*** Variables that go out of scope are now automatically cleaned. This 
+    mostly consists of nullifying various fields, but for the concurrent
+    mapper it also means removal of files
+
+*** Fixed iterate so that iterate i {} until (i > 3); does not include
+    an iteration in which i == 3.
 
 (07/01/11)
 
