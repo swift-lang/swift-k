@@ -304,12 +304,16 @@ $if(isGlobal)$<global name="$name$">$else$<set name="$name$">$endif$
     $endif$
   $endif$
 $if(isGlobal)$</global>$else$</set>$endif$
-<parameterlog>
-<string>intermediate</string>
-<string>$name$</string>
-<vdl:getdatasetprovenanceid var="{$name$}" />
-<string>{#thread}</string>
-</parameterlog>
+$variable_log()$
+>>
+
+variable_log() ::= <<
+	<parameterlog>
+		<string>intermediate</string>
+		<string>$name$</string>
+		<vdl:getdatasetprovenanceid var="{$name$}" />
+		<string>{#thread}</string>
+	</parameterlog>
 >>
 
 vdl_mapping(mapping,file,waitfor) ::= <<
@@ -384,23 +388,30 @@ range(from,to,step,datatype) ::= <<
     $endif$
   </vdl:range>
  </set>
- <if><equals><vdl:configProperty><string>provenance.log</string></vdl:configProperty><string>true</string></equals>
- <then>
- <log level="info"><concat>
-    <string>ARRAYRANGE thread={#thread} array=</string>
-    <vdl:getdatasetprovenanceid var="{swift#rangeout}" />
-    <string> from=</string> <vdl:getdatasetprovenanceid var="{swift#from}" />
-    <string> to=</string> <vdl:getdatasetprovenanceid var="{swift#to}" />
-    $if(step)$
-    <string> step=</string> <vdl:getdatasetprovenanceid var="{swift#step}" />
-    $else$
-    <string> step=none</string>
-    $endif$
- </concat></log>
- </then>
- </if>
+ $range_log()$
  <variable>swift#rangeout</variable>
 </sequential>
+>>
+
+range_log() ::= <<
+	<if>
+		<equals><vdl:configProperty><string>provenance.log</string></vdl:configProperty><string>true</string></equals>
+ 		<then>
+ 			<log level="info">
+ 				<concat>
+    				<string>ARRAYRANGE thread={#thread} array=</string>
+    				<vdl:getdatasetprovenanceid var="{swift#rangeout}" />
+    				<string> from=</string> <vdl:getdatasetprovenanceid var="{swift#from}" />
+    				<string> to=</string> <vdl:getdatasetprovenanceid var="{swift#to}" />
+    				$if(step)$
+    					<string> step=</string> <vdl:getdatasetprovenanceid var="{swift#step}" />
+    				$else$
+    					<string> step=none</string>
+    				$endif$
+ 				</concat>
+ 			</log>
+ 		</then>
+ 	</if>
 >>
 
 if(condition,vthen,velse) ::= <<

@@ -77,6 +77,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String VDL_OPERATION_RUN = "run";
     public static final String VDL_OPERATION_TYPECHECK = "typecheck";
     public static final String VDL_OPERATION_DRYRUN = "dryrun";
+    public static final String ARG_PROVENANCE = "enable.provenance";
 
     public static String buildVersion;
 
@@ -144,7 +145,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
             if (project.endsWith(".swift")) {
                 try {
-                    project = compile(project, ap.isPresent(ARG_RECOMPILE));
+                    project = compile(project, ap.isPresent(ARG_RECOMPILE), ap.isPresent(ARG_PROVENANCE));
                 }
                 catch (ParsingException pe) {
                     // the compiler should have already logged useful
@@ -242,10 +243,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static String compile(String project) throws FileNotFoundException,
             ParsingException, IncorrectInvocationException,
             CompilationException, IOException {
-        return compile(project, false);
+        return compile(project, false, false);
     }
 
-    public static String compile(String project, boolean forceRecompile) throws FileNotFoundException,
+    public static String compile(String project, boolean forceRecompile, boolean provenanceEnabled) throws FileNotFoundException,
             ParsingException, IncorrectInvocationException,
             CompilationException, IOException {
         File swiftscript = new File(project);
@@ -254,7 +255,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         File xml = new File(projectBase + ".xml");
         File kml = new File(projectBase + ".kml");
 
-        loadBuildVersion();
+        loadBuildVersion(provenanceEnabled);
 
         boolean recompile = forceRecompile;
 
@@ -303,7 +304,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
             try {
                 FileOutputStream f = new FileOutputStream(kml);
-                Karajan.compile(xml.getAbsolutePath(), new PrintStream(f));
+                Karajan.compile(xml.getAbsolutePath(), new PrintStream(f), provenanceEnabled);
                 f.close();
             }
             catch (Error e) {
@@ -369,12 +370,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
 		}
     }
     
-	private static void loadBuildVersion() {
+	private static void loadBuildVersion(boolean provenanceEnabled) {
         try {
             File f = new File(System.getProperty("swift.home")
                     + "/libexec/buildid.txt");
             BufferedReader br = new BufferedReader(new FileReader(f));
-            buildVersion = br.readLine();
+            buildVersion = br.readLine() + "-" + (provenanceEnabled ? "provenance" : "no-provenance");
         }
         catch (IOException e) {
             buildVersion = null;

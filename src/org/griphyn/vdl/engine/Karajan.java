@@ -63,6 +63,7 @@ public class Karajan {
 	Set<String> usedVariables = new HashSet<String>();
 
 	public static final String TEMPLATE_FILE_NAME = "Karajan.stg";
+	public static final String TEMPLATE_FILE_NAME_NO_PROVENANCE = "Karajan-no-provenance.stg";
 
 	LinkedList<Program> importList = new LinkedList<Program>();
 	Set<String> importedNames = new HashSet<String>();
@@ -81,15 +82,24 @@ public class Karajan {
 			System.err.println("Please provide a SwiftScript program file.");
 			System.exit(1);
 		}
-		compile(args[0], System.out);
+		compile(args[0], System.out, false);
 	}
 
-	public static void compile(String in, PrintStream out) throws CompilationException {
+	public static void compile(String in, PrintStream out, boolean provenanceEnabled) throws CompilationException {
 		Karajan me = new Karajan();
 		StringTemplateGroup templates;
 		try {
-			templates = new StringTemplateGroup(new InputStreamReader(
-					Karajan.class.getClassLoader().getResource(TEMPLATE_FILE_NAME).openStream()));
+		    StringTemplateGroup main = new StringTemplateGroup(new InputStreamReader(
+                    Karajan.class.getClassLoader().getResource(TEMPLATE_FILE_NAME).openStream()));
+		    if (provenanceEnabled) {
+		        templates = main;
+		    }
+		    else {
+		        StringTemplateGroup override = new StringTemplateGroup(new InputStreamReader(
+                    Karajan.class.getClassLoader().getResource(TEMPLATE_FILE_NAME_NO_PROVENANCE).openStream()));
+		        override.setSuperGroup(main);
+		        templates = override;
+		    }
 		} catch(IOException ioe) {
 			throw new CompilationException("Unable to load karajan source templates",ioe);
 		}
