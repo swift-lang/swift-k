@@ -97,7 +97,7 @@ public class FileGarbageCollector implements Runnable {
                     while (queue.isEmpty() && !shutdown) {
                         this.wait();
                     }
-                    if (shutdown) {
+                    if (shutdown && queue.isEmpty()) {
                         done = true;
                         break;
                     }
