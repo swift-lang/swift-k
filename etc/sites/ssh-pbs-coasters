@@ -1,7 +1,7 @@
 <config>
 <pool handle="ssh-pbs-coasters">
-  <execution jobmanager="ssh:pbs" provider="coaster" url="login1.pads.ci.uchicago.edu" />
-  <filesystem provider="ssh" url="login1.pads.ci.uchicago.edu" />
+  <execution jobmanager="ssh:pbs" provider="coaster" url="_EXECUTION_URL_" />
+  <filesystem provider="ssh" url="_FILESYSTEM_URL_" />
   <profile key="maxtime" namespace="globus">3000</profile>
   <profile key="jobsPerNode" namespace="globus">8</profile>
   <profile key="slots" namespace="globus">1</profile>

@@ -8,6 +8,15 @@ crash()
    exit 1
 }
 
+# Copy files
+copy_requested_files()
+{
+   for file in $FILES_TO_COPY
+   do
+      scp $file $WORKER_USERNAME@$FILES_TO_COPY_REMOTE_DESTINATION
+   done
+}
+
 # Start futuregrid workers
 start-workers-futuregrid()
 {
@@ -44,7 +53,10 @@ start-workers-futuregrid()
       scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
       ssh $WORKER_USERNAME@$MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
-      echo $! >> $PID_FILE 
+      echo $! >> $PID_FILE
+
+      # Copy requsted file
+      copy_requested_files 
    done
 }
 
@@ -58,11 +70,21 @@ start-workers-ssh()
    fi
    for MACHINE in $WORKER_HOSTS
    do
+      # Enayble ssh tunneling if needed
+      if [ $SSH_TUNNELING == "yes" ]; then
+         ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
+         echo $! >> $PID_FILE
+      fi  
+
+      # Copy and start worker script
       scp $SWIFT_BIN/$WORKER $MACHINE:$WORKER_WORK > /dev/null 2>&1
       echo Starting worker on $MACHINE
       ssh $MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
       echo $! >> $PID_FILE
    done
+
+   # Copy requested files
+   copy_requested_files
    return 0
 }
 
@@ -116,6 +138,13 @@ if [ -f "$CONFIG_FILE" ]; then
 else
    crash "Cannot find coaster-service.conf!"
 fi
+
+# Determine Swift config file (cf - used for gensites)
+if [ -f "$RUN_DIR/cf" ]; then
+   SWIFT_CONFIG_FILE="$RUN_DIR/cf"
+else
+   SWIFT_CONFIG_FILE=$CONFIG_FILE
+fi   
 
 # Determine information needed about this machine
 if [ -z "$IPADDR" ]; then
@@ -228,7 +257,7 @@ esac
 # Generate sites.xml
 export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
 echo Generating sites.xml
-gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
+gensites persistent-coasters -p $SWIFT_CONFIG_FILE > $RUN_DIR/sites.xml 
 
 # Generate config file
 if [ $SHARED_FILESYSTEM == "no" ]; then

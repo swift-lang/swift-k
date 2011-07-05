@@ -1,3 +1,4 @@
+<!-- Swift template for Surveyor - http://www.alcf.anl.gov/support/gettingstarted/index.php -->
 <config>
   <pool handle="surveyor">
     <filesystem provider="local" />

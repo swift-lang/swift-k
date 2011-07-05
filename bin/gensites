@@ -115,7 +115,7 @@ fi
 # Locate template
 if [ ! -f "$TEMPLATE_PATH" ]; then
    if [ -f "$TEMPLATE" ]; then
-      $TEMPLATE_PATH = $TEMPLATE
+      TEMPLATE_PATH=$TEMPLATE
    elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
       TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
    elif [ -f "$HOME/.swift/sites/$TEMPLATE" ]; then
@@ -141,6 +141,12 @@ if [ ! -f "$PROPERTIES_FILE" ]; then
          crash "Unable to find a valid properties file! Please specify a valid file with the -p option"
       fi
    fi
+fi
+
+# Setup for creating a TC file
+if [ -f "tc.data" ] && [ -n "`grep -e app $PROPERTIES_FILE`" ]; then
+   mv tc.data tc.data.old
+   HOSTS=`grep -i "pool handle" $TEMPLATE|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
 fi
 
 # Parse values into variables for later sed processing
@@ -178,6 +184,29 @@ do
       "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
          INTERNALHOSTNAME=`get_value $line`
          ;;
+       '#app'*)
+         if [ `echo $line | wc -w` == 2 ]; then
+            for HOST in $HOSTS
+            do
+               NAME=`echo $line |cut -d'=' -f1|awk '{print $2}'`
+               COMMAND=`echo $line |cut -d'=' -f2`
+               COMMAND=`eval echo $COMMAND`
+               echo $HOST $NAME `readlink -f $COMMAND` null null null >> tc.data
+           done
+        fi
+         
+	if [ `echo $line |wc -w` == 3 ]; then
+           for HOST in $HOSTS
+           do
+              if [ $HOST == `echo $line|awk '{print $2}'` ]; then
+                 NAME=`echo $line|awk '{print $3}'|cut -d'=' -f1`
+                 COMMAND=`echo $line|awk '{print $3}'|cut -d'=' -f2`
+                 COMMAND=`eval echo $COMMAND`
+                 eval echo $HOST $NAME `readlink -f $COMMAND` null null null >> tc.data
+             fi
+          done
+        fi
+        ;;
    esac
 done < $PROPERTIES_FILE
 

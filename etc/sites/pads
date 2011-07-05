@@ -1,3 +1,4 @@
+<!-- Swift configuration for PADS - http://pads.ci.uchicago.edu/ -->
 <config>
 <pool handle="pads-pbs">
   <execution jobmanager="local:pbs" provider="local" url="none" />

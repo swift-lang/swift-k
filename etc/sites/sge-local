@@ -1,3 +1,4 @@
+<!-- Template for a generic SGE provider -->
 <config>
 <pool handle="sge-local">
    <execution provider="sge" url="none" />

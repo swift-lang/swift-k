@@ -1,0 +1,196 @@
+Coaster Service Quickstart
+==========================
+
+Persistent Coasters
+-------------------
+There are three main parts to the persistent coasters scripts: 
+coaster-service.conf, start-coaster-service, and stop-coaster-service.
+The coaster-service.conf file is a configuration file that determines how
+coasters should run. Start-coaster-service and stop-coaster-service start 
+and stop the processes that are needed to run Swift in this setup.
+
+coaster-service.conf
+~~~~~~~~~~~~~~~~~~~~
+The coaster-service.conf file is used to control the way 
+the coaster service runs. It is located in the etc/ directory 
+of your Swift distribution. Below is an explanation of what
+the settings in coaster-service.conf do.
+
+IP Address
+^^^^^^^^^^
+-----
+export IPADDR=123.456.7.8
+-----
+This setting is the IP address of the machine on which you are running start-coaster-service. 
+When empty, start-coaster-service will attempt to automatically determine the IP address. 
+In the cases of machines with multiple network devices, it may be better to specify the address
+here.
+
+Local Port and Service Port
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----
+export LOCAL_PORT=1984
+export SERVICE_PORT=2001
+-----
+The local and service ports are the port numbers that are used by workers and by swift 
+to communicate with each other. When these ports are undefined, coaster-service will 
+automatically find and use an available port.
+
+Log Directory
+^^^^^^^^^^^^^
+-----
+export LOG_DIR=logs
+-----
+This is the directory to store log files, relative to your current working directory.
+Currently there are two log files that are stored here: swift.log - the output of the swift
+process, and coasters.log, the output of coaster-service.
+
+Project
+^^^^^^^
+-----
+export PROJECT=CI-CCR000013
+-----
+Name of project when submitting to scheduler.
+
+Queue
+^^^^^
+-----
+export QUEUE=fast
+-----
+
+When working directly with a scheduler, specify a queue to where work will be submitted.
+used to specify an internal hostname in sites.xml for systems with multiple
+interfaces.
+
+Shared Filesystem
+^^^^^^^^^^^^^^^^^
+-----
+export SHARED_FILESYSTEM=yes
+-----
+Valid values for SHARED_FILESYSTEM are either yes or no. This defines
+if all the nodes involved share a common filesystem. By default
+Swift assumes this is true.
+
+When SHARED_FILESYSTEM is set to no, a Swift configuration file called
+cf is generated. It contains information that turns on provider staging, 
+a mechanism for running on machines without a shared filesystems.
+
+SSH Tunneling
+^^^^^^^^^^^^^
+-----
+export SSH_TUNNNELING=yes
+-----
+SSH tunneling provides a way to bypass restrictive firewalls. Use this is there is
+a firewall blocking ports between the head node and worker nodes.
+
+Swift path
+^^^^^^^^^^
+-----
+export SWIFT=/home/davidk/swift
+-----
+The start-coaster-service script will automatically try to 
+determine the path to Swift. If you see any error messages 
+about not being able to find swift, you can manually specify
+the full path to swift here.
+
+Swift VM Boot Directory
+^^^^^^^^^^^^^^^^^^^^^^^
+-----
+export SWIFTVMBOOT_DIR=$HOME/swift-vm-boot
+-----
+When configured to work with Futuregrid, this setting will determine the location of the swift-vm-boot
+utility which is responsible for requesting virtual machines.
+
+Work Directory
+^^^^^^^^^^^^^^
+-----
+export WORK=$HOME/work
+-----
+This setting defines a directory in which Swift can write to while it executes work.
+
+Worker Hosts
+^^^^^^^^^^^^^
+-----
+export WORKER_HOSTS="host1 host2 host3"
+-----
+Worker hosts is a list of hosts to start workers on when in SSH mode.
+ 
+Worker Mode
+^^^^^^^^^^^
+-----
+export WORKER_MODE=ssh
+-----
+Worker mode describes how to start the needed workers. 
+Valid options include ssh, local, cobalt, and futuregrid.
+
+SSH mode requires having keys on all the worker nodes
+that will allow you to log in without prompting. SSH
+is used to handle starting and stopping workers.
+
+Local mode starts a single worker on the local machine.
+
+Cobalt mode starts a worker process via the cobalt job 
+management suite
+
+Futuregrid works similarly to SSH mode, but will also start 
+and stop instances of virtual machines.
+
+Worker Username
+^^^^^^^^^^^^^^^
+-----
+export WORKER_USERNAME=david
+-----
+In modes that use SSH, modify this value to log in as a different user on worker nodes.
+By default this value is set to $USER and assumes login names are the same on each
+system.
+
+Worker Work Directory
+^^^^^^^^^^^^^^^^^^^^^
+-----
+export WORKER_WORK=/home/${USER}/work
+-----
+This setting should point to a directory on the worker nodes that 
+is writable to you. This is a reasonable default, but you may
+need to change it in cases where your worker node has a different 
+directory structure.
+
+start-coaster-service
+~~~~~~~~~~~~~~~~~~~~~
+Once coaster-service.conf is configured, the start-coaster-service script 
+will take care of everything else. It will start the coaster service with 
+the correct arguments, start SSH tunneling, and start the worker.pl script 
+on all worker nodes. It will create a sites.xml and tc.data in your 
+current working directory. If shared filesystem is set to no, it will also 
+generate a Swift configuration file called cf. This contains the settings 
+needed for provider staging. The start-coaster-service script does not take 
+any arguments. It is located in Swift's bin directory.
+
+-----
+$ start-coaster-service
+-----
+
+Running Swift
+~~~~~~~~~~~~~
+Now that start-coaster-service has started all the required programs and 
+generated Swift configuration files, you must tell Swift to use them via
+command line arguments.
+
+.Running Swift (with SHARED_FILESYSTEM=yes)
+-----
+$ swift -sites.file sites.xml -tc.file tc.data <myscript.swift>
+-----
+
+.Running Swift (with SHARED_FILESYSTEM=no)
+-----
+$ swift -sites.file sites.xml -tc.file tc.data -config cf <myscript.swift>
+-----
+
+stop-coaster-service
+~~~~~~~~~~~~~~~~~~~~
+The stop-coaster-service script will stop all of the services started by
+start-coaster-service. It ends the coaster service, worker scripts and
+SSH tunneling. The stop-coaster-service takes no command line arguments.
+
+-----
+$ stop-coaster-service
+-----

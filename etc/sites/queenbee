@@ -1,3 +1,4 @@
+<!-- Queenbee on Teragrid - http://www.loni.org/teragrid/users_guide.php -->
 <config>
 <pool handle="queenbee-pbs">
   <execution jobmanager="local:pbs" provider="local" url="none" />
