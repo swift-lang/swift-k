@@ -75,8 +75,10 @@
 		<copy todir="${dist.dir}/libexec">
 			<fileset dir="${cog.dir}/modules/${module.name}/libexec"/>
 		</copy>
-		<copy todir="${dist.dir}/bin">
-			<fileset dir="${cog.dir}/modules/${module.name}/bin"/>
+		<copy todir="${dist.dir}/bin" verbose="true" flatten="true">
+			<fileset dir="${cog.dir}/modules/${module.name}/bin"> 
+				<type type="file" />
+			</fileset>			
 		</copy>
 		<copy todir="${dist.dir}/lib/perl">
 			<fileset dir="${cog.dir}/modules/${module.name}/lib/perl"/>
@@ -88,8 +90,39 @@
 		<chmod perm="+x" file="${dist.dir}/bin/swiftrun"/>
                 <chmod perm="+x" file="${dist.dir}/bin/gensites"/>
                 <chmod perm="+x" file="${dist.dir}/bin/chxml"/>
-                <chmod perm="+x" file="${dist.dir}/bin/start-coaster-service"/>
+
+                <chmod perm="+x" file="${dist.dir}/bin/foreachsite"/>
+                <chmod perm="+x" file="${dist.dir}/bin/gen_gridsites"/>
+                <chmod perm="+x" file="${dist.dir}/bin/get_greensites"/>
+                <chmod perm="+x" file="${dist.dir}/bin/start-swift-service"/>
+                <chmod perm="+x" file="${dist.dir}/bin/start-ranger-service"/>
+                <chmod perm="+x" file="${dist.dir}/bin/mk_osg_sitetest"/>
+                <chmod perm="+x" file="${dist.dir}/bin/nqueued"/>
+                <chmod perm="+x" file="${dist.dir}/bin/osgcat"/>
+                <chmod perm="+x" file="${dist.dir}/bin/mktcfrominst"/>
+                <chmod perm="+x" file="${dist.dir}/bin/osgcat"/>
+                <chmod perm="+x" file="${dist.dir}/bin/start_services"/>
+
+                <chmod perm="+x" file="${dist.dir}/bin/start-ranger-service"/>
+                <chmod perm="+x" file="${dist.dir}/bin/workers.ranger.sh"/>
+                <chmod perm="+x" file="${dist.dir}/bin/worker.sh"/>
+                <chmod perm="+x" file="${dist.dir}/bin/start-swift-service"/>
+                <chmod perm="+x" file="${dist.dir}/bin/swift-workers"/>
+                <chmod perm="+x" file="${dist.dir}/bin/run_workers"/>
+                <chmod perm="+x" file="${dist.dir}/bin/get_greensites"/>
+                <chmod perm="+x" file="${dist.dir}/bin/gen_gridsites"/>
+                <chmod perm="+x" file="${dist.dir}/bin/foreachsite"/>
+                <chmod perm="+x" file="${dist.dir}/bin/maketcfrominst"/>
+                <chmod perm="+x" file="${dist.dir}/bin/mk_catalog.rb"/>
+                <chmod perm="+x" file="${dist.dir}/bin/mk_cats.rb"/>
+                <chmod perm="+x" file="${dist.dir}/bin/osgcat"/>
+                <chmod perm="+x" file="${dist.dir}/bin/ress.rb"/>
+                <chmod perm="+x" file="${dist.dir}/bin/ressfields"/>
+                <chmod perm="+x" file="${dist.dir}/bin/sites"/>
+
+                <chmod perm="+x" File="${dist.dir}/bin/start-coaster-service"/>
                 <chmod perm="+x" file="${dist.dir}/bin/stop-coaster-service"/>
+
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/active-state-transitions"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/add-runid-as-prefix"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/affine-transform"/>
