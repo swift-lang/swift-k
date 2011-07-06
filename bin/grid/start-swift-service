@@ -1,0 +1,36 @@
+#!/bin/bash
+
+NSERVICES=$1
+SERVICE=coaster-service  # found via PATH
+
+ontrap()  # FIXME: Not needed?
+{
+  echo '====>' in ontrap
+  trap - 1 2 3 15
+  echo start_service: trapping exit or signal
+  kill $(cat service-*.pid)
+}
+
+# trap ontrap 1 2 3 15  # FIXME: Not needed?
+
+rm -f service.sports service.wports
+for i in `seq -w 0 $((NSERVICES - 1))`; do
+  rm -f service-$i.{sport,wport,pid,log}
+  $SERVICE -nosec -passive -portfile service-$i.sport -localportfile service-$i.wport &> service-$i.log  &
+  echo $! >service-$i.pid
+  sleep 3
+  if [ -s service-$i.sport ]; then
+    echo $(cat service-$i.sport) >> service.sports
+  else
+    echo service-$i.sport does not exist or is empty. exiting.
+    exit 1
+  fi
+  if [ -s service-$i.wport ]; then
+    echo $(cat service-$i.wport) >> service.wports
+  else
+    echo service-$i.wport does not exist or is empty. exiting.
+    exit 1
+  fi
+done
+
+wait

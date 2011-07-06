@@ -1,0 +1,40 @@
+
+
+ExTENCI Exec
+
+create modft install & test file; test under fork and work
+
+run sites gen
+
+run tcgen
+
+run factory  (convert factory from ruby to shell?)
+
+run wf (one service for all w/ provider staging; one service per site)
+
+
+TO RESOLVE
+
+- how to set swift throttles to handle a varying number of coaster workers per site?
+
+- why did Allan set exceptions in workdir names, eg for BNL?
+
+- how to dynamically grow/shrink pool and add/remove sites; dynamically take coaster services in and out of service.
+
+- settings for retry and replication
+
+
+FEATURES
+
+Add site secltion option to foreachsite
+
+(Swift feature: foreach site in siwift?_)
+
+CLEANUP
+
+Find all interim p-baked tools under swift/lab/osg and place under grid/ for development
+
+Find Glen's tgsites command and integrate
+
+Merge in gstar
+

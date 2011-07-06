@@ -1,0 +1,8 @@
+
+swift-osg-ress-site-catalog --vo=engage  --condor-g | # >osg.xml
+
+for s in $(grep gridRes | sed -e 's/^.* //' -e 's/<.*//' ); do
+  ( sname=$(echo $s | sed -e 's,/.*,,')
+    echo site: $sname
+  )
+done

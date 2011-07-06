@@ -1,0 +1,38 @@
+#!/bin/bash
+
+#$ -N runworkers
+#$ -pe 16way 16
+#$ -l h_rt=00:10:00
+#$ -o $HOME/
+#$ -e $HOME/
+#$ -q development
+#$ -V
+#$ -S /bin/bash
+
+# Must provide on commandline:
+
+#-- #$ -A TG-DBS080004N
+
+#export SERVICE_URL=http://missingServiceURL
+#export WORKER_LOGLEVEL=TRACE
+
+echo PE_HOSTFILE:
+echo
+cat $PE_HOSTFILE
+echo
+
+rdir=$HOME/swift_gridtools
+NODES=`cat $PE_HOSTFILE | awk '{print $1}'`
+
+INDEX=0
+for NODE in $NODES; do
+  ssh $NODE /bin/bash -c \" $rdir/workers.ranger.sh $SERVICE_URL 16 $WORKER_LOGLEVEL \" &
+  INDEX=$((INDEX + 1))
+done
+wait
+
+
+
+
+
+

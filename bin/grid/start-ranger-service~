@@ -1,0 +1,72 @@
+#! /bin/bash
+
+# FIXME: make these commandline keyword arguments, eg --nodes=
+
+NODES=${1:-1}
+WALLTIME=${2:-00:10:00}
+PROJECT=${3:-TG-DBS080004N}
+QUEUE=${4:-development}
+REMOTE_USER=${5:-tg455797}
+
+STARTSERVICE=true
+HOST=tg-login.ranger.tacc.teragrid.org
+BIN=$(cd $(dirname $0); pwd)
+
+echo NODES=$NODES WALLTIME=$WALLTIME PROJECT=$PROJECT REMOTE_USER=$REMOTE_USER
+LOGLEVEL=INFO # INFO, DEBUG, TRACE for increasing detail
+
+CORESPERNODE=16
+
+THROTTLE=$(echo "scale=2; ($NODES*$CORESPERNODE)/100 -.01"|bc)
+
+echo THROTTLE=$THROTTLE
+
+exit
+
+# This lets user run this script to add another job full of workers to an existing coaster service
+# Must be started in the same directory where start-swift-service created the service.wports file.
+
+if [ $STARTSERVICE = true ]; then
+  start-swift-service 1 &
+  sleep 5
+  SPORT=$(cat service.sports)
+  cat >sites.pecos.xml <<EOF
+
+  <config>
+    <pool handle="localhost">
+      <execution provider="coaster-persistent" url="http://localhost:$SPORT" jobmanager="local:local"/>
+      <profile namespace="globus" key="workerManager">passive</profile>
+      <profile namespace="globus" key="jobsPerNode">$CORESPERNODE</profile>
+      <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <!-- <filesystem provider="local" url="none" /> -->
+      <profile namespace="swift" key="stagingMethod">proxy</profile>
+      <workdirectory>/tmp/wilde</workdirectory>
+    </pool>
+  </config>
+EOF
+fi
+
+WPORT=$(cat service.wports)
+SERVICE_URL=http://$(hostname -f):$WPORT
+echo swift service started - SPORT=$(cat service.sports) WPORT=$WPORT SERVICE_URL=$SERVICE_URL
+
+# FIXME: scp the right worker.pl, worker.sh and .sub files to the dest system (Ranger)
+
+rdir=swift_gridtools
+ssh $REMOTE_USER@$HOST mkdir -p $rdir
+
+if [ $? != 0 ]; then
+  echo $0: unable to create remote directory $rdir
+  exit 1
+fi
+
+echo Created remote dir
+
+scp $BIN/{worker.pl,workers.ranger.sh,workers.ranger.sub} $REMOTE_USER@$HOST:$rdir
+
+echo Copied grid tools to remote dir
+
+ssh $REMOTE_USER@$HOST qsub -A $PROJECT -N runworkers -pe 16way $(($NODES * 16)) -l h_rt=$WALLTIME -q $QUEUE -v SERVICE_URL=$SERVICE_URL,WORKER_LOGLEVEL=$LOGLEVEL $rdir/workers.ranger.sub
+
+echo Submitted remote worker launching script
