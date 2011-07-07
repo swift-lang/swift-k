@@ -20,12 +20,12 @@ public class SingleFileMapper extends AbstractMapper {
 		super();
 	}
 
-	public Collection existing() {
+	public Collection<Path> existing() {
 		if (new AbsFile(PARAM_FILE.getStringValue(this)).exists()) {
 			return Arrays.asList(new Path[] {Path.EMPTY_PATH});
 		}
 		else {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 
