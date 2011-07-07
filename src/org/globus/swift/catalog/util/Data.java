@@ -14,12 +14,6 @@
  */
 package org.globus.swift.catalog.util;
 
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Vector;
-
-import org.apache.log4j.Logger;
 
 /**
  * This is the container for all the Data classes.
@@ -49,47 +43,5 @@ public abstract class Data implements Cloneable {
      * form.
      */
     public abstract String toString();
-
-
-    /**
-     * It converts the contents of the Vector to a String and returns it.
-     * For this to work , all the objects making up the vector should be having
-     * a valid toString() method.
-     *
-     * @param heading   The heading you want to give
-     *                  to the text which is printed
-     *
-     * @param vector    The <code>Vector</code> whose
-     *                  elements you want to print
-     */
-    public String vectorToString(String heading,Vector vector){
-        Enumeration e = vector.elements();
-
-        String st = "\n" + heading;
-        while(e.hasMoreElements()){
-            st += " " + e.nextElement().toString();
-        }
-
-        return st;
-    }
-
-    /**
-     * A small helper method that displays the contents of a Set in a String.
-     *
-     * @param delim  The delimited between the members of the set.
-     * @return  String
-     */
-    public String setToString(Set s, String delim){
-        Iterator it = s.iterator();
-        String st = new String();
-        while(it.hasNext()){
-            st += (String)it.next() + delim;
-        }
-        st = (st.length() > 0)?
-             st.substring(0,st.lastIndexOf(delim)):
-             st;
-        return st;
-    }
-
 
 }

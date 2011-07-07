@@ -391,7 +391,6 @@ public class TCEntry
      * @param namespace String The namespace of the profile
      * @return List   List of Profile objects. returns null if none are found.
      */
-    @SuppressWarnings("hiding")
     public List<Profile> getProfiles( String namespace ) {
         List<Profile> results = null;
         if ( profiles != null ) {

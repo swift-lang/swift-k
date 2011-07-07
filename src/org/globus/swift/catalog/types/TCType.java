@@ -30,7 +30,7 @@ import java.util.HashMap;
 public class TCType
     implements Serializable {
     private String _value_;
-    private static HashMap _table_ = new HashMap(6);
+    private static HashMap<String, TCType> _table_ = new HashMap<String, TCType>(6);
 
     protected TCType(String value) {
         _value_ = value;
@@ -68,7 +68,7 @@ public class TCType
      * @return TCType
      */
     public static TCType fromValue(String value) throws IllegalStateException {
-        TCType m_enum = (TCType) _table_.get(value.toUpperCase());
+        TCType m_enum = _table_.get(value.toUpperCase());
         if (m_enum == null) {
             throw new IllegalStateException(err);
         }

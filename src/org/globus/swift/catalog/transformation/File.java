@@ -38,7 +38,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -67,11 +66,6 @@ public class File
      * It's values are set in the CPlanner (the main toolkit) class.
      */
 
-    /**
-     * The List containing the user specified list of pools on which he wants
-     * the dag to run.
-     */
-    protected List mvExecPools;
 
     /**
      * The Tree Map which stores the contents of the file.
@@ -207,7 +201,7 @@ public class File
      * @see org.globus.swift.catalog.TCEntry
      */
     public List<TCEntry> getTCEntries( String namespace, String name, String version,
-        List resourceids, TCType type ) throws Exception {
+        List<String> resourceids, TCType type ) throws Exception {
         logMessage( "getTCEntries(String namespace,String name,String version," +
             "List resourceids, TCType type" );
         logMessage( "\tgetTCEntries(" + namespace + ", " + name + ", " +
@@ -215,9 +209,9 @@ public class File
             resourceids + ", " + type );
         List<TCEntry> results = null;
         if ( resourceids != null ) {
-            for ( Iterator i = resourceids.iterator(); i.hasNext(); ) {
+            for ( Iterator<String> i = resourceids.iterator(); i.hasNext(); ) {
                 List<TCEntry> tempresults = getTCEntries( namespace, name, version,
-                    ( String ) i.next(), type );
+                    i.next(), type );
                 if ( tempresults != null ) {
                     if ( results == null ) {
                         results = new ArrayList<TCEntry>();
@@ -276,9 +270,9 @@ public class File
         }
         if ( resourceid != null ) {
             if ( mTreeMap.containsKey( resourceid ) ) {
-                Map lfnMap = mTreeMap.get( resourceid );
+                Map<String, List<TCEntry>> lfnMap = mTreeMap.get( resourceid );
                 if ( lfnMap.containsKey( lfn ) ) {
-                    List<TCEntry> l = ( List<TCEntry> ) lfnMap.get( lfn );
+                    List<TCEntry> l = lfnMap.get( lfn );
                     if ( type != null && l != null ) {
                         for ( Iterator<TCEntry> i = l.iterator(); i.hasNext(); ) {
                             TCEntry tc = i.next();
@@ -302,11 +296,10 @@ public class File
                     //check all maps for the executable.
                     Map<String, List<TCEntry>> lfnMap = j.next();
                     if ( lfnMap.containsKey( lfn ) ) {
-                        List l = lfnMap.get( lfn );
+                        List<TCEntry> l = lfnMap.get( lfn );
                         if ( type != null && l != null ) {
-                            for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                                TCEntry tc = (
-                                    TCEntry ) i.next();
+                            for ( Iterator<TCEntry> i = l.iterator(); i.hasNext(); ) {
+                                TCEntry tc = i.next();
                                 if ( tc.getType().equals( type ) ) {
                                     if ( results == null ) {
                                         results = new ArrayList<TCEntry>();
@@ -357,7 +350,7 @@ public class File
             version +
             ", " + type );
         List<String> results = null;
-        List<Map> lfnList = new ArrayList<Map>();
+        List<Map<String, List<TCEntry>>> lfnList = new ArrayList<Map<String, List<TCEntry>>>();
         if ( name == null ) {
             if ( type == null ) {
                 //return all the resources only
@@ -368,20 +361,20 @@ public class File
         //return all the entries to search for type
         lfnList.addAll( mTreeMap.values() );
 
-        List entries = null;
-        for ( Iterator<Map> i = lfnList.iterator(); i.hasNext(); ) {
-            Map lfnMap = i.next();
+        List<TCEntry> entries = null;
+        for ( Iterator<Map<String, List<TCEntry>>> i = lfnList.iterator(); i.hasNext(); ) {
+            Map<String, List<TCEntry>> lfnMap = i.next();
             if ( entries == null ) {
-                entries = new ArrayList();
+                entries = new ArrayList<TCEntry>();
             }
             if ( name == null ) {
-                for ( Iterator j = lfnMap.values().iterator(); j.hasNext(); ) {
-                    entries.addAll( ( List ) j.next() );
+                for ( Iterator<List<TCEntry>> j = lfnMap.values().iterator(); j.hasNext(); ) {
+                    entries.addAll( j.next() );
                 }
             } else {
                 if ( lfnMap.containsKey( Separator.combine( namespace, name,
                     version ) ) ) {
-                    entries.addAll( ( List ) lfnMap.get( Separator.combine(
+                    entries.addAll( lfnMap.get( Separator.combine(
                         namespace,
                         name,
                         version ) ) );
@@ -389,12 +382,11 @@ public class File
             }
         }
         TreeSet<String> rset = null;
-        for ( Iterator i = entries.iterator(); i.hasNext(); ) {
+        for ( Iterator<TCEntry> i = entries.iterator(); i.hasNext(); ) {
             if ( rset == null ) {
                 rset = new TreeSet<String>();
             }
-            TCEntry entry = ( TCEntry ) i.
-                next();
+            TCEntry entry = i.next();
             if ( type == null ) {
                 rset.add( entry.getResourceId() );
             } else {
@@ -464,11 +456,10 @@ public class File
         //     Map lMap = i.next();
         for (Map<String,List<TCEntry>> lMap : lfnList) {
             if ( lMap.containsKey( Separator.combine( namespace, name, version ) ) ) {
-                for ( Iterator j = lMap.get( Separator.combine(
+                for ( Iterator<TCEntry> j = lMap.get( Separator.combine(
                     namespace,
                     name, version ) ).iterator(); j.hasNext(); ) {
-                    TCEntry entry = (
-                        TCEntry ) j.next();
+                    TCEntry entry = j.next();
                     if ( type != null ) {
                         if ( !entry.getType().equals( type ) ) {
                             break;
@@ -515,7 +506,8 @@ public class File
         logMessage( "\t getTCLogicalNames(" + resourceid + "," + type + ")" );
         List<Object> result = null;
         int[] length = {0, 0};
-        List<Map> lfnMap = new ArrayList<Map>();
+        List<Map<String, List<TCEntry>>> lfnMap = 
+            new ArrayList<Map<String, List<TCEntry>>>();
         String lfn = null, resource = null, tctype = null;
         if ( resourceid == null ) {
             lfnMap.addAll( mTreeMap.values() );
@@ -527,13 +519,12 @@ public class File
             }
         }
         if ( lfnMap != null ) {
-            for ( Iterator<Map> i = lfnMap.iterator(); i.hasNext(); ) {
-                for ( Iterator j = i.next().values().iterator();
+            for ( Iterator<Map<String, List<TCEntry>>> i = lfnMap.iterator(); i.hasNext(); ) {
+                for ( Iterator<List<TCEntry>> j = i.next().values().iterator();
                     j.hasNext(); ) {
-                    for ( Iterator k = ( ( List ) j.next() ).iterator();
+                    for ( Iterator<TCEntry> k = j.next().iterator();
                         k.hasNext(); ) {
-                        TCEntry tc = (
-                            TCEntry ) k.next();
+                        TCEntry tc = k.next();
                         String l = null, r = null, t = null;
                         if ( type == null ) {
                             l = tc.getLogicalTransformation();
@@ -588,7 +579,7 @@ public class File
      *
      * @see org.globus.swift.catalog.util.Profile
      */
-    public List getTCLfnProfiles( String namespace, String name,
+    public List<Profile> getTCLfnProfiles( String namespace, String name,
         String version ) throws
         Exception {
         throw new UnsupportedOperationException( "Not Implemented" );
@@ -609,32 +600,31 @@ public class File
      *
      * @see org.globus.swift.catalog.util.Profile
      */
-    public List getTCPfnProfiles( String pfn, String resourceid, TCType type ) throws
+    public List<Profile> getTCPfnProfiles( String pfn, String resourceid, TCType type ) throws
         Exception {
         logMessage(
             "getTCPfnProfiles(String pfn, String resourceid, TCType type)" );
         logMessage( "\t getTCPfnProfiles(" + pfn + "," + resourceid + "," +
             type + ")" );
 
-        List result = null;
-        List<Map> lfnMap = new ArrayList<Map>();
+        List<Profile> result = null;
+        List<Map<String, List<TCEntry>>> lfnMap = new ArrayList<Map<String, List<TCEntry>>>();
         if ( mTreeMap.containsKey( resourceid ) ) {
             lfnMap.add( mTreeMap.get( resourceid ) );
         }
-        for ( Iterator<Map> i = lfnMap.iterator(); i.hasNext(); ) {
-            for ( Iterator j = i.next().values().iterator();
+        for ( Iterator<Map<String, List<TCEntry>>> i = lfnMap.iterator(); i.hasNext(); ) {
+            for ( Iterator<List<TCEntry>> j = i.next().values().iterator();
                 j.hasNext(); ) {
-                for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
-                    TCEntry tc = (
-                        TCEntry ) k.next();
-                    List profiles = null;
+                for ( Iterator<TCEntry> k = j.next().iterator(); k.hasNext(); ) {
+                    TCEntry tc = k.next();
+                    List<Profile> profiles = null;
                     if ( tc.getPhysicalTransformation().equals( pfn ) ) {
                         if ( type == null || tc.getType().equals( type ) ) {
                             profiles = tc.getProfiles();
                         }
                         if ( profiles != null ) {
                             if ( result == null ) {
-                                result = new ArrayList( 10 );
+                                result = new ArrayList<Profile>( 10 );
                             }
                             result.addAll( profiles );
                         }
@@ -660,11 +650,10 @@ public class File
         List<TCEntry> result=new ArrayList<TCEntry>();
         for ( Iterator<Map<String, List<TCEntry>>> i = 
             mTreeMap.values().iterator(); i.hasNext(); ) {
-            for ( Iterator j = i.next().values().iterator();
+            for ( Iterator<List<TCEntry>> j = i.next().values().iterator();
                 j.hasNext(); ) {
-                for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
-                    TCEntry tc = (
-                        TCEntry ) k.next();
+                for ( Iterator<TCEntry> k = j.next().iterator(); k.hasNext(); ) {
+                    TCEntry tc = k.next();
                     result.add(tc);
                 }
 
@@ -715,11 +704,10 @@ public class File
      * @throws Exception
      * @see org.globus.swift.catalog.TCEntry
      */
-    public boolean addTCEntry( List entries ) throws
+    public boolean addTCEntry( List<TCEntry> entries ) throws
         Exception {
         for ( int i = 0; i < entries.size(); i++ ) {
-            TCEntry entry = ( ( TCEntry )
-                entries.get( i ) );
+            TCEntry entry = entries.get( i );
             this.addTCEntry( entry.getLogicalNamespace(),
                 entry.getLogicalName(), entry.getLogicalVersion(),
                 entry.getPhysicalTransformation(),
@@ -820,7 +808,7 @@ public class File
      */
     public boolean addTCLfnProfile( String namespace, String name,
         String version,
-        List profiles ) throws Exception {
+        List<Profile> profiles ) throws Exception {
         throw new UnsupportedOperationException( "Not Implemented" );
     }
 
@@ -840,7 +828,7 @@ public class File
      */
     public boolean addTCPfnProfile( String pfn, TCType type,
         String resourcename,
-        List profiles ) throws Exception {
+        List<Profile> profiles ) throws Exception {
         throw new UnsupportedOperationException( "Not Implemented" );
     }
 
@@ -935,13 +923,13 @@ public class File
     }
 
     public boolean deleteTCPfnProfile( String physicalname, TCType type,
-        String resourceid, List profiles ) throws
+        String resourceid, List<Profile> profiles ) throws
         Exception {
         throw new UnsupportedOperationException( "Not Implemented" );
     }
 
     public boolean deleteTCLfnProfile( String namespace, String name,
-        String version, List profiles ) throws
+        String version, List<Profile> profiles ) throws
         Exception {
         throw new UnsupportedOperationException( "Not Implemented" );
     }

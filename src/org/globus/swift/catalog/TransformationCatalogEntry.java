@@ -25,15 +25,14 @@ package org.globus.swift.catalog;
  * @see org.griphyn.common.classes.TCType
  */
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.globus.swift.catalog.types.SysInfo;
 import org.globus.swift.catalog.types.TCType;
 import org.globus.swift.catalog.util.Profile;
 import org.globus.swift.catalog.util.ProfileParser;
 import org.globus.swift.catalog.util.Separator;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class TransformationCatalogEntry
     implements CatalogEntry {

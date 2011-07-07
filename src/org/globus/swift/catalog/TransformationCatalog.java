@@ -119,7 +119,7 @@ public interface TransformationCatalog
      *                   Returns <B>NULL</B> if no results found.
      * @throws Exception  NotImplementedException if not implemented.
      */
-    List getTCLogicalNames( String resourceid, TCType type ) throws
+    List<Object> getTCLogicalNames( String resourceid, TCType type ) throws
         Exception;
 
     /**
@@ -132,7 +132,7 @@ public interface TransformationCatalog
      * @throws Exception NotImplementedException if not implemented.
      * @see org.globus.swift.catalog.util.Profile
      */
-    List getTCLfnProfiles( String namespace, String name, String version ) throws
+    List<Profile> getTCLfnProfiles( String namespace, String name, String version ) throws
         Exception;
 
     /**
@@ -146,7 +146,7 @@ public interface TransformationCatalog
      *                   Returns <B>NULL</B> if no profiless found.
      * @see org.globus.swift.catalog.util.Profile
      */
-    List getTCPfnProfiles( String pfn, String resourceid, TCType type ) throws
+    List<Profile> getTCPfnProfiles( String pfn, String resourceid, TCType type ) throws
         Exception;
 
     /**
@@ -155,7 +155,7 @@ public interface TransformationCatalog
      * @return List Returns a List of TransformationCatalogEntry objects.
      * @throws Exception
      */
-    List getTC() throws Exception;
+    List<TCEntry> getTC() throws Exception;
 
     /**
      *  ADDITIONS
@@ -168,7 +168,7 @@ public interface TransformationCatalog
      * @return boolean Return true if succesful, false if error. Exception is thrown when error occurs.
      * @see org.globus.swift.catalog.TCEntry
      */
-    boolean addTCEntry( List tcentry ) throws Exception;
+    boolean addTCEntry( List<TCEntry> tcentry ) throws Exception;
 
     /**
      * Add an single entry into the transformation catalog.
@@ -207,7 +207,7 @@ public interface TransformationCatalog
      */
     boolean addTCLfnProfile( String namespace, String name,
         String version,
-        List profiles ) throws Exception;
+        List<Profile> profiles ) throws Exception;
 
     /**
      * Add additional profile to a physical transformation.
@@ -220,7 +220,7 @@ public interface TransformationCatalog
      * @see org.globus.swift.catalog.util.Profile
      */
     boolean addTCPfnProfile( String pfn, TCType type, String resourcename,
-        List profiles ) throws Exception;
+        List<Profile> profiles ) throws Exception;
 
     /**
      * DELETIONS
@@ -308,7 +308,7 @@ public interface TransformationCatalog
      * @throws Exception
      */
     boolean deleteTCPfnProfile( String physicalname, TCType type,
-        String resourceid, List profiles ) throws
+        String resourceid, List<Profile> profiles ) throws
         Exception;
 
     /**
@@ -322,7 +322,7 @@ public interface TransformationCatalog
      * @throws Exception
      */
     boolean deleteTCLfnProfile( String namespace, String name,
-        String version, List profiles ) throws
+        String version, List<Profile> profiles ) throws
         Exception;
 
     /**

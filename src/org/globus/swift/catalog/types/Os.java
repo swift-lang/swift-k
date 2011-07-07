@@ -31,7 +31,7 @@ import java.util.HashMap;
 public class Os
     implements Serializable {
     private String _value_;
-    private static HashMap _table_ = new HashMap(5);
+    private static HashMap<String, Os> _table_ = new HashMap<String, Os>(5);
 
     protected Os(String value) {
         _value_ = value;
@@ -65,7 +65,7 @@ public class Os
      * @return Os
      */
     public static Os fromValue(String value) throws IllegalStateException {
-        Os m_enum = (Os) _table_.get(value.toUpperCase());
+        Os m_enum = _table_.get(value.toUpperCase());
         if (m_enum == null) {
             throw new IllegalStateException(err);
         }
