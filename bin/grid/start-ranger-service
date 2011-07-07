@@ -103,13 +103,17 @@ if [ $? != 0 ]; then
   exit 1
 fi
 
-echo Created remote dir
+echo Created remote dir: $rdir
 
 scp $BIN/{worker.pl,workers.ranger.sh,workers.ranger.sub} $REMOTE_USER@$HOST:$rdir
 
-echo Copied grid tools to remote dir
+echo Copied grid tools to remote dir: $rdir
 
-ssh $REMOTE_USER@$HOST qsub -A $PROJECT -N runworkers -pe 16way $(($NODES * 16)) -l h_rt=$WALLTIME -q $QUEUE -v SERVICE_URL=$SERVICE_URL,WORKER_LOGLEVEL=$LOGLEVEL $rdir/workers.ranger.sub
+echo Submitting ...
+
+echo "ssh $REMOTE_USER@$HOST qsub -A $PROJECT -N runworkers -pe 16way $(($NODES * 16)) -q $QUEUE -l h_rt=$WALLTIME -v SERVICE_URL=$SERVICE_URL, WORKER_LOGLEVEL=$LOGLEVEL $rdir/workers.ranger.sub"
+
+ssh $REMOTE_USER@$HOST qsub -A $PROJECT -N runworkers -pe 16way $(($NODES * 16)) -q $QUEUE -l h_rt=$WALLTIME -v SERVICE_URL=$SERVICE_URL,WORKER_LOGLEVEL=$LOGLEVEL $rdir/workers.ranger.sub
 
 echo Submitted remote worker launching script
 
