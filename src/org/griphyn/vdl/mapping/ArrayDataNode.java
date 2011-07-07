@@ -28,10 +28,10 @@ public class ArrayDataNode extends DataNode {
 			for (Map.Entry<Comparable<?>, DSHandle> e : handles.entrySet()) {
 				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
 				Path fullPath = parentPath.addLast(e.getKey().toString(), getType().isArray());
-				if (!mapper.isHandlesEmpty()) {
+				if (mapper.getType().isComposite()) {
 					mapper.getFringePaths(list, fullPath);
 				}
-				else if (!mapper.getField().getType().isPrimitive()) {
+				else if (!mapper.getType().isPrimitive()) {
 					list.add(fullPath);
 				}
 			}

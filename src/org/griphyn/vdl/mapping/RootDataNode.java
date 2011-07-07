@@ -110,7 +110,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 				    		"incompatible with the mapped variable type: " + e.getMessage());
 				}
 			}
-			root.closeDeep();
+		    root.closeDeep();
 			checkConsistency(root);
 		}
 		else if (mapper.isStatic()) {
@@ -184,7 +184,6 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 							+ ". Missing required field: " + fieldName);
 				}
 			}
-
 		}
 	}
 

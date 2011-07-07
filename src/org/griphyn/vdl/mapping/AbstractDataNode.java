@@ -631,13 +631,15 @@ public abstract class AbstractDataNode implements DSHandle {
     }
 
     public synchronized void clean() {
-        Mapper mapper = getMapper();
-        if (mapper != null) {
-            try {
-                mapper.clean(getFringePaths());
+        if (!handles.isEmpty()) {
+            for (DSHandle h : handles.values()) {
+                ((AbstractDataNode) h).clean();
             }
-            catch (HandleOpenException e) {
-                logger.warn("Unexpected exception", e);
+        }
+        else {
+            Mapper mapper = getRoot().getMapper();
+            if (mapper != null) {
+                mapper.clean(getPathFromRoot());
             }
         }
         field = null;

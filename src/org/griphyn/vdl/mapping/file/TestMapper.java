@@ -46,16 +46,14 @@ public class TestMapper extends AbstractMapper {
     }
 
     @Override
-    public void clean(Collection<Path> paths) {
-        for (Path path : paths) {
-            PhysicalFormat pf = map(path);
-            if (PARAM_TEMP.getBooleanValue(this)) {
-                System.out.println("Cleaning file " + pf);
-                FileGarbageCollector.getDefault().decreaseUsageCount(pf);
-            }
-            else {
-                System.out.println("Not cleaning " + pf + " (not temporary)");
-            }
+    public void clean(Path path) {
+        PhysicalFormat pf = map(path);
+        if (PARAM_TEMP.getBooleanValue(this)) {
+            System.out.println("Cleaning file " + pf);
+            FileGarbageCollector.getDefault().decreaseUsageCount(pf);
+        }
+        else {
+            System.out.println("Not cleaning " + pf + " (not temporary)");
         }
     }
 

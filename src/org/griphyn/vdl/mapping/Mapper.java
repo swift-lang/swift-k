@@ -60,7 +60,7 @@ public interface Mapper {
      * Clean the specified path. A temporary mapper may remove the
      * corresponding file after this call. 
      */
-    void clean(Collection<Path> paths);
+    void clean(Path paths);
     
     
     boolean isPersistent(Path path);
