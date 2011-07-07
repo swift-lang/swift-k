@@ -92,6 +92,24 @@
 				<include name="chxml"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
+				
+				<include name="foreachsite"/>
+				<include name="gen_gridsites"/>
+				<include name="get_greensites"/>
+				<include name="maketcfrominst"/>
+				<include name="mk_catalog.rb"/>
+				<include name="mk_cats.rb"/>
+				<include name="mk_osg_sitetest.rm"/>
+				<include name="osgcat"/>
+				<include name="ress.rb"/>
+				<include name="ressfields"/>
+				<include name="run_workers"/>
+				<include name="sites"/>
+				<include name="start-ranger-service"/>
+				<include name="start-swift-service"/>
+				<include name="swift-workers"/>
+				<include name="worker.sh"/>
+				<include name="workers.ranger.sh"/>
 			</fileset>
 		</chmod>
 		<chmod perm="+x">
