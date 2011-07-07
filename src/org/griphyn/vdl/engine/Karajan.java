@@ -805,7 +805,9 @@ public class Karajan {
 			        foreachST.setAttribute("selfClose", "true");
 			}
 			scope.appendStatement(foreachST);
-			foreachST.setAttribute("cleanups", innerScope.getCleanups());
+			Collection<String> cleanups = innerScope.getCleanups();
+			cleanups.remove(foreach.getVar());
+			foreachST.setAttribute("cleanups", cleanups);
 		} catch(CompilationException re) {
 			throw new CompilationException("Compile error in foreach statement at "+foreach.getSrc()+": "+re.getMessage(),re);
 		}
