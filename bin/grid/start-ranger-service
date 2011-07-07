@@ -1,18 +1,62 @@
 #! /bin/bash
 
 # FIXME: make these commandline keyword arguments, eg --nodes=
+function usage ()
+{
+       echo "Usage:"
+       echo " $0 --nodes nnodes --walltime hh:mm:ss --project proj-name --queue q-name --user user-name"
+}
 
-NODES=${1:-1}
-WALLTIME=${2:-00:10:00}
-PROJECT=${3:-TG-DBS080004N}
-QUEUE=${4:-development}
-REMOTE_USER=${5:-$USER}
+if [ $# -ne 10 ]
+then
+    usage
+    exit 1
+fi
+
+while test "$1" != "" ; do
+    case $1 in
+        --nodes|-n)
+                NODES=${2}
+                shift
+        ;;
+        --walltime|-t)
+                WALLTIME=${2}
+                shift
+        ;;
+        --project|-p)
+                PROJECT=${2}
+                shift
+        ;;
+        --queue|-q)
+                QUEUE=${2}
+                shift
+        ;;
+        --user|-u)
+                REMOTE_USER=${2}
+                shift
+        ;;
+        -*)
+                echo "Error: no such option $1"
+                usage
+                exit 1
+        ;;
+    esac
+    shift
+done
+
+
+
+#NODES=${1:-1}
+#WALLTIME=${2:-00:10:00}
+#PROJECT=${3:-TG-DBS080004N}
+#QUEUE=${4:-development}
+#REMOTE_USER=${5:-$USER}
 
 STARTSERVICE=true
 HOST=tg-login.ranger.tacc.teragrid.org
 BIN=$(cd $(dirname $0); pwd)
 
-echo NODES=$NODES WALLTIME=$WALLTIME PROJECT=$PROJECT REMOTE_USER=$REMOTE_USER
+echo NODES=$NODES WALLTIME=$WALLTIME PROJECT=$PROJECT REMOTE_USER=$REMOTE_USER QUEUE=$QUEUE
 LOGLEVEL=INFO # INFO, DEBUG, TRACE for increasing detail
 
 CORESPERNODE=16
