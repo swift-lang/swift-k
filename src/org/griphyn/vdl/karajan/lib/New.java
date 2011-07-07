@@ -98,7 +98,7 @@ public class New extends VDLFunction {
 							 "with a list of values");
 						}
 						int index = 0;
-						Iterator i = ((List) value).iterator();
+						Iterator<?> i = ((List<?>) value).iterator();
 						while (i.hasNext()) {
 							// TODO check type consistency of elements with
 							// the type of the array
