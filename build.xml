@@ -75,166 +75,131 @@
 		<copy todir="${dist.dir}/libexec">
 			<fileset dir="${cog.dir}/modules/${module.name}/libexec"/>
 		</copy>
-		<copy todir="${dist.dir}/bin" verbose="true" flatten="true">
-			<fileset dir="${cog.dir}/modules/${module.name}/bin"> 
-				<type type="file" />
-			</fileset>			
+		<copy todir="${dist.dir}/bin">
+			<fileset dir="${cog.dir}/modules/${module.name}/bin"/>
 		</copy>
 		<copy todir="${dist.dir}/lib/perl">
 			<fileset dir="${cog.dir}/modules/${module.name}/lib/perl"/>
-                </copy>
-		<chmod perm="+x" file="${dist.dir}/bin/VDL2Karajan"/>
-		<chmod perm="+x" file="${dist.dir}/bin/vdlc"/>
-		<chmod perm="+x" file="${dist.dir}/bin/swift-plot-log"/>
-		<chmod perm="+x" file="${dist.dir}/bin/swiftconfig"/>
-		<chmod perm="+x" file="${dist.dir}/bin/swiftrun"/>
-                <chmod perm="+x" file="${dist.dir}/bin/gensites"/>
-                <chmod perm="+x" file="${dist.dir}/bin/chxml"/>
-
-                <chmod perm="+x" file="${dist.dir}/bin/foreachsite"/>
-                <chmod perm="+x" file="${dist.dir}/bin/gen_gridsites"/>
-                <chmod perm="+x" file="${dist.dir}/bin/get_greensites"/>
-                <chmod perm="+x" file="${dist.dir}/bin/start-swift-service"/>
-                <chmod perm="+x" file="${dist.dir}/bin/start-ranger-service"/>
-                <chmod perm="+x" file="${dist.dir}/bin/mk_osg_sitetest"/>
-                <chmod perm="+x" file="${dist.dir}/bin/nqueued"/>
-                <chmod perm="+x" file="${dist.dir}/bin/osgcat"/>
-                <chmod perm="+x" file="${dist.dir}/bin/mktcfrominst"/>
-                <chmod perm="+x" file="${dist.dir}/bin/osgcat"/>
-                <chmod perm="+x" file="${dist.dir}/bin/start_services"/>
-
-                <chmod perm="+x" file="${dist.dir}/bin/start-ranger-service"/>
-                <chmod perm="+x" file="${dist.dir}/bin/workers.ranger.sh"/>
-                <chmod perm="+x" file="${dist.dir}/bin/worker.sh"/>
-                <chmod perm="+x" file="${dist.dir}/bin/start-swift-service"/>
-                <chmod perm="+x" file="${dist.dir}/bin/swift-workers"/>
-                <chmod perm="+x" file="${dist.dir}/bin/run_workers"/>
-                <chmod perm="+x" file="${dist.dir}/bin/get_greensites"/>
-                <chmod perm="+x" file="${dist.dir}/bin/gen_gridsites"/>
-                <chmod perm="+x" file="${dist.dir}/bin/foreachsite"/>
-                <chmod perm="+x" file="${dist.dir}/bin/maketcfrominst"/>
-                <chmod perm="+x" file="${dist.dir}/bin/mk_catalog.rb"/>
-                <chmod perm="+x" file="${dist.dir}/bin/mk_cats.rb"/>
-                <chmod perm="+x" file="${dist.dir}/bin/osgcat"/>
-                <chmod perm="+x" file="${dist.dir}/bin/ress.rb"/>
-                <chmod perm="+x" file="${dist.dir}/bin/ressfields"/>
-                <chmod perm="+x" file="${dist.dir}/bin/sites"/>
-
-                <chmod perm="+x" File="${dist.dir}/bin/start-coaster-service"/>
-                <chmod perm="+x" file="${dist.dir}/bin/stop-coaster-service"/>
-
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/active-state-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/add-runid-as-prefix"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/affine-transform"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/all-kickstarts-to-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/all-logs-active-jobsubmissions-count-graph"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/annotate-karatasks-with-execute2-id"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/autospace-data"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/cli-finished"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/cli-version"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/cluster-report"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/cluster-stats"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/colour-execute2"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/colour-execute2-by-falkon"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/colour-karatasks"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/coloured-event-plot"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/combine-execute-start-last-times"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/combine-karajan-tasks-and-load-average"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/combine-start-last-times"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/combine-start-last-times-to-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/compute-t-inf"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/create-everylog-vs-versions-data"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/duration-of-workflow"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/error-summary"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/event-duration-stats"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/events-in-progress"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/events-in-progress-first-loop.pl"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/events-in-progress-second-loop.pl"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/events-in-progress-third-loop.pl"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/everylog-durations-of-workflows"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/everylog-to-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/everylog-vs-versions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/execstages-plot"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/execute2-status-from-log"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/execute2-summary-from-log"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/execution-summaries"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-activity-for-subthreads-of"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-activity-for-task"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-activity-for-thread"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-completed-time-for-run-id"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-end-time"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-execute-start-times"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-failed-time-for-run-id"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-jobid-karajanid-bindings"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-last-time-for-execute"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-start-time"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/extract-start-times"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/falkon-to-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/generate-karatasks-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/get-jobid-for-karajanid"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/get-replicationid-for-execute2id"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/get-site-for-run-id"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/get-thread-for-run-id"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/info-and-karajan-actives"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/info-to-md5"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/info-to-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/info-to-zeroed-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/iso-to-secs"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/karatasks-only"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/kickstarts-to-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/kickstarts-to-plot"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/last-times"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/last-transition-line"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/list-known-tasks"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/list-known-threads"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-createdirset-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-dostagein-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-dostageout-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-execute-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-execute2-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-initshareddir-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-karatasks-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-compound-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/log-to-internal-proc-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/logs-for-all"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/lookup-colour"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/max-duration"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/normalise-event-start-time"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/normalise-event-start-time-to-any"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/number-events"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/number-sites-list"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/overview-reports.sh"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/per-site-execute2-durations"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/plot-duration-histogram"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/plot-everylogs"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/queue-state-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/retrycounts"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/sec-to-utc"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/sec-to-utc-day"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/simple-event-plot"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/sort-preserve"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/split-start-times-shifted"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/start-last-times-and-kickstart"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/sum-tt1.pl"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/swap-and-sort"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/swap-and-sort-and-swap"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/swift-standard-log-to-transition"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/table-jobs-sites"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/task-status-to-transitions"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/tasks-in-cluster"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/temporal-join"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/tie-url-filenames"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/times-for-all-tasks"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/total-event-plot"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/trail"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/trail-freex"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/transitions-to-cedps"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/transitions-to-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/tscore.sh"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/weights.sh"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/whole-workflow-event"/>
-		<chmod perm="+x" file="${dist.dir}/libexec/log-processing/whole-workflow-time"/>
-
+		</copy>
+		<chmod perm="+x">
+			<fileset dir="${dist.dir}/bin">
+				<include name="VDL2Karajan"/>
+				<include name="vdlc"/>
+				<include name="swift-plot-log"/>
+				<include name="swiftconfig"/>
+				<include name="swiftrun"/>
+				<include name="gensites"/>
+				<include name="chxml"/>
+				<include name="start-coaster-service"/>
+				<include name="stop-coaster-service"/>
+			</fileset>
+		</chmod>
+		<chmod perm="+x">
+			<fileset dir="${dist.dir}/libexec/log-processing">
+				<include name="active-state-transitions"/>
+				<include name="add-runid-as-prefix"/>
+				<include name="affine-transform"/>
+				<include name="all-kickstarts-to-event"/>
+				<include name="all-logs-active-jobsubmissions-count-graph"/>
+				<include name="annotate-karatasks-with-execute2-id"/>
+				<include name="autospace-data"/>
+				<include name="cli-finished"/>
+				<include name="cli-version"/>
+				<include name="cluster-report"/>
+				<include name="cluster-stats"/>
+				<include name="colour-execute2"/>
+				<include name="colour-execute2-by-falkon"/>
+				<include name="colour-karatasks"/>
+				<include name="coloured-event-plot"/>
+				<include name="combine-execute-start-last-times"/>
+				<include name="combine-karajan-tasks-and-load-average"/>
+				<include name="combine-start-last-times"/>
+				<include name="combine-start-last-times-to-event"/>
+				<include name="compute-t-inf"/>
+				<include name="create-everylog-vs-versions-data"/>
+				<include name="duration-of-workflow"/>
+				<include name="error-summary"/>
+				<include name="event-duration-stats"/>
+				<include name="events-in-progress"/>
+				<include name="events-in-progress-*.pl"/>
+				<include name="everylog-durations-of-workflows"/>
+				<include name="everylog-to-event"/>
+				<include name="everylog-vs-versions"/>
+				<include name="execstages-plot"/>
+				<include name="execute2-status-from-log"/>
+				<include name="execute2-summary-from-log"/>
+				<include name="execution-summaries"/>
+				<include name="extract-activity-for-subthreads-of"/>
+				<include name="extract-activity-for-task"/>
+				<include name="extract-activity-for-thread"/>
+				<include name="extract-completed-time-for-run-id"/>
+				<include name="extract-end-time"/>
+				<include name="extract-execute-start-times"/>
+				<include name="extract-failed-time-for-run-id"/>
+				<include name="extract-jobid-karajanid-bindings"/>
+				<include name="extract-last-time-for-execute"/>
+				<include name="extract-start-time"/>
+				<include name="extract-start-times"/>
+				<include name="falkon-to-event"/>
+				<include name="generate-karatasks-event"/>
+				<include name="get-jobid-for-karajanid"/>
+				<include name="get-replicationid-for-execute2id"/>
+				<include name="get-site-for-run-id"/>
+				<include name="get-thread-for-run-id"/>
+				<include name="info-and-karajan-actives"/>
+				<include name="info-to-md5"/>
+				<include name="info-to-transitions"/>
+				<include name="info-to-zeroed-transitions"/>
+				<include name="iso-to-secs"/>
+				<include name="karatasks-only"/>
+				<include name="kickstarts-to-event"/>
+				<include name="kickstarts-to-plot"/>
+				<include name="last-times"/>
+				<include name="last-transition-line"/>
+				<include name="list-known-tasks"/>
+				<include name="list-known-threads"/>
+				<include name="log-to-*-transitions"/>
+				<include name="logs-for-all"/>
+				<include name="lookup-colour"/>
+				<include name="max-duration"/>
+				<include name="normalise-event-start-time"/>
+				<include name="normalise-event-start-time-to-any"/>
+				<include name="number-events"/>
+				<include name="number-sites-list"/>
+				<include name="overview-reports.sh"/>
+				<include name="per-site-execute2-durations"/>
+				<include name="plot-duration-histogram"/>
+				<include name="plot-everylogs"/>
+				<include name="queue-state-transitions"/>
+				<include name="retrycounts"/>
+				<include name="sec-to-utc"/>
+				<include name="sec-to-utc-day"/>
+				<include name="simple-event-plot"/>
+				<include name="sort-preserve"/>
+				<include name="split-start-times-shifted"/>
+				<include name="start-last-times-and-kickstart"/>
+				<include name="sum-tt1.pl"/>
+				<include name="swap-and-sort"/>
+				<include name="swap-and-sort-and-swap"/>
+				<include name="swift-standard-log-to-transition"/>
+				<include name="table-jobs-sites"/>
+				<include name="task-status-to-transitions"/>
+				<include name="tasks-in-cluster"/>
+				<include name="temporal-join"/>
+				<include name="tie-url-filenames"/>
+				<include name="times-for-all-tasks"/>
+				<include name="total-event-plot"/>
+				<include name="trail"/>
+				<include name="trail-freex"/>
+				<include name="transitions-to-cedps"/>
+				<include name="transitions-to-event"/>
+				<include name="tscore.sh"/>
+				<include name="weights.sh"/>
+				<include name="whole-workflow-event"/>
+				<include name="whole-workflow-time"/>
+			</fileset>
+		</chmod>
+	
 		<!--<delete file="${dist.dir}/lib/jaxrpc.jar" quiet="true"/>-->
 		<delete includeEmptyDirs="true">
 			<fileset dir="${dist.dir}/bin/examples"/>
