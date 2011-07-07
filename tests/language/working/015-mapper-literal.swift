@@ -1,2 +1,2 @@
 type myfile;
-myfile v<"literalfilename.txt">;
+myfile v<"015-mapper-literal.in">;
