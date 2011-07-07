@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
@@ -116,17 +114,14 @@ public class AbsFile implements GeneralizedFileFormat {
 		try {
 			FileResource fr = getFileResource();
 			try {
-				List l = new ArrayList();
-				Collection c = fr.list(path);
-				Iterator i = c.iterator();
-				while (i.hasNext()) {
-					GridFile gf = (GridFile) i.next();
+				List<AbsFile> l = new ArrayList<AbsFile>();
+				for (GridFile gf : fr.list(path)) {
 					AbsFile f = new AbsFile(protocol, host, gf.getAbsolutePathName());
 					if (filter == null || filter.accept(new File(f.getDir()), f.getName())) {
 						l.add(f);
 					}
 				}
-				return (AbsFile[]) l.toArray(FILE_ARRAY);
+				return l.toArray(FILE_ARRAY);
 			}
 			finally {
 				releaseResource(fr);
@@ -178,5 +173,21 @@ public class AbsFile implements GeneralizedFileFormat {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof AbsFile) {
+            AbsFile a = (AbsFile) obj;
+            return protocol.equals(a.protocol) && host.equals(a.host) && path.equals(a.path);
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return protocol.hashCode() + host.hashCode() + path.hashCode();
     }
 }
