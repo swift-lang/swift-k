@@ -16,23 +16,23 @@ fi
 while test "$1" != "" ; do
     case $1 in
         --nodes|-n)
-                NODES=${2}
+                NODES="$2"
                 shift
         ;;
         --walltime|-t)
-                WALLTIME=${2}
+                WALLTIME="$2"
                 shift
         ;;
         --project|-p)
-                PROJECT=${2}
+                PROJECT="$2"
                 shift
         ;;
         --queue|-q)
-                QUEUE=${2}
+                QUEUE="$2"
                 shift
         ;;
         --user|-u)
-                REMOTE_USER=${2}
+                REMOTE_USER="$2"
                 shift
         ;;
         -*)
@@ -112,3 +112,4 @@ echo Copied grid tools to remote dir
 ssh $REMOTE_USER@$HOST qsub -A $PROJECT -N runworkers -pe 16way $(($NODES * 16)) -l h_rt=$WALLTIME -q $QUEUE -v SERVICE_URL=$SERVICE_URL,WORKER_LOGLEVEL=$LOGLEVEL $rdir/workers.ranger.sub
 
 echo Submitted remote worker launching script
+
