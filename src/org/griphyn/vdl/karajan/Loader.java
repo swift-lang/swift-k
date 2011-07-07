@@ -77,7 +77,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String VDL_OPERATION_RUN = "run";
     public static final String VDL_OPERATION_TYPECHECK = "typecheck";
     public static final String VDL_OPERATION_DRYRUN = "dryrun";
-    public static final String ARG_PROVENANCE = "enable.provenance";
 
     public static String buildVersion;
 
@@ -130,7 +129,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
 
         try {
-            //Thread.sleep(20000);
+            boolean provenanceEnabled = VDL2Config.getConfig().getProvenanceLog();
+
             setupLogging(ap, projectName, runID);
             logger.debug("Max heap: " + Runtime.getRuntime().maxMemory());
             
@@ -145,7 +145,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
             if (project.endsWith(".swift")) {
                 try {
-                    project = compile(project, ap.isPresent(ARG_RECOMPILE), ap.isPresent(ARG_PROVENANCE));
+                    project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
                 }
                 catch (ParsingException pe) {
                     // the compiler should have already logged useful
@@ -493,7 +493,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
         ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
                  "reports warnings only");
         
-        ap.addFlag(ARG_PROVENANCE, "Enables provenance tracking.");
 
         Map desc = VDL2ConfigProperties.getPropertyDescriptions();
         Iterator i = desc.entrySet().iterator();
