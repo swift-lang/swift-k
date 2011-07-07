@@ -99,8 +99,12 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		if (initialized) {
 			return mapper;
 		}
-        assert(waitingMapperParam != null);
-        throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+        if (waitingMapperParam == null) {
+            return null;
+        }
+        else {
+            throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+        }
 	}
 
 	public boolean isArray() {

@@ -15,7 +15,7 @@ public class FileName extends VDLFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		String s = argList(filename(stack), true);
-		DSHandle result = RootDataNode.newNode(Types.STRING, s);
+		DSHandle result = new RootDataNode(Types.STRING, s);
 		int provid = VDLFunction.nextProvenanceID();
 		//VDLFunction.logProvenanceParameter(provid, (DSHandle) PA_VAR.getValue(stack), "input");
 		//VDLFunction.logProvenanceResult(provid, result, "filename");

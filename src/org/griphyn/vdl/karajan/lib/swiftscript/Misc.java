@@ -15,7 +15,6 @@ import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
-import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -108,7 +107,7 @@ public class Misc extends FunctionsCollection {
 		
 		DSHandle handle = new RootDataNode(Types.STRING);
 		handle.setValue(buf.toString());
-		handle.closeShallow();
+
 		try {
 			if(VDL2Config.getConfig().getProvenanceLog()) {
 				DSHandle[] provArgs = SwiftArg.VARGS.asDSHandleArray(stack);
@@ -381,7 +380,7 @@ public class Misc extends FunctionsCollection {
 	    n.waitFor();
         String name = VDLFunction.filename(n)[0];
         String result = new AbsFile(name).getDir();
-        return RootDataNode.newNode(Types.STRING, result);
+        return new RootDataNode(Types.STRING, result);
 	}
 
 	/*
@@ -394,7 +393,7 @@ public class Misc extends FunctionsCollection {
 	public DSHandle swiftscript_length(VariableStack stack)
 	throws ExecutionException {
 	    Map<?, ?> n = (Map<?, ?>) PA_ARRAY.getValue(stack);
-	    return RootDataNode.newNode(Types.INT, Integer.valueOf(n.size()));
+	    return new RootDataNode(Types.INT, Integer.valueOf(n.size()));
 	}
 
 	public DSHandle swiftscript_existsfile(VariableStack stack)

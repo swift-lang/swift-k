@@ -22,20 +22,13 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private Map<String, Object> params;
 	private AbstractDataNode waitingMapperParam;
 
-	public static DSHandle newNode(Type type, Object value) {
-		DSHandle handle = new RootDataNode(type);
-		handle.setValue(value);
-		handle.closeShallow();
-		logger.debug("newNode");
-		return handle;
-	}
-
 	public RootDataNode(Type type) {
 		super(Field.Factory.createField(null, type));
 	}
 	
 	public RootDataNode(Type type, Object value) {
 	    this(type);
+	    initialized();
 	    setValue(value);
 	}
 
@@ -214,8 +207,12 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		if (initialized) {
 			return mapper;
 		}
-        assert (waitingMapperParam != null);
-        throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+        if (waitingMapperParam == null) {
+            return null;
+        }
+        else {
+            throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+        }
 	}
 
 	public boolean isArray() {
@@ -230,5 +227,5 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private synchronized void initialized() {
 		initialized = true;
 		waitingMapperParam = null;
-	}    
+	}
 }

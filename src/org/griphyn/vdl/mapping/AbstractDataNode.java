@@ -462,6 +462,7 @@ public abstract class AbstractDataNode implements DSHandle {
             catch (FutureFault fe) {
                 m = null; // no mapping info if mapper isn't initialised yet
             }
+
             if (m != null) {
                 // TODO proper type here
                 // Not sure catching exception here is really the right thing to

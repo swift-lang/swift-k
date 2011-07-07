@@ -32,7 +32,7 @@ public class ExtractInt extends VDLFunction {
 			String str = breader.readLine();
 			freader.close();
 			Double i = new Double(str);
-			DSHandle result = RootDataNode.newNode(Types.FLOAT, i);
+			DSHandle result = new RootDataNode(Types.FLOAT, i);
 			int provid = VDLFunction.nextProvenanceID();
 			VDLFunction.logProvenanceResult(provid, result, "extractint");
 			VDLFunction.logProvenanceParameter(provid, handle, "filename");

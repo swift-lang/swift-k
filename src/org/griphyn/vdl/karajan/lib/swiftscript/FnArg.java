@@ -68,7 +68,7 @@ public class FnArg extends AbstractFunction {
 			throw new ExecutionException("Missing command line argument: " + name);
 		}
 		else {
-			DSHandle result = RootDataNode.newNode(Types.STRING, value);	
+			DSHandle result = new RootDataNode(Types.STRING, value);	
 			int provid=VDLFunction.nextProvenanceID();
 			VDLFunction.logProvenanceResult(provid, result, "arg");
 			VDLFunction.logProvenanceParameter(provid, P_NAME.getRawValue(stack), "name");
