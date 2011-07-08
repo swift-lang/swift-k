@@ -71,7 +71,7 @@ public class LineReader {
                 words.add(ws[i]);
         String[] result = new String[words.size()];
         for (int i = 0; i < words.size(); i++)
-            result[i] = (String) words.get(i);
+            result[i] = words.get(i);
         return result;
     }
 }
