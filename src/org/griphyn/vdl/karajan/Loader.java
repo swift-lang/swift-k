@@ -92,7 +92,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 System.exit(0);
             }
             if (ap.isPresent(ARG_VERSION)){
-            	ap.version();
+            	version();
             	System.exit(0);
             }
             if (ap.isPresent(ARG_MONITOR)) {
@@ -634,6 +634,28 @@ public class Loader extends org.globus.cog.karajan.Loader {
             val = val / base;
         }
         return sb.toString();
+    }
+    
+    public static void version() {
+        String shome = System.getProperty("swift.home", "unknown version, can't determine SWIFT_HOME");
+        File file = new File(shome + "/libexec/version.txt");
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            try {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+            finally {
+                br.close();
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println();
     }
 
 }
