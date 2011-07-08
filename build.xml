@@ -92,7 +92,11 @@
 				<include name="chxml"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
-				
+			</fileset>
+		</chmod>
+		
+		<chmod perm="+x">
+			<fileset dir="${dist.dir}/bin/grid">
 				<include name="foreachsite"/>
 				<include name="gen_gridsites"/>
 				<include name="get_greensites"/>
