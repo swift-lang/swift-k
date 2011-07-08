@@ -14,7 +14,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,11 +37,11 @@ public class VDL2ErrorTranslator {
 		return translator;
 	}
 
-	private List entries;
+	private List<Entry> entries;
 
 	public void load() {
 		try {
-			entries = new ArrayList();
+			entries = new ArrayList<Entry>();
 			InputStream is = VDL2ErrorTranslator.class.getClassLoader().getResourceAsStream(
 					"error.properties");
 			if (is == null) {
@@ -80,9 +79,7 @@ public class VDL2ErrorTranslator {
 	}
 
 	public String translate(String org) {
-		Iterator i = entries.iterator();
-		while (i.hasNext()) {
-			Entry e = (Entry) i.next();
+	    for (Entry e : entries) {
 			Matcher m = e.pattern.matcher(org);
 			if (m.matches()) {
 				return replace(m, e.replacement);
@@ -91,18 +88,17 @@ public class VDL2ErrorTranslator {
 		return null;
 	}
 
-	private String replace(Matcher m, ArrayList replacement) {
-		Iterator i = replacement.iterator();
+	private String replace(Matcher m, List<Replacement> replacement) {
 		StringBuffer sb = new StringBuffer();
-		while (i.hasNext()) {
-			sb.append(((Replacement) i.next()).get(m));
+		for (Replacement r : replacement) {
+			sb.append(r.get(m));
 		}
 		return sb.toString();
 	}
 
 	public static class Entry {
 		public Pattern pattern;
-		public ArrayList replacement;
+		public ArrayList<Replacement> replacement;
 
 		public Entry(Pattern pattern, String replacement) {
 			this.pattern = pattern;
@@ -110,7 +106,7 @@ public class VDL2ErrorTranslator {
 		}
 
 		private void buildReplacement(String r) {
-			replacement = new ArrayList();
+			replacement = new ArrayList<Replacement>();
 			int last = 0;
 			int index = 0;
 			while (true) {

@@ -18,7 +18,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -191,7 +190,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             stack.setGlobal("swift.home", System.getProperty("swift.home"));
             stack.setGlobal("PATH_SEPARATOR", File.separator);
 
-            List arguments = ap.getArguments();
+            List<String> arguments = ap.getArguments();
             if (ap.hasValue(ARG_RESUME)) {
                 arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
             }
@@ -409,11 +408,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     private static void addCommandLineProperties(VDL2Config config,
             ArgumentParser ap) {
-        Map desc = VDL2ConfigProperties.getPropertyDescriptions();
-        Iterator i = desc.entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry) i.next();
-            String name = (String) e.getKey();
+        Map<String, PropInfo> desc = VDL2ConfigProperties.getPropertyDescriptions();
+        for (Map.Entry<String, PropInfo> e : desc.entrySet()) {
+            String name = e.getKey();
             if (ap.isPresent(name)) {
             	String value = ap.getStringValue(name);
             	logger.debug("setting: " + name + " to: " + value);
@@ -494,12 +491,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
                  "reports warnings only");
         
 
-        Map desc = VDL2ConfigProperties.getPropertyDescriptions();
-        Iterator i = desc.entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry) i.next();
-            PropInfo pi = (PropInfo) e.getValue();
-            ap.addOption((String) e.getKey(), pi.desc, pi.validValues,
+        Map<String, PropInfo> desc = VDL2ConfigProperties.getPropertyDescriptions();
+        for (Map.Entry<String, PropInfo> e : desc.entrySet()) {
+            PropInfo pi = e.getValue();
+            ap.addOption(e.getKey(), pi.desc, pi.validValues,
                 ArgumentParser.OPTIONAL);
         }
         return ap;
@@ -567,6 +562,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
     }
 
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected static Appender getAppender(Class cls) {
         Logger root = Logger.getRootLogger();
         Enumeration e = root.getAllAppenders();

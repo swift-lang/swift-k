@@ -5,7 +5,7 @@ package org.griphyn.vdl.karajan;
 
 import java.util.AbstractList;
 
-public class Pair extends AbstractList {
+public class Pair extends AbstractList<Object> {
 	private Object[] elements = new Object[2];
 
 	public Pair(Object o1, Object o2) {

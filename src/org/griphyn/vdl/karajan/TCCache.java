@@ -7,24 +7,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.TransformationCatalog;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.util.FQN;
 
 public class TCCache {
 	private TransformationCatalog tc;
-	private Map<Entry, List> cache;
+	private Map<Entry, List<TCEntry>> cache;
 	private Entry entry;
 
 	public TCCache(TransformationCatalog tc) {
 		this.tc = tc;
-		cache = new HashMap<Entry, List>();
+		cache = new HashMap<Entry, List<TCEntry>>();
 		entry = new Entry();
 	}
 
-	public synchronized List getTCEntries(FQN tr, String host, TCType tctype) throws Exception {
+	public synchronized List<TCEntry> getTCEntries(FQN tr, String host, TCType tctype) throws Exception {
 		entry.set(tr, host, tctype);
-		List l = cache.get(entry);
+		List<TCEntry> l = cache.get(entry);
 		if (l == null && !cache.containsKey(entry)) {
 			l = tc.getTCEntries(tr.getNamespace(), tr.getName(), tr.getVersion(), host, tctype);
 			cache.put(new Entry(tr, host, tctype), l);

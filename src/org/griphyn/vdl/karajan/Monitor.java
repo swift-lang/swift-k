@@ -51,7 +51,8 @@ public class Monitor implements ActionListener, MouseListener {
 	private JPanel buttons, display;
 	private JTable t;
 	private JButton futures, waiting, tasks;
-	private List wr, wt;
+	private List<Future> wr;
+	private List<VariableStack> wt;
 	private int crtdisp;
 
 	public Monitor() {
@@ -93,12 +94,12 @@ public class Monitor implements ActionListener, MouseListener {
 				t.removeMouseListener(this);
 			}
 			crtdisp = VARS;
-			ArrayList al = new ArrayList();
-			wr = new ArrayList();
+			ArrayList<List<Object>> al = new ArrayList<List<Object>>();
+			wr = new ArrayList<Future>();
 			Map<DSHandle, Future> map = FutureTracker.get().getMap();
 			synchronized (map) {
 			    for (Map.Entry<DSHandle, Future> en : map.entrySet()) {
-					List entry = new ArrayList();
+					List<Object> entry = new ArrayList<Object>();
 					Future f = en.getValue();
 					DSHandle handle = en.getKey();
 					String value = "-";
@@ -164,12 +165,10 @@ public class Monitor implements ActionListener, MouseListener {
 				t.removeMouseListener(this);
 			}
 			crtdisp = THREADS;
-			ArrayList al = new ArrayList();
-			wt = new ArrayList();
-			Collection c = WaitingThreadsMonitor.getAllThreads();
-			Iterator i = c.iterator();
-			while (i.hasNext()) {
-				VariableStack stack = (VariableStack) i.next();
+			ArrayList<String> al = new ArrayList<String>();
+			wt = new ArrayList<VariableStack>();
+			Collection<VariableStack> c = WaitingThreadsMonitor.getAllThreads();
+			for (VariableStack stack : c) {
 				try {
 					al.add(String.valueOf(ThreadingContext.get(stack)));
 				}
@@ -229,10 +228,8 @@ public class Monitor implements ActionListener, MouseListener {
 
 	public static void dumpThreads(PrintStream pw) {
 		pw.println("\nWaiting threads:");
-		Collection c = WaitingThreadsMonitor.getAllThreads();
-		Iterator i = c.iterator();
-		while (i.hasNext()) {
-			VariableStack stack = (VariableStack) i.next();
+		Collection<VariableStack> c = WaitingThreadsMonitor.getAllThreads();
+		for (VariableStack stack : c) {
 			try {
 				pw.println(String.valueOf(ThreadingContext.get(stack)));
 			}
@@ -244,16 +241,14 @@ public class Monitor implements ActionListener, MouseListener {
 	}
 
 	public class VariableModel extends AbstractTableModel {
-		private List l;
+		private List<Object[]> l;
 
-		public VariableModel(List lp) {
-			l = new ArrayList();
-			Iterator i = lp.iterator();
+		public VariableModel(List<List<Object>> lp) {
+			l = new ArrayList<Object[]>();
+			Iterator<List<Object>> i = lp.iterator();
 			while (i.hasNext()) {
-				List s = (List) i.next();
-				Iterator j = s.iterator();
-				Object[] e = new Object[6];
-				e = s.toArray();
+				List<Object> s = i.next();
+				Object[] e = s.toArray();
 				l.add(e);
 			}
 		}
@@ -268,7 +263,7 @@ public class Monitor implements ActionListener, MouseListener {
 
 		public Object getValueAt(int rowIndex, int columnIndex) {
 			if (columnIndex < 6) {
-				return ((Object[]) l.get(rowIndex))[columnIndex];
+				return l.get(rowIndex)[columnIndex];
 			}
 			else {
 				EventTargetPair[] l = Monitor.this.getListeners(rowIndex);
@@ -313,9 +308,9 @@ public class Monitor implements ActionListener, MouseListener {
 	}
 
 	public static class ThreadModel extends AbstractTableModel {
-		private List l;
+		private List<String> l;
 
-		public ThreadModel(List lp) {
+		public ThreadModel(List<String> lp) {
 			l = lp;
 		}
 

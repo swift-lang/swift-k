@@ -42,7 +42,7 @@ public class ScalabilityTest {
 				ElementTree tree = Loader.load("scalability.k");
 				ExecutionContext ec = new ExecutionContext(tree);
 				ec.setStdout(new Stdout());
-				List l = new LinkedList();
+				List<String> l = new LinkedList<String>();
 				l.add(args[1]);
 				l.add(args[2]);
 				ec.setArguments(l);

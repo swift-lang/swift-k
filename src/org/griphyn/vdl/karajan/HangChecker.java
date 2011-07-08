@@ -20,7 +20,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.nodes.grid.SchedulerNode;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
 
 public class HangChecker extends TimerTask {
     public static final Logger logger = Logger.getLogger(HangChecker.class);
