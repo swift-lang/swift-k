@@ -9,11 +9,12 @@
  */
 package org.globus.cog.util;
 
-import java.util.Scanner;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,13 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 public class ArgumentParser {
 	public static final int NORMAL = 0;
@@ -39,29 +33,29 @@ public class ArgumentParser {
 
 	public static final String DEFAULT = null;
 
-	private Map options;
+	private Map<String, String> options;
 
-	private Map aliases;
+	private Map<String, String> aliases;
 
-	private Set flags;
+	private Set<String> flags;
 
-	private Map details;
+	private Map<String, String> details;
 
-	private Map argumentNames;
+	private Map<String, String> argumentNames;
 
-	private Map types;
+	private Map<String, Integer> types;
 
 	private String executableName;
 
-	private List arguments;
+	private List<String> arguments;
 
 	public ArgumentParser() {
-		options = new HashMap();
-		aliases = new HashMap();
-		flags = new HashSet();
-		details = new LinkedHashMap();
-		argumentNames = new HashMap();
-		types = new HashMap();
+		options = new HashMap<String, String>();
+		aliases = new HashMap<String, String>();
+		flags = new HashSet<String>();
+		details = new LinkedHashMap<String, String>();
+		argumentNames = new HashMap<String, String>();
+		types = new HashMap<String, Integer>();
 	}
 
 	public void setExecutableName(String executableName) {
@@ -128,7 +122,7 @@ public class ArgumentParser {
 	}
 
 	public String getStringValue(String name) {
-		return (String) options.get(name);
+		return options.get(name);
 	}
 
 	public String getStringValue(String name, String defaultValue) {
@@ -167,7 +161,7 @@ public class ArgumentParser {
 	}
 
 	protected boolean hasOption(String name, int option) {
-		Integer type = (Integer) types.get(name);
+		Integer type = types.get(name);
 		if ((type.intValue() & option) != 0) {
 			return true;
 		}
@@ -186,12 +180,12 @@ public class ArgumentParser {
 
 	protected String getArgumentName(String name) {
 		if (argumentNames.containsKey(name)) {
-			return (String) argumentNames.get(name);
+			return argumentNames.get(name);
 		}
 		return "value";
 	}
 
-	public List getArguments() {
+	public List<String> getArguments() {
 		return arguments;
 	}
 
@@ -203,7 +197,7 @@ public class ArgumentParser {
 			if (option.startsWith("-") && (lastOption == null)) {
 				option = option.substring(1);
 				if (aliases.containsKey(option)) {
-					option = (String) aliases.get(option);
+					option = aliases.get(option);
 				}
 			}
 			if (lastOption != null) {
@@ -241,9 +235,7 @@ public class ArgumentParser {
 	}
 
 	public void checkMandatory() throws ArgumentParserException {
-		Iterator i = options.keySet().iterator();
-		while (i.hasNext()) {
-			String name = (String) i.next();
+		for (String name : options.keySet()) {
 			if (!isOptional(name) && !isFlag(name) && (options.get(name) == null)) {
 				throw new ArgumentParserException("Missing mandatory argument " + name);
 			}
@@ -251,9 +243,7 @@ public class ArgumentParser {
 	}
 
 	protected boolean hasAliases(String name) {
-		Iterator j = aliases.keySet().iterator();
-		while (j.hasNext()) {
-			String alias = (String) j.next();
+		for (String alias : aliases.keySet()) {
 			if (name.equals(aliases.get(alias))) {
 				return true;
 			}
@@ -276,9 +266,7 @@ public class ArgumentParser {
 			System.out.println("  " + executableName + " <options> ");
 		}
 		System.out.println("\n\twhere options are:\n");
-		Iterator i = details.keySet().iterator();
-		while (i.hasNext()) {
-			String name = (String) i.next();
+		for (String name : details.keySet()) {
 			String fullName = "";
 			if (name == DEFAULT) {
 				continue;
@@ -290,9 +278,7 @@ public class ArgumentParser {
 				fullName += "(";
 			}
 			fullName += "-" + name;
-			Iterator j = aliases.keySet().iterator();
-			while (j.hasNext()) {
-				String alias = (String) j.next();
+			for (String alias : aliases.keySet()) {
 				if (name.equals(aliases.get(alias))) {
 					fullName += " | -" + alias;
 				}
@@ -300,8 +286,8 @@ public class ArgumentParser {
 			if (hasAliases(name)) {
 				fullName += ")";
 			}
-			String detail = (String) details.get(name);
-			String arg = (String) argumentNames.get(name);
+			String detail = details.get(name);
+			String arg = argumentNames.get(name);
 			System.out.print("    " + fullName);
 			if (!isFlag(name)) {
 				System.out.print(" <" + getArgumentName(name) + ">");
@@ -317,39 +303,13 @@ public class ArgumentParser {
 		}
 	}
 
-	public void version() {
-	    String shome = System.getProperty("swift.home","unknown version, can't determine SWIFT_HOME");
-		File file = new File(shome+"/libexec/version.txt");
-		FileInputStream fis = null;
-		BufferedInputStream bis = null;
-		DataInputStream dis = null;
-		try {
-		    fis = new FileInputStream(file);
-		    bis = new BufferedInputStream(fis);
-		    dis = new DataInputStream(bis);
-		    while (dis.available() != 0) {
-			System.out.println(dis.readLine());
-		    }
-		    fis.close();
-		    bis.close();
-		    dis.close();
-
-		} catch (FileNotFoundException e) {
-		    e.printStackTrace();
-		} catch (IOException e) {
-		    e.printStackTrace();
-   
-		}
-
-			System.out.println();
-	}
 	public void setArguments(boolean args) {
 		if (args) {
-			arguments = new ArrayList();
+			arguments = new ArrayList<String>();
 		}
 		else {
 			arguments = null;
 		}
 	}
-	}
+}
 
