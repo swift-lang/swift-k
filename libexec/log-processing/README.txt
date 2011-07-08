@@ -1,10 +1,8 @@
-
 Log Processing
 ==============
 
 To properly generate log plots, you must enable VDL/Karajan logging.
 TODO:How?
-
 
 You should check the scripts that you intend to use to determine
 what log lines they require and ensure that you are generating
@@ -21,13 +19,18 @@ TODO: Does it work for coasters-based runs only?
 Normalize event times in the log to the run start time
 ------------------------------------------------------
 
+* Convert timestamps in the log from iso to seconds format
+
+------------------------------------------
+./iso-to-secs < original.log > swift-run.log
+------------------------------------------
+
+
 * Generate the log, assuming the log is titled +swift-run.log+
 
 ------------------------------------------
 ./normalize-log.pl file.contains.start.time swift-run.log > swift-run.norm
 ------------------------------------------
-TODO:In what format does the start time be in 'file.contains.start.time'
-
 
 Make a basic load plot from Coasters Cpu log lines
 --------------------------------------------------
@@ -43,7 +46,7 @@ Make a basic load plot from Coasters Cpu log lines
 ------------------------------------------
 swift_plotter.zsh -s load.cfg load.eps load.data
 ------------------------------------------
-Note: Th load.cfg is available from swift/libexec/log-processing/
+Note: The load.cfg is available from swift/libexec/log-processing/
 
 
 Make a basic job completion plot from Coasters Cpu log lines
@@ -56,6 +59,7 @@ Make a basic job completion plot from Coasters Cpu log lines
 ------------------------------------------
 ./cpu-job-completed.pl < swift-run.norm > completed.data
 ------------------------------------------
+TODO: This file: cpu-job-completed seems to be missing
 
 . Plot with the JFreeChart-based plotter in usertools/plotter:
 +
@@ -94,7 +98,7 @@ Make a job runtime distribution plot from Coasters Cpu log lines
 . Put the job runtimes into 1-second buckets:
 +
 ------------------------------------------
-./ buckets.pl 1 times.data > buckets.data
+./buckets.pl 1 times.data > buckets.data
 ------------------------------------------
 
 . Plot with the JFreeChart-based plotter in usertools/plotter:
