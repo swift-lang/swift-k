@@ -135,6 +135,10 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	protected void addToSorted(WeightedHost wh) {
 		sorted.add(wh);
 	}
+	
+	protected WeightedHostSet getWeightedHostSet() {
+	    return sorted;
+	}
 
 	protected synchronized void factorScore(WeightedHost wh, double factor) {
 		double score = wh.getScore();

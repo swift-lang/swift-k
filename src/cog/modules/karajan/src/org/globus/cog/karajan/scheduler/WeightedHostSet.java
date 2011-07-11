@@ -66,6 +66,13 @@ public class WeightedHostSet {
 		wh.changeLoad(dl);
 		checkOverloaded(wh);
 	}
+	
+	public void changeThrottleOverride(WeightedHost wh, int throttleOverride) {
+	    synchronized(scores) {
+	        wh.setThrottleOverride(throttleOverride);
+	        checkOverloaded(wh);
+	    }
+	}
 
 	public double remove(WeightedHost wh) {
 		scores.remove(wh);
