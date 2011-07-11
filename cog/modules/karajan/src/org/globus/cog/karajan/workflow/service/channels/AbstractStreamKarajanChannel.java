@@ -81,7 +81,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	protected synchronized void handleChannelException(Exception e) {
 		logger.info("Channel config: " + getChannelContext().getConfiguration());
 		ChannelManager.getManager().handleChannelException(this, e);
-		getSender(this).purge(this, new NullChannel(true));
+		close();
 	}
 
 	protected void configure() throws Exception {
@@ -98,7 +98,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		logger.info("Channel configured");
 	}
 
-	@SuppressWarnings("hiding")
 	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
 		getSender(this).enqueue(tag, flags, data, this, cb);
 	}
@@ -324,7 +323,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	protected static class Multiplexer extends Thread {
-		@SuppressWarnings("hiding")
 		public static final Logger logger = Logger.getLogger(Multiplexer.class);
 
 		private Set<KarajanChannel> channels;

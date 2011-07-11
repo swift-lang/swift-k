@@ -16,7 +16,6 @@ import java.util.TimerTask;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.UserContext;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
@@ -55,10 +54,6 @@ public class MetaChannel extends AbstractKarajanChannel {
 
 	public void unregisterHandler(int tag) {
 		current.unregisterHandler(tag);
-	}
-
-	public UserContext getUserContext() {
-		return current.getUserContext();
 	}
 
 	public synchronized void bind(KarajanChannel channel) throws ChannelException {

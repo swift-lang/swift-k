@@ -20,15 +20,19 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.NoSuchHandlerException;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.Service;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
+import org.globus.cog.karajan.workflow.service.UserContext;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private static final Logger logger = Logger.getLogger(AbstractKarajanChannel.class);
-	public static final int DEFAULT_HEARTBEAT_INTERVAL = 2 * 60; // seconds
+	public static final int DEFAULT_HEARTBEAT_INTERVAL = 30; // seconds
+	// some random spread to avoid sending all heartbeats at once
+	public static final int DEFAULT_HBI_INITIAL_SPREAD = 10;
+	public static final int DEFAULT_HBI_SPREAD = 10;
 
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
@@ -51,7 +55,6 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	protected void configureHeartBeat() {
-		TimerTask heartBeatTask;
 		Entry config = context.getConfiguration();
 		int heartBeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 		if (config != null && config.hasOption(RemoteConfiguration.HEARTBEAT)) {
@@ -60,9 +63,11 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			}
 		}
 		heartBeatInterval *= 1000;
-		if (!isOffline() && isClient()) {
-			heartBeatTask = new HeartBeatTask(this);
-			context.getTimer().schedule(heartBeatTask, heartBeatInterval, heartBeatInterval);
+		
+		boolean controlHeartbeats = isClient() == clientControlsHeartbeats();
+		
+		if (!isOffline() && controlHeartbeats) {
+		    scheduleHeartbeats(heartBeatInterval);
 		}
 		else {
 			if (logger.isInfoEnabled()) {
@@ -80,12 +85,29 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 				}
 			}
 		}
-		if (!isOffline() && !isClient()) {
-			int mult = 2;
-			heartBeatTask = new HeartBeatCheckTask(this, heartBeatInterval, mult);
-			context.getTimer().schedule(heartBeatTask, mult * heartBeatInterval,
-					mult * heartBeatInterval);
+		if (!isOffline() && !controlHeartbeats) {
+			scheduleHeartbeatCheck(heartBeatInterval);
 		}
+	}
+	
+	public void scheduleHeartbeats(int heartBeatInterval) {
+	    TimerTask heartBeatTask;
+	    heartBeatTask = new HeartBeatTask(this);
+	    context.getTimer().schedule(heartBeatTask, 
+        heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_INITIAL_SPREAD * 1000), 
+        heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_SPREAD * 1000));
+	}
+	
+	public void scheduleHeartbeatCheck(int heartBeatInterval) {
+	    TimerTask heartBeatTask;
+	    int mult = 2;
+	    heartBeatTask = new HeartBeatCheckTask(this, heartBeatInterval, mult);
+        context.getTimer().schedule(heartBeatTask, mult * heartBeatInterval,
+        		mult * heartBeatInterval);
+	}
+	
+	protected boolean clientControlsHeartbeats() {
+	    return true;
 	}
 
 	public void registerCommand(Command cmd) throws ProtocolException {
@@ -176,6 +198,10 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public ChannelContext getChannelContext() {
 		return context;
+	}
+	
+	public final UserContext getUserContext() {
+	    return context.getUserContext();
 	}
 
 	public void setChannelContext(ChannelContext context) {

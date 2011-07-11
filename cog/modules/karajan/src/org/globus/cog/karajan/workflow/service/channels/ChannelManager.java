@@ -33,7 +33,7 @@ public class ChannelManager {
 	private RemoteConfiguration config;
 	private Service localService;
 	private RequestManager clientRequestManager;
-
+	
 	public synchronized static ChannelManager getManager() {
 		if (manager == null) {
 			manager = new ChannelManager();
@@ -64,7 +64,7 @@ public class ChannelManager {
 		}
 		return channel;
 	}
-
+	
 	private MetaChannel getClientChannel(String host, GSSCredential cred, RequestManager rm)
 			throws ChannelException {
 		try {
@@ -270,23 +270,20 @@ public class ChannelManager {
 		ChannelContext ctx = channel.getChannelContext();
 		RemoteConfiguration.Entry config = ctx.getConfiguration();
 		try {
-			if (config != null) {
-				if (config.hasOption(RemoteConfiguration.RECONNECT)) {
-					buffer(channel);
-					channel.close();
-					asyncReconnect(channel, e);
-				}
-				else {
-					shutdownChannel(channel);
-				}
+			if (config != null && config.hasOption(RemoteConfiguration.RECONNECT)) {
+				buffer(channel);
+				channel.close();
+				asyncReconnect(channel, e);
 			}
 			else {
+				channel.close();
 				shutdownChannel(channel);
 			}
 		}
 		catch (Exception e2) {
-			logger.warn("Failed to shut down channel", e2);
+			logger.info("Failed to shut down channel", e2);
 		}
+		ctx.channelShutDown(e);
 		logger.info("Channel exception handled");
 	}
 
@@ -363,17 +360,23 @@ public class ChannelManager {
 	public void unregisterChannel(KarajanChannel channel) throws ChannelException {
 		unregisterChannel(getMetaChannel(channel));
 	}
-
+	
 	public void removeChannel(ChannelContext ctx) throws ChannelException {
+	    removeChannel(ctx, true);
+	}
+
+	public void removeChannel(ChannelContext ctx, boolean unregister) throws ChannelException {
 		if (ctx == null) {
 			throw new NullPointerException("Null context");
 		}
-		unregisterChannel(getMetaChannel(ctx));
+		if (unregister) {
+			unregisterChannel(getMetaChannel(ctx));
+		}
 		synchronized (channels) {
 			channels.remove(new HostCredentialPair("id://" + ctx.getChannelID(), ctx.getUserContext().getCredential()));
 		}
 	}
-
+	
 	protected void unregisterChannel(MetaChannel channel) {
 		try {
 			synchronized (channel) {
@@ -391,14 +394,14 @@ public class ChannelManager {
 						else {
 							channel.poll(300);
 						}
-						channel.bind(new NullChannel());
+						channel.bind(new NullChannel(true));
 					}
 					else {
-						channel.bind(new NullChannel());
+						channel.bind(new NullChannel(true));
 					}
 				}
 				else {
-					channel.bind(new NullChannel());
+					channel.bind(new NullChannel(true));
 				}
 			}
 		}

@@ -35,7 +35,6 @@ public class GSSChannel extends AbstractTCPChannel {
 
 	private GssSocket socket;
 	private String peerId;
-	private UserContext uc;
 	private boolean shuttingDown;
 	private Exception startException;
 	private int id;
@@ -108,7 +107,7 @@ public class GSSChannel extends AbstractTCPChannel {
 	protected void initializeConnection() {
 		try {
 			if (socket.getContext().isEstablished()) {
-				uc = getChannelContext().newUserContext(socket.getContext().getSrcName());
+				UserContext uc = getChannelContext().newUserContext(socket.getContext().getSrcName());
 				// TODO Credentials should be associated with each
 				// individual instance
 
@@ -160,10 +159,6 @@ public class GSSChannel extends AbstractTCPChannel {
 
 	public String getPeerId() {
 		return peerId;
-	}
-
-	public UserContext getUserContext() {
-		return uc;
 	}
 
 	public String toString() {

@@ -33,10 +33,6 @@ public class NullChannel extends AbstractKarajanChannel {
 		}
 	}
 
-	public UserContext getUserContext() {
-		return null;
-	}
-
 	public boolean isOffline() {
 		return true;
 	}

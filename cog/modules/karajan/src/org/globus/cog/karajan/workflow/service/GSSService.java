@@ -112,6 +112,10 @@ public class GSSService extends BaseServer implements Service {
 			logger.warn("Could not start connection handler", e);
 		}
 	}
+	
+	protected RequestManager getRequestManager() {
+		return requestManager;
+	}
 
 	public URI getContact() {
 		return contact;
