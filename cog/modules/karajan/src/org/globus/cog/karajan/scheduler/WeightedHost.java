@@ -29,6 +29,7 @@ public class WeightedHost implements Comparable<WeightedHost> {
 	private float jobThrottle;
 	private long lastUsed;
 	private double delayBase;
+	private int throttleOverride = -1;
 
 	public WeightedHost(BoundContact contact, float jobThrottle) {
 		this(contact, 0.0, jobThrottle);
@@ -187,10 +188,19 @@ public class WeightedHost implements Comparable<WeightedHost> {
 	}
 
 	public double maxLoad() {
-		return jobThrottle * tscore + 1;
+	    if (throttleOverride >= 0) {
+	        return throttleOverride;
+	    }
+	    else {
+	    	return jobThrottle * tscore + 1;
+	    }
 	}
 
 	public void notifyUsed() {
 		lastUsed = System.currentTimeMillis();
+	}
+	
+	public void setThrottleOverride(int throttleOverride) {
+	    this.throttleOverride = throttleOverride;
 	}
 }

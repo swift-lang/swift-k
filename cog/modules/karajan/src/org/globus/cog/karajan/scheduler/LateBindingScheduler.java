@@ -66,13 +66,14 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	private boolean done, started;
 	private int running;
 
-	protected final Map executionHandlers;
+	protected final Map<String, TaskHandler> executionHandlers;
 
 	private TaskHandler transferHandler;
 
 	private TaskHandler fileOperationHandler;
 
-	private final Map handlers, taskContacts;
+	private final Map<Task, TaskHandler> handlers;
+	private final Map<Task, Contact[]> taskContacts;
 
 	private int jobsPerCPU, maxTransfers, currentTransfers, sshInitialRate, maxFileOperations,
 			currentFileOperations, currentJobs;
@@ -83,13 +84,13 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	public LateBindingScheduler() {
 		virtualContacts = Collections.synchronizedMap(new HashMap<Contact, BoundContact>());
-		executionHandlers = new HashMap();
-		taskContacts = new HashMap();
+		executionHandlers = new HashMap<String, TaskHandler>();
+		taskContacts = new HashMap<Task, Contact[]>();
 		jobsPerCPU = DEFAULT_JOBS_PER_CPU;
 		maxTransfers = DEFAULT_MAX_TRANSFERS;
 		maxFileOperations = DEFAULT_MAX_FILE_OPERATIONS;
 		sshInitialRate = DEFAULT_SSH_INITIAL_RATE;
-		handlers = new HashMap();
+		handlers = new HashMap<Task, TaskHandler>();
 		submitQueue = new InstanceSubmitQueue();
 		addFailureHandler(new SSHThrottlingFailureHandler());
 	}
@@ -341,10 +342,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			Object constraints = getConstraints(t);
 			if (constraints != null) {
 				contacts = (Contact[]) constraints;
-				if (contacts == null) {
-					contacts = new Contact[] { this.getNextContact(t) };
-					contactTran.add(contacts[0]);
-				}
 			}
 			else {
 				contacts = new Contact[t.getRequiredServices()];
@@ -389,9 +386,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			logger.debug("No host specified");
 		}
 		catch (NoFreeResourceException e) {
-			Iterator i = contactTran.iterator();
-			while (i.hasNext()) {
-				releaseContact((Contact) i.next());
+			for (Contact c : contactTran) {
+				releaseContact(c);
 			}
 			throw e;
 		}
@@ -452,7 +448,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			throws TaskSubmissionException, InvalidProviderException, ProviderMethodException {
 		if (task.getType() == Task.JOB_SUBMISSION) {
 			String provider = services[0].getProvider();
-			TaskHandler handler = (TaskHandler) executionHandlers.get(provider);
+			TaskHandler handler = executionHandlers.get(provider);
 			if (handler == null) {
 				handler = AbstractionFactory.newExecutionTaskHandler(provider);
 				executionHandlers.put(provider, handler);
@@ -545,7 +541,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	protected TaskHandler getHandler(Task t) {
 		synchronized(handlers) {
-			return (TaskHandler) handlers.get(t);
+			return handlers.get(t);
 		}
 	}
 
@@ -650,10 +646,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
     							t.printStackTrace();
     						}
     					}
-    					finally {
-    						removeHandler(task);
-    						notify();
-    					}
 					}
 				}
 				if (code == Status.FAILED) {
@@ -665,7 +657,11 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 						return;
 					}
 				}
-				removeConstraints(task);
+				synchronized(this) {
+					removeHandler(task);
+					removeConstraints(task);
+					notify();
+                }
 			}
 		}
 		catch (Exception ee) {
@@ -719,10 +715,11 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected Contact[] getContacts(Task t) {
-		return (Contact[]) taskContacts.get(t);
+		return taskContacts.get(t);
 	}
 
 	protected synchronized void raiseTasksFinished() {
 		this.tasksFinished = true;
+		notify();
 	}
 }
