@@ -495,7 +495,6 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
             transferCompleted();
         }
         catch (Exception e) {
-            e.printStackTrace();
             logger.debug("Exception in transfer", e);
             transferFailed(e);
         }
