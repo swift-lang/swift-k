@@ -13,12 +13,15 @@ import java.net.URI;
 import java.util.Map;
 
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
+import org.globus.cog.abstraction.coaster.service.ResourceUpdateCommand;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public class PassiveQueueProcessor extends BlockQueueProcessor {
     private final URI callbackURI;
+    
+    private int currentWorkers;
 
     public PassiveQueueProcessor(Settings settings, URI callbackURI) {
         super(settings);
@@ -36,6 +39,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
             RemoteLogCommand cmd = new RemoteLogCommand(RemoteLogCommand.Type.STDERR,
                 "Passive queue processor initialized. Callback URI is " + callbackURI);
             cmd.executeAsync(channel, null);
+            ChannelManager.getManager().releaseChannel(channel);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -51,18 +55,60 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
     protected void removeIdleBlocks() {
         // no removing of idle blocks here
     }
+    
+    @Override
+    public String registrationReceived(String blockID, String workerID, String workerHostname,
+            ChannelContext channelContext, Map<String, String> options) {
+        
+        String r = getBlock(blockID).workerStarted(workerID, workerHostname, channelContext);
+        
+        ResourceUpdateCommand wsc;
+        synchronized(this) {
+            currentWorkers++;
+            wsc = new ResourceUpdateCommand("job-capacity", 
+                String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
+        }
+        try {
+            KarajanChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
+            wsc.executeAsync(channel);
+            ChannelManager.getManager().releaseChannel(channel);
+        }
+        catch (Exception e) {
+            logger.warn("Failed to send worker status update to client", e);
+        }
+        
+        return r;
+    }
 
     @Override
     protected Block getBlock(String id) {
         Map<String, Block> blocks = getBlocks();
+        Block b;
         synchronized(blocks) {
-            Block b = blocks.get(id);
+            b = blocks.get(id);
             if (b == null) {
                 b = new Block(id, 1, TimeInterval.FOREVER, this);
-                b.setRunning(true);
                 blocks.put(id, b);
             }
-            return b;
+        }
+        return b;
+    }
+
+    @Override
+    public void nodeRemoved(Node node) {
+        ResourceUpdateCommand wsc;
+        synchronized(this) {
+            currentWorkers--;
+            wsc = new ResourceUpdateCommand("job-capacity", 
+                String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
+        }
+        try {
+            KarajanChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
+            wsc.executeAsync(channel);
+            ChannelManager.getManager().releaseChannel(channel);
+        }
+        catch (Exception e) {
+            logger.warn("Failed to send worker status update to client", e);
         }
     }
 }

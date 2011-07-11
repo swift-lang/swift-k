@@ -11,6 +11,8 @@ package org.globus.cog.abstraction.coaster.service.local;
 
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogHandler;
+import org.globus.cog.abstraction.coaster.service.ResourceUpdateCommand;
+import org.globus.cog.abstraction.coaster.service.ResourceUpdateHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.BQPStatusHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
@@ -32,5 +34,6 @@ public class LocalRequestManager extends AbstractRequestManager {
         addHandler(RemoteLogCommand.NAME, RemoteLogHandler.class);
         addHandler("GET", GetFileHandler.class);
         addHandler("PUT", PutFileHandler.class);
+        addHandler(ResourceUpdateCommand.NAME, ResourceUpdateHandler.class);
     }
 }

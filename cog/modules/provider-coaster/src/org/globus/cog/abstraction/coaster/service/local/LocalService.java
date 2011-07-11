@@ -19,6 +19,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
@@ -35,8 +36,10 @@ public class LocalService extends GSSService implements Registering {
     // TODO change back to 300
     public static final long DEFAULT_REGISTRATION_TIMEOUT = 3000 * 1000;
 
-    private Map services;
-    private Map lastHeardOf;
+    private Map<String, String> services;
+    private Map<String, Long> lastHeardOf;
+    
+    private Map<ChannelContext, ServiceTrackerPair> resourceTrackers;
 
     public LocalService() throws IOException {
         super();
@@ -47,8 +50,9 @@ public class LocalService extends GSSService implements Registering {
             logger.debug("Starting local service");
         }
         setAuthorization(new SelfAuthorization());
-        services = new HashMap();
-        lastHeardOf = new HashMap();
+        services = new HashMap<String, String>();
+        lastHeardOf = new HashMap<String, Long>();
+        resourceTrackers = new HashMap<ChannelContext, ServiceTrackerPair>();
         this.accept = true;
         Thread t = new Thread(this);
         t.setName("Local service");
@@ -112,7 +116,7 @@ public class LocalService extends GSSService implements Registering {
                         s.getException());
                 }
             }
-            return (String) services.get(id);
+            return services.get(id);
         }
     }
 
@@ -127,17 +131,18 @@ public class LocalService extends GSSService implements Registering {
 
     public void heardOf(String id) {
         synchronized (lastHeardOf) {
-            lastHeardOf.put(id, new Long(System.currentTimeMillis()));
+            lastHeardOf.put(id, System.currentTimeMillis());
         }
     }
 
     protected long lastHeardOf(String id) {
         synchronized (lastHeardOf) {
-            return ((Long) lastHeardOf.get(id)).longValue();
+            return lastHeardOf.get(id).longValue();
         }
     }
 
-    public String registrationReceived(String id, String url, KarajanChannel channel) {
+    public String registrationReceived(String id, String url, KarajanChannel channel, 
+            Map<String, String> options) {
         if (logger.isDebugEnabled()) {
             logger.debug("Received registration from service " + id + ": " + url);
         }
@@ -179,6 +184,32 @@ public class LocalService extends GSSService implements Registering {
         }
         catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public ServiceTrackerPair getResourceTracker(ChannelContext context) {
+        return resourceTrackers.get(context);
+    }
+
+    public void addResourceTracker(ChannelContext ctx, Service service, 
+            CoasterResourceTracker resourceTracker) {
+        resourceTrackers.put(ctx, new ServiceTrackerPair(service, resourceTracker));
+    }
+
+    public void resourceUpdated(ChannelContext ctx, String name, String value) {
+        ServiceTrackerPair stp = resourceTrackers.get(ctx);
+        if (stp != null) {
+            stp.tracker.resourceUpdated(stp.service, name, value);
+        }
+    }
+    
+    private static class ServiceTrackerPair {
+        public final Service service;
+        public final CoasterResourceTracker tracker;
+        
+        public ServiceTrackerPair(Service service, CoasterResourceTracker tracker) {
+            this.service = service;
+            this.tracker = tracker;
         }
     }
 }

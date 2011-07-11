@@ -9,13 +9,16 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.util.Map;
+
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 
 public interface RegistrationManager {
 
     String registrationReceived(String blockID, String workerID,
                                 String workerHostname,
-                                ChannelContext channelContext);
+                                ChannelContext channelContext,
+                                Map<String, String> options);
 
     String nextId(String id);
 }

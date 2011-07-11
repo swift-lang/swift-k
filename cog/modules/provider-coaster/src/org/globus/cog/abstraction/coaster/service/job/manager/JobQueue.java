@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
@@ -136,11 +137,13 @@ public class JobQueue implements RegistrationManager {
     public String registrationReceived(String blockID,
                                        String workerID,
                                        String workerHostname,
-                                       ChannelContext channelContext) {
+                                       ChannelContext channelContext,
+                                       Map<String, String> options) {
         RegistrationManager manager = ((RegistrationManager) coaster);
         return manager.registrationReceived(blockID, workerID,
                                             workerHostname,
-                                            channelContext);
+                                            channelContext,
+                                            options);
     }
 
     public QueueProcessor getCoasterQueueProcessor() {
