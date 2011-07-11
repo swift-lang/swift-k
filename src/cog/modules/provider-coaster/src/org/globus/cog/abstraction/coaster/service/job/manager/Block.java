@@ -371,10 +371,13 @@ public class Block implements StatusListener, Comparable<Block> {
             }
         }
     }
+    
+    private int seq;
 
     public String nextId() {
-        synchronized (cpus) {
-            int n = cpus.size();
+        synchronized (this) {
+            int n = seq;
+            seq += bqp.getSettings().getJobsPerNode();
             return IDF.format(n);
         }
     }
@@ -498,5 +501,18 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public int compareTo(Block o) {
         return id.compareTo(o.id);
+    }
+
+    public void removeNode(Node node) {
+        synchronized(cpus) {
+            synchronized(scpus) {
+                nodes.remove(node);
+                for (Cpu cpu : node.getCpus()) {
+                    scpus.remove(cpu);
+                    cpus.remove(cpu);
+                }
+            }
+        }
+        bqp.nodeRemoved(node);
     }
 }

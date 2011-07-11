@@ -92,7 +92,6 @@ public class TCPBufferManager {
                     crtSocketBuffSz = MIN_BUFFER_SIZE;
                 }
                 logger.info("Adjusting buffer size to " + crtSocketBuffSz);
-                System.out.println("Adjusting buffer size to " + crtSocketBuffSz);
                 updateBufferSizes();
             }
         }

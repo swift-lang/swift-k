@@ -13,6 +13,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
+import org.globus.cog.abstraction.coaster.service.local.LocalService;
+import org.globus.cog.abstraction.coaster.service.local.CoasterResourceTracker;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
@@ -125,6 +127,19 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         if (!checkConfigured(channel)) {
             ServiceConfigurationCommand scc = new ServiceConfigurationCommand(task);
             scc.execute(channel);
+            
+            Object rt = task.getService(0).getAttribute("resource-tracker");
+            if (rt != null) {
+                if (rt instanceof CoasterResourceTracker) {
+                    LocalService ls = (LocalService) channel.getChannelContext().getService();
+                    ls.addResourceTracker(channel.getChannelContext(), 
+                        task.getService(0), (CoasterResourceTracker) rt);
+                }
+                else {
+                    logger.warn("Invalid resource tracker specified: " + rt.getClass() 
+                        + " does not implement " + CoasterResourceTracker.class);
+                }
+            }
             setConfigured(channel);
         }
     }

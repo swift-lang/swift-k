@@ -10,23 +10,27 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
+import org.globus.cog.karajan.workflow.service.channels.ChannelListener;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
 
-public class Node implements Callback {
+public class Node implements Callback, ChannelListener {
     public static final Logger logger = Logger.getLogger(Node.class);
 
     private final int id;
     private final List<Cpu> cpus;
     private Block block;
     private final ChannelContext channelContext;
+    private KarajanChannel channel;
     private boolean shutdown;
     private final String hostname;
 
@@ -109,5 +113,39 @@ public class Node implements Callback {
     @Override
     public String toString() {
         return "Node [" + hostname + "] " + id;
+    }
+
+    public Collection<Cpu> getCpus() {
+        return cpus;
+    }
+
+    public synchronized KarajanChannel getChannel() throws ChannelException {
+        if (channel == null) {
+            channel = ChannelManager.getManager().reserveChannel(channelContext);
+            ChannelManager.getManager().reserveLongTerm(channel);
+            channel.getChannelContext().addChannelListener(this);
+        }
+        return channel;
+    }
+    
+    public void channelShutDown(Exception e) {
+        if (logger.isInfoEnabled()) {
+            logger.info(this + " lost connection to worker; removing node from block.", e);
+        }
+        for (Cpu cpu : cpus) {
+            cpu.taskFailed("Connection to worker lost", e);
+        }
+        try {
+            // the current breed of workers won't try to re-establish a connection, so
+            // consider the channel lost for good (and lose the reference to it).
+            // even if the workers do re-establish the connection, since the current
+            // strategy is to fail the jobs they were running when the connection was lost,
+            // treating them as entirely new workers should be just peachy 
+            ChannelManager.getManager().removeChannel(channel.getChannelContext());
+        }
+        catch (ChannelException ee) {
+            logger.warn("Failed to remove channel", ee);
+        }
+        getBlock().removeNode(this);
     }
 }

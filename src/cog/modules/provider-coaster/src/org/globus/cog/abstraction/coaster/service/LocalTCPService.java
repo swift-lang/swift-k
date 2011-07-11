@@ -12,14 +12,19 @@ package org.globus.cog.abstraction.coaster.service;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.RequestManager;
+import org.globus.cog.karajan.workflow.service.Service;
+import org.globus.cog.karajan.workflow.service.channels.AbstractKarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
 
 public class LocalTCPService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalTCPService.class);
@@ -45,10 +50,8 @@ public class LocalTCPService extends GSSService implements Registering {
         buffMan = new TCPBufferManager();
     }
 
-    public String registrationReceived(String blockid,
-                                       @SuppressWarnings("hiding") String url,
-                                       KarajanChannel channel)
-    throws ChannelException {
+    public String registrationReceived(String blockid, String url, 
+            KarajanChannel channel, Map<String, String> options) throws ChannelException {
         if (logger.isInfoEnabled()) {
             logger.info("Received registration: blockid = " +
                         blockid + ", url = " + url);
@@ -58,8 +61,7 @@ public class LocalTCPService extends GSSService implements Registering {
         String wid = registrationManager.nextId(blockid);
         cc.getChannelID().setRemoteID(wid);
         ChannelManager.getManager().registerChannel(cc.getChannelID(), channel);
-        registrationManager.registrationReceived(blockid, wid, url,
-                                                 cc);
+        registrationManager.registrationReceived(blockid, wid, url, cc, options);
         return wid;
     }
 
@@ -84,6 +86,34 @@ public class LocalTCPService extends GSSService implements Registering {
         catch (SocketException e) {
             e.printStackTrace();
         }
-        super.handleConnection(buffMan.wrap(socket));
+        try {
+            new WorkerConnectionHandler(this, buffMan.wrap(socket), getRequestManager()).start();
+        }
+        catch (Exception e) {
+            logger.warn("Could not start worker connection", e);
+        }
+    }
+    
+    private static class WorkerConnectionHandler extends ConnectionHandler {
+        public WorkerConnectionHandler(Service service, Socket socket, RequestManager requestManager)
+                throws IOException {
+            super(socket, new WorkerChannel(socket, requestManager, 
+                new ChannelContext(service)), requestManager);
+        }
+    }
+    
+    private static class WorkerChannel extends TCPChannel {
+        public WorkerChannel(Socket socket, RequestManager requestManager,
+                ChannelContext channelContext) throws IOException {
+            super(socket, requestManager, channelContext);
+        }
+
+        @Override
+        protected boolean clientControlsHeartbeats() {
+            // Reverse the heartbeat direction for coaster workers because it makes detection of lost
+            // connections quicker (at least when heartbeats are considered lost if not seen for
+            // x > interval).
+            return false;
+        }
     }
 }

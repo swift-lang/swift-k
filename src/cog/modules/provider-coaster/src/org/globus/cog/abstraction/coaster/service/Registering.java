@@ -9,11 +9,14 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.util.Map;
+
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public interface Registering {
-    String registrationReceived(String id, String url, KarajanChannel channel) throws ChannelException;
+    String registrationReceived(String id, String url, KarajanChannel channel, 
+            Map<String, String> options) throws ChannelException;
 
     void unregister(String id);
 }
