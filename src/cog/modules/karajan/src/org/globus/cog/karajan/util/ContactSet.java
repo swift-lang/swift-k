@@ -9,16 +9,15 @@ package org.globus.cog.karajan.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class ContactSet {
-	public Map<String,BoundContact> contacts;
+	public Map<String, BoundContact> contacts;
 	public List<BoundContact> cl;
 
 	public ContactSet() {
-		contacts = new HashMap();
+		contacts = new HashMap<String, BoundContact>();
 	}
 
 	public void addContact(BoundContact contact) {
@@ -53,14 +52,13 @@ public class ContactSet {
 		return cl.indexOf(contact);
 	}
 
-	public List getContacts() {
+	public List<BoundContact> getContacts() {
 		return cl;
 	}
 
-	public void setContacts(List cl) {
+	public void setContacts(List<BoundContact> cl) {
 		this.cl = cl;
-		for (Iterator i = cl.iterator(); i.hasNext();) {
-			BoundContact contact = (BoundContact) i.next();
+		for (BoundContact contact : cl) {
 			contacts.put(contact.getHost(), contact);
 		}
 	}
