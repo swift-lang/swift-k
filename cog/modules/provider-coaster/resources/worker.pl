@@ -14,6 +14,7 @@ use IO::Socket;
 use File::Basename;
 use File::Path;
 use File::Copy;
+use Getopt::Std;
 use Cwd;
 use POSIX ":sys_wait_h";
 use strict;
@@ -109,7 +110,7 @@ use constant IOBLOCKSZ => 8;
 # 60 seconds by default. Note that since there is no configuration handshake
 # this would have to match the default interval in the service in order to avoid
 # "lost heartbeats".
-use constant HEARTBEAT_INTERVAL => 2 * 60;
+use constant HEARTBEAT_INTERVAL => 30;
 
 # If true, enable a profile result that is written to the log
 my $PROFILE = 0;
@@ -138,13 +139,24 @@ sub wlog {
 }
 
 # Command-line arguments:
+my %OPTS=();
+getopts("w:h", \%OPTS);
+
+if (defined $OPTS{"h"}) {
+	print "worker.pl <serviceURL> <blockID> <logdir> [-w <maxwalltime>]\n";
+	exit(1);
+}
+
 my $URISTR=$ARGV[0];
 my $BLOCKID=$ARGV[1];
 my $LOGDIR=$ARGV[2];
 
+my $MAXWALLTIME = $OPTS{"w"};
+
 defined $URISTR  || die "Not given: URI\n";
 defined $BLOCKID || die "Not given: BLOCKID\n";
 defined $LOGDIR  || die "Not given: LOGDIR\n";
+defined $MAXWALLTIME || ($MAXWALLTIME = "-1");
 
 # REQUESTS holds a map of incoming requests
 my %REQUESTS = ();
@@ -287,7 +299,7 @@ sub reconnect() {
 			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);
 			# myhost is used by the CoasterService for MPI tasks
-			queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost);
+			queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost, "maxwalltime = $MAXWALLTIME");
 			last;
 		}
 		else {
@@ -778,8 +790,8 @@ sub heartbeatCBDataIn {
 
 	if ($timeout) {
 		if (time() - $LAST_HEARTBEAT > 2 * HEARTBEAT_INTERVAL) {
-			wlog WARN, "No heartbeat replies in a while. Dying.\n";
-			die "No response to heartbeat\n";
+			wlog WARN, "No heartbeats received in a while. Dying.\n";
+			die "Lost heartbeat\n";
 		}
 	}
 	elsif ($err) {
@@ -829,6 +841,7 @@ sub shutdownw {
 
 sub heartbeat {
 	my ($tag, $timeout, $msgs) = @_;
+	$LAST_HEARTBEAT = time();
 	sendReply($tag, ("OK"));
 }
 
