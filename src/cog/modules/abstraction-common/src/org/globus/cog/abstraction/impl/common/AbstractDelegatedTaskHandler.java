@@ -9,6 +9,8 @@
  */
 package org.globus.cog.abstraction.impl.common;
 
+import java.util.Map;
+
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
@@ -18,6 +20,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 public abstract class AbstractDelegatedTaskHandler implements
         DelegatedTaskHandler {
     private Task task;
+    private Map<String, Object> attributes;
     
     public void cancel() throws InvalidSecurityContextException,
             TaskSubmissionException {
@@ -52,5 +55,10 @@ public abstract class AbstractDelegatedTaskHandler implements
         newStatus.setMessage(message);
         newStatus.setException(exception);
         getTask().setStatus(newStatus);
+    }
+
+    @Override
+    public void setAttributes(Map<String, Object> attributes) {
+    	this.attributes = attributes;
     }
 }

@@ -6,7 +6,12 @@
 
 package org.globus.cog.abstraction.interfaces;
 
-import org.globus.cog.abstraction.impl.common.task.*;
+import java.util.Map;
+
+import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
+import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
+import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 
 /**
  * Implements the semantics to execute the given {@link Task} in a separate
@@ -88,4 +93,6 @@ public interface DelegatedTaskHandler {
 
     public void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException;
+    
+    public void setAttributes(Map<String, Object> attributes);
 }
