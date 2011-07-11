@@ -25,7 +25,6 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.ServiceContext;
 import org.globus.cog.karajan.workflow.service.UDPService;
-import org.globus.cog.karajan.workflow.service.UserContext;
 
 public class UDPChannel extends AbstractKarajanChannel {
 	public static final Logger logger = Logger.getLogger(UDPChannel.class);
@@ -36,10 +35,10 @@ public class UDPChannel extends AbstractKarajanChannel {
 	private InetAddress addr;
 	private int port;
 	private DatagramSocket ds;
-	private WeakReference sndbuf;
+	private WeakReference<byte[]> sndbuf;
 	private ServiceContext sc;
 	private UDPService service;
-	private Map tagSeq;
+	private Map<Integer, Integer> tagSeq;
 	private boolean started;
 
 	public UDPChannel(DatagramSocket ds, ChannelContext context, RequestManager rm,
@@ -50,16 +49,12 @@ public class UDPChannel extends AbstractKarajanChannel {
 		this.addr = addr.getAddress();
 		this.port = addr.getPort() + 1;
 		this.contact = service.getContact();
-		tagSeq = new HashMap();
+		tagSeq = new HashMap<Integer, Integer>();
 	}
 
 	public UDPChannel(URI contact, ChannelContext context, RequestManager rm) {
 		super(rm, context, true);
 		this.contact = contact;
-	}
-
-	public UserContext getUserContext() {
-		return null;
 	}
 
 	public String toString() {
@@ -96,14 +91,14 @@ public class UDPChannel extends AbstractKarajanChannel {
 			byte[] buf = null;
 			synchronized (this) {
 				if (sndbuf != null) {
-					buf = (byte[]) sndbuf.get();
+					buf = sndbuf.get();
 					if (buf != null && buf.length < bytes.length + HDRLEN) {
 						buf = null;
 					}
 				}
 				if (buf == null) {
 					buf = new byte[bytes.length + HDRLEN];
-					sndbuf = new WeakReference(buf);
+					sndbuf = new WeakReference<byte[]>(buf);
 				}
 			}
 			// this isn't optimal
@@ -126,18 +121,17 @@ public class UDPChannel extends AbstractKarajanChannel {
 	private static final Integer ZERO = new Integer(0);
 	
 	private synchronized int getSeq(int tag, int flags) {
-		Integer itag = new Integer(tag);
-		Integer seq = (Integer) tagSeq.get(itag);
+		Integer seq = tagSeq.get(tag);
 		if (seq == null) {
 			seq = ZERO; 
 		}
 		if ((flags & FINAL_FLAG) != 0) {
-			tagSeq.remove(itag);
+			tagSeq.remove(tag);
 		}
 		else {
-			tagSeq.put(itag, new Integer(seq.intValue() + 1));
+			tagSeq.put(tag, seq.intValue() + 1);
 		}
-		return seq.intValue();
+		return seq;
 	}
 
 	private int checksum(byte[] buf, int offset, int len) {

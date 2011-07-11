@@ -16,24 +16,19 @@ import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
 
 public class StreamChannel extends AbstractStreamKarajanChannel {
-	private boolean started;
-	private UserContext uc;
-	
+	private boolean started;	
 
 	public StreamChannel(InputStream is, OutputStream os, RequestManager requestManager,
 			ChannelContext channelContext) {
 		super(requestManager, channelContext, false);
 		setInputStream(is);
 		setOutputStream(os);
-		uc = new UserContext(null, channelContext);
+		channelContext.setUserContext(new UserContext(null, channelContext));
 	}
 
 	protected void reconnect() throws ChannelException {
 	}
 
-	public UserContext getUserContext() {
-		return uc;
-	}
 
 	public boolean isOffline() {
 		return false;

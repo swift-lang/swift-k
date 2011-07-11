@@ -46,6 +46,14 @@ public class ConnectionHandler {
 		}
 	}
 	
+	protected ConnectionHandler(Socket socket, KarajanChannel channel, 
+			RequestManager requestManager) throws IOException {
+		assert requestManager != null;
+		this.requestManager = requestManager;
+        this.socket = socket;
+        this.channel = channel;
+	}
+	
 	public ConnectionHandler(Service service, InputStream is, OutputStream os, RequestManager requestManager) {
 	    this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
 	    channel = new StreamChannel(is, os, this.requestManager, new ChannelContext(service));

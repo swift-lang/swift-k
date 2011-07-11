@@ -27,14 +27,13 @@ import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 public class AbstractPipedChannel extends AbstractKarajanChannel {
 	public static final Logger logger = Logger.getLogger(AbstractPipedChannel.class);
 
-	private UserContext uc;
 	private AbstractPipedChannel s;
 	private final Sender sender;
 
 	public AbstractPipedChannel(RequestManager requestManager, ChannelContext channelContext,
 			boolean client) {
 		super(requestManager, channelContext, client);
-		uc = new UserContext(null, channelContext);
+		channelContext.setUserContext(new UserContext(null, channelContext));
 		channelContext.setConfiguration(new Entry("localhost", "KEEPALIVE(-1)"));
 		sender = new Sender();
 	}
@@ -45,10 +44,6 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 
 	protected void configureHeartBeat() {
 		// no heart beat for these
-	}
-
-	public UserContext getUserContext() {
-		return uc;
 	}
 
 	public boolean isOffline() {

@@ -10,6 +10,8 @@
 package org.globus.cog.karajan.workflow.service.channels;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 
@@ -45,6 +47,8 @@ public class ChannelContext {
 	// private ChannelAttributes attr;
 	private int reconnectionAttempts;
 	private long lastHeartBeat;
+	
+	private List<ChannelListener> listeners;
 
 	public ChannelContext() {
 		this(new ServiceContext(null));
@@ -70,6 +74,10 @@ public class ChannelContext {
 	
 	public synchronized UserContext newUserContext(GSSName name) throws ChannelException {
 		return newUserContext(name.toString());
+	}
+	
+	public synchronized void setUserContext(UserContext userContext) {
+		this.userContext = userContext;
 	}
 
 	public synchronized UserContext newUserContext(String name) throws ChannelException {
@@ -237,4 +245,32 @@ public class ChannelContext {
 	public String toString() {
 		return System.identityHashCode(this) + ": " + attributes.toString();
 	}
+	
+	public synchronized void addChannelListener(ChannelListener l) {
+	    if (listeners == null) {
+	        listeners = new LinkedList<ChannelListener>();
+	    }
+	    listeners.add(l);
+	}
+	
+	public synchronized void removeChannelListener(ChannelListener l) {
+	    if (listeners != null) {
+	        listeners.remove(l);
+	    }
+	}
+
+	public synchronized void channelShutDown(Exception e) {
+	    if (listeners != null) {
+	        for (ChannelListener l : listeners) {
+	            try {
+	            	l.channelShutDown(e);
+	            }
+	            catch (Exception ee) {
+	                logger.warn("Failed to notify listener of channel shutdown", ee);
+	            }
+	        }
+	    }
+	}
+	
+	
 }

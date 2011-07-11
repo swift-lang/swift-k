@@ -34,7 +34,7 @@ public abstract class AbstractRequestManager implements RequestManager {
 		Class handlerClass = (Class) handlers.get(cmd);
 		RequestHandler handler;
 		if (handlerClass == null) {
-			logger.warn("Unknown handler: " + cmd + ". Available handlers: " + handlers);
+			logger.warn(getClass().getSimpleName() + ": unknown handler: " + cmd + ". Available handlers: " + handlers);
 			handler = new UnknownCommandHandler();
 		}
 		else {

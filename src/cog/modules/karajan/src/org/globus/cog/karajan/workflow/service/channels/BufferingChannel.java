@@ -11,10 +11,7 @@ package org.globus.cog.karajan.workflow.service.channels;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
-import org.globus.cog.karajan.workflow.service.UserContext;
 
 /**
  * Used for buffering of commands with a polling configuration. Which
@@ -22,19 +19,15 @@ import org.globus.cog.karajan.workflow.service.UserContext;
  * be considered from the time of the actual send
  */
 public class BufferingChannel extends AbstractKarajanChannel implements Purgeable {
-	private List buffer;
+	private List<DataEntry> buffer;
 
 	public BufferingChannel(ChannelContext channelContext) {
 		super(null, channelContext, false);
-		buffer = new ArrayList();
+		buffer = new ArrayList<DataEntry>();
 	}
 
 	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
 		buffer.add(new DataEntry(tag, flags, data));
-	}
-
-	public UserContext getUserContext() {
-		return null;
 	}
 
 	public static class DataEntry {
@@ -61,9 +54,7 @@ public class BufferingChannel extends AbstractKarajanChannel implements Purgeabl
 	}
 	
 	public void purge(KarajanChannel channel) throws IOException {
-		Iterator i = buffer.iterator();
-		while (i.hasNext()) {
-			DataEntry de = (DataEntry) i.next();
+	    for (DataEntry de : buffer) {
 			channel.sendTaggedData(de.getTag(), de.getFlags(), de.getData());
 		}
 		buffer.clear();
