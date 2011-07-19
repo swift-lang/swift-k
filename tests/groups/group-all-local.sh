@@ -9,10 +9,10 @@ GROUPLIST=( $TESTDIR/language/working \
             # $TESTDIR/cdm/star
             $TESTDIR/language-behaviour/arrays \
             $TESTDIR/language-behaviour/broken \
-	    	$TESTDIR/language-behaviour/compounds \
+	    $TESTDIR/language-behaviour/compounds \
             $TESTDIR/language-behaviour/control_structures \
 	    $TESTDIR/language-behaviour/IO \
-	    $TESTDIR/language-behaviour/datatypes \
+	    $TESTDIR/language-behaviour/iterators \
 	    $TESTDIR/language-behaviour/logic \
 	    $TESTDIR/language-behaviour/mappers \
 	    $TESTDIR/language-behaviour/math \
@@ -20,8 +20,7 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/language-behaviour/procedures \
             $TESTDIR/language-behaviour/strings \
 	    $TESTDIR/language-behaviour/variables \
-	    $TESTDIR/language-behaviour/cleanup \
-	    # $TESTDIR/documentation/ \
+	    $TESTDIR/documentation/tutorial \
 	    # $TESTDIR/cdm/ps/pinned
 	    # $TESTDIR/site/intrepid
           )

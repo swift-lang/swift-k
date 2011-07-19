@@ -1,0 +1,13 @@
+Site Configuration Guide
+========================
+
+:toc:
+:icons:
+:website: http://www.ci.uchicago.edu/swift/guides/siteguide.php
+:numbered:
+
+include::pads[]
+
+include::beagle[]
+
+include::futuregrid[]
