@@ -1,0 +1,1 @@
+../../../examples/tutorial/fixed_array_mapper.swift

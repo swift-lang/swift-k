@@ -52,9 +52,8 @@ This section will introduce writing a custom mapper so that Swift is
 able to access data files laid out in application-specific ways.
 
 An application-specific mapper must take the form of a Java class that
-implements the Mapper
-<http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/Mapper.html>
-interface.
+implements the http://www.ci.uchicago.edu/swift/javadoc/vdsk/org/griphyn/vdl/mapping/Mapper.html[Mapper
+interface].
 
 Usually you don't need to implement this interface directly, because
 Swift provides a number of more concrete classes with some functionality
@@ -87,7 +86,7 @@ helper methods that are different from the above mapper methods.
 Examples of mappers which use this class are:
 http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.simple_mapper[simple_mapper],
 http://www.ci.uchicago.edu/swift/guides/userguide.php#mapper.filesys_mapper[filesys_mapper],
-and the (undocumented) StructuredRegularExpressionMapper.
+and the StructuredRegularExpressionMapper.
 
 In general, to write a mapper, choose either the AbstractMapper or the
 AbstractFileMapper and extend those. If your mapper will generally
@@ -119,7 +118,7 @@ like this:
  
 ----
 type file;  
-file f <my_first_mapper;>;  
+file f <my_first_mapper>;  
 ----
 
 First we must choose a base class - AbstractMapper or
@@ -135,42 +134,12 @@ Here is the code implementing this mapper. Put this in your source
 vdsk directory, make a directory src/tutorial/|and put this file in
 src/tutorial/MyFirstMapper.java.
 
- 
+.MyFirstMapper.java
+******************* 
 ----
-package tutorial;  
-  
-import java.util.Arrays;  
-import java.util.Collection;  
-import java.util.Collections;  
-  
-import org.griphyn.vdl.mapping.AbsFile;  
-import org.griphyn.vdl.mapping.AbstractMapper;  
-import org.griphyn.vdl.mapping.Path;  
-import org.griphyn.vdl.mapping.PhysicalFormat;  
-  
-public class MyFirstMapper extends AbstractMapper {  
-  
-  AbsFile myfile = new AbsFile("myfile.txt");  
-  
-  public boolean isStatic() {  
-    return false;  
-  }  
-  
-  public Collection existing() {  
-    if (myfile.exists())  
-      return Arrays.asList(new Path[] {Path.EMPTY_PATH});  
-    else  
-      return Collections.EMPTY_LIST;  
-  }  
-  
-  public PhysicalFormat map(Path p) {  
-    if(p.equals(Path.EMPTY_PATH))  
-      return myfile;  
-    else  
-      return null;  
-  }  
-}  
+include::../../examples/tutorial/MyFirstMapper.java[]
 ----
+*******************
 
 Now we need to inform the Swift engine about the existence of this
 mapper. We do that by editing the MapperFactory class definition, in
@@ -191,20 +160,12 @@ Now rebuild Swift using the "ant redist" target.
 This new Swift build will be aware of your new mapper. We can test it
 out with a hello world program:
 
- 
-----
-type messagefile;  
-  
-(messagefile t) greeting() {  
-    app {  
-        echo "hello" stdout=@filename(t);  
-    }  
-}  
-  
-messagefile outfile <my_first_mapper;>;  
-  
-outfile = greeting();  
-----
+.my_first_mapper.swift
+********************** 
+-----
+include::../../examples/tutorial/my_first_mapper.swift[]
+-----
+**********************
 
 Run this program, and hopefully you will find the "hello" string has
 been output into the hard coded output file myfile.txt:
@@ -231,13 +192,14 @@ problem so that Swift can continue with the workflow.
 
 First we have the program in working form, restart.swift.
 
- 
+.restart.swift
+************** 
 ----
-include::../../examples/restart.swift[]
+include::../../examples/tutorial/restart.swift[]
 ----
+**************
 
 We must define some transformation catalog entries:
-
  
 ----
 localhost   touch   /usr/bin/touch  INSTALLED   INTEL32::LINUX  null  
@@ -245,7 +207,6 @@ localhost   broken  /bin/true   INSTALLED   INTEL32::LINUX  null
 ----
 
 Now we can run the program:
-
  
 ----
 $ swift restart.swift    
@@ -262,13 +223,11 @@ isn't actually broken yet).
 Now we will break the broken job and see what happens. Replace the
 definition in tc.data for broken with this:
 
- 
 ----
 localhost    broken     /bin/false   INSTALLED       INTEL32::LINUX  null  
 ----
 
 Now when we run the workflow, the broken task fails:
-
  
 ----
 $ swift restart.swift   
@@ -356,4 +315,3 @@ Final status:  Initializing:2  Finished successfully:2
 Swift tries to run "broken" again. This time it works, and so Swift
 continues on to execute the final piece of the workflow as if nothing
 had ever gone wrong.
-

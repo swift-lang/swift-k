@@ -38,6 +38,9 @@ COLORIZE=0
 TOPDIR=`readlink -f $PWD/../../../..`
 CRTDIR=`pwd`
 
+# Disable usage stats in test suite
+export SWIFT_USAGE_STATS=0
+
 while [ $# -gt 0 ]; do
   case $1 in
     -a)
@@ -764,7 +767,10 @@ check_outputs() {
 		diff $BNE $EXPECTED 2>&1 >> $OUTPUT
 		if [ "$?" != "0" ]; then
 			RESULT="Failed"
-		fi
+                        echo Failed
+                else
+                        echo OK
+                fi
 		if [ "$RESULT" == "None" ]; then
 			RESULT="Passed"
 		fi
@@ -814,7 +820,7 @@ swift_test_case() {
   grep THIS-SCRIPT-SHOULD-FAIL $SWIFTSCRIPT > /dev/null
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
-  monitored_exec $TIMEOUT swift                         \
+  monitored_exec $TIMEOUT swift     \
                        -wrapperlog.always.transfer true \
                        -sitedir.keep true               \
                        -config swift.properties         \

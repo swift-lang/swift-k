@@ -1,21 +1,23 @@
 Hello World
 -----------
-The first example program, first.swift, outputs a hello world message
+The first example program, hello.swift, outputs a hello world message
 into a file called hello.txt.
 
-.first.swift
+.hello.swift
 ************
  
 ----
-include::../../examples/first.swift[]
+include::../../examples/tutorial/hello.swift[]
 ----
 ************
 
-We can run this program as follows:
-note: Make sure the bin directory of swift-installation is in your path.
+To run hello.swift, change directories to the location of the script
+and run the swift command as follows.
+
+TIP: Make sure the bin directory of your swift installation is in your PATH.
 ----
-$ cd examples/swift/
-$ swift first.swift
+$ cd examples/tutorial
+$ swift hello.swift
 Swift svn swift-r3334 (swift modified locally) cog-r2752
 
 RunID: 20100526-1925-8zjupq1b
@@ -27,44 +29,39 @@ Hello, world!
 
 The basic structure of this program is a type definition, an
 application procedure definition, a variable definition and then a
-call to the procedure:
-
+call to the procedure.
  
-----
-type messagefile;  
-----
-
 First we define a new type, called messagefile. In this example, we will
-use this messagefile type as the type for our output message.
+use this messagefile type for our output message.
 
+----
+sys::[sed -n '1p' ../../examples/tutorial/hello.swift]
+----
 
 All data in SwiftScript must be typed, whether it is stored in memory or
 on disk. This example defines a very simple type. Later on we will see
 more complex type examples.
-
  
 ----
-app (messagefile t) greeting() {   
-    echo "Hello, world!" stdout=@filename(t);  
-}  
+sys::[sed -n '3,5p' ../../examples/tutorial/hello.swift]
 ----
 
 Next we define a procedure called greeting. This procedure will write
-out the "hello world" message to a file.
-
-To achieve this, it executes the unix utility 'echo' with a parameter
-"Hello, world!" and directs the standard output into the output file.
+out the "hello world" message to a file. To achieve this, it executes 
+the unix utility 'echo' with a parameter "Hello, world!" and directs 
+the standard output into the output file.
 
 The actual file to use is specified by the return parameter, t.
-
-messagefile outfile <"hello.txt">;  
-
+-----
+sys::[sed -n '7p' ../../examples/tutorial/hello.swift]
+-----
 Here we define a variable called outfile. The type of this variable is
 messagefile, and we specify that the contents of this variable will be
 stored on disk in a file called hello.txt
 
-outfile = greeting(); 
-
+-----
+sys::[sed -n '3,5p' ../../examples/tutorial/hello.swift]
+-----
 Now we call the greeting procedure, with its output going to the outfile
 variable and therefore to hello.txt on disk.
 
