@@ -717,6 +717,7 @@ script_exec() {
   process_exec $SCRIPT
   RESULT=$( result )
 
+  test_log
   output_report test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
