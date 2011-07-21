@@ -97,7 +97,7 @@ if (( VERBOSE )); then
   HTML_COMMENTS=1
 fi
 
-if [ $COLORIZE ]; then
+if (( $COLORIZE )); then
 	LGREEN="\033[1;32m"
 	YELLOW="\033[1;33m"
 	RED="\033[1;31m"
@@ -411,7 +411,7 @@ start_group() {
   echo "| $G"
   echo "|"
   echo -e "\\----------------------------------------------------${GRAY}"
-  echo 
+  echo
   if [ $TEXTREPORT == 1 ]; then
   	  stars
 	  printf "$G\n">>$REPORT
@@ -426,7 +426,7 @@ start_group() {
 	  html "$G"
 	  html_~th
 	  html_~tr
-	
+
 	 html_tr group
 	 html_td
 	 html "#"
@@ -684,7 +684,7 @@ monitored_exec()
   rm killed_test > /dev/null 2>&1 && sleep 5
   verbose "killing monitor: $MONITOR_PID..."
   kill $MONITOR_PID
-  
+
   INDIVIDUAL_TEST_TIME=$(( STOP-START ))
   TOTAL_TIME=$(( INDIVIDUAL_TEST_TIME+TOTAL_TIME ))
   echo -e "${YELLOW}TOOK (seconds): $INDIVIDUAL_TEST_TIME${GRAY}"
@@ -725,9 +725,9 @@ script_exec() {
 stage_files() {
 	GROUP=$1
 	NAME=$2
-	
+
 	RESULT="None"
-		
+
 	if [ -f $GROUP/$NAME.in ]; then
 		echo "Copying input: $NAME.in"
 		cp -v $GROUP/$NAME.in . 2>&1 >> $OUTPUT
@@ -749,18 +749,18 @@ stage_files() {
 			RESULT="Passed"
 		fi
 	done
-	
+
 	output_report test "s" "setup" $RESULT
-	
+
 	check_bailout
 }
 
 check_outputs() {
 	GROUP=$1
 	NAME=$2
-	
+
 	RESULT="None"
-		
+
 	for EXPECTED in $GROUP/$NAME.*.expected; do
 		BNE=`basename $EXPECTED .expected`
 		echo -n "Checking output: $BNE "
@@ -775,15 +775,15 @@ check_outputs() {
 			RESULT="Passed"
 		fi
 	done
-	
+
 	if [ "$RESULT" == "None" ]; then
 		html_td width 25
    		html "&nbsp;&nbsp;"
    		html_~td
 	fi
-	
+
 	output_report test "&#8730;" "check" $RESULT
-	
+
 	check_bailout
 }
 
@@ -791,7 +791,7 @@ check_outputs() {
 swift_test_case() {
   SWIFTSCRIPT=$1
   NAME=${SWIFTSCRIPT%.swift}
-  
+
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
   CLEANSCRIPT=$NAME.clean.sh
@@ -804,12 +804,12 @@ swift_test_case() {
   else
     stage_files $GROUP $NAME
   fi
-  
+
   ARGS=""
   if [ -f $GROUP/$ARGSFILE ]; then
   	ARGS=`cat $GROUP/$ARGSFILE`
   fi
-  
+
   CDM=
   [ -r fs.data ] && CDM="-cdm.file fs.data"
 
@@ -848,9 +848,9 @@ swift_test_case() {
 script_test_case() {
   SHELLSCRIPT=$1
   NAME=${SWIFTSCRIPT%.swift}
-  
+
   stage_files $GROUP $NAME
-  
+
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
   CLEANSCRIPT=$NAME.clean.sh
