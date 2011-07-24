@@ -119,7 +119,7 @@ namespace("vdl"
 								"-status", "provider"
 								"-a", maybe(each(arguments))
 							)
-							directory = "{wfdir}-{jobdir}-{jobid}"
+							directory = tmpdir
 							redirect = false
 							host = rhost
 
