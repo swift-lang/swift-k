@@ -54,7 +54,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		}
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
-			getField().setName(PARAM_PREFIX.getStringValue(mapper));
+			getField().setId(PARAM_PREFIX.getStringValue(mapper));
 			initialized();
 			checkInputs();
 		}

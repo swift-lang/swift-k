@@ -7,13 +7,13 @@ public interface Field {
 	 * get the name of the field
 	 * @return
 	 */
-	public String getName();
+	public Comparable<?> getId();
 	
 	/**
 	 * set the name of the field
 	 *
 	 */
-	public void setName(String name);
+	public void setId(Comparable<?> id);
 		
 	/**
 	 * get the type of the field
@@ -38,8 +38,8 @@ public interface Field {
 			return new FieldImpl();
 		}
 		
-		public static Field createField(String name, Type type) {
-			return new FieldImpl(name, type);
+		public static Field createField(Comparable<?> id, Type type) {
+			return new FieldImpl(id, type);
 		}		
 	}
 }

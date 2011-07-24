@@ -342,6 +342,17 @@
     <xs:attribute name="src" type="xs:string" />
 
   </xs:complexType>
+  
+  <xs:complexType name="Append">
+    <xs:annotation>
+      <xs:documentation>appends a value to an array
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
+    </xs:sequence>
+    <xs:attribute name="src" type="xs:string" />
+  </xs:complexType>
 
   <xs:complexType name="Call">
     <xs:annotation>
@@ -393,6 +404,8 @@
       </xs:element>
 
       <xs:element name="assign" type="Assign"/>
+      
+      <xs:element name="append" type="Append"/>
 
       <xs:element name="call" type="Call"/>
 

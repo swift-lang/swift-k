@@ -69,7 +69,7 @@ public class CreateArray extends VDLFunction {
 				DSHandle n = (DSHandle) i.next();
 				// we know this DSHandle cast will work because we checked
 				// it in the previous scan of the array contents
-				Path p = Path.EMPTY_PATH.addLast(String.valueOf(index), true);
+				Path p = Path.EMPTY_PATH.addLast(index, true);
 
 				handle.getField(p).set(n);
 				logger.info("CREATEARRAY MEMBER array="+handle.getIdentifier()+" index="+index+" member="+n.getIdentifier());

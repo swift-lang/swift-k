@@ -29,7 +29,7 @@ public class DoRestartLog extends AbstractSequentialWithArguments {
         try {
             for (Object f : files) {
                 List pv = TypeUtil.toList(f);
-                Path p = Path.parse(TypeUtil.toString(pv.get(0)));
+                Path p = (Path) pv.get(0);
                 DSHandle handle = (DSHandle) pv.get(1);
                 LogVar.logVar(stack, handle, p);
             }

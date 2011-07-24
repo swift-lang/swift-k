@@ -60,7 +60,7 @@ public class Range extends VDLFunction {
 						return Collections.singletonList((DSHandle) this);
 					}
 					else {
-						int index = Integer.parseInt(path.getFirst());
+						int index = (Integer) path.getFirst();
 						DSHandle value = new RootDataNode(type);
 						value.init(null);
 						value.setValue(new Double(start + incr * index));
@@ -91,13 +91,18 @@ public class Range extends VDLFunction {
 													{
 														value = new RootDataNode(type);
 														value.init(null);
-														value.setValue(new Double(crt));
+														if (type == Types.INT) {
+														    value.setValue(new Integer((int) crt));
+														}
+														else {
+														    value.setValue(new Double(crt));
+														}
 														value.closeShallow();
 														key = index;
 													}
 
 													public Comparable<?> getKey() {
-														return new Double(key);
+														return Integer.valueOf(key);
 													}
 
 													public DSHandle getValue() {

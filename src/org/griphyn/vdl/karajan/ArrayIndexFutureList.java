@@ -30,6 +30,7 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
         this.node = node;
         this.values = values;
         keys = new ArrayList<Object>();
+        keys.addAll(values.keySet());
     }
 
     public Object get(int index) {

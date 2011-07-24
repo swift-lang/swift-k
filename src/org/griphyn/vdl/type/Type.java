@@ -52,7 +52,7 @@ public interface Type {
 	public URI getNamespaceURI();
 
 	boolean isArray();
-	
+		
 	/**
 	 * Returns true if this type is a composite type (array or struct).
 	 */
@@ -134,7 +134,7 @@ public interface Type {
 
 	/**
 	 * This method returns the type of the array consisting of elements of this
-	 * type.*
+	 * type and integer keys.
 	 */
 	Type arrayType();
 	
@@ -143,6 +143,11 @@ public interface Type {
 	 * If t is a type, t == t.arrayType().itemType();
 	 */
 	Type itemType();
+	
+	/**
+	 * For an array, this returns the array key type
+	 */
+	Type keyType();
 
 	/**
 	 * A factory class with static methods for creating instances of Type.

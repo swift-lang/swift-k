@@ -2,6 +2,8 @@ package org.griphyn.vdl.mapping.file;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.util.Base64;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.AbstractMapper;
@@ -117,21 +120,37 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		int level = 0, tokenCount = path.size();
 		while (pi.hasNext()) {
 			Path.Entry nextPathElement = (Path.Entry) pi.next();
-			String token = nextPathElement.getName();
 			if (nextPathElement.isIndex()) {
-				if(logger.isDebugEnabled())
-					logger.debug("Mapping path component index "+token);
-				String f = getElementMapper().mapIndex(Integer.parseInt(token));
-				if(logger.isDebugEnabled())
-					logger.debug("field is mapped to: "+f);
-				sb.append(f);
+			    Comparable<?> key = nextPathElement.getKey();
+			    String f, token;
+			    if (key instanceof Integer) {
+			        token = key.toString();
+			        f = getElementMapper().mapIndex(((Integer) key).intValue());
+			    }
+			    else if (key instanceof Double) {
+			        token = Double.toHexString(((Double) key).doubleValue());
+			        f = getElementMapper().mapField(token);
+			    }
+			    else {
+			        MessageDigest md = getDigest();
+			        byte[] buf = md.digest(key.toString().getBytes());
+			        token = encode(buf);
+			        f = getElementMapper().mapField(token);
+			    }
+    			if (logger.isDebugEnabled()) {
+    			    logger.debug("Mapping path component to " + token);
+    			}
+    			sb.append(f);
 			}
 			else {
-				if(logger.isDebugEnabled())
-					logger.debug("Mapping path component field "+token);
+			    String token = (String) nextPathElement.getKey();
+				if (logger.isDebugEnabled()) {
+					logger.debug("Mapping path component field " + token);
+				}
 				String f = getElementMapper().mapField(token);
-				if(logger.isDebugEnabled())
-					logger.debug("field is mapped to: "+f);
+				if (logger.isDebugEnabled()) {
+					logger.debug("field is mapped to: " + f);
+				}
 				sb.append(f);
 			}
 
@@ -151,19 +170,39 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		if (suffix != null) {
 			sb.append(suffix);
 		}
-		if(logger.isDebugEnabled())
-			logger.debug("mapper id="+this.hashCode()+" finished mapping "+path+" to "+sb.toString());
+		if (logger.isDebugEnabled()) {
+			logger.debug("mapper id=" + this.hashCode() + " finished mapping " 
+			    + path + " to " + sb.toString());
+		}
 		return new AbsFile(sb.toString());
 	}
 
-	public Collection existing() {
+	private String encode(byte[] buf) {
+        buf = Base64.encode(buf);
+        char[] c = new char[buf.length];
+        for (int i = 0; i < buf.length; i++) {
+            c[i] = (char) buf[i];
+        }
+        return String.copyValueOf(c);
+    }
+
+    private MessageDigest getDigest() {
+        try {
+            return MessageDigest.getInstance("SHA-1");
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new Error("JVM error: SHA-1 not available");
+        }
+    }
+
+    public Collection<Path> existing() {
 		if(logger.isDebugEnabled())
 			logger.debug("list existing paths for mapper id="+this.hashCode());
 		final String location = PARAM_LOCATION.getStringValue(this);
 		final String prefix = PARAM_PREFIX.getStringValue(this);
 		final String suffix = PARAM_SUFFIX.getStringValue(this);
 		final String pattern = PARAM_PATTERN.getStringValue(this);
-		List l = new ArrayList();
+		List<Path> l = new ArrayList<Path>();
 		final AbsFile f;
 		if (location == null) {
 			f = new AbsFile(".");
@@ -286,7 +325,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	  */
 	protected Path rmapElement(Path path, String e) {
 		if (Character.isDigit(e.charAt(0))) {
-			return path.addLast(String.valueOf(getElementMapper().rmapIndex(e)), true);
+			return path.addLast(getElementMapper().rmapIndex(e), true);
 		}
 		else {
 			return path.addLast(getElementMapper().rmapField(e));

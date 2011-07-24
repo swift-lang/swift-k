@@ -266,6 +266,13 @@ assign(lhs,rhs,sourcelocation) ::= <<
 </assign>
 >>
 
+append(array,value,sourcelocation) ::= <<
+<append src="$sourcelocation$">
+ $array$
+ $value$
+</append>
+>>
+
 arraySubscript(array, subscript, sourcelocation) ::= <<
 <arraySubscript>
  $array$

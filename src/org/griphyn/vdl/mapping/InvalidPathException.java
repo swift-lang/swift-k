@@ -12,4 +12,8 @@ public class InvalidPathException extends Exception {
 	public InvalidPathException(Path path, DSHandle source) {
 		this(path.toString(), source);
 	}
+
+    public InvalidPathException(String string) {
+        super(string);
+    }
 }

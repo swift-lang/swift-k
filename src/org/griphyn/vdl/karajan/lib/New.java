@@ -103,7 +103,7 @@ public class New extends VDLFunction {
 							// TODO check type consistency of elements with
 							// the type of the array
 							Object n = i.next();
-							Path p = Path.EMPTY_PATH.addLast(String.valueOf(index), true);
+							Path p = Path.EMPTY_PATH.addLast(index, true);
 							if (n instanceof DSHandle) {
 								handle.getField(p).set((DSHandle) n);
 							}

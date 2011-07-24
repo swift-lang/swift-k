@@ -1,5 +1,7 @@
 package org.griphyn.vdl.engine;
 
+import org.griphyn.vdl.type.Types;
+
 public class FormalArgumentSignature {
 	private String name;
 	private String type;
@@ -13,7 +15,7 @@ public class FormalArgumentSignature {
 	}
 	
 	public FormalArgumentSignature(String type, String name) {
-		this.type = type;
+		this.type = Types.normalize(type);
 		this.name = name;
 		this.anyType = false;
 		this.optionalArg = false;
@@ -25,7 +27,7 @@ public class FormalArgumentSignature {
 	}
 	
 	public FormalArgumentSignature(String type) {
-		this.type = type;
+		this.type = Types.normalize(type);
 		this.anyType = false;
 		this.optionalArg = false;
 	}

@@ -31,7 +31,7 @@ public class ArrayFileMapper extends AbstractMapper {
 		Set<?> s = m.keySet();
 		Iterator<?> i = s.iterator();
 		while(i.hasNext()) {
-			String nextKey = i.next().toString();
+			Comparable<?> nextKey = (Comparable<?>) i.next();
 			l.add(Path.EMPTY_PATH.addLast(nextKey, true));
 		}
 		return l;

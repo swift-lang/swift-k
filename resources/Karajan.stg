@@ -198,7 +198,7 @@ iterate(declarations,statements,cond,var,cleanups) ::= <<
 </vdl:infinitecountingwhile>
 >>
 
-foreach(var,in,indexVar,declarations,statements,line,selfClose,cleanups) ::= <<
+foreach(var,in,indexVar,indexVarType,declarations,statements,line,selfClose,cleanups) ::= <<
 <vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$>
   <getarrayiterator>$in$</getarrayiterator>
   <set names="\$\$, $var$">
@@ -206,7 +206,7 @@ foreach(var,in,indexVar,declarations,statements,line,selfClose,cleanups) ::= <<
   </set>
 $if(indexVar)$
     <set name="$indexVar$">
-      <vdl:new type="int" value="{\$\$}"/>
+      <vdl:new type="$indexVarType$" value="{\$\$}"/>
     </set>
 $endif$
 	<log level="debug" message="FOREACH_IT_START line=$line$ thread={#thread}"/>
@@ -343,13 +343,16 @@ vdl_parameter(name,expr) ::= <<
 
 assign(var,value) ::= <<
    <vdl:setfieldvalue>
-     <argument name="var">
        $var$
-     </argument>
-     <argument name="value">
        $value$
-     </argument>
    </vdl:setfieldvalue>
+>>
+
+append(array, value) ::= <<
+	<vdl:appendArray>
+		$array$
+		$value$
+	</vdl:appendArray>
 >>
 
 callexpr(call, datatype, callID, prefix) ::= <<

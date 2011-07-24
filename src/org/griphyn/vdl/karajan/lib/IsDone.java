@@ -23,9 +23,9 @@ public class IsDone extends VDLFunction {
     @Override
     protected Object function(VariableStack stack) throws ExecutionException {
         List files = TypeUtil.toList(STAGEOUT.getValue(stack));
-        for (Object f : files) { 
+        for (Object f : files) {
             List pv = TypeUtil.toList(f);
-            Path p = Path.parse(TypeUtil.toString(pv.get(0)));
+            Path p = (Path) pv.get(0);
             DSHandle handle = (DSHandle) pv.get(1);
             if (!IsLogged.isLogged(stack, handle, p)) {
                 return Boolean.FALSE;

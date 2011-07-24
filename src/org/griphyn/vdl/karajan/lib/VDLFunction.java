@@ -3,7 +3,6 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +40,7 @@ import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PathComparator;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -154,7 +154,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			return new Double(TypeUtil.toDouble(value));
 		}
 		else if (Types.INT.equals(type)) {
-			return new Double(TypeUtil.toInt(value));
+			return new Integer(TypeUtil.toInt(value));
 		}
 		else if (Types.BOOLEAN.equals(type)) {
 			return new Boolean(TypeUtil.toBoolean(value));
@@ -220,50 +220,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			throw new ExecutionException("DSHandle is lying about its fringe paths");
 		}
 		return l.toArray(EMPTY_STRING_ARRAY);
-	}
-	
-	private static class PathComparator implements Comparator<Path> {
-		public int compare(Path p1, Path p2) {
-			for (int i = 0; i < Math.min(p1.size(), p2.size()); i++) {
-				int d; 
-				d = indexOrder(p1.isArrayIndex(i), p2.isArrayIndex(i));
-				if (d != 0) {
-					return d;
-				}
-				if (p1.isArrayIndex(i)) {
-					d = numericOrder(p1.getElement(i), p2.getElement(i));
-				}
-				else {
-					d = p1.getElement(i).compareTo(p2.getElement(i));
-				}
-				if (d != 0) {
-					return d;
-				}
-			}
-			//the longer one wins
-			return p1.size() - p2.size();
-		}
-		
-		private int indexOrder(boolean i1, boolean i2) {
-			//it doesn't matter much what the order between indices and non-indices is,
-			//but it needs to be consistent
-			if (i1) {
-				if (!i2) {
-					return -1;
-				}
-			}
-			else {
-				if (i2) {
-					return 1;
-				}
-			}
-			return 0;
-		}
-		
-		private int numericOrder(String i1, String i2) {
-			//TODO check if we're actually dealing with numeric indices
-			return Integer.parseInt(i1) - Integer.parseInt(i2);
-		}
 	}
 	
 	private static String leafFileName(DSHandle var) throws ExecutionException {
@@ -408,43 +364,12 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 
 	public static Path parsePath(Object o, VariableStack stack) throws ExecutionException {
-		Path q = Path.EMPTY_PATH;
-		Path p;
 		if (o instanceof Path) {
-			p = (Path) o;
+			return (Path) o;
 		}
 		else {
-			p = Path.parse(TypeUtil.toString(o));
+			return Path.parse(TypeUtil.toString(o));
 		}
-		for (int i = 0; i < p.size(); i++) {
-			if (p.isArrayIndex(i)) {
-				if (p.isWildcard(i)) {
-					q = q.addLast(p.getElement(i), true);
-				}
-				else {
-					String index = p.getElement(i);
-					try {
-						// check this is can parse as an integer by trying to parse and getting an exception if not
-						Integer.parseInt(index);
-						q = q.addLast(index, true);
-					}
-					catch (NumberFormatException e) {
-						Object v = stack.getVar(index);
-						if (v instanceof DSHandle) {
-							v = ((DSHandle) v).getValue();
-						}
-						q = q.addLast(TypeUtil.toString(v), true);
-					}
-				}
-			}
-			else {
-				q = q.addLast(p.getElement(i));
-			}
-		}
-		if (p.hasWildcards() && !q.hasWildcards()) {
-			throw new RuntimeException("Error in the wildcard processing routine");
-		}
-		return q;
 	}
 
 	private static Set warnset = new HashSet();

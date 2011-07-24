@@ -119,7 +119,7 @@ public class ReadData extends VDLFunction {
 		String line = br.readLine();
 		try {
 			while (line != null) {
-				DSHandle child = dest.getField(Path.EMPTY_PATH.addLast(String.valueOf(index), true));
+				DSHandle child = dest.getField(Path.EMPTY_PATH.addLast(index, true));
 				setValue(child, line);
 				line = br.readLine();
 				index++;
@@ -139,8 +139,7 @@ public class ReadData extends VDLFunction {
 			while (line != null) {
 				line = line.trim();
 				if (!line.equals("")) {
-					DSHandle child = dest.getField(Path.EMPTY_PATH.addLast(String.valueOf(index),
-							true));
+					DSHandle child = dest.getField(Path.EMPTY_PATH.addLast(index, true));
 					readStruct(child, line, header);
 					index++;
 				}
@@ -211,13 +210,13 @@ public class ReadData extends VDLFunction {
 		try {
 
 			if (dest.getType().equals(Types.INT)) {
-				dest.setValue(new Double(Integer.parseInt(s.trim())));
+				dest.setValue(Integer.valueOf(s.trim()));
 			}
 			else if (dest.getType().equals(Types.FLOAT)) {
 				dest.setValue(new Double(s.trim()));
 			}
 			else if (dest.getType().equals(Types.BOOLEAN)) {
-				dest.setValue(new Boolean(s.trim()));
+				dest.setValue(Boolean.valueOf(s.trim()));
 			}
 			else if (dest.getType().equals(Types.STRING)) {
 				dest.setValue(s);

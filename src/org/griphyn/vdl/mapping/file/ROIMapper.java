@@ -38,9 +38,10 @@ public class ROIMapper extends AbstractFileMapper {
 			String tok = st.nextToken();
 			if (i == 1 && tok.equals("ROI")) {
 				path = path.addLast("roi");
-				if (notseen)
+				if (notseen) {
 					idx = new Integer(count);
-				path = path.addLast(idx.toString(), true);
+				}
+				path = path.addLast(idx, true);
 				if (st.hasMoreElements()) {
 					i++;
 					continue;

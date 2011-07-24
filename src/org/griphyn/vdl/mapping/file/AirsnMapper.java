@@ -29,7 +29,7 @@ public class AirsnMapper extends AbstractFileMapper {
 				else {
 					path = path.addLast("v");
 					path = path.addLast(
-							Integer.valueOf(tok.substring(tok.length() - 4)).toString(), true);
+							Integer.valueOf(tok.substring(tok.length() - 4)), true);
 				}
 			}
 			else {

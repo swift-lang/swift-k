@@ -61,7 +61,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		}
 		try {
 			mapper = MapperFactory.getMapper(desc, params);
-			getField().setName(PARAM_PREFIX.getStringValue(mapper));
+			getField().setId(PARAM_PREFIX.getStringValue(mapper));
 			// initialized means that this data has its mapper initialized
 			// this should be called before checkInputs because the latter
 			// may trigger calls to things that try to access this data node's
@@ -150,15 +150,6 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 			// any number of indices is ok
 			try {
 			    for (DSHandle dh : handle.getFields(Path.CHILDREN)) {
-					Path path = dh.getPathFromRoot();
-					String index = path.getElement(path.size() - 1);
-					try {
-						Integer.parseInt(index);
-					}
-					catch (NumberFormatException nfe) {
-						throw new RuntimeException("Array element has index '" + index
-								+ "' that does not parse as an integer.");
-					}
 					checkConsistency(dh);
 				}
 			}

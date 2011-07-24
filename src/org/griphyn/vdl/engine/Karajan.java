@@ -327,8 +327,9 @@ public class Karajan {
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
-			checkIsTypeDefined(param.getType().getLocalPart());
-			innerScope.addVariable(param.getName(), param.getType().getLocalPart());
+			String type = normalize(param.getType().getLocalPart());
+            checkIsTypeDefined(type);
+            innerScope.addVariable(param.getName(), type);
 		}
 		for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 			FormalParameter param = proc.getInputArray(i);
@@ -338,8 +339,9 @@ public class Karajan {
 				procST.setAttribute("optargs", paramST);
 			else
 				procST.setAttribute("arguments", paramST);
-			checkIsTypeDefined(param.getType().getLocalPart());
-			outerScope.addVariable(param.getName(), param.getType().getLocalPart());
+			String type = normalize(param.getType().getLocalPart());
+			checkIsTypeDefined(type);
+			outerScope.addVariable(param.getName(), type);
 		}
 
 		Binding bind;
@@ -359,7 +361,7 @@ public class Karajan {
 		StringTemplate paramST = new StringTemplate("parameter");
 		StringTemplate typeST = new StringTemplate("type");
 		paramST.setAttribute("name", param.getName());
-		typeST.setAttribute("name", param.getType().getLocalPart());
+		typeST.setAttribute("name", normalize(param.getType().getLocalPart()));
 		typeST.setAttribute("namespace", param.getType().getNamespaceURI());
 		paramST.setAttribute("type", typeST);
 		if(!param.isNil())
@@ -463,15 +465,10 @@ public class Karajan {
 		scope.bodyTemplate.setAttribute("declarations", variableST);
 	}
 
-	void checkIsTypeDefined(String type) throws CompilationException {
-		while (type.length() > 2 && type.substring(type.length() - 2).equals("[]"))
-			type = type.substring(0, type.length() - 2);
-		if (!type.equals("int") && !type.equals("float") && !type.equals("string")
-				&& !type.equals("boolean") && !type.equals("external")) {
-			boolean typeDefined = typesMap.containsKey(type);
-			if (!typeDefined)
-				throw new CompilationException("Type " + type + " is not defined.");
-		}
+    void checkIsTypeDefined(String type) throws CompilationException {
+	    if (!org.griphyn.vdl.type.Types.isValidType(type, typesMap.keySet())) {
+	        throw new CompilationException("Type " + type + " is not defined.");
+	    }
 	}
 
 	public void assign(Assign assign, VariableScope scope) throws CompilationException {
@@ -492,6 +489,31 @@ public class Karajan {
 			throw new CompilationException("Compile error in assignment at "+assign.getSrc()+": "+re.getMessage(),re);
 		}
 	}
+	
+	public void append(Append append, VariableScope scope) throws CompilationException {
+        try {
+            StringTemplate appendST = template("append");
+            StringTemplate array = expressionToKarajan(append.getAbstractExpressionArray(0),scope);
+            StringTemplate value = expressionToKarajan(append.getAbstractExpressionArray(1),scope);
+            String indexType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(datatype(array));
+            if (!"auto".equals(indexType)) {
+                throw new CompilationException("You can only append to an array with " +
+                		"'auto' index type. Current index type: " + indexType);
+            }
+            if (!datatype(value).equals(org.griphyn.vdl.type.Types.getArrayItemTypeName(datatype(array)))) {
+                throw new CompilationException("You cannot append value of type " + datatype(value) +
+                        " to an array of type " + datatype(array));
+            }
+            appendST.setAttribute("array", array);
+            appendST.setAttribute("value", value);
+            String rootvar = abstractExpressionToRootVariable(append.getAbstractExpressionArray(0));
+            // an append is always a partial write
+            scope.addWriter(rootvar, new Integer(callID++), true);
+            scope.appendStatement(appendST);
+        } catch(CompilationException re) {
+            throw new CompilationException("Compile error in assignment at "+append.getSrc()+": "+re.getMessage(),re);
+        }
+    }
 
 	public void statementsForSymbols(XmlObject prog, VariableScope scope) throws CompilationException {
 		XmlCursor cursor = prog.newCursor();
@@ -516,6 +538,7 @@ public class Karajan {
 			variableForSymbol((Variable) child, scope);
 		}
 		else if (child instanceof Assign
+		    || child instanceof Append
 			|| child instanceof Call
 			|| child instanceof Foreach
 			|| child instanceof Iterate
@@ -538,6 +561,9 @@ public class Karajan {
 		}
 		else if (child instanceof Assign) {
 			assign((Assign) child, scope);
+		}
+		else if (child instanceof Append) {
+		    append((Append) child, scope);
 		}
 		else if (child instanceof Call) {
 			call((Call) child, scope, false);
@@ -783,13 +809,16 @@ public class Karajan {
 			foreachST.setAttribute("in", inST);
 
 			String inType = datatype(inST);
-			if (inType.length() < 2 || !inType.substring(inType.length() - 2).equals("[]"))
-				throw new CompilationException("You can iterate through an array structure only");
-			String varType = inType.substring(0, inType.length() - 2);
-			innerScope.addVariable(foreach.getVar(), varType);
+			String itemType = org.griphyn.vdl.type.Types.getArrayItemTypeName(inType);
+			String keyType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(inType);
+			if (itemType == null) {
+			    throw new CompilationException("You can iterate through an array structure only");
+			}
+			innerScope.addVariable(foreach.getVar(), itemType);
 			foreachST.setAttribute("indexVar", foreach.getIndexVar());
+			foreachST.setAttribute("indexVarType", keyType);
 			if(foreach.getIndexVar() != null) {
-				innerScope.addVariable(foreach.getIndexVar(), "int");
+				innerScope.addVariable(foreach.getIndexVar(), keyType);
 			}
 
 			innerScope.bodyTemplate = foreachST;
@@ -921,12 +950,19 @@ public class Karajan {
 				XmlObject argument = app.getAbstractExpressionArray(i);
 				StringTemplate argumentST = expressionToKarajan(argument, scope);
 				String type = datatype(argumentST);
-				if(type.equals("string") || type.equals("string[]")
-				 || type.equals("int") || type.equals("float")
-				 || type.equals("int[]") || type.equals("float[]")
-				 || type.equals("boolean") || type.equals("boolean[]")) {
-					appST.setAttribute("arguments", argumentST);
-				} else {
+				String base = org.griphyn.vdl.type.Types.getArrayItemTypeName(type);
+				String testType;
+				// if array then use the array item type for testing
+				if (base != null) {
+				    testType = base;
+				}
+				else {
+				    testType = type;
+				}
+				if (org.griphyn.vdl.type.Types.isPrimitive(testType)) {
+				    appST.setAttribute("arguments", argumentST);
+				} 
+				else {
 					throw new CompilationException("Cannot pass type '"+type+"' as a parameter to application '"+app.getExecutable()+"'");
 				}
 			}
@@ -1155,43 +1191,50 @@ public class Karajan {
 			StringTemplate arrayST = expressionToKarajan(op.getAbstractExpressionArray(1), scope);
 			StringTemplate parentST = expressionToKarajan(op.getAbstractExpressionArray(0), scope);
 
-			// handle [*] as identity/no-op
+			String indexType = datatype(arrayST);
+			String declaredIndexType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(datatype(parentST));
+			// the index type must match the declared index type,
+			// unless the declared index type is *
+			
+			// and really, at this point type checking should be delegated to the type system
+			// instead of the ad-hoc string comparisons
 			if (datatype(arrayST).equals("string")) {
-				XmlString var = (XmlString) op.getAbstractExpressionArray(1);
-				if (var.getStringValue().equals("*")) {
-					return parentST;
-				} else {
-				   throw new CompilationException("Array index must be of type int, or *.");
-				}
-			} else {
-				// the index should be numerical
-
-				StringTemplate newst = template("extractarrayelement");
-				newst.setAttribute("arraychild", arrayST);
-				newst.setAttribute("parent", parentST);
-
-				String arrayType = datatype(parentST);
-				if (datatype(arrayST).equals("int")) {
-					newst.setAttribute("datatype", arrayType.substring(0, arrayType.length()-2));
-				} else {
-					throw new CompilationException("Array index must be of type int, or *.");
-				}
-				return newst;
+                XmlString var = (XmlString) op.getAbstractExpressionArray(1);
+                if (var.getStringValue().equals("*")) {
+                    return parentST;
+                }
+            }
+			
+			if (!indexType.equals(declaredIndexType) 
+			        && !"".equals(declaredIndexType) 
+			        && !"any".equals(declaredIndexType)) {
+			    throw new CompilationException("Supplied array index type (" 
+			        + indexType + ") does not match the declared index type (" + declaredIndexType + ")");
 			}
+			
+			StringTemplate newst = template("extractarrayelement");
+			newst.setAttribute("arraychild", arrayST);
+			newst.setAttribute("parent", parentST);
+			newst.setAttribute("datatype", org.griphyn.vdl.type.Types.getArrayItemTypeName(datatype(parentST)));
+
+			return newst;
 		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
 			StructureMember sm = (StructureMember) expression;
 			StringTemplate parentST = expressionToKarajan(sm.getAbstractExpression(), scope);
 
 			String parentType = datatype(parentST);
 
-
 			// if the parent is an array, then check against
 			// the base type of the array
+			
+			String baseType = org.griphyn.vdl.type.Types.getArrayItemTypeName(parentType);
+			String indexType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(parentType);
+			String arrayType = parentType;
 
 			boolean arrayMode = false;
-			if(parentType.endsWith("[]")) {
-				arrayMode=true;
-				parentType = parentType.substring(0, parentType.length() - 2);
+			if (baseType != null) {
+				arrayMode = true;
+				parentType = baseType;
 			}
 
 			String actualType = null;
@@ -1212,20 +1255,18 @@ public class Karajan {
 			if (actualType == null) {
 				throw new CompilationException("Type " + parentType + " is not defined.");
 			}
+			StringTemplate newst;
 			if(arrayMode) {
-				actualType += "[]";
-				StringTemplate newst = template("slicearray");
-				newst.setAttribute("parent", parentST);
-				newst.setAttribute("memberchild", sm.getMemberName());
-				newst.setAttribute("datatype", actualType);
-				return newst;
-			} else {
-				StringTemplate newst = template("extractstructelement");
-				newst.setAttribute("parent", parentST);
-				newst.setAttribute("memberchild", sm.getMemberName());
-				newst.setAttribute("datatype", actualType);
-				return newst;
+			    actualType = actualType + "[" + indexType + "]";
+				newst = template("slicearray");
+			} 
+			else {
+				newst = template("extractstructelement");
 			}
+			newst.setAttribute("parent", parentST);
+			newst.setAttribute("memberchild", sm.getMemberName());
+            newst.setAttribute("datatype", actualType);
+            return newst;
 			// TODO the template layout for this and ARRAY_SUBSCRIPT are
 			// both a bit convoluted for historical reasons.
 			// should be straightforward to tidy up.
@@ -1244,7 +1285,7 @@ public class Karajan {
 			}
 			if (elemType.equals(""))
 				logger.warn("WARNING: Empty array constant");
-			st.setAttribute("datatype", elemType + "[]");
+			st.setAttribute("datatype", elemType + "[int]");
 			return st;
 		} else if (expressionQName.equals(RANGE_EXPR)) {
 			Range range = (Range)expression;
@@ -1261,16 +1302,20 @@ public class Karajan {
 
 			String fromType = datatype(fromST);
 			String toType = datatype(toST);
-			if (stepST == null && (!fromType.equals("int") || !toType.equals("int")))
+			if (stepST == null && (!fromType.equals("int") || !toType.equals("int"))) {
 				throw new CompilationException("Step in range specification can be omitted only when from and to types are int");
+			}
 			else if ((fromType.equals("int") && toType.equals("int")) &&
-					(stepST == null || datatype(stepST).equals("int")))
-				st.setAttribute("datatype", "int[]");
+					(stepST == null || datatype(stepST).equals("int"))) {
+				st.setAttribute("datatype", "int[int]");
+			}
 			else if (fromType.equals("float") && toType.equals("float") &&
-					datatype(stepST).equals("float"))
-				st.setAttribute("datatype", "float[]");
-			else
+					datatype(stepST).equals("float")) {
+				st.setAttribute("datatype", "float[int]");
+			}
+			else {
 				throw new CompilationException("Range can only be specified with numeric types");
+			}
 			return st;
 		} else if (expressionQName.equals(FUNCTION_EXPR)) {
 			Function f = (Function) expression;
@@ -1430,15 +1475,17 @@ public class Karajan {
 	String escapeQuotes(String in) {
 		return in.replaceAll("\"", "&quot;");
 	}
+	
+	public static String normalize(String type) {
+	    return org.griphyn.vdl.type.Types.normalize(type);
+	}
 
 	String datatype(StringTemplate st) {
-	    String result = null;
 	    try {
-	        result = st.getAttribute("datatype").toString();
+	        return normalize(st.getAttribute("datatype").toString());
 	    }
 	    catch (Exception e) {
 	        throw new RuntimeException("Not typed properly: " + st);
 	    }
-	    return result;
 	}
 }

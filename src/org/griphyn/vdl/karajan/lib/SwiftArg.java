@@ -66,13 +66,22 @@ public abstract class SwiftArg extends Arg {
 	}
 	
 	public static double checkDouble(Object dbl) throws ExecutionException {
-		if (dbl instanceof Double) {
-			return ((Double) dbl).doubleValue();
+		if (dbl instanceof Number) {
+			return ((Number) dbl).doubleValue();
 		}
 		else {
 			throw new ExecutionException("Internal type error. Expected a Double. Got " + classOf(dbl));
 		}
 	}
+	
+	public static int checkInt(Object i) throws ExecutionException {
+        if (i instanceof Integer) {
+            return ((Integer) i).intValue();
+        }
+        else {
+            throw new ExecutionException("Internal type error. Expected a Integer. Got " + classOf(i));
+        }
+    }
 
 	public DSHandle getRawValue(VariableStack stack) throws ExecutionException {
 		Object v = super.getValue(stack);

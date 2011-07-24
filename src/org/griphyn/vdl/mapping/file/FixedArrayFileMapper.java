@@ -42,10 +42,10 @@ public class FixedArrayFileMapper extends AbstractMapper {
 		return (String[]) PARAM_FILES.getValue(this);
 	}
 
-	public Collection existing() {
-		List l = new ArrayList();
+	public Collection<Path> existing() {
+		List<Path> l = new ArrayList<Path>();
 		for (int i = 0; i < getFiles().length; i++) {
-			l.add(Path.EMPTY_PATH.addLast(String.valueOf(i), true));
+			l.add(Path.EMPTY_PATH.addLast(i, true));
 		}
 		return l;
 	}
@@ -55,8 +55,14 @@ public class FixedArrayFileMapper extends AbstractMapper {
 			throw new IllegalArgumentException(path.toString());
 		}
 		else {
-			int index = Integer.parseInt(path.getFirst());
-			return new AbsFile(getFiles()[index]);
+		    Object o = path.getFirst();
+		    if (o instanceof Integer) {
+		        int index = ((Integer) o).intValue();
+		        return new AbsFile(getFiles()[index]);
+		    }
+		    else {
+		        throw new IllegalArgumentException("The fixed array mapper can only be used with an int key array");
+		    }
 		}
 	}
 

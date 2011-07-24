@@ -24,7 +24,12 @@ public class Operators extends FunctionsCollection {
 	private DSHandle newNum(Type type, double value) throws ExecutionException {
 		try {
 			DSHandle handle = new RootDataNode(type);
-			handle.setValue(new Double(value));
+			if (type == Types.INT) {
+			    handle.setValue(Integer.valueOf((int) value));
+			}
+			else {
+			    handle.setValue(new Double(value));
+			}
 			handle.closeShallow();
 			return handle;
 		}
@@ -32,6 +37,18 @@ public class Operators extends FunctionsCollection {
 			throw new ExecutionException("Internal error", e);
 		}
 	}
+	
+	private DSHandle newNum(Type type, int value) throws ExecutionException {
+        try {
+            DSHandle handle = new RootDataNode(type);
+            handle.setValue(new Integer(value));
+            handle.closeShallow();
+            return handle;
+        }
+        catch (Exception e) {
+            throw new ExecutionException("Internal error", e);
+        }
+    }
 	
 	private DSHandle newString(String value) throws ExecutionException {
 		try {
@@ -86,12 +103,16 @@ public class Operators extends FunctionsCollection {
 	public Object vdlop_sum(VariableStack stack) throws ExecutionException {
 		Object l = L.getValue(stack);
 		Object r = R.getValue(stack);
+		Type t = type(stack);
 		DSHandle ret;
 		if (l instanceof String || r instanceof String) {
 			ret = newString(((String) l) + ((String) r));
 		}
+		else if (t == Types.INT) {
+		    ret = newNum(t, SwiftArg.checkInt(l) + SwiftArg.checkInt(r));
+		}
 		else {
-			ret = newNum(type(stack), SwiftArg.checkDouble(l) + SwiftArg.checkDouble(r));
+			ret = newNum(t, SwiftArg.checkDouble(l) + SwiftArg.checkDouble(r));
 		}
 		logBinaryProvenance(stack, "sum", ret);
 		return ret;

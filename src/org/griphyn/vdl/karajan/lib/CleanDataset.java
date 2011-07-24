@@ -32,7 +32,9 @@ public class CleanDataset extends VDLFunction {
 	    }
 	    else {
     		AbstractDataNode var = (AbstractDataNode) PA_VAR.getValue(stack);
-    		logger.info("Cleaning " + var);
+    		if (logger.isInfoEnabled()) {
+    		    logger.info("Cleaning " + var);
+    		}
     		var.clean();
 	    }
 	    return null;

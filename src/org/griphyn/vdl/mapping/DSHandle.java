@@ -30,7 +30,7 @@ public interface DSHandle {
      */
     public Type getType();
 
-    public void init(Map<String,Object> params);
+    public void init(Map<String, Object> params);
 
     public DSHandle getRoot();
 
@@ -55,8 +55,8 @@ public interface DSHandle {
     public void setValue(Object value);
 
     /** create a new logical component */
-    public DSHandle createDSHandle(String fieldName) throws NoSuchFieldException;
-
+    public DSHandle createField(Comparable<?> key) throws NoSuchFieldException;
+ 
     // special file oriented methods, not sure if these apply to 
     // all datasets
 

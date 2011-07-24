@@ -60,21 +60,20 @@ public class SliceArray extends VDLFunction {
 				RootArrayDataNode destinationArray = new RootArrayDataNode(destinationType);
 
 
-                               	Path cutPath = Path.EMPTY_PATH.addLast((String)PA_PATH.getValue(stack), false);
+				Path cutPath = Path.EMPTY_PATH.addLast((String) PA_PATH.getValue(stack), false);
 
-                        	PairIterator it = new PairIterator(sourceArray.getArrayValue());
+				PairIterator it = new PairIterator(sourceArray.getArrayValue());
 
 				while(it.hasNext()) {
 					Pair pair = (Pair) it.next();
 					Object index = pair.get(0);
 					DSHandle sourceElement = (DSHandle) pair.get(1);
 
-
-                                	Path p = Path.EMPTY_PATH.addLast(String.valueOf(index), true);
+					Path p = Path.EMPTY_PATH.addLast((Comparable<?>) index, true);
 
 					DSHandle n = sourceElement.getField(cutPath);
 
-                                	destinationArray.getField(p).set((DSHandle) n);
+					destinationArray.getField(p).set(n);
 				}
 
 				// all of the inputs should be closed, so

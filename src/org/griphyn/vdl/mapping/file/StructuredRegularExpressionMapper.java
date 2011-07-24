@@ -44,7 +44,7 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 		Collection output = new ArrayList();
 		Collection sourceFields;
 		try {
-			sourceFields = sourceHandle.getFields(Path.parse("[*]"));
+			sourceFields = sourceHandle.getFields(Path.CHILDREN);
 		}
 		catch (InvalidPathException ipe) {
 			return Collections.EMPTY_LIST;

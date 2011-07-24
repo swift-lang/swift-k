@@ -12,6 +12,9 @@ public class DataNode extends AbstractDataNode {
 	
 	protected DataNode(Field field, DSHandle root, DSHandle parent) {
 		super(field);
+		if (parent != null && field.getId() == null) {
+		    throw new IllegalArgumentException("Internal error: field id is null");
+		}
 		this.root = root;
 		this.parent = parent;
 	}

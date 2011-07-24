@@ -68,23 +68,24 @@ public class SetFieldValue extends VDLFunction {
 	            if (p.equals("$"))
 	                p = "";
 	            String name = data.getDisplayableName() + p;
-	            Object v = value.getValue();
-	            if (! (v instanceof Map))
-	                logger.info("Set: " + name + "=" + v);
-	            else
+	            if (value.getType().isArray()) {
 	                logger.info("Set: " + name + "=" + 
-	                            unpackHandles((Map<String, DSHandle>) v));
+                                unpackHandles(value.getArrayValue()));
+	            }
+	            else {
+	                logger.info("Set: " + name + "=" + value.getValue());
+	            }
 	        }
 	    }
     }
 
-	String unpackHandles(Map<String,DSHandle> handles) { 
+	String unpackHandles(Map<Comparable<?>, DSHandle> handles) { 
 	    StringBuilder sb = new StringBuilder();
 	    sb.append("{");
-	    Iterator<Map.Entry<String,DSHandle>> it = 
+	    Iterator<Map.Entry<Comparable<?>, DSHandle>> it = 
 	        handles.entrySet().iterator();
 	    while (it.hasNext()) { 
-	        Map.Entry<String,DSHandle> entry = it.next();
+	        Map.Entry<Comparable<?>, DSHandle> entry = it.next();
 	        sb.append(entry.getKey());
 	        sb.append('=');
 	        sb.append(entry.getValue().getValue());
@@ -113,21 +114,15 @@ public class SetFieldValue extends VDLFunction {
 			}
 			while (it.hasNext()) {
 				Pair pair = (Pair) it.next();
-				Object lhs = pair.get(0);
+				Comparable<?> lhs = (Comparable<?>) pair.get(0);
 				DSHandle rhs = (DSHandle) pair.get(1);
-				Path memberPath;
-				if (lhs instanceof Double) {
-				    memberPath = Path.EMPTY_PATH.addLast(String.valueOf(((Double) lhs).intValue()), true);
-				}
-				else {
-				    memberPath = Path.EMPTY_PATH.addLast(String.valueOf(lhs), true);
-				}
+				Path memberPath = Path.EMPTY_PATH.addLast(lhs, true);
 				DSHandle field;
 				try {
 					field = dest.getField(memberPath);
 				}
 				catch (InvalidPathException ipe) {
-					throw new ExecutionException("Could not get destination field",ipe);
+					throw new ExecutionException("Could not get destination field", ipe);
 				}
 				deepCopy(field, rhs, stack, level + 1);
 			}

@@ -175,8 +175,8 @@ public class Sprintf extends VDLFunction {
     private static void append_i(DSHandle arg, StringBuilder output) 
     throws ExecutionException {
         if (arg.getType() == Types.INT) {
-        	Double d = (Double) arg.getValue();
-            output.append(new Integer(d.intValue()));
+        	Integer d = (Integer) arg.getValue();
+            output.append(d);
         }
         else {
             throw new ExecutionException

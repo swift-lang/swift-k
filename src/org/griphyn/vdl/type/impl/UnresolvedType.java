@@ -46,6 +46,10 @@ public class UnresolvedType implements Type {
 	public Type itemType() {
 		throw new UnsupportedOperationException();
 	}
+	
+	public Type keyType() {
+	    throw new UnsupportedOperationException();
+	}
 
 	public Type getBaseType() {
 		throw new UnsupportedOperationException();
@@ -62,7 +66,7 @@ public class UnresolvedType implements Type {
 	public List getFields() {
 		throw new UnsupportedOperationException("addField");
 	}
-
+	
 	public String getName() {
 		return name;
 	}

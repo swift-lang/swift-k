@@ -87,6 +87,22 @@ public class Misc extends FunctionsCollection {
     	            buf.append(o);
     	        }
     	    }
+    	    else if (h.getType().isArray()) {
+    	        buf.append('{');
+    	        boolean first = true;
+    	        for (Map.Entry<Comparable<?>, DSHandle> e : h.getArrayValue().entrySet()) {
+    	            if (first) {
+    	                first = false;
+    	            }
+    	            else {
+    	                buf.append(", ");
+    	            }
+    	            buf.append(e.getKey());
+    	            buf.append(" = ");
+    	            prettyPrint(buf, e.getValue());
+    	        }
+    	        buf.append('}');
+    	    }
     	    else {
     	        buf.append(h);
     	    }
@@ -105,8 +121,7 @@ public class Misc extends FunctionsCollection {
 			buf.append(TypeUtil.toString(args[i]));
 		}
 		
-		DSHandle handle = new RootDataNode(Types.STRING);
-		handle.setValue(buf.toString());
+		DSHandle handle = new RootDataNode(Types.STRING, buf.toString());
 
 		try {
 			if(VDL2Config.getConfig().getProvenanceLog()) {
@@ -134,11 +149,9 @@ public class Misc extends FunctionsCollection {
 
 		String filename = TypeUtil.toString(args[0]);
 
-		DSHandle handle = new RootDataNode(Types.BOOLEAN);
 		AbsFile file = new AbsFile(filename);
 		logger.debug("exists: " + file);
-		handle.setValue(file.exists());
-		handle.closeShallow();
+		DSHandle handle = new RootDataNode(Types.BOOLEAN, file.exists());
 
 		try {
 			if(VDL2Config.getConfig().getProvenanceLog()) {
@@ -185,9 +198,8 @@ public class Misc extends FunctionsCollection {
 		if (logger.isDebugEnabled()) {
 			logger.debug("strcut matched '" + group + "'");
 		}
-		DSHandle handle = new RootDataNode(Types.STRING);
-		handle.setValue(group);
-		handle.closeShallow();
+		DSHandle handle = new RootDataNode(Types.STRING, group);
+
 		VDLFunction.logProvenanceResult(provid, handle, "strcut");
 		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "input");
 		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
@@ -203,10 +215,7 @@ public class Misc extends FunctionsCollection {
                 "' for pattern '" + pattern + "'");
         }
         int result = inputString.indexOf(pattern);
-        DSHandle handle = new RootDataNode(Types.INT);
-        handle.setValue(new Double(result));
-        handle.closeShallow();
-        return handle;
+        return new RootDataNode(Types.INT, result);
     }
 
 	public DSHandle swiftscript_strsplit(VariableStack stack)
@@ -219,7 +228,7 @@ public class Misc extends FunctionsCollection {
 
 		DSHandle handle = new RootArrayDataNode(Types.STRING.arrayType());
 		for (int i = 0; i < split.length; i++) {
-			DSHandle el = handle.getField(Path.EMPTY_PATH.addFirst(String.valueOf(i), true));
+			DSHandle el = handle.getField(Path.EMPTY_PATH.addFirst(i, true));
 			el.setValue(split[i]);
 		}
 		handle.closeDeep();
@@ -279,7 +288,7 @@ public class Misc extends FunctionsCollection {
 
 		try
 		{
-		    handle.setValue(new Double(inputString));
+		    handle.setValue(new Integer(inputString));
 		}
 		catch(NumberFormatException e)
 		{
@@ -403,12 +412,7 @@ public class Misc extends FunctionsCollection {
 	    Object[] args = SwiftArg.VARGS.asArray(stack);
 	    String arg = (String) args[0];
 	    AbsFile file = new AbsFile(arg);
-	    boolean b = file.exists();
-	    result = new RootDataNode(Types.BOOLEAN);
-	    result.setValue(b);
-	    result.closeShallow();
-
-        return result;
+	    return new RootDataNode(Types.BOOLEAN, file.exists());
 	}
 }
 

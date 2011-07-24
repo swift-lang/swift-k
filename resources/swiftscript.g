@@ -166,6 +166,12 @@ topLevelStatement[StringTemplate code]
         code.setAttribute("statements",d);
        }
 
+// these are non-declaration append-associative array statements
+ 
+	|   (predictAppendStat) => d=appendStat
+		{
+		 code.setAttribute("statements",d);
+		}
 
 // they all begin with (id name)
     | (predictDeclaration) => declaration[code]
@@ -206,10 +212,14 @@ declpart [StringTemplate code, StringTemplate t, boolean isGlobal]
         String thisType = (String) t.getAttribute("name");
         StringTemplate variable=null;
         StringTemplate m = null;
+        StringTemplate sTemp = null;
+		String sType = "";
     }
     :
      n=declarator
-     (LBRACK RBRACK {thisType = thisType + "[]"; } )*
+	(LBRACK
+	(sTemp=type {sType = (String) sTemp.getAttribute("name") ;} )? 
+	RBRACK {thisType = thisType + "[" + sType + "]" ; sType = ""; } )*
      {
         thisTypeTemplate=template("type");
         thisTypeTemplate.setAttribute("name", thisType);
@@ -465,14 +475,23 @@ formalParameter returns [StringTemplate code=template("parameter")]
         }
     ;
 
-type returns [StringTemplate code=null]
-    :
-     id:ID 
-        {
-        code=template("type");
-        code.setAttribute("name", id.getText());
-        }
-    ;
+type returns [ StringTemplate code = null ] 
+	{ StringBuilder buf = new StringBuilder(); }
+:
+	id:ID {
+		code = template("type");
+		buf.append(id.getText());
+	}
+	(typeSubscript[buf]) * {
+		code.setAttribute("name", buf.toString());
+	}
+;
+    
+typeSubscript[StringBuilder buf] :
+	LBRACK { buf.append('['); }
+	(id:ID { buf.append(id.getText()); })?
+	RBRACK { buf.append(']'); }
+;
 
 compoundStat[StringTemplate code]
     :   LCURLY
@@ -492,6 +511,7 @@ innerStatement[StringTemplate code]
        s=ll1statement
     |  (procedurecallCode) => s=procedurecallCode
     |  (predictAssignStat) => s=assignStat
+    |  (predictAppendStat) => s=appendStat
     )
        {
         code.setAttribute("statements",s);
@@ -505,6 +525,7 @@ caseInnerStatement [StringTemplate statements]
     (  code=ll1statement
     |  (procedurecallCode) => code=procedurecallCode
     |  (predictAssignStat) => code=assignStat
+    |  (predictAppendStat) => code=appendStat
     ) {statements.setAttribute("statements",code);}
     |   (procedurecallStatAssignManyReturnParam[statements]) => procedurecallStatAssignManyReturnParam[statements]
     ;
@@ -549,7 +570,7 @@ foreachStat returns [StringTemplate code=template("foreach")]
         code.setAttribute("var", id.getText());
         code.setAttribute("in", ds);
         if (indexId != null) {
-           code.setAttribute("index", indexId.getText());
+           code.setAttribute("index", indexId.getText());           
         }
     }
     compoundStat[body] {code.setAttribute("body", body);}
@@ -613,6 +634,10 @@ predictAssignStat
 {StringTemplate x=null;}
     : x=identifier ASSIGN ;
 
+predictAppendStat
+{StringTemplate x=null;}
+    : x=identifier APPEND ;    
+
 assignStat returns [StringTemplate code=null]
 {StringTemplate id=null;}
     :
@@ -631,6 +656,34 @@ assignStat returns [StringTemplate code=null]
       }
     )
     ;
+
+appendStat returns [ StringTemplate code = null ]
+	{ StringTemplate id=null; }
+:
+    id=identifier
+    APPEND 
+    (
+    	(predictProcedurecallAssign) => code=procedurecallCode {
+    		StringTemplate o = template("returnParam");
+			o.setAttribute("name",id);
+			code.setAttribute("outputs",o);
+        }
+    	|
+      	code=arrayAppend { 
+			code.setAttribute("array", id);          
+		}
+    )
+;
+    
+arrayAppend returns [ StringTemplate code = null ]
+	{ StringTemplate a = null, e = null, id = null; }
+:
+	e = expression SEMI {
+		code = template("append");
+		code.setAttribute("value", e);
+	}
+;
+
 
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
@@ -750,20 +803,27 @@ procedurecallStatAssignManyReturnOutput [StringTemplate s, StringTemplate code]
         }
     ;
 
-returnParameter returns [StringTemplate code=template("returnParam")]
-{StringTemplate t=null, id=null, d=null;}
-    :   (t=type{        code.setAttribute("type", t);})?
-        id=identifier
-        {
-        code.setAttribute("name", id);
-        }
-        (
-          (ASSIGN declarator)=>(ASSIGN d=declarator)
-          {
-          code.setAttribute("bind", d);
-          }
-        )?
-    ;
+returnParameter returns [ StringTemplate code = template("returnParam") ]
+	{ StringTemplate t = null, id = null, d = null; StringBuilder buf = new StringBuilder(); }
+:
+	t = identifier { buf.append(t.getAttribute("name")); }
+	(typeSubscript[buf])*
+	( id = identifier )?
+	{
+		if (id == null) {
+			code.setAttribute("name", t);
+		}
+		else {
+			t = template("type");
+			t.setAttribute("name", buf.toString());
+			code.setAttribute("name", id);
+			code.setAttribute("type", t);
+		}
+	}
+	((ASSIGN declarator) => (ASSIGN d=declarator) {
+		code.setAttribute("bind", d);
+	})?
+;
 
 actualParameter returns [StringTemplate code=template("actualParam")]
 {StringTemplate d=null, id=null, ai=null;}
@@ -1110,6 +1170,7 @@ LT      :   '<' ;
 LE        :   "<=" ;
 GT        :   ">" ;
 GE        :   ">=";
+APPEND    :   "<<";
 ASSIGN  :   '=' ;
 AND        :   "&&";
 OR        :   "||";

@@ -100,13 +100,13 @@ public class ReadStructured extends VDLFunction {
 	private void setValue(DSHandle dest, String s) throws ExecutionException {
 		try {
 			if (dest.getType().equals(Types.INT)) {
-				dest.setValue(new Double(Integer.parseInt(s.trim())));
+				dest.setValue(Integer.valueOf(s.trim()));
 			}
 			else if (dest.getType().equals(Types.FLOAT)) {
 				dest.setValue(new Double(s.trim()));
 			}
 			else if (dest.getType().equals(Types.BOOLEAN)) {
-				dest.setValue(new Boolean(s.trim()));
+				dest.setValue(Boolean.valueOf(s.trim()));
 			}
 			else if (dest.getType().equals(Types.STRING)) {
 				dest.setValue(s);

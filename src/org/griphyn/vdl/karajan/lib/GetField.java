@@ -21,7 +21,6 @@ public class GetField extends VDLFunction {
 	public Object function(VariableStack stack) throws ExecutionException {
 		Object var1 = PA_VAR.getValue(stack);
 
-
 		if(var1 instanceof DSHandle) {
 
 			try {

@@ -12,7 +12,7 @@ import java.util.List;
 
 public class Path {
 	public static final Path EMPTY_PATH = new EmptyPath();
-	public static final Path CHILDREN = Path.parse("*");
+	public static final Path CHILDREN = Path.parse("[*]");
 
 	/** A list of Path.Entry that represents the path. */
 	private List<Path.Entry> entries;
@@ -48,13 +48,13 @@ public class Path {
 		/**
 		 * The name of this path entry (either the array offset or the type
 		 * member name.
-		 */
-		private String name;
+		 */		
+		private Comparable<?> key;
 
-		public Entry(String name, boolean index) {
-			this.name = name;
+		public Entry(Comparable<?> key, boolean index) {
+		    this.key = key;
 			this.index = index;
-			if (name == null) {
+			if (key == null) {
 				throw new IllegalArgumentException(
 						"Attempted to create a path entry with a null name");
 			}
@@ -72,75 +72,59 @@ public class Path {
 		}
 
 		public boolean isWildcard() {
-			return (name.length() == 1) && (name.charAt(0) == '*');
+		    return false;
 		}
 
-		public String getName() {
-			return name;
+		public Comparable<?> getKey() {
+			return key;
 		}
 
 		public boolean equals(Object obj) {
 			if (obj instanceof Entry) {
 				Entry other = (Entry) obj;
-				return name.equals(other.name) && (index == other.index);
+				if (isWildcard()) {
+				    return other.isWildcard();
+				}
+				return key.equals(other.key);
 			}
             return false;
 		}
 
 		public int hashCode() {
-			return name.hashCode() + (index ? 0 : 123);
+		    return key.hashCode() + (index ? 0 : 123);
 		}
 
 		public String toString() {
 			if (index) {
-				return '[' + name + ']';
+				return '[' + String.valueOf(key) + ']';
 			}
-            return name;
+			else {
+			    return String.valueOf(key);
+			}
+		}
+		
+		/*
+		 * equals() and hashCode() cannot be used to
+		 * properly test equality between a wildcard and 
+		 * another entry
+		 */
+		public static class Wildcard extends Entry {
+            @Override
+            public boolean isIndex() {
+                return true;
+            }
+
+            @Override
+            public boolean isWildcard() {
+                return true;
+            }
+            
+            
 		}
 	}
 
 	public static Path parse(String path) {
-		if (path == null || path.equals("") || path.equals("$")) {
-			return Path.EMPTY_PATH;
-		}
-		ArrayList<Entry> list = new ArrayList<Entry>();
-		StringBuilder sb = new StringBuilder();
-		Entry e = new Entry();
-		boolean wildcard = false;
-		for (int i = 0; i < path.length(); i++) {
-			char c = path.charAt(i);
-			switch (c) {
-				case '[': {
-					if (sb.length() == 0) {
-						continue; // TODO: what case does this capture?
-						// attempt to use multidim arrays?
-						//[m] it may simply be incomplete/incorrect
-					}
-				}
-				case '.': {
-					e.name = sb.toString();
-					list.add(e);
-					e = new Entry();
-					sb.setLength(0);
-					break;
-				}
-				case ']': {
-					e.index = true;
-					break;
-				}
-				case '*': {
-					wildcard = true;
-				}
-				default: {
-					sb.append(c);
-					break;
-				}
-			}
-		}
-		e.name = sb.toString();
-		list.add(e);
-		list.trimToSize();
-		return new Path(list, wildcard);
+		return new PathParser(path).parse();
 	}
 
 	private Path(List<Entry> entries, boolean wildcard) {
@@ -148,7 +132,7 @@ public class Path {
 		this.wildcard = wildcard;
 	}
 
-	private Path(List<Entry> entries) {
+	protected Path(List<Entry> entries) {
 		this(entries, false);
 		for (Entry e : entries) {
 			if (e.isWildcard()) {
@@ -170,20 +154,24 @@ public class Path {
 	    this.entries = Collections.emptyList();
 	}
 	
-	public String getElement(int index) {
-		return entries.get(index).name;
+	public Comparable<?> getElement(int index) {
+		return entries.get(index).key;
 	}
+	
+	public Comparable<?> getKey(int index) {
+        return entries.get(index).key;
+    }
 
 	public int size() {
 		return entries == null ? 0 : entries.size();
 	}
 
-	public String getFirst() {
-		return entries.get(0).name;
+	public Comparable<?> getFirst() {
+		return entries.get(0).key;
 	} 
 	
-	public String getLast() {
-		return entries.get(entries.size() - 1).name;
+	public Comparable<?> getLast() {
+		return entries.get(entries.size() - 1).key;
 	}
 
 	public boolean isEmpty() {
@@ -202,7 +190,7 @@ public class Path {
 		return new Path(entries.subList(fromIndex, toIndex));
 	}
 
-	public Path addFirst(String element, boolean index) {
+	public Path addFirst(Comparable<?> element, boolean index) {
 		Path p = new Path(this);
 		Entry e;
 		p.entries.add(0, e = new Entry(element, index));
@@ -216,7 +204,7 @@ public class Path {
 		return addFirst(element, false);
 	}
 
-	public Path addLast(String element, boolean index) {
+	public Path addLast(Comparable<?> element, boolean index) {
 		Path p = new Path(this);
 		Entry e = new Entry(element, index);
 		p.entries.add(e);
@@ -225,8 +213,15 @@ public class Path {
 		}
 		return p;
 	}
+	
+	protected void addLast(Entry e) {
+	    if (entries.isEmpty()) {
+	        entries = new ArrayList<Entry>();
+	    }
+	    entries.add(e);
+	}
 
-	public Path addLast(String element) {
+	public Path addLast(Comparable<?> element) {
 		return addLast(element, false);
 	}
 
@@ -239,18 +234,59 @@ public class Path {
 	public String stringForm() {
 		StringBuilder sb = new StringBuilder();
 		Iterator<Entry> i = entries.iterator();
+		boolean first = true;
 		while (i.hasNext()) {
-			sb.append(i.next().name);
-			if (i.hasNext()) {
-				sb.append('.');
-			}
+		    Entry e = i.next();
+		    if (e.isWildcard()) {
+		        sb.append("[*]");
+		    }
+		    else if (e.isIndex()) {
+		        sb.append('[');
+		        sb.append(stringForm(e.key));
+		        sb.append(']');
+		    }
+		    else {
+		        if (!first) {
+		            sb.append('.');
+		        }
+		        sb.append(e.key);
+		    }
+		    first = false;
 		}
 		return sb.toString();
 	}
 
+	private String stringForm(Comparable<?> key) {
+        if (key instanceof String) {
+            return "\"" + escape((String) key) + '"';
+        }
+        else if (key instanceof Number) {
+            return key.toString();
+        }
+        else {
+            throw new IllegalArgumentException("Unsupported key type: " + key);
+        }
+    }
+
 	/**
+	 * TODO: match or use the actual language valid escapes
+	 */
+    private String escape(String key) {
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < key.length(); i++) {
+            char c = key.charAt(i);
+            if (c == '\\' || c == '"') {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    /**
 	 * Returns a human readable string representation of this path. The string
-	 * returned by this method <strong>will not</strong> correctly be parsed
+	 * returned by this method <strong>will not necessarily</strong> correctly be parsed
 	 * into the same path by {@link Path.parse}. In other words no guarantee is
 	 * made that <code>Path.parse(somePath.toString()).equals(somePath)</code>.
 	 * For a consistent such representation of this path use {@link stringForm}.
@@ -261,17 +297,23 @@ public class Path {
 	    }
 		StringBuffer sb = new StringBuffer();
 		
+		boolean first = true;
 		for (Entry e : entries) {
-			
-			if (e.isIndex()) {
+		    if (e.isWildcard()) {
+                sb.append("[*]");
+            }
+		    else if (e.isIndex()) {
 				sb.append('[');
-				sb.append(e.getName());
+				sb.append(e.getKey());
 				sb.append(']');
 			}
 			else {
-				sb.append('.');
-				sb.append(e.getName());
+			    if (!first) {
+			        sb.append('.');
+			    }
+				sb.append(e.getKey());
 			}
+		    first = false;
 		}
 		return tostrcached = sb.toString();
 	}

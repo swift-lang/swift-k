@@ -29,14 +29,11 @@ public class GetFieldSubscript extends VDLFunction {
 
 		try {
 			Path path;
-			if (index instanceof String) {
-				path = Path.EMPTY_PATH.addFirst((String) index, true);
-			}
-			else if (index instanceof Double) {
-				path = Path.EMPTY_PATH.addFirst(String.valueOf(((Double) index).intValue()), true);
+			if ("*".equals(index)) {
+			    path = Path.CHILDREN;
 			}
 			else {
-				throw new RuntimeException("Cannot handle array index of Java type " + index.getClass());
+				path = Path.EMPTY_PATH.addFirst((Comparable<?>) index, true);
 			}
 			Collection<DSHandle> fields = var.getFields(path);
 			if (fields.size() == 1) {

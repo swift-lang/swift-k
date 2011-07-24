@@ -9,12 +9,13 @@ import java.util.Map;
 import org.griphyn.vdl.type.DuplicateFieldException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public class TypeImpl extends UnresolvedType {
 	private boolean primitive;
-	private Map fields;
+	private Map<String, Field> fields;
 	private Type baseType;
-
+	
 	public TypeImpl() {
 		this((URI) null, null, false);
 	}
@@ -31,7 +32,7 @@ public class TypeImpl extends UnresolvedType {
 
 	private void init(boolean primitive) {
 		this.primitive = primitive;
-		fields = new HashMap();
+		fields = new HashMap<String, Field>();
 		baseType = null;
 	}
 
@@ -44,9 +45,10 @@ public class TypeImpl extends UnresolvedType {
 	}
 
 	public void addField(Field field) throws DuplicateFieldException {
-		String name = field.getName();
-		if (name == null)
+		String name = (String) field.getId();
+		if (name == null) {
 			return;
+		}
 		if (fields.get(name) != null) {
 			throw new DuplicateFieldException(name);
 		}
@@ -65,7 +67,7 @@ public class TypeImpl extends UnresolvedType {
 			throw new NullPointerException();
 		}
 
-		Field field = (Field) fields.get(name);
+		Field field = fields.get(name);
 		if (field != null) {
 			return field;
 		}
@@ -74,8 +76,8 @@ public class TypeImpl extends UnresolvedType {
 		}
 	}
 
-	public List getFieldNames() {
-		ArrayList list = new ArrayList();
+	public List<String> getFieldNames() {
+		List<String> list = new ArrayList<String>();
 		list.addAll(fields.keySet());
 		return list;
 	}
@@ -83,13 +85,13 @@ public class TypeImpl extends UnresolvedType {
 	public List<Field> getFields() {
 		return new ArrayList<Field>(fields.values());
 	}
-
-	public Type getBaseType() {
+	
+    public Type getBaseType() {
 		return baseType;
 	}
 
 	public Type arrayType() {
-		return new Array(this);
+		return new Array(this, Types.INT);
 	}
 
 	public Type itemType() {
@@ -113,15 +115,17 @@ public class TypeImpl extends UnresolvedType {
         return isArray() || !fields.isEmpty();
     }
 
-    private static class Array extends TypeImpl {
+    public static class Array extends TypeImpl {
 		private Field field;
+		private Type keyType;
 
 		/** Constructs an array that will contain elements of the
 		    specified type. */
-		public Array(Type type) {
-			super(type.getNamespaceURI(), type.getName()+"[]", false);
+		public Array(Type valueType, Type keyType) {
+			super(valueType.getNamespaceURI(), valueType.getName()+"[" + keyType.getName() + "]", false);
 			field = Field.Factory.newInstance();
-			field.setType(type);
+			field.setType(valueType);
+			this.keyType = keyType;
 		}
 
 /*
@@ -140,6 +144,10 @@ public class TypeImpl extends UnresolvedType {
 
 		public Type itemType() {
 			return field.getType();
+		}
+		
+		public Type keyType() {
+		    return keyType;
 		}
 	}
 }

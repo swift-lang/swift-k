@@ -38,9 +38,15 @@ public class GetArrayIterator extends VDLFunction {
 				}
 				synchronized(var) {
 					if (var.isClosed()) {
+					    if (logger.isDebugEnabled()) {
+					        logger.debug("Using closed iterator for " + var);
+					    }
 						return new PairIterator(var.getArrayValue());
 					}
 					else {
+					    if (logger.isDebugEnabled()) {
+                            logger.debug("Using future iterator for " + var);
+                        }
 						return ((ArrayDataNode) var).getFutureList().futureIterator();
 					}
 				}

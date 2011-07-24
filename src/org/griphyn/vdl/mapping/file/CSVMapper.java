@@ -158,7 +158,7 @@ public class CSVMapper extends AbstractMapper {
 		int ii = 0;
 		while (itl.hasNext()) {
 			Path path = Path.EMPTY_PATH;
-			path = path.addFirst(String.valueOf(ii), true);
+			path = path.addFirst(ii, true);
 			List colContent = (List) itl.next();
 			Iterator itc = colContent.iterator();
 			int j = 0;
@@ -184,16 +184,16 @@ public class CSVMapper extends AbstractMapper {
 
 		readFile();
 
-		Iterator pi = path.iterator();
-		Path.Entry pe = (Path.Entry) pi.next();
+		Iterator<Path.Entry> pi = path.iterator();
+		Path.Entry pe = pi.next();
 		if (!pe.isIndex()) {
 			return null;
 		}
 		int i = 0;
-		try {
-			i = Integer.parseInt(pe.getName());
+		if (pe.getKey() instanceof Integer) {
+		    i = ((Integer) pe.getKey()).intValue();
 		}
-		catch (NumberFormatException e) {
+		else {
 			return null;
 		}
 		if (i > content.size()) {
@@ -208,8 +208,8 @@ public class CSVMapper extends AbstractMapper {
 			return new AbsFile((String) cl.get(0));
 		}
 
-		pe = (Path.Entry) pi.next();
-		String col = pe.getName();
+		pe = pi.next();
+		String col = String.valueOf(pe.getKey());
 		if (!colindex.containsKey(col)) {
 			return null;
 		}

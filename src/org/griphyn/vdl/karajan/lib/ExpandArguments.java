@@ -1,19 +1,19 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Comparator;
-import java.util.TreeSet;
-import java.util.Set;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
-
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.PathElementComparator;
 
 public class ExpandArguments extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(ExpandArguments.class);
@@ -35,7 +35,7 @@ public class ExpandArguments extends VDLFunction {
 				ArrayDataNode array = (ArrayDataNode) item;
 				Map m=array.getArrayValue();
 				Set keySet = m.keySet();
-				TreeSet sortedKeySet = new TreeSet(new StringsAsIntegersComparator());
+				TreeSet<Comparable<?>> sortedKeySet = new TreeSet<Comparable<?>>(new PathElementComparator());
 				sortedKeySet.addAll(keySet);
 				Iterator it = sortedKeySet.iterator();
 				while(it.hasNext()) {
