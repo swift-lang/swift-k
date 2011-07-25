@@ -7,7 +7,7 @@ if [ -n "$(find . -name "$PREFIX.*.tmp" -print -quit)" ]; then
 	exit 1
 fi
 
-if [ `grep "Cleaning" $TEST_LOG | wc -l` != "4" ]; then
+if [ `grep "Cleaning" $OUTPUT | wc -l` != "4" ]; then
 	echo "Wrong number of files cleaned"
 	exit 1
 fi

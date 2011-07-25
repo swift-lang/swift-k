@@ -12,17 +12,17 @@ if [ ! -f $PREFIX.2.out ]; then
 	exit 1
 fi
 
-if ! grep "Remapping" $TEST_LOG; then
+if ! grep "Remapping" $OUTPUT; then
 	echo "Test mapper did not claim to have remapped anything"
 	exit 1
 fi
 
-if ! grep "Cleaning file.*$PREFIX.1.tmp.*" $TEST_LOG; then
+if ! grep "Cleaning file.*$PREFIX.1.tmp.*" $OUTPUT; then
 	echo "Test mapper didn't clean what it should have"
 	exit 1
 fi
 
-if ! grep "Not cleaning file.*$PREFIX.2.out.*" $TEST_LOG; then
+if ! grep "Not cleaning file.*$PREFIX.2.out.*" $OUTPUT; then
 	echo "Test mapper did not identify 2 as persistent"
 	exit 1
 fi
