@@ -495,12 +495,12 @@ public class Karajan {
             StringTemplate appendST = template("append");
             StringTemplate array = expressionToKarajan(append.getAbstractExpressionArray(0),scope);
             StringTemplate value = expressionToKarajan(append.getAbstractExpressionArray(1),scope);
-            String indexType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(datatype(array));
+            String indexType = org.griphyn.vdl.type.Types.getArrayInnerIndexTypeName(datatype(array));
             if (!"auto".equals(indexType)) {
                 throw new CompilationException("You can only append to an array with " +
                 		"'auto' index type. Current index type: " + indexType);
             }
-            if (!datatype(value).equals(org.griphyn.vdl.type.Types.getArrayItemTypeName(datatype(array)))) {
+            if (!datatype(value).equals(org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(datatype(array)))) {
                 throw new CompilationException("You cannot append value of type " + datatype(value) +
                         " to an array of type " + datatype(array));
             }
@@ -809,8 +809,8 @@ public class Karajan {
 			foreachST.setAttribute("in", inST);
 
 			String inType = datatype(inST);
-			String itemType = org.griphyn.vdl.type.Types.getArrayItemTypeName(inType);
-			String keyType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(inType);
+			String itemType = org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(inType);
+			String keyType = org.griphyn.vdl.type.Types.getArrayInnerIndexTypeName(inType);
 			if (itemType == null) {
 			    throw new CompilationException("You can iterate through an array structure only");
 			}
@@ -950,7 +950,7 @@ public class Karajan {
 				XmlObject argument = app.getAbstractExpressionArray(i);
 				StringTemplate argumentST = expressionToKarajan(argument, scope);
 				String type = datatype(argumentST);
-				String base = org.griphyn.vdl.type.Types.getArrayItemTypeName(type);
+				String base = org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(type);
 				String testType;
 				// if array then use the array item type for testing
 				if (base != null) {
@@ -1192,7 +1192,7 @@ public class Karajan {
 			StringTemplate parentST = expressionToKarajan(op.getAbstractExpressionArray(0), scope);
 
 			String indexType = datatype(arrayST);
-			String declaredIndexType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(datatype(parentST));
+			String declaredIndexType = org.griphyn.vdl.type.Types.getArrayOuterIndexTypeName(datatype(parentST));
 			// the index type must match the declared index type,
 			// unless the declared index type is *
 			
@@ -1215,7 +1215,7 @@ public class Karajan {
 			StringTemplate newst = template("extractarrayelement");
 			newst.setAttribute("arraychild", arrayST);
 			newst.setAttribute("parent", parentST);
-			newst.setAttribute("datatype", org.griphyn.vdl.type.Types.getArrayItemTypeName(datatype(parentST)));
+			newst.setAttribute("datatype", org.griphyn.vdl.type.Types.getArrayOuterItemTypeName(datatype(parentST)));
 
 			return newst;
 		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
@@ -1227,8 +1227,8 @@ public class Karajan {
 			// if the parent is an array, then check against
 			// the base type of the array
 			
-			String baseType = org.griphyn.vdl.type.Types.getArrayItemTypeName(parentType);
-			String indexType = org.griphyn.vdl.type.Types.getArrayIndexTypeName(parentType);
+			String baseType = org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(parentType);
+			String indexType = org.griphyn.vdl.type.Types.getArrayInnerIndexTypeName(parentType);
 			String arrayType = parentType;
 
 			boolean arrayMode = false;
