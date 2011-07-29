@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Pseudo-code for now
+set -x
 
-# for f in *.out.expected 
-# do
-#   assert *.out exists 
-#   assert *.out.expected == *.out
-# done
+LINES=$( ls catsn*.out | wc -l )
+[[ ${?} == 0 ]] || exit 1
+[[ ${LINES} == 10 ]] || exit 1
+
+exit 0
