@@ -300,8 +300,8 @@ public class PBSExecutor extends AbstractExecutor {
 	   http://doesciencegrid.org/public/pbs/qsub.html
 	 */
 	String makeName(Task task) {
-		String name = task.getName(); 
-		if (name.length() > 15) {
+		String name = task.getName();
+		if (name == null || name.length() > 15) {
 			int i = 0;
 			synchronized(this) {
 				i = unique++;
