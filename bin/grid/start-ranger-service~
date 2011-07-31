@@ -21,8 +21,6 @@ THROTTLE=$(echo "scale=2; ($NODES*$CORESPERNODE)/100 -.01"|bc)
 
 echo THROTTLE=$THROTTLE
 
-exit
-
 # This lets user run this script to add another job full of workers to an existing coaster service
 # Must be started in the same directory where start-swift-service created the service.wports file.
 
