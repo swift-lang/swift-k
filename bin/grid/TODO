@@ -1,6 +1,5 @@
 
-
-ExTENCI Exec
+EXTENCI APPLICATION WORK
 
 create modft install & test file; test under fork and work
 
@@ -26,15 +25,15 @@ TO RESOLVE
 
 FEATURES
 
-Add site secltion option to foreachsite
-
-(Swift feature: foreach site in siwift?_)
+- Add site selection option to foreachsite
 
 CLEANUP
 
-Find all interim p-baked tools under swift/lab/osg and place under grid/ for development
+- Find all interim tools under swift/lab/osg and place under grid/ for development
 
-Find Glen's tgsites command and integrate
+ENHANCEMENTS
 
-Merge in gstar
+- Find Glen's tgsites command and integrate
+
+- incorporate gstar (would be a good Globus Online feature)
 
