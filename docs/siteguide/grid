@@ -1,0 +1,125 @@
+Grids, including OSG and TeraGrid
+---------------------------------
+
+Overview of running on grid sites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Get a DOEGrids cert. Then register it in the *OSG Engage VO*, and/or map it using +gx-request+ on TeraGrid sites.
+
+* Run +GridSetup+ to configure Swift to use the grid sites.  This tests
+for correct operation and creates a "green list" of good sites.
+
+* Prepare an installation package for the programs you want to run on
+grid sites via Swift, and install that package using +foreachsite+.
+
+* Run +RunWorkers+ to start and maintain a pool of Swift workers on
+each site.
+
+* Run Swift scripts that use the grid site resources.
+
+
+Requesting Access
+~~~~~~~~~~~~~~~~~
+
+*For OSG*: Obtain a DOEGrids certificate and register the certificate in
+the OSG "Engage" VO following the procedures at:
+
+https://twiki.grid.iu.edu/bin/view/Engagement/EngageNewUserGuide
+
+[red]*FIXME*: access to OSG wiki pages may request the user to present
+a certificate. Is this a problem from users without one? If so, make a
+copy of the page on the Swift web.
+
+*For TeraGrid*: Obtain a DOEGrids certifcate using the OSG ENgage
+instructions above. Ask a TeraGrid PI to add you to a TeraGrid
+project. Once you obtain a login and project access (via US Mail), use
+gx-request to add your certificate
+
+To run jobs using the procedures documented here you need to be logged
+in to a "submit host" on which you will run Swift and other
+grid-related utilities. This can be any host with the OSG client stack
+or equivalent tools installed. Such hosts include the OSG Engage
+submit host, and the two Swift lab servers
+{bridled,communicado}.ci.uchicago.edu.
+
+Obtain a login on engage-submit.renci.org following instructions on
+the OSG URL above.
+
+Obtain a CI login with access to the Swift lab servers by requesting
+"OSG Gridlab" access at:
+
+http://accounts.ci.uchicago.edu
+
+
+Connecting to a submit host
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-----
+ssh yourusername@bridled.ci.uchicago.edu
+ssh yourusername@communicado.ci.uchicago.edu
+ssh yourusername@engage-submit.renci.org
+-----
+
+Downloading and install Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The current version of Swift can be downloaded from
+http://www.ci.uchicago.edu/swift/downloads/index.php.
+
+Fetch and untar the latest release.
+Then add the Swift bin/ directory to your PATH. For example:
+
+-----
+cd $HOME
+wget http://www.ci.uchicago.edu/swift/packages/swift-0.92.1.tar.gz
+tar txf swift-0.92.1.tar.gz
+export PATH=$PATH:$HOME/swift-0.92.1/bin
+-----
+
+Set up OSG environment
+~~~~~~~~~~~~~~~~~~~~~~
+
+Depending on your shell type, run:
+
+-----
+source /opt/osg/setup.sh
+or
+source /opt/osg/setup.csh
+-----
+
+Create a VOMS Grid proxy
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+-----
+$ voms-proxy-init -voms Engage -valid 12:00
+-----
+
+Generating Configuration Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-----
+cd $HOME
+mkdir swiftgrid
+cd swiftgrid
+gen_gridsites
+# Wait a few minutes to a few hours for Swift to validate grid sites
+get_greensites >greensites
+-----
+
+
+Running Swift
+~~~~~~~~~~~~~
+Now that everything is in place, run Swift with the following command:
+
+-----
+swift -sites.file sites.xml -tc.file tc.data catsn.swift -n=10
+-----
+
+You should see several new files being created, called catsn.0001.out, catsn.0002.out, etc. Each of these
+files should contain the contents of what you placed into data.txt. If this happens, your job has run
+successfully on PADS!
+
+More Help
+~~~~~~~~~
+The best place for additional help is the Swift user mailing list. You can subscribe to this list at
+http://mail.ci.uchicago.edu/mailman/listinfo/swift-user. When submitting information, please send your sites.xml file, your tc.data, and any Swift log files that were created during your attempt.
