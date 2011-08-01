@@ -1,6 +1,5 @@
 #! /bin/bash
 
-# FIXME: make these commandline keyword arguments, eg --nodes=
 function usage ()
 {
        echo "Usage:"
