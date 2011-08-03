@@ -33,7 +33,7 @@ public class InfiniteCountingWhile extends Sequential {
 		stack.setVar("#iteratethread", tc);
 		stack.setVar("#thread", tc.split(0));
 		stack.setVar(COUNTER_NAME, Collections.singletonList(0));
-		stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, 0.0));
+		stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, 0));
 		super.pre(stack);
 	}
 
@@ -48,7 +48,7 @@ public class InfiniteCountingWhile extends Sequential {
 			return;
 		}
 		FlowElement fn = null;
-
+		
 		if (index == elementCount() - 1) {
 		    // the condition is always compiled as the last thing in the loop
 		    // but the increment needs to happen before the condition is
@@ -60,7 +60,7 @@ public class InfiniteCountingWhile extends Sequential {
             ThreadingContext tc = (ThreadingContext)stack.getVar("#iteratethread");
             stack.setVar("#thread", tc.split(i));
             stack.setVar(COUNTER_NAME, Collections.singletonList(i));
-            stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, Double.valueOf(i)));
+            stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, i));
 		}
 		if (index >= elementCount()) {
 			// starting new iteration
