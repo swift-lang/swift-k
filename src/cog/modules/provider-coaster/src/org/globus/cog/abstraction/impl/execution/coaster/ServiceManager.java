@@ -42,6 +42,7 @@ import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
@@ -106,8 +107,8 @@ public class ServiceManager implements StatusListener {
         }
     }
 
-    public String reserveService(ServiceContact contact, SecurityContext sc,
-            String bootHandlerProvider) throws TaskSubmissionException {
+    public String reserveService(Service service, String bootHandlerProvider) throws TaskSubmissionException {
+        ServiceContact contact = service.getServiceContact();
         if (logger.isDebugEnabled()) {
             logger.debug("Reserving service " + contact);
         }
@@ -117,7 +118,7 @@ public class ServiceManager implements StatusListener {
             String url = waitForStart(contact);
             if (url == null) {
                 url =
-                        startService(contact, sc, getBootHandler(bootHandlerProvider),
+                        startService(service, getBootHandler(bootHandlerProvider),
                             bootHandlerProvider);
             }
             increaseUsageCount(contact);
@@ -130,7 +131,11 @@ public class ServiceManager implements StatusListener {
 
     public String reserveService(Task task, String bootHandlerProvider)
             throws TaskSubmissionException {
-        return reserveService(getContact(task), getSecurityContext(task), bootHandlerProvider);
+        return reserveService(getService(task), bootHandlerProvider);
+    }
+    
+    private Service getService(Task task) {
+        return task.getService(0);
     }
 
     protected String waitForStart(Object service) throws InterruptedException {
@@ -152,11 +157,13 @@ public class ServiceManager implements StatusListener {
 
     // private static final String[] STRING_ARRAY = new String[0];
 
-    protected String startService(ServiceContact contact, SecurityContext sc,
-            TaskHandler bootHandler, String bootHandlerProvider) throws Exception {
+    protected String startService(Service service, TaskHandler bootHandler, 
+            String bootHandlerProvider) throws Exception {
+        ServiceContact contact = service.getServiceContact();
+        SecurityContext sc = service.getSecurityContext();
         try {
             startLocalService();
-            final Task t = buildTask(contact);
+            final Task t = buildTask(service);
             setSecurityContext(t, sc, bootHandlerProvider);
             t.addStatusListener(this);
             if (logger.isDebugEnabled()) {
@@ -170,7 +177,6 @@ public class ServiceManager implements StatusListener {
                 new Thread(new Runnable() {
                     public void run() {
                         CoasterService.main(new String[] { ls, id, "-local" });
-                        //CoasterService.main(new String[] { ls, id });
                     }
                 }).start();
             }
@@ -180,7 +186,9 @@ public class ServiceManager implements StatusListener {
             String url = localService.waitForRegistration(t, (String) t.getAttribute(TASK_ATTR_ID));
             synchronized (services) {
                 services.put(contact, url);
-                credentials.put(url, sc.getCredentials());
+                if (sc != null) {
+                    credentials.put(url, sc.getCredentials());
+                }
             }
             return url;
         }
@@ -257,7 +265,7 @@ public class ServiceManager implements StatusListener {
         return task.getService(0).getSecurityContext();
     }
 
-    private Task buildTask(ServiceContact sc) throws TaskSubmissionException {
+    private Task buildTask(Service service) throws TaskSubmissionException {
         try {
             Task t = new TaskImpl();
             t.setType(Task.JOB_SUBMISSION);
@@ -268,13 +276,14 @@ public class ServiceManager implements StatusListener {
             t.setAttribute(TASK_ATTR_ID, id);
             js.addArgument(loadBootstrapScript(new String[] { getBootstrapServiceURL(),
                     getLocalServiceURL(), getMD5(BOOTSTRAP_JAR), getMD5(Bootstrap.BOOTSTRAP_LIST),
-                    id, sc.getHost() }));
+                    id, service.getServiceContact().getHost() }));
             js.setDelegation(Delegation.FULL_DELEGATION);
             js.setStdOutputLocation(FileLocation.MEMORY);
             js.setStdErrorLocation(FileLocation.MEMORY);
+           
             t.setSpecification(js);
             ExecutionService s = new ExecutionServiceImpl();
-            s.setServiceContact(sc);
+            s.setServiceContact(service.getServiceContact());
             s.setJobManager("fork");
             t.setService(0, s);
             return t;
@@ -367,7 +376,12 @@ public class ServiceManager implements StatusListener {
 
     private synchronized void startLocalService() throws IOException {
         if (localService == null) {
-            localService = new LocalService();
+            try {
+                localService = new LocalService();
+            }
+            catch (Exception e) {
+                throw new IOException(e);
+            }
             localService.start();
         }
     }

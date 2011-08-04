@@ -9,19 +9,21 @@
  */
 package org.globus.cog.abstraction.impl.execution.coaster;
 
-import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
+import org.globus.cog.abstraction.coaster.service.job.manager.Job;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class ServiceConfigurationCommand extends Command {
     public static final String NAME = "CONFIGSERVICE";
-    
+        
     public ServiceConfigurationCommand(Task task) {
         super(NAME);
         JobSpecification spec = (JobSpecification) task.getSpecification();
-        for (int i = 0; i < Settings.NAMES.length; i++) {
-            add(spec, Settings.NAMES[i]);
+        for (String name : spec.getAttributeNames()) {
+            if (!Job.SUPPORTED_ATTRIBUTES.contains(name)) {
+                add(spec, name);
+            }
         }
     }
     
