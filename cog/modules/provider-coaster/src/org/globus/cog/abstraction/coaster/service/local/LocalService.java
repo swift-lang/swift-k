@@ -22,13 +22,17 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.karajan.workflow.service.ChannelFactory;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
+import org.globus.gsi.GlobusCredentialException;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
 
 public class LocalService extends GSSService implements Registering {
     public static final Logger logger = Logger.getLogger(LocalService.class);
@@ -41,7 +45,7 @@ public class LocalService extends GSSService implements Registering {
     
     private Map<ChannelContext, ServiceTrackerPair> resourceTrackers;
 
-    public LocalService() throws IOException {
+    public LocalService() throws IOException, GlobusCredentialException, GSSException {
         super();
     }
 
@@ -151,8 +155,11 @@ public class LocalService extends GSSService implements Registering {
                 logger.info("Replacing channel for service with id=" + id + ".");
             }
             try {
-                ChannelManager.getManager().registerChannel(url,
-                    channel.getUserContext().getCredential(), channel);
+                GSSCredential cred = channel.getUserContext().getCredential();
+                if (cred == null) {
+                    cred = ChannelFactory.getDefaultCredential();
+                }
+                ChannelManager.getManager().registerChannel(url, cred, channel);
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to register channel " + url);
