@@ -100,6 +100,14 @@ public class Node implements Callback, ChannelListener {
 
     public void replyReceived(Command cmd) {
         logger.info(this + " shut down successfully");
+        try {
+            KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
+            channel.close();
+            ChannelManager.getManager().removeChannel(channelContext);
+        }
+        catch (ChannelException e) {
+            logger.warn(this + " failed to remove channel after shutdown");
+        }        
     }
 
     public ChannelContext getChannelContext() {
