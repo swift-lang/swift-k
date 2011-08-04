@@ -6,6 +6,9 @@
 
 package org.globus.cog.abstraction.impl.common;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.ExecutionTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.FileOperationTaskHandler;
@@ -27,7 +30,11 @@ public class AbstractionFactory {
 
     private static Logger logger = Logger.getLogger(AbstractionFactory.class);
 
-    private static boolean trapChecked;
+    private static Map<String, SecurityContext> defaultCredentials;
+    
+    static {
+    	defaultCredentials = new HashMap<String, SecurityContext>();
+    }
 
     public static TaskHandler newExecutionTaskHandler()
             throws InvalidProviderException, ProviderMethodException {
@@ -138,4 +145,14 @@ public class AbstractionFactory {
             throw new InvalidClassException(e);
         }
     }
+    
+    public synchronized static Object getDefaultCredentials(String provider) throws InvalidProviderException, ProviderMethodException {
+    	SecurityContext sc = defaultCredentials.get(provider);
+    	if (sc == null) {
+    	    sc = newSecurityContext(provider);
+            defaultCredentials.put(provider, sc);   
+    	}
+    	return sc.getDefaultCredentials();
+    }
+    
 }
