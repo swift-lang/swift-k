@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
@@ -25,13 +26,13 @@ import org.globus.cog.abstraction.interfaces.GridResource;
 import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 public abstract class AbstractFileResource implements FileResource {
     private String name;
     private Map<String, Object> attributes;
-    private ServiceContact serviceContact;
-    private SecurityContext securityContext;
+    private Service service;
     private Identity identity;
     private final int type = GridResource.FILE;
     private String protocol;
@@ -39,6 +40,11 @@ public abstract class AbstractFileResource implements FileResource {
     
     protected AbstractFileResource(String name, String protocol,
             ServiceContact serviceContact, SecurityContext securityContext) {
+        this(name, protocol, new ServiceImpl(protocol, serviceContact, securityContext));
+    }
+    
+    protected AbstractFileResource(String name, String protocol,
+            Service service) {
         attributes = new HashMap<String, Object>();
         identity = new IdentityImpl();
         this.name = name;
@@ -46,8 +52,7 @@ public abstract class AbstractFileResource implements FileResource {
             throw new NullPointerException();
         }
         this.protocol = protocol;
-        this.serviceContact = serviceContact;
-        this.securityContext = securityContext;
+        this.service = service;
     }
 
     /** Set the name of the resource */
@@ -62,12 +67,12 @@ public abstract class AbstractFileResource implements FileResource {
 
     /** set service contact */
     public void setServiceContact(ServiceContact serviceContact) {
-        this.serviceContact = serviceContact;
+        service.setServiceContact(serviceContact);
     }
 
     /** return service contact */
     public ServiceContact getServiceContact() {
-        return serviceContact;
+        return service.getServiceContact();
     }
 
     /** Set identity of the resource */
@@ -92,12 +97,20 @@ public abstract class AbstractFileResource implements FileResource {
 
     /** Set the appropriate SecurityContext for the FileResource */
     public void setSecurityContext(SecurityContext securityContext) {
-        this.securityContext = securityContext;
+        service.setSecurityContext(securityContext);
     }
 
     /** Get the securityContext for the remote resource */
     public SecurityContext getSecurityContext() {
-        return this.securityContext;
+        return service.getSecurityContext();
+    }
+    
+    public Service getService() {
+        return service;
+    }
+    
+    public void setService(Service service) {
+        this.service = service;
     }
 
     public boolean isStarted() {

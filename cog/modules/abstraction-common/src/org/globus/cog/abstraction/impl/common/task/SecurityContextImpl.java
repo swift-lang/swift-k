@@ -18,6 +18,11 @@ public class SecurityContextImpl implements SecurityContext {
     public SecurityContextImpl() {
         this.attributes = new HashMap<String, Object>();
     }
+    
+    public SecurityContextImpl(Object credentials) {
+        this();
+        this.credentials = credentials;
+    }
 
     public SecurityContextImpl(Object credentials, String alias) {
         this();

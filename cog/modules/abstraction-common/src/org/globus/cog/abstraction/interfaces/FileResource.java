@@ -58,6 +58,10 @@ public interface FileResource extends GridResource {
      * <code>FileResource</code>
      */
     public String getProtocol();
+    
+    void setService(Service service);
+    
+    Service getService();
 
     /**
      * Sets the service contact for this <code>FileResource</code>

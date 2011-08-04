@@ -65,13 +65,23 @@ public class ServiceContactImpl implements ServiceContact {
     public boolean equals(Object o) {
     	if (o instanceof ServiceContact) {
     		ServiceContact sc = (ServiceContact) o;
-    		return getContact().equals(sc.getContact());
+    		if (contact == null) {
+    		    return sc.getContact() == null;
+    		}
+    		else {
+    		    return contact.equals(sc.getContact());
+    		}
     	}
         return false;
     }
 
     public int hashCode() {
-        return this.getContact().hashCode();
+        if (contact == null) {
+            return 1;
+        }
+        else {
+            return contact.hashCode();
+        }
     }
 
     private void parse(String contact) {
