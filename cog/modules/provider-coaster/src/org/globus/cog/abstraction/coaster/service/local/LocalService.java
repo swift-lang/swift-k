@@ -18,11 +18,11 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.ChannelFactory;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
 import org.globus.cog.karajan.workflow.service.GSSService;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
@@ -157,7 +157,7 @@ public class LocalService extends GSSService implements Registering {
             try {
                 GSSCredential cred = channel.getUserContext().getCredential();
                 if (cred == null) {
-                    cred = ChannelFactory.getDefaultCredential();
+                    cred = (GSSCredential) AbstractionFactory.getDefaultCredentials("gt2");
                 }
                 ChannelManager.getManager().registerChannel(url, cred, channel);
             }
