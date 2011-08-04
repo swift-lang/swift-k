@@ -29,7 +29,7 @@ public abstract class AbstractQueuePoller implements Runnable {
 
     private String name;
     private LinkedList newjobs, donejobs;
-    private Map jobs;
+    private Map<String, Job> jobs;
     boolean any = false;
     private int sleepTime;
     private int failures;
@@ -44,7 +44,7 @@ public abstract class AbstractQueuePoller implements Runnable {
         this.name = name;
         this.properties = properties;
         this.sleepTime = properties.getPollInterval() * 1000;
-        jobs = new HashMap();
+        jobs = new HashMap<String, Job>();
         newjobs = new LinkedList();
         donejobs = new LinkedList();
     }
@@ -168,12 +168,13 @@ public abstract class AbstractQueuePoller implements Runnable {
             Process pqstat = Runtime.getRuntime().exec(cmdarray);
             
             processStdout(pqstat.getInputStream());
+            String stderr = readStderr(pqstat.getErrorStream());
             if (logger.isDebugEnabled()) {
-                logger.debug("Stderr from poll command: " + readStderr(pqstat.getErrorStream()));
+                logger.debug("Stderr from poll command: " + stderr);
             }
             
             int ec = pqstat.waitFor();
-            if (ec != 0) {
+            if (getError(ec, stderr) != 0) {
                 failures++;
                 if (failures >= MAX_CONSECUTIVE_FAILURES) {
                     failAll(getProperties().getPollCommandName()
@@ -187,6 +188,10 @@ public abstract class AbstractQueuePoller implements Runnable {
         catch (Exception e) {
             failAll(e);
         }
+    }
+
+    protected int getError(int ec, String stderr) {
+        return ec;
     }
 
     private String readStderr(InputStream is) {
@@ -211,10 +216,10 @@ public abstract class AbstractQueuePoller implements Runnable {
     }
 
     protected Job getJob(String id) {
-        return (Job) jobs.get(id);
+        return jobs.get(id);
     }
 
-    protected Map getJobs() {
+    protected Map<String, Job> getJobs() {
         return jobs;
     }
 
