@@ -83,4 +83,9 @@ public class SecurityContextImpl implements SecurityContext {
             return false;
         }
     }
+
+    @Override
+    public Object getDefaultCredentials() {
+        return null;
+    }
 }

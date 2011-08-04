@@ -34,4 +34,10 @@ public interface SecurityContext {
     public void setAttribute(String name, Object value);
 
     public Object getAttribute(String name);
+    
+    /**
+     * If this security context supports default credentials, return them;
+     * else return <code>null</code>
+     */
+    public Object getDefaultCredentials();
 }
