@@ -6,21 +6,15 @@
 
 package org.globus.cog.abstraction.impl.ssh;
 
-import java.util.Hashtable;
-
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 
-public class SSHSecurityContextImpl implements SecurityContext {
+public class SSHSecurityContextImpl extends SecurityContextImpl {
 
     private static Logger logger = Logger
             .getLogger(SSHSecurityContextImpl.class.getName());
-    private Object credentials;
-
-    private Hashtable attributes = new Hashtable();
 
     public SSHSecurityContextImpl() {
-        //  this.credentials = new PasswordAuthentication(null, null);
     }
 
     public SSHSecurityContextImpl(Object credentials) {
@@ -29,30 +23,5 @@ public class SSHSecurityContextImpl implements SecurityContext {
 
     public void setCredentials(Object credentials, String alias) {
         setCredentials(credentials);
-    }
-
-    public void setCredentials(Object credentials) {
-        this.credentials = credentials;
-    }
-
-    public Object getCredentials() {
-        return this.credentials;
-    }
-
-    public void setAttribute(String name, Object value) {
-        this.attributes.put(name, value);
-    }
-
-    public Object getAttribute(String name) {
-
-        return this.attributes.get(name);
-    }
-
-    public void setAlias(String alias) {
-    }
-
-    public String getAlias() {
-
-        return null;
     }
 }
