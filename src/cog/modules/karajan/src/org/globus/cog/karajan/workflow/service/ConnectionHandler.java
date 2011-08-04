@@ -16,11 +16,14 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.GSSChannel;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.StreamChannel;
 import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
 import org.globus.gsi.gssapi.net.GssSocket;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
 
 public class ConnectionHandler {
 	private static final Logger logger = Logger.getLogger(ConnectionHandler.class);
@@ -37,9 +40,8 @@ public class ConnectionHandler {
 	    this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
 		this.socket = socket;
 		
-		if (socket instanceof GssSocket) {
-			channel = new GSSChannel((GssSocket) socket, this.requestManager, new ChannelContext(
-					service));
+		if (socket instanceof GssSocket) {			
+			channel = new GSSChannel((GssSocket) socket, this.requestManager, new ChannelContext(service));
 		}
 		else {
 			channel = new TCPChannel(socket, this.requestManager, new ChannelContext(service));

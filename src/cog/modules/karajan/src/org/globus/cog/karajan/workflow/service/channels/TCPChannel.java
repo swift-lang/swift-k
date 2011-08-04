@@ -23,14 +23,14 @@ public class TCPChannel extends AbstractTCPChannel {
 		super(rm, channelContext, true);
 		this.contact = contact;
 		setName(contact.toString());
-		channelContext.setUserContext(new UserContext(null, channelContext));
+		channelContext.setUserContext(new UserContext(channelContext));
 	}
 
 	public TCPChannel(Socket socket, RequestManager requestManager, ChannelContext channelContext)
 			throws IOException {
 		super(requestManager, channelContext, false);
 		setSocket(socket);
-		channelContext.setUserContext(new UserContext(null, channelContext));
+		channelContext.setUserContext(new UserContext(channelContext));
 	}
 
 	public void start() throws ChannelException {

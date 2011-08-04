@@ -15,15 +15,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.ietf.jgss.GSSName;
+import org.ietf.jgss.GSSCredential;
 
 public class ServiceContext {
-	private Map users;
+	private Map<String, UserContext> users;
 	private Service service;
     private boolean local;
 	
 	public ServiceContext(Service service) {
-		users = new HashMap();
+		users = new HashMap<String, UserContext>();
 		this.service = service;
 	}
 	
@@ -32,27 +32,23 @@ public class ServiceContext {
 			users.put(String.valueOf(uc.getName()), uc);
 		}
 	}
-	
-	public UserContext getUserContext(GSSName name, ChannelContext channelContext) {
-		return getUserContext(name.toString(), channelContext);
-	}
-	
-	public UserContext getUserContext(String name, ChannelContext channelContext) {
+		
+	public UserContext getUserContext(String name, GSSCredential cred, ChannelContext channelContext) {
 		//TODO this doesn't make much sense
 		synchronized(users) {
 			String sname = String.valueOf(name);
-			UserContext uc = (UserContext) users.get(sname);
+			UserContext uc = users.get(sname);
 			if (uc == null) {
-				uc = new UserContext(name, channelContext);
+				uc = new UserContext(cred, channelContext);
 				users.put(sname, uc);
 			}
 			return uc;
 		}
 	}
 	
-	public Collection getUserContexts() {
+	public Collection<UserContext> getUserContexts() {
 		synchronized(users) {
-			return new ArrayList(users.values());
+			return new ArrayList<UserContext>(users.values());
 		}
 	}
 	

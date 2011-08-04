@@ -9,8 +9,6 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
-import java.rmi.server.UID;
-
 import org.globus.cog.karajan.workflow.service.RequestManager;
 
 public class PipedClientChannel extends AbstractPipedChannel {

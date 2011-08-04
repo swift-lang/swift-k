@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
 
 public class UserContext {
 
@@ -21,9 +22,14 @@ public class UserContext {
 	private GSSCredential credential;
 	private final Map instances;
 	private final ChannelContext channelContext;
-
-	public UserContext(String name, ChannelContext channelContext) {
-		this.name = name;
+	
+	public UserContext(ChannelContext channelContext) {
+		this(null, channelContext);
+	}
+	
+	public UserContext(GSSCredential cred, ChannelContext channelContext) {
+	    this.credential = cred;
+	    this.name = getName(cred);
 		instances = new HashMap();
 		this.channelContext = channelContext;
 		if (channelContext == null) {
@@ -32,6 +38,20 @@ public class UserContext {
 		if (channelContext.getServiceContext() != null) {
 			channelContext.getServiceContext().registerUserContext(this);
 		}
+	}
+
+	public static String getName(GSSCredential cred) {
+		if (cred != null) {
+            try {
+                return cred.getName().toString();
+            }
+            catch (GSSException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            return null;
+        }
 	}
 
 	public GSSCredential getCredential() {
