@@ -494,6 +494,10 @@ public class Block implements StatusListener, Comparable<Block> {
     public void jobPulled() {
         lastUsed = System.currentTimeMillis();
     }
+    
+    public void jobCompleted() {
+    	lastUsed = System.currentTimeMillis();
+    }
 
     public long getLastUsed() {
         return lastUsed;
