@@ -114,14 +114,12 @@ public class FileResourceCache {
         if (provider == null) {
             throw new InvalidProviderException("Provider is null");
         }
-        SecurityContext securityContext = service.getSecurityContext();
-        if (securityContext == null) {
-            securityContext = AbstractionFactory.newSecurityContext(provider);
+        if (service.getSecurityContext() == null) {
+            service.setSecurityContext(AbstractionFactory.newSecurityContext(provider));
         }
         FileResource fileResource = AbstractionFactory
                 .newFileResource(provider);
-        fileResource.setServiceContact(service.getServiceContact());
-        fileResource.setSecurityContext(securityContext);
+        fileResource.setService(service);
         List<FileResource> resources;
         if (fileResources.containsKey(service)) {
             resources = fileResources.get(service);
