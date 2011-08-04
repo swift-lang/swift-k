@@ -7,61 +7,28 @@
 package org.globus.cog.abstraction.impl.file.webdav;
 
 import java.net.PasswordAuthentication;
-import java.util.Hashtable;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 
-public class InteractiveWebDAVSecurityContextImpl implements SecurityContext {
+public class InteractiveWebDAVSecurityContextImpl extends SecurityContextImpl {
 
     private static Logger logger = Logger
             .getLogger(InteractiveWebDAVSecurityContextImpl.class.getName());
-    private PasswordAuthentication credentials = null;
-
-    private Hashtable attributes = new Hashtable();
 
     public InteractiveWebDAVSecurityContextImpl() {
-        //  this.credentials = new PasswordAuthentication(null, null);
-    }
-
-    public void setCredentials(Object credentials, String alias) {
-        setCredentials(credentials);
     }
 
     public InteractiveWebDAVSecurityContextImpl(PasswordAuthentication credentials) {
         setCredentials(credentials);
     }
 
-    public void setCredentials(Object credentials) {
-        try {
-            this.credentials = (PasswordAuthentication) credentials;
-        } catch (Exception e) {
-            logger.error("Cannot establish credentials", e);
-        }
-    }
-
-    public Object getCredentials() {
+    public synchronized Object getCredentials() {
+        Object credentials = getCredentials();
         if (credentials == null) {
-            this.credentials = CredentialsDialog.showCredentialsDialog();
+            credentials = CredentialsDialog.showCredentialsDialog();
+            setCredentials(credentials);
         }
-        return this.credentials;
+        return credentials;
     }
-
-    public void setAttribute(String name, Object value) {
-        this.attributes.put(name, value);
-    }
-
-    public Object getAttribute(String name) {
-
-        return this.attributes.get(name);
-    }
-
-    public void setAlias(String alias) {
-    }
-
-    public String getAlias() {
-
-        return null;
-    }
-
 }
