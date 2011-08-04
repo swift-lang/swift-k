@@ -23,8 +23,10 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
+import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.interfaces.FileLocation;
+import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 
 public class CobaltExecutor extends AbstractExecutor {
@@ -42,7 +44,18 @@ public class CobaltExecutor extends AbstractExecutor {
 				.getExitcodeRegexp());
 	}
 
-	protected Job createJob(String jobid, String stdout,
+	@Override
+    protected void validate(Task task) throws ProcessException {
+	    JobSpecification spec = (JobSpecification) task.getSpecification();
+	    if (spec.getAttribute("alcfbgpnat") != null) {
+            spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
+        }
+        super.validate(task);
+    }
+
+
+
+    protected Job createJob(String jobid, String stdout,
 			FileLocation stdOutputLocation, String stderr,
 			FileLocation stdErrorLocation, String exitcode,
 			AbstractExecutor executor) {
