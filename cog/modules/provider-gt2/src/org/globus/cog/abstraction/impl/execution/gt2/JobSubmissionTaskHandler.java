@@ -378,7 +378,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
             throws IllegalSpecException {
         for (String key : spec.getAttributeNames()) {
             try {
-                String value = (String) spec.getAttribute(key);
+                String value = String.valueOf(spec.getAttribute(key));
                 if (key.equals("condor_requirements")) {
                     continue;
                 }
