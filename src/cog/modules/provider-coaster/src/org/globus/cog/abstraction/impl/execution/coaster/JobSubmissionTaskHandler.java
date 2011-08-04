@@ -16,6 +16,7 @@ import org.globus.cog.abstraction.coaster.service.local.CoasterResourceTracker;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -32,7 +33,6 @@ import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.ChannelFactory;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
@@ -211,9 +211,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private GSSCredential getCredentials(Task task) throws InvalidSecurityContextException {
         SecurityContext sc = task.getService(0).getSecurityContext();
         if (sc == null) {
-            GSSCredential cred = ChannelFactory.getDefaultCredential();
-            task.getService(0).setSecurityContext(new SecurityContextImpl(cred));
-            return cred;
+            try {
+                GSSCredential cred = (GSSCredential) AbstractionFactory.getDefaultCredentials("gt2");
+                task.getService(0).setSecurityContext(new SecurityContextImpl(cred));
+                return cred;
+            }
+            catch (Exception e) {
+                throw new InvalidSecurityContextException(e);
+            }
         }
         else {
             return (GSSCredential) sc.getCredentials();
