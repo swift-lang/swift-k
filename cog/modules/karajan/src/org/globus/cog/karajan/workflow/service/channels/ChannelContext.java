@@ -43,7 +43,6 @@ public class ChannelContext {
 	// private Map reexecutionSet;
 	private static Timer timer;
 	private ServiceContext serviceContext;
-	private GSSCredential cred;
 	// private ChannelAttributes attr;
 	private int reconnectionAttempts;
 	private long lastHeartBeat;
@@ -71,16 +70,32 @@ public class ChannelContext {
 	public synchronized UserContext getUserContext() {
 		return userContext;
 	}
-	
-	public synchronized UserContext newUserContext(GSSName name) throws ChannelException {
-		return newUserContext(name.toString());
-	}
-	
+		
 	public synchronized void setUserContext(UserContext userContext) {
 		this.userContext = userContext;
 	}
 
 	public synchronized UserContext newUserContext(String name) throws ChannelException {
+		if (userContext != null && userContext.getName() != null) {
+			try {
+				if (!userContext.getName().equals(name)) {
+					throw new ChannelException("Invalid identity. Expected "
+							+ userContext.getName() + " but got " + name);
+				}
+			}
+			catch (ChannelException e) {
+				throw e;
+			}
+			catch (Exception e) {
+				throw new ChannelException(e);
+			}
+		}
+		userContext = serviceContext.getUserContext(name, null, this);
+		return userContext;
+	}
+	
+	public synchronized UserContext newUserContext(GSSCredential cred) throws ChannelException {
+		String name = UserContext.getName(cred);
 		if (userContext != null) {
 			try {
 				if (!userContext.getName().equals(name)) {
@@ -88,11 +103,14 @@ public class ChannelContext {
 							+ userContext.getName() + " but got " + name);
 				}
 			}
+			catch (ChannelException e) {
+				throw e;
+			}
 			catch (Exception e) {
 				throw new ChannelException(e);
 			}
 		}
-		userContext = serviceContext.getUserContext(name, this);
+		userContext = serviceContext.getUserContext(name, cred, this);
 		return userContext;
 	}
 
@@ -204,14 +222,6 @@ public class ChannelContext {
 	
 	public ServiceContext getServiceContext() {
 		return serviceContext;
-	}
-
-	public void setCredential(GSSCredential cred) {
-		this.cred = cred;
-	}
-	
-	public GSSCredential getCredential() {
-		return cred;
 	}
 	
 	public Object getData(String name) {

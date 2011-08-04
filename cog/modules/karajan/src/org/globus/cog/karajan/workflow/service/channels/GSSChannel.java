@@ -71,7 +71,7 @@ public class GSSChannel extends AbstractTCPChannel {
 				Authorization authz = new FallbackAuthorization(new Authorization[] { hostAuthz,
 						SelfAuthorization.getInstance() });
 
-				GSSCredential cred = this.getChannelContext().getCredential();
+				GSSCredential cred = this.getChannelContext().getUserContext().getCredential();
 				if (cred == null) {
 					cred = GSSService.initializeCredentials(true, null, null);
 				}
@@ -107,7 +107,7 @@ public class GSSChannel extends AbstractTCPChannel {
 	protected void initializeConnection() {
 		try {
 			if (socket.getContext().isEstablished()) {
-				UserContext uc = getChannelContext().newUserContext(socket.getContext().getSrcName());
+				UserContext uc = getChannelContext().newUserContext(socket.getContext().getSrcName().toString());
 				// TODO Credentials should be associated with each
 				// individual instance
 
@@ -116,6 +116,9 @@ public class GSSChannel extends AbstractTCPChannel {
 				// socket.getContext()).inquireByOid(GSSConstants.X509_CERT_CHAIN);
 				if (socket.getContext().getCredDelegState()) {
 					uc.setCredential(socket.getContext().getDelegCred());
+				}
+				else {
+					uc.setCredential(GSSService.initializeCredentials(true, null, null));
 				}
 				peerId = uc.getName();
 				logger.debug(getContact() + "Peer identity: " + peerId);

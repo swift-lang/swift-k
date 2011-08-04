@@ -23,7 +23,7 @@ public class StreamChannel extends AbstractStreamKarajanChannel {
 		super(requestManager, channelContext, false);
 		setInputStream(is);
 		setOutputStream(os);
-		channelContext.setUserContext(new UserContext(null, channelContext));
+		channelContext.setUserContext(new UserContext(channelContext));
 	}
 
 	protected void reconnect() throws ChannelException {
