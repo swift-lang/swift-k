@@ -9,8 +9,10 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
-import org.apache.log4j.Logger;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -19,6 +21,14 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 public class Job implements Comparable<Job> {
     public static final Logger logger = Logger.getLogger(Job.class);
+    
+    public static final Set<String> SUPPORTED_ATTRIBUTES;
+    
+    static {
+    	SUPPORTED_ATTRIBUTES = new HashSet<String>();
+    	SUPPORTED_ATTRIBUTES.add("hostcount");
+    	SUPPORTED_ATTRIBUTES.add("maxwalltime");
+    }
 
     private int id;
     private Task task;
