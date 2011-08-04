@@ -79,8 +79,8 @@ public class ChannelManager {
 				if (channel == null) {
 					ChannelContext context = new ChannelContext();
 					context.setConfiguration(RemoteConfiguration.getDefault().find(host));
+					context.newUserContext(cred);
 					context.setRemoteContact(host);
-					context.setCredential(cred);
 					channel = new MetaChannel(rm == null ? clientRequestManager : rm, context);
 					registerChannel(hcp, channel);
 				}
@@ -150,8 +150,7 @@ public class ChannelManager {
 		if (channel == null) {
 			throw new ChannelException("Cannot register null channel");
 		}
-		HostCredentialPair hcp = new HostCredentialPair("id://" + id.toString(),
-				channel.getUserContext().getCredential());
+		HostCredentialPair hcp = new HostCredentialPair("id://" + id.toString(), (GSSCredential) null);
 		synchronized (channels) {
 			MetaChannel previous = getChannel(hcp);
 			if (previous != null) {
@@ -238,7 +237,7 @@ public class ChannelManager {
 					clientRequestManager);
 			putChannel(new HostCredentialPair("id://"
 					+ client.getChannel().getChannelContext().getChannelID(),
-					client.getChannel().getUserContext().getCredential()), meta);
+					(GSSCredential) null), meta);
 			meta.bind(client.getChannel());
 		}
 		catch (ChannelException e) {
@@ -437,12 +436,12 @@ public class ChannelManager {
 
 			if (meta == null && context.getRemoteContact() != null) {
 				hcp = new HostCredentialPair(
-						context.getRemoteContact(), context.getCredential());
+						context.getRemoteContact(), context.getUserContext().getCredential());
 				meta = getChannel(hcp);
 			}
 
 			if (meta == null) {
-				throw new ChannelException("Invalid channel: " + context);
+				throw new ChannelException("Invalid channel: " + hcp);
 			}
 			else {
 				synchronized (meta) {
