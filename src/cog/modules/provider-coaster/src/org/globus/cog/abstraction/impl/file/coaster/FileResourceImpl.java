@@ -40,6 +40,7 @@ import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
@@ -60,6 +61,12 @@ public class FileResourceImpl extends AbstractFileResource {
     
     public FileResourceImpl(boolean autostart) {
         super(null, "coaster", null, null);
+        this.autostart = autostart;
+    }
+    
+    public FileResourceImpl(String name, String protocol,
+            Service service, boolean autostart) {
+        super(name, protocol, service);
         this.autostart = autostart;
     }
 
@@ -214,8 +221,7 @@ public class FileResourceImpl extends AbstractFileResource {
             InvalidSecurityContextException, FileResourceException {
         if (autostart) {
             try {
-                url = ServiceManager.getDefault().reserveService(
-                        getServiceContact(), getSecurityContext(), provider);
+                url = ServiceManager.getDefault().reserveService(getService(), provider);
             }
             catch (TaskSubmissionException e) {
                 logger.warn("Failed to start coaster resource on " + getServiceContact(), e);
