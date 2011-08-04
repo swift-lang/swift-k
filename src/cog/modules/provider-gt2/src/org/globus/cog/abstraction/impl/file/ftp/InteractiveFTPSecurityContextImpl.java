@@ -7,20 +7,16 @@
 package org.globus.cog.abstraction.impl.file.ftp;
 
 import java.net.PasswordAuthentication;
-import java.util.Hashtable;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 
-public class InteractiveFTPSecurityContextImpl implements SecurityContext {
+public class InteractiveFTPSecurityContextImpl extends SecurityContextImpl {
 
     private static Logger logger = Logger
             .getLogger(InteractiveFTPSecurityContextImpl.class.getName());
-    private PasswordAuthentication credentials = null;
-    private Hashtable attributes = new Hashtable();
 
     public InteractiveFTPSecurityContextImpl() {
-        //  this.credentials = new PasswordAuthentication(null, null);
     }
 
     public InteractiveFTPSecurityContextImpl(PasswordAuthentication credentials) {
@@ -31,35 +27,12 @@ public class InteractiveFTPSecurityContextImpl implements SecurityContext {
         setCredentials(credentials);
     }
 
-    public void setCredentials(Object credentials) {
-        try {
-            this.credentials = (PasswordAuthentication) credentials;
-        } catch (Exception e) {
-            logger.error("Cannot establish credentials", e);
-        }
-    }
-
-    public Object getCredentials() {
+    public synchronized Object getCredentials() {
+        Object credentials = getCredentials();
         if (credentials == null) {
-            this.credentials = CredentialsDialog.showCredentialsDialog();
+            credentials = CredentialsDialog.showCredentialsDialog();
+            setCredentials(credentials);
         }
-        return this.credentials;
-    }
-
-    public void setAttribute(String name, Object value) {
-        this.attributes.put(name, value);
-    }
-
-    public Object getAttribute(String name) {
-
-        return this.attributes.get(name);
-    }
-
-    public void setAlias(String alias) {
-    }
-
-    public String getAlias() {
-
-        return null;
+        return credentials;
     }
 }
