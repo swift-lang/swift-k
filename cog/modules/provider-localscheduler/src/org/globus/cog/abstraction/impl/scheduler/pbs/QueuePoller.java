@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,6 +26,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.Job;
 
 public class QueuePoller extends AbstractQueuePoller {
 	public static final Logger logger = Logger.getLogger(QueuePoller.class);
+	public static final int FULL_LIST_THRESHOLD = 16;
 
 	private Set processed;
 
@@ -36,13 +38,49 @@ public class QueuePoller extends AbstractQueuePoller {
 	private static String[] CMDARRAY;
 
 	protected synchronized String[] getCMDArray() {
-		if (CMDARRAY == null) {
-			CMDARRAY = new String[] { getProperties().getPollCommand(), "-f" };
-		}
+	    if (getJobs().size() <= FULL_LIST_THRESHOLD) {
+	        String[] cmda = new String[2 + getJobs().size()];
+	        cmda[0] = getProperties().getPollCommand();
+	        cmda[1] = "-f";
+	        int i = 2;
+	        for (Job j : getJobs().values()) {
+	            cmda[i++] = j.getJobID();
+	        }
+	        return cmda;
+	    }
+	    else {
+	        if (CMDARRAY == null) {
+	            CMDARRAY = new String[] { getProperties().getPollCommand(), "-f" };
+	        }
+	    }
 		return CMDARRAY;
 	}
 
-	protected void processStdout(InputStream is) throws IOException {
+	@Override
+    protected int getError(int ec, String stderr) {
+	    if (ec != 0) {
+    	    BufferedReader sr = new BufferedReader(new StringReader(stderr));
+    	    try {
+        	    String line = sr.readLine();
+        	    while (line != null) {
+        	        if (!line.contains("Unknown Job Id")) {
+        	            return ec;
+        	        }
+        	        line = sr.readLine();
+        	    }
+    	    }
+    	    catch (IOException e) {
+    	        // should not occur while reading from a string reader
+    	        e.printStackTrace();
+    	    }
+    	    return 0;
+	    }
+	    else {
+	        return ec;
+	    }
+    }
+
+    protected void processStdout(InputStream is) throws IOException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		processed.clear();
 		String line;
@@ -61,6 +99,9 @@ public class QueuePoller extends AbstractQueuePoller {
 					}
 					if (currentJob != null) {
 						if (line.startsWith("job_state = ")) {
+						    if (logger.isDebugEnabled()) {
+						        logger.debug("Status line: " + line);
+						    }
 							switch (line.substring("job_state = ".length())
 									.charAt(0)) {
 								case 'Q': {
