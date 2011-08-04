@@ -83,6 +83,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         }
         block.increaseDoneJobCount();
         block.remove(this);
+        block.jobCompleted();
         donetime = Time.now();
         timelast = donetime;
         busyTime += timeDiff();
