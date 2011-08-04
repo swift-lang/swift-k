@@ -32,13 +32,16 @@ import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
+import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.common.util.NullOutputStream;
 import org.globus.cog.abstraction.impl.common.util.OutputStreamMultiplexer;
+import org.globus.cog.abstraction.impl.file.FileResourceCache;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
@@ -294,8 +297,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
         String srcScheme = defaultToLocal(suri.getScheme());
         String dstScheme = defaultToLocal(duri.getScheme());
-        FileResource sres = AbstractionFactory.newFileResource(srcScheme);
+        Service ss = new ServiceImpl(srcScheme, getServiceContact(suri), null);
+        Service ds = new ServiceImpl(dstScheme, getServiceContact(duri), null);
         
+        FileResource sres = FileResourceCache.getDefault().getResource(ss);
+        FileResource dres = FileResourceCache.getDefault().getResource(ds);
+                
         String srcPath = getPath(suri, dir);
         
         if (mode.contains(Mode.IF_PRESENT) && !sres.exists(srcPath)) {
@@ -307,13 +314,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         if (mode.contains(Mode.ON_ERROR) && jobSucceeded) {
             return;
         }
-        
-        FileResource dres = AbstractionFactory.newFileResource(dstScheme);
-        sres.setServiceContact(getServiceContact(suri));
-        sres.start();
-
-        dres.setServiceContact(getServiceContact(duri));
-        dres.start();
 
         InputStream is = sres.openInputStream(srcPath);
         OutputStream os = dres.openOutputStream(getPath(duri, dir));
@@ -324,9 +324,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             os.write(buffer, 0, len);
             len = is.read(buffer);
         }
-
-        sres.stop();
-        dres.stop();
+        
+        FileResourceCache.getDefault().releaseResource(sres);
+        FileResourceCache.getDefault().releaseResource(dres);
     }
 
     private String getPath(URI uri, File dir) {
