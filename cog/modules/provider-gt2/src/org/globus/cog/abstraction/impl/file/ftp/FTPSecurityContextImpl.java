@@ -7,56 +7,26 @@
 package org.globus.cog.abstraction.impl.file.ftp;
 
 import java.net.PasswordAuthentication;
-import java.util.Hashtable;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 
-public class FTPSecurityContextImpl implements SecurityContext {
+public class FTPSecurityContextImpl extends SecurityContextImpl {
 
     private static Logger logger = Logger
             .getLogger(FTPSecurityContextImpl.class.getName());
-    private PasswordAuthentication credentials = null;
-    private Hashtable attributes = new Hashtable();
 
     public FTPSecurityContextImpl() {
-        //  this.credentials = new PasswordAuthentication(null, null);
     }
 
     public FTPSecurityContextImpl(PasswordAuthentication credentials) {
         setCredentials(credentials);
     }
 
-    public void setCredentials(Object credentials, String alias) {
-        setCredentials(credentials);
-    }
-
-    public void setCredentials(Object credentials) {
-        try {
-            this.credentials = (PasswordAuthentication) credentials;
-        } catch (Exception e) {
-            logger.error("Cannot establish credentials", e);
-        }
-    }
-
-    public Object getCredentials() {
-        return this.credentials;
-    }
-
-    public void setAttribute(String name, Object value) {
-        this.attributes.put(name, value);
-    }
-
-    public Object getAttribute(String name) {
-
-        return this.attributes.get(name);
-    }
-
     public void setAlias(String alias) {
     }
 
     public String getAlias() {
-
         return null;
     }
 }
