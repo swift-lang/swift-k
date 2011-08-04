@@ -7,17 +7,13 @@
 package org.globus.cog.abstraction.impl.ssh;
 
 import java.net.PasswordAuthentication;
-import java.util.Hashtable;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 
-public class InteractiveSSHSecurityContextImpl implements SecurityContext {
+public class InteractiveSSHSecurityContextImpl extends SecurityContextImpl {
 
 	private static Logger logger = Logger.getLogger(InteractiveSSHSecurityContextImpl.class.getName());
-	private Object credentials;
-
-	private Hashtable attributes = new Hashtable();
 	
 	private String hostName;
 
@@ -33,11 +29,8 @@ public class InteractiveSSHSecurityContextImpl implements SecurityContext {
 		setCredentials(credentials);
 	}
 
-	public void setCredentials(Object credentials) {
-		this.credentials = credentials;
-	}
-
 	public synchronized Object getCredentials() {
+	    Object credentials = getCredentials();
 		if (credentials == null) {
 			boolean forceText = false;
 			Object text = getAttribute("nogui");
@@ -53,23 +46,9 @@ public class InteractiveSSHSecurityContextImpl implements SecurityContext {
 				// avoid being asked again
 				credentials = new PasswordAuthentication("", new char[0]);
 			}
+			setCredentials(credentials);
 		}
-		return this.credentials;
-	}
-
-	public void setAttribute(String name, Object value) {
-		this.attributes.put(name, value);
-	}
-
-	public Object getAttribute(String name) {
-		return this.attributes.get(name);
-	}
-
-	public void setAlias(String alias) {
-	}
-
-	public String getAlias() {
-		return null;
+		return credentials;
 	}
 
     public String getHostName() {
