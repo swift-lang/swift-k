@@ -71,10 +71,12 @@ class BlockTaskSubmitter extends Thread {
                     }
                 }
                 catch (TaskSubmissionException e) {
-                    if (b.getTask().getStatus().getStatusCode() != Status.CANCELED)
-                        logger.info("Error submitting block task: " + e.getMessage());
-                    else
+                    if (b.getTask().getStatus().getStatusCode() != Status.CANCELED) {
+                        logger.info("Error submitting block task", e);
+                    }
+                    else {
                         logger.info("Block task was canceled previously: " + b);
+                    }
                 }
                 catch (Exception e) {
                     if (b.getTask().getStatus().getStatusCode() != Status.CANCELED) {
