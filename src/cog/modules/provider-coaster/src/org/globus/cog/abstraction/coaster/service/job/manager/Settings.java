@@ -20,7 +20,9 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -41,13 +43,12 @@ public class Settings {
                        "maxNodes", "lowOverallocation",
                        "highOverallocation",
                        "overallocationDecayFactor",
-                       "spread", "reserve", "maxtime", "project",
-                       "queue", "remoteMonitorEnabled",
-                       "kernelprofile", "alcfbgpnat",
+                       "spread", "reserve", "maxtime",
+                       "remoteMonitorEnabled",
                        "internalHostname", "hookClass",
                        "workerManager", "workerLoggingLevel",
                        "workerLoggingDirectory",
-                       "ppn", "ldLibraryPath", "workerCopies",
+                       "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
                        "providerAttributes", "parallelism" };
 
@@ -110,14 +111,6 @@ public class Settings {
 
     private SecurityContext securityContext;
 
-    private String project;
-
-    private String queue;
-
-    private String kernelprofile;
-
-    private boolean alcfbgpnat;
-
     private boolean remoteMonitorEnabled;
 
     private double parallelism = 0.01;
@@ -143,15 +136,13 @@ public class Settings {
     private String useHashBang = null;
 
     private String providerAttributes = null;
-
-    /**
-     * A pass-through setting in case there is a need to mess with PBS' ppn setting
-     */
-    private String ppn;
+    
+    private Map<String, String> attributes;
 
     public Settings() {
         hook = new Hook();
         callbackURIs = new TreeSet<URI>();
+        attributes = new HashMap<String, String>();
     }
 
     public int getSlots() {
@@ -420,22 +411,6 @@ public class Settings {
         this.securityContext = securityContext;
     }
 
-    public String getProject() {
-        return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
-    }
-
-    public String getQueue() {
-        return queue;
-    }
-
-    public void setQueue(String queue) {
-        this.queue = queue;
-    }
-
     public boolean getRemoteMonitorEnabled() {
         return remoteMonitorEnabled;
     }
@@ -462,30 +437,6 @@ public class Settings {
 
     public void setParallelism(double parallelism) {
         this.parallelism = parallelism;
-    }
-
-    public String getKernelprofile() {
-        return kernelprofile;
-    }
-
-    public void setKernelprofile(String kernelprofile) {
-        this.kernelprofile = kernelprofile;
-    }
-
-    public boolean getAlcfbgpnat() {
-        return alcfbgpnat;
-    }
-
-    public void setAlcfbgpnat(boolean alcfbgpnat) {
-        this.alcfbgpnat = alcfbgpnat;
-    }
-
-    public String getPpn() {
-        return ppn;
-    }
-
-    public void setPpn(String ppn) {
-        this.ppn = ppn;
     }
 
     public String getHookClass() {
@@ -541,6 +492,18 @@ public class Settings {
     public void setUseHashBang(String uhb) {
         this.useHashBang = uhb;
     }
+    
+    public void setAttribute(String name, String value) {
+    	attributes.put(name, value);
+    }
+    
+    public Collection<String> getAttributeNames() {
+    	return attributes.keySet();
+    }
+    
+    public String getAttribute(String name) {
+    	return attributes.get(name);
+    }
 
     public void set(String name, String value)
         throws IllegalArgumentException {
@@ -553,7 +516,7 @@ public class Settings {
             Character.toUpperCase(name.charAt(0)) + name.substring(1);
         try {
             for (Method method : methods) {
-                if (method.getName().equals(setterName)) {
+                if (method.getName().equalsIgnoreCase(setterName)) {
                     set(method, value);
                     complete = true;
                     break;
@@ -567,8 +530,9 @@ public class Settings {
         catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        if (!complete)
-            throw new RuntimeException("Unknown setting: " + name);
+        if (!complete) {
+        	setAttribute(name, value);
+        }
     }
 
     void set(Method method, String value)
@@ -629,6 +593,7 @@ public class Settings {
             }
             sb.append('\n');
         }
+        sb.append("\tattributes = " + attributes + "\n");
         sb.append("}\n");
         return sb.toString();
     }

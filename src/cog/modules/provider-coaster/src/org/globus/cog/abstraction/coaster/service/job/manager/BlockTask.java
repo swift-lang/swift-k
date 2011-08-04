@@ -39,11 +39,8 @@ public class BlockTask extends TaskImpl {
         setType(Task.JOB_SUBMISSION);
         JobSpecification spec = buildSpecification();
         setSpecification(spec);
-        setName("Block-" + block.getId());
+        setName("B" + block.getId());
         setAttribute(spec, "maxwalltime", WallTime.format((int) block.getWalltime().getSeconds()));
-        setAttribute(spec, "queue", settings.getQueue());
-        setAttribute(spec, "project", settings.getProject());
-        setAttribute(spec, "ppn", settings.getPpn());
         int count = block.getWorkerCount() / settings.getJobsPerNode();
         if (count > 1) {
             setAttribute(spec, "jobType", "multiple");
@@ -51,12 +48,11 @@ public class BlockTask extends TaskImpl {
         // Here, count means number of worker script invocations
         setAttribute(spec, "count", String.valueOf(count));
         setAttribute(spec, "hostCount", String.valueOf(count));
-        setAttribute(spec, "kernelprofile", settings.getKernelprofile());
+        for (String name : settings.getAttributeNames()) {
+        	setAttribute(spec, name, settings.getAttribute(name));
+        }
         setAttribute(spec, "providerAttributes", settings.getProviderAttributes());
         logger.debug("providerAttributes: " + settings.getProviderAttributes());
-        if (settings.getAlcfbgpnat()) {
-            spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
-        }
         String libraryPath = settings.getLdLibraryPath();
         if (libraryPath != null)
             spec.addEnvironmentVariable("LD_LIBRARY_PATH",
@@ -76,6 +72,11 @@ public class BlockTask extends TaskImpl {
         }
         setRequiredService(1);
         setService(0, buildService());
+        System.out.println(spec);
+        if (logger.isDebugEnabled()) {
+        	logger.debug("Block task spec: " + spec);
+        	logger.debug("Block Task Service: " + getService(0));
+        }
     }
 
     private JobSpecification buildSpecification() {
