@@ -2,8 +2,8 @@
 
 set -x
 
-ls stdout.txt || exit 1
-COUNT=$( grep -c "file: [abc].dat" < stdout.txt )
+ls $OUTPUT || exit 1
+COUNT=$( grep -c "file: [abc].dat" < $OUTPUT )
 (( $COUNT == 3 )) || exit 1
 
 exit 0
