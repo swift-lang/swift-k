@@ -20,6 +20,7 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/language-behaviour/procedures \
             $TESTDIR/language-behaviour/strings \
 	    $TESTDIR/language-behaviour/variables \
+	    $TESTDIR/bugs \
 	    $TESTDIR/documentation/tutorial \
 	    # $TESTDIR/cdm/ps/pinned
 	    # $TESTDIR/site/intrepid

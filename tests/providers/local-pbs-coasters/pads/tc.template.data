@@ -1,0 +1,8 @@
+local-pbs-coasters 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+local-pbs-coasters 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+local-pbs-coasters 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+local-pbs-coasters 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+local-pbs-coasters 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+local-pbs-coasters 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+local-pbs-coasters	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
+
