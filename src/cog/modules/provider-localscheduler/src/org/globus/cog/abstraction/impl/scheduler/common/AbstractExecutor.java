@@ -216,6 +216,9 @@ public abstract class AbstractExecutor implements ProcessListener {
             throw new TaskSubmissionException("Failed to cancel task", e);
         }
     }
+    
+    protected void validate(Task task) throws ProcessException {
+    }
 
     protected abstract AbstractProperties getProperties();
 
