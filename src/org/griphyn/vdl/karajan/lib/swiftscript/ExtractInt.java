@@ -31,8 +31,7 @@ public class ExtractInt extends VDLFunction {
 			BufferedReader breader = new BufferedReader(freader);
 			String str = breader.readLine();
 			freader.close();
-			Double i = new Double(str);
-			DSHandle result = new RootDataNode(Types.FLOAT, i);
+			DSHandle result = new RootDataNode(Types.INT, Integer.parseInt(str));
 			int provid = VDLFunction.nextProvenanceID();
 			VDLFunction.logProvenanceResult(provid, result, "extractint");
 			VDLFunction.logProvenanceParameter(provid, handle, "filename");
