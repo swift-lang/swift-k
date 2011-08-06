@@ -1,4 +1,10 @@
-#!/usr/bin/env ruby
+#! /usr/bin/env ruby
+
+$stdout.sync = true
+
+# FIXME: Is this the best way to get lib functions from bin/grid into RUBYLIB ?
+
+$:[$:.length] = File.dirname($0)
 
 require 'mk_catalog'
 require 'etc'
@@ -13,6 +19,10 @@ class Site
 
 #      executable = /home/wilde/swift/src/0.92/cog/modules/swift/dist/swift-svn/bin/worker.pl
 #      arguments = http://128.135.125.17:<%= port %> <%= name %> /tmp 14400
+
+# WORKER_LOGGING_LEVEL=$LOGLEVEL $HOME/swift_gridtools/worker.pl $SERVICEURL swork${worker} $LOGDIR >& /dev/null &
+
+# a mod
 
   def gen_submit(count = 1)
     job = %q[
@@ -33,11 +43,38 @@ class Site
       <% } %>
     ]
 
-    ERB.new(job.gsub(/^\s+/, ""), 0, "%<>", "@submit_file").result(binding)
+    ov=$VERBOSE
+    $VERBOSE=nil
+    workerExecutable = `which worker.pl`
+    $VERBOSE=ov
+#    workerContact = "http://communicado.ci.uchicago.edu:36906"
+     workerContact = ARGV[2]
+
+    newjob = %Q[
+      universe = grid
+      stream_output = False
+      stream_error = False
+      transfer_executable = true
+      periodic_remove = JobStatus == 5
+      notification = Never
+
+      globus_rsl = (maxwalltime=240)
+      grid_resource = <%= @grid_resource %>
+      executable = #{workerExecutable}
+      arguments = #{workerContact} swork /tmp
+      environment = WORKER_LOGGING_LEVEL=INFO
+      log = condor.log
+
+      <% count.times { %>queue
+      <% } %>
+    ]
+
+    ERB.new(newjob.gsub(/^\s+/, ""), 0, "%<>", "@submit_file").result(binding)
   end
 
   def submit_job(count)
-#    puts "Submitting #{@name} #{count} jobs"
+    puts "submit_job: Submitting #{@name} #{count} jobs"
+    count = count.to_i
     output = ""
 #return output
     submitfile = gen_submit(count)
@@ -50,12 +87,18 @@ class Site
   end
 
   def queued
+    ov=$VERBOSE
+    $VERBOSE=nil
     jobs = `condor_q  #{$username} -const 'GridResource == \"#{@grid_resource}\" && JobStatus == 1' -format \"%s \" GlobalJobId`
+    $VERBOSE=ov
     jobs.split(" ").size
   end
 
   def running
+    ov=$VERBOSE
+    $VERBOSE=nil
     jobs = `condor_q #{$username} -const 'GridResource == \"#{@grid_resource}\" && JobStatus == 2' -format \"%s \" GlobalJobId`
+    $VERBOSE=ov
     jobs.split(" ").size
   end
 
@@ -75,13 +118,13 @@ JobStatus in job ClassAds
 =end
 
 if __FILE__ == $0
-  raise "No whitelist file" if !ARGV[0]
+  raise "No greenlist file" if !ARGV[0]
 
   start_port = 61100 # FIXME
   ctr        = 0
   threads    = []
   ARGV[1]    = "scec" if !ARGV[1]
-  whitelist  = IO.readlines(ARGV[0]).map { |line| line.chomp! }
+  greenlist  = IO.readlines(ARGV[0]).map { |line| line.chomp! }
   $username = Etc.getlogin
 
   puts "Username = #{$username}"
@@ -93,7 +136,7 @@ if __FILE__ == $0
   totalRunning = 0
 
   ress_parse(ARGV[1]) do |name, value|
-    next if not whitelist.index(name) and not whitelist.empty?
+    next if not greenlist.index(name) and not greenlist.empty?
     totalCores += (value.throttle * 100 + 2).to_i
   end
   puts "totalCores for green sites = #{totalCores}"
@@ -105,14 +148,16 @@ if __FILE__ == $0
       # swiftDemand = IO.read("swiftDemand")  # Replace this with sensor of Swift demand
       swiftDemand = 15
       paddedDemand = (swiftDemand * 1.2).to_i
+      ov=$VERBOSE;$VERBOSE=nil
       totalRunning = `condor_q #{$username} -const 'JobStatus == 2' -format \"%s \" GlobalJobId`.split(" ").size
+      $VERBOSE=ov
       puts "*** demandThread: swiftDemand=#{swiftDemand} paddedDemand=#{paddedDemand} totalRunning=#{totalRunning}"
       sleep 60
     end
   end
 
   ress_parse(ARGV[1]) do |name, value|
-    next if not whitelist.index(name) and not whitelist.empty?
+    next if not greenlist.index(name) and not greenlist.empty?
     site               = Site.new
     site.name          = name
     site.grid_resource = "gt2 #{value.url}/jobmanager-#{value.jm}"
