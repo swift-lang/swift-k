@@ -26,7 +26,7 @@ import java.util.ListIterator;
 
 public class CopyOnWriteArrayList<T> implements List<T> {
 	private List<T> list = Collections.emptyList();
-	private int lock;	
+	private int lock;
 
 	public int size() {
 		return list.size();
@@ -40,22 +40,24 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		return list.contains(o);
 	}
 	
-	public synchronized void release() {
-		if (lock > 0) {
-			lock--;
-		}
+	public synchronized void release(Iterator<T> it) {
+	    if (((LIterator) it).list == list) {
+	        if (lock > 0) {
+	            lock--;
+	        }
+	    }
 	}
 
 	public synchronized Iterator<T> iterator() {
 		lock++;
-		return list.iterator();
+		return new LIterator(list);
 	}
 
 	public Object[] toArray() {
 		return list.toArray();
 	}
 
-    public <T> T[] toArray(T[] a) {
+    public <S> S[] toArray(S[] a) {
         return list.toArray(a);
     }
 
@@ -259,5 +261,28 @@ public class CopyOnWriteArrayList<T> implements List<T> {
         throw new UnsupportedOperationException();
     };
 	
-	
+	private class LIterator implements Iterator<T> {
+	    public List<T> list;
+	    private Iterator<T> it;
+	    
+	    public LIterator(List<T> list){
+	        this.list = list;
+	        this.it = list.iterator();
+	    }
+
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public T next() {
+            return it.next();
+        }
+
+        @Override
+        public void remove() {
+            it.remove();
+        }
+	}
 }

@@ -169,7 +169,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 				}
 			}
 			finally {
-				jobListeners.release();
+				jobListeners.release(i);
 			}
 		}
 	}

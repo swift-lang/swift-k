@@ -41,7 +41,7 @@ import java.util.Set;
 
 public class CopyOnWriteHashSet<T> implements Set<T>, Cloneable {
 	private Set<T> set = Collections.emptySet();
-	private int lock;	
+	private int lock;
 
 	public int size() {
 		return set.size();
@@ -55,22 +55,24 @@ public class CopyOnWriteHashSet<T> implements Set<T>, Cloneable {
 		return set.contains(o);
 	}
 	
-	public synchronized void release() {
-		if (lock > 0) {
-			lock--;
-		}
+	public synchronized void release(Iterator<T> it) {
+	    if (((LIterator) it).set == set) {
+    		if (lock > 0) {
+    			lock--;
+    		}
+	    }
 	}
 
 	public synchronized Iterator<T> iterator() {
 		lock++;
-		return set.iterator();
+		return new LIterator(set);
 	}
 
 	public Object[] toArray() {
 		return set.toArray();
 	}
 
-    public <T> T[] toArray(T[] a) {
+    public <S> S[] toArray(S[] a) {
         return set.toArray(a);
     }
 
@@ -194,11 +196,36 @@ public class CopyOnWriteHashSet<T> implements Set<T>, Cloneable {
 	        T o = it.next();
 	        tmp.add(o);
 	    }
-	    release();
+	    release(it);
 	    
 	    CopyOnWriteHashSet<T> result = new CopyOnWriteHashSet<T>();
 	    result.lock = 0;
 	    result.set = tmp;
 	    return result;
+	}
+	
+	private class LIterator implements Iterator<T> {
+	    private Iterator<T> it;
+	    public Set<T> set;
+	    
+	    public LIterator(Set<T> set) {
+	        this.set = set;
+	        this.it = set.iterator();
+	    }
+
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public T next() {
+            return it.next();
+        }
+
+        @Override
+        public void remove() {
+            it.remove();
+        }
 	}
 }
