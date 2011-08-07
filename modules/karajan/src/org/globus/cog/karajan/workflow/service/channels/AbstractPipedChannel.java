@@ -9,13 +9,13 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
-
-import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * A channel implementation for which the other endpoint lives in the
