@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,8 +27,6 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChannel implements
 		Purgeable {
@@ -81,7 +80,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	protected synchronized void handleChannelException(Exception e) {
 		logger.info("Channel config: " + getChannelContext().getConfiguration());
 		ChannelManager.getManager().handleChannelException(this, e);
-		getSender(this).purge(this, new NullChannel(true));
+		close();
 	}
 
 	protected void configure() throws Exception {
@@ -98,7 +97,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		logger.info("Channel configured");
 	}
 
-	@SuppressWarnings("hiding")
 	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
 		getSender(this).enqueue(tag, flags, data, this, cb);
 	}
@@ -324,7 +322,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	protected static class Multiplexer extends Thread {
-		@SuppressWarnings("hiding")
 		public static final Logger logger = Logger.getLogger(Multiplexer.class);
 
 		private Set<KarajanChannel> channels;
