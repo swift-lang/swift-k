@@ -247,6 +247,10 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 		return selected.getHost();
 	}
+	
+	public synchronized boolean allOverloaded() {
+		return sorted.allOverloaded();
+	}
 
 	public void releaseContact(Contact contact) {
 		if (logger.isDebugEnabled()) {
