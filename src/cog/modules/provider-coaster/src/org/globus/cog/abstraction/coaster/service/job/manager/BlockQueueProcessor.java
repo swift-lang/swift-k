@@ -351,8 +351,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
-    private Set<Job> allocateBlocks(@SuppressWarnings("hiding")
-                                    double tsum) {
+    private Set<Job> allocateBlocks(double tsum) {
         Set<Job> remove = new HashSet<Job>();
         int cslots =
                 (int) Math.ceil((settings.getSlots() - blocks.size())
@@ -600,7 +599,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         this.settings = settings;
     }
 
-    protected Block getBlock(@SuppressWarnings("hiding") String id) {
+    protected Block getBlock(String id) {
         synchronized (blocks) {
             Block b = blocks.get(id);
             if (b != null) {
@@ -619,7 +618,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                                                channelContext);
     }
 
-    public String nextId(@SuppressWarnings("hiding") String id) {
+    public String nextId(String id) {
         return getBlock(id).nextId();
     }
 
@@ -674,9 +673,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     /**
        Get the KarajanChannel for the worker with given id
      */
-    public KarajanChannel
-    getWorkerChannel(@SuppressWarnings({ "unused", "hiding" })
-                     String id) {
+    public KarajanChannel getWorkerChannel(String id) {
         return null;
+    }
+
+    public void nodeRemoved(Node node) {
     }
 }
