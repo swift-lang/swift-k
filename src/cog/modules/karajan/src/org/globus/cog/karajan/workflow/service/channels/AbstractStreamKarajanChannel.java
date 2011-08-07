@@ -77,10 +77,15 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 
 	protected abstract void reconnect() throws ChannelException;
 
-	protected synchronized void handleChannelException(Exception e) {
+	protected synchronized boolean handleChannelException(Exception e) {
 		logger.info("Channel config: " + getChannelContext().getConfiguration());
-		ChannelManager.getManager().handleChannelException(this, e);
-		close();
+		if (!ChannelManager.getManager().handleChannelException(this, e)) {
+			close();
+			return false;
+		}
+		else {
+		    return true;
+		}
 	}
 
 	protected void configure() throws Exception {
@@ -251,10 +256,11 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 					catch (IOException ex) {
 						logger.info("Channel IOException", ex);
 						try {
-							synchronized (this) {
-								queue.addFirst(e);
+							if (e.channel.handleChannelException(ex)) {
+								synchronized (this) {
+									queue.addFirst(e);
+								}
 							}
-							e.channel.handleChannelException(ex);
 						}
 						catch (Exception exx) {
 						    logger.warn("Channel threw exception while handling channel exception", exx);

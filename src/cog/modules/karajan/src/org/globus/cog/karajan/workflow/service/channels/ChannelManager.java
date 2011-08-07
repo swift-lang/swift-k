@@ -260,31 +260,40 @@ public class ChannelManager {
 		return meta;
 	}
 
-	public void handleChannelException(KarajanChannel channel, Exception e) {
+	/**
+	 * Returns <code>true</code> if this channel can still transmit after this
+	 * exception
+	 */
+	public boolean handleChannelException(KarajanChannel channel, Exception e) {
 		logger.info("Handling channel exception", e == null ? new Throwable() : e);
 		if (channel.isOffline()) {
 			logger.info("Channel already shut down");
-			return;
+			return false;
 		}
 		channel.setLocalShutdown();
 		ChannelContext ctx = channel.getChannelContext();
 		RemoteConfiguration.Entry config = ctx.getConfiguration();
+		boolean canContinue;
 		try {
 			if (config != null && config.hasOption(RemoteConfiguration.RECONNECT)) {
 				buffer(channel);
 				channel.close();
 				asyncReconnect(channel, e);
+				canContinue = true;
 			}
 			else {
 				channel.close();
 				shutdownChannel(channel);
+				canContinue = false;
 			}
 		}
 		catch (Exception e2) {
 			logger.info("Failed to shut down channel", e2);
+			canContinue = false;
 		}
 		ctx.channelShutDown(e);
 		logger.info("Channel exception handled");
+		return canContinue;
 	}
 
 	private void asyncReconnect(final KarajanChannel channel, final Exception e) {
