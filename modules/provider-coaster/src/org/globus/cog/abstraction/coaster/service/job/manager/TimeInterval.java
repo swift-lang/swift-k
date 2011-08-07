@@ -72,7 +72,7 @@ public final class TimeInterval implements Comparable<TimeInterval> {
         return ms;
     }
     
-    public static TimeInterval fromSeconds(int seconds) {
+    public static TimeInterval fromSeconds(long seconds) {
         return new TimeInterval(seconds * 1000);
     }
     

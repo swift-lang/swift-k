@@ -19,6 +19,7 @@ import org.globus.cog.abstraction.coaster.rlog.RemoteLogger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
@@ -160,10 +161,17 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private void queue(Job job) {
-        synchronized (queued) {
-            queued.add(job);
-            queued.notify();
-        }
+    	if (job.getMaxWallTime().getSeconds() > settings.getMaxtime() - settings.getReserve().getSeconds()) {
+    		job.fail("Job walltime > maxTime - reserve (" + 
+    				WallTime.format("hms", job.getMaxWallTime().getSeconds()) + " > " + 
+    				WallTime.format("hms", settings.getMaxtime() - settings.getReserve().getSeconds()) + ")", null);
+    	}
+    	else {
+            synchronized (queued) {
+                queued.add(job);
+                queued.notify();
+            }
+    	}
     }
 
     public void waitForJobs() throws InterruptedException {
