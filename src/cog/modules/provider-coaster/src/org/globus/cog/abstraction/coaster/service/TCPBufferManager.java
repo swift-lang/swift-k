@@ -79,7 +79,9 @@ public class TCPBufferManager {
         int crt = crtSocketBuffSz / BUFFER_SIZE_GRANULARITY;
         int old = crt;
         
-        logger.debug("crt: " + crt + ", #sockets: " + sockets.size() + ", min: " + min + ", max: " + max);
+        if (logger.isDebugEnabled()) {
+            logger.debug("crt: " + crt + ", #sockets: " + sockets.size() + ", min: " + min + ", max: " + max);
+        }
         if (sockets.size() == 0) {
             logger.debug("No sockets");
             return;
@@ -91,8 +93,9 @@ public class TCPBufferManager {
                 if (crtSocketBuffSz < MIN_BUFFER_SIZE) {
                     crtSocketBuffSz = MIN_BUFFER_SIZE;
                 }
-                logger.info("Adjusting buffer size to " + crtSocketBuffSz);
-                System.out.println("Adjusting buffer size to " + crtSocketBuffSz);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Adjusting buffer size to " + crtSocketBuffSz);
+                }
                 updateBufferSizes();
             }
         }
