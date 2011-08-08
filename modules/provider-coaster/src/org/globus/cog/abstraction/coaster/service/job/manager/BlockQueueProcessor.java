@@ -142,15 +142,29 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     public void enqueue1(Task t) {
         synchronized (incoming) {
             Job j = new Job(t);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Got job with walltime = " + j.getMaxWallTime());
+            if (checkJob(j)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Got job with walltime = " + j.getMaxWallTime());
+                }
+                if (planning) {
+                    incoming.add(j);
+                }
+                else {
+                    queue(j);
+                }
             }
-            if (planning) {
-                incoming.add(j);
-            }
-            else {
-                queue(j);
-            }
+        }
+    }
+
+    private boolean checkJob(Job job) {
+        if (job.getMaxWallTime().getSeconds() > settings.getMaxtime() - settings.getReserve().getSeconds()) {
+            job.fail("Job walltime > maxTime - reserve (" + 
+                    WallTime.format("hms", job.getMaxWallTime().getSeconds()) + " > " + 
+                    WallTime.format("hms", settings.getMaxtime() - settings.getReserve().getSeconds()) + ")", null);
+            return false;
+        }
+        else {
+            return true;
         }
     }
 
@@ -161,17 +175,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private void queue(Job job) {
-    	if (job.getMaxWallTime().getSeconds() > settings.getMaxtime() - settings.getReserve().getSeconds()) {
-    		job.fail("Job walltime > maxTime - reserve (" + 
-    				WallTime.format("hms", job.getMaxWallTime().getSeconds()) + " > " + 
-    				WallTime.format("hms", settings.getMaxtime() - settings.getReserve().getSeconds()) + ")", null);
-    	}
-    	else {
-            synchronized (queued) {
-                queued.add(job);
-                queued.notify();
-            }
-    	}
+    	synchronized (queued) {
+    	    queued.add(job);
+            queued.notify();
+        }
     }
 
     public void waitForJobs() throws InterruptedException {
