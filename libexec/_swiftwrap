@@ -58,9 +58,13 @@ debug() {
 fail() {
 	EC=$1
 	shift
-	if [ "$STATUSMODE" = "files" ]; then
-		echo $@ >"$WFDIR/status/$JOBDIR/${ID}-error"
+	
+	if [ "$STATUSMODE" != "files" ]; then
+		mkdir -p $WFDIR/status/$JOBDIR
 	fi
+	
+	echo $@ >"$WFDIR/status/$JOBDIR/${ID}-error"
+		
 	log $@
 	info
 	if [ "$STATUSMODE" = "files" ]; then
