@@ -1025,7 +1025,7 @@ group_title() {
 	PIECES=""
 	while [ "$G" != "$CRTDIR" ]; do
 		PIECE=`basename $G`
-		PIECES="$PIECE $PIECES"
+		PIECES="$PIECE/$PIECES"
 		G=`dirname $G`
 	done
 	echo $PIECES
