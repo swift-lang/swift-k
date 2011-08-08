@@ -26,8 +26,6 @@ public class ServiceConfigurationHandler extends RequestHandler {
         Settings settings =
                 ((CoasterService) getChannel().getChannelContext().getService()).getJobQueue().getSettings();
 
-        logger.debug(settings);
-
         try {
             List<byte[]> l = getInDataChunks();
             if (l != null) {
@@ -37,6 +35,7 @@ public class ServiceConfigurationHandler extends RequestHandler {
                     settings.set(p[0], p[1]);
                 }
             }
+            logger.debug(settings);
             sendReply("OK");
         }
         catch (Exception e) {
