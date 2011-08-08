@@ -568,7 +568,8 @@ namespace("vdl"
 					)
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
-						exception := try(exception(checkErrorFile(rhost, wfdir, jobid, jobdir)), exception)
+						prev := exception
+						exception := try(exception(checkErrorFile(rhost, wfdir, jobid, jobdir)), prev)
 						
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 

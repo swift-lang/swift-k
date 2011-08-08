@@ -170,7 +170,8 @@ namespace("vdl"
 					)
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
-						exception := try(exception(readErrorFile(ddir, jobid)), exception)
+						prev := exception
+						exception := try(exception(readErrorFile(ddir, jobid)), prev)
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 
 						throw(
