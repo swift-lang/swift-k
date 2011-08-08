@@ -7,7 +7,9 @@
 package org.globus.cog.abstraction.impl.execution.coaster;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -45,6 +47,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
 
     private static Set<Object> configured, configuring;
+    
+    private static Map<Service, TaskSubmissionException> checkedServices = 
+        new HashMap<Service, TaskSubmissionException>();
 
     static {
         configured = new HashSet<Object>();
@@ -94,6 +99,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
             InvalidServiceContactException, TaskSubmissionException {
         checkAndSetTask(task);
+        validateTaskSettings();
         task.setStatus(Status.SUBMITTING);
         try {
             KarajanChannel channel = getChannel(task);
@@ -242,6 +248,117 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     public void setAutostart(boolean autostart) {
         this.autostart = autostart;
+    }
+    
+    private void validateTaskSettings() throws TaskSubmissionException {
+        synchronized (JobSubmissionTaskHandler.class) {
+            Task task = getTask();
+            Service s = task.getService(0);
+            TaskSubmissionException e = checkedServices.get(s);
+            if (e != null) {
+                throw e;
+            }
+            else if (!checkedServices.containsKey(s)) {
+                try {
+                    validateTask();
+                }
+                catch (IllegalArgumentException ee) {
+                    e = new TaskSubmissionException(ee.getMessage());
+                    checkedServices.put(task.getService(0), e);
+                    throw e;
+                }
+            }
+        }
+    }
+    
+    private void validateTask() {
+        checkPositiveInt("slots", 0);
+        checkPositiveInt("maxNodes", 0);
+        checkPositiveInt("maxTime", 0);
+        Integer nodeGranularity = getInt("nodeGranularity");
+        Integer maxNodes = getInt("maxNodes");
+        if (nodeGranularity != null && maxNodes != null) {
+            if (nodeGranularity > maxNodes) {
+                throw new IllegalArgumentException("nodeGranularity > maxNodes (" + 
+                    nodeGranularity + " > " + maxNodes + ")");
+            }
+        }
+        
+        checkLessThan("lowOverallocation", 1);
+        checkLessThan("highOverallocation", 1);
+        
+        checkGreaterThan("allocationStepSize", 0);
+        checkLessOrEqualThan("allocationStepSize", 1);
+        
+        checkGreaterOrEqualThan("spread", 0);
+        checkLessOrEqualThan("spread", 1);
+        
+        checkGreaterOrEqualThan("parallelism", 0);
+        checkLessOrEqualThan("parallelism", 1);
+    }
+
+    private void checkPositiveInt(String name, int i) {
+        Integer v = getInt(name);
+        if (v != null && v <= 0) {
+            throw new IllegalArgumentException(name + " must be > 0 (currently " + v + ")");
+        }
+    }
+
+    private void checkGreaterOrEqualThan(String name, double d) {
+        Double v = getDouble(name);
+        if (v != null && v < d) {
+            throw new IllegalArgumentException(name + " must be >= " + d + " (currently " + v + ")");
+        }
+    }
+
+    private void checkLessOrEqualThan(String name, double d) {
+        Double v = getDouble(name);
+        if (v != null && v > d) {
+            throw new IllegalArgumentException(name + " must be <= " + d + " (currently " + v + ")");
+        }
+    }
+
+    private void checkLessThan(String name, double d) {
+        Double v = getDouble(name);
+        if (v != null && v >= d) {
+            throw new IllegalArgumentException(name + " must be < " + d + " (currently " + v + ")");
+        }
+    }
+
+    private void checkGreaterThan(String name, double d) {
+        Double v = getDouble(name);
+        if (v != null && v <= d) {
+            throw new IllegalArgumentException(name + " must be > " + d + " (currently " + v + ")");
+        }
+    }
+
+    private Double getDouble(String name) {
+        Object v = ((JobSpecification) getTask().getSpecification()).getAttribute(name.toLowerCase());
+        if (v == null) {
+            return null;
+        }
+        else if (v instanceof String) {
+            return Double.parseDouble((String) v);
+        }
+        else if (v instanceof Number) {
+            return ((Number) v).doubleValue();
+        }
+        else {
+            throw new IllegalArgumentException("Invalid valid for " + name + ": " + v + "; must be a floating point number.");
+        }
+    }
+
+    private Integer getInt(String name) {
+        Object v = ((JobSpecification) getTask().getSpecification()).getAttribute(name.toLowerCase());
+        if (v == null) {
+            return null;
+        }
+        else if (v instanceof String) {
+            return Integer.parseInt((String) v);
+        }
+        else {
+            throw new IllegalArgumentException("Invalid valid for " + name + ": " + v + "; must be an integer.");
+        }
     }
 
     private static Task submitTask() throws Exception {
