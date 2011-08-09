@@ -454,14 +454,8 @@ public abstract class AbstractDataNode implements DSHandle {
                 }
             }
 
-            Mapper m;
+            Mapper m = getActualMapper();
 
-            try {
-                m = this.getMapper();
-            }
-            catch (FutureFault fe) {
-                m = null; // no mapping info if mapper isn't initialised yet
-            }
             if (m != null) {
                 // TODO proper type here
                 // Not sure catching exception here is really the right thing to
@@ -517,6 +511,10 @@ public abstract class AbstractDataNode implements DSHandle {
                 node.logContent();
             }
         }
+    }
+    
+    protected Mapper getActualMapper() {
+        return null;
     }
 
     public boolean isClosed() {
