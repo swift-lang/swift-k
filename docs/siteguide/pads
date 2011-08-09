@@ -165,7 +165,7 @@ Catsn.swift
 The swift script we will run is called catsn.swift. It simply cats a file and saves the result. This is a nice simple test to ensure jobs are running correctly. Create a file called data.txt which contains some simple input - a "hello world" will do the trick.
 
 -----
-include::../../examples/catsn.swift[]
+include::../../examples/misc/catsn.swift[]
 -----
 
 Running Swift
