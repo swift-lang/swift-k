@@ -12,7 +12,7 @@ $LOG  = $ARGV[1];
 my $earliesttime;
 
 open(START, $TIME) || die "$!\n";
-read(FH, $earliesttime, 64);
+read(START, $earliesttime, 64);
 close START;
 
 open(LOG, $LOG) || die "$!\n";
