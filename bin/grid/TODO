@@ -2,6 +2,20 @@ BUGS TO INVESTIGATE AND/OR FILE
 
 - why are there two logs from the coaster service: uuid-named log and swift.log????
 
+- missing .error file???
+
+- new error handling strategy ?
+
+- unique sub file for each worker job
+--- log file for each
+--- worker log on $tmp
+--- cat worker log on error
+--- set worker run time
+--- option for per-site service
+--- option for gridftp if using per-site service
+--- return log file on error if possible
+
+
 
 EXTENCI APPLICATION WORK
 

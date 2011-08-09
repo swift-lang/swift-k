@@ -10,7 +10,7 @@ require 'mk_catalog'
 require 'etc'
 
 class Site
-  attr_accessor :grid_resource, :data_dir, :app_dir, :name, :port
+  attr_accessor :grid_resource, :gridftp, :data_dir, :app_dir, :name, :port
   attr_reader :submit_file
 
 #      executable = <%= @app_dir %>/worker.pl  # FIXME (below)
@@ -22,35 +22,22 @@ class Site
 
 # WORKER_LOGGING_LEVEL=$LOGLEVEL $HOME/swift_gridtools/worker.pl $SERVICEURL swork${worker} $LOGDIR >& /dev/null &
 
-# a mod
-
   def gen_submit(count = 1)
-    job = %q[
-      universe = grid
-      stream_output = False
-      stream_error = False
-      transfer_executable = false
-      periodic_remove = JobStatus == 5
-      notification = Never
-
-      globus_rsl = (maxwalltime=240)
-      grid_resource = <%= @grid_resource %>
-      executable = /bin/sleep
-      arguments = 300
-      log = condor.log
-
-      <% count.times { %>queue
-      <% } %>
-    ]
 
     ov=$VERBOSE
     $VERBOSE=nil
     workerExecutable = `which worker.pl`
+    workerWrapper = `which run-worker.sh`
     $VERBOSE=ov
-#    workerContact = "http://communicado.ci.uchicago.edu:36906"
-     workerContact = ARGV[2]
+#   workerContact = "http://communicado.ci.uchicago.edu:36906"
+    workerContact = ARGV[2]
 
-    newjob = %Q[
+# for submit file:      log = condor.log
+#       <% count.times { %>queue
+#       <% } %>
+#      log     = condor/$(Process).log
+
+    job = %Q[
       universe = grid
       stream_output = False
       stream_error = False
@@ -60,23 +47,23 @@ class Site
 
       globus_rsl = (maxwalltime=240)
       grid_resource = <%= @grid_resource %>
-      executable = #{workerExecutable}
-      arguments = #{workerContact} swork /tmp
+      executable = #{workerWrapper}
+      arguments = #{workerContact} <%= @name.gsub(/__.*/,"") %> /tmp
       environment = WORKER_LOGGING_LEVEL=INFO
-      log = condor.log
+      Input   = #{workerExecutable}
+      Error   = condor/$(Process).err
+      Output  = condor/$(Process).out
+      log     = condor.log
 
-      <% count.times { %>queue
-      <% } %>
+      queue #{count}
     ]
-
-    ERB.new(newjob.gsub(/^\s+/, ""), 0, "%<>", "@submit_file").result(binding)
+    ERB.new(job.gsub(/^\s+/, ""), 0, "%<>", "@submit_file").result(binding)
   end
 
   def submit_job(count)
     puts "submit_job: Submitting #{@name} #{count} jobs"
     count = count.to_i
     output = ""
-#return output
     submitfile = gen_submit(count)
     IO.popen("condor_submit", "w+") do |submit|
       submit.puts submitfile
@@ -144,9 +131,9 @@ if __FILE__ == $0
   demandThread = Thread.new("monitor-demand") do |t|
     puts "starting demand thread"
     while true do
-    puts "in demand thread"
-      # swiftDemand = IO.read("swiftDemand")  # Replace this with sensor of Swift demand
-      swiftDemand = 15
+      puts "in demand thread"
+      swiftDemand = IO.read("swiftDemand").to_i  # Replace this with sensor of Swift demand
+      # swiftDemand = 15
       paddedDemand = (swiftDemand * 1.2).to_i
       ov=$VERBOSE;$VERBOSE=nil
       totalRunning = `condor_q #{$username} -const 'JobStatus == 2' -format \"%s \" GlobalJobId`.split(" ").size
@@ -161,6 +148,7 @@ if __FILE__ == $0
     site               = Site.new
     site.name          = name
     site.grid_resource = "gt2 #{value.url}/jobmanager-#{value.jm}"
+    site.gridftp       = "gsiftp://#{value.url}"
     site.app_dir       = value.app_dir
     site.data_dir      = value.data_dir
     site.port          = start_port + ctr
@@ -201,9 +189,9 @@ if __FILE__ == $0
             site.submit_job(targetQueued - queued)
           end
           trip += 1
-          sleep 60
           # puts "#{name}: #{total}"
         end
+      sleep 60
       end
     end
 
