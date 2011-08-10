@@ -521,7 +521,7 @@ public abstract class AbstractDataNode implements DSHandle {
         return closed;
     }
 
-    public void closeDeep() {
+    public synchronized void closeDeep() {
         if (!this.closed) {
             closeShallow();
         }
