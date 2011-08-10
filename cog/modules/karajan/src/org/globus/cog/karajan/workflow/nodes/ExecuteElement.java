@@ -20,9 +20,11 @@ import org.globus.cog.karajan.arguments.NamedArgumentsImpl;
 import org.globus.cog.karajan.arguments.VariableArguments;
 import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.DefList;
 import org.globus.cog.karajan.util.DefUtil;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.JavaElement;
 import org.globus.cog.karajan.workflow.nodes.user.UDEDefinition;
 import org.globus.cog.karajan.workflow.nodes.user.UserDefinedElement;
 
@@ -34,7 +36,8 @@ public class ExecuteElement extends SequentialWithArguments {
 	
 	private static int count = 0;
 
-	private UserDefinedElement cached;
+	private Object cached;
+	private String cachedName;
 
 	private boolean initialized, vargs, named;
 
@@ -48,6 +51,9 @@ public class ExecuteElement extends SequentialWithArguments {
 
 	public void post(VariableStack stack) throws ExecutionException {
 		Object element = A_ELEMENT.getValue(stack);
+		if (element instanceof String) {
+			element = getByName((String) element, stack);
+		}
 		if (element instanceof UDEDefinition) {
 			startDef(stack, (UDEDefinition) element);
 		}
@@ -69,6 +75,19 @@ public class ExecuteElement extends SequentialWithArguments {
 		else {
 			throw new ExecutionException("Cannot execute element of type " + element.getClass());
 		}
+	}
+
+	private synchronized Object getByName(String name, VariableStack stack) throws ExecutionException {
+		if (!name.equals(cachedName)) {
+			DefList.Entry def = DefUtil.getDef(stack, name, getParent());
+			if (def == null || def.getDef() == null) {
+				throw new ExecutionException("'" + getElementType() + "' is not defined.");
+			}
+			Object element = def.getDef();
+			cachedName = name;
+			cached = element; 
+		}
+		return cached;
 	}
 
 	protected void startDef(VariableStack stack, UDEDefinition def) throws ExecutionException {
