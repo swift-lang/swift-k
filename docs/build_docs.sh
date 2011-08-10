@@ -14,11 +14,11 @@ CHMOD_FILE_MODE="664"
 GROUP="vdl2-svn"
 
 # Verify correct arguments
-if [ -n "$1" ]; then
-   INSTALLATION_DIRECTORY=$1
-else
-   crash "Error: Must specify a directory for installation"
+if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "-help" ]; then
+   crash "Usage: ./build_docs.sh /path/to/copy/output"
 fi
+
+INSTALLATION_DIRECTORY=$1
 
 # Create installation directory if needed
 if [ ! -d "$INSTALLATION_DIRECTORY" ]; then
@@ -43,7 +43,7 @@ do
    for file in $FILES
    do
       echo Converting $directory"$file" to HTML
-      asciidoc -a toc -a max-width=750px $file
+      asciidoc -a toc -a max-width=750px -a stylesheet=$(pwd)/../stylesheets/asciidoc.css $file
       echo Converting $directory"$file" to PDF
       a2x --format=pdf --no-xmllint $file 
    done
