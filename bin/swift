@@ -63,7 +63,7 @@ CMDLINE=`fixCommandLine "$@"`
 
 # make sure sites.xml file is well-formed
 
-chxml $CMDLINE
+$SWIFT_HOME/bin/chxml $CMDLINE
 
 ### SETUP OTHER ENV VARIABLES ####
 
