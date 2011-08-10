@@ -181,9 +181,6 @@ do
    esac
 done < $PROPERTIES_FILE
 
-# Test for mandatory variables
-[[ ${WORK}   == "" ]] && crash "Not specified: WORK"
-
 # Verify that the variables by the template are defined
 for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL
 do
