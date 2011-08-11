@@ -11,3 +11,5 @@ include::pads[]
 include::beagle[]
 
 include::futuregrid[]
+
+include::intrepid[]
