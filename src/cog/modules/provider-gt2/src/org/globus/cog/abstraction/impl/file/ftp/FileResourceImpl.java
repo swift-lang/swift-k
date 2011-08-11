@@ -563,12 +563,10 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         return true;
     }
 
-    @Override
     public boolean supportsPartialTransfers() {
         return false;
     }
 
-    @Override
     public boolean supportsThirdPartyTransfers() {
         return false;
     }

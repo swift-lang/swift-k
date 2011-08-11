@@ -38,7 +38,6 @@ public class ChannelSplitter implements FutureListener {
 	
 	
 
-	@Override
 	public void futureModified(Future f, VariableStack stack) {
 		FutureVariableArguments in = (FutureVariableArguments) f;
 		while(in.available() > 0) {

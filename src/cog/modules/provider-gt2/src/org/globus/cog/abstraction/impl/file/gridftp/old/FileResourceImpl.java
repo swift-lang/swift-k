@@ -755,12 +755,10 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
         return true;
     }
 
-    @Override
     public boolean supportsPartialTransfers() {
         return true;
     }
 
-    @Override
     public boolean supportsThirdPartyTransfers() {
         return true;
     }
