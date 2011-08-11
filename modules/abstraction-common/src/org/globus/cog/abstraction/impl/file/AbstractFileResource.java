@@ -122,37 +122,31 @@ public abstract class AbstractFileResource implements FileResource {
         return this.attributes.get(name);
     }
 
-    @Override
     public void getFile(String remoteFileName, String localFileName)
             throws FileResourceException {
         getFile(new FileFragmentImpl(remoteFileName), new FileFragmentImpl(localFileName));
     }
 
-    @Override
     public void getFile(String remoteFileName, String localFileName,
             ProgressMonitor progressMonitor) throws FileResourceException {
         getFile(new FileFragmentImpl(remoteFileName), new FileFragmentImpl(localFileName), progressMonitor);
     }
 
-    @Override
     public void getFile(FileFragment remote, FileFragment local)
             throws FileResourceException {
         getFile(remote, local, null);
     }
 
-    @Override
     public void putFile(String localFileName, String remoteFileName)
             throws FileResourceException {
         putFile(new FileFragmentImpl(localFileName), new FileFragmentImpl(remoteFileName));
     }
 
-    @Override
     public void putFile(String localFileName, String remoteFileName,
             ProgressMonitor progressMonitor) throws FileResourceException {
         putFile(new FileFragmentImpl(localFileName), new FileFragmentImpl(remoteFileName), progressMonitor);
     }
 
-    @Override
     public void putFile(FileFragment local, FileFragment remote)
             throws FileResourceException {
         putFile(local, remote, null);
@@ -373,7 +367,6 @@ public abstract class AbstractFileResource implements FileResource {
         return "FileResource: " + name;
     }
 
-    @Override
     public void thirdPartyTransfer(FileResource sourceResource,
             FileFragment source, FileFragment destination)
             throws FileResourceException {

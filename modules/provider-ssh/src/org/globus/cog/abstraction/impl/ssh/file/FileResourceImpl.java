@@ -386,12 +386,10 @@ public class FileResourceImpl extends AbstractFileResource {
         throw new TaskSubmissionException("Not implemented");
     }
 
-    @Override
     public boolean supportsPartialTransfers() {
         return false;
     }
 
-    @Override
     public boolean supportsThirdPartyTransfers() {
         return false;
     }

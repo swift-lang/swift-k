@@ -213,17 +213,14 @@ public class CopyOnWriteHashSet<T> implements Set<T>, Cloneable {
 	        this.it = set.iterator();
 	    }
 
-        @Override
         public boolean hasNext() {
             return it.hasNext();
         }
 
-        @Override
         public T next() {
             return it.next();
         }
 
-        @Override
         public void remove() {
             it.remove();
         }

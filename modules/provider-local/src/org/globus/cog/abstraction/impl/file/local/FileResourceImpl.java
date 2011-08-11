@@ -439,12 +439,10 @@ public class FileResourceImpl extends AbstractFileResource {
         return true;
     }
 
-    @Override
     public boolean supportsPartialTransfers() {
         return true;
     }
 
-    @Override
     public boolean supportsThirdPartyTransfers() {
         return false;
     }
