@@ -300,15 +300,20 @@ public class PBSExecutor extends AbstractExecutor {
 	   http://doesciencegrid.org/public/pbs/qsub.html
 	 */
 	String makeName(Task task) {
-		String name = task.getName(); 
-		if (name.length() > 15) {
+		String name = task.getName();
+		if (name == null) {
 			int i = 0;
-			synchronized(this) {
+			synchronized(PBSExecutor.class) {
 				i = unique++;
 			}
 			name = "cog-" + IDF.format(i);
-			logger.debug("PBS name: for: " + task.getName() + 
-			             " is: " + name);
+		}
+		else if (name.length() > 15) {
+		    name = name.substring(0, 15);
+		}
+		if (logger.isDebugEnabled()) {
+		    logger.debug("PBS name: for: " + task.getName() + 
+                         " is: " + name);
 		}
 		return name;
 	}
