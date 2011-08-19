@@ -230,6 +230,9 @@ public class FileResourceImpl extends AbstractFileResource {
             if (dst.getCanonicalPath().equals(src.getCanonicalPath())) {
                 return;
             }
+            
+            checkParameters(remote, local, src, dst);
+            
             FileInputStream remoteStream = null;
             FileOutputStream localStream = null;
             try {
@@ -239,9 +242,16 @@ public class FileResourceImpl extends AbstractFileResource {
                 
                 long crt = 0;
                 long total = Math.min(src.length(), remote.getLength());
+                if (logger.isDebugEnabled()) {
+                    logger.debug(src + ": srclen = " + src.length() 
+                        + ", len = " + remote.getLength() + ", total = " + total);
+                }
                 byte[] buf = new byte[16384];
                 do {
-                    int read = remoteStream.read(buf, 0, Math.min(buf.length, (int) (total - crt)));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(src + ": crt = " + crt + ", total - crt = " + (total - crt));
+                    }
+                    int read = remoteStream.read(buf, 0, (int) Math.min(buf.length, total - crt));
                     localStream.write(buf, 0, read);
                     crt += read;
                     if (progressMonitor != null) {
@@ -260,6 +270,14 @@ public class FileResourceImpl extends AbstractFileResource {
         } 
         catch (IOException e) {
             throw new FileResourceException(e);
+        }
+    }
+
+    private void checkParameters(FileFragment srcf, FileFragment dstf, File src, File dst) throws FileResourceException {
+        long srcLen = src.length();
+        if (srcf.getOffset() >= srcLen) {
+            throw new FileResourceException("Requested file offset (" 
+                + srcf.getOffset() + ") is larger than the file size (" + srcLen + ")");
         }
     }
 
