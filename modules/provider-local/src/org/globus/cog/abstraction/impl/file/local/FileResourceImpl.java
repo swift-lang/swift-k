@@ -275,7 +275,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     private void checkParameters(FileFragment srcf, FileFragment dstf, File src, File dst) throws FileResourceException {
         long srcLen = src.length();
-        if (srcf.getOffset() >= srcLen) {
+        if (srcf.getOffset() > srcLen) {
             throw new FileResourceException("Requested file offset (" 
                 + srcf.getOffset() + ") is larger than the file size (" + srcLen + ")");
         }
