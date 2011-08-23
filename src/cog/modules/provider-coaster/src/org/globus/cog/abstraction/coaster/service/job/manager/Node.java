@@ -100,6 +100,7 @@ public class Node implements Callback, ChannelListener {
 
     public void replyReceived(Command cmd) {
         logger.info(this + " shut down successfully");
+        cmd.getChannel().close();
     }
 
     public ChannelContext getChannelContext() {
