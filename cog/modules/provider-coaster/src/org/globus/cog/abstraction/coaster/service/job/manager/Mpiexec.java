@@ -85,7 +85,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
         this.cpus = cpus;
         this.job = job;
         assert(cpus.size() > 0);
-        this.block = cpus.get(0).getBlock();
+        // this.block = cpus.get(0).getBlock();
         proxies = new ArrayList<Job>(job.cpus);
 
         // Get the provider
