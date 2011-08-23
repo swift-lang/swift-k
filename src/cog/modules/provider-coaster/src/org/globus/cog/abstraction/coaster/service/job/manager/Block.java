@@ -194,7 +194,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public void shutdownIfEmpty(Cpu cpu) {
         synchronized (scpus) {
             if (scpus.isEmpty()) {
-                if (logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled() && !shutdown) {
                     logger.info(this + ": all cpus are clear");
                 }
                 shutdown(false);
