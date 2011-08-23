@@ -53,11 +53,11 @@ public class Mpiexec implements ProcessListener, StatusListener {
     private final Map<Integer,Integer> statusCount =
         new HashMap<Integer,Integer>();
 
-    /**
+    /*
        The Block containing the Cpus that will run this Job
        TODO: Use this to ensure all Cpus are in this Block
      */
-    private final Block block;
+    //private final Block block;
 
     /**
        The Cpus that will run this Job
