@@ -14,15 +14,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.FlowElement;
-
-
 
 /**
  * <p>
@@ -53,10 +49,8 @@ public final class EventBus {
 	public volatile static long eventCount;
 
 	private final ExecutorService es;
-	private final BlockingQueue<Runnable> bq;
 
 	public EventBus() {
-		bq = new LinkedBlockingQueue<Runnable>();
 		es = Executors.newFixedThreadPool(DEFAULT_WORKER_COUNT);
 	}
 
