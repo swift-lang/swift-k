@@ -23,7 +23,6 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
-import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -47,6 +46,9 @@ public class PBSExecutor extends AbstractExecutor {
 	 */
 	int depth = 1;
 
+	/**
+	   Unique number for automatic task names
+	*/
 	private static int unique = 0; 
 	
 	public PBSExecutor(Task task, ProcessListener listener) {
@@ -58,9 +60,9 @@ public class PBSExecutor extends AbstractExecutor {
 	/** 
 	    The job name is limited to 15 characters: 
 		http://doesciencegrid.org/public/pbs/qsub.html
+		This limit is enforced on Cray machines
 	 */
-	protected void validate(Task task)
-	throws ProcessException {
+	protected void validate(Task task) {
 		String name = task.getName();
 		if (name == null) {
 		    int i = 0;
@@ -74,7 +76,10 @@ public class PBSExecutor extends AbstractExecutor {
             }
 		}
 		else if (name.length() > 15) {
-		    task.setName(name.substring(0, 15));
+			String shorter = name.substring(0, 15);
+			logger.debug("PBS name: for: " + name + 
+			             " is: " + shorter);
+		    task.setName(shorter);
 		}
 	}
 	
@@ -224,6 +229,7 @@ public class PBSExecutor extends AbstractExecutor {
 
         getSpec().unpackProviderAttributes();
 
+        validate(task);
         writeHeader(wr);
         
 		wr.write("#PBS -S /bin/bash\n");
