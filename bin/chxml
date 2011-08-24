@@ -3,7 +3,7 @@
 # ensures that that there is a sites file specified and that it contains
 # well-formed xml as well as essential attributes for the specified provider
 
-import xml.parsers.expat,sys,os,commands
+import xml.parsers.expat,sys,os,commands,pprint
 from glob import glob
 
 class siteProps:
@@ -44,11 +44,14 @@ class siteProps:
     def start_element(self, name, attrs):
         self.startTags.append(name)
         for x, y in attrs.iteritems():
-            if (name=="execution" and x=="provider" and y=="local"):
-                self.execProvider = "local"
+            if (name=="execution" and x=="provider"):
+                self.execProvider = y
             if (y=="globus"):
                 self.globusParams = 1
-
+	    if (mysite.globusParams == 1 and mysite.execProvider == "local"):
+    		pp = pprint.PrettyPrinter()
+    		print "Warning: "+mysite.sites_file+" contains globus parameters that do not apply to the local execution provider ("+name+" "+pp.pformat(attrs)+")"
+		sys.exit()
     def end_element(self, name):
         self.endTags.append(name)
 
@@ -59,7 +62,7 @@ mysite = siteProps(sys.argv)
 try:
     mysite.parsefile()
 except Exception, e:
-    print "Error: there is a problem with your sites file"
+    print "Error: XML parsing error in "+mysite.sites_file
     print "%s is %s" % (mysite.sites_file, e)
     sys.exit()
 
@@ -78,9 +81,10 @@ for tag in mysite.startTags:
         if tag=="pool":
             pool= 1
 
-if (pool<1 or config<1):
-    print "Error: there is a problem with your sites file "+mysite.sites_file
-if (mysite.globusParams == 1 and mysite.execProvider == "local"):
-    print "Error: "+mysite.sites_file+" contains parameters that do not apply to the selected execution provider"
+if (pool<1):
+    print "Warning: Your sites file, "+mysite.sites_file+" is missing a pool entry"
+    sys.exit()
+if (config<1):
+    print "Warning: Your site file, "+mysite.sites_file+" is missing a config entry"
     sys.exit()
     
