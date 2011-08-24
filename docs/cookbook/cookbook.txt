@@ -1,5 +1,3 @@
-// To compile use: asciidoc -a toc -n cookbook-asciidoc.txt 
-
 Swift Cookbook
 ==============
 Swift team <swift-user@ci.uchicago.edu>
