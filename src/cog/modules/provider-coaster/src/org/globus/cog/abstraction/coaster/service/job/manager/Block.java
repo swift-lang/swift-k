@@ -269,9 +269,16 @@ public class Block implements StatusListener, Comparable<Block> {
                 }
 				if (!failed) {
 					if (count < workers || now) {
+					    if (logger.isInfoEnabled()) {
+					        logger.info("Adding short shutdown watchdog: count = " + 
+					            count + ", workers = " + workers + ", now = " + now);
+					    }
 	                    addForcedShutdownWatchdog(100);
     	            }
 					else {
+					    if (logger.isInfoEnabled()) {
+					        logger.info("Adding normal shutdown watchdog");
+					    }
 	   					addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
 					}
 				}
@@ -304,14 +311,16 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void forceShutdown() {
-        if (task != null) {
-            try {
-                getSubmitter().cancel(this);
+        synchronized(cpus) {
+            if (task != null) {
+                try {
+                    getSubmitter().cancel(this);
+                }
+                catch (Exception e) {
+                    logger.warn("Failed to shut down block: " + this, e);
+                }
+                bqp.blockTaskFinished(this);
             }
-            catch (Exception e) {
-                logger.warn("Failed to shut down block: " + this, e);
-            }
-            bqp.blockTaskFinished(this);
         }
     }
 
@@ -410,6 +419,7 @@ public class Block implements StatusListener, Comparable<Block> {
                     }
                     bqp.blockTaskFinished(this);
                     running = false;
+                    task = null;
                 }
                 logger.info(id + " stdout: " + prettifyOut(task.getStdOutput()));
                 logger.info(id + " stderr: " + prettifyOut(task.getStdError()));

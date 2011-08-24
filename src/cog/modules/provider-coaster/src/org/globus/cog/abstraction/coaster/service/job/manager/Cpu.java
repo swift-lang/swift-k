@@ -254,10 +254,12 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void shutdown() {
-		if (shutdown) {
-			return;
-		}
-		shutdown = true;
+        synchronized(this) {
+            if (shutdown) {
+                return;
+            }
+            shutdown = true;
+        }
 		Block block = node.getBlock();
         done.clear();
         if (running != null) {
