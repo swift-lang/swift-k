@@ -1,1 +1,1 @@
-../../docs/log-processing/log-processing.txt
+../../docs/userguide/log-processing
