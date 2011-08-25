@@ -218,6 +218,9 @@ public class ServiceManager implements StatusListener {
             String msg =
                     "Coaster service ended. Reason: " + s.getMessage() + "\n\tstdout: "
                             + t.getStdOutput() + "\n\tstderr: " + t.getStdError();
+            if (logger.isInfoEnabled()) {
+                logger.info(msg);
+            }
             NotificationManager.getDefault().serviceTaskEnded(contact, msg);
             try {
                 if (url != null) {
