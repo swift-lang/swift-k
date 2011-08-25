@@ -1,12 +1,14 @@
 
 type file;
 
-app (file o) copy(file i)
+app (file o) transform(file i)
 {
-  mpi_cp @i @o;
+  mpi_sleep "-i" @i "-o" @o ;
 }
 
 file input<"100-input.txt">;
-file output<"100-output.txt">;
 
-output = copy(input);
+foreach i in [0:4] {
+  file output<single_file_mapper;file=@strcat("transform-",i,".txt")>;
+  output = transform(input);
+}

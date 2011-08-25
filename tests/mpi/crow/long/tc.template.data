@@ -20,3 +20,4 @@ localhost 	cp 		/bin/cp	        INSTALLED	INTEL32::LINUX	null
 # hydra-tests-2
 
 crow 	mpi_cp 		_DIR_/mpi-cp    INSTALLED	INTEL32::LINUX	globus::hostCount=2
+crow 	mpi_sleep 	_DIR_/mpi-sleep    INSTALLED	INTEL32::LINUX	globus::hostCount=2
