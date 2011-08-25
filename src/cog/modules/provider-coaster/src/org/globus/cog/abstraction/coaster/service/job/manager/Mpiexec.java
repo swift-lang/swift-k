@@ -140,6 +140,9 @@ public class Mpiexec implements ProcessListener, StatusListener {
         return result;
     }
 
+    /**
+       Construct the mpiexec command line for the given Task 
+     */
     private String[] commandLine(Task task) {
         JobSpecification spec =
             (JobSpecification) task.getSpecification();
@@ -150,8 +153,10 @@ public class Mpiexec implements ProcessListener, StatusListener {
         String hosts = getHydraHostList(task);
 
         cmdl.add(MPIEXEC);
-        cmdl.add("-bootstrap");
-        cmdl.add("none");
+        // Uncomment this for tons of output:
+        // cmdl.add("-verbose");
+        cmdl.add("-launcher");
+        cmdl.add("manual");
         cmdl.add("-disable-hostname-propagation");
         cmdl.add("-n");
         cmdl.add(Integer.toString(job.cpus));
