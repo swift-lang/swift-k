@@ -18,6 +18,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
+import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -109,7 +110,7 @@ public class LocalService extends GSSService implements Registering {
                     throw new TaskSubmissionException("Task ended before registration was received"
                             + (s.getMessage() == null ? ". " : ": " + s.getMessage())
                             + out("STDOUT", t.getStdOutput()) + out("STDERR", t.getStdError()),
-                        s.getException());
+                        s.getException() instanceof JobException ? null : s.getException());
                 }
             }
             return (String) services.get(id);
@@ -118,7 +119,7 @@ public class LocalService extends GSSService implements Registering {
 
     private String out(String name, String value) {
         if (value != null) {
-            return "\n" + name + ": " + value;
+            return "\n" + value;
         }
         else {
             return "";
