@@ -1,0 +1,7 @@
+PADS-pbs 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+PADS-pbs 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+PADS-pbs 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+PADS-pbs 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+PADS-pbs 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+PADS-pbs 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+PADS-pbs	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
