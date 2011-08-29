@@ -243,6 +243,8 @@ public class PBSExecutor extends AbstractExecutor {
 		wr.write("#PBS -e " + quote(stderr) + '\n');
 
 		for (String name : spec.getEnvironmentVariableNames()) {
+			// "export" is necessary on the Cray XT5 Crow
+			wr.write("export ");
 			wr.write(name);
 			wr.write('=');
 			wr.write(quote(spec.getEnvironmentVariable(name)));
