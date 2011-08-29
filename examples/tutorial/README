@@ -1,0 +1,42 @@
+The files in this directory are examples from the 
+http://www.ci.uchicago.edu/swift/guides/release-0.93/tutorial/tutorial.html[Swift tutorial].
+
+hello.swift
+	The Swift hello world program. It outputs a hello world message into a file 
+        called hello.txt
+
+parameter.swift
+	Shows how to specify parameters to procedures
+
+manyparam.swift
+	Similar to parameter.swift, but called multiple times with different 
+	parameters
+
+capitalise.swift
+	Gets input from a file, capitalizes the contents, and writes to a new file
+
+types.swift
+	How to use user-defined structures
+
+arrays.swift
+	Introduction to arrays
+
+regexp_mapper.swift
+	Example of how to use the regular expression mapper
+
+fixed_array_mapper.swift
+	Example of how to use the fixed array mapper
+
+foreach.swift
+	Demonstrates the usage of foreach by counting words in multiple files
+
+if.swift
+	Handling decisions with if
+
+sequential_iteration.swift
+	Demonstrates the usage of iterate
+
+default.swift
+	Shows named parameters and default values
+
+
