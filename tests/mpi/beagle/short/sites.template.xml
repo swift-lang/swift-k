@@ -5,7 +5,7 @@
 <set name="wdir" value="{pwd}/work"/>
 <echo message="setting workDirectory to: {wdir}"/>
 
-<pool handle="crow">
+<pool handle="beagle">
   <execution jobmanager="local:pbs" provider="coaster" url="none"/>
   <filesystem provider="local" url="none" />
   <profile namespace="globus" key="maxWallTime">1</profile>
