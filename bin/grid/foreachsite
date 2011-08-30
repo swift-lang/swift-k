@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Default settings:
 
 resource=work # fork or work(er)
@@ -9,7 +11,6 @@ resource=work # fork or work(er)
 usage="$0 foreachsite [-resource fork|worker ] scriptname"
 
 # Process command line arguments
-
 while [ $# -gt 0 ]; do
   case $1 in
     -resource) resource=$2; shift 2 ;;

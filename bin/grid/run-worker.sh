@@ -3,6 +3,7 @@
 contact=$1
 workername=$2
 origlogdir=$3
+export PATH=${OSG_APP}/scec:$PATH
 echo OSG_WN_TMP=$OSG_WN_TMP
 if [ _$OSG_WN_TMP = _ ]; then
   OSG_WN_TMP=/tmp
@@ -31,3 +32,4 @@ echo "=== worker log - last $nlines lines:"
 echo
 
 tail -v -n $nlines $logdir/*
+
