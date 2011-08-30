@@ -3,7 +3,7 @@ type file;
 
 app (file o) transform(file i)
 {
-  mpi_sleep "-i" @i "-o" @o ;
+  mpi_sleep "-i" @i "-o" @o 3;
 }
 
 file input<"100-input.txt">;
