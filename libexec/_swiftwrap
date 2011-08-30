@@ -232,6 +232,8 @@ closeinfo
 if [ -z $MPI_RANK ]; then
 	INFOFILE="$INFODIR/${ID}-info"
 else
+	# Just touch this file so the *.k stuff does not fail
+	[[ $MPI_RANK == 0 ]] && touch $INFODIR/${ID}-info
 	INFOFILE="$INFODIR/${ID}-${MPI_RANK}-info"
 fi
 rm -f $INFOFILE
