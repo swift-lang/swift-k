@@ -5,14 +5,14 @@
 <set name="wdir" value="{pwd}/work"/>
 <echo message="setting workDirectory to: {wdir}"/>
 
-<pool handle="crow">
+<pool handle="beagle">
   <execution jobmanager="local:pbs" provider="coaster" url="none"/>
   <filesystem provider="local" url="none" />
   <profile namespace="globus" key="maxWallTime">1</profile>
   <profile namespace="globus" key="maxTime">7200</profile>
 
   <profile namespace="globus" key="providerAttributes">
-    pbs.aprun;pbs.mpp;depth=6
+    pbs.aprun;pbs.mpp;depth=1
   </profile>
   <profile key="jobsPerNode" namespace="globus">1</profile>
   <profile key="slots" namespace="globus">1</profile>
