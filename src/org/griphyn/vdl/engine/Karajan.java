@@ -250,12 +250,20 @@ public class Karajan {
 	private void processProcedures(Program prog, VariableScope scope) throws CompilationException {
 
 		// Keep track of declared procedures
+	    // Check for redefinitions of existing procedures
+	    Set<String> procsDefined = new HashSet<String>() ;	    
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
 			Procedure proc = prog.getProcedureArray(i);
-			ProcedureSignature ps = new ProcedureSignature(proc.getName());
+			String procName = proc.getName().toLowerCase();
+			if (procsDefined.contains(procName)){
+			    // We have a redefinition error
+			    throw new CompilationException("Illegal redefinition of procedure attempted for " + procName );
+			}
+			procsDefined.add(procName);
+			ProcedureSignature ps = new ProcedureSignature(procName);
 			ps.setInputArgs(proc.getInputArray());
 			ps.setOutputArgs(proc.getOutputArray());
-			proceduresMap.put(proc.getName(), ps);
+			proceduresMap.put(procName, ps);
 		}
 
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
