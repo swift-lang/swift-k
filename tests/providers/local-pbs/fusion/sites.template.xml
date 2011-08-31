@@ -1,9 +1,0 @@
-<config>
-<pool handle="fusion-pbs">
-  <execution provider="pbs" url="none" />
-  <filesystem provider="local" url="none" />
-  <profile namespace="globus"  key="maxwalltime">5</profile>
-  <profile namespace="globus"  key="queue">shared</profile>
-  <workdirectory>_WORK_</workdirectory>
-</pool>
-</config>
