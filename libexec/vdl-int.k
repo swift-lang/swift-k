@@ -293,6 +293,7 @@ namespace("vdl"
 					//make sure we do have the directory on the client side
 					dir:make(ldir, host=dhost, provider=provider)
 					policy := cdm:query(query=file)
+					log(LOG:DEBUG, "CDM: {file} : {policy}")
 					if (sys:or(policy == "DEFAULT", policy == "BROADCAST")
 						then(
 						restartOnError(".*", 2
