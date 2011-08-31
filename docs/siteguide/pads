@@ -1,10 +1,61 @@
 PADS
 ----
 
+PADS Quickstart
+~~~~~~~~~~~~~~~
+This section will walk you through running a simple Swift script
+on PADS.
+
+In your home directory, edit a file called .soft and add these
+lines (in this order):
+-----
++java-sun
++maui
++torque
+@default
+-----
+
+Log out of PADS, and log back in.
+
+Next, paste the example below into a file called sites.xml.
+
+-----
+include::../../tests/providers/PADS/coasters/sites.template.xml[]
+-----
+
+Create a directory called swiftwork. Modify _WORK_ in sites.xml
+to point to this new directory. For example
+-----
+<workdirectory>/home/myhome/swiftwork</workdirectory>
+-----
+
+Next, paste the following example into a file called tc.data
+
+-----
+include::../../tests/providers/PADS/coasters/tc.template.data[]
+-----
+
+Copy the catsn Swift script and input text file into your current directory
+-----
+$ cp ~/swift-0.93/examples/misc/catsn.swift .
+$ cp ~/swift-0.93/examples/misc/data.txt .
+-----
+TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
+
+And finally, run the script
+-----
+$ swift -sites.file sites.xml -tc.file tc.data catsn.swift
+-----
+
+You should see 10 new text files get created, named catsn*.out. If
+you see these files, then you have succesfully run Swift on PADS!
+
+TIP: Make sure your default project is defined. Read on for more information.
+
 Requesting Access
 ~~~~~~~~~~~~~~~~~
 If you do not already have a Computation Institute account, you can request
-one at https://www.ci.uchicago.edu/accounts/. This page will give you a list
+one at https://www.ci.uchicago.edu/accounts. This page will give you a list
 of resources you can request access to. Be sure that PADS is selected. If
 you already have an existing CI account, but do not have access to PADS,
 send an email to support@ci.uchicago.edu to request access.
@@ -38,34 +89,6 @@ to look like this:
 +torque
 @default
 -----
-
-Downloading and building Swift
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The most recent versions of Swift can be found at 
-http://www.ci.uchicago.edu/swift/downloads/index.php. Follow the instructions
-provided on that site to download and build Swift.
-
-Adding Swift to your PATH
-~~~~~~~~~~~~~~~~~~~~~~~~~
-Once you have installed Swift, add the Swift binary to your PATH so you can
-easily run it from any directory. 
-
-In your home directory, edit the file ".bashrc".
-
-If you have installed Swift via a source repository, add the following line
-at the bottom of .bashrc.
-
------
-export PATH=$PATH:$HOME/cog/modules/swift/dist/swift-svn/bin
------
-
-If you have installed Swift via a binary package, add this line:
-
------
-export PATH=$PATH:$HOME/swift-<version>/bin
------
-
-Replace <version> with the actual name of the swift directory in the example above.
 
 What You Need To Know Before Running Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -145,17 +168,18 @@ Manually Editing sites.xml
 Below is the template that is used by Swift's test suite for running on PADS.
 
 -----
-include::../../tests/providers/local-pbs/pads/sites.template.xml[]
+include::../../tests/providers/PADS/coasters/sites.template.xml[]
 -----
 
-The values to note here are the ones that are listed between underscores. In the example above, they are _QUEUE_, and _WORK_. Queue is the PADS queue to use and WORK is the swift work directory. These are placeholder values you will need to modify to fit your needs. Copy and paste this template, replace the values, and call it sites.xml.
+Before you can use this configuration file, you will need to modify _WORK_ to a directory writable by you, 
+and have your default project defined. Copy this template, replace _WORK_, and then save as sites.xml.
 
 Manually Editing tc.data
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Below is the tc.data file used by Swift's test suite for running on PADS.
 
 -----
-include::../../tests/providers/local-pbs/pads/tc.template.data[]
+include::../../tests/providers/PADS/coasters/tc.template.data[]
 ------
 
 Copy these commands and save it as tc.data.
