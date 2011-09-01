@@ -419,8 +419,6 @@ public class Block implements StatusListener, Comparable<Block> {
                     }
                     bqp.blockTaskFinished(this);
                     running = false;
-                    logger.info(id + " stdout: " + prettifyOut(task.getStdOutput()));
-                    logger.info(id + " stderr: " + prettifyOut(task.getStdError()));
                     task = null;
                 }
             }
