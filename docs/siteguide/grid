@@ -121,8 +121,52 @@ You can repeatedly try the get_greensites command, which simply
 concatenates all the site names that sucessfully resturned an output
 file from site tests.
 
+Installing software on OSG sites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The command "foreachsite" will execute a local shell script passed to
+it as an argument, on each OSG site in the Engage VO ReSS site
+catalog. The user's installscript will execute on either the head node
+(as a GRAM "fork" job) or on a worker node, as controlled by the
+-resource option. Its syntax is:
+
+-----
+$ ./foreachsite -help
+./foreachsite foreachsite [-resource fork|worker ] [-sites alt-sites-file] scriptname
+$ 
+-----
+
+To install your software, create a script similar to "myapp.sh",
+below, which (in this example) reads a tar file of a pre-compiled
+application "myapp-2.12" and executes a test script for that
+application. The test script should print some reconizable indication
+of its success or failure:
+
+-----
+$ cat myinstall.sh
+renice 2 -p $$
+IDIR=OSG_APP/extenci/myname/myapp
+mkdir -p $IDIR
+cd $IDIR
+wget http://my.url.edu/~mydir/myapp-2.12.tar.tgz
+tar zxf myapp-2.12.tar.tgz
+myapp-2.12/bin/test_myapp.sh
+if [ $? = 0 ]; then
+  echo INSTALL SUCCEEDED
+else
+  echo INSTALL FAILED
+fi
+$
+$ foreachsite -resource fork myinstall.sh
+$
+$ # Wait a file here, then poll for successfully installed apps...
+$
+$ grep SUCCEEDED run.89/*/*.stdout
+$
+
+
 Starting a single coaster service
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This single coaster service will service all grid sites:
 
