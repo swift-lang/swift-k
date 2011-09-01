@@ -39,7 +39,15 @@ public class NotificationManager {
         return def;
     }
 
+    /** 
+       Map from Task IDs to Tasks
+     */
     private Map<String, Task> tasks;
+    
+    /**
+       Map from Task IDs to Status updates that arrived before the 
+       Task existed in the Map {@link tasks}
+     */
     private Map<String, List<Status>> pending;
     private long lastNotificationTime;
 
