@@ -15,10 +15,12 @@ public interface Metric {
 
     double blockSize(int slot, int cslots, double tsum);
 
+    /** Seconds? */
     double getSize(Job j);
     
     double getSizeLeft(Job j);
 
+    /** Seconds? */
     double desiredSize(Job j);
 
     double size(int w, int h);
