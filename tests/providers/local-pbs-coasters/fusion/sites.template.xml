@@ -1,5 +1,5 @@
 <config>
-<pool handle="local-pbs-coasters">
+<pool handle="fusion">
   <execution jobmanager="local:pbs" provider="coaster" url="none"/>
   <filesystem provider="local" url="none" />
   <profile namespace="globus" key="maxWallTime">1</profile>
