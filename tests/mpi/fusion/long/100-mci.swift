@@ -8,7 +8,9 @@ app (file o) transform(file i)
 
 file input<"100-input.txt">;
 
-foreach i in [0:4] {
+int total = 10;
+
+foreach i in [0:total] {
   file output<single_file_mapper;file=@strcat("transform-",i,".txt")>;
   output = transform(input);
 }

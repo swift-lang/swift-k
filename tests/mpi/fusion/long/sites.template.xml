@@ -8,7 +8,7 @@
 <pool handle="fusion">
   <execution jobmanager="local:pbs" provider="coaster" url="none"/>
   <filesystem provider="local" url="none" />
-  <profile namespace="globus" key="maxWallTime">1</profile>
+  <profile namespace="globus" key="maxWallTime">100</profile>
   <profile namespace="globus" key="maxTime">7200</profile>
 
   <profile key="jobsPerNode" namespace="globus">1</profile>
