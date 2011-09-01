@@ -3,6 +3,8 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -272,6 +274,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
+    static NumberFormat format = new DecimalFormat("0.00");
+  
     private int computeTotalRequestSize() {
         double sz = 0;
         for (Job j : holding) {
@@ -280,7 +284,9 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         if (sz > 0) {
             if (sz < 1)
                 sz = 1;
-            logger.info("Required size: " + sz + " for " + holding.size() + " jobs");
+            logger.info("Jobs in holding queue: " + holding.size());
+            String s = format.format(sz);
+            logger.info("Time estimate (seconds): " + s);
         }
         return (int) sz;
     }
@@ -363,6 +369,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
         double size = metric.blockSize(slot, cslots, tsum);
 
+        logger.info("Allocating blocks...");
+        
         while (i <= holding.size() && slot < cslots) {
             int granularity = settings.getNodeGranularity() * settings.getJobsPerNode();
             boolean granularityFit = (i - last) % granularity == 0;
@@ -377,15 +385,21 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 int h = overallocatedSize(holding.get(i));
                 // height must be a multiple of the overallocation of the
                 // largest job
-                int maxt = settings.getMaxtime() - (int) settings.getReserve().getSeconds();
+                int maxt =
+                  settings.getMaxtime() - (int) settings.getReserve().getSeconds();
                 h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
                 int w =
-                        Math.min(round(metric.width(msz, h), granularity), settings.getMaxNodes()
-                                * settings.getJobsPerNode());
+                        Math.min(round(metric.width(msz, h), granularity),
+                                 settings.getMaxNodes()
+                                 * settings.getJobsPerNode());
                 int r = (i - last) % w;
                 if (logger.isInfoEnabled()) {
-                    logger.info("h: " + h + ", jj: " + lastwalltime + ", x-last: " + ", r: " + r
-                            + ", sumsz: " + sumSizes(last, i));
+                    logger.info("h: " + h + ", jj: " + lastwalltime +
+                                ", x-last: " + ", r: " + r +
+                                ", sumsz: " + sumSizes(last, i));
+                    logger.info("\t Considering: " + holding.get(i));
+                    logger.info("\t  Time estimate (seconds): " + h);
+                    logger.info("\t  Remaining: " + sumSizes(last, i));
                 }
 
                 // read just number of jobs fitted based on granularity
