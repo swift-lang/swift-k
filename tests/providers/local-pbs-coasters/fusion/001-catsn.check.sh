@@ -2,11 +2,12 @@
 
 set -x
 
-for count in `seq --format "%04.f" 1 1 10`
+FILES=( catsn.*.out )
+[[ ${#FILES[@]} == 10 ]] || exit 1
+
+for FILE in ${FILES}
 do
-	[ -f catsn.$count.out ] || exit 1
-	CONTENTS1=$( cat catsn.$count.out.expected )
-	CONTENTS2=$( cat catsn.$count.out )
-	[[ $CONTENTS1 == $CONTENTS2 ]] || exit 1
+ grep -q "Hello world" ${FILE} || exit 1
 done
+
 exit 0
