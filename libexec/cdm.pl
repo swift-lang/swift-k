@@ -1,10 +1,10 @@
 
-# CDM Lookup 
+# CDM Lookup
 
 sub print_hash
 {
     my $hash = $_[0];
-    foreach (keys %$hash) 
+    foreach (keys %$hash)
     {
         print "$_ : $$hash{$_} \n";
     }
@@ -47,18 +47,18 @@ sub cdm_property
     print "$result\n";
 }
 
-# Command-line arguments: 
+# Command-line arguments:
 $task = $ARGV[0];
 $arg  = $ARGV[1];
 
-# Read fs.data off of stdin: 
+# Read fs.data off of stdin:
 @keys = ();
 %map  = ();
 %properties = ();
 while (<STDIN>)
 {
     chomp;
-    
+
     my $comment = index $_, "#";
     if ($comment >= 0) {
 	$_ = substr($_, 0, $comment);
@@ -66,15 +66,15 @@ while (<STDIN>)
 
     next if $_ eq "";
 
-    @tokens = split(/[ \t]+/, $_); 
-    $type   = shift(@tokens); 
-    if ($type eq "rule") 
+    @tokens = split(/[ \t]+/, $_);
+    $type   = shift(@tokens);
+    if ($type eq "rule")
     {
 	$key = shift(@tokens);
-	if (! defined $map{$key}) 
+	if (! defined $map{$key})
 	{
 	    $rest = join(' ', @tokens);
-	    @keys = (@keys, $key); 
+	    @keys = (@keys, $key);
 	    $map{$key} = $rest;
 	}
     }
@@ -84,13 +84,13 @@ while (<STDIN>)
 	$rest   = join(' ', @tokens);
 	$properties{$property} = $rest;
     }
-    else 
+    else
     {
-	die "Unknown directive: $type"; 
+	die "Unknown directive: $type";
     }
 }
 
-# Do the user task: 
+# Do the user task:
 if ($task eq "lookup")
 {
     cdm_lookup(\@keys, \%map, $arg);
