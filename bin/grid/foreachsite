@@ -6,13 +6,12 @@ resource=work # fork or work(er)
 
 # FIXME: test for valid proxy
 
-# Usage: foreachsite [-resource fork|worker ] scriptname
-
-usage="$0 foreachsite [-resource fork|worker ] scriptname"
+usage="$0 foreachsite [-resource fork|worker ] [-sites alt-sites-file] scriptname"
 
 # Process command line arguments
 while [ $# -gt 0 ]; do
   case $1 in
+    -sites) sitefile=$2; shift 2;;
     -resource) resource=$2; shift 2 ;;
     -*) echo $usage 1>&2
         exit 1 ;;
@@ -31,10 +30,13 @@ cd $rundir
 
 echo Running foreachsite: resource=$resource script=$scriptparam rundir=$rundir
 
-# swift-osg-ress-site-catalog --engage-verified --condor-g >osg.xml
-swift-osg-ress-site-catalog --engage  --condor-g >osg.xml
+if [ _$sitefile = _ ]; then
+  sitefile=osg.xml
+  # swift-osg-ress-site-catalog --engage  --condor-g >osg.xml
+  swift-osg-ress-site-catalog --vo=engage  --condor-g >osg.xml
+fi
 
-for jobmanager in $(grep gridRes osg.xml | sed -e 's/^.* //' -e 's/<.*//' ); do
+for jobmanager in $(grep gridRes $sitefile | sed -e 's/^.* //' -e 's/<.*//' ); do
   ( sitename=$(echo $jobmanager | sed -e 's,/.*,,')  # strip off batch jobmanager /jobmanager, leaving site name
     mkdir $sitename
     cd $sitename
