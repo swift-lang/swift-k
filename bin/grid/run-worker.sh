@@ -3,7 +3,6 @@
 contact=$1
 workername=$2
 origlogdir=$3
-export PATH=${OSG_APP}/scec:$PATH
 echo OSG_WN_TMP=$OSG_WN_TMP
 if [ _$OSG_WN_TMP = _ ]; then
   OSG_WN_TMP=/tmp
@@ -12,7 +11,7 @@ mkdir -p $OSG_WN_TMP
 logdir=$(mktemp -d $OSG_WN_TMP/${workername}.workerdir.XXXXXX)
 nlines=1000
 
-PATH=$OSG_APP/extenci/aashish/terfix/bin:$PATH
+PATH=$OSG_APP:$OSG_APP/scec:$OSG_APP/extenci/aashish/terfix/bin:$PATH
 
 echo "=== contact: $contact"
 echo "=== name:    $workername Running in dir $(pwd)"

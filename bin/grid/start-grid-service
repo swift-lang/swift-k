@@ -44,18 +44,31 @@ BIN=$(cd $(dirname $0); pwd)
 
 echo THROTTLE=$THROTTLE LOGLEVEL=$LOGLEVEL
 
+coaster-service -port 1984 -localport 35753 -nosec >& local-coaster-service.out &
+sleep 5
 start-swift-service 1 &
 sleep 5
 SPORT=$(cat service.sports)
 cat >sites.grid-ps.xml <<EOF
   <config>
-    <pool handle="localhost">
+    <pool handle="grid">
       <execution provider="coaster-persistent" url="http://localhost:$SPORT" jobmanager="local:local"/>
       <profile namespace="globus" key="workerManager">passive</profile>
       <profile namespace="globus" key="jobsPerNode">$JOBSPERNODE</profile>
       <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
       <profile namespace="karajan" key="initialScore">10000</profile>
       <!-- <filesystem provider="local" url="none" /> -->
+      <profile namespace="swift" key="stagingMethod">proxy</profile>
+      <workdirectory>/tmp/$USER</workdirectory>
+    </pool>
+    
+   <pool handle="localhost">
+      <execution provider="coaster-persistent" url="http://localhost:1984" jobmanager="local:local"/>
+      <profile namespace="globus" key="workerManager">passive</profile>
+      <profile namespace="globus" key="jobsPerNode">$JOBSPERNODE</profile>
+      <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <filesystem provider="local" url="none" />
       <profile namespace="swift" key="stagingMethod">proxy</profile>
       <workdirectory>/tmp/$USER</workdirectory>
     </pool>
