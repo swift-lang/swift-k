@@ -9,11 +9,9 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
@@ -136,8 +134,7 @@ public class CoasterPersistentService extends CoasterService {
         }
     }
     
-    static void setupLogging()
-    {
+    static void setupLogging() {
         String timestamp = Timestamp.YMDhms_dash();
         String filename =  "cps-"+timestamp+".log";        
         logger.warn("Switching log to: " + filename);
