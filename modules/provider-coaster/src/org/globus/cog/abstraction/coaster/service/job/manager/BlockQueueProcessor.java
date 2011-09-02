@@ -285,11 +285,13 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private void warnAboutWalltimes(Iterable<Job> set) {
         synchronized(set) {
             for (Job r : set) {
-                Task t = r.getTask();
-                if (t.getAttribute("#warnedAboutWalltime") == null) {
-                    logger.warn("The following job exceeded its walltime: " + 
-                        t.getSpecification());
-                    t.setAttribute("#warnedAboutWalltime", Boolean.TRUE);
+                if (r.getMaxWallTime().isLessThan(Time.now().subtract(r.getStartTime()))) {
+                    Task t = r.getTask();
+                    if (t.getAttribute("#warnedAboutWalltime") == null) {
+                        logger.warn("The following job exceeded its walltime: " + 
+                            t.getSpecification());
+                        t.setAttribute("#warnedAboutWalltime", Boolean.TRUE);
+                    }
                 }
             }
         }
