@@ -241,7 +241,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private Set<Job> queueToExistingBlocks() {
-        double runningSize = running.getSizeLeft();
+        double runningSize = getRunningSizeLeft();
         Set<Job> remove = new HashSet<Job>();
         for (Job j : holding) {
             if (allocsize - queued.getJSize() - runningSize > metric.getSize(j) && fits(j)) {
@@ -257,7 +257,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private void requeueNonFitting() {
         int count = 0;
-        double runningSize = running.getSizeLeft();
+        double runningSize = getRunningSizeLeft();
         logger.debug("allocsize = " + allocsize +
                      ", queuedsize = " + queued.getJSize() +
                      ", running = " + runningSize +
@@ -266,14 +266,38 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             Job j = queued.removeOne(TimeInterval.FOREVER,
                                      Integer.MAX_VALUE);
             if (j == null) {
-                CoasterService.error(19, "queuedsize > 0 but no job dequeued. Queued: " + queued,
-                    new Throwable());
+                if (queued.getJSize() > 0) {
+                    CoasterService.error(19, "queuedsize > 0 but no job dequeued. Queued: " + queued,
+                        new Throwable());
+                }
+                else if (allocsize - getRunningSizeLeft() < 0) {
+                    warnAboutWalltimes(running);
+                }
             }
             holding.add(j);
             count++;
         }
         if (count > 0) {
             logger.info("Requeued " + count + " non-fitting jobs");
+        }
+    }
+    
+    private void warnAboutWalltimes(Iterable<Job> set) {
+        synchronized(set) {
+            for (Job r : set) {
+                Task t = r.getTask();
+                if (t.getAttribute("#warnedAboutWalltime") == null) {
+                    logger.warn("The following job exceeded its walltime: " + 
+                        t.getSpecification());
+                    t.setAttribute("#warnedAboutWalltime", Boolean.TRUE);
+                }
+            }
+        }
+    }
+
+    private double getRunningSizeLeft() {
+        synchronized(running) {
+            return running.getSizeLeft();
         }
     }
 
@@ -562,13 +586,17 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     public Job request(TimeInterval ti, int cpus) {
         Job job = queued.removeOne(ti, cpus);
         if (job != null) {
-            running.add(job);
+            synchronized(running) {
+                running.add(job);
+            }
         }
         return job;
     }
 
     public void jobTerminated(Job job) {
-        running.remove(job);
+        synchronized(running) {
+            running.remove(job);
+        }
     }
 
     private int round(int v, int g) {
