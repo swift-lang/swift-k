@@ -20,12 +20,29 @@ public class Timestamp
 		new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 	
 	/**
-	   Year Month Day hour minutes seconds 
+	   Current time as: Year/Month/Day hour:minutes:seconds 
 	 */
 	public static String YMDhms()
 	{
 		Date now = new Date();
 		String result = YMDhms.format(now);
 		return result;
+	}
+
+	/**
+	   Year Month Day hour minutes seconds 
+	 */
+	static DateFormat YMDhms_dash = 
+		new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+	
+	/**
+	   Current time as: Year_Month_Day_hour_minutes_seconds
+	   Good for file names  
+	 */
+	public static String YMDhms_dash()
+	{
+		Date now = new Date();
+		String result = YMDhms_dash.format(now);
+		return result;		
 	}
 }
