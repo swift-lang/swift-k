@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
@@ -81,6 +83,25 @@ public class Mpiexec implements ProcessListener, StatusListener {
      */
     private String provider;
 
+  /** 
+     If non-empty, override the proxy line with this host
+     Motivation: The Hydra proxy line contains the hostname on which 
+     mpiexec, the proxies connect to this host.  On some systems, 
+     mpiexec produces a hostname that the proxies cannot find. 
+     mpiexec.host.subst allows the user to override this hostname
+     This is a System property, use COG_OPTS to set this
+  */
+   static String mpiexecHostSubst = "";
+
+   static {
+       String v = System.getProperty("mpiexec.host.subst");
+       if (v != null && v.length() > 0) {
+           mpiexecHostSubst = v;
+           logger.debug
+           ("Property mpiexec.host.subst="+mpiexecHostSubst);
+       }
+   }
+
     Mpiexec(List<Cpu> cpus, Job job) {
         this.cpus = cpus;
         this.job = job;
@@ -141,7 +162,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
     }
 
     /**
-       Construct the mpiexec command line for the given Task 
+       Construct the mpiexec command line for the given Task
      */
     private String[] commandLine(Task task) {
         JobSpecification spec =
@@ -260,12 +281,42 @@ public class Mpiexec implements ProcessListener, StatusListener {
         String[] lines = output.split("\\n");
         for (String line : lines)
             if (line.startsWith("HYDRA_LAUNCH:")) {
-                String[] tokens = line.split("\\s");
+            	line = proxyLineSubst(line);
+            	String[] tokens = line.split("\\s");
                 String[] args   = StringUtil.subset(tokens, 1);
                 result.add(args);
             }
 
         return result;
+    }
+
+    /**
+       Pattern to match on for mpiexec.host.subst
+     */
+    final Pattern controlPortHost =
+    	Pattern.compile("--control-port (.*):");
+    
+    /** 
+       Replacement for mpiexec.host.subst
+     */
+    final String replacement =
+    	"--control-port " + mpiexecHostSubst + ":";
+
+    /**
+       Perform translations on Hydra proxy line here
+       For now, only does mpiexec.host.subst 
+     */
+    String proxyLineSubst(String input) {
+
+    	if (mpiexecHostSubst.length() == 0)
+    		return input;
+
+    	Matcher matcher = controlPortHost.matcher(input);
+    	if (! matcher.find())
+    		throw new RuntimeException
+    		("Proxy line does not contain --control-port !");
+    	String result = matcher.replaceFirst(replacement);
+    	return result;
     }
 
     /**
