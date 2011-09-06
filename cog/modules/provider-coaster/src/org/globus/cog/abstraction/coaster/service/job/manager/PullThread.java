@@ -16,11 +16,27 @@ class PullThread extends Thread {
        Cpus actively looking for work and not sleeping
      */
     private final LinkedList<Cpu> queue;
+    
     /** 
        Cpus sleeping (tried to pull but found no work)
      */
     private final LinkedList<Cpu> sleeping;
-    private long sleepTime, runTime, last;
+
+    /**
+       Time slept since last report in milliseconds 
+     */
+    private long sleepTime;
+    
+    /**
+       Time slept in milliseconds
+     */
+    private long runTime;
+    
+    /** 
+       Time of last time measurement in milliseconds 
+     */
+    private long last;
+    
     private final BlockQueueProcessor bqp;
 
     public PullThread(BlockQueueProcessor bqp) {
@@ -118,7 +134,8 @@ class PullThread extends Thread {
         wait(ms);
         sleepTime += countAndResetTime();
         if (runTime + sleepTime > 10000) {
-            logger.info("runTime: " + runTime + ", sleepTime: " + sleepTime);
+            logger.debug("time running (milliseconds): " + runTime);
+            logger.debug("time sleeping (milliseconds):" + sleepTime);
             runTime = 0;
             sleepTime = 0;
         }
