@@ -1,0 +1,18 @@
+<config>
+
+<import file="sys.xml"/>
+<set name="wdir" value="/lustre/beagle/{user.name}/work"/>
+<echo message="setting workDirectory to: {wdir}"/>
+
+<pool handle="beagle-pbs">
+  <execution provider="pbs" url="none" />
+  <filesystem provider="local" url="none" />
+  <profile namespace="globus" key="pbs.aprun"/>
+  <profile namespace="globus" key="pbs.mpp"/>
+  <workdirectory>{wdir}</workdirectory>
+</pool>
+</config>
+
+<!-- RESERVATIONS:
+Add something like this to your globus namespace:
+pbs.resources=advres=modFTDock.47 -->
