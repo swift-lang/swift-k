@@ -82,7 +82,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		this.elementMapper = elementMapper;
 	}
 
-	public void setParams(Map params) {
+	public void setParams(Map<String,Object> params) {
 		super.setParams(params);
 		if (PARAM_SUFFIX.isPresent(this)) {
 			String suffix = PARAM_SUFFIX.getStringValue(this);
@@ -116,7 +116,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			sb.append(prefix);
 		}
 
-		Iterator pi = path.iterator();
+		Iterator<Path.Entry> pi = path.iterator();
 		int level = 0, tokenCount = path.size();
 		while (pi.hasNext()) {
 			Path.Entry nextPathElement = (Path.Entry) pi.next();
@@ -202,7 +202,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		final String prefix = PARAM_PREFIX.getStringValue(this);
 		final String suffix = PARAM_SUFFIX.getStringValue(this);
 		final String pattern = PARAM_PATTERN.getStringValue(this);
-		List<Path> l = new ArrayList<Path>();
+
+		List<Path> result = new ArrayList<Path>();
 		final AbsFile f;
 		if (location == null) {
 			f = new AbsFile(".");
@@ -226,7 +227,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 				Path p = rmap(files[i].getName());
 				if (p != null) {
 					if(logger.isDebugEnabled()) logger.debug("reverse-mapped to path "+p);
-					l.add(p);
+					result.add(p);
 				} else {
 					logger.debug("reverse-mapped to nothing");
 				}
@@ -237,10 +238,10 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			throw new IllegalArgumentException("Directory not found: " + location);
 		}
 		if(logger.isDebugEnabled()) {
-			logger.debug("Finish list existing paths for mapper "+this.hashCode()+" list="+l);
+			logger.debug("Finish list existing paths for mapper "+this.hashCode()+" list="+result);
 		}
-		System.out.println(getVarName() + " (input): found " + l.size() + " files");
-		return l;
+		System.out.println(getVarName() + " (input): found " + result.size() + " files");
+		return result;
 	}
 
 	private String getVarName() {
@@ -299,21 +300,17 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 					logger.debug("rmap filename "+name+" to path "+p+", codepath 1");
 					return p;
 				}
-				else {
-					if (e[0].length() == 0 || e[1].length() == 0) {
-						logger.debug("e[0] or e[1] was zero - returning null. e[0]"+e[0]+" e[1]="+e[1]);
-						return null;
-					}
-					path = rmapElement(path, e[0]);
-					path = rmapElement(path, e[1]);
-					logger.debug("rmap filename "+name+" to path "+path+", codepath 2");
-					return path;
-				}
+                if (e[0].length() == 0 || e[1].length() == 0) {
+                	logger.debug("e[0] or e[1] was zero - returning null. e[0]"+e[0]+" e[1]="+e[1]);
+                	return null;
+                }
+                path = rmapElement(path, e[0]);
+                path = rmapElement(path, e[1]);
+                logger.debug("rmap filename "+name+" to path "+path+", codepath 2");
+                return path;
 			}
-			else {
-				path = rmapElement(path, name.substring(0, index));
-				name = name.substring(index + 1);
-			}
+            path = rmapElement(path, name.substring(0, index));
+            name = name.substring(index + 1);
 			level++;
 		}
 	}
@@ -327,9 +324,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		if (Character.isDigit(e.charAt(0))) {
 			return path.addLast(getElementMapper().rmapIndex(e), true);
 		}
-		else {
-			return path.addLast(getElementMapper().rmapField(e));
-		}
+        return path.addLast(getElementMapper().rmapField(e));
 	}
 
 	/** Appends the string representation of obj to the string buffer
