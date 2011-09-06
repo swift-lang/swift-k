@@ -14,22 +14,28 @@ class siteProps:
         self.endTags=[]
         self.globusParams = 0
         self.execProvider = ""
-        
+
         if len(argstr)<2:
             print "please specify a sites file"
-            sys.exit()
+            sys.exit(1)
         i = 0
         for o in argstr:
             if o == "'-sites.file'":
                 self.sites_file = argstr[i+1].split("'")[1]
             elif o == "'-config'":
-                config_file = open(argstr[i+1].split("'")[1],"r")
+                try:
+                    config_filename = argstr[i+1].split("'")[1]
+                    config_file = open(config_filename,"r")
+                except IOError as (errno, strerror):
+                    print strerror
+                    sys.exit("Could not read: " + config_filename)
+
                 for line in config_file.readlines():
                     if line.strip().startswith('#'):
                         continue
                     if line.find("sites.file")>-1:
                         self.sites_file = line.split("=")[1].strip()
-            i = i+1                    
+            i = i+1
         if (self.sites_file == ""):
             swift_loc = commands.getoutput("which swift")
             swift_home = swift_loc.split("bin")[0]
@@ -55,10 +61,11 @@ class siteProps:
     def end_element(self, name):
         self.endTags.append(name)
 
-        
+
 #------------------------main----------------------------------
 
 mysite = siteProps(sys.argv)
+
 try:
     mysite.parsefile()
 except Exception, e:
@@ -87,4 +94,4 @@ if (pool<1):
 if (config<1):
     print "Warning: Your site file, "+mysite.sites_file+" is missing a config entry"
     sys.exit()
-    
+
