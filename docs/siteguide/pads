@@ -9,7 +9,7 @@ to create the required Swift configuration files, and finally
 how to run Swift.
 
 Adding Software Packages
-++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^
 In your home directory, edit a file called .soft and add these
 lines (in this order):
 -----
@@ -22,7 +22,7 @@ lines (in this order):
 Log out of PADS, and log back in for these changes to take effect.
 
 Creating sites.xml
-++++++++++++++++++
+^^^^^^^^^^^^^^^^^^
 Swift relies on various configuration files to determine how to
 run. This section will provide a working configuration file which
 you can copy and paste to get running quickly. The sites.xml file
@@ -37,14 +37,14 @@ include::../../tests/providers/PADS/coasters/sites.template.xml[]
 -----
 
 This file will require just a few customizations. First, create a 
-directory called swiftwork. Modify \_WORK\_ in sites.xml
+directory called swiftwork. Modify \_WORK_ in sites.xml
 to point to this new directory. For example
 -----
 <workdirectory>/home/myhome/swiftwork</workdirectory>
 -----
 
 Creating tc.data
-++++++++++++++++
+^^^^^^^^^^^^^^^^
 The tc.data configuration file gives information about the applications
 that will be called by Swift. More information about the format
 of tc.data can be found in the Swift User's guide.
@@ -56,7 +56,7 @@ include::../../tests/providers/PADS/coasters/tc.template.data[]
 -----
 
 Copy a Swift Script
-+++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^
 
 Within the Swift directory is an examples directory which contains
 several introductory Swift scripts. The example we will use in this
@@ -70,7 +70,7 @@ $ cp ~/swift-0.93/examples/misc/data.txt .
 TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
 
 Run Swift
-+++++++++
+^^^^^^^^^
 
 Finally, run the script
 -----
@@ -200,8 +200,8 @@ Below is the template that is used by Swift's test suite for running on PADS.
 include::../../tests/providers/PADS/coasters/sites.template.xml[]
 -----
 
-Before you can use this configuration file, you will need to modify \_WORK\_ to a directory writable by you, 
-and have your default project defined. Copy this template, replace \_WORK\_, and then save as sites.xml.
+Before you can use this configuration file, you will need to modify \_WORK_ to a directory writable by you, 
+and have your default project defined. Copy this template, replace \_WORK_, and then save as sites.xml.
 
 If you wanted to use a different queue, replace "fast" with the desired queue name.
 

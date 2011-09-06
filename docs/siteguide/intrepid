@@ -125,17 +125,17 @@ Below is the template that is used by Swift's test suite for running on Intrepid
 TODO: Update the rest below here
 
 -----
-include::../../tests/providers/local-pbs/pads/sites.template.xml[]
+include::../../tests/providers/intrepid/sites.template.xml[]
 -----
 
-The values to note here are the ones that are listed between underscores. In the example above, they are _QUEUE_, and _WORK_. Queue is the PADS queue to use and WORK is the swift work directory. These are placeholder values you will need to modify to fit your needs. Copy and paste this template, replace the values, and call it sites.xml.
+The values to note here are the ones that are listed between underscores. In the example above, they are \_QUEUE_, and \_WORK_. Queue is the PADS queue to use and WORK is the swift work directory. These are placeholder values you will need to modify to fit your needs. Copy and paste this template, replace the values, and call it sites.xml.
 
 Manually Editing tc.data
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Below is the tc.data file used by Swift's test suite for running on PADS.
 
 -----
-include::../../tests/providers/local-pbs/pads/tc.template.data[]
+include::../../tests/providers/intrepid/tc.template.data[]
 ------
 
 Copy these commands and save it as tc.data.
