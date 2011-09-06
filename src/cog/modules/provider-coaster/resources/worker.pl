@@ -95,6 +95,7 @@ my $TAG = 0;
 use constant RETRIES => 3;
 use constant REPLYTIMEOUT => 180;
 use constant MAXFRAGS => 16;
+# TODO: Make this configurable (#537)
 use constant MAX_RECONNECT_ATTEMPTS => 3;
 
 use constant JOB_CHECK_SKIP => 32;
@@ -245,10 +246,11 @@ sub file2hash() {
 }
 
 sub timestring() {
+	# TODO: Make this choice configurable (#541)
 	my $t = sprintf("%.3f", time());
-	#my @d = localtime(time());
-	#my $t = sprintf("%i/%02i/%02i %02i:%02i",
-	# $d[5]+1900, $d[4], $d[3], $d[2], $d[1]);
+	# my @d = localtime(time());
+	# my $t = sprintf("%i/%02i/%02i %02i:%02i",
+	# 				$d[5]+1900, $d[4]+1, $d[3], $d[2], $d[1]);
 	return $t;
 }
 
@@ -275,14 +277,14 @@ sub hts {
 sub reconnect() {
 	my $fail;
 	my $success;
-	my $i;
+	my $attempt;
 	my $j;
-	for ($i = 0; $i < MAX_RECONNECT_ATTEMPTS; $i++) {
-		wlog INFO, "Connecting ($i)...\n";
+	for ($attempt = 0; $attempt < MAX_RECONNECT_ATTEMPTS; $attempt++) {
+		wlog INFO, "Connect attempt: $attempt ...\n";
 		my $sz = @HOSTNAME;
 		$success = 0;
 		for ($j = 0; $j < $sz; $j++) {
-			wlog DEBUG, "Trying $HOSTNAME[$j]:$PORT[$j]...\n";
+			wlog DEBUG, "Trying $HOSTNAME[$j]:$PORT[$j] ...\n";
 			$fail = 0;
 			$SOCK = IO::Socket::INET->new(Proto=>'tcp', PeerAddr=>$HOSTNAME[$j], PeerPort=>$PORT[$j], Blocking=>1) || ($fail = 1);
 			if (!$fail) {
@@ -303,9 +305,12 @@ sub reconnect() {
 			last;
 		}
 		else {
-			my $delay = 2 ** $i;
-			wlog ERROR, "Connection failed for all addresses. Retrying in $delay seconds\n";
-			select(undef, undef, undef, $delay);
+			my $delay = 2 ** $attempt;
+			wlog ERROR, "Connection failed for all addresses.\n";
+			if ($attempt < MAX_RECONNECT_ATTEMPTS-1) {
+				wlog ERROR, "Retrying in $delay seconds\n";
+				select(undef, undef, undef, $delay);
+			}
 		}
 	}
 	if (!$success) {
@@ -316,13 +321,17 @@ sub reconnect() {
 
 sub initlog() {
 	my $slevel = $ENV{"WORKER_LOGGING_LEVEL"};
-	if (defined $slevel) {
+ 	if (defined $slevel) {
 		if (!defined $LEVELMAP{$slevel}) {
 			die "Invalid worker logging level requested: $slevel";
 		}
 		$LOGLEVEL = $LEVELMAP{$slevel};
 	}
 	if ($LOGLEVEL != NONE) {
+		if ($LOGLEVEL < WARN) {
+			# This message may help people find the log
+			print "LOG: $LOG\n";
+		}
 		open(LOG, ">>$LOG") or die "Failed to open log file ($LOG): $!";
 		my $b = select(LOG);
 		$| = 1;
