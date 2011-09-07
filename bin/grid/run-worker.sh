@@ -7,16 +7,19 @@ echo OSG_WN_TMP=$OSG_WN_TMP
 if [ _$OSG_WN_TMP = _ ]; then
   OSG_WN_TMP=/tmp
 fi
+
 mkdir -p $OSG_WN_TMP
 logdir=$(mktemp -d $OSG_WN_TMP/${workername}.workerdir.XXXXXX)
 nlines=1000
 
-PATH=$OSG_APP:$OSG_APP/scec:$OSG_APP/extenci/aashish/terfix/bin:$PATH
+#export PATH=${OSG_APP}/engage/scec:${OSG_APP}/engage/scec/JBSim3d/bin:${OSG_APP}/engage/scec/SpectralAcceleration/p2utils:${OSG_APP}/extenci/swift/DSSAT/bin:${OSG_APP}/extenci/aashish/terfix/bin:$PATH
+export PATH=${OSG_APP}/${OSG_PATH}:$PATH
 
 echo "=== contact: $contact"
 echo "=== name:    $workername Running in dir $(pwd)"
 echo "=== cwd:     $(pwd)"
 echo "=== logdir:  $logdir"
+echo "=== path:    $PATH"
 echo "==============================================="
 
 cat >worker.pl
