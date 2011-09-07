@@ -2,5 +2,5 @@
 
 GROUPLIST=( 	    
 	    $TESTDIR/providers/local \
-	    $TESTDIR/providers/local-pbs/queenbee \
+	    $TESTDIR/providers/queenbee/pbs \
 )

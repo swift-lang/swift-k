@@ -3,5 +3,6 @@
 
 GROUPLIST=( 	    
 	    $TESTDIR/providers/local \
-	    $TESTDIR/providers/local-pbs/pads \
+            $TESTDIR/providers/pads/coasters \
+	    $TESTDIR/providers/pads/pbs \
 )
