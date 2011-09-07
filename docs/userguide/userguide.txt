@@ -37,3 +37,5 @@ include::coasters[]
 include::howto_tips[]
 
 include::cdm[]
+
+include::log-processing[]
