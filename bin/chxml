@@ -26,7 +26,7 @@ class siteProps:
                 try:
                     config_filename = argstr[i+1].split("'")[1]
                     config_file = open(config_filename,"r")
-                except IOError as (errno, strerror):
+                except IOError, (errno, strerror):
                     print strerror
                     sys.exit("Could not read: " + config_filename)
 
