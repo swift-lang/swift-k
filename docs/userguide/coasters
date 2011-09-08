@@ -1,5 +1,7 @@
 Coasters
 --------
+Coasters were introduced in Swift v0.6 as an experimental feature.
+
 In many applications, Swift performance can be greatly enhanced by the
 use of CoG coasters. CoG coasters provide a low-overhead job submission
 and file transfer mechanism suited for the execution of short jobs (on

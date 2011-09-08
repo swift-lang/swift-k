@@ -6,12 +6,10 @@ Site Configuration Guide
 :website: http://www.ci.uchicago.edu/swift/guides/siteguide.php
 :numbered:
 
-include::prereqs[]
-
 include::pads[]
 
 include::beagle[]
 
 include::futuregrid[]
 
-include::intrepid[]
+include::grid[]

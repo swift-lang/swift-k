@@ -1,0 +1,245 @@
+Grids, including OSG and TeraGrid
+---------------------------------
+
+Overview of running on grid sites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Get a DOEGrids cert. Then register it in the *OSG Engage VO*, and/or
+map it using +gx-request+ on TeraGrid sites.
+
+* Run +GridSetup+ to configure Swift to use the grid sites.  This tests
+for correct operation and creates a "green list" of good sites.
+
+* Prepare an installation package for the programs you want to run on
+grid sites via Swift, and install that package using +foreachsite+.
+
+* Run +swift-workers+ to start and maintain a pool of Swift workers on
+each site.
+
+* Run Swift scripts that use the grid site resources.
+
+NOTE: This revision only supports a single-entry sites file which uses
+provider staging and assumes that the necessary apps are locatable
+through the same tc entries (ie either absolute or PATH-relative
+paths) on all sites.
+
+NOTE: This revision has been testing using the bin/grid code from
+trunk (which gets installed into trunk's bin/ directory, and the base
+swift code from the 0.93 branch.  No other configurations have been
+tested at the moment.  I intend to put this code in bin/grid in 0.93,
+as it should have no ill affects on other Swift usage.
+
+Requesting Access
+~~~~~~~~~~~~~~~~~
+
+*For OSG*: Obtain a DOEGrids certificate and register the certificate in
+the OSG "Engage" VO following the procedures at:
+
+https://twiki.grid.iu.edu/bin/view/Engagement/EngageNewUserGuide
+
+[red]*FIXME*: access to OSG wiki pages may request the user to present
+a certificate. Is this a problem from users without one? If so, make a
+copy of the page on the Swift web.
+
+*For TeraGrid*: Obtain a DOEGrids certifcate using the OSG ENgage
+instructions above. Ask a TeraGrid PI to add you to a TeraGrid
+project. Once you obtain a login and project access (via US Mail), use
+gx-request to add your certificate
+
+To run jobs using the procedures documented here you need to be logged
+in to a "submit host" on which you will run Swift and other
+grid-related utilities. This can be any host with the OSG client stack
+or equivalent tools installed. Such hosts include the OSG Engage
+submit host, and the two Swift lab servers
+{bridled,communicado}.ci.uchicago.edu.
+
+Obtain a login on engage-submit.renci.org following instructions on
+the OSG URL above.
+
+Obtain a CI login with access to the Swift lab servers by requesting
+"OSG Gridlab" access at:
+
+http://accounts.ci.uchicago.edu
+
+
+Connecting to a submit host
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-----
+ssh yourusername@bridled.ci.uchicago.edu
+ssh yourusername@communicado.ci.uchicago.edu
+ssh yourusername@engage-submit.renci.org
+-----
+
+Downloading and install Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The current version of Swift can be downloaded from
+http://www.ci.uchicago.edu/swift/downloads/index.php.
+
+Fetch and untar the latest release.
+Then add the Swift bin/ directory to your PATH. For example:
+
+-----
+cd $HOME
+wget http://www.ci.uchicago.edu/swift/packages/swift-0.92.1.tar.gz
+tar txf swift-0.92.1.tar.gz
+export PATH=$PATH:$HOME/swift-0.92.1/bin
+-----
+
+Set up OSG environment
+~~~~~~~~~~~~~~~~~~~~~~
+
+Depending on your shell type, run:
+
+-----
+source /opt/osg/setup.sh
+or
+source /opt/osg/setup.csh
+-----
+
+Create a VOMS Grid proxy
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+-----
+$ voms-proxy-init -voms Engage -valid 12:00
+-----
+
+Generating Configuration Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-----
+cd $HOME
+mkdir swiftgrid
+cd swiftgrid
+gen_gridsites
+# Wait a few minutes to a few hours for Swift to validate grid sites
+get_greensites >greensites
+-----
+
+You can repeatedly try the get_greensites command, which simply
+concatenates all the site names that sucessfully resturned an output
+file from site tests.
+
+Installing software on OSG sites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The command "foreachsite" will execute a local shell script passed to
+it as an argument, on each OSG site in the Engage VO ReSS site
+catalog. The user's installscript will execute on either the head node
+(as a GRAM "fork" job) or on a worker node, as controlled by the
+-resource option. Its syntax is:
+
+-----
+$ ./foreachsite -help
+./foreachsite foreachsite [-resource fork|worker ] [-sites alt-sites-file] scriptname
+$ 
+-----
+
+To install your software, create a script similar to "myapp.sh",
+below, which (in this example) reads a tar file of a pre-compiled
+application "myapp-2.12" and executes a test script for that
+application. The test script should print some reconizable indication
+of its success or failure:
+
+-----
+$ cat myinstall.sh
+renice 2 -p $$
+IDIR=OSG_APP/extenci/myname/myapp
+mkdir -p $IDIR
+cd $IDIR
+wget http://my.url.edu/~mydir/myapp-2.12.tar.tgz
+tar zxf myapp-2.12.tar.tgz
+myapp-2.12/bin/test_myapp.sh
+if [ $? = 0 ]; then
+  echo INSTALL SUCCEEDED
+else
+  echo INSTALL FAILED
+fi
+$
+$ foreachsite -resource fork myinstall.sh
+$
+$ # Wait a file here, then poll for successfully installed apps...
+$
+$ grep SUCCEEDED run.89/*/*.stdout
+$
+
+
+Starting a single coaster service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This single coaster service will service all grid sites:
+
+start-grid-service --loglevel INFO --throttle 3.99 --jobspernode 1 \
+                   >& start-grid-service.out
+
+Starting workers on OSG sites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Make sure that your "greensites" file is in the current working
+directory.
+
+The swiftDemand file should be set to contain the number of workers
+you want to start across all OSG sites. Eventually this will be set
+dynamically by watching your Swift script execute.  (Note that this
+number only includes jobs started by the swift-workers factory
+command, not by any workers added manually from the TeraGrid - see
+below.
+
+The condor directory must be pre-created and will be used by Condor to
+return stdout and stderr files from the Condor jobs, which will
+execute the wrapper script "run-workers.sh".
+
+NOTE: this script is current built manually, and wraps around and
+transports the worker.pl script. This needs to be automated.
+
+-----
+echo 250 >swiftDemand mkdir -p condor
+
+swift-workers greensites extenci \
+              http://communicado.ci.uchicago.edu:$(cat service-0.wport) \
+              >& swift-workers.out &
+-----
+
+Adding workers from TeraGrid sites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The job below can be used to submit jobs to TareGrid (Ranger only at
+the moment) to add more workers to the execution pool. The same
+requirements hold there as for OSG sites, namely, that the app tools
+listed in tc for the single execution site need to be locatable on the
+TeraGrid site(s).
+
+-----
+start-ranger-service --nodes 1 --walltime 00:10:00 --project TG-DBS123456N \
+                     --queue development --user tg12345 --startservice no \
+                     >& start-ranger-service.out 
+-----
+
+NOTE: Change the project and user names to match your TeraGrid
+parameters.
+
+Running Swift
+~~~~~~~~~~~~~
+Now that everything is in place, run Swift with the following command:
+
+-----
+export SWIFT_HEAP_MAX=6000m # Add this for very large scripts
+
+swift -config cf.ps -tc.file tc -sites.file sites.grid-ps.xml \
+      catsn.swift -n=10000 >& swift.out &
+-----
+
+You should see several new files being created, called catsn.0001.out,
+catsn.0002.out, etc. Each of these files should contain the contents
+of what you placed into data.txt. If this happens, your job has run
+successfully on the grid sites.
+
+More Help
+~~~~~~~~~
+
+The best place for additional help is the Swift user mailing list. You
+can subscribe to this list at
+http://mail.ci.uchicago.edu/mailman/listinfo/swift-user. When
+submitting information, please send your sites.xml file, your tc.data,
+and any Swift log files that were created during your attempt.
