@@ -1,0 +1,26 @@
+Document Automation
+-------------------
+All .txt files in the docs directory get converted to HTML and PDF on a nightly 
+basis. These documents then get copied to the Swift web site.
+
+Cron Job
+~~~~~~~~
+The job that processes these documents runs on Bridled at 7pm nightly. The script is 
+/home/davidk/docscripts/update_and_build.sh. The script calls svn update on several 
+different swift directories in ~davidk, and then builds the the documents. The 
+documents should be built for each Swift branch later than 0.93, including trunk. As 
+new versions of Swift are created, this script will need to be updated.
+
+Website
+-------
+Once the cron job runs, documents can be accessed at:
+
+\http://www.ci.uchicago.edu/swift/guides/release-<version>/documentname/documentname.html
+\http://www.ci.uchicago.edu/swift/guides/release-<version>/documentname/documentname.pdf
+
+For example, assume that you create a document called docs/newdoc. You check this 
+guide into Swift 0.93. The AsciiDoc .txt file is called newdoc.txt. The URLs
+that would be generated would be:
+
+\http://www.ci.uchicago.edu/swift/guides/release-0.93/newdoc/newdoc.html
+\http://www.ci.uchicago.edu/swift/guides/release-0.93/newdoc/newdoc.pdf

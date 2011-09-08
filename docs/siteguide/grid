@@ -163,7 +163,7 @@ $ # Wait a file here, then poll for successfully installed apps...
 $
 $ grep SUCCEEDED run.89/*/*.stdout
 $
-
+-----
 
 Starting a single coaster service
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
