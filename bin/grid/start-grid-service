@@ -44,7 +44,7 @@ BIN=$(cd $(dirname $0); pwd)
 
 echo THROTTLE=$THROTTLE LOGLEVEL=$LOGLEVEL
 
-coaster-service -port 1984 -localport 35753 -nosec >& local-coaster-service.out &
+#coaster-service -port 1984 -localport 35753 -nosec >& local-coaster-service.out &
 sleep 5
 start-swift-service 1 &
 sleep 5

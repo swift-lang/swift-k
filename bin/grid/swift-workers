@@ -148,6 +148,7 @@ if __FILE__ == $0
     site               = Site.new
     site.name          = name
     site.grid_resource = "gt2 #{value.url}/jobmanager-#{value.jm}"
+    #site.grid_resource = "fork"
     site.gridftp       = "gsiftp://#{value.url}"
     site.app_dir       = value.app_dir
     site.data_dir      = value.data_dir
