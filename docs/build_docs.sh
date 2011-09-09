@@ -43,7 +43,7 @@ do
    for file in $FILES
    do
       echo Converting $directory"$file" to HTML
-      asciidoc -a toc -a max-width=750px -a stylesheet=$(pwd)/../stylesheets/asciidoc.css $file
+      asciidoc -a toc -a toclevels=2 -a max-width=750px -a textwidth=80 -a stylesheet=$(pwd)/../stylesheets/asciidoc.css $file
       echo Converting $directory"$file" to PDF
       a2x --format=pdf --no-xmllint $file 
    done

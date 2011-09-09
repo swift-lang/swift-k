@@ -1,26 +1,6 @@
 Futuregrid Quickstart Guide
 ---------------------------
 
-Downloading and Building Swift
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The most recent versions of Swift can be found at 
-http://www.ci.uchicago.edu/swift/downloads/index.php. To run on futuregrid,
-you will need to download the development/trunk version from SVN.
-
-Adding Swift to your PATH
-~~~~~~~~~~~~~~~~~~~~~~~~~
-Once you have installed Swift, add the Swift binary to your PATH so you can
-easily run it from any directory. 
-
-In your home directory, edit the file ".bashrc".
-
-If you have installed Swift via a source repository, add the following line
-at the bottom of .bashrc.
-
------
-export PATH=$PATH:$HOME/cog/modules/swift/dist/swift-svn/bin
------
-
 Requesting Futuregrid Access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 If you do not already have a futuregrid account, you can follow the
