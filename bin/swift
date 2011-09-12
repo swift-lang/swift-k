@@ -64,7 +64,7 @@ CMDLINE=`fixCommandLine "$@"`
 # make sure sites.xml file is well-formed
 
 $SWIFT_HOME/bin/chxml $CMDLINE
-if [[ ${?} != 0 ]]; then
+if [ "$?" != 0 ]; then
 	echo "Could not process input files!"
 	exit 1
 fi
