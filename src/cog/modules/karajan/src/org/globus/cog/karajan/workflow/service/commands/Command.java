@@ -148,6 +148,8 @@ public abstract class Command extends RequestReply implements SendCallback {
 		//when using the piped channels the reply will arrive before this method is called
 		setupReplyTimeoutChecker();
 	}
+	
+	private static boolean shutdownMsg;
 
 	protected synchronized void setupReplyTimeoutChecker() {
 		if (!isInDataReceived()) {
@@ -156,7 +158,8 @@ public abstract class Command extends RequestReply implements SendCallback {
 				timer.schedule(timeout, replyTimeout);
 			}
 			catch (IllegalStateException e) {
-				logger.info("Timer cancelled due to JVM shutting down. Going without timeouts.");
+				logger.info("Timer cancelled due to JVM shutting down. Going without timeouts.", shutdownMsg ? e : null);
+				shutdownMsg = true;
 			}
 		}
 	}
