@@ -164,6 +164,53 @@ my %REQUESTS = ();
 # REPLIES stores the state of (outgoing) commands for which replies are expected
 my %REPLIES  = ();
 
+# the structure of the above maps is (fields marked with "*" are optional):
+#	tag: [state, time]
+#
+#	state: {} - valid keys:
+#		tag: the current command/request tag
+#		dataIn: proc(state, tag, timeout, err, fin, msg) - invoked when data is received
+#		nextData: proc(state) - invoked to get the next data chunk
+#								returns: (flags, data, yieldFlag), where
+#									flags: the protocol flags to send (e.g. err, fin)
+#									data: the actual data
+#									yieldFlag: if CONTINUE then it instructs the sending procedure
+#												to loop sending data until YIELD is returned  
+#
+#		dataSent: proc(state, tag) - invoked when all data was sent
+#		PUT file specific state:
+#			state: a numeric state number:
+#				0 - new request
+#				1 - command sent
+#				2 - file size sent
+#				3 - local name sent (i.e. sending data)
+#			size: file size
+#			lname: local file name
+#			rname: remote file name
+#			sent: total bytes sent from this file
+#			bindex: block index - multiple I/O buffer size worth of data are sent
+#								  before yielding to other commands/requests (up to IOBLOCKSZ).
+#								  This number counts how many buffer sizes in the current block have
+#								  been sent so far.
+#			handle: file handle
+#
+#		GET file specific state:
+#			state:
+#				0 - new request
+#				1 - size received
+#			handle: file handle
+#			size: file size
+#			lname: local file name
+#
+#		state when sending array data:
+#			index: the current index in the data array
+#			data: an array containing the data chunks
+#			
+#		 
+#	
+#	time:  last communication time (used to determine timeouts)
+#
+
 my $LOG = logfilename($LOGDIR, $BLOCKID);
 
 my %HANDLERS = (
@@ -404,12 +451,17 @@ sub sendFrags {
 		# final flag not set; put it back in the queue
 		wlog DEBUG, "$tag yielding\n";
 		$$data{"tag"} = $tag;
+		
+		# update last time
+		my $record = $REPLIES{$tag};
+		$$record[1] = time();
+		
 		queueCmdCustomDataHandling($REPLIES{$tag}, $data);
 	}
 	else {
 		if (exists($REPLIES{$tag})) {
 			my $record = $REPLIES{$tag};
-			my ($cont, $start) = ($$record[0], $$record[1]);
+			my ($cont, $lastTime) = ($$record[0], $$record[1]);
 			if (defined($$cont{"dataSent"})) {
 				$$cont{"dataSent"}($cont, $tag);
 			}
@@ -608,12 +660,14 @@ sub process {
 
 
 	my $reply = $flg & REPLY_FLAG;
-	my ($record, $cont, $start);
+	my ($record, $cont, $lastTime);
 
 	if ($reply) {
 		if (exists($REPLIES{$tag})) {
 			$record = $REPLIES{$tag};
-			($cont, $start) = ($$record[0], $$record[1]);
+			($cont, $lastTime) = ($$record[0], $$record[1]);
+			# update last time 
+			$$record[1] = time();
 		}
 		else {
 			wlog(WARN, "received reply to unregistered command (tag=$tag). Discarding.\n");
@@ -626,7 +680,7 @@ sub process {
 			wlog DEBUG, "New request ($tag)\n";
 		}
 		$record = $REQUESTS{$tag};
-		($cont, $start) = ($$record[0], $$record[1]);
+		($cont, $lastTime) = ($$record[0], $$record[1]);
 	}
 
 	my $fin = $flg & FINAL_FLAG;
@@ -919,8 +973,8 @@ sub getFileCB {
 		mkfdir($jobid, $dst);
 		# don't try open(DESC, ...) (as I did). It will use the same reference
 		# and concurrent operations will fail.
-		my $desc;
-		if (!open($desc, ">", "$dst")) {
+		my $handle;
+		if (!open($handle, ">", "$dst")) {
 			die "Failed to open $dst: $!";
 		}
 		else {
@@ -930,7 +984,7 @@ sub getFileCB {
 				"dataIn" => \&getFileCBDataIn,
 				"state" => 0,
 				"lfile" => $dst,
-				"desc" => $desc
+				"handle" => $handle
 			};
 		}
 	}
@@ -987,18 +1041,18 @@ sub getFileCBDataIn {
 		my $lfile = $$state{"lfile"};
 	}
 	else {
-		my $desc = $$state{"desc"};
-		if (!(print {$desc} $reply)) {
-			close $desc;
-			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $desc; lfile: $$state{'lfile'}\n";
+		my $handle = $$state{"handle"};
+		if (!(print {$handle} $reply)) {
+			close $handle;
+			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $handle; lfile: $$state{'lfile'}\n";
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "522", "Could not write to file: $!"));
 			delete($JOBDATA{$jobid});
 			return;
 		}
 	}
 	if ($fin) {
-		my $desc = $$state{"desc"};
-		close $desc;
+		my $handle = $$state{"handle"};
+		close $handle;
 		wlog DEBUG, "$jobid Closed $$state{'lfile'}\n";
 		if ($PINNED_READY) {
 			completePinnedFile($jobid);
