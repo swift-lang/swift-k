@@ -64,6 +64,7 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     }
 
     public void dataSent() {
+    	setLastTime(System.currentTimeMillis());
         reader.dataSent();
     }
 

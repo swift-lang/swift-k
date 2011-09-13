@@ -72,6 +72,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
     }
 
     public void dataSent() {
+        super.dataSent();
         rbuf.freeFirst();
     }
 
