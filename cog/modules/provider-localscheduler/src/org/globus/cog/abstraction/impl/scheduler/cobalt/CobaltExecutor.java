@@ -114,11 +114,11 @@ public class CobaltExecutor extends AbstractExecutor {
 
 	protected String[] buildCommandLine(File jobdir, File script,
 			String exitcode, String stdout, String stderr) throws IOException {
-		List<String> l = new ArrayList<String>();
-		l.add(cqsub);
+		List<String> result = new ArrayList<String>();
+		result.add(cqsub);
 		Collection<String> names = getSpec().getEnvironmentVariableNames();
 		if (names != null && names.size() > 0) {
-			l.add("-e");
+			result.add("-e");
 			StringBuffer sb = new StringBuffer();
 			Iterator<String> i = names.iterator();
 			while (i.hasNext()) {
@@ -130,31 +130,31 @@ public class CobaltExecutor extends AbstractExecutor {
 					sb.append(':');
 				}
 			}
-			l.add(sb.toString());
+			result.add(sb.toString());
 		}
-		addAttr("mode", "-m", l);
+		addAttr("mode", "-m", result);
 		// We're gonna treat this as the node count
-		addAttr("count", "-c", l, true);
-		addAttr("hostCount", "-n", l, "1", true);
-		addAttr("project", "-p", l);
-		addAttr("queue", "-q", l);
-		addAttr("kernelprofile", "-k", l);
+		addAttr("count", "-c", result, true);
+		addAttr("hostCount", "-n", result, "1", true);
+		addAttr("project", "-p", result);
+		addAttr("queue", "-q", result);
+		addAttr("kernelprofile", "-k", result);
 		// cqsub seems to require both the node count and time args
-		addAttr("maxwalltime", "-t", l, "10");
+		addAttr("maxwalltime", "-t", result, "10");
 		if (getSpec().getDirectory() != null) {
-			l.add("-C");
-			l.add(getSpec().getDirectory());
+			result.add("-C");
+			result.add(getSpec().getDirectory());
 		}
-		l.add("-o");
-		l.add(stdout);
-		l.add("-E");
-		l.add(stderr);
-		l.add(getSpec().getExecutable());
-		l.addAll(getSpec().getArgumentsAsList());
+		result.add("-o");
+		result.add(stdout);
+		result.add("-E");
+		result.add(stderr);
+		result.add(getSpec().getExecutable());
+		result.addAll(getSpec().getArgumentsAsList());
 		if (logger.isDebugEnabled()) {
-			logger.debug("cqsub command: " + l);
+			logger.debug("cqsub command: " + result);
 		}
-		return l.toArray(EMPTY_STRING_ARRAY);
+		return result.toArray(EMPTY_STRING_ARRAY);
 	}
 
 	protected String quote(String s) {
