@@ -26,8 +26,9 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
-public class BlockQueueProcessor extends AbstractQueueProcessor implements RegistrationManager,
-        Runnable {
+public class BlockQueueProcessor 
+extends AbstractQueueProcessor 
+implements RegistrationManager, Runnable {
     public static final Logger logger = Logger.getLogger(BlockQueueProcessor.class);
 
     private Settings settings;
@@ -83,6 +84,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private final RemoteLogger rlogger;
 
+    /** 
+       Formatter for time-based variables in seconds
+     */
+    private static final NumberFormat SECONDS = new DecimalFormat("0.00");
+    
     public BlockQueueProcessor(Settings settings) {
         super("Block Queue Processor");
         this.settings = settings;
@@ -274,8 +280,6 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
-    static NumberFormat format = new DecimalFormat("0.00");
-  
     private int computeTotalRequestSize() {
         double sz = 0;
         for (Job j : holding) {
@@ -285,23 +289,36 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             if (sz < 1)
                 sz = 1;
             logger.info("Jobs in holding queue: " + holding.size());
-            String s = format.format(sz);
+            String s = SECONDS.format(sz);
             logger.info("Time estimate (seconds): " + s);
         }
         return (int) sz;
     }
 
+    /** 
+       @return Time overallocation in seconds
+     */   
     public int overallocatedSize(Job j) {
         return overallocatedSize(j, settings);
     }
 
+    /** 
+       @return Time overallocation in seconds
+     */   
     public static int overallocatedSize(Job j, Settings settings) {
-        return overallocatedSize((int) j.getMaxWallTime().getSeconds(), settings);
+        int walltime = (int) j.getMaxWallTime().getSeconds();
+        return overallocatedSize(walltime, settings);
     }
 
-    private static int overallocatedSize(int wt, Settings settings) {
-        return (int) (wt * ((settings.getLowOverallocation() - settings.getHighOverallocation())
-                        * Math.exp(-wt * settings.getOverallocationDecayFactor()) + settings.getHighOverallocation()));
+    /** 
+       @param walltime in seconds
+       @return Time overallocation in seconds
+     */
+    private static int overallocatedSize(int walltime, Settings settings) {
+        double L = settings.getLowOverallocation();
+        double H = settings.getHighOverallocation();
+        double D = settings.getOverallocationDecayFactor();
+        return (int) (walltime * ((L - H) * Math.exp(-walltime * D) + H));
     }
 
     private int sumSizes(int start, int end) {
@@ -357,21 +374,33 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
+    /**
+       Move Jobs from {@link holding} to {@link queued} by 
+       allocating new Blocks for them 
+     */
     private Set<Job> allocateBlocks(double tsum) {
         Set<Job> remove = new HashSet<Job>();
-        int cslots =
-                (int) Math.ceil((settings.getSlots() - blocks.size())
-                        * settings.getAllocationStepSize());
+        
+        // Calculate chunkOfBlocks: how many blocks we may allocate 
+        //     in this particular call to allocateBlocks()
+        int maxBlocks = settings.getMaxBlocks();
+        double fraction = settings.getAllocationStepSize();
+        int chunkOfBlocks = 
+            (int) Math.ceil((maxBlocks - blocks.size()) * fraction);
 
         int last = 0;
+        // Index through holding queue
         int i = 0;
-        int slot = 0;
+        // Number of new Blocks allocated in this call
+        int newBlocks = 0;
 
-        double size = metric.blockSize(slot, cslots, tsum);
+        double size = metric.blockSize(newBlocks, chunkOfBlocks, tsum);
 
-        logger.info("Allocating blocks...");
+        String s = SECONDS.format(tsum);
+        logger.info("Allocating blocks for (seconds): " + s);
         
-        while (i <= holding.size() && slot < cslots) {
+        while (i <= holding.size() && newBlocks < chunkOfBlocks) {
+            // Job job = holding.get(i);
             int granularity = settings.getNodeGranularity() * settings.getJobsPerNode();
             boolean granularityFit = (i - last) % granularity == 0;
             boolean lastChunk = i == holding.size() - 1;
@@ -388,11 +417,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 int maxt =
                   settings.getMaxtime() - (int) settings.getReserve().getSeconds();
                 h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
-                int w =
+                int width =
                         Math.min(round(metric.width(msz, h), granularity),
                                  settings.getMaxNodes()
                                  * settings.getJobsPerNode());
-                int r = (i - last) % w;
+                int r = (i - last) % width;
                 if (logger.isInfoEnabled()) {
                     logger.info("h: " + h + ", jj: " + lastwalltime +
                                 ", x-last: " + ", r: " + r +
@@ -403,19 +432,19 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 }
 
                 // read just number of jobs fitted based on granularity
-                i += (w - r);
+                i += (width - r);
                 if (r != 0) {
                     h = Math.min(h + lastwalltime, maxt);
                 }
 
                 if (logger.isInfoEnabled()) {
-                    logger.info("h: " + h + ", w: " + w + ", size: " + size + ", msz: " + msz
-                            + ", w*h: " + w * h);
+                    logger.info("h: " + h + ", w: " + width + ", size: " + size + ", msz: " + msz
+                            + ", w*h: " + width * h);
                 }
 
-                Block b = new Block(w, TimeInterval.fromSeconds(h), this);
+                Block b = new Block(width, TimeInterval.fromSeconds(h), this);
                 int ii = last;
-                while (ii < holding.size() && sumSizes(last, ii + 1) <= metric.size(w, h)) {
+                while (ii < holding.size() && sumSizes(last, ii + 1) <= metric.size(width, h)) {
                     queue(holding.get(ii));
                     remove.add(holding.get(ii));
                     ii++;
@@ -426,8 +455,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 i = ii - 1;
                 addBlock(b);
                 last = i + 1;
-                slot++;
-                size = metric.blockSize(slot, cslots, tsum);
+                newBlocks++;
+                size = metric.blockSize(newBlocks, chunkOfBlocks, tsum);
             }
             i++;
         }
