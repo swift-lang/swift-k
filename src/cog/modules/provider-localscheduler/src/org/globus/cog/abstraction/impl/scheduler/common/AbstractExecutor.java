@@ -61,8 +61,8 @@ public abstract class AbstractExecutor implements ProcessListener {
         this.listener = listener;
     }
 
-    public void start() throws AuthorizationException, GSSException,
-            IOException, ProcessException {
+    public void start() 
+    throws AuthorizationException, IOException, ProcessException {	
     	
     	File scriptdir = new File(System.getProperty("user.home")
                 + File.separatorChar + ".globus" + File.separatorChar
