@@ -254,7 +254,7 @@ public class Karajan {
 	    Set<String> procsDefined = new HashSet<String>() ;	    
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
 			Procedure proc = prog.getProcedureArray(i);
-			String procName = proc.getName().toLowerCase();
+			String procName = proc.getName();
 			if (procsDefined.contains(procName)){
 			    // We have a redefinition error
 			    throw new CompilationException("Illegal redefinition of procedure attempted for " + procName );
@@ -326,7 +326,7 @@ public class Karajan {
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("line", proc.getSrc().substring(proc.getSrc().indexOf(' ') + 1));
-		procST.setAttribute("name", proc.getName());
+		procST.setAttribute("name", mangle(proc.getName()));
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
 			StringTemplate paramST = parameter(param, innerScope);
@@ -365,7 +365,23 @@ public class Karajan {
 		}
 	}
 
-	public StringTemplate parameter(FormalParameter param, VariableScope scope) throws CompilationException {
+    /**
+     * Convert to a case-insensitive representation by
+     * pre-pending a '^' to upper case letters
+     */
+	private String mangle(String name) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isUpperCase(c)) {
+                sb.append('-');
+            }
+            sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
+    }
+
+    public StringTemplate parameter(FormalParameter param, VariableScope scope) throws CompilationException {
 		StringTemplate paramST = new StringTemplate("parameter");
 		StringTemplate typeST = new StringTemplate("type");
 		paramST.setAttribute("name", param.getName());
@@ -624,7 +640,7 @@ public class Karajan {
 				throw new CompilationException
 				("Unknown procedure invocation mode "+proc.getInvocationMode());
 			}
-			callST.setAttribute("func", call.getProc().getLocalPart());
+			callST.setAttribute("func", mangle(procName));
 			/* Does number of input arguments match */
 			for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 				if (proc.getInputArray(i).isOptional())
