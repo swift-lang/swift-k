@@ -70,9 +70,10 @@ public class Settings {
     private double allocationStepSize = 0.1;
 
     /**
-     * How long (timewise) the request should be based on the job walltime. os
-     * is a factor for 1s jobs, and oe is a factor for +Inf jobs. Things
-     * in-between are derived using x * ((os - oe) / x + oe.
+     * How long (timewise) the request should be based on the job walltime. 
+     * lowOverallocation is the factor for 1s jobs
+     * highOverallocation is the factor for +Inf jobs. 
+     * Things in-between are derived using x * ((os - oe) / x + oe.
      *
      * For example, with oe = 100, a bunch of jobs of walltime 1 will generate
      * blocks about 100 long.
@@ -145,6 +146,13 @@ public class Settings {
         attributes = new HashMap<String, String>();
     }
 
+    /**
+       Formerly "slots": the maximum number of Coasters Blocks 
+     */
+    public int getMaxBlocks() { 
+        return slots;
+    }
+    
     public int getSlots() {
         return slots;
     }
