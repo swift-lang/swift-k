@@ -9,22 +9,22 @@
  */
 package org.globus.cog.karajan.workflow.service;
 
-public class ReplyTimeoutException extends ProtocolException {
+public class TimeoutException extends ProtocolException {
 	private static final long serialVersionUID = -6781619140427115780L;
 
-	public ReplyTimeoutException() {
+	public TimeoutException() {
 		super();
 	}
 	
-	public ReplyTimeoutException(String message) {
+	public TimeoutException(String message) {
 		super(message);
 	}
 
-	public ReplyTimeoutException(String message, Throwable cause) {
+	public TimeoutException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public ReplyTimeoutException(Throwable cause) {
+	public TimeoutException(Throwable cause) {
 		super(cause);
 	}
 }

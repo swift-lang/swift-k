@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
@@ -22,6 +23,7 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 import org.globus.cog.karajan.workflow.service.RequestManager;
+import org.globus.cog.karajan.workflow.service.RequestReply;
 import org.globus.cog.karajan.workflow.service.Service;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
@@ -32,6 +34,8 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	// some random spread to avoid sending all heartbeats at once
 	public static final int DEFAULT_HBI_INITIAL_SPREAD = 10;
 	public static final int DEFAULT_HBI_SPREAD = 10;
+	
+	public static final int TIMEOUT_CHECK_INTERVAL = 1;
 
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
@@ -51,6 +55,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		// registeredMaps = new LinkedList();
 		this.client = client;
 		configureHeartBeat();
+		configureTimeoutChecks();
 	}
 
 	protected void configureHeartBeat() {
@@ -105,6 +110,33 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
         		mult * heartBeatInterval);
 	}
 	
+	public void configureTimeoutChecks() {
+	    context.getTimer().schedule(new TimerTask() {
+			public void run() {
+			    checkTimeouts();
+			}},
+	        TIMEOUT_CHECK_INTERVAL * 1000, TIMEOUT_CHECK_INTERVAL * 1000);
+	}
+	
+	protected void checkTimeouts() {
+	    checkTimeouts(context.getActiveCommands());
+	    checkTimeouts(context.getActiveHandlers());
+	}
+	
+	private void checkTimeouts(Collection<? extends RequestReply> l) {
+	    long now = System.currentTimeMillis();
+	    for (RequestReply r : l) {
+	    	if (now - r.getLastTime() > r.getTimeout()) {
+	    		try {
+	    			r.handleTimeout();
+	    		}
+	    		catch (Exception e) {
+	    			logger.warn("Error handling timeout", e);
+	    		}
+	    	}
+	    }
+	}
+
 	protected boolean clientControlsHeartbeats() {
 	    return true;
 	}

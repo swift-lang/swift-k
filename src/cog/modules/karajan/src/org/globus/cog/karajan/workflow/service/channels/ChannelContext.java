@@ -9,6 +9,8 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,8 +40,8 @@ public class ChannelContext {
 	private String remoteContact;
 	private UserContext userContext;
 	private int cmdseq;
-	private TagTable activeSenders;
-	private TagTable activeReceivers;
+	private TagTable<Command> activeSenders;
+	private TagTable<RequestHandler> activeReceivers;
 	// private Map reexecutionSet;
 	private static Timer timer;
 	private ServiceContext serviceContext;
@@ -56,9 +58,9 @@ public class ChannelContext {
 	
 	public ChannelContext(ServiceContext sc) {
 	    attributes = new HashMap<String,Object>();
-		activeSenders = new TagTable();
-		activeReceivers = new TagTable();
-		// reexecutionSet = new Hashtable();
+		activeSenders = new TagTable<Command>();
+		activeReceivers = new TagTable<RequestHandler>();
+
 		channelID = new ChannelID();
 		this.serviceContext = sc;
 	}
@@ -138,6 +140,18 @@ public class ChannelContext {
 		else {
 			throw new ProtocolException("Command already registered with id " + cmd.getId());
 		}
+	}
+	
+	public synchronized Collection<Command> getActiveCommands() {
+	    List<Command> l = new ArrayList<Command>();
+	    l.addAll(activeSenders.values());
+	    return l;
+	}
+	
+	public synchronized Collection<RequestHandler> getActiveHandlers() {
+	    List<RequestHandler> l = new ArrayList<RequestHandler>();
+	    l.addAll(activeReceivers.values());
+	    return l;
 	}
 
 	public void unregisterCommand(Command cmd) {
