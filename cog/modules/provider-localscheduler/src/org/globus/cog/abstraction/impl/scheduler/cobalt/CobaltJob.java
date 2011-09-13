@@ -47,7 +47,7 @@ public class CobaltJob extends Job {
         this.tstderr = tstderr;
         this.errLoc = errLoc;
         this.exitcodeRegexp = exitcodeRegexp;
-        int exitcode = Integer.MIN_VALUE;
+        exitcode = Integer.MIN_VALUE;
     }
 
     public boolean close() {
