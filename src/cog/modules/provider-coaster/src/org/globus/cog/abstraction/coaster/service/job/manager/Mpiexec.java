@@ -79,17 +79,17 @@ public class Mpiexec implements ProcessListener, StatusListener {
     /**
        The provider on which this task will be run
        Essentially, there is the local SMP mode and the remote
-       host/TCP mode (currently, only local SMP works)
+       host/TCP mode
      */
     private String provider;
 
   /** 
      If non-empty, override the proxy line with this host
-     Motivation: The Hydra proxy line contains the hostname on which 
-     mpiexec, the proxies connect to this host.  On some systems, 
-     mpiexec produces a hostname that the proxies cannot find. 
+     Motivation: The Hydra proxy line contains the hostname to which 
+     the proxies connect.  On some systems, mpiexec produces a 
+     hostname that the proxies cannot find. 
      mpiexec.host.subst allows the user to override this hostname
-     This is a System property, use COG_OPTS to set this
+     This is a System property, use COG_OPTS to set this.
   */
    static String mpiexecHostSubst = "";
 
@@ -357,8 +357,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
     private void monitor(Process process) {
         ProcessMonitor monitor = new ProcessMonitor(process, this);
         monitor.start();
-        ProcessKiller killer = new ProcessKiller(process, 10000);
-        killer.start();
+        // ProcessKiller killer = new ProcessKiller(process, 10000);
+        // killer.start();
     }
 
     public void callback(ProcessMonitor monitor) {
