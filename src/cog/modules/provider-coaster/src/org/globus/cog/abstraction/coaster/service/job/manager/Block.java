@@ -309,7 +309,11 @@ public class Block implements StatusListener, Comparable<Block> {
                 getSubmitter().cancel(this);
             }
             catch (Exception e) {
-                logger.warn("Failed to shut down block: " + this, e);
+                if (failed)
+                    logger.debug("Failed to shut down block: " +
+                                this + " " + e.getMessage());
+                else
+                    logger.warn("Failed to shut down block: " + this, e);
             }
             bqp.blockTaskFinished(this);
         }
