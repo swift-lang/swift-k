@@ -26,17 +26,26 @@ public class Job implements Comparable<Job> {
     
     static {
     	SUPPORTED_ATTRIBUTES = new HashSet<String>();
-    	SUPPORTED_ATTRIBUTES.add("hostcount");
+    	SUPPORTED_ATTRIBUTES.add("mpi.processes");
+    	SUPPORTED_ATTRIBUTES.add("mpi.ppn");
     	SUPPORTED_ATTRIBUTES.add("maxwalltime");
     }
 
     private int id;
     private Task task;
+    
     /**
-       If not 1, number of MPI CPUs required
-       Set by JobSpecification attribute "hostcount"
+       If not 1, number of MPI processes required (i.e., mpiexec -n)
+       Set by JobSpecification attribute "mpi.processes"
      */
-    int cpus;
+    int mpiProcesses;
+
+    /**
+       If not 1, number of MPI processes required (i.e., mpiexec -n)
+       Set by JobSpecification attribute "mpi.processes"
+     */
+    int mpiPPN;
+
     private TimeInterval walltime;
     private Time starttime, endtime;
     private boolean done;
@@ -48,21 +57,14 @@ public class Job implements Comparable<Job> {
 
     public Job(Task task) {
         setTask(task);
-        JobSpecification spec =
-            (JobSpecification) task.getSpecification();
-        Object tmp = spec.getAttribute("hostcount");
-        if (tmp == null)
-            cpus = 1;
-        else
-            cpus = Integer.parseInt((String) tmp);
         synchronized (Job.class) {
             id = sid++;
         }
     }
 
-    public Job(Task task, int cpus) {
+	public Job(Task task, int cpus) {
         setTask(task);
-        this.cpus = cpus;
+        this.mpiProcesses = cpus;
     }
 
     void setTask(Task task) {
@@ -70,6 +72,9 @@ public class Job implements Comparable<Job> {
 
         JobSpecification spec =
             (JobSpecification) task.getSpecification();
+        logger.trace(spec);
+
+        // Set walltime
         Object tmp = spec.getAttribute("maxwalltime");
         if (tmp == null) {
             this.walltime = TimeInterval.fromSeconds(10 * 60);
@@ -77,6 +82,19 @@ public class Job implements Comparable<Job> {
         else {
             WallTime wt = new WallTime(tmp.toString());
             this.walltime = TimeInterval.fromSeconds(wt.getSeconds());
+        }
+        
+        // MPI settings
+        tmp = spec.getAttribute("mpi.processes");
+        if (tmp == null)
+            mpiProcesses = 1;
+        else {
+            mpiProcesses = Integer.parseInt((String) tmp);
+            tmp = spec.getAttribute("mpi.ppn");
+            if (tmp == null)
+            	mpiPPN = 1;
+            else 
+            	mpiPPN = Integer.parseInt((String) tmp);
         }
     }
 
@@ -135,9 +153,9 @@ public class Job implements Comparable<Job> {
         sb.append(id);
         sb.append(" ");
         sb.append(walltime);
-        if (cpus != 1) {
+        if (mpiProcesses != 1) {
             sb.append(" [");
-            sb.append(cpus);
+            sb.append(mpiProcesses);
             sb.append("]");
         }
         sb.append(")");
@@ -162,6 +180,6 @@ public class Job implements Comparable<Job> {
     }
 
     public int getCpus() {
-        return cpus;
+        return mpiProcesses;
     }
 }

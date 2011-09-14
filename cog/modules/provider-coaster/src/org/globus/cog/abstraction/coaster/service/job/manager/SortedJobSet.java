@@ -21,26 +21,26 @@ import org.apache.log4j.Logger;
 
 public class SortedJobSet implements Iterable<Job> {
     public static final Logger logger = Logger.getLogger(SortedJobSet.class);
-    
+
     private SortedMap<TimeInterval, LinkedList<Job>> sm;
     int size;
     double jsize;
-    /** 
+    /**
        Monotonically increasing job sequence number
      */
     int seq;
-    private Metric metric;
-    
+    private final Metric metric;
+
     public SortedJobSet() {
         this(Metric.NULL_METRIC);
     }
-    
+
     public SortedJobSet(Metric metric) {
         sm = new TreeMap<TimeInterval, LinkedList<Job>>();
         size = 0;
         this.metric = metric;
     }
-    
+
     public SortedJobSet(SortedJobSet other) {
         metric = other.metric;
         synchronized(other) {
@@ -67,16 +67,16 @@ public class SortedJobSet implements Iterable<Job> {
     }
 
     /**
-       Remove and return largest job with a walltime smaller than the 
+       Remove and return largest job with a walltime smaller than the
        given walltime and less than or equal to the given cpus
        Could be cleaned up using Java 1.6 functionality
      */
     public synchronized Job removeOne(TimeInterval walltime,
                                       int cpus) {
         Job result = null;
-        SortedMap<TimeInterval, LinkedList<Job>> smaller = 
+        SortedMap<TimeInterval, LinkedList<Job>> smaller =
             sm.headMap(walltime);
-        
+
         while (! smaller.isEmpty()) {
             TimeInterval key = smaller.lastKey();
             List<Job> jobs = smaller.get(key);
@@ -96,7 +96,9 @@ public class SortedJobSet implements Iterable<Job> {
         Job result = null;
         for (Iterator<Job> it = jobs.iterator(); it.hasNext(); ) {
             Job job = it.next();
-            if (job.cpus <= cpus) {
+            int jobCpus = job.mpiProcesses != 1 ?
+            	          job.mpiProcesses/job.mpiPPN : 1;
+            if (jobCpus <= cpus) {
                 result = job;
                 it.remove();
                 break;
@@ -106,14 +108,14 @@ public class SortedJobSet implements Iterable<Job> {
             sm.remove(key);
         return result;
     }
-    
+
     public double getJSize() {
         return jsize;
     }
 
     public Iterator<Job> iterator() {
         return new Iterator<Job>() {
-            private Iterator<LinkedList<Job>> it1 = sm.values().iterator();
+            private final Iterator<LinkedList<Job>> it1 = sm.values().iterator();
             private Iterator<Job> it2 = it1.hasNext() ? it1.next().iterator() : null;
 
             public boolean hasNext() {
@@ -141,8 +143,9 @@ public class SortedJobSet implements Iterable<Job> {
     public synchronized int getSeq() {
         return seq;
     }
-    
-    public String toString() {
+
+    @Override
+	public String toString() {
         return sm.toString();
     }
 }

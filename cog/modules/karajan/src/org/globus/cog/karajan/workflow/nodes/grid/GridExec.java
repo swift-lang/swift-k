@@ -78,6 +78,10 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 	public static final Arg.Channel C_STAGEIN = new Arg.Channel("stagein");
 	public static final Arg.Channel C_STAGEOUT = new Arg.Channel("stageout");
 	public static final Arg.Channel C_CLEANUP = new Arg.Channel("cleanup");
+	/** MPI processes (i.e. mpiexec -n) */
+	public static final Arg A_MPI_PROCESSES = new Arg.Optional("mpi.processes");
+	/** MPI processes per node (i.e. mpiexec -ppn) */
+	public static final Arg A_MPI_PPN = new Arg.Optional("mpi.ppn");
 
 	static {
 		setArguments(GridExec.class, new Arg[] { A_EXECUTABLE, A_ARGS, A_ARGUMENTS, A_HOST,
@@ -85,7 +89,8 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 				A_COUNT, A_HOST_COUNT, A_JOBTYPE, A_MAXTIME, A_MAXWALLTIME, A_MAXCPUTIME,
 				A_ENVIRONMENT, A_QUEUE, A_PROJECT, A_MINMEMORY, A_MAXMEMORY, A_REDIRECT,
 				A_SECURITY_CONTEXT, A_DIRECTORY, A_NATIVESPEC, A_DELEGATION, A_ATTRIBUTES,
-				C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH, C_STAGEIN, C_STAGEOUT, C_CLEANUP });
+				C_ENVIRONMENT, A_FAIL_ON_JOB_ERROR, A_BATCH, C_STAGEIN, C_STAGEOUT, C_CLEANUP,
+				A_MPI_PROCESSES, A_MPI_PPN});
 	}
 
 	public void submitTask(VariableStack stack) throws ExecutionException {
