@@ -114,7 +114,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		virtualContacts.remove(contact);
 		tasksFinished = true;
 	}
-	
+
 	protected BoundContact getBoundContact(Contact contact) {
 	    if (contact instanceof BoundContact) {
 	        return (BoundContact) contact;
@@ -134,7 +134,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			next = virtualContacts.get(contact);
 			if (next != null) {
 				next = virtualContacts.get(contact);
-				int index = getResources().indexOf(next);
 				if (!checkLoad(next)) {
 					throw new NoFreeResourceException("Contact " + next.getHost()
 							+ " has too many tasks");
