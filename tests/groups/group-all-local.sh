@@ -13,7 +13,6 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/language-behaviour/control_structures \
             $TESTDIR/language-behaviour/datatypes \
 	    $TESTDIR/language-behaviour/IO \
-	    $TESTDIR/language-behaviour/iterators \
 	    $TESTDIR/language-behaviour/logic \
 	    $TESTDIR/language-behaviour/mappers \
 	    $TESTDIR/language-behaviour/math \
