@@ -33,15 +33,15 @@ public class JobCountMetric implements Metric {
     }
 
     public double getSize(Job j) {
-        return j.cpus;
+        return j.mpiProcesses;
     }
     
     public double getSizeLeft(Job j) {
-        return j.cpus;
+        return j.mpiProcesses;
     }
 
     public double desiredSize(Job j) {
-        return j.cpus;
+        return j.mpiProcesses;
     }
 
     public double size(int w, int h) {

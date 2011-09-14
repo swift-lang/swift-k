@@ -1,3 +1,4 @@
+
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.io.ByteArrayOutputStream;
@@ -20,7 +21,7 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.util.ProcessKiller;
+// import org.globus.cog.util.ProcessKiller;
 import org.globus.cog.util.ProcessListener;
 import org.globus.cog.util.ProcessMonitor;
 import org.globus.cog.util.StreamProcessor;
@@ -30,40 +31,43 @@ import org.globus.cog.util.StringUtil;
 /**
  * Construct MPICH/Hydra proxies and submit them back to sleeping Cpu
  * There is one Mpiexec instance for each Job that requires MPI
+ * 
  * @author wozniak
  */
 public class Mpiexec implements ProcessListener, StatusListener {
 
-    public static final Logger logger =
-        Logger.getLogger(Mpiexec.class);
+    public static final Logger logger = Logger.getLogger(Mpiexec.class);
 
     /**
        The path to mpiexec
      */
     public static String MPIEXEC = "mpiexec";
 
-    private List<Job> proxies = null;
-
     /**
-       The original user job
+       The original user Job
      */
     private final Job job;
 
+    /** 
+       The proxy jobs constructed by Mpiexec to satisfy the user Job
+     */
+    private List<Job> proxies = null;
+    
     /**
        Map from Status code to count of those codes received
      */
-    private final Map<Integer,Integer> statusCount =
-        new HashMap<Integer,Integer>();
+    private final Map<Integer, Integer> statusCount = new HashMap<Integer, Integer>();
 
     /*
-       The Block containing the Cpus that will run this Job
-       TODO: Use this to ensure all Cpus are in this Block
+       The Block containing the Cpus that will run this Job TODO: Use
+       this to ensure all Cpus are in this Block
      */
-    //private final Block block;
+    // private final Block block;
 
     /**
-       The Cpus that will run this Job
-    */
+       The Cpus that will run this Job.
+       The size of this list is the number of Hydra proxies
+     */
     private final List<Cpu> cpus;
 
     /**
@@ -77,37 +81,36 @@ public class Mpiexec implements ProcessListener, StatusListener {
     private String error;
 
     /**
-       The provider on which this task will be run
-       Essentially, there is the local SMP mode and the remote
-       host/TCP mode
+       The provider on which this task will be run Essentially, there
+       is the local SMP mode and the remote host/TCP mode
      */
     private String provider;
 
-  /** 
-     If non-empty, override the proxy line with this host
-     Motivation: The Hydra proxy line contains the hostname to which 
-     the proxies connect.  On some systems, mpiexec produces a 
-     hostname that the proxies cannot find. 
-     mpiexec.host.subst allows the user to override this hostname
-     This is a System property, use COG_OPTS to set this.
-  */
-   static String mpiexecHostSubst = "";
+    /**
+       If non-empty, override the proxy line with this host
+       Motivation: The Hydra proxy line contains the hostname to which
+       the proxies connect. On some systems, mpiexec produces a
+       hostname that the proxies cannot find. mpiexec.host.subst
+       allows the user to override this hostname This is a System
+       property, use COG_OPTS to set this.
+     */
+    static String mpiexecHostSubst = "";
 
-   static {
-       String v = System.getProperty("mpiexec.host.subst");
-       if (v != null && v.length() > 0) {
-           mpiexecHostSubst = v;
-           logger.debug
-           ("Property mpiexec.host.subst="+mpiexecHostSubst);
-       }
-   }
+    static {
+        String v = System.getProperty("mpiexec.host.subst");
+        if (v != null && v.length() > 0) {
+            mpiexecHostSubst = v;
+            logger.debug("Property mpiexec.host.subst="
+                    + mpiexecHostSubst);
+        }
+    }
 
     Mpiexec(List<Cpu> cpus, Job job) {
-        this.cpus = cpus;
-        this.job = job;
         assert(cpus.size() > 0);
+    	this.cpus = cpus;
+        this.job = job;
         // this.block = cpus.get(0).getBlock();
-        proxies = new ArrayList<Job>(job.cpus);
+        proxies = new ArrayList<Job>();
 
         // Get the provider
         String p = job.getTask().getService(0).getProvider();
@@ -130,9 +133,9 @@ public class Mpiexec implements ProcessListener, StatusListener {
             return false;
         }
 
-        List<String[]> lines = getProxyLines();
-        for (int i = 0; i < job.cpus; i++) {
-            Job proxy = getProxyJob(lines.get(i), i);
+        List<String[]> lines = scanProxyLines();
+        for (int i = 0; i < cpus.size(); i++) {
+            Job proxy = buildProxyJob(lines.get(i), i);
             proxies.add(proxy);
         }
 
@@ -151,27 +154,26 @@ public class Mpiexec implements ProcessListener, StatusListener {
         Streamer streamer = new Streamer(estream, ebytes);
         streamer.start();
         Object object = new Object();
-        StreamProcessor sprocessor =
-            new StreamProcessor(istream, ibytes, object,
-                                "HYDRA_LAUNCH_END");
+        StreamProcessor sprocessor = 
+        	new StreamProcessor(istream, ibytes, object, 
+        	                    "HYDRA_LAUNCH_END");
         monitor(process);
         boolean result = waitForHydra(sprocessor, object);
         output = ibytes.toString();
-        error  = ebytes.toString();
+        error = ebytes.toString();
         return result;
     }
 
     /**
-       Construct the mpiexec command line for the given Task
+       Build the mpiexec command line for the given Task
      */
     private String[] commandLine(Task task) {
-        JobSpecification spec =
-            (JobSpecification) task.getSpecification();
+        JobSpecification spec = (JobSpecification) task.getSpecification();
         List<String> cmdl = new ArrayList<String>();
 
         logger.debug(spec.toString());
 
-        String hosts = getHydraHostList(task);
+        String hosts = buildHydraHostList(task);
 
         cmdl.add(MPIEXEC);
         // Uncomment this for tons of output:
@@ -180,7 +182,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
         cmdl.add("manual");
         cmdl.add("-disable-hostname-propagation");
         cmdl.add("-n");
-        cmdl.add(Integer.toString(job.cpus));
+        cmdl.add(Integer.toString(job.mpiProcesses));
         cmdl.add("-hosts");
         cmdl.add(hosts);
         cmdl.add(spec.getExecutable());
@@ -189,8 +191,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
         String[] result = new String[cmdl.size()];
         cmdl.toArray(result);
 
-        if (logger.isDebugEnabled())
-        {
+        if (logger.isDebugEnabled()) {
             String logline = StringUtil.concat(result);
             logger.debug(logline);
         }
@@ -198,27 +199,26 @@ public class Mpiexec implements ProcessListener, StatusListener {
         return result;
     }
 
-    private String getHydraHostList(Task task) {
+    private String buildHydraHostList(Task task) {
         String result = null;
 
-        ExecutionService service =
-            (ExecutionService) task.getService(0);
+        ExecutionService service = (ExecutionService) task.getService(0);
         String jobManager = service.getJobManager();
-        // logger.debug("jobmanager: " + jobManager);
+        logger.debug("jobmanager: " + jobManager);
 
-        if (jobManager.equals("local:local"))
-            result = getHydraHostListLocal();
-        else
-            result = getHydraHostListHostnames();
+        //if (jobManager.equals("local:local"))
+        //    result = buildHydraHostListLocal();
+        //else
+            result = buildHydraHostListHostnames();
         return result;
     }
 
-    private String getHydraHostListLocal() {
+    private String buildHydraHostListLocal() {
         int count = cpus.size();
-        StringBuilder sb = new StringBuilder(count*4);
+        StringBuilder sb = new StringBuilder(count * 4);
         for (int i = 0; i < count; i++) {
             sb.append(i);
-            if (i < count-1)
+            if (i < count - 1)
                 sb.append(',');
         }
         String result = sb.toString();
@@ -226,14 +226,18 @@ public class Mpiexec implements ProcessListener, StatusListener {
         return result;
     }
 
-    private String getHydraHostListHostnames() {
-        StringBuilder sb = new StringBuilder(cpus.size()*16);
+    private String buildHydraHostListHostnames() {
+        StringBuilder sb = new StringBuilder(cpus.size() * 32);
 
         for (int i = 0; i < cpus.size(); i++) {
             Cpu cpu = cpus.get(i);
             Node node = cpu.getNode();
             sb.append(node.getHostname());
-            if (i < cpus.size()-1)
+            if (job.mpiPPN > 1) {
+            	sb.append(':');
+            	sb.append(job.mpiPPN);
+            }
+            if (i < cpus.size() - 1)
                 sb.append(',');
         }
 
@@ -246,8 +250,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
     private static final int MPICH_TIMEOUT = 3;
 
     /**
-       Wait until Hydra has reported the proxy command lines
-       The process does not exit until the proxies exit
+       Wait until Hydra has reported the proxy command lines. 
+       The mpiexec process does not exit until the proxies exit
      */
     private boolean waitForHydra(StreamProcessor sprocessor,
                                  Object object) {
@@ -257,8 +261,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
         synchronized (object) {
             try {
                 sprocessor.start();
-                while (!sprocessor.matched() &&
-                        tries++ < MPICH_TIMEOUT)
+                while (!sprocessor.matched()
+                        && tries++ < MPICH_TIMEOUT)
                     object.wait(1000);
             }
             catch (InterruptedException e) {
@@ -272,18 +276,18 @@ public class Mpiexec implements ProcessListener, StatusListener {
     }
 
     /**
-       Break output into lines and then into words, returning
-       only the significant words
+       Break output into lines and then into words, returning only the
+       significant words
      */
-    private List<String[]> getProxyLines() {
+    private List<String[]> scanProxyLines() {
         List<String[]> result = new ArrayList<String[]>();
 
         String[] lines = output.split("\\n");
         for (String line : lines)
             if (line.startsWith("HYDRA_LAUNCH:")) {
-            	line = proxyLineSubst(line);
-            	String[] tokens = line.split("\\s");
-                String[] args   = StringUtil.subset(tokens, 1);
+                line = proxyLineSubst(line);
+                String[] tokens = line.split("\\s");
+                String[] args = StringUtil.subset(tokens, 1);
                 result.add(args);
             }
 
@@ -293,37 +297,36 @@ public class Mpiexec implements ProcessListener, StatusListener {
     /**
        Pattern to match on for mpiexec.host.subst
      */
-    final Pattern controlPortHost =
-    	Pattern.compile("--control-port (.*):");
-    
-    /** 
-       Replacement for mpiexec.host.subst
-     */
-    final String replacement =
-    	"--control-port " + mpiexecHostSubst + ":";
+    final Pattern controlPortHost = Pattern.compile("--control-port (.*):");
 
     /**
-       Perform translations on Hydra proxy line here
-       For now, only does mpiexec.host.subst 
+       Replacement for mpiexec.host.subst
+     */
+    final String replacement = "--control-port " + mpiexecHostSubst
+            + ":";
+
+    /** 
+       Perform translations on Hydra proxy line here. 
+       For now, only does mpiexec.host.subst
      */
     String proxyLineSubst(String input) {
 
-    	if (mpiexecHostSubst.length() == 0)
-    		return input;
+        if (mpiexecHostSubst.length() == 0)
+            return input;
 
-    	Matcher matcher = controlPortHost.matcher(input);
-    	if (! matcher.find())
-    		throw new RuntimeException
-    		("Proxy line does not contain --control-port !");
-    	String result = matcher.replaceFirst(replacement);
-    	return result;
+        Matcher matcher = controlPortHost.matcher(input);
+        if (!matcher.find())
+            throw new RuntimeException
+            ("Proxy line does not contain --control-port !");
+        String result = matcher.replaceFirst(replacement);
+        return result;
     }
 
     /**
-       Replace the user job with a Hydra proxy job
+       Build and register a Hydra proxy job from the Hydra output 
        New Job.Task.Identity is appended with unique integer
      */
-    private Job getProxyJob(String[] line, int i) {
+    private Job buildProxyJob(String[] line, int i) {
         // Set clone to notify this Mpiexec
         Task clone = (Task) job.getTask().clone();
         clone.addStatusListener(this);
@@ -336,15 +339,13 @@ public class Mpiexec implements ProcessListener, StatusListener {
         NotificationManager.getDefault().registerTask(value, clone);
 
         // Update Task Specification
-        JobSpecification spec =
-            (JobSpecification) clone.getSpecification();
+        JobSpecification spec = (JobSpecification) clone.getSpecification();
         spec.setExecutable(line[0]);
         spec.setArguments(StringUtil.concat(line, 1));
 
         if (logger.isDebugEnabled())
-            logger.debug("Proxy job: " +
-                         spec.getExecutable() + " " +
-                         spec.getArguments());
+            logger.debug("Proxy job: " + spec.getExecutable() + " "
+                    + spec.getArguments());
 
         Job result = new Job(clone, 1);
         return result;
@@ -352,6 +353,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
 
     /**
      * Set up threads to watch the external process
+     * 
      * @param process
      */
     private void monitor(Process process) {
@@ -366,8 +368,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
     }
 
     /**
-       Launch proxies on this Cpu and several others
-       (The LinkedList sleeping should already have enough Cpus)
+       Launch proxies on this Cpu and several others (The LinkedList
+       sleeping should already have enough Cpus)
      */
     private void launchProxies() {
         for (int i = 0; i < proxies.size(); i++)
@@ -375,16 +377,16 @@ public class Mpiexec implements ProcessListener, StatusListener {
     }
 
     private void submitToCpu(Cpu sleeper, Job proxy, int i) {
-        assert(sleeper != null);
-        JobSpecification spec =
-            (JobSpecification) proxy.getTask().getSpecification();
+        assert (sleeper != null);
+        JobSpecification spec = 
+        	(JobSpecification) proxy.getTask().getSpecification();
         spec.addEnvironmentVariable("MPI_RANK", i);
         sleeper.launch(proxy);
     }
 
     /**
-       Multiplex Hydra proxy StatusEvents into the StatusEvents for
-       the original job
+     * Multiplex Hydra proxy StatusEvents into the StatusEvents for
+     * the original job
      */
     public void statusChanged(StatusEvent event) {
         logger.debug(event);

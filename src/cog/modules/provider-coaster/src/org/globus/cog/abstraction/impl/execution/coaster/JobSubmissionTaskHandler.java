@@ -82,7 +82,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private String cancelMessage;
     private boolean cancel;
     private boolean autostart;
-    
+
     public JobSubmissionTaskHandler() {
         this(true);
     }
@@ -239,7 +239,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                     cancel(cancelMessage);
                 }
                 catch (Exception e) {
-                    logger.warn("Failed to cancel job " + jobid, e);
+                    logger.warn("Failed to cancel jobid: " + jobid + " " + e.getMessage());
                 }
             }
             jsc = null;
@@ -291,7 +291,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         th.submit(t);
         return t;
     }
-    
+
     private static Random rnd;
 
     public static void main(String[] args) {

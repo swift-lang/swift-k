@@ -20,12 +20,9 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelListener;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
-import org.globus.cog.karajan.workflow.service.commands.HeartBeatCommand;
 
 public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
@@ -100,6 +97,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     private void sleep() {
+    	logger.debug(block.getId() + ":" + getId() + "sleeping");
         sleep(this);
     }
 
@@ -141,8 +139,8 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             if (checkSuspended(block)) {
                 return;
             }
-            if (logger.isInfoEnabled()) {
-                logger.info(block.getId() + ":" + getId() + " pull");
+            if (logger.isTraceEnabled()) {
+                logger.trace(block.getId() + ":" + getId() + " pull");
             }
             if (shutdown) {
                 return;
@@ -154,6 +152,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 lastseq = bqp.getQueueSeq();
                 TimeInterval time = endtime.subtract(Time.now());
                 int cpus = pullThread.sleepers() + 1;
+                if (logger.isDebugEnabled())
+                    logger.debug(block.getId() + ":" + getId() +
+                                 " pull: Cpus sleeping: " + cpus);
                 running = bqp.request(time, cpus);
                 if (running != null) {
                     block.jobPulled();
@@ -186,7 +187,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         boolean result = false;
         running = job;
         running.start();
-        if (job.cpus == 1)
+        if (job.mpiProcesses == 1)
             result = launchSequential();
         else
             result = launchMPICH(job);
@@ -211,11 +212,14 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
        Requires non-standard mpiexec with Hydra as modified by
        Justin Wozniak
 
+       The Cpu Count is the number of Cpus required
+
        This Cpu is awake but n-1 others must be obtained via
        PullThread.getSleepers()
      */
     boolean launchMPICH(Job job) {
-        List<Cpu> cpus = getPullThread().getSleepers(job.cpus-1);
+    	int cpuCount = job.mpiProcesses/job.mpiPPN;
+        List<Cpu> cpus = getPullThread().getSleepers(cpuCount-1);
         cpus.add(this);
         Mpiexec mpiexec = new Mpiexec(cpus, job);
         boolean result = mpiexec.launch();
@@ -236,9 +240,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         Task task = job.getTask();
         if (logger.isInfoEnabled()) {
             JobSpecification spec =
-                (JobSpecification) task.getSpecification();        
+                (JobSpecification) task.getSpecification();
             logger.info(block.getId() + ":" + getId() +
-                " submitting " + task.getIdentity() + ": " + 
+                " submitting " + task.getIdentity() + ": " +
                 spec.getExecutable() + " " + spec.getArguments());
         }
         task.setStatus(Status.SUBMITTING);
@@ -317,7 +321,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             TimeInterval time = endtime.subtract(Time.now());
             int cpus = 1 + getPullThread(node.getBlock()).sleepers();
             running = bqp.request(time, cpus);
-            // no listener is added to this task, so make sure 
+            // no listener is added to this task, so make sure
             // it won't linger in the BQP running set
             bqp.jobTerminated(running);
         }
@@ -377,8 +381,8 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     String getFullId() {
-        return block.getId() + ":" + 
-               getNode().getHostname() + ":" + 
+        return block.getId() + ":" +
+               getNode().getHostname() + ":" +
                getId();
     }
 }
