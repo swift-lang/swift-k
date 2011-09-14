@@ -14,13 +14,13 @@ import java.util.Date;
 public class Timestamp
 {
 	/**
-	   Year Month Day hour minutes seconds 
+	   Year Month Day hour minutes seconds
 	 */
-	static DateFormat YMDhms = 
+	static DateFormat YMDhms =
 		new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-	
+
 	/**
-	   Current time as: Year/Month/Day hour:minutes:seconds 
+	   Current time as: Year/Month/Day hour:minutes:seconds
 	 */
 	public static String YMDhms()
 	{
@@ -30,19 +30,19 @@ public class Timestamp
 	}
 
 	/**
-	   Year Month Day hour minutes seconds 
+	   Year Month Day hour minutes seconds
 	 */
-	static DateFormat YMDhms_dash = 
-		new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
-	
+	static DateFormat YMDhms_dash =
+		new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+
 	/**
 	   Current time as: Year_Month_Day_hour_minutes_seconds
-	   Good for file names  
+	   Good for file names
 	 */
 	public static String YMDhms_dash()
 	{
 		Date now = new Date();
 		String result = YMDhms_dash.format(now);
-		return result;		
+		return result;
 	}
 }
