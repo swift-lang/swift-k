@@ -6,7 +6,7 @@
 DEBUG=0
 
 infosection() {
-        echo >& "$INFO"
+	echo >& "$INFO"
 	echo "_____________________________________________________________________________" >& "$INFO"
 	echo >& "$INFO"
 	echo "        $1" >& "$INFO"
@@ -232,9 +232,10 @@ closeinfo
 if [ -z $MPI_RANK ]; then
 	INFOFILE="$INFODIR/${ID}-info"
 else
-	# Just touch this file so the *.k stuff does not fail
-	[[ $MPI_RANK == 0 ]] && touch $INFODIR/${ID}-info
-	INFOFILE="$INFODIR/${ID}-${MPI_RANK}-info"
+	# Rename info file for each rank
+	INFOFILE="$INFODIR/${ID}-${PMI_RANK}-info"
+	# Build list of per-rank info files
+	echo $INFOFILE >> $INFODIR/${ID}-info
 fi
 rm -f $INFOFILE
 openinfo "$INFOFILE"
@@ -342,7 +343,8 @@ if [ "X${EXEC:0:1}" != "X/" ] ; then
 	fi
 fi
 
-debug "PID=$$"
+log "PID=$$"
+log "HOST=$HOST"
 log "PWD=$PWD"
 log "DIR=$DIR"
 log "EXEC=$EXEC"
@@ -354,9 +356,9 @@ log "INF=$INF"
 log "OUTF=$OUTF"
 log "KICKSTART=$KICKSTART"
 log "CDM_FILE=$CDM_FILE"
-[ -z $MPI_RANK ] && log "MPI_RANK=$MPI_RANK"
 log "ARGS=$@"
 log "ARGC=$#"
+[ -n $MPI_RANK ] && log "MPI_RANK=$MPI_RANK" && log "PMI_RANK=$PMI_RANK"
 IFS="|"
 
 logstate "CREATE_JOBDIR"
@@ -364,7 +366,7 @@ mkdir -p $DIR
 checkError 254 "Failed to create job directory $DIR"
 log "Created job directory: $DIR"
 
-if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
+if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 
 logstate "CREATE_INPUTDIR"
 for D in $DIRS ; do
@@ -417,7 +419,7 @@ if [ ! -z $CDM_FILE ]; then
 	done
 fi
 
-fi # MPI_RANK==0
+fi # PMI_RANK==0
 
 debug "Moving to jobdir: $DIR"
 cd $DIR
