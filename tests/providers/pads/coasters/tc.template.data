@@ -1,0 +1,7 @@
+PADS-coasters 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX	null
+PADS-coasters 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX	null
+PADS-coasters 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX	null
+PADS-coasters 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
+PADS-coasters 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
+PADS-coasters 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
+PADS-coasters	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
