@@ -17,16 +17,20 @@ public interface Metric {
 
     /** Seconds? */
     double getSize(Job j);
-    
+
     double getSizeLeft(Job j);
 
     /** Seconds? */
     double desiredSize(Job j);
 
     double size(int w, int h);
-    
+
+    /**
+        Given a size estimate and minimum time length, how many
+        worker cores should we allocate?
+     */
     int width(int msz, int h);
-    
+
     public class NullMetric implements Metric {
         public double blockSize(int slot, int cslots, double tsum) {
             return 0;
@@ -39,7 +43,7 @@ public interface Metric {
         public double getSize(Job j) {
             return 0;
         }
-        
+
         public double getSizeLeft(Job j) {
             return 0;
         }
