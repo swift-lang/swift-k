@@ -679,7 +679,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					+ (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + "M");
 		}
 		else if (logger.isInfoEnabled()) {
-			logger.info("JobQueue: " + getJobQueue().size());
+			logger.info("jobs queued: " + getJobQueue().size());
 		}
 	}
 
