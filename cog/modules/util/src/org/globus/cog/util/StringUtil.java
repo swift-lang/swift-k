@@ -8,19 +8,23 @@
 
 package org.globus.cog.util;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class provides a string split function similar to jdk 1.4
  * String.split(). Be warned that the split() method in this class does not use
  * regular expressions.
- *  
+ *
  */
 public class StringUtil {
 
 	/**
 	 * Splits a string into an array of tokens
-	 * 
+	 *
 	 * @param string
 	 *            The string to be split
 	 * @param separator
@@ -136,26 +140,26 @@ public class StringUtil {
 		}
 		return result;
 	}
-	
-	public static String concat(String[] tokens, int start) { 
+
+	public static String concat(String[] tokens, int start) {
 	    return concat(tokens, start, " ");
 	}
-	
-	public static String concat(String[] tokens, int start, 
+
+	public static String concat(String[] tokens, int start,
 	                            String separator) {
         StringBuilder sb = new StringBuilder();
-        for (int i = start; i < tokens.length; i++) { 
+        for (int i = start; i < tokens.length; i++) {
             sb.append(tokens[i]);
             if (i < tokens.length-1)
                 sb.append(separator);
         }
         return sb.toString();
     }
-	
+
 	public static String concat(String... strings) {
 	    return concat(' ', strings);
 	}
-	                            	
+
 	public static String concat(char c, String... strings) {
 	    StringBuilder sb = new StringBuilder();
 	    for (int i = 0; i < strings.length; i++) {
@@ -177,12 +181,35 @@ public class StringUtil {
         return result;
     }
 
-    /** 
+    /**
        @see {@link Arrays.asList}
      */
-    public static void addSome(List<String> dest, String[] src, 
+    public static void addSome(List<String> dest, String[] src,
                                int i) {
-        for (int j = i; j < src.length; j++) 
+        for (int j = i; j < src.length; j++)
             dest.add(src[j]);
+    }
+
+    /**
+       Like Java Map.toString() but no curly braces
+     */
+    public static String toString(Map<String,? extends Object> map) {
+
+    	if (map == null)
+    		return "null";
+
+    	StringBuilder sb = new StringBuilder(map.size()*128);
+    	Set<String> keys = map.keySet();
+    	Iterator<String> it = keys.iterator();
+    	while (it.hasNext()) {
+    		String key = it.next();
+    		Object value = map.get(key);
+    		sb.append(key);
+    		sb.append('=');
+    		sb.append(value);
+    		if (it.hasNext())
+    			sb.append(',');
+    	}
+    	return sb.toString();
     }
 }
