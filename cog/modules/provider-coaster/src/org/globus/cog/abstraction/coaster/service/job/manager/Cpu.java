@@ -57,7 +57,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     public void workerStarted() {
 	 if (logger.isDebugEnabled()) {
-	        logger.debug("workerStarted: " + getFullId());
+	        logger.debug("worker started: block=" + block.getId() +
+	                     " host=" + getNode().getHostname() +
+	                     " id=" + id);
 	 }
         node.getBlock().remove(this);
         starttime = Time.now();
@@ -97,7 +99,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     private void sleep() {
-    	logger.debug(block.getId() + ":" + getId() + "sleeping");
+    	logger.debug(block.getId() + ":" + getId() + " sleeping");
         sleep(this);
     }
 
@@ -116,7 +118,8 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private static synchronized void pullLater(Cpu cpu) {
         Block block = cpu.node.getBlock();
         if (logger.isDebugEnabled()) {
-            logger.debug(block.getId() + ":" + cpu.getId() + " pullLater");
+            logger.debug("ready for work: block=" + block.getId() +
+                         " id=" + cpu.getId());
         }
         getPullThread(block).enqueue(cpu);
     }
@@ -153,8 +156,10 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 TimeInterval time = endtime.subtract(Time.now());
                 int cpus = pullThread.sleepers() + 1;
                 if (logger.isDebugEnabled())
-                    logger.debug(block.getId() + ":" + getId() +
-                                 " pull: Cpus sleeping: " + cpus);
+                    logger.debug("requesting work: " +
+                                 "block=" + block.getId() +
+                                 " id=" + getId() +
+                                 " Cpus sleeping: " + cpus);
                 running = bqp.request(time, cpus);
                 if (running != null) {
                     block.jobPulled();

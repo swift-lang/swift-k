@@ -52,7 +52,7 @@ public class BlockTask extends TaskImpl {
         	setAttribute(spec, name, settings.getAttribute(name));
         }
         setAttribute(spec, "providerAttributes", settings.getProviderAttributes());
-        logger.debug("providerAttributes: " + settings.getProviderAttributes());
+        // logger.trace("providerAttributes: " + settings.getProviderAttributes());
         String libraryPath = settings.getLdLibraryPath();
         if (libraryPath != null)
             spec.addEnvironmentVariable("LD_LIBRARY_PATH",
@@ -67,8 +67,8 @@ public class BlockTask extends TaskImpl {
                                         workerCopiesFixed);
         }
         spec.addEnvironmentVariable("WORKER_LOGGING_LEVEL", settings.getWorkerLoggingLevel());
-        if (logger.isDebugEnabled()) {
-            logger.debug("Worker logging level: " + settings.getWorkerLoggingLevel());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Worker logging level: " + settings.getWorkerLoggingLevel());
         }
         setRequiredService(1);
         setService(0, buildService());
@@ -117,7 +117,7 @@ public class BlockTask extends TaskImpl {
         		js.addArgument(logDir);
         }
 
-        logger.debug("arguments: " + js.getArguments());
+        // logger.debug("arguments: " + js.getArguments());
 
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
