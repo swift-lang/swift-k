@@ -33,7 +33,7 @@ public class TCPBufferManager {
     public static final int MIN_BUFFER_SIZE = 16 * K;
     public static final int BUFFER_SIZE_GRANULARITY = 1 * K;
     
-    private Set<Socket> sockets;
+    private final Set<Socket> sockets;
     private int crtSocketBuffSz;
     
     public TCPBufferManager() {
@@ -91,7 +91,7 @@ public class TCPBufferManager {
                 if (crtSocketBuffSz < MIN_BUFFER_SIZE) {
                     crtSocketBuffSz = MIN_BUFFER_SIZE;
                 }
-                logger.info("Adjusting buffer size to " + crtSocketBuffSz);
+                logger.debug("Adjusting buffer size to " + crtSocketBuffSz);
                 updateBufferSizes();
             }
         }
@@ -108,7 +108,7 @@ public class TCPBufferManager {
     }
     
     private final class SocketWrapper extends Socket {
-        private Socket s;
+        private final Socket s;
         
         public SocketWrapper(Socket delegate) {
             this.s = delegate;
