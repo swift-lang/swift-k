@@ -60,7 +60,7 @@ documented in the Globus namespace profile section:
 |=================
 |Profile key|Brief description
 |slots|How many maximum LRM jobs/worker blocks are allowed
-|workersPerNode|How many coaster workers to run per execution node
+|jobsPerNode|How many coaster workers to run per execution node
 |nodeGranularity|Each worker block uses a number of nodes that is a
 multiple of this number
 |lowOverallocation|How many times larger than the job walltime should a
@@ -70,11 +70,11 @@ block's walltime be if all jobs are infinitely long
 |overallocationDecayFactor|How quickly should the overallocation curve
 tend towards the highOverallocation as job walltimes get larger
 |spread|By how much should worker blocks vary in worker size
-|workersPerNode|How many coaster workers to run per execution node
+|jobsPerNode|How many coaster workers to run per execution node
 |reserve|How many seconds to reserve in a block's walltime for
 starting/shutdown operations
 |maxnodes|The maximum number of nodes allowed in a block
-|maxtime|The maximum number of walltime allowed for a block
+|maxtime|The maximum walltime allowed for a block, in integer seconds
 |remoteMonitorEnabled|If true, show a graphical display of the status of
 the coaster service
 |==================

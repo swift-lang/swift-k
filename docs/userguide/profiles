@@ -115,7 +115,7 @@ slots When using coasters, this parameter specifies the
 maximum number of jobs/blocks that the coaster scheduler will have
 running at any given time. The default is 20.
 
-workersPerNode - This parameter determines how many coaster workers are
+jobsPerNode - This parameter determines how many coaster workers are
 started one each compute node. The default value is 1.
 
 nodeGranularity - When allocating a coaster worker block, this parameter
@@ -171,7 +171,8 @@ job anyway). Default 10 (s).
 maxnodes - Determines the maximum number of nodes that can be allocated
 in one coaster block. Default: unlimited.
 
-maxtime - Indicates the maximum walltime that a coaster block can have.
+maxtime - Indicates the maximum walltime, in seconds, that a coaster 
+block can have.
 Default: unlimited.
 
 remoteMonitorEnabled - If set to "true", the client side will get a
