@@ -44,6 +44,17 @@ many number of concurrent +cat+
 
 *step 6.* Check the output in the generated +outdir+ directory (+ls outdir+)
 
-Note: Running from sandbox node or requesting 1 hour walltime for upto 3 nodes
+Note: Running from sandbox node or requesting 30 minutes walltime for upto 3 nodes
 will get fast prioritized execution. Good for small tests.
+
+Larger Runs on Beagle
+~~~~~~~~~~~~~~~~~~~~~
+A key factor in scaling up Swift runs on Beagle is to setup the sites.xml parameters.
+The following sites.xml parameters must be set to scale that is intended for a large run:
+
+ * walltime: The expected walltime for completion of your run. This parameter is accepted in seconds.
+ * slots: Number of qsub jobs needs to be submitted by swift. This number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 80 for large runs.
+ * nodegranularity: Determines the number of nodes per job. Total nodes will thus be slots times nodegranularity. This may vary for advanced configurations though.
+ * maxnodes: Determines the maximum number of nodes a job must pack into its qsub. This parameter determines the largest single job that your run will submit.
+
 
