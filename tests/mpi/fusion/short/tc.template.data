@@ -19,4 +19,4 @@ localhost 	cp 		/bin/cp	        INSTALLED	INTEL32::LINUX	null
 
 # hydra-tests-2
 
-fusion 	mpi_cp 		_DIR_/mpi-cp    INSTALLED	INTEL32::LINUX	globus::hostCount=2
+fusion 	mpi_cp 		_DIR_/mpi-cp    INSTALLED	INTEL32::LINUX	globus::mpi.processes=2

@@ -1,7 +1,6 @@
 
 /**
  * Simple Hydra test
- * No I/O
  *
  * usage: mpi-sleep <duration>
  *
@@ -11,11 +10,12 @@
  * */
 
 #include <assert.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 #include <mpi.h>
@@ -26,7 +26,9 @@
 #ifdef ENABLE_DEBUG
 #define DEBUG(...) __VA_ARGS__
 #define debug(...)                              \
-  { printf("%i: ", mpi_rank); printf(__VA_ARGS__); }
+  { printf("%i: ", mpi_rank);                   \
+    printf(__VA_ARGS__);                        \
+    fflush(stdout); }
 #else
 #define DEBUG(...)
 #define debug(...)
@@ -37,6 +39,8 @@
 
 void print_help(void);
 void startup(void);
+void write_header(void);
+void write_data(void);
 void crash(char* msg);
 void check(void* value, char* msg);
 
@@ -45,14 +49,16 @@ int mpi_size, mpi_rank;
 const int INPUT_MAX = 10;
 int input_count = 0;
 
+char hostname[1024];
 char output[1024];
 
-bool write_header = false;
+bool enable_write_header = false;
 
 int main(int argc, char* argv[])
 {
   int duration = -1;
   char* inputs[INPUT_MAX];
+  output[0] = '\0';
 
   int opt = -1;
   while ((opt = getopt(argc, argv, "i:o:v")) != -1)
@@ -67,7 +73,7 @@ int main(int argc, char* argv[])
       case 'o':
         strcpy(output, optarg);
       case 'v':
-        write_header = true;
+        enable_write_header = true;
         break;
     }
   }
@@ -100,22 +106,17 @@ int main(int argc, char* argv[])
   // INTRO BARRIER
   debug("barrier1\n");
   MPI_Barrier(MPI_COMM_WORLD);
-  debug("sleep %i\n", duration);
+
+  // WRITE HEADER
+  if (enable_write_header)
+    write_header();
 
   // SLEEP
+  debug("sleep %i\n", duration);
   sleep(duration);
 
   // WRITE OUTPUT
-  if (mpi_rank == 0)
-  {
-    debug("write to: %s\n", output);
-    FILE* file = fopen(output, "w");
-    check(file, "could not write to file!");
-    if (write_header)
-      fprintf(file, "rank: %i/%i\n", mpi_rank, mpi_size);
-    fprintf(file, "howdy\n");
-    fclose(file);
-  }
+  write_data();
 
   // FINAL BARRIER
   debug("barrier2\n");
@@ -132,6 +133,14 @@ void startup()
   FILE* file;
   char filename[1024];
   // DEBUG(system("/bin/hostname"));
+
+  if (mpi_rank == 0)
+    if (strlen(output) == 0)
+    {
+      printf("No output file!\n");
+      exit(1);
+    }
+
   debug("size: %i\n", mpi_size);
   debug("rank: %i\n", mpi_rank);
   DEBUG(pwd = getenv("PWD"));
@@ -141,6 +150,56 @@ void startup()
   // DEBUG(file = fopen(filename, "w"));
   // DEBUG(fprintf(file, "OK\n"));
   // DEBUG(fclose(file));
+}
+
+/**
+   An output header written only by rank 0
+*/
+void write_header()
+{
+  if (mpi_rank == 0)
+  {
+    debug("write_header(): %s\n", output);
+    FILE* file = fopen(output, "w");
+    check(file, "could not write to file!");
+    fprintf(file, "rank 0: header\n");
+    fclose(file);
+  }
+}
+
+void read_hostname()
+{
+  struct utsname name;
+  if (uname (&name) == -1)
+  {
+    printf("Could not call uname()!\n");
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
+
+  strcpy(hostname, name.nodename);
+
+  /*
+  char* filename = "/etc/HOSTNAME";
+  FILE* file = fopen(filename, "r");
+  if (!file)
+  {
+    printf("Could not open: %s\n", filename);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
+  fscanf(file, "%s", hostname);
+  fclose(file);
+  */
+}
+
+void write_data()
+{
+  debug("write_data(): %s\n", output);
+  read_hostname();
+  FILE* file = fopen(output, "a");
+  check(file, "could not write to file!");
+  fprintf(file, "rank: %i/%i %s\n",
+          mpi_rank, mpi_size, hostname);
+  fclose(file);
 }
 
 void print_help()

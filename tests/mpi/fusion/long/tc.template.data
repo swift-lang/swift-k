@@ -17,7 +17,4 @@ localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
 localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
 localhost 	cp 		/bin/cp	        INSTALLED	INTEL32::LINUX	null
 
-# hydra-tests-2
-
-fusion 	mpi_cp 		_DIR_/mpi-cp       INSTALLED	INTEL32::LINUX	globus::hostCount=2
-fusion 	mpi_sleep 	_DIR_/mpi-sleep    INSTALLED	INTEL32::LINUX	globus::hostCount=2
+fusion 	mpi_sleep _DIR_/mpi-sleep    INSTALLED	INTEL32::LINUX	globus::mpi.processes=4;globus::mpi.ppn=2
