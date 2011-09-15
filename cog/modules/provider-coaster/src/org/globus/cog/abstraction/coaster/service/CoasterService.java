@@ -42,7 +42,7 @@ public class CoasterService extends GSSService {
             .getLogger(CoasterService.class);
 
     public static final int IDLE_TIMEOUT = 120 * 1000;
-    
+
     public static final int CONNECT_TIMEOUT = 2 * 60 * 1000;
 
     public static final RequestManager COASTER_REQUEST_MANAGER = new CoasterRequestManager();
@@ -61,7 +61,7 @@ public class CoasterService extends GSSService {
     public CoasterService() throws IOException {
         this(true);
     }
-    
+
     public CoasterService(boolean local) throws IOException {
         this(null, null, local);
     }
@@ -71,7 +71,7 @@ public class CoasterService extends GSSService {
     }
 
     public CoasterService(GSSCredential cred, int port, InetAddress bindTo) throws IOException {
-        super(cred, port, bindTo);   
+        super(cred, port, bindTo);
     }
 
     public CoasterService(String registrationURL, String id, boolean local)
@@ -87,7 +87,7 @@ public class CoasterService extends GSSService {
         setAuthorization(new SelfAuthorization());
         initializeLocalService();
     }
-    
+
     private RequestManager newLocalRequestManager() {
         RequestManager rm = new ServiceRequestManager();
         rm.addHandler("REGISTER", RegistrationHandler.class);
@@ -96,11 +96,11 @@ public class CoasterService extends GSSService {
         rm.addHandler("PUT", PutFileHandler.class);
         return rm;
     }
-    
+
     protected void initializeLocalService() throws IOException {
         localService = new LocalTCPService(newLocalRequestManager());
     }
-    
+
     protected void initializeLocalService(int port) throws IOException {
         localService = new LocalTCPService(newLocalRequestManager(), port);
     }
@@ -346,7 +346,7 @@ public class CoasterService extends GSSService {
     public JobQueue getJobQueue() {
         return jobQueue;
     }
-    
+
     public boolean getIgnoreIdleTime() {
         return ignoreIdleTime;
     }
@@ -390,25 +390,29 @@ public class CoasterService extends GSSService {
         }
     }
 
-    public static void error(int code, String msg) { 
+    public static void error(int code, String msg) {
         error(code, msg, null);
     }
-    
+
+    /**
+       This reports a fatal error
+     */
     public static void error(int code, String msg, Throwable t) {
         if (msg != null) {
+        	System.err.println("CoasterService fatal error:");
             System.err.println(msg);
         }
         if (t != null) {
             t.printStackTrace();
         }
-        logger.error(msg, t);
+        logger.fatal(msg, t);
         System.exit(code);
     }
 
     public boolean isLocal() {
         return local;
     }
-    
+
     protected LocalTCPService getLocalService() {
         return localService;
     }
@@ -420,6 +424,6 @@ public class CoasterService extends GSSService {
     public void setDefaultQP(String defaultQP) {
         this.defaultQP = defaultQP;
     }
-    
-    
+
+
 }
