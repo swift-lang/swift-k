@@ -21,7 +21,6 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-// import org.globus.cog.util.ProcessKiller;
 import org.globus.cog.util.ProcessListener;
 import org.globus.cog.util.ProcessMonitor;
 import org.globus.cog.util.StreamProcessor;
@@ -31,7 +30,7 @@ import org.globus.cog.util.StringUtil;
 /**
  * Construct MPICH/Hydra proxies and submit them back to sleeping Cpu
  * There is one Mpiexec instance for each Job that requires MPI
- * 
+ *
  * @author wozniak
  */
 public class Mpiexec implements ProcessListener, StatusListener {
@@ -48,11 +47,11 @@ public class Mpiexec implements ProcessListener, StatusListener {
      */
     private final Job job;
 
-    /** 
+    /**
        The proxy jobs constructed by Mpiexec to satisfy the user Job
      */
     private List<Job> proxies = null;
-    
+
     /**
        Map from Status code to count of those codes received
      */
@@ -84,7 +83,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
        The provider on which this task will be run Essentially, there
        is the local SMP mode and the remote host/TCP mode
      */
-    private String provider;
+    private final String provider;
 
     /**
        If non-empty, override the proxy line with this host
@@ -96,6 +95,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
      */
     static String mpiexecHostSubst = "";
 
+    static boolean verbose = false;
+
     static {
         String v = System.getProperty("mpiexec.host.subst");
         if (v != null && v.length() > 0) {
@@ -103,6 +104,10 @@ public class Mpiexec implements ProcessListener, StatusListener {
             logger.debug("Property mpiexec.host.subst="
                     + mpiexecHostSubst);
         }
+
+        v = System.getProperty("mpiexec.verbose");
+        if (v != null && v.length() > 0)
+            verbose = Boolean.parseBoolean(v);
     }
 
     Mpiexec(List<Cpu> cpus, Job job) {
@@ -154,8 +159,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
         Streamer streamer = new Streamer(estream, ebytes);
         streamer.start();
         Object object = new Object();
-        StreamProcessor sprocessor = 
-        	new StreamProcessor(istream, ibytes, object, 
+        StreamProcessor sprocessor =
+        	new StreamProcessor(istream, ibytes, object,
         	                    "HYDRA_LAUNCH_END");
         monitor(process);
         boolean result = waitForHydra(sprocessor, object);
@@ -177,7 +182,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
 
         cmdl.add(MPIEXEC);
         // Uncomment this for tons of output:
-        // cmdl.add("-verbose");
+        if (verbose)
+        	cmdl.add("-verbose");
         cmdl.add("-launcher");
         cmdl.add("manual");
         cmdl.add("-disable-hostname-propagation");
@@ -209,7 +215,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
         //if (jobManager.equals("local:local"))
         //    result = buildHydraHostListLocal();
         //else
-            result = buildHydraHostListHostnames();
+        result = buildHydraHostListHostnames();
         return result;
     }
 
@@ -250,7 +256,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
     private static final int MPICH_TIMEOUT = 3;
 
     /**
-       Wait until Hydra has reported the proxy command lines. 
+       Wait until Hydra has reported the proxy command lines.
        The mpiexec process does not exit until the proxies exit
      */
     private boolean waitForHydra(StreamProcessor sprocessor,
@@ -305,8 +311,8 @@ public class Mpiexec implements ProcessListener, StatusListener {
     final String replacement = "--control-port " + mpiexecHostSubst
             + ":";
 
-    /** 
-       Perform translations on Hydra proxy line here. 
+    /**
+       Perform translations on Hydra proxy line here.
        For now, only does mpiexec.host.subst
      */
     String proxyLineSubst(String input) {
@@ -323,12 +329,14 @@ public class Mpiexec implements ProcessListener, StatusListener {
     }
 
     /**
-       Build and register a Hydra proxy job from the Hydra output 
+       Build and register a Hydra proxy job from the Hydra output
        New Job.Task.Identity is appended with unique integer
      */
     private Job buildProxyJob(String[] line, int i) {
-        // Set clone to notify this Mpiexec
+        // Clone original job as proxy job
         Task clone = (Task) job.getTask().clone();
+
+        // Set clone to notify this Mpiexec instance
         clone.addStatusListener(this);
 
         // Update Task Identity and set Notification
@@ -342,6 +350,9 @@ public class Mpiexec implements ProcessListener, StatusListener {
         JobSpecification spec = (JobSpecification) clone.getSpecification();
         spec.setExecutable(line[0]);
         spec.setArguments(StringUtil.concat(line, 1));
+        // The clone is not an MPI job: it is a part of the MPI job
+        spec.removeAttribute("mpi.processes");
+        spec.removeAttribute("mpi.ppn");
 
         if (logger.isDebugEnabled())
             logger.debug("Proxy job: " + spec.getExecutable() + " "
@@ -353,7 +364,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
 
     /**
      * Set up threads to watch the external process
-     * 
+     *
      * @param process
      */
     private void monitor(Process process) {
@@ -378,7 +389,7 @@ public class Mpiexec implements ProcessListener, StatusListener {
 
     private void submitToCpu(Cpu sleeper, Job proxy, int i) {
         assert (sleeper != null);
-        JobSpecification spec = 
+        JobSpecification spec =
         	(JobSpecification) proxy.getTask().getSpecification();
         spec.addEnvironmentVariable("MPI_RANK", i);
         sleeper.launch(proxy);
