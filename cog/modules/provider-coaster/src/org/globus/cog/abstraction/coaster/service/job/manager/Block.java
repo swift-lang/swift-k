@@ -87,7 +87,7 @@ public class Block implements StatusListener, Comparable<Block> {
             logger.info("Starting block: workers=" + workers + ", walltime=" + walltime);
         }
         bqp.getRLogger().log(
-            "BLOCK_REQUESTED id=" + getId() + ", w=" + getWorkerCount() + ", h="
+            "BLOCK_REQUESTED id=" + getId() + ", workers=" + getWorkerCount() + ", walltime="
                     + getWalltime().getSeconds());
         task = new BlockTask(this);
         task.addStatusListener(this);
@@ -375,7 +375,7 @@ public class Block implements StatusListener, Comparable<Block> {
             }
         }
     }
-    
+
     private int seq;
 
     public String nextId() {
@@ -498,7 +498,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public void jobPulled() {
         lastUsed = System.currentTimeMillis();
     }
-    
+
     public void jobCompleted() {
     	lastUsed = System.currentTimeMillis();
     }
