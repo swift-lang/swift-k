@@ -42,13 +42,15 @@ my %ads;
 my %tmp;
 my $cmd = "condor_status -any -long -constraint" .
           " 'StringlistIMember(\"VO:$opt_vo\";GlueCEAccessControlBaseRule)'" .
-          " -pool osg-ress-1.fnal.gov";
+          #" -pool osg-ress-1.fnal.gov";
+          " -pool engage-submit.renci.org";
 # if we want the engage verified sites, ignore opt_vo and query against 
 # engage central collector
 if ($opt_engage_verified) {
     $cmd = "condor_status -any -long -constraint" .
            " 'SiteVerified==TRUE'" .
-           " -pool engage-central.renci.org"
+           # " -pool engage-central.renci.org"
+            " -pool engage-submit.renci.org";
 }
 open(STATUS, "$cmd|");
 while(<STATUS>) {
