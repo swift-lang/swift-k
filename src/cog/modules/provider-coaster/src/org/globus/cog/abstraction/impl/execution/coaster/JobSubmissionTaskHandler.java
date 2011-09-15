@@ -284,8 +284,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
         }
         
-        checkLessThan("lowOverallocation", 1);
-        checkLessThan("highOverallocation", 1);
+        checkGreaterOrEqualThan("lowOverallocation", 1);
+        checkGreaterThan("highOverallocation", 1);
         
         checkGreaterThan("allocationStepSize", 0);
         checkLessOrEqualThan("allocationStepSize", 1);
