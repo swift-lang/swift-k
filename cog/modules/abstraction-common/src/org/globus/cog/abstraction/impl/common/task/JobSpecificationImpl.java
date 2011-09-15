@@ -24,6 +24,7 @@ import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
+import org.globus.cog.util.StringUtil;
 
 public class JobSpecificationImpl implements JobSpecification {
 
@@ -345,6 +346,10 @@ public class JobSpecificationImpl implements JobSpecification {
         }
     }
 
+    public Object removeAttribute(String name) {
+        return attributes.remove(name);
+    }
+
     public boolean isDelegationEnabled() {
         if (delegationEnabled != null) {
             return delegationEnabled.booleanValue();
@@ -377,10 +382,10 @@ public class JobSpecificationImpl implements JobSpecification {
         sb.append("\n\tdirectory:  " + getDirectory());
         sb.append("\n\tbatch:      " + isBatchJob());
         sb.append("\n\tredirected: " + isRedirected());
-        sb.append("\n\tattrs:");
-        sb.append(attributes);
-        sb.append("\n\tenv:");
-        sb.append(environment);
+        sb.append("\n\tattributes: ");
+        sb.append(StringUtil.toString(attributes));
+        sb.append("\n\tenv:        ");
+        sb.append(StringUtil.toString(environment));
         sb.append('\n');
 
         return sb.toString();

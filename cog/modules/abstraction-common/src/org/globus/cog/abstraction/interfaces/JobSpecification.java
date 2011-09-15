@@ -6,7 +6,10 @@
 
 package org.globus.cog.abstraction.interfaces;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Vector;
 
 /**
  * The <code>JobSpecification</code> represents all the parameters required
@@ -371,6 +374,13 @@ public interface JobSpecification extends Specification {
     public void setAttribute(String name, Object value);
 
     public Object getAttribute(String name);
+
+    /**
+       Remove attribute.
+       @return If there was a non-null attribute with given name,
+               return that attribute value, else return null.
+     */
+    public Object removeAttribute(String name);
 
     /**
      * Unpacks attribute assignments from special attribute
