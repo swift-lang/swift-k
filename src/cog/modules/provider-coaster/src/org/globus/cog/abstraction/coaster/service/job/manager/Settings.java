@@ -70,9 +70,9 @@ public class Settings {
     private double allocationStepSize = 0.1;
 
     /**
-     * How long (timewise) the request should be based on the job walltime. 
+     * How long (timewise) the request should be based on the job walltime.
      * lowOverallocation is the factor for 1s jobs
-     * highOverallocation is the factor for +Inf jobs. 
+     * highOverallocation is the factor for +Inf jobs.
      * Things in-between are derived using x * ((os - oe) / x + oe.
      *
      * For example, with oe = 100, a bunch of jobs of walltime 1 will generate
@@ -114,6 +114,25 @@ public class Settings {
 
     private boolean remoteMonitorEnabled;
 
+	/**
+	 * Adjusts the metric used for block sizes.
+	 *
+	 * Essentially when you pick a box, there is a choice of how you
+	 * are going to pick the length vs. width of the box for the same
+	 * volume.
+	 *
+	 * Though it's used a bit in reverse. A parallelism of 0 means
+	 * that the size of a job will be its natural width * its height ^
+	 * parallelism (the latter being 1). Since the height is always 1,
+	 * then you can only fit 2 jobs in a volume 2 block, which has to
+	 * have a width of 2.
+	 *
+	 * A parallelism of 1 means that the height is the actual
+	 * walltime, which is realistic, but the parallelism will be
+	 * whatever the block width happens to be. So basically it
+	 * determines how much relative weight is given to the walltime
+	 * vs. the number of CPUs needed.
+	 */
     private double parallelism = 0.01;
 
     private TimeInterval maxWorkerIdleTime = TimeInterval.fromSeconds(120);
@@ -137,8 +156,8 @@ public class Settings {
     private String useHashBang = null;
 
     private String providerAttributes = null;
-    
-    private Map<String, String> attributes;
+
+    private final Map<String, String> attributes;
 
     public Settings() {
         hook = new Hook();
@@ -147,12 +166,12 @@ public class Settings {
     }
 
     /**
-       Formerly "slots": the maximum number of Coasters Blocks 
+       Formerly "slots": the maximum number of Coasters Blocks
      */
-    public int getMaxBlocks() { 
+    public int getMaxBlocks() {
         return slots;
     }
-    
+
     public int getSlots() {
         return slots;
     }
@@ -500,15 +519,15 @@ public class Settings {
     public void setUseHashBang(String uhb) {
         this.useHashBang = uhb;
     }
-    
+
     public void setAttribute(String name, String value) {
     	attributes.put(name, value);
     }
-    
+
     public Collection<String> getAttributeNames() {
     	return attributes.keySet();
     }
-    
+
     public String getAttribute(String name) {
     	return attributes.get(name);
     }
