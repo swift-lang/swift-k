@@ -63,25 +63,25 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			}
 		}
 		heartBeatInterval *= 1000;
-		
+
 		boolean controlHeartbeats = isClient() == clientControlsHeartbeats();
-		
+
 		if (!isOffline() && controlHeartbeats) {
 		    scheduleHeartbeats(heartBeatInterval);
 		}
 		else {
-			if (logger.isInfoEnabled()) {
+			if (logger.isDebugEnabled()) {
 				if (config == null) {
-					logger.info(this + ": Disabling heartbeats (config is null)");
+					logger.debug(this + ": Disabling heartbeats (config is null)");
 				}
 				else if (!config.hasOption(RemoteConfiguration.HEARTBEAT)) {
-					logger.info(this + ": Disabling heartbeats (disabled in config)");
+					logger.debug(this + ": Disabling heartbeats (disabled in config)");
 				}
 				else if (isOffline()) {
-					logger.info(this + ": Disabling heartbeats (offline channel)");
+					logger.debug(this + ": Disabling heartbeats (offline channel)");
 				}
 				else if (!isClient()) {
-					logger.info(this + ": Disabling heartbeats (not a client)");
+					logger.debug(this + ": Disabling heartbeats (not a client)");
 				}
 			}
 		}
@@ -89,15 +89,15 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			scheduleHeartbeatCheck(heartBeatInterval);
 		}
 	}
-	
+
 	public void scheduleHeartbeats(int heartBeatInterval) {
 	    TimerTask heartBeatTask;
 	    heartBeatTask = new HeartBeatTask(this);
-	    context.getTimer().schedule(heartBeatTask, 
-        heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_INITIAL_SPREAD * 1000), 
+	    context.getTimer().schedule(heartBeatTask,
+        heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_INITIAL_SPREAD * 1000),
         heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_SPREAD * 1000));
 	}
-	
+
 	public void scheduleHeartbeatCheck(int heartBeatInterval) {
 	    TimerTask heartBeatTask;
 	    int mult = 2;
@@ -105,7 +105,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
         context.getTimer().schedule(heartBeatTask, mult * heartBeatInterval,
         		mult * heartBeatInterval);
 	}
-	
+
 	protected boolean clientControlsHeartbeats() {
 	    return true;
 	}
@@ -199,7 +199,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public ChannelContext getChannelContext() {
 		return context;
 	}
-	
+
 	public final UserContext getUserContext() {
 	    return context.getUserContext();
 	}
@@ -239,7 +239,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	/**
-	   Pretty-print byte buffer 
+	   Pretty-print byte buffer
 	 */
 	public static String ppByteBuf(byte[] data) {
 		byte[] buf = new byte[Math.min(data.length, 256)];
