@@ -21,9 +21,9 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 public class Job implements Comparable<Job> {
     public static final Logger logger = Logger.getLogger(Job.class);
-    
+
     public static final Set<String> SUPPORTED_ATTRIBUTES;
-    
+
     static {
     	SUPPORTED_ATTRIBUTES = new HashSet<String>();
     	SUPPORTED_ATTRIBUTES.add("mpi.processes");
@@ -33,7 +33,7 @@ public class Job implements Comparable<Job> {
 
     private int id;
     private Task task;
-    
+
     /**
        If not 1, number of MPI processes required (i.e., mpiexec -n)
        Set by JobSpecification attribute "mpi.processes"
@@ -53,16 +53,18 @@ public class Job implements Comparable<Job> {
     private static int sid;
 
     public Job() {
+    	synchronized (Job.class) {
+    		id = sid++;
+    	}
     }
 
     public Job(Task task) {
+    	this();
         setTask(task);
-        synchronized (Job.class) {
-            id = sid++;
-        }
     }
 
 	public Job(Task task, int cpus) {
+		this();
         setTask(task);
         this.mpiProcesses = cpus;
     }
@@ -72,7 +74,7 @@ public class Job implements Comparable<Job> {
 
         JobSpecification spec =
             (JobSpecification) task.getSpecification();
-        logger.trace(spec);
+        logger.info("Coasters Job id=" + id + " is:\n" + spec);
 
         // Set walltime
         Object tmp = spec.getAttribute("maxwalltime");
@@ -83,7 +85,7 @@ public class Job implements Comparable<Job> {
             WallTime wt = new WallTime(tmp.toString());
             this.walltime = TimeInterval.fromSeconds(wt.getSeconds());
         }
-        
+
         // MPI settings
         tmp = spec.getAttribute("mpi.processes");
         if (tmp == null)
@@ -93,8 +95,11 @@ public class Job implements Comparable<Job> {
             tmp = spec.getAttribute("mpi.ppn");
             if (tmp == null)
             	mpiPPN = 1;
-            else 
+            else
             	mpiPPN = Integer.parseInt((String) tmp);
+            logger.info("MPI Job: id=" + id +
+                         " mpi.processes=" + mpiProcesses +
+                         " mpi.ppn=" + mpiPPN);
         }
     }
 
@@ -147,7 +152,8 @@ public class Job implements Comparable<Job> {
         this.walltime = walltime;
     }
 
-    public String toString() {
+    @Override
+	public String toString() {
         StringBuilder sb = new StringBuilder(128);
         sb.append("Job(id:");
         sb.append(id);
@@ -156,6 +162,8 @@ public class Job implements Comparable<Job> {
         if (mpiProcesses != 1) {
             sb.append(" [");
             sb.append(mpiProcesses);
+            sb.append('/');
+            sb.append(mpiPPN);
             sb.append("]");
         }
         sb.append(")");

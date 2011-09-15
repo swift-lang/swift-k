@@ -2,9 +2,9 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.io.File;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,8 +26,8 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
-public class BlockQueueProcessor 
-extends AbstractQueueProcessor 
+public class BlockQueueProcessor
+extends AbstractQueueProcessor
 implements RegistrationManager, Runnable {
     public static final Logger logger = Logger.getLogger(BlockQueueProcessor.class);
 
@@ -84,11 +84,18 @@ implements RegistrationManager, Runnable {
 
     private final RemoteLogger rlogger;
 
-    /** 
-       Formatter for time-based variables in seconds
+    /**
+       Formatter for time-based variables in whole seconds
      */
-    private static final NumberFormat SECONDS = new DecimalFormat("0.00");
-    
+    private static final NumberFormat SECONDS =
+    	new DecimalFormat("0");
+
+    /**
+       Formatter for time-based variables to thousandth of second
+    */
+    private static final NumberFormat SECONDS_3 =
+    	new DecimalFormat("0.000");
+
     public BlockQueueProcessor(Settings settings) {
         super("Block Queue Processor");
         this.settings = settings;
@@ -101,6 +108,7 @@ implements RegistrationManager, Runnable {
         queued = new SortedJobSet(metric);
         running = new JobSet(metric);
         rlogger = new RemoteLogger();
+        logger.info("Starting... id=" + id);
     }
 
     public Metric getMetric() {
@@ -111,16 +119,19 @@ implements RegistrationManager, Runnable {
     public void run() {
         try {
             script = ScriptManager.writeScript();
-            int planTime = 1;
+            int planTimeMillis = 1;
             while (!done) {
-                logger.debug("Plan: holding.size(): " + holding.size());
-                planTime = updatePlan();
-                logger.debug("Plan time: " + planTime);
+                logger.debug("Holding queue job count: " +
+                             holding.size());
+                planTimeMillis = updatePlan();
+                double planTime = ((double) planTimeMillis) / 1000;
+                logger.debug("Planning time (seconds): " +
+                             SECONDS_3.format(planTime));
                 if (holding.size() + incoming.size() == 0) {
-                    planTime = 100;
+                    planTimeMillis = 100;
                 }
                 synchronized (incoming) {
-                    incoming.wait(Math.min(planTime * 20, 10000) + 1000);
+                    incoming.wait(Math.min(planTimeMillis * 20, 10000) + 1000);
                 }
             }
         }
@@ -259,7 +270,7 @@ implements RegistrationManager, Runnable {
             Job j = queued.removeOne(TimeInterval.FOREVER,
                                      Integer.MAX_VALUE);
             if (j == null) {
-                CoasterService.error(19, "queuedsize > 0 but no job dequeued. Queued: " + queued,
+                CoasterService.error(19, "queued size > 0 but no job dequeued. Queued: " + queued,
                     new Throwable());
             }
             holding.add(j);
@@ -280,6 +291,9 @@ implements RegistrationManager, Runnable {
         }
     }
 
+    /**
+       Total request size in seconds
+     */
     private int computeTotalRequestSize() {
         double sz = 0;
         for (Job j : holding) {
@@ -290,27 +304,27 @@ implements RegistrationManager, Runnable {
                 sz = 1;
             logger.info("Jobs in holding queue: " + holding.size());
             String s = SECONDS.format(sz);
-            logger.info("Time estimate (seconds): " + s);
+            logger.info("Time estimate for holding queue (seconds): " + s);
         }
         return (int) sz;
     }
 
-    /** 
+    /**
        @return Time overallocation in seconds
-     */   
+     */
     public int overallocatedSize(Job j) {
         return overallocatedSize(j, settings);
     }
 
-    /** 
+    /**
        @return Time overallocation in seconds
-     */   
+     */
     public static int overallocatedSize(Job j, Settings settings) {
         int walltime = (int) j.getMaxWallTime().getSeconds();
         return overallocatedSize(walltime, settings);
     }
 
-    /** 
+    /**
        @param walltime in seconds
        @return Time overallocation in seconds
      */
@@ -375,22 +389,23 @@ implements RegistrationManager, Runnable {
     }
 
     /**
-       Move Jobs from {@link holding} to {@link queued} by 
-       allocating new Blocks for them 
+       Move Jobs from {@link holding} to {@link queued} by
+       allocating new Blocks for them
      */
     private Set<Job> allocateBlocks(double tsum) {
         Set<Job> remove = new HashSet<Job>();
-        
-        // Calculate chunkOfBlocks: how many blocks we may allocate 
+
+        // Calculate chunkOfBlocks: how many blocks we may allocate
         //     in this particular call to allocateBlocks()
         int maxBlocks = settings.getMaxBlocks();
         double fraction = settings.getAllocationStepSize();
-        int chunkOfBlocks = 
+        int chunkOfBlocks =
             (int) Math.ceil((maxBlocks - blocks.size()) * fraction);
 
+        // Last job queued to last new Block
         int last = 0;
         // Index through holding queue
-        int i = 0;
+        int index = 0;
         // Number of new Blocks allocated in this call
         int newBlocks = 0;
 
@@ -398,49 +413,53 @@ implements RegistrationManager, Runnable {
 
         String s = SECONDS.format(tsum);
         logger.info("Allocating blocks for (seconds): " + s);
-        
-        while (i <= holding.size() && newBlocks < chunkOfBlocks) {
+
+        while (index <= holding.size() && newBlocks < chunkOfBlocks) {
             // Job job = holding.get(i);
             int granularity = settings.getNodeGranularity() * settings.getJobsPerNode();
-            boolean granularityFit = (i - last) % granularity == 0;
-            boolean lastChunk = i == holding.size() - 1;
+            boolean granularityFit = (index - last) % granularity == 0;
+            boolean lastChunk = (index == holding.size() - 1);
             boolean sizeFit = false;
             if (!lastChunk) {
-                sizeFit = sumSizes(last, i) > size;
+                sizeFit = sumSizes(last, index) > size;
             }
             if ((granularityFit && sizeFit) || lastChunk) {
                 int msz = (int) size;
-                int lastwalltime = (int) holding.get(i).getMaxWallTime().getSeconds();
-                int h = overallocatedSize(holding.get(i));
+                int lastwalltime = (int) holding.get(index).getMaxWallTime().getSeconds();
+                int h = overallocatedSize(holding.get(index));
                 // height must be a multiple of the overallocation of the
                 // largest job
                 int maxt =
                   settings.getMaxtime() - (int) settings.getReserve().getSeconds();
+                // Is not h <= round(h, lastwalltime) ? -Justin
+                // If h > maxt, should we report a warning/error? -Justin
                 h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
                 int width =
                         Math.min(round(metric.width(msz, h), granularity),
                                  settings.getMaxNodes()
                                  * settings.getJobsPerNode());
-                int r = (i - last) % width;
+                int r = (index - last) % width;
                 if (logger.isInfoEnabled()) {
-                    logger.info("h: " + h + ", jj: " + lastwalltime +
-                                ", x-last: " + ", r: " + r +
-                                ", sumsz: " + sumSizes(last, i));
-                    logger.info("\t Considering: " + holding.get(i));
-                    logger.info("\t  Time estimate (seconds): " + h);
-                    logger.info("\t  Remaining: " + sumSizes(last, i));
+                	logger.info("\t Considering: " + holding.get(index));
+                    //logger.info("h: " + h + ", jj: " + lastwalltime +
+                    //            ", x-last: " + ", r: " + r +
+                    //            ", sumsz: " + sumSizes(last, i));
+                	logger.info("\t  Max Walltime (seconds):   " + lastwalltime);
+                    logger.info("\t  Time estimate (seconds):  " + h);
+                    logger.info("\t  Total for this new Block (est. seconds): " +
+                                sumSizes(last, index));
                 }
 
                 // read just number of jobs fitted based on granularity
-                i += (width - r);
+                index += (width - r);
                 if (r != 0) {
                     h = Math.min(h + lastwalltime, maxt);
                 }
 
-                if (logger.isInfoEnabled()) {
-                    logger.info("h: " + h + ", w: " + width + ", size: " + size + ", msz: " + msz
-                            + ", w*h: " + width * h);
-                }
+                //if (logger.isInfoEnabled()) {
+                //    logger.info("h: " + h + ", w: " + width + ", size: " + size + ", msz: " + msz
+                //            + ", w*h: " + width * h);
+                //}
 
                 Block b = new Block(width, TimeInterval.fromSeconds(h), this);
                 int ii = last;
@@ -450,15 +469,16 @@ implements RegistrationManager, Runnable {
                     ii++;
                 }
                 if (logger.isInfoEnabled()) {
-                    logger.info("Added: " + last + " - " + (ii - 1));
+                    logger.info("Queued: " + (ii-last) +
+                                " jobs to new Block");
                 }
-                i = ii - 1;
+                index = ii - 1;
                 addBlock(b);
-                last = i + 1;
+                last = index + 1;
                 newBlocks++;
                 size = metric.blockSize(newBlocks, chunkOfBlocks, tsum);
             }
-            i++;
+            index++;
         }
         if (remove.size() > 0) {
             logger.info("Added " + remove.size() + " jobs to new blocks");
@@ -539,6 +559,9 @@ implements RegistrationManager, Runnable {
         }
     }
 
+    /**
+      @return Time consumed in milliseconds
+     */
     public int updatePlan() throws PlanningException {
         Set<Job> tmp;
 
@@ -599,6 +622,9 @@ implements RegistrationManager, Runnable {
         running.remove(job);
     }
 
+    /**
+       Round v up to the next multiple of g
+     */
     private int round(int v, int g) {
         int r = v - (v % g) + g;
         return r;
