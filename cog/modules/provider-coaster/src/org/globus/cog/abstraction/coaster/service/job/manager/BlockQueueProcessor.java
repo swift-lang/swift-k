@@ -451,6 +451,7 @@ implements RegistrationManager, Runnable {
                 }
 
                 // read just number of jobs fitted based on granularity
+                // This result is unused and overwritten below. -Justin
                 index += (width - r);
                 if (r != 0) {
                     h = Math.min(h + lastwalltime, maxt);
