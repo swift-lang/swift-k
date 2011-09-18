@@ -20,7 +20,7 @@ public class LRUFileCache implements VDLFileCache {
 		return s.addFile(entry);
 	}
 
-	public synchronized CacheReturn addAndLockEntry(File entry) {
+	public CacheReturn addAndLockEntry(File entry) {
 		Site s = getSite(entry.getHost());
 		return s.addAndLockFile(entry);
 	}
