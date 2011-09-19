@@ -18,19 +18,19 @@ subdirectory called *run-_DATE_*, and generate useful HTML output and
 [width="30%",cols="s,15",options="header"]
 |==============================================
 |Options  |  Output
-|-a       |  Do not run ant dist.               
-|-c       |  Do not remove dist (clean)        
-|-f       |  Generate plain text output file.   
-|-h       |  This table.                      
-|-k <N>   |  Skip first N tests.                
-|-n <N>   |  Run N tests and quit.              
-|-p       |  Do not build the package.          
-|-s       |  Do not do a fresh svn checkout.    
-|-t       |  Tree mode (alias: -a,-c,-g,-p,-s) 
-|-x       |  Do not continue after a failure.   
-|-v       |  Verbose (set -x, HTML comments).    
-|-o output|  Location for cog and output.        
-|<GROUP>  |  GROUP argument.                     
+|-a       |  Do not run ant dist.
+|-c       |  Do not remove dist (clean)
+|-f       |  Generate plain text output file.
+|-h       |  This table.
+|-k <N>   |  Skip first N tests.
+|-n <N>   |  Run N tests and quit.
+|-p       |  Do not build the package.
+|-s       |  Do not do a fresh svn checkout.
+|-t       |  Tree mode (alias: -a,-c,-g,-p,-s)
+|-x       |  Do not continue after a failure.
+|-v       |  Verbose (set -x, HTML comments).
+|-o output|  Location for cog and output.
+|<GROUP>  |  GROUP argument.
 |==============================================
 Assuming your code is in *_/tmp/cog_*, where you
 have the conventional *_cog/modules/swift_* configuration,
@@ -48,7 +48,7 @@ Run *suite.sh -h* for quick help
 When something goes wrong, find and check *tests.log* or use *-v*
 
 The script generates by default an HTML report, use *-f* to change
-the output to plain text. 
+the output to plain text.
 
 2. Swift Location
 -----------------
@@ -70,13 +70,13 @@ The temporary output always goes to *OUTPUT* (*TOPDIR/exec.out*)
 -----------------
 Each *.swift* test may be accompanied by a:
 
-- *.setup.sh* 
+- *.setup.sh*
 - *.check.sh*
 - *.clean.sh*
 - *.timeout specifier.*
 
-The scripts may setup and inspect files in *RUNDIR* 
-including *exec.out* which must be accessed in *stdout.txt* 
+The scripts may setup and inspect files in *RUNDIR*
+including *exec.out* which must be accessed in *stdout.txt*
 because the currently running tested process writes to
 *exec.out*; *stdout.txt* is a copy.
 
@@ -150,6 +150,10 @@ SwiftScripts contain the token *_THIS-SCRIPT-SHOULD-FAIL_* somewhere.
 The response of *suite.sh* to the exit code of these Swift
 executions is reversed.
 
+Additionally, some tests may be in a known state of disrepair.  These
+SwiftScripts contain the token *_SKIP-THIS-TEST_* somewhere, which will
+cause the test suite to skip that test.
+
 8. Schedulers
 -------------
 Environment must contain *PROJECT*, *QUEUE*, and *WORK*.
@@ -207,7 +211,7 @@ The results are added to the HTML output, etc., automatically.
 The prefix number on each test is simply for sorting
 
 .E.g.,
-****************** 
+******************
  ls *.swift
 ******************
 
@@ -225,7 +229,7 @@ This is a work in progress. Here are some things you can do:
 - Run it!  Report problems to swift-devel.
 - Fix broken tests.
 - Break down test *GROUPs* into smaller, meaningful *GROUPs* ; it would be good to limit *GROUP* sizes to 20 or so tests.
-- Current work has focused on the HTML and stdout output, which is intended to be high-level and clean. 
+- Current work has focused on the HTML and stdout output, which is intended to be high-level and clean.
 
 ***********************************************************************************
 Using -v results in extremely verbose output.

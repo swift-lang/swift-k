@@ -1,4 +1,6 @@
 
+// SKIP-THIS-TEST
+
 type file;
 
 app (file o) copy (file i)

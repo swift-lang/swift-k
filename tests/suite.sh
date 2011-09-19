@@ -24,6 +24,7 @@ printhelp() {
 TEXTREPORT=0
 DEFAULT_TIMEOUT=30 # seconds
 RUN_ANT=1
+# If true, run "ant clean"
 CLEAN=1
 SKIP_TESTS=0
 NUMBER_OF_TESTS=1000000 # Run all tests by default
@@ -386,8 +387,8 @@ output_report() {
 	      		html_a_href $TEST_LOG "$LABEL"
 	      	elif [ "$RESULT" == "None" ]; then
 	      		html_td width 25
-		   		html "&nbsp;&nbsp;"
-   				html_~td
+		   	html "&nbsp;&nbsp;"
+   			html_~td
 	    	else
 	      		echo -e "${RED}FAILED${GRAY}"
 	      		cat $RUNDIR/$TEST_LOG < /dev/null
@@ -792,6 +793,12 @@ check_outputs() {
 swift_test_case() {
   SWIFTSCRIPT=$1
   NAME=${SWIFTSCRIPT%.swift}
+
+  if grep -q "SKIP-THIS-TEST" $SWIFTSCRIPT ; then
+    echo SKIP-THIS-TEST
+    INDIVIDUAL_TEST_TIME=0
+    return 0
+  fi
 
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
