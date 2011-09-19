@@ -84,8 +84,8 @@ Make a basic Block allocation plot from Coasters Block log lines
 swift_plotter.zsh -s blocks.{cfg,eps,data}
 ------------------------------------------
 
-Make a job runtime distribution plot from Coasters Cpu log lines
-----------------------------------------------------------------
+Make a job run time distribution plot from Coasters Cpu log lines
+-----------------------------------------------------------------
 
 . Normalize the log.
 
@@ -106,3 +106,24 @@ Make a job runtime distribution plot from Coasters Cpu log lines
 ------------------------------------------
 swift_plotter.zsh -s buckets.cfg buckets.eps buckets.data
 ------------------------------------------
+
+Utilities
+^^^^^^^^^
+
+* +iso-to-secs+
+Convert human-readable log dates to Unix time
+
+* +extract-start-time+
+Pull out the first Unix timestamp from the log file
+
+* +normalise-event-start-time+
+Convert Unix seconds to seconds from start time, given a start time file
+
+* +normalise-event-start-time-to-any+
+Convert Unix seconds to seconds from start time, given a start time number
+
+* +sec-to-hour.pl+
+Convert seconds to hours in the Unix time column.
+
+* +sec-to-min.pl+
+Convert seconds to minutes in the Unix time column.
