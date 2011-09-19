@@ -52,9 +52,38 @@ Larger Runs on Beagle
 A key factor in scaling up Swift runs on Beagle is to setup the sites.xml parameters.
 The following sites.xml parameters must be set to scale that is intended for a large run:
 
- * walltime: The expected walltime for completion of your run. This parameter is accepted in seconds.
- * slots: Number of qsub jobs needs to be submitted by swift. This number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 80 for large runs.
- * nodegranularity: Determines the number of nodes per job. Total nodes will thus be slots times nodegranularity. This may vary for advanced configurations though.
- * maxnodes: Determines the maximum number of nodes a job must pack into its qsub. This parameter determines the largest single job that your run will submit.
+ * *maxTime* : The expected walltime for completion of your run. This parameter is accepted in seconds.
+ * *slots* : Number of qsub jobs needs to be submitted by swift. This number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 80 for large runs.
+ * *nodeGranularity* : Determines the number of nodes per job. Total nodes will thus be slots times nodegranularity. This may vary for advanced configurations though.
+ * *maxNodes* : Determines the maximum number of nodes a job must pack into its qsub. This parameter determines the largest single job that your run will submit.
+ * *jobThrottle* : A factor that determines the number of tasks dispatched simultaneously. The intended number of simultaneous tasks must match the number of cores targeted. The number of tasks is calculated from the jobThrottle factor is as follows:
 
+----
+Number of Tasks = (JobThrottle x 100) + 1
+----
+
+Following is an example sites.xml for a 50 slots run with each slot occupying 4 nodes (thus, a 200 node run):
+
+-----
+<config>
+  <pool handle="pbs">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <profile namespace="globus" key="project">CI-CCR000013</profile>
+
+    <profile namespace="globus" key="ppn">24:cray:pack</profile>
+
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="maxTime">50000</profile>
+    <profile namespace="globus" key="slots">50</profile>
+    <profile namespace="globus" key="nodeGranularity">4</profile>
+    <profile namespace="globus" key="maxNodes">4</profile>
+
+    <profile namespace="karajan" key="jobThrottle">48.00</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+
+    <filesystem provider="local"/>
+    <workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+  </pool>
+</config>
+-----
 
