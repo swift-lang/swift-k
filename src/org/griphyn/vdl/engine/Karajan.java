@@ -1012,7 +1012,7 @@ public class Karajan {
 
 	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
 		StringTemplate funcST = template("function");
-		funcST.setAttribute("name", func.getName());
+		funcST.setAttribute("name", mangle(func.getName()));
 		ProcedureSignature funcSignature =  functionsMap.get(func.getName());
 		if(funcSignature == null) {
 			throw new CompilationException("Unknown function: @"+func.getName());
