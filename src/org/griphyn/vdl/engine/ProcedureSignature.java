@@ -16,6 +16,8 @@ public class ProcedureSignature {
 	private boolean anyNumOfInputArgs;
 	private boolean anyNumOfOutputArgs; /* this is maybe unnecessary*/
 	private int invocationMode;
+	
+	private boolean deprecated;
 
 	/* Procedure is built in to Swift. */
 	static public final int INVOCATION_INTERNAL = 600;
@@ -114,63 +116,46 @@ public class ProcedureSignature {
 	public int getInvocationMode() {
 		return this.invocationMode;
 	}
+	
+	public boolean isDeprecated() {
+        return deprecated;
+    }
+
+    public void setDeprecated(boolean deprecated) {
+        this.deprecated = deprecated;
+    }
+
+    public static final String STRING = "string";
+    public static final String STRING_ARRAY = "string[]";
+    public static final String INT = "int";
+    public static final String FLOAT = "float";
+    public static final String BOOLEAN = "boolean";
+    public static final String ANY = "-any";
+    public static final String VARGS = "-vargs";
 
 	public static Map<String,ProcedureSignature>
 	makeProcedureSignatures() {
 		Map<String,ProcedureSignature> proceduresMap = 
 		    new HashMap<String,ProcedureSignature>();
-
-		ProcedureSignature readData = new ProcedureSignature("readData");
-		FormalArgumentSignature rdInputArg = new FormalArgumentSignature(true);
-		readData.addInputArg(rdInputArg);
-		FormalArgumentSignature rdOutputArg = new FormalArgumentSignature(true);
-		readData.addOutputArg(rdOutputArg);
-		readData.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("readData", readData);
-
-		ProcedureSignature readData2 = new ProcedureSignature("readData2");
-		FormalArgumentSignature rd2InputArg = new FormalArgumentSignature(true);
-		readData2.addInputArg(rd2InputArg);
-		FormalArgumentSignature rd2OutputArg = new FormalArgumentSignature(true);
-		readData2.addOutputArg(rd2OutputArg);
-		readData2.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("readData2", readData2);
-
-		ProcedureSignature readStructured = new ProcedureSignature("readStructured");
-		FormalArgumentSignature rStInputArg = new FormalArgumentSignature(true);
-		readStructured.addInputArg(rStInputArg);
-		FormalArgumentSignature rStOutputArg = new FormalArgumentSignature(true);
-		readStructured.addOutputArg(rStOutputArg);
-		readStructured.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("readStructured", readStructured);
-
-		ProcedureSignature trace = new ProcedureSignature("trace");
-		trace.setAnyNumOfInputArgs();
-		trace.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("trace", trace);
-
-		ProcedureSignature tracef = new ProcedureSignature("tracef");
-		tracef.setAnyNumOfInputArgs();
-		tracef.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("tracef", tracef);
-
-		ProcedureSignature fprintf = new ProcedureSignature("ftracef");
-		fprintf.setAnyNumOfInputArgs();
-		fprintf.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("fprintf", fprintf);
-
-		ProcedureSignature assrt = new ProcedureSignature("assert");
-		assrt.setAnyNumOfInputArgs();
-		assrt.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("assert", assrt);
-
-		ProcedureSignature writeData = new ProcedureSignature("writeData");
-		FormalArgumentSignature wdInputArg = new FormalArgumentSignature(true);
-		writeData.addInputArg(wdInputArg);
-		FormalArgumentSignature wdOutputArg = new FormalArgumentSignature(true);
-		writeData.addOutputArg(wdOutputArg);
-		writeData.setInvocationMode(INVOCATION_INTERNAL);
-		proceduresMap.put("writeData", writeData);
+		
+		add(proceduresMap, "readData", returns(ANY), args(ANY));
+		add(proceduresMap, "readData2", returns(ANY), args(ANY));
+		add(proceduresMap, "readStructured", returns(ANY), args(ANY));
+		add(proceduresMap, "trace", returns(), args(VARGS));
+		add(proceduresMap, "tracef", returns(), args(VARGS));
+		add(proceduresMap, "fprintf", returns(), args(VARGS));
+		add(proceduresMap, "assert", returns(), args(VARGS));
+		add(proceduresMap, "writeData", returns(ANY), args(ANY));
+		
+		// backwards compatible; to be removed in the future
+		addDeprecated(proceduresMap, "readdata", returns(ANY), args(ANY));
+        addDeprecated(proceduresMap, "readdata2", returns(ANY), args(ANY));
+        addDeprecated(proceduresMap, "readstructured", returns(ANY), args(ANY));
+        addDeprecated(proceduresMap, "writedata", returns(ANY), args(ANY));
+		
+		for (Map.Entry<String, ProcedureSignature> e : proceduresMap.entrySet()) {
+		    e.getValue().setInvocationMode(INVOCATION_INTERNAL);
+		}
 
 		return proceduresMap;
 	}
@@ -180,156 +165,113 @@ public class ProcedureSignature {
 		Map<String,ProcedureSignature> functionsMap = 
 		    new HashMap<String,ProcedureSignature>();
 
-		ProcedureSignature arg = new ProcedureSignature("arg");
-		FormalArgumentSignature argIn1 = new FormalArgumentSignature("string");
-		arg.addInputArg(argIn1);
-		FormalArgumentSignature argIn2 = new FormalArgumentSignature("string");
-		argIn2.setOptional(true);
-		arg.addInputArg(argIn2);
-		FormalArgumentSignature argOut1 = new FormalArgumentSignature("string");
-		arg.addOutputArg(argOut1);
-		functionsMap.put(arg.getName(), arg);
+		add(functionsMap, "arg", returns(STRING), args(STRING, optional(STRING)));
 
-		ProcedureSignature extractint = new ProcedureSignature("extractint");
-		FormalArgumentSignature extractintIn1 = new FormalArgumentSignature(true); /* file can be specified as any type */
-		extractint.addInputArg(extractintIn1);
-		FormalArgumentSignature extractintOut1 = new FormalArgumentSignature("int");
-		extractint.addOutputArg(extractintOut1);
-		functionsMap.put(extractint.getName(), extractint);
+		add(functionsMap, "extractInt", returns(INT), args(ANY));
+		add(functionsMap, "filename", returns(STRING), args(ANY));
+		add(functionsMap, "filenames", returns(STRING_ARRAY), args(ANY));
+		add(functionsMap, "dirname", returns(STRING), args(ANY));
+		add(functionsMap, "length", returns(INT), args(ANY));
+		
+		add(functionsMap, "regexp", returns(STRING), args(STRING, STRING, STRING));
+		add(functionsMap, "strcat", returns(STRING), args(VARGS));
+		add(functionsMap, "sprintf", returns(STRING), args(VARGS));
+		add(functionsMap, "strcut", returns(STRING), args(STRING, STRING));
+		add(functionsMap, "strstr", returns(INT), args(STRING, STRING));
+		add(functionsMap, "strsplit", returns(STRING_ARRAY), args(STRING, STRING));
+		
+		add(functionsMap, "toInt", returns(INT), args(ANY));
+		add(functionsMap, "toFloat", returns(FLOAT), args(ANY));
+		add(functionsMap, "toString", returns(STRING), args(ANY));
+		
+		add(functionsMap, "format", returns(STRING), args(FLOAT, INT));
+		add(functionsMap, "pad", returns(STRING), args(INT, INT));
+		
+		add(functionsMap, "java", returns("java"), args(VARGS));
 
-		ProcedureSignature filename = new ProcedureSignature("filename");
-		FormalArgumentSignature filenameIn1 = new FormalArgumentSignature(true); /* file can be specified as any type */
-		filename.addInputArg(filenameIn1);
-		FormalArgumentSignature filenameOut1 = new FormalArgumentSignature("string");
-		filename.addOutputArg(filenameOut1);
-		functionsMap.put(filename.getName(), filename);
-
-		ProcedureSignature filenames = new ProcedureSignature("filenames");
-		FormalArgumentSignature filenamesIn1 = new FormalArgumentSignature(true); /* file can be specified as any type */
-		filenames.addInputArg(filenamesIn1);
-		FormalArgumentSignature filenamesOut1 = new FormalArgumentSignature("string[]"); /* i think this is what it returns */
-		filenames.addOutputArg(filenamesOut1);
-		functionsMap.put(filenames.getName(), filenames);
-
-        ProcedureSignature dirname = new ProcedureSignature("dirname");
-		FormalArgumentSignature dirnameIn1 = new FormalArgumentSignature(true); /* dir can be specified as any type */
-		dirname.addInputArg(dirnameIn1);
-		FormalArgumentSignature dirnameOut1 = new FormalArgumentSignature("string");
-		dirname.addOutputArg(dirnameOut1);
-		functionsMap.put(dirname.getName(), dirname);
-
-		ProcedureSignature length = new ProcedureSignature("length");
-		FormalArgumentSignature lengthIn1 = new FormalArgumentSignature(true);
-		length.addInputArg(lengthIn1);
-		FormalArgumentSignature lengthOut1 = new FormalArgumentSignature("int");
-		length.addOutputArg(lengthOut1);
-		functionsMap.put(length.getName(), length);
-
-		ProcedureSignature regexp = new ProcedureSignature("regexp");
-		FormalArgumentSignature regexpIn1 = new FormalArgumentSignature("string");
-		regexp.addInputArg(regexpIn1);
-		FormalArgumentSignature regexpIn2 = new FormalArgumentSignature("string");
-		regexp.addInputArg(regexpIn2);
-		FormalArgumentSignature regexpIn3 = new FormalArgumentSignature("string");
-		regexp.addInputArg(regexpIn3);
-		FormalArgumentSignature regexpOut1 = new FormalArgumentSignature("string");
-		regexp.addOutputArg(regexpOut1);
-		functionsMap.put(regexp.getName(), regexp);
-
-		ProcedureSignature strcat = new ProcedureSignature("strcat");
-		strcat.setAnyNumOfInputArgs();
-		FormalArgumentSignature strcatOut1 = new FormalArgumentSignature("string");
-		strcat.addOutputArg(strcatOut1);
-		functionsMap.put(strcat.getName(), strcat);
-
-		ProcedureSignature sprintf = new ProcedureSignature("sprintf");
-		sprintf.setAnyNumOfInputArgs();
-		FormalArgumentSignature sprintfOut1 = new FormalArgumentSignature("string");
-		sprintf.addOutputArg(sprintfOut1);
-		functionsMap.put(sprintf.getName(), sprintf);
-
-		ProcedureSignature strcut = new ProcedureSignature("strcut");
-		FormalArgumentSignature strcutIn1 = new FormalArgumentSignature("string");
-		strcut.addInputArg(strcutIn1);
-		FormalArgumentSignature strcutIn2 = new FormalArgumentSignature("string");
-		strcut.addInputArg(strcutIn2);
-		FormalArgumentSignature strcutOut1 = new FormalArgumentSignature("string");
-		strcut.addOutputArg(strcutOut1);
-		functionsMap.put(strcut.getName(), strcut);
-
-		ProcedureSignature strstr = new ProcedureSignature("strstr");
-		FormalArgumentSignature strstrIn1 = new FormalArgumentSignature("string");
-		strstr.addInputArg(strstrIn1);
-		FormalArgumentSignature strstrIn2 = new FormalArgumentSignature("string");
-		strstr.addInputArg(strstrIn2);
-		FormalArgumentSignature strstrOut1 = new FormalArgumentSignature("int");
-		strstr.addOutputArg(strstrOut1);
-		functionsMap.put(strstr.getName(), strstr);
-
-		ProcedureSignature strsplit = new ProcedureSignature("strsplit");
-		FormalArgumentSignature strsplitIn1 = new FormalArgumentSignature("string");
-		strsplit.addInputArg(strsplitIn1);
-		FormalArgumentSignature strsplitIn2 = new FormalArgumentSignature("string");
-		strsplit.addInputArg(strsplitIn2);
-		FormalArgumentSignature strsplitOut1 = new FormalArgumentSignature("string[]");
-		strsplit.addOutputArg(strsplitOut1);
-		functionsMap.put(strsplit.getName(), strsplit);
-
-		ProcedureSignature toint = new ProcedureSignature("toint");
-		FormalArgumentSignature tointIn1 = new FormalArgumentSignature(true);
-		toint.addInputArg(tointIn1);
-		FormalArgumentSignature toOut1 = new FormalArgumentSignature("int");
-		toint.addOutputArg(toOut1);
-		functionsMap.put(toint.getName(), toint);
-
-		ProcedureSignature tofloat = new ProcedureSignature("tofloat");
-		FormalArgumentSignature tofloatIn1 = new FormalArgumentSignature(true);
-		tofloat.addInputArg(tofloatIn1);
-		FormalArgumentSignature tofloatOut1 = new FormalArgumentSignature("float");
-		tofloat.addOutputArg(tofloatOut1);
-		functionsMap.put(tofloat.getName(), tofloat);
-
-	    ProcedureSignature format = new ProcedureSignature("format");
-	    FormalArgumentSignature formatIn1 = new FormalArgumentSignature("float");
-	    FormalArgumentSignature formatIn2 = new FormalArgumentSignature("int");
-	    format.addInputArg(formatIn1);
-	    format.addInputArg(formatIn2);
-	    FormalArgumentSignature formatOut = new FormalArgumentSignature("string");
-	    format.addOutputArg(formatOut);
-	    functionsMap.put(format.getName(), format);
-
-	    ProcedureSignature pad = new ProcedureSignature("pad");
-        FormalArgumentSignature padIn1 = new FormalArgumentSignature("int");
-        FormalArgumentSignature padIn2 = new FormalArgumentSignature("int");
-        pad.addInputArg(padIn1);
-        pad.addInputArg(padIn2);
-        FormalArgumentSignature padOut = new FormalArgumentSignature("string");
-        pad.addOutputArg(padOut);
-        functionsMap.put(pad.getName(), pad);
-
-		ProcedureSignature tostring = new ProcedureSignature("tostring");
-		FormalArgumentSignature tostringIn1 = new FormalArgumentSignature(true);
-		tostring.addInputArg(tostringIn1);
-		FormalArgumentSignature tostringOut1 = new FormalArgumentSignature("string");
-		tostring.addOutputArg(tostringOut1);
-		functionsMap.put(tostring.getName(), tostring);
-
-		ProcedureSignature java = new ProcedureSignature("java");
-		java.setAnyNumOfInputArgs();
-		FormalArgumentSignature output = new FormalArgumentSignature("java");
-		java.addOutputArg(output);
-		functionsMap.put(java.getName(), java);
-
-		ProcedureSignature exists = new ProcedureSignature("exists");
-		exists.setAnyNumOfInputArgs();
-		FormalArgumentSignature existsOut1 = new FormalArgumentSignature("boolean");
-		exists.addOutputArg(existsOut1);
-		functionsMap.put(exists.getName(), exists);
+		add(functionsMap, "exists", returns(BOOLEAN), args(VARGS));
+		
+		
+		// backwards compatible and deprecated lower case version
+		addDeprecated(functionsMap, "extractint", returns(INT), args(ANY));
+		addDeprecated(functionsMap, "toint", returns(INT), args(ANY));
+        addDeprecated(functionsMap, "tofloat", returns(FLOAT), args(ANY));
+        addDeprecated(functionsMap, "tostring", returns(STRING), args(ANY));
 
 		return functionsMap;
 	}
+	
+	public static final FormalArgumentSignature VARG_SIG = new FormalArgumentSignature(true);
 
-	public String toString() {
+	private static void addDeprecated(Map<String, ProcedureSignature> map, 
+            String name, FormalArgumentSignature[] returns, FormalArgumentSignature[] args) {
+	    ProcedureSignature sig = buildSig(name, returns, args);
+	    sig.setDeprecated(true);
+	    map.put(name, sig);
+	}
+	
+	private static void add(Map<String, ProcedureSignature> map, 
+	        String name, FormalArgumentSignature[] returns, FormalArgumentSignature[] args) {
+	    map.put(name, buildSig(name, returns, args));
+    }
+
+    private static ProcedureSignature buildSig(String name,
+            FormalArgumentSignature[] returns, FormalArgumentSignature[] args) {
+        ProcedureSignature sig = new ProcedureSignature(name);
+        for (FormalArgumentSignature arg : args) {
+            if (arg == VARG_SIG) {
+                sig.setAnyNumOfInputArgs();
+            }
+            else {
+                sig.addInputArg(arg);
+            }
+        }
+        for (FormalArgumentSignature ret : returns) {
+            sig.addOutputArg(ret);
+        }
+        return sig;
+    }
+
+    private static FormalArgumentSignature arg(String type) {
+        if (type.equals(ANY)) {
+            return new FormalArgumentSignature(true);
+        }
+        else if (type.equals(VARGS)) {
+            return VARG_SIG;
+        }
+        else {
+            return new FormalArgumentSignature(type);
+        }
+    }
+
+    private static FormalArgumentSignature[] returns(Object ... returns) {
+        return buildArgs(returns);
+    }
+
+    private static FormalArgumentSignature[] args(Object ... args) {
+        return buildArgs(args);
+    }
+
+    private static FormalArgumentSignature[] buildArgs(Object[] args) {
+        FormalArgumentSignature[] r = new FormalArgumentSignature[args.length];
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof FormalArgumentSignature) {
+                r[i] = (FormalArgumentSignature) args[i];
+            }
+            else {
+                r[i] = arg((String) args[i]);
+            }
+        }
+        return r;
+    }
+    
+    private static FormalArgumentSignature optional(String type) {
+        FormalArgumentSignature arg = arg(type);
+        arg.setOptional(true);
+        return arg;
+    }
+
+    public String toString() {
 	    return outputArgs + " " + name + inputArgs;
 	}
 }

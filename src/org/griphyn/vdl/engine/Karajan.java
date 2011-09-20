@@ -155,8 +155,27 @@ public class Karajan {
 	protected StringTemplate template(String name) {
 		return m_templates.getInstanceOf(name);
 	}
+	
+	private void warn(XmlObject obj, String msg) {
+	    msg = "Warning: " + msg + ", at " + getLine(obj.getDomNode());
+	    logger.info(msg);
+	    System.err.println(msg);
+    }
 
-	private void processImports(Program prog) throws CompilationException {
+	private String getLine(Node n) {
+	    if (n == null) {
+	        return "line unknown";
+	    }
+        Node src = n.getAttributes().getNamedItem("src");
+        if (src == null) {
+            return getLine(n.getParentNode());
+        }
+        else {
+            return src.getNodeValue();
+        }
+    }
+
+    private void processImports(Program prog) throws CompilationException {
 
 		Imports imports = prog.getImports();
 		if(imports!=null) {
@@ -374,7 +393,7 @@ public class Karajan {
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
             if (Character.isUpperCase(c)) {
-                sb.append('-');
+                sb.append('_');
             }
             sb.append(Character.toLowerCase(c));
         }
@@ -631,6 +650,11 @@ public class Karajan {
 			    new HashMap<String, FormalArgumentSignature>();
 
 			ProcedureSignature proc = proceduresMap.get(procName);
+			
+			if (proc.isDeprecated()) {
+			    warn(call, "Procedure " + procName + " is deprecated");
+			}
+			
 			StringTemplate callST;
 			if(proc.getInvocationMode() == ProcedureSignature.INVOCATION_USERDEFINED) {
 				callST = template("callUserDefined");
@@ -795,7 +819,7 @@ public class Karajan {
 		}
 	}
 
-	public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
+    public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
 		VariableScope loopScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
 		VariableScope innerScope = new VariableScope(this, loopScope, VariableScope.ENCLOSURE_LOOP);
 
@@ -1350,6 +1374,9 @@ public class Karajan {
 			if (funcSignature != null) {
 				/* Functions have only one output parameter */
 				st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
+				if (funcSignature.isDeprecated()) {
+				    warn(f, "Function " + name + " is deprecated");
+				}
 			} else
 				throw new CompilationException("Function " + name + " is not defined.");
 			return st;
@@ -1371,6 +1398,8 @@ public class Karajan {
 		        throw new CompilationException("Procedure " + name + " must have exactly one " +
 		        		"return value to be used in an expression.");
 		    }
+		    
+		    warn(c, "Procedure " + name + " is deprecated");
 
 		    StringTemplate call = template("callexpr");
 
