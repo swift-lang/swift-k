@@ -2,26 +2,35 @@
 
   <namespace prefix="swiftscript">
 	<!-- string functions library -->
-	<export name="extract-int"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ExtractInt"/></export>
-	<export name="read-data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData"/></export>
-	<export name="read-data2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
-	<export name="read-structured"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="extract_int"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ExtractInt"/></export>
+	<export name="read_data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData"/></export>
+	<export name="read_data2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="read_structured"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
 	<export name="write-data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strstr"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strsplit"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="regexp"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
-	<export name="to-int"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
-	<export name="to-float"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="to_int"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="to_float"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="format"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="pad"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="sprintf"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Sprintf"/></export>
-	<export name="to-string"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="to_string"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="assert"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Assert"/></export>
 	<export name="trace"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="tracef"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Tracef"/></export>
 	<export name="fprintf"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Fprintf"/></export>
+	
+	<!-- included for backwards compatibility -->
+	<export name="readdata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData"/></export>
+	<export name="readdata2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="readstructured"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="writedata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
+	<export name="toint"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="tofloat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="tostring"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 
 	<export name="java"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Java"/></export>
 	<export name="filename"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
