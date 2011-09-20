@@ -2,7 +2,7 @@
 # GROUPLIST definition to run on Intrepid
 
 GROUPLIST=( $TESTDIR/local \
-	    $TESTDIR/providers/local-cobalt/intrepid \
+            $TESTDIR/providers/intrepid \
           )
 
 checkvars WORK QUEUE PROJECT
