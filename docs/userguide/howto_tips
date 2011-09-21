@@ -27,7 +27,17 @@ More information on the TeraGrid allocations process can be found here
 
 Launching MPI jobs from Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Here is an example of running a simple MPI program.
+
+There are several ways to run MPI jobs under Swift.
+The simplest is to simply launch the desired +mpiexec+ command line
+locally by using the local provider.  Two additional use cases are
+noted here.
+
+==== Submission of MPI jobs to remote queues
+
+// TODO: This seems to require appropriate PBS profile settings
+
+This use case allows the user to submit an MPI job to a remote queue.
 
 In SwiftScript, we make an invocation that does not look any different
 from any other invocation. In the below code, we do not have any input
@@ -65,11 +75,41 @@ Because of the way that Swift runs its server side code,
 provider-specific MPI modes (such as GRAM jobType=mpi) should not be
 used. Instead, the mpirun command should be explicitly invoked.
 
+==== MPICH/Coasters
+
+In this case, the user desires to launch many MPI jobs within a single
+Coasters allocation, reusing Coasters workers for variable-sized jobs.
+The reuse of the Coasters workers allows the user to launch many
+MPI jobs in rapid succession with minimal overhead.
+
+The user must access to MPICH compiled for sockets, with +mpiexec+ in
+the +PATH+ environment variable.  Swift uses this MPICH installation
+to launch the user processes on the remote Coasters workers, which are
+able to connect back to +mpiexec+ and coordinate the job launch.  The
+infrastructure must allow the user MPI processes to find each other
+and communicate over sockets.
+
+To configure the user MPI job, simply add +mpi.processes+ and
++mpi.ppn+ to the profile in the +tc.file+:
+
+----
+pbs_site my_program  /path/to/program null null globus::mpi.processes=16;globus::mpi.ppn=8
+----
+
+Coasters must be set with +jobsPerNode=1+.
+
+This runs +mpiexec+ locally, and allocates 2 Coasters workers (2
+nodes), each with 8 MPI processes.  Thus, +MPI_COMM_WORLD+ has size
+16.
+
+
+
 Running on Windows
 ~~~~~~~~~~~~~~~~~~
-Since 10/11/09, the development version of Swift has the ability to run
-on a Windows machine, as well as the ability to submit jobs to a Windows
-site (provided that an appropriate provider is used).
+
+Swift has the ability to run on a Windows machine, as well as the
+ability to submit jobs to a Windows site (provided that an appropriate
+provider is used).
 
 In order to launch Swift on Windows, use the provided batch file
 (swift.bat). In certain cases, when a large number of jar libraries are
