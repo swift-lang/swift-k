@@ -34,18 +34,18 @@ from any other invocation. In the below code, we do not have any input
 files, and have two output files on stdout and stderr:
 
 ----
-type file;  
-  
-(file o, file e) p() {   
-    app {  
-        mpi stdout=@filename(o) stderr=@filename(e);  
-    }  
-}  
-  
-file mpiout <"mpi.out">;  
-file mpierr <"mpi.err">;  
-  
-(mpiout, mpierr) = p();  
+type file;
+
+(file o, file e) p() {
+    app {
+        mpi stdout=@filename(o) stderr=@filename(e);
+    }
+}
+
+file mpiout <"mpi.out">;
+file mpierr <"mpi.err">;
+
+(mpiout, mpierr) = p();
 ----
 
 Now we define how 'mpi' will run in tc.data:
@@ -58,7 +58,7 @@ installed on the remote site:
 
 ----
 #!/bin/bash
-mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out 
+mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out
 ----
 
 Because of the way that Swift runs its server side code,
@@ -95,7 +95,7 @@ of this, specify the "sysinfo" attribute for the "pool" element in the
 site catalog. For example:
 
 ----
-<pool handle="localhost" sysinfo="INTEL32::WINDOWS">  
-...  
-</pool>  
+<pool handle="localhost" sysinfo="INTEL32::WINDOWS">
+...
+</pool>
 ----
