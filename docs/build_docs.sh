@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Usage: See usage() for usage
+
 # crash: Report a problem and exit
 crash()
 {
@@ -8,17 +10,43 @@ crash()
     exit 1
 }
 
-# Change file permissions to values set below
+# Output directory mode
 CHMOD_DIRECTORY_MODE="775"
+# Output file mode
 CHMOD_FILE_MODE="664"
+# Output group
 GROUP="vdl2-svn"
+# Make PDFs iff MAKE_PDF=1
+MAKE_PDF=1
 
-# Verify correct arguments
-if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "-help" ]; then
-   crash "Usage: ./build_docs.sh /path/to/copy/output"
-fi
+# See getopts loop below for options
+usage()
+{
+  echo "Usage: ./build_docs.sh <opts> <installation directory>"
+}
+
+while getopts "dh" OPTION
+do
+  case ${OPTION} in
+    d)
+      MAKE_PDF=0
+      shift
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+  esac
+done
 
 INSTALLATION_DIRECTORY=$1
+
+if [[ $INSTALLATION_DIRECTORY == "" ]]
+then
+  echo "Not given: installation directory"
+  usage
+  exit 1
+fi
 
 # Create installation directory if needed
 if [ ! -d "$INSTALLATION_DIRECTORY" ]; then
@@ -43,9 +71,16 @@ do
    for file in $FILES
    do
       echo Converting $directory"$file" to HTML
-      asciidoc -a toc -a toclevels=2 -a max-width=750px -a textwidth=80 -a stylesheet=$(pwd)/../stylesheets/asciidoc.css $file
-      echo Converting $directory"$file" to PDF
-      a2x --format=pdf --no-xmllint $file 
+      asciidoc -a toc -a toclevels=2                            \
+               -a max-width=750px                               \
+               -a textwidth=80                                  \
+               -a stylesheet=$(pwd)/../stylesheets/asciidoc.css \
+               $file
+      if (( MAKE_PDF ))
+      then
+        echo Converting $directory"$file" to PDF
+        a2x --format=pdf --no-xmllint $file
+      fi
    done
 
    if [ ! -d "$INSTALLATION_DIRECTORY/$VERSION" ]; then
