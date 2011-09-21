@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
+
+# This does not run under python3.2 - insist on 2.7 for now
 
 # ensures that that there is a sites file specified and that it contains
 # well-formed xml as well as essential attributes for the specified provider
