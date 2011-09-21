@@ -344,7 +344,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     /**
        Enter the text content of given files into the log
-       @throws IOException
+       @param name A token printed in the log
+       @param file The text file to copy into the log
+       @throws IOException 
      */
     public static void debugText(String name, File file) {
     	Logger textLogger = Logger.getLogger("swift.textfiles");
@@ -361,15 +363,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	}
 
     static void debugSitesText(VDL2Config config) {
-    	VDL2Config defaultConfig = null;
-    	try {
-			defaultConfig = VDL2Config.getDefaultConfig(); 
-			
-		} catch (IOException e) {
-			logger.warn("Could not log sites file text");			
-		}
+    	String defaultPoolFile = 
+        	System.getProperty("swift.home") + File.separator + 
+        	"etc" + File.separator + "sites.xml";
+
 		String poolFile = config.getPoolFile();
-		String defaultPoolFile = defaultConfig.getPoolFile();
+		System.out.println(defaultPoolFile);
 		if (poolFile.equals(defaultPoolFile)) {
 			Logger textLogger = Logger.getLogger("swift.textfiles");
 			textLogger.debug("using default sites file");
