@@ -386,13 +386,15 @@ public class Karajan {
 
     /**
      * Convert to a case-insensitive representation by
-     * pre-pending a '^' to upper case letters
+     * pre-pending a '_' to upper case letters. If the
+     * original name contains a '_' it will be converted 
+     * to "__" (two underscores).
      */
 	private String mangle(String name) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
-            if (Character.isUpperCase(c)) {
+            if (Character.isUpperCase(c) || c == '_') {
                 sb.append('_');
             }
             sb.append(Character.toLowerCase(c));
