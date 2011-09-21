@@ -25,7 +25,8 @@ public class RuntimeStats extends FunctionsCollection {
 
 	public static final Arg PA_STATE = new Arg.Positional("state");
     //formatter for timestamp against std.err lines
-	public static final SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+	public static SimpleDateFormat formatter = 
+		new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 	public static final int MIN_PERIOD_MS=1000;
 	public static final int MAX_PERIOD_MS=30000;
 
@@ -74,9 +75,20 @@ public class RuntimeStats extends FunctionsCollection {
 		t.setDaemon(true);
 		t.start();
 		setTicker(stack, t);
+		
+		// Allow user to reformat output date
+		String format;
+		try {
+			format = VDL2Config.getDefaultConfig().getTickerDateFormat();
+		} 
+		catch (IOException e) {
+			throw new ExecutionException(e);
+		}
+		if (format != null && format.length() > 0)
+			formatter = 
+				new SimpleDateFormat(format);
 		return null;
 	}
-
 
 	public Object vdl_setprogress(VariableStack stack) throws ExecutionException {
 		setProgress(stack, TypeUtil.toString(PA_STATE.getValue(stack)));
@@ -116,6 +128,8 @@ public class RuntimeStats extends FunctionsCollection {
 		private boolean disabled;
 		private boolean shutdown;
 
+		String tickerPrefix;
+		
 		public ProgressTicker() {
 			super("Progress ticker");
 			try {
@@ -123,6 +137,8 @@ public class RuntimeStats extends FunctionsCollection {
 					logger.info("Ticker disabled in configuration file");
 					disabled = true;
 				}
+				tickerPrefix = 
+					VDL2Config.getConfig().getTickerPrefix();
 			}
 			catch (IOException e) {
 				logger.debug("Could not read swift properties", e);
@@ -156,7 +172,7 @@ public class RuntimeStats extends FunctionsCollection {
 			long now = System.currentTimeMillis();
 			if(lastDumpTime + MIN_PERIOD_MS > now) return;
 			lastDumpTime = now;
-			printStates("Progress:");
+			printStates(tickerPrefix);
 		}
 
 		void finalDumpState() {
@@ -190,16 +206,16 @@ public class RuntimeStats extends FunctionsCollection {
 			return summary;
 		}
 
-		void printStates(String header) {
+		void printStates(String prefix) {
 			Map<String, Integer> summary = getSummary();
 		//	SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 
 			// output the results of summarization, in a relatively
 			// pretty form - first the preferred order listed elements,
 			// and then anything remaining
-			System.err.print(header);
+			System.err.print(prefix + " ");
 			//System.err.print("  time:" + (System.currentTimeMillis() - start));
-			System.err.print("  time: " + formatter.format(System.currentTimeMillis()));
+			System.err.print(formatter.format(System.currentTimeMillis()));
 
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];

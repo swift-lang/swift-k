@@ -98,6 +98,8 @@ public class VDL2Config extends Properties {
 		
 		put("cdm.broadcast.mode", "file");
 		put("use.provider.staging", "false");
+		put("ticker.date.format", "");
+		put("ticker.prefix", "Progress:  time:");
 	}
 
 	private VDL2Config(VDL2Config other) {
@@ -215,6 +217,14 @@ public class VDL2Config extends Properties {
 		return Boolean.valueOf(getProperty(VDL2ConfigProperties.PROVENANCE_LOG, "false")).booleanValue();
 	}
 
+	public String getTickerDateFormat() { 
+		return getProperty("ticker.date.format");
+	}
+	
+	public String getTickerPrefix() { 
+		return getProperty("ticker.prefix");
+	}
+	
 	public String toString() {
 		return "Swift configuration " + files;
 	}
