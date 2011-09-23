@@ -32,6 +32,7 @@ maxtries=10
 for (( tries=0; tries < $maxtries; tries++ )); do
   sleep 1
   errors=0
+  rm service.sports service.wports
   for i in `seq -w 0 $((NSERVICES - 1))`; do
     if [ -s service-$i.sport -a -s service-$i.wport ]; then
       echo $(cat service-$i.sport) >> service.sports
