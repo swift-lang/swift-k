@@ -12,23 +12,18 @@ crash()
 PID_FILE="$HOME/.swift/.coaster-service-pids"
 SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instances"
 
-if [ -f "$HOME/.swift/coaster-service.conf" ]; then
+# Import settings
+if [ -f "./coaster-service.conf" ]; then
+   CONFIG_FILE="./coaster-service.conf"
+elif [ -f "$HOME/.swift/coaster-service.conf" ]; then
    CONFIG_FILE="$HOME/.swift/coaster-service.conf"
 elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
    CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
-fi
-
-if [ -z "$CONFIG_FILE" ]; then
-   crash "Unable to find coaster-service.conf!"
-fi
-
-
-# Read config file to determine worker mode
-if [ -f "$CONFIG_FILE" ]; then
-   source "$CONFIG_FILE"
 else
    crash "Cannot find coaster-service.conf!"
 fi
+
+source "$CONFIG_FILE"
 
 echo Ending coaster processes..
 if [ -f "$PID_FILE" ]; then
