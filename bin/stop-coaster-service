@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Files relative to location of this script
-PID_FILE=".coaster-service-pids"
-SWIFTVM_INSTANCES=".swiftvm_instances"
-CONFIG_FILE="../etc/coaster-service.conf"
-
 # crash: Report a problem and exit
 crash()
 {
@@ -13,7 +8,20 @@ crash()
    exit 1
 }
 
-pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
+# Location of required files
+PID_FILE="$HOME/.swift/.coaster-service-pids"
+SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instances"
+
+if [ -f "$HOME/.swift/coaster-service.conf" ]; then
+   CONFIG_FILE="$HOME/.swift/coaster-service.conf"
+elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
+   CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
+fi
+
+if [ -z "$CONFIG_FILE" ]; then
+   crash "Unable to find coaster-service.conf!"
+fi
+
 
 # Read config file to determine worker mode
 if [ -f "$CONFIG_FILE" ]; then

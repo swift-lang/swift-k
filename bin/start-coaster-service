@@ -35,7 +35,7 @@ start-workers-futuregrid()
    for MACHINE in $WORKER_HOSTS
    do
       # Enable ssh tunneling if needed
-      if [ $SSH_TUNNELING == "yes" ]; then
+      if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
          echo $! >> $PID_FILE
       fi
@@ -58,6 +58,12 @@ start-workers-ssh()
    fi
    for MACHINE in $WORKER_HOSTS
    do
+      # Enable ssh tunneling if needed
+      if [ "$SSH_TUNNELING" == "yes" ]; then
+         ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
+         echo $! >> $PID_FILE
+      fi
+
       scp $SWIFT_BIN/$WORKER $MACHINE:$WORKER_WORK > /dev/null 2>&1
       echo Starting worker on $MACHINE
       ssh $MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
@@ -105,13 +111,21 @@ start-workers-cobalt()
   return 0
 }
 
-PID_FILE=".coaster-service-pids"
+if [ ! -d "$HOME/.swift" ]; then
+   mkdir -p "$HOME/.swift" || crash "Unable to create $HOME/.swift"
+fi
+
+PID_FILE="$HOME/.swift/.coaster-service-pids"
 RUN_DIR=`pwd`
-pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
 
 # Import settings
-CONFIG_FILE="../etc/coaster-service.conf"
-if [ -f "$CONFIG_FILE" ]; then
+if [ -f "$HOME/.swift/coaster-service.conf" ]; then
+   CONFIG_FILE="$HOME/.swift/coaster-service.conf"
+elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
+   CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
+fi
+
+if [ -n "$CONFIG_FILE" ]; then
    source "$CONFIG_FILE"
 else
    crash "Cannot find coaster-service.conf!"
@@ -231,7 +245,7 @@ echo Generating sites.xml
 gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
 
 # Generate config file
-if [ $SHARED_FILESYSTEM == "no" ]; then
+if [ "$SHARED_FILESYSTEM" == "no" ]; then
 echo Generating config file
 cat > $RUN_DIR/cf << EOF
 use.provider.staging=true
