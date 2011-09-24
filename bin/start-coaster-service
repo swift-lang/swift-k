@@ -8,15 +8,6 @@ crash()
    exit 1
 }
 
-# Copy files
-copy_requested_files()
-{
-   for file in $FILES_TO_COPY
-   do
-      scp $file $WORKER_USERNAME@$FILES_TO_COPY_REMOTE_DESTINATION
-   done
-}
-
 # Start futuregrid workers
 start-workers-futuregrid()
 {
@@ -44,7 +35,7 @@ start-workers-futuregrid()
    for MACHINE in $WORKER_HOSTS
    do
       # Enable ssh tunneling if needed
-      if [ $SSH_TUNNELING == "yes" ]; then
+      if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
          echo $! >> $PID_FILE
       fi
@@ -53,10 +44,7 @@ start-workers-futuregrid()
       scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
       ssh $WORKER_USERNAME@$MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
-      echo $! >> $PID_FILE
-
-      # Copy requsted file
-      copy_requested_files 
+      echo $! >> $PID_FILE 
    done
 }
 
@@ -70,21 +58,17 @@ start-workers-ssh()
    fi
    for MACHINE in $WORKER_HOSTS
    do
-      # Enayble ssh tunneling if needed
-      if [ $SSH_TUNNELING == "yes" ]; then
+      # Enable ssh tunneling if needed
+      if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
          echo $! >> $PID_FILE
-      fi  
+      fi
 
-      # Copy and start worker script
       scp $SWIFT_BIN/$WORKER $MACHINE:$WORKER_WORK > /dev/null 2>&1
       echo Starting worker on $MACHINE
       ssh $MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
       echo $! >> $PID_FILE
    done
-
-   # Copy requested files
-   copy_requested_files
    return 0
 }
 
@@ -127,24 +111,25 @@ start-workers-cobalt()
   return 0
 }
 
-PID_FILE=".coaster-service-pids"
+if [ ! -d "$HOME/.swift" ]; then
+   mkdir -p "$HOME/.swift" || crash "Unable to create $HOME/.swift"
+fi
+
+PID_FILE="$HOME/.swift/.coaster-service-pids"
 RUN_DIR=`pwd`
-pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
 
 # Import settings
-CONFIG_FILE="../etc/coaster-service.conf"
-if [ -f "$CONFIG_FILE" ]; then
+if [ -f "$HOME/.swift/coaster-service.conf" ]; then
+   CONFIG_FILE="$HOME/.swift/coaster-service.conf"
+elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
+   CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
+fi
+
+if [ -n "$CONFIG_FILE" ]; then
    source "$CONFIG_FILE"
 else
    crash "Cannot find coaster-service.conf!"
 fi
-
-# Determine Swift config file (cf - used for gensites)
-if [ -f "$RUN_DIR/cf" ]; then
-   SWIFT_CONFIG_FILE="$RUN_DIR/cf"
-else
-   SWIFT_CONFIG_FILE=$CONFIG_FILE
-fi   
 
 # Determine information needed about this machine
 if [ -z "$IPADDR" ]; then
@@ -257,10 +242,10 @@ esac
 # Generate sites.xml
 export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
 echo Generating sites.xml
-gensites persistent-coasters -p $SWIFT_CONFIG_FILE > $RUN_DIR/sites.xml 
+gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
 
 # Generate config file
-if [ $SHARED_FILESYSTEM == "no" ]; then
+if [ "$SHARED_FILESYSTEM" == "no" ]; then
 echo Generating config file
 cat > $RUN_DIR/cf << EOF
 use.provider.staging=true
