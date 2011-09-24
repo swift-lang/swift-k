@@ -119,17 +119,17 @@ PID_FILE="$HOME/.swift/.coaster-service-pids"
 RUN_DIR=`pwd`
 
 # Import settings
-if [ -f "$HOME/.swift/coaster-service.conf" ]; then
+if [ -f "$RUN_DIR/coaster-service.conf" ]; then
+   CONFIG_FILE="$RUN_DIR/coaster-service.conf"
+elif [ -f "$HOME/.swift/coaster-service.conf" ]; then
    CONFIG_FILE="$HOME/.swift/coaster-service.conf"
 elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
    CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
-fi
-
-if [ -n "$CONFIG_FILE" ]; then
-   source "$CONFIG_FILE"
 else
    crash "Cannot find coaster-service.conf!"
 fi
+
+source $CONFIG_FILE
 
 # Determine information needed about this machine
 if [ -z "$IPADDR" ]; then

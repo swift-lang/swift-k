@@ -1085,13 +1085,20 @@ test_group() {
 
     cp $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
-    start_row
+
+    # Use repeat.txt to determine number of test iterations
+    SCRIPT_BASENAME=`basename $TESTNAME .swift`
+    if [ -f "$GROUP/$SCRIPT_BASENAME.repeat" ]; then
+      ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
+    fi
+
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
+      start_row
       swift_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
+      end_row
     done
-     end_row
   done
     group_statistics
     TOTAL_TIME=0
