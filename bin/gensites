@@ -45,7 +45,7 @@ usage()
 
    Examples:
 
-   Create a site configuration file for sites.xml using default properties.file in current directory
+   Create a site configuration file for sites.xml using swift.properties in current directory
    	$ gensites pads > sites.xml
 
    Use a specific properties file for a site
@@ -134,52 +134,50 @@ fi
 
 # Ensure a properties file exists
 if [ ! -f "$PROPERTIES_FILE" ]; then
-   PROPERTIES_FILE="swift.properties"
+   PROPERTIES_FILE="./swift.properties"
    if [ ! -f "$PROPERTIES_FILE" ]; then
       PROPERTIES_FILE="$HOME/.swift/swift.properties"
-      if [ ! -f "$PROPERTIES_FILE" ]; then
-         crash "Unable to find a valid properties file! Please specify a valid file with the -p option"
-      fi
    fi
 fi
 
 # Parse values into variables for later sed processing
-#WORK=`pwd`"/work"
-while read line
-do
-   case "$line" in
-      "#site $TEMPLATE work="*|'#site work='*) 
-         WORK=`get_value $line`
-         ;;
-      "#site $TEMPLATE globus_hostname="*|'#site globus_hostname=') 
-         GLOBUS_HOSTNAME=`get_value $line`
-         ;;
-      "#site $TEMPLATE nodes="*|'#site nodes='*)
-         NODES=`get_value $line`
-         ;;
-      "#site $TEMPLATE project="*|'#site project='*)
-         PROJECT=`get_value $line`
-         ;;
-      "#site $TEMPLATE queue="*|'#site queue='*)
-         QUEUE=`get_value $line`
-         ;;
-      "#site $TEMPLATE n_gran="*|'#site n_gran='*)
-         N_GRAN=`get_value $line`
-         ;;
-      "#site $TEMPLATE n_max="*|'#site n_max='*)
-         MAXTIME=`get_value $line`
-         ;;
-      "#site $TEMPLATE slots="*|'#site slots='*)
-         SLOTS=`get_value $line`
-         ;;
-      "#site $TEMPLATE execution_url="*|'#site execution_url='*)
-        EXECUTION_URL=`get_value $line`
-        ;;
-      "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
-         INTERNALHOSTNAME=`get_value $line`
-         ;;
-   esac
-done < $PROPERTIES_FILE
+if [ -f "$PROPERTIES_FILE" ]; then
+   while read line
+   do
+      case "$line" in
+         "#site $TEMPLATE work="*|'#site work='*) 
+            WORK=`get_value $line`
+            ;;
+         "#site $TEMPLATE globus_hostname="*|'#site globus_hostname=') 
+            GLOBUS_HOSTNAME=`get_value $line`
+            ;;
+         "#site $TEMPLATE nodes="*|'#site nodes='*)
+            NODES=`get_value $line`
+            ;;
+         "#site $TEMPLATE project="*|'#site project='*)
+            PROJECT=`get_value $line`
+            ;;
+         "#site $TEMPLATE queue="*|'#site queue='*)
+            QUEUE=`get_value $line`
+            ;;
+         "#site $TEMPLATE n_gran="*|'#site n_gran='*)
+            N_GRAN=`get_value $line`
+            ;;
+         "#site $TEMPLATE n_max="*|'#site n_max='*)
+            MAXTIME=`get_value $line`
+            ;;
+         "#site $TEMPLATE slots="*|'#site slots='*)
+            SLOTS=`get_value $line`
+            ;;
+         "#site $TEMPLATE execution_url="*|'#site execution_url='*)
+            EXECUTION_URL=`get_value $line`
+           ;;
+         "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
+            INTERNALHOSTNAME=`get_value $line`
+            ;;
+      esac
+   done < $PROPERTIES_FILE
+fi
 
 # Verify that the variables by the template are defined
 for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL
