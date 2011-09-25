@@ -940,18 +940,6 @@ build_package() {
   output_report package "swift-$DATE.tar.gz"
 }
 
-# Generate the sites.sed file
-make_sites_sed() {
-  {
-    echo "s@_WORK_@$WORK@"
-    echo "s@_HOST_@$GLOBUS_HOSTNAME@"
-    echo "s@_PROJECT_@$PROJECT@"
-    echo "s@_QUEUE_@$QUEUE@"
-    echo "s@_EXECUTION_URL_@$EXECUTION_URL@"
-  } > $RUNDIR/sites.sed
-  return 0
-}
-
 # Setup coasters variables
 if which ifconfig > /dev/null 2>&1; then
   IFCONFIG=ifconfig
@@ -965,20 +953,34 @@ GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
 
 # Generate sites.xml
 group_sites_xml() {
-  TEMPLATE=$GROUP/sites.template.xml
-  if [ -f $TEMPLATE ]; then
-    sed -f $RUNDIR/sites.sed < $TEMPLATE > sites.xml
-    [ $? != 0 ] && crash "Could not create sites.xml!"
-    echo "Using: $GROUP/sites.template.xml"
+
+  # Determine template
+  if [ -f "$GROUP/sites.template.xml" ]; then
+     TEMPLATE="$GROUP/sites.template.xml"
+  elif [ -f "$GROUP/gensites.template" ]; then
+     TEMPLATE=`cat $GROUP/gensites.template`
   else
-    sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
-    [ $? != 0 ] && crash "Could not create sites.xml!"
-    echo "Using: $TESTDIR/sites/localhost.xml"
+     TEMPLATE="$TESTDIR/sites/localhost.xml"
+  fi
+   
+  # Call gensites
+  TEMPLATE_DIRNAME=`dirname $TEMPLATE`
+  TEMPLATE=`basename $TEMPLATE`
+  if [ "$TEMPLATE_DIRNAME" != "." ]; then
+     gensites -L $TEMPLATE_DIRNAME $TEMPLATE > sites.xml
+  else 
+     gensites $TEMPLATE > sites.xml
   fi
 }
 
 # Generate tc.data
 group_tc_data() {
+
+  # Gensites will create a tc.data file if it is being used
+  if [ -f "$GROUP/gensites.template" ]; then
+     return
+  fi
+
   if [ -f $GROUP/tc.template.data ]; then
     sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
     [ $? != 0 ] && crash "Could not create tc.data!"
@@ -993,6 +995,7 @@ group_tc_data() {
     echo "Mixing: $GROUP/tc.template.mix.data"
   fi
 }
+
 
 # Generate the CDM file, fs.data
 group_fs_data() {
@@ -1062,10 +1065,10 @@ group_statistics(){
 # Execute all tests in current GROUP
 test_group() {
 
+  group_swift_properties
   group_sites_xml
   group_tc_data
   group_fs_data
-  group_swift_properties
 
   SWIFTS=$( echo $GROUP/*.swift )
   checkfail "Could not list: $GROUP"
@@ -1159,7 +1162,6 @@ mkdir -p $RUNDIR
 
 date > $LOG
 
-make_sites_sed
 
 # Here the report starts.
 # Call to function header()
@@ -1244,6 +1246,7 @@ for G in ${GROUPLIST[@]}; do
   (( $SHUTDOWN )) && break
 done
 
+footer
 exit 0
 
 # Local Variables:

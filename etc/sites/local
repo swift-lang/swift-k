@@ -1,0 +1,9 @@
+<config>
+<pool handle="local">
+  <execution provider="local" />
+  <gridftp url="local://localhost" />
+  <profile key="initialScore" namespace="karajan">10000</profile>
+  <profile key="jobThrottle" namespace="karajan">.31</profile>
+  <workdirectory>_WORK_</workdirectory>
+</pool>
+</config>

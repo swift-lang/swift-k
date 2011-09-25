@@ -133,19 +133,22 @@ if [ ! -z "$LIST_SPECIFIC_TEMPLATE" ]; then
 fi
 
 # Ensure a properties file exists
-if [ ! -f "$PROPERTIES_FILE" ]; then
-   PROPERTIES_FILE="./swift.properties"
-   if [ ! -f "$PROPERTIES_FILE" ]; then
+if [ -z "$PROPERTIES_FILE" ]; then
+   if [ -f "./swift.properties" ]; then
+      PROPERTIES_FILE="./swift.properties"
+   elif [ -f "$HOME/.swift/swift.properties" ]; then
       PROPERTIES_FILE="$HOME/.swift/swift.properties"
    fi
 fi
 
 # Setup for creating a TC file
-if [ -n "`grep -e app $PROPERTIES_FILE`" ]; then
-   if [ -f "tc.data" ]; then
-      mv tc.data tc.data.old
+if [ -f "$PROPERTIES_FILE" ]; then
+   if [ -n "`grep -e app $PROPERTIES_FILE`" ]; then
+      if [ -f "tc.data" ]; then
+         mv tc.data tc.data.old
+      fi
+      HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
    fi
-   HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
 fi
 
 # Parse values into variables for later sed processing
