@@ -155,15 +155,9 @@ echo "HTML_OUTPUT: $HTML"
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 # Ensure all given variables are set
+# Deprecated - this is now handled by gensites
 checkvars() {
-  while (( ${#*} ))
-   do
-   VAR=$1
-   V=$( eval "echo \${${VAR}+1}" )
-   [[ $V == 1 ]] || crash "Not set: $VAR"
-   shift
-  done
-  return 0
+   return
 }
 
 checkfail() {
@@ -962,7 +956,13 @@ group_sites_xml() {
   else
      TEMPLATE="$TESTDIR/sites/localhost.xml"
   fi
-   
+  
+  # Give default to _WORK_ if undefined in swift.properties
+  if [ -z "$WORK" ]
+  then
+     export WORK=$TOPDIR/work
+  fi
+
   # Call gensites
   TEMPLATE_DIRNAME=`dirname $TEMPLATE`
   TEMPLATE=`basename $TEMPLATE`
@@ -1133,12 +1133,8 @@ test_group() {
 }
 
 
-if [[ $WORK == "" ]]
-then
-  WORK=$TOPDIR/work
-fi
 
-checkvars GROUPARG
+#checkvars GROUPARG
 echo "GROUP ARGUMENT: $GROUPARG"
 if [[ $GROUPARG != /* ]]; then
   # Adjust relative path
