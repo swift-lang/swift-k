@@ -41,10 +41,55 @@ https://twiki.grid.iu.edu/bin/view/Engagement/EngageNewUserGuide
 a certificate. Is this a problem from users without one? If so, make a
 copy of the page on the Swift web.
 
-*For TeraGrid*: Obtain a DOEGrids certifcate using the OSG ENgage
+*For TeraGrid*: Obtain a DOEGrids certifcate using the OSG Engage
 instructions above. Ask a TeraGrid PI to add you to a TeraGrid
 project. Once you obtain a login and project access (via US Mail), use
-gx-request to add your certificate
+gx-request to add your certificate.
+
+A detailed step-by-step instructions for requesting and installing your
+certificates in the browser and client machine are as follows:
+
+*Step1.* Apply for a certificate: https://pki1.doegrids.org/ca/; use ANL as
+affiliation (registration authority) in the form.
+
+*Step2.* When you receive your certificate via a link by mail, download and
+install it in your browser; we have tested it for firefox on linux and mac.,
+and for Chrome on mac. 
+
+On firefox, as you click the link that you received in the mail, you will be
+prompted to install it by firefox: passphrase it and click install. Next take a
+backup of this certificate in the form of .p12.
+This is in Preferences > Advanced > Encryption > View Certificate > Your
+Certificate
+
+*Step3.* Install DOE CA and ESnet root CA into your browser by clicking the top
+left links on this page: http://www.doegrids.org/
+
+*Step4.* Go to the Engage VO registration point here:
+https://osg-engage.renci.org:8443/vomrs/Engage/vomrs from the same browser that
+has the above certs installed. Also see
+https://twiki.grid.iu.edu/bin/view/Engagement/EngageNewUserGuide for more
+details.
+
+*Step5.* For installation of certificate on client machine, you need to have the certificate
+that is in the browser put in your client's ~/.globus directory from where you want to access OSG
+resources. The certificate has to be in the form of .pem files with a seperate
+.pem file for key and cert. For this conversion use the above backed up .p12 file as follows:
+
+----
+$ openssl pkcs12 -in your.p12 -out usercert.pem -nodes -clcerts -nokeys 
+$ openssl pkcs12 -in your.p12 -out userkey.pem -nodes -nocerts
+----
+
+Above commands are taken from:
+http://security.ncsa.illinois.edu/research/grid-howtos/usefulopenssl.html
+For more on openssl: http://www.openssl.org/docs/apps/openssl.html
+
+Step6. Test it:
+
+----
+$ voms-proxy-init --voms Engage -hours 48
+----
 
 To run jobs using the procedures documented here you need to be logged
 in to a "submit host" on which you will run Swift and other
