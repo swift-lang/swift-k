@@ -8,7 +8,6 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -36,7 +35,7 @@ public class Java extends VDLFunction {
     */
     Method getMethod(DSHandle[] args) {
         Method result = null;
-        Class clazz;
+        Class<?> clazz;
         
         String lib = "unset";
         String name = "unset";
@@ -46,8 +45,8 @@ public class Java extends VDLFunction {
             ("@java() requires at least two arguments");
         
         try {
-            lib = args[0].toString();
-            name = args[1].toString();
+            lib = (String) args[0].getValue();
+            name = (String) args[1].getValue();
             clazz = Class.forName(lib); 
             Method[] methods = clazz.getMethods();
             result = null;
@@ -104,7 +103,7 @@ public class Java extends VDLFunction {
     Type returnType(Method method) {
         Type result = null;
         
-        Class rt = method.getReturnType(); 
+        Class<?> rt = method.getReturnType(); 
         if (rt.equals(Double.TYPE))
             result = Types.FLOAT; 
         else if (rt.equals(Integer.TYPE))
