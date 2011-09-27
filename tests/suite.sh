@@ -117,6 +117,7 @@ LOGCOUNT=0
 SEQ=1
 DATE=$( date +"%Y-%m-%d" )
 TIME=$( date +"%T" )
+HOURMINSEC=$( date +"%H%M%S" )
 
 RUNDIRBASE="run-$DATE"
 RUNDIR=$TOPDIR/$RUNDIRBASE
@@ -356,7 +357,7 @@ output_report() {
 	LABEL="$2"  # Text on link to output
 	CMD=$3    # Command issued (td title)
 	RESULT=$4 # Passed or Failed
-
+ 
 	if [ $TEXTREPORT == 1 ]; then
 		if [ "$TYPE" == "test" ]; then
 			if [ "$RESULT" == "Passed" ]; then
@@ -377,7 +378,7 @@ output_report() {
 	    	# WIDTH=$( width "$LABEL" )
 	    	if [ "$RESULT" == "Passed" ]; then
 	      		html_td class "success" width 25 title "$CMD"
-	      		html_a_href $OUTPUT "$LABEL"
+	      		html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
 	      	elif [ "$RESULT" == "None" ]; then
 	      		html_td width 25
 		   		html "&nbsp;&nbsp;"
@@ -386,7 +387,7 @@ output_report() {
 	      		echo -e "${RED}FAILED${GRAY}"
 	      		cat $RUNDIR/$OUTPUT < /dev/null
 	      		html_td class "failure" width 25 title "$CMD"
-	      		html_a_href $OUTPUT $LABEL
+	      		html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
 	    	fi
 	    	html_~td
 	  	elif [ "$TYPE" == "package" ]; then
@@ -696,7 +697,7 @@ script_exec() {
 
   process_exec $SCRIPT
   RESULT=$( result )
-
+   
   output_report test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
@@ -705,11 +706,10 @@ script_exec() {
 stage_files() {
 	GROUP=$1
 	NAME=$2
-
 	RESULT="None"
-
-	if [ -f $GROUP/$NAME.in ]; then
-		echo "Copying input: $NAME.in"
+	
+        if [ -f "$GROUP/$NAME.in" ]; then
+                echo "Copying input: $NAME.in"
 		cp -v $GROUP/$NAME.in . 2>&1 >> $OUTPUT
 		if [ "$?" != 0 ]; then
 			RESULT="Failed"
@@ -718,9 +718,10 @@ stage_files() {
 			RESULT="Passed"
 		fi
 	fi
+
 	for INPUT in $GROUP/$NAME.*.in; do
 		IN=`basename $INPUT`
-		echo "Copying input: $IN"
+                echo "Copying input: $IN"
 		cp -v $INPUT . 2>&1 >> $OUTPUT
 		if [ "$?" != 0 ]; then
 			RESULT="Failed"
@@ -771,7 +772,6 @@ check_outputs() {
 swift_test_case() {
   SWIFTSCRIPT=$1
   NAME=${SWIFTSCRIPT%.swift}
-
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
   CLEANSCRIPT=$NAME.clean.sh
@@ -779,7 +779,7 @@ swift_test_case() {
   ARGSFILE=$NAME.args
 
   TEST_SHOULD_FAIL=0
-  
+
   OUTPUT=$NAME.setup.stdout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
@@ -799,7 +799,7 @@ swift_test_case() {
 
   TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
 
-  grep THIS-SCRIPT-SHOULD-FAIL $SWIFTSCRIPT > /dev/null
+  grep THIS-SCRIPT-SHOULD-FAIL $GROUP/$SWIFTSCRIPT > /dev/null
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
   OUTPUT=$NAME.stdout
@@ -1065,43 +1065,48 @@ group_statistics(){
 # Execute all tests in current GROUP
 test_group() {
 
-  group_swift_properties
-  group_sites_xml
-  group_tc_data
-  group_fs_data
 
   SWIFTS=$( echo $GROUP/*.swift )
   checkfail "Could not list: $GROUP"
 
   for TEST in $SWIFTS; do
-
+   
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
     TESTNAME=$( basename $TEST )
+    TESTNAMEDIR=`basename $TESTNAME .swift`-$DATE-$HOURMINSEC
+    mkdir -p $TESTNAMEDIR
+    pushd $TESTNAMEDIR > /dev/null 2>&1
 
-	echo
-	echo
-	echo "/--------------------------------------------------------------"
-    echo -e "|   Test case: $LGREEN$TESTNAME$GRAY"
-    echo "\--------------------------------------------------------------"
+    cp $TEST .    
+    group_swift_properties
+    group_sites_xml
+    group_tc_data
+    group_fs_data
+
     echo
-
-    cp $GROUP/$TESTNAME .
-    TESTLINK=$TESTNAME
+    echo
+       echo "/--------------------------------------------------------------"
+    echo -e "|   Test case: $LGREEN$TESTNAME$GRAY"
+       echo "\--------------------------------------------------------------"
+    echo
 
     # Use repeat.txt to determine number of test iterations
     SCRIPT_BASENAME=`basename $TESTNAME .swift`
+    TESTLINK="$TESTNAMEDIR/$TESTNAME"
     if [ -f "$GROUP/$SCRIPT_BASENAME.repeat" ]; then
       ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
     fi
 
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
+      HOURMINSEC=$( date +"%H%M%S" )
       start_row
       swift_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
       end_row
     done
+  popd > /dev/null 2>&1
   done
     group_statistics
     TOTAL_TIME=0
@@ -1118,7 +1123,7 @@ test_group() {
 
     TESTNAME=$( basename $TEST )
     cp -v $GROUP/$TESTNAME .
-    TESTLINK=$TESTNAME
+    TESTLINK="$TESTNAMEDIR/$TESTNAME"
 
     start_row
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
