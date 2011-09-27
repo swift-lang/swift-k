@@ -2,8 +2,8 @@
 
 set -x
 
-ls stdout.txt || exit 1
-COUNT=$( grep -c "file: [abc].dat" < stdout.txt )
+ls filesysmapper.stdout || exit 1
+COUNT=$( grep -c "file: [abc].dat" < filesysmapper.stdout )
 (( $COUNT == 3 )) || exit 1
 
 exit 0

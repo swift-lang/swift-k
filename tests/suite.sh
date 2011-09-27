@@ -118,6 +118,7 @@ LOGCOUNT=0
 SEQ=1
 DATE=$( date +"%Y-%m-%d" )
 TIME=$( date +"%T" )
+HOURMINSEC=$( date +"%H%M%S" )
 
 RUNDIRBASE="run-$DATE"
 RUNDIR=$TOPDIR/$RUNDIRBASE
@@ -363,7 +364,7 @@ output_report() {
 				printf %-10.10s "success">>$REPORT
 			else
 				echo -e "${RED}FAILED${GRAY}"
-				cat $RUNDIR/$TEST_LOG < /dev/null
+				cat $RUNDIR/$OUTPUT < /dev/null
 				printf %-10.10s "failure">>$REPORT
 			fi
 
@@ -377,17 +378,17 @@ output_report() {
 	    	# WIDTH=$( width "$LABEL" )
 	    	if [ "$RESULT" == "Passed" ]; then
 	      		html_td class "success" width 25 title "$CMD"
-	      		html_a_href $TEST_LOG "$LABEL"
+                        html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
 	      	elif [ "$RESULT" == "None" ]; then
 	      		html_td width 25
 		   	html "&nbsp;&nbsp;"
    			html_~td
 	    	else
 	      		echo -e "${RED}FAILED${GRAY}"
-	      		cat $RUNDIR/$TEST_LOG < /dev/null
+                        cat $RUNDIR/$OUTPUT < /dev/null
 	      		html_td class "failure" width 25 title "$CMD"
-	      		html_a_href $TEST_LOG $LABEL
-	    	fi
+                        html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"	    	
+                fi
 	    	html_~td
 	  	elif [ "$TYPE" == "package" ]; then
 	    	BINPACKAGE=$2
@@ -596,8 +597,7 @@ test_exec() {
   fi
 
   RESULT=$( result )
-  test_log
-  output_report test $SEQ "$LASTCMD" $RESULT $TEST_LOG
+  output_report test $SEQ "$LASTCMD" $RESULT $OUTPUT
 
   check_bailout
 
@@ -695,8 +695,7 @@ monitored_exec()
 
 
   LASTCMD="$@"
-  test_log
-  output_report test $SEQ "$LASTCMD" $RESULT $TEST_LOG
+  output_report test $SEQ "$LASTCMD" $RESULT $OUTPUT
 
   check_bailout
 
@@ -711,7 +710,6 @@ script_exec() {
   process_exec $SCRIPT
   RESULT=$( result )
 
-  test_log
   output_report test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
@@ -723,7 +721,7 @@ stage_files() {
 
 	RESULT="None"
 
-	if [ -f $GROUP/$NAME.in ]; then
+	if [ -f "$GROUP/$NAME.in" ]; then
 		echo "Copying input: $NAME.in"
 		cp -v $GROUP/$NAME.in . 2>&1 >> $OUTPUT
 		if [ "$?" != 0 ]; then
@@ -800,6 +798,7 @@ swift_test_case() {
   ARGSFILE=$NAME.args
 
   TEST_SHOULD_FAIL=0
+  OUTPUT=$NAME.setup.stdout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   else
@@ -818,9 +817,10 @@ swift_test_case() {
 
   TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
 
-  grep THIS-SCRIPT-SHOULD-FAIL $SWIFTSCRIPT > /dev/null
+  grep THIS-SCRIPT-SHOULD-FAIL $GROUP/$SWIFTSCRIPT > /dev/null
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
+  OUTPUT=$NAME.stdout
   monitored_exec $TIMEOUT swift     \
                        -wrapperlog.always.transfer true \
                        -sitedir.keep true               \
@@ -831,12 +831,13 @@ swift_test_case() {
 
   TEST_SHOULD_FAIL=0
   if [ -x $GROUP/$CHECKSCRIPT ]; then
-  	export OUTPUT
+     OUTPUT=$NAME.check.stdout  
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   else
     check_outputs $GROUP $NAME
   fi
 
+   OUTPUT=$NAME.clean.stdout
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
   else
@@ -858,6 +859,7 @@ script_test_case() {
   TIMEOUTFILE=$NAME.timeout
 
   TEST_SHOULD_FAIL=0
+  OUTPUT=$NAME.clean.stdout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
   else
@@ -879,6 +881,8 @@ script_test_case() {
    html_~td
   fi
 
+   OUTPUT=$NAME.stdout
+
   if [ -x $GROUP/$SHELLSCRIPT ]; then
     script_exec $SHELLSCRIPT "X"
   else
@@ -887,6 +891,7 @@ script_test_case() {
    html_~td
   fi
 
+  OUTPUT=$NAME.check.stdout
   if [ -x $GROUP/$CHECKSCRIPT ]; then
     script_exec $GROUP/$CHECKSCRIPT "&#8730;"
   else
@@ -895,6 +900,7 @@ script_test_case() {
    html_~td
   fi
 
+  OUTPUT=$NAME.clean.stdout
   if [ -x $GROUP/$CLEANSCRIPT ]; then
     script_exec $GROUP/$CLEANSCRIPT "C"
   else
@@ -1075,10 +1081,6 @@ group_statistics(){
 # Execute all tests in current GROUP
 test_group() {
 
-  group_sites_xml
-  group_tc_data
-  group_fs_data
-  group_swift_properties
 
   SWIFTS=$( echo $GROUP/*.swift )
   checkfail "Could not list: $GROUP"
@@ -1087,8 +1089,6 @@ test_group() {
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
-    TESTNAME=$( basename $TEST )
-
 	echo
 	echo
 	echo "/--------------------------------------------------------------"
@@ -1096,21 +1096,34 @@ test_group() {
     echo "\--------------------------------------------------------------"
     echo
 
-    cp $GROUP/$TESTNAME .
     TESTLINK=$TESTNAME
 
    # Use repeat.txt to determine number of test iterations
     SCRIPT_BASENAME=`basename $TESTNAME .swift`
+    TESTLINK="$TESTNAMEDIR/$TESTNAME"
     if [ -f "$GROUP/$SCRIPT_BASENAME.repeat" ]; then
       ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
     fi
 
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
+      HOURMINSEC=$( date +"%H%M%S" )
+      TESTNAME=$( basename $TEST )
+      TESTNAMEDIR=`basename $TESTNAME .swift`-$HOURMINSEC
+      TESTLINK="$TESTNAMEDIR/$TESTNAME"
+      mkdir -p $TESTNAMEDIR
+      pushd $TESTNAMEDIR > /dev/null 2>&1
+
+      cp $TEST .    
+      group_swift_properties
+      group_sites_xml
+      group_tc_data
+      group_fs_data      
       start_row
       swift_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
       end_row
+      popd > /dev/null 2>&1
     done
   done
     group_statistics
@@ -1125,11 +1138,12 @@ test_group() {
   for TEST in $SCRIPTS; do
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
-
+    HOURMINSEC=$( date +"%H%M%S" )
     TESTNAME=$( basename $TEST )
+    TESTNAMEDIR=`basename $TESTNAME .swift`-$HOURMINSEC
+    mkdir -p $TESTNAMEDIR
+    pushd $TESTNAMEDIR > /dev/null 2>&1
     cp -v $GROUP/$TESTNAME .
-    TESTLINK=$TESTNAME
-
     start_row
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
       script_test_case $TESTNAME
@@ -1178,6 +1192,7 @@ cd $TOPDIR
 start_group "Build"
 TESTLINK=
 EXITONFAILURE=true
+OUTPUT=checkout.stdout
 if [ "$SKIP_CHECKOUT" != "1" ]; then
   TESTNAME="Checkout CoG"
   start_row
@@ -1195,6 +1210,7 @@ fi
 TESTNAME="Compile"
 start_row
 
+OUTPUT=compile.stdout
 # Exit early if the Swift directory is not there
 if [[ ! -d $TOPDIR/cog/modules/swift ]]
 then
@@ -1212,7 +1228,7 @@ if (( $RUN_ANT )); then
   test_exec ant -quiet dist
 fi
 SWIFT_HOME=$TOPDIR/cog/modules/swift/dist/swift-svn
-
+OUTPUT=compile.stdout
 if [ $BUILD_PACKAGE = "1" ]; then
   build_package
 fi
@@ -1246,6 +1262,7 @@ for G in ${GROUPLIST[@]}; do
   (( $SHUTDOWN )) && break
 done
 
+footer
 exit 0
 
 # Local Variables:
