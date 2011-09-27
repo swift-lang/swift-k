@@ -1073,16 +1073,6 @@ test_group() {
    
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
-    TESTNAME=$( basename $TEST )
-    TESTNAMEDIR=`basename $TESTNAME .swift`-$DATE-$HOURMINSEC
-    mkdir -p $TESTNAMEDIR
-    pushd $TESTNAMEDIR > /dev/null 2>&1
-
-    cp $TEST .    
-    group_swift_properties
-    group_sites_xml
-    group_tc_data
-    group_fs_data
 
     echo
     echo
@@ -1092,21 +1082,33 @@ test_group() {
     echo
 
     # Use repeat.txt to determine number of test iterations
-    SCRIPT_BASENAME=`basename $TESTNAME .swift`
-    TESTLINK="$TESTNAMEDIR/$TESTNAME"
+    SCRIPT_BASENAME=`basename $TEST .swift`
     if [ -f "$GROUP/$SCRIPT_BASENAME.repeat" ]; then
       ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
     fi
 
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
-      HOURMINSEC=$( date +"%H%M%S" )
+
+       HOURMINSEC=$( date +"%H%M%S" )
+       TESTNAME=$( basename $TEST )
+       TESTNAMEDIR=`basename $TESTNAME .swift`-$HOURMINSEC
+       TESTLINK="$TESTNAMEDIR/$TESTNAME"
+       mkdir -p $TESTNAMEDIR
+       pushd $TESTNAMEDIR > /dev/null 2>&1
+
+       cp $TEST .    
+       group_swift_properties
+       group_sites_xml
+       group_tc_data
+       group_fs_data
+
       start_row
       swift_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
       end_row
+      popd > /dev/null 2>&1
     done
-  popd > /dev/null 2>&1
   done
     group_statistics
     TOTAL_TIME=0
@@ -1120,6 +1122,11 @@ test_group() {
   for TEST in $SCRIPTS; do
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
+    HOURMINSEC=$( date +"%H%M%S" )
+    TESTNAME=$( basename $TEST )
+    TESTNAMEDIR=`basename $TESTNAME .swift`-$HOURMINSEC
+    mkdir -p $TESTNAMEDIR
+    pushd $TESTNAMEDIR > /dev/null 2>&1
 
     TESTNAME=$( basename $TEST )
     cp -v $GROUP/$TESTNAME .
