@@ -18,3 +18,4 @@ localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
 localhost 	cp 		/bin/cp         INSTALLED	INTEL32::LINUX	null
 localhost 	touch 		/bin/touch      INSTALLED	INTEL32::LINUX	null
 localhost	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
+localhost	sleep		/bin/sleep	null	null 	null
