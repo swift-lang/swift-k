@@ -5,7 +5,7 @@ Downloading and Building Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The most recent versions of Swift can be found at 
 http://www.ci.uchicago.edu/swift/downloads/index.php. To run on futuregrid,
-you will need to download the development/trunk version from SVN.
+you will need to use Swift 0.93 or later.
 
 Adding Swift to your PATH
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,13 +35,14 @@ machines. To download, change to your home directory and run the
 following command:
 
 -----
-$ svn co https://svn.ci.uchicago.edu/svn/vdl2/usertools/swift-vm-boot
+$ svn co https://svn.ci.uchicago.edu/svn/vdl2/usertools/swift-vm-boot swift-vm-boot
 -----
 
 Download your Credentials
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Run the following commands to retrieve your credentials:
 -----
+$ cd swift-vm-boot
 $ scp yourusername@hotel.futuregrid.org:nimbus_creds.tar.gz .
 $ tar xvfz nimbus_creds.tar.gz
 -----

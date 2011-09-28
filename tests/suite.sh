@@ -782,7 +782,8 @@ swift_test_case() {
 
   OUTPUT=$NAME.setup.stdout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
-    script_exec $GROUP/$SETUPSCRIPT "S"
+    cp -v $GROUP/$SETUPSCRIPT .
+    script_exec ./$SETUPSCRIPT "S"
   else
     stage_files $GROUP $NAME
   fi
@@ -798,6 +799,9 @@ swift_test_case() {
   (( TESTCOUNT++ ))
 
   TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
+  if [ -f "$GROUP/$TIMEOUTFILE" ]; then
+     cp "$GROUP/$TIMEOUTFILE" .
+  fi
 
   grep THIS-SCRIPT-SHOULD-FAIL $GROUP/$SWIFTSCRIPT > /dev/null
   TEST_SHOULD_FAIL=$(( ! $?  ))
@@ -814,15 +818,17 @@ swift_test_case() {
   TEST_SHOULD_FAIL=0
   OUTPUT=$NAME.check.stdout
   if [ -x $GROUP/$CHECKSCRIPT ]; then
-  	export TEST_LOG=$NAME.stdout
-    script_exec $GROUP/$CHECKSCRIPT "&#8730;"
+    cp "$GROUP/$CHECKSCRIPT" .	
+    export TEST_LOG=$NAME.stdout
+    script_exec ./$CHECKSCRIPT "&#8730;"
   else
     check_outputs $GROUP $NAME
   fi
 
   OUTPUT=$NAME.clean.stdout
   if [ -x $GROUP/$CLEANSCRIPT ]; then
-    script_exec $GROUP/$CLEANSCRIPT "C"
+    cp "$GROUP/$CLEANSCRIPT" .
+    script_exec ./$CLEANSCRIPT "C"
   else
    html_td width 25
    html "&nbsp;&nbsp;"
