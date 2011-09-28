@@ -53,7 +53,7 @@ while [ $# -gt 0 ]; do
     -f)
       TEXTREPORT=1
       shift;;
-    -h)
+    -h|--h|-help|--help)
       printhelp
       exit 0;;
     -k)
@@ -799,8 +799,9 @@ swift_test_case() {
 
   TEST_SHOULD_FAIL=0
   OUTPUT=$NAME.setup.stdout
-  if [ -x $GROUP/$SETUPSCRIPT ]; then
-    script_exec $GROUP/$SETUPSCRIPT "S"
+  if [ -x "$GROUP/$SETUPSCRIPT" ]; then
+    cp "$GROUP/$SETUPSCRIPT" .
+    script_exec ./$SETUPSCRIPT "S"
   else
     stage_files $GROUP $NAME
   fi
@@ -816,7 +817,9 @@ swift_test_case() {
   (( TESTCOUNT++ ))
 
   TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
-
+  if [ -f "$GROUP/$TIMEOUTFILE" ]; then
+     cp "$GROUP/$TIMEOUTFILE" .
+  fi
   grep THIS-SCRIPT-SHOULD-FAIL $GROUP/$SWIFTSCRIPT > /dev/null
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
@@ -830,16 +833,18 @@ swift_test_case() {
                        $CDM $SWIFTSCRIPT $ARGS
 
   TEST_SHOULD_FAIL=0
-  if [ -x $GROUP/$CHECKSCRIPT ]; then
+  if [ -x "$GROUP/$CHECKSCRIPT" ]; then
+     cp "$GROUP/$CHECKSCRIPT" .
      OUTPUT=$NAME.check.stdout  
-    script_exec $GROUP/$CHECKSCRIPT "&#8730;"
+     script_exec ./$CHECKSCRIPT "&#8730;"
   else
     check_outputs $GROUP $NAME
   fi
 
    OUTPUT=$NAME.clean.stdout
-  if [ -x $GROUP/$CLEANSCRIPT ]; then
-    script_exec $GROUP/$CLEANSCRIPT "C"
+  if [ -x "$GROUP/$CLEANSCRIPT" ]; then
+    cp "$GROUP/$CLEANSCRIPT" .
+    script_exec ./$CLEANSCRIPT "C"
   else
    html_td width 25
    html "&nbsp;&nbsp;"
@@ -860,8 +865,9 @@ script_test_case() {
 
   TEST_SHOULD_FAIL=0
   OUTPUT=$NAME.clean.stdout
-  if [ -x $GROUP/$SETUPSCRIPT ]; then
-    script_exec $GROUP/$SETUPSCRIPT "S"
+  if [ -x "$GROUP/$SETUPSCRIPT" ]; then
+    cp "$GROUP/$SETUPSCRIPT" .
+    script_exec ./$SETUPSCRIPT "S"
   else
    html_td width 25
    html "&nbsp;&nbsp;"
@@ -892,8 +898,9 @@ script_test_case() {
   fi
 
   OUTPUT=$NAME.check.stdout
-  if [ -x $GROUP/$CHECKSCRIPT ]; then
-    script_exec $GROUP/$CHECKSCRIPT "&#8730;"
+  if [ -x "$GROUP/$CHECKSCRIPT" ]; then
+    cp "$GROUP/$CHECKSCRIPT" .
+    script_exec ./$CHECKSCRIPT "&#8730;"
   else
    html_td width 25
    html "&nbsp;&nbsp;"
@@ -901,8 +908,9 @@ script_test_case() {
   fi
 
   OUTPUT=$NAME.clean.stdout
-  if [ -x $GROUP/$CLEANSCRIPT ]; then
-    script_exec $GROUP/$CLEANSCRIPT "C"
+  if [ -x "$GROUP/$CLEANSCRIPT" ]; then
+    cp "$GROUP/$CLEANSCRIPT" .
+    script_exec ./$CLEANSCRIPT "C"
   else
    html_td width 25
    html "&nbsp;&nbsp;"
