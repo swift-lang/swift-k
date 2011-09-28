@@ -54,19 +54,6 @@ start-swift-service $n &
 
 sleep 60
 
-#SPORT=$(cat service.sports)
-#just temporary
-#SPORT=100
-rm -f service.sports
-rm -f service.wports
-m=`expr $n - 1`
-for i in `seq -w 00 $m`
-do
-    cat service-$i.sport >> service.sports
-    echo "" >> service.sports
-    cat service-$i.wport >> service.wports
-    echo "" >> service.wports
-done
 #sed '$d' < greensites > file1 ; mv file1 greensites
 sed '$d' < service.sports > file2 ; mv file2 service.sports
 sed '$d' < service.wports > file3 ; mv file3 service.wports

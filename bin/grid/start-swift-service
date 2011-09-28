@@ -16,8 +16,8 @@ ontrap()
 trap ontrap 1 2 3 15  # FIXME: Not needed?
 
 # Launch the requested number of services
+ rm -f service.sports service.wports
 
-rm -f service.sports service.wports
 for i in `seq -w 0 $((NSERVICES - 1))`; do
   rm -f service-$i.{sport,wport,pid,out}
   $SERVICE -nosec -passive -portfile service-$i.sport -localportfile service-$i.wport &> service-$i.out  &
@@ -32,7 +32,7 @@ maxtries=10
 for (( tries=0; tries < $maxtries; tries++ )); do
   sleep 1
   errors=0
-  rm service.sports service.wports
+  rm -f service.sports service.wports
   for i in `seq -w 0 $((NSERVICES - 1))`; do
     if [ -s service-$i.sport -a -s service-$i.wport ]; then
       echo $(cat service-$i.sport) >> service.sports
@@ -49,7 +49,7 @@ for (( tries=0; tries < $maxtries; tries++ )); do
 done
 
 if [ $errors != 0 ]; then
-  echo $0: $errors services failesd to report their port numbers
+  echo $0: $errors services failed to report their port numbers
 fi
 echo $0: $((NSERVICES-errors)) services started successfully
 

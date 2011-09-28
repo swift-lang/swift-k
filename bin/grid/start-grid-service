@@ -44,9 +44,12 @@ BIN=$(cd $(dirname $0); pwd)
 
 echo THROTTLE=$THROTTLE LOGLEVEL=$LOGLEVEL
 
+numsites=`cat greensites | wc -l`
+
 #coaster-service -port 1984 -localport 35753 -nosec >& local-coaster-service.out &
 sleep 5
 start-swift-service 1 &
+#start-swift-service $numsites &
 sleep 5
 SPORT=$(cat service.sports)
 cat >sites.grid-ps.xml <<EOF
