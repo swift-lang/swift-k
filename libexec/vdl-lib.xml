@@ -6,7 +6,7 @@
 	<export name="read_data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData"/></export>
 	<export name="read_data2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
 	<export name="read_structured"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
-	<export name="write-data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
+	<export name="write_data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
 	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
 	<export name="strstr"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
