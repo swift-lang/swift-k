@@ -1,5 +1,9 @@
 #! /usr/bin/env ruby
 
+$stdout.sync = true
+# FIXME: Is this the best way to get lib functions from bin/grid into RUBYLIB ?
+$:[$:.length] = File.dirname($0)
+
 require 'erb'
 require 'mk_catalog'
 require 'etc'
@@ -113,15 +117,17 @@ if __FILE__ == $0
   numlines = %x{wc -l #{ARGV[0]}}.split.first.to_i
 
   # **Ketan: Remove any worker or service ports file present from the previous runs
+  puts "removing service.sports and service.wports"
   system("rm -f service.sports service.wports")
 
   system("start-swift-service #{numlines} &")
-
+  
   service_ports=[]
   worker_ports=[]
-
+  
+  puts "sleeping, waiting for all services to start and write their ports"
   sleep 40
-
+  
   sports_file=File.open("service.sports")
   sports_file.each_line { |line|
        service_ports.push line
@@ -319,7 +325,6 @@ keep queued on each site:
      r=50 q=25
 =end
 
-=begin
 def dump(file, template, binding)
   file_out = File.open(file, "w")
   file_out.puts ERB.new(template, 0, "%<>").result(binding)
@@ -327,6 +332,4 @@ def dump(file, template, binding)
 end
 
 dump("coaster_osg.xml", coaster_sites, binding)
-
-=end
 
