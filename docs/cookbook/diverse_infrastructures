@@ -153,8 +153,7 @@ coaster service is listening to the workers+
 
 .sites.xml for the above run
 
-[xml]
-source~~~~
+----
 <config>
   <pool handle="localhost">
     <execution provider="coaster-persistent" url="http://localhost:1984" jobmanager="local:local"/>
@@ -174,7 +173,7 @@ source~~~~
     <workdirectory>/home/ketan/swift-labs/bionimbus-coaster-modftdock/swift.workdir</workdirectory>
   </pool>
 </config>
-source~~~~
+----
 
 //Magellan
 //~~~~~~~~
