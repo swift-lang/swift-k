@@ -123,7 +123,7 @@ end
   numlines = %x{wc -l #{ARGV[0]}}.split.first.to_i
 
   # **Ketan: Remove any worker or service ports file present from the previous runs
-  puts "removing service.sports and service.wports"
+  # removing service.sports and service.wports
   system("rm -f service.sports service.wports")
 
   system("start-swift-service #{numlines} &")
