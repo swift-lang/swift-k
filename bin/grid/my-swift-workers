@@ -113,6 +113,12 @@ JobStatus in job ClassAds
 if __FILE__ == $0
   raise "No greenlist file" if !ARGV[0]
 
+def dump(file, template, binding)
+ file_out = File.open(file, "w")
+ file_out.puts ERB.new(template, 0, "%<>").result(binding)
+ file_out.close
+end
+
   # **Ketan: Read the lines in greensites file and start that many services
   numlines = %x{wc -l #{ARGV[0]}}.split.first.to_i
 
@@ -206,20 +212,19 @@ if __FILE__ == $0
    coaster_sites = %q[
       <config>
       <% ctr = 0
-        sites.each_key do |name|
-        jm       = sites[name].jm
-        url      = sites[name].url
-        app_dir  = sites[name].app_dir
-        data_dir = sites[name].data_dir
-        throttle = sites[name].throttle
+        sites.each do |asite|
+        gftp      = asite.gridftp
+        app_dir  = asite.app_dir
+        data_dir = asite.data_dir
+        sitename = asite.name
       %>
-      <pool handle="<%=name%>">
-       <execution provider="coaster-persistent" url="http://localhost:<%= coaster_service + ctr %>" jobmanager="local:local" />
+      <pool handle="<%=sitename%>">
+       <execution provider="coaster-persistent" url="http://localhost:<%= service_ports[ctr]%>" jobmanager="local:local" />
        <profile namespace="globus" key="workerManager">passive</profile>
        <profile namespace="karajan" key="initialScore">10000</profile>
-       <profile namespace="karajan" key="jobThrottle"><%=throttle%></profile>
+       <profile namespace="karajan" key="jobThrottle">2.99</profile>
        <profile namespace="globus" key="jobsPerNode">16</profile>
-       <gridftp  url="gsiftp://<%=url%>"/>
+       <gridftp  url="gsiftp://<%=gftp%>"/>
        <workdirectory><%=data_dir%>/swift_scratch</workdirectory>
       </pool>
       <% ctr += 1
@@ -227,18 +232,20 @@ if __FILE__ == $0
       %>
      </config>
     ] 
-
+    
+    dump("coaster_osg.xml", coaster_sites, binding) 
+    
     # local per-site attributes:
     cores = (value.throttle * 100 + 2).to_i
     siteFraction = cores.to_f / totalCores.to_f
     siteTargetRunning = [ (swiftDemand.to_f * siteFraction), minSiteJobs ].max
     siteTargetQueued = [ (swiftDemand.to_f * siteFraction), minSiteJobs ].max
-
+    
     printf "site: %5d cores %2d%% %s\n", cores, siteFraction * 100, name
     targetQueued = 3
-
+    
     site.gen_submit
-
+    
     threads << Thread.new(name) do |job|
       trip=0
       while true do
@@ -325,11 +332,6 @@ keep queued on each site:
      r=50 q=25
 =end
 
-def dump(file, template, binding)
-  file_out = File.open(file, "w")
-  file_out.puts ERB.new(template, 0, "%<>").result(binding)
-  file_out.close
-end
 
-dump("coaster_osg.xml", coaster_sites, binding)
+#dump("coaster_osg.xml", coaster_sites, binding)
 
