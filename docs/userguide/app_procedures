@@ -383,9 +383,11 @@ floating point numbers.
 
 @length
 ~~~~~~
-@length(array) will return the length of an array in Swift. This function will wait for all elements in the array to be written before returning the lennth.
+@length(array) will return the length of an array in Swift. This function will wait for all elements in the array to be written before returning the length.
 
-
+@java
+~~~~~~
+@java(class_name, static_method, method_arg) will call a java static method of the class class_name.
 
 Built-in procedure reference
 ----------------------------
