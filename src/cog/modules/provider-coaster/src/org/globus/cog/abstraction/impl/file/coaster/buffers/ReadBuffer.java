@@ -11,7 +11,9 @@ package org.globus.cog.abstraction.impl.file.coaster.buffers;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 
 
@@ -21,7 +23,7 @@ public abstract class ReadBuffer extends Buffer {
     protected LinkedList<ByteBuffer> empty;
     protected long read;
     protected long size;
-    protected Buffers.Allocation alloc;
+    protected List<Buffers.Allocation> allocs;
 
     protected ReadBuffer(Buffers buffers, ReadBufferCallback cb, long size) {
         super(buffers);
@@ -36,6 +38,7 @@ public abstract class ReadBuffer extends Buffer {
     protected void init() throws InterruptedException {
         full = new LinkedList<ByteBuffer>();
         empty = new LinkedList<ByteBuffer>();
+        allocs = new ArrayList<Buffers.Allocation>();
         for (int i = 0; i < Buffers.ENTRIES_PER_STREAM; i++) {
             // these will be allocated when the first read happens,
             // which also happens to happen in the I/O thread
@@ -44,13 +47,6 @@ public abstract class ReadBuffer extends Buffer {
         requestFill();
     }
     
-    protected ByteBuffer allocateOneBuffer() throws InterruptedException {
-        if (alloc == null) {
-            alloc = buffers.request(Buffers.ENTRIES_PER_STREAM);
-        }
-        return ByteBuffer.allocate(Buffers.ENTRY_SIZE);
-    }
-
     public void freeFirst() {
         ByteBuffer b;
         synchronized (this) {
@@ -88,8 +84,14 @@ public abstract class ReadBuffer extends Buffer {
         getCallback().dataRead(read == size, buf);
     }
     
+    protected void bufferCreated(Buffers.Allocation a) {
+        allocs.add(a);
+    }
+    
     protected void deallocateBuffers() {
-        buffers.free(alloc);
+        for (Buffers.Allocation a : allocs) {
+            buffers.free(a);
+        }
     }
     
     public void close() throws IOException {

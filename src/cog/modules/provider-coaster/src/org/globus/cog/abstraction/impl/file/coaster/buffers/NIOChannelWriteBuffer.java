@@ -24,7 +24,7 @@ public class NIOChannelWriteBuffer extends WriteBuffer {
         this.cb = cb;
     }
 
-    public void doStuff(boolean last, ByteBuffer b) {
+    public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
         try {
             channel.write(b);
             b.rewind();

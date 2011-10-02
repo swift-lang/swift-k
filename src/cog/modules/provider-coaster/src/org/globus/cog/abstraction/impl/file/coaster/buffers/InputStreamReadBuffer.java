@@ -25,14 +25,14 @@ public class InputStreamReadBuffer extends ReadBuffer {
         init();
     }
 
-    public void doStuff(boolean last, ByteBuffer b) {
+    public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
         if (read >= size) {
             return;
         }
+        if (alloc != null) {
+            bufferCreated(alloc);
+        }
         try {
-            if (b == null) {
-                b = allocateOneBuffer();
-            }
             if (b.hasArray()) {
                 int len = is.read(b.array());
                 b.limit(len);

@@ -23,12 +23,14 @@ public class Buffers extends Thread {
 
     public static final int ENTRY_SIZE = 32768;
     public static final int ENTRIES_PER_STREAM = 16;
-    public static final int MAX_ENTRIES = 256;
+    public static final int MAX_ENTRIES = 512; // 16 MB
     public static final int PERFORMANCE_LOGGING_INTERVAL = 10000;
 
     private static final Buffers INSTANCE = new Buffers();
 
     private LinkedList<Entry> queue;
+    private LinkedList<Entry> waiting;
+    
     private Object sizeLock = new Object();
     private int crt;
     private long lastTime, bufTime;
@@ -37,6 +39,7 @@ public class Buffers extends Thread {
     
     public Buffers() {
         queue = new LinkedList<Entry>();
+        waiting = new LinkedList<Entry>();
         setName("I/O Queue");
         setDaemon(true);
         start();
@@ -74,20 +77,13 @@ public class Buffers extends Thread {
     }
 
     public synchronized void queueRequest(boolean last, ByteBuffer buf, Buffer buffer) {
-        queue.add(new Entry(last, buf, buffer));
-        notify();
-    }
-
-    public Allocation request(int count) throws InterruptedException {
-        synchronized (sizeLock) {
-            while (crt + count > MAX_ENTRIES) {
-                sizeLock.wait(1000);
-            }
-            updateBuffersUsed();
-            crt += count;
-            Allocation a = new Allocation(count);
-            assert(!a.free);
-            return a;
+        Entry e = new Entry(last, buf, buffer);
+        if (buf == null && crt > MAX_ENTRIES) {
+            waiting.add(e);
+        }
+        else {
+            queue.add(e);
+            notify();
         }
     }
 
@@ -102,20 +98,44 @@ public class Buffers extends Thread {
         }
         bufTime = time;
     }
+    
+    public synchronized Allocation request(int count) throws InterruptedException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Request " + count + ", crt = " + crt + ", max = " + MAX_ENTRIES);
+        }
+        while (crt >= MAX_ENTRIES) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Max buffers reached. Waiting...");
+            }
+            wait();
+        }
+        updateBuffersUsed();
+        crt += count;
+        return new Allocation(count);
+    }
 
-    public void free(Allocation alloc) {
-        synchronized (sizeLock) {
-            if (alloc == null) {
-                throw new IllegalArgumentException("Null alloc");
-            }
-            if (alloc.free) {
-                logger.warn("Trying to release buffer allocation twice", new Exception());
-                return;
-            }
-            updateBuffersUsed();
-            crt -= alloc.count;
-            alloc.free();
-            sizeLock.notify();
+    public synchronized void free(Allocation alloc) {
+        if (alloc == null) {
+            throw new IllegalArgumentException("Null alloc");
+        }
+        if (alloc.free) {
+            logger.warn("Trying to release buffer allocation twice", new Exception());
+            return;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Free " + alloc.count + ", crt = " + crt + ", max = " + MAX_ENTRIES);
+        }
+        updateBuffersUsed();
+        crt -= alloc.count;
+        alloc.free();
+        queueWaiting();
+        notify();
+    }
+
+    private void queueWaiting() {
+        while (!waiting.isEmpty() && crt < MAX_ENTRIES) {
+            queue.add(waiting.removeFirst());
+            crt++;
         }
     }
 
@@ -130,7 +150,12 @@ public class Buffers extends Thread {
                     e = queue.removeFirst();
                 }
                 try {
-                    e.buffer.doStuff(e.last, e.buf);
+                    if (e.buf == null) {
+                        e.buffer.doStuff(e.last, ByteBuffer.allocate(ENTRY_SIZE), new Allocation(1));
+                    }
+                    else {
+                        e.buffer.doStuff(e.last, e.buf, null);
+                    }
                     if (logger.isInfoEnabled()) {
                         long time = System.currentTimeMillis();
                         long dif = time - lastTime;

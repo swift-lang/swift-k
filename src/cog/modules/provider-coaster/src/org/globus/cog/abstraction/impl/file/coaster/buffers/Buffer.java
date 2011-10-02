@@ -18,7 +18,7 @@ public abstract class Buffer {
     	this.buffers = buffers;
     }
 
-    public abstract void doStuff(boolean last, ByteBuffer b);
+    public abstract void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc);
 
     public void close() throws IOException {
     }

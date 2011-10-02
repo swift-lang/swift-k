@@ -25,14 +25,14 @@ public class NIOChannelReadBuffer extends ReadBuffer {
         init();
     }
 
-    public void doStuff(boolean last, ByteBuffer b) {
+    public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
         if (read >= size) {
             return;
         }
+        if (alloc != null) {
+            bufferCreated(alloc);
+        }
         try {
-            if (b == null) {
-                b = allocateOneBuffer();
-            }
             channel.read(b);
             b.limit(b.position());
             b.rewind();
