@@ -292,10 +292,10 @@ sub file2hash() {
 }
 
 sub timestring() {
-	my $t = sprintf("%.3f", time());
-	#my @d = localtime(time());
-	#my $t = sprintf("%i/%02i/%02i %02i:%02i",
-	# $d[5]+1900, $d[4], $d[3], $d[2], $d[1]);
+	#my $t = sprintf("%.3f", time());
+	my $now = time();
+	my @d = localtime($now);
+	my $t = sprintf("%i/%02i/%02i %02i:%02i:%02i.%03i", $d[5]+1900, $d[4], $d[3], $d[2], $d[1], $d[0], ($now*1000) % 1000);
 	return $t;
 }
 
@@ -525,7 +525,7 @@ sub nextFileData {
 			return (FINAL_FLAG + ERROR_FLAG, "File size mismatch. Expected $$state{'size'}, got $$state{'sent'}", CONTINUE);
 		}
 		$$state{"sent"} += $sz;
-		wlog DEBUG, "size: $$state{'size'}, sent: $$state{'sent'}\n";
+		wlog DEBUG, "tag: $$state{'tag'}, size: $$state{'size'}, sent: $$state{'sent'}\n";
 		if ($$state{"sent"} == $$state{"size"}) {
 			close $handle;
 		}
@@ -617,7 +617,7 @@ sub unpackData {
 		$alen = $alen + length($frag);
 		$msg = $msg.$frag;
 	}
-
+	
 	my $actuallen = length($msg);
 	wlog(TRACE, " IN: len=$len, actuallen=$actuallen, tag=$tag, flags=$flg, $msg\n");
 	if ($len != $actuallen) {
@@ -789,7 +789,7 @@ sub loopOne {
 	# things may be added to it while stuff is being sent
 	my $sz = scalar(@CMDQ);
 	for (my $i = 0; $i < $sz; $i++)  {
-		$cmd = pop(@CMDQ);
+		$cmd = shift(@CMDQ);
 		sendCmdInt(@$cmd);
 	}
 	checkJobs();
@@ -1374,7 +1374,7 @@ sub putFileCBDataIn {
 
 	if ($err || $timeout) {
 		if ($JOBDATA{$jobid}) {
-			wlog DEBUG, "Stage out failed ($reply)\n";
+			wlog DEBUG, "$tag Stage out failed ($reply)\n";
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "515", "Stage out failed ($reply)"));
 			delete($JOBDATA{$jobid});
 		}
