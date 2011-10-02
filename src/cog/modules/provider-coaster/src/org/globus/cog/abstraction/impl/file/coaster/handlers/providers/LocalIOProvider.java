@@ -151,6 +151,7 @@ public class LocalIOProvider implements IOProvider {
         }
 
         public synchronized void dataSent() {
+            logger.debug("Data sent");
             rbuf.freeFirst();
         }
 

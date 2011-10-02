@@ -39,6 +39,9 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
     }
 
     protected void addInData(boolean fin, boolean err, byte[] data) {
+    	if (logger.isDebugEnabled()) {
+    		logger.debug(this + " got data, fin = " + fin + ", err = " + err + ", sz = " + data.length);
+    	}
         try {
             if (err) {
                 super.addInData(fin, err, data);
@@ -46,19 +49,19 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             else if (len == -1) {
                 len = unpackLong(data);
                 if (logger.isDebugEnabled()) {
-                    logger.debug(dst + " Size: " + len);
+                    logger.debug(this + " " + dst + " Size: " + len);
                 }
             }
             else if (src == null) {
                 src = new String(data);
                 if (logger.isInfoEnabled()) {
-                    logger.info("Source: " + src);
+                    logger.info(this + " source: " + src);
                 }
             }
             else if (dst == null) {
                 dst = new String(data);
                 if (logger.isInfoEnabled()) {
-                    logger.info("Destination: " + dst);
+                    logger.info(this + " destination: " + dst);
                 }
                 provider = IOProviderFactory.getDefault().instance(getProtocol(dst));
                 writer = provider.push(src, dst, this);
@@ -101,6 +104,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
 
     public void error(IOHandle op, Exception e) {
         try {
+        	logger.warn("Failed to write file data", e);
             sendError("Failed to write file data: " + e.getMessage());
         }
         catch (ProtocolException ee) {
