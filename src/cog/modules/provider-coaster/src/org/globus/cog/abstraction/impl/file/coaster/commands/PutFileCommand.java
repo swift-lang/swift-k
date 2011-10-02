@@ -34,6 +34,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
     private ReadBuffer rbuf;
     // private Exception ex;
     private String src;
+    private boolean done;
     
     public PutFileCommand(String src, String dest) throws IOException, InterruptedException {
         this(src, dest, new File(src).length());
@@ -61,24 +62,38 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
         if (channel == null) {
             throw new ProtocolException("Unregistered command");
         }
+        
+        long now = System.currentTimeMillis();
+        setSendReqTime(now);
+        setLastTime(now);
 
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + ", src: " + src + ", dest: " + dest + ", size: " + size);
+        }
         channel.sendTaggedData(getId(), false, getOutCmd().getBytes());
         channel.sendTaggedData(getId(), false, pack(size));
         channel.sendTaggedData(getId(), false, src.getBytes());
         channel.sendTaggedData(getId(), size == 0, dest.getBytes());
         if (logger.isInfoEnabled()) {
-            logger.info("Sending data");
+            logger.info(this + " sending data");
         }
     }
 
     public void dataSent() {
         super.dataSent();
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + " data sent");
+        }
         rbuf.freeFirst();
     }
 
     public void dataRead(boolean last, ByteBuffer buf) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + " data read, last = " + last);
+        }
         getChannel().sendTaggedData(getId(), last ? KarajanChannel.FINAL_FLAG : 0, buf, this);
         if (last) {
+            done = true;
             closeBuffer();
         }
     }
@@ -96,4 +111,9 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
         getChannel().sendTaggedReply(getId(), e.getMessage().getBytes(), true, true, null);
         closeBuffer();
     }
+
+    public String toString() {
+        return super.toString() + (done ? " (d)" : " (t)");
+    }
+        
 }
