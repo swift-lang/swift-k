@@ -153,15 +153,22 @@ public class ProxyIOProvider implements IOProvider {
             getCallback().error(true, e);
         }
 
-        public synchronized void queue(boolean last, ByteBuffer buf) throws InterruptedException {
-            while (crt >= Buffers.ENTRIES_PER_STREAM) {
-                wait();
+        public void queue(boolean last, ByteBuffer buf) throws InterruptedException {
+            if (logger.isDebugEnabled()) {
+                logger.debug(getCallback() + " got data");
             }
-            crt++;
-            alloc.add(buffers.request(1));
-            /* if (last) {
-                seenLast = true;
-            } */
+            Buffers.Allocation a = buffers.request(1);
+            synchronized(this) {
+                while (crt >= Buffers.ENTRIES_PER_STREAM) {
+                    logger.debug("Reached max stream buffers. Waiting");
+                    wait();
+                }
+                crt++;
+                alloc.add(a);
+                /* if (last) {
+                    seenLast = true;
+                } */
+            }
             getCallback().dataRead(last, buf);
         }
 
@@ -174,7 +181,7 @@ public class ProxyIOProvider implements IOProvider {
         protected void deallocateBuffers() {
         }
 
-        public void doStuff(boolean last, ByteBuffer b) {
+        public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
             // not used
         }
     }
@@ -301,7 +308,7 @@ public class ProxyIOProvider implements IOProvider {
             this.cmd = cmd;
         }
 
-        public void doStuff(boolean last, ByteBuffer b) {
+        public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
             try {
                 cmd.cb.data(cmd.handle, b, last);
             }
