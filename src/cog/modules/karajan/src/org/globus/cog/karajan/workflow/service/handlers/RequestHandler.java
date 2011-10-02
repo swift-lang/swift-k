@@ -10,6 +10,7 @@
 package org.globus.cog.karajan.workflow.service.handlers;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
@@ -104,18 +105,19 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	protected String ppInData(String prefix) {
-		return ppData(prefix+"< ", getInCmd(), getInDataChunks());
+		return ppData(prefix + "< ", getInCmd(), getInDataChunks());
 	}
-	
+
 	public String toString() {
-		return "Handler(" + getInCmd() + ")";
+		return "Handler(" + getId() + ", " + getInCmd() + ")";
 	}
-	
+
 	public void handleTimeout() {
-        if (isInDataReceived()) {
-            return;
-        }
-        logger.info(this + ": timed out receiving request");
-        errorReceived("Timeout", new TimeoutException());
-    }
+		if (isInDataReceived()) {
+			return;
+		}
+		logger.info(this + ": timed out receiving request. Last time "
+				+ DF.format(new Date(getLastTime())) + ", now: " + DF.format(new Date()));
+		errorReceived("Timeout", new TimeoutException());
+	}
 }

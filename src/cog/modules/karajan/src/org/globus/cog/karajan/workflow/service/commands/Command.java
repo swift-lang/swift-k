@@ -10,8 +10,6 @@
 package org.globus.cog.karajan.workflow.service.commands;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -19,8 +17,8 @@ import java.util.Timer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.TimeoutException;
 import org.globus.cog.karajan.workflow.service.RequestReply;
+import org.globus.cog.karajan.workflow.service.TimeoutException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelIOException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
@@ -34,8 +32,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 	static {
 		timer = new Timer(true);
 	}
-
-	public static final DateFormat DF = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
 
 	public static final int DEFAULT_MAX_RETRIES = 2;
 	private int maxRetries = DEFAULT_MAX_RETRIES;
@@ -255,6 +251,14 @@ public abstract class Command extends RequestReply implements SendCallback {
 				+ DF.format(new Date(sendReqTime)) + ", sendTime=" + DF.format(new Date(sendTime))
 						+ ", now=" + DF.format(new Date()));
 		reexecute("Reply timeout", new TimeoutException());
+	}
+
+	protected long getSendReqTime() {
+		return sendReqTime;
+	}
+
+	protected void setSendReqTime(long sendReqTime) {
+		this.sendReqTime = sendReqTime;
 	}
 
 	public String toString() {

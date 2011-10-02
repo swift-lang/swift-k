@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -45,6 +47,8 @@ public abstract class RequestReply {
 	private boolean inDataReceived;
 	private KarajanChannel channel;
 	private long lastTime = Long.MAX_VALUE;
+	
+	public static final DateFormat DF = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
 
 	// private static final byte[] NO_EXCEPTION = new byte[0];
 
