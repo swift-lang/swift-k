@@ -10,8 +10,8 @@
 package org.globus.cog.karajan.workflow.nodes.functions;
 
 import java.util.Collections;
-import java.util.Stack;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -20,6 +20,8 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 
 public class Variable extends AbstractFunction {
+
+	final static Logger logger = Logger.getLogger(Variable.class);
 
 	public static final Arg A_NAME = new Arg.Positional("name");
 
@@ -46,6 +48,8 @@ public class Variable extends AbstractFunction {
 				}
 			}
 		}
+
+		logger.debug("get: " + name);
 
 		switch (frame) {
 			case UNINITIALIZED:
