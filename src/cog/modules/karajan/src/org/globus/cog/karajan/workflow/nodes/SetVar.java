@@ -6,7 +6,7 @@
 
 /*
  * Created on Jun 6, 2003
- *  
+ *
  */
 package org.globus.cog.karajan.workflow.nodes;
 
@@ -23,7 +23,7 @@ public class SetVar extends SequentialWithArguments {
 	public static final Arg A_NAMES = new Arg.Optional("names");
 	public static final Arg A_VALUE = new Arg.Optional("value");
 
-	private Object value;
+	// private Object value;
 	private Object[] names;
 
 	static {
@@ -83,8 +83,8 @@ public class SetVar extends SequentialWithArguments {
 		else {
 			throw new KarajanRuntimeException("No 'name' or 'names' attribute specified");
 		}
-		if (A_VALUE.isPresentStatic(this)) {
-			value = A_VALUE.getStatic(this);
-		}
+		//		if (A_VALUE.isPresentStatic(this)) {
+		//			value = A_VALUE.getStatic(this);
+		//		}
 	}
 }
