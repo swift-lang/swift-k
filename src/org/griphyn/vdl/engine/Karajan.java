@@ -86,7 +86,7 @@ public class Karajan {
 	}
 
 	public static void compile(String in, PrintStream out, boolean provenanceEnabled) throws CompilationException {
-		Karajan me = new Karajan();
+		Karajan karajan = new Karajan();
 		StringTemplateGroup templates;
 		try {
 		    StringTemplateGroup main = new StringTemplateGroup(new InputStreamReader(
@@ -112,8 +112,8 @@ public class Karajan {
 		}
 
 		Program prog = programDoc.getProgram();
-		me.setTemplateGroup(templates);
-		StringTemplate code = me.program(prog);
+		karajan.setTemplateGroup(templates);
+		StringTemplate code = karajan.program(prog);
 		out.println(code.toString());
 	}
 
@@ -370,7 +370,7 @@ public class Karajan {
 			checkIsTypeDefined(type);
 			outerScope.addVariable(param.getName(), type);
 		}
-
+		
 		Binding bind;
 		if ((bind = proc.getBinding()) != null) {
 			binding(bind, procST, innerScope);
@@ -1022,10 +1022,32 @@ public class Karajan {
 				appST.setAttribute("stdout", expressionToKarajan(app.getStdout().getAbstractExpression(), scope));
 			if(app.getStderr()!=null)
 				appST.setAttribute("stderr", expressionToKarajan(app.getStderr().getAbstractExpression(), scope));
+			addProfiles(app, scope, appST);
 			return appST;
 		} catch(CompilationException e) {
 			throw new CompilationException(e.getMessage()+" in application "+app.getExecutable()+" at "+app.getSrc(),e);
 		}
+	}
+
+	private void addProfiles(ApplicationBinding app, 
+	                         VariableScope scope,
+	                         StringTemplate appST) 
+	throws CompilationException {
+		Profile[] profiles = app.getProfileArray();
+		if (profiles.length == 0) 
+			return;
+		StringTemplate attributes = template("vdl_attributes");
+		for (Profile profile : profiles) { 
+			XmlObject xmlKey   = profile.getAbstractExpressionArray(0);
+			XmlObject xmlValue = profile.getAbstractExpressionArray(1);
+			StringTemplate key   = expressionToKarajan(xmlKey, scope);
+			StringTemplate value = expressionToKarajan(xmlValue, scope);
+			StringTemplate entry = template("map_entry");
+			entry.setAttribute("key", key);
+			entry.setAttribute("value", value);
+			attributes.setAttribute("entries", entry);
+		}
+		appST.setAttribute("attributes", attributes);
 	}
 
 	/** Produces a Karajan function invocation from a SwiftScript invocation.

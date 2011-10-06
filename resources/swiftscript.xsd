@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
            version="1.0"
-           targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript" 
+           targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript"
            xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -49,11 +49,11 @@
          <xs:complexType>
           <xs:sequence>
 	        <xs:element name="typename" type="xs:string" />
-			<xs:element name="typealias" type="xs:string" />			
+			<xs:element name="typealias" type="xs:string" />
 	        <xs:element name="typestructure" type="TypeStructure" />
 	      </xs:sequence>
          </xs:complexType>
-        </xs:element>        
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -65,7 +65,7 @@
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  
+
   <xs:complexType name="Procedure">
     <xs:annotation>
       <xs:documentation>a procedure defines the logical interface of a
@@ -121,7 +121,7 @@
         <xs:documentation>the name of the procedure</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    
+
     <xs:attribute name="src" type="xs:string" />
   </xs:complexType>
 
@@ -168,6 +168,10 @@
         </xs:annotation>
       </xs:element>
 
+      <xs:element name="profile" type="Profile"
+                  minOccurs="0" maxOccurs="unbounded">
+      </xs:element>
+
       <xs:sequence>
 
         <xs:element minOccurs="0" name="stdin" type="UnlabelledUnaryOperator">
@@ -202,6 +206,13 @@
 
   </xs:complexType>
 
+  <xs:complexType name="Profile">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+      <xs:element ref="abstractExpression" />
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:group name="ArgumentGroup">
     <xs:sequence>
       <xs:element minOccurs="0" name="function" type="Function"/>
@@ -225,6 +236,10 @@
     </xs:attribute>
   </xs:complexType>
 
+  <!--
+      This is an older idea about how to put profile settings in XML
+      It should not be accessible from SwiftScript any more. -Justin
+
   <xs:complexType mixed="true" name="Profile">
     <xs:annotation>
       <xs:documentation>profile specifies configuration information pertaining
@@ -245,6 +260,7 @@
 
     <xs:attribute name="key" type="xs:NMTOKEN" use="required"/>
   </xs:complexType>
+  -->
 
   <xs:complexType name="Array">
     <xs:annotation>
@@ -342,7 +358,7 @@
     <xs:attribute name="src" type="xs:string" />
 
   </xs:complexType>
-  
+
   <xs:complexType name="Append">
     <xs:annotation>
       <xs:documentation>appends a value to an array
@@ -404,7 +420,7 @@
       </xs:element>
 
       <xs:element name="assign" type="Assign"/>
-      
+
       <xs:element name="append" type="Append"/>
 
       <xs:element name="call" type="Call"/>
@@ -615,7 +631,7 @@ and it will absorb 'not' -->
 		             type="TypeRow" name="member" />
 	</xs:sequence>
   </xs:complexType>
-	
+
   <xs:complexType name="TypeRow">
 	<xs:sequence>
 		<xs:element name="membername" type="xs:string"/>

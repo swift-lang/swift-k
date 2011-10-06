@@ -1,4 +1,4 @@
-element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), channel(stagein), channel(stageout), channel(restartout)]
+element([tr, optional(arguments, stdin, stdout, stderr, attributes, deperror, mdeperror), channel(stagein), channel(stageout), channel(restartout)]
 
 	vdl:initprogressstate()
 
@@ -20,8 +20,9 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 							parallelFor(i, replicationChannel
 								ignoreErrors(match = "^Abort$"
 									execute2(
-										tr, maybe(arguments=unwrapClosedList(arguments)), 
-										maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), 
+										tr, maybe(arguments=unwrapClosedList(arguments)),
+										maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr),
+                    maybe(attributes=attributes),
 										stagein, stageout, restartout, replicationGroup, replicationChannel
 									)
 								)
@@ -33,6 +34,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 					)
 					catch(".*"
 						log(LOG:INFO, "END_FAILURE thread={#thread} tr={tr}")
+						log(LOG:WARN, "EXCEPTION {exception}")
 						vdl:setprogress("Failed")
 						if(
 							vdl:configProperty("lazy.errors") == "false" then(
@@ -56,7 +58,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, deperror, mdeperror), ch
 		else (
 			if(
 				merr == true then(
-					exception := exception(concat("VDL2: Application ", str:quote(tr), 
+					exception := exception(concat("VDL2: Application ", str:quote(tr),
 						" not executed due to errors in mapping dependencies"))
 					to(errors, exception)
 					log(LOG:INFO, exception)

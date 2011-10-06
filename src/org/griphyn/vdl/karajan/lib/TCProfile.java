@@ -27,11 +27,19 @@ import org.griphyn.vdl.util.FQN;
 public class TCProfile extends VDLFunction {
     public static final Logger logger = Logger.getLogger(TCProfile.class);
     
-	public static final Arg OA_TR = new Arg.Optional("tr");
-	public static final Arg PA_HOST = new Arg.Positional("host");
+	public static final Arg OA_TR    = new Arg.Optional("tr");
+	
+	/**
+	   Allows for dynamic attributes from the SwiftScript 
+	   profile statements. 
+	   These override any other attributes. 
+	 */
+	public static final Arg OA_ATTRS = new Arg.Positional("attributes");
+	
+	public static final Arg PA_HOST  = new Arg.Positional("host");
 	
 	static {
-		setArguments(TCProfile.class, new Arg[] { PA_HOST, OA_TR });
+		setArguments(TCProfile.class, new Arg[] { PA_HOST, OA_ATTRS, OA_TR });
 	}
 
 	private static Map<String, Arg> PROFILE_T;
@@ -52,14 +60,17 @@ public class TCProfile extends VDLFunction {
 	public Object function(VariableStack stack) throws ExecutionException {
 		TCCache tc = getTC(stack);
 		String tr = null;
+		
+		Map<String,Object> dynamicAttributes = 
+			readDynamicAttributes(stack);
+		
 		if (OA_TR.isPresent(stack)) {
 		    tr = TypeUtil.toString(OA_TR.getValue(stack));
 		}
 		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
 		
 		NamedArguments named = ArgUtil.getNamedReturn(stack);
-		Map<String,Object> attrs = null;
-		
+		Map<String,Object> attrs = null;	
 		attrs = attributesFromHost(bc, attrs, named);
 
 		TCEntry tce = null;
@@ -75,11 +86,46 @@ public class TCProfile extends VDLFunction {
 		}
 		named.add(GridExec.A_ENVIRONMENT, env);
 		checkWalltime(tr, named);
+		attrs = addDynamicAttributes(attrs, dynamicAttributes);
 		addAttributes(named, attrs);
 		return null;
 	}
+
+	/**
+	   Bring in the dynamic attributes from the Karajan stack 
+	   @return Map, may be null
+	 */
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> 
+	readDynamicAttributes(VariableStack stack) 
+	throws ExecutionException {
+		Map<String, Object> result = null;
+		if (OA_ATTRS.isPresent(stack)) 
+			result = (Map<String,Object>) OA_ATTRS.getValue(stack);
+		return result;
+	}
 	
-    private void checkWalltime(String tr, NamedArguments attrs) {
+	/**
+       Store dynamic attributes into returned attributes, 
+       overwriting if necessary
+       @param result Attributes so far known, may be null
+       @param dynamicAttributes Attributes to insert, may be null
+       @result Combination, may be null
+	 */
+	private Map<String, Object>
+	addDynamicAttributes(Map<String, Object> result,
+	                     Map<String, Object> dynamicAttributes) {
+		if (result == null && dynamicAttributes == null)
+			return null;
+		if (result == null)
+			return dynamicAttributes;
+		if (dynamicAttributes == null)
+			return result;
+		result.putAll(dynamicAttributes);
+		return result;
+	}
+	
+	private void checkWalltime(String tr, NamedArguments attrs) {
 	    Object walltime = null;
 	    if (attrs != null) {
 	        if (attrs.hasArgument("maxwalltime")) {

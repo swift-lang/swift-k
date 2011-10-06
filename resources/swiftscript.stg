@@ -12,10 +12,10 @@ program(namespaces,targetNS,functions,types,statements,imports,sourcelocation) :
     $imports;separator="\n"$
   </imports>
   $endif$
-  $if(types)$  
+  $if(types)$
   <types>
-     $types;separator="\n"$   
-  </types>  
+     $types;separator="\n"$
+  </types>
   $endif$
   $functions;separator="\n"$
   $statements;separator="\n"$
@@ -42,7 +42,7 @@ $if(type)$
 		<typename>$name$</typename>
 		<typealias>$type$</typealias>
 		<typestructure></typestructure>
-	</type>   
+	</type>
 $else$
 $if(!members)$
 	<type>
@@ -140,14 +140,14 @@ actualParam(value,bind,sourcelocation) ::= <<
 parameter(type,name,outlink,defaultv,sourcelocation) ::= <<
 
 $if(outlink)$
-  <output 
+  <output
 $else$
-  <input 
+  <input
 $endif$
 
 name="$name$" type="$type$"
 
-$if(defaultv)$> 
+$if(defaultv)$>
 $defaultv$
 
 $if(outlink)$
@@ -161,10 +161,13 @@ $else$
 $endif$
 >>
 
-app(exec,arguments,stdin,stdout,stderr,sourcelocation) ::= <<
+app(exec,profiles,arguments,stdin,stdout,stderr,sourcelocation) ::= <<
 <binding>
   <application src="$sourcelocation$">
     <executable>$exec$</executable>
+$if(profiles)$
+    $profiles$
+$endif$
 $if(stdin)$
     $stdin$
 $endif$
@@ -179,6 +182,14 @@ $if(arguments)$
 $endif$
   </application>
 </binding>
+>>
+
+app_profile(key, value, sourcelocation) ::= <<
+  <profile>
+    $key$
+    $value$
+  </profile>
+
 >>
 
 functionInvocation(name,args,sourcelocation) ::= <<

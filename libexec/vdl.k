@@ -9,7 +9,7 @@ namespace("vdl"
 
 	import("vdl-sc.k", export = true)
 	import("vdl-lib.xml", export = true)
-	
+
 	pstaging := configProperty("use.provider.staging")
 	int := if (pstaging == "true", "vdl-int-staging.k", "vdl-int.k")
 
@@ -23,18 +23,18 @@ namespace("vdl"
 		log("info","RUNID id=run:{VDL:RUNID}")
 		echo("RunID: {VDL:RUNID}")
 	)
-	
+
 	export("stagein", elementDef(classname="org.griphyn.vdl.karajan.lib.Stagein"))
 	export("stageout", elementDef(classname="org.griphyn.vdl.karajan.lib.Stageout"))
 
 	export(
-	
-		element(parameterlog, [direction, variable, id, thread], 
-			if( 
-				vdl:configProperty("provenance.log") == "true" 
-				log("info","PARAM thread={thread} direction={direction} variable={variable} provenanceid={id}") 
-			) 
-		) 
+
+		element(parameterlog, [direction, variable, id, thread],
+			if(
+				vdl:configProperty("provenance.log") == "true"
+				log("info","PARAM thread={thread} direction={direction} variable={variable} provenanceid={id}")
+			)
+		)
 		element(split, [var], each(str:split(vdl:getFieldValue(var), " ")))
 
 		element(quote, [var, optional(path)],
@@ -59,7 +59,7 @@ namespace("vdl"
 				)
 			)
 		)
-		
+
 		element(mapping, [descriptor, ...]
 			mapping=map(map:entry("descriptor", descriptor), each(...))
 		)
@@ -83,6 +83,10 @@ namespace("vdl"
 		element(tr, [name]
 			tr = name
 		)
+
+    element(attributes, [attrs]
+      attributes = attrs
+    )
 
 		element(mains, [channel(cleanup), channel(errors), channel(warnings)]
 			anyerrors := vdl:processBulkErrors("The following errors have occurred:", errors)
@@ -110,7 +114,7 @@ namespace("vdl"
 		parallelElement(mainp, [channel(graph), channel(cleanup)]
 			parallel(
 				if(
-					vdl:configProperty("pgraph") != "false" 
+					vdl:configProperty("pgraph") != "false"
 						generateProvenanceGraph(graph)
 				)
 				to(cleanup, unique(for(c, cleanup, c)))

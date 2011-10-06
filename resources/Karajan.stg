@@ -12,8 +12,8 @@ program(types,procedures,declarations,statements,constants,buildversion,cleanups
   $if(types)$
   <types>
      <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-     $types;separator="\n"$  
-     </xs:schema>	 
+     $types;separator="\n"$
+     </xs:schema>
   </types>
   $endif$
   $constants;separator="\n"$
@@ -37,7 +37,7 @@ program(types,procedures,declarations,statements,constants,buildversion,cleanups
 
 typeDef(name,type,members,sourcelocation) ::= <<
  $if(type)$
-   	 <xs:element name="$name$" type="$type$"/>      
+   	 <xs:element name="$name$" type="$type$"/>
  $else$
    $if(!members)$
  	   <xs:simpleType name="$name$">
@@ -52,7 +52,7 @@ typeDef(name,type,members,sourcelocation) ::= <<
    $endif$
  $endif$
 >>
- 	
+
 memberdefinition(type,name,sourcelocation) ::= <<
    <xs:element name="$name$" type="$type$"/>
 >>
@@ -98,13 +98,14 @@ $it.default$
 $endif$
 >>
 
-vdl_execute(outputs,inputs,application,name,line) ::= <<
+vdl_execute(outputs,inputs,attributes,application,name,line) ::= <<
 <log level="debug" message="PROCEDURE line=$line$ thread={#thread} name=$name$"/>
 <vdl:execute>
+  $attributes$
   <vdl:tr>$application.exec$</vdl:tr>
   $inputs:vdl_stagein();separator="\n"$
   $outputs:vdl_stageout();separator="\n"$
-  $vdl_arguments(arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
+  $vdl_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 </vdl:execute>
 $outputs:vdl_closedataset();separator="\n"$
 <log level="debug" message="PROCEDURE_END line=$line$"/>
@@ -144,7 +145,8 @@ vdl_cleandataset() ::= <<
 <vdl:cleandataset var="{$it$}"/>
 >>
 
-vdl_arguments(arguments,stdin,stdout,stderr) ::= <<
+vdl_arguments(attributes,arguments,stdin,stdout,stderr) ::= <<
+  $attributes$
 <vdl:arguments>
   $arguments;separator="\n"$
 </vdl:arguments>
@@ -163,6 +165,26 @@ $if (stderr)$
   $stderr$
 </vdl:stderr>
 $endif$
+>>
+
+vdl_attributes(entries) ::= <<
+<vdl:attributes>
+   <map>
+    $entries;separator="\n"$
+  </map>
+</vdl:attributes>
+
+>>
+
+map_entry(key,value) ::= <<
+      <entry>
+        <vdl:getfieldvalue>
+          $key$
+        </vdl:getfieldvalue>
+        <vdl:getfieldvalue>
+          $value$
+        </vdl:getfieldvalue>
+      </entry>
 >>
 
 parallel(statements) ::= <<
@@ -194,7 +216,7 @@ iterate(declarations,statements,cond,var,cleanups) ::= <<
     <vdl:getfieldvalue>$cond$</vdl:getfieldvalue>
     <sys:break/>
   </sys:if>
-  
+
 </vdl:infinitecountingwhile>
 >>
 
@@ -222,7 +244,7 @@ $endif$
 >>
 
 // need to log inputs and outputs at the calling stage here because
-// they are not 
+// they are not
 // $outputs:vdl_log_output();separator="\n"$
 
 callInternal(func, outputs, inputs) ::= <<
@@ -547,7 +569,7 @@ extractstructelement(parent, memberchild, datatype) ::= <<
 
 slicearray(parent, memberchild, datatype) ::= <<
 <sequential>
- <set name="swift#array">$parent$</set> 
+ <set name="swift#array">$parent$</set>
  <set name="swift#slice">
   <vdl:slicearray>
     <argument name="var"><variable>swift#array</variable></argument>

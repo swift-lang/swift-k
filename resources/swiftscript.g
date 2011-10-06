@@ -118,7 +118,7 @@ structdecl [StringTemplate code]
       thisTypeTemplate=template("type");
       thisTypeTemplate.setAttribute("name", thisType);
       e.setAttribute("type", thisTypeTemplate);
-      code.setAttribute("members", e); 
+      code.setAttribute("members", e);
     }
     (
         COMMA
@@ -134,7 +134,7 @@ structdecl [StringTemplate code]
            thisTypeTemplate=template("type");
            thisTypeTemplate.setAttribute("name", thisType);
            e1.setAttribute("type", thisTypeTemplate);
-           code.setAttribute("members", e1); 
+           code.setAttribute("members", e1);
          }
     )*
     SEMI
@@ -167,7 +167,7 @@ topLevelStatement[StringTemplate code]
        }
 
 // these are non-declaration append-associative array statements
- 
+
 	|   (predictAppendStat) => d=appendStat
 		{
 		 code.setAttribute("statements",d);
@@ -218,7 +218,7 @@ declpart [StringTemplate code, StringTemplate t, boolean isGlobal]
     :
      n=declarator
 	(LBRACK
-	(sTemp=type {sType = (String) sTemp.getAttribute("name") ;} )? 
+	(sTemp=type {sType = (String) sTemp.getAttribute("name") ;} )?
 	RBRACK {thisType = thisType + "[" + sType + "]" ; sType = ""; } )*
      {
         thisTypeTemplate=template("type");
@@ -434,6 +434,7 @@ appproceduredecl returns [StringTemplate code=template("function")]
         )?
         RPAREN
         LCURLY
+        ( appProfile[app] )*
         exec=declarator
         {app.setAttribute("exec",exec);}
         ( appArg[app] )* SEMI
@@ -445,6 +446,18 @@ appproceduredecl returns [StringTemplate code=template("function")]
         }
     ;
 
+appProfile [StringTemplate code]
+{   StringTemplate p=null;
+    StringTemplate k=null;
+    StringTemplate v=null;}
+    : "profile" k=expression ASSIGN v=expression SEMI
+        {
+            p=template("app_profile");
+            p.setAttribute("key", k);
+            p.setAttribute("value", v);
+            code.setAttribute("profiles", p);
+        }
+    ;
 
 // TODO in here, why do we have an | between LBRACKBRACK and ASSIGN?
 // does this mean that we don't have array initialisation in formal
@@ -475,7 +488,7 @@ formalParameter returns [StringTemplate code=template("parameter")]
         }
     ;
 
-type returns [ StringTemplate code = null ] 
+type returns [ StringTemplate code = null ]
 	{ StringBuilder buf = new StringBuilder(); }
 :
 	id:ID {
@@ -486,7 +499,7 @@ type returns [ StringTemplate code = null ]
 		code.setAttribute("name", buf.toString());
 	}
 ;
-    
+
 typeSubscript[StringBuilder buf] :
 	LBRACK { buf.append('['); }
 	(id:ID { buf.append(id.getText()); })?
@@ -570,7 +583,7 @@ foreachStat returns [StringTemplate code=template("foreach")]
         code.setAttribute("var", id.getText());
         code.setAttribute("in", ds);
         if (indexId != null) {
-           code.setAttribute("index", indexId.getText());           
+           code.setAttribute("index", indexId.getText());
         }
     }
     compoundStat[body] {code.setAttribute("body", body);}
@@ -636,7 +649,7 @@ predictAssignStat
 
 predictAppendStat
 {StringTemplate x=null;}
-    : x=identifier APPEND ;    
+    : x=identifier APPEND ;
 
 assignStat returns [StringTemplate code=null]
 {StringTemplate id=null;}
@@ -661,7 +674,7 @@ appendStat returns [ StringTemplate code = null ]
 	{ StringTemplate id=null; }
 :
     id=identifier
-    APPEND 
+    APPEND
     (
     	(predictProcedurecallAssign) => code=procedurecallCode {
     		StringTemplate o = template("returnParam");
@@ -669,12 +682,12 @@ appendStat returns [ StringTemplate code = null ]
 			code.setAttribute("outputs",o);
         }
     	|
-      	code=arrayAppend { 
-			code.setAttribute("array", id);          
+      	code=arrayAppend {
+			code.setAttribute("array", id);
 		}
     )
 ;
-    
+
 arrayAppend returns [ StringTemplate code = null ]
 	{ StringTemplate a = null, e = null, id = null; }
 :
@@ -744,7 +757,7 @@ procedureInvocationExpr [StringTemplate code]
         )?
         RPAREN
     ;
-    
+
 procedureCallExpr returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
     :
@@ -846,6 +859,7 @@ atomicBody [StringTemplate code]
     {code.setAttribute("config",app);}
     ;
 
+/* This is the deprecated format for app { } blocks */
 appSpec returns [StringTemplate code=template("app")]
 {StringTemplate exec=null;}
     :  "app" LCURLY
@@ -1060,7 +1074,7 @@ unaryExpr returns [StringTemplate code=null]
 
 primExpr returns [StringTemplate code=null]
 {StringTemplate id=null, exp=null;}
-    : (predictProcedureCallExpr) => code=procedureCallExpr                     
+    : (predictProcedureCallExpr) => code=procedureCallExpr
     | code=identifier
     | LPAREN exp=orExpr RPAREN { code=template("paren");
         code.setAttribute("exp", exp);}
@@ -1078,7 +1092,7 @@ predictProcedureCallExpr
 // other IDs
 
 identifier returns [StringTemplate code=null]
-{ 
+{
   StringTemplate c=null;
   code=template("variableReference");
 }

@@ -31,7 +31,6 @@ namespace("vdl"
 			dir:make(dc, host=host)
 		)
 
-
 		element(checkJobStatus, [rhost, wfdir, jobid, tr, jobdir]
 			log(LOG:DEBUG, "START jobid={jobid}")
 			try(
@@ -192,7 +191,6 @@ namespace("vdl"
 			)
 		)
 
-
 		element(stageWrapperParams, [jobid, jobdir, wrapfile, dir, host]
 			log(LOG:INFO, "START jobid={jobid} - staging in wrapper params")
 			provider := provider(wrapfile)
@@ -207,7 +205,6 @@ namespace("vdl"
 
 			task:transfer(srcprovider=provider, srchost=srchost, srcfile=filename, srcdir=srcdir, desthost=host, destdir=destdir)
 			log(LOG:INFO, "END jobid={jobid}")
-
 		)
 
 		element(doStagein, [jobid, files, dir, host]
@@ -401,7 +398,7 @@ namespace("vdl"
 			recfile
 		)
 
-		element(execute2, [tr, optional(arguments, stdin, stdout, stderr), stagein, stageout,  restartout,
+		element(execute2, [tr, optional(arguments, stdin, stdout, stderr, attributes), stagein, stageout,  restartout,
 			replicationGroup, replicationChannel]
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
@@ -480,7 +477,7 @@ namespace("vdl"
 								directory=wfdir
 								redirect=false
 								host=rhost
-								vdl:tcprofile(rhost, tr=tr) //this gets various app params from the tc, such as environment, walltime, etc
+								vdl:tcprofile(rhost, maybe(attributes=attributes), tr=tr) //this gets various app params from the tc, such as environment, walltime, etc
 								replicationGroup=replicationGroup
 								replicationChannel=replicationChannel
 								jobid=jobid
@@ -510,7 +507,7 @@ namespace("vdl"
 							directory=wfdir
 							redirect=false
 							host=rhost
-							vdl:tcprofile(rhost, tr=tr) //this gets various app params from the tc, such as environment, walltime, etc
+							vdl:tcprofile(rhost, maybe(attributes=attributes), tr=tr)
 							replicationGroup=replicationGroup
 							replicationChannel=replicationChannel
 							jobid=jobid
