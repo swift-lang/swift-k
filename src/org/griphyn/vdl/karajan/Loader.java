@@ -80,7 +80,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static String buildVersion;
 
     public static void main(String[] argv) {
-        logger.debug("Loader started");
+        logger.debug("Swift started");
+        logger.info("Swift version: 0.93");
         ArgumentParser ap = buildArgumentParser();
         String project = null;
         try {
