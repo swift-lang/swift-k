@@ -59,6 +59,7 @@ END
 exit 0;
 }
 
+
 # Parse command line arguments
 while [ $# -gt 0 ]
 do
@@ -216,10 +217,14 @@ fi
 # Verify that the variables by the template are defined
 for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL
 do
-   # Need but can't find, due
-   if grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
+   # Test for HOST/GLOBUS_HOSTNAME - the only values which don't match
+   if [ "$TOKEN" == "HOST" ]; then
+      if [ -z "$GLOBUS_HOSTNAME" ]; then
+         crash "Not specified: GLOBUS_HOSTNAME"
+      fi
+   elif grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
       if [ -z "${!TOKEN}" ]; then
-            crash "Not specified: ${TOKEN}"
+         crash "Not specified: ${TOKEN}"
       fi
    fi
 done
