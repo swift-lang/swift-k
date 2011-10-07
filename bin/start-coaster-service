@@ -43,7 +43,7 @@ start-workers-futuregrid()
       # Copy and start worker script
       scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
-      ssh $WORKER_USERNAME@$MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
+      ssh $WORKER_USERNAME@$MACHINE "$WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
       echo $! >> $PID_FILE 
    done
 }
@@ -56,6 +56,11 @@ start-workers-ssh()
    if [ -z "$PORT" ]; then
       crash "start-workers-ssh: Port number not specified, giving up"
    fi
+
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$WORKER_RELAY_HOST:/tmp > /dev/null 2>&1
+   fi
+
    for MACHINE in $WORKER_HOSTS
    do
       # Enable ssh tunneling if needed
@@ -64,10 +69,20 @@ start-workers-ssh()
          echo $! >> $PID_FILE
       fi
 
-      scp $SWIFT_BIN/$WORKER $MACHINE:$WORKER_WORK > /dev/null 2>&1
-      echo Starting worker on $MACHINE
-      ssh $MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
-      echo $! >> $PID_FILE
+      # Use a relay host
+      if [ -n "$WORKER_RELAY_HOST" ]; then
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_WORK > /dev/null 2>&1
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK" > /dev/null 2>&1
+         echo Starting worker on $MACHINE
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
+         echo $! >> $PID_FILE
+      # Connect directly
+      else  
+         scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
+         echo Starting worker on $MACHINE
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+         echo $! >> $PID_FILE
+      fi
    done
    return 0
 }
