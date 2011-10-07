@@ -43,7 +43,7 @@ start-workers-futuregrid()
       # Copy and start worker script
       scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
-      ssh $WORKER_USERNAME@$MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
+      ssh $WORKER_USERNAME@$MACHINE "$WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
       echo $! >> $PID_FILE 
    done
 }
@@ -56,6 +56,11 @@ start-workers-ssh()
    if [ -z "$PORT" ]; then
       crash "start-workers-ssh: Port number not specified, giving up"
    fi
+
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$WORKER_RELAY_HOST:/tmp > /dev/null 2>&1
+   fi
+
    for MACHINE in $WORKER_HOSTS
    do
       # Enable ssh tunneling if needed
@@ -64,10 +69,20 @@ start-workers-ssh()
          echo $! >> $PID_FILE
       fi
 
-      scp $SWIFT_BIN/$WORKER $MACHINE:$WORKER_WORK > /dev/null 2>&1
-      echo Starting worker on $MACHINE
-      ssh $MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
-      echo $! >> $PID_FILE
+      # Use a relay host
+      if [ -n "$WORKER_RELAY_HOST" ]; then
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_WORK > /dev/null 2>&1
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK" > /dev/null 2>&1
+         echo Starting worker on $MACHINE
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
+         echo $! >> $PID_FILE
+      # Connect directly
+      else  
+         scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
+         echo Starting worker on $MACHINE
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+         echo $! >> $PID_FILE
+      fi
    done
    return 0
 }
@@ -242,7 +257,11 @@ esac
 # Generate sites.xml
 export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
 echo Generating sites.xml
-gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
+if [ -f "gensites.template" ]; then
+   gensites `cat gensites.template` -p $CONFIG_FILE > $RUN_DIR/sites.xml
+else
+   gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
+fi
 
 # Generate config file
 if [ "$SHARED_FILESYSTEM" == "no" ]; then
@@ -254,18 +273,4 @@ execution.retries=0
 provider.staging.pin.swiftfiles=false
 EOF
 fi
-
-# Generate TC file
-echo Generating tc.data
-cat > $RUN_DIR/tc.data << EOF
-persistent-coasters 	echo		/bin/echo		null	null	null
-persistent-coasters 	cat		/bin/cat		null	null	null
-persistent-coasters 	ls		/bin/ls			null	null	null
-persistent-coasters 	grep		/bin/grep		null	null	null
-persistent-coasters 	sort		/bin/sort		null	null	null
-persistent-coasters 	paste		/bin/paste		null	null	null
-persistent-coasters 	cp		/bin/cp	        	null	null	null
-persistent-coasters	wc		/usr/bin/wc		null	null	null
-persistent-coasters	hostname	/bin/hostname		null	null	null
-EOF
 
