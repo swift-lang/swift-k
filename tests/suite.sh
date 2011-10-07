@@ -947,7 +947,7 @@ else
   IFCONFIG=/sbin/ifconfig
 fi
 $IFCONFIG > /dev/null 2>&1 || crash "Cannot run ifconfig!"
-GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
+export GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
                    awk '{print $1}' )
 [ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
 
@@ -958,7 +958,7 @@ group_sites_xml() {
   if [ -f "$GROUP/sites.template.xml" ]; then
      TEMPLATE="$GROUP/sites.template.xml"
   elif [ -f "$GROUP/gensites.template" ]; then
-     TEMPLATE=`cat $GROUP/gensites.template`
+     TEMPLATE=`$GROUP/gensites.template`
   else
      TEMPLATE="$TESTDIR/sites/localhost.xml"
   fi
@@ -972,11 +972,7 @@ group_sites_xml() {
   # Call gensites
   TEMPLATE_DIRNAME=`dirname $TEMPLATE`
   TEMPLATE=`basename $TEMPLATE`
-  if [ "$TEMPLATE_DIRNAME" != "." ]; then
-     gensites -L $TEMPLATE_DIRNAME $TEMPLATE > sites.xml
-  else 
-     gensites $TEMPLATE > sites.xml
-  fi
+  gensites -L $TEMPLATE_DIRNAME $TEMPLATE > sites.xml
 }
 
 # Generate tc.data
