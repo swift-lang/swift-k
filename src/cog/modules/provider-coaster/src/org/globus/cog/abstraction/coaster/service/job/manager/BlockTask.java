@@ -44,6 +44,7 @@ public class BlockTask extends TaskImpl {
         setAttribute(spec, "queue", settings.getQueue());
         setAttribute(spec, "project", settings.getProject());
         setAttribute(spec, "ppn", settings.getPpn());
+        setAttribute(spec, "pe", settings.getPe());
         int count = block.getWorkerCount() / settings.getJobsPerNode();
         if (count > 1) {
             setAttribute(spec, "jobType", "multiple");

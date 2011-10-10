@@ -77,10 +77,12 @@ public class SGEExecutor extends AbstractExecutor {
         wr.write("#$ -V\n");
         writeAttr("project", "-A ", wr);
 
+        String peValue = "-pe ";
+        Object pe = spec.getAttribute("pe");
+        if(pe == null) peValue += getSGEProperties().getDefaultPE() + " ";
+        else peValue += pe + " ";
         Object nodeGranularity = spec.getAttribute("nodeGranularity");
-        writeAttr("count", "-pe "
-                + getAttribute(spec, "pe", getSGEProperties().getDefaultPE())
-                + " ", wr, nodeGranularity == null ? "1" : nodeGranularity.toString());
+        writeAttr("count", peValue, wr, nodeGranularity == null ? "1" : nodeGranularity.toString());
 
         writeWallTime(wr);
         writeAttr("queue", "-q ", wr);

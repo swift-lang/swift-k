@@ -49,7 +49,7 @@ public class Settings {
                        "workerLoggingDirectory",
                        "ppn", "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
-                       "providerAttributes", "parallelism" };
+                       "providerAttributes", "parallelism", "pe" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -148,6 +148,11 @@ public class Settings {
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
      */
     private String ppn;
+
+    /**
+     * A pass-through setting for SGE, parallel environment
+    */
+    private String pe;
 
     public Settings() {
         hook = new Hook();
@@ -478,6 +483,14 @@ public class Settings {
 
     public void setAlcfbgpnat(boolean alcfbgpnat) {
         this.alcfbgpnat = alcfbgpnat;
+    }
+
+    public String getPe() {
+        return pe;
+    }
+
+    public void setPe(String pe) { 
+        this.pe = pe;
     }
 
     public String getPpn() {
