@@ -47,9 +47,7 @@ def ress_parse
       value.app_dir += dir_suffix
       value.data_dir += dir_suffix
     end
-
     yield name, value
   end
 end
-
 

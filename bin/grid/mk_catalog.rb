@@ -146,7 +146,8 @@ coaster_sites = %q[
 ]
 
 def ress_query(class_ads)
-  cmd = "condor_status -pool engage-submit.renci.org"
+  cmd = "condor_status -pool engage-central.renci.org"
+  #cmd = "condor_status -pool osg-ress-1.fnal.gov" 
   class_ads[0..-2].each do |class_ad|
     cmd << " -format \"%s|\" #{class_ad}"
   end

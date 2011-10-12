@@ -22,7 +22,7 @@ $:[$:.length] = File.dirname($0)
 
 
 class Site
-  attr_accessor :grid_resource, :gridftp, :data_dir, :app_dir, :name, :port
+  attr_accessor :grid_resource, :gridftp, :data_dir, :app_dir, :name, :sport, :wport
   attr_reader :submit_file
 
   # **Ketan: Generate the worker job
@@ -49,7 +49,7 @@ class Site
       globus_rsl    = (maxwalltime=240)
       grid_resource = <%= @grid_resource %>
       executable    = #{workerWrapper}
-      arguments     = #{workerContact} <%= @name.gsub(/__.*/,"") %> /tmp
+      arguments     = #{workerContact}:<%= @wport.to_i %> <%= @name.gsub(/__.*/,"") %> /tmp
       environment   = WORKER_LOGGING_LEVEL=INFO
       Input         = #{workerExecutable}
       Error         = condor/$(Process).err
@@ -93,7 +93,6 @@ class Site
     $VERBOSE=ov
     jobs.split(" ").size
   end
-
 end
 
 =begin
@@ -200,12 +199,14 @@ end
     site               = Site.new
     site.name          = name
     site.grid_resource = "gt2 #{value.url}/jobmanager-#{value.jm}"
+    #site.grid_resource = "gt2 #{value.url}/jobmanager-fork"
     site.gridftp       = "gsiftp://#{value.url}"
     site.app_dir       = value.app_dir
     site.data_dir      = value.data_dir
     #site.port          = start_port + ctr
-    site.port          = service_ports[ctr] #**Ketan: assuming this is the worker that needs to connect back to its corresponding service
-    
+    site.sport          = service_ports[ctr] #**Ketan: assuming this is the worker that needs to connect back to its corresponding service
+    site.wport          = worker_ports[ctr]
+
     sites.push site
 
     # **Ketan: can put the coasters_osg.xml template right here.
@@ -219,12 +220,12 @@ end
         sitename = asite.name
       %>
       <pool handle="<%=sitename%>">
-       <execution provider="coaster-persistent" url="http://localhost:<%= service_ports[ctr]%>" jobmanager="local:local" />
+       <execution provider="coaster-persistent" url="http://localhost:<%= service_ports[ctr].chomp %>" jobmanager="local:local" />
        <profile namespace="globus" key="workerManager">passive</profile>
        <profile namespace="karajan" key="initialScore">10000</profile>
        <profile namespace="karajan" key="jobThrottle">2.99</profile>
        <profile namespace="globus" key="jobsPerNode">16</profile>
-       <gridftp  url="gsiftp://<%=gftp%>"/>
+       <gridftp  url="<%=gftp%>"/>
        <workdirectory><%=data_dir%>/swift_scratch</workdirectory>
       </pool>
       <% ctr += 1
@@ -331,7 +332,6 @@ keep queued on each site:
      sitec = 200 20% d=100 ex=20 q=20
      r=50 q=25
 =end
-
 
 #dump("coaster_osg.xml", coaster_sites, binding)
 
