@@ -1,20 +1,20 @@
 Log Processing
 ==============
 
-To properly generate log plots, you must enable VDL/Karajan logging.
-TODO:How?
-
 You should check the scripts that you intend to use to determine
 what log lines they require and ensure that you are generating
-those lines via log4j.properties
+those lines via +swift/etc/log4j.properties+.
 
-Make sure log4.properties contains:
+To properly generate log plots, you must enable VDL/Karajan logging.
+Make sure +log4.properties+ contains:
 --------------------------------------
 log4j.logger.swift=DEBUG
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Block=DEBUG
 --------------------------------------
-TODO: Does it work for coasters-based runs only?
+
+The script programs referred to below are in
++swift/libexec/log-processing+.
 
 Normalize event times in the log to the run start time
 ------------------------------------------------------
@@ -24,7 +24,6 @@ Normalize event times in the log to the run start time
 ------------------------------------------
 ./iso-to-secs < original.log > swift-run.log
 ------------------------------------------
-
 
 * Generate the log, assuming the log is titled +swift-run.log+
 
@@ -57,9 +56,8 @@ Make a basic job completion plot from Coasters Cpu log lines
 . Build up a completed data file:
 +
 ------------------------------------------
-./cpu-job-completed.pl < swift-run.norm > completed.data
+./cpu-job-complete.pl < swift-run.norm > completed.data
 ------------------------------------------
-TODO: This file: cpu-job-completed seems to be missing
 
 . Plot with the JFreeChart-based plotter in usertools/plotter:
 +
@@ -107,23 +105,22 @@ Make a job run time distribution plot from Coasters Cpu log lines
 swift_plotter.zsh -s buckets.cfg buckets.eps buckets.data
 ------------------------------------------
 
-Utilities
-^^^^^^^^^
+== Utilities
 
-* +iso-to-secs+
++iso-to-secs+::
 Convert human-readable log dates to Unix time
 
-* +extract-start-time+
++extract-start-time+::
 Pull out the first Unix timestamp from the log file
 
-* +normalise-event-start-time+
++normalise-event-start-time+::
 Convert Unix seconds to seconds from start time, given a start time file
 
-* +normalise-event-start-time-to-any+
++normalise-event-start-time-to-any+::
 Convert Unix seconds to seconds from start time, given a start time number
 
-* +sec-to-hour.pl+
++sec-to-hour.pl+::
 Convert seconds to hours in the Unix time column.
 
-* +sec-to-min.pl+
++sec-to-min.pl+::
 Convert seconds to minutes in the Unix time column.
