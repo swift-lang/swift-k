@@ -63,9 +63,11 @@ public class VDL2ExecutionContext extends ExecutionContext {
 	}
 
     public void start(VariableStack stack) {
-        if (logger.isInfoEnabled()) {
-            logger.info(stack);
+        if (logger.isDebugEnabled()) {
+            logger.debug(stack);
         }
+        logger.info("swift.home = " + 
+                    System.getProperty("swift.home"));
         super.start(stack);
     }
 }
