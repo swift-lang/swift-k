@@ -369,7 +369,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
         	"etc" + File.separator + "sites.xml";
 
 		String poolFile = config.getPoolFile();
-		System.out.println(defaultPoolFile);
 		if (poolFile.equals(defaultPoolFile)) {
 			Logger textLogger = Logger.getLogger("swift.textfiles");
 			textLogger.debug("using default sites file");
