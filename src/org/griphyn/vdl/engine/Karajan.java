@@ -130,7 +130,7 @@ public class Karajan {
 		programDoc  = ProgramDocument.Factory.parse(new File(defs), options);
 
 		if(programDoc.validate(options)) {
-			logger.info("Validation of XML intermediate file was successful");
+			logger.debug("Validation of XML intermediate file was successful");
 		} else {
 			logger.warn("Validation of XML intermediate file failed.");
 			logger.warn("Validation errors:");
