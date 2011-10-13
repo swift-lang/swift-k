@@ -20,6 +20,8 @@ namespace("vdl"
 		log("info",sys:file:read("{swift.home}/libexec/version.txt"))
 		echo(sys:file:read("{swift.home}/libexec/version.txt"))
 
+                log(LOG:INFO, "Swift version: TRUNK")
+
 		log("info","RUNID id=run:{VDL:RUNID}")
 		echo("RunID: {VDL:RUNID}")
 	)

@@ -81,7 +81,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     public static void main(String[] argv) {
         logger.debug("Swift started");
-        logger.info("Swift version: TRUNK");
         ArgumentParser ap = buildArgumentParser();
         String project = null;
         try {
