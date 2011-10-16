@@ -71,6 +71,10 @@ Following is an example sites.xml for a 50 slots run with each slot occupying 4 
     <profile namespace="globus" key="project">CI-CCR000013</profile>
 
     <profile namespace="globus" key="ppn">24:cray:pack</profile>
+   
+    <!-- For swift 0.93
+    <profile namespace="globus" key="ppn">pbs.aprun;pbs.mpp;depth=24</profile>
+    -->
 
     <profile namespace="globus" key="jobsPerNode">24</profile>
     <profile namespace="globus" key="maxTime">50000</profile>
