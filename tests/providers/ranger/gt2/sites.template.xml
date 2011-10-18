@@ -1,0 +1,16 @@
+<config>
+<pool handle="ranger">
+      <execution provider="coaster" jobManager="gt2:SGE" url="129.114.50.165"/>
+      <filesystem provider="gsiftp" url="gsiftp://129.114.50.166"/>
+      <profile namespace="globus" key="maxtime">3600</profile>
+      <profile namespace="globus" key="maxWallTime">00:00:03</profile>
+      <profile namespace="globus" key="jobsPerNode">1</profile>
+      <profile namespace="globus" key="nodeGranularity">16</profile>
+      <profile namespace="globus" key="maxNodes">16</profile>
+      <profile namespace="globus" key="queue">development</profile>
+      <profile namespace="karajan" key="jobThrottle">0.9</profile>
+      <profile namespace="globus" key="project">TG-DBS080004N</profile>
+      <profile namespace="globus" key="pe">16way</profile>
+      <workdirectory>_WORK_</workdirectory>
+</pool>
+</config>
