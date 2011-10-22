@@ -28,15 +28,14 @@ public class PerformanceDiagnosticInputStream extends InputStream {
 			public void run() {
 				count++;
 				String s;
-				logger.info(s = "Total transferred: " + units(bytes) + "B, current rate: "
+				logger.info(s = "[IN] Total transferred: " + units(bytes) + "B, current rate: "
 						+ units(bytes - last) + "B/s, average rate: " + units(bytes / count)
 						+ "B/s");
-				System.out.println("[IN]: " + s);
-				System.out.println("[MEM] Heap total: "
+				logger.info(s = "[MEM] Heap total: "
 						+ units(Runtime.getRuntime().totalMemory())
-						+ "MB, Heap used: "
+						+ "B, Heap used: "
 						+ units(Runtime.getRuntime().totalMemory()
-								- Runtime.getRuntime().freeMemory()) + "MB");
+								- Runtime.getRuntime().freeMemory()) + "B");
 				last = bytes;
 			}
 		});
