@@ -98,8 +98,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 	}
 	
 	public void send(boolean err) throws ProtocolException {
-		sendReqTime = System.currentTimeMillis();
-		setLastTime(sendReqTime);
 
 		KarajanChannel channel = getChannel();
 		if (logger.isDebugEnabled()) {
@@ -130,6 +128,8 @@ public abstract class Command extends RequestReply implements SendCallback {
 					channel.sendTaggedData(id, !i.hasNext(), buf, !i.hasNext() ? this : null);
 				}
 			}
+			sendReqTime = System.currentTimeMillis();
+			setLastTime(sendReqTime);
 		}
 		catch (ChannelIOException e) {
 			reexecute(e.getMessage(), e);
@@ -249,8 +249,8 @@ public abstract class Command extends RequestReply implements SendCallback {
 		logger.warn(this
 				+ ": handling reply timeout; sendReqTime="
 				+ DF.format(new Date(sendReqTime)) + ", sendTime=" + DF.format(new Date(sendTime))
-						+ ", now=" + DF.format(new Date()));
-		reexecute("Reply timeout", new TimeoutException());
+						+ ", now=" + DF.format(new Date()) + ", channel=" + getChannel());
+		//reexecute("Reply timeout", new TimeoutException());
 	}
 
 	protected long getSendReqTime() {
