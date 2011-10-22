@@ -162,6 +162,16 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		context.unregisterHandler(tag);
 	}
 
+	@Override
+	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err) {
+		sendTaggedReply(tag, data, (fin ? FINAL_FLAG : 0) + (err ? ERROR_FLAG : 0));
+	}
+	
+	@Override
+	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err, SendCallback cb) {
+		sendTaggedReply(tag, data, (fin ? FINAL_FLAG : 0) + (err ? ERROR_FLAG : 0), cb);
+	}
+
 	public void sendTaggedReply(int tag, byte[] data, boolean fin) {
 		sendTaggedReply(tag, data, fin, false);
 	}
@@ -182,36 +192,33 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		sendTaggedData(i, flags, bytes, null);
 	}
 
-	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err) {
-		sendTaggedReply(tag, data, fin, err, null);
+	public void sendTaggedReply(int tag, byte[] data, int flags) {
+		sendTaggedReply(tag, data, flags, null);
 	}
 
-	public void sendTaggedReply(int tag, byte[] data, boolean fin, boolean err, SendCallback cb) {
+	public void sendTaggedReply(int tag, byte[] data, int flags, SendCallback cb) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(this + " REPL>: tag = " + tag + ", fin = " + fin + ", datalen = "
+			logger.debug(this + " REPL>: tag = " + tag + ", fin = " + flagIsSet(flags, FINAL_FLAG) + ", datalen = "
 					+ data.length + ", data = " + ppByteBuf(data));
 		}
-		int flags = REPLY_FLAG;
-		if (fin) {
-			flags |= FINAL_FLAG;
-		}
-		if (err) {
-			flags |= ERROR_FLAG;
-		}
-		sendTaggedData(tag, flags, data, cb);
+		
+		sendTaggedData(tag, flags | REPLY_FLAG, data, cb);
+	}
+	
+	public void sendTaggedReply(int id, ByteBuffer buf, boolean fin, boolean err, SendCallback cb) {
+		sendTaggedReply(id, buf, (fin ? FINAL_FLAG : 0) + (err ? ERROR_FLAG : 0), cb);
 	}
 
-	public void sendTaggedReply(int id, ByteBuffer buf, boolean fin, boolean errorFlag,
-			SendCallback cb) {
+	public void sendTaggedReply(int id, ByteBuffer buf, int flags, SendCallback cb) {
 		// TODO this should probably be changed to use buffers more efficiently
 		if (buf.hasArray() && (buf.limit() == buf.capacity())) {
-			sendTaggedReply(id, buf.array(), fin, errorFlag, cb);
+			sendTaggedReply(id, buf.array(), flags, cb);
 		}
 		else {
 			byte[] bbuf = new byte[buf.limit()];
 			buf.get(bbuf);
 			buf.rewind();
-			sendTaggedReply(id, bbuf, fin, errorFlag, cb);
+			sendTaggedReply(id, bbuf, flags, cb);
 		}
 	}
 
@@ -264,7 +271,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		i += (buf[offset + 3] & 0xff) << 24;
 		return i;
 	}
-
+	
 	/**
 	   Pretty-print byte buffer 
 	 */
@@ -369,20 +376,28 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	}
 
-	protected void handleReply(int tag, boolean fin, boolean error, int len, byte[] data) {
+	protected void handleReply(int tag, int flags, int len, byte[] data) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(this + " REPL<: tag = " + tag + ", fin = " + fin + ", err = " + error
+			logger.debug(this + " REPL<: tag = " + tag + ", fin = " + 
+					flagIsSet(flags, FINAL_FLAG) + ", err = " + flagIsSet(flags, ERROR_FLAG)
 					+ ", datalen = " + len + ", data = " + ppByteBuf(data));
 		}
 		Command cmd = getChannelContext().getRegisteredCommand(tag);
 		if (cmd != null) {
 			try {
-				cmd.replyReceived(fin, error, data);
+				boolean fin = finalFlagIsSet(flags);
+				boolean err = errorFlagIsSet(flags);
+				if (flagIsSet(flags, SIGNAL_FLAG)) {
+                    cmd.handleSignal(data);
+                }
+				else {
+					cmd.replyReceived(fin, err, data);
+				}
 				if (fin) {
 					if (logger.isDebugEnabled()) {
 						logger.debug(this + " REPL: " + cmd);
 					}
-					if (error) {
+					if (err) {
 						cmd.errorReceived();
 					}
 					else {
@@ -405,22 +420,45 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		}
 	}
 
+	protected boolean flagIsSet(int flags, int mask) {
+		return (flags & mask) != 0;
+	}
+	
+	protected boolean finalFlagIsSet(int flags) {
+		return (flags & FINAL_FLAG) != 0;
+	}
+	
+	protected boolean errorFlagIsSet(int flags) {
+		return (flags & ERROR_FLAG) != 0;
+	}
+
 	protected void unregisteredSender(int tag) {
 		logger.warn(getName() + " Recieved reply to unregistered sender. Tag: " + tag);
 	}
 
-	protected void handleRequest(int tag, boolean fin, boolean error, int len, byte[] data) {
+	protected void handleRequest(int tag, int flags, int len, byte[] data) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(this + " REQ<: tag = " + tag + ", fin = " + fin + ", err = " + error
+			logger.debug(this + " REQ<: tag = " + tag + ", fin = " + 
+					flagIsSet(flags, FINAL_FLAG) + ", err = " + flagIsSet(flags, ERROR_FLAG)
 					+ ", datalen = " + len + ", data = " + ppByteBuf(data));
 		}
 		RequestHandler handler = getChannelContext().getRegisteredHandler(tag);
+		boolean fin = finalFlagIsSet(flags);
+		boolean err = errorFlagIsSet(flags);
 		try {
 			if (handler != null) {
-				handler.register(this);
-				handler.dataReceived(fin, error, data);
+				if (flagIsSet(flags, SIGNAL_FLAG)) {
+					handler.handleSignal(data);
+				}
+				else {
+					handler.dataReceived(fin, err, data);
+				}
 			}
 			else {
+				if (flagIsSet(flags, SIGNAL_FLAG)) {
+					logger.warn("Got signal for unregistered tag (" + tag + "): " + new String(data));
+					return;
+				}
 				try {
 					handler = getRequestManager().handleInitialRequest(data);
 					handler.setId(tag);
@@ -436,7 +474,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 					if (logger.isDebugEnabled()) {
 						logger.debug(this + " REQ: " + handler);
 					}
-					if (error) {
+					if (err) {
 						handler.errorReceived();
 					}
 					else {

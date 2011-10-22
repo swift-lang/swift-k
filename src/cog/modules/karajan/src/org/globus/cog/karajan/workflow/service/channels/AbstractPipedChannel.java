@@ -80,10 +80,10 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 		byte[] copy = new byte[bytes.length];
 		System.arraycopy(bytes, 0, copy, 0, bytes.length);
 		if (reply) {
-			s.handleReply(tag, fin, error, copy.length, copy);
+			s.handleReply(tag, flags, copy.length, copy);
 		}
 		else {
-			s.handleRequest(tag, fin, error, copy.length, copy);
+			s.handleRequest(tag, flags, copy.length, copy);
 		}
 		if (cb != null) {
 			cb.dataSent();

@@ -18,10 +18,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.zip.Adler32;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
@@ -35,7 +37,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	public static final int STATE_IDLE = 0;
 	public static final int STATE_RECEIVING_DATA = 1;
 
-	public static final int HEADER_LEN = 12;
+	public static final int HEADER_LEN = 20;
 
 	private InputStream inputStream;
 	private OutputStream outputStream;
@@ -43,7 +45,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	private final byte[] rhdr;
 	private byte[] data;
 	private int dataPointer;
-	private int state, tag, flags, len;
+	private int state, tag, flags, len, hcsum, csum;
 
 	protected AbstractStreamKarajanChannel(RequestManager requestManager,
 			ChannelContext channelContext, boolean client) {
@@ -125,11 +127,20 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				tag = unpack(rhdr, 0);
 				flags = unpack(rhdr, 4);
 				len = unpack(rhdr, 8);
+				hcsum = unpack(rhdr, 12);
+				if ((tag ^ flags ^ len) != hcsum) {
+					logger.warn("Header checksum failed. Computed checksum: " + 
+							Integer.toHexString(tag ^ flags ^ len) + 
+							", checksum: " + Integer.toHexString(hcsum));
+					return true;
+				}
+				csum = unpack(rhdr, 16);
 				if (len > 1048576) {
 					logger.warn("Big len: " + len + " (tag: " + tag + ", flags: " + flags + ")");
 					data = new byte[1024];
 					inputStream.read(data);
 					logger.warn("data: " + ppByteBuf(data));
+					return true;
 				}
 				data = new byte[len];
 				dataPointer = 0;
@@ -147,18 +158,26 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 			if (dataPointer == len) {
 				dataPointer = 0;
 				state = STATE_IDLE;
-				boolean fin = (flags & FINAL_FLAG) != 0;
-				boolean error = (flags & ERROR_FLAG) != 0;
+				
+				if (csum != 0) {
+					Adler32 c = new Adler32();
+					c.update(data);
+					
+					if (((int) c.getValue()) != csum) {
+						logger.warn("Data checksum failed. Compute checksum: " + 
+								Integer.toHexString((int) c.getValue()) + ", checksum: " + Integer.toHexString(csum));
+					}
+				}
 				byte[] tdata = data;
 				// don't hold reference from the channel to the data
 				data = null;
-				if ((flags & REPLY_FLAG) != 0) {
+				if (flagIsSet(flags, REPLY_FLAG)) {
 					// reply
-					handleReply(tag, fin, error, len, tdata);
+					handleReply(tag, flags, len, tdata);
 				}
 				else {
 					// request
-					handleRequest(tag, fin, error, len, tdata);
+					handleRequest(tag, flags, len, tdata);
 				}
 				data = null;
 			}
@@ -192,7 +211,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 
 		Sender s = sender.get(channel.getClass());
 		if (s == null) {
-			sender.put(channel.getClass(), s = new Sender());
+			sender.put(channel.getClass(), s = new Sender(channel.getClass().getSimpleName()));
 			s.start();
 		}
 		return s;
@@ -214,20 +233,26 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 	}
 
 	private static class Sender extends Thread {
-		private final LinkedList<SendEntry> queue;
+		private final BlockingQueue<SendEntry> queue;
 		private final byte[] shdr;
+		private final String name;
 
-		public Sender() {
-			super("Sender");
-			queue = new LinkedList<SendEntry>();
+		public Sender(String name) {
+			super("Sender " + name);
+			this.name = name;
+			queue = new LinkedBlockingQueue<SendEntry>();
 			setDaemon(true);
 			shdr = new byte[HEADER_LEN];
 		}
 
-		public synchronized void enqueue(int tag, int flags, byte[] data,
+		public void enqueue(int tag, int flags, byte[] data,
 				AbstractStreamKarajanChannel channel, SendCallback cb) {
-			queue.addLast(new SendEntry(tag, flags, data, channel, cb));
-			notifyAll();
+			try {
+				queue.put(new SendEntry(tag, flags, data, channel, cb));
+			}
+			catch (InterruptedException e) {
+				logger.warn("Interrupted", e);
+			}
 		}
 
 		public void run() {
@@ -236,17 +261,14 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				SendEntry e;
 				while (true) {
 					long now = System.currentTimeMillis();
-					synchronized (this) {
-						while (queue.isEmpty()) {
-							wait();
-						}
-						e = queue.removeFirst();
-						if (now - last > 10000) {
-							logger.info("Sender " + System.identityHashCode(this) + " queue size: "
-									+ queue.size());
-							last = now;
-						}
+					
+					e = queue.take();
+					if (now - last > 10000) {
+						logger.info("Sender " + name + " queue size: "
+								+ queue.size());
+						last = now;
 					}
+					
 					try {
 						send(e.tag, e.flags, e.data, e.channel.getOutputStream());
 						if (e.cb != null) {
@@ -257,9 +279,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 						logger.info("Channel IOException", ex);
 						try {
 							if (e.channel.handleChannelException(ex)) {
-								synchronized (this) {
-									queue.addFirst(e);
-								}
+								queue.put(e);
 							}
 						}
 						catch (Exception exx) {
@@ -267,13 +287,13 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 						}
 					}
 					catch (Exception ex) {
-						ex.printStackTrace();
+						logger.warn("Caught exception while sending data", ex);
 						try {
 							e.channel.getChannelContext().getRegisteredCommand(e.tag).errorReceived(
 									null, ex);
 						}
 						catch (Exception exx) {
-							logger.warn(exx);
+							logger.warn("Exception", exx);
 						}
 					}
 				}
@@ -296,11 +316,16 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				}
 			}
 		}
+		
 
 		private void send(int tag, int flags, byte[] data, OutputStream os) throws IOException {
 			pack(shdr, 0, tag);
 			pack(shdr, 4, flags);
 			pack(shdr, 8, data.length);
+			pack(shdr, 12, tag ^ flags ^ data.length);
+			Adler32 csum = new Adler32();
+			csum.update(data);
+			pack(shdr, 16, (int) csum.getValue());
 			synchronized (os) {
 				os.write(shdr);
 				os.write(data);
@@ -335,7 +360,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		private boolean terminated;
 		private int id;
 
-		@SuppressWarnings("unchecked")
 		public Multiplexer(int id) {
 			super("Channel multiplexer " + id);
 			this.id = id;
