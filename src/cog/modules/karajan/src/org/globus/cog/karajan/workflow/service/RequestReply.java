@@ -67,8 +67,7 @@ public abstract class RequestReply {
 	protected void setOutCmd(String outCmd) {
 		this.outCmd = outCmd;
 	}
-	
-	@SuppressWarnings("hiding") 
+	 
 	public void register(KarajanChannel channel) {
 		this.channel = channel;
 	}
@@ -142,13 +141,11 @@ public abstract class RequestReply {
 	}
 	
 	public abstract void send(boolean err) throws ProtocolException;
-
-	@SuppressWarnings("unused")
+	
 	protected void dataReceived(boolean fin, boolean error, byte[] data) throws ProtocolException {
 		setLastTime(System.currentTimeMillis());
 	}
-	
-	@SuppressWarnings("unused")
+		
 	protected synchronized void addInData(boolean fin, boolean err, byte[] data) {
 		if (inData == null) {
 			inData = new ArrayList<byte[]>(4);
@@ -156,7 +153,6 @@ public abstract class RequestReply {
 		inData.add(data);
 	}
 	
-	@SuppressWarnings("unused")
 	protected final void addInData(byte[] data) {
 		throw new RuntimeException("Should not be used");
 	}
@@ -375,5 +371,10 @@ public abstract class RequestReply {
 
 	public void handleTimeout() {
 		logger.warn("Unhandled timeout", new Throwable());
+		setLastTime(Long.MAX_VALUE);
+	}
+	
+	public void handleSignal(byte[] data) {
+		
 	}
 }
