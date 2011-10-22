@@ -257,6 +257,12 @@ public class ChannelContext {
 	        attributes.put(name, o);
 	    }
 	}
+	
+	public Object getAttribute(String name) {
+	    synchronized(attributes) {
+	        return attributes.get(name);
+	    }
+	}
 
 	public int getReconnectionAttempts() {
 		return reconnectionAttempts;
