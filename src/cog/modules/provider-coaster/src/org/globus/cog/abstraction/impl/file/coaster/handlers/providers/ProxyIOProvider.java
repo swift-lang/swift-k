@@ -14,15 +14,22 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Allocation;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBufferCallback;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.ThrottleManager;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.commands.GetFileCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.PutFileCommand;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
+import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
@@ -53,10 +60,20 @@ public class ProxyIOProvider implements IOProvider {
     }
 
     private static class Writer implements IOWriter, Callback {
+        /**
+         * Reverse the buffer direction compared to the local IO provider.
+         * The actual label on the set of buffers is not relevant as long as
+         * they are different on one JVM instance. But when using proxy mode
+         * in local:local (i.e. both service and client in the same JVM) this
+         * avoids a deadlock.
+         */
+        private static Direction BUFDIR = Direction.IN;
+        
         private CustomPutFileCmd cmd;
         private WriteIOCallback cb;
         private KarajanChannel channel;
         private String src, dst;
+        private boolean done, suspended;
 
         public Writer(String src, String dst, WriteIOCallback cb) throws IOException {
             this.cb = cb;
@@ -80,6 +97,16 @@ public class ProxyIOProvider implements IOProvider {
                 cmd = new CustomPutFileCmd(src, "file://localhost/" + uri.getPath().substring(1), len, this);
                 channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
                 cmd.executeAsync(channel, this);
+                cb.info(String.valueOf(cmd.getId()));
+                synchronized(this) {
+                    if (!suspended) {
+                        return;
+                    }
+                }
+                if (logger.isInfoEnabled()) {
+                    logger.info(cmd.getId() + " suspended before. Sending signal.");
+                }
+                cmd.suspend();
             }
             catch (Exception e) {
                 throw new IOException(e.getMessage());
@@ -88,6 +115,7 @@ public class ProxyIOProvider implements IOProvider {
 
         public void write(boolean last, byte[] data) throws IOException {
             try {
+                done = last;
                 cmd.getBuffer().queue(last, ByteBuffer.wrap(data));
             }
             catch (InterruptedException e) {
@@ -106,11 +134,44 @@ public class ProxyIOProvider implements IOProvider {
         public void abort() throws IOException {
             close();
         }
+
+        public void suspend() {
+            if (!done) {
+                synchronized(this) {
+                    if (cmd == null) {
+                        suspended = true;
+                        return;
+                    }
+                }
+                cmd.suspend();
+            }
+        }
+
+        public void resume() {
+            if (!done) {
+                synchronized(this) {
+                    if (cmd == null) {
+                        suspended = false;
+                        return;
+                    }
+                }
+                cmd.resume();
+            }
+        }
+
+        public void setUpThrottling() {
+            Buffers.getBuffers(BUFDIR).getThrottleManager().register(cb);
+        }
+
+        public void cancelThrottling() {
+            ThrottleManager.getDefault(BUFDIR).unregister(cb);
+        }
     }
 
     private static class CustomPutFileCmd extends PutFileCommand {
         private CReadBuffer buffer;
         private Writer handle;
+        private boolean suspended;
 
         public CustomPutFileCmd(String local, String remote, long length, Writer handle) throws IOException,
                 InterruptedException {
@@ -118,8 +179,31 @@ public class ProxyIOProvider implements IOProvider {
             this.handle = handle;
         }
 
+        public void resume() {
+            synchronized(this) {
+                setLastTime(System.currentTimeMillis());
+                suspended = false;
+            }
+            getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, PutFileHandler.CONTINUE);
+        }
+
+        public void suspend() {
+            suspended = true;
+            getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, PutFileHandler.STOP);
+        }
+        
+        @Override
+        public synchronized long getLastTime() {
+            if (suspended) {
+                return Long.MAX_VALUE;
+            }
+            else {
+                return super.getLastTime();
+            }
+        }
+
         protected ReadBuffer createBuffer() throws FileNotFoundException, InterruptedException {
-            return buffer = new CReadBuffer(Buffers.getDefault(), this);
+            return buffer = new CReadBuffer(Buffers.getBuffers(Direction.IN), this);
         }
 
         public CReadBuffer getBuffer() {
@@ -137,6 +221,7 @@ public class ProxyIOProvider implements IOProvider {
     }
 
     private static class CReadBuffer extends ReadBuffer {
+        
         // private Exception error;
         // private BlockingQueue queue;
         // private boolean seenLast;
@@ -159,10 +244,6 @@ public class ProxyIOProvider implements IOProvider {
             }
             Buffers.Allocation a = buffers.request(1);
             synchronized(this) {
-                while (crt >= Buffers.ENTRIES_PER_STREAM) {
-                    logger.debug("Reached max stream buffers. Waiting");
-                    wait();
-                }
                 crt++;
                 alloc.add(a);
                 /* if (last) {
@@ -170,7 +251,7 @@ public class ProxyIOProvider implements IOProvider {
                 } */
             }
             getCallback().dataRead(last, buf);
-        }
+        }    
 
         public synchronized void freeFirst() {
             buffers.free(alloc.removeFirst());
@@ -230,6 +311,7 @@ public class ProxyIOProvider implements IOProvider {
                 logger.debug("Sending proxy get");
                 cmd.executeAsync(channel, this);
                 logger.debug("Proxy get sent");
+                cb.info(String.valueOf(cmd.getId()));
             }
             catch (ProtocolException e) {
                 logger.warn("Error requesting file from " + channel, e);
@@ -256,6 +338,7 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         public void dataSent() {
+            cmd.cwb.releaseOne();
         }
 
         public void errorReceived(Command cmd, String msg, Exception t) {
@@ -280,6 +363,7 @@ public class ProxyIOProvider implements IOProvider {
     private static class CustomGetFileCmd extends GetFileCommand {
         private final ReadIOCallback cb;
         private final Reader handle;
+        public CWriteBuffer cwb; 
 
         public CustomGetFileCmd(String src, String dst, Reader handle) throws IOException {
             super(src, dst, null);
@@ -291,21 +375,39 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         protected WriteBuffer createWriteBuffer() throws IOException {
-            return new CWriteBuffer(Buffers.getDefault(), this);
+            return cwb = new CWriteBuffer(Buffers.getBuffers(Direction.OUT), this);
         }
 
         protected void setLen(long len) {
             super.setLen(len);
             cb.length(len);
         }
+        
+            @Override
+        public void handleSignal(byte[] data) {
+            if (Arrays.equals(GetFileHandler.QUEUED.getBytes(), data)) {
+                setQueued(true);
+                cb.queued();
+            }
+        }
     }
 
     private static class CWriteBuffer extends WriteBuffer {
         private final CustomGetFileCmd cmd;
+        public List<Allocation> alloc;
 
         protected CWriteBuffer(Buffers buffers, CustomGetFileCmd cmd) {
             super(buffers);
             this.cmd = cmd;
+            alloc = new LinkedList<Allocation>();
+        }
+
+        public void releaseOne() {
+            Allocation a;
+            synchronized(alloc) {
+                a = alloc.remove(0);
+            }
+            buffers.free(a);
         }
 
         public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
@@ -315,6 +417,14 @@ public class ProxyIOProvider implements IOProvider {
             catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        
+        public void write(boolean last, byte[] data) throws InterruptedException {
+            Allocation a = buffers.request(1);
+            synchronized(alloc) {
+                alloc.add(a);
+            }
+            buffers.queueRequest(last, ByteBuffer.wrap(data), this);
         }
 
         private byte[] getByteArray(ByteBuffer b) {

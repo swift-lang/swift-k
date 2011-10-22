@@ -13,7 +13,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 
+import org.apache.log4j.Logger;
+
 public class NIOChannelReadBuffer extends ReadBuffer {
+    public static final Logger logger = Logger.getLogger(NIOChannelReadBuffer.class);
+    
     private ScatteringByteChannel channel;
     private long crt;
     private Exception ex;
@@ -27,6 +31,12 @@ public class NIOChannelReadBuffer extends ReadBuffer {
 
     public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
         if (read >= size) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Transfer done. De-allocating one unused buffer");
+            }
+            if (alloc != null) {
+                buffers.free(alloc);
+            }
             return;
         }
         if (alloc != null) {

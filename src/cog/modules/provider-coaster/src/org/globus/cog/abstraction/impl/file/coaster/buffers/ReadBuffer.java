@@ -15,9 +15,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 
 
 public abstract class ReadBuffer extends Buffer {
+    public static final Logger logger = Logger.getLogger(ReadBuffer.class);
+    
     private final ReadBufferCallback cb;
     protected LinkedList<ByteBuffer> full;
     protected LinkedList<ByteBuffer> empty;
@@ -39,12 +43,22 @@ public abstract class ReadBuffer extends Buffer {
         full = new LinkedList<ByteBuffer>();
         empty = new LinkedList<ByteBuffer>();
         allocs = new ArrayList<Buffers.Allocation>();
-        for (int i = 0; i < Buffers.ENTRIES_PER_STREAM; i++) {
+        
+        int nbuf = Math.min((int) (size / Buffers.ENTRY_SIZE) + 1, Buffers.ENTRIES_PER_STREAM);
+        
+        if (logger.isInfoEnabled()) {
+            logger.info("Will ask for " + nbuf + " buffers for a size of " + size);
+        }
+        
+        for (int i = 0; i < nbuf; i++) {
             // these will be allocated when the first read happens,
             // which also happens to happen in the I/O thread
             empty.add(null);
         }
-        requestFill();
+        if (requestFill() == nbuf) {
+            // all buffers are queued
+            cb.queued();
+        }
     }
     
     public void freeFirst() {
@@ -57,16 +71,20 @@ public abstract class ReadBuffer extends Buffer {
         requestFill();
     }
 
-    protected void requestFill() {
+    protected int requestFill() {
+        int queued = 0;
         synchronized (empty) {
             while (!empty.isEmpty() && read < size) {
                 ByteBuffer buf = empty.removeFirst();
                 if (buf != null) {
                     buf.clear();
                 }
-                buffers.queueRequest(false, buf, this);
+                if (buffers.queueRequest(false, buf, this)) {
+                    queued++;
+                }
             }
         }
+        return queued;
     }
 
     public void error(ByteBuffer buf, Exception e) {
@@ -85,10 +103,16 @@ public abstract class ReadBuffer extends Buffer {
     }
     
     protected void bufferCreated(Buffers.Allocation a) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("buffer created");
+        }
         allocs.add(a);
     }
     
     protected void deallocateBuffers() {
+        if (logger.isInfoEnabled()) {
+            logger.info("De-allocating " + allocs.size() + " buffers");
+        }
         for (Buffers.Allocation a : allocs) {
             buffers.free(a);
         }

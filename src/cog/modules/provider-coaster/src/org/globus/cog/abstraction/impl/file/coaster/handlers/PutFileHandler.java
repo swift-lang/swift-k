@@ -10,22 +10,30 @@
 package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.ThrottleManager;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOHandle;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProvider;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProviderFactory;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOWriter;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.WriteIOCallback;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public class PutFileHandler extends CoasterFileRequestHandler implements WriteIOCallback {
     public static final Logger logger = Logger.getLogger(PutFileHandler.class);
+    
+    public static final byte[] STOP = "STOP".getBytes();
+    public static final byte[] CONTINUE = "CONTINUE".getBytes();
 
     private long len = -1;
     private String src, dst;
     private IOProvider provider;
     private IOWriter writer;
+    private boolean done, suspended;
 
     public void requestComplete() throws ProtocolException {
         if (writer != null && provider.isDirect()) {
@@ -40,7 +48,8 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
 
     protected void addInData(boolean fin, boolean err, byte[] data) {
     	if (logger.isDebugEnabled()) {
-    		logger.debug(this + " got data, fin = " + fin + ", err = " + err + ", sz = " + data.length);
+    		logger.debug(this + " got data, fin = " + fin + 
+    				", err = " + err + ", sz = " + data.length);
     	}
         try {
             if (err) {
@@ -65,6 +74,9 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
                 }
                 provider = IOProviderFactory.getDefault().instance(getProtocol(dst));
                 writer = provider.push(src, dst, this);
+                if (!provider.isDirect()) {
+                    writer.setUpThrottling();
+                }
                 writer.setLength(len);
             }
             else {
@@ -92,9 +104,49 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             }
         }
     }
+    
+    public void suspend() {
+        synchronized(this) {
+            if (done) {
+                return;
+            }
+        }
+        int tag = getId();
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + " suspending");
+        }
+        suspended = true;
+        getChannel().sendTaggedReply(tag, STOP, KarajanChannel.SIGNAL_FLAG);
+        writer.suspend();
+    }
+    
+    public void resume() {
+        synchronized(this) {
+            if (done) {
+                return;
+            }
+            setLastTime(System.currentTimeMillis());
+            suspended = false;
+        }
+        int tag = getId();
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + " resuming");
+        }
+        getChannel().sendTaggedReply(tag, CONTINUE, KarajanChannel.SIGNAL_FLAG);
+        writer.resume();
+    }
 
     public void done(IOHandle op) {
+        synchronized(this) {
+            done = true;
+        }
+        if (!provider.isDirect()) {
+            writer.cancelThrottling();
+        }
         try {
+        	if (logger.isInfoEnabled()) {
+        		logger.info(this + " Transfer done");
+        	}
             sendReply("OK");
         }
         catch (ProtocolException e) {
@@ -110,6 +162,12 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
         catch (ProtocolException ee) {
             logger.warn("Failed to send reply", ee);
         }
+    }
+    
+    public void info(String s) {
+    	if (logger.isInfoEnabled()) {
+    		logger.info(this + " -> " + s);
+    	}
     }
 
     public void sendError(String error, Throwable e) throws ProtocolException {
@@ -134,6 +192,33 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
                 logger.info("Failed to close output stream", e);
             }
         }
+        ThrottleManager.getDefault(Direction.OUT).unregister(this);
         super.errorReceived(msg, t);
+    }
+
+    @Override
+    public void handleSignal(byte[] data) {
+        if (Arrays.equals(data, STOP)) {
+        	suspended = true;
+        }
+        else if (Arrays.equals(data, CONTINUE)) {
+        	synchronized(this) {
+        	    setLastTime(System.currentTimeMillis());
+        	    suspended = false;
+        	}
+        }
+        else {
+        	logger.warn("Unhandled signal: " + String.valueOf(data));
+        }
+    }
+
+    @Override
+    public synchronized long getLastTime() {
+        if (suspended) {
+        	return Long.MAX_VALUE;
+        }
+        else {
+        	return super.getLastTime();
+        }
     }
 }

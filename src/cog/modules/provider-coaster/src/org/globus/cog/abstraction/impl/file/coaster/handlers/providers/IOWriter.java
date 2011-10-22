@@ -17,4 +17,12 @@ public interface IOWriter extends IOHandle, Abortable {
     void close() throws IOException;
 
     void write(boolean last, byte[] data) throws IOException;
+
+    void suspend();
+
+    void resume();
+
+    void setUpThrottling();
+
+    void cancelThrottling();
 }

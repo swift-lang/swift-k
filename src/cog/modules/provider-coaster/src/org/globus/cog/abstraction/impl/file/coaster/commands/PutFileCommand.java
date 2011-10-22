@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBufferCallback;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
@@ -27,6 +28,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
     public static final Logger logger = Logger.getLogger(PutFileCommand.class);
 
     public static final String NAME = "PUT";
+    public static final String QUEUED = "QUEUED";
 
     private String dest;
     private long size;
@@ -51,7 +53,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
     }
 
     protected ReadBuffer createBuffer() throws FileNotFoundException, InterruptedException {
-        return Buffers.newReadBuffer(new FileInputStream(src).getChannel(), size, this);
+        return Buffers.newReadBuffer(Buffers.getBuffers(Direction.OUT), new FileInputStream(src).getChannel(), size, this);
     }
 
     public void send() throws ProtocolException {
@@ -98,6 +100,10 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
         }
     }
 
+    public void queued() {
+        getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, QUEUED.getBytes());
+    }
+
     private void closeBuffer() {
     	try {
             rbuf.close();
@@ -115,5 +121,4 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
     public String toString() {
         return super.toString() + (done ? " (d)" : " (t)");
     }
-        
 }

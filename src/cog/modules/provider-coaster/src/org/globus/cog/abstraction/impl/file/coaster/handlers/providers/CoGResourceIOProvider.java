@@ -18,8 +18,10 @@ import java.nio.channels.FileChannel;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBufferCallback;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.ThrottleManager;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.CoasterFileRequestHandler;
@@ -44,6 +46,8 @@ public class CoGResourceIOProvider implements IOProvider {
     }
 
     private static class Writer implements IOWriter, WriteBufferCallback, Abortable {
+        private static final Direction BUFDIR = Direction.OUT;
+        
         private File f;
         private long len, crt;
         private WriteIOCallback cb;
@@ -71,7 +75,7 @@ public class CoGResourceIOProvider implements IOProvider {
                 cb.done(this);
             }
             else {
-                buf = Buffers.newWriteBuffer(new FileOutputStream(f).getChannel(), this);
+                buf = Buffers.newWriteBuffer(Buffers.getBuffers(BUFDIR), new FileOutputStream(f).getChannel(), this);
             }
         }
 
@@ -103,6 +107,28 @@ public class CoGResourceIOProvider implements IOProvider {
             buf.close();
             f.delete();
         }
+
+        /**
+         * Used to notify upstream handler that the transfer
+         * has been suspended and that what otherwise would be
+         * timeouts are benign
+         */
+        public void suspend() {
+        }
+
+        /**
+         * The opposite of suspend()
+         */
+        public void resume() {
+        }
+        
+        public void setUpThrottling() {
+            Buffers.getBuffers(BUFDIR).getThrottleManager().register(cb);
+        }
+
+        public void cancelThrottling() {
+            ThrottleManager.getDefault(BUFDIR).unregister(cb);
+        }
     }
 
     private static class Reader implements IOReader, ReadBufferCallback {
@@ -125,7 +151,7 @@ public class CoGResourceIOProvider implements IOProvider {
             cb.length(f.length());
             try {
                 synchronized (this) {
-                    rbuf = Buffers.newReadBuffer(fc, f.length(), this);
+                    rbuf = Buffers.newReadBuffer(Buffers.getBuffers(Direction.IN), fc, f.length(), this);
                 }
             }
             catch (InterruptedException e) {
@@ -142,6 +168,10 @@ public class CoGResourceIOProvider implements IOProvider {
             if (last) {
                 close();
             }
+        }
+
+        public void queued() {
+            cb.queued();
         }
 
         private synchronized void closeBuffer() {
