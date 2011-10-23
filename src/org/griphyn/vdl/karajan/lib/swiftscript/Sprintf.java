@@ -23,6 +23,7 @@ import org.griphyn.vdl.type.Types;
       %%: % sign. <br>
       %M: Filename output: waits for close
       %p: Not typechecked, output as in trace(). <br>
+      %b: Typechecked boolean output. <br>
       %f: Typechecked float output. <br>
       %i: Typechecked int output. <br>
       %s: Typechecked string output. <br>
@@ -119,6 +120,9 @@ public class Sprintf extends VDLFunction {
         if (c == 'M') {
             append_M(vars[arg], output);
         }
+        else if (c == 'b') { 
+            append_b(vars[arg], output);
+        }
         else if (c == 'f') {
             append_f(vars[arg], output);
         }
@@ -161,6 +165,17 @@ public class Sprintf extends VDLFunction {
         }
     }
     
+    private static void append_b(DSHandle arg, StringBuilder output) 
+    throws ExecutionException {
+        if (arg.getType() == Types.BOOLEAN) {
+            output.append(arg.getValue());
+        }
+        else {
+            throw new ExecutionException
+            ("tracef(): %b requires a boolean!");
+        }
+    }
+    
     private static void append_f(DSHandle arg, StringBuilder output) 
     throws ExecutionException {
         if (arg.getType() == Types.FLOAT) {
@@ -192,7 +207,7 @@ public class Sprintf extends VDLFunction {
             try {
                 int size = node.size();
                 for (int i = 0; i < size; i++) {
-                    String entry = ""+i; 
+                    String entry = "["+i+"]"; 
                     DSHandle handle = 
                         node.getField(Path.parse(entry));
                     output.append(handle.getValue());
