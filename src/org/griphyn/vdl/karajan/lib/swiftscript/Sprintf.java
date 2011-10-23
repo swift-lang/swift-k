@@ -23,6 +23,7 @@ import org.griphyn.vdl.type.Types;
       %%: % sign. <br>
       %M: Filename output: waits for close
       %p: Not typechecked, output as in trace(). <br>
+      %b: Typechecked boolean output. <br>
       %f: Typechecked float output. <br>
       %i: Typechecked int output. <br>
       %s: Typechecked string output. <br>
@@ -119,6 +120,9 @@ public class Sprintf extends VDLFunction {
         if (c == 'M') {
             append_M(vars[arg], output);
         }
+        else if (c == 'b') { 
+            append_b(vars[arg], output);
+        }
         else if (c == 'f') {
             append_f(vars[arg], output);
         }
@@ -158,6 +162,17 @@ public class Sprintf extends VDLFunction {
         catch (Exception e) { 
             throw new ExecutionException
             ("tracef(%M): Could not lookup: " + arg); 
+        }
+    }
+    
+    private static void append_b(DSHandle arg, StringBuilder output) 
+    throws ExecutionException {
+        if (arg.getType() == Types.BOOLEAN) {
+            output.append(arg.getValue());
+        }
+        else {
+            throw new ExecutionException
+            ("tracef(): %b requires a boolean!");
         }
     }
     

@@ -39,8 +39,8 @@ public class Fprintf extends VDLFunction {
         
         check(args);
         
-        String filename = args[0].toString();
-        String spec = args[1].toString(); 
+        String filename = (String) args[0].getValue();
+        String spec = (String) args[1].getValue(); 
         DSHandle[] vars = Sprintf.copyArray(args, 2, args.length-2);
         
         StringBuilder output = new StringBuilder();
@@ -59,10 +59,10 @@ public class Fprintf extends VDLFunction {
             ("fprintf(): requires at least 2 arguments!");
         if (! args[0].getType().equals(Types.STRING))
             throw new ExecutionException
-            ("fprintf(): first argument is a string filename!");
+            ("fprintf(): first argument must be a string filename!");
         if (! args[0].getType().equals(Types.STRING))
             throw new ExecutionException
-            ("fprintf(): second argument is a string specifier!");
+            ("fprintf(): second argument must be a string specifier!");
     }
     
     private static void write(String filename, String msg) 
