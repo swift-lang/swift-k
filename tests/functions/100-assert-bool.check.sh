@@ -2,6 +2,6 @@
 
 set -x
 
-grep ASSERT_MESSAGE stdout.txt || exit 1
+grep ASSERT_MESSAGE 100-assert-bool.stdout || exit 1
 
 exit 0
