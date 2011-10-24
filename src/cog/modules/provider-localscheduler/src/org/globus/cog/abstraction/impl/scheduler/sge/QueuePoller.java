@@ -14,114 +14,248 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 
+/**
+ * SGE queue poller class
+ */
 public class QueuePoller extends AbstractQueuePoller {
-    public static final Logger logger = Logger.getLogger(QueuePoller.class);
 
-    private Set processed;
+	private static String[] CMDARRAY;
+	public static final Logger logger = Logger.getLogger(QueuePoller.class);
+	private Set<Object> processed;
+	private Hashtable<String, QueueInformation> queueInformation;
 
-    public QueuePoller(AbstractProperties properties) {
-        super("SGE provider queue poller", properties);
-        processed = new HashSet();
-    }
+	public QueuePoller(AbstractProperties properties) {
+		this("SGE provider queue poller", properties);
+	}
 
-    private static String[] CMDARRAY;
+	public QueuePoller(String name, AbstractProperties properties) {
+		super(name, properties);
+		processed = new HashSet<Object>();
+		gatherQueueInformation();
+	}
+	
+	/**
+	 * getDataFromElement - Make XML parsing a bit easier 
+	 * @param e XML Element
+	 * @return XML data as a String
+	 */
+	public static String getDataFromElement(Element e) {
+		Node child = e.getFirstChild();
+		if (child instanceof CharacterData) {
+			CharacterData cd = (CharacterData) child;
+			return cd.getData();
+		}
+		return "";
+	}
 
-    protected synchronized String[] getCMDArray() {
-        if (CMDARRAY == null) {
-            CMDARRAY = new String[] { getProperties().getPollCommand() };
-        }
-        return CMDARRAY;
-    }
 
-    // there's an XML options that the SGE qstat has. It's probably a safer
-    // way to do this
-    protected void processStdout(InputStream is) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        String line;
-        String header = br.readLine();
-        // sge qstat outputs nothing when there are no jobs
-        if (header != null) {
-            int jobIDIndex = header.indexOf("job-ID");
-            int stateIndex = header.indexOf("state");
-            // skip the -----
-            br.readLine();
-            processed.clear();
-            do {
-                line = br.readLine();
-                if (line != null) {
-                    String jobid = parseToWhitespace(line, jobIDIndex);
-                    String state = parseToWhitespace(line, stateIndex);
-                    if (jobid == null || jobid.equals("") || state == null
-                            || state.equals("")) {
-                        throw new IOException("Failed to parse qstat line: "
-                                + line);
-                    }
-                    Job job = getJob(jobid);
-                    if (job == null) {
-                        continue;
-                    }
-                    processed.add(jobid);
-                    if (state.contains("q") || state.contains("w")) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(jobid + " is queued");
-                        }
-                        job.setState(Job.STATE_QUEUED);
-                    }
-                    else if (state.contains("r")) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(jobid + " is running");
-                        }
-                        job.setState(Job.STATE_RUNNING);
-                    }
-                    else if (state.contains("E")) {
-                        job.fail("Job is in an error state. Try running qstat -j "
-                                    + jobid + " to see why.");
-                    }
-                }
-            } while (line != null);
-        }
-        else {
-            processed.clear();
-        }
-        Iterator i = getJobs().entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry) i.next();
-            String id = (String) e.getKey();
-            Job job = (Job) e.getValue();
-            if (!processed.contains(id)) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(id + " is done");
-                }
-                job.setState(Job.STATE_DONE);
-                if (job.getState() == Job.STATE_DONE) {
-                    addDoneJob(id);
-                }
-            }
-            else {
-                // at least on Ranger the job is done long
-                // before qstat reports it as done, so check
-                // if the exit code file is there
-                File f = new File(job.getExitcodeFileName());
-                if (f.exists()) {
-                    job.setState(Job.STATE_DONE);
-                    if (job.getState() == Job.STATE_DONE) {
-                        addDoneJob(id);
-                    }
-                }
-            }
-        }
-    }
+	/** 
+	 * gatherQueueInformation - Collect information about queues and PEs
+	 */
+	private void gatherQueueInformation() {
+		queueInformation = new Hashtable<String, QueueInformation>();
+		String command[] = {
+				((Properties) this.getProperties()).getConfigCommand(), "-sql" };
 
-    protected void processStderr(InputStream is) throws IOException {
-    }
+		try {
+			// Get queue names
+			Process p = Runtime.getRuntime().exec(command);
+			InputStream is = p.getInputStream();
+			try {
+				p.waitFor();
+			} catch (InterruptedException e1) {
+				logger.error("QueuePoller command failed");
+				logger.error(e1.getMessage());
+			}
+
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader br = new BufferedReader(isr);
+			String line = "";
+
+			while ((line = br.readLine()) != null) {
+				queueInformation.put(line, new QueueInformation());
+			}
+
+			// Get info about each queue
+			for (String queue : queueInformation.keySet()) {
+
+				command = new String[] {
+						((Properties) this.getProperties()).getConfigCommand(),
+						"-sq", queue };
+				p = Runtime.getRuntime().exec(command);
+				try {
+					p.waitFor();
+				} catch (InterruptedException e) {
+					logger.error("QueuePoller command interrupted");
+					logger.error(e.getMessage());
+				}
+				is = p.getInputStream();
+				isr = new InputStreamReader(is);
+				br = new BufferedReader(isr);
+
+				while ((line = br.readLine()) != null) {
+					String results[] = line.split("\\s+", 2);
+					queueInformation.get(queue).addData(results);
+				}
+			}
+		} catch (IOException e) {
+			logger.error("QueuePoller command interrupted");
+			logger.error(e.getMessage());
+		}
+	}
+
+	/**
+	 * getAllQueues - Get a list of queues in a list
+	 * @return ArrayList<String> of queues
+	 */
+	public ArrayList<String> getAllQueues() {
+		ArrayList<String> result = new ArrayList<String>();
+		for (String s : queueInformation.keySet()) {
+			result.add(s);
+		}
+		return result;
+	}
+
+	/**
+	 * getCMDArray - Return poll command
+	 * @return String array contains poll command and flags
+	 */
+	protected synchronized String[] getCMDArray() {
+		if (CMDARRAY == null) {
+			CMDARRAY = getProperties().getPollCommand().split(" ");
+		}
+		return CMDARRAY;
+	}
+
+	/**
+	 * Return queue information for a requested queue
+	 * @param queue
+	 *            String of queue name
+	 * @return QueueInformation for requested queue
+	 */
+	public QueueInformation getQueueInformation(String queue) {
+		return queueInformation.get(queue);
+	}
+
+	/**
+	 * isValidQueue - Determine if queue is valid on this system
+	 * @param queue Queue name
+	 * @return True if queue exists, false otherwise
+	 */
+	public boolean isValidQueue(String queue) {
+		if (queueInformation.keySet().contains(queue))
+			return true;
+		else
+			return false;
+	}
+
+	/**
+	 * processStderr - defines how to handle errors from the queue poller 
+	 * @param InputStream
+	 */
+	protected void processStderr(InputStream is) throws IOException {
+	}
+
+	/**
+	 * processStdout - Process poller output and determine the status of jobs
+	 * Uses XML to parse, which requires SGE 6.0 or later
+	 * @param InputStream is - stream representing output
+	 */
+	protected void processStdout(InputStream is) throws IOException {
+
+		DocumentBuilder builder;
+		Document doc;
+
+		try {
+			builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			doc = builder.parse(is);
+		}
+
+		catch (Exception e) {
+			e.printStackTrace();
+			throw new IOException("Error while parsing XML\n");
+		}
+
+		NodeList nodes = doc.getElementsByTagName("job_list");
+		Job tmpJob;
+
+		for (int i = 0; i < nodes.getLength(); i++) {
+			Element element = (Element) nodes.item(i);
+			NodeList nodeList = element.getElementsByTagName("JB_job_number");
+			Element line = (Element) nodeList.item(0);
+			String jobid = getDataFromElement(line);
+			tmpJob = getJob(jobid);
+
+			if (tmpJob == null) {
+				continue;
+			}
+
+			processed.add(jobid);
+			nodeList = element.getElementsByTagName("state");
+			line = (Element) nodeList.item(0);
+			String state = getDataFromElement(line);
+
+			if (state.contains("q") || state.contains("w")) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(jobid + " is queued");
+				}
+				tmpJob.setState(Job.STATE_QUEUED);
+			} else if (state.contains("r")) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(jobid + " is running");
+				}
+				tmpJob.setState(Job.STATE_RUNNING);
+			} else if (state.contains("E")) {
+				tmpJob.fail("Job is in an error state. Try running qstat -j "
+						+ jobid + " to see why.");
+			}
+		}
+
+		Iterator i = getJobs().entrySet().iterator();
+		while (i.hasNext()) {
+			Map.Entry e = (Map.Entry) i.next();
+			String id = (String) e.getKey();
+			Job job = (Job) e.getValue();
+			if (!processed.contains(id)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(id + " is done");
+				}
+				job.setState(Job.STATE_DONE);
+				if (job.getState() == Job.STATE_DONE) {
+					addDoneJob(id);
+				}
+			} else {
+				// at least on Ranger the job is done long
+				// before qstat reports it as done, so check
+				// if the exit code file is there
+				File f = new File(job.getExitcodeFileName());
+				if (f.exists()) {
+					job.setState(Job.STATE_DONE);
+					if (job.getState() == Job.STATE_DONE) {
+						addDoneJob(id);
+					}
+				}
+			}
+		}
+	}
 }

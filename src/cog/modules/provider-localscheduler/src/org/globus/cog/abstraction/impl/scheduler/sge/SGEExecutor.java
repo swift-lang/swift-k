@@ -4,15 +4,13 @@
 //This message may not be removed or altered.
 //----------------------------------------------------------------------
 
-/*
- * Created on Oct 11, 2005
- */
 package org.globus.cog.abstraction.impl.scheduler.sge;
 
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,145 +27,56 @@ import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 
+/**
+ * Java CoG interface for Sun/Oracle Grid Engine
+ */
 public class SGEExecutor extends AbstractExecutor {
-    public static final Logger logger = Logger.getLogger(SGEExecutor.class);
+
+    public static final Pattern JOB_ID_LINE = Pattern.compile(".*[Yy]our job (\\d+) \\(.*\\) has been submitted");
+	public static final Logger logger = Logger.getLogger(SGEExecutor.class);
+    private static QueuePoller poller;
+    private static final String[] QSUB_PARAMS = new String[] {};
 
     public SGEExecutor(Task task, ProcessListener listener) {
         super(task, listener);
+        verifyQueueInformation();
     }
 
-    protected void writeAttr(String attrName, String arg, Writer wr,
-            String defaultValue) throws IOException {
-        Object value = getSpec().getAttribute(attrName);
-        if (value != null) {
-            wr.write("#$ " + arg + String.valueOf(value) + '\n');
-        }
-        else if (defaultValue != null) {
-            wr.write("#$ " + arg + String.valueOf(defaultValue) + '\n');
-        }
-    }
-
-    protected void writeAttr(String attrName, String arg, Writer wr)
-            throws IOException {
-        writeAttr(attrName, arg, wr, null);
-    }
-
-    protected void writeWallTime(Writer wr) throws IOException {
-        Object walltime = getSpec().getAttribute("maxwalltime");
-        if (walltime != null) {
-            wr.write("#$ -l h_rt="
-                    + WallTime.normalize(walltime.toString(), "sge-native")
-                    + '\n');
-        }
-    }
-
-    protected void writeScript(Writer wr, String exitcodefile, String stdout,
-            String stderr) throws IOException {
-        Task task = getTask();
-        JobSpecification spec = getSpec();
-        String type = (String) spec.getAttribute("jobType");
-        boolean multiple = false;
-        if ("multiple".equals(type)) {
-            multiple = true;
-        }
-
-        wr.write("#!/bin/bash\n");
-        wr.write("#$ -N " + task.getName() + '\n');
-        // ranger requires this. might as well be default
-        wr.write("#$ -V\n");
-        writeAttr("project", "-A ", wr);
-
-        String peValue = "-pe ";
-        Object pe = spec.getAttribute("pe");
-        if(pe == null) peValue += getSGEProperties().getDefaultPE() + " ";
-        else peValue += pe + " ";
-        Object nodeGranularity = spec.getAttribute("nodeGranularity");
-        writeAttr("count", peValue, wr, nodeGranularity == null ? "1" : nodeGranularity.toString());
-
-        writeWallTime(wr);
-        writeAttr("queue", "-q ", wr);
-        if (spec.getStdInput() != null) {
-            wr.write("#$ -i " + quote(spec.getStdInput()) + '\n');
-        }
-        wr.write("#$ -o " + quote(stdout) + '\n');
-        wr.write("#$ -e " + quote(stderr) + '\n');
-
-        if (!spec.getEnvironmentVariableNames().isEmpty()) {
-            wr.write("#$ -v ");
-            Iterator i = spec.getEnvironmentVariableNames().iterator();
-            while (i.hasNext()) {
-                String name = (String) i.next();
-                wr.write(name);
-                wr.write('=');
-                wr.write(quote(spec.getEnvironmentVariable(name)));
-                if (i.hasNext()) {
-                    wr.write(',');
-                }
-            }
-            wr.write('\n');
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Job type: " + type);
-        }
-        if (type != null) {
-            String wrapper = Properties.getProperties().getProperty(
-                "wrapper." + type);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Wrapper: " + wrapper);
-            }
-            if (wrapper != null) {
-                wrapper = replaceVars(wrapper);
-                wr.write(wrapper);
-                wr.write(' ');
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug("Wrapper after variable substitution: " + wrapper);
-            }
-        }
-        if (spec.getDirectory() != null) {
-            wr.write("cd " + quote(spec.getDirectory()) + " && ");
-        }
-
-        if (multiple) {
-            writeMultiJobPreamble(wr, exitcodefile);
-        }
-        wr.write(quote(spec.getExecutable()));
-        List args = spec.getArgumentsAsList();
-        if (args != null && args.size() > 0) {
-            wr.write(' ');
-            Iterator i = args.iterator();
-            while (i.hasNext()) {
-                wr.write(quote((String) i.next()));
-                if (i.hasNext()) {
-                    wr.write(' ');
-                }
-            }
-        }
-
-        if (spec.getStdInput() != null) {
-            wr.write(" < " + quote(spec.getStdInput()));
-        }
-        if (multiple) {
-            writeMultiJobPostamble(wr);
-        }
-        else {
-            wr.write('\n');
-            wr.write("/bin/echo $? >" + exitcodefile + '\n');
-        }
-        wr.close();
-    }
     
-    protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
-            throws IOException {
-        wr.write("NODES=`cat $PE_HOSTFILE | awk '{ for(i=0;i<$2;i++){print $1} }'`\n");
-        wr.write("ECF=" + exitcodefile + "\n");
-        wr.write("INDEX=0\n");
-        wr.write("for NODE in $NODES; do\n");
-        wr.write("  echo \"N\" >$ECF.$INDEX\n");
-        wr.write("  ssh $NODE /bin/bash -c \\\" \"");
+    /**
+     * Create a new Job
+     * @param jobid - String representing SGE job ID
+     * @param stdout
+     * @param stdOutputLocation
+     * @param stderr
+     * @param stdErrorLocation
+     * @param exitcode
+     * @param executor
+     */
+    protected Job createJob(String jobid, String stdout,
+            FileLocation stdOutputLocation, String stderr,
+            FileLocation stdErrorLocation, String exitcode,
+            AbstractExecutor executor) {
+        return new Job(jobid, stdout, stdOutputLocation, stderr,
+            stdErrorLocation, exitcode, executor);
     }
 
+    /**
+     * Return additional submit parameters
+     * @return String representing qsub parameters
+     */
+    protected String[] getAdditionalSubmitParameters() {
+        return QSUB_PARAMS;
+    }
+
+    /**
+     * Get an attribute from a job specification
+     * If the attribute does not exist, return the default value
+     * @param spec JobSpecification to search
+     * @param name Attribute to search for
+     * @param defaultValue This value is return if the attribute is not found
+     * @return String representing an attribute (if found) or the default value
+     */
     private String getAttribute(JobSpecification spec, String name,
             String defaultValue) {
         Object value = spec.getAttribute(name);
@@ -179,20 +88,50 @@ public class SGEExecutor extends AbstractExecutor {
         }
     }
 
+    /** 
+     * getName - Return the name of this provider
+     * @return String representing provider name
+     */
     protected String getName() {
         return "SGE";
     }
-
+    
+    /**
+     * getProperties - Return SGE properties
+     * @return Properties as an AbstractProperties object
+     */
     protected AbstractProperties getProperties() {
         return Properties.getProperties();
     }
-    
+
+    /**
+     * getQueuePoller - return the Queue Poller
+     * @return AbstractQueuePoller
+     */
+    protected AbstractQueuePoller getQueuePoller() {
+        synchronized (SGEExecutor.class) {
+            if (poller == null) {
+                poller = new QueuePoller(getProperties());
+                poller.start();
+            }
+            return poller;
+        }
+    }
+
+    /**
+     * getSGEProperties - Return SGE properties
+     * @return Properties as a Properties object
+     */
     protected Properties getSGEProperties() {
         return (Properties) getProperties();
     }
-    
-    public static final Pattern JOB_ID_LINE = Pattern.compile(".*[Yy]our job (\\d+) \\(.*\\) has been submitted");
 
+    /**
+     * parseSubmitCommandOutput - Given qsub output, return job ID
+     * @param out - String that contains qsub output
+     * @return String containing job id
+     * @throws IOException
+     */
     protected String parseSubmitCommandOutput(String out) throws IOException {
         // > your job 2494189 ("t1.sub") has been submitted
         BufferedReader br = new BufferedReader(new CharArrayReader(out.toCharArray()));
@@ -211,29 +150,262 @@ public class SGEExecutor extends AbstractExecutor {
         throw new IOException("None of the qsub lines matches the required patten: " + JOB_ID_LINE);
     }
 
-    private static final String[] QSUB_PARAMS = new String[] {};
+    /**
+     * Check that job specification values are valid for this system
+     * @throws IllegalArgumentException
+     */
+    private void verifyQueueInformation() {
 
-    protected String[] getAdditionalSubmitParameters() {
-        return QSUB_PARAMS;
+    	// A queue must be defined in order to gather information about it
+    	poller = (QueuePoller) getQueuePoller();
+    	JobSpecification spec = getSpec();
+        String queue = (String) spec.getAttribute("queue");
+        if(queue == null) {
+        	logger.error("Error: No queue defined");
+        	return;
+        }
+
+    	QueueInformation qi = poller.getQueueInformation(queue);
+    	String error="";
+        
+        // Verify the queue is available
+    	if(!poller.isValidQueue(queue)) {
+    		error = "Invalid queue \"" + queue + "\"\nAvailable queues are: ";
+    		for(String s : poller.getAllQueues()) {
+    			error += s + " ";
+    		}
+    		logger.error(error);
+    		return;
+    	}
+    	                
+        // Check that pe is defined
+        String pe = (String) spec.getAttribute("pe");
+        if(pe == null) {
+        	error = "Error: No parallel environment specified";
+        	logger.error(error);
+        	return;
+        }
+        
+        // Check that pe is available for the queue
+        if(!qi.getPe_list().contains(pe)) {
+        	error = "Parallel environment " + pe + " is not valid for " + queue + " queue\n";
+        	error += "Valid PEs are: ";
+        	for(String s : qi.getPe_list()) {
+        		error += s + " ";
+        	}
+        	logger.error(error);
+        	return;
+        }
+     
+        // Check that requested walltime fits into time limits
+        String maxWalltimeAttribute = (String) spec.getAttribute("maxwalltime");
+        if(maxWalltimeAttribute != null) {
+        	int requestedWalltime = WallTime.timeToSeconds(maxWalltimeAttribute);
+        	String queueWalltimeString = qi.getWalltime();
+        	if(!queueWalltimeString.equalsIgnoreCase("INFINITY")) {
+        		int queueWalltime = WallTime.timeToSeconds(queueWalltimeString);
+        		if(requestedWalltime > queueWalltime) {
+        			error = "Requested wall time of " + requestedWalltime
+        				+ " seconds is greater than queue limit of " + queueWalltime;
+        			logger.error(error);
+        		}
+            }        	
+        }
+        
+        // Give a warning if CPUs are being underutilized (this may be intentional due to memory restrictions)
+        Object jobsPerNodeAttribute = spec.getAttribute("jobsPerNode");
+        if(jobsPerNodeAttribute != null) {
+        	String jobsPerNode = String.valueOf(jobsPerNodeAttribute);
+        	if(Integer.valueOf(jobsPerNode) < qi.getSlots()) {
+        		logger.info("Requesting only " + jobsPerNode + "/" + qi.getSlots() + " CPUs per node");
+        	}
+        }
+    }
+    
+
+    /**
+     * writeAttr - Write a specification attribute to a submit file
+     * If the attribute is not found, use null
+     * @param attrName Specification attribute to write
+     * @param arg The SGE argument (eg. -N for the job name)
+     * @param wr A Writer object representing the submit file
+     * @throws IOException
+     */
+    protected void writeAttr(String attrName, String arg, Writer wr)
+            throws IOException {
+    	
+    	writeAttr(attrName, arg, wr, null);
     }
 
-    protected Job createJob(String jobid, String stdout,
-            FileLocation stdOutputLocation, String stderr,
-            FileLocation stdErrorLocation, String exitcode,
-            AbstractExecutor executor) {
-        return new Job(jobid, stdout, stdOutputLocation, stderr,
-            stdErrorLocation, exitcode, executor);
+
+
+    /**
+     * writeAttr - Write a specification attribute to a submit file
+     * 
+     * @param attrName Specification attribute to write
+     * @param arg The SGE argument (eg. -N for the job name)
+     * @param wr A Writer object representing the submit file
+     * @param defaultValue If the requested attribute is not found, use this default value
+     * @throws IOException
+     */
+    protected void writeAttr(String attrName, String arg, Writer wr,
+            String defaultValue) throws IOException {
+
+    	Object value = getSpec().getAttribute(attrName);
+        if (value != null) {
+            wr.write("#$ " + arg + String.valueOf(value) + '\n');
+        }
+        else if (defaultValue != null) {
+            wr.write("#$ " + arg + String.valueOf(defaultValue) + '\n');
+        }
     }
 
-    private static QueuePoller poller;
+    /**
+     * writeMultiJobPreamble - Add multiple jobs to a single submit file
+     * @param wr Writer A Writer object representing the submit file
+     * @param exitcodefile Filename where application exit code should be written
+     * @throws IOException
+     */
+    protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
+            throws IOException {
+        wr.write("NODES=`cat $PE_HOSTFILE | awk '{ for(i=0;i<$2;i++){print $1} }'`\n");
+        wr.write("ECF=" + exitcodefile + "\n");
+        wr.write("INDEX=0\n");
+        wr.write("for NODE in $NODES; do\n");
+        wr.write("  echo \"N\" >$ECF.$INDEX\n");
+        wr.write("  ssh $NODE /bin/bash -c \\\" \"");
+    }
 
-    protected AbstractQueuePoller getQueuePoller() {
-        synchronized (SGEExecutor.class) {
-            if (poller == null) {
-                poller = new QueuePoller(getProperties());
-                poller.start();
+
+    /**
+     * writeScript - Write the SGE submit script
+     * @param wr A Writer object representing the submit file
+     * @param exitcodefile Filename where exit code will be written
+     * @param stdout Filename where standard output will be written
+     * @param stderr Filename where standard error will be written
+     * @throws IOException
+     */
+    protected void writeScript(Writer wr, String exitcodefile, String stdout,
+            String stderr) throws IOException {
+
+    	Task task = getTask();
+        JobSpecification spec = getSpec();
+        
+        String type = (String) spec.getAttribute("jobType");
+        boolean multiple = false;
+        if ("multiple".equals(type)) {
+            multiple = true;
+        }
+        
+        int blocks = Integer.valueOf(getAttribute(spec, "count", "1"));
+        String queue = (String)spec.getAttribute("queue");
+        int coresPerNode = Integer.valueOf(getAttribute(spec, "coresPerNode", 
+        		String.valueOf(poller.getQueueInformation(queue).getSlots())));
+        int jobsPerNode = Integer.valueOf(getAttribute(spec, "jobsPerNode", String.valueOf(coresPerNode)));
+        int coresToRequest = blocks * jobsPerNode;
+
+        
+        wr.write("#!/bin/bash\n");
+        wr.write("#$ -N " + task.getName() + '\n');
+        wr.write("#$ -V\n");
+        writeAttr("project", "-A ", wr);
+       
+                
+        String peValue = "-pe " +  getAttribute(spec, "pe", getSGEProperties().getDefaultPE()) + " ";
+        writeAttr("null", peValue, wr, String.valueOf(coresToRequest));
+        
+        writeWallTime(wr);
+        writeAttr("queue", "-q ", wr);
+        
+        if (spec.getStdInput() != null) {
+            wr.write("#$ -i " + quote(spec.getStdInput()) + '\n');
+        }
+        wr.write("#$ -o " + quote(stdout) + '\n');
+        wr.write("#$ -e " + quote(stderr) + '\n');
+
+        if (!spec.getEnvironmentVariableNames().isEmpty()) {
+            wr.write("#$ -v ");
+            Iterator<String> i = spec.getEnvironmentVariableNames().iterator();
+            while (i.hasNext()) {
+                String name = i.next();
+                wr.write(name);
+                wr.write('=');
+                wr.write(quote(spec.getEnvironmentVariable(name)));
+                if (i.hasNext()) {
+                    wr.write(',');
+                }
             }
-            return poller;
+            wr.write('\n');
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job type: " + type);
+        }
+        
+        if (type != null) {
+            String wrapper = Properties.getProperties().getProperty(
+                "wrapper." + type);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Wrapper: " + wrapper);
+            }
+            if (wrapper != null) {
+                wrapper = replaceVars(wrapper);
+                wr.write(wrapper);
+                wr.write(' ');
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Wrapper after variable substitution: " + wrapper);
+            }
+        }
+        
+        if (spec.getDirectory() != null) {
+            wr.write("cd " + quote(spec.getDirectory()) + " && ");
+        }
+
+        if (multiple) {
+            writeMultiJobPreamble(wr, exitcodefile);
+        }
+        
+        wr.write(quote(spec.getExecutable()));
+        List<String> args = spec.getArgumentsAsList();
+        if (args != null && args.size() > 0) {
+            wr.write(' ');
+            Iterator<String> i = args.iterator();
+            while (i.hasNext()) {
+                wr.write(quote((String) i.next()));
+                if (i.hasNext()) {
+                    wr.write(' ');
+                }
+            }
+        }
+
+        if (spec.getStdInput() != null) {
+            wr.write(" < " + quote(spec.getStdInput()));
+        }
+
+        if (multiple) {
+            writeMultiJobPostamble(wr);
+        } else {
+            wr.write('\n');
+            wr.write("/bin/echo $? >" + exitcodefile + '\n');
+        }
+        wr.close();
+    }
+ 
+    /**
+     * writeWallTime - Convert time into correct format and write to submit file
+     * Use maxtime first is available, otherwise use maxwalltime
+     * @param wr Writer A Writer object representing the submit file
+     * @throws IOException
+     */
+    protected void writeWallTime(Writer wr) throws IOException {
+ 
+    	Object walltime = getSpec().getAttribute("maxwalltime");
+        
+        if (walltime != null) {
+            wr.write("#$ -l h_rt="
+                    + WallTime.normalize(walltime.toString(), "sge-native")
+                    + '\n');
         }
     }
 }

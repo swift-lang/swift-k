@@ -9,22 +9,24 @@
  */
 package org.globus.cog.abstraction.impl.scheduler.sge;
 
-import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 
 public class Properties extends AbstractProperties {
-	private static Logger logger = Logger.getLogger(Properties.class);
 
+	private static final long serialVersionUID = 1L;
 	public static final String PROPERTIES = "provider-sge.properties";
-	
 	public static final String POLL_INTERVAL = "poll.interval";
 	public static final String QSUB = "qsub";
-	public static final String QSTAT = "qstat";
+	public static final String QSTAT = "qstat -xml";
 	public static final String QDEL = "qdel";
+	public static final String QCONF = "qconf";
 	public static final String DEFAULT_PE = "parallel.environment"; 
-
 	private static Properties properties;
 
+	/**
+	 * getProperties - return properties
+	 * @return Properties object representing SGE properties
+	 */
 	public static synchronized Properties getProperties() {
 		if (properties == null) {
 			properties = new Properties();
@@ -33,33 +35,70 @@ public class Properties extends AbstractProperties {
 		return properties;
 	}
 
-	protected void setDefaults() {
-		setPollInterval(10);
-		setSubmitCommand("qsub");
-		setPollCommand("qstat");
-		setRemoveCommand("qdel");
-		setDefaultPE("threaded");
+	/**
+	 * Get the config command
+	 * @return String with config command
+	 */
+	public String getConfigCommand() {
+		return QCONF;
+	}
+	/**
+	 * getDefaultPE - Get the default parallel environment
+	 * @return String containing pe
+	 */
+	public String getDefaultPE() {
+	    return getProperty(DEFAULT_PE);
 	}
 
+	/**
+	 * getPollCommandName - Get poll command name
+	 * @return String containing poll command
+	 */
 	public String getPollCommandName() {
 		return QSTAT;
 	}
 
-
+	/**
+	 * getRemoveCommandName - Get remove command
+	 * @return String of command on how to remove a job
+	 */
 	public String getRemoveCommandName() {
 		return QDEL;
 	}
 
-
+	/**
+	 * getSubmitCommandName - Get submit command
+	 * @return String of submit command
+	 */
 	public String getSubmitCommandName() {
 		return QSUB;
 	}
-	
+
+	/**
+	 * Set the default config command
+	 * Used for gathering information about the queues
+	 * @param config String with command name
+	 */
+	public void setConfigCommand(String config) {
+		setProperty(QCONF, config);
+	}
+	/**
+	 * setDefaultPE - set the default parallel environment
+	 * @param pe String representing pe
+	 */
 	public void setDefaultPE(String pe) {
 	    setProperty(DEFAULT_PE, pe);
 	}
-	
-	public String getDefaultPE() {
-	    return getProperty(DEFAULT_PE);
+
+	/**
+	 * setDefault - Reset all SGE options to default
+	 */
+	protected void setDefaults() {
+		setPollInterval(10);
+		setSubmitCommand("qsub");
+		setPollCommand("qstat -xml");
+		setRemoveCommand("qdel");
+		setDefaultPE("threaded");
+		setConfigCommand("qconf");
 	}
 }

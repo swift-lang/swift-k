@@ -49,7 +49,8 @@ public class Settings {
                        "workerLoggingDirectory",
                        "ppn", "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
-                       "providerAttributes", "parallelism", "pe" };
+                       "providerAttributes", "parallelism", "pe",
+                       "coresPerNode"};
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -144,6 +145,8 @@ public class Settings {
 
     private String providerAttributes = null;
 
+    private String coresPerNode = "1";
+    
     /**
      * A pass-through setting in case there is a need to mess with PBS' ppn setting
      */
@@ -501,6 +504,13 @@ public class Settings {
         this.ppn = ppn;
     }
 
+    public String getCoresPerNode() {
+        return coresPerNode;
+    }
+    
+    public void setCoresPerNode(String coresPerNode) {
+        this.coresPerNode=coresPerNode;
+    }
     public String getHookClass() {
         return hookClass;
     }
