@@ -116,6 +116,7 @@ public abstract class RequestHandler extends RequestReply {
 		if (isInDataReceived()) {
 			return;
 		}
+		setLastTime(Long.MAX_VALUE);
 		String msg = this + ": timed out receiving request. Last time "
 				+ DF.format(new Date(getLastTime())) + ", now: " + DF.format(new Date());
 		logger.info(msg);
