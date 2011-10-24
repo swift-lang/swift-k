@@ -117,6 +117,7 @@ public abstract class RequestHandler extends RequestReply {
 			return;
 		}
 		setLastTime(Long.MAX_VALUE);
+		getChannel().unregisterHandler(getId());
 		String msg = this + ": timed out receiving request. Last time "
 				+ DF.format(new Date(getLastTime())) + ", now: " + DF.format(new Date());
 		logger.info(msg);
