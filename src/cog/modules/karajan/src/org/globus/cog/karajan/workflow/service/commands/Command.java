@@ -250,6 +250,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 				+ ": handling reply timeout; sendReqTime="
 				+ DF.format(new Date(sendReqTime)) + ", sendTime=" + DF.format(new Date(sendTime))
 						+ ", now=" + DF.format(new Date()) + ", channel=" + getChannel());
+		getChannel().unregisterCommand(this);
 		//reexecute("Reply timeout", new TimeoutException());
 	}
 
