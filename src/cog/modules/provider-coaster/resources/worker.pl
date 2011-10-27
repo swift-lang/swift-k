@@ -307,7 +307,7 @@ sub timestring() {
 	#my $t = sprintf("%.3f", time());
 	my $now = time();
 	my @d = localtime($now);
-	my $t = sprintf("%i/%02i/%02i %02i:%02i:%02i.%03i", $d[5]+1900, $d[4], $d[3], $d[2], $d[1], $d[0], ($now*1000) % 1000);
+        my $t = sprintf("%i/%02i/%02i %02i:%02i:%02i.%03i", $d[5]+1900, $d[4]+1, $d[3], $d[2], $d[1], $d[0], ($now*1000) % 1000);
 	return $t;
 }
 
