@@ -451,9 +451,7 @@ sub sendFrags {
 	my $flg2;
 	my $msg;
 	my $yield;
-	if (defined($$data{"tag"})) {
-		$tag = $$data{"tag"};
-	}
+	
 	do {
 		($flg2, $msg, $yield) = $$data{"nextData"}($data);
 		if (defined($msg)) {
@@ -464,7 +462,6 @@ sub sendFrags {
 	if (($flg2 & FINAL_FLAG) == 0) {
 		# final flag not set; put it back in the queue
 		wlog TRACE, "$tag yielding\n";
-		$$data{"tag"} = $tag;
 		
 		# update last time
 		my $record = $REPLIES{$tag};
@@ -590,6 +587,8 @@ sub sendCmdInt {
 	if (!defined $ctag) {
 		$ctag =  $TAG++;
 		registerCmd($ctag, $cont);
+		# make the tag accessible to the data generator
+		$$state{"tag"} = $ctag;
 	}
 	sendFrags($ctag, 0, $state);
 	return $ctag;
@@ -604,6 +603,7 @@ sub sendCmd {
 sub queueCmd {
 	my @cmd = @_;
 	my $cont = shift(@cmd);
+	# $cont is the continuation (what gets called when a reply is received)
 	push @CMDQ, [$cont, arrayData(@cmd)];
 }
 
