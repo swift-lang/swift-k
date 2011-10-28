@@ -46,8 +46,8 @@ public class Java extends VDLFunction {
             ("@java() requires at least two arguments");
         
         try {
-            lib = args[0].toString();
-            name = args[1].toString();
+            lib = (String)args[0].getValue();
+            name = (String)args[1].getValue();
             clazz = Class.forName(lib); 
             Method[] methods = clazz.getMethods();
             result = null;
