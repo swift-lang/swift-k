@@ -1107,7 +1107,9 @@ test_group() {
     TESTLINK="$TESTNAMEDIR/$TESTNAME"
     if [ -f "$GROUP/$SCRIPT_BASENAME.repeat" ]; then
       ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
-    fi
+    else
+       ITERS_LOCAL=1
+    fi 
 
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
       HOURMINSEC=$( date +"%H%M%S" )
