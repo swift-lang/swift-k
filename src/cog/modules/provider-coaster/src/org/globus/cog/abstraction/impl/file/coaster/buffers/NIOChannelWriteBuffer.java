@@ -28,10 +28,10 @@ public class NIOChannelWriteBuffer extends WriteBuffer {
         try {
             channel.write(b);
             b.rewind();
-            cb.done(last);
             if (last) {
                 channel.close();
             }
+            cb.done(last);
         }
         catch (IOException e) {
             cb.error(last, e);
