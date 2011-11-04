@@ -1311,6 +1311,13 @@ sub stageout {
 			wlog DEBUG, "$jobid Staging out $lfile (mode = $mode).\n";
 			my ($protocol, $host, $path) = urisplit($rfile);
 			if ($protocol eq "file" || $protocol eq "proxy") {
+				# make sure we keep track of the total number of actual stageouts
+				if (!defined $JOBDATA{$jobid}{"stageoutCount"}) {
+					$JOBDATA{$jobid}{"stageoutCount"} = 0;
+				}
+				$JOBDATA{$jobid}{"stageoutCount"} += 1;
+				wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n"; 
+				
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
 			}
 			elsif ($protocol eq "sfs") {
@@ -1345,16 +1352,34 @@ sub stageout {
 	}
 }
 
+sub sendStatus {
+	my ($jobid) = @_;
+	
+	my $ec = $JOBDATA{$jobid}{"exitcode"};
+	
+	if ($ec == 0) {
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+	}
+	else {
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with an exit code of $ec"));
+	}
+}
+
 sub cleanup {
 	my ($jobid) = @_;
 
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
 	if (ASYNC) {
-		if ($ec == 0) {
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+		if ($JOBDATA{$jobid}{"stageoutCount"} == 0) {
+			# there were no stageouts. Notification can be sent now
+			wlog DEBUG, "$jobid There were no stageouts. Sending notification immediately\n";
+			sendStatus($jobid);
 		}
 		else {
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with an exit code of $ec"));
+			# there were stageouts. Wait until all are acknowledged
+			# as done by the client. And we keep track of the
+			# count of stageouts that weren't acknowledged in 
+			# $JOBDATA{$jobid}{"stageoutCount"}
 		}
 	}
 
@@ -1404,7 +1429,7 @@ sub putFileCBDataSent {
 	if (ASYNC) {
 		wlog DEBUG, "$tag putFileCBDataSent\n";
 		my $jobid = $$state{"jobid"};
-		if ($jobid != -1) {
+		if ($jobid != -1) { 
 			wlog DEBUG, "$tag Data sent, async is on. Staging out next file\n";
 			stageout($jobid);
 		}
@@ -1435,9 +1460,18 @@ sub putFileCBDataIn {
 		wlog DEBUG, "$tag Got continue request. Resuming transfer.\n";
 	}
 	elsif ($jobid != -1) {
+		# OK reply from client
 		if (!ASYNC) {
 			wlog DEBUG, "$tag Stageout done; staging out next file\n";
 			stageout($jobid);
+		}
+		else {
+			wlog DEBUG, "$jobid Stageout done; stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
+			$JOBDATA{$jobid}{"stageoutCount"} -= 1;
+			if ($JOBDATA{$jobid}{"stageoutCount"} == 0) {
+				wlog DEBUG, "$jobid All stageouts acknowledged. Sending notification\n";
+				sendStatus($jobid);
+			}
 		}
 	}
 }
