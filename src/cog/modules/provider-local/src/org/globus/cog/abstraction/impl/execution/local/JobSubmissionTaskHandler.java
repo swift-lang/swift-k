@@ -197,7 +197,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             int exitCode = p.getExitCode();
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Exit code was " + exitCode);
+                logger.debug("Application " + spec.getExecutable() + " failed with an exit code of " + exitCode);
             }
             if (killed) {
                 return;
@@ -418,8 +418,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
         cmdarray[0] = spec.getExecutable();
         int index = 1;
-        for (String arg : arguments)
+        for (String arg : arguments) {
             cmdarray[index++] = arg;
+        }
         
         return cmdarray;
     }
@@ -558,7 +559,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                     int avail = sp.is.available();
                     if (avail > 0) {
                         any = true;
-                        int len = sp.is.read(buf);
+                        int len = sp.is.read(buf, 0, Math.min(avail, BUFFER_SIZE));
                         sp.os.write(buf, 0, len);
                     }
                 }
