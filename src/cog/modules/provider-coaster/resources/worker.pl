@@ -1626,7 +1626,21 @@ sub forkjob {
 	$JOBDATA{$JOBID}{"jobslot"} = $JOBSLOT;
 
 	pipe(PARENT_R, CHILD_W);
+	
+	# from the documentation for fork():
+	# > Beginning with v5.6.0, Perl attempts to flush all files opened for 
+	# > output before forking the child process, but this may not be 
+	# > supported on some platforms (see perlport).
+	#
+	# But that flush seems to hang in pthread __write_nocancel()
+	#
+	# I don't know why that happens, but disabling autoflush while doing
+	# the fork seems to fix the problem
+	#
+	
+	$| = 0;
 	$pid = fork();
+	$| = 1;
 	if (defined($pid)) {
 		if ($pid == 0) {
 			close PARENT_R;
