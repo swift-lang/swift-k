@@ -15,6 +15,7 @@ use File::Basename;
 use File::Path;
 use File::Copy;
 use Getopt::Std;
+use FileHandle;
 use Cwd;
 use POSIX ":sys_wait_h";
 use strict;
@@ -383,9 +384,7 @@ sub initlog() {
 	}
 	if ($LOGLEVEL != NONE) {
 		open(LOG, ">>$LOG") or die "Failed to open log file ($LOG): $!";
-		my $b = select(LOG);
-		$| = 1;
-		select($b);
+		LOG->autoflush(1);
 		my $date = localtime;
 		wlog INFO, "$BLOCKID Logging started: $date\n";
 	}
@@ -1625,35 +1624,24 @@ sub forkjob {
 	}
 	$JOBDATA{$JOBID}{"jobslot"} = $JOBSLOT;
 
-	pipe(PARENT_R, CHILD_W);
+	my ($PARENT_R, $CHILD_W);
+	pipe($PARENT_R, $CHILD_W);
 	
-	# from the documentation for fork():
-	# > Beginning with v5.6.0, Perl attempts to flush all files opened for 
-	# > output before forking the child process, but this may not be 
-	# > supported on some platforms (see perlport).
-	#
-	# But that flush seems to hang in pthread __write_nocancel()
-	#
-	# I don't know why that happens, but disabling autoflush while doing
-	# the fork seems to fix the problem
-	#
-	
-	$| = 0;
 	$pid = fork();
-	$| = 1;
+
 	if (defined($pid)) {
 		if ($pid == 0) {
-			close PARENT_R;
-			runjob(\*CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
-			close CHILD_W;
+			close $PARENT_R;
+			runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
+			close $CHILD_W;
 		}
 		else {
 			wlog DEBUG, "$JOBID Forked process $pid. Waiting for its completion\n";
-			close CHILD_W;
+			close $CHILD_W;
 			$JOBS_RUNNING++;
 			$JOBWAITDATA{$JOBID} = {
 				pid => $pid,
-				pipe => \*PARENT_R
+				pipe => $PARENT_R
 				};
 			if ($PROFILE) {
 				push(@PROFILE_EVENTS, "FORK", $pid, time());
