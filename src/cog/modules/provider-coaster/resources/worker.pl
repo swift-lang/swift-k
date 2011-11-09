@@ -1397,7 +1397,7 @@ sub cleanup {
 				chop $c;
 			}
 			wlog DEBUG, "$jobid Removing $c\n";
-			rmtree($c, {safe => 1, verbose => 0});
+			rmtree($c, 0, 0);
 			wlog DEBUG, "$jobid Removed $c\n";
 		}
 	}
