@@ -1,12 +1,16 @@
 Collective Data Management
 --------------------------
 
+What is CDM
+~~~~~~~~~~~
+CDM is a Swift feature that broadly enables improved management of data based on its nature and location.
+
 Overview
 ~~~~~~~~ 
 . The user specifies a CDM policy in a file, customarily fs.data.  
 . fs.data is given to Swift on the command line.  
 . The Swift data module (org.globus.swift.data) is informed of the CDM policy.  
-. At job launch time, the VDL Karajan code queries the CDM policy,  
+. At job launch time, the CDM policy is queried,  
    .. altering the file staging phase, and  
    .. sending fs.data to the compute site.  
 . At job run time, the Swift wrapper script  
