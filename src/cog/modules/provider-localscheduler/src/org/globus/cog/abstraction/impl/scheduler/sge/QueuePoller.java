@@ -196,6 +196,7 @@ public class QueuePoller extends AbstractQueuePoller {
 			throw new IOException("Error while parsing XML\n");
 		}
 
+		processed.clear();
 		NodeList nodes = doc.getElementsByTagName("job_list");
 		Job tmpJob;
 
