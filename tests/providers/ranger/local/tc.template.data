@@ -5,4 +5,4 @@ ranger 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX	null
 ranger 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX	null
 ranger 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX	null
 ranger	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX	null
-
+ranger	sleep		/bin/sleep	null		null		null
