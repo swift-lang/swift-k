@@ -26,23 +26,78 @@ Follow the steps outlined below to get started with Swift on Beagle:
 stay. (say, +mkdir swift-lab+, followed by, +cd swift-lab+)
 
 *step 3.* To get started with a simple example running +/bin/cat+ to read an
-input file +data.txt+ and write to an output file +f.nnn.out+, copy the folder
-at +/home/ketan/catsn+ to the above directory. (+cp -r /home/ketan/catsn
-.+ followed by +cd catsn+).
+input file +data.txt+ and write to an output file +f.nnn.out+, start with writing a simple swift source script as follows:
 
-*step 4.*  In the sites file: +beagle-coaster.xml+, make the following two
-changes: *1)* change the path of +workdirectory+ to your preferred location
-(say to +/lustre/beagle/$USER/swift-lab/swift.workdir+) and *2)* Change the
-project name to your project (+CI-CCR000013+) . The workdirectory will contain
-execution data related to each run, e.g. wrapper scripts, system information,
-inputs and outputs.
+-----
+type file;
 
-*step 5.* Run the example using following commandline (also found in run.sh):
-+swift -config cf -tc.file tc -sites.file beagle-coaster.xml catsn.swift -n=1+
+/* App definitio */
+app (file o) cat (file i)
+{
+  cat @i stdout=@o;
+}
+
+file out[]<simple_mapper; location="outdir", prefix="f.",suffix=".out">;
+file data<"data.txt">;
+
+/* App invocation: n times */
+foreach j in [1:@toint(@arg("n","1"))] {
+  out[j] = cat(data);
+}
+-----
+
+*step 4.*  The next step is to create a sites file. An example sites file (sites.xml) is shown as follows:
+-----
+<config>
+  <pool handle="pbs">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <!-- replace with your project -->
+    <profile namespace="globus" key="project">CI-CCR000013</profile>
+
+    <profile namespace="globus" key="providerAttributes">
+                     pbs.aprun;pbs.mpp;depth=24</profile>
+
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="maxTime">1000</profile>
+    <profile namespace="globus" key="slots">1</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="globus" key="maxNodes">1</profile>
+
+    <profile namespace="karajan" key="jobThrottle">.63</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+
+    <filesystem provider="local"/>
+    <!-- replace this with your home on lustre -->
+    <workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+  </pool>
+</config>
+-----
+
+*step 5.* In this step, we will see the config and tc files. The config file (cf) is as follows:
+-----
+wrapperlog.always.transfer=true
+sitedir.keep=true
+execution.retries=1
+lazy.errors=true
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+foreach.max.threads=100
+provenance.log=false
+-----
+
+The tc file (tc) is as follows:
+-----
+pbs cat /bin/cat null null null
+-----
+
+More about config and tc file options can be found in the swift userguide here: http://www.ci.uchicago.edu/swift/wwwdev/guides/release-0.93/userguide/userguide.html#_swift_configuration_properties.
+
+*step 6.* Run the example using following commandline (also found in run.sh):
++swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1+
 . You can further change the value of +-n+ to any arbitrary number to run that
 many number of concurrent +cat+
 
-*step 6.* Check the output in the generated +outdir+ directory (+ls outdir+)
+*step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
 
 Note: Running from sandbox node or requesting 30 minutes walltime for upto 3 nodes
 will get fast prioritized execution. Good for small tests.
