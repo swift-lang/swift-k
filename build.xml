@@ -387,7 +387,7 @@
 	</target>
 
 	<target name="generateVersion">
-		<echo file="libexec/version.txt">Swift ${version} </echo>
+		<echo file="libexec/version.txt">Swift </echo>
 		<exec os="Linux, Mac OS X" executable="libexec/svn-revision" append="true" output="libexec/version.txt"/>
 		<exec os="Linux, Mac OS X" executable="libexec/generate-buildid" append="false" output="libexec/buildid.txt"/>
 	</target>
