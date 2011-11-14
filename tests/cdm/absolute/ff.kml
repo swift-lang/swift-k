@@ -14,28 +14,28 @@
     <vdl:new type="string" value="1" />
   </global>
   <global name="swift#string#17004">
-    <vdl:new type="string" value="/home/ketan/cdm_tests/out2.data" />
-  </global>
-  <global name="swift#string#17008">
-    <vdl:new type="string" value="/home/ketan/cdm_tests/data1.txt" />
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out2.data" />
   </global>
   <global name="swift#string#17000">
     <vdl:new type="string" value="s" />
   </global>
-  <global name="swift#string#17005">
-    <vdl:new type="string" value="/home/ketan/cdm_tests/out3.data" />
+  <global name="swift#string#17010">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/indir/data4.txt" />
   </global>
   <global name="swift#string#17006">
-    <vdl:new type="string" value="/home/ketan/cdm_tests/out4.data" />
-  </global>
-  <global name="swift#string#17003">
-    <vdl:new type="string" value="/home/ketan/cdm_tests/out1.data" />
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out4.data" />
   </global>
   <global name="swift#string#17009">
-    <vdl:new type="string" value="/home/ketan/cdm_tests/data2.txt" />
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/indir/data2.txt" />
   </global>
-  <global name="swift#string#17010">
-    <vdl:new type="string" value="/home/ketan/cdm_tests/data4.txt" />
+  <global name="swift#string#17008">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/indir/data1.txt" />
+  </global>
+  <global name="swift#string#17005">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out3.data" />
+  </global>
+  <global name="swift#string#17003">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out1.data" />
   </global>
   <element name="catnap" arguments="o,_delay,i">
     <parameterlog>

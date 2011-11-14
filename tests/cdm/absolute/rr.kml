@@ -11,37 +11,37 @@
      </xs:schema>	 
   </types>
   <global name="swift#string#17008">
-    <vdl:new type="string" value="data1.txt" />
+    <vdl:new type="string" value="./indir/data1.txt" />
   </global>
   <global name="swift#string#17001">
     <vdl:new type="string" value="1" />
   </global>
-  <global name="swift#string#17003">
-    <vdl:new type="string" value="out1.data" />
-  </global>
   <global name="swift#string#17000">
     <vdl:new type="string" value="s" />
   </global>
-  <global name="swift#string#17009">
-    <vdl:new type="string" value="data2.txt" />
-  </global>
-  <global name="swift#string#17004">
-    <vdl:new type="string" value="out2.data" />
+  <global name="swift#string#17010">
+    <vdl:new type="string" value="./indir/data4.txt" />
   </global>
   <global name="swift#string#17006">
-    <vdl:new type="string" value="out4.data" />
+    <vdl:new type="string" value="./outdir/out4.data" />
   </global>
-  <global name="swift#string#17010">
-    <vdl:new type="string" value="data4.txt" />
+  <global name="swift#string#17009">
+    <vdl:new type="string" value="./indir/data2.txt" />
   </global>
   <global name="swift#string#17005">
-    <vdl:new type="string" value="out3.data" />
+    <vdl:new type="string" value="./outdir/out3.data" />
   </global>
-  <element name="catnap" arguments="o,delay,i">
+  <global name="swift#string#17004">
+    <vdl:new type="string" value="./outdir/out2.data" />
+  </global>
+  <global name="swift#string#17003">
+    <vdl:new type="string" value="./outdir/out1.data" />
+  </global>
+  <element name="catnap" arguments="o,_delay,i">
     <parameterlog>
     <string>input</string>
-    <string>delay</string>
-    <vdl:getdatasetprovenanceid var="{delay}" />
+    <string>_delay</string>
+    <vdl:getdatasetprovenanceid var="{_delay}" />
     <string>{#thread}</string>
     </parameterlog>
     <parameterlog>
@@ -59,11 +59,11 @@
     <log level="debug" message="PROCEDURE line=4 thread={#thread} name=catnap"/>
     <vdl:execute>
       <vdl:tr>catnap</vdl:tr>
-      <vdl:stagein var="{delay}"/>
+      <vdl:stagein var="{_delay}"/>
       <vdl:stagein var="{i}"/>
       <vdl:stageout var="{o}"/>
       <vdl:arguments>
-        <variable>delay</variable>
+        <variable>_delay</variable>
         <swiftscript:filename>
          <variable>i</variable> 
         </swiftscript:filename>
