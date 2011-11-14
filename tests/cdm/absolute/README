@@ -1,0 +1,23 @@
+This directory contains testcases to test the Swift CDM for the following cases:
+case 1. When input data is specified as relative or full path name.
+case 2. When the output data is specified as relative or full path name.
+case 3. When the config option wrapper.invocation.mode is set to 'absolute' or 'relative'
+
+The above cases lead to 8 possible combinations of input/output data specification and the wrapper.invocation.mode value.
+
+The naming of swift scripts are given based on how the data is specified:
+
+ff=both input and output data is specified as *fullpaths*
+rf=input data in relative path and output data in fullpath
+fr=input data in full path and output data in relative path
+rr=both input and output data in relative path
+
+Two different versions of config files represent the absolute and relative options for wrapper.invocation.mode:
+cf.absolute
+cf.relative
+
+A run.sh file contains the commandlines to run all the combinations.
+
+You will need to adapt the absolute pathnames in the swift sources based on where you run.
+
+The CDM policy file is fs.data.

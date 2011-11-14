@@ -1,0 +1,1 @@
+rule \./outdir/.* DIRECT /home/ketan/cdm_test
