@@ -107,6 +107,20 @@ directory, say, +/fs/dir+.  To do this, use a rule such as:
 rule .* DIRECT /fs/dir
 ----
 
+==== Absolute paths
+
+If your Swift script operates on files with absolute path names such as:
+
+----
+file f<"/fs/dir/f.txt">;
+----
+
+use:
+
+----
+rule .*f.txt DIRECT /
+----
+
 ==== Use of symbolic links
 
 Swift may provide a symbolic link to the application, which the
