@@ -13,7 +13,7 @@ with a shared file system.
 . The user specifies a CDM policy in a file, customarily +fs.data+.
 . +fs.data+ is given to Swift on the command line.
 . The Swift data module is informed of the CDM policy.
-. At job launch time, for each file, the Swift mechanics query the CDM policy,
+. At job launch time, for each file, the Swift mechanics query the CDM file,
    .. altering the file staging phase, and
    .. sending +fs.data+ to the compute site.
 . At job run time, the Swift wrapper script
@@ -39,15 +39,15 @@ rule .* DEFAULT
 
 The lines contain:
 
-. A directive, either rule or property
+. A directive, either +rule+ or +property+.
 . A rule has:
-   .. A regular expression to match on the file name
-   .. A policy token
-   .. Additional policy-specific arguments
-. A property has
-   .. A policy property token
-   .. The token value
-. Comments with +#+ .
+   .. A regular expression to match on the file name.
+   .. A policy token.
+   .. Additional policy-specific arguments.
+. A property has:
+   .. A policy property token.
+   .. The token value.
+. Comments with +#+.
 . Blank lines are ignored.
 
 ==== Notes
@@ -56,11 +56,12 @@ The lines contain:
 methods.  Thus, one should only use basic features such as +.*+ .
 . Swift treats file names as URLs, while the wrapper script treats
 them as Unix file names.  Thus, one should use a wildcard in the
-beginning of each file name.
+beginning of each file name, as shown in the example.
 . For example, a lookup with the database above given the argument
-+input.txt+ would result in the DIRECT policy.
-. If the lookup does not succeed, the result is DEFAULT.
-
++input.txt+ would result in the +DIRECT+ policy.
+. Each rule is considered in the order given; the first match results
+in that policy line.
+. If the lookup does not succeed, the result is +DEFAULT+.
 
 === Policy Descriptions
 ==== DEFAULT
@@ -92,6 +93,26 @@ rule .*input.txt LOCAL dd /gpfs/homes/user/data obs=64K
 given directory, a shared file system location.
 Copies will be placed in the job directory for use by the user job.
 * Argument list: [tool] [directory] [tool arguments]*
+
+=== Specific use cases
+
+==== Matching on all file names
+
+To match all file names produced by Swift, simply use pattern +.*+
+
+A common use case is to redirect all file operations to a given
+directory, say, +/fs/dir+.  To do this, use a rule such as:
+
+----
+rule .* DIRECT /fs/dir
+----
+
+==== Use of symbolic links
+
+Swift may provide a symbolic link to the application, which the
+application may read and write normally.  The application may not
+unlink these links; if it does, the application will not be able to
+find or create Swift-compatible data.
 
 // .Gather
 // -----
