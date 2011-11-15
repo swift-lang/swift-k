@@ -2,6 +2,6 @@
 
 set -x
 
-rm -v /tmp/211-output.txt || exit 1
+rm -v /tmp/205-output.txt || exit 1
 
 exit 0
