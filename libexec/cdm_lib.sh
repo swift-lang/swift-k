@@ -31,6 +31,7 @@ cdm_action() {
 	case $POLICY in
 		DIRECT)
 			DIRECT_DIR=${ARGS[0]}
+			[[ $DIRECT_DIR == "/" ]] && DIRECT_DIR=""
 			log "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE via $JOBDIR/$FILE"
 			if [ $MODE == "INPUT" ]; then
 				[ -f "$DIRECT_DIR/$FILE" ]
@@ -38,10 +39,8 @@ cdm_action() {
 				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
 				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
 			elif [ $MODE == "OUTPUT" ]; then
-				mkdir -p $DIRECT_DIR
-				checkError 254 "CDM[DIRECT]: mkdir -p $DIRECT_DIR failed!"
 				mkdir -p $( dirname $DIRECT_DIR/$FILE )
-				checkError 254 "CDM[DIRECT]: mkdir -p $( dirname $FILE ) failed!"
+				checkError 254 "CDM[DIRECT]: mkdir -p $( dirname $DIRECT_DIR/$FILE ) failed!"
 				touch $DIRECT_DIR/$FILE
 				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
 				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
