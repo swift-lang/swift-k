@@ -27,6 +27,11 @@ $ swift -sites.file sites.xml -tc.file tc.data -cdm.file fs.data stream.swift
 -----
 
 === CDM policy file format
+A CDM policy file contains four space separated fields as follows:
+. The keyword 'rule'
+. The filename pattern expressed as a regexp
+. The rulename: DIRECT, GATHER, BROADCAST etc.
+. The path where to look for the files (optional)
 
 ==== Example
 -----
@@ -231,7 +236,7 @@ find or create Swift-compatible data.
 
 // . A directive, either rule or property
 // . A rule has:
-//    .. A regular expression for site matchin
+//    .. A regular expression for site matching
 //    .. A regular expression for filename matching
 //    .. A policy token
 //    .. Additional policy-specific arguments
