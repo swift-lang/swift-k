@@ -10,6 +10,8 @@
 package org.globus.cog.abstraction.impl.scheduler.sge;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +21,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 import org.w3c.dom.CharacterData;
@@ -185,10 +188,12 @@ public class QueuePoller extends AbstractQueuePoller {
 
 		DocumentBuilder builder;
 		Document doc;
-
+		String xml = new Scanner(is).useDelimiter("\\A").next();
+		InputStream is2 = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+		
 		try {
 			builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			doc = builder.parse(is);
+			doc = builder.parse(is2);
 		}
 
 		catch (Exception e) {
