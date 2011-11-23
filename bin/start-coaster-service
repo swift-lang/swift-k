@@ -78,6 +78,7 @@ start-workers-ssh()
          echo $! >> $PID_FILE
       # Connect directly
       else  
+         ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORKER_WORK > /dev/null 2>&1
          scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
          echo Starting worker on $MACHINE
          ssh $WORKER_USERNAME@$MACHINE "$WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
