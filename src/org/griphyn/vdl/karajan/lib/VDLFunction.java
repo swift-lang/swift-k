@@ -197,8 +197,17 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	private static String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
 	    Mapper mapper;
+	    	    
         synchronized (var.getRoot()) {
-            mapper = var.getMapper();
+            if (var instanceof AbstractDataNode) {
+                mapper = ((AbstractDataNode) var).getActualMapper();
+                if (mapper == null) {
+                    throw new ExecutionException(var + " is not a mapped type");
+                }
+            }
+            else {
+                mapper = var.getMapper();
+            }
         }
 		List<String> l = new ArrayList<String>();
 		try {

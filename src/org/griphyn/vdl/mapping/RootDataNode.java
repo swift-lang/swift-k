@@ -213,7 +213,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
         throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
 	}
 	
-	protected Mapper getActualMapper() {
+	public Mapper getActualMapper() {
         return mapper;
     }
 
