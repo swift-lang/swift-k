@@ -81,15 +81,17 @@ public class SetFieldValue extends VDLFunction {
 	String unpackHandles(Map<String,DSHandle> handles) { 
 	    StringBuilder sb = new StringBuilder();
 	    sb.append("{");
-	    Iterator<Map.Entry<String,DSHandle>> it = 
-	        handles.entrySet().iterator();
-	    while (it.hasNext()) { 
-	        Map.Entry<String,DSHandle> entry = it.next();
-	        sb.append(entry.getKey());
-	        sb.append('=');
-	        sb.append(entry.getValue().getValue());
-	        if (it.hasNext())
-	            sb.append(", ");
+	    synchronized(handles) {
+    	    Iterator<Map.Entry<String,DSHandle>> it = 
+    	        handles.entrySet().iterator();
+    	    while (it.hasNext()) { 
+    	        Map.Entry<String,DSHandle> entry = it.next();
+    	        sb.append(entry.getKey());
+    	        sb.append('=');
+    	        sb.append(entry.getValue().getValue());
+    	        if (it.hasNext())
+    	            sb.append(", ");
+    	    }
 	    }
 	    sb.append("}");
 	    return sb.toString();
