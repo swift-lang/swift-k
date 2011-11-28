@@ -10,6 +10,8 @@ import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.Writer;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +25,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.impl.scheduler.pbs.PBSExecutor;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -36,12 +39,13 @@ public class SGEExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(SGEExecutor.class);
     private static QueuePoller poller;
     private static final String[] QSUB_PARAMS = new String[] {};
-
+    private static int unique = 0; 
+    private static NumberFormat IDF = new DecimalFormat("000000");
+    
     public SGEExecutor(Task task, ProcessListener listener) {
         super(task, listener);
         verifyQueueInformation();
     }
-
     
     /**
      * Create a new Job
@@ -127,6 +131,30 @@ public class SGEExecutor extends AbstractExecutor {
     }
 
     /**
+     * Create SGE job name
+     * @param task
+     * @return String containing task name
+     */
+	private String makeName(Task task) {
+		String name = task.getName();
+		if (name == null) {
+			int i = 0;
+			synchronized(SGEExecutor.class) {
+				i = unique++;
+			}
+			name = "cog-" + IDF.format(i);
+		}
+		else if (name.length() > 15) {
+		    name = name.substring(0, 15);
+		}
+		if (logger.isDebugEnabled()) {
+		    logger.debug("SGE name: for: " + task.getName() + 
+                         " is: " + name);
+		}
+		return name;
+	}
+    
+    /**
      * parseSubmitCommandOutput - Given qsub output, return job ID
      * @param out - String that contains qsub output
      * @return String containing job id
@@ -200,14 +228,13 @@ public class SGEExecutor extends AbstractExecutor {
         // Check that requested walltime fits into time limits
         String maxWalltimeAttribute = (String) spec.getAttribute("maxwalltime");
         if(maxWalltimeAttribute != null) {
-        	int requestedWalltime = WallTime.timeToSeconds(maxWalltimeAttribute);
+        	int requestedWalltimeSeconds = WallTime.timeToSeconds(maxWalltimeAttribute);
         	String queueWalltimeString = qi.getWalltime();
         	if(!queueWalltimeString.equalsIgnoreCase("INFINITY")) {
         		int queueWalltime = WallTime.timeToSeconds(queueWalltimeString);
-        		if(requestedWalltime > queueWalltime) {
-        			error = "Requested wall time of " + requestedWalltime
+        		if(requestedWalltimeSeconds > queueWalltime) {
+        			error = "Requested wall time of " + requestedWalltimeSeconds
         				+ " seconds is greater than queue limit of " + queueWalltime;
-        			logger.error(error);
         		}
             }        	
         }
@@ -217,7 +244,9 @@ public class SGEExecutor extends AbstractExecutor {
         if(jobsPerNodeAttribute != null) {
         	String jobsPerNode = String.valueOf(jobsPerNodeAttribute);
         	if(Integer.valueOf(jobsPerNode) < qi.getSlots()) {
-        		logger.info("Requesting only " + jobsPerNode + "/" + qi.getSlots() + " CPUs per node");
+        		if(logger.isInfoEnabled()) {
+        			logger.info("Requesting only " + jobsPerNode + "/" + qi.getSlots() + " CPUs per node");
+        		}
         	}
         }
     }
@@ -290,32 +319,33 @@ public class SGEExecutor extends AbstractExecutor {
 
     	Task task = getTask();
         JobSpecification spec = getSpec();
-        
+		
         String type = (String) spec.getAttribute("jobType");
         boolean multiple = false;
         if ("multiple".equals(type)) {
             multiple = true;
         }
         
-        int blocks = Integer.valueOf(getAttribute(spec, "count", "1"));
+        int count = Integer.valueOf(getAttribute(spec, "count", "1"));
         String queue = (String)spec.getAttribute("queue");
+        
         int coresPerNode = Integer.valueOf(getAttribute(spec, "coresPerNode", 
         		String.valueOf(poller.getQueueInformation(queue).getSlots())));
-        int jobsPerNode = Integer.valueOf(getAttribute(spec, "jobsPerNode", String.valueOf(coresPerNode)));
-        int coresToRequest = blocks * jobsPerNode;
+        int jobsPerNode = Integer.valueOf(getAttribute(spec, "jobsPerNode", 
+        		String.valueOf(coresPerNode)));
+        int coresToRequest = count * jobsPerNode;
 
-        
         wr.write("#!/bin/bash\n");
-        wr.write("#$ -N " + task.getName() + '\n');
+        wr.write("#$ -N " + makeName(task) + '\n');
         wr.write("#$ -V\n");
         writeAttr("project", "-A ", wr);
-       
+    	writeAttr("queue", "-q ", wr);
                 
         String peValue = "-pe " +  getAttribute(spec, "pe", getSGEProperties().getDefaultPE()) + " ";
         writeAttr("null", peValue, wr, String.valueOf(coresToRequest));
-        
+        	
         writeWallTime(wr);
-        writeAttr("queue", "-q ", wr);
+        writeSoftWallTime(wr);
         
         if (spec.getStdInput() != null) {
             wr.write("#$ -i " + quote(spec.getStdInput()) + '\n');
@@ -357,7 +387,21 @@ public class SGEExecutor extends AbstractExecutor {
                 logger.debug("Wrapper after variable substitution: " + wrapper);
             }
         }
-        
+
+        wr.write("\nwrite_exitcode()\n");
+        wr.write("{\n");
+        wr.write("echo $1 > " + exitcodefile + "\n");
+        wr.write("exit 0\n"); 
+        wr.write("}\n\n");
+
+        wr.write("# Trap all signals\n");
+        wr.write("SIGNAL=1\n");
+        wr.write("while [ $SIGNAL -le 30 ];\n");
+        wr.write("do\n");
+        wr.write("   trap \"echo Received signal $SIGNAL; write_exitcode $SIGNAL\" $SIGNAL\n");
+        wr.write("   (( SIGNAL+=1 ))\n");
+        wr.write("done\n\n");
+
         if (spec.getDirectory() != null) {
             wr.write("cd " + quote(spec.getDirectory()) + " && ");
         }
@@ -386,8 +430,9 @@ public class SGEExecutor extends AbstractExecutor {
         if (multiple) {
             writeMultiJobPostamble(wr);
         } else {
-            wr.write('\n');
-            wr.write("/bin/echo $? >" + exitcodefile + '\n');
+            wr.write(" &\n");
+            wr.write("wait $!\n");
+            wr.write("write_exitcode $?\n");
         }
         wr.close();
     }
@@ -399,13 +444,23 @@ public class SGEExecutor extends AbstractExecutor {
      * @throws IOException
      */
     protected void writeWallTime(Writer wr) throws IOException {
- 
     	Object walltime = getSpec().getAttribute("maxwalltime");
-        
         if (walltime != null) {
             wr.write("#$ -l h_rt="
                     + WallTime.normalize(walltime.toString(), "sge-native")
                     + '\n');
         }
     }
+    
+    protected void writeSoftWallTime(Writer wr) throws IOException {
+    	String walltime = (String)getSpec().getAttribute("maxwalltime");
+        if (walltime != null) {
+        	int walltimeSeconds = WallTime.timeToSeconds(walltime) - 10;
+        	wr.write("#$ -l s_rt="
+        	        + WallTime.format("sge-native", walltimeSeconds)
+        	        + '\n');
+        }
+    }
+    
+
 }

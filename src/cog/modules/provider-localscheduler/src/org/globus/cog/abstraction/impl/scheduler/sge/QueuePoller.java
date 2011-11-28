@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -46,13 +47,23 @@ public class QueuePoller extends AbstractQueuePoller {
 	public static final Logger logger = Logger.getLogger(QueuePoller.class);
 	private Set<Object> processed;
 	private Hashtable<String, QueueInformation> queueInformation;
-
+	DocumentBuilder builder;
+	Document doc;
+	
 	public QueuePoller(AbstractProperties properties) {
 		this("SGE provider queue poller", properties);
 	}
 
 	public QueuePoller(String name, AbstractProperties properties) {
 		super(name, properties);
+		try {
+			builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		}
+		catch(Exception e) {
+			if(logger.isInfoEnabled()) {
+				logger.info(e.getMessage());
+			}
+		}
 		processed = new HashSet<Object>();
 		gatherQueueInformation();
 	}
@@ -177,6 +188,10 @@ public class QueuePoller extends AbstractQueuePoller {
 	 * @param InputStream
 	 */
 	protected void processStderr(InputStream is) throws IOException {
+		String error = new Scanner(is).useDelimiter("\\A").next();
+		if(logger.isDebugEnabled()) {
+			logger.debug("QueuePoller error: " + error);
+		}
 	}
 
 	/**
@@ -185,20 +200,20 @@ public class QueuePoller extends AbstractQueuePoller {
 	 * @param InputStream is - stream representing output
 	 */
 	protected void processStdout(InputStream is) throws IOException {
-
-		DocumentBuilder builder;
-		Document doc;
 		String xml = new Scanner(is).useDelimiter("\\A").next();
-		InputStream is2 = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+		if(logger.isDebugEnabled()) {
+			logger.debug("QueuePoller XML: " + xml);
+		}
+		InputStream is_copy = new ByteArrayInputStream(xml.getBytes());
 		
 		try {
-			builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			doc = builder.parse(is2);
+			doc = builder.parse(is_copy);
 		}
-
 		catch (Exception e) {
-			e.printStackTrace();
-			throw new IOException("Error while parsing XML\n");
+			if(logger.isDebugEnabled()) {
+				logger.debug(e.getMessage());
+			}
+			return;
 		}
 
 		processed.clear();
@@ -249,18 +264,17 @@ public class QueuePoller extends AbstractQueuePoller {
 				job.setState(Job.STATE_DONE);
 				if (job.getState() == Job.STATE_DONE) {
 					addDoneJob(id);
-				}
-			} else {
-				// at least on Ranger the job is done long
-				// before qstat reports it as done, so check
-				// if the exit code file is there
-				File f = new File(job.getExitcodeFileName());
-				if (f.exists()) {
-					job.setState(Job.STATE_DONE);
-					if (job.getState() == Job.STATE_DONE) {
-						addDoneJob(id);
+				} else {
+					// at least on Ranger the job is done long
+					// before qstat reports it as done, so check
+					// if the exit code file is there
+					File f = new File(job.getExitcodeFileName());
+					if (f.exists()) {
+						job.setState(Job.STATE_DONE);
+						if (job.getState() == Job.STATE_DONE) {
+								addDoneJob(id);
+						}
 					}
-				}
 			}
 		}
 	}
