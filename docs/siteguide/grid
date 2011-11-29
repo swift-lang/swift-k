@@ -177,7 +177,7 @@ catalog. The user's installscript will execute on either the head node
 
 -----
 $ ./foreachsite -help
-./foreachsite foreachsite [-resource fork|worker ] [-sites alt-sites-file] scriptname
+./foreachsite [-resource fork|worker ] [-sites alt-sites-file] scriptname
 $ 
 -----
 
@@ -215,8 +215,10 @@ Starting a single coaster service
 
 This single coaster service will service all grid sites:
 
+-----
 start-grid-service --loglevel INFO --throttle 3.99 --jobspernode 1 \
                    >& start-grid-service.out
+-----
 
 Starting workers on OSG sites
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
