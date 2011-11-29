@@ -43,13 +43,13 @@ class Site
       stream_error = False
       transfer_executable = true
       periodic_remove = JobStatus == 5
-      notification = Never
+      notification = NEVER
 
       globus_rsl = (maxwalltime=240)
       grid_resource = <%= @grid_resource %>
       executable = #{workerWrapper}
       arguments = #{workerContact} <%= @name.gsub(/__.*/,"") %> /tmp
-      environment = WORKER_LOGGING_LEVEL=INFO
+      environment = WORKER_LOGGING_LEVEL=DEBUG
       Input   = #{workerExecutable}
       Error   = condor/$(Process).err
       Output  = condor/$(Process).out

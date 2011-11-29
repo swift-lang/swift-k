@@ -62,6 +62,7 @@ cat >sites.grid-ps.xml <<EOF
       <profile namespace="karajan" key="initialScore">10000</profile>
       <!-- <filesystem provider="local" url="none" /> -->
       <profile namespace="swift" key="stagingMethod">proxy</profile>
+      <profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
       <workdirectory>/tmp/$USER</workdirectory>
     </pool>
     
@@ -72,6 +73,7 @@ cat >sites.grid-ps.xml <<EOF
       <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
       <profile namespace="karajan" key="initialScore">10000</profile>
       <filesystem provider="local" url="none" />
+      <profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
       <profile namespace="swift" key="stagingMethod">proxy</profile>
       <workdirectory>/tmp/$USER</workdirectory>
     </pool>

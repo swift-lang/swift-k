@@ -224,6 +224,7 @@ end
        <profile namespace="globus" key="workerManager">passive</profile>
        <profile namespace="karajan" key="initialScore">10000</profile>
        <profile namespace="karajan" key="jobThrottle">2.99</profile>
+       <profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
        <profile namespace="globus" key="jobsPerNode">16</profile>
        <gridftp  url="<%=gftp%>"/>
        <workdirectory><%=data_dir%>/swift_scratch</workdirectory>
