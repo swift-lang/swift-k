@@ -275,6 +275,7 @@ public class QueuePoller extends AbstractQueuePoller {
 								addDoneJob(id);
 						}
 					}
+                              }
 			}
 		}
 	}
