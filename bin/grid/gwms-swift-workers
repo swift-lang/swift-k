@@ -24,7 +24,11 @@ class Site
           universe = vanilla
           stream_output = False
           stream_error = False
+
           transfer_executable = true
+          should_transfer_files = YES
+          WhenToTransferOutput = ON_EXIT
+
           periodic_remove = JobStatus == 5
           notification = NEVER
 
