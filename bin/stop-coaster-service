@@ -10,7 +10,7 @@ crash()
 
 # Location of required files
 PID_FILE="$HOME/.swift/.coaster-service-pids"
-SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instances"
+SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instance"
 
 # Import settings
 if [ -f "./coaster-service.conf" ]; then

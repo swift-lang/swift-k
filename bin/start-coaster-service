@@ -19,15 +19,15 @@ start-workers-futuregrid()
    fi
 
    echo Starting virtual machines.. please wait
-   $SWIFTVMBOOT_DIR/bin/bootit.sh
+   $SWIFTVMBOOT_DIR/bin/bootit.sh | tee -a bootit.log
    SWIFTVMBOOT_OUTPUT=$SWIFTVMBOOT_DIR/output.json
 
    if [ ! -f "$SWIFTVMBOOT_OUTPUT" ]; then
       crash "Error: Swift VM output file $SWIFTVMBOOT_OUTPUT does not exist!"
    fi
 
-   SWIFTVM_INSTANCES=`grep instance_id $SWIFTVMBOOT_OUTPUT |awk '{print $2}'|sed 's/\"//g;s/,//g;s/null//g'`
-   echo $SWIFTVM_INSTANCES > .swiftvm_instances
+   SWIFTVM_INSTANCE=`grep "Starting up run" bootit.log |awk '{print $4}'`
+   echo $SWIFTVM_INSTANCE >> $HOME/.swift/.swiftvm_instance
 
    WORKER_HOSTS=`grep hostname $SWIFTVMBOOT_OUTPUT |awk '{print $2}'|sed 's/\"//g;s/,//g;s/null//g'`
 
@@ -218,7 +218,7 @@ else
    crash "Unknown SERVICE_PORT type specified!"
 fi
 
-echo $! > $PID_FILE
+echo $! >> $PID_FILE
 sleep 5
 
 # Determine SERVICE_PORT
