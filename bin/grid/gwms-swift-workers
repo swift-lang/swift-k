@@ -29,11 +29,9 @@ class Site
           should_transfer_files = YES
           WhenToTransferOutput = ON_EXIT
 
-          periodic_remove = JobStatus == 5
+          #periodic_remove = JobStatus == 5
           notification = NEVER
 
-          #globus_rsl = (maxwalltime=240)
-          #grid_resource = <%= @grid_resource %>
           executable = #{workerWrapper}
           arguments = #{workerContact} <%= @name.gsub(/__.*/,"") %> /tmp
           environment = WORKER_LOGGING_LEVEL=DEBUG

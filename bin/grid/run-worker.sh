@@ -22,7 +22,7 @@ echo "=== logdir:  $logdir"
 echo "=== path:    $PATH"
 echo "==============================================="
 
-cat >worker.pl
+#cat >worker.pl
 chmod +x worker.pl
 
 ./worker.pl $contact $workername $logdir
