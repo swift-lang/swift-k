@@ -14,11 +14,8 @@ start-workers-futuregrid()
    PORT=$1
    EXECUTION_URL=http://localhost:$PORT
 
-   if [ ! -d "$SWIFTVMBOOT_DIR" ]; then
-      SWIFTVMBOOT_DIR=$SWIFT_BIN/vm/futuregrid
-      if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/bootit.sh" ]; then
-         crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
-      fi
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/bootit.sh" ]; then
+      crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
    fi
 
    echo Starting virtual machines.. please wait
@@ -57,11 +54,8 @@ start-workers-ec2()
    PORT=$1
    EXECUTION_URL=http://localhost:$PORT
    
-   if [ ! -d "$SWIFTVMBOOT_DIR" ]; then
-      SWIFTVMBOOT_DIR=$SWIFT_BIN/vm/ec2
-      if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/gp-instance-create" ]; then
-         crash "SWIFTVMBOT_DIR incorrectly defined in coaster-service.conf"
-      fi
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/gp-instance-create" ]; then
+      crash "SWIFTVMBOT_DIR incorrectly defined in coaster-service.conf"
    fi
 
    SEDFILE=`mktemp`
