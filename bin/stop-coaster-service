@@ -39,9 +39,8 @@ if [ -f "$PID_FILE" ]; then
    done
    rm $PID_FILE > /dev/null 2>&1
 fi
-echo Done
 
-if [ $WORKER_MODE == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+if [ "$WORKER_MODE" == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    for INSTANCE in `cat $SWIFTVM_INSTANCES`
    do
       $SWIFTVMBOOT_DIR/ve/bin/cloudinitd terminate $INSTANCE
@@ -49,5 +48,13 @@ if [ $WORKER_MODE == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    rm $SWIFTVM_INSTANCES > /dev/null 2>&1
 fi
 
+if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   for INSTANCE in `cat $SWIFTVM_INSTANCES`
+   do
+      echo Stopping ec2 instance $INSTANCE...
+      $SWIFTVMBOOT_DIR/bin/gp-instance-stop $INSTANCE | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+  done
+  rm $SWIFTVM_INSTANCES > /dev/null 2>&1
+fi
 
 popd > /dev/null 2>&1
