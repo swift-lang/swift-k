@@ -1,0 +1,10 @@
+#!/usr/bin/python
+# EASY-INSTALL-ENTRY-SCRIPT: 'globus-provision==0.3.2','console_scripts','gp-instance-update'
+__requires__ = 'globus-provision==0.3.2'
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == '__main__':
+    sys.exit(
+        load_entry_point('globus-provision==0.3.2', 'console_scripts', 'gp-instance-update')()
+    )

@@ -1,0 +1,39 @@
+{
+  "dependencies": {
+
+  },
+  "platforms": {
+
+  },
+  "long_description": "= DESCRIPTION:\n\n= REQUIREMENTS:\n\n= ATTRIBUTES:\n\n= USAGE:\n\n",
+  "providing": {
+
+  },
+  "maintainer": "YOUR_COMPANY_NAME",
+  "recipes": {
+
+  },
+  "replacing": {
+
+  },
+  "license": "All rights reserved",
+  "maintainer_email": "YOUR_EMAIL",
+  "groupings": {
+
+  },
+  "version": "0.0.1",
+  "recommendations": {
+
+  },
+  "description": "Installs/Configures demogrid",
+  "suggestions": {
+
+  },
+  "name": "demogrid",
+  "attributes": {
+
+  },
+  "conflicting": {
+
+  }
+}

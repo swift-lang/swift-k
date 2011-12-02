@@ -1,0 +1,5 @@
+access_id_CA      X509         '<%= @certificate.subject.to_s %>'
+
+pos_rights        globus        CA:sign
+
+cond_subjects     globus       '"<%= @certificate.subject.to_s.sub(/CN=.*/, "*") %>"'

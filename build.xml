@@ -112,6 +112,14 @@
 				<include name="workers.ranger.sh"/>
 			</fileset>
 		</chmod>
+                <chmod perm="+x">
+              		<fileset dir="${dist.dir}/bin/vm/futuregrid">
+				<include name="install.sh"/>
+                                <include name="env.sh"/>
+                        </fileset>
+                        <fileset dir="${dist.dir}/bin/vm/futuregrid/bin"/>
+            		<fileset dir="${dist.dir}/bin/vm/ec2/bin"/>
+                </chmod>
 		<chmod perm="+x">
 			<fileset dir="${dist.dir}/libexec/log-processing">
 				<include name="active-state-transitions"/>

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+username=$1
+if [ X"$username" = X ]; then
+    # no username given
+    exit 1
+fi
+
+# DN must match the signing policy for your CA.
+echo "/O=Grid/OU=DemoGrid/CN=${username}"
+
+exit 0

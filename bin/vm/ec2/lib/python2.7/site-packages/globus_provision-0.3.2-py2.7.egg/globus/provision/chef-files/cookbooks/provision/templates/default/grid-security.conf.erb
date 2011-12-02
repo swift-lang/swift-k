@@ -1,0 +1,41 @@
+#################################################################
+#
+# File: grid-security.conf
+#
+# Purpose: This file contains the configuration information
+#          for the Grid Security Infrastructure
+#
+#################################################################
+
+# These values are set by grid-ca-create
+SETUP_GSI_HOST_BASE_DN="$SETUP_GSI_HOST_BASE_DN"
+SETUP_GSI_USER_BASE_DN="$SETUP_GSI_USER_BASE_DN"
+SETUP_GSI_CA_NAME="$SETUP_GS_CA_NAME"
+SETUP_GSI_CA_EMAIL_ADDR="$SETUP_GSI_CA_EMAIL_ADDR"
+
+DEFAULT_GSI_HOST_BASE_DN="<%= @subject.select{|k,v| k != "cn"}.collect{|x| x[0]+"="+x[1]}.join ", " %>"
+DEFAULT_GSI_USER_BASE_DN="<%= @subject.select{|k,v| k != "cn"}.collect{|x| x[0]+"="+x[1]}.join ", " %>"
+DEFAULT_GSI_CA_NAME="<%= @subject["cn"] %>"
+DEFAULT_GSI_CA_EMAIL_ADDR="ca@globusprovision.example.org"
+
+# Distinguish Name (DN) of the Host
+GSI_HOST_BASE_DN="${SETUP_GSI_HOST_BASE_DN:-${DEFAULT_GSI_HOST_BASE_DN}}"
+
+# Distinguish Name (DN) of the User
+GSI_USER_BASE_DN="${SETUP_GSI_USER_BASE_DN:-${DEFAULT_GSI_USER_BASE_DN}}"
+
+# CA Name for the organization
+GSI_CA_NAME="${SETUP_GSI_CA_NAME:-${DEFAULT_GSI_CA_NAME}}"
+
+# CA Email address for the organization
+GSI_CA_EMAIL_ADDR="${SETUP_GSI_CA_EMAIL_ADDR:-${DEFAULT_GSI_CA_EMAIL_ADDR}}"
+
+export GSI_HOST_BASE_DN
+export GSI_USER_BASE_DN
+export GSI_CA_NAME
+export GSI_CA_EMAIL_ADDR
+
+
+
+
+

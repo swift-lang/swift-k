@@ -1,0 +1,7 @@
+= DESCRIPTION:
+
+These recipes are used by Globus Provision; they are not meant to be used
+directly.  Please refer to the Globus Provision documentation for instructions 
+on how to deploy and configure a Globus system using these recipes.
+
+

@@ -1,0 +1,20 @@
+Metadata-Version: 1.0
+Name: globus-provision
+Version: 0.3.2
+Summary: A tool for deploying fully-configured Globus systems on Amazon EC2
+Home-page: http://globus.org/provision
+Author: University of Chicago
+Author-email: borja@cs.uchicago.edu
+License: Apache Software License
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: Intended Audience :: Education
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: System :: Distributed Computing

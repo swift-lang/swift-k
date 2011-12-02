@@ -1,0 +1,35 @@
+#
+# /etc/defaults/nis	Configuration settings for the NIS daemons.
+#
+
+# Are we a NIS server and if so what kind (values: false, slave, master)?
+NISSERVER=master
+
+# Are we a NIS client?
+NISCLIENT=false
+
+# Location of the master NIS password file (for yppasswdd).
+# If you change this make sure it matches with /var/yp/Makefile.
+YPPWDDIR=/etc
+
+# Do we allow the user to use ypchsh and/or ypchfn ? The YPCHANGEOK
+# fields are passed with -e to yppasswdd, see it's manpage.
+# Possible values: "chsh", "chfn", "chsh,chfn"
+YPCHANGEOK=chsh
+
+# NIS master server.  If this is configured on a slave server then ypinit
+# will be run each time NIS is started.
+NISMASTER=
+
+# Additional options to be given to ypserv when it is started.
+YPSERVARGS=
+
+# Additional options to be given to ypbind when it is started.  
+YPBINDARGS=-no-dbus
+
+# Additional options to be given to yppasswdd when it is started.  Note
+# that if -p is set then the YPPWDDIR above should be empty.
+YPPASSWDDARGS=
+
+# Additional options to be given to ypxfrd when it is started. 
+YPXFRDARGS=

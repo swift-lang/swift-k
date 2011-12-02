@@ -1,0 +1,16 @@
+[console_scripts]
+gp-ec2-create-ami = globus.provision.cli.ec2:gp_ec2_create_ami_func
+gp-instance-add-user = globus.provision.cli.api:gp_instance_add_user_func
+gp-go-register-endpoints = globus.provision.cli.globusonline:gp_go_register_endpoints_func
+gp-instance-remove-hosts = globus.provision.cli.api:gp_instance_remove_hosts_func
+gp-instance-add-host = globus.provision.cli.api:gp_instance_add_host_func
+gp-instance-remove-users = globus.provision.cli.api:gp_instance_remove_users_func
+gp-instance-create = globus.provision.cli.api:gp_instance_create_func
+gp-instance-describe = globus.provision.cli.api:gp_instance_describe_func
+gp-instance-list = globus.provision.cli.api:gp_instance_list_func
+gp-instance-update = globus.provision.cli.api:gp_instance_update_func
+gp-instance-start = globus.provision.cli.api:gp_instance_start_func
+gp-ec2-update-ami = globus.provision.cli.ec2:gp_ec2_update_ami_func
+gp-instance-terminate = globus.provision.cli.api:gp_instance_terminate_func
+gp-instance-stop = globus.provision.cli.api:gp_instance_stop_func
+

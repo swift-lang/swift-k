@@ -1,0 +1,11 @@
+<% if @subnet %>
+	<% if @type == :allow %>
+mountd nfsd statd lockd rquotad portmap ypserv ypbind: <%= @subnet %>/24
+	<% elsif @type == :deny %>
+mountd nfsd statd lockd rquotad portmap ypserv ypbind: ALL	
+	<% end %>
+<% else %>
+	<% if @type == :allow %>
+mountd nfsd statd lockd rquotad portmap ypserv ypbind: ALL
+	<% end %>
+<% end %>

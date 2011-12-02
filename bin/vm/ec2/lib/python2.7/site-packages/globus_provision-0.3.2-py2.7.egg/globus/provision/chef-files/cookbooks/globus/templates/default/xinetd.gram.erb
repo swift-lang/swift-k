@@ -1,0 +1,13 @@
+service gsigatekeeper
+{
+    socket_type = stream
+    protocol = tcp
+    wait = no
+    user = root
+    env += GLOBUS_LOCATION=<%= @globus_location %>
+    env += LD_LIBRARY_PATH=<%= @globus_location %>/lib
+    env += LD_LIBRARY_PATH=GLOBUS_LOCATION/lib
+    server = <%= @globus_location %>/sbin/globus-gatekeeper
+    server_args = -conf <%= @globus_location %>/etc/globus-gatekeeper.conf
+    disable = no
+}

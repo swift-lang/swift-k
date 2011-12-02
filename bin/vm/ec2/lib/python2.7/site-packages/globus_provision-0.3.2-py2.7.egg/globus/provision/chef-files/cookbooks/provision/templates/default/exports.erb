@@ -1,0 +1,9 @@
+<% if @subnet %>
+/nfs/home     <%= @subnet %>/24(rw,root_squash,no_subtree_check,sync)
+/mnt/scratch  <%= @subnet %>/24(rw,root_squash,no_subtree_check,sync)
+/nfs/software <%= @subnet %>/24(rw,root_squash,no_subtree_check,sync)
+<% else %>
+/nfs/home     (rw,root_squash,no_subtree_check,sync)
+/mnt/scratch  (rw,root_squash,no_subtree_check,sync)
+/nfs/software (rw,root_squash,no_subtree_check,sync)
+<% end %>

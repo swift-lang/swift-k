@@ -1,0 +1,13 @@
+# Format:
+#------------------------------------------------------------------------
+#  token type  | def.authority |                value              
+#--------------|---------------|-----------------------------------------
+# EACL entry #1|
+
+access_id_CA      X509      '/C=US/O=Globus Consortium/CN=Globus Connect CA'
+
+pos_rights        globus    CA:sign
+
+cond_subjects     globus   '"/C=US/O=Globus Consortium/OU=Globus Connect User/*" "/C=US/O=Globus Consortium/OU=Globus Connect Server/*" "/C=US/O=Globus Consortium/OU=Globus Connect Service/*"'
+
+# end of EACL
