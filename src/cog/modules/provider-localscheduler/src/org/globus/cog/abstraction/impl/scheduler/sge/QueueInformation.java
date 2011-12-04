@@ -56,6 +56,7 @@ public class QueueInformation {
 	}
 	
 	public void setSlots(String slots) {
-		this.slots = Integer.valueOf(slots);
+		String slot_list[] = slots.split(",");
+		this.slots = Integer.valueOf(slot_list[0]);
 	}
 }

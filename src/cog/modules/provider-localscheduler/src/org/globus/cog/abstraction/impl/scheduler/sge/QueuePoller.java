@@ -74,10 +74,18 @@ public class QueuePoller extends AbstractQueuePoller {
 	 * @return XML data as a String
 	 */
 	public static String getDataFromElement(Element e) {
-		Node child = e.getFirstChild();
-		if (child instanceof CharacterData) {
-			CharacterData cd = (CharacterData) child;
-			return cd.getData();
+		try {
+			Node child = e.getFirstChild();
+			if (child instanceof CharacterData) {
+				CharacterData cd = (CharacterData) child;
+				return cd.getData();
+			}
+		}
+		
+		catch (Exception ex) {
+			logger.debug("Error in getDataFromElement");
+			logger.debug(ex.getMessage());
+			logger.debug(ex.getStackTrace());
 		}
 		return "";
 	}
@@ -135,6 +143,7 @@ public class QueuePoller extends AbstractQueuePoller {
 		} catch (IOException e) {
 			logger.error("QueuePoller command interrupted");
 			logger.error(e.getMessage());
+			logger.error(e.getStackTrace());
 		}
 	}
 
@@ -200,82 +209,80 @@ public class QueuePoller extends AbstractQueuePoller {
 	 * @param InputStream is - stream representing output
 	 */
 	protected void processStdout(InputStream is) throws IOException {
-		String xml = new Scanner(is).useDelimiter("\\A").next();
-		if(logger.isDebugEnabled()) {
-			logger.debug("QueuePoller XML: " + xml);
-		}
-		InputStream is_copy = new ByteArrayInputStream(xml.getBytes());
-		
 		try {
+			String xml = new Scanner(is).useDelimiter("\\A").next();
+			if(logger.isDebugEnabled()) {
+				logger.debug("QueuePoller XML: " + xml);
+			}	
+			InputStream is_copy = new ByteArrayInputStream(xml.getBytes());
 			doc = builder.parse(is_copy);
+			processed.clear();
+			NodeList nodes = doc.getElementsByTagName("job_list");
+			Job tmpJob;
+
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Element element = (Element) nodes.item(i);
+				NodeList nodeList = element.getElementsByTagName("JB_job_number");
+				Element line = (Element) nodeList.item(0);
+				String jobid = getDataFromElement(line);
+				tmpJob = getJob(jobid);
+
+				if (tmpJob == null) {
+					continue;
+				}
+
+				processed.add(jobid);
+				nodeList = element.getElementsByTagName("state");
+				line = (Element) nodeList.item(0);
+				String state = getDataFromElement(line);
+
+				if (state.contains("q") || state.contains("w")) {
+					if (logger.isDebugEnabled()) {
+						logger.debug(jobid + " is queued");
+					}
+					tmpJob.setState(Job.STATE_QUEUED);
+				} else if (state.contains("r")) {
+					if (logger.isDebugEnabled()) {
+						logger.debug(jobid + " is running");
+					}
+					tmpJob.setState(Job.STATE_RUNNING);
+				} else if (state.contains("E")) {
+					tmpJob.fail("Job is in an error state. Try running qstat -j "
+						+ jobid + " to see why.");
+				}
+			}
+
+			Iterator i = getJobs().entrySet().iterator();
+			while (i.hasNext()) {
+				Map.Entry e = (Map.Entry) i.next();
+				String id = (String) e.getKey();
+				Job job = (Job) e.getValue();
+				if (!processed.contains(id)) {
+					if (logger.isDebugEnabled()) {
+						logger.debug(id + " is done");
+					}
+					job.setState(Job.STATE_DONE);
+					if (job.getState() == Job.STATE_DONE) {
+						addDoneJob(id);
+					} else {
+						// at least on Ranger the job is done long
+						// before qstat reports it as done, so check
+						// if the exit code file is there
+						File f = new File(job.getExitcodeFileName());
+						if (f.exists()) {
+							job.setState(Job.STATE_DONE);
+							if (job.getState() == Job.STATE_DONE) {
+								addDoneJob(id);
+							}
+						}
+                   }
+				}
+			}
 		}
 		catch (Exception e) {
 			if(logger.isDebugEnabled()) {
-				logger.debug(e.getMessage());
-			}
-			return;
-		}
-
-		processed.clear();
-		NodeList nodes = doc.getElementsByTagName("job_list");
-		Job tmpJob;
-
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Element element = (Element) nodes.item(i);
-			NodeList nodeList = element.getElementsByTagName("JB_job_number");
-			Element line = (Element) nodeList.item(0);
-			String jobid = getDataFromElement(line);
-			tmpJob = getJob(jobid);
-
-			if (tmpJob == null) {
-				continue;
-			}
-
-			processed.add(jobid);
-			nodeList = element.getElementsByTagName("state");
-			line = (Element) nodeList.item(0);
-			String state = getDataFromElement(line);
-
-			if (state.contains("q") || state.contains("w")) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(jobid + " is queued");
-				}
-				tmpJob.setState(Job.STATE_QUEUED);
-			} else if (state.contains("r")) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(jobid + " is running");
-				}
-				tmpJob.setState(Job.STATE_RUNNING);
-			} else if (state.contains("E")) {
-				tmpJob.fail("Job is in an error state. Try running qstat -j "
-						+ jobid + " to see why.");
-			}
-		}
-
-		Iterator i = getJobs().entrySet().iterator();
-		while (i.hasNext()) {
-			Map.Entry e = (Map.Entry) i.next();
-			String id = (String) e.getKey();
-			Job job = (Job) e.getValue();
-			if (!processed.contains(id)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(id + " is done");
-				}
-				job.setState(Job.STATE_DONE);
-				if (job.getState() == Job.STATE_DONE) {
-					addDoneJob(id);
-				} else {
-					// at least on Ranger the job is done long
-					// before qstat reports it as done, so check
-					// if the exit code file is there
-					File f = new File(job.getExitcodeFileName());
-					if (f.exists()) {
-						job.setState(Job.STATE_DONE);
-						if (job.getState() == Job.STATE_DONE) {
-								addDoneJob(id);
-						}
-					}
-                              }
+				logger.debug("Exception in processStdout");
+				logger.debug(e.getStackTrace());
 			}
 		}
 	}
