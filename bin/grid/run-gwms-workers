@@ -1,0 +1,36 @@
+#!/bin/bash
+
+workerExecutable=`which worker.pl`
+workerWrapper=`which run-worker.sh`
+workerContact=$1
+
+cat > myjob.condor <<EOF
+universe = vanilla
+
+transfer_output = true
+transfer_error = true
+
+stream_output = False
+stream_error = False
+
+transfer_executable = true
+should_transfer_files = YES
+WhenToTransferOutput = ON_EXIT
+
+periodic_remove = JobStatus == 5
+PeriodicRelease = (NumGlobusSubmits < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*60))
+notification = NEVER
+
+executable = $workerWrapper
+arguments = $workerContact scec /tmp
+environment = WORKER_LOGGING_LEVEL=DEBUG
+Input   = $workerExecutable
+Error   = condor/job.err
+Output  = condor/job.out
+log     = condor.log
+
+queue 50
+EOF
+
+condor_submit myjob.condor
+
