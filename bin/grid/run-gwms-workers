@@ -1,9 +1,16 @@
 #!/bin/bash
 
+die () {
+    echo >&2 "$@"
+    exit 1
+}
+
 workerExecutable=`which worker.pl`
 workerWrapper=`which run-worker.sh`
 workerContact=$1
 n=$2
+
+[ "$#" -eq 2 ] || die "2 arguments required, $# provided"
 
 cat > myjob.condor <<EOF
 universe = vanilla
@@ -34,4 +41,3 @@ queue $n
 EOF
 
 condor_submit myjob.condor
-
