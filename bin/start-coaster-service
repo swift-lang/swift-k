@@ -53,9 +53,9 @@ start-workers-ec2()
 {
    PORT=$1
    EXECUTION_URL=http://localhost:$PORT
-   
+
    if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/gp-instance-create" ]; then
-      crash "SWIFTVMBOT_DIR incorrectly defined in coaster-service.conf"
+      crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
    fi
 
    SEDFILE=`mktemp`
@@ -63,7 +63,7 @@ start-workers-ec2()
       echo "s@_CLUSTER-NODES_@$EC2_NODES@"
       echo "s@_INSTANCE-TYPE_@$EC2_INSTANCE_TYPE@"
       echo "s@_KEYPAIR_@$EC2_KEYPAIR@"
-      echo "s@_KEYFILE_@$EC2_KEYFILE@"  
+      echo "s@_KEYFILE_@$EC2_KEYFILE@"
       echo "s@_AMI_@$EC2_AMI@"
    } > $SEDFILE
    sed -f $SEDFILE < "$SWIFTVMBOOT_DIR/ec2.template.conf" > "$SWIFTVMBOOT_DIR/ec2.conf"
@@ -74,9 +74,9 @@ start-workers-ec2()
    SWIFTVM_INSTANCE=`awk '{print $4}' gpic.out`
    rm gpic.out
    echo $SWIFTVM_INSTANCE >> $HOME/.swift/.swiftvm_instance
- 
+
    echo Starting instance..
-   "$SWIFTVMBOOT_DIR/bin/gp-instance-start" "$SWIFTVM_INSTANCE" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" 
+   "$SWIFTVMBOOT_DIR/bin/gp-instance-start" "$SWIFTVM_INSTANCE" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
    WORKER_HOSTS=`$SWIFTVMBOOT_DIR/bin/gp-instance-describe $SWIFTVM_INSTANCE|sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"|awk '{print $3}'`
 
    # Start worker script
