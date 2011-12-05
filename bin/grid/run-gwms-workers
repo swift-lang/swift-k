@@ -26,7 +26,6 @@ should_transfer_files = YES
 WhenToTransferOutput = ON_EXIT
 
 periodic_remove = JobStatus == 5
-PeriodicRelease = (NumGlobusSubmits < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*60))
 notification = NEVER
 
 executable = $workerWrapper
