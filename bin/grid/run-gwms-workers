@@ -3,6 +3,7 @@
 workerExecutable=`which worker.pl`
 workerWrapper=`which run-worker.sh`
 workerContact=$1
+n=$2
 
 cat > myjob.condor <<EOF
 universe = vanilla
@@ -29,7 +30,7 @@ Error   = condor/job.err
 Output  = condor/job.out
 log     = condor.log
 
-queue 50
+queue $n
 EOF
 
 condor_submit myjob.condor
