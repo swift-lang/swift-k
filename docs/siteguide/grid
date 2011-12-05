@@ -220,8 +220,8 @@ start-grid-service --loglevel INFO --throttle 3.99 --jobspernode 1 \
                    >& start-grid-service.out
 -----
 
-Starting workers on OSG sites
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting workers on OSG sites through GRAM
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Make sure that your "greensites" file is in the current working
 directory.
@@ -247,6 +247,26 @@ swift-workers greensites extenci \
               http://communicado.ci.uchicago.edu:$(cat service-0.wport) \
               >& swift-workers.out &
 -----
+
+Starting workers on OSG sites through GlideinWMS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As an alternative to the above gram based 'direct' worker submission, a GlideinWMS based worker submission can be made. The service start step would be same as above.
+
+GlideinWMS is a Glidein Based WMS (Workload Management System) that works on top of condor.
+
+As with the case of Gram based workers, the condor directory must be pre-created and will be used by Condor to
+return stdout and stderr files from the Condor jobs, which will
+execute the wrapper script "run-workers.sh".
+
+NOTE: this script is current built manually, and wraps around and
+transports the worker.pl script. This needs to be automated.
+
+-----
+run-gwms-workers http://communicado.ci.uchicago.edu:$(cat service-0.wport) 100 >& gwms-workers.out &
+-----
+
+In the above commandline, one can change the number of workers by changing the second commandline argument, which is 100 in this example.
 
 Adding workers from TeraGrid sites
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
