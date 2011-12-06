@@ -310,15 +310,6 @@ else
 fi
 checkError $? "Exit code $?"
 
-if [ ! -s "$STDOUT" ]; then
-	log "Removing empty stdout"
-	rm -f $STDOUT
-fi
-if [ ! -s "$STDERR" ]; then
-	log "Removing empty stderr"
-	rm -f $STDERR
-fi
-
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
 
