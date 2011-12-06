@@ -13,16 +13,7 @@ PID_FILE="$HOME/.swift/.coaster-service-pids"
 SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instance"
 
 # Import settings
-if [ -f "./coaster-service.conf" ]; then
-   CONFIG_FILE="./coaster-service.conf"
-elif [ -f "$HOME/.swift/coaster-service.conf" ]; then
-   CONFIG_FILE="$HOME/.swift/coaster-service.conf"
-elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
-   CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
-else
-   crash "Cannot find coaster-service.conf!"
-fi
-
+CONFIG_FILE=$HOME/.swift/.config
 source "$CONFIG_FILE"
 
 echo Ending coaster processes..
@@ -52,9 +43,15 @@ if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    for INSTANCE in `cat $SWIFTVM_INSTANCES`
    do
       echo Stopping ec2 instance $INSTANCE...
-      $SWIFTVMBOOT_DIR/bin/gp-instance-stop $INSTANCE | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+      $SWIFTVMBOOT_DIR/bin/gp-instance-terminate $INSTANCE | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+
   done
   rm $SWIFTVM_INSTANCES > /dev/null 2>&1
 fi
 
+if [ -f "$HOME/.swift/.machines" ]; then
+   rm "$HOME/.swift/.machines"
+fi
+
 popd > /dev/null 2>&1
+echo Done

@@ -82,6 +82,9 @@ start-workers-ec2()
    # Start worker script
    for MACHINE in $WORKER_HOSTS
    do
+      # Create a list of machines for other applications, if needed
+      echo $MACHINE >> $HOME/.swift/.machines
+
       # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -q -o StrictHostKeyChecking=no -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
@@ -192,9 +195,10 @@ elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
 else
    crash "Cannot find coaster-service.conf!"
 fi
+cp $CONFIG_FILE $HOME/.swift/.config
 
-echo "start-coaster-service..."
-echo "configuration: $CONFIG_FILE"
+echo "Start-coaster-service..."
+echo "Configuration: $CONFIG_FILE"
 
 source $CONFIG_FILE
 
