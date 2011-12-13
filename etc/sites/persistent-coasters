@@ -4,7 +4,7 @@
                url="_EXECUTION_URL_"
                jobmanager="local:local"/>
     <profile namespace="globus" key="workerManager">passive</profile>
-    <profile namespace="globus" key="workersPerNode">4</profile>
+    <profile namespace="globus" key="jobsPerNode">_JOBS_PER_NODE_</profile>
     <profile key="jobThrottle" namespace="karajan">_JOB_THROTTLE_</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
     <filesystem provider="local" url="none" />

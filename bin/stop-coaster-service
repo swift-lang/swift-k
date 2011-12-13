@@ -10,7 +10,7 @@ crash()
 
 # Location of required files
 PID_FILE="$HOME/.swift/.coaster-service-pids"
-SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instance"
+SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instances"
 
 # Import settings
 CONFIG_FILE=$HOME/.swift/.config
@@ -39,7 +39,7 @@ if [ "$WORKER_MODE" == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    rm $SWIFTVM_INSTANCES > /dev/null 2>&1
 fi
 
-if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+if [ "$WORKER_MODE" == "gp" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    for INSTANCE in `cat $SWIFTVM_INSTANCES`
    do
       echo Stopping ec2 instance $INSTANCE...
@@ -47,6 +47,17 @@ if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
 
   done
   rm $SWIFTVM_INSTANCES > /dev/null 2>&1
+fi
+
+if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   export EC2_HOME="$SWIFTVMBOOT_DIR"
+   export EC2_PRIVATE_KEY="$EC2_KEYFILE"
+   export EC2_CERT="$EC2_CERTFILE"
+   INSTANCES_AS_STRING=$( cat $SWIFTVM_INSTANCES | tr "\\n" " ")
+   $SWIFTVMBOOT_DIR/bin/ec2-terminate-instances $INSTANCES_AS_STRING
+   if [ -f "$HOME/.swift/.swiftvm_instances" ]; then
+      rm $HOME/.swift/.swiftvm_instances
+   fi
 fi
 
 if [ -f "$HOME/.swift/.machines" ]; then

@@ -119,9 +119,10 @@ start-workers-ec2()
    echo Creating instance..
    $SWIFTVMBOOT_DIR/bin/ec2-run-instances "$EC2_AMI" -t "$EC2_INSTANCE_TYPE" -n "$EC2_NODES" -k "$EC2_KEYPAIR"
    SWIFTVM_INSTANCES=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances | grep INSTANCE | grep -v terminated |awk '{print $2}' )
-   echo $SWIFTVM_INSTANCES >> $HOME/.swift/.swiftvm_instance
+   echo $SWIFTVM_INSTANCES >> $HOME/.swift/.swiftvm_instances
    echo Waiting for nodes to boot..
 
+   # Wait until all instances are listed as running
    while /bin/true
    do
       SWIFTVM_INSTANCES_AS_STRING=$( echo $SWIFTVM_INSTANCES | tr "\\n" " ")
@@ -137,8 +138,12 @@ start-workers-ec2()
 
    WORKER_HOSTS=$( ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $4}' )
 
+   if [ -f "$HOME/.swift/.machines" ]; then
+      rm $HOME/.swift/.machines
+   fi
+
    # Start worker script
-   rm $HOME/.swift/.machines
+   SSH_OPTS="-i $EC2_KEYFILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
    for MACHINE in $WORKER_HOSTS
    do
 
@@ -147,18 +152,18 @@ start-workers-ec2()
 
       # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
-         ssh -i $EC2_KEYFILE -q -o StrictHostKeyChecking=no -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
+         ssh $SSH_OPTS -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 > /dev/null 2>&1 &
          echo $! >> $PID_FILE
       fi
 
       # Copy and start worker script
-      scp -i $EC2_KEYFILE -q -o StrictHostKeyChecking=no $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
+      scp $SSH_OPTS $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
-      ssh -i $EC2_KEYFILE -q -o StrictHostKeyChecking=no $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+      ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" > /dev/null 2>&1 &
       echo $! >> $PID_FILE
 
       # Copy SSH key for easier access
-      cat $HOME/.ssh/*.pub | ssh -i $EC2_KEYFILE $WORKER_USERNAME@$MACHINE 'umask 077; cat >> $HOME/.ssh/authorized_keys'
+      cat $HOME/.ssh/*.pub | ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE 'umask 077; cat >> $HOME/.ssh/authorized_keys' > /dev/null 2>&1
    done
 }
 
