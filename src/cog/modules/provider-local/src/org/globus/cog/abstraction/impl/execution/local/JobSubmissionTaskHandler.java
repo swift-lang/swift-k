@@ -35,6 +35,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.common.util.NullOutputStream;
 import org.globus.cog.abstraction.impl.common.util.OutputStreamMultiplexer;
+import org.globus.cog.abstraction.impl.file.FileResourceCache;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.FileResource;
@@ -294,7 +295,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
         String srcScheme = defaultToLocal(suri.getScheme());
         String dstScheme = defaultToLocal(duri.getScheme());
+        
         FileResource sres = AbstractionFactory.newFileResource(srcScheme);
+        sres.setServiceContact(getServiceContact(suri));
+        sres.start();
         
         String srcPath = getPath(suri, dir);
         
@@ -309,8 +313,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         
         FileResource dres = AbstractionFactory.newFileResource(dstScheme);
-        sres.setServiceContact(getServiceContact(suri));
-        sres.start();
 
         dres.setServiceContact(getServiceContact(duri));
         dres.start();
