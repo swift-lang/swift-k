@@ -199,15 +199,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	    Mapper mapper;
 	    	    
         synchronized (var.getRoot()) {
-            if (var instanceof AbstractDataNode) {
-                mapper = ((AbstractDataNode) var).getActualMapper();
-                if (mapper == null) {
-                    throw new ExecutionException(var + " is not a mapped type");
-                }
-            }
-            else {
-                mapper = var.getMapper();
-            }
+            mapper = var.getMapper();
         }
 		List<String> l = new ArrayList<String>();
 		try {
