@@ -209,8 +209,12 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		if (initialized) {
 			return mapper;
 		}
-        assert (waitingMapperParam != null);
-        throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+		if (waitingMapperParam == null) {
+		    return null;
+		}
+		else {        
+		    throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+		}
 	}
 	
 	public Mapper getActualMapper() {
