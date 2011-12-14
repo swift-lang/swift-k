@@ -17,7 +17,10 @@ import org.griphyn.vdl.karajan.PairIterator;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.type.Field;
+import org.griphyn.vdl.type.Type;
 
 public class SetFieldValue extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(SetFieldValue.class);
@@ -99,83 +102,114 @@ public class SetFieldValue extends VDLFunction {
 	
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
-	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
+	public static void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
 	    ((AbstractDataNode) source).waitFor();
 		if (source.getType().isPrimitive()) {
 			dest.setValue(source.getValue());
 		}
 		else if (source.getType().isArray()) {
-			PairIterator it;
-			if (stack.isDefined("it" + level)) {
-			    it = (PairIterator) stack.getVar("it" + level);
-			}
-			else {
-			    it = new PairIterator(source.getArrayValue());
-			    stack.setVar("it" + level, it);
-			}
-			while (it.hasNext()) {
-				Pair pair = (Pair) it.next();
-				Object lhs = pair.get(0);
-				DSHandle rhs = (DSHandle) pair.get(1);
-				Path memberPath;
-				if (lhs instanceof Double) {
-				    memberPath = Path.EMPTY_PATH.addLast(String.valueOf(((Double) lhs).intValue()), true);
-				}
-				else {
-				    memberPath = Path.EMPTY_PATH.addLast(String.valueOf(lhs), true);
-				}
-				DSHandle field;
-				try {
-					field = dest.getField(memberPath);
-				}
-				catch (InvalidPathException ipe) {
-					throw new ExecutionException("Could not get destination field",ipe);
-				}
-				deepCopy(field, rhs, stack, level + 1);
-			}
-			stack.currentFrame().deleteVar("it" + level);
-			dest.closeShallow();
-		} 
-		else if (!source.getType().isComposite()) {
-		    Path dpath = dest.getPathFromRoot();
-		    if (dest.getMapper().canBeRemapped(dpath)) {
-		        if (logger.isDebugEnabled()) {
-		            logger.debug("Remapping " + dest + " to " + source);
-		        }
-		        dest.getMapper().remap(dpath, source.getMapper().map(source.getPathFromRoot()));
-		        dest.closeShallow();
-		    }
-		    else {
-		        if (stack.currentFrame().isDefined("fc")) {
-		            FileCopier fc = (FileCopier) stack.currentFrame().getVar("fc");
-		            if (!fc.isClosed()) {
-		                throw new FutureNotYetAvailable(fc);
-		            }
-		            else {
-		                if (fc.getException() != null) {
-		                    throw new ExecutionException("Failed to copy " + source + " to " + dest, fc.getException());
-		                }
-		            }
-		            dest.closeShallow();
-		        }
-		        else {
-		            FileCopier fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
-		                dest.getMapper().map(dpath));
-		            stack.setVar("fc", fc);
-		            try {
-		                fc.start();
-		            }
-		            catch (Exception e) {
-		                throw new ExecutionException("Failed to start file copy", e);
-		            }
-		            throw new FutureNotYetAvailable(fc);
-		        }
-		    }
+		    copyArray(dest, source, stack, level);
+		}
+		else if (source.getType().isComposite()) {
+		    copyStructure(dest, source, stack, level);
 		}
 		else {
-		    // TODO implement this
-            //throw new RuntimeException("Deep non-array structure copying not implemented, when trying to copy "+source);
+		    copyNonComposite(dest, source, stack, level);
 		}
 	}
 
+    private static void copyStructure(DSHandle dest, DSHandle source,
+            VariableStack stack, int level) throws ExecutionException {
+        Type type = dest.getType();
+        for (String fname : type.getFieldNames()) {
+            Path fpath = Path.EMPTY_PATH.addFirst(fname);
+            try {
+                DSHandle dstf = dest.getField(fpath);
+                try {
+                    DSHandle srcf = source.getField(fpath);
+                    deepCopy(dstf, srcf, stack, level + 1);
+                }
+                catch (InvalidPathException e) {
+                    // do nothing. It's an unused field in the source.
+                }
+            }
+            catch (InvalidPathException e) {
+                throw new ExecutionException("Internal type inconsistency detected. " + 
+                    dest + " claims not to have a " + fname + " field");
+            }
+        }
+    }
+
+    private static void copyNonComposite(DSHandle dest, DSHandle source,
+            VariableStack stack, int level) throws ExecutionException {
+        Path dpath = dest.getPathFromRoot();
+        Mapper dmapper = dest.getRoot().getMapper();
+        if (dmapper.canBeRemapped(dpath)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Remapping " + dest + " to " + source);
+            }
+            dmapper.remap(dpath, source.getMapper().map(source.getPathFromRoot()));
+            dest.closeShallow();
+        }
+        else {
+            if (stack.currentFrame().isDefined("fc")) {
+                FileCopier fc = (FileCopier) stack.currentFrame().getVar("fc");
+                if (!fc.isClosed()) {
+                    throw new FutureNotYetAvailable(fc);
+                }
+                else {
+                    if (fc.getException() != null) {
+                        throw new ExecutionException("Failed to copy " + source + " to " + dest, fc.getException());
+                    }
+                }
+                dest.closeShallow();
+            }
+            else {
+                FileCopier fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
+                    dest.getMapper().map(dpath));
+                stack.setVar("fc", fc);
+                try {
+                    fc.start();
+                }
+                catch (Exception e) {
+                    throw new ExecutionException("Failed to start file copy", e);
+                }
+                throw new FutureNotYetAvailable(fc);
+            }
+        }
+    }
+
+    private static void copyArray(DSHandle dest, DSHandle source,
+            VariableStack stack, int level) throws ExecutionException {
+        PairIterator it;
+        if (stack.isDefined("it" + level)) {
+            it = (PairIterator) stack.getVar("it" + level);
+        }
+        else {
+            it = new PairIterator(source.getArrayValue());
+            stack.setVar("it" + level, it);
+        }
+        while (it.hasNext()) {
+            Pair pair = (Pair) it.next();
+            Object lhs = pair.get(0);
+            DSHandle rhs = (DSHandle) pair.get(1);
+            Path memberPath;
+            if (lhs instanceof Double) {
+                memberPath = Path.EMPTY_PATH.addLast(String.valueOf(((Double) lhs).intValue()), true);
+            }
+            else {
+                memberPath = Path.EMPTY_PATH.addLast(String.valueOf(lhs), true);
+            }
+            DSHandle field;
+            try {
+                field = dest.getField(memberPath);
+            }
+            catch (InvalidPathException ipe) {
+                throw new ExecutionException("Could not get destination field",ipe);
+            }
+            deepCopy(field, rhs, stack, level + 1);
+        }
+        stack.currentFrame().deleteVar("it" + level);
+        dest.closeShallow();
+    }
 }

@@ -201,6 +201,11 @@ public abstract class VDLFunction extends SequentialWithArguments {
         synchronized (var.getRoot()) {
             mapper = var.getMapper();
         }
+        
+        if (mapper == null) {
+            throw new ExecutionException(var.getType() + " is not a mapped type");
+        }
+        
 		List<String> l = new ArrayList<String>();
 		try {
 			Collection<Path> fp = var.getFringePaths();
