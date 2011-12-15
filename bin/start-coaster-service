@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # crash: Report a problem and exit
 crash()
@@ -117,7 +117,7 @@ start-workers-ec2()
    export EC2_CERT="$EC2_CERTFILE"
 
    echo Creating instance..
-   $SWIFTVMBOOT_DIR/bin/ec2-run-instances "$EC2_AMI" -t "$EC2_INSTANCE_TYPE" -n "$EC2_NODES" -k "$EC2_KEYPAIR"
+   $SWIFTVMBOOT_DIR/bin/ec2-run-instances "$EC2_AMI" -t "$EC2_INSTANCE_TYPE" -n "$EC2_NODES" -K "$EC2_KEYFILE" -C "$EC2_CERT"
    SWIFTVM_INSTANCES=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances | grep INSTANCE | grep -v terminated |awk '{print $2}' )
    echo $SWIFTVM_INSTANCES >> $HOME/.swift/.swiftvm_instances
    echo Waiting for nodes to boot..
@@ -126,7 +126,7 @@ start-workers-ec2()
    while /bin/true
    do
       SWIFTVM_INSTANCES_AS_STRING=$( echo $SWIFTVM_INSTANCES | tr "\\n" " ")
-      STATUS_LIST=$( $SWIFTVMBOOT_DIR/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $6}' |sort -u )
+      STATUS_LIST=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $6}' |sort -u )
       if [ "$STATUS_LIST" == "running" ]; then
          break
       fi
@@ -136,7 +136,7 @@ start-workers-ec2()
    # There is some delay between when the machines are 'running', and when system utilities like sshd are started
    sleep 30
 
-   WORKER_HOSTS=$( $SWIFTVMBOOT_DIR/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $4}' )
+   WORKER_HOSTS=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $4}' )
 
    if [ -f "$HOME/.swift/.machines" ]; then
       rm $HOME/.swift/.machines
