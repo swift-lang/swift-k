@@ -16,4 +16,6 @@ include::beagle[]
 
 include::futuregrid[]
 
+include::mcs[]
+
 include::intrepid[]

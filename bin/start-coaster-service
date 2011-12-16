@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # crash: Report a problem and exit
 crash()
@@ -11,36 +11,64 @@ crash()
 # Start futuregrid workers
 start-workers-futuregrid()
 {
+   # Setup environment
    PORT=$1
    EXECUTION_URL=http://localhost:$PORT
+   export EC2_ACCESS_KEY=$FUTUREGRID_IAAS_ACCESS_KEY
+   export EC2_SECRET_KEY=$FUTUREGRID_IAAS_SECRET_KEY
+   export FUTUREGRID_SIERRA_NODES=$FUTUREGRID_NODES
 
-   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/bootit.sh" ]; then
+   # Check that SWIFTVMBOOT_DIR looks ok
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/futuregrid/bin/bootit.sh" ]; then
       crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
    fi
 
-   echo Starting virtual machines.. please wait
-   $SWIFTVMBOOT_DIR/bin/bootit.sh | tee -a bootit.log
-   SWIFTVMBOOT_OUTPUT=$SWIFTVMBOOT_DIR/output.json
+   # Install ve
+   if [ ! -d "$SWIFTVMBOOT_DIR/futuregrid/ve" ]; then
+      echo Setting up environment
+      python $SWIFTVMBOOT_DIR/futuregrid/bin/virtualenv.py $SWIFTVMBOOT_DIR/futuregrid/ve
+      if [ $? -ne 0 ]; then
+         echo "Failed to created the needed python virtual environment"
+         exit 1
+      fi
+   fi
 
+   # Install cloudinitd
+   source $SWIFTVMBOOT_DIR/futuregrid/ve/bin/activate
+   easy_install cloudinitd
+   if [ $? -ne 0 ]; then
+      echo "Failed to install cloudinitd"
+      exit 1
+   fi
+
+   # Register key
+   echo "Registering the key names in all the clouds"
+   python $SWIFTVMBOOT_DIR/futuregrid/bin/register_key.py $SWIFTVMBOOT_DIR/futuregrid/hosts.txt
+   if [ $? -ne 0 ]; then
+      echo "Failed to register the key names"
+      exit 1
+   fi
+
+   # Start virtual machines
+   echo Starting virtual machines.. please wait
+   $SWIFTVMBOOT_DIR/futuregrid/bin/bootit.sh | tee -a bootit.log
+   SWIFTVMBOOT_OUTPUT=$SWIFTVMBOOT_DIR/futuregrid/output.json
    if [ ! -f "$SWIFTVMBOOT_OUTPUT" ]; then
       crash "Error: Swift VM output file $SWIFTVMBOOT_OUTPUT does not exist!"
    fi
 
    SWIFTVM_INSTANCE=`grep "Starting up run" bootit.log |awk '{print $4}'`
-   echo $SWIFTVM_INSTANCE >> $HOME/.swift/.swiftvm_instance
-
+   echo $SWIFTVM_INSTANCE >> $HOME/.swift/.swiftvm_instances
    WORKER_HOSTS=`grep hostname $SWIFTVMBOOT_OUTPUT |awk '{print $2}'|sed 's/\"//g;s/,//g;s/null//g'`
 
    # Start worker script
    for MACHINE in $WORKER_HOSTS
    do
-      # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
          echo $! >> $PID_FILE
       fi
-
-      # Copy and start worker script
+      
       scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
       ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &

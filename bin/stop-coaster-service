@@ -34,7 +34,7 @@ fi
 if [ "$WORKER_MODE" == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    for INSTANCE in `cat $SWIFTVM_INSTANCES`
    do
-      $SWIFTVMBOOT_DIR/ve/bin/cloudinitd terminate $INSTANCE
+      $SWIFTVMBOOT_DIR/futuregrid/ve/bin/cloudinitd terminate $INSTANCE
    done
    rm $SWIFTVM_INSTANCES > /dev/null 2>&1
 fi
