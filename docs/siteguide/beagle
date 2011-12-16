@@ -47,6 +47,7 @@ foreach j in [1:@toint(@arg("n","1"))] {
 -----
 
 *step 4.*  The next step is to create a sites file. An example sites file (sites.xml) is shown as follows:
+
 -----
 <config>
   <pool handle="pbs">
@@ -74,6 +75,7 @@ foreach j in [1:@toint(@arg("n","1"))] {
 -----
 
 *step 5.* In this step, we will see the config and tc files. The config file (cf) is as follows:
+
 -----
 wrapperlog.always.transfer=true
 sitedir.keep=true
@@ -86,6 +88,7 @@ provenance.log=false
 -----
 
 The tc file (tc) is as follows:
+
 -----
 pbs cat /bin/cat null null null
 -----
