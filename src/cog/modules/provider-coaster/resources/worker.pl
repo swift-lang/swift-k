@@ -1369,7 +1369,7 @@ sub cleanup {
 
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
 	if (ASYNC) {
-		if ($JOBDATA{$jobid}{"stageoutCount"} == 0) {
+		if (!defined($JOBDATA{$jobid}{"stageoutCount"}) || ($JOBDATA{$jobid}{"stageoutCount"} == 0)) {
 			# there were no stageouts. Notification can be sent now
 			wlog DEBUG, "$jobid There were no stageouts. Sending notification immediately\n";
 			sendStatus($jobid);
