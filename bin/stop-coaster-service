@@ -60,8 +60,8 @@ if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    fi
 fi
 
-if [ -f "$HOME/.swift/.machines" ]; then
-   rm "$HOME/.swift/.machines"
+if [ -f "$HOME/.swift/machines" ]; then
+   rm "$HOME/.swift/machines"
 fi
 
 popd > /dev/null 2>&1

@@ -64,6 +64,7 @@ start-workers-futuregrid()
    # Start worker script
    for MACHINE in $WORKER_HOSTS
    do
+      echo $MACHINE >> $HOME/.swift/machines
       if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
          echo $! >> $PID_FILE
@@ -108,13 +109,13 @@ start-workers-gp()
    WORKER_HOSTS=`$SWIFTVMBOOT_DIR/bin/gp-instance-describe $SWIFTVM_INSTANCE|sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"|awk '{print $3}'`
 
    # Start worker script
-   if [ -f "$HOME/.swift/.machines" ]; then
-      rm $HOME/.swift/.machines
+   if [ -f "$HOME/.swift/machines" ]; then
+      rm $HOME/.swift/machines
    fi
    for MACHINE in $WORKER_HOSTS
    do
       # Create a list of machines for other applications, if needed
-      echo $MACHINE >> $HOME/.swift/.machines
+      echo $MACHINE >> $HOME/.swift/machines
 
       # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
@@ -166,8 +167,8 @@ start-workers-ec2()
 
    WORKER_HOSTS=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $4}' )
 
-   if [ -f "$HOME/.swift/.machines" ]; then
-      rm $HOME/.swift/.machines
+   if [ -f "$HOME/.swift/machines" ]; then
+      rm $HOME/.swift/machines
    fi
 
    # Start worker script
@@ -176,7 +177,7 @@ start-workers-ec2()
    do
 
       # Create a list of machines for other applications, if needed
-      echo $MACHINE >> $HOME/.swift/.machines
+      echo $MACHINE >> $HOME/.swift/machines
 
       # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
@@ -433,7 +434,7 @@ use.provider.staging=true
 wrapperlog.always.transfer=false
 execution.retries=0
 provider.staging.pin.swiftfiles=false
-sitedir.keep=true
+sitedir.keep=false
 EOF
 fi
 

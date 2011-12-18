@@ -226,7 +226,7 @@ do
    # Test for HOST/GLOBUS_HOSTNAME - the only values which don't match
    if [ "$TOKEN" == "HOST" ]; then
       if [ -z "$GLOBUS_HOSTNAME" ]; then
-         crash "Not specified: GLOBUS_HOSTNAME"
+         GLOBUS_HOSTNAME=$( hostname -f )
       fi
    elif grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
       if [ -z "${!TOKEN}" ]; then
