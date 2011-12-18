@@ -96,11 +96,24 @@ pbs cat /bin/cat null null null
 More about config and tc file options can be found in the swift userguide here: http://www.ci.uchicago.edu/swift/wwwdev/guides/release-0.93/userguide/userguide.html#_swift_configuration_properties.
 
 *step 6.* Run the example using following commandline (also found in run.sh):
-+swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1+
+
+-----
+swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
+-----
+
 . You can further change the value of +-n+ to any arbitrary number to run that
 many number of concurrent +cat+
 
 *step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
+
+----
+Swift 0.93RC5 swift-r5285 cog-r3322
+
+RunID: 20111218-0246-6ai8g7f0
+Progress:  time: Sun, 18 Dec 2011 02:46:33 +0000
+Progress:  time: Sun, 18 Dec 2011 02:46:42 +0000  Active:1
+Final status:  time: Sun, 18 Dec 2011 02:46:43 +0000  Finished successfully:1
+----
 
 Note: Running from sandbox node or requesting 30 minutes walltime for upto 3 nodes
 will get fast prioritized execution. Good for small tests.
