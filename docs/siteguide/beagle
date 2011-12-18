@@ -95,13 +95,13 @@ pbs cat /bin/cat null null null
 
 More about config and tc file options can be found in the swift userguide here: http://www.ci.uchicago.edu/swift/wwwdev/guides/release-0.93/userguide/userguide.html#_swift_configuration_properties.
 
-*step 6.* Run the example using following commandline (also found in run.sh):
+*step 6.* Run the example using following commandline:
 
 -----
 swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
 -----
 
-. You can further change the value of +-n+ to any arbitrary number to run that
+You can further change the value of +-n+ to any arbitrary number to run that
 many number of concurrent +cat+
 
 *step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
@@ -116,7 +116,7 @@ Final status:  time: Sun, 18 Dec 2011 02:46:43 +0000  Finished successfully:1
 ----
 
 Note: Running from sandbox node or requesting 30 minutes walltime for upto 3 nodes
-will get fast prioritized execution. Good for small tests.
+will get fast prioritized execution. Suitable for small tests.
 
 Larger Runs on Beagle
 ~~~~~~~~~~~~~~~~~~~~~
@@ -124,7 +124,7 @@ A key factor in scaling up Swift runs on Beagle is to setup the sites.xml parame
 The following sites.xml parameters must be set to scale that is intended for a large run:
 
  * *maxTime* : The expected walltime for completion of your run. This parameter is accepted in seconds.
- * *slots* : This parameter specifies the maximum number of jobs/blocks that the coaster scheduler will have running at any given time. On Beagle, this number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 60 for large runs.
+ * *slots* : This parameter specifies the maximum number of pbs jobs/blocks that the coaster scheduler will have running at any given time. On Beagle, this number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 60 for large runs.
  * *nodeGranularity* : Determines the number of nodes per job. It restricts the number of nodes in a job to a multiple of this value. The total number of workers will then be a multiple of jobsPerNode * nodeGranularity. For Beagle, jobsPerNode value is 24 corresponding to its 24 cores per node. 
  * *maxNodes* : Determines the maximum number of nodes a job must pack into its qsub. This parameter determines the largest single job that your run will submit.
  * *jobThrottle* : A factor that determines the number of tasks dispatched simultaneously. The intended number of simultaneous tasks must match the number of cores targeted. The number of tasks is calculated from the jobThrottle factor is as follows:
