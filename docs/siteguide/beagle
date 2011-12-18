@@ -162,6 +162,14 @@ Following is an example sites.xml for a 50 slots run with each slot occupying 4 
 </config>
 -----
 
+Resuming Big Runs
+~~~~~~~~~~~~~~~~~
+Oftentimes, the application runs with a large number of tasks needed to be resumed after they have run to a certain point. The reasons for resume could be among others, application error, trainsient errors such as Beagle's availability or accidental shutdowns of the runs. In such cases, the *resume* feature of Swift is very handy. Resume starts the run from the point it left of. One can resume a stopped run using the same swift commandline plus adding the option -resume followed by a resume log (.rlog) that is created by Swift. An example of such a resume follows:
+
+-----
+$ swift -resume catsn-ht0adgi315l61.0.rlog <other options> catsn.swift
+-----
+
 Troubleshooting
 ~~~~~~~~~~~~~~~
 
@@ -199,3 +207,33 @@ It is likely that it is set to a path where the compute nodes can not write, e.g
  - Subscribe to the swift-user lists and post your questions here: https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user
 
 * Application invocation fails. An application invocation might fail for a variety of reasons. Some of the common reasons include a faulty command line, out-of-memory, non-availability of data, library dependencies unmet, among others. In another set of failures, the application invocation might fail for a partial number of datasets. In these conditions, one might want to to continue for the rest of application invocations. In most cases, these conditions could be handled by catching various exitcodes and logging the erroneous invocations for later inspection. In the rest of this section, we provide some such examples.
+ - Handling exitcodes in wrapperscript. The following code snippet from an application, handles the erroneous exitcode so that the erroneous runs could be logged and dealt with later:
+
+----
+call_to_app $1 $2
+if [ "$exit_status" -ne 0 ]; then
+    echo $2 | awk '{ print $1 }' >> /lustre/beagle/ketan/App_FailedList.txt
+fi
+----
+
+- Advanced Handling of Out of Memory (OOM) Conditions. The following code snippet handles a case of OOM error conditions by monitoring the available memory at each invocation:
+
+----
+# if mem is low, wait for it to recover before starting
+for i in $(seq 0 $maxtries); do
+  freeMB=$(free -m | grep cache: | awk '{print $4}')
+  if [ $freeMB -lt $lowmem ]; then
+    if [ $i = $maxtries ]; then
+      echo "$host $(date) freeMB = $freeMB below yellow mark $lowmem after $maxtries $startsleep sec pauses. Exiting." >>$oomlog
+      exit 7
+    else
+      echo "$host $(date) freeMB = $freeMB below yellow mark $lowmem on try $i. Sleeping $startsleep sec." >>$oomlog
+      sleep $startsleep
+    fi
+  else
+    break
+  fi
+done
+
+app_invocation $args
+----
