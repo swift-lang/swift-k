@@ -169,5 +169,14 @@ $ module load swift
 Swift version swift-0.93RC5 loaded
 -----
 
-* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file. It is likely that it is set to a path where the compute nodes can not write, e.g. your /home directory. The remedy for this error is to set your workdirectory to the /lustre path where swift could write from compute nodes.
+* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.
+ 
+-----
+<workdirectory >/home/ketan/swift.workdir</workdirectory>
+-----
 
+It is likely that it is set to a path where the compute nodes can not write, e.g. your /home directory. The remedy for this error is to set your workdirectory to the /lustre path where swift could write from compute nodes.
+
+----
+<workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+----
