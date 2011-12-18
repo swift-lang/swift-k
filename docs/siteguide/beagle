@@ -178,12 +178,13 @@ In this section we will discuss some of the common issues and remedies while usi
 * Command not found: Swift is installed on Beagle as a module. If you see the following error message:
 
 -----
-If 'swift' is not a typo you can run the following command to lookup the package that contains the binary:
+If 'swift' is not a typo you can run the following command to lookup the 
+package that contains the binary:
     command-not-found swift
 -bash: swift: command not found
 -----
 
-The most likely cause is the module is not loaded. Do the following to load the Swift module:
+The most likely cause is the Swift module is not loaded. Do the following to load the Swift module:
 
 -----
 $ module load swift
@@ -198,9 +199,21 @@ Swift version swift-0.93RC5 loaded
 
 It is likely that it is set to a path where the compute nodes can not write, e.g. your /home directory. The remedy for this error is to set your workdirectory to the /lustre path where swift could write from compute nodes.
 
-----
+-----
 <workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
-----
+-----
+
+* Out of heap space error is a typical error that you get when running large number of tasks in parallel from a submit host such as Beagle login nodes.
+
+-----
+java.lang.OutOfMemoryError: Java heap space
+-----
+
+A simple solution to this problem is to increase the java heap space. This can be solved by increasing the heap space Swift gets by the following environment variable:
+
+-----
+WIFT_HEAP_MAX=5000M swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=10000
+-----
 
 * If the error message does not give much clue, one can go about the following approaches to find more help:
  - Search for the particular error message on the swift mailing list archive from here: http://www.ci.uchicago.edu/swift/wwwdev/support/index.php
@@ -224,10 +237,12 @@ for i in $(seq 0 $maxtries); do
   freeMB=$(free -m | grep cache: | awk '{print $4}')
   if [ $freeMB -lt $lowmem ]; then
     if [ $i = $maxtries ]; then
-      echo "$host $(date) freeMB = $freeMB below yellow mark $lowmem after $maxtries $startsleep sec pauses. Exiting." >>$oomlog
+      echo "$host $(date) freeMB = $freeMB below yellow mark $lowmem after $maxtries \
+       $startsleep sec pauses. Exiting." >>$oomlog
       exit 7
     else
-      echo "$host $(date) freeMB = $freeMB below yellow mark $lowmem on try $i. Sleeping $startsleep sec." >>$oomlog
+      echo "$host $(date) freeMB = $freeMB below yellow mark $lowmem on try $i. Sleeping \
+      $startsleep sec." >>$oomlog
       sleep $startsleep
     fi
   else
