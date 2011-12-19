@@ -1,8 +1,10 @@
 Beagle
 ------
+
 Introduction
 ~~~~~~~~~~~~
 Beagle is a Cray XE6 supercomputer at UChicago. It employs a batch-oriented computational model where-in a PBS schedular accepts user's jobs and queues them in the queueing system for execution. The computational model requires a user to prepare the submit files, track job submissions, chackpointing, managing input/output data and handling exceptional conditions manually. Running Swift under Beagle can accomplish the above tasks with least manual user intervention and maximal oppurtunistic computation time on Beagle queues. In the following sections, we discuss more about specifics of running Swift on Beagle. A more detailed information about Swift and its workings can be found on Swift documentation page here: http://www.ci.uchicago.edu/swift/wwwdev/docs/index.php .
+
 Requesting Access
 ~~~~~~~~~~~~~~~~~
 If you do not already have a Computation Institute account, you can request
