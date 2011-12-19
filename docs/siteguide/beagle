@@ -164,7 +164,7 @@ Following is an example sites.xml for a 50 slots run with each slot occupying 4 
 
 Resuming Large Runs
 ~~~~~~~~~~~~~~~~~~~
-Oftentimes, the application runs with a large number of tasks needed to be resumed after they have run to a certain point. The reasons for resume could be among others, application error, trainsient errors such as Beagle's availability or accidental shutdowns of the runs. In such cases, the *resume* feature of Swift is very handy. Resume starts the run from the point it left of. One can resume a stopped run using the same swift commandline plus adding the option -resume followed by a resume log (.rlog) that is created by Swift. An example of such a resume follows:
+Oftentimes, the application runs with a large number of tasks needed to be resumed after they have run to a certain point. The reasons for resume could be among others, application error, trainsient errors such as Beagle's availability or accidental shutdowns of the runs. In such cases, the *resume* feature of Swift is very handy. Resume starts the run from the point it left of. One can resume a stopped run using the same swift commandline plus adding the option -resume followed by a resume log (extension .rlog) that is created by Swift in your run directory. An example of such a resume follows:
 
 -----
 $ swift -resume catsn-ht0adgi315l61.0.rlog <other options> catsn.swift
