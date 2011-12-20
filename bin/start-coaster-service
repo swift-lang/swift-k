@@ -16,7 +16,6 @@ start-workers-futuregrid()
    EXECUTION_URL=http://localhost:$PORT
    export EC2_ACCESS_KEY=$FUTUREGRID_IAAS_ACCESS_KEY
    export EC2_SECRET_KEY=$FUTUREGRID_IAAS_SECRET_KEY
-   export FUTUREGRID_SIERRA_NODES=$FUTUREGRID_NODES
 
    # Check that SWIFTVMBOOT_DIR looks ok
    if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/futuregrid/bin/bootit.sh" ]; then
@@ -65,15 +64,19 @@ start-workers-futuregrid()
    for MACHINE in $WORKER_HOSTS
    do
       echo $MACHINE >> $HOME/.swift/machines
+      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
       if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
          echo $! >> $PID_FILE
+         echo "Starting worker on $MACHINE"
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER http://localhost:$PORT $MACHINE $LOG_DIR" &
+         echo $! >> $PID_FILE
+      else
+         echo "Starting worker on $MACHINE"
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+         echo $! >> $PID_FILE
       fi
       
-      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
-      echo "Starting worker on $MACHINE"
-      ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
-      echo $! >> $PID_FILE
    done
 }
 
@@ -136,18 +139,17 @@ start-workers-ec2()
 {
    PORT=$1
    EXECUTION_URL=http://localhost:$PORT
-
-   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/ec2-run-instances" ]; then
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/ec2/bin/ec2-run-instances" ]; then
       crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
    fi
 
-   export EC2_HOME="$SWIFTVMBOOT_DIR" 
+   export EC2_HOME="$SWIFTVMBOOT_DIR/ec2" 
    export EC2_PRIVATE_KEY="$EC2_KEYFILE"
    export EC2_CERT="$EC2_CERTFILE"
 
    echo Creating instance..
-   $SWIFTVMBOOT_DIR/bin/ec2-run-instances "$EC2_AMI" -t "$EC2_INSTANCE_TYPE" -n "$EC2_NODES" -K "$EC2_KEYFILE" -C "$EC2_CERT"
-   SWIFTVM_INSTANCES=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances | grep INSTANCE | grep -v terminated |awk '{print $2}' )
+   $SWIFTVMBOOT_DIR/ec2/bin/ec2-run-instances "$EC2_AMI" -t "$EC2_INSTANCE_TYPE" -n "$EC2_NODES" -K "$EC2_KEYFILE" -C "$EC2_CERT"
+   SWIFTVM_INSTANCES=$( $SWIFTVMBOOT_DIR/ec2/bin/ec2-describe-instances | grep INSTANCE | grep -v terminated |awk '{print $2}' )
    echo $SWIFTVM_INSTANCES >> $HOME/.swift/.swiftvm_instances
    echo Waiting for nodes to boot..
 
@@ -155,7 +157,7 @@ start-workers-ec2()
    while /bin/true
    do
       SWIFTVM_INSTANCES_AS_STRING=$( echo $SWIFTVM_INSTANCES | tr "\\n" " ")
-      STATUS_LIST=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $6}' |sort -u )
+      STATUS_LIST=$( $SWIFTVMBOOT_DIR/ec2/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $6}' |sort -u )
       if [ "$STATUS_LIST" == "running" ]; then
          break
       fi
@@ -165,7 +167,7 @@ start-workers-ec2()
    # There is some delay between when the machines are 'running', and when system utilities like sshd are started
    sleep 30
 
-   WORKER_HOSTS=$( $SWIFTVMBOOT_DIR/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $4}' )
+   WORKER_HOSTS=$( $SWIFTVMBOOT_DIR/ec2/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $4}' )
 
    if [ -f "$HOME/.swift/machines" ]; then
       rm $HOME/.swift/machines
@@ -179,17 +181,21 @@ start-workers-ec2()
       # Create a list of machines for other applications, if needed
       echo $MACHINE >> $HOME/.swift/machines
 
+      # Copy and start worker script
+      scp $SSH_OPTS $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
+      echo $! >> $PID_FILE
+
       # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh $SSH_OPTS -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 > /dev/null 2>&1 &
+         sleep 10
+         ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER http://localhost:$PORT $MACHINE $LOG_DIR" 2>&1 &
+         echo $! >> $PID_FILE
+      else
+         echo "Starting worker on $MACHINE"
+         ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" > /dev/null 2>&1 &
          echo $! >> $PID_FILE
       fi
-
-      # Copy and start worker script
-      scp $SSH_OPTS $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
-      echo "Starting worker on $MACHINE"
-      ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" > /dev/null 2>&1 &
-      echo $! >> $PID_FILE
 
       # Copy SSH key for easier access
       cat $HOME/.ssh/*.pub | ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE 'umask 077; cat >> $HOME/.ssh/authorized_keys' > /dev/null 2>&1
@@ -223,7 +229,7 @@ start-workers-ssh()
          ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
          ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION" > /dev/null 2>&1
          echo Starting worker on $MACHINE
-         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER http://localhost:$PORT $MACHINE $WORKER_LOG_DIR" &
          echo $! >> $PID_FILE
       # Connect directly
       else

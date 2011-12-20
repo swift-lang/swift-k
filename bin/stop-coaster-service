@@ -23,7 +23,7 @@ if [ -f "$PID_FILE" ]; then
       #echo "$pid"
       for i in `ps -ef| awk '$3 == '$pid' { print $2 }'`
       do
-         #echo "$i"
+         echo "Killing process $i"
          kill $i > /dev/null 2>&1
       done
       kill $pid > /dev/null 2>&1
@@ -50,11 +50,11 @@ if [ "$WORKER_MODE" == "gp" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
 fi
 
 if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
-   export EC2_HOME="$SWIFTVMBOOT_DIR"
+   export EC2_HOME="$SWIFTVMBOOT_DIR/ec2"
    export EC2_PRIVATE_KEY="$EC2_KEYFILE"
    export EC2_CERT="$EC2_CERTFILE"
    INSTANCES_AS_STRING=$( cat $SWIFTVM_INSTANCES | tr "\\n" " ")
-   $SWIFTVMBOOT_DIR/bin/ec2-terminate-instances $INSTANCES_AS_STRING
+   $SWIFTVMBOOT_DIR/ec2/bin/ec2-terminate-instances $INSTANCES_AS_STRING
    if [ -f "$HOME/.swift/.swiftvm_instances" ]; then
       rm $HOME/.swift/.swiftvm_instances
    fi
