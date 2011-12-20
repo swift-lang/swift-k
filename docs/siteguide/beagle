@@ -264,5 +264,5 @@ More Help
 
 If the error messages you get does not give much clue, you can go about one of the following approaches to find more help:
  - Search for the particular error message on the swift mailing list archive from here: http://www.ci.uchicago.edu/swift/wwwdev/support/index.php. It is likely someone has encountered the issue before and there is a ready remedy posted by one of the Swift team members.
- - Subscribe to the swift-user lists and post your questions here: https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user. Please attach the Swift generated log file and the sites file with your question.
+ - Subscribe to the swift-user lists and post your questions here: https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user. Please attach the Swift-generated log file and the sites file with your question.
 

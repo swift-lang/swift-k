@@ -42,16 +42,16 @@ do
    FILES=`ls -1 *.txt 2>/dev/null`
    for file in $FILES
    do
-      diff $file .cache/$file >/dev/null 2>/dev/null
-      if [ $? -ne 0 ]
-      then
-       echo "updating cache"
-       cp $file .cache
+      #diff $file .cache/$file >/dev/null 2>/dev/null
+      #if [ $? -ne 0 ]
+      #then
+      # echo "updating cache"
+      # cp $file .cache
        echo Converting $directory"$file" to HTML
        asciidoc -a toc -a max-width=750px -a stylesheet=$(pwd)/../stylesheets/asciidoc.css $file
        echo Converting $directory"$file" to PDF
        a2x --format=pdf --no-xmllint $file
-      fi 
+      #fi 
    done
 
    if [ ! -d "$INSTALLATION_DIRECTORY/$VERSION" ]; then
