@@ -225,10 +225,6 @@ A simple solution to this problem is to increase the java heap space. This can b
 WIFT_HEAP_MAX=5000M swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=10000
 -----
 
-* If the error message does not give much clue, one can go about the following approaches to find more help:
- - Search for the particular error message on the swift mailing list archive from here: http://www.ci.uchicago.edu/swift/wwwdev/support/index.php
- - Subscribe to the swift-user lists and post your questions here: https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user
-
 * Application invocation fails. An application invocation might fail for a variety of reasons. Some of the common reasons include a faulty command line, out-of-memory, non-availability of data, library dependencies unmet, among others. In another set of failures, the application invocation might fail for a partial number of datasets. In these conditions, one might want to to continue for the rest of application invocations. In most cases, these conditions could be handled by catching various exitcodes and logging the erroneous invocations for later inspection. In the rest of this section, we provide some such examples.
  - Handling exitcodes in wrapperscript. The following code snippet from an application, handles the erroneous exitcode so that the erroneous runs could be logged and dealt with later:
 
@@ -262,3 +258,11 @@ done
 
 app_invocation $args
 ----
+
+More Help
+~~~~~~~~
+
+If the error messages you get does not give much clue, you can go about one of the following approaches to find more help:
+ - Search for the particular error message on the swift mailing list archive from here: http://www.ci.uchicago.edu/swift/wwwdev/support/index.php. It is likely someone has encountered the issue before and there is a ready remedy posted by one of the Swift team members.
+ - Subscribe to the swift-user lists and post your questions here: https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user. Please attach the Swift generated log file and the sites file with your question.
+
