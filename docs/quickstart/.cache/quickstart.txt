@@ -1,0 +1,101 @@
+Swift Quickstart
+================
+
+[abstract]
+Abstract
+--------
+This guide describes the steps needed to download, install, configure, 
+and run the basic examples for Swift. If you are using a pre-installed 
+version of Swift, you can skip directly to the configuration section.
+
+Stable Releases vs. Development Releases
+----------------------------------------
+Stable releases of Swift have undergone more extensive testing than development releases.
+In general, they are more stable, have fewer bugs, and have been tested on a variety of
+systems.
+
+The development version of Swift is aimed at developers and testers. The development 
+code has the highest chance of containing buggy and untested code. If you need stability 
+please use the latest stable release. 
+
+Downloading a Swift Distribution
+--------------------------------
+There are two main ways of getting the Swift implementation: binary
+releases and the source repository.
+
+Binary Releases
+~~~~~~~~~~~~~~~
+For the majority of users, downloading and installing binary releases is recommended.
+Since Swift is written in Java, the binary packages will run on all supported platforms with 
+Java Runtime Environment 1.5 or greater. Binary releases can be obtained from the 
+http://www.ci.uchicago.edu/swift/downloads/index.php[Swift downloads page]. 
+
+Once downloaded, simply unpack the downloaded package (swift-<version>.tar.gz) into a
+directory of your choice:
+
+-----
+tar -xzvf swift-<version>.tar.gz
+-----
+
+This will create a swift-<version> directory containing the build.
+
+Source Repository
+~~~~~~~~~~~~~~~~~
+The source code for Swift is available to developers who have an interest in contributing 
+new features. To build Swift from source code, you will need http://ant.apache.org/[Apache Ant]
+and http://www.oracle.com/technetwork/java/javase/downloads/index.html[Java JDK]. Once
+built, the dist/swift-svn directory will contain your build.
+
+To download and build Swift 0.93, follow these instructions:
+-----
+$ mkdir swift-0.93 
+$ cd swift-0.93 
+$ svn co https://cogkit.svn.sourceforge.net/svnroot/cogkit/branches/4.1.9/src/cog 
+$ cd cog/modules 
+$ svn co https://svn.ci.uchicago.edu/svn/vdl2/branches/release-0.93 swift 
+$ cd swift 
+$ ant redist
+-----
+
+Setting your PATH
+-----------------
+Once Swift is installed, it is useful to add the swift binary to your PATH
+environment variable. To do this, first determine where the Swift bin
+directory is located. If you installed Swift from a binary release, it will
+be in the swift-0.93/bin directory where you installed it. If you followed
+the instructions above for installing Swift from a source repository, it
+will be located in swift-0.93/cog/modules/swift/dist/swift-svn/bin.
+
+Add the following line to the bottom of ~/.bashrc:
+
+-----
+export PATH=$PATH:/full/path/to/swift
+-----
+
+When you login, test this out by typing the command
+-----
+$ which swift
+-----
+
+This should point you to the path of the Swift binary.
+
+Running Swift Examples
+----------------------
+The Swift examples can be found in the examples directory in the Swift
+distribution. The examples are written in the SwiftScript language, and 
+have .swift as a file extension.
+
+Execution of a Swift workflow is done using the swift command, which
+takes the Swift workflow file name as an argument:
+
+-----
+cd examples/tutorial
+swift hello.swift
+-----
+
+When you run this application, it should create a file called hello.txt.
+If this file gets created, you have successfully ran your first
+Swift script!
+
+More documentation on how to run Swift can be found at 
+http://www.ci.uchicago.edu/swift/docs/index.php,
