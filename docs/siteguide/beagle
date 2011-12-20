@@ -112,7 +112,7 @@ swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
 -----
 
 You can further change the value of +-n+ to any arbitrary number to run that
-many number of concurrent +cat+
+many number of concurrent +cat+ tasks.
 
 *step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
 
@@ -140,7 +140,7 @@ The following sites.xml parameters must be set to scale that is intended for a l
  * *jobThrottle* : A factor that determines the number of tasks dispatched simultaneously. The intended number of simultaneous tasks must match the number of cores targeted. The number of tasks is calculated from the jobThrottle factor is as follows:
 
 ----
-Number of Tasks = (JobThrottle x 100) + 1
+Number of parallel Tasks = (JobThrottle x 100) + 1
 ----
 
 Following is an example sites.xml for a 50 slots run with each slot occupying 4 nodes (thus, a 200 node run):
@@ -201,7 +201,7 @@ $ module load swift
 Swift version swift-0.93RC5 loaded
 -----
 
-* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.
+* Failed to transfer *wrapperlog* for job cat-nmobtbkk and/or Job failed with an exit code of 254. This is a most likely symptom of compute node trying to write to a non-writable filesystem. Check the <workdirectory> element on the sites.xml file.
  
 -----
 <workdirectory >/home/ketan/swift.workdir</workdirectory>
