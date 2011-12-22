@@ -333,8 +333,8 @@ public class SGEExecutor extends AbstractExecutor {
         		String.valueOf(poller.getQueueInformation(queue).getSlots())));
         int jobsPerNode = Integer.valueOf(getAttribute(spec, "jobsPerNode", 
         		String.valueOf(coresPerNode)));
-        int coresToRequest = count * jobsPerNode;
-
+        int coresToRequest = ( count * jobsPerNode + coresPerNode - 1) / coresPerNode * coresPerNode;
+   
         wr.write("#!/bin/bash\n");
         wr.write("#$ -N " + makeName(task) + '\n');
         wr.write("#$ -V\n");
