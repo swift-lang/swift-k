@@ -8,6 +8,7 @@ package org.globus.cog.abstraction.impl.scheduler.sge;
 
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.DecimalFormat;
@@ -24,11 +25,14 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
+import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.impl.scheduler.pbs.PBSExecutor;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.gsi.gssapi.auth.AuthorizationException;
+import org.ietf.jgss.GSSException;
 
 /**
  * Java CoG interface for Sun/Oracle Grid Engine
@@ -178,6 +182,20 @@ public class SGEExecutor extends AbstractExecutor {
         throw new IOException("None of the qsub lines matches the required patten: " + JOB_ID_LINE);
     }
 
+    /**
+     * @see AbstractExecutor#start()
+     */
+    public void start() throws AuthorizationException, GSSException,
+           IOException, ProcessException {
+    	try {
+    		Thread.sleep(Integer.valueOf(getSGEProperties().getSubmissionDelay()));
+    	}
+    	catch (InterruptedException e) {
+    		logger.error(e.getStackTrace());
+    	}
+    	super.start();
+    }
+    
     /**
      * Check that job specification values are valid for this system
      * @throws IllegalArgumentException

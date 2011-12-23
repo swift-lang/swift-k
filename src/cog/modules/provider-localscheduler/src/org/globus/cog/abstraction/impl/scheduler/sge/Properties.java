@@ -17,10 +17,11 @@ public class Properties extends AbstractProperties {
 	public static final String PROPERTIES = "provider-sge.properties";
 	public static final String POLL_INTERVAL = "poll.interval";
 	public static final String QSUB = "qsub";
-	public static final String QSTAT = "qstat -xml";
+	public static final String QSTAT = "qstat";
 	public static final String QDEL = "qdel";
 	public static final String QCONF = "qconf";
 	public static final String DEFAULT_PE = "parallel.environment"; 
+	public static final String SUBMISSION_DELAY = "submission.delay";
 	private static Properties properties;
 
 	/**
@@ -67,6 +68,15 @@ public class Properties extends AbstractProperties {
 	}
 
 	/**
+	 * getSubmissionDelay - Get length to sleep before submitting a job
+	 * Value as a string representing milliseconds
+	 * @return Submission delay as String in milliseconds
+	 */
+	public String getSubmissionDelay() {
+		return getProperty(SUBMISSION_DELAY);
+	}
+	
+	/**
 	 * getSubmitCommandName - Get submit command
 	 * @return String of submit command
 	 */
@@ -100,5 +110,14 @@ public class Properties extends AbstractProperties {
 		setRemoveCommand("qdel");
 		setDefaultPE("threaded");
 		setConfigCommand("qconf");
+		setSubmissionDelay("0");
+	}
+
+	/**
+	 * setSubmissionDelay - set the submission delay
+	 * @param delay String representing milliseconds to sleep 
+	 */
+	private void setSubmissionDelay(String delay) {
+		setProperty(SUBMISSION_DELAY, delay);
 	}
 }
