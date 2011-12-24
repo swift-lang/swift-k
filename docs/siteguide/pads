@@ -1,93 +1,14 @@
 PADS
 ----
-
-PADS Quickstart
-~~~~~~~~~~~~~~~
-This section will walk you through running a simple Swift script
-on PADS. It will explain how to setup software packages, how
-to create the required Swift configuration files, and finally
-how to run Swift.
-
-Adding Software Packages
-^^^^^^^^^^^^^^^^^^^^^^^^
-In your home directory, edit a file called .soft and add these
-lines (in this order):
------
-+java-sun
-+maui
-+torque
-@default
------
-
-Log out of PADS, and log back in for these changes to take effect.
-
-Creating sites.xml
-^^^^^^^^^^^^^^^^^^
-Swift relies on various configuration files to determine how to
-run. This section will provide a working configuration file which
-you can copy and paste to get running quickly. The sites.xml file
-tells Swift how to submit jobs, where working directories are
-located, and various other configuration information. More 
-information on sites.xml can be found in the Swift User's Guide.
-
-The first step is to paste the text below into a file named sites.xml.
-
------
-include::../../tests/providers/pads/coasters/sites.template.xml[]
------
-
-This file will require just a few customizations. First, create a 
-directory called swiftwork. Modify \_WORK_ in sites.xml
-to point to this new directory. For example
------
-<workdirectory>/home/myhome/swiftwork</workdirectory>
------
-
-Creating tc.data
-^^^^^^^^^^^^^^^^
-The tc.data configuration file gives information about the applications
-that will be called by Swift. More information about the format
-of tc.data can be found in the Swift User's guide.
-
-Paste the following example into a file named tc.data
-
------
-include::../../tests/providers/pads/coasters/tc.template.data[]
------
-
-Copy a Swift Script
-^^^^^^^^^^^^^^^^^^^
-
-Within the Swift directory is an examples directory which contains
-several introductory Swift scripts. The example we will use in this
-section is called catsn.swift. Copy this script to the same directory
-that your sites.xml and tc.data files are located.
-
------
-$ cp ~/swift-0.93/examples/misc/catsn.swift .
-$ cp ~/swift-0.93/examples/misc/data.txt .
------
-TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
-
-Run Swift
-^^^^^^^^^
-
-Finally, run the script
------
-$ swift -sites.file sites.xml -tc.file tc.data catsn.swift
------
-
-You should see 10 new text files get created, named catsn*.out. If
-you see these files, then you have succesfully run Swift on PADS! 
-
-TIP: Make sure your default project is defined. Read on for more information.
-
-Read on for more detailed information about running Swift on PADS.
+PADS is a petabyte-scale, data intense computing resource located 
+at the joint Argonne National Laboratory/University of Chicago 
+Computation Institute. More information about PADS can be found
+at http://pads.ci.uchicago.edu.
 
 Requesting Access
 ~~~~~~~~~~~~~~~~~
 If you do not already have a Computation Institute account, you can request
-one at https://www.ci.uchicago.edu/accounts. This page will give you a list
+access at https://www.ci.uchicago.edu/accounts. This page will give you a list
 of resources you can request access to. Be sure that PADS is selected. If
 you already have an existing CI account, but do not have access to PADS,
 send an email to support@ci.uchicago.edu to request access.
@@ -109,8 +30,8 @@ node with the following command:
 ssh yourusername@login.pads.ci.uchicago.edu
 -----
 
-Configuring softenv
-~~~~~~~~~~~~~~~~~~~
+Adding Software Packages
+~~~~~~~~~~~~~~~~~~~~~~~~
 Softenv is a system used for managing applications. In order to run Swift,
 the softenv environment will have to be modified slightly. Softenv is 
 configured by a file in your home directory called .soft. Edit this file
@@ -122,18 +43,7 @@ to look like this:
 @default
 -----
 
-Swift Work Directory
-^^^^^^^^^^^^^^^^^^^^
-The Swift work directory is a directory which Swift uses for processing work.
-This directory needs to be writable and available to all worker nodes on
-a shared filesystem. 
-
-.Examples
------
-/home/username/swiftwork
-/home/username/work
-/autonfs/gpfs-pads/projects/CI-CCR000013/myusername
------
+Log out of PADS, and log back in for these changes to take effect.
 
 Which project(s) are you a member of?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,7 +56,6 @@ $ projects --available
 The following projects are available for your use
 
 Project      PI                      Title
-
 CI-CCR000013 Michael Wilde           The Swift Parallel Scripting System
 -----
 
@@ -167,8 +76,76 @@ $ projects --set CI-CCR000013 --all
 Your default project for all CI clusters has been set to CI-CCR000013.
 -----
 
-Determine your Queue
-^^^^^^^^^^^^^^^^^^^^
+Creating sites.xml
+^^^^^^^^^^^^^^^^^^
+Swift relies on various configuration files to determine how to
+run. This section will provide a working configuration file which
+you can copy and paste to get running quickly. The sites.xml file
+tells Swift how to submit jobs, where working directories are
+located, and various other configuration information. More 
+information on sites.xml can be found in the Swift User's Guide.
+
+The first step is to paste the text below into a file named sites.xml.
+
+-----
+include::../../tests/providers/PADS/coasters/sites.template.xml[]
+-----
+
+This file will require just a few customizations. First, create a 
+directory called swiftwork. Modify \_WORK_ in sites.xml
+to point to this new directory. For example
+-----
+<workdirectory>/home/myhome/swiftwork</workdirectory>
+-----
+
+Creating tc.data
+^^^^^^^^^^^^^^^^
+The tc.data configuration file gives information about the applications
+that will be called by Swift. More information about the format
+of tc.data can be found in the Swift User's guide.
+
+Paste the following example into a file named tc.data
+
+-----
+include::../../tests/providers/PADS/coasters/tc.template.data[]
+-----
+
+Copy a Swift Script
+^^^^^^^^^^^^^^^^^^^
+Within the Swift directory is an examples directory which contains
+several introductory Swift scripts. The example we will use in this
+section is called catsn.swift. Copy this script to the same directory
+that your sites.xml and tc.data files are located.
+
+-----
+$ cp ~/swift-0.93/examples/misc/catsn.swift .
+$ cp ~/swift-0.93/examples/misc/data.txt .
+-----
+TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
+
+
+Run Swift
+^^^^^^^^^
+
+Finally, run the script
+-----
+$ swift -sites.file sites.xml -tc.file tc.data catsn.swift
+-----
+
+You should see several new files being created, called catsn.0001.out, catsn.0002.out, etc. Each of these
+files should contain the contents of what you placed into data.txt. If this happens, your job has run
+successfully on PADS!
+
+TIP: Make sure your default project is defined. Read on for more information.
+
+Read on for more detailed information about running Swift on PADS.
+
+
+Queues
+^^^^^^
+
+As you run more application in the future, you will likely need
+to change queues. 
 
 PADS has several different queues you can submit jobs to depending on
 the type of work you will be doing. The command "qstat -q" will print
@@ -185,58 +162,12 @@ the most up to date list of this information.
 |long    |--    |--      |24:00:00|--  |232|130|--  | E R
 |=========================================================
 
-Generating Configuration Files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Now that you know what queue to use, your project, and your work directory, it is time to
-set up Swift. Swift uses a configuration file called sites.xml to determine how it should run.
-There are two methods you can use for creating this file. You can manually edit
-the configuration file, or generate it with a utility called gensites.
-
-Manually Editing sites.xml
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Below is the template that is used by Swift's test suite for running on PADS.
+When you determine your computing requirements, modify this line in your
+sites.xml:
 
 -----
-include::../../tests/providers/pads/coasters/sites.template.xml[]
+<profile key="queue" namespace="globus">fast</profile>
 -----
-
-Before you can use this configuration file, you will need to modify \_WORK_ to a directory writable by you, 
-and have your default project defined. Copy this template, replace \_WORK_, and then save as sites.xml.
-
-If you wanted to use a different queue, replace "fast" with the desired queue name.
-
-Manually Editing tc.data
-~~~~~~~~~~~~~~~~~~~~~~~~
-Below is the tc.data file used by Swift's test suite for running on PADS.
-
------
-include::../../tests/providers/pads/coasters/tc.template.data[]
-------
-
-Copy these commands and save it as tc.data.
-
-Catsn.swift
-~~~~~~~~~~~
-The swift script we will run is called catsn.swift. It simply cats a file and saves the result. This is 
-a nice simple test to ensure jobs are running correctly. Create a file called data.txt which contains 
-some simple input - a "hello world" will do the trick.
-
------
-include::../../examples/misc/catsn.swift[]
------
-
-
-Running Swift
-~~~~~~~~~~~~~
-Now that everything is in place, run Swift with the following command:
-
------
-swift -sites.file sites.xml -tc.file tc.data catsn.swift -n=10
------
-
-You should see several new files being created, called catsn.0001.out, catsn.0002.out, etc. Each of these
-files should contain the contents of what you placed into data.txt. If this happens, your job has run
-successfully on PADS!
 
 More Help
 ~~~~~~~~~

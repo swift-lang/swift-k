@@ -1,5 +1,7 @@
 MCS Workstations
 ----------------
+This sections describes how to use the general use compute servers for 
+the MCS division of Argonne National Laboratory.
 
 Create a coaster-service.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -8,79 +10,6 @@ directory. Name the file coaster-service.conf.
 
 -----
 include::../../tests/providers/mcs/coaster-service.conf[]
------
-
-SSH Configuration
-~~~~~~~~~~~~~~~~~
-For this configuration to work, you must be able to log into each of the MCS workstations
-using your SSH keys. Copy your id_rsa and id_rsa.pub files into the .ssh/ directory
-on login.mcs.anl.gov. Run the following commands to make sure your keys are private:
-
------
-chmod 600 id_rsa
-chmod 644 id_rsa.pub
------
-
-Once your SSH keys are in place, create a file in .ssh/ called auth.defaults. Paste the
-following text into the file:
-
------
-crush.mcs.anl.gov.type=key
-crush.mcs.anl.gov.username=yourusername
-crush.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-crush.mcs.anl.gov.passphrase=your passphrase here
-
-thwomp.mcs.anl.gov.type=key
-thwomp.mcs.anl.gov.username=yourusername
-thwomp.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-thwomp.mcs.anl.gov.passphrase=your passphrase here
-
-stomp.mcs.anl.gov.type=key
-stomp.mcs.anl.gov.username=yourusername
-stomp.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-stomp.mcs.anl.gov.passphrase=your passphrase here
-
-crank.mcs.anl.gov.type=key
-crank.mcs.anl.gov.username=yourusername
-crank.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-crank.mcs.anl.gov.passphrase=your passphrase here
-
-steamroller.mcs.anl.gov.type=key
-steamroller.mcs.anl.gov.username=yourusername
-steamroller.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-steamroller.mcs.anl.gov.passphrase=your passphrase here
-
-grind.mcs.anl.gov.type=key
-grind.mcs.anl.gov.username=yourusername
-grind.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-grind.mcs.anl.gov.passphrase=your passphrase here
-
-churn.mcs.anl.gov.type=key
-churn.mcs.anl.gov.username=yourusername
-churn.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-churn.mcs.anl.gov.passphrase=your passphrase here
-
-trounce.mcs.anl.gov.type=key
-trounce.mcs.anl.gov.username=yourusername
-trounce.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-trounce.mcs.anl.gov.passphrase=your passphrase here
-
-thrash.mcs.anl.gov.type=key
-thrash.mcs.anl.gov.username=yourusername
-thrash.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-thrash.mcs.anl.gov.passphrase=your passphrase here
-
-vanquish.mcs.anl.gov.type=key
-vanquish.mcs.anl.gov.username=yourusername
-vanquish.mcs.anl.gov.key=/home/yourusername/.ssh/id_rsa
-vanquish.mcs.anl.gov.passphrase=your passphrase here
------
-
-Replace the username, key path, and passphrase with your values.
-Change the permissions on the file to keep it private.
-
------
-chmod 600 auth.default
 -----
 
 Starting the Coaster Service
