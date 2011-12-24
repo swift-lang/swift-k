@@ -88,7 +88,7 @@ information on sites.xml can be found in the Swift User's Guide.
 The first step is to paste the text below into a file named sites.xml.
 
 -----
-include::../../tests/providers/PADS/coasters/sites.template.xml[]
+include::../../tests/providers/pads/coasters/sites.template.xml[]
 -----
 
 This file will require just a few customizations. First, create a 
@@ -107,7 +107,7 @@ of tc.data can be found in the Swift User's guide.
 Paste the following example into a file named tc.data
 
 -----
-include::../../tests/providers/PADS/coasters/tc.template.data[]
+include::../../tests/providers/pads/coasters/tc.template.data[]
 -----
 
 Copy a Swift Script

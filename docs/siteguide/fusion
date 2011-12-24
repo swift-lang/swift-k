@@ -54,7 +54,7 @@ information on sites.xml can be found in the Swift User's Guide.
 The first step is to paste the text below into a file named sites.xml.
 
 -----
-include::../../tests/providers/fusion/sites.template.xml[]
+include::../../tests/providers/fusion/coasters/sites.template.xml[]
 -----
 
 This file will require one customization. Create a 
@@ -73,7 +73,7 @@ of tc.data can be found in the Swift User's guide.
 Paste the following example into a file named tc.data
 
 -----
-include::../../tests/providers/fusion/tc.template.data[]
+include::../../tests/providers/fusion/coasters/tc.template.data[]
 -----
 
 Copy a Swift Script
@@ -84,8 +84,8 @@ section is called catsn.swift. Copy this script to the same directory
 that your sites.xml and tc.data files are located.
 
 -----
-$ cp ~/swift-0.93/examples/misc/catsn.swift .
-$ cp ~/swift-0.93/examples/misc/data.txt .
+$ cp ~/swift/examples/misc/catsn.swift .
+$ cp ~/swift/examples/misc/data.txt .
 -----
 TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
 
