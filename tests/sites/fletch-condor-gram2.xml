@@ -1,9 +1,0 @@
-<config>
-
-  <pool handle="teraport" >
-    <gridftp  url="gsiftp://fletch.bsd.uchicago.edu" /> 
-    <jobmanager universe="vanilla" url="fletch.bsd.uchicago.edu/jobmanager-condor" major="2" />
-    <workdirectory >/disks/gpfs/swift/site-test</workdirectory>
-  </pool>
-
-</config>

@@ -1,5 +1,10 @@
 Futuregrid Quickstart Guide
 ---------------------------
+FutureGrid is a distributed, high-performance test-bed that allows 
+scientists to collaboratively develop and test innovative approaches 
+to parallel, grid, and cloud computing.
+
+More information on futuregrid can be found at https://portal.futuregrid.org/.
 
 Requesting Futuregrid Access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,13 +20,14 @@ machines. To download, change to your home directory and run the
 following command:
 
 -----
-$ svn co https://svn.ci.uchicago.edu/svn/vdl2/usertools/swift-vm-boot
+$ svn co https://svn.ci.uchicago.edu/svn/vdl2/usertools/swift-vm-boot swift-vm-boot
 -----
 
 Download your Credentials
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Run the following commands to retrieve your credentials:
 -----
+$ cd swift-vm-boot
 $ scp yourusername@hotel.futuregrid.org:nimbus_creds.tar.gz .
 $ tar xvfz nimbus_creds.tar.gz
 -----
@@ -30,45 +36,57 @@ hotel.conf. Near the bottom of this file will be two settings
 called vws.repository.s3id and vws.repository.s3key. Copy these
 values for the next step.
 
-Configuring Swift VM Tools
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-Change directories into the swift-vm-boot directory. Edit the file
-called env.sh. There are two settings here that you will need to
-modify: FUTUREGRID_IAAS_ACCESS_KEY and FUTUREGRID_IAAS_SECRET_KEY.
-Paste your access key (s3id) and secret key (s3key) here and save
-the file. By default, env.sh requests 2 nodes on hotel and 2 nodes
-on sierra. Change these values as needed. Run install.sh from the 
-swift-vm-boot directory to complete the installation of Swift VM 
-Tools. The Swift VM Tools may require a fairly recent version of
-Python. If you run into problems while running the install.sh
-script, please try a more recent version of Python and associated
-libraries.
-
 Configuring coaster-service.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Within your swift distribution's etc directory is a file called 
-coaster-service.conf. There are many options here you can modify
-as needed, but these are the settings that will be required
-to run on futuregrid:
+To run on futuregrid, you will need a file called coaster-service.conf. 
+This file contains many options to control how things run. Here is
+an example of a working coaster-service.conf on futuregrid. 
 
 -----
-export WORKER_WORK=/tmp
+# Where to copy worker.pl on the remote machine for sites.xml
+export WORKER_LOCATION=/tmp
+
+# How to launch workers: local, ssh, cobalt, or futuregrid
 export WORKER_MODE=futuregrid
+
+# Do all the worker nodes you're using have a shared filesystem? (yes/no)
 export SHARED_FILESYSTEM=no
+
+# Username to use on worker nodes
 export WORKER_USERNAME=root
+
+# Enable SSH tunneling? (yes/no)
 export SSH_TUNNELING=yes
+
+# Directory to keep log files, relative to working directory when launching start-coaster-service
+export LOG_DIR=logs
+
+# Location of the swift-vm-boot scripts
 export SWIFTVMBOOT_DIR=$HOME/swift-vm-boot
+
+# Futuregrid settings
+export FUTUREGRID_IAAS_ACCESS_KEY=XXXXXXXXXXXXXXXXXXXXX
+export FUTUREGRID_IAAS_SECRET_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+export FUTUREGRID_HOTEL_NODES=0
+export FUTUREGRID_SIERRA_NODES=2
+export FUTUREGRID_CPUS_PER_NODE=1
+
+# Swift information for creating sites.xml
 export WORK=/tmp
+export JOBS_PER_NODE=$FUTUREGRID_CPUS_PER_NODE
+export JOB_THROTTLE=$( echo "scale=5; ($JOBS_PER_NODE * $(($FUTUREGRID_HOTEL_NODES + $FUTUREGRID_SIERRA_NODES)))/100 - 0.00001"|bc )
+
+# Application locations for tc.data
+#app convert=/usr/bin/convert
 -----
 
-These is a brief description of these settings in the coaster-service.conf file.
-Tunneling should be used when you are restricted by a firewall. If your local
-machine has multiple network interfaces, you should also manually set the IP
-address of your machine with export IPADDR=your.ip.address.here.
+Paste your credentials from the hotel.conf file into the FUTUREGRID_IAAS_ACCESS_KEY and FUTUREGRID_IAAS_SECRET_KEY fields.
+Adjust the number of nodes you would like to allocate here by changing the values of FUTUREGRID_HOTEL_NODES and FUTUREGRID_SIERRA_NODES.
+Add a list of any applications you want to run in the format "#app myapp=/path/to/app".
 
 Starting the Coaster Service Script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Now that everything is configured, change to a temporary directory 
+Now that everything is configured, change to the location of the coaster-service.conf file
 and run this command to start the coaster service:
 
 -----
