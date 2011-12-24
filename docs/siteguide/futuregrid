@@ -1,5 +1,10 @@
 Futuregrid Quickstart Guide
 ---------------------------
+FutureGrid is a distributed, high-performance test-bed that allows 
+scientists to collaboratively develop and test innovative approaches 
+to parallel, grid, and cloud computing.
+
+More information on futuregrid can be found at https://portal.futuregrid.org/.
 
 Requesting Futuregrid Access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
