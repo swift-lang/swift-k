@@ -1,13 +1,49 @@
 Fusion
-----
+------
+Fusion is a 320-node computing cluster for the Argonne 
+National Laboratory community. The primary goal of the LCRC is to 
+facilitate mid-range computing in all of the scientific programs of 
+Argonne and the University of Chicago.
 
-Fusion Quickstart
-~~~~~~~~~~~~~~~
 This section will walk you through running a simple Swift script
 on Fusion. 
 
+Requesting Access
+~~~~~~~~~~~~~~~~~
+If you do not already have a Fusion account, you can request one at 
+https://accounts.lcrc.anl.gov/request.php. Email support@lcrc.anl.gov
+for additional help.
+
+Projects
+~~~~~~~~
+In order to run a job on a Fusion compute node, you must first be associated 
+with a project.
+
+Each project has one or more Primary Investigators, or PIs. These PIs are
+responsible for adding and removing users to a project. Contact the PI of
+your project to be added.
+
+More information on this process can be found at 
+http://www.lcrc.anl.gov/info/Projects.
+
+SSH Keys
+~~~~~~~~
+Before accessing Fusion, be sure to have your SSH keys configured correctly.
+SSH keys are required to access fusion. You should see information about 
+this when you request your account. Email support@lcrc.anl.gov for
+additional help. 
+
+Connecting to a login node
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Once your keys are configured, you should be able to access a Fusion login
+node with the following command:
+
+-----
+ssh yourusername@fusion.lcrc.anl.gov
+-----
+
 Creating sites.xml
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 Swift relies on various configuration files to determine how to
 run. This section will provide a working configuration file which
 you can copy and paste to get running quickly. The sites.xml file
@@ -29,7 +65,7 @@ to point to this new directory. For example
 -----
 
 Creating tc.data
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 The tc.data configuration file gives information about the applications
 that will be called by Swift. More information about the format
 of tc.data can be found in the Swift User's guide.
@@ -41,8 +77,7 @@ include::../../tests/providers/fusion/tc.template.data[]
 -----
 
 Copy a Swift Script
-^^^^^^^^^^^^^^^^^^^
-
+~~~~~~~~~~~~~~~~~~~~
 Within the Swift directory is an examples directory which contains
 several introductory Swift scripts. The example we will use in this
 section is called catsn.swift. Copy this script to the same directory
@@ -55,8 +90,7 @@ $ cp ~/swift-0.93/examples/misc/data.txt .
 TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
 
 Run Swift
-^^^^^^^^^
-
+~~~~~~~~~
 Finally, run the script
 -----
 $ swift -sites.file sites.xml -tc.file tc.data catsn.swift
@@ -64,40 +98,6 @@ $ swift -sites.file sites.xml -tc.file tc.data catsn.swift
 
 You should see 10 new text files get created, named catsn*.out. If
 you see these files, then you have succesfully run Swift on Fusion! 
-
-Requesting Access
-~~~~~~~~~~~~~~~~~
-If you do not already have a Fusion account, you can request one at 
-https://accounts.lcrc.anl.gov/request.php. Email support@lcrc.anl.gov
-for additional help.
-
-SSH Keys
-~~~~~~~~
-Before accessing Fusion, be sure to have your SSH keys configured correctly.
-SSH keys are required to access fusion. You should see information about 
-this when you request your account. Email support@lcrc.anl.gov for
-additional help. 
-
-Connecting to a login node
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-Once your keys are configured, you should be able to access a Fusion login
-node with the following command:
-
------
-ssh yourusername@fusion.lcrc.anl.gov
------
-
-Projects
-~~~~~~~~
-In order to run a job on a Fusion compute node, you must first be associated 
-with a project.
-
-Each project has one or more Primary Investigators, or PIs. These PIs are
-responsible for adding and removing users to a project. Contact the PI of
-your project to be added.
-
-More information on this process can be found at 
-http://www.lcrc.anl.gov/info/Projects.
 
 Queues
 ~~~~~~
