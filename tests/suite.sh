@@ -962,7 +962,7 @@ group_sites_xml() {
   elif [ -f "$GROUP/gensites.template" ]; then
      TEMPLATE=`$GROUP/gensites.template`
   else
-     TEMPLATE="$TESTDIR/sites/localhost.xml"
+     TEMPLATE="$TESTDIR/sites/local/sites.template.xml"
   fi
 
   # Give default to _WORK_ if undefined in swift.properties

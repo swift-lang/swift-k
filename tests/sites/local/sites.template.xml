@@ -1,5 +1,5 @@
 <config>
-<pool handle="local">
+<pool handle="localhost">
   <execution provider="local" />
   <gridftp url="local://localhost" />
   <profile key="initialScore" namespace="karajan">10000</profile>
