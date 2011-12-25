@@ -19,7 +19,7 @@ The most likely cause is the Swift is not part of the environment. Do the follow
 $ export PATH=<swift-install-location>/bin:$PATH
 -----
 
-Note: If you are running Swift on a system where it is installed as a module, do module load swift. For instance:
+Note: If you are running Swift on a system where it is installed as a module, do module load swift. For instance, on the Beagle supercomputer, Swift is loaded as follows:
 
 ----
 $ module load swift
