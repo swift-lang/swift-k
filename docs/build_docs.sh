@@ -40,7 +40,7 @@ for directory in $DIRECTORIES
 do
    pushd $directory > /dev/null 2>&1
    FILES=`ls -1 *.txt 2>/dev/null`
-   CONTENTFILES=`/bin/ls -l | grep ^- | awk '{print $9}' | grep -v "\."`
+   CONTENTFILES=`find . -maxdepth 1 -type f ! -iname *.pdf`
    
    for file in $FILES
    do
@@ -53,11 +53,6 @@ do
           doflag=1
          fi
        done
-      #diff $file .cache/$file >/dev/null 2>/dev/null
-      #if [ $? -ne 0 ]
-      #then
-      # echo "updating cache"
-      # cp $file .cache
        if [ $doflag -eq 1 ]
        then
         echo "updating cache"

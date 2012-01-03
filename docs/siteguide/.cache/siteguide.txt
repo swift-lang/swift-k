@@ -8,14 +8,17 @@ Site Configuration Guide
 
 include::prereqs[]
 
-include::pads[]
-
-include::fusion[]
+include::bag_of_workstations[]
 
 include::beagle[]
 
+include::fusion[]
+
 include::futuregrid[]
+
+include::intrepid[]
 
 include::mcs[]
 
-include::intrepid[]
+include::pads[]
+
