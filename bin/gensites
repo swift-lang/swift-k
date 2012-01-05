@@ -45,7 +45,7 @@ usage()
 
    Examples:
 
-   Create a site configuration file for sites.xml using default properties.file in current directory
+   Create a site configuration file for sites.xml using swift.properties in current directory
    	$ gensites pads > sites.xml
 
    Use a specific properties file for a site
@@ -58,6 +58,7 @@ usage()
 END
 exit 0;
 }
+
 
 # Parse command line arguments
 while [ $# -gt 0 ]
@@ -88,7 +89,7 @@ if [ -z "$SWIFT_HOME" ]; then
 fi
 
 # List all templates
-if [ ! -z $LIST_TEMPLATES ]; then
+if [ ! -z "$LIST_TEMPLATES" ]; then
    # Templates in etc/sites
    for file in `ls -1 $SWIFT_HOME/* 2>/dev/null`
    do
@@ -115,7 +116,7 @@ fi
 # Locate template
 if [ ! -f "$TEMPLATE_PATH" ]; then
    if [ -f "$TEMPLATE" ]; then
-      $TEMPLATE_PATH = $TEMPLATE
+      TEMPLATE_PATH=$TEMPLATE
    elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
       TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
    elif [ -f "$HOME/.swift/sites/$TEMPLATE" ]; then
@@ -127,67 +128,109 @@ if [ ! -f "$TEMPLATE_PATH" ]; then
 fi
 
 # List a specific template
-if [ ! -z $LIST_SPECIFIC_TEMPLATE ]; then
+if [ ! -z "$LIST_SPECIFIC_TEMPLATE" ]; then
    cat $TEMPLATE_PATH
    exit 0
 fi
 
 # Ensure a properties file exists
-if [ ! -f "$PROPERTIES_FILE" ]; then
-   PROPERTIES_FILE="swift.properties"
-   if [ ! -f "$PROPERTIES_FILE" ]; then
+if [ -z "$PROPERTIES_FILE" ]; then
+   if [ -f "./swift.properties" ]; then
+      PROPERTIES_FILE="./swift.properties"
+   elif [ -f "$HOME/.swift/swift.properties" ]; then
       PROPERTIES_FILE="$HOME/.swift/swift.properties"
-      if [ ! -f "$PROPERTIES_FILE" ]; then
-         crash "Unable to find a valid properties file! Please specify a valid file with the -p option"
+   fi
+fi
+
+# Setup for creating a TC file
+if [ -f "$PROPERTIES_FILE" ]; then
+   if [ -n "`grep -e app $PROPERTIES_FILE`" ]; then
+      if [ -f "tc.data" ]; then
+         mv tc.data tc.data.old
       fi
+      HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
    fi
 fi
 
 # Parse values into variables for later sed processing
-#WORK=`pwd`"/work"
-while read line
-do
-   case "$line" in
-      "#site $TEMPLATE work="*|'#site work='*) 
-         WORK=`get_value $line`
+if [ -f "$PROPERTIES_FILE" ]; then
+   while read line
+   do
+      case "$line" in
+         "#site $TEMPLATE work="*|'#site work='*) 
+            WORK=`get_value $line`
+            ;;
+         "#site $TEMPLATE globus_hostname="*|'#site globus_hostname=') 
+            GLOBUS_HOSTNAME=`get_value $line`
+            ;;
+         "#site $TEMPLATE nodes="*|'#site nodes='*)
+            NODES=`get_value $line`
+            ;;
+         "#site $TEMPLATE project="*|'#site project='*)
+            PROJECT=`get_value $line`
+            ;;
+         "#site $TEMPLATE queue="*|'#site queue='*)
+            QUEUE=`get_value $line`
+            ;;
+         "#site $TEMPLATE n_gran="*|'#site n_gran='*)
+            N_GRAN=`get_value $line`
+            ;;
+         "#site $TEMPLATE n_max="*|'#site n_max='*)
+            MAXTIME=`get_value $line`
+            ;;
+         "#site $TEMPLATE slots="*|'#site slots='*)
+            SLOTS=`get_value $line`
+            ;;
+         "#site $TEMPLATE execution_url="*|'#site execution_url='*)
+            EXECUTION_URL=`get_value $line`
+           ;;
+         "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
+            INTERNALHOSTNAME=`get_value $line`
+            ;;
+         "#site $TEMPLATE jobs_per_node="*|'#site jobs_per_node='*)
+            JOBS_PER_NODE=`get_value $line`
+            ;;
+         "#site $TEMPLATE job_throttle="*|'#site job_throttle='*)
+            JOB_THROTTLE=`get_value $line`
+            ;;
+         '#app'*)
+            if [ `echo $line | wc -w` == 2 ]; then
+               for HOST in $HOSTS
+               do
+                  NAME=`echo $line |cut -d'=' -f1|awk '{print $2}'`
+                  COMMAND=`echo $line |cut -d'=' -f2`
+                  COMMAND=`eval echo $COMMAND`
+                  echo $HOST $NAME `readlink -f $COMMAND` null null null >> tc.data
+              done
+           fi
+
+           if [ `echo $line |wc -w` == 3 ]; then
+              for HOST in $HOSTS
+              do
+                 if [ $HOST == `echo $line|awk '{print $2}'` ]; then
+                    NAME=`echo $line|awk '{print $3}'|cut -d'=' -f1`
+                    COMMAND=`echo $line|awk '{print $3}'|cut -d'=' -f2`
+                    COMMAND=`eval echo $COMMAND`
+                    eval echo $HOST $NAME `readlink -f $COMMAND` null null null >> tc.data
+                 fi
+               done
+            fi
          ;;
-      "#site $TEMPLATE globus_hostname="*|'#site globus_hostname=') 
-         GLOBUS_HOSTNAME=`get_value $line`
-         ;;
-      "#site $TEMPLATE nodes="*|'#site nodes='*)
-         NODES=`get_value $line`
-         ;;
-      "#site $TEMPLATE project="*|'#site project='*)
-         PROJECT=`get_value $line`
-         ;;
-      "#site $TEMPLATE queue="*|'#site queue='*)
-         QUEUE=`get_value $line`
-         ;;
-      "#site $TEMPLATE n_gran="*|'#site n_gran='*)
-         N_GRAN=`get_value $line`
-         ;;
-      "#site $TEMPLATE n_max="*|'#site n_max='*)
-         MAXTIME=`get_value $line`
-         ;;
-      "#site $TEMPLATE slots="*|'#site slots='*)
-         SLOTS=`get_value $line`
-         ;;
-      "#site $TEMPLATE execution_url="*|'#site execution_url='*)
-        EXECUTION_URL=`get_value $line`
-        ;;
-      "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
-         INTERNALHOSTNAME=`get_value $line`
-         ;;
-   esac
-done < $PROPERTIES_FILE
+      esac
+   done < $PROPERTIES_FILE
+fi
 
 # Verify that the variables by the template are defined
-for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL
+for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL JOBS_PER_NODE JOB_THROTTLE
 do
-   # Need but can't find, due
-   if grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
+   # Test for HOST/GLOBUS_HOSTNAME - the only values which don't match
+   if [ "$TOKEN" == "HOST" ]; then
+      if [ -z "$GLOBUS_HOSTNAME" ]; then
+         GLOBUS_HOSTNAME=$( hostname -f )
+      fi
+   elif grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
       if [ -z "${!TOKEN}" ]; then
-            crash "Not specified: ${TOKEN}"
+         crash "Not specified: ${TOKEN}"
       fi
    fi
 done
@@ -208,6 +251,8 @@ SEDFILE=`mktemp`
   echo "s@_EXECUTION_URL_@${EXECUTION_URL}@"
   echo "s@_SERVICE_COASTERS_@${SERVICE_COASTERS:-NO_URL_GIVEN}@"
   echo "s@_SERVICE_PORT_@${SERVICE_PORT:-NO_PORT_GIVEN}@"
+  echo "s@_JOBS_PER_NODE_@${JOBS_PER_NODE}@"
+  echo "s@_JOB_THROTTLE_@${JOB_THROTTLE}@"
 } > $SEDFILE
 
 

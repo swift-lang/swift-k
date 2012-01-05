@@ -1,6 +1,6 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
-import org.apache.log4j.Logger;
+// import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -16,8 +16,8 @@ import org.griphyn.vdl.type.Types;
  */
 public class Assert extends VDLFunction {
 
-    private static final Logger logger = 
-        Logger.getLogger(Assert.class);
+    //    private static final Logger logger = 
+    //    Logger.getLogger(Assert.class);
     
     static {
         setArguments(Assert.class, new Arg[] { Arg.VARGS });
@@ -31,7 +31,7 @@ public class Assert extends VDLFunction {
         
         if (args.length == 2)
             if (args[1].getType() == Types.STRING)
-                message = args[1].toString();
+                message = (String) args[1].getValue();
             else
                 throw new ExecutionException
                 ("Second argument to assert() must be a String!");

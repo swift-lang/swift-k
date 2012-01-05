@@ -1,0 +1,11 @@
+Swift Document Generation
+=========================
+
+include::overview[]
+
+include::structure[]
+
+include::building[]
+
+include::automation[]
+

@@ -1,0 +1,223 @@
+<project><!-- CACHE ID 4ce39a0c-5c18-4b47-8d49-6688cfc1844b -->
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <types>
+     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      	   <xs:simpleType name="file">
+      	   <xs:restriction base="string"/>
+      	   </xs:simpleType>  
+     </xs:schema>	 
+  </types>
+  <global name="swift#string#17001">
+    <vdl:new type="string" value="1" />
+  </global>
+  <global name="swift#string#17004">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out2.data" />
+  </global>
+  <global name="swift#string#17000">
+    <vdl:new type="string" value="s" />
+  </global>
+  <global name="swift#string#17010">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/indir/data4.txt" />
+  </global>
+  <global name="swift#string#17006">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out4.data" />
+  </global>
+  <global name="swift#string#17009">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/indir/data2.txt" />
+  </global>
+  <global name="swift#string#17008">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/indir/data1.txt" />
+  </global>
+  <global name="swift#string#17005">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out3.data" />
+  </global>
+  <global name="swift#string#17003">
+    <vdl:new type="string" value="/home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute/outdir/out1.data" />
+  </global>
+  <element name="catnap" arguments="o,_delay,i">
+    <parameterlog>
+    <string>input</string>
+    <string>_delay</string>
+    <vdl:getdatasetprovenanceid var="{_delay}" />
+    <string>{#thread}</string>
+    </parameterlog>
+    <parameterlog>
+    <string>input</string>
+    <string>i</string>
+    <vdl:getdatasetprovenanceid var="{i}" />
+    <string>{#thread}</string>
+    </parameterlog>
+    <parameterlog>
+    <string>output</string>
+    <string>o</string>
+    <vdl:getdatasetprovenanceid var="{o}" />
+    <string>{#thread}</string>
+    </parameterlog>
+    <log level="debug" message="PROCEDURE line=4 thread={#thread} name=catnap"/>
+    <vdl:execute>
+      <vdl:tr>catnap</vdl:tr>
+      <vdl:stagein var="{_delay}"/>
+      <vdl:stagein var="{i}"/>
+      <vdl:stageout var="{o}"/>
+      <vdl:arguments>
+        <variable>_delay</variable>
+        <swiftscript:filename>
+         <variable>i</variable> 
+        </swiftscript:filename>
+      </vdl:arguments>
+      <vdl:stdout>
+        <swiftscript:filename>
+         <variable>o</variable> 
+        </swiftscript:filename>
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{o}"/>
+    <log level="debug" message="PROCEDURE_END line=4"/></element>
+
+  <set name="delay">
+        <vdl:new type="string" dbgname="delay" waitfor="88000" />
+  </set>
+  <parameterlog>
+  <string>intermediate</string>
+  <string>delay</string>
+  <vdl:getdatasetprovenanceid var="{delay}" />
+  <string>{#thread}</string>
+  </parameterlog>
+  <set name="swift#mapper#17002">
+        <vdl:new type="string[]" dbgname="swift#mapper#17002" waitfor="" />
+  </set>
+  <parameterlog>
+  <string>intermediate</string>
+  <string>swift#mapper#17002</string>
+  <vdl:getdatasetprovenanceid var="{swift#mapper#17002}" />
+  <string>{#thread}</string>
+  </parameterlog>
+  <set name="out">
+    <vdl:new type="file[]" dbgname="out" waitfor="88002">
+      <vdl:mapping descriptor="array_mapper">
+        <vdl:parameter name="files"><variable>swift#mapper#17002</variable></vdl:parameter>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <parameterlog>
+  <string>intermediate</string>
+  <string>out</string>
+  <vdl:getdatasetprovenanceid var="{out}" />
+  <string>{#thread}</string>
+  </parameterlog>
+  <set name="swift#mapper#17007">
+        <vdl:new type="string[]" dbgname="swift#mapper#17007" waitfor="" />
+  </set>
+  <parameterlog>
+  <string>intermediate</string>
+  <string>swift#mapper#17007</string>
+  <vdl:getdatasetprovenanceid var="{swift#mapper#17007}" />
+  <string>{#thread}</string>
+  </parameterlog>
+  <set name="data">
+    <vdl:new type="file[]" dbgname="data">
+      <vdl:mapping descriptor="array_mapper">
+        <vdl:parameter name="files"><variable>swift#mapper#17007</variable></vdl:parameter>
+        <vdl:parameter name="input" value="true" />
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+  <parameterlog>
+  <string>intermediate</string>
+  <string>data</string>
+  <vdl:getdatasetprovenanceid var="{data}" />
+  <string>{#thread}</string>
+  </parameterlog>
+  <restartLog>
+  	<vdl:mains>
+		<vdl:startprogressticker />
+		<vdl:mainp>
+		    <parallel>
+		        <sequential>
+		             <vdl:setfieldvalue>
+		               <argument name="var">
+		                 <variable>delay</variable>
+		               </argument>
+		               <argument name="value">
+		                 <swiftscript:arg>
+		                  <variable>swift#string#17000</variable><variable>swift#string#17001</variable> 
+		                 </swiftscript:arg>
+		               </argument>
+		             </vdl:setfieldvalue>
+		            <partialCloseDataset var="{delay}" closeID="88000" />
+		        </sequential>
+		        <sequential>
+		             <vdl:setfieldvalue>
+		               <argument name="var">
+		                 <variable>swift#mapper#17002</variable>
+		               </argument>
+		               <argument name="value">
+		                 <vdl:createarray>
+		                   <list>
+		                     <variable>swift#string#17003</variable>
+		                     <variable>swift#string#17004</variable>
+		                     <variable>swift#string#17005</variable>
+		                     <variable>swift#string#17006</variable>
+		                   </list>
+		                 </vdl:createarray>
+		               </argument>
+		             </vdl:setfieldvalue>
+		        </sequential>
+		        <sequential>
+		             <vdl:setfieldvalue>
+		               <argument name="var">
+		                 <variable>swift#mapper#17007</variable>
+		               </argument>
+		               <argument name="value">
+		                 <vdl:createarray>
+		                   <list>
+		                     <variable>swift#string#17008</variable>
+		                     <variable>swift#string#17009</variable>
+		                     <variable>swift#string#17010</variable>
+		                     <variable>swift#string#17010</variable>
+		                   </list>
+		                 </vdl:createarray>
+		               </argument>
+		             </vdl:setfieldvalue>
+		        </sequential>
+		        <sequential>
+		          <vdl:tparallelFor name="$" selfClose="true">
+		            <getarrayiterator><variable>out</variable></getarrayiterator>
+		            <set names="$$, o">
+		              <each items="{$}"/>
+		            </set>
+		              <set name="j">
+		                <vdl:new type="int" value="{$$}"/>
+		              </set>	<log level="debug" message="FOREACH_IT_START line=15 thread={#thread}"/>
+		          <log level="debug"><string>SCOPE thread={#thread}</string></log>
+
+		                <sequentialWithID>
+		                    <sequential>
+		                      <catnap>
+		                        <parallel>
+		                          <vdl:getfieldsubscript>
+		                            <argument name="var"><variable>out</variable></argument>
+		                            <argument name="subscript"><variable>j</variable></argument>
+		                          </vdl:getfieldsubscript>
+		                          <variable>delay</variable>
+		                          <vdl:getfieldsubscript>
+		                            <argument name="var"><variable>data</variable></argument>
+		                            <argument name="subscript"><variable>j</variable></argument>
+		                          </vdl:getfieldsubscript>
+		                        </parallel>
+		                      </catnap>
+		                    </sequential>
+		                </sequentialWithID>
+		              <log level="debug" message="FOREACH_IT_END line=15 thread={#thread}"/>
+		          </vdl:tparallelFor>
+		            <partialCloseDataset var="{out}" closeID="88002" />
+		        </sequential>
+		    </parallel>
+		</vdl:mainp>
+		<vdl:stopprogressticker />
+	</vdl:mains>
+  </restartLog>  
+</project>

@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Files relative to location of this script
-PID_FILE=".coaster-service-pids"
-SWIFTVM_INSTANCES=".swiftvm_instances"
-CONFIG_FILE="../etc/coaster-service.conf"
-
 # crash: Report a problem and exit
 crash()
 {
@@ -13,14 +8,13 @@ crash()
    exit 1
 }
 
-pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
+# Location of required files
+PID_FILE="$HOME/.swift/.coaster-service-pids"
+SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instances"
 
-# Read config file to determine worker mode
-if [ -f "$CONFIG_FILE" ]; then
-   source "$CONFIG_FILE"
-else
-   crash "Cannot find coaster-service.conf!"
-fi
+# Import settings
+CONFIG_FILE=$HOME/.swift/.config
+source "$CONFIG_FILE"
 
 echo Ending coaster processes..
 if [ -f "$PID_FILE" ]; then
@@ -29,22 +23,46 @@ if [ -f "$PID_FILE" ]; then
       #echo "$pid"
       for i in `ps -ef| awk '$3 == '$pid' { print $2 }'`
       do
-         #echo "$i"
+         echo "Killing process $i"
          kill $i > /dev/null 2>&1
       done
       kill $pid > /dev/null 2>&1
    done
    rm $PID_FILE > /dev/null 2>&1
 fi
-echo Done
 
-if [ $WORKER_MODE == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+if [ "$WORKER_MODE" == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    for INSTANCE in `cat $SWIFTVM_INSTANCES`
    do
-      $SWIFTVMBOOT_DIR/ve/bin/cloudinitd terminate $INSTANCE
+      $SWIFTVMBOOT_DIR/futuregrid/ve/bin/cloudinitd terminate $INSTANCE
    done
    rm $SWIFTVM_INSTANCES > /dev/null 2>&1
 fi
 
+if [ "$WORKER_MODE" == "gp" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   for INSTANCE in `cat $SWIFTVM_INSTANCES`
+   do
+      echo Stopping ec2 instance $INSTANCE...
+      $SWIFTVMBOOT_DIR/bin/gp-instance-terminate $INSTANCE | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+
+  done
+  rm $SWIFTVM_INSTANCES > /dev/null 2>&1
+fi
+
+if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   export EC2_HOME="$SWIFTVMBOOT_DIR/ec2"
+   export EC2_PRIVATE_KEY="$EC2_KEYFILE"
+   export EC2_CERT="$EC2_CERTFILE"
+   INSTANCES_AS_STRING=$( cat $SWIFTVM_INSTANCES | tr "\\n" " ")
+   $SWIFTVMBOOT_DIR/ec2/bin/ec2-terminate-instances $INSTANCES_AS_STRING
+   if [ -f "$HOME/.swift/.swiftvm_instances" ]; then
+      rm $HOME/.swift/.swiftvm_instances
+   fi
+fi
+
+if [ -f "$HOME/.swift/machines" ]; then
+   rm "$HOME/.swift/machines"
+fi
 
 popd > /dev/null 2>&1
+echo Done

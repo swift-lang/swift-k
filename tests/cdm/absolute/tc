@@ -1,0 +1,3 @@
+localhost sh /bin/sh null null null
+localhost catnap /home/ketan/cdm_tests/catnap.sh null null GLOBUS::maxwalltime="00:01:00"
+

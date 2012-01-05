@@ -34,9 +34,11 @@ VERBOSE=0
 TOTAL_TIME=0
 INDIVIDUAL_TEST_TIME=0
 COLORIZE=0
+# The directory in which is suite.sh (this script)
+SUITE_DIR=$( dirname $0 )
 # The directory in which to start:
-TOPDIR=`readlink -f $PWD/../../../..`
-CRTDIR=`pwd`
+TOPDIR=$( readlink -f $SUITE_DIR/../../../.. )
+CRTDIR=$( /bin/pwd )
 
 # Disable usage stats in test suite
 export SWIFT_USAGE_STATS=0
@@ -117,6 +119,7 @@ LOGCOUNT=0
 SEQ=1
 DATE=$( date +"%Y-%m-%d" )
 TIME=$( date +"%T" )
+HOURMINSEC=$( date +"%H%M%S" )
 
 RUNDIRBASE="run-$DATE"
 RUNDIR=$TOPDIR/$RUNDIRBASE
@@ -155,15 +158,9 @@ echo "HTML_OUTPUT: $HTML"
 TESTDIR=$TOPDIR/cog/modules/swift/tests
 
 # Ensure all given variables are set
+# Deprecated - this is now handled by gensites
 checkvars() {
-  while (( ${#*} ))
-   do
-   VAR=$1
-   V=$( eval "echo \${${VAR}+1}" )
-   [[ $V == 1 ]] || crash "Not set: $VAR"
-   shift
-  done
-  return 0
+   return
 }
 
 checkfail() {
@@ -383,7 +380,7 @@ output_report() {
 	    	# WIDTH=$( width "$LABEL" )
 	    	if [ "$RESULT" == "Passed" ]; then
 	      		html_td class "success" width 25 title "$CMD"
-	      		html_a_href $OUTPUT "$LABEL"
+	      		html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
 	      	elif [ "$RESULT" == "None" ]; then
 	      		html_td width 25
 		   		html "&nbsp;&nbsp;"
@@ -392,7 +389,7 @@ output_report() {
 	      		echo -e "${RED}FAILED${GRAY}"
 	      		cat $RUNDIR/$OUTPUT < /dev/null
 	      		html_td class "failure" width 25 title "$CMD"
-	      		html_a_href $OUTPUT $LABEL
+	      		html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
 	    	fi
 	    	html_~td
 	  	elif [ "$TYPE" == "package" ]; then
@@ -711,11 +708,10 @@ script_exec() {
 stage_files() {
 	GROUP=$1
 	NAME=$2
-
 	RESULT="None"
 
-	if [ -f $GROUP/$NAME.in ]; then
-		echo "Copying input: $NAME.in"
+        if [ -f "$GROUP/$NAME.in" ]; then
+                echo "Copying input: $NAME.in"
 		cp -v $GROUP/$NAME.in . 2>&1 >> $OUTPUT
 		if [ "$?" != 0 ]; then
 			RESULT="Failed"
@@ -724,9 +720,10 @@ stage_files() {
 			RESULT="Passed"
 		fi
 	fi
+
 	for INPUT in $GROUP/$NAME.*.in; do
 		IN=`basename $INPUT`
-		echo "Copying input: $IN"
+                echo "Copying input: $IN"
 		cp -v $INPUT . 2>&1 >> $OUTPUT
 		if [ "$?" != 0 ]; then
 			RESULT="Failed"
@@ -777,7 +774,6 @@ check_outputs() {
 swift_test_case() {
   SWIFTSCRIPT=$1
   NAME=${SWIFTSCRIPT%.swift}
-
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
   CLEANSCRIPT=$NAME.clean.sh
@@ -785,10 +781,11 @@ swift_test_case() {
   ARGSFILE=$NAME.args
 
   TEST_SHOULD_FAIL=0
-  
+
   OUTPUT=$NAME.setup.stdout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
-    script_exec $GROUP/$SETUPSCRIPT "S"
+    cp -v $GROUP/$SETUPSCRIPT .
+    script_exec ./$SETUPSCRIPT "S"
   else
     stage_files $GROUP $NAME
   fi
@@ -804,8 +801,11 @@ swift_test_case() {
   (( TESTCOUNT++ ))
 
   TIMEOUT=$( gettimeout $GROUP/$TIMEOUTFILE )
+  if [ -f "$GROUP/$TIMEOUTFILE" ]; then
+     cp "$GROUP/$TIMEOUTFILE" .
+  fi
 
-  grep THIS-SCRIPT-SHOULD-FAIL $SWIFTSCRIPT > /dev/null
+  grep THIS-SCRIPT-SHOULD-FAIL $GROUP/$SWIFTSCRIPT > /dev/null
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
   OUTPUT=$NAME.stdout
@@ -820,15 +820,17 @@ swift_test_case() {
   TEST_SHOULD_FAIL=0
   OUTPUT=$NAME.check.stdout
   if [ -x $GROUP/$CHECKSCRIPT ]; then
-  	export TEST_LOG=$NAME.stdout
-    script_exec $GROUP/$CHECKSCRIPT "&#8730;"
+    cp "$GROUP/$CHECKSCRIPT" .
+    export TEST_LOG=$NAME.stdout
+    script_exec ./$CHECKSCRIPT "&#8730;"
   else
     check_outputs $GROUP $NAME
   fi
 
   OUTPUT=$NAME.clean.stdout
   if [ -x $GROUP/$CLEANSCRIPT ]; then
-    script_exec $GROUP/$CLEANSCRIPT "C"
+    cp "$GROUP/$CLEANSCRIPT" .
+    script_exec ./$CLEANSCRIPT "C"
   else
    html_td width 25
    html "&nbsp;&nbsp;"
@@ -848,7 +850,7 @@ script_test_case() {
   TIMEOUTFILE=$NAME.timeout
 
   TEST_SHOULD_FAIL=0
-  
+
   OUTPUT=$NAME.setup.stdout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
@@ -940,18 +942,6 @@ build_package() {
   output_report package "swift-$DATE.tar.gz"
 }
 
-# Generate the sites.sed file
-make_sites_sed() {
-  {
-    echo "s@_WORK_@$WORK@"
-    echo "s@_HOST_@$GLOBUS_HOSTNAME@"
-    echo "s@_PROJECT_@$PROJECT@"
-    echo "s@_QUEUE_@$QUEUE@"
-    echo "s@_EXECUTION_URL_@$EXECUTION_URL@"
-  } > $RUNDIR/sites.sed
-  return 0
-}
-
 # Setup coasters variables
 if which ifconfig > /dev/null 2>&1; then
   IFCONFIG=ifconfig
@@ -959,26 +949,42 @@ else
   IFCONFIG=/sbin/ifconfig
 fi
 $IFCONFIG > /dev/null 2>&1 || crash "Cannot run ifconfig!"
-GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
+export GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
                    awk '{print $1}' )
 [ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
 
 # Generate sites.xml
 group_sites_xml() {
-  TEMPLATE=$GROUP/sites.template.xml
-  if [ -f $TEMPLATE ]; then
-    sed -f $RUNDIR/sites.sed < $TEMPLATE > sites.xml
-    [ $? != 0 ] && crash "Could not create sites.xml!"
-    echo "Using: $GROUP/sites.template.xml"
+
+  # Determine template
+  if [ -f "$GROUP/sites.template.xml" ]; then
+     TEMPLATE="$GROUP/sites.template.xml"
+  elif [ -f "$GROUP/gensites.template" ]; then
+     TEMPLATE=`$GROUP/gensites.template`
   else
-    sed "s@_WORK_@$PWD/work@" < $TESTDIR/sites/localhost.xml > sites.xml
-    [ $? != 0 ] && crash "Could not create sites.xml!"
-    echo "Using: $TESTDIR/sites/localhost.xml"
+     TEMPLATE="$TESTDIR/sites/local/sites.template.xml"
   fi
+
+  # Give default to _WORK_ if undefined in swift.properties
+  if [ -z "$WORK" ]
+  then
+     export WORK=$TOPDIR/work
+  fi
+
+  # Call gensites
+  TEMPLATE_DIRNAME=`dirname $TEMPLATE`
+  TEMPLATE=`basename $TEMPLATE`
+  gensites -L $TEMPLATE_DIRNAME $TEMPLATE > sites.xml
 }
 
 # Generate tc.data
 group_tc_data() {
+
+  # Gensites will create a tc.data file if it is being used
+  if [ -f "$GROUP/gensites.template" ]; then
+     return
+  fi
+
   if [ -f $GROUP/tc.template.data ]; then
     sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
     [ $? != 0 ] && crash "Could not create tc.data!"
@@ -993,6 +999,7 @@ group_tc_data() {
     echo "Mixing: $GROUP/tc.template.mix.data"
   fi
 }
+
 
 # Generate the CDM file, fs.data
 group_fs_data() {
@@ -1062,10 +1069,6 @@ group_statistics(){
 # Execute all tests in current GROUP
 test_group() {
 
-  group_sites_xml
-  group_tc_data
-  group_fs_data
-  group_swift_properties
 
   SWIFTS=$( echo $GROUP/*.swift )
   checkfail "Could not list: $GROUP"
@@ -1074,24 +1077,44 @@ test_group() {
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
-    TESTNAME=$( basename $TEST )
 
-	echo
-	echo
-	echo "/--------------------------------------------------------------"
+    echo
+    echo
+       echo "/--------------------------------------------------------------"
     echo -e "|   Test case: $LGREEN$TESTNAME$GRAY"
-    echo "\--------------------------------------------------------------"
+       echo "\--------------------------------------------------------------"
     echo
 
-    cp $GROUP/$TESTNAME .
-    TESTLINK=$TESTNAME
-    start_row
+    # Use repeat.txt to determine number of test iterations
+    SCRIPT_BASENAME=`basename $TEST .swift`
+    if [ -f "$GROUP/$SCRIPT_BASENAME.repeat" ]; then
+      ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
+    else
+      ITERS_LOCAL=1
+    fi
+
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
+
+       HOURMINSEC=$( date +"%H%M%S" )
+       TESTNAME=$( basename $TEST )
+       TESTNAMEDIR=`basename $TESTNAME .swift`-$HOURMINSEC
+       TESTLINK="$TESTNAMEDIR/$TESTNAME"
+       mkdir -p $TESTNAMEDIR
+       pushd $TESTNAMEDIR > /dev/null 2>&1
+
+       cp $TEST .
+       group_swift_properties
+       group_sites_xml
+       group_tc_data
+       group_fs_data
+
+      start_row
       swift_test_case $TESTNAME
       (( $TESTCOUNT >= $NUMBER_OF_TESTS )) && return
       (( $SHUTDOWN )) && return
+      end_row
+      popd > /dev/null 2>&1
     done
-     end_row
   done
     group_statistics
     TOTAL_TIME=0
@@ -1105,10 +1128,15 @@ test_group() {
   for TEST in $SCRIPTS; do
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
+    HOURMINSEC=$( date +"%H%M%S" )
+    TESTNAME=$( basename $TEST )
+    TESTNAMEDIR=`basename $TESTNAME .swift`-$HOURMINSEC
+    mkdir -p $TESTNAMEDIR
+    pushd $TESTNAMEDIR > /dev/null 2>&1
 
     TESTNAME=$( basename $TEST )
     cp -v $GROUP/$TESTNAME .
-    TESTLINK=$TESTNAME
+    TESTLINK="$TESTNAMEDIR/$TESTNAME"
 
     start_row
     for ((i=0; $i<$ITERS_LOCAL; i=$i+1)); do
@@ -1123,12 +1151,8 @@ test_group() {
 }
 
 
-if [[ $WORK == "" ]]
-then
-  WORK=$TOPDIR/work
-fi
 
-checkvars GROUPARG
+#checkvars GROUPARG
 echo "GROUP ARGUMENT: $GROUPARG"
 if [[ $GROUPARG != /* ]]; then
   # Adjust relative path
@@ -1152,7 +1176,6 @@ mkdir -p $RUNDIR
 
 date > $LOG
 
-make_sites_sed
 
 # Here the report starts.
 # Call to function header()
@@ -1237,6 +1260,7 @@ for G in ${GROUPLIST[@]}; do
   (( $SHUTDOWN )) && break
 done
 
+footer
 exit 0
 
 # Local Variables:

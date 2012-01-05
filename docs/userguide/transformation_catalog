@@ -8,7 +8,7 @@ be overridden with the tc.file configuration property, either in the
 Swift configuration file or on the command line.
 
 The format is one line per executable per site, with fields separated by
-tabs. Spaces cannot be used to separate fields.
+tabs.
 
 Some example entries:
 ----
@@ -17,7 +17,7 @@ TGUC       touch   /usr/bin/touch  INSTALLED       INTEL32::LINUX  GLOBUS::maxwa
 ----
 
 The fields are: site, transformation name, executable path, installation
-status, platform, and profile entrys.
+status, platform, and profile entries.
 
 The site field should correspond to a site name listed in the sites catalog.
 
@@ -31,5 +31,23 @@ The installation status and platform fields are not used. Set them to
 INSTALLED and INTEL32::LINUX respectively.
 
 The profiles field should be set to null if no profile entries are to
-be specified, or should contain the profile entries separated by
-semicolons.
+be specified.
+
+Setting Environment Variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is often useful to set environment variables when running an application.
+This can be accomplished using *env* in the profile entry. For example,
+the following application sets an environment variable called R_LIBS to
+/home/user/R_libs.
+-----
+localhost	R	/usr/bin/R	INSTALLED	INTEL32::LINUX	env::R_LIBS=/home/user/r_libs
+-----
+
+Setting Multiple Profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Multiple profile entries can be added by using a semicolon. The example below
+sets two environment variables: R_LIBS and R_HOME.
+
+-----
+localhost       R       /usr/bin/R      INSTALLED       INTEL32::LINUX  env::R_LIBS=/home/user/r_libs;env::R_HOME=/home/user/r
+-----

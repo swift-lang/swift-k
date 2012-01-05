@@ -68,10 +68,12 @@ public class ArrayDataNode extends DataNode {
     }
     
     private void addKey(String name) {
+        ArrayIndexFutureList w;
         synchronized(this) {
-            if (wrapper != null) {
-                ((ArrayIndexFutureList) wrapper).addKey(name);
-            }
+            w = (ArrayIndexFutureList) wrapper;
+        }
+        if (w != null) {
+            w.addKey(name);
         }
     }
 

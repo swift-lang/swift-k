@@ -11,6 +11,7 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/language-behaviour/broken \
 	    $TESTDIR/language-behaviour/compounds \
             $TESTDIR/language-behaviour/control_structures \
+            $TESTDIR/language-behaviour/datatypes \
 	    $TESTDIR/language-behaviour/IO \
 	    $TESTDIR/language-behaviour/logic \
 	    $TESTDIR/language-behaviour/mappers \

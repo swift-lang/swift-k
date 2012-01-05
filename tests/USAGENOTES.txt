@@ -74,6 +74,7 @@ Each *.swift* test may be accompanied by a:
 - *.check.sh*
 - *.clean.sh*
 - *.timeout specifier.*
+- *.repeat (number of times to repeat this test)
 
 The scripts may setup and inspect files in *RUNDIR* 
 including *exec.out* which must be accessed in *stdout.txt* 

@@ -1,0 +1,2 @@
+rule \./outdir/.* DIRECT /home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute
+rule \./indir/.* DIRECT /home/ketan/swift-install/0.93/cog/modules/swift/tests/cdm/absolute

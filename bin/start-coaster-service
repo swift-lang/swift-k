@@ -11,63 +11,240 @@ crash()
 # Start futuregrid workers
 start-workers-futuregrid()
 {
+   # Setup environment
    PORT=$1
    EXECUTION_URL=http://localhost:$PORT
+   export EC2_ACCESS_KEY=$FUTUREGRID_IAAS_ACCESS_KEY
+   export EC2_SECRET_KEY=$FUTUREGRID_IAAS_SECRET_KEY
 
-   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/bootit.sh" ]; then
+   # Check that SWIFTVMBOOT_DIR looks ok
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/futuregrid/bin/bootit.sh" ]; then
       crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
    fi
 
-   echo Starting virtual machines.. please wait
-   $SWIFTVMBOOT_DIR/bin/bootit.sh
-   SWIFTVMBOOT_OUTPUT=$SWIFTVMBOOT_DIR/output.json
+   # Install ve
+   if [ ! -d "$SWIFTVMBOOT_DIR/futuregrid/ve" ]; then
+      echo Setting up environment
+      python $SWIFTVMBOOT_DIR/futuregrid/bin/virtualenv.py $SWIFTVMBOOT_DIR/futuregrid/ve
+      if [ $? -ne 0 ]; then
+         echo "Failed to created the needed python virtual environment"
+         exit 1
+      fi
+   fi
 
+   # Install cloudinitd
+   source $SWIFTVMBOOT_DIR/futuregrid/ve/bin/activate
+   easy_install cloudinitd
+   if [ $? -ne 0 ]; then
+      echo "Failed to install cloudinitd"
+      exit 1
+   fi
+
+   # Register key
+   echo "Registering the key names in all the clouds"
+   python $SWIFTVMBOOT_DIR/futuregrid/bin/register_key.py $SWIFTVMBOOT_DIR/futuregrid/hosts.txt
+   if [ $? -ne 0 ]; then
+      echo "Failed to register the key names"
+      exit 1
+   fi
+
+   # Start virtual machines
+   echo Starting virtual machines.. please wait
+   $SWIFTVMBOOT_DIR/futuregrid/bin/bootit.sh | tee -a bootit.log
+   SWIFTVMBOOT_OUTPUT=$SWIFTVMBOOT_DIR/futuregrid/output.json
    if [ ! -f "$SWIFTVMBOOT_OUTPUT" ]; then
       crash "Error: Swift VM output file $SWIFTVMBOOT_OUTPUT does not exist!"
    fi
 
-   SWIFTVM_INSTANCES=`grep instance_id $SWIFTVMBOOT_OUTPUT |awk '{print $2}'|sed 's/\"//g;s/,//g;s/null//g'`
-   echo $SWIFTVM_INSTANCES > .swiftvm_instances
-
+   SWIFTVM_INSTANCE=`grep "Starting up run" bootit.log |awk '{print $4}'`
+   echo $SWIFTVM_INSTANCE >> $HOME/.swift/.swiftvm_instances
    WORKER_HOSTS=`grep hostname $SWIFTVMBOOT_OUTPUT |awk '{print $2}'|sed 's/\"//g;s/,//g;s/null//g'`
 
    # Start worker script
    for MACHINE in $WORKER_HOSTS
    do
-      # Enable ssh tunneling if needed
-      if [ $SSH_TUNNELING == "yes" ]; then
+      echo $MACHINE >> $HOME/.swift/machines
+      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
+      if [ "$SSH_TUNNELING" == "yes" ]; then
          ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
+         echo $! >> $PID_FILE
+         echo "Starting worker on $MACHINE"
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER http://localhost:$PORT $MACHINE $LOG_DIR" &
+         echo $! >> $PID_FILE
+      else
+         echo "Starting worker on $MACHINE"
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+         echo $! >> $PID_FILE
+      fi
+      
+   done
+}
+
+# Globus Provision workers
+start-workers-gp()
+{
+   PORT=$1
+   EXECUTION_URL=http://localhost:$PORT
+
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/gp-instance-create" ]; then
+      crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
+   fi
+
+   SEDFILE=`mktemp`
+   {
+      echo "s@_CLUSTER-NODES_@$EC2_NODES@"
+      echo "s@_INSTANCE-TYPE_@$EC2_INSTANCE_TYPE@"
+      echo "s@_KEYPAIR_@$EC2_KEYPAIR@"
+      echo "s@_KEYFILE_@$EC2_KEYFILE@"
+      echo "s@_AMI_@$EC2_AMI@"
+   } > $SEDFILE
+   sed -f $SEDFILE < "$SWIFTVMBOOT_DIR/ec2.template.conf" > "$SWIFTVMBOOT_DIR/ec2.conf"
+   rm $SEDFILE
+
+   echo Creating instance..
+   "$SWIFTVMBOOT_DIR/bin/gp-instance-create" -c "$SWIFTVMBOOT_DIR/ec2.conf" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" | tee -a gpic.out
+   SWIFTVM_INSTANCE=`awk '{print $4}' gpic.out`
+   rm gpic.out
+   echo $SWIFTVM_INSTANCE >> $HOME/.swift/.swiftvm_instance
+
+   echo Starting instance..
+   "$SWIFTVMBOOT_DIR/bin/gp-instance-start" "$SWIFTVM_INSTANCE" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+   WORKER_HOSTS=`$SWIFTVMBOOT_DIR/bin/gp-instance-describe $SWIFTVM_INSTANCE|sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"|awk '{print $3}'`
+
+   # Start worker script
+   if [ -f "$HOME/.swift/machines" ]; then
+      rm $HOME/.swift/machines
+   fi
+   for MACHINE in $WORKER_HOSTS
+   do
+      # Create a list of machines for other applications, if needed
+      echo $MACHINE >> $HOME/.swift/machines
+
+      # Enable ssh tunneling if needed
+      if [ "$SSH_TUNNELING" == "yes" ]; then
+         ssh -q -o StrictHostKeyChecking=no -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
          echo $! >> $PID_FILE
       fi
 
       # Copy and start worker script
-      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_WORK > /dev/null 2>&1
+      scp -q -o StrictHostKeyChecking=no $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
-      ssh $WORKER_USERNAME@$MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
-      echo $! >> $PID_FILE 
+      ssh -q -o StrictHostKeyChecking=no $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+      echo $! >> $PID_FILE
    done
 }
 
+# EC2 workers
+start-workers-ec2()
+{
+   PORT=$1
+   EXECUTION_URL=http://localhost:$PORT
+   if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/ec2/bin/ec2-run-instances" ]; then
+      crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
+   fi
+
+   export EC2_HOME="$SWIFTVMBOOT_DIR/ec2" 
+   export EC2_PRIVATE_KEY="$EC2_KEYFILE"
+   export EC2_CERT="$EC2_CERTFILE"
+
+   echo Creating instance..
+   $SWIFTVMBOOT_DIR/ec2/bin/ec2-run-instances "$EC2_AMI" -t "$EC2_INSTANCE_TYPE" -n "$EC2_NODES" -K "$EC2_KEYFILE" -C "$EC2_CERT"
+   SWIFTVM_INSTANCES=$( $SWIFTVMBOOT_DIR/ec2/bin/ec2-describe-instances | grep INSTANCE | grep -v terminated |awk '{print $2}' )
+   echo $SWIFTVM_INSTANCES >> $HOME/.swift/.swiftvm_instances
+   echo Waiting for nodes to boot..
+
+   # Wait until all instances are listed as running
+   while /bin/true
+   do
+      SWIFTVM_INSTANCES_AS_STRING=$( echo $SWIFTVM_INSTANCES | tr "\\n" " ")
+      STATUS_LIST=$( $SWIFTVMBOOT_DIR/ec2/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $6}' |sort -u )
+      if [ "$STATUS_LIST" == "running" ]; then
+         break
+      fi
+      sleep 5
+   done
+
+   # There is some delay between when the machines are 'running', and when system utilities like sshd are started
+   sleep 30
+
+   WORKER_HOSTS=$( $SWIFTVMBOOT_DIR/ec2/bin/ec2-describe-instances $SWIFTVM_INSTANCES_AS_STRING | grep INSTANCE | grep -v terminated | awk '{print $4}' )
+
+   if [ -f "$HOME/.swift/machines" ]; then
+      rm $HOME/.swift/machines
+   fi
+
+   # Start worker script
+   SSH_OPTS="-i $EC2_KEYFILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+   for MACHINE in $WORKER_HOSTS
+   do
+
+      # Create a list of machines for other applications, if needed
+      echo $MACHINE >> $HOME/.swift/machines
+
+      # Copy and start worker script
+      scp $SSH_OPTS $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
+      echo $! >> $PID_FILE
+
+      # Enable ssh tunneling if needed
+      if [ "$SSH_TUNNELING" == "yes" ]; then
+         ssh $SSH_OPTS -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 > /dev/null 2>&1 &
+         sleep 10
+         ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER http://localhost:$PORT $MACHINE $LOG_DIR" 2>&1 &
+         echo $! >> $PID_FILE
+      else
+         echo "Starting worker on $MACHINE"
+         ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" > /dev/null 2>&1 &
+         echo $! >> $PID_FILE
+      fi
+
+      # Copy SSH key for easier access
+      cat $HOME/.ssh/*.pub | ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE 'umask 077; cat >> $HOME/.ssh/authorized_keys' > /dev/null 2>&1
+   done
+}
+
+
 # Start SSH workers
 start-workers-ssh()
-{ 
+{
    PORT=$1
    EXECUTION_URL=http://$IPADDR:$PORT
    if [ -z "$PORT" ]; then
       crash "start-workers-ssh: Port number not specified, giving up"
    fi
+
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$WORKER_RELAY_HOST:/tmp > /dev/null 2>&1
+   fi
+
    for MACHINE in $WORKER_HOSTS
    do
-      scp $SWIFT_BIN/$WORKER $MACHINE:$WORKER_WORK > /dev/null 2>&1
-      echo Starting worker on $MACHINE
-      ssh $MACHINE $WORKER_WORK/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR &
-      echo $! >> $PID_FILE
+      # Enable ssh tunneling if needed
+      if [ "$SSH_TUNNELING" == "yes" ]; then
+         ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
+         echo $! >> $PID_FILE
+      fi
+
+      # Use a relay host
+      if [ -n "$WORKER_RELAY_HOST" ]; then
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION" > /dev/null 2>&1
+         echo Starting worker on $MACHINE
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER http://localhost:$PORT $MACHINE $WORKER_LOG_DIR" &
+         echo $! >> $PID_FILE
+      # Connect directly
+      else
+         ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
+         scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
+         echo Starting worker on $MACHINE
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+         echo $! >> $PID_FILE
+      fi
    done
    return 0
 }
 
 # Start local workers
-start-workers-local() 
+start-workers-local()
 {
    PORT=$1
    EXECUTION_URL=http://$IPADDR:$PORT
@@ -105,26 +282,41 @@ start-workers-cobalt()
   return 0
 }
 
-PID_FILE=".coaster-service-pids"
+if [ ! -d "$HOME/.swift" ]; then
+   mkdir -p "$HOME/.swift" || crash "Unable to create $HOME/.swift"
+fi
+
+PID_FILE="$HOME/.swift/.coaster-service-pids"
 RUN_DIR=`pwd`
-pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
 
 # Import settings
-CONFIG_FILE="../etc/coaster-service.conf"
-if [ -f "$CONFIG_FILE" ]; then
-   source "$CONFIG_FILE"
+if [ -f "$RUN_DIR/coaster-service.conf" ]; then
+   CONFIG_FILE="$RUN_DIR/coaster-service.conf"
+elif [ -f "$HOME/.swift/coaster-service.conf" ]; then
+   CONFIG_FILE="$HOME/.swift/coaster-service.conf"
+elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
+   CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
 else
    crash "Cannot find coaster-service.conf!"
 fi
+cp $CONFIG_FILE $HOME/.swift/.config
 
-# Determine information needed about this machine
+echo "Start-coaster-service..."
+echo "Configuration: $CONFIG_FILE"
+
+source $CONFIG_FILE
+
+# Determine IP address to which workers should connect
 if [ -z "$IPADDR" ]; then
-   if [ -x "/sbin/ifconfig" ]; then
+   if [ "$SSH_TUNNELING" == "yes" ]; then
+      IPADDR=localhost
+   elif [ -x "/sbin/ifconfig" ]; then
       IPADDR=$( /sbin/ifconfig | grep 'inet addr' | grep -v 127.0.0.1 | cut -d ':' -f 2 | awk '{print $1}' |head -1)
    else
       crash "Unable to determine IP address of system. Please add to coaster-service.conf"
    fi
 fi
+echo Service address: $IPADDR
 
 # Find swift
 if [ ! -x "$SWIFT" ]; then
@@ -178,11 +370,11 @@ elif [ -z "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
    $SWIFT_BIN/coaster-service -nosec -portfile $SERVICE_PORT_FILE --localport $LOCAL_PORT -passive > $COASTER_LOG 2>&1 &
 elif [ -n  "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
    $SWIFT_BIN/coaster-service -nosec -port $SERVICE_PORT -localport $LOCAL_PORT -passive > $COASTER_LOG 2>&1 &
-else 
+else
    crash "Unknown SERVICE_PORT type specified!"
 fi
 
-echo $! > $PID_FILE
+echo $! >> $PID_FILE
 sleep 5
 
 # Determine SERVICE_PORT
@@ -220,7 +412,13 @@ case $WORKER_MODE in
    futuregrid)
       start-workers-futuregrid $LOCAL_PORT
       ;;
-   *) 
+   gp)
+      start-workers-gp $LOCAL_PORT
+      ;;
+   ec2)
+      start-workers-ec2 $LOCAL_PORT
+      ;;
+   *)
       crash "Unknown WORKER_MODE. Please modify coaster-service.conf"
       ;;
 esac
@@ -228,30 +426,25 @@ esac
 # Generate sites.xml
 export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
 echo Generating sites.xml
-gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml 
+if [ -f "gensites.template" ]; then
+   gensites `cat gensites.template` -p $CONFIG_FILE > $RUN_DIR/sites.xml
+else
+   gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml
+fi
 
 # Generate config file
-if [ $SHARED_FILESYSTEM == "no" ]; then
+if [ "$SHARED_FILESYSTEM" == "no" ]; then
 echo Generating config file
 cat > $RUN_DIR/cf << EOF
 use.provider.staging=true
 wrapperlog.always.transfer=false
 execution.retries=0
 provider.staging.pin.swiftfiles=false
+sitedir.keep=false
 EOF
 fi
 
-# Generate TC file
-echo Generating tc.data
-cat > $RUN_DIR/tc.data << EOF
-persistent-coasters 	echo		/bin/echo		null	null	null
-persistent-coasters 	cat		/bin/cat		null	null	null
-persistent-coasters 	ls		/bin/ls			null	null	null
-persistent-coasters 	grep		/bin/grep		null	null	null
-persistent-coasters 	sort		/bin/sort		null	null	null
-persistent-coasters 	paste		/bin/paste		null	null	null
-persistent-coasters 	cp		/bin/cp	        	null	null	null
-persistent-coasters	wc		/usr/bin/wc		null	null	null
-persistent-coasters	hostname	/bin/hostname		null	null	null
-EOF
-
+# Local Variables:
+# tab-width: 3
+# sh-basic-offset: 3
+# End:

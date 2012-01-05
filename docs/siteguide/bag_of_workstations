@@ -1,0 +1,109 @@
+﻿Bag of Workstations
+-------------------
+"Bag of workstations" refers to a collection of machines that are not connected
+together as part of a cluster or supercomputer. 
+
+Prerequisites
+~~~~~~~~~~~~~
+In order to run Swift on a bag of workstations, the following prerequisites must
+be met:
+
+- The machines must be running Linux
+- The machines must have Perl available
+- A user account must be created on each machine (the username you create must be the same on each machine)
+- You must be able to SSH into the accounts without being prompted for a password. This usually involves creating an SSH key and setting up your authorized_keys. More information on how to do this can be found at http://www.openssh.org.
+
+Create a coaster-service.conf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To begin, copy the text below and paste it into the directory
+where your swift script is located. Name this file coaster-service.conf.
+
+-----
+include::../../etc/coaster-service.conf[]
+-----
+
+Modify coaster-service.conf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The coaster-service.conf file contains information about your setup.
+There are a few settings you must customize.
+
+The first is the name of the machines which will be used as workers. Modify
+the line below to reflect the names of the machines you want to use.
+-----
+export WORKER_HOSTS="myhost1.mydomain myhost2.mydomain"
+-----
+
+Update the value for JOBS_PER_NODE to reflect the number of CPUs available per node.
+
+The JOB_THROTTLE setting determines the maximum number of active jobs. Use the formula
+to determine the ideal value:
+
+jobs per node * number of nodes - 0.1 / 100
+
+Example: Suppose you have 10 machines each with 8 cores
+-----
+8 jobs per node * 10 cores = 80
+80 - 0.1 = 79.9
+79.9 / 100 = 0.799
+-----
+
+In this example, you would set the job throttle to 0.799
+-----
+export JOB_THROTTLE=0.799
+-----
+
+By default, this setup assumes there are no firewall rescrictions. If there
+is a firewall rescricting SSH access, set tunneling to true with this command
+
+-----
+export SSH_TUNNELING=yes
+-----
+
+This setup also assumes that these machines are not using a shared filesystem (NFS/AFS/CIFS, etc). 
+If these systems are all sharing a common filesystem, add the setting below.
+
+-----
+export SHARED_FILESYSTEM=no
+-----
+
+Starting the Coaster Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Change directories to the location where you would like to run a 
+Swift script and start the coaster service with this
+command:
+
+-----
+start-coaster-service
+-----
+
+This will create a configuration file that Swift needs
+called sites.xml.
+
+WARNING: Any existing sites.xml files in this directory
+will be overwritten. Be sure to make a copy of any 
+custom configuration files you may have.
+
+Run Swift
+~~~~~~~~~
+
+Next, run Swift. If you do not have a particular script
+in mind, you can test Swift by using a Swift script in
+the examples/ directory.
+
+Run the following command to run the script:
+-----
+swift -sites.file sites.xml -tc.file tc.data yourscript.swift
+-----
+
+Stopping the Coaster Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The coaster service will run indefinitely. The stop-coaster-service
+script will terminate the coaster service.
+
+-----
+$ stop-coaster-service
+-----
+
+This will kill the coaster service and kill the worker scripts on remote systems.
+

@@ -1,0 +1,7 @@
+<config>
+  <pool handle="localhost" sysinfo="INTEL32::LINUX">
+    <gridftp url="local://localhost" />
+    <execution provider="local" url="none" />
+    <workdirectory>work/</workdirectory>
+  </pool>
+</config>

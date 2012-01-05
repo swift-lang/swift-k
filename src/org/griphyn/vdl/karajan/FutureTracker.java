@@ -46,4 +46,8 @@ public class FutureTracker {
     public Map<DSHandle, Future> getMap() {
         return futures;
     }
+    
+    public synchronized Map<DSHandle, Future> getMapSafe() {
+        return new HashMap<DSHandle, Future>(futures);
+    }
 }
