@@ -16,7 +16,6 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +24,6 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -70,6 +68,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
             InvalidServiceContactException, TaskSubmissionException {
+        /*
+         *  see if the task wasn't submitted before and store it
+         *  in the task field
+         */
         checkAndSetTask(task);
         task.setStatus(Status.SUBMITTING);
         JobSpecification spec;
@@ -92,12 +94,19 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
             log(task, count);
             synchronized (this) {
+                // run count copies of this task
                 if (task.getStatus().getStatusCode() != Status.CANCELED) {
                     for (int i = 0; i < count; i++) {
                         pool.submit(this);
                     }
                     task.setStatus(Status.SUBMITTED);
                     if (spec.isBatchJob()) {
+                        /*
+                         *  "batch job" in Globus terms means
+                         *  "start and forget", so set the
+                         *  status to completed if this is
+                         *  a batch job
+                         */
                         task.setStatus(Status.COMPLETED);
                     }
                 }
@@ -131,28 +140,34 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     public void suspend() throws InvalidSecurityContextException, TaskSubmissionException {
+        // not supported
     }
 
     public void resume() throws InvalidSecurityContextException, TaskSubmissionException {
+        // not supported
     }
 
     public void cancel(String message) throws InvalidSecurityContextException,
             TaskSubmissionException {
         synchronized (this) {
             killed = true;
-            process.destroy();
+            if (process != null) {
+                process.destroy();
+            }
             getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));
         }
     }
-
-    private static final FileLocation REDIRECT_LOCATION =
-            FileLocation.MEMORY.and(FileLocation.LOCAL);
 
     public void run() {
         try {
             // TODO move away from the multi-threaded approach
             JobSpecification spec = (JobSpecification) getTask().getSpecification();
 
+            /*
+             * Run the process in the specified directory or
+             * in the current directory if the specification
+             * directory is null
+             */
             File dir = null;
             if (spec.getDirectory() != null) {
                 dir = new File(spec.getDirectory());
@@ -167,9 +182,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
             getTask().setStatus(Status.ACTIVE);
 
-            processIN(spec.getStdInput(), dir);
-
-            List pairs = new LinkedList();
+            /*
+             * Build a list of stream pairs (in, out) that need to
+             * be processed during the execution. This is a list because
+             * any combination of STDOUT and STDERR (namely none, OUT, ERR, and (OUT and ERR))
+             * can be requested through the specification.
+             */
+            // TODO a single thread can be used here for all processes
+            List<StreamPair> pairs = new LinkedList<StreamPair>();
 
             if (!FileLocation.NONE.equals(spec.getStdOutputLocation())) {
                 OutputStream os =
@@ -189,19 +209,43 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 }
             }
 
+            /*
+             * Start redirecting the streams
+             */
             Processor p = new Processor(process, pairs);
-
-            if (spec.isBatchJob()) {
-                pool.execute(p);
-                return;
-            }
-
-            p.run();
-            int exitCode = p.getExitCode();
+            pool.execute(p);
+            
+            /*
+             * Stdin needs to pe dealt with after we start dealing with stdout 
+             * to avoid the following possible deadlock:
+             * 1. stdin is fed in
+             * 2. app (say cat) dumps data to stdout
+             * 3. stdout is not read, so the buffer fills up
+             * 4. that pauses the app
+             * 5. stdin writing is blocked
+             * 6. the stdin feed blocks
+             * 7. the code never gets to reading stdout 
+             */
+            /*
+             * In addition, STDIN must be dealt with separately
+             * since OutputStreams don't have a way of detecting
+             * when a write would block (whereas InputStreams 
+             * have a way of detecting when reads would block),
+             * so STDIN processing cannot easily be interwoven
+             * with STDOUT/STDERR processing in a single thread
+             */
+            processIN(spec.getStdInput(), dir);
+            
+            int exitCode = process.waitFor();
 
             if (logger.isDebugEnabled()) {
                 logger.debug("Exit code was " + exitCode);
             }
+            
+            /*
+             * If the process exited because of a cancel() request,
+             * then don't stage out or clean up
+             */
             if (killed) {
                 return;
             }
@@ -209,7 +253,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             stageOut(spec, dir, exitCode == 0);
             if (exitCode == 0) {
                 cleanUp(spec, dir);
-                getTask().setStatus(Status.COMPLETED);
+                if (!spec.isBatchJob()) {
+                    getTask().setStatus(Status.COMPLETED);
+                }
             }
             else {
                 throw new JobException(exitCode);
@@ -231,9 +277,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         if (cs == null || cs.isEmpty()) {
             return;
         }
-        Iterator i = cs.iterator();
-        while (i.hasNext()) {
-            String e = (String) i.next();
+        for (String e : cs) {
             File f = new File(e);
             if (!f.isAbsolute()) {
                 f = new File(dir, f.getPath());
@@ -271,9 +315,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     private void stage(StagingSet s, File dir, boolean jobSucceeded) throws Exception {
-        Iterator i = s.iterator();
-        while (i.hasNext()) {
-            StagingSetEntry e = (StagingSetEntry) i.next();
+        for (StagingSetEntry e : s) {
             copy(e.getSource(), e.getDestination(), dir, e.getMode(), jobSucceeded);
         }
     }
@@ -399,6 +441,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         if ((FileLocation.LOCAL.overlaps(loc) || FileLocation.REMOTE.equals(loc)) && out != null) {
             if (os != null) {
+                /*
+                 * This is reached when redirection is requested to
+                 * both memory and a file, so use an output stream
+                 * that in turn writes to two output streams 
+                 */
                 os = new OutputStreamMultiplexer(os, new FileOutputStream(out));
             }
             else {
@@ -437,9 +484,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         String[] envp = new String[names.size()];
         int index = 0;
-        for (String name : names) 
+        for (String name : names) { 
             envp[index++] = name + "=" + 
             spec.getEnvironmentVariable(name);
+        }
         
         return envp;
     }
@@ -454,6 +502,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
+    /**
+     * A byte array-backed output stream that enforces 
+     * a limit on the backing buffer, discarding earlier data.
+     * Only MAX_SIZE / 2 bytes are guaranteed to be stored in the 
+     * array.
+     */
     private static class TaskOutputStream extends ByteArrayOutputStream {
         public static final int MAX_SIZE = 8192;
         private Task task;
@@ -499,6 +553,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
+    /**
+     * A class to move data between multiple in -> out streams.
+     */
     private class Processor implements Runnable {
         private Process p;
         private List<StreamPair> streamPairs;
@@ -600,6 +657,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
+    /**
+     * A ThreadFactory that produces daemon threads
+     */
     static class DaemonThreadFactory implements ThreadFactory {
         private ThreadFactory delegate;
 
