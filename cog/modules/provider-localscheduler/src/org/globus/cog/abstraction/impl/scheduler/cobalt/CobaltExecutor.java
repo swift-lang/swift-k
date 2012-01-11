@@ -23,7 +23,6 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
-import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -32,8 +31,8 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class CobaltExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(CobaltExecutor.class);
 
-	private String cqsub;
-	private Pattern exitcodeRegexp;
+	private final String cqsub;
+	private final Pattern exitcodeRegexp;
 
 	private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
@@ -45,7 +44,7 @@ public class CobaltExecutor extends AbstractExecutor {
 	}
 
 	@Override
-    protected void validate(Task task) throws ProcessException {
+    protected void validate(Task task) {
 	    JobSpecification spec = (JobSpecification) task.getSpecification();
 	    if (spec.getAttribute("alcfbgpnat") != null) {
             spec.addEnvironmentVariable("ZOID_ENABLE_NAT", "true");
@@ -53,24 +52,32 @@ public class CobaltExecutor extends AbstractExecutor {
         super.validate(task);
     }
 
-
-
-    protected Job createJob(String jobid, String stdout,
-			FileLocation stdOutputLocation, String stderr,
-			FileLocation stdErrorLocation, String exitcode,
-			AbstractExecutor executor) {
-		return new CobaltJob(jobid, stdout, stderr, getSpec().getStdOutput(), stdOutputLocation,
-				getSpec().getStdError(), stdErrorLocation, exitcodeRegexp, this);
+    @Override
+	protected Job createJob(String jobid,
+                            String stdout,
+                            FileLocation stdOutputLocation,
+                            String stderr,
+                            FileLocation stdErrorLocation,
+                            String exitcode,
+                            AbstractExecutor executor) {
+		return new CobaltJob(jobid, stdout, stderr,
+		                     getSpec().getStdOutput(),
+		                     stdOutputLocation,
+		                     getSpec().getStdError(),
+		                     stdErrorLocation, exitcodeRegexp, this);
 	}
 
+	@Override
 	protected String getName() {
 		return "Cobalt";
 	}
 
+	@Override
 	protected AbstractProperties getProperties() {
 		return Properties.getProperties();
 	}
 
+	@Override
 	protected void writeScript(Writer wr, String exitcode, String stdout,
 			String stderr) throws IOException {
 	}
@@ -112,6 +119,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		}
 	}
 
+	@Override
 	protected String[] buildCommandLine(File jobdir, File script,
 			String exitcode, String stdout, String stderr) throws IOException {
 		List<String> result = new ArrayList<String>();
@@ -157,6 +165,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		return result.toArray(EMPTY_STRING_ARRAY);
 	}
 
+	@Override
 	protected String quote(String s) {
 		boolean quotes = false;
 		if (s.indexOf(' ') != -1) {
@@ -180,6 +189,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		return sb.toString();
 	}
 
+	@Override
 	protected void cleanup() {
 		super.cleanup();
 		new File(getStdout()).delete();
@@ -188,6 +198,7 @@ public class CobaltExecutor extends AbstractExecutor {
 
 	private static AbstractQueuePoller poller;
 
+	@Override
 	protected AbstractQueuePoller getQueuePoller() {
 		synchronized(CobaltExecutor.class) {
 			if (poller == null) {
