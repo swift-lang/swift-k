@@ -26,7 +26,6 @@ import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.gsi.gssapi.auth.AuthorizationException;
-import org.ietf.jgss.GSSException;
 
 /**
  *   Set log level to DEBUG to not delete generated submit script
@@ -59,11 +58,12 @@ public abstract class AbstractExecutor implements ProcessListener {
         this.task = task;
         this.spec = (JobSpecification) task.getSpecification();
         this.listener = listener;
+        validate(task);
     }
 
-    public void start() 
-    throws AuthorizationException, IOException, ProcessException {	
-    	
+    public void start()
+    throws AuthorizationException, IOException, ProcessException {
+
     	File scriptdir = new File(System.getProperty("user.home")
                 + File.separatorChar + ".globus" + File.separatorChar
                 + "scripts");
@@ -163,9 +163,9 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected String[] buildCommandLine(File jobdir, File script,
-            String exitcode, String stdout, String stderr) 
+            String exitcode, String stdout, String stderr)
     throws IOException {
-    	
+
         writeScript(new BufferedWriter(new FileWriter(script)), exitcode,
             stdout, stderr);
         if (logger.isDebugEnabled()) {
@@ -216,8 +216,12 @@ public abstract class AbstractExecutor implements ProcessListener {
             throw new TaskSubmissionException("Failed to cancel task", e);
         }
     }
-    
-    protected void validate(Task task) throws ProcessException {
+
+    /**
+       Overriding methods may perform miscellaneous Task
+       processing here
+     */
+    protected void validate(Task task) {
     }
 
     protected abstract AbstractProperties getProperties();
@@ -259,7 +263,7 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected abstract void writeScript(Writer wr, String exitcode,
-                                        String stdout, String stderr) 
+                                        String stdout, String stderr)
     throws IOException;
 
     protected JobSpecification getSpec() {
@@ -283,39 +287,45 @@ public abstract class AbstractExecutor implements ProcessListener {
         }
     }
 
-    public void processCompleted(int exitCode) {
+    @Override
+	public void processCompleted(int exitCode) {
         cleanup();
         if (listener != null) {
             listener.processCompleted(exitCode);
         }
     }
 
-    public void processFailed(String message) {
+    @Override
+	public void processFailed(String message) {
         cleanup();
         if (listener != null) {
             listener.processFailed(message);
         }
     }
 
-    public void statusChanged(int status) {
+    @Override
+	public void statusChanged(int status) {
         if (listener != null) {
             listener.statusChanged(status);
         }
     }
 
-    public void stderrUpdated(String stderr) {
+    @Override
+	public void stderrUpdated(String stderr) {
         if (listener != null) {
             listener.stderrUpdated(stderr);
         }
     }
 
-    public void stdoutUpdated(String stdout) {
+    @Override
+	public void stdoutUpdated(String stdout) {
         if (listener != null) {
             listener.stdoutUpdated(stdout);
         }
     }
 
-    public void processFailed(Exception e) {
+    @Override
+	public void processFailed(Exception e) {
         cleanup();
         if (listener != null) {
             listener.processFailed(e);
