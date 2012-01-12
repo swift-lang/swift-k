@@ -4,5 +4,8 @@
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="abstraction-common"/>
 		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-local"/>
+		</ant>
 	</target>
 </project>
