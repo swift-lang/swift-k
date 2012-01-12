@@ -26,12 +26,14 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
     protected String[] buildCmdArray(JobSpecification spec) {
         Service service = getTask().getService(0);
         
+        String ssh = (String) getTask().getAttribute("ssh");
+        if (ssh == null) {
+            ssh = "ssh";
+        }
+        
         List<String> cmdarray = new ArrayList<String>();
-        cmdarray.add("ssh");
-        //cmdarray.add("/home/mike/soft/bin/tssh");
-        //cmdarray.add("-v");
-        //cmdarray.add("-v");
-        //cmdarray.add("-v");
+        cmdarray.add(ssh);
+
         if (spec.getAttribute("username") != null) {
             cmdarray.add("-l");
             cmdarray.add(spec.getAttribute("username").toString());
