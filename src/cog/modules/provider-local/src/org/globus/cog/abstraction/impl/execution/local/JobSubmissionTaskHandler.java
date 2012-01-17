@@ -178,23 +178,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             // TODO a single thread can be used here for all processes
             List<StreamPair> pairs = new LinkedList<StreamPair>();
 
-            if (!FileLocation.NONE.equals(spec.getStdOutputLocation())) {
-                OutputStream os =
-                        prepareOutStream(spec.getStdOutput(), spec.getStdOutputLocation(), dir,
-                            getTask(), STDOUT);
-                if (os != null) {
-                    pairs.add(new StreamPair(process.getInputStream(), os));
-                }
-            }
+            OutputStream os;
+            os = prepareOutStream(spec.getStdOutput(), spec.getStdOutputLocation(), dir,
+                getTask(), STDOUT);
+            pairs.add(new StreamPair(process.getInputStream(), os));
 
-            if (!FileLocation.NONE.equals(spec.getStdErrorLocation())) {
-                OutputStream os =
-                        prepareOutStream(spec.getStdError(), spec.getStdErrorLocation(), dir,
-                            getTask(), STDERR);
-                if (os != null) {
-                    pairs.add(new StreamPair(process.getErrorStream(), os));
-                }
-            }
+            os = prepareOutStream(spec.getStdError(), spec.getStdErrorLocation(), dir,
+                getTask(), STDERR);
+            pairs.add(new StreamPair(process.getErrorStream(), os));
 
             /*
              * Start redirecting the streams
@@ -245,6 +236,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 }
             }
             else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("STDOUT: " + pairs.get(0).os.toString());
+                    logger.debug("STDERR: " + pairs.get(1).os.toString());
+                }
                 throw new JobException(exitCode);
             }
         }
