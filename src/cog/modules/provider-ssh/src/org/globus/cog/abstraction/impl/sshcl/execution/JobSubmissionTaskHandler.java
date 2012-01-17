@@ -23,7 +23,7 @@ import org.globus.cog.abstraction.interfaces.Service;
 
 public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.execution.local.JobSubmissionTaskHandler {
     
-    protected String[] buildCmdArray(JobSpecification spec) {
+    protected List<String> buildCmdArray(JobSpecification spec) {
         Service service = getTask().getService(0);
         
         String ssh = (String) getTask().getAttribute("ssh");
@@ -57,9 +57,17 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
          */
         cmdarray.add("-s");
         
-        return cmdarray.toArray(new String[0]);
+        return cmdarray;
     }
     
+    @Override
+    protected void addEnvs(ProcessBuilder pb, JobSpecification spec) {
+        // override to do nothing. Environment variables are passed
+        // through the ssh shell
+    }
+
+
+
     @Override
     protected void processIN(String in, File dir, OutputStream os) throws IOException {
         JobSpecification spec = (JobSpecification) getTask().getSpecification();
