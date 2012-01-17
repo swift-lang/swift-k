@@ -14,10 +14,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -255,7 +257,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     protected Process startProcess(JobSpecification spec, File dir) throws IOException {
-        return Runtime.getRuntime().exec(buildCmdArray(spec), buildEnvp(spec), dir);
+        ProcessBuilder pb = new ProcessBuilder(buildCmdArray(spec));
+        addEnvs(pb, spec);
+        return pb.start();
     }
 
     protected File getJobDir(JobSpecification spec) {
@@ -457,37 +461,22 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         return os;
     }
 
-    protected String[] buildCmdArray(JobSpecification spec) {
-        List<String> arguments = spec.getArgumentsAsList();
-        String[] cmdarray = new String[arguments.size() + 1];
-
-        cmdarray[0] = spec.getExecutable();
-        int index = 1;
-        for (String arg : arguments)
-            cmdarray[index++] = arg;
-        
-        return cmdarray;
+    protected List<String> buildCmdArray(JobSpecification spec) {
+        List<String> arguments = new ArrayList<String>();
+        arguments.add(spec.getExecutable());
+        arguments.addAll(spec.getArgumentsAsList());
+                
+        return arguments;
     }
 
-    protected String[] buildEnvp(JobSpecification spec) {
+    protected void addEnvs(ProcessBuilder pb, JobSpecification spec) {
         Collection<String> names = spec.getEnvironmentVariableNames();
-        if (names.size() == 0) {
-            /*
-             * Questionable. An envp of null will cause the parent environment
-             * to be inherited, while an empty one will cause no environment
-             * variables to be set for the process. Or so it seems from the
-             * Runtime.exec docs.
-             */
-            return null;
+        if (names.size() != 0) {
+            Map<String, String> env = pb.environment();
+            for (String name : names) { 
+                env.put(name, spec.getEnvironmentVariable(name));
+            }
         }
-        String[] envp = new String[names.size()];
-        int index = 0;
-        for (String name : names) { 
-            envp[index++] = name + "=" + 
-            spec.getEnvironmentVariable(name);
-        }
-        
-        return envp;
     }
 
     private static class StreamPair {
