@@ -138,16 +138,18 @@ Set up OSG environment
 Depending on your shell type, run:
 
 -----
-source /opt/osg/setup.sh
+source /opt/osg-<version>/setup.sh
 or
-source /opt/osg/setup.csh
+source /opt/osg-<version>/setup.csh
 -----
+
+NOTE: This above step is not required on engage-submit3 host. 
 
 Create a VOMS Grid proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 -----
-$ voms-proxy-init -voms Engage -valid 12:00
+$ voms-proxy-init -voms Engage -valid 72:00
 -----
 
 Generating Configuration Files
@@ -204,10 +206,35 @@ fi
 $
 $ foreachsite -resource fork myinstall.sh
 $
-$ # Wait a file here, then poll for successfully installed apps...
+$ # Wait a while here, then poll for successfully installed apps...
 $
 $ grep SUCCEEDED run.89/*/*.stdout
 $
+-----
+
+Following is an example of the installation script for DSSAT app on OSG:
+
+-----
+#!/bin/bash
+
+cd ${OSG_APP}/extenci/swift/
+
+#pull
+wget http://www.ci.uchicago.edu/~ketan/DSSAT.tgz
+
+#extract
+tar zxf DSSAT.tgz
+
+# test
+cd DSSAT/data
+
+../DSSAT040.EXE A H1234567.MZX > std.OUT
+
+if [ $? = 0 ]; then
+  echo INSTALL SUCCEEDED
+else
+  echo INSTALL FAILED
+fi
 -----
 
 Starting a single coaster service
