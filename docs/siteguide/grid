@@ -33,7 +33,7 @@ Requesting Access
 ~~~~~~~~~~~~~~~~~
 
 *For OSG*: Obtain a DOEGrids certificate and register the certificate in
-the OSG "Engage" VO following the procedures at:
+the OSG "Engage" VO following the procedure at:
 
 https://twiki.grid.iu.edu/bin/view/Engagement/EngageNewUserGuide
 
@@ -91,14 +91,14 @@ Step6. Test it:
 $ voms-proxy-init --voms Engage -hours 48
 ----
 
-To run jobs using the procedures documented here you need to be logged
+To run jobs using the procedure described here, you need to be logged
 in to a "submit host" on which you will run Swift and other
-grid-related utilities. This can be any host with the OSG client stack
-or equivalent tools installed. Such hosts include the OSG Engage
-submit host, and the two Swift lab servers
+grid-related utilities. A submit host is any host where the OSG client stack
+or equivalent tools are installed. Such hosts include the OSG Engage
+submit host (engage-submit3.renci.org), and the two Swift lab servers
 {bridled,communicado}.ci.uchicago.edu.
 
-Obtain a login on engage-submit.renci.org following instructions on
+Obtain a login on engage-submit3.renci.org following instructions on
 the OSG URL above.
 
 Obtain a CI login with access to the Swift lab servers by requesting
