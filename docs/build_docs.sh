@@ -40,12 +40,32 @@ for directory in $DIRECTORIES
 do
    pushd $directory > /dev/null 2>&1
    FILES=`ls -1 *.txt 2>/dev/null`
+   CONTENTFILES=`find . -maxdepth 1 -type f ! -iname *.pdf`
+   
    for file in $FILES
    do
-      echo Converting $directory"$file" to HTML
-      asciidoc -a toc -a max-width=750px -a stylesheet=$(pwd)/../stylesheets/asciidoc.css $file
-      echo Converting $directory"$file" to PDF
-      a2x --format=pdf --no-xmllint $file 
+      doflag=0
+      for contentfile in $CONTENTFILES
+      do
+         diff $contentfile .cache/$contentfile >/dev/null 2>/dev/null
+         if [ $? -ne 0 ]
+         then
+          doflag=1
+         fi
+       done
+       if [ $doflag -eq 1 ]
+       then
+        echo "updating cache"
+        for newcontent in $CONTENTFILES
+        do
+          cp $newcontent .cache/
+        done
+        echo Converting $directory"$file" to HTML
+        asciidoc -a toc -a max-width=750px -a stylesheet=$(pwd)/../stylesheets/asciidoc.css $file
+        echo Converting $directory"$file" to PDF
+        a2x --format=pdf --no-xmllint $file
+      fi
+      #fi 
    done
 
    if [ ! -d "$INSTALLATION_DIRECTORY/$VERSION" ]; then

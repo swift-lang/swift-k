@@ -34,9 +34,11 @@ VERBOSE=0
 TOTAL_TIME=0
 INDIVIDUAL_TEST_TIME=0
 COLORIZE=0
+# The directory in which is suite.sh (this script)
+SUITE_DIR=$( dirname $0 )
 # The directory in which to start:
-TOPDIR=`readlink -f $PWD/../../../..`
-CRTDIR=`pwd`
+TOPDIR=$( readlink -f $SUITE_DIR/../../../.. )
+CRTDIR=$( /bin/pwd )
 
 # Disable usage stats in test suite
 export SWIFT_USAGE_STATS=0
@@ -357,7 +359,7 @@ output_report() {
 	LABEL="$2"  # Text on link to output
 	CMD=$3    # Command issued (td title)
 	RESULT=$4 # Passed or Failed
- 
+
 	if [ $TEXTREPORT == 1 ]; then
 		if [ "$TYPE" == "test" ]; then
 			if [ "$RESULT" == "Passed" ]; then
@@ -697,7 +699,7 @@ script_exec() {
 
   process_exec $SCRIPT
   RESULT=$( result )
-   
+
   output_report test "$SYMBOL" "$LASTCMD" $RESULT
 
   check_bailout
@@ -707,7 +709,7 @@ stage_files() {
 	GROUP=$1
 	NAME=$2
 	RESULT="None"
-	
+
         if [ -f "$GROUP/$NAME.in" ]; then
                 echo "Copying input: $NAME.in"
 		cp -v $GROUP/$NAME.in . 2>&1 >> $OUTPUT
@@ -818,7 +820,7 @@ swift_test_case() {
   TEST_SHOULD_FAIL=0
   OUTPUT=$NAME.check.stdout
   if [ -x $GROUP/$CHECKSCRIPT ]; then
-    cp "$GROUP/$CHECKSCRIPT" .	
+    cp "$GROUP/$CHECKSCRIPT" .
     export TEST_LOG=$NAME.stdout
     script_exec ./$CHECKSCRIPT "&#8730;"
   else
@@ -848,7 +850,7 @@ script_test_case() {
   TIMEOUTFILE=$NAME.timeout
 
   TEST_SHOULD_FAIL=0
-  
+
   OUTPUT=$NAME.setup.stdout
   if [ -x $GROUP/$SETUPSCRIPT ]; then
     script_exec $GROUP/$SETUPSCRIPT "S"
@@ -960,9 +962,9 @@ group_sites_xml() {
   elif [ -f "$GROUP/gensites.template" ]; then
      TEMPLATE=`$GROUP/gensites.template`
   else
-     TEMPLATE="$TESTDIR/sites/localhost.xml"
+     TEMPLATE="$TESTDIR/sites/local/sites.template.xml"
   fi
-  
+
   # Give default to _WORK_ if undefined in swift.properties
   if [ -z "$WORK" ]
   then
@@ -1072,7 +1074,7 @@ test_group() {
   checkfail "Could not list: $GROUP"
 
   for TEST in $SWIFTS; do
-   
+
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
 
@@ -1089,7 +1091,7 @@ test_group() {
       ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
     else
       ITERS_LOCAL=1
-    fi    
+    fi
 
     for (( i=0; $i<$ITERS_LOCAL; i=$i+1 )); do
 
@@ -1100,7 +1102,7 @@ test_group() {
        mkdir -p $TESTNAMEDIR
        pushd $TESTNAMEDIR > /dev/null 2>&1
 
-       cp $TEST .    
+       cp $TEST .
        group_swift_properties
        group_sites_xml
        group_tc_data

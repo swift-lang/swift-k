@@ -1,6 +1,7 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,8 +16,8 @@ import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
-import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
@@ -83,7 +84,23 @@ public class Misc extends FunctionsCollection {
     	    if (h.getType().isPrimitive()) {
     	        buf.append(o);
     	    }
-    	    
+    	    else if (h.getType().isArray()) {
+    	        try {
+    	            Iterator<DSHandle> i = h.getFields(Path.CHILDREN).iterator();
+    	            buf.append('[');
+    	            while (i.hasNext()) {
+    	                prettyPrint(buf, i.next());
+    	                if (i.hasNext()) {
+    	                    buf.append(", ");
+    	                }
+    	            }
+    	            buf.append(']');
+    	        }
+    	        catch (HandleOpenException e) {
+    	        }
+                catch (InvalidPathException e) {
+                }
+    	    }
 	    }
     }
 

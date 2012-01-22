@@ -187,6 +187,12 @@ if [ -f "$PROPERTIES_FILE" ]; then
          "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
             INTERNALHOSTNAME=`get_value $line`
             ;;
+         "#site $TEMPLATE jobs_per_node="*|'#site jobs_per_node='*)
+            JOBS_PER_NODE=`get_value $line`
+            ;;
+         "#site $TEMPLATE job_throttle="*|'#site job_throttle='*)
+            JOB_THROTTLE=`get_value $line`
+            ;;
          '#app'*)
             if [ `echo $line | wc -w` == 2 ]; then
                for HOST in $HOSTS
@@ -215,12 +221,12 @@ if [ -f "$PROPERTIES_FILE" ]; then
 fi
 
 # Verify that the variables by the template are defined
-for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL
+for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL JOBS_PER_NODE JOB_THROTTLE
 do
    # Test for HOST/GLOBUS_HOSTNAME - the only values which don't match
    if [ "$TOKEN" == "HOST" ]; then
       if [ -z "$GLOBUS_HOSTNAME" ]; then
-         crash "Not specified: GLOBUS_HOSTNAME"
+         GLOBUS_HOSTNAME=$( hostname -f )
       fi
    elif grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
       if [ -z "${!TOKEN}" ]; then
@@ -245,6 +251,8 @@ SEDFILE=`mktemp`
   echo "s@_EXECUTION_URL_@${EXECUTION_URL}@"
   echo "s@_SERVICE_COASTERS_@${SERVICE_COASTERS:-NO_URL_GIVEN}@"
   echo "s@_SERVICE_PORT_@${SERVICE_PORT:-NO_PORT_GIVEN}@"
+  echo "s@_JOBS_PER_NODE_@${JOBS_PER_NODE}@"
+  echo "s@_JOB_THROTTLE_@${JOB_THROTTLE}@"
 } > $SEDFILE
 
 

@@ -1,0 +1,28 @@
+Troubleshooting
+---------------
+
+In this section we will discuss some of the common issues and remedies while using Swift. The origin of these issues can be Swift or the configuration of the target site, state and us
+er configuration among other factors. We try to identify known issues and address them here:
+
+* Command not found: Swift is installed but not in path. If you see the following error message:
+
+-----
+If 'swift' is not a typo you can run the following command to lookup the
+package that contains the binary:
+    command-not-found swift
+-bash: swift: command not found
+-----
+
+The most likely cause is the Swift is not part of the environment. Do the following to load the Swift module:
+
+-----
+$ export PATH=<swift-install-location>/bin:$PATH
+-----
+
+Note: If you are running Swift on a system where it is installed as a module, do module load swift. For instance, on the Beagle supercomputer, Swift is loaded as follows:
+
+----
+$ module load swift
+Swift version swift-0.93RC5 loaded
+----
+

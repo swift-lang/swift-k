@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
 import org.griphyn.vdl.karajan.FutureTracker;
@@ -199,8 +198,6 @@ public abstract class AbstractDataNode implements DSHandle {
             return handle;
         }
         catch (NoSuchFieldException e) {
-            logger.warn("could not find variable: " + field.getName() + 
-                               " " + path);
             throw new InvalidPathException(path, this);
         }
     }
@@ -513,7 +510,7 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
     
-    protected Mapper getActualMapper() {
+    public Mapper getActualMapper() {
         return null;
     }
 

@@ -157,28 +157,23 @@ public class Karajan {
 				logger.debug("Importing module "+moduleToImport);
 				if(!importedNames.contains(moduleToImport)) {
 
-					// TODO PATH/PERL5LIB-style path handling
-					//String swiftfilename = "./"+moduleToImport+".swift";
-					//String xmlfilename = "./"+moduleToImport+".xml";
 				    String lib_path = System.getenv("SWIFT_LIB");
-					String swiftfilename = moduleToImport+".swift";
-					String xmlfilename = moduleToImport+".xml";
+					String swiftfilename = "./"+moduleToImport+".swift";
+					String xmlfilename = "./"+moduleToImport+".xml";
 
 					File local = new File(swiftfilename);
 					if( !( lib_path == null || local.exists() ) )
 					{
-					    StringTokenizer st = new StringTokenizer(lib_path, ":");
-					    while(st.hasMoreTokens())
+					    String[] path = lib_path.split(":");
+					    for(String entry : path)
 					    {
-					        String path = st.nextToken();
-					        String lib_script_location = path + "/" + swiftfilename;
-					        File tmp = new File(lib_script_location);
+					        String lib_script_location = entry + "/" + swiftfilename;
+					        File file = new File(lib_script_location);
 
-					        if(tmp.exists())
+					        if(file.exists())
 					        {
-					            swiftfilename = path + "/" + swiftfilename;
-					            xmlfilename = path + "/" + xmlfilename;
-					            moduleToImport = path + "/" + moduleToImport;
+					            swiftfilename = entry + "/" + swiftfilename;
+					            moduleToImport = entry + "/" + moduleToImport;
 					            break;
 					        }
 					    }
