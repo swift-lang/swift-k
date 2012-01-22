@@ -15,21 +15,37 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 
 
 public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.execution.local.JobSubmissionTaskHandler {
+    public static final Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
+    
+    private static Properties props;
+    
+    private synchronized static Properties getProperties() {
+        if (props == null) {
+            props = new Properties();
+            try {
+                ClassLoader cl = JobSubmissionTaskHandler.class.getClassLoader(); 
+                props.load(cl.getResourceAsStream("provider-sshcl.properties")); 
+            }
+            catch (Exception e) {
+                logger.warn("Failed to load properties", e);
+            }
+        }
+        return props;
+    }
     
     protected List<String> buildCmdArray(JobSpecification spec) {
         Service service = getTask().getService(0);
         
-        String ssh = (String) getTask().getAttribute("ssh");
-        if (ssh == null) {
-            ssh = "ssh";
-        }
+        String ssh = getProperties().getProperty("ssh", "ssh");
         
         List<String> cmdarray = new ArrayList<String>();
         cmdarray.add(ssh);
