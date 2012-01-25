@@ -92,6 +92,8 @@
 				<include name="chxml"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
+                                <include name="run-worker.sh"/>
+                                <include name="start-grid-service"/>
 			</fileset>
 		</chmod>
 		<chmod perm="+x">
