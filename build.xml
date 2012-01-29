@@ -92,12 +92,9 @@
 				<include name="chxml"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
-                                <include name="run-worker.sh"/>
-                                <include name="start-grid-service"/>
-			</fileset>
-		</chmod>
-		<chmod perm="+x">
-			<fileset dir="${dist.dir}/bin">
+				<include name="run-worker.sh"/>
+				<include name="start-grid-service"/>
+
 				<include name="foreachsite"/>
 				<include name="gen_gridsites"/>
 				<include name="get_greensites"/>

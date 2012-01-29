@@ -218,7 +218,7 @@ public class RuntimeStats extends FunctionsCollection {
 				}
 			}
 			finally {
-			    states.release();
+			    states.release(stateIterator);
 			}
 			return summary;
 		}

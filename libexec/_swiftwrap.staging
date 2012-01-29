@@ -61,19 +61,11 @@ logstate() {
 fail() {
 	EC=$1
 	shift
-	if [ "$STATUSMODE" = "files" ]; then
-		echo $@ >"$WFDIR/status/$JOBDIR/${ID}-error"
-	fi
+
 	log $@
 	info
-	if [ "$STATUSMODE" = "files" ]; then
-		exit 0
-	else
-		if [ "X$STDERR" != "X" ]; then
-			echo "$@" >>$STDERR
-		fi
-		exit $EC
-	fi
+	echo "$@" >> wrapper.error
+	exit $EC
 }
 
 checkError() {
@@ -308,7 +300,7 @@ else
 	fi
 	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 fi
-checkError $? "Exit code $?"
+checkError $? "Application $EXEC failed with an exit code of $?" <<$STDERR
 
 logstate "EXECUTE_DONE"
 log "Job ran successfully"

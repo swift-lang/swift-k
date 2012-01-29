@@ -52,7 +52,7 @@ public class AppStageouts extends AbstractSequentialWithArguments {
             List files = TypeUtil.toList(FILES.getValue(stack));
             for (Object f : files) { 
                 List pv = TypeUtil.toList(f);
-                Path p = Path.parse(TypeUtil.toString(pv.get(0)));
+                Path p = (Path) pv.get(0);
                 DSHandle handle = (DSHandle) pv.get(1);
                 ArgUtil.getNamedArguments(stack).add("var", handle.getField(p));
                 AbsFile file = new AbsFile(VDLFunction.filename(stack)[0]);

@@ -113,7 +113,6 @@ public class ExternalDataNode extends AbstractDataNode {
 	    return null;
 	}
 
-    @Override
     public String getParam(String name) {
         if (params == null) {
             return null;

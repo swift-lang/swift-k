@@ -23,7 +23,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.scheduler.LateBindingScheduler;
+import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.EventBus;
@@ -48,11 +48,11 @@ public class HangChecker extends TimerTask {
 
     public void run() {
         try {
-            LateBindingScheduler s = (LateBindingScheduler) stack.getGlobal(SchedulerNode.SCHEDULER);
+            WeightedHostScoreScheduler s = (WeightedHostScoreScheduler) stack.getGlobal(SchedulerNode.SCHEDULER);
             if (s != null) {
                 int running = s.getRunning();
-
-                if (running == 0 && EventBus.eventCount == lastEventCount) {
+                boolean allOverloaded = s.allOverloaded();
+                if (running == 0 && EventBus.eventCount == lastEventCount && !allOverloaded) {
                     logger.warn("No events in " + (CHECK_INTERVAL / 1000) + "s.");
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     PrintStream ps = new PrintStream(os);

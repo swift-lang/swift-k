@@ -33,6 +33,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -148,7 +149,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
             boolean provenanceEnabled = VDL2Config.getConfig().getProvenanceLog();
 
             setupLogging(ap, projectName, runID);
-            logger.debug("Max heap: " + Runtime.getRuntime().maxMemory());
+            if (logger.isDebugEnabled()) {
+                logger.debug("arguments: " + Arrays.asList(argv));
+                logger.debug("Max heap: " + Runtime.getRuntime().maxMemory());
+            }
             
             if (ap.isPresent(ARG_CDMFILE)) {
                 loadCDM(ap); 

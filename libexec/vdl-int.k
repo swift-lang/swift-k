@@ -45,23 +45,36 @@ namespace("vdl"
 					file:remove("{wfdir}/status/{jobdir}/{jobid}-success", host=rhost)
 					log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 				)
-				if(
-					file:exists("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost) then(
-						log(LOG:INFO, "FAILURE jobid={jobid} - Failure file found")
-						task:transfer(srchost=rhost, srcdir="{wfdir}/status/{jobdir}", srcfile="{jobid}-error")
-						error := parallel(
-							file:remove("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost)
-							sequential(
-								str:strip(file:read("{jobid}-error"))
-								file:remove("{jobid}-error")
-							)
+				sequential(
+					try (
+						msg = checkErrorFile(rhost, wfdir, jobid, jobdir)
+						sequential (
+							log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Both status files are missing")
+							throw("No status file was found. Check the shared filesystem on {rhost}")
 						)
-						throw(error)
 					)
-					else (
-						log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Both status files are missing")
-						throw("No status file was found. Check the shared filesystem on {rhost}")
+				)
+				throw(checkErrorFile(rhost, wfdir, jobid, tr, jobdir))
+			)
+		)
+		
+		element(checkErrorFile, [rhost, wfdir, jobid, jobdir]
+			if (
+				file:exists("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost) then(
+					log(LOG:INFO, "FAILURE jobid={jobid} - Failure file found")
+					task:transfer(srchost=rhost, srcdir="{wfdir}/status/{jobdir}", srcfile="{jobid}-error")
+					error := parallel(
+						file:remove("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost)
+						sequential(
+							str:strip(file:read("{jobid}-error"))
+							file:remove("{jobid}-error")
+						)
 					)
+					error
+				)
+				else (
+					log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Error file missing")
+					throw("No status file was found. Check the shared filesystem on {rhost}")
 				)
 			)
 		)
@@ -553,6 +566,9 @@ namespace("vdl"
 					)
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
+						prev := exception
+						exception := try(exception(checkErrorFile(rhost, wfdir, jobid, jobdir)), prev)
+						
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 
 						if(matches(exception,".*executable bit.*")

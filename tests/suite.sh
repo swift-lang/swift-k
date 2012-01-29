@@ -375,20 +375,20 @@ output_report() {
 		fi
 	else
 		if [ "$TYPE" == "test" ]; then
-	    	# WIDTH=$( width "$LABEL" )
-	    	if [ "$RESULT" == "Passed" ]; then
-	      		html_td class "success" width 25 title "$CMD"
-                        html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
-	      	elif [ "$RESULT" == "None" ]; then
-	      		html_td width 25
-		   	html "&nbsp;&nbsp;"
-   			html_~td
-	    	else
-	      		echo -e "${RED}FAILED${GRAY}"
-                        cat $RUNDIR/$OUTPUT < /dev/null
-	      		html_td class "failure" width 25 title "$CMD"
-                        html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"	    	
-                fi
+			# WIDTH=$( width "$LABEL" )
+			if [ "$RESULT" == "Passed" ]; then
+				html_td class "success" width 25 title "$CMD"
+				html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
+			elif [ "$RESULT" == "None" ]; then
+				html_td width 25
+				html "&nbsp;&nbsp;"
+				html_~td
+			else
+				echo -e "${RED}FAILED${GRAY}"
+				cat $RUNDIR/$OUTPUT < /dev/null
+				html_td class "failure" width 25 title "$CMD"
+				html_a_href "$TESTNAMEDIR/$OUTPUT" "$LABEL"
+			fi
 	    	html_~td
 	  	elif [ "$TYPE" == "package" ]; then
 	    	BINPACKAGE=$2
@@ -477,19 +477,6 @@ end_row() {
    	        html_~td
 		html_~tr
 	fi
-}
-
-# Create test output_*.txt file and copy to stdout.txt
-# Rename to copy_output?
-# TEST_LOG = test log
-test_log() {
-  TEST_LOG="output_$LOGCOUNT.txt"
-  banner "$LASTCMD" $RUNDIR/$TEST_LOG
-  if [ -f $OUTPUT ]; then
-    cp $OUTPUT $RUNDIR/$TEST_LOG 2>>$LOG
-    cp $OUTPUT $RUNDIR/stdout.txt
-  fi
-  let "LOGCOUNT=$LOGCOUNT+1"
 }
 
 stars() {
@@ -597,6 +584,11 @@ test_exec() {
   fi
 
   RESULT=$( result )
+<<<<<<< .working
+  output_report test $SEQ "$LASTCMD" $RESULT $OUTPUT
+=======
+>>>>>>> .merge-right.r5122
+
   output_report test $SEQ "$LASTCMD" $RESULT $OUTPUT
 
   check_bailout
@@ -720,7 +712,6 @@ stage_files() {
 	NAME=$2
 
 	RESULT="None"
-
 	if [ -f "$GROUP/$NAME.in" ]; then
 		echo "Copying input: $NAME.in"
 		cp -v $GROUP/$NAME.in . 2>&1 >> $OUTPUT
@@ -887,7 +878,7 @@ script_test_case() {
    html_~td
   fi
 
-   OUTPUT=$NAME.stdout
+  OUTPUT=$NAME.stdout
 
   if [ -x $GROUP/$SHELLSCRIPT ]; then
     script_exec $SHELLSCRIPT "X"
@@ -1048,7 +1039,7 @@ group_title() {
 	PIECES=""
 	while [ "$G" != "$CRTDIR" ]; do
 		PIECE=`basename $G`
-		PIECES="$PIECE $PIECES"
+		PIECES="$PIECE/$PIECES"
 		G=`dirname $G`
 	done
 	echo $PIECES
@@ -1235,6 +1226,7 @@ if (( $RUN_ANT )); then
 fi
 SWIFT_HOME=$TOPDIR/cog/modules/swift/dist/swift-svn
 OUTPUT=compile.stdout
+OUTPUT=build.stdout
 if [ $BUILD_PACKAGE = "1" ]; then
   build_package
 fi

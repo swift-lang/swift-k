@@ -123,6 +123,10 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
             throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
         }
 	}
+	
+	protected Mapper getActualMapper() {
+        return mapper;
+    }
 
 	public boolean isArray() {
 		return true;
