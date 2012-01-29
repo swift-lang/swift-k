@@ -51,7 +51,7 @@ public class LocalTCPService extends GSSService implements Registering {
     }
 
     public String registrationReceived(String blockid, String url, 
-            KarajanChannel channel, Map<String, String> options) throws ChannelException {
+            KarajanChannel channel) throws ChannelException {
         if (logger.isInfoEnabled()) {
             logger.info("Received registration: blockid = " +
                         blockid + ", url = " + url);
@@ -61,7 +61,7 @@ public class LocalTCPService extends GSSService implements Registering {
         String wid = registrationManager.nextId(blockid);
         cc.getChannelID().setRemoteID(wid);
         ChannelManager.getManager().registerChannel(cc.getChannelID(), channel);
-        registrationManager.registrationReceived(blockid, wid, url, cc, options);
+        registrationManager.registrationReceived(blockid, wid, url, cc);
         return wid;
     }
 

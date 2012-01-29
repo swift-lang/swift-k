@@ -22,8 +22,10 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBufferCallback;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.ThrottleManager;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.CoasterFileRequestHandler;
 
 public class LocalIOProvider implements IOProvider {
@@ -55,6 +57,8 @@ public class LocalIOProvider implements IOProvider {
     }
 
     private static class Writer implements IOWriter, WriteBufferCallback, Abortable {
+        private static Direction BUFDIR = Direction.OUT;
+        
         private File f;
         private long len, crt;
         private WriteIOCallback cb;
@@ -86,7 +90,7 @@ public class LocalIOProvider implements IOProvider {
                         throw new IOException("Failed to create directory " + p.getAbsolutePath());
                     }
                 }
-                buf = Buffers.newWriteBuffer(new FileOutputStream(f).getChannel(), this);
+                buf = Buffers.newWriteBuffer(Buffers.getBuffers(Direction.OUT), new FileOutputStream(f).getChannel(), this);
             }
         }
 
@@ -118,6 +122,22 @@ public class LocalIOProvider implements IOProvider {
             buf.close();
             f.delete();
         }
+
+        public void suspend() {
+            // not used
+        }
+
+        public void resume() {
+            // not used
+        }
+        
+        public void setUpThrottling() {
+            Buffers.getBuffers(BUFDIR).getThrottleManager().register(cb);
+        }
+
+        public void cancelThrottling() {
+            ThrottleManager.getDefault(BUFDIR).unregister(cb);
+        }
     }
 
     private static class Reader implements IOReader, ReadBufferCallback {
@@ -142,7 +162,7 @@ public class LocalIOProvider implements IOProvider {
             cb.length(f.length());
             try {
                 synchronized(this) {
-                    rbuf = Buffers.newReadBuffer(fc, f.length(), this);
+                    rbuf = Buffers.newReadBuffer(Buffers.getBuffers(Direction.IN), fc, f.length(), this);
                 }
             }
             catch (InterruptedException e) {
@@ -151,6 +171,7 @@ public class LocalIOProvider implements IOProvider {
         }
 
         public synchronized void dataSent() {
+            logger.debug("Data sent");
             rbuf.freeFirst();
         }
 
@@ -159,6 +180,10 @@ public class LocalIOProvider implements IOProvider {
             if (last) {
                 close();
             }
+        }
+
+        public void queued() {
+            cb.queued();
         }
 
         private synchronized void closeBuffer() {

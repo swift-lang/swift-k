@@ -15,4 +15,8 @@ public interface ReadIOCallback extends IOCallback {
     void length(long len);
     
     void data(IOHandle handle, ByteBuffer data, boolean last);
+
+    void info(String msg);
+
+    void queued();
 }

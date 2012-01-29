@@ -9,11 +9,14 @@
  */
 package org.globus.cog.karajan.workflow.service.commands;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
 
 
 public class HeartBeatCommand extends Command {
+    public static final Logger logger = Logger.getLogger(HeartBeatCommand.class);
+    
     private long start;
     private static int sid;
     private int id;
@@ -31,5 +34,10 @@ public class HeartBeatCommand extends Command {
 
 	public void replyReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
 		super.replyReceived(fin, err, data);
+		if (logger.isInfoEnabled()) {
+            long rst = Long.parseLong(getInDataAsString(0));
+            long now = System.currentTimeMillis();
+            logger.info(getChannel() + " up latency: " + (now - rst) + "ms, rtt: " + (now - start) + "ms");
+        }
 	}
 }

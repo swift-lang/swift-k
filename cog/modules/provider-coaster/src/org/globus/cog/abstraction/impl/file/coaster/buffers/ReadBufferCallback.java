@@ -15,4 +15,6 @@ public interface ReadBufferCallback {
     void dataRead(boolean last, ByteBuffer buf);
     
     void error(boolean last, Exception e);
+
+    void queued();
 }

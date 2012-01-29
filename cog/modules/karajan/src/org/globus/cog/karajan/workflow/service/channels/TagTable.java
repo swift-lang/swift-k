@@ -13,14 +13,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TagTable {
+public class TagTable<T> {
 	private static final long serialVersionUID = 1659255187618780167L;
 
-	private Map<MutableInteger,Object> map;
+	private Map<MutableInteger, T> map;
 	private MutableInteger mkey;
 	
 	public TagTable() {
-		map = new HashMap<MutableInteger,Object>();
+		map = new HashMap<MutableInteger, T>();
 		mkey = new MutableInteger();
 	}
 	
@@ -29,21 +29,21 @@ public class TagTable {
 		return map.containsKey(mkey);
 	}
 	
-	public synchronized void put(int key, Object value) {
+	public synchronized void put(int key, T value) {
 		map.put(new MutableInteger(key), value);
 	}
 	
-	public synchronized Object remove(int key) {
+	public synchronized T remove(int key) {
 		mkey.setValue(key);
 		return map.remove(mkey);
 	}
 	
-	public synchronized Object get(int key) {
+	public synchronized T get(int key) {
 		mkey.setValue(key);
 		return map.get(mkey);
 	}
 	
-	public Collection<Object> values() {
+	public Collection<T> values() {
 		return map.values();
 	}
 	

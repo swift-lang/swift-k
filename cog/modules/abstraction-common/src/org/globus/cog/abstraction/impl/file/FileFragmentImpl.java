@@ -17,10 +17,17 @@ public class FileFragmentImpl implements FileFragment {
     
     public FileFragmentImpl(String file, long offset, long length) {
         this.file = file;
-        this.offset = offset;
-        this.length = length;
+        this.offset = checkPositive(offset, "offset");
+        this.length = checkPositive(length, "length");
     }
     
+    private long checkPositive(long n, String param) {
+        if (n < 0) {
+            throw new IllegalArgumentException(param + " < 0 (" + n + ")");
+        }
+        return n;
+    }
+
     /**
      * Creates a new FileFragment object for the entire specified file
      */

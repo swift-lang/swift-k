@@ -27,13 +27,12 @@ public class PerformanceDiagnosticOutputStream extends OutputStream {
 			public void run() {
 				count++;
 				String s;
-				logger.info(s = "Total transferred: "
+				logger.info(s = "[OUT] Total transferred: "
 						+ PerformanceDiagnosticInputStream.units(bytes) + "B, current rate: "
 						+ PerformanceDiagnosticInputStream.units(bytes - last)
 						+ "B/s, average rate: "
 						+ PerformanceDiagnosticInputStream.units(bytes / count)
 						+ "B/s");
-				System.out.println("[OUT] " + s);
 				last = bytes;
 			}
 		});

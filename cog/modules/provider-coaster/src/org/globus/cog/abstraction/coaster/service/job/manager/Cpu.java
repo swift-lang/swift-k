@@ -20,9 +20,12 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.karajan.workflow.service.channels.ChannelListener;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.karajan.workflow.service.commands.HeartBeatCommand;
 
 public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
@@ -264,10 +267,12 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public void shutdown() {
-		if (shutdown) {
-			return;
-		}
-		shutdown = true;
+        synchronized(this) {
+            if (shutdown) {
+                return;
+            }
+            shutdown = true;
+        }
 		Block block = node.getBlock();
         done.clear();
         if (running != null) {

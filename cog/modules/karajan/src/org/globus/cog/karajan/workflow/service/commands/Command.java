@@ -10,18 +10,15 @@
 package org.globus.cog.karajan.workflow.service.commands;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.ReplyTimeoutException;
 import org.globus.cog.karajan.workflow.service.RequestReply;
+import org.globus.cog.karajan.workflow.service.TimeoutException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelIOException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
@@ -36,17 +33,12 @@ public abstract class Command extends RequestReply implements SendCallback {
 		timer = new Timer(true);
 	}
 
-	public static final DateFormat DF = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
-
-	public static final int DEFAULT_REPLY_TIMEOUT = 120 * 1000;
 	public static final int DEFAULT_MAX_RETRIES = 2;
-	private int replyTimeout = DEFAULT_REPLY_TIMEOUT;
 	private int maxRetries = DEFAULT_MAX_RETRIES;
 
 	private Callback cb;
 	private String errorMsg;
 	private Exception exception;
-	private Timeout timeout;
 	private int retries;
 	private long sendTime;
 	private long sendReqTime;
@@ -64,13 +56,13 @@ public abstract class Command extends RequestReply implements SendCallback {
 		this.cb = cb;
 	}
 
-	public void waitForReply() throws ReplyTimeoutException {
+	public void waitForReply() throws TimeoutException {
 		synchronized (this) {
 			if (!this.isInDataReceived()) {
-				long left = replyTimeout;
+				long left = getTimeout();
 				while (!this.isInDataReceived()) {
 					if (left <= 0) {
-						throw new ReplyTimeoutException();
+						throw new TimeoutException();
 					}
 					try {
 						wait(left);
@@ -78,7 +70,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 					catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					left = sendTime == 0 ? 1000 : replyTimeout
+					left = sendTime == 0 ? 1000 : getTimeout()
 							- (System.currentTimeMillis() - sendTime);
 				}
 			}
@@ -106,8 +98,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 	}
 	
 	public void send(boolean err) throws ProtocolException {
-		sendReqTime = System.currentTimeMillis();
-		cancelTimeout();
+
 		KarajanChannel channel = getChannel();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Sending " + this + " on " + channel);
@@ -137,6 +128,8 @@ public abstract class Command extends RequestReply implements SendCallback {
 					channel.sendTaggedData(id, !i.hasNext(), buf, !i.hasNext() ? this : null);
 				}
 			}
+			sendReqTime = System.currentTimeMillis();
+			setLastTime(sendReqTime);
 		}
 		catch (ChannelIOException e) {
 			reexecute(e.getMessage(), e);
@@ -146,20 +139,10 @@ public abstract class Command extends RequestReply implements SendCallback {
 	public void dataSent() {
 		sendTime = System.currentTimeMillis();
 		//when using the piped channels the reply will arrive before this method is called
-		setupReplyTimeoutChecker();
+		setLastTime(sendTime);
 	}
-
-	protected synchronized void setupReplyTimeoutChecker() {
-		if (!isInDataReceived()) {
-			timeout = new Timeout();
-			try {
-				timer.schedule(timeout, replyTimeout);
-			}
-			catch (IllegalStateException e) {
-				logger.info("Timer cancelled due to JVM shutting down. Going without timeouts.");
-			}
-		}
-	}
+	
+	private static boolean shutdownMsg;
 
 	public byte[] execute(KarajanChannel channel) throws ProtocolException, IOException {
 		send(channel);
@@ -187,14 +170,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 		send();
 	}
 
-	public int getReplyTimeout() {
-		return replyTimeout;
-	}
-
-	public void setReplyTimeout(int replyTimeout) {
-		this.replyTimeout = replyTimeout;
-	}
-
 	public int getMaxRetries() {
 		return maxRetries;
 	}
@@ -203,15 +178,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 		this.maxRetries = maxRetries;
 	}
 
-	private synchronized void cancelTimeout() {
-		if (timeout != null) {
-			timeout.cancel();
-			timeout = null;
-		}
-	}
-
 	public void receiveCompleted() {
-		cancelTimeout();
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppInData("CMD"));
 		}
@@ -222,7 +189,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 	}
 
 	public void errorReceived(String msg, Exception t) {
-		cancelTimeout();
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppInData("CMDERR"));
 		}
@@ -275,30 +241,25 @@ public abstract class Command extends RequestReply implements SendCallback {
 			}
 		}
 	}
-
-	protected void handleReplyTimeout() {
-		timeout = null;
+	
+	public void handleTimeout() {
 		if (isInDataReceived()) {
 			return;
 		}
 		logger.warn(this
 				+ ": handling reply timeout; sendReqTime="
 				+ DF.format(new Date(sendReqTime)) + ", sendTime=" + DF.format(new Date(sendTime))
-						+ ", now=" + DF.format(new Date()));
-		reexecute("Reply timeout", new ReplyTimeoutException());
+						+ ", now=" + DF.format(new Date()) + ", channel=" + getChannel());
+		getChannel().unregisterCommand(this);
+		//reexecute("Reply timeout", new TimeoutException());
 	}
 
-	private class Timeout extends TimerTask {
-		public void run() {
-			handleReplyTimeout();
-		}
+	protected long getSendReqTime() {
+		return sendReqTime;
+	}
 
-		public boolean cancel() {
-			if (logger.isDebugEnabled()) {
-				logger.debug("SRC " + System.identityHashCode(timeout), new Exception());
-			}
-			return super.cancel();
-		}		
+	protected void setSendReqTime(long sendReqTime) {
+		this.sendReqTime = sendReqTime;
 	}
 
 	public String toString() {

@@ -10,11 +10,13 @@
 package org.globus.cog.karajan.workflow.service.handlers;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestReply;
+import org.globus.cog.karajan.workflow.service.TimeoutException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public abstract class RequestHandler extends RequestReply {
@@ -34,6 +36,7 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	protected void sendReply() throws ProtocolException {
+	    setLastTime(System.currentTimeMillis());
 		send();
 		replySent = true;
 	}
@@ -102,10 +105,22 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	protected String ppInData(String prefix) {
-		return ppData(prefix+"< ", getInCmd(), getInDataChunks());
+		return ppData(prefix + "< ", getInCmd(), getInDataChunks());
 	}
-	
+
 	public String toString() {
-		return "Handler(" + getInCmd() + ")";
+		return "Handler(" + getId() + ", " + getInCmd() + ")";
+	}
+
+	public void handleTimeout() {
+		if (isInDataReceived()) {
+			return;
+		}
+		setLastTime(Long.MAX_VALUE);
+		getChannel().unregisterHandler(getId());
+		String msg = this + ": timed out receiving request. Last time "
+				+ DF.format(new Date(getLastTime())) + ", now: " + DF.format(new Date());
+		logger.info(msg);
+		errorReceived("Timeout", new TimeoutException(msg));
 	}
 }

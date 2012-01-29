@@ -24,6 +24,7 @@ public interface KarajanChannel {
 	public static final int FINAL_FLAG = 0x00000002;
 	public static final int ERROR_FLAG = 0x00000004;
 	public static final int COMPRESSED_FLAG = 0x00000008;
+	public static final int SIGNAL_FLAG = 0x00000010;
 
 	void sendTaggedData(int i, boolean fin, byte[] bytes);
 
@@ -41,11 +42,17 @@ public interface KarajanChannel {
 
 	void unregisterHandler(int tag);
 
-	void sendTaggedReply(int i, byte[] buf, boolean fin, boolean errorFlag);
+	void sendTaggedReply(int i, byte[] buf, boolean fin, boolean err);
 	
-	void sendTaggedReply(int i, byte[] buf, boolean fin, boolean errorFlag, SendCallback cb);
+	void sendTaggedReply(int i, byte[] buf, boolean fin, boolean err, SendCallback cb);
 	
-	void sendTaggedReply(int id, ByteBuffer buf, boolean fin, boolean errorFlag, SendCallback cb);
+	void sendTaggedReply(int i, byte[] buf, int flags);
+	
+	void sendTaggedReply(int i, byte[] buf, int flags, SendCallback cb);
+	
+	void sendTaggedReply(int id, ByteBuffer buf, boolean fin, boolean err, SendCallback cb);
+	
+	void sendTaggedReply(int id, ByteBuffer buf, int flags, SendCallback cb);
 
 	void registerHandler(RequestHandler handler, int tag);
 

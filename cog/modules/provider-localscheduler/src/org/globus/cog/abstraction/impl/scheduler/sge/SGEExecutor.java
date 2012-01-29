@@ -185,7 +185,8 @@ public class SGEExecutor extends AbstractExecutor {
     /**
      * @see AbstractExecutor#start()
      */
-    public void start() throws AuthorizationException, IOException, ProcessException {
+    public void start() throws AuthorizationException,
+           IOException, ProcessException {
     	try {
     		Thread.sleep(Integer.valueOf(getSGEProperties().getSubmissionDelay()));
     	}

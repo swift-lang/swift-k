@@ -21,6 +21,7 @@ import org.globus.cog.abstraction.coaster.rlog.RemoteLogger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
@@ -160,15 +161,29 @@ implements RegistrationManager, Runnable {
     public void enqueue1(Task t) {
         synchronized (incoming) {
             Job j = new Job(t);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Got job with walltime = " + j.getMaxWallTime());
+            if (checkJob(j)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Got job with walltime = " + j.getMaxWallTime());
+                }
+                if (planning) {
+                    incoming.add(j);
+                }
+                else {
+                    queue(j);
+                }
             }
-            if (planning) {
-                incoming.add(j);
-            }
-            else {
-                queue(j);
-            }
+        }
+    }
+
+    private boolean checkJob(Job job) {
+        if (job.getMaxWallTime().getSeconds() > settings.getMaxtime() - settings.getReserve().getSeconds()) {
+            job.fail("Job walltime > maxTime - reserve (" + 
+                    WallTime.format("hms", job.getMaxWallTime().getSeconds()) + " > " + 
+                    WallTime.format("hms", settings.getMaxtime() - settings.getReserve().getSeconds()) + ")", null);
+            return false;
+        }
+        else {
+            return true;
         }
     }
 
@@ -179,8 +194,8 @@ implements RegistrationManager, Runnable {
     }
 
     private void queue(Job job) {
-        synchronized (queued) {
-            queued.add(job);
+    	synchronized (queued) {
+    	    queued.add(job);
             queued.notify();
         }
     }
@@ -245,7 +260,7 @@ implements RegistrationManager, Runnable {
     }
 
     private Set<Job> queueToExistingBlocks() {
-        double runningSize = running.getSizeLeft();
+        double runningSize = getRunningSizeLeft();
         Set<Job> remove = new HashSet<Job>();
         for (Job j : holding) {
             if (allocsize - queued.getJSize() - runningSize > metric.getSize(j) && fits(j)) {
@@ -261,7 +276,7 @@ implements RegistrationManager, Runnable {
 
     private void requeueNonFitting() {
         int count = 0;
-        double runningSize = running.getSizeLeft();
+        double runningSize = getRunningSizeLeft();
         logger.debug("allocsize = " + allocsize +
                      ", queuedsize = " + queued.getJSize() +
                      ", running = " + runningSize +
@@ -270,14 +285,40 @@ implements RegistrationManager, Runnable {
             Job j = queued.removeOne(TimeInterval.FOREVER,
                                      Integer.MAX_VALUE);
             if (j == null) {
-                CoasterService.error(19, "queued size > 0 but no job dequeued. Queued: " + queued,
-                    new Throwable());
+                if (queued.getJSize() > 0) {
+                    CoasterService.error(19, "queuedsize > 0 but no job dequeued. Queued: " + queued,
+                        new Throwable());
+                }
+                else if (allocsize - getRunningSizeLeft() < 0) {
+                    warnAboutWalltimes(running);
+                }
             }
             holding.add(j);
             count++;
         }
         if (count > 0) {
             logger.info("Requeued " + count + " non-fitting jobs");
+        }
+    }
+    
+    private void warnAboutWalltimes(Iterable<Job> set) {
+        synchronized(set) {
+            for (Job r : set) {
+                if (r.getMaxWallTime().isLessThan(Time.now().subtract(r.getStartTime()))) {
+                    Task t = r.getTask();
+                    if (t.getAttribute("#warnedAboutWalltime") == null) {
+                        logger.warn("The following job exceeded its walltime: " + 
+                            t.getSpecification());
+                        t.setAttribute("#warnedAboutWalltime", Boolean.TRUE);
+                    }
+                }
+            }
+        }
+    }
+
+    private double getRunningSizeLeft() {
+        synchronized(running) {
+            return running.getSizeLeft();
         }
     }
 
@@ -614,13 +655,17 @@ implements RegistrationManager, Runnable {
     public Job request(TimeInterval ti, int cpus) {
         Job job = queued.removeOne(ti, cpus);
         if (job != null) {
-            running.add(job);
+            synchronized(running) {
+                running.add(job);
+            }
         }
         return job;
     }
 
     public void jobTerminated(Job job) {
-        running.remove(job);
+        synchronized(running) {
+            running.remove(job);
+        }
     }
 
     /**

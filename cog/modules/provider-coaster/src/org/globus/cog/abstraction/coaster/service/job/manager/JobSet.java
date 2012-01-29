@@ -10,9 +10,10 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-public class JobSet {
+public class JobSet implements Iterable<Job> {
     private Set<Job> jobs;
     private Metric metric;
     
@@ -55,5 +56,9 @@ public class JobSet {
         }
         
         return sum;
+    }
+
+    public Iterator<Job> iterator() {
+        return jobs.iterator();
     }
 }

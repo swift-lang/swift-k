@@ -19,6 +19,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -117,7 +118,7 @@ public class LocalService extends GSSService implements Registering {
                     throw new TaskSubmissionException("Task ended before registration was received"
                             + (s.getMessage() == null ? ". " : ": " + s.getMessage())
                             + out("STDOUT", t.getStdOutput()) + out("STDERR", t.getStdError()),
-                        s.getException());
+                        s.getException() instanceof JobException ? null : s.getException());
                 }
             }
             return services.get(id);
@@ -126,7 +127,7 @@ public class LocalService extends GSSService implements Registering {
 
     private String out(String name, String value) {
         if (value != null) {
-            return "\n" + name + ": " + value;
+            return "\n" + value;
         }
         else {
             return "";
@@ -146,7 +147,7 @@ public class LocalService extends GSSService implements Registering {
     }
 
     public String registrationReceived(String id, String url, KarajanChannel channel, 
-            Map<String, String> options) {
+    		Map<String, String> options) {
         if (logger.isDebugEnabled()) {
             logger.debug("Received registration from service " + id + ": " + url);
         }

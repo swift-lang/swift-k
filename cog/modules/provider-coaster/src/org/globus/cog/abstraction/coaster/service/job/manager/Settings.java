@@ -50,13 +50,19 @@ public class Settings {
                        "workerLoggingDirectory",
                        "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
-                       "providerAttributes", "parallelism" };
+                       "parallelism",
+                       "coresPerNode"};
 
     /**
      * The maximum number of blocks that can be active at one time
      */
     private int slots = 20;
     private int jobsPerNode = 1;
+    
+    /**
+     * TODO: clarify what this does
+     */
+    private String coresPerNode = "1";
 
     /**
      * How many nodes to allocate at once
@@ -113,7 +119,7 @@ public class Settings {
     private SecurityContext securityContext;
 
     private boolean remoteMonitorEnabled;
-
+    
 	/**
 	 * Adjusts the metric used for block sizes.
 	 *
@@ -155,9 +161,12 @@ public class Settings {
 
     private String useHashBang = null;
 
-    private String providerAttributes = null;
-
     private final Map<String, String> attributes;
+
+    /**
+     * A pass-through setting for SGE, parallel environment
+    */
+    private String pe;
 
     public Settings() {
         hook = new Hook();
@@ -302,14 +311,6 @@ public class Settings {
 
     public String getWorkerLoggingDirectory() {
         return workerLoggingDirectory;
-    }
-
-    public String getProviderAttributes() {
-        return providerAttributes;
-    }
-
-    public void setProviderAttributes(String options) {
-        providerAttributes = options;
     }
 
     /**
@@ -466,6 +467,13 @@ public class Settings {
         this.parallelism = parallelism;
     }
 
+    public String getCoresPerNode() {
+        return coresPerNode;
+    }
+    
+    public void setCoresPerNode(String coresPerNode) {
+        this.coresPerNode=coresPerNode;
+    }
     public String getHookClass() {
         return hookClass;
     }
@@ -519,7 +527,7 @@ public class Settings {
     public void setUseHashBang(String uhb) {
         this.useHashBang = uhb;
     }
-
+    
     public void setAttribute(String name, String value) {
     	attributes.put(name, value);
     }

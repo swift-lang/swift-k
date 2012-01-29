@@ -12,15 +12,16 @@ package org.globus.cog.abstraction.impl.common.execution;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WallTime implements Comparable {
-    private static final Map FORMATTERS;
+public class WallTime implements Comparable<WallTime> {
+    private static final Map<String, Formatter> FORMATTERS;
     private static final Formatter DEFAULT_FORMATTER = new DefaultFormatter();
 
     static {
-        FORMATTERS = new HashMap();
+        FORMATTERS = new HashMap<String, Formatter>();
         FORMATTERS.put(null, DEFAULT_FORMATTER);
         FORMATTERS.put("default", DEFAULT_FORMATTER);
         FORMATTERS.put("pbs", new PBSFormatter());
+        FORMATTERS.put("hms", new HHMMSSFormatter());
         FORMATTERS.put("globus-jobmanager-pbs", new PBSFormatter());
         FORMATTERS.put("pbs-native", new NativePBSFormatter());
         FORMATTERS.put("sge-native", new NativeSGEFormatter());
@@ -30,7 +31,7 @@ public class WallTime implements Comparable {
         if (type != null) {
             type = type.toLowerCase();
         }
-        Formatter f = (Formatter) FORMATTERS.get(type);
+        Formatter f = FORMATTERS.get(type);
         return f == null ? DEFAULT_FORMATTER : f;
     }
 
@@ -74,11 +75,11 @@ public class WallTime implements Comparable {
         return seconds;
     }
 
-    public static String format(String type, int seconds) {
+    public static String format(String type, long seconds) {
         return getFormatter(type).format(seconds);
     }
 
-    public static String format(int seconds) {
+    public static String format(long seconds) {
         return format(null, seconds);
     }
 
@@ -86,7 +87,7 @@ public class WallTime implements Comparable {
         return format(target, timeToSeconds(spec));
     }
 
-    private static void pad(StringBuffer sb, int value) {
+    private static void pad(StringBuffer sb, long value) {
         if (value < 10) {
             sb.append('0');
         }
@@ -128,30 +129,30 @@ public class WallTime implements Comparable {
     }
 
     public static interface Formatter {
-        String format(int seconds);
+        String format(long seconds);
     }
 
     private static class DefaultFormatter implements Formatter {
-        public String format(int seconds) {
-            return String.valueOf((int) Math.ceil((double) seconds / 60));
+        public String format(long seconds) {
+            return String.valueOf((long) Math.ceil((double) seconds / 60));
         }
     }
 
     private static class HHMMSSFormatter implements Formatter {
     	
-        private static int seconds(int secondsInterval) {
+        private static long seconds(long secondsInterval) {
             return secondsInterval % 60;
         }
 
-        private static int minutes(int secondsInterval) {
+        private static long minutes(long secondsInterval) {
             return (secondsInterval / 60) % 60;
         }
 
-        private static int hours(int secondsInterval) {
+        private static long hours(long secondsInterval) {
             return secondsInterval / 3600;
         }
 
-        public String format(int seconds) {
+        public String format(long seconds) {
             StringBuffer sb = new StringBuffer();
             pad(sb, hours(seconds));
             sb.append(':');
@@ -177,12 +178,7 @@ public class WallTime implements Comparable {
     private static class NativeSGEFormatter extends HHMMSSFormatter {
     }
 
-    public int compareTo(Object o) {
-        if (o instanceof WallTime) {
-            return seconds - ((WallTime) o).seconds;
-        }
-        else {
-            throw new ClassCastException(o.getClass().getName());
-        }
+    public int compareTo(WallTime o) {
+        return seconds - o.seconds;
     }
 }

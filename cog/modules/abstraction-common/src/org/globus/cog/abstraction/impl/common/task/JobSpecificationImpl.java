@@ -166,7 +166,6 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
 
-    @Override
     public void addEnvironmentVariable(String name, int i) {
         addEnvironmentVariable(name, Integer.toString(i));
     }
@@ -469,7 +468,6 @@ public class JobSpecificationImpl implements JobSpecification {
         return result;
     }
 
-    @Override
     public void unpackProviderAttributes() {
         String attrs = (String) getAttribute("providerAttributes");
 

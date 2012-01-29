@@ -41,7 +41,11 @@ public class BlockTask extends TaskImpl {
         setSpecification(spec);
         setName("B" + block.getId());
         setAttribute(spec, "maxwalltime", WallTime.format((int) block.getWalltime().getSeconds()));
+        setAttribute(spec, "jobsPerNode", settings.getJobsPerNode());
+        setAttribute(spec, "coresPerNode", settings.getCoresPerNode());
+        
         int count = block.getWorkerCount() / settings.getJobsPerNode();
+        
         if (count > 1) {
             setAttribute(spec, "jobType", "multiple");
         }
@@ -51,8 +55,7 @@ public class BlockTask extends TaskImpl {
         for (String name : settings.getAttributeNames()) {
         	setAttribute(spec, name, settings.getAttribute(name));
         }
-        setAttribute(spec, "providerAttributes", settings.getProviderAttributes());
-        // logger.trace("providerAttributes: " + settings.getProviderAttributes());
+        
         String libraryPath = settings.getLdLibraryPath();
         if (libraryPath != null)
             spec.addEnvironmentVariable("LD_LIBRARY_PATH",
@@ -91,6 +94,7 @@ public class BlockTask extends TaskImpl {
             js.setExecutable("/usr/bin/perl");
             js.addArgument(script);
         }
+        
         // Cobalt on Intrepid, if no directory is specified, assumes $CWD for the
         // job directory.
         // If $CWD happens to be /scratch/something it has a filter in place

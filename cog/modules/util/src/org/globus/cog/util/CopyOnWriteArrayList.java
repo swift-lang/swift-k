@@ -26,7 +26,7 @@ import java.util.ListIterator;
 
 public class CopyOnWriteArrayList<T> implements List<T> {
 	private List<T> list = Collections.emptyList();
-	private int lock;	
+	private int lock;
 
 	public int size() {
 		return list.size();
@@ -40,22 +40,24 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		return list.contains(o);
 	}
 	
-	public synchronized void release() {
-		if (lock > 0) {
-			lock--;
-		}
+	public synchronized void release(Iterator<T> it) {
+	    if (((LIterator) it).list == list) {
+	        if (lock > 0) {
+	            lock--;
+	        }
+	    }
 	}
 
 	public synchronized Iterator<T> iterator() {
 		lock++;
-		return list.iterator();
+		return new LIterator(list);
 	}
 
 	public Object[] toArray() {
 		return list.toArray();
 	}
 
-    public <T> T[] toArray(T[] a) {
+    public <S> S[] toArray(S[] a) {
         return list.toArray(a);
     }
 
@@ -68,7 +70,6 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		}
 	}
     
-    @Override
     public synchronized void add(int index, T o) {
         if (lock > 0 || list.isEmpty()) {
             copyAndAdd(index, o);
@@ -102,7 +103,6 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		}
 	}
 	
-	@Override
     public synchronized T remove(int index) {
         if (lock > 0) {
             return copyAndRemove(index);
@@ -141,7 +141,6 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		}
 	}
 	
-	@Override
     public boolean addAll(int index, Collection<? extends T> c) {
         if (lock > 0 || list.isEmpty()) {
             return copyAndAddAll(index, c);
@@ -224,40 +223,53 @@ public class CopyOnWriteArrayList<T> implements List<T> {
 		return list.toString();
 	}
 
-    @Override
     public T get(int index) {
         return list.get(index);
     }
 
-    @Override
     public int indexOf(Object o) {
         return list.indexOf(o);
     }
 
-    @Override
     public int lastIndexOf(Object o) {
         return list.lastIndexOf(o);
     }
 
-    @Override
     public ListIterator<T> listIterator() {
     	throw new UnsupportedOperationException();
     }
 
-    @Override
     public ListIterator<T> listIterator(int index) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public T set(int index, T o) {
         return list.set(index, o);
     }
 
-    @Override
     public List<T> subList(int fromIndex, int toIndex) {
         throw new UnsupportedOperationException();
     };
 	
-	
+	private class LIterator implements Iterator<T> {
+	    public List<T> list;
+	    private Iterator<T> it;
+	    
+	    public LIterator(List<T> list){
+	        this.list = list;
+	        this.it = list.iterator();
+	    }
+
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        public T next() {
+            return it.next();
+        }
+
+        public void remove() {
+            it.remove();
+        }
+	}
 }

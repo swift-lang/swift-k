@@ -9,8 +9,9 @@
  */
 package org.globus.cog.karajan.scheduler.submitQueue;
 
-import edu.emory.mathcs.backport.java.util.Queue;
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 
 /**
  * Base class for submit queues. It uses a generic throttle value.
